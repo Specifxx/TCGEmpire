@@ -126,12 +126,6 @@ const HEROES: Hero[] = [
     chips: ["Ban philosophy", "2v2 by 2028", "Collectors vs players"],
   },
   {
-    slug: "riftbound-t1-signature-edition-drawing",
-    kicker: "News · Drawing dates",
-    title: "T1 Signature Edition Drawing",
-    chips: ["Opens 14 Aug, 9am PT", "Closes 17 Aug, 6pm PT", "10,125 copies · US$360"],
-  },
-  {
     slug: "best-riftbound-price-comparison-sites",
     kicker: "Comparison · Price tools",
     title: "Best Riftbound Price Comparison Sites",

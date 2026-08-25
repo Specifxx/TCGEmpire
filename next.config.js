@@ -250,6 +250,26 @@ const nextConfig = {
       // vs-sealed ground; the survivor (just expanded to 6 markets / 100+ stores)
       // already covers everything this one did.
       { source: "/blog/where-to-buy-riftbound-singles", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
+      // CONSOLIDATION (AdSense remediation § Phase 26). A deeper editorial pass at
+      // the user's request ("a lot of irrelevant blog posts... remove"), on top of
+      // Phase 25's duplicate-topic cleanup. These seven are a different failure
+      // mode: not duplicates of each other, but posts whose entire premise has
+      // expired — a site-launch announcement now superseded by /about, a meta
+      // snapshot for a metagame that no longer exists (and was actively wrong to
+      // leave live), a "should you buy before X drops" question X has since
+      // answered, an "early trickle" trading-window post for a window that closed
+      // weeks ago, and a now-closed collectible drawing's dated logistics (its
+      // still-good analysis was merged forward, not lost — see
+      // riftbound-t1-worlds-champion-collection in src/lib/articles.ts). Each
+      // verified individually before deletion; every internal link into them was
+      // found and repointed rather than left to ride the redirect.
+      { source: "/blog/welcome-to-riftcompareau", destination: "/about", permanent: true },
+      { source: "/blog/unleashed-meta-snapshot-june-2026", destination: "/decks", permanent: true },
+      { source: "/blog/should-you-buy-riftbound-origins-before-vendetta", destination: "/guides/why-riftbound-card-prices-change", permanent: true },
+      { source: "/blog/riftbound-vendetta-is-here-early-release", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
+      { source: "/blog/how-to-start-buying-riftbound-vendetta-decks", destination: "/guides/best-riftbound-vendetta-decks", permanent: true },
+      { source: "/blog/riftbound-t1-signature-edition-drawing", destination: "/blog/riftbound-t1-worlds-champion-collection", permanent: true },
+      { source: "/blog/riftbound-vendetta-synergies-with-existing-cards", destination: "/guides/building-for-riftbound-vendetta", permanent: true },
       // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
       // every internal link — only the URL still said "arbitrage", a word no
       // buyer searches for. Renamed to /tools/deal-finder; this 301 preserves

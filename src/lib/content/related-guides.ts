@@ -96,7 +96,7 @@ const RULES: Rule[] = [
   // while its own About paragraph promised a guide to the drawing.
   {
     when: (c) => noRetailChannelProduct(c.setCode) != null,
-    prefer: ["riftbound-t1-signature-edition-drawing", "riftbound-t1-worlds-champion-collection"],
+    prefer: ["riftbound-t1-worlds-champion-collection"],
     match: [],
     reason: (c) => `How to get ${noRetailChannelProduct(c.setCode)?.product ?? c.setName}, what is in it, and what makes it scarce`,
   },

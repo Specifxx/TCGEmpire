@@ -1108,76 +1108,6 @@ Build smart, compare prices, and you'll have a competitive Riftbound deck withou
     ],
   },
   {
-    slug: "welcome-to-riftcompareau",
-    category: "blog",
-    title: "Welcome to RiftCompare",
-    excerpt:
-      "What RiftCompare is, why we built it, and everything it now covers — card and sealed prices, decks, tools and games — across AU, US, UK, Singapore, Canada and the EU.",
-    author: "RiftCompare",
-    date: "2026-07-15",
-    readMins: 5,
-    tags: ["news", "about"],
-    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**. We started as an Australia-only project; today RiftCompare tracks live prices across **Australia, the US, the UK, Singapore, Canada and the EU**, and has grown well past a simple price table.
-
-## The problem we built this to solve
-
-Riftbound is exciting, but tracking down the cheapest copy of a specific card across dozens of independent stores is genuinely tedious — every shop prices differently, stock changes daily, overseas sites quietly show you the wrong currency, and postage costs can flip which store is actually cheapest once you account for shipping. RiftCompare does that legwork automatically: search a card once, and see every store's live price side by side, ranked by **total delivered cost** (price plus postage, with free-shipping thresholds factored in), refreshed daily.
-
-## What you can do here
-
-- **[Browse the card database](/browse)** — every Riftbound single, filterable by set, domain, rarity and type, with live prices in your market.
-- **[Buy Riftbound singles](/singles)** — the fastest path from "which card do I need" to "who's cheapest right now."
-- **[Compare sealed products](/sealed)** — booster boxes, packs, Proving Grounds and more, priced across shops.
-- **[Explore meta decks](/decks)** — real top-finishing tournament lists, with a live "build cost" so you know exactly what it costs to assemble each one.
-- **[The RiftCompare Index](/market)** and **[price movers](/movers)** — a daily read on the whole Riftbound singles market, and which cards are spiking, cooling, or quietly undervalued.
-- **[Deck pricer](/deck)** — paste or build a decklist and price the entire thing across every store in one pass.
-- **Tools** — an arbitrage/deal finder and a box-EV calculator.
-- **[Riftle](/riftle)** — our free daily Wordle-style "guess the card" game, plus an Unlimited mode.
-- **Wishlist, price alerts and portfolio tracking** — for a free account, track the cards you want, get notified on price drops, and value your whole collection.
-
-## How prices work
-
-We pull live prices directly from each store's public product feed (and eBay) in that market's own currency — never converted or estimated — so what you see is what you'd actually pay locally. Prices refresh daily, and every listing links straight out to the store so you can buy in a couple of clicks. Where we don't yet have a local listing for a card, we point you to an eBay search for it rather than leaving the page empty.
-
-## Where we're still growing
-
-Store coverage is deepest in Australia and growing fastest in the US, UK and Singapore — we're actively finding and adding new stores in every market. If a store you use is missing, or something looks wrong, tell us via the [contact form](/contact). Thanks for stopping by, and happy hunting.`,
-  },
-  {
-    slug: "unleashed-meta-snapshot-june-2026",
-    category: "blog",
-    title: "Riftbound Unleashed Meta Snapshot — June 2026",
-    excerpt:
-      "The six decks defining the Unleashed metagame — champion, key cards, archetype and what each actually costs to build, priced live across every store we track.",
-    author: "RiftCompare",
-    date: "2026-07-15",
-    readMins: 6,
-    tags: ["meta", "decks"],
-    body: `The **Unleashed** metagame has settled into a clear top tier. Here's a breakdown of the six most-played and best-performing legends, based on tournament results aggregated by [riftDecks.com](https://riftdecks.com/legends) — what each deck actually does, its key cards, and a link to the full list with a live **build cost** priced across every store we track.
-
-## Tier 1 — the decks to beat
-
-**[Master Yi, Wuju Bladesman](/decks/master-yi-wuju-bladesman)** (Body/Calm) — the defining aggro-tempo deck. It runs Master Yi, Tempered behind a wall of cheap, resilient units (Lonely Poro, Scuttle Crab, First Mate) and closes with Zhonya's Hourglass and Trinity Force turning a single big threat into a game-ending combat trick. It wants to win the early board and never give it back.
-
-**[Irelia, Blade Dancer](/decks/irelia-blade-dancer)** (Calm/Chaos) — flexible tempo built around Irelia, Fervent, backed by Guardian Angel and Boots of Swiftness to keep her attacking through removal. Scuttle Crab and Tideturner give it the same resilient-unit foundation as Yi, but with a deeper trick suite that snowballs the board rather than racing it.
-
-**LeBlanc, Deceiver** (Mind/Order) — midrange that goes wide and converts with value. LeBlanc, Fragmented sets up disruptive plays alongside Soaring Scout, Watchful Sentry and Black Rose Dignitary, with Baited Hook picking off whatever the board state doesn't already answer.
-
-## Tier 2 — strong and popular
-
-**[Diana, Scorn of the Moon](/decks/diana-scorn-of-the-moon)** (Chaos/Mind) — spell-tempo built around Diana, Lunari. It leans on Ravenbloom Student and Tideturner for board presence, with Hwei, Brooding Painter adding a second angle of pressure once the spell package takes over.
-
-**Fiora, Grand Duelist** (Body/Order) — wide, aggressive units (Pit Rookie, First Mate, Spectral Matron) that duel down blockers and race, equipped with B.F. Sword, Shepherd's Heirloom and Baited Hook to keep Fiora, Victorious swinging through anything that tries to trade with her.
-
-**Vex, Gloomist** (Calm/Chaos) — evasive tempo/control. Vex, Apathetic backed by Scuttle Crab, Tideturner and Trevor Snoozebottom, with Boots of Swiftness protecting the pieces that actually close the game once the board is stabilized.
-
-## See the full lists (and build cost)
-
-Every deck above is a real, legal tournament list on our **[Meta Decks page](/decks)** — card-by-card, split into Legend, Champion, Main Deck, Battlefields, Runes and Side Deck, with a live **build cost** priced across every store RiftCompare tracks (not just Australia — the build cost adapts to your own market). Click through to any deck above to see the exact 40+ cards and what assembling it would cost you today.
-
-Decklists are sourced from riftDecks.com and refresh with the metagame — we'll post a new snapshot as the tier list shifts.`,
-  },
-  {
     slug: "how-a-riftbound-deck-is-built",
     category: "guide",
     title: "How a Riftbound Deck Is Built",
@@ -1926,47 +1856,6 @@ Early singles are already trading, which means you don't have to wait until 31 J
 For the full picture, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
   },
   {
-    slug: "should-you-buy-riftbound-origins-before-vendetta",
-    category: "blog",
-    title: "Should You Buy Origins Before Vendetta Drops?",
-    excerpt:
-      "A new set changes prices across the whole game. Here's how a Vendetta launch typically moves Origins prices — and whether to buy the singles you want now or wait.",
-    author: "RiftCompare",
-    date: "2026-07-06",
-    updated: "2026-07-06",
-    readMins: 4,
-    tags: ["buying", "vendetta", "value", "opinion"],
-    body: `A new set doesn't just add cards — it moves the price of the cards you already own or want. With **[Vendetta](/sets/vendetta)** landing 31 July, a lot of buyers are asking the same thing: *do I grab my Origins singles now, or wait?* Here's how to think about it.
-
-## What a new set typically does to older singles
-
-There's no single rule, but a few patterns show up again and again when a TCG expansion drops:
-
-- **Attention shifts to the new set.** Demand — and hype-driven prices — concentrate on the newest cards at launch, which can soften prices on the previous set for a while.
-- **Format staples hold or climb.** Older cards that stay legal and see play in the new meta don't get cheaper just because a new set exists — sometimes they rise as new decks want them.
-- **Reprints reset prices.** If a card from an older set gets reprinted or a functionally similar card appears, the old version can drop. Nothing about this is confirmed for Vendetta — treat it as a risk to watch, not a certainty.
-
-## So: buy now or wait?
-
-**Buy now if** the card is something you'll actually use and you don't want to risk it climbing — playable staples rarely get dramatically cheaper, and waiting can cost you.
-
-**Wait if** you're only collecting, the card isn't urgent, and you'd rather see whether launch-week attention softens Origins prices first.
-
-The honest answer for most people: **buy what you'll play, wait on what you don't need yet.**
-
-## Let the data decide instead of guessing
-
-You don't have to predict any of this — you can watch it:
-
-- **[Price movers](/movers)** shows what's climbing and falling right now, so you can see a trend forming instead of guessing.
-- **[Wishlist](/browse)** a card and get alerted when its price actually moves.
-- The **[RiftCompare Index](/market)** tracks the whole market's direction day to day.
-
-When you're ready to buy, **[compare every store](/browse)** so you pay the cheapest delivered price — the single biggest saving is almost always *where* you buy, not *when*.
-
-Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which Origins and Unleashed cards the new archetypes want — those are the ones worth locking in early.`,
-  },
-  {
     slug: "riftbound-banlist-explained",
     category: "guide",
     title: "Riftbound Ban List Explained",
@@ -2119,281 +2008,6 @@ For the complete, always-current picture — including March's original 7 bans �
   // not Riot's marketing art. Save to public/blog/t1-drawing-entry-form.png and add:
   //   ![The Riot Merch Store drawing registration form for the T1 2025 Worlds Champion Signature Edition](/blog/t1-drawing-entry-form.png)
   {
-    slug: "riftbound-t1-signature-edition-drawing",
-    category: "blog",
-    title: "Riftbound T1 Drawing 2026: Winners Emailed",
-    excerpt:
-      "Riftbound T1 Signature Edition drawing: registration closed 17 August 2026, selection emails go out from 20 August. Every date, the odds, and all five cards.",
-    author: "RiftCompare",
-    date: "2026-08-09",
-    updated: "2026-08-19",
-    readMins: 10,
-    tags: ["news", "collectibles", "esports", "collecting", "chase cards"],
-    hero: {
-      src: "/blog/riftbound-t1-signature-edition-drawing.png",
-      alt: "Riftbound T1 2025 Worlds Champion Signature Edition drawing dates — registration 14-17 August 2026",
-    },
-    summary: [
-      "**Registration runs from 16:00 UTC on Friday 14 August 2026 to 01:00 UTC on Tuesday 18 August** (Riot publishes it as 9am-6pm Pacific). It is a drawing on the Riot Merch Store, not a first-come sale — entering early does nothing, so enter at a reasonable hour wherever you are.",
-      "**Selection emails start Thursday 20 August**, with further waves on 24 and 27 August if they are needed. Boxes begin arriving from **Wednesday 2 September**.",
-      "**US$360**, **10,125 copies per language** (English, Chinese, Korean). One card in every box is serial-numbered 1-2025 and carries a gold-stamped player signature.",
-      "**There is no Catch Up pool.** Riot has said every entrant has the same chance regardless of past entries or purchases, so a long purchase history buys you nothing here.",
-      "**The real scarcity number is 2,025, not 10,125.** Five champions share a 1-2025 serial range, so each one exists in about 2,025 serialised English copies — a fifth of the print run.",
-      "The cheaper **Player Bundle (US$70)** has its own drawing later in the year — same five champions, different art, no serialisation.",
-    ],
-    faq: [
-      {
-        q: "What time does the Riftbound T1 Signature Edition drawing open?",
-        a: "The window opens at 16:00 UTC on Friday 14 August 2026 and closes at 01:00 UTC on Tuesday 18 August. Riot publishes it in Pacific time (9am Friday to 6pm Monday), which is Friday evening in the UK and Saturday morning across Singapore and Australia. The article has the exact local open and close for all five markets we price. Because it is a drawing rather than a first-come sale, the opening minute carries no advantage — enter at any convenient point before it closes.",
-      },
-      {
-        q: "Is the T1 drawing first-come, first-served?",
-        a: "No. It is a drawing (a lottery): you register during the window and Riot selects entrants afterwards. Entering in the first minute gives you no advantage over entering on the last day, as long as you are in before registration closes.",
-      },
-      {
-        q: "How much does the Riftbound T1 Signature Edition cost?",
-        a: "US$360 for the English edition. The Chinese edition is CN¥2,025 and the Korean edition is KR₩500,000. The separate Player Bundle is US$70, CN¥399 and KR₩100,000.",
-      },
-      {
-        q: "How many T1 Signature Editions are being made?",
-        a: "10,125 per language across English, Chinese and Korean — just over 30,000 worldwide. Each box contains one card serial-numbered between 1 and 2025, marking the year of T1's championship.",
-      },
-      {
-        q: "Do previous Riot Merch purchases improve my odds in the T1 drawing?",
-        a: "No. Riot has confirmed there is no Catch Up pool for this drawing and that everyone who enters has the same opportunity to be selected regardless of previous entries or purchases.",
-      },
-      {
-        q: "When can I buy the T1 Worlds Champion Player Bundle?",
-        a: "Later in 2026, through its own Riot Merch Store drawing. Riot has not published a registration date for it yet — only that it follows the Signature Edition.",
-      },
-      {
-        q: "Which cards are in the Riftbound T1 collection?",
-        a: "Five champion units, one chosen by each member of T1's championship roster: Ambessa, The Wolf (Doran), Xin Zhao, Vigilant (Oner), Galio, Indefatigable (Faker), Miss Fortune, Buccaneer (Gumayusi) and Seraphine, Not Alone (Keria).",
-      },
-      {
-        q: "How rare is the Riftbound T1 Signature Edition?",
-        a: "10,125 copies per language and 30,375 worldwide — but each box holds only one serialised card, and five champions share the 1-2025 serial range (5 x 2,025 = 10,125). So any single champion exists in roughly 2,025 serialised copies per language, or 6,075 worldwide. Riot has not confirmed the champions are distributed evenly, so treat that as the arithmetic's implication rather than a promise.",
-      },
-      {
-        q: "How many serialised Faker Galio cards are there?",
-        a: "About 2,025 in English and 6,075 across English, Chinese and Korean, if the five champions share the 1-2025 serial range evenly. Galio, Indefatigable is the card Lee \"Faker\" Sang-hyeok chose, and the serialised copy carries his gold-stamped signature.",
-      },
-      {
-        q: "Is the Riftbound T1 Signature Edition worth it?",
-        a: "As cards to play with, no — the same five champions exist as ordinary printings that cost cents, and one of them is not tournament-legal until Radiance releases. What US$360 buys is a capped print run with no reprint planned, a one-of-one serialised card, a player's gold-stamped signature and a foiling treatment made for this release. Whether that is worth it depends entirely on whether you want the object.",
-      },
-      {
-        q: "Will the Riftbound T1 cards go up in value?",
-        a: "We do not forecast prices. The only publicly known figure is the US$360 Riot charges drawing winners, and after the window closes even that stops being obtainable, so every number beyond it is a guess. What is factual is the scarcity: a fixed print run, no reprint, no retail channel, and one unique serial per box. All six printings have live pages on RiftCompare and will show a real price the moment a copy trades somewhere we can see it.",
-      },
-      {
-        q: "Can I buy the T1 cards individually?",
-        a: "Not from Riot. The collection is sold only as a complete product through a Riot Merch Store drawing, so individual T1S printings can only ever appear on the secondary market once winners break sets up. The ordinary retail printings of four of the five champions are buyable as singles today.",
-      },
-    ],
-    itemList: {
-      name: "Cards in the Riftbound x T1 2025 Worlds Champion Collection",
-      items: [
-        { name: "Ambessa, The Wolf (T1S 001/005)", description: "Chosen by Doran. Body domain unit, 4 energy, 4 might, with Empower 3." },
-        { name: "Xin Zhao, Vigilant (T1S 002/005)", description: "Chosen by Oner. Order domain unit, 3 energy, 4 might, with Tank." },
-        { name: "Galio, Indefatigable (T1S 003/005)", description: "Chosen by Faker. Order domain unit, 3 energy, 6 might, with Deflect and Tank. Also the serialised, gold-signed printing shown in Riot's reveal." },
-        { name: "Miss Fortune, Buccaneer (T1S 004/005)", description: "Chosen by Gumayusi. Chaos domain unit, 4 energy, 4 might, enabling plays to open battlefields." },
-        { name: "Seraphine, Not Alone (T1S 005/005)", description: "Chosen by Keria. Order domain unit, 5 energy, 1 might. From the unreleased Radiance set, so not tournament-legal until Radiance ships." },
-      ],
-    },
-    // Self-populating. These six printings live in prisma/manual-cards.json and land
-    // in the database when `npm run cards:manual` runs; until then resolveEmbed simply
-    // omits them and the article reads normally (never a broken tile).
-    embeds: [
-      {
-        title: "All six T1 printings in our database",
-        note: "The five collection cards plus Faker's serialised Galio. These are drawing-only prints, so they carry no store price until copies reach the secondary market.",
-        slugs: [
-          "ambessa-the-wolf-t1s-001-005-promo",
-          "xin-zhao-vigilant-t1s-002-005-promo",
-          "galio-indefatigable-t1s-003-005-promo",
-          "galio-indefatigable-t1s-003s-005-promo",
-          "miss-fortune-buccaneer-t1s-004-005-promo",
-          "seraphine-not-alone-t1s-005-005-promo",
-        ],
-      },
-      {
-        title: "The retail printings of the same four champions",
-        note: "The normal, buyable versions of the cards T1 picked — live prices across every store we track. Seraphine has no retail printing yet.",
-        slugs: [
-          "ambessa-the-wolf-ven-084",
-          "xin-zhao-vigilant-sfd-176-221",
-          "galio-indefatigable-unl-171-219",
-          "miss-fortune-buccaneer-ogn-193-298",
-        ],
-      },
-    ],
-    browseCta: {
-      href: "/sealed",
-      label: "Compare sealed prices →",
-      blurb: "Every Riftbound sealed product we track, ranked cheapest-first, with an at-RRP flag so you can see what is still selling at retail.",
-    },
-    body: `**Registration for the English T1 2025 Worlds Champion Signature Edition drawing is closed.** The window ran from **9am Pacific on Friday 14 August 2026** to **6pm Pacific on Monday 17 August** — it was a lottery on the Riot Merch Store, not a sale, so entering early inside that window bought no advantage. If you registered, selection emails start going out **20 August**, in waves. If you missed it, there is no second entry point for this drawing; the separate, cheaper **Player Bundle** drawing hasn't opened yet (see below).
-
-This was the most expensive Riftbound product Riot has ever made, at **US$360**, and the most limited: **10,125 copies per language**. Here is every date, what winners actually get, and the parts of the entry rules that were easy to miss.
-
-![The five Riftbound x T1 2025 Worlds Champion Collection cards side by side: Ambessa The Wolf, Xin Zhao Vigilant, Galio Indefatigable, Miss Fortune Buccaneer and Seraphine Not Alone](/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg)
-
-## Every date in the T1 Signature Edition drawing
-
-| When | What happens |
-| --- | --- |
-| **Fri 14 Aug 2026, 9:00am PT** | Registration opens on the Riot Merch Store |
-| **Mon 17 Aug 2026, 6:00pm PT** | Registration closes |
-| **Thu 20 Aug 2026** | First wave of selection emails goes out |
-| **24 Aug 2026** | Second wave, if one is needed |
-| **27 Aug 2026** | Third wave begins, if one is needed |
-| **Wed 2 Sep 2026** | Boxes begin arriving with players |
-
-Two small things worth knowing about that table. The waves are conditional — Riot will only run the second and third if the first does not fill the allocation, so no email on 20 August is not a rejection. And Riot has said it will post when each wave goes out, and when the drawing has formally concluded, on the official Riftbound account on X, which is the only place a "have I missed out?" answer will exist before your inbox has one.
-
-One correction worth flagging, because it will confuse people reading the announcement: Riot's post labels the later waves "Friday, August 24" and "Monday, August 27". In 2026 the 24th is a Monday and the 27th is a Thursday. The dates themselves follow a sensible Thursday-Monday-Thursday cadence from the 20th, so we have treated the dates as correct and the weekday labels as a slip.
-
-## What time does the drawing open where you live?
-
-The window is published in Pacific time, which is 5pm to 2am in the UK and lands overnight for Australia. Both ends of the window in the five markets we price:
-
-| Market | Opens | Closes |
-| --- | --- | --- |
-| US Pacific | Fri 14 Aug, 9:00am | Mon 17 Aug, 6:00pm |
-| US Eastern | Fri 14 Aug, 12:00pm | Mon 17 Aug, 9:00pm |
-| Canada (Toronto) | Fri 14 Aug, 12:00pm | Mon 17 Aug, 9:00pm |
-| United Kingdom | Fri 14 Aug, 5:00pm | Tue 18 Aug, 2:00am |
-| Singapore | Sat 15 Aug, 12:00am | Tue 18 Aug, 9:00am |
-| Australia (Sydney) | Sat 15 Aug, 2:00am | Tue 18 Aug, 11:00am |
-
-If you are outside North America, the practical advice is to ignore the opening time entirely and enter at a civilised hour on the Saturday, Sunday or Monday. There is no queue and no advantage to being first.
-
-## How the drawing actually works
-
-You register during the window; after it closes, Riot draws from everyone who entered and emails the people it selects with a link to buy. Nothing is reserved at the moment you sign up, and nothing is charged until you complete a purchase from that email.
-
-The single most important rule, and the one most likely to change how people behave: **there is no Catch Up pool.** In some previous Riot Merch drawings, people who had missed out before were weighted more heavily next time. Riot has explicitly said that is not happening here — everyone who enters has the same chance, regardless of prior entries or purchases. If you have been losing drawings all year, that history is worth nothing on this one. If you have never entered one, you are not behind.
-
-One thing nobody can tell you, us included: your odds. Riot has never published how many people enter a Merch Store drawing, so "10,125 copies" is a supply figure with no demand figure beside it. Anyone quoting you a percentage chance of winning is making it up.
-
-Riot has also confirmed two things about the shipping side that matter at this price point. Orders get extra packaging specifically to protect them in transit. And because every serialised card is genuinely unique, a damaged one cannot be replaced with an identical copy — so the remedy is returning the complete set for a full refund, not a swap. If your box arrives damaged, that is a decision to make deliberately rather than a form to fill in.
-
-## What US$360 actually buys
-
-| | Signature Edition | Player Bundle |
-| --- | --- | --- |
-| English price | **US$360** | **US$70** |
-| Chinese price | CN¥2,025 | CN¥399 |
-| Korean price | KR₩500,000 | KR₩100,000 |
-| Print run | 10,125 per language | Not announced |
-| The five cards | Yes, new foiling | Yes, different art |
-| Serialised card | One per box, 1-2025 | No |
-| Gold player signature | On the serialised card | No |
-| Accessories | Display packaging | Sleeves, deckbox, binder, metal die |
-| Drawing | 14-17 Aug 2026 | Later in 2026, date TBA |
-
-The Signature Edition is a display piece: five cards with a foiling treatment made for this release, one of them serialised and signed, in packaging designed to be stood up rather than stored. The Player Bundle is the version aimed at people who want to sleeve these up and play them, and one in every ten of its metal dice is a black-and-gold variant.
-
-Both are English-language Riot Merch Store drawings. The Chinese and Korean editions are handled separately in-region, and Riot has timed the English drawing to coincide with a T1 event for the Korean versions.
-
-## The five cards, and who picked them
-
-Each card was chosen by the T1 player it represents. The card data below is read from Riot's own reveal renders and cross-checked against the existing retail printings of the same cards in our database — the collection uses new art and a new frame, but the rules text and stats are the cards you already know.
-
-| Card | Picked by | Domain | Cost / Might | Ability |
-| --- | --- | --- | --- | --- |
-| **Ambessa, The Wolf** | Doran | Body | 4 / 4 | Empower 3; empowered, gains +3 might and can only be damaged in combat |
-| **Xin Zhao, Vigilant** | Oner | Order | 3 / 4 | Tank; enters ready if you have two or more other units in your base |
-| **Galio, Indefatigable** | Faker | Order | 3 / 6 | Deflect, Tank; deals no combat damage |
-| **Miss Fortune, Buccaneer** | Gumayusi | Chaos | 4 / 4 | Can be played to an open battlefield, and lets your other units do the same |
-| **Seraphine, Not Alone** | Keria | Order | 5 / 1 | Makes a Recruit token when played or exhausted; grows with each exhausted unit you control |
-
-[[embed:0]]
-
-**The Seraphine catch.** Seraphine, Not Alone is from **Radiance**, the fifth Riftbound set, which does not release until [23 October 2026](/blog/riftbound-2027-set-roadmap). Until then the card is not legal for sanctioned play — so a Player Bundle bought to actually play with contains one card you cannot yet use. That is a temporary problem, not a permanent one, but it is worth knowing before October.
-
-## The serialised card is the whole story
-
-Every box contains exactly one card numbered from 1 to 2025 — the year of the title being commemorated — with a gold-stamped signature from the player who picked it. Riot's reveal render shows Faker's Galio in that slot, stamped 0001/2025.
-
-![Faker's serialised Galio, Indefatigable from the T1 2025 Worlds Champion Signature Edition, showing the 0001 of 2025 serial box and gold-stamped signature](/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg)
-
-If you have read our [variant and finish glossary](/guides/riftbound-variant-glossary), this is a category Riftbound has not had before. Signature cards in normal sets carry the artist's stamp; this is a player's, on a card with a unique serial. In every other serialised collectible market, low numbers trade above high ones, and there is no obvious reason this one would behave differently. No Riftbound serial has ever changed hands, though, so that is a pattern from elsewhere rather than an observation about this card.
-
-Riot has separately said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which is what makes this interesting rather than a preview of things to come: it is a deliberately walled-off collector release.
-
-## How rare is the T1 Signature Edition, exactly?
-
-Rare enough that the number is worth doing properly, because "10,125" on its own understates it.
-
-Each box contains **one** serialised card, numbered somewhere in **1–2025**. There are five champions in the set, and 5 × 2,025 = **10,125** — exactly the print run Riot published for each language.
-
-That is not a coincidence, and the arithmetic only closes one way. A single shared 1–2025 pool cannot cover 10,125 boxes when every box holds a uniquely numbered card: you would run out after 2,025 boxes. Five separate 1–2025 runs, one per champion, is the only arrangement that fits the two numbers Riot published.
-
-| | English | Per language | Worldwide (EN + CN + KR) |
-| --- | --- | --- | --- |
-| Boxes | 10,125 | 10,125 | 30,375 |
-| Serialised cards | 10,125 | 10,125 | 30,375 |
-| Serialised copies **per champion** | 2,025 | 2,025 | 6,075 |
-
-So the thing collectors will actually chase — a **gold-signed, serialised Galio picked and signed by Faker** — exists in roughly **2,025 English copies**, and 6,075 across all three languages. That is a fifth of the number most coverage is quoting, and it is the number that matters.
-
-Two honest caveats. Riot has published the print run and the serial range but has **not** confirmed that the five champions are distributed evenly across boxes — the arithmetic implies it, Riot has not stated it, and which champion you get is not something you choose. And the four unserialised cards in your box are identical to everybody else's: the serial is what is scarce, not the set.
-
-## What actually makes these cards valuable
-
-Four things, and only one of them is the price tag.
-
-**The print run is fixed and small, and there is no reprint lever.** Riot capped this at 10,125 per language before a single copy shipped. A set that sells out is normally followed by a reprint, a second wave or a promo distribution of the same art. None of those exist here — the collection commemorates a specific championship, and the serial range is literally the year.
-
-**The serial number is a one-of-one.** Every serialised card is unique: there is exactly one #0001 Galio in English and there will never be another. Be precise about what that means, because resellers will not be — the three language editions are numbered separately, so a #0001 Galio exists once in English, once in Chinese and once in Korean. Riot's own returns policy makes the point better than any analysis — a damaged serialised card cannot be replaced with an identical copy, so the remedy is a full refund of the whole set. That is a company saying, in a support policy, that it cannot manufacture a second one.
-
-**There is no retail channel at all.** Every other Riftbound product we track has a shop price, which anchors resale: you can always see what a booster box costs at retail and judge a listing against it. This has no retail price after the drawing closes. The only public number is the US$360 you would have paid to Riot, and once the window shuts even that stops being obtainable. Price discovery happens entirely on the secondary market, starting from nothing. We will report what that produces; we are not going to guess at it in advance.
-
-**The category itself is walled off.** In the same month, Riot said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways). Serialised Riftbound cards are therefore not a thing that will exist in the ordinary product line — they are a thing that exists in dedicated collector releases, of which this is the first.
-
-And one thing that does **not** make them valuable: playability. These are the same five champions you can already buy as ordinary singles for cents apiece — [and one of them, Seraphine, is not tournament-legal until Radiance releases](/blog/riftbound-2027-set-roadmap) in October. Nobody is paying US$360 for a 3-cost 6-might Galio. They are paying for the object.
-
-## What we won't tell you
-
-We do not forecast prices, and this is exactly the product where the temptation is strongest.
-
-**These cards have a cost. They do not yet have a price.** US$360 is what Riot charges a winner; a price is what two strangers agree on, and none has been agreed yet.
-
-Here is the whole of what is actually known: the print run, the serial range, and one price — US$360 — that only winners of the drawing can pay. Every number beyond that is somebody's guess, including ours. Sealed collector products from a first-of-its-kind collaboration have gone both ways in other card games, and anyone quoting you a multiple in the first week is quoting a vibe.
-
-What we will do instead is show you the number when it exists. All six printings have live pages on RiftCompare, and the moment a copy changes hands somewhere we can see it, that page shows the price and starts a history. [Set a price alert](/alerts) if you would rather be told than check.
-
-## Is the Player Bundle the better buy?
-
-For most people who just like the cards, yes — and it is not close on a per-dollar basis.
-
-The gap is worth doing as arithmetic rather than as "a fifth of the price". US$360 minus US$70 is **US$290**, and that US$290 buys exactly three things: the serialisation, the gold-stamped signature and the foiling treatment made for this release. Everything else — the five champions, exclusive art, an object you can hold — is in both.
-
-US$70 gets you the same five champions in their own exclusive art, plus sleeves, a deckbox, a binder and a metal die. If your reason for wanting this collection is "I want Faker's Galio on my shelf", the Player Bundle does that for a fifth of the price; if it is "I want a numbered card that only 2,025 people can own", it does not do that at all, and nothing else will.
-
-Worth pricing the third option honestly too: the ordinary retail printings of four of these five champions are in our database right now and cost cents. If what you want is to **play** these cards, that is the entire cost.
-
-[[embed:1]]
-
-## What we're tracking on RiftCompare
-
-All six printings — the five cards plus Faker's serialised Galio — are now in our card database, so they have real pages the moment secondary-market listings exist rather than weeks afterwards. Prices will appear on those pages automatically when they do.
-
-On the sealed side, both the Signature Edition and the Player Bundle now have their own product types in [our sealed comparison](/sealed), each carrying Riot's published US price as its reference. That is the number that matters after the drawing closes: not "what is the cheapest listing", but "how far above US$360 is the cheapest listing". [The deal finder](/tools/deal-finder) applies the same logic across everything else we track.
-
-If you would rather not watch any of this manually, [set a price alert](/alerts) and we will email you when a listing appears.
-
-## The short version
-
-Enter between **14 and 17 August**, at any point in that window. Do not stay up for the opening if you are not in North America. Do not expect prior purchases to help you. And if you miss out, the [Player Bundle drawing](/blog/riftbound-t1-worlds-champion-collection) later this year gets you the same five champions, in different art, for a fifth of the price.
-
----
-
-*Sources: Riot Games' official announcements — the [August Merch Store Updates](https://playriftbound.com/en-us/news/announcements/august-merch-store-updates/) post of 6 August 2026 (drawing dates, entry rules, shipping policy), [The Riftbound x T1 2025 Worlds Champion Collection](https://playriftbound.com/en-us/news/announcements/the-riftbound-x-t1-2025-worlds-champion-collection/) (contents, print run, prices) and the [August 2026 Roadmap](https://playriftbound.com/en-us/news/announcements/august-2026-roadmap/) (the 14-17 August window). Dates, prices and print runs are Riot's; the timezone conversions, card data, analysis and resale commentary are ours. Card images are our own crops of Riot's reveal renders, re-hosted here. Riot's published schedule can change — check the official post before the window opens.*`,
-  },
-  {
     slug: "riftbound-t1-worlds-champion-collection",
     category: "blog",
     title: "Riftbound × T1 Worlds Champion Collection",
@@ -2403,10 +2017,13 @@ Enter between **14 and 17 August**, at any point in that window. Do not stay up 
     date: "2026-07-17",
     // Rewritten 9 Aug 2026: the drawing timetable and prices are published, the
     // five collection printings are now in our database, and the original text's
-    // "Seraphine isn't catalogued yet" line was stale. The dated logistics live in
-    // /blog/riftbound-t1-signature-edition-drawing so the two posts don't compete
-    // for the same query — this one stays the product explainer.
-    updated: "2026-08-09",
+    // "Seraphine isn't catalogued yet" line was stale. A companion post
+    // (/blog/riftbound-t1-signature-edition-drawing) briefly carried the dated
+    // registration logistics so the two didn't compete for the same query; once
+    // that window closed (17 Aug 2026) it was retired and its still-evergreen
+    // analysis (scarcity math, Player Bundle comparison) merged in here — see the
+    // AdSense remediation Phase 26 note in next.config.js.
+    updated: "2026-08-25",
     readMins: 5,
     tags: ["news", "collectibles", "esports"],
     shop: [
@@ -2436,7 +2053,7 @@ Enter between **14 and 17 August**, at any point in that window. Do not stay up 
         ],
       },
     ],
-    body: `> **Drawing dates are out.** Registration for the English Signature Edition runs **14-17 August 2026**. Every date, timezone conversion and entry rule is in **[the drawing guide](/blog/riftbound-t1-signature-edition-drawing)**. This page is the product explainer: what the collection is, what is in it, and what it costs.
+    body: `> **Registration for the English Signature Edition is closed.** The window ran 14-17 August 2026; selection emails went out from 20 August, with boxes arriving from 2 September. This page is the lasting product explainer — what the collection is, what's in it, what actually makes it scarce, and what it costs — for anyone who missed the window, is deciding on the still-open Player Bundle drawing, or just wants to know what these cards are.
 
 Riot did something in July it had never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third in a row — with signed, serialised cards picked by the players themselves.
 
@@ -2464,9 +2081,33 @@ All six printings — the five cards plus Faker's serialised Galio, numbered T1S
 
 ## How to actually get one
 
-Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you register inside a window and Riot selects entrants afterwards. The English Signature Edition's registration window is **14-17 August 2026**; the Player Bundle follows later in the year with its own drawing, date not yet announced. Chinese and Korean editions are handled separately in-region.
+Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you register inside a window and Riot selects entrants afterwards, rather than it being first-come, first-served. The English Signature Edition's registration window (14-17 August 2026) is now closed; if you entered, Riot's selection emails went out from 20 August, in waves, and boxes began arriving from 2 September. The **Player Bundle follows later in the year with its own drawing**, date not yet announced. Chinese and Korean editions are handled separately in-region.
 
-The full timetable, the timezone conversions and the entry rules — including the fact that there is **no Catch Up pool**, so previous purchases do not improve your odds — are in [the drawing guide](/blog/riftbound-t1-signature-edition-drawing).
+The one rule worth remembering for the Player Bundle drawing when it opens: Riot has confirmed there is **no Catch Up pool** — everyone who enters has the same chance regardless of prior entries or purchases, so a long purchase history buys nothing here, and neither does missing the Signature Edition window.
+
+## What actually makes these cards valuable
+
+Four things, and only one of them is the price tag.
+
+**The print run is fixed and small, and there is no reprint lever.** Riot capped this at 10,125 boxes per language before a single copy shipped. A set that sells out is normally followed by a reprint, a second wave or a promo distribution of the same art. None of those exist here — the collection commemorates a specific championship, and the serial range is literally the year.
+
+**The serial number is a one-of-one.** Every serialised card is unique: there is exactly one #0001 Galio in English and there will never be another. The three language editions are numbered separately, so a #0001 Galio exists once in English, once in Chinese and once in Korean. Riot's own returns policy makes the point better than any analysis — a damaged serialised card cannot be replaced with an identical copy, so the remedy is a full refund of the whole set. That is a company saying, in a support policy, that it cannot manufacture a second one.
+
+**There is no retail channel at all.** Every other Riftbound product we track has a shop price, which anchors resale: you can always see what a booster box costs at retail and judge a listing against it. This collection has no retail price — the only public number is the US$360 Riot charged drawing winners, and that stopped being obtainable the moment registration closed. Price discovery happens entirely on the secondary market, starting from nothing. We will report what that produces on the card pages below rather than guess at it here.
+
+**The category itself is walled off.** In the same month, Riot said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways). Serialised Riftbound cards are therefore not a thing that will exist in the ordinary product line — they are a thing that exists in dedicated collector releases, of which this is the first.
+
+And one thing that does **not** make them valuable: playability. These are the same five champions you can already buy as ordinary singles for cents apiece — and Seraphine isn't tournament-legal until Radiance releases in October. Nobody is paying US$360 for a 3-cost 6-might Galio. They are paying for the object.
+
+## Signature Edition vs Player Bundle: which is the better buy?
+
+For most people who just like the cards, the Player Bundle — and it isn't close on a per-dollar basis.
+
+The gap is worth doing as arithmetic rather than as "a fifth of the price". US$360 minus US$70 is **US$290**, and that US$290 buys exactly three things: the serialisation, the gold-stamped signature and the foiling treatment made for this release. Everything else — the five champions, exclusive art, an object you can hold — is in both.
+
+US$70 gets you the same five champions in their own exclusive art, plus sleeves, a deckbox, a binder and a metal die. If your reason for wanting this collection is "I want Faker's Galio on my shelf", the Player Bundle does that for a fifth of the price; if it is "I want a numbered card that only 2,025 people can own", it does not do that at all, and nothing else will.
+
+Worth pricing the third option honestly too: the ordinary retail printings of four of these five champions are in our database right now and cost cents. If what you want is to **play** these cards, that is the entire cost.
 
 ## Should you expect these on RiftCompare?
 
@@ -2478,7 +2119,7 @@ What is trackable *today* is the ordinary retail printing of each champion T1 pi
 
 ## Why it is scarce, in one paragraph
 
-Each box holds exactly one serialised card in a 1-2025 range, and five champions share that range — 5 x 2,025 is 10,125, the published print run for each language. So any one champion (Faker's Galio, say) exists in roughly **2,025 serialised English copies**, not 10,125, with about 6,075 worldwide across the three languages. Add a capped run with no reprint planned, a signature stamped in gold, and no retail channel to anchor a price against, and you have the four things that actually drive a collectible's scarcity. What you do **not** get is playability you could not buy for cents — [the full breakdown is in the drawing guide](/blog/riftbound-t1-signature-edition-drawing#what-actually-makes-these-cards-valuable).
+Each box holds exactly one serialised card in a 1-2025 range, and five champions share that range — 5 x 2,025 is 10,125, the published print run for each language. So any one champion (Faker's Galio, say) exists in roughly **2,025 serialised English copies**, not 10,125, with about 6,075 worldwide across the three languages. Add a capped run with no reprint planned, a signature stamped in gold, and no retail channel to anchor a price against, and you have the four things that actually drive a collectible's scarcity — the full breakdown is above. What you do **not** get is playability you could not buy for cents.
 
 For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/guides/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
 
@@ -3216,72 +2857,6 @@ Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers** �
 Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 60+ stores in AU, the US and the UK — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
 
 For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**. Vendetta released on 31 July 2026 — browse **[every card with live prices](/sets/vendetta)**.`,
-  },
-  {
-    slug: "riftbound-vendetta-synergies-with-existing-cards",
-    category: "blog",
-    title: "Vendetta Synergies With Your Existing Cards",
-    excerpt:
-      "Flow, Burn and Empower don't arrive in a vacuum — they slot into shells that already exist. A detailed look at how Vendetta's new mechanics combo with current Origins, Unleashed and Spiritforged cards, domain by domain.",
-    author: "RiftCompare",
-    date: "2026-07-09",
-    updated: "2026-07-31",
-    readMins: 7,
-    tags: ["vendetta", "synergies", "combos", "deckbuilding", "gameplay"],
-    shop: [
-      { label: "Zhonya's Hourglass & Calm gear", query: "Riftbound Zhonya's Hourglass" },
-      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
-    ],
-    body: `![Vendetta's synergy loop — Burn fills the trash, Flow cashes it in](/vendetta-synergy-loop.png)
-
-The most valuable thing to work out before a set drops isn't which new cards are strongest — it's which cards you **already own** suddenly get better. Vendetta's three mechanics (**[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)**) are all engine pieces, and engines need supporting cards. Here's a domain-by-domain look at the synergies, using real cards already in the game.
-
-> **A note on timing:** Vendetta cards are still being revealed, so this is pre-release analysis grounded in the *confirmed* mechanics and *existing* cards — the exact numbers get finalised on the **[Vendetta set page](/sets/vendetta)** at launch. Every card named below is a real card you can look up today.
-
-## The core engine: Burn + Flow (Chaos)
-
-The tightest built-in synergy is **Burn feeding Flow**, and **Chaos** — Riftbound's death-and-recursion domain — already has the pieces. Chaos cards like **Morbid Return**, **Cemetery Attendant** and the **Scrapheap** gear are all built around the trash; they're exactly the kind of cards a Flow/Burn shell wants.
-
-The loop works like this:
-
-1. **Burn** a few cards from your own deck into the trash (cheap self-Burn enablers).
-2. **Flow** replays the best of them straight out of the trash.
-3. Chaos's existing trash-payoffs (return effects, "cards in trash matter" units) reward you for having a full graveyard the whole time.
-
-If you already run a Chaos recursion deck, Flow is the payoff you've been missing — it turns "cards I used" into a second hand. Watch for the cheapest self-Burn enabler at launch; that single card decides how fast the engine spins. (We track exactly that on the **[price movers](/movers)** page — enabler cards spike first.)
-
-## Empower ramp: Mind + Body (Jayce & Mel)
-
-Vendetta's confirmed **Mind + Body** pairing and its **Empower** mechanic point at the same place: bank resources, then go over the top. **Mind** already has the ramp and card-advantage tools — **Energy Conduit** gear, **Consult the Past**, apprentice-style units like **Eager Apprentice** — and Empower is what you spend that banked energy on.
-
-The synergy is a curve, not a combo: play a cheap Empower unit early, use Mind's ramp to bank energy, then **Empower it into a threat** on a later turn while your opponent has tapped out. Champions like **Jayce** and **Mel** (both arriving in Vendetta) are built to headline exactly this Mind/Body "durdle then explode" plan, and existing Mind ramp is the connective tissue.
-
-## Decrees & the domain war: Chaos + Order
-
-**Decrees** are a cycle of spells built to punish a card's **opposite domain**, and the confirmed **Chaos + Order** pairing is where that rivalry is sharpest. If your local meta is full of one domain, its rival's Decree is a sharp, on-colour answer — which makes Decrees a **sideboard-style lever** more than a combo piece.
-
-Existing removal and tempo spells set the baseline they have to beat: **Order** already has clean answers like **Cull the Weak** and **Hidden Blade**; **Chaos** has disruptive spells like **Rebuke** and **Gust**. Decrees will slot in alongside these as the "hate card" for the match-up, so a deck that already plays a flexible spell base gets the most out of them.
-
-## Unit-Gear: flexibility that rewards gear payoffs
-
-A **Unit-Gear** counts as both a unit and a piece of gear, so it turns on *anything* that already cares about gear. Every domain has gear payoffs today — **Fury's** aggressive equipment (**Iron Ballista**, **Sun Disc**), **Calm's** protective gear (**Zhonya's Hourglass**, **Mask of Foresight**), **Order's** buff pieces (**Forge of the Future**, **Symbol of the Solari**) — and a Unit-Gear is a body *and* a gear trigger in one slot.
-
-The synergy is deckbuilding efficiency: Unit-Gear lets a gear-payoff deck run fewer dead draws, because the same card is a threat when you need a board and an equipment trigger when you need value. If you built a gear-matters deck in Spiritforged or Unleashed, Unit-Gear is a straight upgrade to your curve.
-
-## Rivalry pairings: the champion synergies
-
-Vendetta's whole identity is **rivalries**, and the confirmed champion pairings are synergy prompts in themselves:
-
-- **Nasus vs Renekton** — the sibling rivalry; expect Body/Fury cards that scale (Nasus's classic "grow over time" identity pairs naturally with Empower).
-- **Shen vs Zed** — order versus shadow; the debut **Showdown Deck** is built around this exact clash, so it's the ready-made on-ramp to the set's mechanics.
-
-## How to build around this at launch
-
-1. **Audit your trash-matters and gear-matters cards** — those decks get the biggest Vendetta upgrade.
-2. **Draft your list now** with the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**.
-3. **Price the whole deck in one click** with the **[deck pricer](/deck)** on release day, so you buy the new pieces for the least across every store.
-
-Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and browse **[every Vendetta card with live prices](/sets/vendetta)**. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, US, UK, SG, CA &amp; EU on the **[Vendetta set page](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
@@ -4191,129 +3766,6 @@ Any signed-in, email-verified user can list a card in a couple of minutes from t
 Already selling? The new rate applies automatically — nothing to change, nothing to opt into. Check **[Seller Funds](/marketplace/funds)** to see it reflected on your next completed sale.`,
   },
   {
-    slug: "riftbound-vendetta-is-here-early-release",
-    category: "blog",
-    title: "Riftbound: Vendetta Is Out — Where to Buy",
-    excerpt:
-      "Riftbound: Vendetta has arrived early. Vendetta released worldwide on 31 July 2026 after a week of Pre-Rift launch events — here's what's live, where to buy it, and what to watch for through the launch window.",
-    author: "RiftCompare",
-    date: "2026-07-24",
-    updated: "2026-07-31",
-    readMins: 4,
-    tags: ["vendetta", "news", "release", "buying guide", "price comparison"],
-    browseCta: {
-      href: "/sets/vendetta",
-      label: "Shop the Vendetta set page →",
-      blurb: "Every card, live prices as they land, and sealed product ready to buy now.",
-    },
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Riftbound: Vendetta is here — a little early. In-store **Pre-Rift launch events** ran from **24 July 2026**, and the set reached its full worldwide release on **31 July 2026**. Vendetta is out everywhere now. We're seeing early listings land on eBay and a handful of local stores well before the date everyone had circled — so if you've been waiting to chase a specific card, the wait is already partly over.
-
-## What's actually happening
-
-Pre-Rift events are early, in-store play sessions Riot runs the week before a set's full release — stores get product and run games, and inevitably some of those cards end up listed for sale before the "real" launch day. That's exactly how it played out: Pre-Rift singles reached the secondary market first, and the coordinated worldwide release followed on **31 July**.
-
-## Is this the full release?
-
-Not quite, and it's worth being precise about it. This is an early trickle, not the release itself — most stores won't have Vendetta singles in stock until 31 July, and the wider market (organised availability across every retailer we track) will only fill in properly once the street date actually hits. What's different starting today is that it's no longer purely theoretical: real cards are being bought and sold, which means real prices to compare.
-
-## Where to buy Vendetta right now
-
-- **[Vendetta set page](/sets/vendetta)** — every one of the 166 confirmed cards, with live prices populating as stores and early listings appear.
-- **[Sealed product](/sealed)** — booster boxes and packs have been buyable for a while and are unaffected by the early singles trickle.
-- eBay is the fastest-moving channel for early copies — watch it closely through launch week, since Pre-Rift-sourced listings tend to be thin on stock and can move in price quickly.
-
-## What to watch for through launch week
-
-Early-window prices on a brand-new set are volatile — a handful of listings can swing the "cheapest" price around by a lot until real supply catches up. A few things worth keeping in mind:
-
-- **Don't panic-buy the first listing you see.** With so few copies trading, the first price isn't necessarily a fair one.
-- **Chase cards move first.** Overnumbers, Showcase alt-arts and Epics are the printings most likely to show up (and sell out) early — see our **[chase card tracker](/blog/riftbound-vendetta-chase-cards-so-far)**.
-- **Compare before you commit.** We're tracking every listing as it lands, delivered cost included, so the card page always shows the actual cheapest way to buy — not just the first store to list.
-- **The 31 July date still matters.** If a card you want isn't trading yet, it almost certainly will be once the full release lands — no need to overpay chasing an early copy.
-
-## Where to go next
-
-- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
-- **[Every Vendetta card](/blog/every-riftbound-vendetta-card-revealed)** — all 166 in the set.
-- **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — what to actually hunt for.
-- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown.
-
-## Common questions
-
-**Has Riftbound Vendetta been released?** Early singles are trading now via Pre-Rift launch events (started 24 July), a week ahead of the official 31 July worldwide street date — so yes, in part, but the full release is still 31 July.
-
-**Can I buy Vendetta singles right now?** Some — early Pre-Rift copies are already surfacing on eBay and a handful of stores. Supply is thin and prices are still settling; check the **[Vendetta set page](/sets/vendetta)** for what's currently live.
-
-**Are RiftCompare's Vendetta prices live?** Yes — we're comparing every Vendetta listing we track as it appears, delivered cost included, the same as every other set.
-
-**When's the official Vendetta release date?** 31 July 2026, worldwide. That date hasn't moved — what's new is that some singles are trading a few days early.`,
-  },
-  {
-    slug: "how-to-start-buying-riftbound-vendetta-decks",
-    category: "blog",
-    title: "How to Start Buying Riftbound Vendetta Decks",
-    excerpt:
-      "Vendetta is out — it released on 31 July 2026. Here's how to actually start buying into Flow Value, Burn/Disruption or Empower Midrange today — without overpaying in the early rush.",
-    author: "RiftCompare",
-    date: "2026-07-24",
-    updated: "2026-07-31",
-    readMins: 5,
-    tags: ["vendetta", "decks", "buying guide", "news", "price comparison"],
-    shop: [
-      { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
-      { label: "Mel singles", query: "Riftbound Mel" },
-      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
-      { label: "Zed vs Shen Showdown Deck", query: "Riftbound Vendetta Showdown Deck" },
-    ],
-    browseCta: {
-      href: "/sets/vendetta",
-      label: "Shop Vendetta cards now →",
-      blurb: "Every confirmed card, priced live as early singles and stores list them.",
-    },
-    embed: {
-      title: "Epic-rarity picks",
-      note: "Vendetta's in-set Epics — history says one or two of these become the sleeper chases of the set, so they're worth grabbing early if a shell needs one.",
-      chaseSet: "VEN",
-      chaseTier: "epic",
-      take: 12,
-    },
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Riftbound: Vendetta is out — it **[released worldwide](/blog/riftbound-vendetta-is-here-early-release)** on **31 July 2026**, after a week of Pre-Rift launch events. If you already know which archetype you want to play, that means you don't have to wait for launch day to start buying — you just have to be smart about it while supply is thin and prices are still settling.
-
-## The three shells, in one line each
-
-Full breakdown (synergies, engine, how to pilot each) is in **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)** — the short version:
-
-- **Flow Value (Fury + Calm)** — Burn fills your trash, Flow replays from it. Grindy, hard to run out of gas.
-- **Burn / Disruption (Chaos + Order)** — attack their deck as a clock while self-Burn fuels your own payoffs. Highest ceiling, easiest to mis-sequence.
-- **Empower Midrange (Mind + Body)** — curve out cheap bodies, then pay to Empower them into finishers. Built around **Jayce** and **Mel**, the set's two confirmed Empower Legends.
-
-## How to actually buy in during the early trickle
-
-- **Start with the Legend.** Your Legend locks in your domains for everything else, so it's the first card worth securing — chase it on the **[Vendetta set page](/sets/vendetta)** or via the shop links below.
-- **Sealed is the steadier option right now.** Singles supply from Pre-Rift events is thin, so prices can swing hard on a handful of trades. If you want a guaranteed way in, the **[Zed vs Shen Showdown Deck](/sealed)** is a ready-to-play two-player box — a genuine way to try two shells (and the Fury/Calm and Mind/Body-adjacent rivalry) without chasing singles at all.
-- **Compare before you commit.** We track every early listing as it lands, delivered cost included, so a card's page always shows the actual cheapest way to buy it — not just the first store or eBay listing to show up.
-- **Don't overpay for a card that isn't scarce.** Early-window prices are volatile because so few copies are trading; a common enabler that spikes today is usually cheap again within days once real supply lands on 31 July.
-- **Chase cards move first and hardest.** If a shell wants a specific Overnumbered, Showcase alt-art or Epic, that's the piece most likely to be expensive early and to actually hold value — see the Epics below, and the full **[chase card tracker](/blog/riftbound-vendetta-chase-cards-so-far)**.
-
-## Price your shell before you buy
-
-Once you've picked a direction, drop your planned list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price across the stores we track, in your own currency, so you know exactly what a shell costs before you start buying pieces one at a time.
-
-## Common questions
-
-**Can I actually buy Vendetta singles right now?** Yes — the set released on 31 July 2026 and singles are listed across eBay and the stores we track. Supply is thin, so prices are still settling.
-
-**Which Vendetta deck should I build first?** Empower Midrange (Jayce or Mel) is the most beginner-friendly of the three confirmed shells; Flow Value is the most resilient long-game grinder. See the **[full archetype guide](/guides/best-riftbound-vendetta-decks)** for the complete breakdown.
-
-**Is sealed or singles cheaper for a new-set deck?** It depends on supply — early in a set's life, thin singles supply can make sealed (or a preconstructed product like the Zed vs Shen Showdown Deck) the steadier option; see **[singles vs sealed](/guides/riftbound-singles-vs-sealed)** for the general rule.
-
-**Are RiftCompare's prices for these cards live?** Yes — every listing we track is compared as it lands, the same as every other Riftbound set.`,
-  },
-  {
     slug: "riftbound-pre-rift-rules-explained",
     category: "guide",
     title: "Riftbound Pre-Rift Rules Explained",
@@ -4348,7 +3800,7 @@ That single rule changes everything else about deck-building for the event.
 
 Pre-Rift decks reward flexibility over a tuned gameplan — you're building around what you open, not what you planned. Go in with an open mind about domain pairings rather than expecting to force a specific Constructed archetype; the format is designed to make every pod's packs playable, not to reward hoarding one domain.
 
-If you're gearing up for Vendetta's own Pre-Rift week, our **[Vendetta early-access guide](/blog/riftbound-vendetta-is-here-early-release)** covers what's already tradeable, and our **[Vendetta card database](/sets/vendetta)** has live prices on every confirmed card the moment it's buyable.
+If you're gearing up for a set's own Pre-Rift week, our **[Vendetta card database](/sets/vendetta)** has live prices on every confirmed card the moment it's buyable.
 
 ## Common questions
 
@@ -4753,7 +4205,6 @@ All three together, with how they interact: **[Vendetta's new mechanics](/blog/r
 
 - **[How a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** — deck construction, Legends, and how the pieces fit together.
 - **[Building for Vendetta](/guides/building-for-riftbound-vendetta)** — deckbuilding with the new set's cards and domain pairings.
-- **[Vendetta synergies with existing cards](/blog/riftbound-vendetta-synergies-with-existing-cards)** — how new cards interact with earlier sets.
 
 ## What's currently legal
 
@@ -5564,130 +5015,6 @@ Everything else — the collector product philosophy, the language pause — is 
   // settled (five of the six have an existing page targeting the same query).
   // ───────────────────────────────────────────────────────────────────────────
   {
-    slug: "riftbound-t1-bundle-guide",
-    draft: true,
-    category: "blog",
-    title: "Riftbound × T1 Bundle: The Complete Buyer's Guide",
-    excerpt:
-      "What is in each Riftbound × T1 bundle, which five cards T1's players picked, how the drawing works, and whether the Signature Edition is worth chasing.",
-    author: "RiftCompare",
-    date: "2026-08-08",
-    readMins: 5,
-    tags: ["t1", "collectibles", "esports", "buying", "news"],
-    shop: [
-      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
-      { label: "Riftbound sealed product", query: "Riftbound TCG booster box" },
-    ],
-    summary: [
-      "**Two products, not one.** The T1 Signature Edition is the serialised, player-signed collector release; the Player Bundle is the playable version with accessories.",
-      "**Five cards, each chosen by a player** from T1's championship roster — not a Riot-selected list.",
-      "**It is a drawing, not a storefront sale.** You enter for the right to buy; you cannot simply add it to a cart.",
-      "**[TODO: confirm current drawing status and dates]** before treating any entry window in this post as open.",
-      "**The value question is about the base printings.** The bundle art is exclusive and unpriced, but the ordinary printing of each champion is trackable today.",
-    ],
-    faq: [
-      {
-        q: "What is the Riftbound T1 collaboration?",
-        a: "It is Riot's first single-team Riftbound collaboration, marking T1's 2025 World Championship win. It covers two separate products — a serialised, signed Signature Edition and a playable Player Bundle — built around five cards chosen by the championship roster.",
-      },
-      {
-        q: "What is in the Riftbound T1 bundle?",
-        a: "The Player Bundle pairs the five champion cards in non-serialised art with accessories. [TODO: confirm the exact accessory list and any changes since the original announcement.] The Signature Edition instead contains serialised, gold-stamped signed cards with a foiling treatment made for the collection.",
-      },
-      {
-        q: "How do you buy the T1 Signature Edition?",
-        a: "Through a drawing on the Riot Merch Store rather than an ordinary sale — you enter for the chance to buy. [TODO: verify whether the drawing is currently open, and the entry window.]",
-      },
-      {
-        q: "Is the T1 bundle worth it?",
-        a: "As a collectible it depends on the serialised print run against demand, which is why the number matters more than the sticker price. As a way to own the cards, it is not the cheapest route — the ordinary printing of each champion is available as a single and can be price-compared today.",
-      },
-    ],
-    embed: {
-      title: "The champions T1 picked — ordinary printings",
-      note: "The regular, buyable printing of each card, not the exclusive bundle art. [TODO: confirm this list still matches the final product.]",
-      slugs: [
-        "ambessa-the-wolf-ven-084",
-        "galio-indefatigable-unl-171-219",
-        "miss-fortune-buccaneer-ogn-193-298",
-        "xin-zhao-vigilant-sfd-176-221",
-      ],
-    },
-    browseCta: {
-      href: "/browse",
-      label: "Price the base printings →",
-      blurb: "Compare live prices on the ordinary printing of every champion in the collection.",
-    },
-    body: `> **Superseded — do not publish (9 Aug 2026).** Every [TODO] below has since been answered from Riot's own announcements, and the answers now live on two published pages: **[the drawing guide](/blog/riftbound-t1-signature-edition-drawing)** (dates, prices, entry rules) and **[the collection explainer](/blog/riftbound-t1-worlds-champion-collection)** (contents, print run, the five cards). Publishing this would be a third page competing for the same query. Delete this entry unless it is repurposed for something the other two do not cover.
-
-The **Riftbound × T1** collaboration is two separate products, and which one you want decides everything else. The **Signature Edition** is the serialised, player-signed collector release. The **Player Bundle** is the playable version with accessories. Both are built around five cards picked by T1's championship roster, and both are distributed by **drawing** rather than ordinary sale — you enter for the right to buy.
-
-If you only want to play with the cards, neither is the cheapest route: the ordinary printing of each champion is on sale as a single right now.
-
-## What the collaboration actually is
-
-Riot's first collaboration with a single esports team rather than a league, marking T1's 2025 World Championship. We covered the announcement in detail when it landed — see **[the Worlds Champion Collection breakdown](/blog/riftbound-t1-worlds-champion-collection)** for the original details.
-
-**[TODO: confirm nothing material has changed since the July announcement — contents, print run, or distribution method.]**
-
-## What is in each bundle
-
-### T1 Signature Edition
-
-The collector product. Serialised cards with a gold-stamped player signature and a foiling treatment made specifically for this collection.
-
-- **Print run:** [TODO: confirm copies per language]
-- **Serial range:** [TODO: confirm the numbering range]
-- **Languages:** [TODO: confirm which languages]
-- **Price:** [TODO: confirm RRP, per language/region]
-
-### T1 Player Bundle
-
-The accessible version, meant to be played with. Same five champions in different, non-serialised art, plus accessories.
-
-- **Contents:** [TODO: confirm the full accessory list]
-- **Price:** [TODO: confirm RRP]
-- **Availability:** [TODO: confirm timing relative to the Signature Edition]
-
-## The five T1 signature cards
-
-Each card was chosen by the corresponding player rather than selected by Riot, which is the detail that makes the set worth explaining at all — it is a roster's personal picks, not a marketing list.
-
-**[TODO: confirm the player-to-card mapping is unchanged from the announcement.]**
-
-[[embed:0]]
-
-**[TODO: add internal links to individual card pages once the final card list is confirmed — one /card/ link per champion.]**
-
-## Where to buy
-
-Entry is through a **drawing on the Riot Merch Store**, not a normal storefront. That distinction matters for planning: there is nothing to compare on price at retail, because there is no retail.
-
-**[TODO: verify current status — is the drawing open, closed, or upcoming? Add the entry window.]**
-
-Secondary-market copies are a different matter. Anything that surfaces after distribution behaves like any other collectible, and **[compare prices across stores](/browse)** applies the moment it does.
-
-[[shop]]
-
-## Is it worth it?
-
-The honest answer splits by which product you mean.
-
-**For the Signature Edition**, the number that decides it is the print run against demand, not the sticker price. A serialised card's value is a supply question first. Until the run and the entry odds are confirmed, any "worth it" claim is a guess — which is why the figures above are marked for verification rather than filled in.
-
-**For the Player Bundle**, compare it against the parts. The five champions exist as ordinary printings you can buy individually today, and the accessories have their own market rate. If the bundle costs more than the singles plus accessories, you are paying for the exclusive art and the packaging — which is a legitimate thing to want, but worth knowing you are doing.
-
-**For actually playing the deck**, buy the singles. That is true of nearly every bundle in every TCG, and it is the same logic behind **[buying singles versus opening packs](/blog/buying-singles-vs-opening-packs)**.
-
-## What to track instead
-
-If you miss the drawing, the base printings stay buyable and priceable. **[The movers dashboard](/movers)** is where collaboration-driven demand shows up first — a champion getting a signature treatment tends to move its ordinary printing too, and that movement is visible before any secondary-market bundle listing appears.
-
----
-
-*Product details are Riot's; every unverified figure above is marked. Check the collection's own page on [the official Riftbound site](https://playriftbound.com) before relying on any of them.*`,
-  },
-  {
     slug: "riftbound-vendetta-vault-endless-riches",
     draft: true,
     category: "blog",
@@ -5792,360 +5119,6 @@ Once it is on sale, the Vault will be price-compared the same way as every other
 ---
 
 *Every claim above is unverified. Check [the official Riftbound site](https://playriftbound.com) and replace each [TODO] before this post goes live.*`,
-  },
-  {
-    slug: "riftbound-state-of-the-game-august-2026",
-    draft: true,
-    category: "blog",
-    title: "Riftbound State of the Game (Aug 2026)",
-    excerpt:
-      "A plain summary of Riftbound's August 2026 State of the Game — what Riot announced, what changed, and what it means if you buy cards.",
-    author: "RiftCompare",
-    date: "2026-08-08",
-    readMins: 5,
-    tags: ["news", "competitive", "meta", "state of the game"],
-    summary: [
-      "**[TODO: one-line summary of the single biggest change.]** This bullet is what an AI answer engine will lift — make it the actual headline.",
-      "**[TODO: second change.]**",
-      "**[TODO: third change.]**",
-      "**The buying angle:** [TODO — what, if anything, this changes about what is worth owning.]",
-    ],
-    faq: [
-      {
-        q: "What is Riftbound's State of the Game?",
-        a: "A periodic developer update from Riot covering design philosophy, format support, product plans and, sometimes, ban policy. It is usually more Q&A than announcement.",
-      },
-      {
-        q: "What changed in the August 2026 State of the Game?",
-        a: "[TODO: summarise the actual changes. Do not reuse the July or the 4 August summary — this answer must reflect the update this post is about.]",
-      },
-      {
-        q: "Does the State of the Game affect card prices?",
-        a: "Indirectly and sometimes sharply. Ban policy, format support and product plans all change what is worth owning — a card that gains a supported format gains a second source of demand.",
-      },
-    ],
-    browseCta: {
-      href: "/movers",
-      label: "See what is moving →",
-      blurb: "The cards whose prices moved most in the last week, across every store we track.",
-    },
-    body: `> **Draft — and a duplication warning.** RiftCompare already published **[Riftbound's August 2026 State of the Game: Five Takeaways](/blog/riftbound-august-2026-state-of-the-game-takeaways)** on 4 August 2026, covering the same update in depth. Publishing this post as a second page for the same query would compete with it rather than add to it. Either point this at a genuinely later update, or merge anything new here into that post and delete this one. See the batch notes for the full picture.
-
-**[TODO: write the answer-first intro. State in the first two sentences what the August 2026 State of the Game changed. This paragraph is the featured-snippet target for "riftbound state of the game", so it must answer the query rather than introduce it.]**
-
-## What was announced
-
-**[TODO: list the actual announcements. Keep each one to a claim you can point at a source for.]**
-
-- **[TODO]**
-- **[TODO]**
-- **[TODO]**
-
-## What changed since last time
-
-The useful framing for a recurring update is the delta, not the contents — readers who follow the game already know the standing positions.
-
-**[TODO: compare against the previous update and state only what moved. If nothing moved, say so plainly; "no change" is a real and useful answer.]**
-
-## What it means if you buy cards
-
-This is the section that justifies the post existing on a price-comparison site rather than a news site, so it should carry the most original thinking.
-
-**[TODO: connect each announcement to a concrete consequence for what is worth owning. Ban policy affects staples; format support creates new demand curves; product plans affect sealed value.]**
-
-Existing context worth linking once the specifics are known:
-
-- Ban policy → **[the current ban list](/guides/riftbound-banlist-explained)**
-- Sealed and collector products → **[the box EV calculator](/tools/box-ev)**
-- Set and product plans → **[the 2027 set roadmap](/blog/riftbound-2027-set-roadmap)**
-
-## What we would actually do
-
-**[TODO: the honest answer is often "nothing this week" — say so if it is true. A post that manufactures urgency it cannot justify reads worse than one that admits most updates are context rather than a trade.]**
-
----
-
-*Source: [TODO — link Riot's original announcement and give its publication date.] Developer positions are Riot's; interpretation is ours.*`,
-  },
-  {
-    slug: "riftbound-empower-mechanic-guide",
-    draft: true,
-    category: "blog",
-    title: "Empower in Riftbound: How the Mechanic Works",
-    excerpt:
-      "A full guide to Riftbound's Empower mechanic — what it is, when you can use it, whether opponents can react, and whether the effect is permanent.",
-    author: "RiftCompare",
-    date: "2026-08-08",
-    readMins: 6,
-    tags: ["empower", "mechanics", "gameplay", "vendetta", "rules"],
-    ebayPicks: { heading: "Empower cards on eBay right now" },
-    summary: [
-      "**Empower lets a card gain new abilities after it is already in play**, usually by paying an extra cost on a later turn.",
-      "**It is a cheap play now for a bigger payoff later** — the trade is tempo against value.",
-      "**[TODO: confirm the timing window]** — exactly when Empower can be activated, and at what speed.",
-      "**[TODO: confirm whether opponents can respond]** to an Empower activation.",
-    ],
-    faq: [
-      {
-        q: "What is Empower in Riftbound?",
-        a: "Empower gives a card the potential to gain new abilities once it is already in play, usually by paying an extra cost on a later turn — a cheap play now for a bigger payoff later.",
-      },
-      {
-        q: "How does Empower work?",
-        a: "You play the card normally, then on a later turn pay its Empower cost to unlock the additional ability printed on it. [TODO: confirm the exact activation procedure and any restrictions on how often it can be used.]",
-      },
-      {
-        q: "Can you react to Empower?",
-        a: "[TODO: confirm from the official rules whether an Empower activation uses the stack/chain and can be responded to before it resolves. This is the single most-asked Empower question and the answer must come from the rulebook, not inference.]",
-      },
-      {
-        q: "Is Empower permanent?",
-        a: "[TODO: confirm whether the gained ability persists for the rest of the game, only until end of turn, or until the card leaves play. Note also how Disempower interacts, since the two are printed as a pair.]",
-      },
-      {
-        q: "When can you Empower a card?",
-        a: "[TODO: confirm the timing window — main phase only, any time you hold priority, or otherwise — and whether the card must have been in play since the start of the turn.]",
-      },
-      {
-        q: "What speed is Empower?",
-        a: "[TODO: confirm Empower's speed and how it interacts with other timing rules. Cite the rulebook section.]",
-      },
-    ],
-    browseCta: {
-      href: "/browse",
-      label: "Find Empower cards →",
-      blurb: "Browse every card in the database and compare live prices across stores.",
-    },
-    embed: {
-      title: "Cards with Empower",
-      note: "Every card whose rules text includes Empower, populated from the database as reveals land.",
-      rulesContain: "[Empower]",
-      take: 12,
-    },
-    body: `> **Draft — and a duplication warning.** RiftCompare already ranks for this topic with **[Riftbound Empower Explained](/guides/riftbound-empower-explained)**, a guide covering the same mechanic and carrying its own FAQ. A second page targeting "riftbound empower" would compete with it. The stronger play is almost certainly to fold the extra FAQ questions below into that guide instead of publishing this. See the batch notes.
-
-**Empower** lets a Riftbound card gain new abilities *after* it is already in play — you play it cheaply now, then pay an extra cost on a later turn to unlock the rest of it. That trade, tempo now against value later, is the whole mechanic.
-
-## How Empower works
-
-You play an Empower card normally. On a later turn, you pay its Empower cost to unlock the additional ability printed on the card.
-
-**[TODO: confirm the exact activation procedure from the rulebook — where the cost is paid from, whether it can be done more than once, and any restriction on the turn it becomes available.]**
-
-[[embed:0]]
-
-## When you can Empower
-
-**[TODO: confirm the timing window.]** This is where most rules disputes come from, so it needs a precise answer rather than a general one — main phase only, or any time you hold priority; and whether the card must have been in play since the start of your turn.
-
-### Can your opponent respond?
-
-**[TODO: confirm whether an Empower activation can be responded to before it resolves.]** Answer this from the rulebook rather than by analogy with other card games — it is the most-asked question about the mechanic and getting it wrong is worse than leaving it blank.
-
-## Does Empower last?
-
-**[TODO: confirm whether the gained ability is permanent, ends at end of turn, or ends when the card leaves play.]**
-
-Empower is printed alongside **Disempower**, so this section should also cover how the two interact — whether Disempower reverses an already-paid Empower, and what happens to the cost if it does.
-
-## Building around Empower
-
-The deckbuilding tension is that Empower cards are deliberately weak on the turn you play them. A deck full of them has a soft early game and a strong late one, which is a real strategic identity rather than a drawback — but it means the rest of the curve has to cover for it.
-
-**[TODO: confirm with current decklists which Empower cards actually see play, rather than listing every card that has the keyword.]**
-
-For deckbuilding context, **[building for Vendetta](/guides/building-for-riftbound-vendetta)** and **[the best Vendetta decks](/guides/best-riftbound-vendetta-decks)** cover how these fit real lists, and **[Vendetta's new mechanics](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)** covers Empower alongside Flow and Burn.
-
-## Where to buy Empower cards
-
-Empower cards span rarities, so the price range is wide. Compare across stores on **[the card database](/browse)** before buying, and use **[the deck pricer](/deck)** to total a full list at the cheapest live price.
-
----
-
-*Rules claims above are marked for verification against Riot's official rulebook. Do not publish this post with any [TODO] rules answer still in place — a wrong rules answer is worse than no page.*`,
-  },
-  {
-    slug: "riftbound-vendetta-hub",
-    draft: true,
-    category: "blog",
-    title: "Riftbound Vendetta: Card List, Gallery & Meta Hub",
-    excerpt:
-      "One hub for Riftbound: Vendetta — the full card list and gallery, the chase cards, current decks and meta, plus live prices on every card in the set.",
-    author: "RiftCompare",
-    date: "2026-08-08",
-    readMins: 5,
-    tags: ["vendetta", "card list", "set", "meta", "decks"],
-    shop: [
-      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta single" },
-      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
-    ],
-    ebayPicks: { setCode: "VEN", heading: "Vendetta chase cards on eBay right now" },
-    summary: [
-      "**Vendetta is a 166-card main set**, released 31 July 2026, and every card is live with prices.",
-      "**Start with the gallery** if you want to see the cards, or the set page if you want to compare prices.",
-      "**[TODO: confirm the current top meta decks]** — the meta section is the part of this hub that dates fastest.",
-    ],
-    faq: [
-      {
-        q: "How many cards are in Riftbound Vendetta?",
-        a: "166 cards in the main set, plus chase-tier printings — signature, over-numbered, alternate-art and promo versions — that sit outside that count.",
-      },
-      {
-        q: "When was Riftbound Vendetta released?",
-        a: "Vendetta released worldwide on 31 July 2026.",
-      },
-      {
-        q: "What are the best Vendetta decks?",
-        a: "[TODO: summarise the current top decks and refresh this answer whenever the meta moves — it is the answer most likely to go stale.]",
-      },
-      {
-        q: "Where can I see every Vendetta card?",
-        a: "The full gallery below lists every card in the set with images, filterable by domain, rarity and type, and each card links through to live prices across every store we track.",
-      },
-    ],
-    embed: {
-      title: "Every Vendetta card",
-      note: "All 166 main-set cards, filterable by domain, rarity and type. Click any card for live prices.",
-      setAll: "VEN",
-      filterable: true,
-    },
-    browseCta: {
-      href: "/sets/vendetta",
-      label: "Compare Vendetta prices →",
-      blurb: "Live prices for every Vendetta card across every store we track.",
-    },
-    body: `> **Draft — and a duplication warning.** RiftCompare already has **[the complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** and **[the Vendetta set page](/sets/vendetta)**, which between them cover everything this hub does. A third page for "riftbound vendetta" would split signal across three URLs rather than concentrating it. Consider making one of the existing pages the hub instead. See the batch notes.
-
-**Riftbound: Vendetta** is the game's 166-card main set, released **31 July 2026**. This page is the hub: the full card gallery, the chase cards worth knowing about, the current decks, and live prices on everything.
-
-## The full card list
-
-Every one of the 166 main-set cards is below, filterable by domain, rarity and type. Click any card for live prices across every store we track.
-
-[[embed:0]]
-
-## The chase cards
-
-Vendetta's chase tier sits outside the 166-card count and is where most of the set's value is concentrated:
-
-- **[Chase cards so far](/blog/riftbound-vendetta-chase-cards-so-far)** — the headline pulls
-- **[Crystal Rose cards](/guides/riftbound-vendetta-crystal-rose-cards)** — the premium treatment
-- **[Over-numbered cards explained](/guides/riftbound-vendetta-overnumbers-explained)** — why some collector numbers exceed 166
-- **[Nexus Night promos](/blog/riftbound-vendetta-nexus-night-promo-cards)** — the organised-play printings
-
-[[shop]]
-
-## Decks and the meta
-
-**[TODO: this is the section that makes a hub worth visiting twice, and the one that dates fastest. Summarise the current top decks in two or three sentences and re-check it whenever the meta moves.]**
-
-For full lists, see **[the best Vendetta decks](/guides/best-riftbound-vendetta-decks)** and **[building for Vendetta](/guides/building-for-riftbound-vendetta)**. Once you have a list, **[the deck pricer](/deck)** totals it at the cheapest live price across stores.
-
-## Bans
-
-**[TODO: confirm whether any Vendetta card is currently banned, and link the specific entry rather than the list as a whole.]**
-
-The current ban list is **[here](/guides/riftbound-banlist-explained)**, and **[July's ban wave](/blog/riftbound-july-2026-ban-list-update)** covers the most recent changes.
-
-## Buying Vendetta
-
-- **Singles** — **[compare every store](/browse)**, or go straight to **[the set page](/sets/vendetta)**
-- **Sealed** — **[compare booster box prices](/sealed)**, and check **[the box EV calculator](/tools/box-ev)** before buying
-- **Cheapest-first** — **[browse every Vendetta card, live-priced](/blog/every-riftbound-vendetta-card-revealed)**`,
-  },
-  {
-    slug: "riftbound-vendetta-ban-list",
-    draft: true,
-    category: "blog",
-    title: "Riftbound Vendetta Ban List: Every Banned Card",
-    excerpt:
-      "Every card currently banned in Riftbound, why each one went, and what it means for your deck — updated whenever Riot changes the list.",
-    author: "RiftCompare",
-    date: "2026-08-08",
-    readMins: 4,
-    tags: ["banlist", "vendetta", "competitive", "rules"],
-    shop: [
-      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
-    ],
-    summary: [
-      "**[TODO: state the current number of banned cards]** in constructed, and the date of the most recent change.",
-      "**Bans are rare by design** — Riot's stated approach is minimal intervention, so the list moves slowly.",
-      "**There is a separate 2v2 ban list**, which is not the same as the constructed one.",
-      "**[TODO: confirm whether any Vendetta card specifically is banned]**, since that is what this page's query is asking.",
-    ],
-    faq: [
-      {
-        q: "How many Riftbound cards are banned?",
-        a: "[TODO: state the current count for constructed, and note the separate 2v2 list. Update this whenever the list changes.]",
-      },
-      {
-        q: "Are any Vendetta cards banned?",
-        a: "[TODO: confirm. This is the specific question the page targets, so answer it directly in the first sentence rather than describing the list generally.]",
-      },
-      {
-        q: "Why does Riot ban Riftbound cards?",
-        a: "The stated philosophy is minimal intervention — acting only to correct what the team considers an emergency, and often choosing not to act at all on the view that the format will evolve on its own.",
-      },
-      {
-        q: "When does the Riftbound ban list update?",
-        a: "[TODO: confirm whether updates follow a fixed schedule or are announced ad hoc.]",
-      },
-    ],
-    browseCta: {
-      href: "/guides/riftbound-banlist-explained",
-      label: "Read the full ban list guide →",
-      blurb: "Every banned card, the official reason for each, and live prices.",
-    },
-    body: `> **Draft — and a duplication warning.** RiftCompare already has **[Riftbound Ban List Explained: Every Currently Banned Card](/guides/riftbound-banlist-explained)**, which targets this exact query and is kept updated, plus **[the July 2026 ban list update](/blog/riftbound-july-2026-ban-list-update)** for the most recent wave. This post would compete with both. Updating the existing guide is almost certainly the better move. See the batch notes.
-
-**[TODO: open with the direct answer — how many cards are banned, and whether any Vendetta card is among them. This is the featured-snippet target.]**
-
-## Constructed ban list
-
-Structured as a table so it can be updated in place — one row per card, and nothing else in the post needs touching when the list changes.
-
-| Card | Set | Banned | Reason |
-| --- | --- | --- | --- |
-| [TODO] | [TODO] | [TODO] | [TODO] |
-| [TODO] | [TODO] | [TODO] | [TODO] |
-
-**[TODO: add a /card/ link on each card name once the rows are filled in, so readers can see what a banned card is now worth.]**
-
-## Constructed 2v2 ban list
-
-A separate list, not a subset of the one above — a card legal in constructed can be banned in 2v2 and the reverse.
-
-| Card | Set | Banned | Reason |
-| --- | --- | --- | --- |
-| [TODO] | [TODO] | [TODO] | [TODO] |
-
-## Are any Vendetta cards banned?
-
-**[TODO: answer directly. If none are, say so plainly — "no Vendetta card is currently banned" is a complete and useful answer, and it is what most people searching this term want to know.]**
-
-## Why Riftbound bans so few cards
-
-Riot's stated approach is minimal intervention: act only on what the team considers an emergency, and accept that this will often mean doing nothing, on the view that a format keeps evolving on its own. We covered the reasoning in **[the August State of the Game takeaways](/blog/riftbound-august-2026-state-of-the-game-takeaways)**.
-
-**What that means for your wallet:** in games that ban aggressively, expensive staples carry permanent policy risk. A stated preference for rare intervention means Riftbound staples should hold value more reliably — not that bans never happen.
-
-[[shop]]
-
-## What to do if a card you own gets banned
-
-A ban usually moves the price immediately, and usually downward, but not always to zero — a banned constructed card can still be legal in other formats and still be collectable.
-
-**[TODO: confirm which formats a constructed-banned card remains legal in.]**
-
-**[The movers dashboard](/movers)** is where that price move shows up first.
-
-## How this page is maintained
-
-Both tables above are updated in place whenever Riot announces a change, with the date of the most recent update shown at the top. **[TODO: set the updated field on this article whenever the tables change — it drives the dateModified in structured data.]**
-
----
-
-*Ban list details are Riot's. Every unverified entry above is marked; check [the official Riftbound site](https://playriftbound.com) before relying on this page.*`,
   },
   {
     slug: "riftbound-sets-in-order",
@@ -7239,7 +6212,7 @@ Here's what it actually shows, as of this writing:
 
 That's not a rounding artifact or a display bug. It's the honest state of the underlying data: the Index's own public API, at /api/v1/index.json, literally returns the value *null* for both the 7-day and 30-day change fields, because neither window has completed yet. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
 
-For scale: Riftbound has released five sets. The newest, Vendetta, came out on 31 July 2026 — [two weeks before this article](/blog/riftbound-vendetta-is-here-early-release). We don't even have confirmed release dates for four of the other five sets in our own database, because Riot never published exact street dates for them. A market needs years to show whether an asset holds value; this one hasn't finished its first month.
+For scale: Riftbound has released five sets. The newest, Vendetta, came out on 31 July 2026 — two weeks before this article. We don't even have confirmed release dates for four of the other five sets in our own database, because Riot never published exact street dates for them. A market needs years to show whether an asset holds value; this one hasn't finished its first month.
 
 ## What we can actually say, versus what we can't
 

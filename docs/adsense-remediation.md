@@ -1451,6 +1451,89 @@ here too). If a future rejection persists after Manual Action 1 is resolved, tha
 voice-uniformity question is the next thing worth auditing, not more duplicate-
 hunting — this pass found the one duplicate-shaped cluster there was to find.
 
+## Phase 26 — A deeper editorial pass: articles whose premise expired, not just duplicates
+
+**Requested directly by the owner**, on top of Phase 25: "fix everything up... there
+are a lot of irrelevant blog posts. That we can probably just remove. I'll leave it
+up to you." Full editorial discretion, exercised article-by-article rather than by
+any mechanical rule (word count, age, template shape) — age alone is not evidence of
+irrelevance, and two candidates that looked stale on title alone were kept once their
+actual dates ruled that out (see below).
+
+**Method, unchanged from Phase 25:** read every published article's full body before
+judging it, not just its title/excerpt. A slug or publish date can suggest staleness
+that the prose doesn't support, and the reverse — the two false positives below prove
+the read-first rule earns its cost.
+
+**7 more articles retired**, each for a distinct reason, not a shared template:
+
+| Article | Why it's gone | Redirects to |
+| --- | --- | --- |
+| `welcome-to-riftcompareau` | A "we launched" announcement, superseded by the real `/about` page (comprehensive, current, kept up to date) and stale in its own words — it still said "we started as an Australia-only project" months after the site expanded past that framing. | `/about` |
+| `unleashed-meta-snapshot-june-2026` | Not just old — actively wrong. It named specific decks "the decks to beat" for a metagame Vendetta's release (three new mechanics, a new ban wave) has since completely reshaped, and its own closing line ("we'll post a new snapshot as the tier list shifts") was never followed through. A frozen snapshot presented as current is a worse failure than a merely thin page. | `/decks` (the live, current meta) |
+| `should-you-buy-riftbound-origins-before-vendetta` | Its entire premise — "should you buy before Vendetta drops" — is unanswerable-as-asked once Vendetta has been out for a month; the general "how a new set affects an older set's prices" advice it gave is already covered, more thoroughly and without the dead premise, by `why-riftbound-card-prices-change`. | `/guides/why-riftbound-card-prices-change` |
+| `riftbound-vendetta-is-here-early-release` | Covered a ~1-week "Pre-Rift early trading" window that closed a month before this pass. Everything durable in it (release date, where to buy) is already in the evergreen hub. | `/blog/riftbound-vendetta-everything-you-need-to-know` |
+| `how-to-start-buying-riftbound-vendetta-decks` | Same expired "early trickle, supply is thin" premise as the article above, wrapping archetype summaries that duplicate `best-riftbound-vendetta-decks`. | `/guides/best-riftbound-vendetta-decks` |
+| `riftbound-vendetta-synergies-with-existing-cards` | Explicit in its own text: *"Vendetta cards are still being revealed, so this is pre-release analysis."* Vendetta shipped, with real cards, over a month before this pass — the article's own stated framing had expired. | `/guides/building-for-riftbound-vendetta` |
+| `riftbound-t1-signature-edition-drawing` | A now-closed collectible drawing's dated registration logistics (exact open/close times across five markets, wave-by-wave email schedule) — the exact kind of content this article existed to retire. **Not a simple delete**: its real, evergreen analysis (the 2,025-not-10,125 scarcity math, the "what actually makes these cards valuable" four-point breakdown, the Signature-Edition-vs-Player-Bundle arithmetic) was merged into `riftbound-t1-worlds-champion-collection` first, so nothing of substance was lost — only the dead dates were. | `/blog/riftbound-t1-worlds-champion-collection` |
+
+**Two candidates checked and kept, because the dates didn't support retiring them:**
+
+- `riftbound-2026-regional-qualifier-los-angeles` — a single real-world event, which
+  reads like the same "expired premise" pattern as the six above. It isn't: the
+  event is **25-27 September 2026**, a month *after* this pass (25 Aug 2026) — live,
+  actionable, ticket-purchase content, not yet past its date. Worth re-checking after
+  the event passes.
+- `riftbound-vendetta-chase-cards-so-far` — the "so far" in the slug reads like
+  leftover spoiler-season framing, but the body opens "Riftbound: Vendetta is out"
+  and every card example comes from a live, self-populating database embed
+  (`chaseSet`/`chaseTier` filters), not a frozen list. It's evergreen despite the
+  title, and it's cross-linked from several other live articles. Left alone.
+
+**5 draft `[TODO]`-stub articles deleted outright, no redirect needed.** These were
+never published — `draft: true` excludes them from `getArticles()`, so no URL ever
+served them and there is nothing to redirect. Deleted because each one's own header
+comment already said to: `riftbound-t1-bundle-guide` ("Delete this entry unless it is
+repurposed"), `riftbound-state-of-the-game-august-2026` ("delete this one"),
+`riftbound-empower-mechanic-guide`, `riftbound-vendetta-hub` and
+`riftbound-vendetta-ban-list` (each flagged as duplicating an already-published,
+better-finished page). A sixth draft, `riftbound-vendetta-vault-endless-riches`, was
+checked and kept — it's an honestly-unverified skeleton on a topic with no published
+counterpart, not a superseded duplicate, so deleting it would destroy a real future
+content opportunity rather than clutter.
+
+**Every internal link into the 7 retired articles was found and repointed**, the same
+discipline as Phase 25 — including two non-obvious ones the redirect alone wouldn't
+have caught: `src/lib/constants.ts`'s `NO_RETAIL_CHANNEL.T1S.articleSlug` (feeds a
+"how to get this" pointer used by `card-narrative.ts`, currently unconsumed
+downstream but corrected for whenever it is) and `src/app/blog/page.tsx`'s
+`FEATURED_POSTS`, which had carried the T1 drawing post with an explicit code comment
+saying to swap it for an evergreen "once the drawing has concluded" — it has, so it
+was swapped for the survivor, `riftbound-t1-worlds-champion-collection`.
+
+**One test retired along with its subject.**
+`tests/article-regions.test.ts`'s "the T1 drawing window is stated region-neutrally"
+asserted UTC-anchored phrasing on the T1 drawing article's specific FAQ entry — that
+FAQ (and the dated logistics it described) was deliberately not carried forward into
+the merged content, so the test's subject no longer exists in the corpus. Removed,
+with the file's header comment updated so it no longer cites a deleted article as a
+live example. The general-purpose sibling test ("no summary or FAQ answer names some
+markets' local times but not others") is unaffected and still guards every article.
+
+**Orphaned assets cleaned up**: the T1 drawing article's generated hero (5 files —
+`.png`/`.webp`/`.avif`/two responsive `.webp` variants) and its `image-manifest.json`
+entry, plus its now-dead `HEROES` entry in `scripts/gen-blog-heroes.ts`.
+
+**Net result: 88 → 74 published articles** (81 after Phase 25's cut of 7, then 74
+after this phase's 7 — plus 5 unpublished draft stubs deleted, 91 → 79 total including
+drafts). `npm test` (846/846), `npx tsc --noEmit`, `npm run lint` and
+`npm run adsense:guard` (38/38) all pass clean after this phase.
+
+**Calibration, restated:** two rounds of editorial cleanup (14 published articles
+retired total) is real and defensible, but it is still a content-quality lever, not a
+guaranteed fix — the standing note about Manual Action 1 (the unresolved second
+AdSense account question) applies here exactly as it did after Phase 25.
+
 ---
 
 # ⚠️ THINGS I JUDGED RISKY AND DELIBERATELY LEFT ALONE

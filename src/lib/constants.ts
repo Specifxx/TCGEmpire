@@ -549,7 +549,7 @@ export const NO_RETAIL_CHANNEL: Record<string, NoRetailChannelProduct> = {
     serialTop: 2025,
     cardsInSet: 5,
     price: "US$360",
-    articleSlug: "riftbound-t1-signature-edition-drawing",
+    articleSlug: "riftbound-t1-worlds-champion-collection",
   },
 };
 

@@ -10,8 +10,10 @@ import { COUNTRY_LIST } from "../src/lib/country";
 // The failure this guards is not a typo — it is drift. Copy written when the
 // site had four markets said "AUD, NZD, USD or GBP"; SGD and CAD readers were
 // then told, in the site's own words, that their currency was not one of the
-// options. Same shape as the T1 drawing FAQ, which gave opening times for
-// Pacific/Eastern/UK/Australia while the article body tabulated all six.
+// options. The T1 Signature Edition drawing FAQ was the same shape once — it
+// gave opening times for Pacific/Eastern/UK/Australia while the article body
+// tabulated all six — before that article was retired (AdSense remediation
+// Phase 26, its registration window having closed).
 //
 // The rule: a passage may mention ONE currency (e.g. a US-priced product), or
 // it may enumerate the markets we price — but a partial enumeration is a bug,
@@ -58,20 +60,6 @@ test("no article enumerates a partial list of our market currencies", () => {
     }
   }
   assert.deepEqual(bad, [], `partial market lists:\n  ${bad.join("\n  ")}`);
-});
-
-test("the T1 drawing window is stated region-neutrally", () => {
-  const a = articles.find((x) => (x.faq ?? []).some((f) => /drawing open/i.test(f.q)));
-  assert.ok(a, "expected the T1 drawing article");
-  const faq = a.faq!.find((f) => /drawing open/i.test(f.q))!;
-  // UTC is the neutral anchor; Pacific may be cited as Riot's own framing, but
-  // must not be the only way a reader can work out their own local time.
-  assert.match(faq.a, /\bUTC\b/, "the canonical time must be given in UTC");
-  assert.match(
-    (a.summary ?? []).join("\n"),
-    /\bUTC\b/,
-    "the AnswerBox summary is what AI answer engines quote — it needs UTC too",
-  );
 });
 
 test("no summary or FAQ answer names some markets' local times but not others", () => {

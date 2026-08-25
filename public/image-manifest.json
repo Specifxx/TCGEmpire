@@ -368,27 +368,6 @@
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
   },
-  "/blog/riftbound-t1-signature-edition-drawing.png": {
-    "src": "/blog/riftbound-t1-signature-edition-drawing.png",
-    "width": 1200,
-    "height": 630,
-    "bytes": 44055,
-    "webp": "/blog/riftbound-t1-signature-edition-drawing.webp",
-    "webpBytes": 23466,
-    "avif": "/blog/riftbound-t1-signature-edition-drawing.avif",
-    "avifBytes": 13921,
-    "variants": [
-      {
-        "w": 480,
-        "src": "/blog/riftbound-t1-signature-edition-drawing-480w.webp"
-      },
-      {
-        "w": 768,
-        "src": "/blog/riftbound-t1-signature-edition-drawing-768w.webp"
-      }
-    ],
-    "fingerprint": "d1c516522e9a5d71"
-  },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",
     "width": 1200,

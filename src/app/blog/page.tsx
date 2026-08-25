@@ -7,11 +7,14 @@ import { pageAlternates } from "@/lib/seo";
 
 // Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
 // the Vendetta card-gallery post alone outdrew every other blog post combined.
+//
+// Swapped back to evergreen 25 Aug 2026: the T1 Signature Edition registration
+// window (14-17 Aug 2026) that justified featuring the time-boxed drawing post has
+// closed, and that post has since been retired — its lasting analysis (scarcity
+// math, Player Bundle comparison) was merged into the product explainer below,
+// which is what stays featured now. See AdSense remediation Phase 26.
 const FEATURED_POSTS = [
-  // Time-boxed: the T1 Signature Edition registration window is 14-17 Aug 2026, and
-  // this is the post that answers "when does it open". Swap it back out for an
-  // evergreen once the drawing has concluded.
-  "riftbound-t1-signature-edition-drawing",
+  "riftbound-t1-worlds-champion-collection",
   "every-riftbound-vendetta-card-revealed",
   "riftbound-vendetta-new-mechanics-flow-burn-empower",
 ];
