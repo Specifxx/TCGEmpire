@@ -30,7 +30,7 @@ import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
 import { getEbayCheapest } from "./arbitrage";
-import { getPriceMovers } from "./price-history";
+import { getPriceMovers, sydneyDayKey } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
 import { getRisingCards } from "./rise-predictor";
 import { CONTENT_TAG } from "./revalidate-content";
@@ -206,8 +206,17 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         // matches /tools/rising's own ["rising-cards-public", scope] exactly,
         // so a visit to either page warms the same entry — no extra query
         // cost for adding this column on top of the tool that already exists.
-        const analysis = await unstable_cache(() => getRisingCards(country), ["rising-cards-public", country], {
-          revalidate: 3600,
+        // Day-keyed + long TTL, matching every other PriceHistory reader
+        // (getPriceMovers etc). getRisingCards is the WIDEST history read in the
+        // repo (SCAN cards × HISTORY_DAYS × every market on GLOBAL), and this was
+        // the one heavy reader still on an hourly TTL with no sydneyDayKey — so
+        // between the daily CONTENT_TAG purges it re-ran the full read ~hourly,
+        // on the homepage, for every market. The day key rolls the entry over
+        // once per Sydney day; the 48h revalidate means the TTL never fires a
+        // mid-day refetch, so freshness is import-driven like everything else.
+        // Key still shared verbatim with /tools/rising so one warms the other.
+        const analysis = await unstable_cache(() => getRisingCards(country), ["rising-cards-public", country, sydneyDayKey()], {
+          revalidate: 172800,
           tags: [CONTENT_TAG],
         })();
         const priced = analysis.picks.filter((p) => p.priceCents != null);

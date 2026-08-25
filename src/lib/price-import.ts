@@ -1623,11 +1623,13 @@ export async function importPrices(): Promise<ImportSummary> {
     // including the chase pass's own. That is what stops the chase pass firing
     // repeatedly, and it is a bug I shipped: gating chase on _min made it a latch
     // the chase pass could not clear, so it stayed due for the whole 10-20h
-    // window. There are THREE daily invocations of this import, not two —
-    // .github/workflows/refresh-prices.yml at 07:00 and 19:00, and vercel.json's
-    // own cron at 18:00 — so it fired at 18:00 and again at 19:00, roughly 420
-    // wasted Browse calls, with each primeEbayBudget() also clearing a
-    // rate-limit latch the morning pass had set.
+    // window. There are now TWO daily invocations of this import —
+    // .github/workflows/refresh-prices.yml at 07:00 and 19:00. A vercel.json cron
+    // used to run it a THIRD time at 18:00; that was removed (2026-08-24) because
+    // it double-fired an hour before the 19:00 GitHub run — ~420 wasted Browse
+    // calls, and each primeEbayBudget() also cleared a rate-limit latch the
+    // morning pass had set. With it gone the chase pass simply moves to 19:00
+    // (see chaseCutoff below), which is where the 20h/10h gate always intended it.
     _min: { lastSeen: true },
     _max: { lastSeen: true },
   });
@@ -1635,9 +1637,11 @@ export async function importPrices(): Promise<ImportSummary> {
   const newestPerMarket = new Map(lastPerMarket.map((r) => [r.retailer, r._max.lastSeen]));
   const HOUR = 60 * 60 * 1000;
   const fullCutoff = Date.now() - 20 * HOUR;
-  // 10h after the LAST eBay write of any kind. With the full pass at 07:00 that
-  // clears at 18:00 (the Vercel cron), and the 19:00 run then sees a 1h-old
-  // write and correctly does nothing.
+  // 10h after the LAST eBay write of any kind. With the full pass at 07:00, the
+  // 19:00 GitHub run sees a 12h-old write (> 10h) and correctly runs the chase
+  // pass — exactly once a day, opposite the full pass. (Before the 18:00 Vercel
+  // cron was removed, chase fired there instead and the 19:00 run no-opped on a
+  // 1h-old write; same once-a-day chase, one fewer wasteful full import.)
   const chaseCutoff = Date.now() - 10 * HOUR;
   // EBAY_FORCE=1 bypasses the once-a-day gate, e.g. to push out an eBay matching fix
   // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.

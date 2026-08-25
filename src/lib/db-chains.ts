@@ -76,17 +76,21 @@ export const OPERATIONAL_VARS = ["RM9"] as const;
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   RH8                    — in service since 2026-08-23. A NEW project, created
+ *   RH9                    — in service since 2026-08-25. A NEW project, created
  *                            for this cutover, so it started genuinely empty
  *                            (Card/ClickEvent/PriceHistory all 0 before the
  *                            restore) and carries no orphaned term of its own.
- *                            migrate-history-db-to-rh8 restored a row-count
- *                            verified copy of _4: Card 1,434/1,434, ClickEvent
- *                            698/698, PriceHistory 306,015/306,015.
- *   HISTORY_DATABASE_URL_4 — the rollback: served 2026-08-21 to 2026-08-23 and
- *                            holds every row written in that window. Near its
- *                            transfer allowance, which is why this rotation
- *                            happened, but still reachable.
+ *                            migrate-history-db-to-rh9 restored a row-count
+ *                            verified copy of RH8.
+ *   RH8                    — the rollback: served 2026-08-23 to 2026-08-25 and
+ *                            holds every row written in that window. At/near its
+ *                            5 GB transfer allowance, which is why this rotation
+ *                            happened, but still reachable. Only ever selected if
+ *                            RH9 is UNSET — a safety net for a missing secret, not
+ *                            a health check, so a slow-but-present RH9 never
+ *                            silently demotes to it (resolveVar is precedence,
+ *                            never health; see OPERATIONAL_VARS above for the
+ *                            outage that shape caused on the operational side).
  *   DATABASE_URL           — the terminal case, meaning "no separate history
  *                            project is configured; history shares the
  *                            operational database". db-history.ts's
@@ -96,17 +100,17 @@ export const OPERATIONAL_VARS = ["RM9"] as const;
  * probe found it holding User=85, CollectionCard=374, Order=4,
  * MarketplaceListing=11, RetailerPrice=39,635 — a full OPERATIONAL snapshot from
  * an early term, not a history project at all. It was briefly the intended target
- * of this rotation; the migration's User-row guard refused it. It is also one of
- * the account-recovery sources probe-databases exists to find, so it should be
+ * of the RH8 rotation; the migration's User-row guard refused it. It is also one
+ * of the account-recovery sources probe-databases exists to find, so it should be
  * left intact rather than reused.
  *
- * HISTORY_DATABASE_URL_3 drops out of this cutover (it was _4's rollback, and a
- * chain only needs one). HISTORY_DATABASE_URL (bare) and _2 were superseded
+ * HISTORY_DATABASE_URL_4 drops out of this cutover (it was RH8's rollback, and a
+ * chain only needs one). _3, HISTORY_DATABASE_URL (bare) and _2 were superseded
  * earlier. RH7 is orphaned — 0% of its card ids resolve against the live
  * catalogue. RH6 still holds the deep 2026-06-06..08-04 history and IS joinable,
  * but it is a migration source to be drained forward, not a runtime target.
  */
-export const HISTORY_VARS = ["RH8", "HISTORY_DATABASE_URL_4", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["RH9", "RH8", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {

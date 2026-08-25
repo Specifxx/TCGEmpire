@@ -11,36 +11,45 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // session's Neon network-transfer review found: a plain `prisma.card.findMany`
 // with no `take`, re-run on every single request to /tools/deal-finder's
 // cross-region tab (that page is `force-dynamic` with no ISR/unstable_cache
-// anywhere above it). Fixed to reuse the same in-memory memoization pattern
-// this file already uses for its eBay/TCGplayer US pulls.
+// anywhere above it). It, and the file's eBay/TCGplayer-US pulls, were first
+// bounded by a per-instance globalThis memo, then (2026-08-24) moved to the
+// SHARED Next data cache via cachedOrDirect — day-keyed and CONTENT_TAG-busted,
+// so one pull per home market per day is shared across every lambda instance
+// instead of one per warm instance. These tests pin that shared-cache shape.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ARBITRAGE = "src/lib/arbitrage.ts";
 
-test("the deal-finder cross-region tab has no caching layer of its own", () => {
-  // Pins the PREMISE of the fix below: if this page ever gains ISR/unstable_cache,
-  // the in-memory memoization stops being the only thing bounding this query and
-  // this test (not the fix) should be revisited.
+test("the deal-finder cross-region tab has no PAGE-level caching layer of its own", () => {
+  // The bounding now lives inside the lib (cachedOrDirect), not on the page. This
+  // still pins that the page itself stays force-dynamic with no unstable_cache —
+  // if that changes, the two cache layers interact and this should be revisited.
   const page = read("src/app/tools/deal-finder/page.tsx");
   assert.match(page, /export const dynamic = "force-dynamic"/);
   assert.doesNotMatch(page, /unstable_cache/);
 });
 
-test("getCrossRegionGaps's full-catalogue read is memoized, not per-request", () => {
+test("getCrossRegionGaps's full-catalogue read is shared-cached, not per-request", () => {
   const src = read(ARBITRAGE);
-  assert.match(src, /async function computeCrossRegionRows\(homeCountry: Country\)/);
-  // Same TTL + globalThis-Map pattern as the file's existing eBay/TCG memos —
-  // survives hot-module-reload in dev, shared across warm lambda invocations.
-  assert.match(src, /xRegionRowsMemo\.get\(homeCountry\)/);
-  assert.match(src, /Date\.now\(\) - hit\.at < ARB_MEMO_TTL_MS/);
-  assert.match(src, /xRegionRowsMemo\.set\(homeCountry,/);
-  // The exported function must call the memoized helper, not run its own findMany.
+  assert.match(src, /function computeCrossRegionRows\(homeCountry: Country\)/);
+  // Shared Next data cache (cachedOrDirect) keyed by home market + Sydney day —
+  // one pull per market per day across all instances, busted on import via
+  // CONTENT_TAG. NOT a per-instance globalThis memo (which only dedupes within one
+  // warm lambda, so every cold instance re-pulled the whole catalogue).
+  assert.match(src, /return cachedOrDirect\(async \(\) => \{/);
+  assert.match(src, /\["arb-xregion-rows", homeCountry, sydneyDayKey\(\)\]/);
+  assert.match(src, /revalidate: 172800, tags: \[CONTENT_TAG\]/);
+  assert.doesNotMatch(src, /xRegionRowsMemo/, "the per-instance globalThis memo must be gone");
+  // The exported function must call the cached helper, not run its own findMany.
   const exported = src.slice(src.indexOf("export async function getCrossRegionGaps"));
   assert.match(exported, /await computeCrossRegionRows\(homeCountry\)/);
-  assert.doesNotMatch(exported, /prisma\.card\.findMany/, "the full-catalogue query must live only in the memoized helper");
+  assert.doesNotMatch(exported, /prisma\.card\.findMany/, "the full-catalogue query must live only in the cached helper");
 });
 
-test("the memo key is per-country, so one market's fetch can't serve another's prices", () => {
+test("the cache key is per-country, so one market's fetch can't serve another's prices", () => {
   const src = read(ARBITRAGE);
-  assert.match(src, /XRegionRowsMemo = Map<Country,/);
+  // homeCountry is in the cache key, so each market caches independently.
+  assert.match(src, /\["arb-xregion-rows", homeCountry, sydneyDayKey\(\)\]/);
+  // The eBay pull is likewise keyed by (country, retailer); TCG-US is market-neutral.
+  assert.match(src, /\["arb-ebay-rows", country, ebayKey, sydneyDayKey\(\)\]/);
 });

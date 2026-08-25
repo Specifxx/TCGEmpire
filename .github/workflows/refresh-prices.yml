@@ -115,16 +115,17 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
-          # RH7 is the current history project (see src/lib/db-history.ts) — RH6/RH5
-          # exhausted its Neon transfer allowance on 2026-07-31 and _4 went
-          # unreachable (P1001) before that; both are kept only as dead fallbacks.
-          # THIS STEP WRITES PriceHistory — if RH7 is missing here, db-history.ts
-          # falls through to a dead project (or, at the end of the chain, to the
-          # OPERATIONAL database), so keep this list in sync with db-history.ts.
+          # RH9 is the current history project (see src/lib/db-history.ts) — RH8 is
+          # its at-limit rollback (served 2026-08-23..25), and everything older is a
+          # dead fallback kept only so a drain can still reach it. THIS STEP WRITES
+          # PriceHistory — if RH9 is missing here, db-history.ts falls through to RH8
+          # (or, at the end of the chain, to the OPERATIONAL database), so keep this
+          # list in sync with db-history.ts / db-chains.ts.
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
-          RH8: ${{ secrets.RH8 || vars.RH8 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
@@ -154,10 +155,11 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
           # Same chain as the Import prices step above — see its comment.
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
-          RH8: ${{ secrets.RH8 || vars.RH8 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}

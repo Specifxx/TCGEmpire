@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Every claim on this page is checkable against the code:
 //   • store count            → lib/retailers.ts (RETAILER_LIST)
-//   • daily refresh          → vercel.json cron "0 18 * * *" → /api/cron/refresh-prices
+//   • daily refresh          → .github/workflows/refresh-prices.yml (07:00 + 19:00 UTC)
 //   • page cache windows     → `export const revalidate` on each route
 //   • affiliate marking      → outboundRel() in lib/affiliate.ts
 //   • what is generated      → lib/content/card-narrative.ts, lib/content/authors.ts
@@ -133,11 +133,11 @@ export default function EditorialPolicyPage() {
           <h2 className="text-lg font-bold text-white">How often prices refresh</h2>
           <ul className="list-disc space-y-1 pl-5">
             {/* Twice, not once: .github/workflows/refresh-prices.yml is scheduled at
-                07:00 and 19:00 UTC and store prices are imported on BOTH runs (a
-                Vercel cron hits /api/cron/refresh-prices as well). Only the eBay
-                catalogue pass is held to once a day, by the 20-hour gate in
+                07:00 and 19:00 UTC and store prices are imported on BOTH runs. Only
+                the eBay catalogue pass is held to once a day, by the 20-hour gate in
                 lib/price-import.ts. The page claimed 24 hours for everything, which
-                understated the store cadence and misdescribed eBay's. */}
+                understated the store cadence and misdescribed eBay's. (A redundant
+                Vercel 18:00 cron that also ran the import was removed 2026-08-24.) */}
             <li><strong className="text-white">Store prices:</strong> a full import runs twice a day.</li>
             <li><strong className="text-white">eBay listings:</strong> the whole catalogue is searched once every 24 hours; the chase printings (promos, signatures and overnumbered prints above a value floor) refresh twice a day.</li>
             <li><strong className="text-white">Price history:</strong> one recorded point per card per market per day, which is what the charts and trend figures are built from.</li>

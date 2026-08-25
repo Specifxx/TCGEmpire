@@ -5,12 +5,15 @@
 // when the winning SELL source is eBay (selling to a store has no marketplace fee).
 //
 // Egress-bounded: a few groupBy aggregates rank everything; per-listing detail
-// (urls/names) is fetched only for the page being shown. The two exceptions
-// (all of one market's eBay rows, all of TCGplayer's US rows — needed to rank by
-// delivered cost, which the DB can't compute in a groupBy) are memoized in
-// process memory below, same pattern as lib/sealed-import.ts's getSealedGroups —
-// a per-request unbounded pull is exactly what has burned through this project's
-// Neon free-tier transfer allowance before.
+// (urls/names) is fetched only for the page being shown. The three full-set pulls
+// that can't be done as a groupBy (all of one market's eBay rows and all of
+// TCGplayer's US rows — needed to rank by delivered cost — plus the cross-region
+// catalogue read) go through the SHARED Next data cache via cachedOrDirect below:
+// day-keyed and CONTENT_TAG-busted on import, so it's one pull per market per day
+// across every lambda instance. These used to be per-instance globalThis memos,
+// but those only dedupe within one warm lambda — under Vercel's fan-out every cold
+// instance re-pulled the whole set, which is exactly what has burned through this
+// project's Neon free-tier transfer allowance before.
 import { prisma } from "./db";
 import { COUNTRY_LIST, currencyOf, pickPrice, type Country } from "./country";
 import { RETAILERS } from "./retailers";
@@ -18,6 +21,8 @@ import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
 import { TCG_US } from "./tcgplayer";
 import { usdCentsToCountry, convertCents } from "./fx";
+import { cachedOrDirect, sydneyDayKey } from "./price-history";
+import { CONTENT_TAG } from "./revalidate-content";
 import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
 import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
 import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
@@ -33,40 +38,42 @@ const MIN_NET_CENTS = 100;
 const MAX_MARGIN_PCT = 300;
 const MAX_DEAL_PCT = 80;
 
-// One in-memory pull per (country, eBay retailer) per TTL, not per request —
-// see the file header comment. Same globalThis pattern as getSealedGroups so it
-// survives hot-module-reload in dev and is shared across warm lambda invocations.
-const ARB_MEMO_TTL_MS = 15 * 60_000;
+// One pull per (country, eBay retailer) per DAY, shared across every lambda
+// instance — NOT a per-instance globalThis memo. This used to memoize into
+// process memory with a 15-min TTL; that only dedupes WITHIN one warm lambda, so
+// under Vercel's fan-out every cold instance re-pulled the whole in-stock eBay
+// set (~1,000+ rows/market) on the force-dynamic deal-finder / market-records
+// pages — one of the largest repeat main-DB reads in the app. cachedOrDirect
+// puts it in the shared Next data cache instead, day-keyed and CONTENT_TAG-busted
+// on import (the data only changes then), and falls back to a direct query in any
+// context without the incremental cache (scripts) so nothing else has to care.
 type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
-type EbayRowsMemo = Map<string, { at: number; data: EbayRow[] }>;
-const ebayRowsMemo: EbayRowsMemo = ((globalThis as unknown as { __arbEbayRows?: EbayRowsMemo }).__arbEbayRows ??= new Map());
 
-async function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
-  const cacheKey = `${country}:${ebayKey}`;
-  const hit = ebayRowsMemo.get(cacheKey);
-  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
-  const rows = await prisma.retailerPrice.findMany({
-    where: { country, inStock: true, retailer: ebayKey },
-    select: { cardId: true, priceCents: true, shippingCents: true, url: true },
-  });
-  ebayRowsMemo.set(cacheKey, { at: Date.now(), data: rows });
-  return rows;
+function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
+  return cachedOrDirect(
+    () =>
+      prisma.retailerPrice.findMany({
+        where: { country, inStock: true, retailer: ebayKey },
+        select: { cardId: true, priceCents: true, shippingCents: true, url: true },
+      }),
+    ["arb-ebay-rows", country, ebayKey, sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
 }
 
 // TCGplayer's US reference rows are market-neutral (one price per card regardless
 // of the viewer's country), so this is a single global slot, not keyed by country.
 type TcgRow = { cardId: string; priceCents: number; url: string };
-type TcgRowsMemo = { at: number; data: TcgRow[] } | undefined;
-async function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
-  const slot = globalThis as unknown as { __arbTcgRows?: TcgRowsMemo };
-  const hit = slot.__arbTcgRows;
-  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
-  const rows = await prisma.retailerPrice.findMany({
-    where: { retailer: TCG_US.retailer, inStock: true },
-    select: { cardId: true, priceCents: true, url: true },
-  });
-  slot.__arbTcgRows = { at: Date.now(), data: rows };
-  return rows;
+function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
+  return cachedOrDirect(
+    () =>
+      prisma.retailerPrice.findMany({
+        where: { retailer: TCG_US.retailer, inStock: true },
+        select: { cardId: true, priceCents: true, url: true },
+      }),
+    ["arb-tcg-us-rows", sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
 }
 
 export type ArbSort = "profit" | "margin";
@@ -559,22 +566,14 @@ const XREGION_MAX_GAP_PCT = 300; // same outlier-guard reasoning as MAX_MARGIN_P
 // almost always a converted reference price or a thin/stale market, not a real 300%+ difference.
 
 type XRegionRow = { card: CardTileData; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
-type XRegionRowsMemo = Map<Country, { at: number; data: XRegionRow[] }>;
-// Same in-memory-memoization pattern as getEbayRowsMemoized/getTcgUsRowsMemoized
-// above (see this file's header comment on why: a per-request unbounded pull is
-// exactly what has burned through this project's Neon transfer allowance
-// before). This one was missing it entirely — a plain `prisma.card.findMany`
-// with no `where` bound beyond variant/isPromo, no `take`, and no cache, so it
-// re-pulled the WHOLE catalogue (every scalar column `cardTileSelect` selects,
-// including two image URLs, for ~1,000-1,500 cards) on every single request to
-// the deal-finder page's cross-region tab — the page is `force-dynamic` with no
-// ISR/ unstable_cache anywhere above it, so nothing else was bounding this.
-const xRegionRowsMemo: XRegionRowsMemo = ((globalThis as unknown as { __arbXRegionRows?: XRegionRowsMemo }).__arbXRegionRows ??= new Map());
-
-async function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[]> {
-  const hit = xRegionRowsMemo.get(homeCountry);
-  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
-
+// Day-cached in the SHARED Next data cache, not a per-instance globalThis memo.
+// This read had no bound at all originally — a plain card.findMany with no take,
+// pulling the WHOLE catalogue (cardTileSelect, two image URLs/row, ~1,000-1,500
+// cards) on every request to the force-dynamic deal-finder cross-region tab and
+// /market/records. cachedOrDirect collapses it to one pull per home market per
+// day (CONTENT_TAG busts it on import), shared across all lambda instances.
+function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[]> {
+  return cachedOrDirect(async () => {
   const homeCurrency = currencyOf(homeCountry);
   const cards = await prisma.card.findMany({
     where: { variant: null, isPromo: false },
@@ -601,9 +600,8 @@ async function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[
     rows.push({ card: c, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
   }
   rows.sort((a, b) => b.pct - a.pct);
-
-  xRegionRowsMemo.set(homeCountry, { at: Date.now(), data: rows });
   return rows;
+  }, ["arb-xregion-rows", homeCountry, sydneyDayKey()], { revalidate: 172800, tags: [CONTENT_TAG] });
 }
 
 export async function getCrossRegionGaps(homeCountry: Country, page = 1, pageSize = 25): Promise<CrossRegionPage> {
