@@ -299,7 +299,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
           </Link>
           {set.code === "VEN" && (
             <>
-              <Link href="/guides/riftbound-vendetta-card-list" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
+              <Link href="/blog/every-riftbound-vendetta-card-revealed" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">
                 Vendetta card list →
               </Link>
               <Link href="/guides/riftbound-empower-explained" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">

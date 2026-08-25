@@ -218,6 +218,38 @@ const nextConfig = {
         destination: "/guides/where-to-buy-riftbound-cards",
         permanent: true,
       },
+      // CONSOLIDATION (AdSense remediation § Phase 25). A second content-quality
+      // pass, prompted by a fresh AdSense rejection citing "low value content".
+      // The audit tool (scripts/adsense-audit.ts) reports 0 near-duplicate
+      // clusters at its 90%-shingle-similarity threshold, so this cluster is
+      // real but a level the automated check doesn't catch: seven posts that
+      // independently restate the same handful of facts about ONE product
+      // launch (Vendetta, 31 Jul 2026) rather than sharing literal text — same
+      // topic, same intent, different wording. Now three weeks-plus stale, they
+      // added nothing a reader couldn't get from one canonical page. Consolidated
+      // into the two pages that already covered the same ground best, and
+      // nothing unique was lost — verified article-by-article before deleting.
+      //
+      // Three "all 166 Vendetta cards" posts → the one with the actual live,
+      // filterable card gallery embedded (not just prose about the card count).
+      { source: "/guides/riftbound-vendetta-card-list", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      { source: "/blog/riftbound-vendetta-spoiler-season-complete-166-cards", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      // A third "how RiftCompare prices Vendetta cards" post that duplicated the
+      // same live gallery embed as the page above, with generic prose around it.
+      { source: "/blog/riftbound-vendetta-card-prices-where-to-buy-cheapest", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      // Three "get ready for Vendetta" posts (a pre-release announcement, a
+      // launch-week checklist, a release-date countdown) that restated the same
+      // four-item checklist — wishlist, compare sealed, price your deck, don't
+      // overpay — into the one hub post that already contains it, plus the full
+      // set rundown the other three didn't have.
+      { source: "/blog/riftbound-vendetta-next-set", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
+      { source: "/blog/riftbound-vendetta-launch-week-buying-checklist", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
+      { source: "/blog/riftbound-vendetta-countdown-how-long-until-release", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
+      // A second general "how to buy Riftbound cards" guide that linked to the
+      // same five regional posts as its sibling and covered the same singles-
+      // vs-sealed ground; the survivor (just expanded to 6 markets / 100+ stores)
+      // already covers everything this one did.
+      { source: "/blog/where-to-buy-riftbound-singles", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
       // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
       // every internal link — only the URL still said "arbitrage", a word no
       // buyer searches for. Renamed to /tools/deal-finder; this 301 preserves
