@@ -20,6 +20,11 @@ export function usePremiumDialog() {
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
 
+// "$4.99" → "$0". Derived rather than hardcoded so a re-denominated
+// PREMIUM_PRICE_AMOUNT (£, €, A$…) carries its symbol through instead of this
+// silently claiming dollars. Falls back to "$" if the amount is bare digits.
+const ZERO_DUE_TODAY = `${PREMIUM_PRICE_AMOUNT.replace(/[\d.,]+.*$/, "") || "$"}0`;
+
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const open = useCallback(() => {
@@ -48,12 +53,15 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 
 function PremiumDialog({ onClose }: { onClose: () => void }) {
   const { user, premium, premiumCheckout, trialEligible, trialDays, premiumAnnual, loaded } = useMe();
-  const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
   const savePct = annualSavingPct();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Default to the best-value plan when annual is offered; force monthly otherwise.
-  const [plan, setPlan] = useState<"monthly" | "annual">("annual");
+  // Monthly is the default even when annual is offered. Annual is the better
+  // value and says so on its own toggle (−35%), but defaulting to it puts the
+  // larger number ($39) in front of someone who has not decided to pay anything
+  // yet. Monthly is the lower-commitment first step; annual is one tap away for
+  // anyone who wants it.
+  const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const activePlan = premiumAnnual ? plan : "monthly";
 
   useEffect(() => {
@@ -186,8 +194,30 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                   </div>
                 )}
 
-                {/* Price for the selected plan */}
-                {activePlan === "annual" ? (
+                {/* Price for the selected plan.
+                    While the visitor is trial-eligible the headline number is
+                    what they will actually be charged today — zero — because
+                    that is the number the decision turns on. The real price and
+                    the day it starts sit directly underneath in the same block,
+                    not in fine print further down: "$0" alone would be a lie by
+                    omission, and a card IS required to start. */}
+                {trialEligible ? (
+                  <div className="mb-3 text-center">
+                    <div className="flex items-baseline justify-center gap-1.5">
+                      <span className="num text-4xl font-extrabold text-white">{ZERO_DUE_TODAY}</span>
+                      <span className="text-sm text-slate-400">due today</span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-400">
+                      then{" "}
+                      <span className="font-semibold text-slate-200">
+                        {activePlan === "annual"
+                          ? `${PREMIUM_ANNUAL_AMOUNT}/yr`
+                          : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`}
+                      </span>{" "}
+                      after your {trialDays}-day free trial
+                    </p>
+                  </div>
+                ) : activePlan === "annual" ? (
                   <div className="mb-3">
                     <AnnualPriceBlock size="sm" />
                   </div>
@@ -210,8 +240,13 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                 <p className="mt-2 text-center text-[11px] leading-snug text-slate-500">
                   {(() => {
                     const priceAfter = activePlan === "annual" ? `${PREMIUM_ANNUAL_AMOUNT}/yr` : PREMIUM_PRICE_LABEL || "billed monthly";
+                    // On the trial path the price block above already states the
+                    // amount and when it starts, so repeating it here just makes
+                    // the same sentence twice. What is left to say is the part
+                    // the block above does NOT cover: a card is needed up front,
+                    // and cancelling is free.
                     return trialEligible ? (
-                      <>Card required. Free for {dayPhrase}, then {priceAfter} — cancel anytime.</>
+                      <>Card required to start · cancel anytime before it converts.</>
                     ) : (
                       <>{priceAfter} · cancel anytime.</>
                     );

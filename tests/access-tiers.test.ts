@@ -299,6 +299,44 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   assert.match(shared, /anon: "Top pick", account: "Top pick", premium: "Full list"/);
 });
 
+test("every dialog-only row override names a row that actually exists", async () => {
+  // The dialog trims and rewrites specific rows by matching TIER_COMPARISON's
+  // `feature` string. A typo, or a later reword of the row itself, makes the
+  // entry match nothing — and the failure is SILENT: the row simply keeps
+  // rendering as if the override had never been written. Nobody reviewing a
+  // rename of "Price alerts" would think to check a Set in another const.
+  //
+  // Both sets carry an em dash and an ampersand between them, which is exactly
+  // the kind of character a hand-retyped string gets wrong.
+  const { TIER_COMPARISON, DIALOG_OMIT_FEATURES, DIALOG_BINARY_FEATURES } = await import(
+    "../src/components/TierComparisonTable"
+  );
+  const real = new Set(TIER_COMPARISON.map((r) => r.feature));
+
+  for (const [set, name] of [
+    [DIALOG_OMIT_FEATURES, "DIALOG_OMIT_FEATURES"],
+    [DIALOG_BINARY_FEATURES, "DIALOG_BINARY_FEATURES"],
+  ] as const) {
+    for (const feature of set) {
+      assert.ok(
+        real.has(feature),
+        `${name} names "${feature}", which is not a TIER_COMPARISON row — the override is a no-op. ` +
+          `Rows are: ${[...real].map((f) => `"${f}"`).join(", ")}`
+      );
+    }
+  }
+
+  // The dialog must still show something worth reading. If a future edit omits
+  // so much that only flat-tick rows survive, the table stops making any case
+  // for paying and should be removed rather than left as decoration.
+  const shown = TIER_COMPARISON.filter((r) => !DIALOG_OMIT_FEATURES.has(r.feature));
+  assert.ok(shown.length >= 4, `the dialog table is down to ${shown.length} rows — too few to be worth rendering`);
+  assert.ok(
+    shown.some((r) => r.premium === true && r.account !== true),
+    "the dialog table must keep at least one row where Premium gives something a free account does not"
+  );
+});
+
 test("the Premium dialog stays closable once the table makes it tall", () => {
   const src = read("src/components/PremiumDialog.tsx");
   assert.match(src, /fixed inset-0[^"]*overflow-y-auto/, "the overlay must scroll, or a tall card hides its own close button");

@@ -60,14 +60,33 @@ export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: 
 
 // The compact dialog is a fast glance, not the full accounting — /premium (the
 // link right below the table) is where the complete, unabridged list lives.
-// Omitted here purely for length: the popup caps its own height and scrolls.
-const DIALOG_OMIT_FEATURES = new Set(["Ad-free experience", "Condition Impact Calculator"]);
+//
+// Two reasons a row is omitted here, and both are about the popup's job rather
+// than the row being unimportant:
+//   • length — the popup caps its own height and scrolls, so every row costs
+//     something (Ad-free experience, Condition Impact Calculator);
+//   • no signal — with the "No account" column dropped below, a row that is a
+//     tick for BOTH remaining columns tells a reader deciding whether to pay
+//     nothing at all. The four here are exactly that shape.
+// The rows that survive are the ones that differentiate, plus the handful of
+// flat-tick rows that establish what the free tier already covers.
+// Exported for tests/access-tiers.test.ts only: a typo in either of these sets
+// is a SILENT no-op — the row just keeps rendering — so the only thing that can
+// catch it is an assertion that every entry matches a real TIER_COMPARISON row.
+export const DIALOG_OMIT_FEATURES = new Set([
+  "Ad-free experience",
+  "Condition Impact Calculator",
+  "Deck builder, trade calculator & box EV",
+  "RiftCompare Index, movers & daily wrap",
+  "Price alerts",
+  "Portfolio tracker — history, P&L, CSV export",
+]);
 
 // TIER_COMPARISON keeps "Top pick" as the honest answer for these two rows (a
 // free account isn't shut out, just capped) — that string stays intact above
 // for /premium. The dialog is a conversion surface rather than a spec sheet, so
 // there it collapses to the same tick/✗ vocabulary as every other row.
-const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
+export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
 
 /**
  * `compact` is also "is this the dialog?" — it trims padding/type scale AND

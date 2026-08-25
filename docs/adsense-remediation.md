@@ -15,35 +15,67 @@ finding and a genuine content-quality finding are not mutually exclusive, and th
 account question is the higher-leverage one to close out first because no amount of
 content work overcomes it.
 
+**Status 25 Aug 2026:** the owner has said to remove the second account. The code
+side was already clean (Phase 1) and is re-verified in Manual Action 1 — but the
+account closure itself is a Google-console action behind the owner's login and
+**has not happened yet**. Manual Action 1 now carries the exact steps.
+
 ---
 
 ## ⛔ MANUAL ACTIONS FOR THE OWNER
 
 *Nothing in this list has been done for you. Items 1 and 2 are blocking.*
 
-### 1. Confirm whether `ca-pub-6262011577596407` is a second AdSense account you control — BLOCKING
+### 1. Close the second AdSense account `ca-pub-6262011577596407` — BLOCKING, AND ONLY YOU CAN DO IT
 
-The live site was serving this in its `<head>` on every page:
+**Owner decision, 25 Aug 2026: remove it.** What that instruction can and cannot
+reach is worth stating precisely, because the two halves live in different places:
+
+**The code half is already done, and has been since Phase 1.** The live site used to
+serve this in its `<head>` on every page:
 
 ```html
 <meta name="google-adsense-account" content="ca-pub-6262011577596407">
 ```
 
-That is **not** the account under review (`pub-6842128782879909`). The tag has been
-replaced (see Phase 1 below), but the underlying question has deliberately **not**
-been investigated, looked up, or acted on — it is yours to answer:
+That tag is gone — replaced by one sourced from `NEXT_PUBLIC_ADSENSE_CLIENT_ID`
+(the account actually under review, `pub-6842128782879909`). Re-verified by full-repo
+grep on 25 Aug 2026: the string `6262011577596407` now appears in exactly three
+places, none of them served to a browser —
 
-- **If it is a second AdSense account you own or have owned**, close it before
-  anything else. Holding more than one AdSense account is a direct violation of the
-  AdSense Terms of Service, and it is the single most plausible explanation for two
-  rejections that arrived without a specific content complaint. Approving this site
-  under a second account is something Google will not do while the first exists.
-- **If you have never seen it before**, the tag most likely arrived with a copied
-  template or a third-party integration. It is harmless now that it is gone, but say
-  so in your next review note so the reviewer isn't left wondering either.
+| File | What it is |
+| --- | --- |
+| `scripts/adsense-guard.ts` | the constant the **build-failing guard** compares against, so the id cannot return to the source tree |
+| `scripts/adsense-verify.ts` | the same, for the live-HTTP check against a deployment |
+| `docs/adsense-remediation.md` | this document's own history |
 
-Either way, resolve it **before** the current review concludes. No amount of content
-work overcomes a duplicate-account finding.
+Those three are the mechanism that keeps it gone. **Do not "clean them up" — deleting
+them is deleting the guard.**
+
+**The account half cannot be done from this repository, or by any agent working in
+it.** Closing an AdSense account happens inside Google's console, behind your Google
+login. Nothing in a codebase, a deploy, or a DNS record closes it. Concretely, you
+need to:
+
+1. Sign in to <https://adsense.google.com> **as the account that owns
+   `pub-6262011577596407`** — likely a different Google account from the one under
+   review. If you cannot get in, that is itself the useful finding: see step 3.
+2. Account → **Account information** → **Close account**. Google runs a holding
+   period before the closure finalises; it is not instant.
+3. **If it turns out not to be yours** — no such account, or you cannot access it —
+   then it was never a duplicate-account problem at all. The tag most likely arrived
+   with a copied template or a third-party integration. Say exactly that in the next
+   review note, so a reviewer looking at old crawls of the site is not left with the
+   same open question you were.
+
+**Why this stays at the top of the document even now that a rejection has finally
+cited content.** Holding more than one AdSense account is a direct Terms of Service
+violation, and it is not mutually exclusive with a genuine content finding — an
+account can be rejected for both. A duplicate-account finding is also the one thing
+no amount of content work overcomes, which makes it the higher-leverage item to close
+out first. Two content-consolidation passes have now shipped (Phases 25 and 26); if a
+further rejection arrives with this still unresolved, that is the reason to suspect
+before writing another word.
 
 ### 2. Set `NEXT_PUBLIC_ADSENSE_CLIENT_ID` in Vercel, then deploy this branch
 
@@ -1538,8 +1570,13 @@ AdSense account question) applies here exactly as it did after Phase 25.
 
 # ⚠️ THINGS I JUDGED RISKY AND DELIBERATELY LEFT ALONE
 
-1. **`ca-pub-6262011577596407` — not investigated.** As instructed. It is the first manual
-   action at the top of this document and the most likely single cause of two rejections.
+1. **`ca-pub-6262011577596407` — removed from the code; the ACCOUNT is still the owner's
+   to close.** Originally left uninvestigated as instructed. The owner has since said to
+   remove it (25 Aug 2026), and the code half was already done in Phase 1 — but closing an
+   AdSense account happens behind a Google login, not in a repository, so no agent working
+   here can finish it. Updated Manual Action 1 with the exact console steps. Still the most
+   likely single cause of the two rejections that arrived with no content complaint, and
+   still unresolved until someone signs in and closes it.
 2. **No fabricated author identities.** Explained in Phase 10d. A named human with an
    invented bio would be a lie, and a worse one if checked.
 3. **Consent Mode defaults are globally `denied`, not region-scoped.** Google permits
