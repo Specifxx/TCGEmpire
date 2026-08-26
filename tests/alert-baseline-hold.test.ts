@@ -43,21 +43,22 @@ test("a failed digest holds its alerts' baselines back", () => {
 
 test("the baseline write applies the filtered set, not the raw one", () => {
   // The bug was one identifier wide: `updates` instead of the filtered list.
-  const write = /\$transaction\(([\s\S]*?)\);/.exec(src);
-  assert.ok(write, "the baseline $transaction moved — re-derive this test");
   assert.match(
-    write[1],
-    /dueUpdates\.map/,
+    src,
+    /\$transaction\(\s*dueUpdates\.map/,
     "the transaction must write the filtered baselines; writing `updates` " +
       "advances past a drop nobody was told about"
   );
-  const notified = /updateMany\(\{([\s\S]*?)\}\);/.exec(src);
-  assert.ok(notified, "the lastNotifiedAt updateMany moved — re-derive this test");
+  // lastNotifiedAt and the lowest-emailed watermark are now folded into the SAME
+  // per-alert write, gated on the alert's digest having actually sent — so a
+  // failed send claims no notification and never advances the watermark.
   assert.match(
-    notified[1],
-    /dueNotifiedIds/,
-    "lastNotifiedAt must not claim a notification that failed to send"
+    src,
+    /if \(dueNotifiedSet\.has\(u\.id\)\)/,
+    "notified-only fields must be gated on the sent set, not written for a held drop"
   );
+  assert.match(src, /data\.lastNotifiedAt = now/, "an emailed alert stamps lastNotifiedAt in that write");
+  assert.match(src, /data\.lowestEmailedCents = /, "an emailed alert advances its lowest-emailed watermark in that write");
 });
 
 test("only alerts that actually carried a drop are held", () => {

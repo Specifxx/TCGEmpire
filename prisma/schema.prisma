@@ -565,6 +565,15 @@ model PriceAlert {
   // Last lowest price observed for this card+market (the baseline a drop is
   // measured against). null until the card first has a price in this market.
   lastPriceCents Int?
+  // Lowest price we have ever EMAILED this subscriber for this card+market — the
+  // anti-spam watermark. A drop only sends a fresh email when it beats this value
+  // (a genuinely new low), or when REMINDER_INTERVAL_MS (≈2 months) has passed
+  // since lastNotifiedAt, so a price that keeps sawtoothing back down to a figure
+  // we already sent does not re-spam the subscriber. null until the first email;
+  // additive/nullable so `prisma db push` adds it with no backfill. Distinct from
+  // lastPriceCents, which keeps tracking every move so a drop can still be DETECTED
+  // against the most recent price even while emails are being suppressed.
+  lowestEmailedCents Int?
   // Per-email secret powering one-click unsubscribe (shared across all of an
   // email's rows, so one link can remove every alert for that address).
   unsubToken     String
