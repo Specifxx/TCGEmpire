@@ -92,8 +92,9 @@ test("signing in never moves an existing account's email address", () => {
 });
 
 test("an unverified address cannot stamp an account as email-verified", () => {
-  // emailVerified feeds isVerifiedSeller in lib/auth.ts, so an unconditional
-  // `?? new Date()` would hand seller standing to an unproven address.
+  // A verified email is an identity claim the account hasn't demonstrated unless
+  // the provider vouches for it, so an unconditional `?? new Date()` would let an
+  // unproven address mark itself verified.
   assert.match(
     callback,
     /emailVerified: byProvider\.emailVerified \?\? \(emailVerified \? new Date\(\) : null\)/,

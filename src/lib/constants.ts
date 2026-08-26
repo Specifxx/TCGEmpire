@@ -85,7 +85,6 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // So they are excluded ENTIRELY — not deprioritised — from:
 //   • the comparison rows and store count      (computeMarket, market-rows.ts)
 //   • the QuickView price list                 (components/QuickView.tsx)
-//   • the marketplace "beat this price" query  (app/marketplace/page.tsx)
 //   • the lowestPriceCents* columns            (price-import.ts)
 // They survive only in the Deal Finder (arbitrage needs a sell-side reference)
 // and in the card page's clearly-labelled TcgMarketPrice block.

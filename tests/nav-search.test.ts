@@ -33,11 +33,10 @@ const MUST_FIND: [query: string, href: string][] = [
   ["blog", "/blog"],
   ["alerts", "/alerts"],
   // No "sell" row. The /sell-cards buylist lander was retired (it advertised a
-  // mail-in service around a placeholder postal address), and the surviving
-  // seller page — /marketplace/sell — only enters NAV_GROUPS when
-  // NEXT_PUBLIC_MARKETPLACE_PUBLIC=1, which is unset here. So "sell" correctly
-  // matches nothing right now, and asserting otherwise would either fail or
-  // force a fake destination into the index.
+  // mail-in service around a placeholder postal address), and the peer-to-peer
+  // marketplace's seller page (/marketplace/sell) was removed entirely (2026-08).
+  // Nothing on the site sells cards now, so "sell" correctly matches nothing, and
+  // asserting otherwise would force a fake destination into the index.
   ["set", "/sets"],
   ["sets", "/sets"],
   ["champion", "/champions"],

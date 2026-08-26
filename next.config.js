@@ -156,10 +156,10 @@ const nextConfig = {
       // The page was noindex/nofollow and only reachable from the command
       // launcher, so there is nothing indexed to preserve; the redirect is purely
       // so a bookmark or launcher-history entry lands somewhere instead of 404ing.
-      // /marketplace is the surviving "I want to sell cards" path.
+      // Points at the homepage now that the marketplace (its old target) is gone.
       {
         source: "/sell-cards",
-        destination: "/marketplace",
+        destination: "/",
         permanent: true,
       },
       // These three shipped as guides and were moved to the blog shortly after.

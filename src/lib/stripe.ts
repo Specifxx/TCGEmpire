@@ -1,23 +1,15 @@
-// Stripe (plain Checkout) — foundations shared by Premium subscriptions and the P2P
-// marketplace. The buyer always pays the PLATFORM account via a hosted Checkout
-// Session (this file); per-seller payouts are a separate Connect step that happens
-// later, on delivery — see lib/connect.ts for account onboarding + the escrow
-// transfer. Splitting it this way is what lets funds be held until delivery instead
-// of moving to the seller the moment the buyer pays.
-//
-// Stock is reserved Skinport-style: at checkout we decrement availability and open
-// a PENDING order with a short reservation window. The webhook flips it to PAID on
-// success; expiry/failure releases the stock back.
+// Stripe (plain Checkout) — the foundation Premium subscriptions are built on. The
+// buyer pays the platform account via a hosted Checkout Session; the subscription
+// webhook (api/marketplace/stripe/webhook — kept at that path, see its own note)
+// stamps entitlement. The P2P marketplace this module used to also serve was
+// removed (2026-08), along with its Connect payouts (lib/connect.ts) and stock
+// reservations.
 //
 // INERT until STRIPE_SECRET_KEY is set — callers check `stripeEnabled()`.
 import Stripe from "stripe";
-import { prisma } from "./db";
 
 const SECRET = process.env.STRIPE_SECRET_KEY ?? "";
 export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
-
-// How long a checkout holds the buyer's stock before it's released (minutes).
-export const RESERVATION_MINUTES = Number(process.env.MARKETPLACE_RESERVE_MINUTES ?? 20);
 
 let _stripe: Stripe | null = null;
 export function stripe(): Stripe {
@@ -28,41 +20,4 @@ export function stripe(): Stripe {
 
 export function stripeEnabled(): boolean {
   return Boolean(SECRET);
-}
-
-// Release any PENDING marketplace reservations whose hold has expired: restore the
-// listing's stock and mark the orders CANCELLED. Cheap to call opportunistically
-// (e.g. before a new checkout) so abandoned carts free their stock without a cron.
-export async function releaseExpiredReservations(): Promise<number> {
-  const expired = await prisma.order.findMany({
-    where: { kind: "MARKETPLACE", status: "PENDING", reservedUntil: { lt: new Date() } },
-    select: { id: true, marketplaceListingId: true, quantity: true },
-  });
-  if (!expired.length) return 0;
-
-  for (const o of expired) {
-    await prisma.$transaction(async (tx) => {
-      // Re-check it's still pending inside the txn to avoid racing the webhook.
-      const fresh = await tx.order.findUnique({ where: { id: o.id }, select: { status: true } });
-      if (fresh?.status !== "PENDING") return;
-      await tx.order.update({ where: { id: o.id }, data: { status: "CANCELLED" } });
-      if (o.marketplaceListingId) {
-        const listing = await tx.marketplaceListing.findUnique({
-          where: { id: o.marketplaceListingId },
-          select: { quantity: true, status: true },
-        });
-        if (listing) {
-          await tx.marketplaceListing.update({
-            where: { id: o.marketplaceListingId },
-            data: {
-              quantity: { increment: o.quantity },
-              // Re-activate a listing that had sold out while reserved.
-              ...(listing.status === "SOLD_OUT" ? { status: "ACTIVE" } : {}),
-            },
-          });
-        }
-      }
-    }).catch(() => {});
-  }
-  return expired.length;
 }

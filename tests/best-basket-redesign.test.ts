@@ -10,15 +10,14 @@ const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").repla
 // ─────────────────────────────────────────────────────────────────────────────
 // Best Basket redesign: search-and-pick a card is the primary interaction now,
 // with the raw-decklist paste demoted to a secondary "advanced" option. The
-// search widget was extracted from the marketplace's "List a card" flow
-// (SellerDashboard.tsx's old page-local CardSearch) into a shared component so
-// both flows stay on one implementation instead of forking a second copy.
+// search widget lives in a shared CardSearch component so any flow that needs
+// card lookup stays on one implementation instead of forking a second copy.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("CardSearch is a standalone reusable component with an onPick callback, not a navigate-away link", () => {
   const code = readCode("src/components/CardSearch.tsx");
   assert.match(code, /export function CardSearch/, "must be an exported component");
-  assert.match(code, /onPick:\s*\(c:\s*SearchCard\)\s*=>\s*void/, "must expose a select callback, matching the SellerDashboard precedent");
+  assert.match(code, /onPick:\s*\(c:\s*SearchCard\)\s*=>\s*void/, "must expose a select callback");
   assert.match(code, /\/api\/search\?q=/, "must reuse the existing /api/search endpoint, no new backend needed");
   assert.doesNotMatch(code, /next\/link/, "a pick must select the card, not navigate via <Link>");
 });
@@ -28,13 +27,6 @@ test("CardSearch supports keyboard arrow/enter selection (a gap in both prior im
   assert.match(code, /ArrowDown/, "must handle ArrowDown to move the active result");
   assert.match(code, /ArrowUp/, "must handle ArrowUp to move the active result");
   assert.match(code, /key === "Enter"/, "must handle Enter to pick the active result");
-});
-
-test("SellerDashboard reuses the shared CardSearch instead of its own page-local copy", () => {
-  const code = readCode("src/components/SellerDashboard.tsx");
-  assert.match(code, /import \{ CardSearch, type SearchCard \} from "\.\/CardSearch"/, "must import the extracted shared component");
-  assert.doesNotMatch(code, /function CardSearch\(/, "the old page-local CardSearch function must be gone, not duplicated");
-  assert.doesNotMatch(code, /interface SearchCard \{/, "the old page-local SearchCard interface must be gone, not duplicated");
 });
 
 test("BestBasket's primary flow is search-and-add: CardSearch feeds a picked-card list with qty and remove", () => {

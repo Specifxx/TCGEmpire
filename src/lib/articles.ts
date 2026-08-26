@@ -3478,235 +3478,6 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
   },
   {
-    slug: "how-to-buy-on-riftcompare-marketplace",
-    category: "guide",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // guide describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "How to Buy on the RiftCompare Marketplace",
-    excerpt:
-      "A step-by-step guide to buying Riftbound singles directly from other players on the RiftCompare Marketplace — finding a listing, checking out, and what happens to your money until the card actually arrives.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 6,
-    tags: ["marketplace", "buying", "guide", "escrow", "p2p"],
-    browseCta: {
-      href: "/marketplace",
-      label: "Browse the Marketplace →",
-      blurb: "See live listings from verified sellers in your market, ready to buy right now.",
-    },
-    body: `RiftCompare has always compared prices across stores — now you can also buy **directly from other players** through the **[RiftCompare Marketplace](/marketplace)**, a built-in P2P marketplace with buyer protection baked in. Here's exactly how it works, start to finish.
-
-## 1. Find a listing
-
-Marketplace listings show up two places:
-
-- **[The marketplace grid](/marketplace)** — browse every active listing in your market, filter by card, and see each seller's shop, condition and price.
-- **Right inside the price comparison.** If a seller's price beats every store for a card, it appears as a normal row on that card's page, tagged **"RiftCompare Marketplace."** You don't have to go looking for it separately — it's just another price to compare.
-
-Every listing shows the card's **condition** (Near Mint through Damaged), whether it's **foil**, the **seller's shop name and rating**, and a price in your local currency. Listings only show sellers shipping within your own market — no cross-border shipping surprises.
-
-## 2. Check out
-
-Add what you want to your cart and check out through **Stripe** — the same secure checkout used for card payments everywhere else. You'll see the item price, an estimated shipping cost, and the total before you confirm.
-
-Your payment does **not** go straight to the seller. It's held by RiftCompare until the order is actually delivered — that's the whole point of buying through the marketplace instead of a direct message or a forum trade.
-
-## 3. What happens after you pay
-
-- The seller gets notified immediately and has **14 days to ship** your order and add tracking. If they don't, you're **automatically refunded in full** — no back-and-forth required.
-- Once they mark it shipped, you'll get an email with the carrier and tracking number, plus an estimated delivery window.
-- Your money stays held the whole time your order is in transit.
-
-## 4. Confirm delivery (or let it auto-release)
-
-When your card arrives, open **[My orders](/marketplace/orders)** and tap **"Got it"** to confirm delivery — this instantly releases the seller's payout and closes out the order.
-
-Forget to confirm? No problem — funds **auto-release 14 days after the order ships** either way, so a seller never gets stuck waiting on you to click a button. You can also message the seller directly from the order if you want to check in before then.
-
-## 5. Message the seller
-
-Every order has a built-in chat thread with the seller — ask about shipping, condition, anything. No need to hunt down a Discord or trade forum to sort out a question about your order.
-
-## 6. If something goes wrong
-
-Tap **"Report a problem"** on the order. This pauses the scheduled release immediately and puts a real person on it — not an automated dispute bot. Common cases:
-
-- **Never shipped in time** → automatic full refund, no report needed.
-- **Item not as described / damaged / never arrived** → report it and we'll sort out a refund.
-- **Just have a question first?** Message the seller before it becomes a problem — most things are a shipping delay, not a scam.
-
-## Why this is different from a normal trade
-
-Buying from a random seller in a Discord server or Facebook group means sending money and hoping. On the RiftCompare Marketplace, your payment is never released until you have the card in hand (or the deadline passes with no dispute) — the platform is the thing standing between "I paid" and "I got scammed," not your judgment of a stranger's profile picture.
-
-The marketplace is new, so if anything looks off, there's a "Found a bug? Report it" link on every marketplace page that comes straight to us.
-
-## Ready to buy?
-
-**[Browse the marketplace](/marketplace)** to see what's listed right now, or check a specific card's page — marketplace listings show up right alongside every store price. Have cards to sell instead? **[Open a shop](/marketplace/sell)** — it's free to list.`,
-  },
-  {
-    slug: "riftcompare-marketplace-buyer-protection-explained",
-    category: "blog",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // post describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "RiftCompare Marketplace Buyer Protection",
-    excerpt:
-      "How the RiftCompare Marketplace actually protects your money when buying Riftbound cards from another player — escrow, auto-refunds, ship deadlines and what happens if a trade goes wrong.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 5,
-    tags: ["marketplace", "safety", "escrow", "buyer-protection", "trust"],
-    browseCta: {
-      href: "/marketplace/buyer-protection",
-      label: "Read the full buyer protection policy →",
-      blurb: "The exact rules — ship deadlines, release dates and how disputes are handled.",
-    },
-    body: `Buying a card from a stranger online is always a little nerve-wracking — you're trusting someone you've never met to actually ship what they said they'd ship. The RiftCompare Marketplace is built specifically to remove that risk. Here's exactly how, with no marketing fluff.
-
-## Your money doesn't go to the seller — not yet
-
-When you pay for a marketplace order, the money is held by RiftCompare, not sent to the seller. It only gets released once one of two things happens:
-
-1. **You confirm delivery** — you tap "Got it" once the card arrives, and the seller is paid out right then.
-2. **14 days pass after the order ships** with no dispute — funds auto-release automatically, so a seller isn't left waiting forever on a buyer who forgot to click a button.
-
-Either way, a seller only ever gets paid *after* the card is genuinely on its way to you and the delivery window has had a chance to play out.
-
-## What if the seller just doesn't ship?
-
-Every seller has **14 days from payment** to mark an order shipped and add tracking. Miss that window, and the order **automatically cancels and refunds you in full** — you don't have to notice, complain, or file anything. It just happens.
-
-## What if the card isn't what was listed, or never turns up?
-
-Tap **"Report a problem"** on the order (found in **[My orders](/marketplace/orders)**). This immediately pauses the scheduled fund release — the seller doesn't get paid while your report is open — and puts it in front of our team to sort out, whether that's a refund or getting the seller to make it right.
-
-This is different from most peer-to-peer trading (Discord, Facebook groups, trade forums), where once you've sent payment there's no mechanism to get it back if the other person ghosts.
-
-## Who are these sellers, anyway?
-
-Anyone selling on the marketplace needs a **verified email account** and has to explicitly agree to the marketplace seller terms before their shop goes live. Every seller has a public shop page with **ratings and reviews from past buyers** — check it before buying from someone new, the same way you'd check feedback on any other platform.
-
-## Can I talk to the seller before worrying?
-
-Yes — every order has built-in messaging with the seller. If tracking looks stalled or you have a question about condition, message them first. Most "is this a scam?" moments turn out to be a normal shipping delay once you actually ask.
-
-## The short version
-
-| Question | Answer |
-| --- | --- |
-| Where does my payment go when I pay? | Held by RiftCompare, not the seller |
-| When does the seller get paid? | After you confirm delivery, or 14 days after shipping, whichever comes first |
-| Seller doesn't ship in time? | Automatic full refund, no action needed from you |
-| Item's wrong / damaged / never arrives? | Report it — release pauses instantly, a real person handles it |
-| Can I message the seller? | Yes, directly on the order |
-
-Full details, including the exact policy language, are on the **[buyer protection page](/marketplace/buyer-protection)**.
-
-## Ready to buy?
-
-**[Browse the marketplace](/marketplace)** and buy with your payment protected the whole way through. New here? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
-  },
-  {
-    slug: "marketplace-vs-stores-where-to-buy-riftbound",
-    category: "blog",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // post describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "Marketplace vs Stores: Where to Buy Riftbound",
-    excerpt:
-      "RiftCompare shows you store prices AND player-to-player marketplace listings side by side. Here's when to buy from a store and when the marketplace is the better (or cheaper) call.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 5,
-    tags: ["marketplace", "buying", "stores", "comparison", "guide"],
-    body: `RiftCompare has always compared prices across dozens of stores. Now it also has a **[player-to-player marketplace](/marketplace)** built in — so which one should you actually buy from? Short answer: you don't have to choose, because we show you both at once. Here's how to think about it.
-
-## They're not competitors — they're the same comparison
-
-Marketplace listings don't live in a separate corner of the site. When a seller's marketplace price beats every store for a card, it shows up as **just another row** in that card's normal price comparison, tagged "RiftCompare Marketplace." You're already comparing both every time you search a card — you just might not have noticed.
-
-## When a store is the better call
-
-- **You want it today, or close to it.** Most stores have same-day or next-day dispatch and established shipping times. Marketplace sellers get 14 days to ship, which is usually faster but isn't guaranteed like a store's stated dispatch time.
-- **You're buying sealed product.** Booster boxes, Proving Grounds and packs are store territory — the marketplace is singles-only.
-- **You want the absolute path of least resistance.** Stores are businesses; there's no seller to coordinate with, no delivery confirmation step. Pay, wait, done.
-
-## When the marketplace is the better call
-
-- **The price is genuinely better.** Individual sellers don't carry store overhead, so marketplace listings frequently undercut retail — that's *why* they show up as the top price on a card page in the first place.
-- **You're after a specific condition or printing** a store doesn't have in stock. Marketplace sellers list exactly what's in their binder, including played copies at played-copy prices, alt-arts, and printings that sell out at retail in minutes.
-- **You want to actually talk to the seller.** Built-in messaging means you can ask "is this really Near Mint?" before you buy, something you can't do with a store listing.
-
-## The trust question, answered honestly
-
-The one real hesitation buying from a store vs. a marketplace seller is trust — a store is a business with a track record; a marketplace seller is a person. That's exactly why the marketplace holds your payment in **escrow** until delivery is confirmed (or auto-releases 14 days after shipping), and auto-refunds you in full if a seller doesn't ship within 14 days. You get the pricing upside of buying peer-to-peer without giving up the safety net of buying from a store. Full breakdown: **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
-
-## The practical answer
-
-Just search the card. Whatever's cheapest — store or marketplace listing — shows up first, in your currency, with shipping factored in. You don't need to decide in advance; **[the card database](/browse)** decides for you every time.
-
-## Ready to buy?
-
-**[Search any card](/browse)** to see stores and marketplace listings compared side by side, or go straight to the **[marketplace grid](/marketplace)** to browse player listings. First time buying from a seller? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
-  },
-  {
-    slug: "riftcompare-marketplace-fee-cut-2-percent",
-    category: "blog",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // post describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "RiftCompare Marketplace Fees Dropped to 2%",
-    excerpt:
-      "We've cut the RiftCompare Marketplace seller fee from 5% to 2% — and Premium members now sell for just 1%. Here's what changed, why, and how it stacks up against Cardmarket.",
-    author: "RiftCompare",
-    date: "2026-07-22",
-    readMins: 4,
-    tags: ["marketplace", "fees", "selling", "premium", "announcement"],
-    browseCta: {
-      href: "/marketplace/sell",
-      label: "Open your seller dashboard →",
-      blurb: "List a card and see exactly what you'll receive before you confirm.",
-    },
-    body: `Starting today, selling on the **[RiftCompare Marketplace](/marketplace)** costs less — a lot less. The platform fee is down from 5% to **2%**, and if you're a **[Premium](/premium)** member it's just **1%**. No tiers to unlock, no minimum sales volume to hit first — the rate applies automatically, from your very next sale.
-
-## What actually changed
-
-- **Standard sellers**: 5% → **2%** on every completed sale.
-- **Premium sellers**: **1%** — half the standard rate, on top of everything else Premium already includes (Value Finder, Rising Cards, the full Deal Finder list, and an ad-free site).
-- **Evaluated per sale, not per listing.** The rate that applies is whatever your account status is *at the moment a sale completes* — upgrade to Premium today, and your very next sale is charged at 1%, even on a listing you posted weeks ago.
-- **Nothing else changes.** Same escrow protection, same 14-day ship deadline, same buyer-side experience. This is purely a fee cut.
-
-## Why we did this
-
-RiftCompare's marketplace exists to make it easier — and cheaper — for players to buy and sell directly with each other. A lower fee means more of every sale actually lands in the seller's pocket, which matters most while the marketplace is still building up its base of real listings from real players.
-
-It's also just a better deal than the alternatives. Cardmarket, the biggest general TCG marketplace, charges sellers a tiered commission — 5% for a standard "Private" seller, dropping to 3% or 1.5% only once you qualify for its Professional/Powerseller tiers — plus a Trustee Service fee (0.5–1%) and a 3% currency-conversion charge on cross-border sales, landing around 6–8% all-in for most casual sellers. RiftCompare's 2% (or 1% with Premium) beats that from the first sale, with no tiers to climb and no currency-conversion surprise.
-
-## What you actually take home
-
-Say you sell a card for $20:
-
-| | Fee | You receive |
-|---|---|---|
-| Standard | 2% ($0.40) | **$19.60** |
-| Premium | 1% ($0.20) | **$19.80** |
-
-Your seller dashboard and Seller Funds page always show the exact numbers before you list and after you sell — no need to do this math yourself.
-
-## Selling for the first time?
-
-Any signed-in, email-verified user can list a card in a couple of minutes from the **[seller dashboard](/marketplace/sell)**. Payouts go through Stripe Connect once you've completed a quick identity check, and buyer payments are held in escrow until delivery is confirmed — full details in **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
-
-Already selling? The new rate applies automatically — nothing to change, nothing to opt into. Check **[Seller Funds](/marketplace/funds)** to see it reflected on your next completed sale.`,
-  },
-  {
     slug: "riftbound-pre-rift-rules-explained",
     category: "guide",
     title: "Riftbound Pre-Rift Rules Explained",
@@ -6460,11 +6231,12 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Bulk Pricer, the Condition Calculator and the 1% Marketplace fee — with pricing, screenshots and honest FAQs.",
+      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Bulk Pricer and the Condition Calculator — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
+    updated: "2026-08-26",
     readMins: 11,
-    tags: ["premium", "pricing", "tools", "value finder", "deal finder", "marketplace"],
+    tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
       src: "/blog/riftcompare-premium-explained.png",
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
@@ -6472,8 +6244,8 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     summary: [
       "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
       "**It unlocks 5 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), the full Deal Finder (full list, 4 views), and the Condition Impact Calculator. Best Basket — the multi-store cart optimiser — is free with any account, no Premium needed.",
-      "**It also cuts your Marketplace seller fee from 2% to 1%** on every sale, automatically, plus removes ads sitewide.",
-      "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools and the seller discount, never about seeing prices.",
+      "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
+      "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a month of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
@@ -6488,15 +6260,15 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), and the Condition Impact Calculator — plus a Marketplace seller fee cut from 2% to 1% and a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
+        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), and the Condition Impact Calculator — plus a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and the lower Marketplace fee.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and an ad-free site.",
       },
       {
         q: "What's the difference between a free account and Premium?",
-        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, the Condition Calculator, the 1% Marketplace fee and an ad-free site.",
+        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, the Condition Calculator and an ad-free site.",
       },
       {
         q: "Is there a free trial?",
@@ -6514,10 +6286,6 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
         q: "Does Premium remove ads on RiftCompare?",
         a: "Yes — every page is completely ad-free the moment you're Premium. It's automatic; there's nothing to switch on separately.",
       },
-      {
-        q: "How much lower is the Marketplace seller fee with Premium?",
-        a: "RiftCompare's peer-to-peer Marketplace normally takes a 2% fee on each sale. Premium sellers pay 1% instead — half the standard rate — applied automatically to every sale the moment you're Premium, with no separate opt-in.",
-      },
     ],
     itemList: {
       name: "What's included with RiftCompare Premium",
@@ -6527,13 +6295,12 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
         { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
         { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
         { name: "Condition Impact Calculator", description: "See how a card's value shifts between NM, LP, MP, HP and DMG.", url: "/tools/condition-calculator" },
-        { name: "1% Marketplace seller fee", description: "Half the standard 2% fee on every Marketplace sale, applied automatically.", url: "/marketplace/sell" },
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
       ],
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise, cuts your Marketplace seller fee in half, and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
+Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -6566,10 +6333,9 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Value Finder screener | — | — | ✓ |
 | Bulk Pricer | — | — | ✓ |
 | Condition Impact Calculator | — | — | ✓ |
-| Marketplace seller fee | — | 2% | **1%** |
 | Ad-free experience | — | — | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and the seller discount on top of that.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and an ad-free site on top of that.
 
 ## The 5 tools you only get with Premium
 
@@ -6593,7 +6359,7 @@ Rising Cards ranks cards by a composite of **demand and price-timing signals** �
 
 Deal Finder is the one built specifically around arbitrage — the same card, priced meaningfully differently in two places RiftCompare tracks at the same time. It has four separate views:
 
-- **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store or our own Marketplace currently charges (useful if you're deciding whether to sell)
+- **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store currently charges (useful if you're deciding whether to sell)
 - **Underpriced vs TCGplayer** — cards cheaper elsewhere than TCGplayer's own listing
 - **Cheapest on eBay** — the reverse: cards where eBay is currently the cheapest place to buy
 - **Cross-region** — cards priced meaningfully cheaper in a different market RiftCompare tracks
@@ -6611,12 +6377,6 @@ Paste an entire want-list, trade pile or full collection, and Bulk Pricer matche
 ![The Condition Impact Calculator — estimating a card's value across NM, LP, MP, HP and DMG conditions](/blog/premium/06-condition-calculator.png)
 
 Search any card and see how its value shifts across **NM, LP, MP, HP and DMG** — the exact same multiplier scale your portfolio is already valued with, run forward on any single card before you buy, sell or grade a copy.
-
-## The Marketplace discount: 1% instead of 2%
-
-![The RiftCompare Marketplace seller dashboard confirming the Premium 1% fee rate, down from the standard 2%](/blog/premium/07-marketplace-sell.png)
-
-If you sell on the RiftCompare Marketplace, Premium quietly pays for itself the fastest here: the standard seller fee is **2%**, and Premium sellers pay **1%** — half the rate, applied automatically to every sale from the moment you're Premium, with no separate toggle or opt-in. On a single $250 sale that's the difference between a $5 and a $2.50 fee; sell a handful of cards a month and the fee cut alone can cover the subscription.
 
 ## Everything, at a glance
 
@@ -6639,9 +6399,8 @@ Being straightforward here, since the point of this post is accuracy over hype: 
 
 1. **Active buyers who want an edge** — Value Finder and Rising Cards exist to surface opportunities you would not have found by browsing normally.
 2. **Anyone pricing a whole list at a time** — the Bulk Pricer turns a tedious, repetitive task into one paste (Best Basket does the same for buying a list, and it's already free with your account).
-3. **RiftCompare Marketplace sellers** — the 1% fee alone can offset the subscription within a handful of sales.
 
-If none of those describe how you use the site, the free tier — which still includes full price comparison, alerts, a portfolio tracker and Best Basket — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
+If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts, a portfolio tracker and Best Basket — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
   },
   ...SEO_PACK_ARTICLES,

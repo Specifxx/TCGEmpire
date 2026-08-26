@@ -187,8 +187,8 @@ test("methodology page states the condition mapping and FX policy", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Navbar — Best Basket promoted, marketplace buy-chip removed, seller access
-// (funds/orders) untouched.
+// Navbar — Best Basket promoted, and the peer-to-peer marketplace removed
+// entirely (2026-08): no buy-chip, no routes, no nav gate.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("Best Basket is a first-class Navbar link", () => {
@@ -205,16 +205,16 @@ test("the marketplace buy-chip is gone from the primary Navbar", () => {
   assert.doesNotMatch(code, /aria-label="Marketplace"/, "the marketplace chip markup must be gone");
 });
 
-test("marketplace routes and seller-management links stay intact (nav-only removal)", () => {
-  // The removal is scoped to the primary header — existing sellers must keep
-  // access to orders/funds/dashboard. This just confirms the routes still
-  // exist as files; it does not re-assert their content.
+test("the marketplace routes are fully removed", () => {
+  // The P2P marketplace was killed entirely — every route under /marketplace
+  // must 404, so none of its page files may survive in the tree.
   for (const p of [
     "src/app/marketplace/page.tsx",
     "src/app/marketplace/orders/page.tsx",
     "src/app/marketplace/funds/page.tsx",
+    "src/app/marketplace/sell/page.tsx",
   ]) {
-    assert.doesNotThrow(() => readFileSync(join(ROOT, p), "utf8"), `${p} must still exist — this was a nav-only change`);
+    assert.throws(() => readFileSync(join(ROOT, p), "utf8"), `${p} must be gone — the marketplace was removed`);
   }
 });
 

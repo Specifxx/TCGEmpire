@@ -39,12 +39,6 @@ const TOOLS: Tool[] = [
     desc: "Contact messages, store suggestions and feedback — everything sent in through a site form.",
   },
   {
-    href: "/admin/marketplace",
-    title: "Marketplace",
-    icon: "🛒",
-    desc: "Wind-down only (feature is off): disputed orders, seller suspensions, force release/refund tools, and support tickets.",
-  },
-  {
     href: "/admin/rising",
     title: "Rising cards",
     icon: "🚀",
@@ -60,7 +54,7 @@ const TOOLS: Tool[] = [
     href: "/admin/loyalty",
     title: "Loyal users",
     icon: "🏆",
-    desc: "Top marketplace buyers/sellers, biggest collections, longest-tenured Premium members.",
+    desc: "Biggest collections and longest-tenured Premium members.",
   },
   {
     href: "/admin/store-health",

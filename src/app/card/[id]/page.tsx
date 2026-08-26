@@ -26,8 +26,6 @@ import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
-import { MarketplaceHeroBlock } from "@/components/MarketplaceHeroBlock";
-import { getActiveListingsForCard } from "@/lib/marketplace";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { KeywordText } from "@/components/KeywordTooltip";
@@ -359,36 +357,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   // emit the Product markup when we actually have priced, in-stock offers to back
   // it — unpriced cards simply omit it rather than emit an invalid empty Product.
   //
-  // Marketplace listings (once MARKETPLACE_PUBLIC) join as individual Offer
-  // entries alongside the store AggregateOffer — the card page IS the product
-  // page Google sees for each listing; there are deliberately no per-listing
-  // pages (thin/duplicate content that 404s when sold). Freshness is handled by
-  // revalidateCardPage() firing on every listing mutation.
-  const mpListings = await getActiveListingsForCard(card.id).catch(() => []);
-  // priceValidUntil = now + 1 day: store prices refresh on the daily import and
-  // listing churn re-renders the page on-demand, so each snapshot is honest
-  // until the next pass overwrites it.
+  // priceValidUntil = now + 1 day: store prices refresh on the daily import, so
+  // each snapshot is honest until the next pass overwrites it.
   const priceValidUntil = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
   const hasStoreOffers = baseline.prices.length > 0 && baseline.lowest != null;
-  // Google's "merchant listing" price/shipping/returns snippet requires every
-  // Offer to declare shippingDetails + hasMerchantReturnPolicy (missing either
-  // is flagged in Search Console and can suppress the enhanced display). We can
-  // only declare these HONESTLY where we're the actual merchant of record —
-  // RiftCompare's own Marketplace, where a listing's real flat shipping rate and
-  // our own (real, documented) buyer-protection terms are known facts. The store
-  // AggregateOffer above aggregates many independent third-party retailers we
-  // don't control shipping/returns for, so it deliberately carries neither field
-  // rather than assert something that isn't true for at least some of them.
-  // Our buyer protection (see /marketplace/buyer-protection) covers "item never
-  // arrived / not as described / damaged", not ordinary change-of-mind returns —
-  // MerchantReturnUnspecified is the honest schema.org category for that shape of
-  // guarantee, rather than overclaiming a standard return window we don't offer.
-  // applicableCountry is per-listing since the Marketplace serves several markets.
-  const marketplaceReturnPolicy = (listingCountry: string) => ({
-    "@type": "MerchantReturnPolicy",
-    returnPolicyCategory: "https://schema.org/MerchantReturnUnspecified",
-    applicableCountry: isoCountry(listingCountry as Country),
-  });
   // Hoisted above the JSON-LD: the AggregateOffer needs a landing URL, and
   // Google's merchant-listing guidance lists offers.url as recommended — the
   // per-listing Offer nodes below already set one, so the aggregate was the odd
@@ -422,11 +394,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     // lib/market-rows.ts/effectiveShippingCents), so this asserts nothing the
     // page doesn't already claim. shippingDetails is omitted, not zeroed, for
     // the rare row where even that estimate is unknown ("at checkout").
-    // hasMerchantReturnPolicy is deliberately NOT set here (unlike the
-    // Marketplace Offers below) — return policy is a fact about the individual
-    // third-party retailer that this data does not track, and asserting one
-    // uniformly would be the same kind of overclaim the Marketplace policy note
-    // above warns against.
+    // hasMerchantReturnPolicy is deliberately NOT set here — return policy is a
+    // fact about the individual third-party retailer that this data does not
+    // track, and asserting one uniformly would overclaim a guarantee we can't
+    // make on their behalf.
     ...baseline.prices.map((row) => ({
       "@type": "Offer",
       price: (row.priceCents / 100).toFixed(2),
@@ -445,31 +416,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           }
         : {}),
     })),
-    ...mpListings.map((l) => {
-      const shipCents = l.seller.sellerProfile?.shippingFlatCents;
-      return {
-        "@type": "Offer",
-        price: (l.priceCents / 100).toFixed(2),
-        priceCurrency: l.currency,
-        availability: "https://schema.org/InStock",
-        itemCondition: l.condition === "NM" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
-        seller: { "@type": "Organization", name: l.seller.sellerProfile?.shopName ?? l.seller.displayName },
-        url: `${SITE_URL}/card/${card.slug ?? params.id}#marketplace-listings`,
-        priceValidUntil,
-        // The seller's own real flat rate (see SellerProfile.shippingFlatCents) —
-        // omitted rather than guessed when a seller hasn't set one.
-        ...(shipCents != null
-          ? {
-              shippingDetails: {
-                "@type": "OfferShippingDetails",
-                shippingRate: { "@type": "MonetaryAmount", value: (shipCents / 100).toFixed(2), currency: l.currency },
-                shippingDestination: { "@type": "DefinedRegion", addressCountry: isoCountry(l.country as Country) },
-              },
-            }
-          : {}),
-        hasMerchantReturnPolicy: marketplaceReturnPolicy(l.country),
-      };
-    }),
   ];
   // Product is emitted ONLY when real offers exist. That is deliberate and stays:
   // Google treats a Product carrying none of offers/review/aggregateRating as a
@@ -986,7 +932,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               rate). The #1 in-stock retailer row must be visible without
               scrolling — that's the whole point of a price-comparison site,
               and it used to sit below an entire "About" essay + empty-state
-              fallback + Marketplace hero. Moving it up front is a REORDER, not
+              fallback. Moving it up front is a REORDER, not
               a content deletion: About/FAQ/prices-by-market/the affiliate eBay
               block are all still in the DOM a little further down (rankings
               depend on content EXISTING in the DOM, not on where — see
@@ -1071,14 +1017,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 collected on the AU baseline market). */}
             <PriceHistoryChart cardId={card.id} rows={rows} />
           </section>
-
-          {/* RiftCompare Marketplace hero — the main attention-grab, shown only
-              when this card actually has active P2P listings. Moved BELOW the
-              store price comparison (was above it): the store table is the
-              proven, always-populated primary path, and a P2P listing (when
-              one exists) is the secondary upsell beneath it, not competing
-              with it for the first thing a buyer sees. */}
-          <MarketplaceHeroBlock cardId={card.id} cardName={displayName} />
 
           {/* ── OUR OWN ANALYSIS ────────────────────────────────────────────
               Still leads over the FAQ, the prices-by-market table and — most

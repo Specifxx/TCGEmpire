@@ -1,11 +1,11 @@
-// Public share links for a collection (/c/<token>) and a marketplace listing
-// (/l/<token>), plus the post text a seller pastes into a trading group.
+// Public share links for a collection (/c/<token>), plus the post text a
+// collector pastes into a trading group.
 //
 // WHY THESE EXIST. Riftbound trading happens in Discord and Facebook groups, not
-// on price sites. A collection or a listing that can only be seen by signing in
-// cannot travel there, so the site is absent from the exact conversation where a
-// trade gets made. A link that unfurls with the card art and the price puts us in
-// that conversation for free, every time somebody shares one.
+// on price sites. A collection that can only be seen by signing in cannot travel
+// there, so the site is absent from the exact conversation where a trade gets
+// made. A link that unfurls with the card art and the value puts us in that
+// conversation for free, every time somebody shares one.
 //
 // ── TWO RULES THIS FILE ENFORCES, BOTH LEARNED THE HARD WAY ELSEWHERE ───────
 // 1. A share token is a CAPABILITY, not an identifier. Anyone holding the URL
@@ -156,95 +156,9 @@ export async function getSharedCollection(token: string, country: Country): Prom
   };
 }
 
-// ── Marketplace listings ────────────────────────────────────────────────────
-
-/**
- * Get (or lazily mint) a listing's share token.
- *
- * Lazy rather than minted at creation time so existing rows need no backfill
- * migration and a seller who never shares never carries a token. Only the
- * listing's OWNER may call this — the caller checks that; this function
- * deliberately does not, so it can also be used by an admin tool later.
- */
-export async function ensureListingShare(listingId: string): Promise<string | null> {
-  const row = await prisma.marketplaceListing.findUnique({
-    where: { id: listingId },
-    select: { shareId: true },
-  });
-  if (!row) return null;
-  if (row.shareId) return row.shareId;
-  const token = newShareToken();
-  await prisma.marketplaceListing.update({ where: { id: listingId }, data: { shareId: token } });
-  return token;
-}
-
-export type SharedListing = {
-  id: string;
-  card: CardTileData;
-  condition: string;
-  isFoil: boolean;
-  priceCents: number;
-  quantity: number;
-  currency: string;
-  country: string;
-  status: string;
-  sellerName: string;
-  shopName: string | null;
-  /** Cheapest tracked STORE price for the same card in the same market, or null. */
-  marketCents: number | null;
-};
-
-export async function getSharedListing(token: string): Promise<SharedListing | null> {
-  if (!isShareToken(token)) return null;
-  const l = await prisma.marketplaceListing.findUnique({
-    where: { shareId: token },
-    select: {
-      id: true,
-      condition: true,
-      isFoil: true,
-      priceCents: true,
-      quantity: true,
-      currency: true,
-      country: true,
-      status: true,
-      cardId: true,
-      seller: { select: { displayName: true, sellerProfile: { select: { shopName: true } } } },
-    },
-  });
-  // A REMOVED listing is gone, not merely inactive — its share page must 404
-  // rather than render a dead price. PAUSED and SOLD_OUT still render, clearly
-  // labelled: a link in a Discord channel outlives the listing's availability,
-  // and "this sold" is a far better landing than a 404 for someone who followed
-  // it. The page shows the card either way, so the visit is never wasted.
-  if (!l || l.status === "REMOVED") return null;
-
-  const card = await prisma.card.findUnique({
-    where: { id: l.cardId },
-    select: cardTileSelect(l.country as Country),
-  });
-  if (!card) return null;
-  const tile = card as unknown as CardTileData;
-
-  return {
-    id: l.id,
-    card: tile,
-    condition: l.condition,
-    isFoil: l.isFoil,
-    priceCents: l.priceCents,
-    quantity: l.quantity,
-    currency: l.currency,
-    country: l.country,
-    status: l.status,
-    sellerName: l.seller.displayName,
-    shopName: l.seller.sellerProfile?.shopName ?? null,
-    marketCents: pickPrice(tile, l.country as Country),
-  };
-}
-
 // ── Post text ───────────────────────────────────────────────────────────────
 
 export const shareUrlForCollection = (token: string) => `${SITE_URL}/c/${token}`;
-export const shareUrlForListing = (token: string) => `${SITE_URL}/l/${token}`;
 
 /**
  * The copy-paste post for a trading group.
@@ -259,37 +173,7 @@ export const shareUrlForListing = (token: string) => `${SITE_URL}/l/${token}`;
  * (stores from $24)" is a selling point the seller would otherwise have to look
  * up themselves, and it is the number only we can supply.
  */
-export function listingPostText(l: {
-  cardName: string;
-  cardSetCode: string;
-  cardCollectorNumber: string;
-  condition: string;
-  isFoil: boolean;
-  priceCents: number;
-  quantity: number;
-  currency: string;
-  marketCents: number | null;
-  url: string;
-}): string {
-  const price = formatMoney(l.priceCents, l.currency);
-  const lines = [
-    `${l.cardName} (${l.cardSetCode} ${l.cardCollectorNumber})${l.isFoil ? " — Foil" : ""}`,
-    `${price} · ${l.condition}${l.quantity > 1 ? ` · ${l.quantity} available` : ""}`,
-  ];
-  // Only claim a saving when there is one. A "cheaper than stores" line on a
-  // listing that is dearer than every store is the kind of detail that gets a
-  // seller called out in the channel, and us blamed for writing it.
-  if (l.marketCents != null && l.marketCents > l.priceCents) {
-    const pct = Math.round(((l.marketCents - l.priceCents) / l.marketCents) * 100);
-    lines.push(`${pct}% under the cheapest store price (${formatMoney(l.marketCents, l.currency)})`);
-  } else if (l.marketCents != null) {
-    lines.push(`Cheapest store price right now: ${formatMoney(l.marketCents, l.currency)}`);
-  }
-  lines.push(l.url);
-  return lines.join("\n");
-}
-
-/** The same idea for a whole collection — a "here's my binder" post. */
+/** A "here's my binder" post for a whole collection. */
 export function collectionPostText(c: {
   ownerName: string;
   distinctCards: number;

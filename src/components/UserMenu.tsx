@@ -167,14 +167,9 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
             <MenuLink href="/watching" onClick={() => setOpen(false)}>🔔 My watchlist</MenuLink>
-            {/* Marketplace disabled site-wide (2026-08-19) — this whole block used to
-                render "Seller dashboard" unconditionally (unlike the two links below
-                it, which were already gated by MARKETPLACE_NAV_VISIBLE) and the two
-                gated links. All three are gone from this menu now. The routes
-                themselves are untouched — anyone with an existing order/listing to
-                manage can still reach /marketplace/sell, /marketplace/orders and
-                /marketplace/funds directly (e.g. via a transactional email link);
-                they're just no longer linked from here. See lib/marketplace.ts. */}
+            {/* The P2P marketplace was removed entirely (2026-08), so the seller
+                dashboard / orders / funds links this menu used to carry are gone
+                with it — the site is back to pure price comparison. */}
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
               Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
             </MenuLink>

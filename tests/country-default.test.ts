@@ -120,10 +120,3 @@ test("a retailer's own AU market is NOT swept away", () => {
     assert.match(read(f), /country \?\? "AU"/, `${f}: the retailer-market fallback must survive`);
   }
 });
-
-test("genuinely AU-specific logic survives too", () => {
-  // Remote-postcode surcharges and Stripe Connect's AU handling are about
-  // Australia the country, not about a default.
-  assert.match(read("src/lib/shipping.ts"), /country === "AU"/);
-  assert.match(read("src/lib/connect.ts"), /country === "AU"/);
-});

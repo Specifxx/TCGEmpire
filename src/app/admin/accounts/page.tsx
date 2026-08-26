@@ -43,7 +43,6 @@ export default async function AccountsAdminPage({
     googleId: string | null;
     discordId: string | null;
     isAdmin: boolean;
-    isVerifiedSeller: boolean;
     premiumUntil: Date | null;
     trialStartedAt: Date | null;
     createdAt: Date;
@@ -78,7 +77,7 @@ export default async function AccountsAdminPage({
         take: TAKE,
         select: {
           id: true, email: true, displayName: true, emailVerified: true, passwordHash: true,
-          googleId: true, discordId: true, isAdmin: true, isVerifiedSeller: true,
+          googleId: true, discordId: true, isAdmin: true,
           premiumUntil: true, trialStartedAt: true, createdAt: true,
         },
       }),
@@ -334,9 +333,7 @@ export default async function AccountsAdminPage({
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-1">
-                          {u.isAdmin && <span className="chip bg-brand-500/15 text-brand-300">admin</span>}
-                          {u.isVerifiedSeller && <span className="chip bg-ink-800 text-slate-400">seller</span>}
-                          {!u.isAdmin && !u.isVerifiedSeller && <span className="text-slate-600">—</span>}
+                          {u.isAdmin ? <span className="chip bg-brand-500/15 text-brand-300">admin</span> : <span className="text-slate-600">—</span>}
                         </div>
                       </td>
                     </tr>

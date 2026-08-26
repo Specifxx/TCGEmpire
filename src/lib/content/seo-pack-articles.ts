@@ -84,8 +84,6 @@ const L = {
   mostValuable: "/guides/most-valuable-riftbound-cards",
   whereToBuy: "/guides/where-to-buy-riftbound-cards",
   boxEvGuide: "/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles",
-  marketplaceVsStores: "/blog/marketplace-vs-stores-where-to-buy-riftbound",
-  buyerProtection: "/blog/riftcompare-marketplace-buyer-protection-explained",
 } as const;
 
 const AUTHOR = "Bill";

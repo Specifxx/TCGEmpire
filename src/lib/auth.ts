@@ -52,7 +52,6 @@ export interface SessionUser {
   emailVerified: boolean;
   balanceCents: number;
   isAdmin: boolean;
-  isVerifiedSeller: boolean;
   // End of the current paid Premium period (drives the ad-free site etc.).
   premiumUntil: Date | null;
   // When this account first started a free trial (null = never → trial-eligible).
@@ -132,10 +131,6 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
-      // Open selling: any signed-in user with a verified email may list on the
-      // marketplace (Stripe Connect onboarding + KYC happens separately, before
-      // payouts are enabled — see lib/connect.ts). Admins can always sell/test.
-      isVerifiedSeller: !!user.emailVerified || user.isAdmin || isAdminEmail(user.email),
       premiumUntil: user.premiumUntil,
       trialStartedAt: user.trialStartedAt,
       preferredCountry: user.preferredCountry,

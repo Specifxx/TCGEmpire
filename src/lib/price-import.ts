@@ -11,7 +11,6 @@ import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, eb
 import { importSealed } from "./sealed-import";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
-import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
@@ -1803,16 +1802,6 @@ export async function importPrices(): Promise<ImportSummary> {
     }
   } catch (e) {
     console.warn("CardTrader import failed:", e);
-  }
-
-  // ---- RiftCompare Marketplace (our own verified-seller listings) --------------
-  // Surface verified sellers' cheapest active listing per market as a source, so
-  // marketplace cards show up in the comparison. Isolated so it never fails the run.
-  try {
-    const n = await importMarketplaceListings();
-    if (n > 0) summary.stores.push({ name: "RiftCompare Marketplace", products: n, priced: n, matched: n, unmatched: 0 });
-  } catch (e) {
-    console.warn("Marketplace import failed:", e);
   }
 
   // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,

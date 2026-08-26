@@ -130,13 +130,6 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          # Never set anywhere in this workflow before — importMarketplaceListings()
-          # (lib/marketplace.ts) early-returns 0 without it, so every scheduled/manual/
-          # push-triggered import silently skipped syncing marketplace listings into
-          # the price comparison, regardless of what's actually listed. Mirrors the
-          # production value (see docs/MARKETPLACE.md); override via a repo variable
-          # if that ever needs to differ from CI.
-          NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-prices.ts
       - name: Import sealed products
         # Populate the /sealed page (booster boxes/packs across AU/US). Nothing
@@ -164,13 +157,6 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          # Never set anywhere in this workflow before — importMarketplaceListings()
-          # (lib/marketplace.ts) early-returns 0 without it, so every scheduled/manual/
-          # push-triggered import silently skipped syncing marketplace listings into
-          # the price comparison, regardless of what's actually listed. Mirrors the
-          # production value (see docs/MARKETPLACE.md); override via a repo variable
-          # if that ever needs to differ from CI.
-          NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-sealed.ts
 
       - name: Revalidate site pages (on-demand ISR)

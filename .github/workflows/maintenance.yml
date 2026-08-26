@@ -54,7 +54,6 @@ on:
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
-          - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
           - repair-history-card-ids # THE FIX for blank price charts: rewrites a history project's Card.id values onto the LIVE catalogue, matching on externalId, so PriceHistory rows join again (the FK cascades them). Every history project currently has 0% of its cardIds resolving against the live Card table, because the operational catalogue was REBUILT rather than restored and every card got a fresh cuid. DRY RUN unless dry_run is set to false. Optional `source` input picks which history variable to repair (default: whichever db-history.ts resolves).
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
@@ -3934,48 +3933,6 @@ jobs:
       - name: Remove @riftcompare.seed persona accounts
         if: inputs.task == 'remove-seed-accounts'
         run: npx tsx scripts/remove-seed-accounts.ts
-
-      # Every smoke-test step below uses always() so one secret being missing
-      # doesn't cascade into GitHub Actions skipping the rest by default (its
-      # normal behaviour once any earlier step fails) — each of these checks is
-      # independent and should report its own real status regardless of the
-      # others.
-      - name: "Marketplace smoke test: detect Stripe key mode"
-        id: stripe_mode
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-mode.ts
-
-      - name: "Marketplace smoke test: TEST mode — Connect account create/delete round-trip"
-        if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'test'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-connect-account.ts
-
-      - name: "Marketplace smoke test: LIVE mode — Connect account create/delete round-trip"
-        if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'live'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-connect-live.ts
-
-      - name: "Marketplace smoke test: CRON_SECRET against the live cron endpoint"
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-        run: npx tsx scripts/test-cron-secret.ts
-
-      - name: "Marketplace smoke test: main Stripe webhook signature (STRIPE_WEBHOOK_SECRET)"
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-        run: npx tsx scripts/test-stripe-webhook-signature.ts main
-
-      - name: "Marketplace smoke test: Connect webhook signature (STRIPE_CONNECT_WEBHOOK_SECRET)"
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          STRIPE_CONNECT_WEBHOOK_SECRET: ${{ secrets.STRIPE_CONNECT_WEBHOOK_SECRET }}
-        run: npx tsx scripts/test-stripe-webhook-signature.ts connect
 
       - name: Audit outbound clicks (read-only leaderboard)
         if: inputs.task == 'audit-clicks'

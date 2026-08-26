@@ -32,8 +32,7 @@ type Client = {
 
 // Returns the NEXT value for `key` (i.e. already incremented) — display it as
 // `RC-${n}`. Pass the transaction client when calling this inside a `$transaction`
-// (checkout does; see api/marketplace/stripe/checkout/route.ts) so the number is
-// only committed if the surrounding write succeeds.
+// so the number is only committed if the surrounding write succeeds.
 export async function nextNumber(key: keyof typeof SEED, client: Client = prisma): Promise<number> {
   // Idempotent seed — a plain `create` would throw on the (extremely likely) case
   // that another request already seeded this key first.

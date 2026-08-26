@@ -19,9 +19,9 @@ const STATUS_STYLE: Record<string, string> = {
   CLOSED: "bg-ink-800 text-slate-500",
 };
 
-// Admin queue for marketplace support tickets — same access pattern as
-// /admin/messages (ADMIN_TOKEN query key or a real admin session), but tickets
-// also need status/notes tracked, so each row has an inline editor (saves via
+// Admin queue for support tickets — same access pattern as /admin/messages
+// (ADMIN_TOKEN query key or a real admin session), but tickets also need
+// status/notes tracked, so each row has an inline editor (saves via
 // PATCH /api/admin/support, which requires a real admin session).
 export default async function AdminSupportPage({ searchParams }: { searchParams: { key?: string } }) {
   const token = process.env.ADMIN_TOKEN;
@@ -42,7 +42,7 @@ export default async function AdminSupportPage({ searchParams }: { searchParams:
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
-        <Link href={`/admin/marketplace${keySuffix}`} className="hover:text-slate-300">Marketplace admin</Link>
+        <Link href={`/admin${keySuffix}`} className="hover:text-slate-300">Admin</Link>
         <span>/</span>
         <span className="text-slate-300">Support tickets</span>
       </nav>

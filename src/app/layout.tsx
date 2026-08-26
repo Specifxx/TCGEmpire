@@ -16,7 +16,6 @@ import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
-import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
@@ -352,24 +351,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
-            {/* Returns sits OUTSIDE the MARKETPLACE_NAV_VISIBLE gate on purpose:
-                Google Merchant Center and Shopping ads need a conventional return
-                policy reachable from every page regardless of whether marketplace
-                navigation is currently surfaced. */}
-            <Link href="/returns" className="tap-link text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
-            <span className="text-ink-700">·</span>
-            {MARKETPLACE_NAV_VISIBLE && (
-              <>
-                <Link href="/marketplace/terms" className="tap-link text-slate-300 hover:text-brand-400">Marketplace terms</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/buyer-protection" className="tap-link text-slate-300 hover:text-brand-400">Buyer protection</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/shipping" className="tap-link text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/faq" className="tap-link text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
-                <span className="text-ink-700">·</span>
-              </>
-            )}
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <span className="text-ink-700">·</span>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
