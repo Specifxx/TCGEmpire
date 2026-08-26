@@ -29,11 +29,12 @@ export function NewsletterSignup({
   trackEvent?: string;
 }) {
   // May render OUTSIDE CountryProvider (footer) — read the market cookie directly.
-  const country = typeof document !== "undefined" ? /(?:^|; )country=(\w+)/.exec(document.cookie)?.[1] ?? "AU" : "AU";
+  // Falls back to the site default (US) when no market cookie is set yet.
+  const country = typeof document !== "undefined" ? /(?:^|; )country=(\w+)/.exec(document.cookie)?.[1] ?? "US" : "US";
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
 
-  const label = heading ?? `📬 Get the weekly ${siteName} Index summary in your inbox`;
+  const label = heading ?? `📬 Get the weekly ${siteName} market summary in your inbox`;
   const doneMsg = done ?? "✓ You're on the list — first summary lands this week.";
 
   async function submit(e: React.FormEvent) {
