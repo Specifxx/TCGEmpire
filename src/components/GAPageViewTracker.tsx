@@ -35,6 +35,10 @@ function PageViewTracker() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.gtag) return;
+    // Admin pages are internal tooling, not audience traffic — never log them to
+    // analytics (they'd otherwise inflate page_view counts and leak internal
+    // paths into GA reports). Covers /admin and every /admin/* sub-route.
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) return;
     const query = searchParams.toString();
     const path = query ? `${pathname}?${query}` : pathname;
     const location = `${window.location.origin}${path}`;
