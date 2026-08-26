@@ -1,8 +1,8 @@
 // Posts a daily Discord update via an incoming webhook. No-ops (safely) unless
 // DISCORD_WEBHOOK_URL is set, so it ships inert until the webhook is configured.
 //
-// The market wrap used to be featured here. Report generation is now DELETED (see
-// lib/market-report.ts), so there is no fresh wrap to feature and never will be —
+// The market wrap used to be featured here. The market-report feature is now
+// DELETED, so there is no fresh wrap to feature and never will be —
 // the old freshness gate around it was already permanently false, so the branch
 // and its getLatestMarketReport() read are gone rather than left as dead weight.
 // The daily post is the Riftle prompt.

@@ -35,7 +35,7 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Compare prices across every store + eBay", anon: true, account: true, premium: true },
   { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
   { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
-  { feature: "RiftCompare Index, movers & daily wrap", anon: true, account: true, premium: true },
+  { feature: "Daily price movers — biggest risers & fallers", anon: true, account: true, premium: true },
   { feature: "Price alerts", anon: false, account: true, premium: true },
   { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
   { feature: "Best Basket — cheapest store split, postage included", anon: false, account: true, premium: true },
@@ -77,7 +77,7 @@ export const DIALOG_OMIT_FEATURES = new Set([
   "Ad-free experience",
   "Condition Impact Calculator",
   "Deck builder, trade calculator & box EV",
-  "RiftCompare Index, movers & daily wrap",
+  "Daily price movers — biggest risers & fallers",
   "Price alerts",
   "Portfolio tracker — history, P&L, CSV export",
 ]);

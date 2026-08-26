@@ -73,10 +73,7 @@ export default function EditorialPolicyPage() {
           <p>
             Guides and posts are written by the people who run {SITE_NAME}, publishing under the{" "}
             <Link href="/authors/riftcompare-editorial" className="text-brand-400 hover:underline">RiftCompare</Link>{" "}
-            byline. Writing that is generated directly from our price database — index movements,
-            price snapshots, set-level distributions — carries a separate{" "}
-            <Link href="/authors/riftcompare-markets-desk" className="text-brand-400 hover:underline">RiftCompare Markets Desk</Link>{" "}
-            byline instead, so you can always tell which is which.
+            byline.
           </p>
           <p>
             Every guide and post shows its author, its publish date and, where it has been

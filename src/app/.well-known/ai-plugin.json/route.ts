@@ -20,8 +20,7 @@ export function GET() {
       description_for_model:
         "Read-only Riftbound TCG price data: card search, per-card prices in every market, the full " +
         "store-by-store listing comparison (item price + shipping = total delivered cost) so you can find the " +
-        "cheapest place to buy a card, sealed-product prices, and the RiftCompare Index (a daily market index " +
-        "for Riftbound singles). No authentication required.",
+        "cheapest place to buy a card, and sealed-product prices. No authentication required.",
       auth: { type: "none" },
       api: { type: "openapi", url: `${SITE_URL}/openapi.json`, is_user_authenticated: false },
       logo_url: `${SITE_URL}/icon.png`,

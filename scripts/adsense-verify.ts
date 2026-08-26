@@ -43,7 +43,7 @@ const DEFAULT_PATHS: [string, string][] = [
   ["/guides", "guides hub"],
   ["/blog", "blog hub"],
   ["/about", "static / policy"],
-  ["/market", "tool"],
+  ["/movers", "tool"],
   ["/marketplace", "marketplace"],
   ["/decks", "decks"],
 ];

@@ -76,7 +76,7 @@ const MUST_404_RAW = [
 
 // Known-good URLs that must KEEP returning 200 — the other half of the check.
 // A fix that 404s everything would otherwise pass.
-const MUST_200 = (process.env.STATUS_CHECK_OK ?? "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/authors,/market")
+const MUST_200 = (process.env.STATUS_CHECK_OK ?? "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/authors,/movers")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);

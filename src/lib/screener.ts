@@ -13,7 +13,7 @@ import { pickPrice, priceField, type Country } from "./country";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
 import { CONTENT_TAG } from "./revalidate-content";
-import { sydneyDayKey } from "./market-index";
+import { sydneyDayKey } from "./price-history";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
 const WINDOW_DAYS = 30;

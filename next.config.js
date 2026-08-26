@@ -195,14 +195,13 @@ const nextConfig = {
         destination: "/deck",
         permanent: true,
       },
-      // Retired the daily-market-wrap archive and stopped generating new auto-
-      // reports entirely (see lib/market-report.ts) — a run of near-identical
-      // templated pages, one per day forever, was exactly the "scaled content
-      // abuse" shape putting the AdSense application at risk. 301 to the real
-      // Index tool rather than 404ing any indexed/inbound links.
+      // The daily-market-wrap archive, the auto-generated market reports and the
+      // RiftCompare Index have all been retired. 301 any surviving inbound/indexed
+      // /market/wrap links to the price movers page — the closest live surface —
+      // rather than 404ing them.
       {
         source: "/market/wrap",
-        destination: "/market",
+        destination: "/movers",
         permanent: true,
       },
       // CONSOLIDATION (AdSense remediation § Phase 12b). "Where to Buy Riftbound

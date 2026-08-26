@@ -38,22 +38,14 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 const pctText = (p: number | null) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`);
 const pctClass = (p: number | null) => (p == null || p === 0 ? "text-slate-300" : p > 0 ? "text-brand-400" : "text-rose-400");
 
-// The Premium "investor" panel: cost-basis P&L + how the portfolio is tracking
-// against the RiftCompare Index over the same windows.
+// The Premium "investor" panel: cost-basis P&L over the tracked windows.
 function PnlView({
   pnl,
-  index,
-  d7,
-  d30,
   currency,
 }: {
   pnl: NonNullable<Portfolio["pnl"]>;
-  index: Portfolio["index"];
-  d7: number | null;
-  d30: number | null;
   currency: string;
 }) {
-  const beat = (port: number | null, idx: number | null) => (port != null && idx != null ? Math.round((port - idx) * 10) / 10 : null);
   return (
     <div className="mt-3 space-y-4">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -62,29 +54,6 @@ function PnlView({
         <Stat label="Profit / loss" value={`${pnl.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(pnl.plCents), currency)}`} cls={pctClass(pnl.plCents)} />
         <Stat label="Return" value={pctText(pnl.plPct)} cls={pctClass(pnl.plPct)} />
       </div>
-      {index && (index.d7 != null || index.d30 != null) && (
-        <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm">
-          <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">vs the market (RiftCompare Index)</div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { w: "7-day", port: d7, idx: index.d7 },
-              { w: "30-day", port: d30, idx: index.d30 },
-            ].map(({ w, port, idx }) => {
-              const b = beat(port, idx);
-              return (
-                <div key={w} className="flex flex-col">
-                  <span className="text-xs text-slate-500">{w}: you <span className={pctClass(port)}>{pctText(port)}</span> · index <span className={pctClass(idx)}>{pctText(idx)}</span></span>
-                  {b != null && (
-                    <span className={`text-sm font-bold ${pctClass(b)}`}>
-                      {b > 0 ? `▲ Beating the market by ${b}%` : b < 0 ? `▼ Trailing the market by ${Math.abs(b)}%` : "Matching the market"}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
       <p className="text-[11px] text-slate-600">
         P&amp;L covers the {pnl.costedRows} holding{pnl.costedRows === 1 ? "" : "s"} you&apos;ve recorded a purchase price for. Add a
         &quot;paid&quot; price on any card in <a href="#collection" className="text-brand-400 hover:underline">My Collection</a> to include it.
@@ -199,11 +168,11 @@ export default async function PortfolioPage() {
             </div>
             {pro ? (
               portfolio.pnl ? (
-                <PnlView pnl={portfolio.pnl} index={portfolio.index} d7={portfolio.d7} d30={portfolio.d30} currency={info.currency} />
+                <PnlView pnl={portfolio.pnl} currency={info.currency} />
               ) : (
                 <p className="mt-2 text-sm text-slate-400">
                   Record what you paid for a card (the <strong className="text-slate-200">paid</strong> field in My Collection below) and
-                  your profit/loss — plus how you&apos;re tracking against the RiftCompare Index — appears here.
+                  your profit/loss appears here.
                 </p>
               )
             ) : (

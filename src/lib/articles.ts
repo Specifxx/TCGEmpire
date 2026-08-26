@@ -126,7 +126,7 @@ export interface Article {
   closeups?: ArticleCloseUp[];
   // Override for the "Ready to buy?" CTA at the end of the article — lets a guide
   // point somewhere more specific than the generic card database (e.g. a browse
-  // view pre-filtered to the mechanic it just explained, or the Index). Omit for
+  // view pre-filtered to the mechanic it just explained). Omit for
   // the default /browse CTA.
   browseCta?: { href: string; label: string; blurb: string };
   // Attach a LIVE, market-specific data section (stores stocking Riftbound in
@@ -1284,7 +1284,7 @@ And if you're simply risk-averse - you'd rather know exactly what you're getting
 
 The healthiest way to use box EV is as one input alongside your own goals, not as a green light to rip. Ask what you're actually optimizing for: a specific card, a fun opening experience, or the best expected return on money spent. Each of those has a different right answer, and EV only speaks directly to the last one.
 
-A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
+A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and decide from there. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
   },
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
@@ -1340,65 +1340,6 @@ Manually checking five or six retailers for every card you're curious about does
 The honest version of this: arbitrage in a TCG market is a volume-and-diligence game, not a jackpot game. Gaps tend to be modest per card and close relatively quickly once a few people notice them, which is exactly what happened in every collectible market that came before this one. The people who do well at it check consistently, act quickly when a real gap appears, and don't overpay in fees or shipping to chase a thin margin.
 
 It also doesn't require a large bankroll to start. Watching a handful of cards you already understand, comparing listings regularly, and only acting when the math clearly works after costs is a sustainable approach. Treat any comparison tool as a way to see the market faster and more completely than you could by hand - not as a guarantee that every gap it surfaces is worth taking.`,
-  },
-  {
-    slug: "understanding-the-riftcompare-index-methodology",
-    category: "guide",
-    title: "What Is the RiftCompare Index? How It's Calculated",
-    excerpt:
-      "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
-    author: "RiftCompare",
-    date: "2026-07-01",
-    readMins: 4,
-    tags: ["riftcompare-index", "methodology", "riftbound-tcg", "market-data"],
-    body: `## What the RiftCompare Index Actually Measures
-
-The RiftCompare Index is a single number meant to answer one question: *is the Riftbound secondary market, taken as a whole, worth more or less than it used to be?* It is not the price of any one card, and it isn't an average of "everything for sale." It's a tracked basket of specific cards whose combined value is rebased to a starting point, so the day-to-day movement of that basket tells you something about market direction rather than about one chase card getting hot.
-
-Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a fixed group of cards, tracked every day, combined into one line you can watch over time.
-
-This matters because individual card prices are noisy. A single copy selling low because a seller needed cash fast, or high because two collectors got into a bidding war, can make a card's price chart look dramatic without meaning anything about the format or the game's overall health. An index smooths that out by design.
-
-## How the Basket of Cards Is Chosen
-
-Not every card in Riftbound belongs in the Index, and that's intentional. A useful index needs cards that are actually liquid - meaning they trade often enough that a snapshot price reflects real transactions, not a single stale listing sitting untouched for weeks.
-
-In practice that means the basket leans toward:
-
-- Cards with consistent trading volume across multiple listings, rather than cards that rarely change hands
-- A spread across rarity tiers, so the Index isn't just tracking mythic-rarity chase cards while ignoring the commons and uncommons that make up most of what people actually buy and sell
-- Cards that have been available long enough to have a real price history, rather than something that hit the market yesterday
-
-The goal is representativeness, not completeness. Trying to include every printed card would let thinly-traded, hard-to-price cards drag the number around based on one or two outlier sales. A smaller, deliberately chosen basket produces a steadier, more trustworthy signal.
-
-### Why the Basket Doesn't Change Every Week
-
-If the basket shifted constantly, the Index would stop being comparable to itself over time. Part of the value of an index is that you can look at it in six months and know it's still measuring roughly the same thing it was measuring today. Basket composition is reviewed periodically rather than adjusted in response to short-term hype around any one card.
-
-## How Daily Snapshots and Rebasing Work
-
-Every card in the basket gets a price snapshot on a regular cadence - effectively a daily "closing price" pulled from tracked listings and completed sales. Those individual snapshots are combined into a single basket value for that day.
-
-That raw basket value, in dollars, isn't very readable on its own - it's just a sum of a bunch of card prices, and the actual dollar figure doesn't mean much by itself. So the Index gets **rebased**: the very first snapshot is set to a round starting value (this is standard practice for any price index, financial or otherwise), and every day after that is expressed relative to that starting point.
-
-The practical effect is that you read the Index as a percentage move from its starting line, not as a dollar amount. If the Index is above its starting value, the basket of tracked cards is worth more in aggregate than when tracking began. If it's below, the basket is worth less. The specific starting number itself is arbitrary - what matters is the trend line it produces.
-
-This is also why the Index is most useful looked at over stretches of time rather than a single day. One day's snapshot can wobble for the same reasons a single card's price can wobble - a slow listing day, a temporary gap in completed sales for a card or two in the basket. The trend across weeks and months is where the signal lives.
-
-## Index vs. Movers: Two Different Questions
-
-It's worth being explicit about what the Index is *not* for, because [/movers](/movers) exists to answer a genuinely different question. Movers is about which individual cards changed price the most recently - the specific singles that jumped or dropped week over week, useful if you're trying to time a buy or sell on a particular card.
-
-The Index doesn't try to do that job. It won't tell you that one card spiked because of a tournament result or a reprint rumor. What it tells you is whether the *format as a whole* is trending up or down. A card can be a huge mover in either direction while the Index barely budges, because it's one card out of a basket. Conversely, the Index can drift steadily even when no single card is making headlines that week - that's often the more meaningful signal, since it reflects broad, sustained demand rather than one card's news cycle.
-
-If you're deciding whether to buy a specific card right now, check Movers. If you're trying to understand whether Riftbound singles in general have gotten more or less expensive since you started collecting, the Index is the number to watch.
-
-## Using the Index as a New Collector
-
-If you're still getting oriented in the game itself, it's worth pairing this with our [beginner's guide to Riftbound](/guides/riftbound-for-beginners) before you lean too heavily on market data - understanding what makes a card mechanically strong or scarce will help you interpret *why* the Index moves the way it does, not just that it moved.
-
-Used honestly, the Index is a health check, not a trading signal. It won't tell you when to buy a specific card. It will tell you, over time, whether the market you're buying into is expanding or contracting.
-`,
   },
   {
     slug: "riftbound-set-checklist-how-to-complete-a-set",
@@ -4009,7 +3950,6 @@ Note what is *not* on that list: reveal-day hype on its own, and social-media sp
 You don't have to take any of this on trust — the whole point of RiftCompare is that you can check.
 
 - **[Price movers](/movers)** — which cards are climbing or cooling right now, per market.
-- **[The RiftCompare Index](/market)** — the market as a whole rather than one card. Methodology is documented in **[how the Index works](/guides/understanding-the-riftcompare-index-methodology)**.
 - **Any card page** — the full store-by-store table ranked by delivered cost, plus that card's price history chart as it accumulates.
 - **[Price watch](/browse)** — save a card and get told when it moves, instead of checking manually.
 
@@ -6124,7 +6064,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
     category: "blog",
     title: "Are Riftbound Cards a Real Investment?",
     excerpt:
-      "Riftbound's own market index is eleven days old. Here's what that actually means for anyone asking whether these cards are an investment — with the real prices, real fees and real risks, not a guess dressed up as one.",
+      "Our price tracking for Riftbound only goes back eleven days. Here's what that actually means for anyone asking whether these cards are an investment — with the real prices, real fees and real risks, not a guess dressed up as one.",
     author: "RiftCompare",
     date: "2026-08-15",
     readMins: 9,
@@ -6134,19 +6074,15 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
       alt: "Ahri, Nine-Tailed Fox (OGN 303*/298), the Signature printing — priced nine times its unsigned twin, and the clearest real example of where Riftbound value actually sits today",
     },
     summary: [
-      "**This is analysis, not financial advice — and the honest headline finding is that nobody has enough data yet to give real investment advice about Riftbound cards.** The RiftCompare Index, our own tracked basket of the game's most-traded singles, is eleven days old as of this writing.",
-      "**We can't tell you the 7-day or 30-day return, because those numbers don't exist yet.** Not \"we won't say\" — the data literally isn't there. Our own live Index API returns `null` for both.",
+      "**This is analysis, not financial advice — and the honest headline finding is that nobody has enough data yet to give real investment advice about Riftbound cards.** Our own price tracking, which follows the game's most-traded singles, only goes back eleven days as of this writing.",
+      "**We can't tell you the 7-day or 30-day return, because those numbers don't exist yet.** Not \"we won't say\" — the data literally isn't there. Neither window has enough price history behind it yet.",
       "**What we can show you is real and current:** which printings already carry genuine scarcity premiums (one card is worth 9× its twin for a single printed signature), how volatile a market this thin already looks, and exactly what it costs to buy and sell.",
       "**If you already own cards and want to know what they're worth, that's a different — and answerable — question.** [Set a free price alert](/alerts) rather than guessing.",
     ],
     faq: [
       {
         q: "Are Riftbound cards a good investment?",
-        a: "Nobody can honestly answer that yet, ourselves included. Riftbound has released five sets, the newest of which is two weeks old, and the RiftCompare Index — our own tracked measure of the secondary market — only has data back to 4 August 2026. There is no multi-year track record to point to, up or down. What we can tell you is what the market looks like today: real prices, real fees, real volatility. Whether today's prices look smart in five years is not something the data can answer yet.",
-      },
-      {
-        q: "How is the RiftCompare Index calculated, and how far back does it go?",
-        a: "It's a search-weighted basket of 200 of the most-traded Riftbound singles, rebased to 100 on its start date of 4 August 2026 (see /market for the live number and methodology). As of this writing it sits at 111.6, and its own API reports a null value for both the 7-day and 30-day change, because the Index isn't old enough to have completed either window yet.",
+        a: "Nobody can honestly answer that yet, ourselves included. Riftbound has released five sets, the newest of which is two weeks old, and our own price tracking only goes back to 4 August 2026. There is no multi-year track record to point to, up or down. What we can tell you is what the market looks like today: real prices, real fees, real volatility. Whether today's prices look smart in five years is not something the data can answer yet.",
       },
       {
         q: "What actually makes a Riftbound card valuable right now?",
@@ -6197,20 +6133,20 @@ That absence is itself the most useful thing we can tell you, so we're going to 
 
 ## Eleven days is not a track record
 
-RiftCompare runs a market index — a tracked basket of 200 of the game's most-traded singles, rebased to 100, the same idea as the S&P 500 but for Riftbound cards instead of large-cap stocks. You can watch it move in real time at [/market](/market).
+We track prices for a basket of 200 of the game's most-traded singles — the broad market data behind everything else on the site. The catch is how little history sits behind it.
 
-Here's what it actually shows, as of this writing:
+Here's what that price data actually shows, as of this writing:
 
 | | |
 | --- | --- |
-| Index start date | **4 August 2026** |
-| Current level | 111.6 (base 100) |
+| Tracking began | **4 August 2026** |
+| History so far | 11 days |
 | Change since start | +11.6% |
 | 1-day change | +0.4% |
 | **7-day change** | **null — not enough history** |
 | **30-day change** | **null — not enough history** |
 
-That's not a rounding artifact or a display bug. It's the honest state of the underlying data: the Index's own public API, at /api/v1/index.json, literally returns the value *null* for both the 7-day and 30-day change fields, because neither window has completed yet. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
+That's not a rounding artifact or a display bug. It's the honest state of the underlying data: neither the 7-day nor the 30-day change can be computed at all yet, because neither window has completed. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
 
 For scale: Riftbound has released five sets. The newest, Vendetta, came out on 31 July 2026 — two weeks before this article. We don't even have confirmed release dates for four of the other five sets in our own database, because Riot never published exact street dates for them. A market needs years to show whether an asset holds value; this one hasn't finished its first month.
 
@@ -6218,7 +6154,7 @@ For scale: Riftbound has released five sets. The newest, Vendetta, came out on 3
 
 | | Riftbound cards (today) | S&P 500 |
 | --- | --- | --- |
-| Track record | 11 days (RiftCompare Index) | ~100 years |
+| Track record | 11 days of price data | ~100 years |
 | Historical average annual return | Unknown — insufficient data | Roughly 10%/year nominal, long-run average |
 | Minimum entry | Cents to low dollars for most cards | Fraction of a share via most brokers |
 | Liquidity | Thin — see the spread example below | Extremely deep, sub-cent spreads |
@@ -6258,11 +6194,11 @@ The Diana pair is the extreme case: two cards, identical collector number, rough
 
 ## What volatility looks like in a market this young
 
-An 11-day-old, thinly-traded index is not going to behave like a mature one, and it doesn't. The Index's own volatility reading today sits at **2.11%** — for comparison, a mature equity index typically runs closer to 1% on an ordinary day. Of the 200 tracked cards, 89 are up, 76 are down and 35 are unchanged as of this writing — nothing close to a one-directional market.
+An 11-day-old, thinly-traded market is not going to behave like a mature one, and it doesn't. The daily volatility across the cards we track sits at **2.11%** — for comparison, a mature equity index typically runs closer to 1% on an ordinary day. Of the 200 cards we track, 89 are up, 76 are down and 35 are unchanged as of this writing — nothing close to a one-directional market.
 
-Individual cards move far harder than the aggregate. As of this writing, several constituents have moved more than 100% in a week: Rhasa the Sunderer (OGN 195/298) is up 415% over 7 days on a US$3.93 card, and multiple others are up well over 100% in the same window. These aren't chase cards — they're cheap ones, which is exactly the point: in a thin market, a handful of trades at a new price can swing the reported price enormously, in either direction, on cards worth a few dollars just as easily as on five-figure Signatures.
+Individual cards move far harder than the aggregate. As of this writing, several of the cards we track have moved more than 100% in a week: Rhasa the Sunderer (OGN 195/298) is up 415% over 7 days on a US$3.93 card, and multiple others are up well over 100% in the same window. These aren't chase cards — they're cheap ones, which is exactly the point: in a thin market, a handful of trades at a new price can swing the reported price enormously, in either direction, on cards worth a few dollars just as easily as on five-figure Signatures.
 
-Liquidity friction shows up even inside a single day. Take Defy (OGN 045/298) — currently the listings for this one card, on the same day, in the same market, range from **US$3.93 to US$11.00**: nearly a 3x spread for the identical printing. That's not a typo or a stale listing; it's what "price discovery" looks like before a market has had time to converge. [The Index methodology](/guides/understanding-the-riftcompare-index-methodology) explains why we build ours from a liquid basket specifically to smooth this kind of noise out — but the noise is still there in any individual card you might actually try to buy or sell.
+Liquidity friction shows up even inside a single day. Take Defy (OGN 045/298) — currently the listings for this one card, on the same day, in the same market, range from **US$3.93 to US$11.00**: nearly a 3x spread for the identical printing. That's not a typo or a stale listing; it's what "price discovery" looks like before a market has had time to converge. We deliberately track a broad, liquid basket of cards to smooth this kind of noise out of the overall picture — but the noise is still there in any individual card you might actually try to buy or sell.
 
 ## What it costs to actually buy or sell one
 
@@ -6298,7 +6234,7 @@ Not "buy" and not "don't." Three practical things that don't require a track rec
 
 **If you already own cards and just want to know what they're worth without checking daily:** that's a genuinely answerable question, unlike the investment question. [Set a free price alert](/alerts) and let the number come to you.
 
-We built the Index, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
+We built the price tracking, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
 `,
   },
   {
@@ -6556,7 +6492,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and the lower Marketplace fee.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and the lower Marketplace fee.",
       },
       {
         q: "What's the difference between a free account and Premium?",
@@ -6595,7 +6531,7 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
       ],
     },
-    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
+    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
 Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise, cuts your Marketplace seller fee in half, and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
 
@@ -6621,7 +6557,7 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Compare prices across every store + eBay | ✓ | ✓ | ✓ |
 | Full card database, search & browse | ✓ | ✓ | ✓ |
 | Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
-| RiftCompare Index, movers & daily wrap | ✓ | ✓ | ✓ |
+| Movers & daily wrap | ✓ | ✓ | ✓ |
 | Price alerts | — | ✓ | ✓ |
 | Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |
 | Best Basket — cheapest store split, postage included | — | ✓ | ✓ |

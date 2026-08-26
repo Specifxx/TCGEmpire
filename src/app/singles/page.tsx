@@ -134,7 +134,6 @@ export default async function SinglesPage() {
           <HubCard href="/browse" title="Full card database" desc="Every Riftbound single, filterable by set, domain, rarity, type and price — with live prices." />
           <HubCard href="/browse?priced=1&sort=price_asc" title="Cheapest singles" desc="The lowest-priced Riftbound cards available right now in your market." />
           <HubCard href="/movers" title="Price movers" desc="Which singles are climbing or cooling this week — buy before a spike." />
-          <HubCard href="/market" title="The RiftCompare Index" desc="One number for the whole Riftbound singles market, tracked daily." />
           <HubCard href="/deck" title="Whole-deck pricer" desc="Price an entire deck's singles across every store in one click — the cheapest combined cart." />
           <HubCard href="/stores/tracked" title="Stores we compare" desc="Every Riftbound retailer in the comparison, by market." />
         </div>

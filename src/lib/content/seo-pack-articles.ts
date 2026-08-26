@@ -56,7 +56,6 @@ const L = {
   stores: "/stores",
   tracked: "/stores/tracked",
   sealed: "/sealed",
-  market: "/market",
   signatures: "/cards/printing/signature",
   overnumbered: "/cards/printing/overnumbered",
   altArt: "/cards/printing/alternate-art",

@@ -87,8 +87,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // query (caught by tests/nav-search.test.ts). The pre-order keywords below
       // still carry every intent that should land here.
       { href: "/radiance-preorders", label: "Radiance pre-orders", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
-      { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
-      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
+      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "how is the market"], popular: true },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },
       { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
@@ -232,7 +231,7 @@ export const POPULAR_LINKS: NavGroupLink[] = NAV_GROUPS.flatMap((g) => g.links).
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },
-  { href: "/market", label: "Index" },
+  { href: "/movers", label: "Movers" },
   { href: "/blog", label: "Blog" },
 ];
 
@@ -259,18 +258,32 @@ const marketplaceLinks = byTitle["Marketplace"] ?? [];
 // /radiance-countdown lives in the "Browse the database" NAV_GROUP (it's a
 // release-date countdown, not a price — moved out of "Prices" 2026-08-17),
 // but pinned back into the Shop FOOTER column specifically: without this,
-// Shop drops to 7 links against Learn & play's 15 — just over the 2x column-
-// balance ceiling this file's own header comment guards. NAV_GROUPS itself
-// (and therefore the launcher/hamburger categorisation the move was actually
-// about) is untouched; only which footer column this one link lands in.
+// Shop drops well below Learn & play — just over the 2x column-balance ceiling
+// this file's own header comment guards. NAV_GROUPS itself (and therefore the
+// launcher/hamburger categorisation the move was actually about) is untouched;
+// only which footer column this one link lands in.
+//
+// /stores/suggest is pinned the same way, for the same reason: removing the
+// retired Market Index from the Prices group left Shop one link short of the
+// ceiling against Learn & play (the tallest column, which owns Help). "Suggest a
+// store" also just reads better next to "Stores we track" in Shop than buried in
+// Help. Again NAV_GROUPS is untouched — only its footer column changes.
 const browseDbLinks = byTitle["Browse the database"] ?? [];
 const radianceCountdown = browseDbLinks.find((l) => l.href === "/radiance-countdown");
 const browseDbFooterLinks = browseDbLinks.filter((l) => l.href !== "/radiance-countdown");
+const helpLinks = byTitle["Help"] ?? [];
+const suggestStore = helpLinks.find((l) => l.href === "/stores/suggest");
+const helpFooterLinks = helpLinks.filter((l) => l.href !== "/stores/suggest");
 
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? []), ...(radianceCountdown ? [radianceCountdown] : []), ...marketplaceLinks.slice(0, 2)],
+    links: [
+      ...(byTitle["Prices"] ?? []),
+      ...(radianceCountdown ? [radianceCountdown] : []),
+      ...(suggestStore ? [suggestStore] : []),
+      ...marketplaceLinks.slice(0, 2),
+    ],
   },
   {
     title: "Browse & collect",
@@ -285,7 +298,7 @@ export const FOOTER_GROUPS: NavGroup[] = [
     links: [
       ...(byTitle["Games"] ?? []),
       ...(byTitle["Guides & News"] ?? []),
-      ...(byTitle["Help"] ?? []),
+      ...helpFooterLinks,
       ...marketplaceLinks.slice(4, 6),
     ],
   },

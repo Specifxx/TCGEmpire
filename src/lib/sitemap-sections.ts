@@ -100,7 +100,6 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
@@ -451,9 +450,10 @@ async function content(): Promise<SitemapEntry[]> {
   // noindexed at the page level: one templated post per calendar day is the
   // textbook shape of Google's "scaled content abuse" policy and an AdSense
   // Publisher-Policy risk. Across a full Search Console export not one report URL
-  // had earned any traffic to lose. Generation is now DELETED outright
-  // (lib/market-report.ts), so this list can never regrow — the ~130 existing rows
-  // stay reachable by direct URL only.
+  // had earned any traffic to lose. Generation is now DELETED outright, so this
+  // list can never regrow — and the read-side was removed with the Index too, so
+  // the ~130 legacy rows are no longer served at all (their URLs 404). The rows
+  // themselves are left dormant in the database.
   return getArticles().map((a) => ({
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly" as const,

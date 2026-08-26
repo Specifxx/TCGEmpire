@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { COUNTRY_LIST } from "@/lib/country";
 
-// Region picker for the RiftCompare Index page. Defaults to the GLOBAL composite;
-// choosing a region reloads /market?market=XX with that market's own index.
+// Region picker for the market pages. Choosing a region reloads
+// <basePath>?market=XX for that market.
 //
-// `basePath` and `includeGlobal` exist for /market/records, which reuses this
-// control but cannot honour a global option: a record is a price in ONE market's
+// `basePath` and `includeGlobal` are set by the consumer — /market/records (the
+// one live consumer) cannot honour a global option: a record is a price in ONE market's
 // own currency, so "all markets" has no meaning there — an all-time high of
 // A$180 and one of US$120 do not combine into a number worth printing. Rather
 // than let the page silently coerce GLOBAL to a default market (a switcher whose
@@ -18,9 +18,9 @@ const GLOBAL_OPTION = { value: "GLOBAL", label: "🌍 Global (all markets)" };
 
 export function MarketSwitcher({
   value,
-  basePath = "/market",
+  basePath = "/market/records",
   includeGlobal = true,
-  label = "Choose the market the Index tracks",
+  label = "Choose the market",
 }: {
   value: string;
   basePath?: string;

@@ -61,24 +61,6 @@ export const AUTHORS: Author[] = [
       "How-to guides for collecting, storing and selling",
     ],
   },
-  {
-    slug: "riftcompare-markets-desk",
-    name: "RiftCompare Markets Desk",
-    type: "Organization",
-    role: "Market data and price reporting",
-    bio: [
-      "The Markets Desk byline covers writing that is generated directly from the RiftCompare price database rather than composed by hand — index movements, price snapshots and the numbers behind our market coverage.",
-      "It is a separate byline on purpose. Anything published under it is derived from recorded data with a fixed methodology, and we would rather label that plainly than pass it off as hand-written analysis.",
-      "Prices are collected daily from public store listings and marketplace APIs, matched to a specific printing by set code and collector number rather than by name, so a promo, an alternate art and a Signature print are never conflated into one figure.",
-      "The methodology is deliberately dull and deliberately fixed: cheapest live in-stock listing per card per market, ranked by delivered cost where a store's postage is known, never converted between currencies to declare a cross-market winner. When the data cannot support a claim, the claim is left out rather than estimated. Our editorial policy sets out the whole procedure, including how often each surface refreshes and how to report a figure that is wrong.",
-      "Nothing under this byline is investment advice, and card prices can and do fall.",
-    ],
-    covers: [
-      "The RiftCompare Index",
-      "Daily price snapshots and movers",
-      "Set-level price distributions",
-    ],
-  },
 ];
 
 export const authorBySlug = (slug: string) => AUTHORS.find((a) => a.slug === slug);
