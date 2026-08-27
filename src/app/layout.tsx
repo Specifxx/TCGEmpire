@@ -39,6 +39,12 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
 const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
   ssr: false,
 });
+// Low-intrusion Premium nudge for logged-in non-Premium users (a corner slide-in,
+// not a modal). ssr:false — it renders nothing until a few pages into a session,
+// so there's nothing for a crawler to see and no reason to ship it server-side.
+const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
+  ssr: false,
+});
 // The always-available feedback launcher. ssr:false because it renders nothing
 // until a visitor clicks it, so there is no content for a crawler to miss and no
 // reason to pay for it in the server HTML.
@@ -299,6 +305,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
                 <SignupPromoPopup providers={enabledProviders()} />
+                {/* Signed-in, non-Premium browsing nudge — the signed-out
+                    counterpart of SignupPromoPopup. The two never overlap by
+                    audience. */}
+                <PremiumSlideIn />
+
                 {/* Converts the OAuth callback's one-time ?welcome= param into
                     the sign_up analytics event, then strips it from the URL.
                     Renders nothing. */}
