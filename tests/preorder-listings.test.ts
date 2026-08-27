@@ -125,10 +125,14 @@ test("the pre-order page declares PreOrder availability, never InStock", () => {
   assert.ok(!/schema\.org\/InStock/.test(page), "must never claim InStock for an unshipped product");
 });
 
-test("the countdown page's pre-order promise now points somewhere real", () => {
+test("the release page's pre-order promise now points somewhere real", () => {
   // This page promised "compare booster box pre-order prices" while the importer
   // was still dropping every unreleased-set listing, so the link it offered could
-  // not have shown one.
-  const page = read("src/app/radiance-countdown/page.tsx");
-  assert.match(page, /href="\/radiance-preorders"/, "the pre-order tile must link to the comparison page");
+  // not have shown one. The URL is no longer hard-coded in the page (it moved to
+  // the calendar entry, so it retires with the set instead of outliving it), so
+  // assert the wiring: the tile renders the upcoming set's own preordersHref.
+  const page = read("src/app/release-dates/page.tsx");
+  assert.match(page, /href=\{next\.preordersHref\}/, "the pre-order tile must link to the upcoming set's comparison page");
+  const calendar = read("src/lib/release-calendar.ts");
+  assert.match(calendar, /preordersHref: "\/radiance-preorders"/, "the upcoming set must declare its pre-order page");
 });

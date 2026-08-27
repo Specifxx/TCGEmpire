@@ -146,11 +146,12 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-smash") },
     { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7, lastModified: latestBlog },
-    // The countdown slot always points at the NEXT unreleased set. /vendetta-countdown
-    // was retired here when Vendetta shipped (it now 301s to /sets/vendetta — see
-    // next.config.js); a redirecting URL in a sitemap is a soft error in Search
-    // Console, so it is removed rather than left behind.
-    { url: `${SITE_URL}/radiance-countdown`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-countdown") },
+    // The release calendar. This slot used to be a per-set countdown URL that had
+    // to be swapped here every launch (/vendetta-countdown, then
+    // /radiance-countdown — both now 301, see next.config.js), and a redirecting
+    // URL left in a sitemap is a soft error in Search Console. /release-dates is
+    // set-agnostic, so this line stays put through every future launch.
+    { url: `${SITE_URL}/release-dates`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/release-dates") },
     { url: `${SITE_URL}/radiance-preorders`, changeFrequency: "daily", priority: 0.8, lastModified: staticPageDate("/radiance-preorders") },
     // /feedback is NOT submitted: src/app/feedback/page.tsx sets
     // robots: { index: false, follow: true } (AdSense remediation § Phase 7 —

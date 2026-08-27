@@ -1590,7 +1590,7 @@ the phase that actually does the section-consolidation half of the brief.
   "countdown">`. Now a single `<p>` line: a small "{set} is coming" chip +
   "{days} days to go — Full release details →". The newsletter capture is
   **gone entirely** (not moved anywhere) — the brief wants exactly one
-  capture, footer-only, and `/radiance-countdown`'s own page still carries
+  capture, footer-only, and `/release-dates`'s own page still carries
   the full release-hype treatment (with its own capture) for anyone who
   clicks through wanting more, so nothing is lost, just not duplicated on
   the homepage. Still server-computed, no client timer (same ISR-consistency
@@ -3497,3 +3497,67 @@ recreated the entire already-resolved rebuild-vs-original-file conflict,
 since the fix's own history still passed through main's pre-rebuild
 SearchBar.tsx) — verified identical in effect to the original commit, then
 adapted to sit inside this branch's already-rebuilt combobox structure.
+
+## Release dates — one page instead of a page per set (2026-08-27)
+
+**The problem, stated as a pattern rather than a bug.** `/vendetta-countdown`
+was a hand-written page about Vendetta's release. It went stale on 31 Jul 2026
+and was retired: a 301 to `/sets/vendetta`, a new route, a sitemap swap, and
+every internal link repointed. `/radiance-countdown` was built to replace it —
+and was the same page again, with a different set's name and date hard-coded
+into its H1, its `<title>`, its Event schema, its FAQ answers, its newsletter
+copy and its smoke test. It would have gone stale on 23 Oct 2026 and needed the
+identical retirement, for the third launch running. Each cycle also leaves a
+window where the site's answer to "when is the next set" is a page about a set
+that already shipped.
+
+**The change.** `/release-dates` replaces it, and names no set in code.
+`src/lib/release-calendar.ts` holds every announced Riftbound release in order;
+the page splits that list at today's date, counts down to the first thing still
+ahead, and tabulates the rest. Title, description, H1, hero copy, the "what's
+confirmed" block, the newsletter strings, the FAQ and the Event schema are all
+derived. Verified by rendering the page against a frozen clock at 24 Oct 2026
+(leads with Legacy), 5 Feb 2027 (The Reckoning) and 5 May 2027 (nothing dated
+left — generic H1, and no Event markup rather than a past-dated one). Adding a
+set is a row in the calendar; **release day itself needs no edit at all.**
+
+**Three things that had to be got right, and were easy to get wrong:**
+
+- *The split is per-entry, not a slice.* The obvious implementation is
+  "everything before the first future date is out". That breaks on the
+  window-only rows the calendar legitimately contains (the Feb 2027 Legacy boxed
+  decks, the unnamed Q3/Q4 2027 slots): a placeholder that never resolves
+  becomes a wall, and every dated set behind it keeps reading as *upcoming* for
+  years after it shipped. `isOut()` judges each row on its own — window-only is
+  never out, dated is out once its date passes, and an undated row is historical
+  iff it sits ahead of the first dated row (Riot didn't publish street dates
+  before Vendetta, which is a statement about our records, not a guessed date).
+  Caught by a test, not in review.
+- *The street hour is computed, not frozen.* The old page hard-coded
+  `2026-10-23T07:00:00.000Z` — right for a PDT date, an hour wrong for a PST
+  one, so the countdown would have been wrong for Legacy (29 Jan 2027).
+  `assumedStreetInstant()` resolves midnight in `America/Los_Angeles` for
+  whatever date it's given. Riot has never published an hour for a Riftbound
+  street date, so this stays a labelled assumption on the page, not a fact.
+- *Undated sets stay undated.* Origins through Unleashed have no published
+  street dates, and the table says "Date never published" rather than inventing
+  one — same standard `/guides/riftbound-sets-in-order` already holds.
+
+**Nav.** The link moved out of "Browse the database" (where it was the one entry
+that shows no cards, having earlier been the one entry in "Prices" with nothing
+to do with a price) into a new **Miscellaneous** group — a catch-all for pages
+that answer a real question but are none of the things the other groups are
+about. Its label is now "Release dates", not a set name, for the same reason the
+route is. Set-specific phrasings ("radiance release date") are carried as
+launcher keywords instead, so the query still lands. The footer has four columns
+and no room for a fifth, so Miscellaneous folds into Shop — reading the whole
+group rather than naming the one link, so a future entry can't silently vanish
+from the footer.
+
+**SEO.** `/radiance-countdown` 301s to `/release-dates` (it carried the
+"riftbound radiance release date" query and ~a dozen internal links; the
+destination leads with Radiance's date until Radiance ships). The redirected URL
+is removed from the sitemap — a redirecting URL there is a soft error in Search
+Console — and this sitemap line is now set-agnostic, so it stays put through
+every future launch. `tests/release-calendar.test.ts` fails the build if a set
+name or a date literal reappears in the page, the metadata or the smoke check.

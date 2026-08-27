@@ -31,8 +31,8 @@ const UNITS: { key: "days" | "hours" | "minutes" | "seconds"; label: string }[] 
  *
  * SERVER-ACCURATE ON FIRST PAINT, THEN TICKS — this is a client component, but
  * `timeLeft()` still runs once during SSR using the server's clock, so the raw
- * HTML a crawler fetches shows real, current numbers (matching this page's own
- * "the countdown is server-computed" principle — see radiance-countdown/page.tsx),
+ * HTML a crawler fetches shows real, current numbers (matching the release page's
+ * own "the countdown is server-computed" principle — see release-dates/page.tsx),
  * not a client-only "0" that only becomes correct after hydration. useEffect then
  * ticks it forward once a second, purely client-side.
  *
@@ -41,7 +41,7 @@ const UNITS: { key: "days" | "hours" | "minutes" | "seconds"; label: string }[] 
  * disagree by a second — the same accepted tradeoff every ticking-clock React
  * example makes, not a bug to chase.
  */
-export function RadianceCountdownTimer({ targetIso, onRelease }: { targetIso: string; onRelease?: () => void }) {
+export function ReleaseCountdownTimer({ targetIso, onRelease }: { targetIso: string; onRelease?: () => void }) {
   const [left, setLeft] = useState(() => timeLeft(targetIso));
 
   useEffect(() => {

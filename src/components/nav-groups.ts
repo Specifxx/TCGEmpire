@@ -77,14 +77,6 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Browse the database",
     links: [
       { href: "/sets", label: "Sets & card lists", emoji: "🗂️", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
-      // The countdown for whichever set is NEXT. Its predecessor
-      // (/vendetta-countdown) was never in the nav and depended entirely on
-      // article links for discovery; putting the slot here means the release-date
-      // page is one ⌘K away all through the pre-launch window, when it is the
-      // single highest-intent page on the site. Lives here, not under "Prices"
-      // (moved 2026-08-17): it's a release-date countdown, not a price — the
-      // one page in that group with nothing to do with comparing a price.
-      { href: "/radiance-countdown", label: "Radiance release date", emoji: "✨", keywords: ["release date", "countdown", "when", "next set", "set 5", "radiance"] },
       { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
       { href: "/cards", label: "By type & rarity", emoji: "🔤", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
       // The set-agnostic hub for /sets/<set>/gallery (added 2026-08-20 to target
@@ -158,6 +150,29 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // The catch-all. A page belongs here when it answers a real question but is
+    // none of the things the other groups are about — not a price, not a view of
+    // the card database, not a tool, not our own writing.
+    //
+    // /release-dates is the founding member, and the reason the group exists. It
+    // had been filed under "Browse the database" (and under "Prices" before
+    // that), because a release countdown is adjacent to both and squarely in
+    // neither — it was the one entry in a database-views group that shows no
+    // cards, exactly as it had been the one entry in a prices group with nothing
+    // to do with comparing a price. Rather than move it a third time, it gets a
+    // group whose whole definition is "doesn't fit the others".
+    title: "Miscellaneous",
+    links: [
+      // Deliberately NOT named after a set. Its two predecessors were
+      // (/vendetta-countdown, then /radiance-countdown) and both went stale on a
+      // known date, taking a nav label with them; this one reads the release
+      // calendar and rolls forward on its own. The keywords carry every
+      // set-specific phrasing people actually type, so "radiance release date"
+      // still lands here without the label having to say it.
+      { href: "/release-dates", label: "Release dates", emoji: "📅", keywords: ["release date", "release dates", "countdown", "when", "next set", "upcoming", "radiance", "legacy", "when does the next set come out"] },
+    ],
+  },
+  {
     title: "Help",
     links: [
       { href: "/support", label: "Support", emoji: "🆘", keywords: ["support", "help", "faq", "problem", "issue", "something is broken"] },
@@ -226,22 +241,21 @@ const byTitle = Object.fromEntries(
   NAV_GROUPS.map((g) => [g.title, g.links.filter((l) => !l.hideInFooter)])
 );
 
-// /radiance-countdown lives in the "Browse the database" NAV_GROUP (it's a
-// release-date countdown, not a price — moved out of "Prices" 2026-08-17),
-// but pinned back into the Shop FOOTER column specifically: without this,
-// Shop drops well below Learn & play — just over the 2x column-balance ceiling
-// this file's own header comment guards. NAV_GROUPS itself (and therefore the
-// launcher/hamburger categorisation the move was actually about) is untouched;
-// only which footer column this one link lands in.
+// The Miscellaneous NAV_GROUP has no footer column of its own — four columns is
+// the footer's whole layout, and a fifth for one link would be worse than either
+// of the alternatives. Its links are folded into Shop instead, which is also
+// where /release-dates was already pinned when it lived under "Browse the
+// database": without it Shop drops well below Learn & play, just over the 2x
+// column-balance ceiling this file's own header comment guards. Reading the
+// whole group (rather than naming the one link) means a future Miscellaneous
+// entry lands somewhere real instead of silently vanishing from the footer.
 //
 // /stores/suggest is pinned the same way, for the same reason: removing the
 // retired Market Index from the Prices group left Shop one link short of the
 // ceiling against Learn & play (the tallest column, which owns Help). "Suggest a
 // store" also just reads better next to "Stores we track" in Shop than buried in
-// Help. Again NAV_GROUPS is untouched — only its footer column changes.
-const browseDbLinks = byTitle["Browse the database"] ?? [];
-const radianceCountdown = browseDbLinks.find((l) => l.href === "/radiance-countdown");
-const browseDbFooterLinks = browseDbLinks.filter((l) => l.href !== "/radiance-countdown");
+// Help. NAV_GROUPS itself is untouched — only its footer column changes.
+const miscLinks = byTitle["Miscellaneous"] ?? [];
 const helpLinks = byTitle["Help"] ?? [];
 const suggestStore = helpLinks.find((l) => l.href === "/stores/suggest");
 const helpFooterLinks = helpLinks.filter((l) => l.href !== "/stores/suggest");
@@ -251,13 +265,13 @@ export const FOOTER_GROUPS: NavGroup[] = [
     title: "Shop",
     links: [
       ...(byTitle["Prices"] ?? []),
-      ...(radianceCountdown ? [radianceCountdown] : []),
+      ...miscLinks,
       ...(suggestStore ? [suggestStore] : []),
     ],
   },
   {
     title: "Browse & collect",
-    links: [...browseDbFooterLinks, ...(byTitle["Your collection"] ?? [])],
+    links: [...(byTitle["Browse the database"] ?? []), ...(byTitle["Your collection"] ?? [])],
   },
   {
     title: "Deals & decks",

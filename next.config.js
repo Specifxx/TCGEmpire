@@ -317,6 +317,19 @@ const nextConfig = {
       // Sending it to the set page keeps that equity on a page that still
       // answers the query, instead of dropping it on the floor.
       { source: "/vendetta-countdown", destination: "/sets/vendetta", permanent: true },
+      // ...and /radiance-countdown, which replaced it, is retired for the same
+      // reason one release earlier than last time: a page named after a set goes
+      // stale on a date you can see coming. /release-dates is the permanent
+      // replacement — it reads lib/release-calendar.ts, counts down to whichever
+      // release is next, and needs no edit on release day. This is the last
+      // redirect this slot should ever need.
+      //
+      // 301, NOT 404: /radiance-countdown carried the "riftbound radiance
+      // release date" query and was internally linked from the nav, the
+      // homepage, the pre-order page and half a dozen articles. The destination
+      // answers the same query (it leads with Radiance's date until Radiance
+      // ships), so the equity moves rather than being dropped.
+      { source: "/radiance-countdown", destination: "/release-dates", permanent: true },
       // ROTATED-OUT META DECKS. /decks tracks the live metagame, so a legend that
       // drops out of the tier list loses its deck page. These three were Tier 1-2
       // in the Unleashed era and fell out of the Vendetta tier list; their URLs
