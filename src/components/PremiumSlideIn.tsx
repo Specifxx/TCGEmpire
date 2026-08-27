@@ -33,8 +33,8 @@ const DISMISS_COUNT = "rc_prem_slidein_dismisses"; // localStorage: lifetime dis
 const SNOOZE_UNTIL = "rc_prem_slidein_until"; // localStorage: epoch ms; don't show before this
 const PV_KEY = "rc_prem_slidein_pv"; // sessionStorage: this component's own per-session pageview count
 
-// "after they visit 3 pages in one session" — engaged, not a first-impression pop.
-const MIN_PAGEVIEWS = 3;
+// "after they visit 2 pages in one session" — engaged, not a first-impression pop.
+const MIN_PAGEVIEWS = 2;
 // Let them settle on the qualifying page before it slides in (a natural pause,
 // not the instant the page renders).
 const DWELL_MS = 12_000;
