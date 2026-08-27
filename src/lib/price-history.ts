@@ -10,7 +10,12 @@ import { dbHistory } from "./db-history";
 import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
-import { CONTENT_TAG } from "./revalidate-content";
+import { HISTORY_TAG } from "./revalidate-content";
+
+// One week plus a day of slack. The cache keys below are week-scoped, so the TTL
+// only has to outlive one key — a shorter TTL (the old 48h) would expire the
+// entry mid-week and trigger a fresh whole-market scan for nothing.
+const HISTORY_CACHE_TTL = 8 * 86400;
 
 // unstable_cache requires Next.js's request-scoped incremental cache, which doesn't
 // exist when this module is imported by a plain tsx script (e.g. scripts/weekly-promo.ts)
@@ -35,6 +40,33 @@ export function sydneyDayKey(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
 }
 
+// WEEK-scoped cache key, and the reason history reads are affordable.
+//
+// PriceHistory is written once a week now (see HISTORY_MIN_INTERVAL_DAYS in
+// price-import.ts), so a day-scoped key was forcing six whole-market re-scans a
+// day to recompute a number that had not changed since the previous Monday. This
+// returns the ISO week's Monday, so every history-derived cache recomputes on the
+// same rollover the data itself moves on.
+//
+// Sydney, matching sydneyDayKey and the importer's own sydneyDay() — the snapshot
+// boundary is Sydney midnight, so the week boundary has to agree or a key could
+// roll a day before or after the data does.
+export function sydneyWeekKey(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Australia/Sydney",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  const d = new Date(`${get("year")}-${get("month")}-${get("day")}T00:00:00Z`);
+  // Shift back to Monday. getUTCDay(): 0 = Sunday, so Sunday counts as 6 days in.
+  const back = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - back);
+  return d.toISOString().slice(0, 10);
+}
+
 export type PricePoint = { t: number; v: number };
 
 // Daily lowest-price points for one card in one market (oldest → newest), in that
@@ -44,27 +76,39 @@ export type PricePoint = { t: number; v: number };
 // page never crashes over the chart.
 async function computePriceHistory(cardId: string, country: Country, take: number): Promise<PricePoint[]> {
   try {
+    // TAKE THE NEWEST `take` POINTS, THEN RESTORE ASCENDING ORDER FOR THE CHART.
+    //
+    // This was `orderBy: { day: "asc" }, take` — which takes the OLDEST `take`
+    // rows, not the most recent. It has been harmless only because no card has
+    // had more than `take` points yet; the moment one did, its chart would have
+    // frozen on the oldest window and never moved again. Cutting `take` (below)
+    // to save egress would have brought that forward rather than avoided it, so
+    // the ordering is fixed here first.
     const rows = await dbHistory.priceHistory.findMany({
       where: { cardId, country },
-      orderBy: { day: "asc" },
+      orderBy: { day: "desc" },
       take,
       select: { day: true, lowestPriceCents: true },
     });
-    return rows.map((r) => ({ t: r.day.getTime(), v: r.lowestPriceCents }));
+    return rows.reverse().map((r) => ({ t: r.day.getTime(), v: r.lowestPriceCents }));
   } catch {
     return [];
   }
 }
 
-// Day-scoped cache per (card, market): repeated views of the same card's chart in a
-// day read the history DB once, not once per page load. Only cards actually viewed
-// get cached, so this never over-reads. Window trimmed to 120 days (2× the useful
-// chart range) to cap the per-read payload.
-export function getPriceHistory(cardId: string, country: Country = DEFAULT_COUNTRY, take = 120): Promise<PricePoint[]> {
+// Week-scoped cache per (card, market). PriceHistory only gains a point once a
+// week now, so a day-scoped key re-read every viewed card's series six times a
+// week to rebuild an identical chart.
+//
+// `take` is 60 rather than 120: at one point per week that is over a year of
+// chart, where 120 would be nearly two and a half years of a game that has
+// existed for one. It also halves the payload of the single most-requested
+// history read on the site — there is one per card page.
+export function getPriceHistory(cardId: string, country: Country = DEFAULT_COUNTRY, take = 60): Promise<PricePoint[]> {
   return cachedOrDirect(
     () => computePriceHistory(cardId, country, take),
-    ["rc-card-history", cardId, country, String(take), sydneyDayKey()],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
+    ["rc-card-history", cardId, country, String(take), sydneyWeekKey()],
+    { revalidate: HISTORY_CACHE_TTL, tags: [HISTORY_TAG] },
   );
 }
 
@@ -124,7 +168,15 @@ const LIST_SIZE = 5;
 // freshest snapshot is older than this, so the section just doesn't render
 // (both callers already treat an empty result as "hide this") instead of
 // presenting stale numbers as today's market.
-export const STALE_HISTORY_MS = 3 * 86400_000;
+// MUST EXCEED THE SNAPSHOT INTERVAL, or the feature switches itself off.
+//
+// This was 3 days, which was correct while snapshots were daily. With weekly
+// snapshots the freshest point is routinely 4-7 days old, so a 3-day threshold
+// would have judged every normal week "stale" and returned empty — movers and
+// recently-updated would simply have stopped rendering, silently, with no error.
+// 10 days is one weekly cycle plus three days of grace, so it still catches a
+// genuinely broken importer (two missed weeks) without firing on a healthy one.
+export const STALE_HISTORY_MS = 10 * 86400_000;
 
 // Compute this-week's biggest gainers, biggest fallers, and best-value buys (the
 // largest discounts off a card's recent high). Reads the whole market's history
@@ -219,7 +271,11 @@ export type RecentUpdate = {
 // slack for a card that occasionally misses a day (out of stock, a slow crawl),
 // while staying an order of magnitude cheaper than the movers query's 21-day
 // window. This function only ever needs "yesterday vs today", not a trend.
-const RECENT_WINDOW_DAYS = 7;
+// Widened from 7 with the move to weekly snapshots. computeRecentlyUpdated needs
+// at least two points per card to detect a change, and a 7-day window over weekly
+// data often holds exactly one — which would have made this return empty most of
+// the time rather than obviously break. 21 days guarantees three.
+const RECENT_WINDOW_DAYS = 21;
 const RECENT_MAX = 80; // upper bound requested for the homepage feed
 
 // Cards whose price genuinely changed in the MOST RECENT snapshot — "just
@@ -304,8 +360,8 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
 export async function getRecentlyUpdated(country: Country = DEFAULT_COUNTRY, limit = 60): Promise<RecentUpdate[]> {
   const full = await cachedOrDirect(
     () => computeRecentlyUpdated(country, RECENT_MAX),
-    ["rc-recently-updated", country, sydneyDayKey()],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
+    ["rc-recently-updated", country, sydneyWeekKey()],
+    { revalidate: HISTORY_CACHE_TTL, tags: [HISTORY_TAG] },
   );
   return full.slice(0, limit);
 }
@@ -319,8 +375,8 @@ const MOVERS_MAX = 50;
 export async function getPriceMovers(country: Country = DEFAULT_COUNTRY, limit = LIST_SIZE): Promise<PriceMovers> {
   const full = await cachedOrDirect(
     () => computePriceMovers(country, MOVERS_MAX),
-    ["rc-price-movers", country, sydneyDayKey()],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
+    ["rc-price-movers", country, sydneyWeekKey()],
+    { revalidate: HISTORY_CACHE_TTL, tags: [HISTORY_TAG] },
   );
   return {
     spiking: full.spiking.slice(0, limit),

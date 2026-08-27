@@ -1930,13 +1930,42 @@ export async function importPrices(): Promise<ImportSummary> {
       if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
       if (eu != null) rows.push({ cardId: c.id, country: "EU", day, lowestPriceCents: eu });
     }
-    await dbHistory.priceHistory.deleteMany({ where: { day } });
-    if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
-    console.log(
-      `Price history: recorded ${rows.length} points (AU/US/UK/SG/CA/EU) for ${day.toISOString().slice(0, 10)}` +
-        (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
-    );
+    // WEEKLY SNAPSHOTS, NOT TWICE-DAILY. This is the history database's cost
+    // control, and it works on both sides of the ledger at once:
+    //
+    //   • fewer writes — this ran on every import, i.e. twice a day, writing
+    //     ~1,400 cards x 6 markets each time;
+    //   • fewer READS, which is the larger half. Every windowed history query is
+    //     "all cards in this market over N days". At one point per week instead
+    //     of one per day, the same window returns roughly a seventh as many rows,
+    //     for every reader — movers, charts, screener, portfolio, public API.
+    //
+    // Gated on the distance from the newest existing snapshot rather than on a
+    // weekday, so a missed run self-heals on the next import instead of waiting
+    // a full week. Date-only arithmetic (`day` is @db.Date) keeps this immune to
+    // the cron drifting by a few hours either side.
+    const HISTORY_MIN_INTERVAL_DAYS = 7;
+    const newest = await dbHistory.priceHistory.findFirst({
+      orderBy: { day: "desc" },
+      select: { day: true },
+    });
+    const daysSince = newest
+      ? Math.round((day.getTime() - newest.day.getTime()) / 86400_000)
+      : Number.POSITIVE_INFINITY;
+
+    if (daysSince < HISTORY_MIN_INTERVAL_DAYS) {
+      console.log(
+        `Price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${HISTORY_MIN_INTERVAL_DAYS}.`
+      );
+    } else {
+      await dbHistory.priceHistory.deleteMany({ where: { day } });
+      if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
+      const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
+      console.log(
+        `Price history: recorded ${rows.length} points (AU/US/UK/SG/CA/EU) for ${day.toISOString().slice(0, 10)}` +
+          (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
+      );
+    }
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

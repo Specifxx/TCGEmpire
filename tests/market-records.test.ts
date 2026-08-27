@@ -49,8 +49,12 @@ test("the detail query is bounded by the page size, not the catalogue", () => {
 test("records are day-cached, like every other history-derived read", () => {
   const src = codeOnly(read(LIB));
   assert.match(src, /cachedOrDirect\(/, "must use the shared cache helper");
-  assert.match(src, /sydneyDayKey\(\)/, "the cache key must include the Sydney day");
-  assert.match(src, /tags:\s*\[CONTENT_TAG\]/, "an import's revalidateContent() must be able to refresh it");
+  assert.match(src, /sydneyWeekKey\(\)/, "the cache key must include the Sydney week");
+  // HISTORY_TAG, not CONTENT_TAG, and deliberately so: PriceHistory is written
+  // weekly, so letting a twice-daily price import purge this would force six
+  // whole-market re-scans a day to rebuild an identical answer. That tag split
+  // is the point of the change — see revalidate-content.ts.
+  assert.match(src, /tags:\s*\[HISTORY_TAG\]/, "history reads must not be purged by an ordinary price import");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,8 +84,25 @@ test("a card needs real history before it can hold a record", () => {
   // Without this, every new set fills the board the day it is added — a card
   // priced on three days has an all-time high by definition and it means
   // nothing.
+  // MIN_DAYS counts SNAPSHOT ROWS, and the snapshot interval is a separate
+  // constant that has already changed once (daily -> weekly, for history-database
+  // cost). Asserting a raw row count therefore encodes the cadence by accident:
+  // the old `min >= 7` silently meant "seven weeks" the moment writes went weekly.
+  //
+  // Assert the thing actually intended instead — how much ELAPSED history a
+  // record needs behind it — by multiplying the floor by the real interval. This
+  // now fails correctly in both directions: too few snapshots, or a cadence
+  // change that makes the existing floor meaningless.
   const min = Number(/const MIN_DAYS = (\d+)/.exec(src)![1]);
-  assert.ok(min >= 7, `MIN_DAYS of ${min} is too low to make "all-time" mean anything`);
+  const importSrc = read("src/lib/price-import.ts");
+  const intervalMatch = /const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(importSrc);
+  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-import.ts");
+  const interval = Number(intervalMatch![1]);
+  const coverageDays = min * interval;
+  assert.ok(
+    coverageDays >= 14,
+    `MIN_DAYS of ${min} at one snapshot per ${interval} day(s) is only ${coverageDays} days of history — too thin to call anything "all-time"`,
+  );
 });
 
 test("an absurd drop is treated as our own bad data, not a record", () => {

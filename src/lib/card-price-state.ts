@@ -26,7 +26,13 @@ import { dbHistory } from "./db-history";
 // Why history counts even with no listing today: a card that has traded for a
 // week has a real chart, a real trend paragraph and a real range — genuinely
 // useful, and worth indexing, even while it is briefly out of stock everywhere.
-export const MIN_HISTORY_DAYS = 7;
+// COUNTS SNAPSHOT ROWS, AND SNAPSHOTS ARE WEEKLY NOW (see price-import.ts).
+// This was 7, meaning 7 daily rows ~ one week of evidence that a card is real
+// and tracked. Left at 7 it would have silently become SEVEN WEEKS, holding
+// every newly imported card at noindex — and out of sitemaps/cards.xml — for
+// most of a quarter. 2 restores the original intent: about a fortnight of
+// track record before we vouch for a card with no live listing.
+export const MIN_HISTORY_DAYS = 2;
 
 // The no-retail-channel exemption itself lives in constants.ts — card-narrative.ts
 // needs the same predicate to stop promising "a price appears the moment a store

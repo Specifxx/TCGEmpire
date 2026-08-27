@@ -28,8 +28,8 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, type Country } from "./country";
-import { cachedOrDirect, sydneyDayKey, STALE_HISTORY_MS } from "./price-history";
-import { CONTENT_TAG } from "./revalidate-content";
+import { cachedOrDirect, sydneyWeekKey, STALE_HISTORY_MS } from "./price-history";
+import { HISTORY_TAG } from "./revalidate-content";
 import type { CardTileData } from "@/components/CardTile";
 
 export type RecordRow = {
@@ -71,7 +71,9 @@ const EMPTY: AllTimeRecords = { peaks: [], offPeak: [], atLow: [], asOf: null };
  * the board fills with cards from the newest set every time one is added, which
  * is exactly the failure mode that makes a records page look broken.
  */
-const MIN_DAYS = 14;
+// Snapshot ROWS, not calendar days — and snapshots are weekly now, so 14 would
+// mean fourteen weeks and empty every records table until December.
+const MIN_DAYS = 3;
 /** Below this, a percentage move is noise on a bulk common. Matches price-history. */
 const MIN_CENTS = 300;
 /**
@@ -228,7 +230,7 @@ export function getAllTimeRecords(
 ): Promise<AllTimeRecords> {
   return cachedOrDirect(
     () => computeAllTimeRecords(country, limit),
-    ["rc-all-time-records", country, String(limit), sydneyDayKey()],
-    { revalidate: 86400, tags: [CONTENT_TAG] },
+    ["rc-all-time-records", country, String(limit), sydneyWeekKey()],
+    { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
   );
 }

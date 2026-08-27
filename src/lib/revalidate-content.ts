@@ -11,6 +11,22 @@ import { SECTIONS } from "./sitemap-sections";
 // /api/revalidate and /api/cron/refresh-prices.
 export const CONTENT_TAG = "content";
 
+// HISTORY-DB READS ARE TAGGED SEPARATELY, AND revalidateContent() DELIBERATELY
+// DOES NOT PURGE THIS ONE.
+//
+// The whole-market history reads (movers, recently-updated, per-card charts) are
+// the single largest source of history-database egress on the site: each one is
+// "every card in this market across a window", ~1,400 cards wide, and there is
+// one per market. They were tagged CONTENT_TAG, so every price import — twice a
+// day — purged them and forced all six markets to re-scan. Their nominal 48h TTL
+// never got anywhere near expiring; the tag bust, not the timer, set the real
+// read rate.
+//
+// Splitting the tag is what lets price data stay twice-daily fresh while history
+// moves to a weekly cadence (see lib/price-history.ts). Purging this tag is now a
+// deliberate act — nothing on the import path fires it.
+export const HISTORY_TAG = "history";
+
 export function revalidateContent(): string[] {
   // GENUINELY STATIC / ISR pages (no cookie or searchParams read). Passing the
   // dynamic route pattern with "page" purges EVERY matching URL — all ~1,200

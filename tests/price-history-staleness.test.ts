@@ -29,7 +29,24 @@ const DB_HISTORY = "src/lib/db-history.ts";
 
 test("computePriceMovers refuses to serve movers once the freshest snapshot is stale", () => {
   const src = read(PRICE_HISTORY);
-  assert.match(src, /const STALE_HISTORY_MS = 3 \* 86400_000/, "expected a 3-day staleness threshold");
+  // The threshold MUST outlast one snapshot cycle, or the feature switches itself
+  // off during normal operation. Asserting a literal "3 days" encoded the old
+  // daily cadence: once writes went weekly, a 3-day threshold would have judged
+  // every healthy week stale and silently returned empty movers forever.
+  //
+  // So assert the relationship, not the number — this stays correct whatever the
+  // cadence becomes, and still fails if someone sets a threshold that cannot
+  // survive its own write interval.
+  const staleMatch = /const STALE_HISTORY_MS = (\d+) \* 86400_000/.exec(src);
+  assert.ok(staleMatch, "expected STALE_HISTORY_MS in days");
+  const staleDays = Number(staleMatch![1]);
+  const intervalMatch = /const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(read("src/lib/price-import.ts"));
+  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-import.ts");
+  const interval = Number(intervalMatch![1]);
+  assert.ok(
+    staleDays > interval,
+    `STALE_HISTORY_MS is ${staleDays} days but snapshots are written every ${interval} — a healthy week would read as stale and movers would silently vanish`,
+  );
   // Scoped to the movers function specifically (not just "appears somewhere in
   // the file") — find its body and assert the guard lives inside it, after the
   // row fetch, before building per-card series.

@@ -9,8 +9,8 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
-import { sydneyDayKey } from "./price-history";
-import { CONTENT_TAG } from "./revalidate-content";
+import { sydneyWeekKey } from "./price-history";
+import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail } from "./email";
 import { formatMoney } from "./format";
@@ -33,8 +33,8 @@ function portfolioHistory(
         orderBy: { day: "asc" },
         select: { cardId: true, day: true, lowestPriceCents: true },
       }),
-    ["rc-portfolio-hist", country, String(windowDays), sydneyDayKey(), cardIds.join(",")],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
+    ["rc-portfolio-hist", country, String(windowDays), sydneyWeekKey(), cardIds.join(",")],
+    { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
   )();
 }
 import { cardTileSelect } from "./cards";

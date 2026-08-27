@@ -12,12 +12,15 @@ import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
-import { CONTENT_TAG } from "./revalidate-content";
-import { sydneyDayKey } from "./price-history";
+import { HISTORY_TAG } from "./revalidate-content";
+import { sydneyWeekKey } from "./price-history";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
-const WINDOW_DAYS = 30;
-const MIN_POINTS = 5; // need enough history for an average to mean anything
+const WINDOW_DAYS = 35; // 5 weekly snapshots fit inside this
+// 3, not 5: at one snapshot per week (price-import.ts) a 35-day window can
+// only ever hold five points, so a floor of 5 demanded a perfect run and
+// returned an empty Value Finder on any missed week.
+const MIN_POINTS = 3; // need enough history for an average to mean anything
 const MIN_PRICE_CENTS = 300; // ignore sub-$3 noise
 const MIN_DISCOUNT = 0.08; // at least 8% below the average to list
 
@@ -88,8 +91,8 @@ export async function getUndervalued(country: Country, limit = 24): Promise<Valu
   // list can't trigger a second whole-market history read.
   const full = await unstable_cache(
     () => computeUndervalued(country, 100),
-    ["rc-undervalued", country, sydneyDayKey()],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
+    ["rc-undervalued", country, sydneyWeekKey()],
+    { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
   )();
   return full.slice(0, limit);
 }
