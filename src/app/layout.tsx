@@ -45,6 +45,12 @@ const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").t
 const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
   ssr: false,
 });
+// Retention nudge: offer monthly Premium subscribers a one-click switch to annual.
+// ssr:false and self-gated to premium/monthly users — renders nothing for everyone
+// else, and never coincides with the non-Premium slide-in above.
+const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge").then((m) => m.AnnualSwitchNudge), {
+  ssr: false,
+});
 // The always-available feedback launcher. ssr:false because it renders nothing
 // until a visitor clicks it, so there is no content for a crawler to miss and no
 // reason to pay for it in the server HTML.
@@ -309,6 +315,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     counterpart of SignupPromoPopup. The two never overlap by
                     audience. */}
                 <PremiumSlideIn />
+                {/* Its mirror image: monthly-Premium → annual retention nudge.
+                    Mutually exclusive with PremiumSlideIn by `premium` state. */}
+                <AnnualSwitchNudge />
 
                 {/* Converts the OAuth callback's one-time ?welcome= param into
                     the sign_up analytics event, then strips it from the URL.
