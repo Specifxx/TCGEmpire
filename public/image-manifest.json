@@ -351,11 +351,11 @@
     "src": "/blog/riftbound-format-legality-rotation.png",
     "width": 1200,
     "height": 630,
-    "bytes": 44464,
+    "bytes": 53105,
     "webp": "/blog/riftbound-format-legality-rotation.webp",
-    "webpBytes": 21470,
+    "webpBytes": 38448,
     "avif": "/blog/riftbound-format-legality-rotation.avif",
-    "avifBytes": 11161,
+    "avifBytes": 24644,
     "variants": [
       {
         "w": 480,
@@ -366,7 +366,7 @@
         "src": "/blog/riftbound-format-legality-rotation-768w.webp"
       }
     ],
-    "fingerprint": "05798cd5ad29453a"
+    "fingerprint": "5c9764ffa81af7c7"
   },
   "/blog/riftbound-legacy-pack-changes-and-card-templating.png": {
     "src": "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
@@ -393,11 +393,11 @@
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,
     "height": 630,
-    "bytes": 44340,
+    "bytes": 42161,
     "webp": "/blog/riftbound-radiance-what-we-know.webp",
-    "webpBytes": 22846,
+    "webpBytes": 23210,
     "avif": "/blog/riftbound-radiance-what-we-know.avif",
-    "avifBytes": 15039,
+    "avifBytes": 13231,
     "variants": [
       {
         "w": 480,
@@ -408,7 +408,7 @@
         "src": "/blog/riftbound-radiance-what-we-know-768w.webp"
       }
     ],
-    "fingerprint": "aaae50c0a7e5ad49"
+    "fingerprint": "8758e0f892e05396"
   },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",

@@ -33,12 +33,34 @@ const ACCENT = "#38bdf8";
 const LOGO_PATH = path.join(process.cwd(), "public", "logo-r-green.png");
 const LOGO_DATA_URI = `data:image/png;base64,${fs.readFileSync(LOGO_PATH).toString("base64")}`;
 
+/**
+ * The graphic in the hero's right-hand third.
+ *
+ * It used to be one hardcoded thing — three bars with the cheapest highlighted —
+ * drawn on every hero regardless of subject. That reads as a price comparison,
+ * which is honest on a pricing post and pure decoration on a release-date
+ * announcement or a rules guide. A thumbnail that says something false about the
+ * article is worse than one that says nothing.
+ *
+ * So the motif is per-post now. `bars` stays the default, so every existing hero
+ * renders byte-identically and does not need redrawing.
+ */
+type Motif =
+  /** Price comparison: three quotes for the same card, cheapest highlighted. */
+  | { kind: "bars" }
+  /** A single date the post is really about — a release, a deadline, a drawing. */
+  | { kind: "date"; label: string; big: string; sub: string }
+  /** A short status list. Every row is a tick; used where "all of these" is the answer. */
+  | { kind: "checklist"; label: string; items: string[] };
+
 interface Hero {
   slug: string;
   kicker: string;
   title: string;
   /** Up to three short stat/label chips drawn along the bottom. */
   chips: string[];
+  /** Right-hand graphic. Omit for the price-comparison bars. */
+  motif?: Motif;
 }
 
 /**
@@ -153,13 +175,26 @@ const HEROES: Hero[] = [
     slug: "riftbound-radiance-what-we-know",
     kicker: "News · Set 5",
     title: "Radiance: What's Confirmed",
-    chips: ["23 October 2026", "~180 cards", "5 new Legends"],
+    // The release date IS the story — it is the one fact the whole post is
+    // built on, so it gets the graphic rather than a generic price motif.
+    chips: ["~180 cards", "5 new Legends", "Card list unrevealed"],
+    motif: { kind: "date", label: "Releases", big: "23 OCT", sub: "2026" },
   },
   {
     slug: "riftbound-format-legality-rotation",
     kicker: "Guide · Rules",
     title: "Does Riftbound Rotate?",
-    chips: ["All 5 sets legal", "Bans, not rotation", "No policy announced"],
+    // Four ticks IS the answer: nothing has rotated out. A reader gets the
+    // conclusion from the thumbnail before opening the post.
+    chips: ["Bans, not rotation", "No policy announced", "Standard + 2v2 differ"],
+    motif: {
+      kind: "checklist",
+      label: "Still legal",
+      // All five released sets, matching the article's table exactly. Showing
+      // four when the post says "all five released sets are legal" just prompts
+      // "so which one isn't?".
+      items: ["Origins", "Proving Grounds", "Spirit Forged", "Unleashed", "Vendetta"],
+    },
   },
   {
     slug: "best-basket-cheapest-riftbound-deck",
@@ -203,12 +238,6 @@ function svgFor(h: Hero): string {
   // ascender clears the kicker's baseline at y=160 even on a two-line title.
   const titleTop = 292 - (lines.length - 1) * (titleSize * 0.58);
 
-  // Decorative "price comparison" motif: three bars, the cheapest highlighted.
-  const bars = [
-    { y: 470, w: 300, win: false },
-    { y: 512, w: 200, win: true },
-    { y: 554, w: 380, win: false },
-  ];
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <defs>
@@ -246,15 +275,61 @@ function svgFor(h: Hero): string {
       .join("\n    ")}
   </g>
 
-  <g opacity="0.5">
+  ${motifSvg(h.motif ?? { kind: "bars" })}
+</svg>`;
+}
+
+/**
+ * Renders the right-hand graphic. Everything is right-aligned to x=1120 and kept
+ * below y=430, which is the band the title and chips never reach (chips bottom
+ * out at y≈554 on the left at x=80, and no chip is long enough to cross x≈700).
+ */
+function motifSvg(m: Motif): string {
+  const R = WIDTH - 80; // 1120 — the right margin every motif hangs off
+  const FONT = `font-family="DejaVu Sans, sans-serif"`;
+
+  if (m.kind === "bars") {
+    const bars = [
+      { y: 470, w: 300, win: false },
+      { y: 512, w: 200, win: true },
+      { y: 554, w: 380, win: false },
+    ];
+    return `<g opacity="0.5">
     ${bars
       .map(
         (b) =>
-          `<rect x="${WIDTH - 80 - b.w}" y="${b.y}" width="${b.w}" height="22" rx="11" fill="${b.win ? BRAND : "#1e293b"}"/>`
+          `<rect x="${R - b.w}" y="${b.y}" width="${b.w}" height="22" rx="11" fill="${b.win ? BRAND : "#1e293b"}"/>`
       )
       .join("\n    ")}
-  </g>
-</svg>`;
+  </g>`;
+  }
+
+  if (m.kind === "date") {
+    return `<g ${FONT} text-anchor="end">
+    <rect x="${R - 340}" y="438" width="340" height="4" rx="2" fill="${BRAND}" opacity="0.6"/>
+    <text x="${R}" y="486" fill="#94a3b8" font-size="24" letter-spacing="4">${esc(m.label.toUpperCase())}</text>
+    <text x="${R}" y="556" fill="${BRAND}" font-size="62" font-weight="bold">${esc(m.big)}</text>
+    <text x="${R}" y="596" fill="#cbd5e1" font-size="30" letter-spacing="2">${esc(m.sub)}</text>
+  </g>`;
+  }
+
+  // checklist — a tick per row, drawn as a stroked path rather than a "✓" glyph
+  // so it cannot depend on what the rasterising font happens to carry.
+  const rows = m.items.slice(0, 5);
+  // Bottom-aligned to a fixed baseline rather than grown downward from a fixed
+  // top: a fifth row starting at 470 would push its baseline to 614, hard against
+  // the 630 edge. The label hangs off `top` for the same reason.
+  const top = 596 - (rows.length - 1) * 36;
+  return `<g ${FONT}>
+    <text x="${R}" y="${top - 40}" fill="#94a3b8" font-size="22" letter-spacing="4" text-anchor="end">${esc(m.label.toUpperCase())}</text>
+    ${rows
+      .map((it, i) => {
+        const y = top + i * 36;
+        return `<text x="${R - 58}" y="${y}" fill="#cbd5e1" font-size="27" text-anchor="end">${esc(it)}</text>
+    <path d="M ${R - 44} ${y - 10} l 9 10 l 18 -20" fill="none" stroke="${BRAND}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+      })
+      .join("\n    ")}
+  </g>`;
 }
 
 async function main() {
