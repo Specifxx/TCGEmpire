@@ -18,7 +18,6 @@ import { deckGroupPath, indexableDeckGroups } from "./deck-groups";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
-import { MARKETPLACE_PUBLIC } from "./marketplace";
 import { KEYWORDS } from "./keywords";
 import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champions";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "./facets";
@@ -100,7 +99,6 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
@@ -176,10 +174,6 @@ async function core(): Promise<SitemapEntry[]> {
       lastModified: latestBlog,
     })),
     { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4, lastModified: staticPageDate("/contact") },
-    // Returns policy — deliberately higher priority than the other legal pages:
-    // Merchant Center / Shopping surfaces look for a conventional return policy,
-    // so it needs to be crawled and indexed, not treated as boilerplate.
-    { url: `${SITE_URL}/returns`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/returns") },
     { url: `${SITE_URL}/support`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/support") },
     { url: `${SITE_URL}/privacy`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/privacy") },
     { url: `${SITE_URL}/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/terms") },
@@ -451,58 +445,16 @@ async function content(): Promise<SitemapEntry[]> {
   // noindexed at the page level: one templated post per calendar day is the
   // textbook shape of Google's "scaled content abuse" policy and an AdSense
   // Publisher-Policy risk. Across a full Search Console export not one report URL
-  // had earned any traffic to lose. Generation is now DELETED outright
-  // (lib/market-report.ts), so this list can never regrow — the ~130 existing rows
-  // stay reachable by direct URL only.
+  // had earned any traffic to lose. Generation is now DELETED outright, so this
+  // list can never regrow — and the read-side was removed with the Index too, so
+  // the ~130 legacy rows are no longer served at all (their URLs 404). The rows
+  // themselves are left dormant in the database.
   return getArticles().map((a) => ({
     url: `${SITE_URL}/${a.category === "guide" ? "guides" : "blog"}/${a.slug}`,
     changeFrequency: "monthly" as const,
     priority: 0.6,
     lastModified: new Date(`${a.updated ?? a.date}T09:00:00+10:00`),
   }));
-}
-
-// ARCHIVED (2026-08-19): the marketplace feature is fully disabled (see
-// lib/marketplace.ts) and this builder is no longer registered in BUILDERS/
-// SECTIONS below, so /sitemaps/marketplace.xml now 404s (see [section]/route.ts's
-// own "unknown section 404s" comment) instead of serving an always-empty
-// sitemap. Kept here, still gated on MARKETPLACE_PUBLIC, so re-registering it
-// is a one-line change if the feature comes back. Exported (unlike the other
-// builders) purely so it counts as used while unregistered.
-export async function marketplace(): Promise<SitemapEntry[]> {
-  if (!MARKETPLACE_PUBLIC) return [];
-  const day = await priceDay();
-  const base: SitemapEntry[] = [
-    { url: `${SITE_URL}/marketplace`, changeFrequency: "daily", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/marketplace/faq`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/marketplace/faq") },
-    { url: `${SITE_URL}/marketplace/buyer-protection`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/marketplace/buyer-protection") },
-    { url: `${SITE_URL}/marketplace/shipping`, changeFrequency: "monthly", priority: 0.4, lastModified: staticPageDate("/marketplace/shipping") },
-    { url: `${SITE_URL}/marketplace/terms`, changeFrequency: "yearly", priority: 0.3, lastModified: staticPageDate("/marketplace/terms") },
-  ];
-  try {
-    // GROUP BY, not findMany({ distinct }) — Prisma applies BOTH `distinct` and
-    // `take` in the client, so that form selects every active listing row and
-    // dedupes here, with the `take: 1000` bounding the deduped array rather than
-    // the query. Postgres does the dedupe and the LIMIT. Same bug class as
-    // demandSnapshotDays() in lib/demand-snapshot.ts.
-    const sellers = await prisma.$queryRaw<{ sellerId: string }[]>`
-      SELECT "sellerId" FROM "MarketplaceListing"
-      WHERE status = 'ACTIVE' AND quantity > 0
-      GROUP BY "sellerId"
-      LIMIT 1000
-    `;
-    base.push(
-      ...sellers.map((s) => ({
-        url: `${SITE_URL}/marketplace/seller/${s.sellerId}`,
-        changeFrequency: "daily" as const,
-        priority: 0.5,
-        lastModified: day,
-      }))
-    );
-  } catch (e) {
-    console.error("sitemap/marketplace: seller query failed, static routes only:", e);
-  }
-  return base;
 }
 
 const BUILDERS: Record<SectionId, () => Promise<SitemapEntry[]>> = {

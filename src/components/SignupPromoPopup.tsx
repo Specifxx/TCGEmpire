@@ -15,10 +15,6 @@ import { AuthForm } from "./AuthForm";
 // effect at all (see the `user` check below). Fires on every route, including the
 // homepage.
 //
-// Skipped entirely on /marketplace — a visitor specifically evaluating the
-// marketplace (e.g. after seeing it linked from a community post) shouldn't be
-// hit with a full-screen signup wall on top of everything else there.
-//
 // THIS POPUP IS A NO-ACCOUNT → FREE-ACCOUNT MOMENT, AND NOTHING ELSE.
 //
 // Premium is deliberately absent. Earlier versions led with a comp — first a free
@@ -81,7 +77,7 @@ export const BUY_SURFACE_BACKSTOP_MS = 120_000;
 // visitor's attention comes back to this page within a few seconds.
 export const POST_BUY_DELAY_MS = 8_000;
 
-const SKIP_PATHS = ["/login", "/verify", "/marketplace"];
+const SKIP_PATHS = ["/login", "/verify"];
 // Session pageview counter (see the gate below). Incremented once per route.
 const PV_KEY = "rc_pv_count";
 // Only arm the popup once the session has seen this many pages.
@@ -145,7 +141,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   // Auto-show once per session, after a delay — only for a signed-out visitor,
-  // off the auth/marketplace pages. Deliberately fires on the homepage too — an
+  // off the auth pages. Deliberately fires on the homepage too — an
   // earlier version excluded "/" on accessibility grounds (see DECISIONS.md's
   // Phase 5 section); that exclusion was a product call, not a technical
   // constraint, and has since been reversed: the homepage is now explicitly

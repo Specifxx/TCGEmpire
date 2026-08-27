@@ -126,7 +126,7 @@ export interface Article {
   closeups?: ArticleCloseUp[];
   // Override for the "Ready to buy?" CTA at the end of the article — lets a guide
   // point somewhere more specific than the generic card database (e.g. a browse
-  // view pre-filtered to the mechanic it just explained, or the Index). Omit for
+  // view pre-filtered to the mechanic it just explained). Omit for
   // the default /browse CTA.
   browseCta?: { href: string; label: string; blurb: string };
   // Attach a LIVE, market-specific data section (stores stocking Riftbound in
@@ -1284,7 +1284,7 @@ And if you're simply risk-averse - you'd rather know exactly what you're getting
 
 The healthiest way to use box EV is as one input alongside your own goals, not as a green light to rip. Ask what you're actually optimizing for: a specific card, a fun opening experience, or the best expected return on money spent. Each of those has a different right answer, and EV only speaks directly to the last one.
 
-A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
+A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and decide from there. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
   },
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
@@ -1340,65 +1340,6 @@ Manually checking five or six retailers for every card you're curious about does
 The honest version of this: arbitrage in a TCG market is a volume-and-diligence game, not a jackpot game. Gaps tend to be modest per card and close relatively quickly once a few people notice them, which is exactly what happened in every collectible market that came before this one. The people who do well at it check consistently, act quickly when a real gap appears, and don't overpay in fees or shipping to chase a thin margin.
 
 It also doesn't require a large bankroll to start. Watching a handful of cards you already understand, comparing listings regularly, and only acting when the math clearly works after costs is a sustainable approach. Treat any comparison tool as a way to see the market faster and more completely than you could by hand - not as a guarantee that every gap it surfaces is worth taking.`,
-  },
-  {
-    slug: "understanding-the-riftcompare-index-methodology",
-    category: "guide",
-    title: "What Is the RiftCompare Index? How It's Calculated",
-    excerpt:
-      "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
-    author: "RiftCompare",
-    date: "2026-07-01",
-    readMins: 4,
-    tags: ["riftcompare-index", "methodology", "riftbound-tcg", "market-data"],
-    body: `## What the RiftCompare Index Actually Measures
-
-The RiftCompare Index is a single number meant to answer one question: *is the Riftbound secondary market, taken as a whole, worth more or less than it used to be?* It is not the price of any one card, and it isn't an average of "everything for sale." It's a tracked basket of specific cards whose combined value is rebased to a starting point, so the day-to-day movement of that basket tells you something about market direction rather than about one chase card getting hot.
-
-Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a fixed group of cards, tracked every day, combined into one line you can watch over time.
-
-This matters because individual card prices are noisy. A single copy selling low because a seller needed cash fast, or high because two collectors got into a bidding war, can make a card's price chart look dramatic without meaning anything about the format or the game's overall health. An index smooths that out by design.
-
-## How the Basket of Cards Is Chosen
-
-Not every card in Riftbound belongs in the Index, and that's intentional. A useful index needs cards that are actually liquid - meaning they trade often enough that a snapshot price reflects real transactions, not a single stale listing sitting untouched for weeks.
-
-In practice that means the basket leans toward:
-
-- Cards with consistent trading volume across multiple listings, rather than cards that rarely change hands
-- A spread across rarity tiers, so the Index isn't just tracking mythic-rarity chase cards while ignoring the commons and uncommons that make up most of what people actually buy and sell
-- Cards that have been available long enough to have a real price history, rather than something that hit the market yesterday
-
-The goal is representativeness, not completeness. Trying to include every printed card would let thinly-traded, hard-to-price cards drag the number around based on one or two outlier sales. A smaller, deliberately chosen basket produces a steadier, more trustworthy signal.
-
-### Why the Basket Doesn't Change Every Week
-
-If the basket shifted constantly, the Index would stop being comparable to itself over time. Part of the value of an index is that you can look at it in six months and know it's still measuring roughly the same thing it was measuring today. Basket composition is reviewed periodically rather than adjusted in response to short-term hype around any one card.
-
-## How Daily Snapshots and Rebasing Work
-
-Every card in the basket gets a price snapshot on a regular cadence - effectively a daily "closing price" pulled from tracked listings and completed sales. Those individual snapshots are combined into a single basket value for that day.
-
-That raw basket value, in dollars, isn't very readable on its own - it's just a sum of a bunch of card prices, and the actual dollar figure doesn't mean much by itself. So the Index gets **rebased**: the very first snapshot is set to a round starting value (this is standard practice for any price index, financial or otherwise), and every day after that is expressed relative to that starting point.
-
-The practical effect is that you read the Index as a percentage move from its starting line, not as a dollar amount. If the Index is above its starting value, the basket of tracked cards is worth more in aggregate than when tracking began. If it's below, the basket is worth less. The specific starting number itself is arbitrary - what matters is the trend line it produces.
-
-This is also why the Index is most useful looked at over stretches of time rather than a single day. One day's snapshot can wobble for the same reasons a single card's price can wobble - a slow listing day, a temporary gap in completed sales for a card or two in the basket. The trend across weeks and months is where the signal lives.
-
-## Index vs. Movers: Two Different Questions
-
-It's worth being explicit about what the Index is *not* for, because [/movers](/movers) exists to answer a genuinely different question. Movers is about which individual cards changed price the most recently - the specific singles that jumped or dropped week over week, useful if you're trying to time a buy or sell on a particular card.
-
-The Index doesn't try to do that job. It won't tell you that one card spiked because of a tournament result or a reprint rumor. What it tells you is whether the *format as a whole* is trending up or down. A card can be a huge mover in either direction while the Index barely budges, because it's one card out of a basket. Conversely, the Index can drift steadily even when no single card is making headlines that week - that's often the more meaningful signal, since it reflects broad, sustained demand rather than one card's news cycle.
-
-If you're deciding whether to buy a specific card right now, check Movers. If you're trying to understand whether Riftbound singles in general have gotten more or less expensive since you started collecting, the Index is the number to watch.
-
-## Using the Index as a New Collector
-
-If you're still getting oriented in the game itself, it's worth pairing this with our [beginner's guide to Riftbound](/guides/riftbound-for-beginners) before you lean too heavily on market data - understanding what makes a card mechanically strong or scarce will help you interpret *why* the Index moves the way it does, not just that it moved.
-
-Used honestly, the Index is a health check, not a trading signal. It won't tell you when to buy a specific card. It will tell you, over time, whether the market you're buying into is expanding or contracting.
-`,
   },
   {
     slug: "riftbound-set-checklist-how-to-complete-a-set",
@@ -3537,235 +3478,6 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
   },
   {
-    slug: "how-to-buy-on-riftcompare-marketplace",
-    category: "guide",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // guide describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "How to Buy on the RiftCompare Marketplace",
-    excerpt:
-      "A step-by-step guide to buying Riftbound singles directly from other players on the RiftCompare Marketplace — finding a listing, checking out, and what happens to your money until the card actually arrives.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 6,
-    tags: ["marketplace", "buying", "guide", "escrow", "p2p"],
-    browseCta: {
-      href: "/marketplace",
-      label: "Browse the Marketplace →",
-      blurb: "See live listings from verified sellers in your market, ready to buy right now.",
-    },
-    body: `RiftCompare has always compared prices across stores — now you can also buy **directly from other players** through the **[RiftCompare Marketplace](/marketplace)**, a built-in P2P marketplace with buyer protection baked in. Here's exactly how it works, start to finish.
-
-## 1. Find a listing
-
-Marketplace listings show up two places:
-
-- **[The marketplace grid](/marketplace)** — browse every active listing in your market, filter by card, and see each seller's shop, condition and price.
-- **Right inside the price comparison.** If a seller's price beats every store for a card, it appears as a normal row on that card's page, tagged **"RiftCompare Marketplace."** You don't have to go looking for it separately — it's just another price to compare.
-
-Every listing shows the card's **condition** (Near Mint through Damaged), whether it's **foil**, the **seller's shop name and rating**, and a price in your local currency. Listings only show sellers shipping within your own market — no cross-border shipping surprises.
-
-## 2. Check out
-
-Add what you want to your cart and check out through **Stripe** — the same secure checkout used for card payments everywhere else. You'll see the item price, an estimated shipping cost, and the total before you confirm.
-
-Your payment does **not** go straight to the seller. It's held by RiftCompare until the order is actually delivered — that's the whole point of buying through the marketplace instead of a direct message or a forum trade.
-
-## 3. What happens after you pay
-
-- The seller gets notified immediately and has **14 days to ship** your order and add tracking. If they don't, you're **automatically refunded in full** — no back-and-forth required.
-- Once they mark it shipped, you'll get an email with the carrier and tracking number, plus an estimated delivery window.
-- Your money stays held the whole time your order is in transit.
-
-## 4. Confirm delivery (or let it auto-release)
-
-When your card arrives, open **[My orders](/marketplace/orders)** and tap **"Got it"** to confirm delivery — this instantly releases the seller's payout and closes out the order.
-
-Forget to confirm? No problem — funds **auto-release 14 days after the order ships** either way, so a seller never gets stuck waiting on you to click a button. You can also message the seller directly from the order if you want to check in before then.
-
-## 5. Message the seller
-
-Every order has a built-in chat thread with the seller — ask about shipping, condition, anything. No need to hunt down a Discord or trade forum to sort out a question about your order.
-
-## 6. If something goes wrong
-
-Tap **"Report a problem"** on the order. This pauses the scheduled release immediately and puts a real person on it — not an automated dispute bot. Common cases:
-
-- **Never shipped in time** → automatic full refund, no report needed.
-- **Item not as described / damaged / never arrived** → report it and we'll sort out a refund.
-- **Just have a question first?** Message the seller before it becomes a problem — most things are a shipping delay, not a scam.
-
-## Why this is different from a normal trade
-
-Buying from a random seller in a Discord server or Facebook group means sending money and hoping. On the RiftCompare Marketplace, your payment is never released until you have the card in hand (or the deadline passes with no dispute) — the platform is the thing standing between "I paid" and "I got scammed," not your judgment of a stranger's profile picture.
-
-The marketplace is new, so if anything looks off, there's a "Found a bug? Report it" link on every marketplace page that comes straight to us.
-
-## Ready to buy?
-
-**[Browse the marketplace](/marketplace)** to see what's listed right now, or check a specific card's page — marketplace listings show up right alongside every store price. Have cards to sell instead? **[Open a shop](/marketplace/sell)** — it's free to list.`,
-  },
-  {
-    slug: "riftcompare-marketplace-buyer-protection-explained",
-    category: "blog",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // post describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "RiftCompare Marketplace Buyer Protection",
-    excerpt:
-      "How the RiftCompare Marketplace actually protects your money when buying Riftbound cards from another player — escrow, auto-refunds, ship deadlines and what happens if a trade goes wrong.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 5,
-    tags: ["marketplace", "safety", "escrow", "buyer-protection", "trust"],
-    browseCta: {
-      href: "/marketplace/buyer-protection",
-      label: "Read the full buyer protection policy →",
-      blurb: "The exact rules — ship deadlines, release dates and how disputes are handled.",
-    },
-    body: `Buying a card from a stranger online is always a little nerve-wracking — you're trusting someone you've never met to actually ship what they said they'd ship. The RiftCompare Marketplace is built specifically to remove that risk. Here's exactly how, with no marketing fluff.
-
-## Your money doesn't go to the seller — not yet
-
-When you pay for a marketplace order, the money is held by RiftCompare, not sent to the seller. It only gets released once one of two things happens:
-
-1. **You confirm delivery** — you tap "Got it" once the card arrives, and the seller is paid out right then.
-2. **14 days pass after the order ships** with no dispute — funds auto-release automatically, so a seller isn't left waiting forever on a buyer who forgot to click a button.
-
-Either way, a seller only ever gets paid *after* the card is genuinely on its way to you and the delivery window has had a chance to play out.
-
-## What if the seller just doesn't ship?
-
-Every seller has **14 days from payment** to mark an order shipped and add tracking. Miss that window, and the order **automatically cancels and refunds you in full** — you don't have to notice, complain, or file anything. It just happens.
-
-## What if the card isn't what was listed, or never turns up?
-
-Tap **"Report a problem"** on the order (found in **[My orders](/marketplace/orders)**). This immediately pauses the scheduled fund release — the seller doesn't get paid while your report is open — and puts it in front of our team to sort out, whether that's a refund or getting the seller to make it right.
-
-This is different from most peer-to-peer trading (Discord, Facebook groups, trade forums), where once you've sent payment there's no mechanism to get it back if the other person ghosts.
-
-## Who are these sellers, anyway?
-
-Anyone selling on the marketplace needs a **verified email account** and has to explicitly agree to the marketplace seller terms before their shop goes live. Every seller has a public shop page with **ratings and reviews from past buyers** — check it before buying from someone new, the same way you'd check feedback on any other platform.
-
-## Can I talk to the seller before worrying?
-
-Yes — every order has built-in messaging with the seller. If tracking looks stalled or you have a question about condition, message them first. Most "is this a scam?" moments turn out to be a normal shipping delay once you actually ask.
-
-## The short version
-
-| Question | Answer |
-| --- | --- |
-| Where does my payment go when I pay? | Held by RiftCompare, not the seller |
-| When does the seller get paid? | After you confirm delivery, or 14 days after shipping, whichever comes first |
-| Seller doesn't ship in time? | Automatic full refund, no action needed from you |
-| Item's wrong / damaged / never arrives? | Report it — release pauses instantly, a real person handles it |
-| Can I message the seller? | Yes, directly on the order |
-
-Full details, including the exact policy language, are on the **[buyer protection page](/marketplace/buyer-protection)**.
-
-## Ready to buy?
-
-**[Browse the marketplace](/marketplace)** and buy with your payment protected the whole way through. New here? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
-  },
-  {
-    slug: "marketplace-vs-stores-where-to-buy-riftbound",
-    category: "blog",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // post describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "Marketplace vs Stores: Where to Buy Riftbound",
-    excerpt:
-      "RiftCompare shows you store prices AND player-to-player marketplace listings side by side. Here's when to buy from a store and when the marketplace is the better (or cheaper) call.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 5,
-    tags: ["marketplace", "buying", "stores", "comparison", "guide"],
-    body: `RiftCompare has always compared prices across dozens of stores. Now it also has a **[player-to-player marketplace](/marketplace)** built in — so which one should you actually buy from? Short answer: you don't have to choose, because we show you both at once. Here's how to think about it.
-
-## They're not competitors — they're the same comparison
-
-Marketplace listings don't live in a separate corner of the site. When a seller's marketplace price beats every store for a card, it shows up as **just another row** in that card's normal price comparison, tagged "RiftCompare Marketplace." You're already comparing both every time you search a card — you just might not have noticed.
-
-## When a store is the better call
-
-- **You want it today, or close to it.** Most stores have same-day or next-day dispatch and established shipping times. Marketplace sellers get 14 days to ship, which is usually faster but isn't guaranteed like a store's stated dispatch time.
-- **You're buying sealed product.** Booster boxes, Proving Grounds and packs are store territory — the marketplace is singles-only.
-- **You want the absolute path of least resistance.** Stores are businesses; there's no seller to coordinate with, no delivery confirmation step. Pay, wait, done.
-
-## When the marketplace is the better call
-
-- **The price is genuinely better.** Individual sellers don't carry store overhead, so marketplace listings frequently undercut retail — that's *why* they show up as the top price on a card page in the first place.
-- **You're after a specific condition or printing** a store doesn't have in stock. Marketplace sellers list exactly what's in their binder, including played copies at played-copy prices, alt-arts, and printings that sell out at retail in minutes.
-- **You want to actually talk to the seller.** Built-in messaging means you can ask "is this really Near Mint?" before you buy, something you can't do with a store listing.
-
-## The trust question, answered honestly
-
-The one real hesitation buying from a store vs. a marketplace seller is trust — a store is a business with a track record; a marketplace seller is a person. That's exactly why the marketplace holds your payment in **escrow** until delivery is confirmed (or auto-releases 14 days after shipping), and auto-refunds you in full if a seller doesn't ship within 14 days. You get the pricing upside of buying peer-to-peer without giving up the safety net of buying from a store. Full breakdown: **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
-
-## The practical answer
-
-Just search the card. Whatever's cheapest — store or marketplace listing — shows up first, in your currency, with shipping factored in. You don't need to decide in advance; **[the card database](/browse)** decides for you every time.
-
-## Ready to buy?
-
-**[Search any card](/browse)** to see stores and marketplace listings compared side by side, or go straight to the **[marketplace grid](/marketplace)** to browse player listings. First time buying from a seller? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
-  },
-  {
-    slug: "riftcompare-marketplace-fee-cut-2-percent",
-    category: "blog",
-    // Marketplace disabled site-wide (2026-08-19, see lib/marketplace.ts) — this
-    // post describes a feature that's currently off. Draft rather than deleted,
-    // per the "keep archived" decision; delete this line to republish.
-    draft: true,
-    title: "RiftCompare Marketplace Fees Dropped to 2%",
-    excerpt:
-      "We've cut the RiftCompare Marketplace seller fee from 5% to 2% — and Premium members now sell for just 1%. Here's what changed, why, and how it stacks up against Cardmarket.",
-    author: "RiftCompare",
-    date: "2026-07-22",
-    readMins: 4,
-    tags: ["marketplace", "fees", "selling", "premium", "announcement"],
-    browseCta: {
-      href: "/marketplace/sell",
-      label: "Open your seller dashboard →",
-      blurb: "List a card and see exactly what you'll receive before you confirm.",
-    },
-    body: `Starting today, selling on the **[RiftCompare Marketplace](/marketplace)** costs less — a lot less. The platform fee is down from 5% to **2%**, and if you're a **[Premium](/premium)** member it's just **1%**. No tiers to unlock, no minimum sales volume to hit first — the rate applies automatically, from your very next sale.
-
-## What actually changed
-
-- **Standard sellers**: 5% → **2%** on every completed sale.
-- **Premium sellers**: **1%** — half the standard rate, on top of everything else Premium already includes (Value Finder, Rising Cards, the full Deal Finder list, and an ad-free site).
-- **Evaluated per sale, not per listing.** The rate that applies is whatever your account status is *at the moment a sale completes* — upgrade to Premium today, and your very next sale is charged at 1%, even on a listing you posted weeks ago.
-- **Nothing else changes.** Same escrow protection, same 14-day ship deadline, same buyer-side experience. This is purely a fee cut.
-
-## Why we did this
-
-RiftCompare's marketplace exists to make it easier — and cheaper — for players to buy and sell directly with each other. A lower fee means more of every sale actually lands in the seller's pocket, which matters most while the marketplace is still building up its base of real listings from real players.
-
-It's also just a better deal than the alternatives. Cardmarket, the biggest general TCG marketplace, charges sellers a tiered commission — 5% for a standard "Private" seller, dropping to 3% or 1.5% only once you qualify for its Professional/Powerseller tiers — plus a Trustee Service fee (0.5–1%) and a 3% currency-conversion charge on cross-border sales, landing around 6–8% all-in for most casual sellers. RiftCompare's 2% (or 1% with Premium) beats that from the first sale, with no tiers to climb and no currency-conversion surprise.
-
-## What you actually take home
-
-Say you sell a card for $20:
-
-| | Fee | You receive |
-|---|---|---|
-| Standard | 2% ($0.40) | **$19.60** |
-| Premium | 1% ($0.20) | **$19.80** |
-
-Your seller dashboard and Seller Funds page always show the exact numbers before you list and after you sell — no need to do this math yourself.
-
-## Selling for the first time?
-
-Any signed-in, email-verified user can list a card in a couple of minutes from the **[seller dashboard](/marketplace/sell)**. Payouts go through Stripe Connect once you've completed a quick identity check, and buyer payments are held in escrow until delivery is confirmed — full details in **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
-
-Already selling? The new rate applies automatically — nothing to change, nothing to opt into. Check **[Seller Funds](/marketplace/funds)** to see it reflected on your next completed sale.`,
-  },
-  {
     slug: "riftbound-pre-rift-rules-explained",
     category: "guide",
     title: "Riftbound Pre-Rift Rules Explained",
@@ -4009,7 +3721,6 @@ Note what is *not* on that list: reveal-day hype on its own, and social-media sp
 You don't have to take any of this on trust — the whole point of RiftCompare is that you can check.
 
 - **[Price movers](/movers)** — which cards are climbing or cooling right now, per market.
-- **[The RiftCompare Index](/market)** — the market as a whole rather than one card. Methodology is documented in **[how the Index works](/guides/understanding-the-riftcompare-index-methodology)**.
 - **Any card page** — the full store-by-store table ranked by delivered cost, plus that card's price history chart as it accumulates.
 - **[Price watch](/browse)** — save a card and get told when it moves, instead of checking manually.
 
@@ -6124,7 +5835,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
     category: "blog",
     title: "Are Riftbound Cards a Real Investment?",
     excerpt:
-      "Riftbound's own market index is eleven days old. Here's what that actually means for anyone asking whether these cards are an investment — with the real prices, real fees and real risks, not a guess dressed up as one.",
+      "Our price tracking for Riftbound only goes back eleven days. Here's what that actually means for anyone asking whether these cards are an investment — with the real prices, real fees and real risks, not a guess dressed up as one.",
     author: "RiftCompare",
     date: "2026-08-15",
     readMins: 9,
@@ -6134,19 +5845,15 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
       alt: "Ahri, Nine-Tailed Fox (OGN 303*/298), the Signature printing — priced nine times its unsigned twin, and the clearest real example of where Riftbound value actually sits today",
     },
     summary: [
-      "**This is analysis, not financial advice — and the honest headline finding is that nobody has enough data yet to give real investment advice about Riftbound cards.** The RiftCompare Index, our own tracked basket of the game's most-traded singles, is eleven days old as of this writing.",
-      "**We can't tell you the 7-day or 30-day return, because those numbers don't exist yet.** Not \"we won't say\" — the data literally isn't there. Our own live Index API returns `null` for both.",
+      "**This is analysis, not financial advice — and the honest headline finding is that nobody has enough data yet to give real investment advice about Riftbound cards.** Our own price tracking, which follows the game's most-traded singles, only goes back eleven days as of this writing.",
+      "**We can't tell you the 7-day or 30-day return, because those numbers don't exist yet.** Not \"we won't say\" — the data literally isn't there. Neither window has enough price history behind it yet.",
       "**What we can show you is real and current:** which printings already carry genuine scarcity premiums (one card is worth 9× its twin for a single printed signature), how volatile a market this thin already looks, and exactly what it costs to buy and sell.",
       "**If you already own cards and want to know what they're worth, that's a different — and answerable — question.** [Set a free price alert](/alerts) rather than guessing.",
     ],
     faq: [
       {
         q: "Are Riftbound cards a good investment?",
-        a: "Nobody can honestly answer that yet, ourselves included. Riftbound has released five sets, the newest of which is two weeks old, and the RiftCompare Index — our own tracked measure of the secondary market — only has data back to 4 August 2026. There is no multi-year track record to point to, up or down. What we can tell you is what the market looks like today: real prices, real fees, real volatility. Whether today's prices look smart in five years is not something the data can answer yet.",
-      },
-      {
-        q: "How is the RiftCompare Index calculated, and how far back does it go?",
-        a: "It's a search-weighted basket of 200 of the most-traded Riftbound singles, rebased to 100 on its start date of 4 August 2026 (see /market for the live number and methodology). As of this writing it sits at 111.6, and its own API reports a null value for both the 7-day and 30-day change, because the Index isn't old enough to have completed either window yet.",
+        a: "Nobody can honestly answer that yet, ourselves included. Riftbound has released five sets, the newest of which is two weeks old, and our own price tracking only goes back to 4 August 2026. There is no multi-year track record to point to, up or down. What we can tell you is what the market looks like today: real prices, real fees, real volatility. Whether today's prices look smart in five years is not something the data can answer yet.",
       },
       {
         q: "What actually makes a Riftbound card valuable right now?",
@@ -6197,20 +5904,20 @@ That absence is itself the most useful thing we can tell you, so we're going to 
 
 ## Eleven days is not a track record
 
-RiftCompare runs a market index — a tracked basket of 200 of the game's most-traded singles, rebased to 100, the same idea as the S&P 500 but for Riftbound cards instead of large-cap stocks. You can watch it move in real time at [/market](/market).
+We track prices for a basket of 200 of the game's most-traded singles — the broad market data behind everything else on the site. The catch is how little history sits behind it.
 
-Here's what it actually shows, as of this writing:
+Here's what that price data actually shows, as of this writing:
 
 | | |
 | --- | --- |
-| Index start date | **4 August 2026** |
-| Current level | 111.6 (base 100) |
+| Tracking began | **4 August 2026** |
+| History so far | 11 days |
 | Change since start | +11.6% |
 | 1-day change | +0.4% |
 | **7-day change** | **null — not enough history** |
 | **30-day change** | **null — not enough history** |
 
-That's not a rounding artifact or a display bug. It's the honest state of the underlying data: the Index's own public API, at /api/v1/index.json, literally returns the value *null* for both the 7-day and 30-day change fields, because neither window has completed yet. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
+That's not a rounding artifact or a display bug. It's the honest state of the underlying data: neither the 7-day nor the 30-day change can be computed at all yet, because neither window has completed. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
 
 For scale: Riftbound has released five sets. The newest, Vendetta, came out on 31 July 2026 — two weeks before this article. We don't even have confirmed release dates for four of the other five sets in our own database, because Riot never published exact street dates for them. A market needs years to show whether an asset holds value; this one hasn't finished its first month.
 
@@ -6218,7 +5925,7 @@ For scale: Riftbound has released five sets. The newest, Vendetta, came out on 3
 
 | | Riftbound cards (today) | S&P 500 |
 | --- | --- | --- |
-| Track record | 11 days (RiftCompare Index) | ~100 years |
+| Track record | 11 days of price data | ~100 years |
 | Historical average annual return | Unknown — insufficient data | Roughly 10%/year nominal, long-run average |
 | Minimum entry | Cents to low dollars for most cards | Fraction of a share via most brokers |
 | Liquidity | Thin — see the spread example below | Extremely deep, sub-cent spreads |
@@ -6258,11 +5965,11 @@ The Diana pair is the extreme case: two cards, identical collector number, rough
 
 ## What volatility looks like in a market this young
 
-An 11-day-old, thinly-traded index is not going to behave like a mature one, and it doesn't. The Index's own volatility reading today sits at **2.11%** — for comparison, a mature equity index typically runs closer to 1% on an ordinary day. Of the 200 tracked cards, 89 are up, 76 are down and 35 are unchanged as of this writing — nothing close to a one-directional market.
+An 11-day-old, thinly-traded market is not going to behave like a mature one, and it doesn't. The daily volatility across the cards we track sits at **2.11%** — for comparison, a mature equity index typically runs closer to 1% on an ordinary day. Of the 200 cards we track, 89 are up, 76 are down and 35 are unchanged as of this writing — nothing close to a one-directional market.
 
-Individual cards move far harder than the aggregate. As of this writing, several constituents have moved more than 100% in a week: Rhasa the Sunderer (OGN 195/298) is up 415% over 7 days on a US$3.93 card, and multiple others are up well over 100% in the same window. These aren't chase cards — they're cheap ones, which is exactly the point: in a thin market, a handful of trades at a new price can swing the reported price enormously, in either direction, on cards worth a few dollars just as easily as on five-figure Signatures.
+Individual cards move far harder than the aggregate. As of this writing, several of the cards we track have moved more than 100% in a week: Rhasa the Sunderer (OGN 195/298) is up 415% over 7 days on a US$3.93 card, and multiple others are up well over 100% in the same window. These aren't chase cards — they're cheap ones, which is exactly the point: in a thin market, a handful of trades at a new price can swing the reported price enormously, in either direction, on cards worth a few dollars just as easily as on five-figure Signatures.
 
-Liquidity friction shows up even inside a single day. Take Defy (OGN 045/298) — currently the listings for this one card, on the same day, in the same market, range from **US$3.93 to US$11.00**: nearly a 3x spread for the identical printing. That's not a typo or a stale listing; it's what "price discovery" looks like before a market has had time to converge. [The Index methodology](/guides/understanding-the-riftcompare-index-methodology) explains why we build ours from a liquid basket specifically to smooth this kind of noise out — but the noise is still there in any individual card you might actually try to buy or sell.
+Liquidity friction shows up even inside a single day. Take Defy (OGN 045/298) — currently the listings for this one card, on the same day, in the same market, range from **US$3.93 to US$11.00**: nearly a 3x spread for the identical printing. That's not a typo or a stale listing; it's what "price discovery" looks like before a market has had time to converge. We deliberately track a broad, liquid basket of cards to smooth this kind of noise out of the overall picture — but the noise is still there in any individual card you might actually try to buy or sell.
 
 ## What it costs to actually buy or sell one
 
@@ -6298,7 +6005,7 @@ Not "buy" and not "don't." Three practical things that don't require a track rec
 
 **If you already own cards and just want to know what they're worth without checking daily:** that's a genuinely answerable question, unlike the investment question. [Set a free price alert](/alerts) and let the number come to you.
 
-We built the Index, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
+We built the price tracking, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
 `,
   },
   {
@@ -6524,11 +6231,12 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Bulk Pricer, the Condition Calculator and the 1% Marketplace fee — with pricing, screenshots and honest FAQs.",
+      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Bulk Pricer and the Condition Calculator — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
+    updated: "2026-08-26",
     readMins: 11,
-    tags: ["premium", "pricing", "tools", "value finder", "deal finder", "marketplace"],
+    tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
       src: "/blog/riftcompare-premium-explained.png",
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
@@ -6536,8 +6244,8 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
     summary: [
       "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
       "**It unlocks 5 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), the full Deal Finder (full list, 4 views), and the Condition Impact Calculator. Best Basket — the multi-store cart optimiser — is free with any account, no Premium needed.",
-      "**It also cuts your Marketplace seller fee from 2% to 1%** on every sale, automatically, plus removes ads sitewide.",
-      "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools and the seller discount, never about seeing prices.",
+      "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
+      "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a month of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
@@ -6552,15 +6260,15 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), and the Condition Impact Calculator — plus a Marketplace seller fee cut from 2% to 1% and a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
+        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), and the Condition Impact Calculator — plus a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and the lower Marketplace fee.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and an ad-free site.",
       },
       {
         q: "What's the difference between a free account and Premium?",
-        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, the Condition Calculator, the 1% Marketplace fee and an ad-free site.",
+        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, the Condition Calculator and an ad-free site.",
       },
       {
         q: "Is there a free trial?",
@@ -6578,10 +6286,6 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
         q: "Does Premium remove ads on RiftCompare?",
         a: "Yes — every page is completely ad-free the moment you're Premium. It's automatic; there's nothing to switch on separately.",
       },
-      {
-        q: "How much lower is the Marketplace seller fee with Premium?",
-        a: "RiftCompare's peer-to-peer Marketplace normally takes a 2% fee on each sale. Premium sellers pay 1% instead — half the standard rate — applied automatically to every sale the moment you're Premium, with no separate opt-in.",
-      },
     ],
     itemList: {
       name: "What's included with RiftCompare Premium",
@@ -6591,13 +6295,12 @@ The honest version of "which cards are going up" is: nobody knows for certain, b
         { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
         { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
         { name: "Condition Impact Calculator", description: "See how a card's value shifts between NM, LP, MP, HP and DMG.", url: "/tools/condition-calculator" },
-        { name: "1% Marketplace seller fee", description: "Half the standard 2% fee on every Marketplace sale, applied automatically.", url: "/marketplace/sell" },
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
       ],
     },
-    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
+    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise, cuts your Marketplace seller fee in half, and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
+Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -6621,7 +6324,7 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Compare prices across every store + eBay | ✓ | ✓ | ✓ |
 | Full card database, search & browse | ✓ | ✓ | ✓ |
 | Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
-| RiftCompare Index, movers & daily wrap | ✓ | ✓ | ✓ |
+| Movers & daily wrap | ✓ | ✓ | ✓ |
 | Price alerts | — | ✓ | ✓ |
 | Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |
 | Best Basket — cheapest store split, postage included | — | ✓ | ✓ |
@@ -6630,10 +6333,9 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Value Finder screener | — | — | ✓ |
 | Bulk Pricer | — | — | ✓ |
 | Condition Impact Calculator | — | — | ✓ |
-| Marketplace seller fee | — | 2% | **1%** |
 | Ad-free experience | — | — | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and the seller discount on top of that.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and an ad-free site on top of that.
 
 ## The 5 tools you only get with Premium
 
@@ -6657,7 +6359,7 @@ Rising Cards ranks cards by a composite of **demand and price-timing signals** �
 
 Deal Finder is the one built specifically around arbitrage — the same card, priced meaningfully differently in two places RiftCompare tracks at the same time. It has four separate views:
 
-- **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store or our own Marketplace currently charges (useful if you're deciding whether to sell)
+- **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store currently charges (useful if you're deciding whether to sell)
 - **Underpriced vs TCGplayer** — cards cheaper elsewhere than TCGplayer's own listing
 - **Cheapest on eBay** — the reverse: cards where eBay is currently the cheapest place to buy
 - **Cross-region** — cards priced meaningfully cheaper in a different market RiftCompare tracks
@@ -6675,12 +6377,6 @@ Paste an entire want-list, trade pile or full collection, and Bulk Pricer matche
 ![The Condition Impact Calculator — estimating a card's value across NM, LP, MP, HP and DMG conditions](/blog/premium/06-condition-calculator.png)
 
 Search any card and see how its value shifts across **NM, LP, MP, HP and DMG** — the exact same multiplier scale your portfolio is already valued with, run forward on any single card before you buy, sell or grade a copy.
-
-## The Marketplace discount: 1% instead of 2%
-
-![The RiftCompare Marketplace seller dashboard confirming the Premium 1% fee rate, down from the standard 2%](/blog/premium/07-marketplace-sell.png)
-
-If you sell on the RiftCompare Marketplace, Premium quietly pays for itself the fastest here: the standard seller fee is **2%**, and Premium sellers pay **1%** — half the rate, applied automatically to every sale from the moment you're Premium, with no separate toggle or opt-in. On a single $250 sale that's the difference between a $5 and a $2.50 fee; sell a handful of cards a month and the fee cut alone can cover the subscription.
 
 ## Everything, at a glance
 
@@ -6703,9 +6399,8 @@ Being straightforward here, since the point of this post is accuracy over hype: 
 
 1. **Active buyers who want an edge** — Value Finder and Rising Cards exist to surface opportunities you would not have found by browsing normally.
 2. **Anyone pricing a whole list at a time** — the Bulk Pricer turns a tedious, repetitive task into one paste (Best Basket does the same for buying a list, and it's already free with your account).
-3. **RiftCompare Marketplace sellers** — the 1% fee alone can offset the subscription within a handful of sales.
 
-If none of those describe how you use the site, the free tier — which still includes full price comparison, alerts, a portfolio tracker and Best Basket — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
+If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts, a portfolio tracker and Best Basket — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
   },
   ...SEO_PACK_ARTICLES,

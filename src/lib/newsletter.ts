@@ -69,8 +69,8 @@ export interface Digest {
 
 // Build one market's digest, or null on a quiet week (house rule: skip rather
 // than send noise).
-// No `latestReport` parameter anymore: market-report generation is deleted (see
-// lib/market-report.ts), so the "read the latest Index report" row was linking a
+// No `latestReport` parameter anymore: the market-report feature is deleted, so
+// the "read the latest Index report" row was linking a
 // permanently-ageing legacy row — i.e. mailing subscribers a months-old,
 // noindexed page as though it were this week's. The digest now points at /movers
 // (live, always current) instead.

@@ -1,5 +1,5 @@
 // Small, dependency-free statistics primitives. The codebase has ad-hoc mean/
-// median/stdev buried privately in market-index/ebay/market-report; this centralises
+// median/stdev buried privately in a few places (e.g. lib/ebay); this centralises
 // the ones the rise-predictor needs (z-scores, percentile rank, Spearman) as pure,
 // unit-testable functions. All operate on plain number[]; NaN/empty inputs degrade
 // to safe neutral values rather than throwing.

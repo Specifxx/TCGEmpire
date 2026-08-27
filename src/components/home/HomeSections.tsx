@@ -71,7 +71,7 @@ export function HomeSections({
   moversByCountry,
   recentlyUpdated,
 }: HomeSectionsProps) {
-  const COUNTRY_CODES: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
+  const COUNTRY_CODES: Country[] = ["US", "AU", "UK", "SG", "CA", "EU"];
   const anyDeals = COUNTRY_CODES.some((c) => topDealsByCountry[c].hasAny);
   // Biggest movers tab: both directions, ranked by the size of the move, for
   // THIS page's own market. Trimmed to {card, pct} — the only two fields

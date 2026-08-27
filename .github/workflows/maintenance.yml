@@ -54,13 +54,13 @@ on:
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
-          - test-marketplace-stripe # smoke-test CRON_SECRET + both Stripe webhook secrets + a Connect account create/delete round-trip (test or live)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
           - repair-history-card-ids # THE FIX for blank price charts: rewrites a history project's Card.id values onto the LIVE catalogue, matching on externalId, so PriceHistory rows join again (the FK cascades them). Every history project currently has 0% of its cardIds resolving against the live Card table, because the operational catalogue was REBUILT rather than restored and every card got a fresh cuid. DRY RUN unless dry_run is set to false. Optional `source` input picks which history variable to repair (default: whichever db-history.ts resolves).
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
-          - migrate-main-db-to-rm9 # CURRENT operational cutover (2026-08-23): full pg_dump/restore of the live RM8 project into RM9 + all-table row-count verification + a schema re-push. RM9 is the ONLY operational variable now — no fallback chain behind it (see src/lib/db-chains.ts) — so this is a one-way cutover, not a rollback pre-stage. RUN THIS BEFORE deploying the RM9-only chain.
+          - migrate-main-db-to-rm9 # LEGACY (RM8 → RM9 cutover, 2026-08-23, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-to-rm10 on 2026-08-26.
+          - migrate-main-db-to-rm10 # CURRENT operational cutover (2026-08-26): full pg_dump/restore of the live RM9 project into RM10 + all-table row-count verification + a schema re-push. RM10 is the ONLY operational variable now — no fallback chain behind it (see src/lib/db-chains.ts) — so this is a one-way cutover, not a rollback pre-stage. RUN THIS BEFORE deploying the RM10-only chain.
           - migrate-main-db-to-rm8 # LEGACY (RM7 → RM8 cutover, kept for reference): full pg_dump/restore of the live RM7 project into RM8 + all-table row-count verification + a schema re-push. RM6 stopped being live on 2026-08-20, so RM6 was the actual source used (RM7 had already died — see the step's own note). Superseded by migrate-main-db-to-rm9 on 2026-08-23.
           - migrate-main-db-to-rm7 # CURRENT operational cutover (2026-08-20): full pg_dump/restore of the live RM6 project into RM7 + row-count verification. RM6 exhausted its 5 GB monthly transfer allowance just three days after the 2026-08-17 cutover onto it — the same ~2 GB/day burn every prior project has shown. RUN THIS BEFORE deploying the RM7-first chain.
           - migrate-main-db-to-rm6 # LEGACY (DATABASE_URL_2 → RM6 cutover, kept for reference): full pg_dump/restore of the live DATABASE_URL_2 project into RM6 + row-count verification. DATABASE_URL_2 hit 4.8 of its 5 GB monthly transfer allowance just three days after the 2026-08-14 cutover onto it, so it rotated onto RM6 — a genuinely NEW project (RM3, the obvious rested candidate, was already at its own capacity).
@@ -74,7 +74,7 @@ on:
         type: boolean
         default: false
       overwrite_live_db:
-        description: "migrate-main-db-to-rm9/rm8/rm7/rm6/du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
+        description: "migrate-main-db-to-rm10/rm9/rm8/rm7/rm6/du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
         type: boolean
         default: false
       ebay_sg:
@@ -135,28 +135,27 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM9 is the ONLY operational variable (cut over 2026-08-23, replacing a
-      # chain of fallbacks — RM7/RM8 before it, each exhausted the same way —
-      # with a single name; see the header of OPERATIONAL_VARS in
-      # src/lib/db-chains.ts for why the chain shape itself was retired, not
-      # just rotated). That file is the source of truth here, and
-      # tests/db-chain.test.ts pins this value to it.
+      # RM10 is the ONLY operational variable (cut over 2026-08-26, RM9 neared its
+      # limit three days after taking over — same single-name shape, no fallback
+      # chain; see the header of OPERATIONAL_VARS in src/lib/db-chains.ts for why
+      # the chain shape itself was retired, not just rotated). That file is the
+      # source of truth here, and tests/db-chain.test.ts pins this value to it.
       #
       # The migrate-* steps below deliberately do NOT use this default: each pins
       # its own SOURCE (the OLD project it reads FROM) and TARGET, and aborts if
       # the two resolve to the same database.
       #
-      # ORDERING: run migrate-main-db-to-rm9 BEFORE any other task here if RM9
+      # ORDERING: run migrate-main-db-to-rm10 BEFORE any other task here if RM10
       # was just set — otherwise something like import-prices would happily
       # operate against a still-empty target. This is not hypothetical: on
       # 2026-08-22 RM8 was set but completely empty at cutover, and every
       # in-stock listing on the site vanished as a result.
-      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+      DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -285,7 +284,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only ever used for a "did RH7 accidentally get set to the operational
           # database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
+          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
 
@@ -476,7 +475,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_2 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
+          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
 
@@ -665,7 +664,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_3 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
+          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
 
@@ -837,7 +836,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH8 || vars.RH8 }}
           # Only for the "did RH8 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
+          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
 
@@ -1010,7 +1009,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH9 || vars.RH9 }}
           # Only for the "did RH9 accidentally get set to the operational database?"
           # guard below, before anything destructive runs.
-          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
+          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
 
@@ -1194,7 +1193,7 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           # Only ever used for a "did HISTORY_DATABASE_URL_4 accidentally get set
           # to the operational database?" guard before this step truncates anything.
-          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
+          OPERATIONAL_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
 
@@ -1557,6 +1556,7 @@ jobs:
         # holds. Run this FIRST, then decide which source to restore from.
         if: inputs.task == 'probe-databases'
         env:
+          P_RM10: ${{ secrets.RM10 || vars.RM10 }}
           P_RM9: ${{ secrets.RM9 || vars.RM9 }}
           P_RM8: ${{ secrets.RM8 || vars.RM8 }}
           P_RM7: ${{ secrets.RM7 || vars.RM7 }}
@@ -1636,7 +1636,8 @@ jobs:
 
           echo ""
           echo "===== OPERATIONAL ROTATION (current first) ====="
-          probe "RM9 (current)"        "${P_RM9:-}" || true
+          probe "RM10 (current)"       "${P_RM10:-}" || true
+          probe "RM9 (retired)"        "${P_RM9:-}" || true
           probe "RM8 (retired)"        "${P_RM8:-}" || true
           probe "RM7 (retired)"        "${P_RM7:-}" || true
           probe "RM6 (spent)"          "${P_RM6:-}" || true
@@ -1998,12 +1999,209 @@ jobs:
           echo "  3. Leave RM5 set as the rollback fallback; remove it only once the"
           echo "     original project has been serving cleanly for a while."
 
+      - name: Migrate main (operational) database to RM10
+        # THE CURRENT CUTOVER (2026-08-26). RM9 neared its limit three days after
+        # taking over; RM10 replaces it, still as a SINGLE name — after this,
+        # src/lib/db-chains.ts's OPERATIONAL_VARS holds RM10 alone. See the long
+        # note there for why the chain shape stays one name.
+        #
+        # SOURCE IS RM9, THE CURRENTLY LIVE PROJECT. Pinned by NAME on both ends,
+        # deliberately NOT using the job-level DATABASE_URL default — reusing that
+        # default here would point source and target at the same database once the
+        # RM10 cutover ships, and the migration would silently no-op while
+        # reporting every row count as matching.
+        #
+        # RUN THIS BEFORE the commit that flips OPERATIONAL_VARS to ["RM10"]
+        # ships, not after. Deploying that flip while RM10 is still empty is
+        # exactly the 2026-08-22 outage shape (see the RM8 task below) — a
+        # database can only be promoted safely once it already holds the data
+        # traffic is about to depend on. The FIRST_IN_CHAIN guard below enforces
+        # this: while db-chains.ts still resolves RM9 first, RM10 is not live and
+        # the restore is safe; once the flip ships, this task refuses without
+        # overwrite_live_db.
+        #
+        # PriceHistory/ClickEvent DATA is excluded (schema kept): those are served
+        # from the history project, and copying them would spend RM9's transfer
+        # allowance on rows this database does not serve.
+        #
+        # Read-only against the source — safe to re-run. Each run fully re-syncs
+        # the target from the source's CURRENT state, so run it once for the bulk
+        # copy and again immediately before cutting traffic over.
+        if: inputs.task == 'migrate-main-db-to-rm10'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::RM10 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name RM10)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::RM9 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database. RM10 must point at a DIFFERENT Neon project than RM9. Aborting before doing anything."
+            exit 1
+          fi
+
+          # ── SAFETY: never overwrite the database production is serving ──────
+          # This task is a ONE-WAY `pg_restore --clean` of SOURCE over TARGET.
+          # That is correct BEFORE the cutover deploy, while TARGET is an idle
+          # spare. It is destructive AFTER it, once TARGET is live: every row
+          # written since the deploy is reverted to the source's frozen snapshot,
+          # and the row-count check still reports "all match" because counts are
+          # necessarily equal after a --clean restore.
+          #
+          # READS db-chains.ts, NOT db.ts — db.ts delegates to
+          # resolveUrl(OPERATIONAL_VARS) and holds no process.env reference of its
+          # own, so parse the head of OPERATIONAL_VARS straight out of the single
+          # source of truth (tests/db-chain.test.ts keeps it honest).
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "RM10" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — RM10 is LIVE. src/lib/db-chains.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen RM9 over it and discard every row written since the cutover (signups, feedback, orders, listings). Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::RM10 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          echo "== Can the source still be reached at all? =="
+          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM10 has NOT been touched. Run probe-databases to see which projects still answer, then point SOURCE_DATABASE_URL at the freshest reachable one."
+            exit 1
+          fi
+          echo "Source answered — proceeding."
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== What the target holds BEFORE we replace it =="
+          # `|| true` PER ITERATION, load-bearing: an EMPTY target (no schema at
+          # all, exactly RM10's current state) must not kill this step under
+          # `bash -e {0}` before a single byte is restored.
+          for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — target has no such table yet)";; esac
+            echo "  target $T: $N"
+          done
+
+          echo "== Dumping the operational database (schema + data) =="
+          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+            --exclude-table-data='public."PriceHistory"' \
+            --exclude-table-data='public."ClickEvent"' \
+            -f main.dump; then
+            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly its transfer allowance dying mid-stream. RM10 has NOT been touched; a partial dump is never restored."
+            exit 1
+          fi
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+          for T in User Card MarketplaceListing; do
+            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+              echo "::error::the dump has no data section for table $T — it is incomplete. RM10 has NOT been touched."
+              exit 1
+            fi
+          done
+          echo "Dump contains a data section for every expected table — proceeding to restore."
+
+          echo "== Restoring into RM10 (existing objects replaced) =="
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
+
+          echo "== Verifying row counts (source vs RM10) =="
+          sleep 3
+          set +e
+          TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc \
+            "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('PriceHistory','ClickEvent') ORDER BY tablename")
+          if [ -z "$TABLES" ]; then
+            echo "::error::could not enumerate source tables — refusing to report an unverified migration as verified."
+            exit 1
+          fi
+          echo "Verifying $(printf '%s\n' "$TABLES" | wc -l) tables."
+          MISMATCH=0
+          for T in $(printf 'public.%s\n' $TABLES); do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project.)"
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT deploy the RM10-only chain yet."
+            exit 1
+          fi
+          echo "All verified tables match — RM10 now holds a full copy of the operational data."
+
+          # ── RE-ALIGN THE SCHEMA TO THE DEPLOYED CODE ────────────────────────
+          # A restore installs the SOURCE's schema, which is older than this
+          # repo's by definition if any migration landed after the source stopped
+          # receiving deploys. Push over the DIRECT endpoint, not the pooler —
+          # `prisma db push` introspects over Neon's PgBouncer as EMPTY and aborts
+          # P1014 even against a database the restore just verified row-for-row.
+          echo ""
+          echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
+            echo "::error::schema push against RM10 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
+            exit 1
+          fi
+          echo "TARGET schema now matches this ref."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything written"
+          echo "     to RM9 in the meantime (signups, orders, price imports) is included."
+          echo "  2. Ship the commit that sets OPERATIONAL_VARS = [\"RM10\"] in"
+          echo "     src/lib/db-chains.ts (and the matching CURRENT_OP in"
+          echo "     scripts/build-db-push.sh, and every workflow's DATABASE_URL"
+          echo "     default) — that is the actual cutover; this task alone does not"
+          echo "     move traffic. Confirm RM10 is set in Vercel for Production,"
+          echo "     Preview AND Development first."
+          echo "  3. THE BURN RATE IS STILL UNEXPLAINED. A new project buys time, not"
+          echo "     a fix — run audit-egress a few hours after cutover and fix the"
+          echo "     query it names (see the note on RetailerPrice in src/lib/db.ts)."
+
       - name: Migrate main (operational) database to RM9
-        # THE CURRENT CUTOVER (2026-08-23). RM9 replaces the fallback CHAIN, not
-        # just the project — after this, src/lib/db-chains.ts's OPERATIONAL_VARS
-        # holds RM9 alone. See the long note there for why the chain shape
-        # itself was retired rather than rotating onto a tenth name with an
-        # eleventh behind it.
+        # LEGACY (RM8 → RM9 cutover, 2026-08-23, kept for reference). RM9 replaced
+        # the fallback CHAIN, not just the project — its OPERATIONAL_VARS held RM9
+        # alone. Superseded by migrate-main-db-to-rm10 on 2026-08-26. See the long
+        # note in db-chains.ts for why the chain shape stays one name.
         #
         # SOURCE IS RM8, THE CURRENTLY LIVE PROJECT. Pinned by NAME on both
         # ends, deliberately NOT using the job-level DATABASE_URL default —
@@ -3229,7 +3427,7 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          TARGET_DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -3512,12 +3710,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
           # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
@@ -3590,8 +3788,8 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
-          # src/lib/db-chains.ts directly, which is now just ["RM9"].
-          RM9: ${{ secrets.RM9 || vars.RM9 }}
+          # src/lib/db-chains.ts directly, which is now just ["RM10"].
+          RM10: ${{ secrets.RM10 || vars.RM10 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other
@@ -3609,8 +3807,8 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
-          # src/lib/db-chains.ts directly, which is now just ["RM9"].
-          RM9: ${{ secrets.RM9 || vars.RM9 }}
+          # src/lib/db-chains.ts directly, which is now just ["RM10"].
+          RM10: ${{ secrets.RM10 || vars.RM10 }}
         run: |
           ARGS=""
           if [ -n "${{ inputs.source }}" ] && [ "${{ inputs.source }}" != "RM4" ]; then
@@ -3735,48 +3933,6 @@ jobs:
       - name: Remove @riftcompare.seed persona accounts
         if: inputs.task == 'remove-seed-accounts'
         run: npx tsx scripts/remove-seed-accounts.ts
-
-      # Every smoke-test step below uses always() so one secret being missing
-      # doesn't cascade into GitHub Actions skipping the rest by default (its
-      # normal behaviour once any earlier step fails) — each of these checks is
-      # independent and should report its own real status regardless of the
-      # others.
-      - name: "Marketplace smoke test: detect Stripe key mode"
-        id: stripe_mode
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-mode.ts
-
-      - name: "Marketplace smoke test: TEST mode — Connect account create/delete round-trip"
-        if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'test'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-connect-account.ts
-
-      - name: "Marketplace smoke test: LIVE mode — Connect account create/delete round-trip"
-        if: always() && inputs.task == 'test-marketplace-stripe' && steps.stripe_mode.outputs.mode == 'live'
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: npx tsx scripts/test-stripe-connect-live.ts
-
-      - name: "Marketplace smoke test: CRON_SECRET against the live cron endpoint"
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-        run: npx tsx scripts/test-cron-secret.ts
-
-      - name: "Marketplace smoke test: main Stripe webhook signature (STRIPE_WEBHOOK_SECRET)"
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-        run: npx tsx scripts/test-stripe-webhook-signature.ts main
-
-      - name: "Marketplace smoke test: Connect webhook signature (STRIPE_CONNECT_WEBHOOK_SECRET)"
-        if: always() && inputs.task == 'test-marketplace-stripe'
-        env:
-          STRIPE_CONNECT_WEBHOOK_SECRET: ${{ secrets.STRIPE_CONNECT_WEBHOOK_SECRET }}
-        run: npx tsx scripts/test-stripe-webhook-signature.ts connect
 
       - name: Audit outbound clicks (read-only leaderboard)
         if: inputs.task == 'audit-clicks'

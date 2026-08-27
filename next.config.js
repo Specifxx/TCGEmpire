@@ -156,10 +156,10 @@ const nextConfig = {
       // The page was noindex/nofollow and only reachable from the command
       // launcher, so there is nothing indexed to preserve; the redirect is purely
       // so a bookmark or launcher-history entry lands somewhere instead of 404ing.
-      // /marketplace is the surviving "I want to sell cards" path.
+      // Points at the homepage now that the marketplace (its old target) is gone.
       {
         source: "/sell-cards",
-        destination: "/marketplace",
+        destination: "/",
         permanent: true,
       },
       // These three shipped as guides and were moved to the blog shortly after.
@@ -195,14 +195,13 @@ const nextConfig = {
         destination: "/deck",
         permanent: true,
       },
-      // Retired the daily-market-wrap archive and stopped generating new auto-
-      // reports entirely (see lib/market-report.ts) — a run of near-identical
-      // templated pages, one per day forever, was exactly the "scaled content
-      // abuse" shape putting the AdSense application at risk. 301 to the real
-      // Index tool rather than 404ing any indexed/inbound links.
+      // The daily-market-wrap archive, the auto-generated market reports and the
+      // RiftCompare Index have all been retired. 301 any surviving inbound/indexed
+      // /market/wrap links to the price movers page — the closest live surface —
+      // rather than 404ing them.
       {
         source: "/market/wrap",
-        destination: "/market",
+        destination: "/movers",
         permanent: true,
       },
       // CONSOLIDATION (AdSense remediation § Phase 12b). "Where to Buy Riftbound

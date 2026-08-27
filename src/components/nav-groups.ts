@@ -50,31 +50,6 @@ export interface NavGroup {
   links: NavGroupLink[];
 }
 
-// Feature disabled (2026-08-19) — hardcoded false, mirroring MARKETPLACE_PUBLIC
-// in lib/marketplace.ts (that constant can't be imported here: it pulls in
-// Prisma, which can't reach a client-bundled nav component). The two used to be
-// one env-driven flag; now they're two hardcoded literals that must be kept in
-// sync by hand — see lib/marketplace.ts's comment for how to re-enable both.
-// The marketplace's routes/Stripe/escrow/cron all keep running under the hood
-// for orders already in flight — this constant only controls whether anything
-// links to it.
-export const MARKETPLACE_NAV_VISIBLE = false;
-
-// The P2P marketplace nav group — see docs/MARKETPLACE.md. Spread in only once
-// launched (NEXT_PUBLIC_MARKETPLACE_PUBLIC=1); kept as its own object so
-// UserMenu.tsx and layout.tsx's footer can reuse the same visibility flag.
-const MARKETPLACE_GROUP: NavGroup = {
-  title: "Marketplace",
-  links: [
-    { href: "/marketplace", label: "Buy on Marketplace", emoji: "🛒", keywords: ["marketplace", "p2p", "from players", "second hand"] },
-    { href: "/marketplace/sell", label: "Sell a card", emoji: "🏷️", keywords: ["sell", "list a card", "seller"] },
-    { href: "/marketplace/orders", label: "My orders", emoji: "📦", keywords: ["orders", "purchases", "tracking"] },
-    { href: "/marketplace/funds", label: "Seller funds", emoji: "💰", keywords: ["payout", "balance", "earnings"] },
-    { href: "/marketplace/buyer-protection", label: "Buyer protection", emoji: "🛡️", keywords: ["protection", "refund", "dispute", "escrow"] },
-    { href: "/marketplace/faq", label: "Marketplace FAQ", emoji: "❓", keywords: ["faq", "questions", "how it works"] },
-  ],
-};
-
 export const NAV_GROUPS: NavGroup[] = [
   {
     // Core price/data pages — the heart of the site.
@@ -87,13 +62,11 @@ export const NAV_GROUPS: NavGroup[] = [
       // query (caught by tests/nav-search.test.ts). The pre-order keywords below
       // still carry every intent that should land here.
       { href: "/radiance-preorders", label: "Radiance pre-orders", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
-      { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
-      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
+      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "how is the market"], popular: true },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },
       { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
   },
-  ...(MARKETPLACE_NAV_VISIBLE ? [MARKETPLACE_GROUP] : []),
   {
     // The database's own hub pages. These were reachable from the sitemap and
     // from /llms.txt but were NOT in the nav at all, on the old view that "the
@@ -232,7 +205,7 @@ export const POPULAR_LINKS: NavGroupLink[] = NAV_GROUPS.flatMap((g) => g.links).
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },
-  { href: "/market", label: "Index" },
+  { href: "/movers", label: "Movers" },
   { href: "/blog", label: "Blog" },
 ];
 
@@ -246,31 +219,41 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // COLUMN BALANCE is the thing to preserve when editing. The four columns are
 // deliberately kept within roughly 8-15 links of each other; a column at twice
 // its neighbours' height leaves a ragged block of whitespace under the other
-// three. Marketplace's 6 links are split 2-2-2 across three columns for the same
-// reason (the spread is a no-op — an empty array — while MARKETPLACE_NAV_VISIBLE
-// is off). Links flagged `hideInFooter` (the six secondary mini-games, whose
+// three. Links flagged `hideInFooter` (the six secondary mini-games, whose
 // /games hub is here) are dropped: the launcher is the complete index, the
 // footer is a curated block.
 const byTitle = Object.fromEntries(
   NAV_GROUPS.map((g) => [g.title, g.links.filter((l) => !l.hideInFooter)])
 );
-const marketplaceLinks = byTitle["Marketplace"] ?? [];
 
 // /radiance-countdown lives in the "Browse the database" NAV_GROUP (it's a
 // release-date countdown, not a price — moved out of "Prices" 2026-08-17),
 // but pinned back into the Shop FOOTER column specifically: without this,
-// Shop drops to 7 links against Learn & play's 15 — just over the 2x column-
-// balance ceiling this file's own header comment guards. NAV_GROUPS itself
-// (and therefore the launcher/hamburger categorisation the move was actually
-// about) is untouched; only which footer column this one link lands in.
+// Shop drops well below Learn & play — just over the 2x column-balance ceiling
+// this file's own header comment guards. NAV_GROUPS itself (and therefore the
+// launcher/hamburger categorisation the move was actually about) is untouched;
+// only which footer column this one link lands in.
+//
+// /stores/suggest is pinned the same way, for the same reason: removing the
+// retired Market Index from the Prices group left Shop one link short of the
+// ceiling against Learn & play (the tallest column, which owns Help). "Suggest a
+// store" also just reads better next to "Stores we track" in Shop than buried in
+// Help. Again NAV_GROUPS is untouched — only its footer column changes.
 const browseDbLinks = byTitle["Browse the database"] ?? [];
 const radianceCountdown = browseDbLinks.find((l) => l.href === "/radiance-countdown");
 const browseDbFooterLinks = browseDbLinks.filter((l) => l.href !== "/radiance-countdown");
+const helpLinks = byTitle["Help"] ?? [];
+const suggestStore = helpLinks.find((l) => l.href === "/stores/suggest");
+const helpFooterLinks = helpLinks.filter((l) => l.href !== "/stores/suggest");
 
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? []), ...(radianceCountdown ? [radianceCountdown] : []), ...marketplaceLinks.slice(0, 2)],
+    links: [
+      ...(byTitle["Prices"] ?? []),
+      ...(radianceCountdown ? [radianceCountdown] : []),
+      ...(suggestStore ? [suggestStore] : []),
+    ],
   },
   {
     title: "Browse & collect",
@@ -278,15 +261,14 @@ export const FOOTER_GROUPS: NavGroup[] = [
   },
   {
     title: "Deals & decks",
-    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? []), ...marketplaceLinks.slice(2, 4)],
+    links: [...(byTitle["Deals & value"] ?? []), ...(byTitle["Decks"] ?? [])],
   },
   {
     title: "Learn & play",
     links: [
       ...(byTitle["Games"] ?? []),
       ...(byTitle["Guides & News"] ?? []),
-      ...(byTitle["Help"] ?? []),
-      ...marketplaceLinks.slice(4, 6),
+      ...helpFooterLinks,
     ],
   },
 ];

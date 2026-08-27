@@ -9,7 +9,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
-import { getMarketIndex, sydneyDayKey } from "./market-index";
+import { sydneyDayKey } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail } from "./email";
@@ -303,9 +303,6 @@ export interface Portfolio {
   d7: number | null;
   d30: number | null;
   pnl: PnL | null; // null when no cost basis is recorded anywhere
-  // Benchmark: the RiftCompare Index move over the same windows, so the portfolio's
-  // performance can be read against the market ("you're beating the market by X").
-  index: { d7: number | null; d30: number | null } | null;
 }
 
 const condMult = (condition: string) => CONDITION_MULTIPLIER[condition] ?? 1;
@@ -314,8 +311,8 @@ const pctChange = (now: number, then: number | undefined): number | null =>
   then == null || then === 0 ? null : Math.round(((now - then) / then) * 1000) / 10;
 
 // Value the user's collection in their market: current totals for everyone, plus
-// a daily value-over-time series rebuilt from PriceHistory (same carry-forward
-// approach as the market index, weighted by owned quantity × condition).
+// a daily value-over-time series rebuilt from PriceHistory (carry-forward per
+// card, weighted by owned quantity × condition).
 export async function getPortfolio(userId: string, country: Country, windowDays = 90): Promise<Portfolio> {
   const rows = await prisma.collectionCard.findMany({
     where: { userId },
@@ -325,8 +322,8 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
   });
 
   const cardIds = [...new Set(rows.map((r) => r.cardId))].sort();
-  // Best-effort, same as the market-index read below: a history-DB hiccup should
-  // cost the value chart and d7/d30 deltas, not the whole portfolio page.
+  // Best-effort: a history-DB hiccup should cost the value chart and d7/d30
+  // deltas, not the whole portfolio page.
   const hist = cardIds.length ? await portfolioHistory(cardIds, country, windowDays).catch(() => []) : [];
 
   // Per-card daily price map + the card's own 7d move.
@@ -395,10 +392,6 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
       })()
     : null;
 
-  // Market benchmark for the same windows (best-effort — never block the page).
-  const idx = await getMarketIndex(country).catch(() => null);
-  const index = idx ? { d7: idx.d7, d30: idx.d30 } : null;
-
   // Daily total series (carry-forward per card so gaps don't crater the line).
   const days = [...daySet].sort((a, b) => a - b);
   const carried = new Map<string, number>();
@@ -433,7 +426,6 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     d7: pctChange(latest, at(7)),
     d30: pctChange(latest, at(30)),
     pnl,
-    index,
   };
 }
 

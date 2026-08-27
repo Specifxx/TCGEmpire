@@ -153,24 +153,12 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Blog
           </Link>
-          {/* NO Marketplace chip here, deliberately (removed 2026-08-17, before
-              this phase's own homepage-decluttering pass — the two changes
-              are independent and both still hold). The P2P marketplace needs
-              liquidity, and liquidity needs the traffic this site does not
-              yet have — a two-sided market that can't clear is a worse first
-              impression than no market at all, and the header is the single
-              most valuable acquisition surface on the site. This is a
-              NAV-ONLY change: /marketplace and every seller-management route
-              (orders, funds, dashboard) stay fully live and linked from the
-              footer and UserMenu, so a seller with an in-flight order or a
-              pending payout keeps normal access — nothing here strands
-              anyone's money. MARKETPLACE_NAV_VISIBLE (nav-groups.ts) still
-              gates the mega-menu/⌘K "Buy on Marketplace" group and the
-              footer legal links; only the primary header chip is gone
-              unconditionally. (This also means Premium — see below — is now
-              the header's only always-visible, non-deferred nav item besides
-              the logo and Database, which only helps the above-the-fold
-              interactive-target budget scripts/homepage-audit.mjs checks.) */}
+          {/* The P2P marketplace was removed entirely (2026-08) — the site is
+              back to pure price comparison — so there is no Marketplace chip
+              here, and Premium (below) is the header's only always-visible,
+              non-deferred nav item besides the logo and Database. That keeps
+              the above-the-fold interactive-target budget (scripts/homepage-
+              audit.mjs) comfortably in range. */}
           {/* Premium — one-click into the upsell dialog from anywhere.
               At xl, not lg: see the Discord icon below for the shared reason. */}
           <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">

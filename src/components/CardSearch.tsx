@@ -4,10 +4,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { cardDisplayName } from "@/lib/card-name";
 import { cardImageAlt } from "@/lib/image-alt";
 
-// Shared "search a card by name, pick an exact printing" widget — the same
-// debounced /api/search-backed dropdown the marketplace "List a card" flow
-// (SellerDashboard.tsx) pioneered, extracted so Best Basket's redesigned
-// search-and-add flow can reuse it instead of forking a second copy.
+// Shared "search a card by name, pick an exact printing" widget — a debounced
+// /api/search-backed dropdown, extracted into one component so Best Basket's
+// search-and-add flow (and any future flow needing card lookup) can reuse it
+// instead of forking a second copy.
 export interface SearchCard {
   id: string;
   name: string;

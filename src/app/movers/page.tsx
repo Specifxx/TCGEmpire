@@ -218,11 +218,11 @@ export default async function MoversPage() {
               {s.name}
             </Link>
           ))}
-          <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
-            RiftCompare Index →
-          </Link>
           <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
             All cards →
+          </Link>
+          <Link href="/market/records" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
+            All-time price records →
           </Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">
             Sealed products →

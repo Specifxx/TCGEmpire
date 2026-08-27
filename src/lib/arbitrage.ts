@@ -23,8 +23,6 @@ import { TCG_US } from "./tcgplayer";
 import { usdCentsToCountry, convertCents } from "./fx";
 import { cachedOrDirect, sydneyDayKey } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
-import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
-import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
 import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -118,23 +116,17 @@ export const TCGPLAYER_KEY: Record<Country, string | null> = {
   // that permission exists, EU arbitrage runs on real EU store rows + eBay ES.
   EU: null,
 };
-const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
-
-// All selectable sources for a market: its tracked stores + eBay + TCGplayer +
-// (once launched) the RiftCompare Marketplace — the marketplace's own listings
-// already feed into RetailerPrice (see importMarketplaceListings), so it's
-// priced alongside every other store. Stores, the Marketplace, and TCGplayer are
-// all BUY-side sources (bucketed in together via storeKeys in the page); eBay is
-// the only one ever used as a resale/sell destination (TCGplayer's own flip view
-// treats it as a fixed reference instead — see getArbitrageVsTcgplayer).
+// All selectable sources for a market: its tracked stores + eBay + TCGplayer.
+// Stores and TCGplayer are BUY-side sources (bucketed in together via storeKeys
+// in the page); eBay is the only one ever used as a resale/sell destination
+// (TCGplayer's own flip view treats it as a fixed reference instead — see
+// getArbitrageVsTcgplayer).
 export function getArbSources(country: Country): ArbSource[] {
   const stores = Object.values(RETAILERS)
     .filter((r) => (r.country ?? "AU") === country)
     .map((r) => ({ key: r.key, name: r.name, isEbay: false, feePct: 0 }));
   const ek = EBAY_KEY[country];
   const sources = ek ? [{ key: ek, name: "eBay", isEbay: true, feePct: EBAY_FEE }, ...stores] : stores;
-  const mpKey = MARKETPLACE_PUBLIC ? MARKETPLACE_RETAILER[country] : undefined;
-  if (mpKey) sources.unshift({ key: mpKey, name: "RiftCompare Marketplace", isEbay: false, feePct: MARKETPLACE_FEE_PCT });
   const tcgKey = TCGPLAYER_KEY[country];
   if (tcgKey) sources.push({ key: tcgKey, name: "TCGplayer", isEbay: false, feePct: 0 });
   return sources;

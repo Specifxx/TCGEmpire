@@ -3,8 +3,8 @@ name: Premium trial reminders
 # Warns Premium free-trial users before their card is charged: runs daily and emails
 # anyone whose trial converts to paid within the next 24h. Runs via GH Actions rather
 # than Vercel Cron because this project's cron slots are already used by
-# refresh-prices/price-alerts/newsletter/user-digest/discord-daily (same reason
-# marketplace-maintenance.yml exists) — see src/lib/premium.ts's
+# refresh-prices/price-alerts/newsletter/user-digest/discord-daily (the same
+# reason the other GH Actions cron workflows here exist) — see src/lib/premium.ts's
 # runPremiumTrialReminders for why this can't just be Stripe's own
 # customer.subscription.trial_will_end webhook (it doesn't fire for trials this short).
 #

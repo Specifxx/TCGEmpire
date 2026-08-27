@@ -70,9 +70,11 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
   EU: { code: "EU", label: "Europe (EU)", adjective: "European", place: "the EU", flag: "🇪🇺", currency: "EUR", locale: "en-IE" },
 };
 
-// Order shown in the switcher. UK is live, priced in GBP (TCGplayer now; eBay UK
-// joins on the next daily import, CardTrader once its API token is set).
-export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.AU, COUNTRIES.US, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA, COUNTRIES.EU];
+// Order shown in the switcher. US leads — it is the primary market and the site
+// default (DEFAULT_COUNTRY below), so it is also the first column and the fallback
+// for anything that reads COUNTRY_LIST[0]. UK is live, priced in GBP (TCGplayer
+// now; eBay UK joins on the next daily import, CardTrader once its API token is set).
+export const COUNTRY_LIST: CountryInfo[] = [COUNTRIES.US, COUNTRIES.AU, COUNTRIES.UK, COUNTRIES.SG, COUNTRIES.CA, COUNTRIES.EU];
 // US is the default market (the ISR baseline + the fallback when geo can't place a
 // visitor in AU/UK). Geo auto-switches AU/UK visitors client-side.
 export const DEFAULT_COUNTRY: Country = "US";

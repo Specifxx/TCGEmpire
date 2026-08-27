@@ -3,7 +3,6 @@ import Link from "next/link";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
-import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { storeSlug } from "@/lib/store-pages";
 import { pageAlternates } from "@/lib/seo";
 
@@ -73,29 +72,6 @@ export default function TrackedStoresPage() {
           prices refresh daily.
         </p>
       </div>
-
-      {/* RiftCompare Marketplace — our own P2P source, not a third-party retailer, so
-          it gets its own featured callout rather than being lost in the per-market
-          grids below. It's a live source in every market (see MARKETPLACE_RETAILER
-          in lib/marketplace.ts) whenever a card has an active listing. */}
-      {MARKETPLACE_PUBLIC && (
-        <Link
-          href="/marketplace"
-          className="card-surface flex flex-wrap items-center justify-between gap-4 border-brand-500/40 bg-gradient-to-br from-brand-500/10 via-ink-900 to-ink-900 p-5 transition-colors hover:border-brand-500/70"
-        >
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">RiftCompare Marketplace</span>
-              <span className="text-xs text-slate-400">buy directly from verified sellers — funds held until delivery</span>
-            </div>
-            <p className="mt-2 text-sm text-slate-300">
-              Our own P2P marketplace — tracked as a live source in every market below (Australia, the US,
-              the UK, Singapore, Canada and the EU) whenever a card has an active listing, alongside the independent stores.
-            </p>
-          </div>
-          <span className="btn-primary shrink-0 whitespace-nowrap">Browse the Marketplace →</span>
-        </Link>
-      )}
 
       {byMarket.map((m) => (
         <section key={m.code}>

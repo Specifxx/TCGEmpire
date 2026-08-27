@@ -78,13 +78,13 @@ jobs:
       # schedule. Do those by hand via maintenance.yml's db-push task.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-08-23 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-08-26 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -98,13 +98,13 @@ jobs:
           fi
       - name: Import prices
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-08-23 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-08-26 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
@@ -130,25 +130,18 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          # Never set anywhere in this workflow before — importMarketplaceListings()
-          # (lib/marketplace.ts) early-returns 0 without it, so every scheduled/manual/
-          # push-triggered import silently skipped syncing marketplace listings into
-          # the price comparison, regardless of what's actually listed. Mirrors the
-          # production value (see docs/MARKETPLACE.md); override via a repo variable
-          # if that ever needs to differ from CI.
-          NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-prices.ts
       - name: Import sealed products
         # Populate the /sealed page (booster boxes/packs across AU/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-08-23 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-08-26 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
@@ -164,13 +157,6 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          # Never set anywhere in this workflow before — importMarketplaceListings()
-          # (lib/marketplace.ts) early-returns 0 without it, so every scheduled/manual/
-          # push-triggered import silently skipped syncing marketplace listings into
-          # the price comparison, regardless of what's actually listed. Mirrors the
-          # production value (see docs/MARKETPLACE.md); override via a repo variable
-          # if that ever needs to differ from CI.
-          NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-sealed.ts
 
       - name: Revalidate site pages (on-demand ISR)

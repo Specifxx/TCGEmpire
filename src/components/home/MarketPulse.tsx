@@ -161,8 +161,8 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
           <h2 className="text-xl font-extrabold text-white">Market pulse</h2>
           <p className="mt-0.5 text-xs text-slate-500">Today&apos;s biggest risers and fallers in {info.place}.</p>
         </div>
-        <Link href="/market" className="btn-ghost hidden text-xs sm:inline-flex">
-          View market index →
+        <Link href="/movers" className="btn-ghost hidden text-xs sm:inline-flex">
+          View all movers →
         </Link>
       </div>
 
@@ -187,8 +187,8 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
         </div>
       </div>
 
-      <Link href="/market" className="mt-3 block text-center text-xs font-semibold text-brand-300 hover:underline sm:hidden">
-        View market index →
+      <Link href="/movers" className="mt-3 block text-center text-xs font-semibold text-brand-300 hover:underline sm:hidden">
+        View all movers →
       </Link>
     </section>
   );

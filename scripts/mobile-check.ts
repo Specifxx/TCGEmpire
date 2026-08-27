@@ -34,7 +34,7 @@ const BASE = argOf("--url", "http://localhost:3111").replace(/\/$/, "");
 
 const PATHS = (
   process.env.MOBILE_CHECK_PATHS ??
-  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/market,/marketplace,/cards/rarity/rare"
+  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/marketplace,/cards/rarity/rare"
 )
   .split(",")
   .map((s) => s.trim())

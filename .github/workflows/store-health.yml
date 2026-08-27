@@ -12,8 +12,8 @@ name: Store data health
 # refresh-prices.yml, plus 18:00 UTC via the Vercel cron — see the note at
 # src/lib/price-import.ts) so the day's fresh RetailerPrice rows are in place
 # before this reads them. Runs via GH Actions rather than Vercel Cron because
-# Vercel's Hobby-plan cron only fires once a day — see marketplace-maintenance.yml
-# for the same reasoning.
+# Vercel's Hobby-plan cron only fires once a day — the same reasoning the other
+# GH Actions cron workflows here carry.
 #
 # SETUP (one-time): add a repository secret named CRON_SECRET matching the
 # value already used to guard /api/revalidate and the other /api/cron/* routes.

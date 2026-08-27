@@ -100,8 +100,8 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   // this doesn't add a second request.
   const { user: meUser, loaded: meLoaded } = useMe();
 
-  // Pages are server-rendered/cached with the AU default baked in (the shared
-  // chrome deliberately no longer reads the country cookie — that dynamic read
+  // Pages are server-rendered/cached with the US default (DEFAULT_COUNTRY) baked
+  // in (the shared chrome deliberately no longer reads the country cookie — that dynamic read
   // used to force every route to render per-request, killing ISR). After
   // mount, reconcile with the real cookie so the selector and all
   // client-localised prices match the user's actual choice. Runs
@@ -167,7 +167,7 @@ export function CountryProvider({ initial, children }: { initial: Country; child
         persist(COUNTRY_COOKIE, geo);
       })
       .catch(() => {
-        /* geo is best-effort — the AU default stands */
+        /* geo is best-effort — the US default (DEFAULT_COUNTRY) stands */
       });
     return () => {
       cancelled = true;

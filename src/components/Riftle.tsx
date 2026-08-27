@@ -495,7 +495,7 @@ export function Riftle() {
             <div className="mt-3 border-t border-ink-800 pt-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">While you&apos;re here</p>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">📊 Today&apos;s market wrap</Link>
+                <Link href="/movers" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">📊 Today&apos;s price movers</Link>
               </div>
             </div>
           )}

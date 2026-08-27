@@ -1,40 +1,23 @@
 import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { pageAlternates } from "@/lib/seo";
-import { SupportForm, type SupportOrderOption } from "@/components/SupportForm";
+import { SupportForm } from "@/components/SupportForm";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Support",
-  description: "Get help with a RiftCompare order, payment, or account issue.",
+  description: "Get help with a RiftCompare Premium payment or account issue.",
   alternates: pageAlternates("/support"),
 };
 
 export default async function SupportPage({ searchParams }: { searchParams: { category?: string; subject?: string } }) {
   const user = await getCurrentUser();
 
-  let orders: SupportOrderOption[] = [];
-  if (user) {
-    const rows = await prisma.order.findMany({
-      where: { kind: "MARKETPLACE", OR: [{ buyerId: user.id }, { sellerId: user.id }] },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      select: { id: true, orderNumber: true, marketplaceListingId: true },
-    });
-    const listingIds = rows.map((r) => r.marketplaceListingId).filter((x): x is string => !!x);
-    const listings = listingIds.length
-      ? await prisma.marketplaceListing.findMany({ where: { id: { in: listingIds } }, select: { id: true, card: { select: { name: true } } } })
-      : [];
-    const byListing = new Map(listings.map((l) => [l.id, l.card.name]));
-    orders = rows.map((r) => ({
-      id: r.id,
-      label: `${r.orderNumber != null ? `RC-${r.orderNumber}` : r.id.slice(0, 8)} — ${r.marketplaceListingId ? byListing.get(r.marketplaceListingId) ?? "item" : "item"}`,
-    }));
-  }
-
+  // The per-order picker is gone with the peer-to-peer marketplace (2026-08) —
+  // there are no first-party orders to reference any more, so tickets are just
+  // free-form now.
   return (
     <div className="mx-auto max-w-xl">
       {/* Visible trail + BreadcrumbList JSON-LD. Every indexable page needs
@@ -42,7 +25,7 @@ export default async function SupportPage({ searchParams }: { searchParams: { ca
       <Breadcrumbs trail={[{ name: "Support", href: "/support" }]} />
       <h1 className="mb-2 font-display text-2xl font-extrabold text-white">🆘 Support</h1>
       <p className="mb-4 text-sm text-slate-400">
-        Problem with an order, payment, or your account? Send us a message and we'll reply by email —
+        Problem with a Premium payment or your account? Send us a message and we'll reply by email —
         usually within a day or two.
       </p>
       <SupportForm
@@ -50,7 +33,7 @@ export default async function SupportPage({ searchParams }: { searchParams: { ca
         defaultEmail={user?.email}
         defaultCategory={searchParams.category}
         defaultSubject={searchParams.subject}
-        orders={orders}
+        orders={[]}
       />
     </div>
   );

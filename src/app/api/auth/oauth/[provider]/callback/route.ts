@@ -177,9 +177,9 @@ async function upsertOAuthUser(
       where: { id: byProvider.id },
       data: {
         // Only an address the provider vouches for may stamp an account verified:
-        // emailVerified feeds isVerifiedSeller (lib/auth.ts), so stamping it from
-        // an unproven address would hand out seller standing. An account that is
-        // already verified stays verified.
+        // stamping emailVerified from an unproven address would let an account
+        // claim an identity it hasn't demonstrated. An account that is already
+        // verified stays verified.
         emailVerified: byProvider.emailVerified ?? (emailVerified ? new Date() : null),
         avatarUrl: byProvider.avatarUrl ?? avatar,
       },

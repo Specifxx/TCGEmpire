@@ -32,7 +32,18 @@ import { track as vercelTrack } from "@vercel/analytics";
 // Add to this set rather than dropping a trackEvent() call: keeping the call
 // site intact is what keeps the two destinations from silently diverging, which
 // is the whole reason this dispatcher exists.
-const GA4_ONLY_EVENTS = new Set(["signup_promo_shown", "signup_promo_dismissed"]);
+//
+// premium_slidein_shown/_dismissed are the same shape as the signup pair: an
+// impression that fires for a share of logged-in visitors, plus its close
+// companion. They go to GA4 only for the same billing reason. The valuable low-
+// volume leg — premium_slidein_click — is deliberately NOT here, so it still
+// reaches Vercel alongside buy_click and sign_up.
+const GA4_ONLY_EVENTS = new Set([
+  "signup_promo_shown",
+  "signup_promo_dismissed",
+  "premium_slidein_shown",
+  "premium_slidein_dismissed",
+]);
 
 export function trackEvent(name: string, params?: Record<string, string | number | boolean | undefined>): void {
   const cleaned = params

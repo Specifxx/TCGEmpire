@@ -42,11 +42,12 @@
 /**
  * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM9 — the ONLY operational variable, in service since 2026-08-23. This is a
- *         deliberate departure from every prior rotation: RM3 through RM8 were
- *         each a FALLBACK CHAIN (CURRENT-first, falling through to older, often
- *         exhausted projects), and every real outage this project has had on
- *         this database traces back to that shape, not to the database itself.
+ *   RM10 — the ONLY operational variable, in service since 2026-08-26 (RM9, its
+ *         predecessor, neared its limit three days after taking over). Like RM9
+ *         it is a SINGLE name, not a chain — a deliberate departure from the RM3
+ *         through RM8 era, when each was a FALLBACK CHAIN (CURRENT-first, falling
+ *         through to older, often exhausted projects), and every real outage this
+ *         database has had traced back to that shape, not to the database itself.
  *
  * ── WHY THIS IS ONE NAME NOW, NOT ANOTHER CHAIN ──────────────────────────────
  * resolveVar() below selects the first variable that is merely SET — precedence,
@@ -62,16 +63,16 @@
  * project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
- * RM3 through RM8 and DATABASE_URL_2 are retired and stay out of this chain —
+ * RM3 through RM9 and DATABASE_URL_2 are retired and stay out of this chain —
  * available to the migration tasks by explicit name (see
- * migrate-main-db-to-rm9 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-to-rm10 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM9"] as const;
+export const OPERATIONAL_VARS = ["RM10"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.

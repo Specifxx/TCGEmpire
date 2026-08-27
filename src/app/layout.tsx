@@ -16,7 +16,6 @@ import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
-import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
@@ -38,6 +37,12 @@ const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").the
   ssr: false,
 });
 const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
+  ssr: false,
+});
+// Low-intrusion Premium nudge for logged-in non-Premium users (a corner slide-in,
+// not a modal). ssr:false — it renders nothing until a few pages into a session,
+// so there's nothing for a crawler to see and no reason to ship it server-side.
+const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
   ssr: false,
 });
 // The always-available feedback launcher. ssr:false because it renders nothing
@@ -175,7 +180,6 @@ const orgJsonLd = {
         "Riftbound: League of Legends TCG",
         "Trading card game prices",
         "Trading card price comparison",
-        "The RiftCompare Index",
         "Sealed trading card products",
       ],
       // Markets served (drives regional entity understanding without per-locale URLs).
@@ -193,7 +197,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore, Canada and the EU, home of the RiftCompare Index.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore, Canada and the EU.",
     },
     {
       "@type": "WebSite",
@@ -301,6 +305,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
                 <SignupPromoPopup providers={enabledProviders()} />
+                {/* Signed-in, non-Premium browsing nudge — the signed-out
+                    counterpart of SignupPromoPopup. The two never overlap by
+                    audience. */}
+                <PremiumSlideIn />
+
                 {/* Converts the OAuth callback's one-time ?welcome= param into
                     the sign_up analytics event, then strips it from the URL.
                     Renders nothing. */}
@@ -353,24 +362,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
-            {/* Returns sits OUTSIDE the MARKETPLACE_NAV_VISIBLE gate on purpose:
-                Google Merchant Center and Shopping ads need a conventional return
-                policy reachable from every page regardless of whether marketplace
-                navigation is currently surfaced. */}
-            <Link href="/returns" className="tap-link text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
-            <span className="text-ink-700">·</span>
-            {MARKETPLACE_NAV_VISIBLE && (
-              <>
-                <Link href="/marketplace/terms" className="tap-link text-slate-300 hover:text-brand-400">Marketplace terms</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/buyer-protection" className="tap-link text-slate-300 hover:text-brand-400">Buyer protection</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/shipping" className="tap-link text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/faq" className="tap-link text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
-                <span className="text-ink-700">·</span>
-              </>
-            )}
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <span className="text-ink-700">·</span>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>

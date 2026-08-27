@@ -161,9 +161,10 @@ test("the row leads with the figure the board is sorted by", () => {
 
 test("the records page is discoverable", () => {
   // A page nothing links to is a page nobody visits — and this one exists to be
-  // found by search, so both the sitemap and the Index page must point at it.
+  // found by search, so both the sitemap and a live page must point at it. The
+  // Market Index page that used to link it was removed; the movers page now does.
   assert.match(read("src/lib/sitemap-sections.ts"), /\/market\/records/, "must be in the sitemap");
-  assert.match(read("src/app/market/page.tsx"), /href="\/market\/records"/, "the Index page must link to it");
+  assert.match(read("src/app/movers/page.tsx"), /href="\/market\/records"/, "the movers page must link to it");
 });
 
 test("the market switcher offers no Global option here", () => {

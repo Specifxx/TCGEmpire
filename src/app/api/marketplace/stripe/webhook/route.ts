@@ -2,19 +2,25 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
-import { importMarketplaceListings } from "@/lib/marketplace";
-import { revalidateCardPage } from "@/lib/revalidate-card";
-import { sendOrderReceiptEmail, sendSaleNotificationEmail } from "@/lib/marketplace-email";
-import { shipByDate } from "@/lib/marketplace-policy";
-import { notify } from "@/lib/notifications";
-import { formatMoney } from "@/lib/format";
 import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
 export const runtime = "nodejs";
 
-// Confirm or release marketplace orders based on Stripe Checkout events.
+// RiftCompare Premium's Stripe webhook.
+//
+// WHY THE PATH STILL SAYS /marketplace/. This endpoint was originally shared by
+// the peer-to-peer Marketplace and Premium — the buyer/escrow branches lived
+// alongside the subscription branches because Stripe delivers every event for
+// the account to ONE registered URL. The Marketplace was removed (2026-08), so
+// every order/escrow branch is gone and only the two Premium branches remain.
+// The URL is kept exactly as-is because it is the endpoint already registered in
+// the Stripe Dashboard: renaming the route means updating that Dashboard URL in
+// lockstep, and any gap between the two drops live subscription events (new
+// signups AND renewals) that Stripe only retries for ~3 days. Keeping the path
+// costs nothing a visitor can see (it is a server-to-server callback) and avoids
+// that risk entirely.
 export async function POST(req: Request) {
   if (!stripeEnabled() || !STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Stripe webhook not configured" }, { status: 503 });
@@ -35,14 +41,8 @@ export async function POST(req: Request) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
+        // Premium is the only checkout left; ignore any other session kind.
         if (session.metadata?.kind === "premium") await premiumStarted(session);
-        else await markPaid(session);
-        break;
-      }
-      case "checkout.session.expired":
-      case "checkout.session.async_payment_failed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        if (session.metadata?.kind !== "premium") await releaseSession(session);
         break;
       }
       // Premium renewals: every successful subscription invoice re-stamps
@@ -61,98 +61,6 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ received: true });
-}
-
-function orderIdsFrom(session: Stripe.Checkout.Session): string[] {
-  const meta = session.metadata?.orderIds ?? "";
-  return meta.split(",").map((s) => s.trim()).filter(Boolean);
-}
-
-// Payment succeeded → finalise the reserved orders as PAID (stock already
-// decremented at reservation time). Also stamps paidAt (anchors the ship-deadline
-// cron), emails the buyer a receipt + the seller a sale notice, and revalidates
-// each affected card page so the marketplace hero/price row updates immediately.
-async function markPaid(session: Stripe.Checkout.Session) {
-  const ids = orderIdsFrom(session);
-  if (!ids.length) return;
-  const pi = typeof session.payment_intent === "string" ? session.payment_intent : null;
-
-  // Read the still-PENDING orders BEFORE updating, so we know exactly which ones
-  // this call actually finalised (Stripe may retry the same event).
-  const pending = await prisma.order.findMany({
-    where: { id: { in: ids }, status: "PENDING" },
-    select: {
-      id: true,
-      orderNumber: true,
-      quantity: true,
-      totalCents: true,
-      feeCents: true,
-      currency: true,
-      buyerId: true,
-      sellerId: true,
-      marketplaceListingId: true,
-    },
-  });
-  if (!pending.length) return;
-
-  const paidAt = new Date();
-  await prisma.order.updateMany({
-    where: { id: { in: pending.map((o) => o.id) }, status: "PENDING" },
-    data: { status: "PAID", reservedUntil: null, stripePaymentIntent: pi, paidAt },
-  });
-  await importMarketplaceListings().catch(() => {});
-
-  const listingIds = pending.map((o) => o.marketplaceListingId).filter((x): x is string => !!x);
-  const listings = listingIds.length
-    ? await prisma.marketplaceListing.findMany({ where: { id: { in: listingIds } }, select: { id: true, cardId: true, card: { select: { name: true } } } })
-    : [];
-  const listingById = new Map(listings.map((l) => [l.id, l]));
-
-  const userIds = Array.from(new Set(pending.flatMap((o) => [o.buyerId, o.sellerId])));
-  const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, email: true } });
-  const emailById = new Map(users.map((u) => [u.id, u.email]));
-
-  const seenCards = new Set<string>();
-  for (const o of pending) {
-    const listing = o.marketplaceListingId ? listingById.get(o.marketplaceListingId) : undefined;
-    const cardName = listing?.card.name ?? "your card";
-    const info = { orderId: o.id, orderNumber: o.orderNumber, cardName, quantity: o.quantity, totalCents: o.totalCents, feeCents: o.feeCents, currency: o.currency };
-    const buyerEmail = emailById.get(o.buyerId);
-    const sellerEmail = emailById.get(o.sellerId);
-    if (buyerEmail) await sendOrderReceiptEmail(buyerEmail, info).catch(() => {});
-    if (sellerEmail) await sendSaleNotificationEmail(sellerEmail, info, shipByDate(paidAt)).catch(() => {});
-    await notify(o.buyerId, "order_confirmed", "Order confirmed", `${o.quantity} × ${cardName} — the seller has been notified.`, "/marketplace/orders").catch(() => {});
-    await notify(o.sellerId, "sale", "You made a sale", `${o.quantity} × ${cardName} sold for ${formatMoney(o.totalCents, o.currency)} — you'll receive ${formatMoney(o.totalCents - o.feeCents, o.currency)} after the marketplace fee.`, "/marketplace/orders?tab=Sales").catch(() => {});
-    if (listing && !seenCards.has(listing.cardId)) {
-      seenCards.add(listing.cardId);
-      await revalidateCardPage(listing.cardId).catch(() => {});
-    }
-  }
-}
-
-// Session expired or payment failed → cancel the PENDING orders and restore stock.
-async function releaseSession(session: Stripe.Checkout.Session) {
-  const ids = orderIdsFrom(session);
-  for (const id of ids) {
-    await prisma.$transaction(async (tx) => {
-      const o = await tx.order.findUnique({
-        where: { id },
-        select: { status: true, marketplaceListingId: true, quantity: true },
-      });
-      if (o?.status !== "PENDING") return;
-      await tx.order.update({ where: { id }, data: { status: "CANCELLED", reservedUntil: null } });
-      if (o.marketplaceListingId) {
-        const l = await tx.marketplaceListing.findUnique({ where: { id: o.marketplaceListingId }, select: { status: true } });
-        if (l) {
-          await tx.marketplaceListing.update({
-            where: { id: o.marketplaceListingId },
-            data: { quantity: { increment: o.quantity }, ...(l.status === "SOLD_OUT" ? { status: "ACTIVE" } : {}) },
-          });
-        }
-      }
-    });
-  }
-  await importMarketplaceListings().catch(() => {});
 }
 
 // ── RiftCompare Premium (subscriptions) ────────────────────────────────────────

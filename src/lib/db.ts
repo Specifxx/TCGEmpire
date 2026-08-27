@@ -64,11 +64,12 @@ import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM9 is the ONLY operational Neon project, cut over 2026-08-23 — a deliberate
-// departure from every prior rotation (DATABASE_URL → DATABASE_URL_2 → RM3 →
-// RM4 → RM5 → DATABASE_URL → DATABASE_URL_2 → RM6 → RM7 → RM8), each of which
-// was a multi-entry FALLBACK CHAIN, current-first. Every real outage this
-// database has caused traced back to that shape, not to the database itself:
+// RM10 is the ONLY operational Neon project, cut over 2026-08-26 (RM9 neared its
+// limit three days after taking over) — a deliberate departure from every rotation
+// before RM9 (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4 → RM5 → DATABASE_URL →
+// DATABASE_URL_2 → RM6 → RM7 → RM8), each of which was a multi-entry FALLBACK
+// CHAIN, current-first. Every real outage this database has caused traced back to
+// that shape, not to the database itself:
 // resolveVar() selects the first variable that is merely SET — precedence,
 // never health — so an exhausted CURRENT project stayed selected instead of
 // failing over, and ~84 `.catch(() => [])` sites across src/ turned the
@@ -95,9 +96,9 @@ const BIG_RESULT_BYTES = 1_000_000;
 // THE NAME HAZARD, and it is worth reading before touching anything here.
 // prisma/schema.prisma reads env("DATABASE_URL") directly, and nearly every
 // script assigns `DATABASE_URL=<something> npx tsx …` to aim Prisma at a
-// database. The operational variable is RM9, so anything that runs Prisma MUST
-// copy RM9 into DATABASE_URL first or it will talk to whatever DATABASE_URL
-// happens to hold while the app talks to RM9. scripts/build-db-push.sh does
+// database. The operational variable is RM10, so anything that runs Prisma MUST
+// copy RM10 into DATABASE_URL first or it will talk to whatever DATABASE_URL
+// happens to hold while the app talks to RM10. scripts/build-db-push.sh does
 // exactly that copy. Locally this all still resolves to the dev Postgres in
 // .env.local, which is why local dev is unaffected.
 //
@@ -108,7 +109,7 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// RM3 through RM8 and DATABASE_URL_2 are retired and reachable BY NAME from
+// RM3 through RM9 and DATABASE_URL_2 are retired and reachable BY NAME from
 // the migrate-* tasks in .github/workflows/maintenance.yml, which is where
 // draining a project before switching it off belongs. Draining must not
 // depend on the runtime chain — and there is no runtime chain to depend on now.
@@ -147,7 +148,7 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // with a separate history database also in play there is no way to tell from
 // the error alone WHICH client was pointed where. Logging the winning var name
 // once at module init makes the next P1001 self-diagnosing — in particular it
-// distinguishes "RM9 is down" from "RM9 is unset in this environment".
+// distinguishes "RM10 is down" from "RM10 is unset in this environment".
 const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
@@ -167,13 +168,13 @@ const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM9") {
+if (OPERATIONAL_URL_SOURCE !== "RM10") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM9. ` +
-      `RM9 is the only operational project as of the 2026-08-23 cutover — there is no fallback ` +
-      `chain anymore, so this means RM9 is simply missing from this environment. If this appears ` +
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM10. ` +
+      `RM10 is the only operational project as of the 2026-08-26 cutover — there is no fallback ` +
+      `chain anymore, so this means RM10 is simply missing from this environment. If this appears ` +
       `in a Vercel build log, check Settings -> Environment Variables -> is "Production" (or ` +
-      `"Preview") ticked for RM9.`
+      `"Preview") ticked for RM10.`
   );
 }
 

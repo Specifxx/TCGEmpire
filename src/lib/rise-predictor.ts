@@ -194,7 +194,7 @@ function emptyAnalysis(scope: RiseScope): RiseAnalysis {
 
 // NEVER let a data anomaly 500 the page. Every other reader of PriceHistory in
 // this codebase already degrades to an empty result on failure
-// (computePriceMovers in price-history.ts, market-index.ts, screener.ts); this
+// (computePriceMovers in price-history.ts, screener.ts); this
 // module was the one that didn't, which is the only reason a single bad country
 // string became a hard 500 on /tools/rising instead of an empty screener. The
 // page renders its "no price history yet" branch from this shape, so an outage
@@ -255,8 +255,8 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);
   const [histRows, supplyRows, velocity, snapshotDays] = await Promise.all([
     // PriceHistory lives in the split-off history database (see lib/db-history.ts)
-    // — every other reader of this table (price-history.ts, market-index.ts,
-    // screener.ts) already goes through dbHistory; this one was still reading the
+    // — every other reader of this table (price-history.ts, screener.ts) already
+    // goes through dbHistory; this one was still reading the
     // OPERATIONAL client, landing a 400-card × 120-day pull on the database
     // that's actually strained. Fixed to match the established pattern.
     dbHistory.priceHistory.findMany({

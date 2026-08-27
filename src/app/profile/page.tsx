@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 import { MyCollection } from "@/components/MyCollection";
-import { ShippingAddressCard } from "@/components/ShippingAddressCard";
 import { ReferralLinkCard } from "@/components/ReferralLinkCard";
 import { REFERRAL_PREMIUM_MONTHS } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
@@ -50,9 +49,6 @@ export default async function ProfilePage() {
 
       {/* My Collection — cards the user owns, valued live (separate from wishlist) */}
       <MyCollection />
-
-      {/* Saved shipping address — prefills Marketplace checkout */}
-      <ShippingAddressCard />
 
       {/* Referral link — hidden entirely when the program is off. The capture
           + grant machinery (ReferralCapture, applyReferral) has existed all

@@ -16,9 +16,9 @@ export async function GET(req: Request) {
   const market = parseMarket(new URL(req.url).searchParams.get("market"));
   const cards = await getBulkCardSummary(market).catch(() => null);
 
-  // Same reasoning as /api/v1/index.json: a transient build failure is a real,
-  // temporary state an agent should be able to tell apart from "this URL is
-  // broken" — 200 + an explicit status, never a 5xx for it.
+  // A transient build failure is a real, temporary state an agent should be able
+  // to tell apart from "this URL is broken" — 200 + an explicit status, never a
+  // 5xx for it.
   if (!cards) {
     return Response.json(
       { status: "warming", market, asOf: new Date().toISOString(), cards: [] },
