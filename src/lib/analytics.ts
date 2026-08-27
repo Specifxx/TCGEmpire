@@ -43,6 +43,8 @@ const GA4_ONLY_EVENTS = new Set([
   "signup_promo_dismissed",
   "premium_slidein_shown",
   "premium_slidein_dismissed",
+  "annual_switch_shown",
+  "annual_switch_dismissed",
 ]);
 
 export function trackEvent(name: string, params?: Record<string, string | number | boolean | undefined>): void {

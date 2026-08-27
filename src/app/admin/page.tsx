@@ -27,6 +27,12 @@ const TOOLS: Tool[] = [
     desc: "Who clicked a Premium CTA or started checkout — interest ahead of conversion.",
   },
   {
+    href: "/admin/subscriptions",
+    title: "Subscription metrics",
+    icon: "📊",
+    desc: "MRR, churn, LTV, plan mix and cohort retention — the revenue read, straight from Stripe.",
+  },
+  {
     href: "/admin/clicks",
     title: "Outbound clicks",
     icon: "📈",
