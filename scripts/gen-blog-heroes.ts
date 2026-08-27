@@ -150,6 +150,18 @@ const HEROES: Hero[] = [
     chips: ["6 markets", "100+ stores", "Singles & sealed"],
   },
   {
+    slug: "riftbound-radiance-what-we-know",
+    kicker: "News · Set 5",
+    title: "Radiance: What's Confirmed",
+    chips: ["23 October 2026", "~180 cards", "5 new Legends"],
+  },
+  {
+    slug: "riftbound-format-legality-rotation",
+    kicker: "Guide · Rules",
+    title: "Does Riftbound Rotate?",
+    chips: ["All 5 sets legal", "Bans, not rotation", "No policy announced"],
+  },
+  {
     slug: "best-basket-cheapest-riftbound-deck",
     kicker: "Guide · Deckbuilding",
     title: "Best Basket: Cheapest Way to Buy a Deck",

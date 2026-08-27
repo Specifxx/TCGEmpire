@@ -22,6 +22,25 @@ const PRINTED_SET_TOTALS: Record<string, number> = {
   VEN: 166,
 };
 
+// Sizes of sets that are ANNOUNCED but not yet printed — Radiance (~180, ships
+// 23 Oct 2026) and Legacy (~346). These are real, citable figures that quite
+// legitimately appear in prose right next to a shipped set's name ("a step up
+// from Vendetta", "roughly double Radiance"), and the matcher below reads a
+// number's nearest set name as its subject. Without this list an announced size
+// beside a shipped set's name is reported as a claim about that shipped set.
+//
+// They are skipped rather than checked, deliberately: this test's stated
+// tiebreaker is the denominator printed on a card, and an unreleased set has no
+// card to read. Move an entry into PRINTED_SET_TOTALS above — and delete it from
+// here — the moment its cards ship and that denominator becomes verifiable.
+// Matched against the surrounding window, NOT applied as a blanket number skip:
+// a bare `has(180)` would also excuse a genuine "Vendetta has 180 cards" error,
+// which is exactly the class of mistake this file exists to catch.
+const ANNOUNCED_UNPRINTED: { size: number; name: RegExp }[] = [
+  { size: 180, name: /radiance/i },
+  { size: 346, name: /legacy/i },
+];
+
 // Numbers that legitimately appear in prose and are NOT a base-set size: the
 // Showcase runs quoted alongside each set, and totals-with-Showcase.
 const NOT_A_SET_SIZE = new Set([54, 61, 66, 24, 352]);
@@ -50,6 +69,10 @@ test("no article states a base-set size that contradicts the printed total", () 
         if (!Object.values(PRINTED_SET_TOTALS).includes(n) && n < 150) continue;
         const start = Math.max(0, m.index! - 90);
         const window = text.slice(start, m.index! + 40);
+        // An announced-but-unprinted set's size, sitting next to a shipped set's
+        // name because the sentence compares the two. Belongs to the announced
+        // set, not to `code`.
+        if (ANNOUNCED_UNPRINTED.some((s) => s.size === n && s.name.test(window))) continue;
         if (!nameRe.test(window)) continue;
         // This claim is about `code`. It must equal the printed total.
         if (n !== expected && Object.values(PRINTED_SET_TOTALS).includes(n)) {

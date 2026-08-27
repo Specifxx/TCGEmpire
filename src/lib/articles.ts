@@ -170,6 +170,246 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  // ── Radiance (Set 5) — the one released set with no coverage at all until now.
+  // Deliberately category "blog", not "guide": news-sitemap.xml only admits blog
+  // posts inside a 2-day window, and a set announcement is exactly the piece that
+  // benefits from fast crawl. Every figure below is from lib/constants.ts's SETS
+  // entry or Riot's published roadmap — nothing about the card list is invented,
+  // because nothing about the card list has been revealed.
+  {
+    slug: "riftbound-radiance-what-we-know",
+    category: "blog",
+    title: "Riftbound Radiance: Release Date & What's Confirmed",
+    excerpt:
+      "Riftbound: Radiance lands 23 October 2026 with around 180 cards and five new champion Legends. Here's every confirmed detail, what hasn't been revealed, and the one Radiance card you can already look up today.",
+    author: "RiftCompare",
+    date: "2026-08-27",
+    readMins: 7,
+    tags: ["radiance", "news", "set", "release date", "seraphine"],
+    hero: {
+      src: "/blog/riftbound-radiance-what-we-know.png",
+      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with around 180 cards",
+    },
+    summary: [
+      "**Radiance releases 23 October 2026** — the fifth Riftbound set, and the next one you will actually be able to buy.",
+      "**Around 180 cards** — the second-largest Riftbound set so far, behind only Origins.",
+      "**Five new champion Legends are confirmed**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      "**The card list has not been revealed.** Anyone showing you Radiance decklists today is guessing — we will publish the gallery the day it is real.",
+      "**One Radiance card already exists in print**: Seraphine, Not Alone shipped inside the T1 Signature Edition months early, which is why it is not tournament-legal yet.",
+    ],
+    faq: [
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026. It is the fifth Riftbound set, following Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta.",
+      },
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "Around 180 in the main set. That is larger than Vendetta's 166 and smaller than Origins' 298, making it the second-biggest Riftbound set released so far. Expect alternate-art, Signature and overnumbered printings on top of that base count, as with every previous set.",
+      },
+      {
+        q: "Which champions are in Riftbound Radiance?",
+        a: "Five new champion Legends are confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. Riot has not published the full card list, so the rest of the set — including which existing champions get new printings — is not yet known.",
+      },
+      {
+        q: "Can I see the Radiance card list yet?",
+        a: "No. The card list has not been revealed. RiftCompare publishes a full, filterable gallery with live prices the moment cards are officially confirmed — that is what happened with Vendetta, and Radiance will be handled the same way.",
+      },
+      {
+        q: "Is there a Radiance card I can already buy?",
+        a: "Sort of. Seraphine, Not Alone is a Radiance card that shipped early inside the Riftbound x T1 2025 Worlds Champion Collection, so copies exist before the set does. It is not legal for sanctioned play until Radiance actually releases on 23 October 2026.",
+      },
+      {
+        q: "Should I buy Vendetta cards before Radiance releases?",
+        a: "It depends on whether you are buying to play or to collect. A new set changes what decks want, which moves prices in both directions — the mechanisms behind that are covered in our guide to why Riftbound prices change. What we will not do is predict specific cards.",
+      },
+    ],
+    // Seraphine's T1 printing is a real, catalogued card (prisma/manual-cards.json),
+    // so this resolves today. If it ever stops resolving, resolveEmbed omits the
+    // tile rather than rendering a broken one.
+    embeds: [
+      {
+        title: "The one Radiance card already in print",
+        note: "Seraphine, Not Alone shipped inside the T1 Signature Edition before her own set. Drawing-only, so she carries no store price until copies reach the secondary market.",
+        slugs: ["seraphine-not-alone-t1s-005-005-promo"],
+      },
+    ],
+    browseCta: {
+      href: "/radiance-countdown",
+      label: "See the Radiance countdown →",
+      blurb: "The exact time remaining until release, plus every set date we track.",
+    },
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to roughly **180 cards**, and it brings **five new champion Legends**. That is the confirmed core — and this page is deliberately limited to what is actually confirmed, because the card list has not been revealed and the internet is already full of Radiance "leaks" that are nothing of the sort.
+
+## Radiance at a glance
+
+| | |
+| --- | --- |
+| **Set number** | 5 |
+| **Release date** | 23 October 2026 |
+| **Card count** | ~180 main set |
+| **New champion Legends** | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV |
+| **Set code** | RAD |
+| **Card list revealed?** | **No** |
+
+## Where Radiance sits in the release order
+
+Riftbound has shipped five sets so far — Origins (298 cards), Origins: Proving Grounds (24), Spirit Forged (221), Unleashed (219) and Vendetta (166). Radiance is the sixth release and the fifth mainline set.
+
+Radiance reverses a shrink. The previous set was the smallest mainline release to date, and Radiance is expected to land at roughly **180 cards** — second only to Origins among everything shipped so far. That matters more than it sounds. **A bigger set spreads the print run across more cards**, which generally means each individual chase card is scarcer relative to demand — the same dynamic that keeps Origins' top cards expensive despite Origins being the largest set of all. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
+
+## The five champions
+
+Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**.
+
+All five are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. What has *not* been said is which domains they sit in, what their abilities do, or which existing champions get new printings alongside them — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+
+If you want the wider picture of who is already in the game, we maintain **[which League of Legends champions are in Riftbound](/guides/league-of-legends-champions-in-riftbound)**.
+
+## The odd one out: a Radiance card that already exists
+
+Here is the genuinely strange detail about this set, and the one thing about Radiance you can look up right now.
+
+**Seraphine, Not Alone is a Radiance card — and it has already been printed.** She was one of the five cards in the **[Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)**, distributed through a Riot Merch Store drawing months before her own set ships.
+
+[[embed:0]]
+
+That creates a situation with no precedent in Riftbound: a card that physically exists, that people own, and that **is not legal for sanctioned play** — because the set it belongs to has not released. Anyone who won a T1 box is holding a card they cannot play until 23 October.
+
+It is also a small, useful signal about the set. Seraphine being pulled forward for a marquee collaboration suggests she is a headline card in Radiance rather than a background one. That is inference, not confirmation — but it is inference from a real, verifiable fact rather than from a rumour.
+
+## What this means if you buy cards
+
+Three things are worth thinking about before release, and none of them require knowing the card list.
+
+**Launch windows are the most volatile pricing a set ever has.** In the first weeks after a release, a huge amount of product is opened at once while nobody yet knows which cards matter. Prices swing hard on very few trades. If you are buying to play rather than to speculate, waiting past the initial rush usually means better information and calmer prices — the full mechanism is in **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)**.
+
+**Sealed is comparable before singles are.** Booster boxes and preconstructed products are usually listed and priceable before singles exist, so if you intend to open Radiance rather than buy into it, the **[sealed comparison](/sealed)** is where to watch first. Whether opening is actually the cheaper route is a question our **[box EV guide](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles)** answers properly — and the honest answer usually depends on the singles market that does not exist yet.
+
+**A new set moves the old ones.** Radiance will change what decks want, which moves Vendetta and Unleashed prices in both directions — up for cards the new archetypes need, down for cards they replace. Watching **[price movers](/movers)** through the launch window tells you which is happening far more reliably than predicting it in advance.
+
+## What we will publish, and when
+
+We are not going to run Radiance speculation. What we will do, on the day the reveals are real:
+
+- **The full card gallery**, filterable by domain, rarity and type, straight from our database.
+- **Live prices on every card**, compared across every store we track in each market's own currency.
+- **The chase tiers** — Signature, overnumbered, alternate-art and promo printings — as they are confirmed.
+
+Until then, the **[Radiance countdown](/radiance-countdown)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
+  },
+  // ── Format legality. "Standard format" and "format legal" returned zero matches
+  // across the whole corpus before this, despite being the question behind every
+  // expensive-card purchase. Scoped carefully: Riot has published a ban list but
+  // NOT a rotation policy, and this article says so plainly rather than inventing
+  // one — same rule /editorial-policy states for rules content.
+  {
+    slug: "riftbound-format-legality-rotation",
+    category: "guide",
+    title: "Does Riftbound Rotate? Card Legality Explained",
+    excerpt:
+      "Every Riftbound set released so far is still legal, and Riot has not announced a rotation. Here's what that actually means before you spend money on a chase card — and what would change it.",
+    author: "RiftCompare",
+    date: "2026-08-27",
+    readMins: 6,
+    tags: ["rules", "format", "rotation", "banlist", "buying guide"],
+    hero: {
+      src: "/blog/riftbound-format-legality-rotation.png",
+      alt: "Riftbound format legality — all five released sets are currently legal, with bans the only removal mechanism",
+    },
+    summary: [
+      "**No Riftbound set has rotated out.** All five released sets are currently legal in Standard.",
+      "**Riot has not published a rotation policy.** That is not the same as promising there will never be one — and we are not going to pretend it is.",
+      "**Bans are the only mechanism removing cards today**, and they are applied narrowly, a handful of cards at a time.",
+      "**Standard and 2v2 have separate ban lists.** A card legal in one can be banned in the other.",
+      "**The buying implication:** treat legality as current fact, not a permanent guarantee, and size expensive purchases accordingly.",
+    ],
+    faq: [
+      {
+        q: "Does Riftbound have rotation?",
+        a: "Not today. No Riftbound set has rotated out of legality, and every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in Standard. Riot has not published a rotation policy either way, so nobody can tell you what happens in 2028.",
+      },
+      {
+        q: "Are Origins cards still legal in Riftbound?",
+        a: "Yes. Origins is the launch set and its cards remain legal in Standard, apart from the small number that appear on the ban list. Age alone has not removed any card from play.",
+      },
+      {
+        q: "What is the difference between a ban and a rotation?",
+        a: "A ban removes one named card because it is causing a problem — it is targeted and rare. A rotation removes whole sets at once on a schedule, regardless of whether their cards are causing problems. Riftbound currently uses bans and does not use rotation.",
+      },
+      {
+        q: "Are Standard and 2v2 ban lists the same?",
+        a: "No, they are separate. A card can be legal in 1v1 Standard and banned in 2v2, or the reverse — Master Yi, Wuju Bladesman is the clearest current example, banned in 2v2 only. Check the format you actually play.",
+      },
+      {
+        q: "Could my expensive Riftbound cards become unplayable?",
+        a: "A ban is possible for any card, though bans have been applied narrowly so far. A rotation would be a much bigger change and has not been announced. The sensible position is that legality is a current fact rather than a permanent guarantee, which is worth factoring into how much you spend on a single card.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/riftbound-banlist-explained",
+      label: "See the current ban list →",
+      blurb: "Every banned card, the format it is banned in, and what it means for your deck.",
+    },
+    body: `If you are about to spend real money on a Riftbound chase card, there is one question underneath the purchase: **will this card still be legal in a year?**
+
+Here is the honest, current answer — including the part most sites skip, which is what nobody actually knows.
+
+## The short version
+
+**Riftbound does not rotate today.** Every set released so far is legal in Standard:
+
+| Set | Code | Legal in Standard? |
+| --- | --- | --- |
+| Origins | OGN | Yes |
+| Origins: Proving Grounds | OGS | Yes |
+| Spirit Forged | SFD | Yes |
+| Unleashed | UNL | Yes |
+| Vendetta | VEN | Yes |
+
+The only cards not legal are the specific ones on the **[ban list](/guides/riftbound-banlist-explained)** — a small, named set, not a whole generation of cards.
+
+## Rotation and bans are not the same thing
+
+These get conflated constantly, and the difference matters a lot for what you buy.
+
+**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[July 2026 ban wave](/blog/riftbound-july-2026-ban-list-update)** is the most recent example.
+
+**A rotation is a scheduled amputation.** It removes entire sets at once on a calendar, whether or not their cards were causing any problem at all. Cards that were perfectly reasonable simply stop being legal because of their age. Several long-running card games work this way; Riftbound, so far, does not.
+
+The practical difference: a ban is a small risk spread across thousands of cards, most of which will never be touched. A rotation is a certainty applied to everything you own from a given set, on a known date.
+
+## What Riot has and hasn't said
+
+This is where we are going to be more careful than most coverage of this question.
+
+**What is confirmed:** there is a ban list, it is maintained, it covers Standard and 2v2 separately, and it has been applied narrowly — a handful of cards at a time, with stated reasoning. Riot's approach to bans has been described as minimal intervention: act on genuine problems, and accept that this often means not acting at all.
+
+**What is not confirmed:** anything about rotation. Riot has not published a rotation policy, a rotation schedule, or a statement ruling rotation out. That silence is genuinely ambiguous, and we are not going to resolve it for you by guessing.
+
+You will find sites confidently telling you Riftbound "will never rotate" or "rotates after four sets". Both are inventions. **[Our editorial policy](/editorial-policy)** is that we publish rules and legality claims only where we can point at something official — and on rotation specifically, there is nothing to point at.
+
+## Why a game this young leaves the question open
+
+Riftbound launched in 2026 and has five released sets with four more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
+
+A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone at around 346 cards.
+
+None of that is evidence rotation is coming. It is the reason the question is worth keeping open rather than answering prematurely in either direction.
+
+## What this means for buying
+
+Three practical positions, in rough order of how much money is at stake.
+
+**For cards you buy to play,** legality today is what matters and today is settled. Build what you want from any released set; check the ban list for the format you actually play, since **[Standard and 2v2 differ](/guides/riftbound-banlist-explained)**.
+
+**For a single expensive chase card,** treat current legality as a fact with an unknown expiry rather than a guarantee. That is not a reason to avoid buying — it is a reason to size the purchase so that a rules change would be disappointing rather than damaging. The same logic applies to any collectible whose value depends partly on rules that someone else controls, and it is covered further in **[are Riftbound cards a real investment?](/blog/are-riftbound-cards-a-real-investment)**.
+
+**For cards you already own,** a ban usually moves the price immediately and downward, but rarely to zero — a card banned in one format can stay legal in another and stay collectable regardless. **[Price movers](/movers)** is where that reaction shows up first.
+
+## What would change this article
+
+We will update this page when any of the following happens, and not before: Riot publishes a rotation policy; a set is announced as rotating out; or the ban list changes materially. Until one of those, the answer to "does Riftbound rotate?" is a straightforward **no, and nothing has been announced** — which is a more useful answer than a confident guess in either direction.`,
+  },
   {
     slug: "best-riftbound-cards",
     category: "guide",
