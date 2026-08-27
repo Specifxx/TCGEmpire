@@ -1423,9 +1423,12 @@ near-verbatim text reused across pages (Phase 6), which is a different failure m
 from several independently-worded articles covering the same narrow topic — the
 metric this phase addresses instead, by editorial read-through rather than script.
 
-**What a manual read of every guide/blog article found.** Of 88 published pieces
-(98 minus 10 drafts, which are excluded from every public surface by design and
-so don't bear on AdSense's review), the great majority are genuinely differentiated — distinct
+**What a manual read of every guide/blog article found.** *(Count corrected 25 Aug
+2026 — see the note at the end of Phase 26. This pass reviewed the 88 published
+articles declared inline in `src/lib/articles.ts`; the corpus is actually 98,
+because `ARTICLES` also spreads in 10 more from `content/seo-pack-articles.ts`.
+Those 10 were reviewed separately afterwards and are healthy.)* Of the 88 read
+here, the great majority are genuinely differentiated — distinct
 regions, distinct rules keywords (each checked against Riot's own Core Rules text,
 per `/editorial-policy`), distinct cards, distinct products. One real cluster stood
 out: **seven posts, all about the single event of the Vendetta set's 31 Jul 2026
@@ -1556,10 +1559,31 @@ markets' local times but not others") is unaffected and still guards every artic
 `.png`/`.webp`/`.avif`/two responsive `.webp` variants) and its `image-manifest.json`
 entry, plus its now-dead `HEROES` entry in `scripts/gen-blog-heroes.ts`.
 
-**Net result: 88 → 74 published articles** (81 after Phase 25's cut of 7, then 74
-after this phase's 7 — plus 5 unpublished draft stubs deleted, 91 → 79 total including
-drafts). `npm test` (846/846), `npx tsc --noEmit`, `npm run lint` and
-`npm run adsense:guard` (38/38) all pass clean after this phase.
+**Net result: 98 → 84 published articles site-wide.** `npm test` (846/846),
+`npx tsc --noEmit`, `npm run lint` and `npm run adsense:guard` (38/38) all pass clean
+after this phase.
+
+> **Count correction, 25 Aug 2026.** Phases 25 and 26 both reported article counts
+> from `src/lib/articles.ts` alone and described that as the whole corpus. It is not:
+> `ARTICLES` is the inline array **plus** `...SEO_PACK_ARTICLES` (10 more, in
+> `content/seo-pack-articles.ts`), which is why `getArticles()` returns 84 rather
+> than the 74 those phases implied. Nothing that shipped was wrong — the 14 articles
+> retired were retired correctly, and no pack article was touched — but the
+> denominator was understated and the claim to have read "every published article"
+> covered only the inline ones.
+>
+> The 10 pack articles have since been reviewed against the same bar: card values,
+> eBay bidding strategy, TCGplayer fees, currency-conversion fees, most-expensive
+> cards, a marketplace comparison, price comparison, an honest self-review, how to
+> choose a marketplace, and the variant/finish glossary. All are 6-12 minute
+> long-form pieces on distinct, high-commercial-intent topics — the opposite shape
+> to the launch-window cluster Phase 25 cut. **No further retirements warranted.**
+>
+> | | Inline (`articles.ts`) | Pack | Published total |
+> | --- | --- | --- | --- |
+> | Before Phase 25 | 88 | 10 | **98** |
+> | After Phase 25 | 81 | 10 | **91** |
+> | After Phase 26 | 74 | 10 | **84** |
 
 **Calibration, restated:** two rounds of editorial cleanup (14 published articles
 retired total) is real and defensible, but it is still a content-quality lever, not a
