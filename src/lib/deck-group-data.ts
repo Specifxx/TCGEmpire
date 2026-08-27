@@ -11,7 +11,7 @@ import type { Country } from "./country";
 // or on how hard they hit the database.
 //
 // EGRESS: the all-decks resolve is cached under the SAME key /decks already uses
-// (["decks-all", <country>]), so a group page is served from a cache entry the
+// (["decks-all-v2", <country>]), so a group page is served from a cache entry the
 // index page has usually already warmed rather than issuing its own query — see
 // the data-egress rules at the top of lib/db.ts. The cart optimiser then runs for
 // exactly ONE deck per page (the cheapest publishable one, which is the only deck
@@ -53,7 +53,10 @@ export async function loadDeckGroup(group: DeckGroup, country: Country): Promise
   // path an unpriced-but-reachable deck already takes.
   let all: ResolvedDeck[] = [];
   try {
-    all = await unstable_cache(() => resolveAllDecks(country), ["decks-all", country], {
+    // "decks-all-v2": key bumped when energyCost joined the resolver's card
+    // select, so a pre-bump cache entry (without the field) can't serve a page
+    // that now expects it. Must stay in lockstep with /decks/page.tsx.
+    all = await unstable_cache(() => resolveAllDecks(country), ["decks-all-v2", country], {
       revalidate: 86400,
       tags: [CONTENT_TAG],
     })();

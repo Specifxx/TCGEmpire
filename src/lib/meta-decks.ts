@@ -52,6 +52,11 @@ export interface ResolvedCardData {
   domain: string;
   type: string;
   rarity: string;
+  // Printed energy cost — powers the honest per-deck curve stats on /decks
+  // (lib/deck-hub-stats.ts). Optional-null because cached resolver output from
+  // before this column joined the select can persist for up to a revalidation
+  // cycle; every consumer treats "missing" as "unknown", never as 0.
+  energyCost?: number | null;
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
@@ -96,6 +101,7 @@ const CARD_SELECT = {
   domain: true,
   type: true,
   rarity: true,
+  energyCost: true,
   imageThumbUrl: true,
   imageUrl: true,
   lowestPriceCents: true,
