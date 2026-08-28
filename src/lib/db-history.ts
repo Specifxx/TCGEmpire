@@ -25,18 +25,19 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH9 is the CURRENT history project — cut over 2026-08-25 when RH8 reached its
-// 5 GB monthly network-transfer allowance, two days after taking over from
-// HISTORY_DATABASE_URL_4 (which served from 2026-08-21; _4 replaced _3, which
-// replaced _2 on 2026-08-19; _2 replaced HISTORY_DATABASE_URL; that replaced RH7
-// on 2026-08-16; RH7 replaced RH6 on 2026-08-04; RH6 replaced RH5 on 2026-07-31).
+// RH10 is the CURRENT history project — cut over 2026-08-28 when RH9 reached its
+// 5 GB monthly network-transfer allowance, three days after taking over from RH8
+// (which served from 2026-08-23; RH8 replaced HISTORY_DATABASE_URL_4, which served
+// from 2026-08-21; _4 replaced _3, which replaced _2 on 2026-08-19; _2 replaced
+// HISTORY_DATABASE_URL; that replaced RH7 on 2026-08-16; RH7 replaced RH6 on
+// 2026-08-04; RH6 replaced RH5 on 2026-07-31).
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Read the head as "in service
 // today", never as a timeline — several rotations went BACKWARDS onto recycled
 // names (_2, _3, _4 are among the oldest in the list) because Neon's caps are
 // per project per month, so a long-retired project has a fully reset allowance.
 //
-// RH9, LIKE RH8, WAS PROVISIONED NEW RATHER THAN RECYCLED, AND THE REASON
+// RH10, LIKE RH9, WAS PROVISIONED NEW RATHER THAN RECYCLED, AND THE REASON
 // MATTERS. The recycling strategy assumed a retired name is an empty history
 // project waiting to be reused. On 2026-08-23 that assumption broke: RH5, the
 // intended target of the RH8 rotation, turned out to hold User=85,
@@ -44,18 +45,18 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // snapshot from an early term. The migration's User-row guard refused it;
 // without that guard the TRUNCATE ... CASCADE would have destroyed real account
 // data. A fresh project was provisioned instead, and started genuinely empty —
-// and RH9 follows the same rule. Before recycling any remaining name, run
+// and RH10 follows the same rule. Before recycling any remaining name, run
 // probe-databases and confirm it reports User=0 — every true history project does.
 //
 // A recycled name carries a second trap: the older vars are also migration
 // SOURCES in .github/workflows/maintenance.yml, so a name that is both target
 // and listed source makes a migration silently no-op while reporting every row
-// count as matching. RH9's task pins SOURCE = RH8 only, never a fallback chain
-// that could resolve back to RH9 itself.
+// count as matching. RH10's task pins SOURCE = RH9 only, never a fallback chain
+// that could resolve back to RH10 itself.
 //
-// NINE PROJECTS IN ~THREE WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE.
+// TEN PROJECTS IN ~FOUR WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE.
 // A fresh project buys only a few days at the current burn rate, so treat the
-// next exhaustion as a signal to find the query, not to provision RH10.
+// next exhaustion as a signal to find the query, not to provision RH11.
 // getEmptyCardIds() in lib/card-price-state.ts and getRisingCards() in
 // lib/top-deals.ts — both named as prime suspects on prior rotations — were
 // rewritten to stop grouping/scanning the whole PriceHistory table per request
@@ -64,9 +65,9 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // "[egress-guard:history]" if the allowance still drains fast; that names the
 // next offender, and measuring it (scripts/audit-egress.ts) beats a tenth project.
 //
-// RH8 is kept as the rollback fallback and every older var below it is a
+// RH9 is kept as the rollback fallback and every older var below it is a
 // read-only fallback/migration source; treat them as dead, never the primary
-// target. Once everything's copied across (see the `migrate-history-db-to-rh9`
+// target. Once everything's copied across (see the `migrate-history-db-to-rh10`
 // task in .github/workflows/maintenance.yml) and nothing references the older
 // vars anymore, they can be removed entirely.
 //
@@ -92,11 +93,11 @@ export const HISTORY_URL_SOURCE =
     ? "DATABASE_URL (no history project set — history shares the operational DB)"
     : resolveVar(HISTORY_VARS)!;
 
-if (HISTORY_URL_SOURCE !== "RH9") {
+if (HISTORY_URL_SOURCE !== "RH10") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH9 — the current ` +
-      `history project is missing from this environment. RH8 is the rollback (served ` +
-      `2026-08-23 to 2026-08-25, at/near its allowance) and RH6 holds the deep pre-2026-08-04 history; ` +
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH10 — the current ` +
+      `history project is missing from this environment. RH9 is the rollback (served ` +
+      `2026-08-25 to 2026-08-28, at/near its allowance) and RH6 holds the deep pre-2026-08-04 history; ` +
       `_2/_3/_4 are spent. Expect P1001 or writes landing in the wrong place.`
   );
 }
