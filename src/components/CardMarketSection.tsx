@@ -9,6 +9,7 @@ import { EbayAd } from "./EbayAd";
 import { timeAgo } from "@/lib/format";
 import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
+import { ReportPriceButton } from "./ReportPriceButton";
 import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { isFallbackRetailer, normaliseCondition, CONDITIONS } from "@/lib/constants";
 import { isPaidLink } from "@/lib/affiliate";
@@ -240,11 +241,13 @@ export function CardPriceMetrics({
 // contextual affiliate banners — everything that varies with the visitor's market.
 export function CardPriceComparison({
   rows,
+  cardId,
   displayName,
   ebaySearch,
   ebayQuery,
 }: {
   rows: MarketRow[];
+  cardId: string;
   displayName: string;
   ebaySearch: EbaySearchMap;
   ebayQuery: string;
@@ -252,6 +255,19 @@ export function CardPriceComparison({
   const { country, fmt, secondaryFmt } = useCountry();
   const m = useMemo(() => computeMarket(rows, country), [rows, country]);
   const { prices, outOfStock } = m;
+  // One entry per STORE, from this market's rows — in-stock and out-of-stock
+  // alike. Deduped because a store can appear on several rows (condition and
+  // foil are part of RetailerPrice's key), and the report picker asks "which
+  // store", not "which row": a visitor can see a wrong price, not a row id.
+  const reportable = useMemo(() => {
+    const byRetailer = new Map<string, { listingId: string; retailer: string; retailerName: string }>();
+    for (const r of [...prices, ...outOfStock]) {
+      if (!byRetailer.has(r.retailer)) {
+        byRetailer.set(r.retailer, { listingId: r.id, retailer: r.retailer, retailerName: r.retailerName });
+      }
+    }
+    return [...byRetailer.values()];
+  }, [prices, outOfStock]);
   const ebay = m.hasEbay ? null : ebaySearch[country] ?? null;
   // ONE combined, price-ranked list — foil and non-foil listings are NOT split
   // into separate views. A [Standard][Foil][Graded] toggle briefly lived here
@@ -462,6 +478,17 @@ export function CardPriceComparison({
           <p className="text-[11px] text-slate-500">
             Prices are collected from public store listings and may change.
           </p>
+          {/* Directly under the sentence that admits these prices are scraped and
+              can be wrong — which is the moment a visitor looking at a number
+              that doesn't match the shop wants somewhere to say so. Out-of-stock
+              rows are reportable too: "you list it as available and it isn't" is
+              one of the issue types, and those rows are exactly where it
+              happens. */}
+          <ReportPriceButton
+            className="mt-1 inline-block"
+            subject={{ kind: "card", cardId, name: displayName }}
+            listings={reportable}
+          />
           <AffiliateDisclosure partner="both" tight />
         </div>
       </div>

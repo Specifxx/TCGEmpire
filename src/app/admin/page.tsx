@@ -42,7 +42,7 @@ const TOOLS: Tool[] = [
     href: "/admin/messages",
     title: "Inbox",
     icon: "✉️",
-    desc: "Contact messages, store suggestions and feedback — everything sent in through a site form.",
+    desc: "Contact messages, store suggestions, feedback and wrong-price reports — everything sent in through a site form.",
   },
   {
     href: "/admin/rising",

@@ -1019,6 +1019,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
             <CardPriceComparison
               rows={rows}
+              cardId={card.id}
               displayName={displayName}
               ebaySearch={ebaySearch}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}

@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
+import { ReportPriceButton } from "./ReportPriceButton";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
@@ -63,6 +64,13 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
   }, [onClose]);
 
   const listings = group.listings;
+  // One entry per STORE, in-stock and out-of-stock alike ("you list it as
+  // available and it isn't" is one of the issue types). Deduped defensively —
+  // grouping should already give one row per retailer, but the picker must never
+  // show the same store twice.
+  const reportable = [
+    ...new Map(listings.map((l) => [l.retailer, { retailer: l.retailer, retailerName: l.retailerName }])).values(),
+  ];
   const lowest = group.lowestPriceCents;
   const host = EBAY_HOST[country] ?? EBAY_HOST.AU;
   const ebayHref = ebayAffiliateUrl(`https://www.${host}/sch/i.html?_nkw=${encodeURIComponent(group.name)}`);
@@ -170,6 +178,22 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                   Search eBay for more listings →
                 </OutboundLink>
               </p>
+            )}
+            {/* Sealed's ONLY report surface, and it has to be: there is no
+                /sealed/<slug> detail route (see this file's header) and the
+                /sealed tiles show a cheapest price without naming the store, so
+                this modal is the only place a visitor can see which store's
+                number is wrong. Sealed listings carry no id of their own, so the
+                report identifies them by groupKey + retailer + market — which is
+                what the API looks them up by. */}
+            {reportable.length > 0 && (
+              <div className="mt-2 text-center">
+                <ReportPriceButton
+                  compact
+                  subject={{ kind: "sealed", groupKey: group.groupKey, name: group.name }}
+                  listings={reportable}
+                />
+              </div>
             )}
             {/* This modal carries affiliate-tagged store + eBay links exactly like
                 the singles quick-view, so it needs its own in-popup disclosure. */}

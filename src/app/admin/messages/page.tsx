@@ -5,6 +5,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SuggestionActions } from "@/components/admin/SuggestionActions";
 import { FeedbackActions } from "@/components/admin/FeedbackActions";
+import { PriceReportActions } from "@/components/admin/PriceReportActions";
+import { formatMoney } from "@/lib/format";
+import { issueLabel } from "@/lib/price-report";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +112,57 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
   const pendingFeedback = feedback.filter((r) => r.status === "NEW").length;
   const publishedFeedback = feedback.filter((r) => r.status === "APPROVED").length;
 
+  // ── Wrong-price reports ──────────────────────────────────────────────────
+  // Wrapped like the two queries above: this table is new, and a deploy that
+  // reaches production a moment before `prisma db push` finishes must not take
+  // the whole inbox down with it.
+  type ReportRow = {
+    id: string;
+    kind: string;
+    cardId: string | null;
+    sealedGroupKey: string | null;
+    retailer: string;
+    retailerName: string;
+    country: string;
+    shownPriceCents: number | null;
+    currency: string;
+    issue: string;
+    actualPriceCents: number | null;
+    note: string | null;
+    userId: string | null;
+    email: string | null;
+    page: string | null;
+    status: string;
+    createdAt: Date;
+  };
+  let reports: ReportRow[] = [];
+  let reportsError = false;
+  try {
+    reports = await prisma.priceReport.findMany({ orderBy: { createdAt: "desc" }, take: 300 });
+  } catch {
+    reportsError = true;
+  }
+  const openReports = reports.filter((r) => r.status === "NEW");
+
+  // THE ROLLUP IS THE POINT. One report is an anecdote a busy person skips; three
+  // open reports against the same store in a fortnight is a scraper that has
+  // broken, which is the failure StoreHealthSnapshot cannot see and this queue
+  // exists to catch. Counting only OPEN reports on purpose — a store whose
+  // reports were all checked and rejected is a store working correctly, and
+  // including those would make the healthiest stores look like the worst.
+  const FORTNIGHT_MS = 14 * 86_400_000;
+  const recentOpen = openReports.filter((r) => Date.now() - new Date(r.createdAt).getTime() < FORTNIGHT_MS);
+  const byRetailer = [...recentOpen.reduce((m, r) => m.set(r.retailerName, (m.get(r.retailerName) ?? 0) + 1), new Map<string, number>())]
+    .filter(([, n]) => n > 1)
+    .sort((a, b) => b[1] - a[1]);
+
+  const REPORT_STATUS_STYLE: Record<string, string> = {
+    NEW: "bg-brand-500/15 text-brand-300",
+    CONFIRMED: "bg-red-500/10 text-red-400",
+    REJECTED: "bg-ink-800 text-slate-400",
+    FIXED: "bg-emerald-500/15 text-emerald-400",
+  };
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <nav className="mb-2 flex items-center gap-1.5 text-xs text-slate-500">
@@ -118,7 +172,7 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
       </nav>
       <h1 className="text-2xl font-bold text-white">Inbox</h1>
       <p className="mt-1 text-sm text-slate-400">
-        Everything sent in through a site form: contact messages, store suggestions and feedback.
+        Everything sent in through a site form: contact messages, store suggestions, feedback and wrong-price reports.
       </p>
 
       {/* ── Messages ──────────────────────────────────────────────────────── */}
@@ -271,6 +325,92 @@ export default async function AdminInboxPage({ searchParams }: { searchParams: {
                 </div>
               );
             })}
+          </div>
+        )}
+      </section>
+
+      {/* ── Wrong-price reports ───────────────────────────────────────────── */}
+      <section className="mt-10 border-t border-ink-800 pt-8">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-lg font-bold text-white">Wrong-price reports</h2>
+          {reports.length > 0 && (
+            <p className="text-xs text-slate-500">
+              {reports.length.toLocaleString()} recent · {openReports.length} open
+            </p>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-slate-400">
+          From the “Spotted a wrong price?” link on card pages, the card quick-view and the sealed quick-view. The
+          &ldquo;we show&rdquo; figure was read from our own database when the report landed; the &ldquo;they say&rdquo;
+          figure is the reporter&apos;s claim and is unverified.
+        </p>
+
+        {/* A store with several open reports is the signal; a single report is
+            noise. This banner is the only part of the section worth reading at a
+            glance. */}
+        {byRetailer.length > 0 && (
+          <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-slate-300">
+            <strong className="text-red-400">Check these stores&apos; scrapers:</strong>{" "}
+            {byRetailer.map(([name, n], i) => (
+              <span key={name}>
+                {i > 0 && " · "}
+                {name} <span className="text-slate-500">({n} open in 14d)</span>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {reportsError ? (
+          <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-8 text-center text-sm text-slate-400">
+            Couldn&apos;t load price reports right now.
+          </div>
+        ) : reports.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-ink-700 bg-ink-850 p-8 text-center text-sm text-slate-400">
+            No price reports yet.
+          </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {reports.map((r) => (
+              <div key={r.id} className="rounded-xl border border-ink-700 bg-ink-850 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-white">{r.retailerName}</span>
+                  <span className="chip bg-ink-800 text-slate-400">{r.country}</span>
+                  <span className="chip bg-ink-800 text-slate-400">{r.kind}</span>
+                  <span className="chip bg-brand-500/10 text-brand-300">{issueLabel(r.issue)}</span>
+                  <span className={`chip ${REPORT_STATUS_STYLE[r.status] ?? "bg-ink-800 text-slate-400"}`}>{r.status}</span>
+                  <span className="ml-auto text-xs text-slate-500">{shortDateFmt(r.createdAt)}</span>
+                </div>
+
+                <div className="num mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                  <span className="text-slate-400">
+                    we show{" "}
+                    <strong className="text-white">
+                      {r.shownPriceCents == null ? "— (listing gone)" : formatMoney(r.shownPriceCents, r.currency)}
+                    </strong>
+                  </span>
+                  {r.actualPriceCents != null && (
+                    <span className="text-slate-400">
+                      they say <strong className="text-red-400">{formatMoney(r.actualPriceCents, r.currency)}</strong>
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-1 flex flex-wrap gap-x-3 text-[11px] text-slate-600">
+                  <span>{r.userId ? "signed-in" : "anonymous"}</span>
+                  {r.email && <span>{r.email}</span>}
+                  {r.page && <span>on {r.page}</span>}
+                  {r.cardId && (
+                    <Link href={`/card/${r.cardId}`} className="text-brand-400 hover:underline">
+                      open card ↗
+                    </Link>
+                  )}
+                  {r.sealedGroupKey && <span>group {r.sealedGroupKey}</span>}
+                </div>
+
+                {r.note && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{r.note}</p>}
+                <PriceReportActions id={r.id} status={r.status} adminKey={adminKey} />
+              </div>
+            ))}
           </div>
         )}
       </section>
