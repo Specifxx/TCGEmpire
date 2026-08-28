@@ -3,6 +3,13 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import {
+  customerIdOf,
+  entitledUntilFromSubscription,
+  extendedPremiumUntil,
+  subscriptionIdFromInvoice,
+  userIdFromSubscription,
+} from "@/lib/stripe-entitlement";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -14,13 +21,39 @@ export const runtime = "nodejs";
 // the peer-to-peer Marketplace and Premium — the buyer/escrow branches lived
 // alongside the subscription branches because Stripe delivers every event for
 // the account to ONE registered URL. The Marketplace was removed (2026-08), so
-// every order/escrow branch is gone and only the two Premium branches remain.
+// every order/escrow branch is gone and only the Premium branches remain.
 // The URL is kept exactly as-is because it is the endpoint already registered in
 // the Stripe Dashboard: renaming the route means updating that Dashboard URL in
 // lockstep, and any gap between the two drops live subscription events (new
 // signups AND renewals) that Stripe only retries for ~3 days. Keeping the path
 // costs nothing a visitor can see (it is a server-to-server callback) and avoids
 // that risk entirely.
+//
+// HARDENED AFTER THE NARON INCIDENT (Aug 2026): a trial converted to a paid
+// year on Stripe but the site showed the account lapsed, because the renewal
+// path listened for exactly one event type, parsed exactly one payload shape,
+// and failed silently at four separate points. The rules now:
+//
+//   1. BELT AND BRACES ON EVENTS. Renewals stamp from `invoice.paid` AND its
+//      sibling `invoice.payment_succeeded` (Dashboard endpoints are often
+//      subscribed to one but not the other), AND from
+//      customer.subscription.created/updated — three independent chances per
+//      billing cycle to record the same fact. Stamping is idempotent, so
+//      overlap is free.
+//   2. PAYLOAD SHAPES ARE VERSION-TOLERANT (lib/stripe-entitlement.ts): the
+//      endpoint's Dashboard-configured API version decides the payload shape,
+//      NOT the SDK pin in lib/stripe.ts, and Stripe moved both
+//      invoice.subscription and subscription.current_period_end in the
+//      2025-03-31 "basil" version. Never read either field directly here.
+//   3. NO SILENT DROPS. Every path that gives up logs console.error with the
+//      event id — a paying customer losing entitlement must show in the
+//      function logs, not vanish.
+//   4. EXTEND-ONLY. Stripe events only ever GROW premiumUntil (see
+//      extendedPremiumUntil) — a monthly renewal must not clobber a longer
+//      comp grant, and out-of-order event delivery must not shorten paid time.
+//   5. The daily reconcile cron (/api/cron/stripe-reconcile) re-derives
+//      entitlement from the Stripe subscription list, so even a fully missed
+//      webhook heals within a day.
 export async function POST(req: Request) {
   if (!stripeEnabled() || !STRIPE_WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Stripe webhook not configured" }, { status: 503 });
@@ -45,18 +78,26 @@ export async function POST(req: Request) {
         if (session.metadata?.kind === "premium") await premiumStarted(session);
         break;
       }
-      // Premium renewals: every successful subscription invoice re-stamps
-      // premiumUntil with the new period end. A cancelled/lapsed sub simply
-      // stops getting stamped and entitlement runs out on its own.
-      case "invoice.paid": {
-        await premiumRenewed(event.data.object as Stripe.Invoice);
+      // Premium renewals — see rule 1 above for why both invoice events.
+      case "invoice.paid":
+      case "invoice.payment_succeeded": {
+        await premiumRenewed(event.data.object, event.id);
+        break;
+      }
+      // The subscription object itself is the most reliable entitlement source:
+      // `updated` fires on every period rollover (incl. trial → active) and
+      // carries the new period end directly — no invoice indirection at all.
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        await premiumSubscriptionChanged(event.data.object, event.id);
         break;
       }
       default:
         break;
     }
-  } catch {
+  } catch (e) {
     // Returning 500 makes Stripe retry — acceptable for transient DB blips.
+    console.error(`stripe webhook ${event.id} (${event.type}) failed:`, e);
     return NextResponse.json({ received: false }, { status: 500 });
   }
 
@@ -72,17 +113,24 @@ export async function POST(req: Request) {
 // only ever written here, so a blocked abuser never gets a moment of access).
 async function premiumStarted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId ?? session.client_reference_id;
-  if (!userId) return;
+  if (!userId) {
+    console.error("stripe webhook: premium checkout with no userId (session", session.id, ")");
+    return;
+  }
   const isTrial = session.metadata?.trial === "1";
-  const customerId = typeof session.customer === "string" ? session.customer : null;
+  const customerId = customerIdOf(session);
   const subId = typeof session.subscription === "string" ? session.subscription : null;
 
   let until: Date | null = null;
   if (subId) {
     try {
       // Expand the default payment method so we can read the card fingerprint.
+      // The retrieve goes through the SDK's own pinned API version, so its
+      // shape is stable regardless of the webhook endpoint's version — but the
+      // period end still goes through the tolerant reader, so an SDK version
+      // bump can't silently null it.
       const sub = await stripe().subscriptions.retrieve(subId, { expand: ["default_payment_method"] });
-      until = new Date(sub.current_period_end * 1000);
+      until = entitledUntilFromSubscription(sub);
 
       if (isTrial) {
         const pm = sub.default_payment_method;
@@ -102,47 +150,78 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
           }
         }
       }
-    } catch {
+    } catch (e) {
+      console.error(`stripe webhook: subscription read failed for checkout ${session.id}:`, e);
       /* fall through to the grace default */
     }
   }
   // If the subscription read failed: grant a short grace window that the precise
-  // period end (invoice.paid / renewal) will correct — PREMIUM_TRIAL_DAYS for a
-  // trial, ~a month for a paid start. Was hardcoded to 1 day here, which under-
-  // granted once the trial length moved off its original 1-day value.
+  // period end (renewal events / the reconcile cron) will correct —
+  // PREMIUM_TRIAL_DAYS for a trial, ~a month for a paid start.
   if (!until) until = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS : 32) * 86400_000);
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      premiumUntil: until,
-      ...(customerId ? { stripeCustomerId: customerId } : {}),
-      ...(isTrial ? { trialStartedAt: new Date() } : {}),
-    },
-  }).catch(() => {});
+  await stampPremium(userId, until, customerId, `checkout ${session.id}`);
+  if (isTrial) {
+    await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
+  }
 }
 
-// Renewal invoices: resolve the user via subscription metadata (preferred) or the
-// stored Stripe customer id, then extend premiumUntil to the new period end.
-async function premiumRenewed(invoice: Stripe.Invoice) {
-  const subId = typeof invoice.subscription === "string" ? invoice.subscription : null;
-  if (!subId) return; // not a subscription invoice
+// Renewal invoices: resolve the subscription across payload generations, then
+// the user (subscription metadata → stored customer id), then extend.
+async function premiumRenewed(invoice: unknown, eventId: string) {
+  const subId = subscriptionIdFromInvoice(invoice);
+  if (!subId) return; // genuinely not a subscription invoice (one-off charge)
 
-  let userId: string | null = null;
-  let until: Date | null = null;
+  let sub: Stripe.Subscription;
   try {
-    const sub = await stripe().subscriptions.retrieve(subId);
-    userId = (sub.metadata?.userId as string | undefined) ?? null;
-    until = new Date(sub.current_period_end * 1000);
-  } catch {
-    return;
+    sub = await stripe().subscriptions.retrieve(subId);
+  } catch (e) {
+    console.error(`stripe webhook ${eventId}: could not retrieve subscription ${subId}:`, e);
+    throw e; // 500 → Stripe retries
   }
-  if (!userId) {
-    const customerId = typeof invoice.customer === "string" ? invoice.customer : null;
-    if (!customerId) return;
+  await stampFromSubscription(sub, eventId, customerIdOf(invoice));
+}
+
+async function premiumSubscriptionChanged(sub: unknown, eventId: string) {
+  await stampFromSubscription(sub, eventId, null);
+}
+
+/** Resolve the user a subscription belongs to and extend their entitlement. */
+async function stampFromSubscription(sub: unknown, eventId: string, fallbackCustomerId: string | null) {
+  const until = entitledUntilFromSubscription(sub);
+  if (!until) return; // canceled/incomplete — earns nothing new, keeps paid time
+
+  const customerId = customerIdOf(sub) ?? fallbackCustomerId;
+  let userId = userIdFromSubscription(sub);
+  if (!userId && customerId) {
     const u = await prisma.user.findFirst({ where: { stripeCustomerId: customerId }, select: { id: true } });
     userId = u?.id ?? null;
   }
-  if (!userId || !until) return;
-  await prisma.user.update({ where: { id: userId }, data: { premiumUntil: until } }).catch(() => {});
+  if (!userId) {
+    // A paying subscription we can't map to an account is exactly the failure
+    // that stranded a real customer — make it impossible to miss. The daily
+    // reconcile also reports these, with the customer email attached.
+    console.error(`stripe webhook ${eventId}: entitled subscription has no resolvable user (customer ${customerId ?? "?"})`);
+    return;
+  }
+  await stampPremium(userId, until, customerId, `event ${eventId}`);
+}
+
+/** Extend-only write of premiumUntil (+ backfill of the customer link). */
+async function stampPremium(userId: string, until: Date, customerId: string | null, source: string) {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true, stripeCustomerId: true } });
+  if (!u) {
+    console.error(`stripe webhook: ${source} names unknown user ${userId}`);
+    return;
+  }
+  const next = extendedPremiumUntil(u.premiumUntil, until);
+  const linkCustomer = customerId && !u.stripeCustomerId;
+  if (!next && !linkCustomer) return; // nothing to change — idempotent overlap
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(next ? { premiumUntil: next } : {}),
+      ...(linkCustomer ? { stripeCustomerId: customerId } : {}),
+    },
+  });
 }
