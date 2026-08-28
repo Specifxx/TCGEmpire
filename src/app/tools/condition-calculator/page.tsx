@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HubFaq } from "@/components/HubFaq";
-import { getCurrentUser } from "@/lib/auth";
-import { isPremium } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
-import { PremiumButton } from "@/components/PremiumButton";
 import { ConditionCalculator } from "@/components/ConditionCalculator";
 
 export const dynamic = "force-dynamic";
 
 const TITLE = "Condition Impact Calculator — NM vs LP vs MP Value | RiftCompare";
 const DESCRIPTION =
-  "Estimate how a Riftbound card's value changes between conditions — NM, LP, MP, HP, DMG — using the same multipliers your portfolio is valued with. A RiftCompare Premium tool.";
+  "Estimate how a Riftbound card's value changes between conditions — NM, LP, MP, HP, DMG — using the same multipliers your portfolio is valued with. Free, no account needed.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -34,14 +31,12 @@ const FAQS = [
     a: "Yes — exactly the same CONDITION_MULTIPLIER table values every holding in your portfolio's total. This tool just lets you run the same math forward on any card, before you own it or before you decide what condition to sell at.",
   },
   {
-    q: "Why is this Premium?",
-    a: "It's one of the tools bundled with RiftCompare Premium, alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list.",
+    q: "Do I need an account or Premium to use it?",
+    a: "No — the Condition Impact Calculator is free for everyone, no account required. Search any card and compare its estimated value across conditions instantly.",
   },
 ];
 
 export default async function ConditionCalculatorPage() {
-  const user = await getCurrentUser();
-  const premium = isPremium(user);
   const country = getCountry();
   const info = COUNTRIES[country];
 
@@ -89,20 +84,7 @@ export default async function ConditionCalculatorPage() {
         </p>
       </div>
 
-      {premium ? (
-        <ConditionCalculator country={country} currency={info.currency} />
-      ) : (
-        <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Go Premium to use the calculator</h2>
-          <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            Search any card and compare its estimated value across conditions instantly.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {user ? <PremiumButton /> : <Link href="/login?next=/tools/condition-calculator" className="btn-primary text-sm">Sign in free</Link>}
-            <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
-          </div>
-        </div>
-      )}
+      <ConditionCalculator country={country} currency={info.currency} />
 
       <HubFaq faqs={FAQS} />
     </div>
