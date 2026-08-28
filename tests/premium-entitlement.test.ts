@@ -168,11 +168,15 @@ test("the webhook never reads version-fragile Stripe fields directly", () => {
 });
 
 test("every entitlement write path is extend-only or stacking — none overwrite blindly", () => {
-  const webhook = read("src/app/api/marketplace/stripe/webhook/route.ts");
-  const reconcile = read("src/app/api/cron/stripe-reconcile/route.ts");
-  for (const [name, src] of [["webhook", webhook], ["reconcile", reconcile]] as const) {
-    assert.ok(src.includes("extendedPremiumUntil"), `${name} must stamp via extendedPremiumUntil`);
+  // The two places that write premiumUntil from Stripe state: the webhook, and
+  // the shared reconcile sweep (which both the cron and the admin button call).
+  // A third writer appearing without extend-only stamping is the regression
+  // this guards — it is how a renewal silently shortened a longer comp grant.
+  for (const p of ["src/app/api/marketplace/stripe/webhook/route.ts", "src/lib/stripe-reconcile.ts"]) {
+    assert.ok(read(p).includes("extendedPremiumUntil"), `${p} must stamp via extendedPremiumUntil`);
   }
+  // Manual admin grants go through the stacking helper instead, never a raw write.
+  assert.ok(read("src/app/api/admin/grant-premium/route.ts").includes("grantPremiumDays"));
 });
 
 test("the daily Stripe reconcile cron is registered in vercel.json", () => {
@@ -188,6 +192,44 @@ test("the reconcile route guards with CRON_SECRET like its siblings", () => {
   const src = read("src/app/api/cron/stripe-reconcile/route.ts");
   assert.ok(src.includes("CRON_SECRET"));
   assert.ok(src.includes("Bearer"));
+});
+
+test("the cron and the admin button run the SAME sweep, so they can't drift", () => {
+  // The incident's slow half was remediation: the person who could see the
+  // problem in the admin panel couldn't fix it without a shell and a secret.
+  // Both entry points must delegate to the one shared implementation.
+  for (const p of ["src/app/api/cron/stripe-reconcile/route.ts", "src/app/api/admin/stripe-reconcile/route.ts"]) {
+    assert.match(read(p), /runStripeReconcile/, `${p} must call the shared sweep`);
+  }
+  const lib = read("src/lib/stripe-reconcile.ts");
+  assert.ok(lib.includes("extendedPremiumUntil"), "the sweep must stamp extend-only");
+});
+
+test("the admin reconcile endpoint is gated like other admin mutations", () => {
+  const src = read("src/app/api/admin/stripe-reconcile/route.ts");
+  assert.ok(src.includes("isAdmin"), "must accept a logged-in admin");
+  assert.ok(src.includes("ADMIN_TOKEN"), "must accept the key link");
+  assert.match(src, /status:\s*404/, "unauthorised must 404, not reveal the route");
+});
+
+test("the reconcile alerts when it heals or finds an unfixable subscription", () => {
+  const src = read("src/lib/stripe-reconcile.ts");
+  assert.ok(src.includes("sendEmail"), "must be able to alert");
+  assert.ok(src.includes("SUPPORT_EMAIL"), "alerts go to the support inbox");
+  // Steady state must stay silent, or the alert gets ignored — the exact
+  // failure mode that let a stranded customer sit unnoticed.
+  assert.match(
+    src,
+    /extended\.length > 0 \|\| unmatched\.length > 0/,
+    "alert only when something actually moved"
+  );
+});
+
+test("an admin-triggered run does not double-notify", () => {
+  // The admin sees the full result on screen; emailing it too is noise, and
+  // noisy alerts are ignored alerts.
+  assert.match(read("src/app/api/admin/stripe-reconcile/route.ts"), /notify:\s*false/);
+  assert.ok(!/notify:\s*false/.test(read("src/app/api/cron/stripe-reconcile/route.ts")), "the cron must keep alerting");
 });
 
 test("the admin grant endpoint exists, is gated, and bounds its input", () => {
