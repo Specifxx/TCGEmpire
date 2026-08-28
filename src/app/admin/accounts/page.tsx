@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
+import { GrantPremiumForm } from "@/components/admin/GrantPremiumForm";
 import { NOT_SEED_WHERE } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
@@ -204,6 +205,13 @@ export default async function AccountsAdminPage({
           )}
         </div>
       )}
+
+      {/* Manual premium grant — the remediation lever for a stranded paying
+          account (see /api/admin/grant-premium). Passes the ?key= through when
+          the page was opened by key link rather than an admin session. */}
+      <div className="mt-5">
+        <GrantPremiumForm adminKey={keyOk && !me?.isAdmin ? token : undefined} />
+      </div>
 
       {/* Export */}
       {!error && rows.length > 0 && (

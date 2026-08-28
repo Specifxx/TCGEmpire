@@ -20,6 +20,9 @@ export interface DeckLdInput {
   metaSharePct?: number;
   winRatePct?: number;
   top8s?: number;
+  /** Registered domain pairing — powers the "most played domains" FAQ entry,
+   *  which is simply omitted for callers (and test fixtures) that don't pass it. */
+  domains?: string[];
 }
 
 export interface DeckLdOpts {
@@ -51,6 +54,22 @@ export function bestWinRateDeck<T extends DeckLdInput>(decks: T[]): T | null {
   return decks
     .filter((d) => d.winRatePct != null)
     .reduce<T | null>((a, b) => (a == null || (b.winRatePct ?? 0) > (a.winRatePct ?? 0) ? b : a), null);
+}
+
+/** Most expensive deck to assemble, ignoring unpriced decks. */
+export function dearestDeck<T extends DeckLdInput>(decks: T[]): T | null {
+  const priced = decks.filter((d) => d.totalCents > 0);
+  return priced.length ? priced.reduce((a, b) => (b.totalCents > a.totalCents ? b : a)) : null;
+}
+
+/** Domains ranked by how many decks register them, most-played first. Empty when
+ *  no caller passed domains (e.g. older fixtures). */
+export function mostPlayedDomains(decks: DeckLdInput[]): { domain: string; count: number }[] {
+  const byDomain = new Map<string, number>();
+  for (const d of decks) for (const dom of d.domains ?? []) byDomain.set(dom, (byDomain.get(dom) ?? 0) + 1);
+  return [...byDomain.entries()]
+    .map(([domain, count]) => ({ domain, count }))
+    .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain));
 }
 
 /**
@@ -126,6 +145,8 @@ export interface FaqEntry {
 export function deckFaq(decks: DeckLdInput[], o: DeckLdOpts): FaqEntry[] {
   const cheapest = cheapestDeck(decks);
   const bestWr = bestWinRateDeck(decks);
+  const dearest = dearestDeck(decks);
+  const domains = mostPlayedDomains(decks);
   const q = (name: string, text: string): FaqEntry => ({
     "@type": "Question",
     name,
@@ -153,6 +174,25 @@ export function deckFaq(decks: DeckLdInput[], o: DeckLdOpts): FaqEntry[] {
           q(
             `Which ${o.setLabel} deck has the highest win rate?`,
             `${bestWr.name}, at ${bestWr.winRatePct}% across ${bestWr.top8s} top-8 finishes in the current ${o.setLabel} metagame.`
+          ),
+        ]
+      : []),
+    ...(dearest
+      ? [
+          q(
+            `What is the most expensive ${o.setLabel} meta deck?`,
+            `${dearest.name}, at ${formatMoney(dearest.totalCents, o.info.currency)} to assemble from the cheapest in-stock ${o.info.adjective} listings today. Deck prices move with the singles market, so the gap between it and the budget end of the field changes week to week.`
+          ),
+        ]
+      : []),
+    ...(domains.length >= 2
+      ? [
+          q(
+            "Which domains are most played in the current meta?",
+            `${domains[0].domain} leads the field, registered by ${domains[0].count} of the ${decks.length} tracked lists, ahead of ${domains
+              .slice(1, 3)
+              .map((d) => d.domain)
+              .join(" and ")}. Every list tracked here runs a two-domain pairing, so the same deck counts toward both halves of its pairing.`
           ),
         ]
       : []),

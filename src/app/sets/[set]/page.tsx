@@ -382,9 +382,13 @@ export default async function SetPage({
               <div className="mx-auto mt-6 max-w-lg border-t border-ink-800 pt-5 text-left">
                 <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for Vendetta</p>
                 <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
-                  <li><Link href="/blog/riftbound-vendetta-everything-you-need-to-know" className="text-brand-400 hover:underline">Everything you need to know →</Link></li>
+                  {/* The "everything you need to know" and "new mechanics roundup"
+                      posts were retired in the Aug 2026 low-performer prune (see
+                      next.config.js redirects) — these link their surviving
+                      equivalents instead. */}
+                  <li><Link href="/blog/riftbound-vendetta-nexus-night-promo-cards" className="text-brand-400 hover:underline">Nexus Night promo cards →</Link></li>
                   <li><Link href="/guides/riftbound-empower-explained" className="text-brand-400 hover:underline">Empower mechanic explained →</Link></li>
-                  <li><Link href="/blog/riftbound-vendetta-new-mechanics-flow-burn-empower" className="text-brand-400 hover:underline">New mechanics: Flow, Burn &amp; Empower →</Link></li>
+                  <li><Link href="/guides/riftbound-flow-explained" className="text-brand-400 hover:underline">Flow mechanic explained →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-unit-gear-decrees" className="text-brand-400 hover:underline">New card types: Unit-Gear &amp; Decrees →</Link></li>
                   <li><Link href="/guides/building-for-riftbound-vendetta" className="text-brand-400 hover:underline">Deckbuilding guide &amp; synergies →</Link></li>
                   <li><Link href="/guides/best-riftbound-vendetta-decks" className="text-brand-400 hover:underline">Best Vendetta decks &amp; archetypes →</Link></li>

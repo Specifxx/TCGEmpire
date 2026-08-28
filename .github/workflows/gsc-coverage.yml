@@ -67,6 +67,39 @@ jobs:
             if ((sm.sitemap||[]).length) out.push(`- Sitemaps submitted: ` + sm.sitemap.map(s=>`${s.path.split("/").pop()}${s.lastDownloaded?` (crawled ${String(s.lastDownloaded).slice(0,10)})`:" (not yet crawled)"}`).join(", "));
             out.push("", "**Top queries:**", ...(byQuery.rows||[]).map(r=>`- \`${r.keys[0]}\` — ${r.clicks} clicks / ${r.impressions} impr`));
             out.push("", "**Top pages:**", ...pages.slice().sort((a,b)=>b.impressions-a.impressions).slice(0,10).map(r=>`- ${r.keys[0].replace(property.replace(/\/$/,""),"")||"/"} — ${r.impressions} impr`));
+            // Per-template rollup + full editorial breakdown. The top-10 above
+            // answers "is the site indexed"; these answer "which content types
+            // and which posts earn their keep" — the byPage query already fetched
+            // every row, so this is free. Paths are normalised (fragments/query
+            // stripped, trailing slash dropped) so /page and /page#section count
+            // as one page.
+            const norm = (u) => { try { const x = new URL(u); return (x.pathname.replace(/\/$/, "") || "/"); } catch { return u; } };
+            const byPath = new Map();
+            for (const r of pages) {
+              const p = norm(r.keys[0]);
+              const e = byPath.get(p) || { impr: 0, clicks: 0 };
+              e.impr += r.impressions || 0; e.clicks += r.clicks || 0;
+              byPath.set(p, e);
+            }
+            const tpl = (p) => (p === "/" ? "home" : "/" + p.split("/")[1]);
+            const roll = new Map();
+            for (const [p, e] of byPath) {
+              const t = tpl(p);
+              const r = roll.get(t) || { pages: 0, impr: 0, clicks: 0 };
+              r.pages++; r.impr += e.impr; r.clicks += e.clicks;
+              roll.set(t, r);
+            }
+            out.push("", "**By template (28d):**",
+              ...[...roll.entries()].sort((a, b) => b[1].impr - a[1].impr).slice(0, 15)
+                .map(([t, r]) => `- ${t} — ${r.pages} pages · ${r.impr.toLocaleString()} impr · ${r.clicks.toLocaleString()} clicks`));
+            // Every editorial path, WORST first — the prune list reads straight off
+            // this. A post absent here entirely had zero impressions in the window.
+            for (const prefix of ["/blog/", "/guides/"]) {
+              const rows = [...byPath.entries()].filter(([p]) => p.startsWith(prefix))
+                .sort((a, b) => a[1].impr - b[1].impr || a[1].clicks - b[1].clicks);
+              out.push("", `**Every ${prefix} path with impressions (${rows.length}, lowest first):**`,
+                ...rows.map(([p, e]) => `- ${p} — ${e.impr} impr · ${e.clicks} clicks`));
+            }
             const txt = out.join("\n");
             console.log(txt);
             if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, txt + "\n");

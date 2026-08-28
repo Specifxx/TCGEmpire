@@ -172,9 +172,14 @@ const nextConfig = {
       // a static source here only ever shadows a slug that no longer resolves
       // under /guides. Should any of the three ever move back, delete its entry —
       // a permanent redirect is browser-cached and would otherwise win.
+      // how-to-read and whats-in-unleashed were then RETIRED outright in the
+      // Aug 2026 low-performer prune (zero Search Console impressions under
+      // either URL form), so their old /guides sources now point straight at
+      // each post's surviving equivalent rather than chaining through the dead
+      // /blog URL (their own /blog redirects live in the prune block below).
       {
         source: "/guides/how-to-read-a-riftbound-card",
-        destination: "/blog/how-to-read-a-riftbound-card",
+        destination: "/guides/riftbound-rules-explained",
         permanent: true,
       },
       {
@@ -184,7 +189,7 @@ const nextConfig = {
       },
       {
         source: "/guides/whats-in-the-riftbound-unleashed-set",
-        destination: "/blog/whats-in-the-riftbound-unleashed-set",
+        destination: "/sets/unleashed",
         permanent: true,
       },
       // Retired the proxy printer entirely (thin/low-value utility page, part of
@@ -241,9 +246,14 @@ const nextConfig = {
       // four-item checklist — wishlist, compare sealed, price your deck, don't
       // overpay — into the one hub post that already contains it, plus the full
       // set rundown the other three didn't have.
-      { source: "/blog/riftbound-vendetta-next-set", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
-      { source: "/blog/riftbound-vendetta-launch-week-buying-checklist", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
-      { source: "/blog/riftbound-vendetta-countdown-how-long-until-release", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
+      // …their hub post itself was then retired in the Aug 2026 low-performer
+      // prune (4 impressions in 28 days, 7 weeks after publishing), so all
+      // three — and the early-release post below — now point at the Vendetta
+      // set hub, the surviving page that answers the same query, rather than
+      // chaining through the dead post.
+      { source: "/blog/riftbound-vendetta-next-set", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-launch-week-buying-checklist", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-countdown-how-long-until-release", destination: "/sets/vendetta", permanent: true },
       // A second general "how to buy Riftbound cards" guide that linked to the
       // same five regional posts as its sibling and covered the same singles-
       // vs-sealed ground; the survivor (just expanded to 6 markets / 100+ stores)
@@ -265,9 +275,29 @@ const nextConfig = {
       { source: "/blog/welcome-to-riftcompareau", destination: "/about", permanent: true },
       { source: "/blog/unleashed-meta-snapshot-june-2026", destination: "/decks", permanent: true },
       { source: "/blog/should-you-buy-riftbound-origins-before-vendetta", destination: "/guides/why-riftbound-card-prices-change", permanent: true },
-      { source: "/blog/riftbound-vendetta-is-here-early-release", destination: "/blog/riftbound-vendetta-everything-you-need-to-know", permanent: true },
+      { source: "/blog/riftbound-vendetta-is-here-early-release", destination: "/sets/vendetta", permanent: true },
       { source: "/blog/how-to-start-buying-riftbound-vendetta-decks", destination: "/guides/best-riftbound-vendetta-decks", permanent: true },
       { source: "/blog/riftbound-t1-signature-edition-drawing", destination: "/blog/riftbound-t1-worlds-champion-collection", permanent: true },
+      // LOW-PERFORMER PRUNE (Aug 2026, at the user's request). The ten lowest-
+      // performing blog posts by 28-day Search Console impressions, among posts
+      // published more than 7 days before the prune (the GSC monitor's
+      // worst-first /blog/ table is the ranking; posts absent from it entirely
+      // had zero impressions). Seven of the ten had literally no impressions;
+      // the other three had 2, 4 and 19 across a full month. Each 301 targets
+      // the surviving page that best answers the retired post's query — never
+      // /blog generically — per the convention of the blocks above. Internal
+      // links into all ten were found and repointed (sets/[set], keywords,
+      // blog FEATURED_POSTS), not left to ride these redirects.
+      { source: "/blog/how-to-read-a-riftbound-card", destination: "/guides/riftbound-rules-explained", permanent: true },
+      { source: "/blog/whats-in-the-riftbound-unleashed-set", destination: "/sets/unleashed", permanent: true },
+      { source: "/blog/ggez-teemo-riftbound-explained", destination: "/champions/teemo", permanent: true },
+      { source: "/blog/lee-sin-centered-nexus-night-promo", destination: "/blog/riftbound-vendetta-nexus-night-promo-cards", permanent: true },
+      { source: "/blog/mel-newly-awakened-vendetta-spotlight", destination: "/blog/riftbound-vendetta-nexus-night-promo-cards", permanent: true },
+      { source: "/blog/why-origins-cards-are-worth-more", destination: "/sets/origins", permanent: true },
+      { source: "/blog/riftbound-cards-to-watch", destination: "/movers", permanent: true },
+      { source: "/blog/riftbound-price-movers-how-to-track", destination: "/movers", permanent: true },
+      { source: "/blog/riftbound-vendetta-everything-you-need-to-know", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-new-mechanics-flow-burn-empower", destination: "/guides/riftbound-empower-explained", permanent: true },
       { source: "/blog/riftbound-vendetta-synergies-with-existing-cards", destination: "/guides/building-for-riftbound-vendetta", permanent: true },
       // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
       // every internal link — only the URL still said "arbitrage", a word no
