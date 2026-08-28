@@ -62,7 +62,7 @@ model User {
   // switches markets while signed in (see CountryProvider + POST
   // /api/account/country) — a signed-in visitor should land on their real
   // market on any device, not just the one that had the right cookie/geo guess.
-  preferredCountry    String?
+  preferredCountry String?
 
   // ── Public collection share link (opt-in, revocable) ────────────────────────
   // A random URL token. Its PRESENCE is the switch: set = /c/<token> serves a
@@ -75,7 +75,7 @@ model User {
   // Discord channel. The public view NEVER reads costBasisCents or any P&L
   // figure — see lib/collection-share.ts, which selects the fields explicitly
   // rather than passing a whole row through.
-  collectionShareId   String?   @unique
+  collectionShareId String? @unique
 
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
   // Prefills the checkout address step; a fresh snapshot is copied onto each Order
@@ -408,14 +408,14 @@ model Feedback {
   // Optional reply address for signed-out submitters. NEVER rendered publicly —
   // it exists so a real complaint can get a real answer. Signed-in rows leave it
   // null (the account already has an address).
-  email String?
+  email       String?
   // What the submitter wants to be called IF they consented to publication.
   // Free text, moderated before it is ever shown.
   displayName String?
   // Where the feedback came from, so a complaint can be read in context: the
   // path ("/card/foo") and which surface raised it.
-  page   String?
-  source String @default("page") // page | widget | riftle
+  page        String?
+  source      String  @default("page") // page | widget | riftle
 
   // MODERATION. Nothing reaches a public surface on submission — status starts
   // NEW and an admin must move it to APPROVED. consentPublic records whether the
@@ -542,7 +542,7 @@ model StoreHealthSnapshot {
 // is never notified twice. lastPriceCents also tracks rises so a later dip is
 // measured against the most recent price, not a stale one.
 model PriceAlert {
-  id             String    @id @default(cuid())
+  id                 String    @id @default(cuid())
   // Lowercased, trimmed recipient address. STILL the mail-routing key and STILL
   // the dedupe key after the user-account migration: a signed-in watch is written
   // with the account's own email, so @@unique([email, cardId, market]) below keeps
@@ -550,7 +550,7 @@ model PriceAlert {
   // drop cron in lib/price-alerts.ts needed no change at all. Safe to keep
   // denormalised because User.email is never updated in-app — the only
   // prisma.user.update touching an email field is api/auth/verify (emailVerified).
-  email          String
+  email              String
   // The account that owns this watch, when there is one.
   //
   // NULLABLE with no default, deliberately. The feature shipped account-free
@@ -559,12 +559,12 @@ model PriceAlert {
   // that runs on every deploy. NULL means "an email-only subscriber from the
   // pop-up", and every read path treats it as such: the drop cron ignores this
   // column entirely, and only the account-scoped watchlist routes filter on it.
-  userId         String?
-  cardId         String
-  market         String    @default("AU") // AU | NZ | US | UK | SG | CA
+  userId             String?
+  cardId             String
+  market             String    @default("AU") // AU | NZ | US | UK | SG | CA
   // Last lowest price observed for this card+market (the baseline a drop is
   // measured against). null until the card first has a price in this market.
-  lastPriceCents Int?
+  lastPriceCents     Int?
   // Lowest price we have ever EMAILED this subscriber for this card+market — the
   // anti-spam watermark. A drop only sends a fresh email when it beats this value
   // (a genuinely new low), or when REMINDER_INTERVAL_MS (≈2 months) has passed
@@ -576,10 +576,10 @@ model PriceAlert {
   lowestEmailedCents Int?
   // Per-email secret powering one-click unsubscribe (shared across all of an
   // email's rows, so one link can remove every alert for that address).
-  unsubToken     String
-  createdAt      DateTime  @default(now())
+  unsubToken         String
+  createdAt          DateTime  @default(now())
   // When we last emailed this subscriber about a drop on this card.
-  lastNotifiedAt DateTime?
+  lastNotifiedAt     DateTime?
 
   card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
   // Cascade, matching every other User relation in this schema. A price watch is
@@ -1133,3 +1133,79 @@ model UserDigestOptOut {
   @@index([lastEditionKey])
 }
 
+// A visitor telling us one of our prices is wrong.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// WHY THIS TABLE EXISTS. A price comparison is only worth using if its prices
+// are right, and every price here is scraped: a store changes its markup, adds a
+// variant, restructures a product page, and one retailer's numbers quietly go
+// wrong for days. StoreHealthSnapshot catches the shapes a machine can see
+// (stale fetch, dropped listings, frozen or jumped prices). It cannot catch "the
+// listing says $12 but the page says $19" — a human standing in front of both
+// can, and until now had nowhere to say so.
+//
+// THE VALUABLE FIELD IS `retailer`, NOT ANY SINGLE ROW. One report is an
+// anecdote; five against the same store in a week is a broken scraper, and that
+// aggregate is the reason this is a table rather than an email. See
+// /admin/messages, which ranks reporters by retailer for exactly that reason.
+//
+// NO FOREIGN KEY TO Card, DELIBERATELY. Card ids are not stable across a
+// catalogue rebuild (that instability is documented at length in
+// db-history.ts's ensureHistoryCards saga), and a report is evidence about a
+// store's data — it should outlive the row it was filed against, not cascade
+// away with it. Same reasoning for the sealed side, which has no stable listing
+// id at all and is identified by (groupKey, retailer, country).
+//
+// NOTHING HERE IS PUBLISHED. Every field is admin-only; there is no public read
+// path. That is what makes it safe to accept anonymous submissions — see the
+// route for the rest of the abuse controls.
+model PriceReport {
+  id String @id @default(cuid())
+
+  kind String // "card" | "sealed"
+
+  // What was reported. Exactly one of these is set, per `kind`.
+  cardId         String?
+  sealedGroupKey String?
+
+  // RetailerPrice.id where the surface knew it (cards). Sealed listings have no
+  // id of their own, so they are identified by groupKey + retailer + country.
+  listingId String?
+
+  retailer     String
+  retailerName String
+  country      String
+
+  // WHAT OUR DATABASE SAID when the report landed — looked up server-side, never
+  // taken from the request body. A number a stranger can put straight into an
+  // admin screen is a number an admin cannot trust, and this one has to be
+  // trustworthy: it is the "before" half of the comparison the whole report is
+  // about. null means the listing had already gone by the time we looked, which
+  // is itself a useful answer.
+  shownPriceCents Int?
+  currency        String
+
+  // PRICE_WRONG | OUT_OF_STOCK | WRONG_ITEM | LINK_BROKEN | OTHER — see
+  // lib/price-report.ts, which is the single definition both the form and the
+  // API validate against.
+  issue            String
+  // What the reporter says the real price is. USER-CLAIMED and labelled as such
+  // everywhere it is shown — unlike shownPriceCents, this one cannot be verified
+  // without visiting the store, which is the admin's job, not the schema's.
+  actualPriceCents Int?
+  note             String?
+
+  userId String? // null = anonymous
+  email  String? // optional reply address, only stored when volunteered
+  ip     String? // best-effort, for abuse triage only
+  page   String? // where it was reported from, for reproducing
+
+  status    String   @default("NEW") // NEW | CONFIRMED | REJECTED | FIXED
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  // Serves the per-store rollup that turns single reports into a scraper alarm.
+  @@index([retailer, createdAt])
+  @@index([cardId])
+  @@index([sealedGroupKey])
+}

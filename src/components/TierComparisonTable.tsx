@@ -36,6 +36,7 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
   { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
   { feature: "Daily price movers — biggest risers & fallers", anon: true, account: true, premium: true },
+  { feature: "Condition Impact Calculator", anon: true, account: true, premium: true },
   { feature: "Price alerts", anon: false, account: true, premium: true },
   { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
   { feature: "Best Basket — cheapest store split, postage included", anon: false, account: true, premium: true },
@@ -43,7 +44,6 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
-  { feature: "Condition Impact Calculator", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 
@@ -64,10 +64,11 @@ export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: 
 // Two reasons a row is omitted here, and both are about the popup's job rather
 // than the row being unimportant:
 //   • length — the popup caps its own height and scrolls, so every row costs
-//     something (Ad-free experience, Condition Impact Calculator);
+//     something (Ad-free experience);
 //   • no signal — with the "No account" column dropped below, a row that is a
 //     tick for BOTH remaining columns tells a reader deciding whether to pay
-//     nothing at all. The four here are exactly that shape.
+//     nothing at all. The five here (the Condition Impact Calculator among them,
+//     now free for everyone) are exactly that shape.
 // The rows that survive are the ones that differentiate, plus the handful of
 // flat-tick rows that establish what the free tier already covers.
 // Exported for tests/access-tiers.test.ts only: a typo in either of these sets

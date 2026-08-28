@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { SetInfo } from "@/lib/constants";
 
-// New-set hype line. Named for Radiance (the set this ships for), but sourced
-// generically via lib/constants.ts's nextUpcomingSet() rather than hard-coded —
-// the same "point at the next one without naming it" pattern newestReleasedSet()
-// already uses for the Explore section's gallery link. So this rolls from
-// Radiance to Legacy on its own once Radiance ships, with no edit here.
+// New-set hype line. Names no set: sourced via lib/constants.ts's
+// nextUpcomingSet(), the same "point at the next one without naming it" pattern
+// newestReleasedSet() already uses for the Explore section's gallery link. So it
+// rolls from Radiance to Legacy on its own once Radiance ships, with no edit
+// here — which is also why the component itself is no longer called
+// RadianceCountdownCard.
 //
 // Rebuilt per the homepage-redesign brief from a full-width card (its own
 // heading, its own countdown digit, its own newsletter capture) into ONE line
@@ -13,15 +14,15 @@ import type { SetInfo } from "@/lib/constants";
 // homepage block — Radiance already gets a disabled "Coming soon" tile in that
 // same section's grid, so this is the one extra fact (how soon) that tile
 // can't say on its own. The newsletter capture is gone entirely: the brief
-// wants exactly one capture, footer-only — /radiance-countdown's own page
-// still carries the full release-hype treatment (and its own capture) for
-// anyone who clicks through wanting more.
+// wants exactly one capture, footer-only — /release-dates carries the full
+// release-hype treatment (and its own capture) for anyone who clicks through
+// wanting more.
 //
 // Still server-computed (no client timer): the homepage is ISR-cached, so the
 // day count in the crawled HTML and the day count a visitor sees before any JS
-// runs must be the same number — exactly the reasoning /radiance-countdown's
-// own page documents for its countdown.
-export function RadianceCountdownCard({ set }: { set: SetInfo | undefined }) {
+// runs must be the same number — exactly the reasoning /release-dates documents
+// for its own countdown.
+export function NextSetCountdownCard({ set }: { set: SetInfo | undefined }) {
   if (!set) return null; // nothing upcoming and announced — nothing to promote
 
   const releaseMs = set.releasedOn ? Date.parse(`${set.releasedOn}T00:00:00Z`) : NaN;
@@ -44,7 +45,7 @@ export function RadianceCountdownCard({ set }: { set: SetInfo | undefined }) {
         )}
         {/* tap-link: same fix as the "See all N cards" link right above this
             in Explore by set — a bare text link measured ~17px tall on mobile. */}
-        <Link href="/radiance-countdown" className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline">
+        <Link href="/release-dates" className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline">
           Full release details →
         </Link>
       </span>

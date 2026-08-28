@@ -12,8 +12,8 @@ import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
-import { HISTORY_TAG } from "./revalidate-content";
-import { sydneyWeekKey } from "./price-history";
+import { CONTENT_TAG, HISTORY_TAG } from "./revalidate-content";
+import { sydneyDayKey, sydneyWeekKey } from "./price-history";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
 const WINDOW_DAYS = 35; // 5 weekly snapshots fit inside this
@@ -33,35 +33,92 @@ export interface ValuePick {
   offHighPct: number; // how far below the window high
 }
 
-async function computeUndervalued(country: Country, limit: number): Promise<ValuePick[]> {
-  try {
-    const field = priceField(country);
-    const where: Prisma.CardWhereInput = { variant: null, isPromo: false };
-    where[field] = { not: null };
-    const cards = await prisma.card.findMany({
+// ─────────────────────────────────────────────────────────────────────────────
+// THE SCAN IS SPLIT IN TWO, BECAUSE ITS TWO HALVES CHANGE AT DIFFERENT RATES.
+//
+// A value pick is "today's price, against this card's recent average". Those come
+// from different databases and different clocks:
+//
+//   • the AVERAGE is derived from PriceHistory, which is now written weekly — it
+//     cannot change between snapshots, and reading it is the expensive part
+//     (~400 cards x a 35-day window, per market);
+//   • the CURRENT price comes from the operational database, refreshed twice a
+//     day — and it is what actually decides whether a card is undervalued today.
+//
+// Caching them together at one rate forces a choice between a stale Value Finder
+// and re-reading history daily for an average that did not move. Split, the
+// history read runs once per market per week while the ranking is rebuilt every
+// day against fresh prices — daily results, weekly history cost.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Per-card window statistics. History-derived, so it only moves weekly. */
+type Baseline = { cardId: string; avg: number; high: number };
+
+async function computeBaselines(country: Country): Promise<Baseline[]> {
+  const field = priceField(country);
+  const where: Prisma.CardWhereInput = { variant: null, isPromo: false };
+  where[field] = { not: null };
+  const ids = (
+    await prisma.card.findMany({
       where,
       orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
       take: SCAN_CARDS,
+      select: { id: true },
+    })
+  ).map((c) => c.id);
+  if (!ids.length) return [];
+
+  const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
+  const hist = await dbHistory.priceHistory.findMany({
+    where: { country, cardId: { in: ids }, day: { gte: cutoff } },
+    select: { cardId: true, lowestPriceCents: true },
+  });
+
+  const byCard = new Map<string, number[]>();
+  for (const h of hist) {
+    const series = byCard.get(h.cardId);
+    if (series) series.push(h.lowestPriceCents);
+    else byCard.set(h.cardId, [h.lowestPriceCents]);
+  }
+
+  const out: Baseline[] = [];
+  for (const [cardId, series] of byCard) {
+    if (series.length < MIN_POINTS) continue;
+    const avg = series.reduce((a, b) => a + b, 0) / series.length;
+    if (avg <= 0) continue;
+    out.push({ cardId, avg, high: Math.max(...series) });
+  }
+  return out;
+}
+
+// Week-scoped: the only history read in this file.
+function getBaselines(country: Country): Promise<Baseline[]> {
+  return unstable_cache(
+    () => computeBaselines(country),
+    ["rc-undervalued-baseline", country, sydneyWeekKey()],
+    { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
+  )();
+}
+
+async function computeUndervalued(country: Country, limit: number): Promise<ValuePick[]> {
+  try {
+    const baselines = await getBaselines(country);
+    if (!baselines.length) return [];
+    const baseById = new Map(baselines.map((b) => [b.cardId, b]));
+
+    // Operational database only — today's prices for exactly the cards that have
+    // a usable baseline. This is the half that re-runs daily.
+    const cards = await prisma.card.findMany({
+      where: { id: { in: [...baseById.keys()] } },
       select: cardTileSelect(country),
     });
-    if (!cards.length) return [];
-
-    const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
-    const hist = await dbHistory.priceHistory.findMany({
-      where: { country, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
-      select: { cardId: true, lowestPriceCents: true },
-    });
-    const byCard = new Map<string, number[]>();
-    for (const h of hist) (byCard.get(h.cardId) ?? byCard.set(h.cardId, []).get(h.cardId)!).push(h.lowestPriceCents);
 
     const picks: ValuePick[] = [];
     for (const c of cards) {
       const current = pickPrice(c, country);
-      const series = byCard.get(c.id);
-      if (current == null || current < MIN_PRICE_CENTS || !series || series.length < MIN_POINTS) continue;
-      const avg = series.reduce((a, b) => a + b, 0) / series.length;
-      const high = Math.max(...series);
-      if (avg <= 0) continue;
+      const base = baseById.get(c.id);
+      if (current == null || current < MIN_PRICE_CENTS || !base) continue;
+      const { avg, high } = base;
       const discount = (avg - current) / avg;
       if (discount < MIN_DISCOUNT) continue;
       // Outlier guard: ≥80% below its own average isn't a value signal, it's a
@@ -83,16 +140,21 @@ async function computeUndervalued(country: Country, limit: number): Promise<Valu
   }
 }
 
-// Day-scoped cache: the undervalued scan reads a chunk of PriceHistory, so run it
-// once per (market, limit) per day and share across every visitor of the
-// value-finder page. Auto-refreshes at the day rollover.
+// DAY-scoped, and CONTENT_TAG, on purpose — the opposite of the history caches.
+//
+// Everything expensive now sits behind getBaselines() above, which is week-scoped.
+// What is left here reads the operational database only, so it can refresh at the
+// same rate as prices do: a card that dropped this morning shows up as
+// undervalued this morning, not next Monday. CONTENT_TAG means the twice-daily
+// price import refreshes it directly, which is exactly what should happen when
+// the prices this ranking is built on have just changed.
 export async function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
   // Compute at a generous cap keyed by (market, day) only, then slice — so a deeper
-  // list can't trigger a second whole-market history read.
+  // list can't trigger a second scan.
   const full = await unstable_cache(
     () => computeUndervalued(country, 100),
-    ["rc-undervalued", country, sydneyWeekKey()],
-    { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
+    ["rc-undervalued", country, sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
   )();
   return full.slice(0, limit);
 }

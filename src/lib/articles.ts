@@ -234,7 +234,7 @@ export const ARTICLES: Article[] = [
       },
     ],
     browseCta: {
-      href: "/radiance-countdown",
+      href: "/release-dates",
       label: "See the Radiance countdown →",
       blurb: "The exact time remaining until release, plus every set date we track.",
     },
@@ -295,7 +295,7 @@ We are not going to run Radiance speculation. What we will do, on the day the re
 - **Live prices on every card**, compared across every store we track in each market's own currency.
 - **The chase tiers** — Signature, overnumbered, alternate-art and promo printings — as they are confirmed.
 
-Until then, the **[Radiance countdown](/radiance-countdown)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
+Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
   },
   // ── Format legality. "Standard format" and "format legal" returned zero matches
   // across the whole corpus before this, despite being the question behind every
@@ -3572,7 +3572,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — Overnumbers, alt-arts and the sleeper Epics worth hunting.
 - **[Vendetta card gallery](/sets/vendetta/gallery)** — every card on one page, filterable, with live prices.
 - **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
-- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
+- **[Radiance release date](/release-dates)** — Set 5 lands 23 October 2026.
 - **[Nexus Night promo cards](/blog/riftbound-vendetta-nexus-night-promo-cards)** — every promo confirmed for Vendetta's season, tracked as they're revealed.`,
   },
   {
@@ -4655,7 +4655,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
 | 3 | **Spirit Forged** | SFD | 221 (+66 Showcase) | — |
 | 4 | **[Unleashed](/sets/unleashed)** | UNL | 219 (+61 Showcase) | — |
 | 5 | **[Vendetta](/sets/vendetta)** | VEN | 166 | 31 Jul 2026 |
-| 6 | **[Radiance](/radiance-countdown)** | RAD | ~180 (announced) | 23 Oct 2026 |
+| 6 | **[Radiance](/release-dates)** | RAD | ~180 (announced) | 23 Oct 2026 |
 
 The **Cards** column is each set's own printed total — the denominator on every card in it. Origins collector numbers run 001/298 to 298/298, so Origins is 298; Spirit Forged cards are numbered out of /221 and Unleashed out of /219. That number is checkable on any single card you own, which is why we use it in preference to a catalogue row count: printings above the total (Signatures, over-numbered chase cards, promos) are real cards but they are not part of the base run, and counting them inflates a set. We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
 
@@ -4679,7 +4679,7 @@ Unleashed is the one worth a closer look if you're buying rather than just catal
 
 ## What's next: Radiance and beyond
 
-[Radiance](/radiance-countdown) — Set 5 — is dated for **23 October 2026** with around 180 cards and five confirmed new champion Legends: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. It's the only future set with a real, Riot-confirmed release date right now.
+[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with around 180 cards and five confirmed new champion Legends: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. It's the only future set with a real, Riot-confirmed release date right now.
 
 Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
@@ -5036,7 +5036,7 @@ Dozens of League of Legends champions already have real, released Riftbound card
 
 ## Who's next: Radiance's new champions
 
-The next confirmed set, [Radiance](/radiance-countdown), adds **five** champions who don't have a Riftbound Legend card yet: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**. If one of those is your main, Radiance — dated 23 October 2026 — is when you'll be able to build around them.
+The next confirmed set, [Radiance](/release-dates), adds **five** champions who don't have a Riftbound Legend card yet: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**. If one of those is your main, Radiance — dated 23 October 2026 — is when you'll be able to build around them.
 
 ## Check if your main is in Riftbound
 
@@ -5474,7 +5474,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder, Bulk Pricer and the Condition Calculator — with pricing, screenshots and honest FAQs.",
+      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder and the Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
     updated: "2026-08-26",
@@ -5486,7 +5486,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     summary: [
       "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
-      "**It unlocks 5 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), the full Deal Finder (full list, 4 views), and the Condition Impact Calculator. Best Basket — the multi-store cart optimiser — is free with any account, no Premium needed.",
+      "**It unlocks 4 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). Best Basket and the Condition Impact Calculator are free with any account, no Premium needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a month of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -5503,7 +5503,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, the full Deal Finder (all four views), and the Condition Impact Calculator — plus a completely ad-free site. Best Basket isn't in that list — it's free with any account.",
+        a: "Four tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, and the full Deal Finder (all four views) — plus a completely ad-free site. Best Basket and the Condition Impact Calculator aren't in that list — they're free with any account.",
       },
       {
         q: "Is price comparison free without Premium?",
@@ -5511,7 +5511,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What's the difference between a free account and Premium?",
-        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, the Condition Calculator and an ad-free site.",
+        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, and an ad-free site.",
       },
       {
         q: "Is there a free trial?",
@@ -5537,13 +5537,12 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Value Finder screener", description: "Every card trading below its own 30-day average right now, ranked by discount.", url: "/tools/value-finder" },
         { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
         { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
-        { name: "Condition Impact Calculator", description: "See how a card's value shifts between NM, LP, MP, HP and DMG.", url: "/tools/condition-calculator" },
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
       ],
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (Best Basket, the multi-store cart optimiser, used to be on that list — it's free with any account now.) Here's the full breakdown.
+Short version: Premium is $4.99/mo (or $39/yr), and it unlocks four tools you can't use at all otherwise and removes every ad on the site. (Best Basket and the Condition Impact Calculator used to be on that list — both are free now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -5554,7 +5553,7 @@ Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you ca
 | Monthly | $4.99/month | $4.99/month | 14 days free |
 | Annual | $39/year | ≈ $3.25/month (**35% off**, vs $59.88/yr paying monthly) | 14 days free |
 
-Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch (the Condition Calculator is a recent addition).
+Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch.
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 
@@ -5568,6 +5567,7 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Full card database, search & browse | ✓ | ✓ | ✓ |
 | Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
 | Movers & daily wrap | ✓ | ✓ | ✓ |
+| Condition Impact Calculator | ✓ | ✓ | ✓ |
 | Price alerts | — | ✓ | ✓ |
 | Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |
 | Best Basket — cheapest store split, postage included | — | ✓ | ✓ |
@@ -5575,12 +5575,11 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Rising Cards | Top pick | Top pick | Full list |
 | Value Finder screener | — | — | ✓ |
 | Bulk Pricer | — | — | ✓ |
-| Condition Impact Calculator | — | — | ✓ |
 | Ad-free experience | — | — | ✓ |
 
 The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and an ad-free site on top of that.
 
-## The 5 tools you only get with Premium
+## The 4 tools you only get with Premium
 
 ### 1. Value Finder screener
 
@@ -5613,13 +5612,7 @@ Every gap is computed from **live listings, not a reference price**, and ranked 
 
 Paste an entire want-list, trade pile or full collection, and Bulk Pricer matches **every card to its cheapest live store price at once**, with a running total. If you've ever priced out a stack of 40 cards one search at a time, this is the tool that turns it into one paste.
 
-(If you're after the cheapest way to actually **buy** a whole list rather than just price it, that's [Best Basket](/tools/best-basket) — it answers a genuinely different question, solving for the lowest total landed cost across stores once postage and free-shipping thresholds are factored in. It used to be Premium-only; it's free with any account now, so it's not counted among the five tools here.)
-
-### 5. Condition Impact Calculator
-
-![The Condition Impact Calculator — estimating a card's value across NM, LP, MP, HP and DMG conditions](/blog/premium/06-condition-calculator.png)
-
-Search any card and see how its value shifts across **NM, LP, MP, HP and DMG** — the exact same multiplier scale your portfolio is already valued with, run forward on any single card before you buy, sell or grade a copy.
+(If you're after the cheapest way to actually **buy** a whole list rather than just price it, that's [Best Basket](/tools/best-basket) — it answers a genuinely different question, solving for the lowest total landed cost across stores once postage and free-shipping thresholds are factored in. It used to be Premium-only; it's free with any account now, so it's not counted among the four tools here. So is the **Condition Impact Calculator** — value a card across NM/LP/MP/HP/DMG, free for everyone.)
 
 ## Everything, at a glance
 

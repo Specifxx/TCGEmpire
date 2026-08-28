@@ -26,8 +26,10 @@ import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
+import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
+import { compareMarkets, marketPriceListSentence, marketSpreadSentence } from "@/lib/market-comparison";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
 import { getCardPriceState } from "@/lib/card-price-state";
@@ -316,14 +318,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
   const baselinePlace = COUNTRIES[baseline.market].place;
   const fmtBaseline = (cents: number) => formatMoney(cents, baseline.currency);
 
-  // Every market's view, for the cross-market price table further down. `rows`
-  // already carries all six markets (no country filter server-side), so this is
-  // free — the same computeMarket() call the client re-runs after hydration for
-  // the visitor's own market, just run once per market here for the ISR-cached
-  // HTML. Markets with no live listing are dropped rather than shown as "—".
-  const marketPrices = COUNTRY_LIST.map((info) => ({ info, view: computeMarket(rows, info.code) })).filter(
-    (x) => x.view.storeCount > 0 && x.view.lowest != null,
-  );
+  // Every market's cheapest local price, on one scale. `rows` already carries all
+  // six markets (no country filter server-side), so this is free — the same
+  // computeMarket() calls the client re-runs after hydration, just done once here
+  // at the baseline currency for the ISR-cached HTML.
+  //
+  // Computed SERVER-side purely so it can reach the FAQPage JSON-LD below. The
+  // visible table (CardMarketsTable) does its own client-side pass against the
+  // visitor's real currency; this one exists because structured data is emitted
+  // from the server render, and a card's price in five named currencies is
+  // exactly the fact an AI answer engine should be able to lift from this page.
+  const marketCmp = compareMarkets(rows, baseline.currency);
 
   // eBay fallback search per market, precomputed (affiliate tagging is server-side).
   // Built for EVERY market and shown by the client section whenever that market has
@@ -852,6 +857,12 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     specialPrintingLabel: thisEdition ?? "",
     basePriceCents,
     noRetailChannel: priceState.noRetailChannel,
+    // Multi-currency answer, or null when only one market stocks the card (see
+    // FaqContext.currencyAnswer for why it must not be faked in that case).
+    currencyAnswer:
+      marketCmp.quotes.length > 1
+        ? `${marketPriceListSentence(marketCmp)}. ${marketSpreadSentence(marketCmp, card.name)}`
+        : null,
   });
   const faqLd = {
     "@context": "https://schema.org",
@@ -1008,6 +1019,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <h2 className="sr-only">Price history &amp; where to buy {card.name}</h2>
             <CardPriceComparison
               rows={rows}
+              cardId={card.id}
               displayName={displayName}
               ebaySearch={ebaySearch}
               ebayQuery={`${cardSearchName(card.name, card)} ${card.collectorNumber}`}
@@ -1094,31 +1106,19 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
           {/* Cross-market prices — every market's listings are ALREADY on this
               page (rows carries all six, no country filter server-side; see the
-              `rows` comment above), so this costs zero extra queries. Previously
-              this data only ever reached the reader as prose inside the "About"
-              narrative above — never a navigable, at-a-glance table. Only
-              markets with an actual live listing render. */}
-          {marketPrices.length > 1 && (
-            <section className="card-surface mt-6 p-5">
-              <h2 className="font-bold text-white">{card.name} prices by market</h2>
-              <ul className="mt-3 divide-y divide-ink-800">
-                {marketPrices.map(({ info, view }) => (
-                  <li key={info.code} className="flex items-center justify-between gap-3 py-2 text-sm">
-                    <span className="flex items-center gap-2 text-slate-300">
-                      <span aria-hidden>{info.flag}</span>
-                      {info.place}
-                    </span>
-                    <span className="num text-white">
-                      {formatMoney(view.lowest!, view.currency)}
-                      <span className="ml-1.5 text-xs text-slate-500">
-                        · {view.storeCount} {view.storeCount === 1 ? "store" : "stores"}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+              `rows` comment above), so this costs zero extra queries.
+              Previously this data only ever reached the reader as prose inside
+              the "About" narrative above — never a navigable, at-a-glance table.
+
+              UPGRADED from a flat per-currency list to a real comparison. That
+              list printed A$14.00, £6.50, US$8.20, S$12.90 and stopped: correct
+              figures nobody can rank by eye, so the site's most distinctive data
+              read as four unrelated numbers. CardMarketsTable puts them on one
+              scale (converted into the visitor's own currency, cheapest marked)
+              and states the spread in prose — which is also the part a crawler
+              and an AI answer engine can use for "how much is <card> in GBP".
+              Still zero extra queries: it consumes the same `rows`. */}
+          <CardMarketsTable rows={rows} cardName={card.name} />
 
           {/* Conversion island (client → route stays ISR): watch-this-price email
               capture + a Value Finder teaser for non-members. */}
@@ -1432,12 +1432,25 @@ type FaqContext = {
    * page it sits on.
    */
   noRetailChannel: boolean;
+  /**
+   * The card's price in every market that stocks it, as prose — or null when
+   * fewer than two markets do.
+   *
+   * NULL IS LOAD-BEARING, and this is published as FAQPage JSON-LD, which is why.
+   * "What does it cost in other currencies?" answered for a card that exists in
+   * one market can only be padded out with a converted figure — and lib/fx.ts is
+   * a hand-set, unrefreshed rate table (see the honesty rules on
+   * lib/market-comparison.ts). Emitting that as a structured-data answer would be
+   * publishing an indicative number as a fact. So the question is omitted
+   * entirely rather than answered thinly.
+   */
+  currencyAnswer: string | null;
 };
 
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
   // Every question and answer leaves through tidy() at the end of this function
   // — same reasoning as the narrative's exit point.
-  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel } = ctx;
+  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel, currencyAnswer } = ctx;
   const faqs = [
     {
       q: `How much does ${card.name} cost?`,
@@ -1446,6 +1459,15 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
         : noRetailChannel
         ? `There is no retail price for ${card.name} (${card.setCode} ${card.collectorNumber}). ${card.setName} is distributed by drawing rather than sold through shops, so no store we track lists it — the only price it can have is a resale price, and this page shows one as soon as a copy changes hands somewhere we can see it.`
         : `We don't have a live price for ${card.name} right now. Prices refresh daily across AU, US, UK and SG stores — check back soon for the cheapest place to buy it.`,
+    },
+    // Sits directly under "How much does it cost?" because it is the same
+    // question asked by someone who does not live in the market that answer was
+    // computed for — which, on a site whose distinguishing feature is six
+    // natively-priced markets, is most people. Filtered out below when
+    // currencyAnswer is null.
+    {
+      q: `How much is ${card.name} in other currencies?`,
+      a: currencyAnswer ?? "",
     },
     {
       q: `What set is ${card.name} from?`,
@@ -1492,5 +1514,11 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
     faqs.push({ q: `Is the ${specialPrintingLabel} printing of ${card.name} worth it?`, a });
   }
 
-  return faqs.map((f) => ({ q: tidy(f.q), a: tidy(f.a) }));
+  // An entry with no answer must never reach the page — these are published as
+  // FAQPage JSON-LD, and a Question whose acceptedAnswer is an empty string is a
+  // structured-data error as well as a nonsense thing to render. Entries that
+  // cannot be answered honestly for this card set their answer to "" above (see
+  // FaqContext.currencyAnswer) and are dropped here, in one place, rather than
+  // each call site remembering to guard its own push.
+  return faqs.map((f) => ({ q: tidy(f.q), a: tidy(f.a) })).filter((f) => f.a.length > 0);
 }

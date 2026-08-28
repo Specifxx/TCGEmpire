@@ -12,6 +12,7 @@ import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel, isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
+import { ReportPriceButton } from "./ReportPriceButton";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
@@ -156,6 +157,23 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       return { ...p, ship, delivered: p.priceCents + (ship ?? 0) };
     })
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
+
+  // One entry per STORE for the report picker — in-stock and out-of-stock alike,
+  // since "you list it as available and it isn't" is one of the issue types and
+  // those are precisely the rows it applies to. Deduped by retailer: a store can
+  // hold several rows (condition and foil are part of RetailerPrice's key) and
+  // the picker asks which STORE is wrong, not which row.
+  const reportable = (() => {
+    const byRetailer = new Map<string, { listingId: string; retailer: string; retailerName: string }>();
+    // NOT countryRows — that one is filtered to in-stock rows for the buy list.
+    const all = (prices ?? []).filter((r) => r.country === country && !isFallbackRetailer(r.retailer));
+    for (const p of all) {
+      if (!byRetailer.has(p.retailer)) {
+        byRetailer.set(p.retailer, { listingId: p.id, retailer: p.retailer, retailerName: p.retailerName });
+      }
+    }
+    return [...byRetailer.values()];
+  })();
 
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
   // Whenever this market has no live eBay row for the card, offer an
@@ -396,6 +414,21 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <a href={href} className="mt-2 block text-center text-xs text-brand-400 hover:underline">
                   See all {inStock.length} stores →
                 </a>
+              )}
+              {/* Same control the full card page carries, on the surface most
+                  people actually compare prices on — the popup is where a
+                  browse-page visitor sees our number without ever loading the
+                  card page, so a report link only on the page would miss them.
+                  Reports the FULL fetched list, not the six rows rendered above:
+                  the store with the wrong price may be the seventh. */}
+              {reportable.length > 0 && (
+                <div className="mt-2 text-center">
+                  <ReportPriceButton
+                    compact
+                    subject={{ kind: "card", cardId: card.id, name: cardDisplayName(card.name, card) }}
+                    listings={reportable}
+                  />
+                </div>
               )}
               {/* The comparison rows' buy buttons are affiliate-tagged wherever the
                   retailer is a partner (eBay, TCGplayer) — disclose right here,

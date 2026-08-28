@@ -6,7 +6,7 @@ import { EbayPicks } from "@/components/EbayPicks";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { AccountStrip } from "@/components/home/AccountStrip";
-import { RadianceCountdownCard } from "@/components/home/RadianceCountdownCard";
+import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
@@ -97,12 +97,12 @@ export function HomeSections({
   const newestSet = newestReleasedSet();
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
-  const radianceSet = nextUpcomingSet();
+  const nextSet = nextUpcomingSet();
   // The teaser row shows GUIDES, not blog posts — the evergreen, reference-
   // shaped content a first-time visitor actually needs. Same data everywhere
   // this renders, since it's the same in-memory list on every market.
   const latestPosts = getArticles("guide").slice(0, 3);
-  const showRadianceCard = radianceSet != null;
+  const showNextSetCard = nextSet != null;
   const showLatestPosts = latestPosts.length > 0;
 
   return (
@@ -267,15 +267,15 @@ export function HomeSections({
         </Reveal>
       </section>
 
-      {/* Radiance countdown — new-set hype, right after Explore (which already
-          shows Radiance as a disabled "Coming soon" tile above): new-set
+      {/* Next-set countdown — new-set hype, right after Explore (which already
+          shows the upcoming set as a disabled "Coming soon" tile above): new-set
           searches are the biggest organic traffic spikes in TCGs, so this
           captures that intent instead of waiting for a visitor to find
-          /radiance-countdown on their own. Hides itself once nothing upcoming
+          /release-dates on their own. Hides itself once nothing upcoming
           is announced. */}
-      {showRadianceCard && (
+      {showNextSetCard && (
         <Reveal>
-          <RadianceCountdownCard set={radianceSet} />
+          <NextSetCountdownCard set={nextSet} />
         </Reveal>
       )}
 

@@ -112,7 +112,6 @@ const GROUPS: ToolGroup[] = [
         emoji: "🩹",
         title: "Condition calculator",
         desc: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same scale your portfolio uses.",
-        badge: "Premium",
       },
     ],
   },

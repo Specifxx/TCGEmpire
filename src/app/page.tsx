@@ -205,7 +205,7 @@ export default async function HomePage() {
           movement on /movers and /market, chase cards on /sets/vendetta.
           UPDATE: the "date-windowed off SetInfo.releasedOn rather than hard-
           coded to one set" version predicted here now exists as
-          RadianceCountdownCard (sourced from lib/constants.ts's
+          NextSetCountdownCard (sourced from lib/constants.ts's
           nextUpcomingSet()) — inside HomeSections below, after Explore — not a
           revival of this band. */}
 

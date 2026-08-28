@@ -46,12 +46,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     cta: "Open Deal Finder",
   },
   {
-    title: "Condition Impact Calculator",
-    body: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same multiplier scale your portfolio is valued with, run forward on any card.",
-    href: "/tools/condition-calculator",
-    cta: "Open the calculator",
-  },
-  {
     title: "Ad-free everywhere",
     body: "No ads on any page while you're Premium — automatic, nothing to switch on.",
     href: null,
@@ -66,7 +60,6 @@ const INCLUDED = [
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
-  "Condition Impact Calculator",
   "Ad-free on every page",
   "Everything in the free account tier",
 ];

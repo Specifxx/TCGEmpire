@@ -238,7 +238,7 @@ export default async function RadiancePreordersPage() {
               </p>
               <p className="mt-3 text-sm text-slate-400">
                 In the meantime:{" "}
-                <Link href="/radiance-countdown" className="text-brand-400 hover:underline">
+                <Link href="/release-dates" className="text-brand-400 hover:underline">
                   what&apos;s confirmed about Radiance
                 </Link>{" "}
                 ·{" "}
@@ -264,7 +264,7 @@ export default async function RadiancePreordersPage() {
       )}
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
-        <Link href="/radiance-countdown" className="btn-ghost">Radiance release date</Link>
+        <Link href="/release-dates" className="btn-ghost">Riftbound release dates</Link>
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
         <Link href="/tools/box-ev" className="btn-ghost">Is a box worth opening?</Link>
       </div>
