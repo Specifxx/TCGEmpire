@@ -16,7 +16,10 @@ import { pageAlternates } from "@/lib/seo";
 const FEATURED_POSTS = [
   "riftbound-t1-worlds-champion-collection",
   "every-riftbound-vendetta-card-revealed",
-  "riftbound-vendetta-new-mechanics-flow-burn-empower",
+  // Swapped in when the new-mechanics roundup was retired in the Aug 2026
+  // low-performer prune: this is the top-performing live blog post by Search
+  // Console impressions that isn't already featured above.
+  "riftbound-vendetta-nexus-night-promo-cards",
 ];
 
 const BLOG_SECTIONS: ArticleSection[] = [

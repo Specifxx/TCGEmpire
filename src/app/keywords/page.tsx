@@ -130,9 +130,17 @@ export default function KeywordsIndexPage() {
           Empower, Flow and Burn are the three brand-new keywords introduced in{" "}
           <Link href="/sets/vendetta" className="text-brand-400 hover:underline">Riftbound: Vendetta</Link>.
           They&apos;re designed to combo — Burn fills your trash, Flow spends it, and Empower turns a cheap
-          early card into a late-game threat. Read the tutorial-style breakdown of all three in{" "}
-          <Link href="/blog/riftbound-vendetta-new-mechanics-flow-burn-empower" className="text-brand-400 hover:underline">
-            Vendetta&apos;s new mechanics explained
+          early card into a late-game threat. Each has its own tutorial-style guide:{" "}
+          <Link href="/guides/riftbound-empower-explained" className="text-brand-400 hover:underline">
+            Empower explained
+          </Link>
+          ,{" "}
+          <Link href="/guides/riftbound-flow-explained" className="text-brand-400 hover:underline">
+            Flow explained
+          </Link>{" "}
+          and{" "}
+          <Link href="/guides/riftbound-burn-explained" className="text-brand-400 hover:underline">
+            Burn explained
           </Link>.
         </p>
       </section>

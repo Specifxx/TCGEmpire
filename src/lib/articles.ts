@@ -713,46 +713,6 @@ Because each printing is, to a collector, a different card. The **base print** i
 Want to see the chase cards in action? Read **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)**, then **[browse the database](/browse)** and sort by price.`,
   },
   {
-    slug: "riftbound-price-movers-how-to-track",
-    category: "blog",
-    title: "What's Moving in Riftbound This Week",
-    excerpt:
-      "Riftbound card prices change every day. Here's how to spot which singles are spiking, which are dropping, and where the best-value buys are — before everyone else does.",
-    author: "RiftCompare",
-    date: "2026-06-11",
-    readMins: 4,
-    tags: ["news", "prices", "movers", "investing"],
-    body: `Riftbound card prices are never still. A card that defines a winning deck at the weekend can jump 30% by Monday; a reprint or a cooling meta can send another sliding. If you buy and sell singles, knowing **which way prices are moving** is half the battle — and we built a page to show you exactly that.
-
-## Track the movers in one place
-
-Head to the **[Price Movers page](/movers)** to see, for your region, this week's:
-
-- **📈 Biggest risers** — the cards spiking up the most over the last 7 days.
-- **📉 Biggest drops** — the singles that have fallen the most, often the best time to buy.
-- **💎 Best value right now** — cards trading furthest below their recent high.
-
-Every figure is the live local price in your own currency — AUD, USD, GBP, SGD, CAD or EUR — compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
-
-## Why prices move
-
-- **The metagame.** When a deck starts winning events, demand for its key cards spikes. Watch the **[meta decks page](/decks)** and you'll often see a card climb right after a strong tournament weekend.
-- **Supply.** New set releases, restocks and reprints add supply and usually cool prices; cards that stop being printed drift up.
-- **Hype and spoilers.** Anticipation for an upcoming set can move prices on related cards before a single pack is opened.
-
-## How to use this as a buyer
-
-- **Buying to play?** Check the drops and best-value lists first — you'll often find the card you need is cheaper than it was a week ago.
-- **Completing a set or chasing a grail?** Set a price alert: tap the heart on any card to get an email when it falls.
-- **Always compare delivered cost.** A spiking headline price still varies store to store — open the card to see every shop ranked cheapest-first.
-
-## How to use this as a seller
-
-If you have cards sitting in a binder, the risers list tells you what's worth listing right now — sell while demand is hot rather than waiting for a peak that may already be behind you.
-
-Want to dive in? **[See this week's Riftbound price movers](/movers)**, or **[browse the full database](/browse)** and sort by price to find your next pickup.`,
-  },
-  {
     slug: "how-to-sell-riftbound-cards",
     category: "blog",
     title: "How to Sell Riftbound Cards for the Best Price",
@@ -1639,108 +1599,6 @@ The part collectors underestimate isn't finding cards, it's keeping an accurate 
 Honestly, weigh this against your actual goal. If you want a complete set for the satisfaction of it, then yes, the last few commons matter as much as the chase rares even though they're worth very little individually. If your real goal is having a playable, presentable collection, the last handful of low-value commons are often not worth the shipping cost of a single-card order and are better picked up opportunistically in a bulk lot or a trade. Being honest about which goal you actually have will save you more money than any single buying tactic on this list.`,
   },
   {
-    slug: "riftbound-vendetta-everything-you-need-to-know",
-    category: "blog",
-    title: "Riftbound Vendetta: Everything You Need to Know",
-    excerpt:
-      "Riftbound: Vendetta lands 31 July 2026 with nine new Legends, three new mechanics, new card types and two-player Showdown Decks. Every card is now confirmed — here's the complete rundown.",
-    author: "RiftCompare",
-    date: "2026-07-07",
-    updated: "2026-07-31",
-    readMins: 6,
-    tags: ["news", "vendetta", "set", "release", "guide"],
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Vendetta is the next Riftbound: League of Legends TCG set, and it's a big one — a rivalries-themed expansion built around clashing champions like **Nasus vs Renekton** and **Shen vs Zed**. Here's everything that's been confirmed, in one place.
-
-## Release date
-
-**Riftbound: Vendetta released on 31 July 2026** and is out now. In-store **Pre-Rift** launch events ran from **24 July**. It's the first Riftbound set to launch simultaneously worldwide in English and Simplified Chinese.
-
-Sealed product — booster boxes and packs — is already listing, and you can compare it cheapest-first on our **[sealed page](/sealed)** right now. The singles will populate the **[Vendetta set page](/sets/vendetta)** with live prices the moment cards release.
-
-## What's in the set
-
-- **166 main-set cards** (all officially confirmed), including **50+ Showcase cards** and **nine new Champion Legends**.
-- Champions making their Riftbound debut include **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
-- **Signed Overnumbered variants** for the nine Legends, plus **22 Rival Overnumbers** — diptych cards that celebrate League's greatest rivalries and are designed to be displayed as a pair.
-
-## Three new mechanics
-
-Vendetta introduces **Flow**, **Burn** and **Empower** — three mechanics that add whole new ways to play. We break each one down in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, but in short:
-
-- **Flow** lets you play cards from your trash instead of your hand.
-- **Burn** sends cards from a deck to the trash — to fuel your own synergies, or to attack your opponent's deck directly.
-- **Empower** lets a card gain new abilities once it's in play, often after paying a cost.
-
-## New card types
-
-Vendetta also adds two new card concepts — **Unit-Gear** (a card that counts as both a unit and a piece of gear) and **Decrees** (a cycle of rivalry spells). Full detail in **[Vendetta's new card types](/blog/riftbound-vendetta-unit-gear-decrees)**.
-
-## A new way to play: Showdown Decks
-
-Vendetta debuts **Showdown Decks** — Riftbound's first ready-to-play **two-player** product, so two people can open one box and battle straight away. The first pairing is fittingly **Shen versus Zed**.
-
-## New domain pairings
-
-![Vendetta's new domain pairings — Fury + Calm, Mind + Body, and Chaos + Order](/vendetta-domains.png)
-
-Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Calm** (red + green), **Mind + Body** (blue + orange) and **Chaos + Order** (purple + yellow) — rival domains forced together. If you're planning a deck, our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** walks through what the new mechanics and pairings point toward.
-
-## How to be ready
-
-1. **Wishlist now.** Browse the **[card database](/browse)** and wishlist what you already want — you'll get an alert if a price drops.
-2. **Compare sealed early.** VEN boxes move fast at launch; the **[sealed page](/sealed)** ranks them cheapest-first across stores.
-3. **Have your deck ready to price.** Drop a list into the **[deck pricer](/deck)** so you can total it the moment cards go live.
-4. **Don't overpay in the rush.** Launch hype pushes prices up — RiftCompare always shows the cheapest delivered price so you never pay the first number you see.
-
-**All 166 main-set cards are out.** Vendetta released worldwide on 31 July 2026. Browse every one of them, live, on the **[Vendetta set page](/sets/vendetta)**, or see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**.`,
-  },
-  {
-    slug: "riftbound-vendetta-new-mechanics-flow-burn-empower",
-    category: "blog",
-    title: "Riftbound Vendetta's New Mechanics Explained",
-    excerpt:
-      "Vendetta introduces three new Riftbound mechanics — Flow, Burn and Empower. Here's what each one does and how it changes the way you build and play.",
-    author: "RiftCompare",
-    date: "2026-07-07",
-    updated: "2026-07-17",
-    readMins: 5,
-    tags: ["vendetta", "mechanics", "gameplay", "guide"],
-    body: `![Vendetta's three new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
-
-Riftbound: Vendetta (out **31 July 2026**) adds three brand-new mechanics — **Flow**, **Burn** and **Empower**. Each opens up a new way to play, and together they push the set toward value, recursion and building-up-over-time strategies. Here's what each one does.
-
-## Flow — play from your trash
-
-**Flow lets you play cards from your trash instead of from your hand.** It draws on the League champions who fuel their kits with Energy — your used and discarded cards become a second resource pool rather than dead weight.
-
-In practice, your trash stops being a graveyard and becomes a toolbox. Cards that get used, discarded or destroyed can come back into play, so Flow decks reward you for cycling through cards quickly and knowing what's waiting to be replayed. **→ Full guide: [Riftbound Flow explained](/guides/riftbound-flow-explained).**
-
-## Burn — send cards to the trash
-
-**Burn sends cards from a Main Deck to the trash.** There are two sides to it:
-
-- **Self-Burn** — some cards burn *your own* deck to fuel synergies. If Flow rewards a full trash, Burn is one of the fastest ways to fill it.
-- **Deck attack** — other cards burn your *opponent's* deck directly, chipping away at what they'll draw. It's Riftbound's take on a mill strategy.
-
-Burn and Flow are natural partners: Burn stocks the trash, Flow cashes it in. **→ Full guide: [Riftbound Burn explained](/guides/riftbound-burn-explained).**
-
-## Empower — grow a card after it's down
-
-**Empower gives a card the potential to gain new abilities once it's in play, often after paying a cost.** You can get a unit on the board one turn, then amplify its might or add an effect on a later turn. Under the hood, Empower sets a persistent **Empowered** status on the card — it sticks around until the card leaves play or something **Disempowers** it (the exact reverse, stripping the status). Riot's Core Rules confirm Disempower is its own action, so expect some Vendetta cards to attack an opponent's Empowered threat directly instead of just racing it.
-
-That changes sequencing: an Empower card can be a cheap early play *and* a late-game threat, so you're rewarded for planning two turns ahead rather than dumping your hand. **→ Full guide: [Riftbound Empower explained](/guides/riftbound-empower-explained).**
-
-## How they fit together
-
-The three mechanics reward **patience and recursion** over raw tempo. Burn fills the trash, Flow replays from it, and Empower turns early plays into scaling threats. Expect Vendetta decks that grind out long games and get stronger the longer they run.
-
-Vendetta's Core Rules also add a smaller, one-off action worth knowing: **Skip**, a replacement effect that erases a named part of a turn entirely — no triggers, no procedures, it just doesn't happen. So far it's on a single card rather than a full mechanic, but it's a genuinely new category of effect for the game.
-
-Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)**, see the **[new card types](/blog/riftbound-vendetta-unit-gear-decrees)** that support them, or get the full picture in **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Prices on every card go live on the **[Vendetta set page](/sets/vendetta)** as it releases.`,
-  },
-  {
     slug: "riftbound-vendetta-unit-gear-decrees",
     category: "blog",
     title: "Vendetta's New Card Types: Unit-Gear & Decrees",
@@ -1769,7 +1627,7 @@ In practice, Decrees are targeted answers: if the field is full of a particular 
 
 ## The bigger picture
 
-Both card types feed Vendetta's rivalry identity — Domains pitted against their opposites, champions against their nemeses. Pair them with the set's new mechanics (**[Flow, Burn and Empower](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**) and there's a lot of new deckbuilding space to explore. Our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** digs into what to build, and the **[Vendetta set page](/sets/vendetta)** tracks live prices on every card as it releases.`,
+Both card types feed Vendetta's rivalry identity — Domains pitted against their opposites, champions against their nemeses. Pair them with the set's new mechanics (**[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)**) and there's a lot of new deckbuilding space to explore. Our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** digs into what to build, and the **[Vendetta set page](/sets/vendetta)** tracks live prices on every card as it releases.`,
   },
   {
     slug: "building-for-riftbound-vendetta",
@@ -1815,7 +1673,7 @@ Each pairing marries two colours that usually pull in opposite directions, so th
 
 ## Let the mechanics suggest the archetypes
 
-The three new mechanics (full breakdown in **[Flow, Burn & Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**) each hint at a deck style:
+The three new mechanics (each with its own guide: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)**) each hint at a deck style:
 
 - **Flow → recursion / value decks.** Because Flow plays cards from your trash, decks that fill and re-use the trash get a second life out of every card. Prioritise cards that discard, cycle or sacrifice with upside.
 - **Burn → fuel or disruption.** Self-Burn stocks your trash fast for Flow payoffs; opponent-Burn is a genuine mill and disruption angle. Early on, Burn is most reliable as *fuel* for your own engine.
@@ -1836,7 +1694,7 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 ## We'll keep this updated
 
-The whole set is out and trading, so this is genuinely the moment to start assembling a shell. The first Vendetta events have now been played and we'll add concrete decklists as the field settles. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
+The whole set is out and trading, so this is genuinely the moment to start assembling a shell. The first Vendetta events have now been played and we'll add concrete decklists as the field settles. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview and live card prices, see the **[Vendetta set page](/sets/vendetta)** as they land.`,
   },
   {
     slug: "best-riftbound-vendetta-decks",
@@ -2034,7 +1892,7 @@ We'll update this guide with concrete lists as a real meta forms — and keep an
 
 Early singles are already trading, which means you don't have to wait until 31 July to start — the **[Vendetta set page](/sets/vendetta)** has live prices on every confirmed card as they list. Once you've settled on a shell, drop it into the **[deck pricer](/deck)** to total every card at the cheapest live price across stores, in your currency — the fastest way to build a new-set deck without overpaying in the launch rush. For a brand-new set, **[singles are usually cheaper than sealed](/guides/riftbound-singles-vs-sealed)** for a specific deck.
 
-For the full picture, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
+For the full picture, read the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
   },
   {
     slug: "riftbound-banlist-explained",
@@ -2375,7 +2233,7 @@ Vendetta released on **31 July 2026**, so these printings now carry live prices 
 
 ## Keep track of both
 
-Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices across every store we track. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and see **[every Vendetta card with live prices](/sets/vendetta)**.`,
+Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices across every store we track. For the rest of Vendetta's new mechanics, see **[Flow explained](/guides/riftbound-flow-explained)** and **[Burn explained](/guides/riftbound-burn-explained)**, and see **[every Vendetta card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-empower-explained",
@@ -2590,7 +2448,7 @@ See how Flow fits full decklists in the **[best Vendetta decks guide](/guides/be
 
 ## Flow vs Empower vs Burn
 
-**Flow** plays cards from your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards to the trash; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+**Flow** plays cards from your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards to the trash; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo.
 
 ## Flow FAQ
 
@@ -2685,7 +2543,7 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 
 ## Burn vs Flow vs Empower
 
-**Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+**Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo.
 
 ## Burn FAQ
 
@@ -3037,7 +2895,7 @@ Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers** �
 
 Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 60+ stores in AU, the US and the UK — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
 
-For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**. Vendetta released on 31 July 2026 — browse **[every card with live prices](/sets/vendetta)**.`,
+For the full picture of the set, read the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**. Vendetta released on 31 July 2026 — browse **[every card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
@@ -3166,7 +3024,7 @@ What demand structure tells you, and what the data can confirm as it accumulates
 - **Check stock depth, not just price.** A low headline price at one shop with no stock elsewhere is a thinner market than it looks.
 - **Watch instead of guessing.** Save a card to **[price watch](/browse)** and get told when it moves rather than refreshing manually.
 
-See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**, or read **[everything you need to know about the set](/blog/riftbound-vendetta-everything-you-need-to-know)**.`,
+See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "buy-riftbound-cards-europe",
@@ -3715,7 +3573,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Vendetta card gallery](/sets/vendetta/gallery)** — every card on one page, filterable, with live prices.
 - **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
 - **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
-- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
+- **[Nexus Night promo cards](/blog/riftbound-vendetta-nexus-night-promo-cards)** — every promo confirmed for Vendetta's season, tracked as they're revealed.`,
   },
   {
     slug: "riftbound-pre-rift-rules-explained",
@@ -4144,7 +4002,6 @@ Vendetta introduced three mechanics, and they generate the bulk of current rules
 - **[Flow explained](/guides/riftbound-flow-explained)** — playing cards straight from your trash, turning discarded cards into a second pool of plays.
 - **[Burn explained](/guides/riftbound-burn-explained)** — sending cards to the trash, either your own to fuel Flow-style payoffs, or an opponent's as a deck attack.
 
-All three together, with how they interact: **[Vendetta's new mechanics](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
 ## New card concepts
 
@@ -4275,337 +4132,6 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
       { q: "How do I get Nexus Night promo cards?", a: "Attend your local game store's weekly Nexus Night event — completing a demo or casual event earns a 3-card promo pack. Day and format vary by store." },
       { q: "Are Nexus Night promos worth anything?", a: "Promo prints are historically one of Riftbound's more volatile chase tiers — small, event-bound print runs can outprice regular chase cards once a season's supply dries up. Check each card's live page for the current picture." },
     ],
-  },
-  // ── Nexus Night promo card spotlights ────────────────────────────────────────
-  // Three single-card deep dives on the promo cards collectors actually talk
-  // about by nickname. Complements (not duplicates) the roundup post above:
-  // that one tracks "every promo confirmed so far" for Vendetta's season; these
-  // are card-by-card profiles, one each from Origins, Unleashed and Vendetta,
-  // cross-linked into a loose trilogy. Every fact (stats, ability text, promo
-  // cycle, GG EZ nickname, Lee Sin's Origins-not-Unleashed collector number) was
-  // checked against our own live card database plus independent secondary
-  // sources before writing — see each post's body for what's confirmed vs.
-  // approximate. No prices are hard-coded in the prose; the embedded card tiles
-  // pull the live number at render time, same as everywhere else on the site.
-  {
-    slug: "ggez-teemo-riftbound-explained",
-    category: "blog",
-    title: "GGEZ Teemo: Riftbound's Most Infamous Promo",
-    excerpt:
-      "Meet GGEZ Teemo — Origins' first Nexus Night promo and one of Riftbound's priciest cards. What it does, why the name, and how it compares to the game's other big promo grails.",
-    author: "RiftCompare",
-    date: "2026-08-17",
-    readMins: 4,
-    tags: ["origins", "teemo", "promo", "chase cards", "collecting", "nexus night"],
-    hero: {
-      src: "https://static.dotgg.gg/riftbound/cards/OGN-197b.webp",
-      alt: "Teemo, Scout — GG EZ (OGN 197b/298) — Origins' first Nexus Night promo, one of Riftbound's priciest cards",
-    },
-    summary: [
-      "**GGEZ Teemo is the nickname for Teemo, Scout (OGN 197b/298)** — the promo printing given out at Origins' very first Nexus Night events.",
-      "**It's a 2-energy, 1-Might Chaos unit with Hidden** — pay 1 rune to hide it face-down, then flip it in for free with +3 Might.",
-      "**The name is a League of Legends in-joke**: \"gg ez\" is the taunt Teemo mains are notorious for, and Riot leaned into it on the card itself.",
-      "**It's one of the priciest individual cards in Riftbound** — tap the card above for the current live number, since this market moves daily.",
-    ],
-    shop: [
-      { label: "GGEZ Teemo on eBay", query: "Riftbound Teemo GG EZ promo" },
-      { label: "Origins Nexus Night promos", query: "Riftbound Origins Nexus Night promo" },
-    ],
-    browseCta: {
-      href: "/card/teemo-scout-ogn-197b-298-promo",
-      label: "See GGEZ Teemo's live price →",
-      blurb: "Every store we track, side by side, updated daily — in your own market's currency.",
-    },
-    embeds: [
-      {
-        title: "GGEZ Teemo",
-        note: "Teemo, Scout (197b/298) — the Origins Nexus Night promo, straight from our live database. Tap it for the full price comparison.",
-        slugs: ["teemo-scout-ogn-197b-298-promo"],
-      },
-      {
-        title: "Every Teemo, Scout printing",
-        note: "Base Rare, the Showcase alt-art, and the GG EZ promo — same card, wildly different price tags.",
-        slugs: ["teemo-scout-ogn-197-298", "teemo-scout-ogn-197a-298", "teemo-scout-ogn-197b-298-promo"],
-      },
-    ],
-    closeups: [
-      {
-        caption: "The printed Hidden line and the +3 Might trigger on GGEZ Teemo's actual card.",
-        slugs: ["teemo-scout-ogn-197b-298-promo"],
-        topPct: 54,
-        heightPct: 32,
-      },
-    ],
-    faq: [
-      {
-        q: "What is GGEZ Teemo?",
-        a: "GGEZ Teemo is the collector nickname for Teemo, Scout (197b/298) — the promo printing of Origins' Teemo, Scout card, given out during Origins' first Nexus Night season. It's a 2-energy, 1-Might Chaos unit with Hidden.",
-      },
-      {
-        q: "Why is it called GGEZ Teemo?",
-        a: "\"gg ez\" (\"good game, easy\") is a League of Legends taunt Teemo mains are notoriously associated with typing after a win. Riot leaned into the joke with this promo, and the nickname stuck harder than the card's actual collector number ever did.",
-      },
-      {
-        q: "What does GGEZ Teemo do?",
-        a: "It carries Hidden: pay 1 rune to hide it face-down at a battlefield, then play it for free from the next turn onward whenever a Reaction card could be played. Playing it this way gives it +3 Might for that turn.",
-      },
-      {
-        q: "How much is GGEZ Teemo worth?",
-        a: "Prices move daily and it's a scarce card with very few live listings at any moment — check its live card page for the current cheapest price across every store we track, in your own market's currency.",
-      },
-      {
-        q: "Is GGEZ Teemo the most expensive Riftbound promo?",
-        a: "It's consistently one of the priciest individual cards in the game, and the most expensive of Riftbound's three big Nexus Night promo grails (GGEZ Teemo, Mel Newly Awakened, and Lee Sin Centered) as of this post — though a ranking like that can shift as each promo cycle's supply dries up further.",
-      },
-    ],
-    body: `If you've spent any time around Riftbound collectors, you've probably seen someone mention **"GGEZ Teemo"** like everyone should already know what that means — and among collectors, most people kind of do. It's the nickname for one specific printing of one specific card: **Teemo, Scout**, promo number **197b/298** from **Origins**, and it's become one of the most talked-about (and priciest) pieces of cardboard in the whole game.
-
-## What GGEZ Teemo actually is
-
-Strip away the nickname and the card underneath is a **2-energy, 1-Might Chaos unit** — the promo printing of the base Teemo, Scout card that's been in Origins packs since launch. What makes it a Nexus Night promo rather than just another pull is the collector number: **197b**, the "b" marking it as the promo treatment of card 197, given out during Origins' very first wave of **Nexus Nights** — Riftbound's weekly, casual, local-game-store events, not a tournament.
-
-[[embed:0]]
-
-## The card, not just the meme
-
-GGEZ Teemo carries **Hidden**: pay 1 rune to hide it face-down at one of your battlefields, then from the next turn onward you can play it for free — ignoring its printed cost — whenever a Reaction card could be played. Flip it in and it gets **+3 Might for that turn**, turning a 1-Might scout into a surprise 4-Might blocker or attacker your opponent didn't see coming. (New to Hidden? [Our full keyword guide](/keywords/hidden) breaks down exactly how hiding and playing from Hidden works.)
-
-[[closeup:0]]
-
-It's a genuinely playable little tempo card even before the collector value enters the picture — cheap, disruptive, and exactly the kind of trick a scout unit should have.
-
-## Why "GG EZ"?
-
-"gg ez" — "good game, easy" — is one of League of Legends' most notorious taunts: something you type in all-chat after a win to rub it in, and something Teemo mains in particular have a long-running reputation for typing rather too often. Riot leaned all the way into the joke on this promo, and the community ran with it — "GGEZ Teemo" stuck as the card's name well before most people learned its actual collector number.
-
-## Every Teemo, Scout printing, side by side
-
-The base Rare print, the Showcase alt-art, and the GG EZ promo are, mechanically, the exact same card — same stats, same Hidden ability. What separates them is purely collectibility: print run, distribution method, and how early in Origins' life each one showed up.
-
-[[embed:1]]
-
-## How rare is it, really?
-
-Nexus Night promos are handed out in small batches at local stores running weekly casual events — nothing close to the print run of a booster box pull. GGEZ Teemo was the very first card in that promo cycle, from Origins' very first season of Nexus Nights, which is a big part of why it's held its value ever since. Prices move daily — tap the card above for the current live number across every store we track — but this has consistently been one of the most expensive individual cards in Riftbound's short history.
-
-## Where it sits against the other Nexus Night grails
-
-GGEZ Teemo isn't the only Nexus Night promo to become a genuine chase card — [Lee Sin, Centered](/blog/lee-sin-centered-nexus-night-promo) (Unleashed's season) and [Mel, Newly Awakened](/blog/mel-newly-awakened-vendetta-spotlight) (Vendetta's current season) followed the same playbook. As of this post, GGEZ Teemo is comfortably the priciest of the three — Mel is a clear step down but still a real grail, and Lee Sin, Centered is the most attainable of the trio. That gap is basically a lesson in how these prices work: age and how thoroughly a card's original print run has dried up tend to matter more than how loud the demand was on release day.
-
-## Is it worth chasing?
-
-If you already run a Teemo deck (or just want the meme on cardboard), GGEZ Teemo is a legitimately fun, cheap Hidden unit that happens to carry serious collector weight — a rare combination. If you're chasing it purely as an investment, treat it the way you'd treat any grail: check the live comps before you buy, not the first asking price you see, and don't assume the trend line only goes up.
-
-[[shop]]
-`,
-  },
-  {
-    slug: "lee-sin-centered-nexus-night-promo",
-    category: "blog",
-    title: "Lee Sin, Centered: Nexus Night Chase Card",
-    excerpt:
-      "Lee Sin, Centered (151b/298) is Unleashed's confirmed Nexus Night chase card — actually a promo reprint of an Origins favourite. What it does, and how it stacks up against Riftbound's other grails.",
-    author: "RiftCompare",
-    date: "2026-08-17",
-    readMins: 4,
-    tags: ["unleashed", "origins", "lee sin", "promo", "chase cards", "collecting", "nexus night"],
-    hero: {
-      src: "https://static.dotgg.gg/riftbound/cards/OGN-151b.webp",
-      alt: "Lee Sin, Centered (OGN 151b/298) — Unleashed's Nexus Night promo, a reprint of the Origins card",
-    },
-    summary: [
-      "**Lee Sin, Centered (151b/298) is Unleashed's Nexus Night chase card** — but it's a promo reprint of an existing Origins card, not a new Unleashed-exclusive printing.",
-      "**It's a 6-energy, 6-Might Body unit with Accelerate**, and its own ability buffs other buffed friendly units at its battlefield by +2 Might.",
-      "**It's the most attainable of Riftbound's three big Nexus Night grails** — a real step down in price from Mel, Newly Awakened and GGEZ Teemo.",
-      "**Check its live card page for the current price** — the figures in this post are relative, not fixed numbers.",
-    ],
-    shop: [
-      { label: "Lee Sin, Centered promo on eBay", query: "Riftbound Lee Sin Centered promo" },
-      { label: "Origins singles on eBay", query: "Riftbound Origins single card" },
-    ],
-    browseCta: {
-      href: "/card/lee-sin-centered-ogn-151b-298-promo",
-      label: "See Lee Sin, Centered's live price →",
-      blurb: "Every store we track, side by side, updated daily — in your own market's currency.",
-    },
-    embeds: [
-      {
-        title: "Lee Sin, Centered — the Nexus Night promo",
-        note: "151b/298 — Unleashed's confirmed Nexus Night chase card, straight from our live database.",
-        slugs: ["lee-sin-centered-ogn-151b-298-promo"],
-      },
-      {
-        title: "Every Lee Sin, Centered printing",
-        note: "Base Rare, the Showcase alt-art, and the Nexus Night promo — same 6/6 Accelerate unit, three very different price tags.",
-        slugs: ["lee-sin-centered-ogn-151-298", "lee-sin-centered-ogn-151a-298", "lee-sin-centered-ogn-151b-298-promo"],
-      },
-    ],
-    closeups: [
-      {
-        caption: "The printed Accelerate cost and the buff-payoff ability on Lee Sin, Centered's actual card.",
-        slugs: ["lee-sin-centered-ogn-151b-298-promo"],
-        topPct: 54,
-        heightPct: 32,
-      },
-    ],
-    faq: [
-      {
-        q: "What is Lee Sin, Centered?",
-        a: "Lee Sin, Centered is a Body-domain unit, and 151b/298 is its Nexus Night promo printing — the confirmed chase card for Unleashed's Nexus Night season.",
-      },
-      {
-        q: "Is Lee Sin, Centered an Unleashed card or an Origins card?",
-        a: "Its collector number (151/298) is an Origins card, first printed there as a Rare. Unleashed's Nexus Night season promoted a new \"b\" variant of that same Origins card as its chase promo, rather than debuting an Unleashed-exclusive printing.",
-      },
-      {
-        q: "What does Lee Sin, Centered do?",
-        a: "It's a 6-energy, 6-Might Body unit with Accelerate — pay an extra Body as you play it to have it enter the battlefield already readied instead of exhausted. Its own printed ability gives other buffed friendly units at its battlefield +2 Might.",
-      },
-      {
-        q: "How much is Lee Sin, Centered worth?",
-        a: "It's the most attainable of Riftbound's three big Nexus Night promo grails (alongside GGEZ Teemo and Mel, Newly Awakened) — check its live card page for the current cheapest price across every store we track.",
-      },
-      {
-        q: "How do I get the Lee Sin, Centered promo?",
-        a: "It was distributed through Unleashed's weekly Nexus Night events at local game stores — completing a demo or casual event earned a promo pack. Now that the season has passed, the secondary market (eBay, TCGplayer and specialist stores) is the way in.",
-      },
-    ],
-    body: `Every Nexus Night season gets one card the community actually chases, and Unleashed's was **Lee Sin, Centered** — collector number **151b/298**, a promo reprint that turned an already-loved card into one of the set's most talked-about pulls.
-
-## The twist: it's not even an Unleashed card
-
-Here's the part that trips people up: **Lee Sin, Centered** isn't a new Unleashed-exclusive printing. Its collector number — **151/298** — places it squarely in **Origins**, where it's been a Rare-rarity Body unit since the set launched. What Unleashed's Nexus Night season did was hand out a **new promo treatment of that same Origins card** (the "b" variant, 151b) as its chase card, rather than debuting something Unleashed-native. It's a reprint promoted into a new season, not a new card.
-
-[[embed:0]]
-
-## What Lee Sin, Centered actually does
-
-Strip away the promo shine and it's a **6-energy, 6-Might Body unit** — a genuine heavyweight — carrying **Accelerate**: pay an extra Body as you play it and it enters the battlefield already readied instead of exhausted, letting it act the moment it lands instead of sitting out a turn. (New to Accelerate? [Our keyword guide](/keywords/accelerate) covers exactly how the cost and payoff work.)
-
-[[closeup:0]]
-
-Its own printed ability rewards you for building around it: **other buffed friendly units at its battlefield get +2 Might**, turning it into a genuine payoff card for a deck that's already stacking buffs rather than a standalone beater.
-
-## Every Lee Sin, Centered printing, side by side
-
-Same story as GGEZ Teemo: the base Rare, the Showcase alt-art, and the Nexus Night promo are mechanically identical — same 6/6, same Accelerate, same buff-payoff text. The gap between them is pure collectibility.
-
-[[embed:1]]
-
-## How it compares to Riftbound's other Nexus Night grails
-
-Lee Sin, Centered is the most attainable of Riftbound's three big Nexus Night promo chase cards — a real step down in price from both [Mel, Newly Awakened](/blog/mel-newly-awakened-vendetta-spotlight) (Vendetta's current season) and especially [GGEZ Teemo](/blog/ggez-teemo-riftbound-explained) (Origins' original, and still the priciest of the three by a wide margin). That doesn't make it unimportant — it makes it the version of this chase you can actually still complete without needing four figures.
-
-## Is it worth chasing?
-
-If you're building around Body-domain buffs, Lee Sin, Centered is a genuinely strong payoff card on top of being a collectible — a rare case where the chase print and the good deckbuilding choice are the same card. And if you're new to promo-hunting, this is a far friendlier entry point than Origins' original grail: real, confirmed scarcity, without needing GGEZ Teemo money to get in.
-
-[[shop]]
-`,
-  },
-  {
-    slug: "mel-newly-awakened-vendetta-spotlight",
-    category: "blog",
-    title: "Mel, Newly Awakened: Nexus Night Chase Card",
-    excerpt:
-      "A deep dive on Mel, Newly Awakened's Nexus Night promo (069b/166) — her draw-and-Empower payoff explained, every printing compared, and how she stacks up against Riftbound's other grails.",
-    author: "RiftCompare",
-    date: "2026-08-17",
-    readMins: 4,
-    tags: ["vendetta", "mel", "promo", "chase cards", "collecting", "nexus night"],
-    hero: {
-      src: "https://riftcompare.com/nexus-night-promos/mel-newly-awakened-ven069b.jpg",
-      alt: "Mel, Newly Awakened (VEN 069b/166) — Vendetta's current Nexus Night promo",
-    },
-    summary: [
-      "**Mel, Newly Awakened's Nexus Night promo is 069b/166** — Vendetta's current confirmed Nexus Night chase card.",
-      "**She draws a card the instant she's played**, then rewards Empowering her later: your spells and abilities can't be countered, and -Might effects hit for one extra.",
-      "**She sits in the middle of Riftbound's three big Nexus Night grails** — pricier than Lee Sin, Centered, well short of GGEZ Teemo.",
-      "**The promo is mechanically identical to the base print** — you're paying for art and scarcity, not extra power.",
-    ],
-    shop: [
-      { label: "Mel, Newly Awakened promo on eBay", query: "Riftbound Mel Newly Awakened promo" },
-      { label: "Vendetta Nexus Night promos", query: "Riftbound Vendetta Nexus Night promo" },
-    ],
-    browseCta: {
-      href: "/card/mel-newly-awakened-ven-069b-166-promo",
-      label: "See Mel, Newly Awakened's live price →",
-      blurb: "Every store we track, side by side, updated daily — in your own market's currency.",
-    },
-    embeds: [
-      {
-        title: "Mel, Newly Awakened — the Nexus Night promo",
-        note: "069b/166 — Vendetta's confirmed Nexus Night chase card, straight from our live database.",
-        slugs: ["mel-newly-awakened-ven-069b-166-promo"],
-      },
-      {
-        title: "Every Mel, Newly Awakened printing",
-        note: "The Epic base print, the Showcase alt-art, and the Nexus Night promo — same card, three very different price tags.",
-        slugs: ["mel-newly-awakened-ven-069", "mel-newly-awakened-ven-069a", "mel-newly-awakened-ven-069b-166-promo"],
-      },
-    ],
-    closeups: [
-      {
-        caption: "The printed draw trigger and Empower payoff on Mel, Newly Awakened's actual card.",
-        slugs: ["mel-newly-awakened-ven-069b-166-promo"],
-        topPct: 54,
-        heightPct: 32,
-      },
-    ],
-    faq: [
-      {
-        q: "What does Mel, Newly Awakened do?",
-        a: "She's a 4-energy, 4-Might Mind unit. When played, draw 1 card. She also carries Empower (3 energy, once): once Empowered, your spells and abilities can't be countered, and any -Might effect you control gives an additional -1 Might.",
-      },
-      {
-        q: "What is the Mel, Newly Awakened Nexus Night promo?",
-        a: "069b/166 — the promo printing of the existing Mel, Newly Awakened unit, confirmed as the chase card for Vendetta's current Nexus Night season. Mechanically identical to the base print; the difference is the art treatment and scarcity.",
-      },
-      {
-        q: "How much is the Mel, Newly Awakened promo worth?",
-        a: "It sits between Riftbound's other two big Nexus Night grails — pricier than Lee Sin, Centered, well short of GGEZ Teemo. Check its live card page for the current cheapest price across every store we track.",
-      },
-      {
-        q: "How do I get the Mel, Newly Awakened promo?",
-        a: "Attend your local game store's weekly Vendetta Nexus Night event — completing a demo or casual event earns a promo pack. See our full rundown of every confirmed Vendetta Nexus Night promo for the rest of the cycle.",
-      },
-      {
-        q: "Is Mel, Newly Awakened good in Vendetta's current meta?",
-        a: "Her ability is built for a control shell: a free card the instant she lands, then a two-stage upgrade that protects your spells from being countered and hits harder with -Might effects once Empowered — a strong fit for a legend built around outlasting the opponent rather than racing them.",
-      },
-    ],
-    body: `We've already covered [every confirmed Vendetta Nexus Night promo](/blog/riftbound-vendetta-nexus-night-promo-cards) as a set — this post is the deep dive on the one everyone's actually chasing: **Mel, Newly Awakened**, promo printing **069b/166**.
-
-## What Mel, Newly Awakened does
-
-She's a **4-energy, 4-Might Mind unit**, and her printed text does two jobs at once. First, a simple value trigger: **"When you play me, draw 1."** Second, a scaling payoff through **Empower**: pay 3 energy on a later turn (once, and only while she isn't already Empowered) to flip her Empowered — after which **your spells and abilities can't be countered**, and **any effect you control that would give a unit -Might gives an additional -1 Might**. (New to Empower? [Our full keyword guide](/keywords/empower) breaks down exactly how the two-stage upgrade works.)
-
-[[embed:0]]
-
-[[closeup:0]]
-
-That's a genuinely control-shaped payoff — protect your own removal and spells from being countered, then make the removal you do land hit harder — which tracks with Mel's reputation as a Vendetta control legend's headline piece.
-
-## Draw-1 now, a bigger Mel later
-
-The two halves work on different clocks. The draw trigger fires the instant she hits the board, so she's never a dead card even if you never find the spare energy to Empower her. Empower is the payoff for sticking around: bank 3 energy on a turn you can spare it, and every spell or removal effect you play afterward gets meaningfully harder to fight through.
-
-## Every Mel, Newly Awakened printing, side by side
-
-The regular Epic base print, the Showcase alt-art, and the Nexus Night promo are, once again, the same card mechanically — same stats, same text. The promo (069b) is the one that turned Vendetta's current Nexus Night season into a genuine chase.
-
-[[embed:1]]
-
-## Where she sits against the other Nexus Night grails
-
-Mel, Newly Awakened sits in the middle of Riftbound's three big Nexus Night promo grails: pricier than [Lee Sin, Centered](/blog/lee-sin-centered-nexus-night-promo) (Unleashed's season), but well short of [GGEZ Teemo](/blog/ggez-teemo-riftbound-explained) (Origins' original, and still the priciest of the three). That's partly a function of timing — Vendetta's Nexus Night season is Riftbound's current one, so her print run hasn't had nearly as long to dry up as Origins' did.
-
-## Is she worth chasing?
-
-If you're building a control shell around Mel, the promo print is a genuine collectible upgrade to your deck's showpiece — the ability is identical to the base print, so you're paying for the art and the scarcity, not extra power. If you just want in on Vendetta's current chase-card conversation while it's still actively unfolding, rather than years-settled the way Origins' is, this is the one to watch.
-
-[[shop]]
-`,
   },
   // ── August 2026 announcement coverage ──────────────────────────────────────
   // Three posts covering Riot's 4 Aug 2026 "Products and Sets into 2027" and
@@ -5127,7 +4653,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
 | 1 | **[Origins](/sets/origins)** | OGN | 298 (+54 Showcase) | Launch set |
 | 2 | **Origins: Proving Grounds** | OGS | 24 | Shortly after Origins |
 | 3 | **Spirit Forged** | SFD | 221 (+66 Showcase) | — |
-| 4 | **[Unleashed](/blog/whats-in-the-riftbound-unleashed-set)** | UNL | 219 (+61 Showcase) | — |
+| 4 | **[Unleashed](/sets/unleashed)** | UNL | 219 (+61 Showcase) | — |
 | 5 | **[Vendetta](/sets/vendetta)** | VEN | 166 | 31 Jul 2026 |
 | 6 | **[Radiance](/radiance-countdown)** | RAD | ~180 (announced) | 23 Oct 2026 |
 
@@ -5145,7 +4671,7 @@ At 24 cards, Proving Grounds is by far the smallest Riftbound release to date �
 
 The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
 
-Unleashed is the one worth a closer look if you're buying rather than just cataloguing — two of the four most expensive cards in the game come out of it. We've broken the whole set down separately: [what's in the Riftbound Unleashed set](/blog/whats-in-the-riftbound-unleashed-set).
+Unleashed is the one worth a closer look if you're buying rather than just cataloguing — two of the four most expensive cards in the game come out of it. Browse the whole set card-by-card, with live prices, on the [Unleashed set page](/sets/unleashed).
 
 ## Vendetta — the current set
 
@@ -5611,311 +5137,6 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
   // /blog and /guides indexes, the sitemap's `content` section, the feeds, the
   // related-posts module, the /llm markdown mirrors) picks them up unchanged.
   {
-    slug: "whats-in-the-riftbound-unleashed-set",
-    category: "blog",
-    title: "What's in the Riftbound Unleashed Set?",
-    excerpt:
-      "A complete guide to Riftbound Unleashed (UNL) — a 219-card set whose chase cards include the most expensive non-Origins printing in the game. Every card, filterable, with live prices.",
-    author: "RiftCompare",
-    date: "2026-08-15",
-    readMins: 6,
-    tags: ["unleashed", "set guide", "card list", "collecting"],
-    hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/unl-238-219-bc6d759458719516.png",
-      alt: "Baron Nashor (UNL 238/219) — the over-numbered Showcase chase card from Riftbound Unleashed",
-    },
-    summary: [
-      "**Unleashed is a 219-card set** (collector numbers run to /219), with over-numbered chase prints continuing past that into the 220s and 230s.",
-      "**Its chase cards compete with Origins on price.** Diana, Scorn of the Moon (UNL 197/219, promo) at US$1,899.99 and Baron Nashor (UNL 238/219) at US$1,634.89 are third and fourth most expensive in the entire game.",
-      "**Baron Nashor is the set's signature card in every sense but the label** — a Showcase print of the game's most recognisable neutral monster, over-numbered at 238/219.",
-      "**The gallery below is live.** It reads the card database directly, so it stays complete and correctly priced as listings change, rather than freezing at whatever was true the day this was written.",
-    ],
-    embeds: [
-      {
-        title: "Unleashed chase cards",
-        note: "The over-numbered and Showcase prints — the expensive end of the set.",
-        chaseSet: "UNL",
-        take: 12,
-      },
-      {
-        title: "Every card in Unleashed",
-        note: "Filter by domain, rarity or type, or search by name. Prices are live in your market.",
-        setAll: "UNL",
-        filterable: true,
-        take: 240,
-      },
-    ],
-    shop: [
-      { label: "Unleashed singles", query: "Riftbound Unleashed" },
-      { label: "Unleashed booster boxes", query: "Riftbound Unleashed booster box" },
-    ],
-    faq: [
-      {
-        q: "How many cards are in Riftbound Unleashed?",
-        a: "The base set runs to 219 cards — every card's collector number is written out of /219. Chase printings continue past that total with over-numbered slots such as 234*/219 and 238/219, which is why you will see numbers higher than 219 on the most expensive cards.",
-      },
-      {
-        q: "What is the most expensive Unleashed card?",
-        a: "Diana, Scorn of the Moon (UNL 197/219, the promo printing) at US$1,899.99 as of 15 August 2026, followed by Baron Nashor (UNL 238/219) at US$1,634.89. Both rank in the top four most expensive Riftbound cards overall. The non-promo 197/219 is a completely different price — see the note below on why that matters.",
-      },
-      {
-        q: "Why is Baron Nashor numbered 238 in a 219-card set?",
-        a: "It is an over-numbered chase print. Riftbound places its premium treatments in collector-number slots beyond the set total, so a card numbered above /219 is by definition one of the set's chase cards rather than part of the base run.",
-      },
-      {
-        q: "Is Unleashed still worth buying sealed?",
-        a: "That depends entirely on current box pricing against the value of what is inside, which moves. The honest answer is to check the live box price against the set's chase cards rather than take a rule of thumb from an article — both are on this site and both change weekly.",
-      },
-    ],
-    body: `
-Unleashed (set code **UNL**) is a 219-card Riftbound set, and it punches well above its share of the conversation. Two of the four most expensive cards in the entire game come from it.
-
-## The shape of the set
-
-Every base card is numbered out of **/219**. Above that total sit the over-numbered chase prints — the slots Riftbound reserves for premium treatments. That is the quickest way to read any Riftbound collector number: **a number higher than the set total is always a chase card**, no exceptions.
-
-So in Unleashed:
-
-- **001–219** — the base set. Commons through Epics, everything you open in a normal pack.
-- **220+** — chase territory. Showcase treatments, alternate arts, and the set's headline cards.
-
-Baron Nashor at **238/219** is the clearest example, and it is the card most people picture when they think of this set.
-
-[[embed:0]]
-
-## Where the money is
-
-| Card | Number | Rarity | Live US price |
-|------|--------|--------|---------------|
-| Diana, Scorn of the Moon | 197/219 *(promo)* | Rare | **US$1,899.99** |
-| Baron Nashor | 238/219 | Showcase | US$1,634.89 |
-| Diana, Scorn of the Moon | 234*/219 | Showcase | US$1,435.78 |
-| Diana, Scorn of the Moon | 197/219 *(non-promo)* | Rare | US$0.18 |
-
-The Diana pair is the interesting story, and it is a warning as much as a fact. **Two cards share the exact number 197/219** — same name, same rarity, same "no asterisk, within the set total" collector number that would normally tell you it's an ordinary base print. One is a promo stamp worth nearly **US$1,900**. The other is a genuinely cheap card at **18 US cents**. Nothing in the collector number tells you which one a listing is; only the "promo" label does. That is a sharper trap than the asterisk-and-overnumbering rules cover, because those are visible in the number itself — this one isn't.
-
-Baron Nashor sits between them. It is not a champion card at all — it is the neutral monster every League player recognises, given the set's most collectible treatment.
-
-[[shop]]
-
-## Buying into Unleashed
-
-Three practical notes if you are starting on this set:
-
-**Check the promo label, not just the number.** Diana 197/219 is the proof: the collector number alone can't tell two ten-thousand-times-apart prices apart when the only difference is a promo stamp. Search the card name and compare every printing — promo included — before committing.
-
-**The chase tier is thin.** As with every Riftbound set's top end, most of these cards have very few sellers at any one time. Prices move on single sales, so the figure you see today is a snapshot rather than a settled valuation.
-
-**Sealed versus singles is an arithmetic question.** If you want one specific card, singles are almost always cheaper than chasing it through boxes. If you want breadth, sealed can make sense. Our [buying singles vs opening packs](/blog/buying-singles-vs-opening-packs) piece works through the maths properly.
-
-## Every card in the set
-
-The gallery below is generated from the live card database rather than typed out here, which means two things: it is complete, and the prices in it are current in your own market. Filter it by domain, rarity or type, or search it by name.
-
-[[embed:1]]
-`,
-  },
-  {
-    slug: "how-to-read-a-riftbound-card",
-    category: "blog",
-    title: "How to Read a Riftbound Card",
-    excerpt:
-      "Every number, colour and symbol on a Riftbound card, explained on real cards — including the rarity gem that tells you what you pulled before you read a word.",
-    author: "RiftCompare",
-    date: "2026-08-15",
-    readMins: 7,
-    tags: ["beginners", "card anatomy", "rarity", "collecting"],
-    hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/ogn-205-298-532138033790fe52.png",
-      alt: "Yasuo, Windrider (OGN 205/298) — a Riftbound Epic showing the card layout: energy cost, might, domain rune, type line and rarity gem",
-    },
-    summary: [
-      "**Top-left is what it costs, top-right is how hard it hits.** Energy cost sits in the circle; might sits behind the shield.",
-      "**The gem at the bottom-centre is the rarity, and it counts up.** Round orb for Common, then 3, 4, 5 and 6 sides as you climb — triangle, diamond, pentagon, hexagon.",
-      "**Colour means domain.** The name banner, the rune discs and the little symbol bottom-right are all the same colour, and it tells you which of the seven domains the card belongs to.",
-      "**The bottom-left corner is the only thing that matters when buying.** Set code plus collector number identifies the exact printing — an asterisk there means a Signature, and Signatures can cost ten times the plain version of the same card.",
-    ],
-    closeups: [
-      {
-        caption: "Top corners: the energy cost (left) is what you pay to play it; the might (right, behind the shield) is how much damage it deals and absorbs. The green disc underneath is one Calm rune — the domain cost, on top of the energy.",
-        slugs: ["ahri-alluring-ogn-066-298"],
-        topPct: 2,
-        heightPct: 20,
-      },
-      {
-        caption: "The type line and the name banner. 'CHAMPION UNIT' is what the card is; 'AHRI' and 'IONIA' are its tags. The banner is green because this is a Calm card — every domain has its own colour.",
-        slugs: ["ahri-alluring-ogn-066-298"],
-        topPct: 50,
-        heightPct: 15,
-      },
-      {
-        caption: "Rules text on top, flavour text in italics below the little coloured square. Only the top half is rules — the italic line does nothing in the game. Note that Riftbound writes its rules in the first person: 'When I hold…'",
-        slugs: ["ahri-alluring-ogn-066-298"],
-        topPct: 70,
-        heightPct: 22,
-      },
-      {
-        caption: "The bottom edge, and the most important line on the card for buyers: set code, collector number, rarity gem, artist. This is a Rare — the magenta diamond has four sides.",
-        slugs: ["ahri-alluring-ogn-066-298"],
-        topPct: 92,
-        heightPct: 8,
-      },
-      {
-        caption: "A Common, from the same set: the rarity gem is a plain round white orb with no facets at all.",
-        slugs: ["arena-bar-ogn-124-298"],
-        topPct: 92,
-        heightPct: 8,
-      },
-      {
-        caption: "A Showcase, the top tier: a gold six-sided gem. Same position on every card in the game, so you can tell what you pulled from the bottom edge alone.",
-        slugs: ["ahri-alluring-ogn-066a-298"],
-        topPct: 92,
-        heightPct: 8,
-      },
-    ],
-    embeds: [
-      {
-        title: "One card at each rarity",
-        note: "The five cards used above, so you can open them full-size and see the gem for yourself.",
-        slugs: [
-          "arena-bar-ogn-124-298",
-          "acceptable-losses-ogn-179-298",
-          "ahri-alluring-ogn-066-298",
-          "ahri-inquisitive-ogn-119-298",
-          "ahri-alluring-ogn-066a-298",
-        ],
-        take: 5,
-      },
-    ],
-    faq: [
-      {
-        q: "What do the numbers in the top corners of a Riftbound card mean?",
-        a: "The number in the circle at the top-left is the energy cost — what you pay to play the card. The number at the top-right, behind the shield symbol, is might: how much damage the unit deals and how much it can take. Cards that are not units, such as spells, have a cost but no might.",
-      },
-      {
-        q: "How can I tell a Riftbound card's rarity by looking at it?",
-        a: "Look at the small gem in the centre of the bottom edge. It gains a side as rarity climbs: a round white orb is Common, a teal triangle is Uncommon, a magenta diamond is Rare, an orange pentagon is Epic, and a gold hexagon is Showcase. The position is identical on every card, so you can sort a pile face-up without reading a single word.",
-      },
-      {
-        q: "What are the coloured discs on the left edge of a Riftbound card?",
-        a: "They are the domain runes the card requires, on top of its energy cost. Count them for how many you need and read the colour for which domain: red is Fury, green is Calm, blue is Mind, orange is Body, purple is Chaos and yellow is Order. Not every card has them — plenty of cards ask only for energy, and those simply have no discs.",
-      },
-      {
-        q: "What does an asterisk in the collector number mean?",
-        a: "It marks a Signature printing, and you can usually see why: the artist's signature is printed across the artwork. It matters enormously for price. Ahri, Nine-Tailed Fox is OGN 303/298 at US$374.22 and OGN 303*/298 at US$3,420.28 — identical art and identical rules, with the signature the only visible difference.",
-      },
-      {
-        q: "Why is the text on a Riftbound battlefield printed upside down?",
-        a: "It is printed twice, once each way up. Battlefields sit in the middle of the table between the two players, so each player gets a copy of the rules text facing them. They are also the only cards printed in landscape rather than portrait.",
-      },
-    ],
-    browseCta: {
-      href: "/browse",
-      label: "Look up a card you own →",
-      blurb: "Search by name, or type the collector number straight in to land on the exact printing — with live prices from every store we track.",
-    },
-    body: `
-A Riftbound card carries about nine pieces of information, and once you know where each one lives you can read any card in the game in a couple of seconds — including cards you have never seen before, in a language you do not speak.
-
-Everything below is shown on real cards, cropped from the actual printed artwork.
-
-## The top corners: cost and might
-
-[[closeup:0]]
-
-**Top-left, in the circle, is the energy cost.** That is what you pay to put the card into play.
-
-**Top-right, behind the shield, is might.** That is the unit's power — how hard it hits and how much it survives. Cards that are not units still have a cost but no might, so that corner is simply empty on most spells.
-
-**The coloured discs down the left edge are domain runes**, and they are an *additional* cost. Ahri above needs five energy **and** one Calm rune. Anivia, Primal needs seven energy and two Body runes, so it shows two orange discs.
-
-Plenty of cards have no discs at all — Blazing Scorcher costs five energy and nothing else. An empty left edge is normal, not a misprint.
-
-## The middle: what it is and what it does
-
-[[closeup:1]]
-
-The thin line above the name is the **type line**: what the card is, followed by its tags. Ahri, Alluring is a *Champion Unit* tagged *Ahri* and *Ionia*.
-
-Then the **name banner** — and the banner's colour is the fastest domain read on the card:
-
-| Domain | Colour |
-| --- | --- |
-| Fury | Red |
-| Calm | Green |
-| Mind | Blue |
-| Body | Orange |
-| Chaos | Purple |
-| Order | Yellow |
-| Colorless | Grey |
-
-The same colour repeats in the rune discs and in the small symbol at the bottom-right, so the card tells you its domain three separate times. A card that belongs to two domains — some Legends do — gets a two-colour gradient banner and one disc of each colour.
-
-[[closeup:2]]
-
-Below that is the **rules text**, and then, under a small coloured square, the **flavour text** in italics. The flavour text is scene-setting and does nothing in the game.
-
-One quirk worth knowing: **Riftbound writes rules in the first person.** "When I hold, you score 1 point" means *this card*, not you. Once you notice it, cards read much faster.
-
-## The bottom edge: everything a buyer needs
-
-[[closeup:3]]
-
-This strip is small and easy to ignore, and it is the only part of the card that matters when you are buying or selling.
-
-- **Bottom-left — set code and collector number.** \`OGN · 066/298\` means Origins, card 66 of 298. This is the card's real identity. Names repeat constantly; this does not.
-- **Bottom-centre — the rarity gem.**
-- **Bottom-right — the artist**, the copyright line, and the domain symbol again.
-
-## The rarity gem, which counts up
-
-The gem in the centre of the bottom edge is the single most useful symbol on the card, because **it gains a side as rarity climbs**:
-
-| Rarity | Gem | Sides | Colour |
-| --- | --- | --- | --- |
-| Common | Orb | round | White |
-| Uncommon | Triangle | 3 | Teal |
-| Rare | Diamond | 4 | Magenta |
-| Epic | Pentagon | 5 | Orange |
-| Showcase | Hexagon | 6 | Gold |
-
-Round, three, four, five, six. That is the whole system, and it is in the same place on every card in every set — so you can fan a stack face-up and sort it without reading anything.
-
-[[closeup:4]]
-
-[[closeup:5]]
-
-[[embed:0]]
-
-## The asterisk, and why it is worth thousands
-
-If the collector number contains an asterisk — \`303*/298\` rather than \`303/298\` — you are holding a **Signature** printing, and you can normally see it: the artist's signature is printed across the artwork in white.
-
-It is the most expensive single character in the game. Ahri, Nine-Tailed Fox exists both ways:
-
-| Printing | Signature? | Live US price |
-| --- | --- | --- |
-| OGN 303/298 | No | US$374.22 |
-| OGN 303*/298 | Yes | **US$3,420.28** |
-
-Same art, same rules, same rarity. The signature accounts for roughly **US$3,046** of difference — about nine times the price. We pulled that comparison apart properly in [every Ahri card in Riftbound](/blog/every-ahri-card-in-riftbound).
-
-A collector number **higher than the set total** — 238 in a 219-card set — signals a chase print in a different way. The full list of treatments is in the [variant and finish glossary](/guides/riftbound-variant-glossary).
-
-## Two layouts that break the pattern
-
-**Showcase and full-art printings** move things around. The art runs to the edges, the text sits directly on it, and the cost and might float in gold filigree instead of tidy boxes. The information is all still there and still in roughly the same corners — it is just harder to spot at first.
-
-**Battlefields are landscape**, the only cards in the game printed that way, and their rules text is **printed twice — once upside down**. That is not a misprint either: a battlefield sits between the two players, so each player gets a readable copy facing them.
-
-## Where to go next
-
-- [Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity) — what the tiers mean for pull rates and price.
-- [The variant and finish glossary](/guides/riftbound-variant-glossary) — every treatment, and how to tell them apart.
-- [Riftbound card condition guide](/guides/riftbound-card-condition-guide) — how to grade what you are holding.
-`,
-  },
-  {
     slug: "every-ahri-card-in-riftbound",
     category: "blog",
     title: "Every Ahri Card in Riftbound",
@@ -6065,7 +5286,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
 
 ## Related reading
 
-- [How to read a Riftbound card](/blog/how-to-read-a-riftbound-card) — where the collector number and the asterisk live, and how to spot a Signature.
+- [Riftbound variant glossary](/guides/riftbound-variant-glossary) — where the collector number and the asterisk live, and how to spot a Signature.
 - [The most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) — the full top of the market, live.
 - [League of Legends champions in Riftbound](/guides/league-of-legends-champions-in-riftbound) — who else has made it into the game.
 `,
@@ -6247,224 +5468,6 @@ Not "buy" and not "don't." Three practical things that don't require a track rec
 
 We built the price tracking, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
 `,
-  },
-  {
-    slug: "why-origins-cards-are-worth-more",
-    category: "blog",
-    title: "Why Origins Cards Are Worth More",
-    excerpt:
-      "Origins isn't the single highest-priced set in Riftbound today — but it still holds two of the four most valuable cards in the entire game. Here's the real, checkable case for why the launch set holds a premium.",
-    author: "RiftCompare",
-    date: "2026-08-18",
-    readMins: 7,
-    tags: ["origins", "chase cards", "collecting", "market analysis"],
-    hero: {
-      src: "https://tcgplayer-cdn.tcgplayer.com/product/635368_in_1000x1000.jpg",
-      alt: "A real Riftbound: League of Legends TCG Origins booster box, showing the set's launch-art champions across the display box and individual booster packs",
-    },
-    summary: [
-      "**Origins isn't the single most expensive set in Riftbound right now** — Spirit Forged's top card and its typical card both price higher. What Origins holds instead is depth: as of publishing, it's still home to two of the four most valuable cards in the entire game.",
-      "**It's the biggest card pool in the game** — 298 base cards, more than any set released since — and the set every other set's promo tier gets measured against.",
-      "**None of this is a guarantee.** Riftbound doesn't have the price history to prove a launch-set premium will hold, and reprints of Origins cards into newer sets are a real, documented pattern working against it.",
-      "**The honest case:** Origins earns its premium from scale and scarcity, not from being untouchable. Treat this as analysis, not a forecast.",
-    ],
-    faq: [
-      {
-        q: "Is Origins the most valuable set in Riftbound?",
-        a: "Not by every measure — Spirit Forged's single most expensive card and its typical card both price higher right now. What Origins holds is depth: as of publishing it's still home to two of the four most valuable cards in the entire game (Ahri, Nine-Tailed Fox and Kai'Sa, Daughter of the Void, both Signature printings), despite being the oldest set competing against four newer releases.",
-      },
-      {
-        q: "What's the difference between a Signature, a promo and a base Origins card?",
-        a: "A Signature carries a ★ in its collector number and the artist's actual stamped signature — the rarest tier, and a physically unique object rather than just a scarce print run. A promo is a separate printing distributed through prereleases, Nexus Night packs or organized play, and can outprice a Signature — GGEZ Teemo, Origins' most famous promo, is a good example. Everything else is part of the base 298-card set.",
-      },
-      {
-        q: "Will Origins cards keep going up in price?",
-        a: "We don't know, and anyone who tells you they do is guessing. Riftbound doesn't have the multi-year price history to confirm a launch-set premium will hold the way it has in older card games. What we can show you is what's true today: real prices, real scarcity, and a real reprint risk working the other way.",
-      },
-      {
-        q: "What's the cheapest way into Origins chase cards?",
-        a: "Start with the base, unsigned printing of a card whose Signature you eventually want — it's mechanically identical, just without the stamped signature and the collector premium. Browse the Origins set and sort by price to see the full spread from cents to four figures.",
-      },
-      {
-        q: "Is Origins still being printed?",
-        a: "Origins was Riftbound's launch set, and four sets — Spirit Forged, Unleashed, Vendetta and the upcoming Radiance — have released since. It's no longer the current set, which is part of why its Signature and promo pool only gets scarcer relative to demand rather than being diluted by a fresh print run of the same cards.",
-      },
-    ],
-    browseCta: {
-      href: "/sets/origins",
-      label: "Browse every Origins card →",
-      blurb: "All 298 base cards plus every Signature, Showcase and promo printing we track, with live prices in your own market.",
-    },
-    closeups: [
-      {
-        caption: "Ahri, Nine-Tailed Fox (OGN 303★/298) — Origins' single most valuable card, and as of publishing the third most valuable card in the entire game across every set combined.",
-        slugs: ["ahri-nine-tailed-fox-ogn-303s-298"],
-        topPct: 34,
-        heightPct: 28,
-      },
-    ],
-    embeds: [
-      {
-        title: "Origins Signature Legends",
-        note: "Every ★-numbered Signature printing from Origins in our database, live-priced. This is the tier that produced two of the four most valuable cards in the whole game.",
-        chaseSet: "OGN",
-        chaseTier: "signature",
-        take: 12,
-      },
-      {
-        title: "Origins promo cards",
-        note: "Prerelease, Nexus Night and organized-play promos from Riftbound's launch set — the tier every later set's own promo chase gets compared against.",
-        chaseSet: "OGN",
-        chaseTier: "promo",
-        take: 16,
-      },
-    ],
-    body: `**Origins** is where Riftbound started — the game's launch set, and still the biggest single card pool in the game at **298 base cards**. Four sets have released since (Spirit Forged, Unleashed, Vendetta, and Radiance, due 23 October 2026), and Origins hasn't been the newest set on the shelf in over a year. By the usual logic of a trading card game, that should make it the least interesting set to watch.
-
-The real numbers say otherwise.
-
-## Origins still punches above its age
-
-As of publishing, two of the four most valuable cards in the *entire* game — every set combined — are Origins Signature printings:
-
-| Rank (site-wide) | Card | Printing | Live price (US) |
-| --- | --- | --- | --- |
-| #3 | Ahri, Nine-Tailed Fox | OGN 303★/298 (Signature) | US$3,000.96 |
-| #4 | Kai'Sa, Daughter of the Void | OGN 299★/298 (Signature) | US$2,739.16 |
-
-That's a genuinely strong showing for the oldest set in the game, going up against four newer ones — including Spirit Forged, whose own top card (Ezreal, Prodigal Explorer, a promo, at US$3,499.99) currently outprices both. **We're not going to pretend Origins is the single most expensive set** — it isn't, by that measure, today. What it is: the set that keeps showing up at the very top of the market a year-plus into the game's life, which is a different and arguably more interesting claim than "the most expensive."
-
-[[closeup:0]]
-
-## Why the depth, not just the top card
-
-Three real, checkable reasons Origins holds up:
-
-**It's the biggest set.** 298 base cards is more than any set that followed — Spirit Forged (221), Unleashed (219) and Vendetta (166) are all smaller. A bigger set means a bigger pool of chase-tier printings competing for collector attention from the same launch.
-
-**It set the precedent for every promo tier since.** Origins' organized-play promos — headlined by [GGEZ Teemo](/blog/ggez-teemo-riftbound-explained), Origins' first Nexus Night promo — are still the benchmark the game's later promo tiers get measured against; we said as much when covering [Vendetta's own chase cards](/blog/riftbound-vendetta-chase-cards-so-far). A promo tier needs real time in market — prereleases, Nexus Night packs, organized-play events — to build that kind of reputation, and Origins has simply had the most of it.
-
-**It's the launch set.** Every major trading card game has shown some version of this pattern — Magic's Alpha and Beta, Pokémon's Base Set — where the first set a game ever printed carries a premium that outlasts sets released around it. We're not claiming Riftbound has years of data to prove the same pattern holds here — it doesn't, yet — but the structural logic behind it (a fixed, non-growing pool of first-ever printings) is real regardless of how the price ends up behaving.
-
-## The honest risk
-
-Two things work against Origins specifically, and we'd rather say so than not:
-
-**It isn't the top set by every measure.** Spirit Forged's most expensive card and its typical card both price higher right now. If "worth more" means "the single highest number in the game," Origins doesn't win that contest today.
-
-**Reprints are a real pattern in this game, not a hypothetical risk.** Riftbound has already reprinted functionally identical cards from older sets into newer ones, with new art and a new collector number. A reprint doesn't touch the *original* Origins printing's own scarcity, but it can cool demand for the character generally if the newer version is cheaper and easier to find. Treat any Origins chase card as subject to that risk, not immune to it.
-
-## The Origins chase tier, live
-
-[[embed:0]]
-
-Origins' promo tier — the deepest of any set, and the one every other set's promo chase gets compared to:
-
-[[embed:1]]
-
-## Where to check the real numbers
-
-Every price above moves. **[Browse the full Origins set](/sets/origins)** for live prices across every store we track, or open any card above for its full comparison in your own market.`,
-  },
-  {
-    slug: "riftbound-cards-to-watch",
-    category: "blog",
-    title: "Riftbound Cards to Watch: Movers & Chase Plays",
-    excerpt:
-      "Not a price prediction — a look at the real signals behind which Riftbound cards could move: current tournament demand for the short term, and chase-tier scarcity for the long term, with real numbers throughout.",
-    author: "RiftCompare",
-    date: "2026-08-18",
-    readMins: 8,
-    tags: ["market analysis", "meta", "chase cards", "opinion", "collecting"],
-    hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/sfd-225-star-221-94b78cb569b2c9f3.png",
-      alt: "Irelia, Fervent (SFD 225★/221), the Signature printing of the current format's most-played legend, and this article's clearest example of a card with real short-term demand",
-    },
-    summary: [
-      "**This is analysis of real signals, not a price prediction.** Riftbound doesn't have the price history for confident forecasting, and we say so on every valuation piece we publish.",
-      "**Short term, the signal we trust is tournament play**, not a chart. A card that's core to the format's highest-share or highest-win-rate deck has real, observable demand pressure right now — win rate and meta share are pulled live from the same tournament decklists our meta page tracks.",
-      "**Long term, the signal is chase-tier scarcity** — Signature, Overnumbered and promo printings, the same structural pattern that made Origins' chase tier what it is today.",
-      "**Both signals carry real, specific risks**: a ban list can erase short-term demand overnight, and a reprint can cool long-term scarcity. We show both sides.",
-    ],
-    faq: [
-      {
-        q: "Are these cards guaranteed to go up in price?",
-        a: "No, and we wouldn't trust a source that told you otherwise. Riftbound doesn't have the price history for confident predictions. What follows is real, current signal — tournament play for the short term, chase-tier scarcity for the long term — not a guarantee about where any specific price goes next.",
-      },
-      {
-        q: "What's the biggest risk to a short-term, meta-driven pick?",
-        a: "A ban. On 24 July 2026, Riot banned three cards from Standard play — Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — and introduced a separate ban list for Constructed 2v2 starting with Master Yi, Wuju Bladesman. A banned card doesn't disappear, but it loses the demand that comes from being tournament-legal, almost overnight. That risk is unique to an actively developed, competitively played game.",
-      },
-      {
-        q: "What's the biggest risk to a long-term, chase-tier pick?",
-        a: "A reprint. Riftbound has already reprinted functionally identical cards from older sets into newer ones with new art and a new collector number, which can cool demand for the character generally even though it doesn't touch the original printing's own scarcity.",
-      },
-      {
-        q: "How do you decide which cards to feature?",
-        a: "For the short-term section, we pull directly from the same real tournament decklists tracked on our meta decks page, ranked by meta share and win rate — not a personal pick. For the long-term section, we look at chase-tier structure (Signature, Overnumbered, promo) rather than any single card's recent price move, because a single week's percentage change on a thinly-traded chase card is usually noise, not signal — we've seen printings move over 1,000% in a week on a handful of trades, which says more about thin markets than about real demand.",
-      },
-      {
-        q: "Where can I track a specific card instead of guessing?",
-        a: "Set a free price alert and let the number come to you instead of checking manually — the honest alternative to trying to time a market this thin.",
-      },
-    ],
-    browseCta: {
-      href: "/decks",
-      label: "See the real decklists behind this article →",
-      blurb: "Every deck referenced here is a real tournament result, priced card-for-card in your own market.",
-    },
-    embeds: [
-      {
-        title: "Short term: cards from the format's top decks",
-        note: "Pulled live from the same tournament decklists our meta page tracks, ordered by how many decks run them. A card here has real, current tournament demand — not a guess.",
-        metaStaples: { minDecks: 2 },
-        take: 16,
-      },
-      {
-        title: "Long term: Vendetta's own Signature tier",
-        note: "The current set's chase-tier Legends — the printings furthest from settled, since Vendetta is the newest full set in our database and hasn't had Origins' years in market yet.",
-        chaseSet: "VEN",
-        chaseTier: "signature",
-        take: 9,
-      },
-    ],
-    body: `We're not going to tell you which Riftbound cards will be worth more in six months or in five years, because nobody can honestly answer that yet — [we've written at length about why](/blog/are-riftbound-cards-a-real-investment). What we can do is show you the two real, different signals that actually exist today, and let you weigh them yourself: **tournament demand** for the short term, and **chase-tier scarcity** for the long term.
-
-## Short term: follow the decklists, not a chart
-
-A single week's price swing on a thinly-traded card is usually just noise — we've seen chase-tier printings move over 1,000% in a week on a handful of trades, which is a market with almost no depth repricing itself, not a real signal. The signal we actually trust is simpler and checkable: **is this card core to a deck that's winning right now?**
-
-Our [meta decks page](/decks) tracks real tournament decklists, with real meta share and win rate attached to each. Right now, the field's benchmark deck is **Irelia, Blade Dancer** — Tier 1, **10% meta share**, a **52% win rate**. Its Signature printing already reflects that: **Irelia, Fervent (SFD 225★/221)** is US$1,505.59 as of publishing. But the same card, in its ordinary base printing (SFD 057/221), is US$19.31 — a card that's core to the single most-played deck in the format, for the price of a few singles.
-
-The highest win rate in the current top tier isn't Irelia's deck, though — it's **Kennen, Heart of the Tempest**, at a **58% win rate** on **9% meta share**. Its key alternate-art printing, Kennen, Storm of Shuriken (VEN 113A/166), is currently US$12.11 — genuinely cheap, and fully tracked with real listings across all five markets we cover, unlike some of the four-figure chase cards in this piece.
-
-| Deck (legend) | Tier | Meta share | Win rate | Key card | Live price (US) |
-| --- | --- | --- | --- | --- | --- |
-| Irelia, Blade Dancer | 1 | 10% | 52% | Irelia, Fervent (base) | US$19.31 |
-| Kennen, Heart of the Tempest | 2 | 9% | **58%** | Kennen, Storm of Shuriken (alt) | US$12.11 |
-| Master Yi, Wuju Bladesman | 2 | 9% | 47% | Master Yi, Tempered (alt) | US$2.96 |
-
-None of this is a claim that these specific printings will rise. It's a claim that they already have something a randomly chosen cheap card doesn't: **real, active demand from people building decks to win with them today.** If a deck's meta share grows, its cheapest core pieces are usually the first to move — because that's where the volume is.
-
-[[embed:0]]
-
-## Long term: chase-tier scarcity, the pattern Origins already proved
-
-The long-term case doesn't come from meta share at all — it comes from the same structural pattern behind [why Origins cards hold a premium](/blog/why-origins-cards-are-worth-more): a fixed pool of Signature, Overnumbered and promo printings that only gets scarcer as a set ages out of being current.
-
-Vendetta is the newest full set in our database, which makes it the set where this pattern is least settled — its Signature Legends are still finding their real price the way Origins' did years ago. As of publishing, Vendetta's own Signature tier includes **Akali, Rogue Assassin (VEN 189★/166)** at US$2,478.89 and **Jayce, Defender of Tomorrow (VEN 194★/166)** at US$1,144.45 — both champions who are also seeing real tournament play (Akali's package shows up splashed into the Irelia deck; Jayce headlines his own Tier 3 list at a 39% win rate), which is the closest thing to a genuine short-and-long-term overlap in this whole piece.
-
-[[embed:1]]
-
-## Two risks that cut the other way
-
-**Short term: a ban can erase demand overnight.** On 24 July 2026, Riot banned three cards from Standard play — Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — and separately banned Master Yi, Wuju Bladesman from Constructed 2v2. A card that's core to a top-tier deck today loses that demand instantly if the deck (or the card itself) gets hit. Meta-driven value is real, but it's the least stable kind there is.
-
-**Long term: a reprint can cool scarcity.** Riftbound has already reprinted functionally identical cards from older sets into newer ones. It doesn't erase a specific printing's own collector-number scarcity, but it can soften demand for the character generally if a cheaper, easier-to-find version exists.
-
-## Watch instead of guessing
-
-The honest version of "which cards are going up" is: nobody knows for certain, but real tournament data and real scarcity structure are better signals than a gut feeling or a single week's percentage swing. **[Browse the current meta decks](/decks)** to see the full picture these numbers came from, or **[set a free price alert](/alerts)** on anything specific you're already watching.`,
   },
   {
     slug: "riftcompare-premium-explained",

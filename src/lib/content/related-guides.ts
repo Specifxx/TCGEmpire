@@ -150,12 +150,6 @@ const RULES: Rule[] = [
     match: ["singles", "packs", "value", "buying"],
     reason: () => "Whether to buy this single or chase it in packs — the maths, with real prices",
   },
-  {
-    when: () => true,
-    prefer: ["riftbound-price-movers-how-to-track"],
-    match: ["prices", "movers", "tracking", "market"],
-    reason: () => "How we collect these prices and how to read a card's movement",
-  },
 ];
 
 export type RelatedGuide = { slug: string; title: string; category: Article["category"]; reason: string };
