@@ -79,12 +79,34 @@ export const revalidate = 3600;
 // verbatim coverage via the description's second sentence and the hero
 // subhead, without diluting the title's own exact match.
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Prices — Compare Every Store | RiftCompare" },
-  // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral.
-  // Leads with "Riftbound prices", then covers the "Riftbound card prices"
-  // variant verbatim in the same sentence.
+  // "(US)" ADDED 2026-08-30 — this title used to carry NO market at all, while
+  // every region page (/au, /uk, /sg, /ca) explicitly names its own in the exact
+  // same slot ("Compare Riftbound Card Prices Across Every Australian Store").
+  // That asymmetry is a real, found cause of a real, reported failure: this page
+  // IS the site's US page (DEFAULT_COUNTRY="US" — see country.ts — is the only
+  // market Googlebot's single cached render ever shows), but nothing in its own
+  // <title> told Google that, while /au's title screamed "Australian" — so for a
+  // query as literal as "riftbound card prices US", root had zero keyword match
+  // in its title and /au (the site's original default market, before the switch
+  // documented on card/[id]/page.tsx, and so its most-established page) won by
+  // default. "(US)" restores that keyword match without breaking the "Riftbound"
+  // + "prices" adjacency the 2026-08-20 audit fixed (see CinematicHero.tsx's H1
+  // comment) — it sits after the phrase, not inside it.
+  //
+  // This does NOT make the page's actual content US-only or US-flavored in any
+  // way visitors would notice — the description below still names every market,
+  // client-side re-localization is untouched, and the FAQ below still explicitly
+  // covers "wherever you are". It only makes the crawled render name the one
+  // market it has always actually rendered as, in the one field carrying the
+  // most ranking weight.
+  title: { absolute: "Riftbound Prices (US) — Compare Every Store | RiftCompare" },
+  // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral
+  // in substance — every market is still named, just reordered (see the areaServed
+  // fix in layout.tsx for the same AU-first leftover, same reasoning: COUNTRY_LIST
+  // is US-first because DEFAULT_COUNTRY is "US", and this had never been updated
+  // to match). EU added — missing entirely since its 2026-08-23 launch.
   description:
-    "Riftbound prices, compared live: see every card price across AU, US, UK, Singapore & Canada stores and find the cheapest place to buy. Updated daily.",
+    "Riftbound prices, compared live: see every card price across US, AU, UK, Singapore, Canada & EU stores and find the cheapest place to buy. Updated daily.",
   // NO keywords meta — removed 2026-08-20. Google has ignored this tag since 2009
   // (see layout.tsx's own sitewide policy comment, which this page had quietly
   // re-added and contradicted); it carried the exact phrase "Riftbound prices"
@@ -96,7 +118,7 @@ export const metadata: Metadata = {
   // Discord/Slack) showed a different, less specific tagline than the actual
   // <title> — found by the same audit.
   openGraph: pageOpenGraph({
-    title: "Riftbound Prices — Compare Every Store",
+    title: "Riftbound Prices (US) — Compare Every Store",
     description: "Riftbound card prices compared live across every store we track — find the cheapest place to buy.",
     url: "/",
   }),

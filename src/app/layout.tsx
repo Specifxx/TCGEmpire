@@ -189,12 +189,21 @@ const orgJsonLd = {
         "Sealed trading card products",
       ],
       // Markets served (drives regional entity understanding without per-locale URLs).
+      // ORDER MATCHES COUNTRY_LIST (lib/country.ts) — United States first, because
+      // DEFAULT_COUNTRY is "US": that's the market Googlebot's single crawled/
+      // cached render actually shows, so it should lead here too. This used to
+      // lead with Australia, a leftover from when DEFAULT_COUNTRY itself was "AU"
+      // (see the history note on card/[id]/page.tsx) — never revisited after the
+      // default market changed. Also added the EU market, missing entirely since
+      // its 2026-08-23 launch (six markets in the ARTICLES/COUNTRY_LIST sense, but
+      // this array still said five).
       areaServed: [
-        { "@type": "Country", name: "Australia" },
         { "@type": "Country", name: "United States" },
+        { "@type": "Country", name: "Australia" },
         { "@type": "Country", name: "United Kingdom" },
         { "@type": "Country", name: "Singapore" },
         { "@type": "Country", name: "Canada" },
+        { "@type": "Country", name: "European Union" },
       ],
       contactPoint: {
         "@type": "ContactPoint",
@@ -203,7 +212,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, the United States, the United Kingdom, Singapore, Canada and the EU.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across the United States, Australia, the United Kingdom, Singapore, Canada and the EU.",
     },
     {
       "@type": "WebSite",
