@@ -1172,6 +1172,69 @@
     "variants": [],
     "fingerprint": "38226525eccb3079"
   },
+  "/t1-worlds-cards/t1-signature-edition-box-cn.jpg": {
+    "src": "/t1-worlds-cards/t1-signature-edition-box-cn.jpg",
+    "width": 1100,
+    "height": 635,
+    "bytes": 49904,
+    "webp": "/t1-worlds-cards/t1-signature-edition-box-cn.webp",
+    "webpBytes": 27660,
+    "avif": "/t1-worlds-cards/t1-signature-edition-box-cn.avif",
+    "avifBytes": 21012,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-cn-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-cn-768w.webp"
+      }
+    ],
+    "fingerprint": "9654e967de5cee35"
+  },
+  "/t1-worlds-cards/t1-signature-edition-box-en.jpg": {
+    "src": "/t1-worlds-cards/t1-signature-edition-box-en.jpg",
+    "width": 1100,
+    "height": 1100,
+    "bytes": 80287,
+    "webp": "/t1-worlds-cards/t1-signature-edition-box-en.webp",
+    "webpBytes": 49084,
+    "avif": "/t1-worlds-cards/t1-signature-edition-box-en.avif",
+    "avifBytes": 30437,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-en-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-en-768w.webp"
+      }
+    ],
+    "fingerprint": "ec1de0a8b3243c36"
+  },
+  "/t1-worlds-cards/t1-signature-edition-box-kr.jpg": {
+    "src": "/t1-worlds-cards/t1-signature-edition-box-kr.jpg",
+    "width": 1100,
+    "height": 1100,
+    "bytes": 86625,
+    "webp": "/t1-worlds-cards/t1-signature-edition-box-kr.webp",
+    "webpBytes": 50966,
+    "avif": "/t1-worlds-cards/t1-signature-edition-box-kr.avif",
+    "avifBytes": 32057,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-kr-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-kr-768w.webp"
+      }
+    ],
+    "fingerprint": "b5c304455eee0102"
+  },
   "/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg": {
     "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg",
     "width": 1536,

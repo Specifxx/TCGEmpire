@@ -500,6 +500,34 @@ async function refreshEbaySealedMarket(
     { groupKey: "SFD|Nexus Night Pack", setCode: "SFD", name: "Spiritforged Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
     { groupKey: "UNL|Nexus Night Pack", setCode: "UNL", name: "Unleashed Nexus Night Promo Pack", productType: "Nexus Night Pack", imageUrl: null as string | null },
   ];
+  // The T1 Signature Edition, drawing-only via a Riot Merch Store giveaway (see
+  // T1_COLLECTION's comment up top) — no store or TCGplayer will ever list it, so
+  // like the Nexus seeds above, the ONLY way any of its three language editions
+  // ever gets an eBay search run against it is by being seeded here explicitly.
+  //
+  // LANGUAGE IS PART OF THE GROUP KEY, deliberately: these are three physically
+  // distinct products (different print runs inside an identical outer box, and
+  // — because the drawing pool sizes differed — very different resale values).
+  // Merging them under one groupKey would show, say, a Korean buyer's resale
+  // price as though it were what the English edition goes for.
+  //
+  // setCode is null, NOT "T1S", even though the DB row for the base T1S CARDS
+  // uses that code (prisma/manual-cards.json) — searchEbaySealed's setName
+  // filter falls back to the raw code when SET_NAMES has no entry for it, which
+  // would then require a real listing to literally say "T1S" (something no
+  // seller ever writes). SET_NAMES has no T1S entry on purpose; leaving setCode
+  // null here just skips that filter rather than mis-arming it.
+  //
+  // language activates searchEbaySealed's CN/KR override (see ebay.ts) —
+  // WITHOUT it, the EN search's normal "reject anything foreign-looking" guards
+  // (SEALED_EXCLUDE_EBAY's chinese|japanese|korean words, isForeignListing's
+  // CJK/CN-location check) would throw out the Chinese and Korean listings
+  // exactly as they're designed to for every OTHER product's search.
+  const T1_SEEDS: { groupKey: string; setCode: string | null; name: string; productType: string; imageUrl: string | null; language?: "CN" | "KR" }[] = [
+    { groupKey: "T1S|T1 Signature Edition|EN", setCode: null, name: "T1 2025 Worlds Champion Signature Edition", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|EN"] },
+    { groupKey: "T1S|T1 Signature Edition|CN", setCode: null, name: "T1 2025 Worlds Champion Signature Edition Chinese", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|CN"], language: "CN" },
+    { groupKey: "T1S|T1 Signature Edition|KR", setCode: null, name: "T1 2025 Worlds Champion Signature Edition Korean", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|KR"], language: "KR" },
+  ];
   const haveKeys = new Set(groups.map((g) => g.groupKey));
   // Trusted reference = cheapest NON-eBay (store/TCGplayer) price for the product, so
   // the eBay search can reject listings priced implausibly below the real product.
@@ -513,8 +541,9 @@ async function refreshEbaySealedMarket(
     return nonEbay.length ? Math.min(...nonEbay) : null;
   };
   const searchList = [
-    ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, referenceCents: trustedRef(g) })),
-    ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
+    ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, language: undefined as "CN" | "KR" | undefined, referenceCents: trustedRef(g) })),
+    ...NEXUS_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, language: undefined as "CN" | "KR" | undefined, referenceCents: null as number | null })),
+    ...T1_SEEDS.filter((s) => !haveKeys.has(s.groupKey)).map((s) => ({ ...s, referenceCents: null as number | null })),
   ].filter((g) => ebaySealedWorthSearching(g.productType));
   const ebayRows: any[] = [];
   let truncated = false;
@@ -523,7 +552,7 @@ async function refreshEbaySealedMarket(
       truncated = true;
       break;
     }
-    const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents, mkt.marketplace);
+    const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents, mkt.marketplace, g.language);
     if (!r) continue;
     ebayRows.push({
       groupKey: g.groupKey,
@@ -749,6 +778,38 @@ const DISTRUST_STORE_IMAGE = new Set([
   "Booster Pack", "Nexus Night Pack", "Promo Pack", "Sleeved Booster", "Sleeved Booster (Art Set)",
 ]);
 
+// Curated, verified thumbnails for the T1 Signature Edition's three language
+// editions (see T1_SEEDS in refreshEbaySealedMarket below) — keyed by groupKey,
+// not productType, because all three share one productType ("T1 Signature
+// Edition") and must NOT share one image. Unlike SEALED_TYPE_IMAGE above, this
+// ALWAYS wins over whatever photo a given eBay row carries (applied after the
+// TCGplayer-canonical override in getAllSealedGroups, and nothing else can ever
+// supply a row for these groupKeys — no store or catalogue sells a drawing-only
+// product). A drawing-only collectible's eBay photos are exactly the kind this
+// guards against: a reseller's own low-quality photo, an accessory-only shot, or
+// — the one that actually matters here — the WRONG language's box.
+//
+// EN reuses the same official Riot Merch Store render SEALED_TYPE_IMAGE already
+// falls back to (self-hosted, never hotlinked — see that entry's comment) but as
+// a clean flattened product shot rather than the multi-item composite. CN is a
+// self-hosted copy of a real listing photo for the Chinese edition. KR has no
+// separate press photo available, so scripts/gen-t1-korean-thumbnail.ts composites
+// a "한국어판" (Korean edition) ribbon onto the EN shot — the box itself carries no
+// language marking, only the cards inside differ.
+const T1_GROUP_IMAGE: Record<string, string> = {
+  "T1S|T1 Signature Edition|EN": "/t1-worlds-cards/t1-signature-edition-box-en.jpg",
+  "T1S|T1 Signature Edition|CN": "/t1-worlds-cards/t1-signature-edition-box-cn.jpg",
+  "T1S|T1 Signature Edition|KR": "/t1-worlds-cards/t1-signature-edition-box-kr.jpg",
+};
+// Same rationale, for the tile NAME: without this a group's name is whatever the
+// winning eBay listing happened to be titled (see the override loop below), which
+// for a resold collectible is rarely a clean product name.
+const T1_GROUP_NAME: Record<string, string> = {
+  "T1S|T1 Signature Edition|EN": "T1 2025 Worlds Champion Signature Edition",
+  "T1S|T1 Signature Edition|CN": "T1 2025 Worlds Champion Signature Edition (Chinese)",
+  "T1S|T1 Signature Edition|KR": "T1 2025 Worlds Champion Signature Edition (Korean)",
+};
+
 // Every sealed group in a market, pre-orders included. Not exported: callers pick a
 // side via getSealedGroups() (shipped) or getPreorderGroups() (not yet), so nothing
 // can accidentally price an unshipped box as though it were on a shelf.
@@ -817,6 +878,23 @@ async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<S
       g.imageUrl = canon;
       imgRank.set(g.groupKey, 0);
     }
+  }
+  // Same idea, stronger: the T1 Signature Edition groups (see T1_GROUP_IMAGE's
+  // comment) have no catalogue to draw from at all, so THIS overrides even a
+  // real eBay photo — a drawing-only collectible's eBay listings are exactly
+  // where a wrong-language or accessory-only photo would otherwise slip through.
+  // The name gets the same treatment for the same reason: without it, the tile
+  // shows whatever a specific eBay seller happened to title their listing
+  // ("Riftbound T1 Sig Ed CHINESE NEW SEALED Ships Fast!!") instead of a name
+  // consistent with every other tile on the page.
+  for (const g of groups.values()) {
+    const img = T1_GROUP_IMAGE[g.groupKey];
+    if (img) {
+      g.imageUrl = img;
+      imgRank.set(g.groupKey, 0);
+    }
+    const name = T1_GROUP_NAME[g.groupKey];
+    if (name) g.name = name;
   }
   // Type-correct branded fallback: if the only image is a STORE photo of a pack-family
   // product (stores reuse the box photo on pack listings → the reported "pack shows a

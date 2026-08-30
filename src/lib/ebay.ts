@@ -236,6 +236,18 @@ function isForeignListing(it: any): boolean {
   return false;
 }
 
+// The T1 Signature Edition ships in three languages, sold only via a Riot Merch
+// Store drawing — so unlike every other sealed search, the Chinese and Korean
+// editions are real, distinct, wanted products, not a foreign-printing false
+// positive to reject. This is the REQUIRE-side inverse of FOREIGN_LANG above:
+// narrower per language on purpose (a Korean search accepting a Chinese listing
+// just because both are "foreign" would silently mix two different resale
+// markets under one price). See the `language` param on searchEbaySealed.
+export const LANGUAGE_SIGNAL: Record<"CN" | "KR", RegExp> = {
+  CN: /[㐀-鿿]|\b(chinese|simplified|traditional|chs|cht|mandarin|cantonese)\b/i,
+  KR: /[가-힯]|\b(korean|kor)\b/i,
+};
+
 function median(nums: number[]): number {
   const s = [...nums].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
@@ -878,8 +890,22 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
 // "booster box PROTECTOR", "acrylic display CASE", "EMPTY box", a single art/code
 // card, etc. These are the main source of absurd low "sealed" prices (a $22 Origins
 // "booster box" that's really a display-box protector), so exclude them outright.
-const SEALED_EXCLUDE_EBAY =
-  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|chinese|japanese|korean|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card/i;
+//
+// Split from the language-word exclusion below (rather than one combined literal)
+// so the T1 CN/KR searches can drop ONLY the language exclusion and keep every
+// other guard — see SEALED_EXCLUDE_EBAY_BASE and the `language` param on
+// searchEbaySealed further down.
+const SEALED_EXCLUDE_EBAY_BASE =
+  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card/i;
+// A listing calling itself Chinese/Japanese/Korean is (almost always) a foreign
+// printing of an English product being searched for — excluded by default. The T1
+// Signature Edition's CN/KR seeds are the one deliberate exception: for those two
+// searches, THIS is the listing being searched for, not noise. See `language` below.
+const SEALED_EXCLUDE_LANGUAGE_WORDS = /chinese|japanese|korean/i;
+const SEALED_EXCLUDE_EBAY = new RegExp(
+  `${SEALED_EXCLUDE_EBAY_BASE.source}|${SEALED_EXCLUDE_LANGUAGE_WORDS.source}`,
+  "i",
+);
 
 // Per-type minimum plausible price (AUD cents) for an eBay sealed listing. A real
 // booster box is never $22 — anything below the floor is an accessory/empty/mis-listed
@@ -937,6 +963,16 @@ export async function searchEbaySealed(
   // resulting row storable against a market — SealedListing has no currency
   // column, so the country IS the currency.
   marketplace: string = DEFAULT_MARKETPLACE,
+  // Set ONLY by the T1 Signature Edition's Chinese/Korean seeds (see T1_SEEDS in
+  // sealed-import.ts). Every other caller omits this and keeps the default
+  // "reject anything foreign-looking" behaviour below — it exists because that
+  // default behaviour, correct for every other sealed product, would reject the
+  // CN/KR editions themselves: SEALED_EXCLUDE_EBAY normally drops any title
+  // containing "chinese"/"japanese"/"korean", and isForeignListing() drops any
+  // CJK title or mainland-China seller location. For these two searches that is
+  // the listing being searched for, not noise, so both are swapped for the
+  // opposite check — REQUIRE the language signal instead of excluding it.
+  language?: "CN" | "KR",
 ): Promise<EbayResult | null> {
   const token = await getToken();
   if (!token) return null;
@@ -976,11 +1012,19 @@ export async function searchEbaySealed(
   const floor = sealedFloorCents(productType, referenceCents);
   const valid = items
     .filter((it) => it?.price?.value)
-    .filter((it) => /riftbound/i.test(it.title ?? ""))
+    // "Riftbound" is required in every other search, but a CN/KR reseller's title
+    // very often keeps the Latin-script team name ("T1") while dropping or
+    // translating the English game name — so a language search also accepts a
+    // bare "T1", still narrow (T1 is the whole reason this product is findable
+    // at all) and still backstopped by the language/keyword/floor filters below.
+    .filter((it) => (language ? /riftbound|\bt1\b/i : /riftbound/i).test(it.title ?? ""))
     .filter((it) => !kw || kw.test(it.title ?? ""))
     .filter((it) => !setName || new RegExp(setName.replace(/\s+/g, "\\s*"), "i").test(it.title ?? "") || !setCode)
-    .filter((it) => !SEALED_EXCLUDE_EBAY.test(it.title ?? ""))
-    .filter((it) => !isForeignListing(it))
+    // Every OTHER exclusion in SEALED_EXCLUDE_EBAY_BASE still applies for a
+    // language search (proxy/sleeve/empty/accessory/…) — only the language-word
+    // branch is dropped, since that's exactly what CN/KR are searching for.
+    .filter((it) => !(language ? SEALED_EXCLUDE_EBAY_BASE : SEALED_EXCLUDE_EBAY).test(it.title ?? ""))
+    .filter((it) => (language ? LANGUAGE_SIGNAL[language].test(it.title ?? "") : !isForeignListing(it)))
     // Price-sanity: drop anything below the per-type / reference floor (the $22
     // "booster box" accessory class).
     .filter((it) => Math.round(parseFloat(it.price.value) * 100) >= floor)
