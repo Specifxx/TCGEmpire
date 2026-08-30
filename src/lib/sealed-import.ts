@@ -549,8 +549,16 @@ async function refreshEbaySealedMarket(
   // exactly as they're designed to for every OTHER product's search.
   const T1_SEEDS: { groupKey: string; setCode: string | null; name: string; productType: string; imageUrl: string | null; language?: "CN" | "KR" }[] = [
     { groupKey: "T1S|T1 Signature Edition|EN", setCode: null, name: "T1 2025 Worlds Champion Signature Edition", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|EN"] },
-    { groupKey: "T1S|T1 Signature Edition|CN", setCode: null, name: "T1 2025 Worlds Champion Signature Edition Chinese", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|CN"], language: "CN" },
-    { groupKey: "T1S|T1 Signature Edition|KR", setCode: null, name: "T1 2025 Worlds Champion Signature Edition Korean", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|KR"], language: "KR" },
+    // CN/KR query wording checked against real live listings on 2026-08-30 (e.g.
+    // "Presale Chinese Riftbound x T1 2025 Worlds Champion Signature edition Box
+    // Sealed", "2025 Riftbound Korean Worlds Champion T1 Signature Edition Box
+    // Sealed Presale") — the language word leads (right after "Riftbound", which
+    // searchEbaySealed prepends) and "Box" is added, both matching how sellers
+    // actually title these, to help eBay's own relevance ranking surface them
+    // within the 50-result window. The post-filters below (LANGUAGE_SIGNAL etc.)
+    // are order-independent regexes, so this is query-side only.
+    { groupKey: "T1S|T1 Signature Edition|CN", setCode: null, name: "Chinese T1 2025 Worlds Champion Signature Edition Box", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|CN"], language: "CN" },
+    { groupKey: "T1S|T1 Signature Edition|KR", setCode: null, name: "Korean T1 2025 Worlds Champion Signature Edition Box", productType: "T1 Signature Edition", imageUrl: T1_GROUP_IMAGE["T1S|T1 Signature Edition|KR"], language: "KR" },
   ];
   const haveKeys = new Set(groups.map((g) => g.groupKey));
   // Trusted reference = cheapest NON-eBay (store/TCGplayer) price for the product, so
