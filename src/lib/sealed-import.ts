@@ -430,7 +430,31 @@ export async function importSealed(): Promise<number> {
   // from before the filters tightened).
   await cleanupStaleSealed();
 
+  // AFTER cleanup, not before: recording first-seen for a row cleanupStaleSealed
+  // is about to delete would leave a permanent tracking entry for a product that
+  // never actually qualified.
+  await recordSealedFirstSeen();
+
   return count;
+}
+
+// Insert a first-seen row for every (groupKey, country) currently in
+// SealedListing that doesn't already have one — see SealedGroupFirstSeen's
+// schema comment for why this can't just be a column on SealedListing itself.
+// skipDuplicates makes every already-tracked group a no-op, so a group's
+// firstSeenAt is written exactly once and never moves again.
+//
+// GROUP BY via $queryRaw, deliberately not `findMany({ distinct: [...] })`:
+// Prisma's `distinct` dedupes in the CLIENT, so the emitted SQL has no DISTINCT
+// and no LIMIT — it drags back every SealedListing row just to compute a
+// two-column pair list (see tests/prisma-client-side-distinct.test.ts for the
+// 2026-08-22 incident this guards against; that test would fail this file).
+export async function recordSealedFirstSeen(): Promise<void> {
+  const pairs = await prisma.$queryRaw<{ groupKey: string; country: string }[]>`
+    SELECT "groupKey", "country" FROM "SealedListing" GROUP BY "groupKey", "country"
+  `;
+  if (!pairs.length) return;
+  await prisma.sealedGroupFirstSeen.createMany({ data: pairs, skipDuplicates: true });
 }
 
 // Sealed product types NOT worth an eBay call.
@@ -690,6 +714,10 @@ export interface SealedGroup {
   msrpCents: number | null;
   atMsrp: boolean;
   overMsrpPct: number | null;
+  // From SealedGroupFirstSeen (see that model's schema comment) — null only for a
+  // group this table's own writer (recordSealedFirstSeen) hasn't caught up to yet,
+  // which self-heals on the next import run. Powers /sealed's "Recently Added" sort.
+  firstSeenAt: Date | null;
   listings: {
     retailer: string;
     retailerName: string;
@@ -735,6 +763,28 @@ async function getCanonicalSealedImages(): Promise<Map<string, string>> {
     /* best-effort — fall back to per-listing images */
   }
   slot.__sealedCanonImg = { at: Date.now(), data: map };
+  return map;
+}
+
+// First-seen timestamps from SealedGroupFirstSeen (see that model's schema
+// comment for why this lives in its own table rather than a column on
+// SealedListing). Keyed by `${groupKey}|${country}` to match how every group is
+// already scoped per market. Memoized the same way as the canonical-image map.
+type FirstSeenMemo = { at: number; data: Map<string, Date> };
+async function getSealedFirstSeen(): Promise<Map<string, Date>> {
+  const slot = globalThis as unknown as { __sealedFirstSeen?: FirstSeenMemo };
+  const cached = slot.__sealedFirstSeen;
+  if (cached && Date.now() - cached.at < SEALED_MEMO_TTL_MS) return cached.data;
+  const map = new Map<string, Date>();
+  try {
+    const rows = await prisma.sealedGroupFirstSeen.findMany({
+      select: { groupKey: true, country: true, firstSeenAt: true },
+    });
+    for (const r of rows) map.set(`${r.groupKey}|${r.country}`, r.firstSeenAt);
+  } catch {
+    /* best-effort — a group with no row just sorts as null, not an error */
+  }
+  slot.__sealedFirstSeen = { at: Date.now(), data: map };
   return map;
 }
 
@@ -826,6 +876,7 @@ async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<S
     },
   });
   const canonicalImg = await getCanonicalSealedImages();
+  const firstSeen = await getSealedFirstSeen();
   const groups = new Map<string, SealedGroup>();
   const imgRank = new Map<string, number>(); // groupKey -> source rank of the chosen image
   for (const r of rows) {
@@ -852,6 +903,7 @@ async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<S
         msrpCents: null,
         atMsrp: false,
         overMsrpPct: null,
+        firstSeenAt: firstSeen.get(`${r.groupKey}|${country}`) ?? null,
         listings: [],
       };
       groups.set(r.groupKey, g);

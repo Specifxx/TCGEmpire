@@ -121,6 +121,13 @@ export function buildCardOrderBy(
       return [{ [field]: { sort: "desc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput, { name: "asc" }];
     case "name":
       return [{ name: "asc" }];
+    // Card.createdAt is set once on insert and never touched again (cards are
+    // always update/create, never wholesale delete+recreate like SealedListing —
+    // see the sealed importer for why that table needed a separate tracking model
+    // instead of just sorting on a column it already had), so it's a stable,
+    // accurate "when did this printing first appear in our catalogue" signal.
+    case "new":
+      return [{ createdAt: "desc" }];
     case "number":
     default:
       return [{ setCode: "asc" }, { collectorNumber: "asc" }];

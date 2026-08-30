@@ -724,6 +724,32 @@ model SealedListing {
   @@index([country])
 }
 
+// "When was this product group first seen?" — for /sealed's "Recently Added" sort.
+// Deliberately a SEPARATE table rather than a column on SealedListing: that table
+// is wiped and rewritten wholesale per store/market on every import run
+// (deleteMany + createMany — see importSealed()), so a `createdAt` column on it
+// would reset to "now" for every still-listed product on every scrape, which is
+// exactly backwards for "recently added". This table is written once per
+// groupKey+country (skipDuplicates — see recordSealedFirstSeen()) and never
+// touched again, so it survives the listing table being rebuilt underneath it.
+//
+// country is part of the key, not just groupKey, because "recently added" is a
+// per-market question — a product a US store has carried for months is still new
+// to an AU buyer the week an AU store first lists it (getAllSealedGroups is
+// itself always scoped to one country, so this matches that shape exactly).
+//
+// firstSeenAt reflects "since this tracking existed", not the product's true
+// real-world debut — there is no historical record for anything that was already
+// in the table before this model existed, and this never guesses one; those
+// groups simply get today's date the first time this code runs against them.
+model SealedGroupFirstSeen {
+  groupKey    String
+  country     String
+  firstSeenAt DateTime @default(now())
+
+  @@id([groupKey, country])
+}
+
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller
 // filled a buy order (kind BUYORDER).
 model Order {

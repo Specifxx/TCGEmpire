@@ -7,6 +7,7 @@ const OPTIONS = [
   { value: "price_asc", label: "Price: Low to High" },
   { value: "price_desc", label: "Price: High to Low" },
   { value: "name", label: "Name: A–Z" },
+  { value: "new", label: "Recently Added" },
 ];
 
 export function SealedSort() {

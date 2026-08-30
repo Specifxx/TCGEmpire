@@ -125,6 +125,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   if (sort === "price_asc") groups = [...groups].sort((a, b) => (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
   else if (sort === "price_desc") groups = [...groups].sort((a, b) => (b.lowestPriceCents ?? -1) - (a.lowestPriceCents ?? -1));
   else if (sort === "name") groups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === "new")
+    // Newest first. A null firstSeenAt (the tracking row hasn't been written yet —
+    // see recordSealedFirstSeen) sorts LAST, not first: "unknown" must never look
+    // like "just added" the way it would if missing sorted as epoch-0 descending.
+    groups = [...groups].sort((a, b) => (b.firstSeenAt?.getTime() ?? -1) - (a.firstSeenAt?.getTime() ?? -1));
   else
     // Default: float the freshly-live Vendetta (VEN) sealed to the top via a stable
     // sort, leaving every other group in its (already-filtered) order.
