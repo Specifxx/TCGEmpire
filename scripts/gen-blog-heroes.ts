@@ -51,7 +51,16 @@ type Motif =
   /** A single date the post is really about — a release, a deadline, a drawing. */
   | { kind: "date"; label: string; big: string; sub: string }
   /** A short status list. Every row is a tick; used where "all of these" is the answer. */
-  | { kind: "checklist"; label: string; items: string[] };
+  | { kind: "checklist"; label: string; items: string[] }
+  /**
+   * A grid of short, distinctly-coloured tiles — for a post whose whole subject
+   * IS a set of named categories (archetypes, domains, tiers). Every other motif
+   * here is monochrome (brand green on near-black); this is the one place colour
+   * itself carries information, which is what makes it read as "a real taxonomy"
+   * rather than decoration and is why it was worth a fourth motif instead of
+   * reusing checklist. Up to 9 items, 3 per row.
+   */
+  | { kind: "grid"; label: string; items: { text: string; color: string }[] };
 
 interface Hero {
   slug: string;
@@ -197,6 +206,34 @@ const HEROES: Hero[] = [
     },
   },
   {
+    slug: "riftbound-deck-archetypes-guide",
+    kicker: "Guide · Deckbuilding",
+    title: "Riftbound Deck Archetypes",
+    // "9 real archetypes" IS the thumbnail's claim, so the grid below has to
+    // show exactly 9 — see the article's own self-checking test for why that
+    // number is read from the data rather than typed twice.
+    chips: ["9 real archetypes", "From live tournament decks", "Which to build first"],
+    motif: {
+      kind: "grid",
+      label: "Archetypes",
+      // Colours cycle through Riftbound's own domain palette (lib/constants.ts
+      // DOMAINS) — not a claim that a given archetype belongs to that domain
+      // (most span two), just real, on-brand colour rather than nine shades of
+      // grey. Order matches the article's own comparison table.
+      items: [
+        { text: "Aggro", color: "#e5484d" },
+        { text: "Tempo", color: "#30a46c" },
+        { text: "Midrange", color: "#3b82f6" },
+        { text: "Combo", color: "#f5a524" },
+        { text: "Disruption", color: "#a855f7" },
+        { text: "Value", color: "#cbd5e1" },
+        { text: "Gear", color: "#e5484d" },
+        { text: "Spell", color: "#30a46c" },
+        { text: "Reach", color: "#3b82f6" },
+      ],
+    },
+  },
+  {
     slug: "best-basket-cheapest-riftbound-deck",
     kicker: "Guide · Deckbuilding",
     title: "Best Basket: Cheapest Way to Buy a Deck",
@@ -313,20 +350,57 @@ function motifSvg(m: Motif): string {
   </g>`;
   }
 
-  // checklist — a tick per row, drawn as a stroked path rather than a "✓" glyph
-  // so it cannot depend on what the rasterising font happens to carry.
-  const rows = m.items.slice(0, 5);
-  // Bottom-aligned to a fixed baseline rather than grown downward from a fixed
-  // top: a fifth row starting at 470 would push its baseline to 614, hard against
-  // the 630 edge. The label hangs off `top` for the same reason.
-  const top = 596 - (rows.length - 1) * 36;
-  return `<g ${FONT}>
+  if (m.kind === "checklist") {
+    // checklist — a tick per row, drawn as a stroked path rather than a "✓" glyph
+    // so it cannot depend on what the rasterising font happens to carry.
+    const rows = m.items.slice(0, 5);
+    // Bottom-aligned to a fixed baseline rather than grown downward from a fixed
+    // top: a fifth row starting at 470 would push its baseline to 614, hard against
+    // the 630 edge. The label hangs off `top` for the same reason.
+    const top = 596 - (rows.length - 1) * 36;
+    return `<g ${FONT}>
     <text x="${R}" y="${top - 40}" fill="#94a3b8" font-size="22" letter-spacing="4" text-anchor="end">${esc(m.label.toUpperCase())}</text>
     ${rows
       .map((it, i) => {
         const y = top + i * 36;
         return `<text x="${R - 58}" y="${y}" fill="#cbd5e1" font-size="27" text-anchor="end">${esc(it)}</text>
     <path d="M ${R - 44} ${y - 10} l 9 10 l 18 -20" fill="none" stroke="${BRAND}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+      })
+      .join("\n    ")}
+  </g>`;
+  }
+
+  // grid — up to 9 tiles, 3 per row, each a distinctly-coloured pill. The one
+  // motif where colour itself is the point (see the type's doc comment), so
+  // tiles use a solid fill at reduced opacity plus a full-opacity top edge,
+  // rather than the outline-only treatment the other motifs use — a thumbnail
+  // this small needs the colour to read at a glance, not on close inspection.
+  const TILE_W = 118;
+  const TILE_H = 46;
+  const GAP = 14;
+  const COLS = 3;
+  const tiles = m.items.slice(0, 9);
+  const rowCount = Math.ceil(tiles.length / COLS);
+  const gridW = COLS * TILE_W + (COLS - 1) * GAP;
+  const gridH = rowCount * TILE_H + (rowCount - 1) * GAP;
+  const left = R - gridW;
+  // Bottom-aligned to y=620, same reasoning as checklist's `top`: growing
+  // downward from a fixed top risks the last row crowding the 630 edge as the
+  // item count (and therefore row count) varies per post.
+  const gridTop = 620 - gridH;
+  return `<g ${FONT}>
+    <text x="${R}" y="${gridTop - 26}" fill="#94a3b8" font-size="22" letter-spacing="4" text-anchor="end">${esc(m.label.toUpperCase())}</text>
+    ${tiles
+      .map((it, i) => {
+        const col = i % COLS;
+        const row = Math.floor(i / COLS);
+        const x = left + col * (TILE_W + GAP);
+        const y = gridTop + row * (TILE_H + GAP);
+        return `<g>
+      <rect x="${x}" y="${y}" width="${TILE_W}" height="${TILE_H}" rx="8" fill="${it.color}" opacity="0.22"/>
+      <rect x="${x}" y="${y}" width="${TILE_W}" height="4" rx="2" fill="${it.color}"/>
+      <text x="${x + TILE_W / 2}" y="${y + TILE_H / 2 + 8}" fill="#ffffff" font-size="20" font-weight="bold" text-anchor="middle">${esc(it.text)}</text>
+    </g>`;
       })
       .join("\n    ")}
   </g>`;

@@ -170,6 +170,105 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  {
+    slug: "riftbound-deck-archetypes-guide",
+    category: "guide",
+    title: "Riftbound Deck Archetypes: A Complete Guide",
+    excerpt:
+      "Aggro, Tempo, Midrange and six more specific tags on top of them — every real Riftbound deck archetype in the current metagame, and which to build first. Want today's actual decklists instead? See the meta decks, priced.",
+    author: "RiftCompare",
+    date: "2026-08-30",
+    readMins: 10,
+    tags: ["deckbuilding", "archetypes", "meta", "beginner", "strategy"],
+    hero: {
+      src: "/blog/riftbound-deck-archetypes-guide.png",
+      alt: "Riftbound deck archetypes guide — Aggro, Tempo, Midrange and six more, color-coded",
+    },
+    summary: [
+      "**Nine named archetypes appear in the current metagame, but only three are real pillars**: Aggro, Tempo and Midrange. Every one of the ten tournament decklists we track is fundamentally one of those three.",
+      "**The other six labels — Combo, Disruption, Value, Gear, Spell, Reach — are always a more specific tag on top of one of the big three**, never a category by themselves (e.g. \"Aggro / Combo\", \"Spell Tempo\").",
+      "**Aggro and Tempo are tied for the most-played, at 4 of the 10 tracked decks each; Midrange has 3.** The current field's one Tier 1 deck (Irelia, Blade Dancer) is Tempo.",
+      "**Domain choice and archetype are linked**, not independent — most competitive lists commit to one or two of Riftbound's seven domains, and the current decks span six of them (every domain but Colorless).",
+      "Looking for actual decklists rather than the strategy behind them? **[See the real, live-priced meta decks](/decks).**",
+    ],
+    itemList: {
+      name: "Riftbound deck archetypes",
+      items: [
+        { name: "Aggro", description: "Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter.", url: "/decks/archetype/aggro" },
+        { name: "Tempo", description: "Spend every turn more efficiently than the opponent can answer.", url: "/decks/archetype/tempo" },
+        { name: "Midrange", description: "Bigger, more efficient cards than Aggro, while still faster than a pure control shell.", url: "/decks/archetype/midrange" },
+        { name: "Combo", description: "An Aggro deck whose win condition is a specific card interaction.", url: "/decks/archetype/combo" },
+        { name: "Disruption", description: "An Aggro deck built to deny the opponent's plan as much as execute its own.", url: "/decks/archetype/disruption" },
+        { name: "Value", description: "A Midrange deck built to grind out a card-advantage edge over a long game.", url: "/decks/archetype/value" },
+        { name: "Gear", description: "A Midrange deck built around equipment rather than raw unit stats.", url: "/decks/archetype/gear" },
+        { name: "Spell", description: "A Tempo deck that wins through spell-heavy swings rather than board stats.", url: "/decks/archetype/spell" },
+        { name: "Reach", description: "A Tempo deck carrying threats that can close the game from outside combat.", url: "/decks/archetype/reach" },
+      ],
+    },
+    faq: [
+      { q: "How many domains can a Riftbound deck run?", a: "One or two, in practice. Nothing in the printed rules caps it lower than that, but your 12 runes have to match your deck's domains to reliably cast your cards, and every archetype in the current tournament metagame we track commits to exactly one or two — usually two." },
+      { q: "What's the actual difference between Aggro and Tempo in Riftbound?", a: "Aggro tries to end the game before the opponent's expensive cards matter, accepting a worse late game for a faster clock. Tempo also plays proactively, but its goal is staying ahead on board turn after turn rather than racing flat out — it's often willing to trade a slower start for a more efficient one. The two overlap enough that some real decks are tagged both (Aggro / Tempo) rather than purely one or the other." },
+      { q: "What archetype should a beginner build first?", a: "Aggro is usually the easiest to learn on: the game plan is straightforward to execute, and mistakes are cheaper because you're rarely committing your whole turn to one expensive card. That's a starting-point recommendation, not a rule — Tempo and Midrange are just as legitimate if the playstyle appeals to you more." },
+      { q: "How many Riftbound deck archetypes are there?", a: "Nine named archetypes show up across the real tournament decklists we track, but three of them — Aggro, Tempo and Midrange — are the actual pillars. The other six (Combo, Disruption, Value, Gear, Spell, Reach) are more specific tags layered onto one of those three, not separate categories of their own." },
+      { q: "How much does a competitive Riftbound deck cost?", a: "It depends entirely on which list and which market you're buying in — the honest number changes daily as prices move. The meta decks page prices every real tournament list live, cheapest first, and the budget deckbuilding guide covers how to cut that cost without leaving the archetype you want to play." },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See today's real, live-priced meta decks →",
+      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole thing right now.",
+    },
+    body: `Search "Riftbound deck" and you'll get two different answers depending on what you actually want. If you want to see what people are winning with **right now** — real tournament lists, priced card-for-card in your own currency — that's [our meta decks page](/decks), updated as results come in. If you're trying to figure out **which kind of deck to build in the first place**, that's this page: what the real archetypes are, what actually separates them, and which one fits how you want to play.
+
+## What a deck needs, in 30 seconds
+
+Every Riftbound tournament deck is the same shape: a **Legend**, a **Champion**, a ~40-card main deck of Units/Gear/Spells, 12 **Runes** matching your domains, 3 **Battlefields**, and a side deck of up to 10 — 66 cards all up since the July 2026 rules update raised the side deck from 8. If any of that is new to you, **[the full anatomy of a deck](/guides/how-a-riftbound-deck-is-built)** covers it card type by card type. This page assumes you know the parts and is about a different question: which *strategy* to build around them.
+
+## Pick a domain (or two) first
+
+Riftbound has seven domains — Fury, Calm, Mind, Body, Chaos, Order and Colorless — and almost every competitive deck commits to one or two of them, since your 12 runes have to match. Domain is a real constraint on archetype: it's not that any domain can be any archetype, it's that a domain's own cards tend to reward a particular way of playing. Fury's cheap, aggressive cards pull toward Aggro; Mind's card-advantage tools pull toward Midrange and Value; and so on. Every domain gets its own breakdown — **[Fury](/decks/domain/fury)**, **[Calm](/decks/domain/calm)**, **[Mind](/decks/domain/mind)**, **[Body](/decks/domain/body)**, **[Chaos](/decks/domain/chaos)** and **[Order](/decks/domain/order)** — each with the real decks currently playing it and what they cost to build. (Colorless isn't a domain you build a deck *in* — no domain pair commits to it in the current metagame — but colorless cards slot into any list regardless of your domains, which is why they're the format's closest thing to universal staples.)
+
+## The archetypes, compared
+
+Nine named archetypes show up across the ten real tournament decklists we track, but they're not nine equal categories. **Every single one of the ten decks is fundamentally Aggro, Tempo or Midrange** — the other six labels (Combo, Disruption, Value, Gear, Spell, Reach) never stand alone; each one is a more specific tag layered onto one of those three. "Aggro / Combo" is an Aggro deck whose plan happens to be a specific card interaction. "Spell Tempo" is a Tempo deck that wins through spells rather than board stats. Knowing that changes how you should read the list below: the first three rows are real, separate ways to build; the next six are flavors of them.
+
+| Archetype | Playstyle | Real example right now | Domains it's shown up in |
+| --- | --- | --- | --- |
+| **[Aggro](/decks/archetype/aggro)** | Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter. | Kennen, Heart of the Tempest (Tier 2) | Body, Calm, Chaos, Fury, Order |
+| **[Tempo](/decks/archetype/tempo)** | Spend every turn more efficiently than the opponent can answer, staying ahead on board rather than racing flat out. | Irelia, Blade Dancer (Tier 1 — the field's benchmark) | Body, Calm, Chaos, Mind |
+| **[Midrange](/decks/archetype/midrange)** | Bigger, more efficient cards than Aggro plays, while still moving faster than a pure control shell. | Viktor, Herald of the Arcane (Tier 3) | Body, Fury, Mind, Order |
+| **[Combo](/decks/archetype/combo)** | An Aggro deck whose win condition is a specific card interaction rather than raw pressure alone. | Akali, Rogue Assassin (Aggro / Combo) | Calm, Fury |
+| **[Disruption](/decks/archetype/disruption)** | An Aggro deck that spends as much energy denying the opponent's plan as executing its own. | Kennen, Heart of the Tempest — same deck as the Aggro row above | Chaos, Order |
+| **[Value](/decks/archetype/value)** | A Midrange deck built to grind out a card-advantage edge over a long game rather than close fast. | Viktor, Herald of the Arcane — same deck as the Midrange row above | Mind, Order |
+| **[Gear](/decks/archetype/gear)** | A Midrange deck built around equipment rather than raw unit stats — a toolbox of repeatable effects. | Jayce, Defender of Tomorrow (Gear Midrange) | Body, Mind |
+| **[Spell](/decks/archetype/spell)** | A Tempo deck that wins through spell-heavy swings instead of board stats doing the work. | Diana, Scorn of the Moon (Spell Tempo, Tier 2) | Chaos, Mind |
+| **[Reach](/decks/archetype/reach)** | A Tempo deck carrying threats that can close the game from outside straight combat. | Ezreal, Prodigal Explorer (Tempo / Reach) | Chaos, Mind |
+
+Every archetype name links to its own page — the real decks in that group, what they cost to build in your market right now, and where to buy every card.
+
+## Which should you build first?
+
+There's no universally correct answer here — this is guidance, not a rule — but a few honest starting points:
+
+- **New to competitive Riftbound?** Start with **Aggro**. It's the most forgiving archetype to learn on: your deck's plan is simple to execute, your mistakes are cheaper (a misplayed 2-drop costs less than a misplayed 6-drop), and it teaches you the game's tempo and combat math faster than any other shell.
+- **Like reacting to what your opponent does, not just executing a plan?** **Tempo** or **Disruption** reward reading the board and adjusting turn to turn, rather than following a fixed script.
+- **Prefer a deck that's forgiving of a bad matchup?** **Midrange** — and specifically **Value** — trades some explosiveness for a deck that rarely has a truly unwinnable game plan against anything.
+- **Want a defined "I did the thing" moment?** **Combo** is the one archetype built around a specific interaction actually coming together, which is a different kind of satisfying than grinding out small edges all game.
+- **Building on a budget?** Archetype and budget aren't the same axis — see the next section — but as a rule of thumb, a low curve means more commons and uncommons and fewer expensive chases, which usually (not always) makes Aggro the cheaper shelf to buy into.
+
+## Budget vs. chasing the meta
+
+Tier 1 isn't always the right target for your first deck. A Tier 1 list is the highest expected finish, but it's also the most-copied — which means its key cards are the most contested and often the most expensive. **[Best budget Riftbound decks](/guides/budget-riftbound-decks)** covers how to build something genuinely competitive without chasing the priciest cards in the format, and **[the most-played cards in the current metagame](/guides/best-riftbound-cards)** shows you which staples show up across multiple lists — the cards worth owning regardless of which single archetype you land on.
+
+Once you've picked a list, don't price it card-by-card across a dozen different stores. **[Best Basket](/tools/best-basket)** takes the whole decklist and works out the store split that's actually cheapest once postage is counted — not just the cheapest total if every store magically shipped free.
+
+## One thing that doesn't change your choice
+
+Every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in every format, and no rotation policy has been announced. That means an archetype you build today isn't on a clock: **[does Riftbound rotate?](/guides/riftbound-format-legality-rotation)** has the full picture, but the short version is that your deck stays legal for as long as the cards in it do, which so far has been indefinitely.
+
+## Where the real decklists live
+
+Everything above is about *choosing* an archetype. Once you have, **[the meta decks page](/decks)** is where the actual, current, real tournament lists live — every card, every domain split, priced live in your own market, with the cheapest place to buy each one. That's the page for "what is everyone actually playing" — this one was for "what should I play."`,
+  },
   // ── Radiance (Set 5) — the one released set with no coverage at all until now.
   // Deliberately category "blog", not "guide": news-sitemap.xml only admits blog
   // posts inside a 2-day window, and a set announcement is exactly the piece that

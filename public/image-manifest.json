@@ -347,6 +347,27 @@
     ],
     "fingerprint": "052a52da511b82a4"
   },
+  "/blog/riftbound-deck-archetypes-guide.png": {
+    "src": "/blog/riftbound-deck-archetypes-guide.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43242,
+    "webp": "/blog/riftbound-deck-archetypes-guide.webp",
+    "webpBytes": 29974,
+    "avif": "/blog/riftbound-deck-archetypes-guide.avif",
+    "avifBytes": 18018,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-deck-archetypes-guide-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-deck-archetypes-guide-768w.webp"
+      }
+    ],
+    "fingerprint": "027bfb2831227774"
+  },
   "/blog/riftbound-format-legality-rotation.png": {
     "src": "/blog/riftbound-format-legality-rotation.png",
     "width": 1200,
