@@ -81,6 +81,13 @@ export const HUB_INTROS: Record<string, HubIntro> = {
       "Postage figures are our own per-store estimates for a single-card order, documented on each store's page, not rates quoted by the shop. Confirm at checkout — a store running free shipping over a threshold can change the answer.",
     ],
   },
+  "/tools/demand": {
+    paragraphs: [
+      "Two numbers, tracked per card since the day it was added: how many times it's been searched for, and how many times its page has been opened. Search is the purest read on intent — someone typed the card's name because they wanted it. Views are broader, catching browsing as well as buying.",
+      "Both are cumulative counters, so 'trending' has to mean 'accrued the most in a window', not just 'has the biggest running total' — a card that's been on the site since launch would always win that comparison. This ranks by what actually happened inside the window you pick, measured against a daily snapshot.",
+      "This is deliberately not a price prediction. High demand can mean a card is about to move, or it can mean everyone already owns one and is just checking its current value. Rising Cards folds demand into a scored, backtested signal built for that question — this page is the unblended number underneath it.",
+    ],
+  },
   "/tools/deal-finder": {
     paragraphs: [
       "The same card, at a materially different price, in two places we track at the same time. Deal Finder surfaces those gaps: cards where one store's live listing is well below the going rate elsewhere, ranked by how much you would save.",

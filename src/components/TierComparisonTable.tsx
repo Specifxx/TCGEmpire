@@ -44,6 +44,7 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
   { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, premium: true },
+  { feature: "Demand Finder — most searched & viewed cards", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 

@@ -112,13 +112,16 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/tools`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/tools") },
     { url: `${SITE_URL}/tools/box-ev`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/tools/selling-fees`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/tools/selling-fees") },
-    // Raised from 0.6 to 0.8 alongside promoting it to a header nav item and a
-    // homepage section — it is the most defensible, hardest-to-replicate feature
-    // on the site (per-store shipping optimisation, not just price lookup) and
-    // was previously priority-ranked below tools with far less depth behind them.
+    // Raised from 0.6 to 0.8 when it briefly had a header nav item and a
+    // homepage section — the homepage section stays (see HomeSections.tsx) even
+    // though the header link didn't (Best Basket moved back to Premium — see
+    // lib/premium.ts's tier note), and it is still the most defensible,
+    // hardest-to-replicate feature on the site (per-store shipping optimisation,
+    // not just price lookup), so the priority stays where it landed.
     { url: `${SITE_URL}/tools/best-basket`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/tools/best-basket") },
     { url: `${SITE_URL}/tools/value-finder`, changeFrequency: "daily", priority: 0.6, lastModified: day },
     { url: `${SITE_URL}/tools/rising`, changeFrequency: "daily", priority: 0.6, lastModified: day },
+    { url: `${SITE_URL}/tools/demand`, changeFrequency: "daily", priority: 0.6, lastModified: day },
     { url: `${SITE_URL}/tools/deal-finder`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/stores/tracked`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/stores/tracked") },
     { url: `${SITE_URL}/stores/suggest`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/stores/suggest") },

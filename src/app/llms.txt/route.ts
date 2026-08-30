@@ -15,6 +15,7 @@ const DESC: Record<string, string> = {
   "/tools/deal-finder": "Deal Finder: cards worth more on eBay than in stores, plus the cheapest cards to buy on eBay.",
   "/tools/value-finder": "Finds undervalued cards trading below their fair market value.",
   "/tools/rising": "Ranks cards by demand and price-timing signals to surface ones likely to rise soon.",
+  "/tools/demand": "Leaderboard of the most searched and viewed cards, by real traffic — raw demand, not a derived score.",
   "/tools/best-basket": "Cheapest single-store basket for a list of cards (minimises combined shipping).",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
