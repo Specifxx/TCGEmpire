@@ -217,7 +217,7 @@
     "imageThumbUrl": null
   },
   {
-    "_note": "Vendetta Signature ('*') Legend pulls — playriftbound.com's own card gallery hasn't posted these yet (Signature prints always trail the base reveal), so fetch-vendetta-official.ts can't see them. Sourced from real eBay listings (buyer-submitted photos, cross-checked against each other for the rules text/collector number), NOT RiftScribe/official art. imageUrl points at our own re-hosted crop of that photo (public/signature-cards/) as a stand-in thumbnail — swap for the official CDN asset once cards-sync/vendetta-pipeline catalogues the real print (same externalId, so it adopts in place, no duplicate). domain is the Legend's FIRST printed domain only, same simplification fetch-vendetta-official.ts's own o.domain.values[0] makes for every other Legend in this file — each of these six is actually dual-domain (Zed Fury/Chaos, Kennen Chaos/Body, Shen Calm/Body, Renekton Fury/Body, Mel Mind/Chaos, Jayce Mind/Body per the two domain pips on the card), the DB just doesn't have a second-domain column yet."
+    "_note": "Vendetta Signature ('*') Legend pulls. UPDATED 2026-08-30: playriftbound.com's official card gallery now lists all 9 Signature prints (VEN 189*-197*/166, tagged by champion — note the site's own card NAME for each is just the subtitle, e.g. 'Master of Shadows' with tags:['Zed'], not 'Zed, Master of Shadows'). imageUrl/imageThumbUrl now point at the official cmsassets.rgpub.io CDN asset (same convention as import-vendetta.ts: imageThumbUrl = imageUrl, no separate crop), replacing the earlier eBay-photo stand-ins. Confirmed by champion tag + collector number, not by name string match. Still not in fetch-vendetta-official.ts's own automated pass, so this file remains the only path to these 8 rows — VEN-196*/166 (Ambessa, 'Matriarch of War') is a 9th Signature the gallery lists, but Ambessa was never added to this manual block in the first place (no base entry to match against here), so it's deliberately left out rather than added half-tracked. domain is still the Legend's FIRST printed domain only, same simplification fetch-vendetta-official.ts's own o.domain.values[0] makes for every other Legend in this file — each of these six is actually dual-domain (Zed Fury/Chaos, Kennen Chaos/Body, Shen Calm/Body, Renekton Fury/Body, Mel Mind/Chaos, Jayce Mind/Body per the two domain pips on the card), the DB just doesn't have a second-domain column yet."
   },
   {
     "externalId": "manual-ven-191166",
@@ -231,8 +231,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you banish a card you own, empower me. Action: Disempower me, exhaust — Discard 1, then draw 1.",
-    "imageUrl": "https://riftcompare.com/signature-cards/zed-master-of-shadows-ven191.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/zed-master-of-shadows-ven191.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a88733f8062c18a7aa51a208b1aef5d0bd030007-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a88733f8062c18a7aa51a208b1aef5d0bd030007-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-197166",
@@ -246,8 +246,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you play a card from anywhere other than your hand, empower me. Action: Disempower me, exhaust — Give a unit Assault 2 this turn.",
-    "imageUrl": "https://riftcompare.com/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/kennen-heart-of-the-tempest-ven197.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/853681913bcd2a2e2b42217e290b530b72518142-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/853681913bcd2a2e2b42217e290b530b72518142-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-193166",
@@ -261,8 +261,8 @@
     "energyCost": null,
     "might": null,
     "description": "Action: Exhaust — Give a friendly unit Tank this turn.",
-    "imageUrl": "https://riftcompare.com/signature-cards/shen-eye-of-twilight-ven193.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/shen-eye-of-twilight-ven193.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1f60702c09f95d2a2af0176c77166092cb8cf6fa-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1f60702c09f95d2a2af0176c77166092cb8cf6fa-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-190166",
@@ -276,8 +276,8 @@
     "energyCost": null,
     "might": null,
     "description": "Reaction: Pay 2 Energy, exhaust — Add 2. Spend this Energy only to play units or activated abilities of units.",
-    "imageUrl": "https://riftcompare.com/signature-cards/renekton-butcher-of-the-sands-ven190.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/renekton-butcher-of-the-sands-ven190.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b9270494d2c18525e766b2ffa23a7c99ad9f994f-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b9270494d2c18525e766b2ffa23a7c99ad9f994f-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-195166",
@@ -291,8 +291,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you empower something else, empower me. Disempower me, exhaust — Give a unit at a battlefield -2 Might this turn.",
-    "imageUrl": "https://riftcompare.com/signature-cards/mel-souls-reflection-ven195.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/mel-souls-reflection-ven195.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/174a22326c894454cb5878f4ce3603d43f9e599f-744x1040.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/174a22326c894454cb5878f4ce3603d43f9e599f-744x1040.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-194166",
@@ -306,8 +306,8 @@
     "energyCost": null,
     "might": null,
     "description": "Empower 2 (2 Energy). Cost 1, exhaust — Ready a gear. Empowered: Cost 1, exhaust — Ready 2 gear.",
-    "imageUrl": "https://riftcompare.com/signature-cards/jayce-defender-of-tomorrow-ven194.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/jayce-defender-of-tomorrow-ven194.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/3092eec0739ac28d36e22c3ee005feb75980d001-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/3092eec0739ac28d36e22c3ee005feb75980d001-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-189166",
@@ -321,8 +321,8 @@
     "energyCost": null,
     "might": null,
     "description": "Empower 3, exhaust. Action: Exhaust — If it's your turn, move a friendly unit in a showdown to base and if I'm Empowered, ready it.",
-    "imageUrl": "https://riftcompare.com/signature-cards/akali-rogue-assassin-ven189.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/akali-rogue-assassin-ven189.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d8262e7b24f26d1c9a18b13166d009aaf573e059-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d8262e7b24f26d1c9a18b13166d009aaf573e059-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-192166",
@@ -336,8 +336,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you play a unit, gear, or activated ability with Energy cost 7 or more, you may exhaust me to ready up to 2 runes.",
-    "imageUrl": "https://riftcompare.com/signature-cards/nasus-curator-of-the-sands-ven192.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/nasus-curator-of-the-sands-ven192.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/964b5f9718a6648add68d894505e69bd2c5d071a-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/964b5f9718a6648add68d894505e69bd2c5d071a-744x1039.png?accountingTag=RB"
   },
   {
     "_note": "Vendetta Nexus Night promo cycle (weekly local-store event pack) — sourced from riftbound.gg's own Nexus Night promo page, official Riot card art (not a fan photo). The chase card is Mel, Newly Awakened (069b/166, a 'b' promo variant of the existing 069/166 base and 069A/166 alt-art); the 6 runes (R01b-R06b) are the promo variants of the existing base rune cycle (R01-R06). riftbound.gg explicitly labels the OTHER ~18 cards shown on that page as placeholders standing in for not-yet-revealed real promos ('We will update this section soon with the promo tagged cards') — only these 7 are confirmed, so only these 7 are added here."
