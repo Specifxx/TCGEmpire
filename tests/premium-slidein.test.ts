@@ -67,6 +67,45 @@ test("it emits a shown / click / dismissed event trio, routed to the right desti
   assert.ok(!ga4Only.includes("premium_slidein_click"), "click is the conversion leg and must reach Vercel too");
 });
 
+test("the pitch chips name real Premium-only tools, and none are missing", async () => {
+  // Guards exactly the bug this redesign fixed: a hand-written sentence naming
+  // three tools drifted out of date the moment Best Basket moved back to
+  // Premium and Demand Finder shipped, and nothing caught it. PITCH_TOOLS is
+  // still a hand-maintained list (TierComparisonTable's TIER_COMPARISON isn't
+  // imported here to keep this component free of a data-layer dependency), so
+  // this test is the thing that must catch the next drift instead.
+  const src = read(SRC);
+  const listMatch = src.match(/const PITCH_TOOLS[^=]*=\s*\[([\s\S]*?)\n\];/);
+  assert.ok(listMatch, "expected a PITCH_TOOLS array declaration");
+  const labels = [...listMatch![1].matchAll(/label: "([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(labels.length >= 4, "expected a real, non-trivial pitch — not just one or two tools");
+
+  const { TIER_COMPARISON } = (await import("../src/components/TierComparisonTable")) as {
+    TIER_COMPARISON: { feature: string; account: boolean | string; premium: boolean | string }[];
+  };
+  // Every row where Premium genuinely gives MORE than a free account — a flat
+  // premium-only tool (Bulk Pricer, Best Basket, Value Finder, Demand Finder)
+  // or a "Top pick vs Full list" upgrade (Deal Finder, Rising Cards). "Ad-free
+  // experience" is excluded on purpose: it's a site-wide perk, not a tool with
+  // its own page, and the component already names it in prose ("goes
+  // ad-free") rather than as a chip.
+  const premiumOnly = TIER_COMPARISON.filter(
+    (r) => r.account !== r.premium && r.feature !== "Ad-free experience"
+  ).map((r) => r.feature.replace(/\s*—.*$/, "").trim());
+  for (const feature of premiumOnly) {
+    assert.ok(
+      labels.some((l) => feature.includes(l) || l.includes(feature)),
+      `TIER_COMPARISON has a Premium-only row "${feature}" that PITCH_TOOLS doesn't mention`
+    );
+  }
+  for (const label of labels) {
+    assert.ok(
+      premiumOnly.some((f) => f.includes(label) || label.includes(f)),
+      `PITCH_TOOLS names "${label}", which isn't a Premium-only TIER_COMPARISON row — likely a stale or misspelled entry`
+    );
+  }
+});
+
 test("it is mounted inside the Premium dialog provider", () => {
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /<PremiumSlideIn\s*\/>/, "must be rendered in the layout");

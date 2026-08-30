@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
 import { trackEvent } from "@/lib/analytics";
-import { PREMIUM_PRICE_LABEL } from "@/lib/site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "the dialog converts well but few people open it".
@@ -45,6 +45,29 @@ const SNOOZE_AFTER_CLICK_MS = 14 * 864e5; // 14 days
 
 // Don't nudge on auth pages or on /premium itself (they're already there).
 const SKIP_PATHS = ["/login", "/verify", "/premium"];
+
+// REDESIGNED 2026-08-30. Conversion was low and the old copy had also drifted
+// out of date — a hand-written sentence naming three tools (Bulk Pricer, Value
+// Finder, Deal Finder) that predated Best Basket moving back to Premium and
+// Demand Finder shipping (see lib/premium.ts's tier note), so the pitch was
+// both weak AND wrong by the time this changed. Two fixes at once:
+//   1. A chip row enumerating every Premium-exclusive tool, so the claim can
+//      never silently go stale again the way the prose sentence did — add a
+//      tool here and it just appears, same shape as TIER_COMPARISON.
+//   2. The price and "locked in for good" line promoted out of a tiny caption
+//      into a real line — it's the same genuine, non-fake incentive /premium
+//      and the dialog already lead with (subscribe now, price never rises),
+//      just previously absent from the one surface logged-in browsers actually
+//      see unprompted.
+// Every entry here must be a real Premium-only TIER_COMPARISON row.
+const PITCH_TOOLS: { emoji: string; label: string }[] = [
+  { emoji: "📋", label: "Bulk Pricer" },
+  { emoji: "🧺", label: "Best Basket" },
+  { emoji: "🔎", label: "Value Finder" },
+  { emoji: "🚀", label: "Rising Cards" },
+  { emoji: "📊", label: "Demand Finder" },
+  { emoji: "💱", label: "Deal Finder" },
+];
 
 function readNum(store: Storage | undefined | null, key: string): number {
   try {
@@ -157,8 +180,8 @@ export function PremiumSlideIn() {
 
   if (!shown) return null;
 
-  const heading = trialEligible ? "Try Premium free" : "Get more out of RiftCompare";
-  const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "See Premium →";
+  const heading = trialEligible ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`;
+  const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
 
   return (
     // Bottom-LEFT so it never collides with the bottom-right feedback pill
@@ -172,7 +195,7 @@ export function PremiumSlideIn() {
         entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
-      <div className="relative overflow-hidden rounded-xl border border-gold/40 bg-ink-900 shadow-2xl">
+      <div className="relative overflow-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
           <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
             Premium
@@ -188,11 +211,19 @@ export function PremiumSlideIn() {
         </div>
         <div className="px-4 py-3">
           <p className="text-xs leading-relaxed text-slate-400">
-            You&apos;ve been comparing prices — Premium adds the tools that do the work for you: the{" "}
-            <span className="font-semibold text-slate-200">Bulk Pricer</span>,{" "}
-            <span className="font-semibold text-slate-200">Value Finder</span> and the full{" "}
-            <span className="font-semibold text-slate-200">Deal Finder</span>, plus an ad-free site.
+            You&apos;ve been comparing prices — Premium adds the pro tools and goes ad-free:
           </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {PITCH_TOOLS.map((t) => (
+              <span
+                key={t.label}
+                className="inline-flex items-center gap-1 rounded-full bg-ink-800 px-2 py-1 text-[10px] font-semibold text-slate-300"
+              >
+                <span aria-hidden>{t.emoji}</span>
+                {t.label}
+              </span>
+            ))}
+          </div>
           <div className="mt-3 flex items-center gap-2">
             <button
               onClick={accept}
@@ -207,8 +238,11 @@ export function PremiumSlideIn() {
               Not now
             </button>
           </div>
-          {!trialEligible && PREMIUM_PRICE_LABEL ? (
-            <p className="mt-2 text-center text-[10px] text-slate-600">{PREMIUM_PRICE_LABEL} · cancel anytime</p>
+          {!trialEligible && PREMIUM_PRICE_AMOUNT ? (
+            <p className="mt-2 text-center text-[11px] text-slate-500">
+              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} · locked in
+              for good, cancel anytime
+            </p>
           ) : null}
         </div>
       </div>
