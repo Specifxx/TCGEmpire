@@ -3,7 +3,8 @@ import { HubIntro } from "@/components/HubIntro";
 import { HubFaq } from "@/components/HubFaq";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { hasAccount } from "@/lib/premium";
+import { isPremium } from "@/lib/premium";
+import { PremiumButton } from "@/components/PremiumButton";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. Free with a RiftCompare account.";
+  "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. A RiftCompare Premium tool.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -24,14 +25,14 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/tools/best-basket" }),
 };
 
-// Answers the questions a signed-out visitor actually has before they'll create
-// the free account the tool is gated behind — this is also the substance a
-// crawler sees while logged out, since the tool UI itself only renders past the
-// gate (see BestBasketPage below).
+// Answers the questions a non-Premium visitor actually has before they'll
+// upgrade to unlock the tool — this is also the substance a crawler sees while
+// logged out, since the tool UI itself only renders past the gate (see
+// BestBasketPage below).
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: "Yes — Best Basket is free with a RiftCompare account. Just sign in (no card required); nothing about it is behind Premium.",
+    a: "No — Best Basket is a RiftCompare Premium tool. Upgrade and it's included alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list.",
   },
   {
     q: "Does it account for shipping?",
@@ -42,8 +43,8 @@ const FAQS = [
     a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given.",
   },
   {
-    q: "Do I need an account just to price a list, not buy it?",
-    a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. An account is only needed for Best Basket's store-split optimisation, and that account is free.",
+    q: "Do I need Premium just to price a list, not buy it?",
+    a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-split optimisation.",
   },
 ];
 
@@ -61,8 +62,8 @@ function decodeList(b64: string): string {
 
 export default async function BestBasketPage({ searchParams }: { searchParams: { list?: string } }) {
   const user = await getCurrentUser();
-  // ACCOUNT tier (see lib/premium.ts) — free, no Premium required.
-  const signedIn = hasAccount(user);
+  // PREMIUM tier (see lib/premium.ts) — moved back from ACCOUNT.
+  const premium = isPremium(user);
   const country = getCountry();
   const info = COUNTRIES[country];
   // A deck page can hand off its own list via ?list= (see decks/[slug]/page.tsx's
@@ -116,23 +117,26 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
         </p>
       </div>
 
-      {signedIn ? (
+      {premium ? (
         <BestBasket currency={info.currency} initialList={initialList} />
       ) : (
         <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Sign in free to use Best Basket</h2>
+          <h2 className="text-lg font-extrabold text-white">Go Premium to use Best Basket</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            Best Basket is free with a RiftCompare account — no card, no Premium. Paste any decklist or use your
-            wishlist and we&apos;ll work out the cheapest combination of stores to buy it all, postage included, with
-            direct buy links.
+            Best Basket is a RiftCompare Premium tool. Upgrade and paste any decklist or use your wishlist to get the
+            cheapest combination of stores to buy it all, postage included, with direct buy links.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <Link
-              href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}
-              className="btn-primary text-sm"
-            >
-              Sign in free
-            </Link>
+            {user ? (
+              <PremiumButton />
+            ) : (
+              <Link
+                href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}
+                className="btn-primary text-sm"
+              >
+                Sign in free
+              </Link>
+            )}
             <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">

@@ -187,12 +187,18 @@ test("methodology page states the condition mapping and FX policy", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Navbar — Best Basket promoted, and the peer-to-peer marketplace removed
-// entirely (2026-08): no buy-chip, no routes, no nav gate.
+// Navbar — the peer-to-peer marketplace removed entirely (2026-08): no
+// buy-chip, no routes, no nav gate.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("Best Basket is a first-class Navbar link", () => {
-  assert.match(read("src/components/Navbar.tsx"), /href="\/tools\/best-basket"/);
+test("Best Basket is NOT a header-level Navbar link", () => {
+  // Was a first-class header link while Best Basket was a free-account tool —
+  // removed when it moved back to Premium (see lib/premium.ts's tier note): a
+  // header slot is for something every visitor can act on immediately, not a
+  // tool most visitors would bounce off a paywall for. Still reachable via
+  // nav-groups.ts (the launcher, mega-menu, /tools) and its own contextual
+  // links, so this only pins the header specifically.
+  assert.doesNotMatch(read("src/components/Navbar.tsx"), /href="\/tools\/best-basket"/);
 });
 
 test("the marketplace buy-chip is gone from the primary Navbar", () => {

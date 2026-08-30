@@ -199,8 +199,8 @@ export const NAV_GROUPS: NavGroup[] = [
 // for them to look at all features only if they want to." Chosen to mirror
 // the destinations already promoted elsewhere on the site rather than a new,
 // separate editorial call — PRIMARY_NAV below (Cards/Sealed/Index/Blog), the
-// header's own md/lg-and-up row (Decks, Best Basket, Premium), plus the
-// highest-intent tool/collection pages (Deal Finder, Daily Movers,
+// header's own md/lg-and-up row (Decks, Premium), plus the
+// highest-intent tool/collection pages (Deal Finder, Best Basket, Daily Movers,
 // Watchlist). The full grouped list is always one tap away via "Show all
 // features" — this is a default, not a wall. Order follows NAV_GROUPS, not a
 // separate list, so a link can't silently drift out of sync with its own

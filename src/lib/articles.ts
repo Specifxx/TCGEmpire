@@ -1379,7 +1379,7 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
     summary: [
       "**The naive way to buy a deck — each card from whichever store has it cheapest — is usually NOT the cheapest way once shipping is counted.** A 40-card list priced that way can easily spread across a dozen stores, each charging its own postage.",
       "**Best Basket solves a different problem**: not \"what's the cheapest price per card\" but \"what's the cheapest way to buy the WHOLE list\", factoring in every store's shipping cost and free-shipping threshold.",
-      "**It's free with any RiftCompare account** — no Premium required — and shows you the naive-split cost right alongside its optimised one, so the saving is a number you can check, not a claim.",
+      "**It's a RiftCompare Premium tool**, and shows you the naive-split cost right alongside its optimised one, so the saving is a number you can check, not a claim.",
       "Just pricing a list, not buying it yet? **[The free deck pricer](/deck)** needs no account at all.",
     ],
     browseCta: {
@@ -1389,7 +1389,7 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
     },
     body: `Price a 40-card Riftbound deck the obvious way — open each card, buy it from whichever store is cheapest — and you'll usually end up with an order spread across eight, ten, sometimes fifteen different stores. Each one charges its own shipping. The "cheapest" card-by-card total quietly stops being the cheapest total once postage lands on top of it a dozen times.
 
-**[Best Basket](/tools/best-basket)** exists to fix exactly that. It's a free tool (any RiftCompare account, no Premium needed) that takes a full decklist and works out the cheapest way to buy *all of it*, not the cheapest way to buy each card in isolation.
+**[Best Basket](/tools/best-basket)** exists to fix exactly that. It's a RiftCompare Premium tool that takes a full decklist and works out the cheapest way to buy *all of it*, not the cheapest way to buy each card in isolation.
 
 ## The problem, concretely
 
@@ -1409,7 +1409,7 @@ Consolidate the same list into, say, 3 or 4 stores instead, and you often come o
 RiftCompare has two related tools, and it's worth knowing which one you actually want:
 
 - **[The deck pricer](/deck)** — free, no account needed. Prices every card in a list at its own cheapest store and adds it up. Good for a quick "what's this deck worth" check.
-- **[Best Basket](/tools/best-basket)** — free with an account. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
+- **[Best Basket](/tools/best-basket)** — a Premium tool. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
 
 If you're pricing a list out of curiosity, the deck pricer is enough. If you're actually about to place an order, Best Basket is the one that saves you real money.
 
@@ -1425,10 +1425,10 @@ It matters least for a single chase card or a short shopping list of two or thre
 
 **[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one from the current **[meta decks](/decks)** — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
     faq: [
-      { q: "Is Best Basket free?", a: "Yes — Best Basket is free with a RiftCompare account. Just sign in (no card required); nothing about it is behind Premium." },
+      { q: "Is Best Basket free?", a: "No — Best Basket is a RiftCompare Premium tool. Upgrade and it's included alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list." },
       { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered." },
       { q: "What can I paste into Best Basket?", a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given." },
-      { q: "Do I need an account just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. An account is only needed for Best Basket's store-split optimisation, and that account is free." },
+      { q: "Do I need Premium just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-split optimisation." },
       { q: "How much can Best Basket actually save on a full deck?", a: "It depends on the list and current stock, which is why the tool shows the real comparison rather than a fixed percentage: the naive per-card-cheapest total and store count, right next to its optimised split. Savings are largest on full 40-card lists heavy on cheap commons, where postage is a large share of each card's price." },
     ],
   },
@@ -5486,7 +5486,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     summary: [
       "**RiftCompare Premium is $4.99/mo or $39/yr** (works out to about $3.25/mo, a 35% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
-      "**It unlocks 4 tools outright**: the Bulk Pricer, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). Best Basket and the Condition Impact Calculator are free with any account, no Premium needed.",
+      "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a month of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -5503,7 +5503,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Four tools you can't otherwise use at all — the Bulk Pricer, Value Finder screener, the full Rising Cards list, and the full Deal Finder (all four views) — plus a completely ad-free site. Best Basket and the Condition Impact Calculator aren't in that list — they're free with any account.",
+        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Best Basket, Value Finder screener, the full Rising Cards list, and the full Deal Finder (all four views) — plus a completely ad-free site. The Condition Impact Calculator isn't in that list — it's free with any account.",
       },
       {
         q: "Is price comparison free without Premium?",
@@ -5511,7 +5511,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "What's the difference between a free account and Premium?",
-        a: "A free account (no card, just an email) adds price alerts, your portfolio tracker (value history, cost-basis P&L, CSV export) and Best Basket on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Value Finder, the full Rising Cards and Deal Finder lists, and an ad-free site.",
+        a: "A free account (no card, just an email) adds price alerts and your portfolio tracker (value history, cost-basis P&L, CSV export) on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Best Basket, Value Finder, the full Rising Cards and Deal Finder lists, and an ad-free site.",
       },
       {
         q: "Is there a free trial?",
@@ -5534,6 +5534,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       name: "What's included with RiftCompare Premium",
       items: [
         { name: "Bulk Pricer", description: "Price an entire want-list or collection at once, each card matched to its cheapest live store price.", url: "/bulk-pricer" },
+        { name: "Best Basket", description: "The cheapest way to actually buy a whole decklist — the store split with the lowest landed cost, postage included.", url: "/tools/best-basket" },
         { name: "Value Finder screener", description: "Every card trading below its own 30-day average right now, ranked by discount.", url: "/tools/value-finder" },
         { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
         { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
@@ -5542,7 +5543,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $4.99/mo (or $39/yr), and it unlocks four tools you can't use at all otherwise and removes every ad on the site. (Best Basket and the Condition Impact Calculator used to be on that list — both are free now.) Here's the full breakdown.
+Short version: Premium is $4.99/mo (or $39/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -5570,16 +5571,16 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Condition Impact Calculator | ✓ | ✓ | ✓ |
 | Price alerts | — | ✓ | ✓ |
 | Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |
-| Best Basket — cheapest store split, postage included | — | ✓ | ✓ |
 | Deal Finder | Top pick | Top pick | Full list |
 | Rising Cards | Top pick | Top pick | Full list |
 | Value Finder screener | — | — | ✓ |
 | Bulk Pricer | — | — | ✓ |
+| Best Basket — cheapest store split, postage included | — | — | ✓ |
 | Ad-free experience | — | — | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the Best Basket cart optimiser); Premium is entirely the pro tools and an ad-free site on top of that.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Premium is entirely the pro tools and an ad-free site on top of that.
 
-## The 4 tools you only get with Premium
+## The 5 tools you only get with Premium
 
 ### 1. Value Finder screener
 
@@ -5612,7 +5613,13 @@ Every gap is computed from **live listings, not a reference price**, and ranked 
 
 Paste an entire want-list, trade pile or full collection, and Bulk Pricer matches **every card to its cheapest live store price at once**, with a running total. If you've ever priced out a stack of 40 cards one search at a time, this is the tool that turns it into one paste.
 
-(If you're after the cheapest way to actually **buy** a whole list rather than just price it, that's [Best Basket](/tools/best-basket) — it answers a genuinely different question, solving for the lowest total landed cost across stores once postage and free-shipping thresholds are factored in. It used to be Premium-only; it's free with any account now, so it's not counted among the four tools here. So is the **Condition Impact Calculator** — value a card across NM/LP/MP/HP/DMG, free for everyone.)
+(The **Condition Impact Calculator** — value a card across NM/LP/MP/HP/DMG — is free for everyone, so it's not counted among the five tools here.)
+
+### 5. Best Basket
+
+Bulk Pricer answers "what does this list cost"; Best Basket answers the harder, more useful question — **what's the cheapest way to actually buy the whole thing**. Paste a decklist or point it at your own wishlist, and it prices every viable split across the stores that carry your list, each with its real shipping cost and free-shipping threshold applied, then shows you the delivered total next to what the naive per-card-cheapest approach would have cost.
+
+The two tools solve genuinely different problems: Bulk Pricer is about knowing a value, Best Basket is about actually placing the order for the least money once postage stops being pretend-free.
 
 ## Everything, at a glance
 
@@ -5634,9 +5641,9 @@ Neither of these requires ever entering a payment method. If Premium turns out t
 Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free tier already does that job completely — you'd be paying for tools you won't open. Premium earns its price for three kinds of RiftCompare users specifically:
 
 1. **Active buyers who want an edge** — Value Finder and Rising Cards exist to surface opportunities you would not have found by browsing normally.
-2. **Anyone pricing a whole list at a time** — the Bulk Pricer turns a tedious, repetitive task into one paste (Best Basket does the same for buying a list, and it's already free with your account).
+2. **Anyone pricing or buying a whole list at a time** — the Bulk Pricer turns a tedious, repetitive pricing task into one paste, and Best Basket does the equivalent for actually buying the list at the lowest landed cost.
 
-If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts, a portfolio tracker and Best Basket — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
+If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
   },
   ...SEO_PACK_ARTICLES,

@@ -76,7 +76,7 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
   const builderHref = `/deck?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
   // Same encoded list, handed to Best Basket instead of the deck builder — the
   // deck page already RUNS the optimiser inline (<DeckCart> below), but until now
-  // had no link to the account-gated tool itself, where a signed-in visitor can
+  // had no link to the Premium-gated tool itself, where a Premium member can
   // re-run it against their own wishlist additions or save/revisit the result.
   const bestBasketHref = `/tools/best-basket?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
 

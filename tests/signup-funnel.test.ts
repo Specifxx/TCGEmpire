@@ -228,8 +228,13 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // 1. The nav LINKS turn on at the same breakpoint as the search bar — the only
   //    element in the row that can flex and absorb the difference.
   assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md — the flexible search bar is lg-and-up");
+  // Was >= 4 (Sealed, Decks, Best Basket, Blog) — Best Basket lost its header
+  // slot when it moved back to Premium (see lib/premium.ts's tier note and
+  // Navbar.tsx's own comment where the link used to be), leaving three. Only
+  // ever removes slack pressure on this row, so the overflow fix this test
+  // guards still holds; the floor drops to match.
   const lgLinks = src.match(/lg:block lg:px-2\.5/g) ?? [];
-  assert.ok(lgLinks.length >= 4, `expected the nav links gated at lg, found ${lgLinks.length}`);
+  assert.ok(lgLinks.length >= 3, `expected the nav links gated at lg, found ${lgLinks.length}`);
   // 2. The two NON-navigational items defer to xl, which is what buys the
   //    1024-1056 band its headroom. Premium stays reachable from UserMenu and
   //    /premium; Discord from the footer.

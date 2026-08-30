@@ -111,22 +111,24 @@ const PROMO_VARIANT = "comparison";
 // nothing here is aspirational:
 //
 //   Compare prices   no gate anywhere (deliberately: it's the whole site)
-//   Best Basket      api/basket 401 + tools/best-basket hasAccount()
 //   Watchlist        app/watching redirect + api/alerts/watchlist/* 401
 //   Price alerts     api/alerts/subscribe — anonymous EMAIL path exists and stays
 //   Portfolio        app/portfolio redirect + api/collection/*, portfolio/export 401
 //
 // `browsing: false` renders an em dash; a string renders as-is, for the rows
-// where signed-out visitors genuinely get something. Two of the five are not a
+// where signed-out visitors genuinely get something. One of the four is not a
 // flat "no", and saying so is the point — a comparison that overstates the wall
 // is a dark pattern, and this one is checkable against the code by anyone.
 //
-// Premium-gated tools (Bulk Pricer, the screeners) are deliberately absent: this
-// dialog never mentions the paid tier. Keep this list at 4-6 rows — the card's
-// height is load-bearing on short phones (see the overlay's own note below).
+// Premium-gated tools (Bulk Pricer, Best Basket, the screeners) are deliberately
+// absent: this dialog never mentions the paid tier. Best Basket lived here as a
+// free-account perk until it moved back to Premium (see lib/premium.ts's tier
+// note) — removed rather than left inaccurate, since every row above is a promise
+// this dialog makes about what signing up gets you. Keep this list at 4-6 rows —
+// the card's height is load-bearing on short phones (see the overlay's own note
+// below).
 const COMPARISON: { label: string; desc: string; browsing: string | false }[] = [
   { label: "Compare every store + eBay", desc: "Live prices on every card", browsing: "Yes" },
-  { label: "Best Basket", desc: "The cheapest way to buy a whole decklist, postage included", browsing: false },
   { label: "Watchlist", desc: "Save cards and pick up where you left off", browsing: false },
   { label: "Price alerts", desc: "Get told when a card hits your price", browsing: "One card, by email" },
   { label: "Portfolio", desc: "What your collection is worth, and what it's made you", browsing: false },
@@ -372,7 +374,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             </p>
 
             {/* Two tier columns, one row per feature. Semantically a table
-                because it IS one — a screen reader announcing "Best Basket,
+                because it IS one — a screen reader announcing "Watchlist,
                 Browsing: no, Free account: yes" is exactly the comparison a
                 sighted visitor gets from the marks. */}
             <table className="mt-3 w-full border-collapse text-left">

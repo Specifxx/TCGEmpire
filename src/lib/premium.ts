@@ -130,28 +130,29 @@ export const PORTFOLIO_FREE = true;
 //      the deck builder, trade calculator, box EV, sealed prices, the index and
 //      movers. No wall anywhere.
 //   2. ACCOUNT (free, `hasAccount`) — the above PLUS watchlists, price alerts,
-//      the portfolio, and the Best Basket optimiser.
+//      and the portfolio.
 //   3. PREMIUM (paid, `isPremium`) — the above plus Value Finder, Rising Cards,
-//      the full Deal Finder list, the Bulk Pricer, and no ads.
+//      the full Deal Finder list, the Bulk Pricer, the Best Basket optimiser, and
+//      no ads.
 //
-// Best Basket moved BACK to tier 2 (signups were near-zero — see the signup-funnel
-// work — and giving away the strongest "reason to sign up" tool for free is the
-// generous move that's supposed to fix that; see SignupPromoPopup.tsx's PERKS,
-// which now pitches it directly). It had briefly moved to tier 3 alongside the
-// Bulk Pricer (a deliberate reversal at the time, per an earlier version of this
-// comment) — that reasoning no longer holds for Best Basket specifically now that
-// growing the account tier is the priority, but the Bulk Pricer stays Premium: it
-// was never named in the request that moved Best Basket back, and the two tools
-// have always been allowed to sit on different tiers independently (see
-// tests/access-tiers.test.ts).
+// Best Basket moved BACK to tier 3, reversing the tier-2 experiment described in
+// an earlier version of this comment (giving it away free to grow signups). It
+// is Premium again, alongside the Bulk Pricer it briefly sat next to before —
+// the two tools are allowed to sit on different tiers independently (see
+// tests/access-tiers.test.ts), it just happens that they agree again now. Every
+// surface that pitched Best Basket as a free-account perk (the header nav link,
+// SignupPromoPopup's comparison, articles.ts's own copy, /premium's feature
+// list) had to be updated in the same pass this comment was — see git history
+// for the full file list, the same six-plus-files problem TierComparisonTable's
+// own header comment warns about.
 //
 // Tier 2 replaced a "free week of Premium on signup" comp that handed new
 // accounts the PAID tier and silently withdrew it a week later — that reasoning
 // (a durable free payoff beats a comp that expires) still holds for
-// watchlists/alerts/portfolio/Best Basket, which stay free regardless of Premium.
-// The grant machinery for that WEEK-long comp (and its signup email) is gone
-// rather than switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy
-// environment can't quietly resurrect it.
+// watchlists/alerts/portfolio, which stay free regardless of Premium. The grant
+// machinery for that WEEK-long comp (and its signup email) is gone rather than
+// switched off by env, so a stale EARLY_PREMIUM_DAYS in a deploy environment
+// can't quietly resurrect it.
 //
 // A shorter Premium preview was reintroduced after that, then removed outright
 // on 2026-08-23 — see the "NO PREMIUM ON SIGNUP" note further down.
@@ -208,9 +209,9 @@ export function referralPremiumActive(): boolean {
 // Stripe. With no constant to read, no environment can turn it back on.
 //
 // What a new account still gets is the free ACCOUNT tier — watchlist, price
-// alerts, portfolio, Best Basket — which is permanent and is the durable
-// reason to sign up. Premium is now reached only by: the card-gated Stripe
-// trial (PREMIUM_TRIAL_DAYS), checkout, feedback, or a referral.
+// alerts, portfolio — which is permanent and is the durable reason to sign up.
+// Premium is now reached only by: the card-gated Stripe trial
+// (PREMIUM_TRIAL_DAYS), checkout, feedback, or a referral.
 
 
 function addMonths(base: Date, months: number): Date {

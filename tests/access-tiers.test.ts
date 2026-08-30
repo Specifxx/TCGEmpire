@@ -31,24 +31,23 @@ test("the bulk pricer gates on Premium, not merely on an account", () => {
   assert.ok(!/hasAccount\s*\(/.test(src), `${BULK} must not gate on hasAccount()`);
 });
 
-test("Best Basket gates on having an account, not on Premium", () => {
-  // Best Basket moved BACK to the free account tier (see the tier note in
-  // lib/premium.ts) — a generosity play to make it the reason to sign up, since
-  // signups were near-zero. isPremium() here would put it back behind the paywall
-  // this change exists to remove it from.
+test("Best Basket gates on Premium, not merely on an account", () => {
+  // Best Basket moved BACK to the Premium tier (see the tier note in
+  // lib/premium.ts), reversing the free-account experiment described in an
+  // earlier version of this test. hasAccount() here would put it back on the
+  // free tier this change moves it off of.
   const src = read(BASKET);
-  assert.match(src, /hasAccount\(/, `${BASKET} must gate via hasAccount()`);
-  assert.ok(!/isPremium\s*\(/.test(src), `${BASKET} must not gate on isPremium()`);
+  assert.match(src, /isPremium\(/, `${BASKET} must gate via isPremium()`);
+  assert.ok(!/hasAccount\s*\(/.test(src), `${BASKET} must not gate on hasAccount()`);
 });
 
-test("the basket API requires a session, and nothing more", () => {
+test("the basket API requires Premium, not merely a session", () => {
   // The page only conditionally RENDERS <BestBasket> — that's no obstacle to a
-  // signed-out caller hitting this route directly, so the sign-in check has to
-  // live here too. It must NOT also require Premium — Best Basket is a free
-  // account-tier tool now.
+  // non-Premium caller hitting this route directly, so the Premium check has to
+  // live here too, on top of the sign-in check.
   const src = read(BASKET_API);
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
-  assert.ok(!/isPremium\s*\(/.test(src), "basket API must not require Premium — it's account-tier now");
+  assert.match(src, /isPremium\(/, "basket API must require Premium — it's Premium-tier again");
 });
 
 test("the bulk pricer gates the TOOL without gating the page's indexable content", () => {
@@ -64,8 +63,8 @@ test("the bulk pricer gates the TOOL without gating the page's indexable content
 
 test("neither list tool still advertises itself as needing no account", () => {
   // Both pages used to say exactly this, and a stale claim here is a promise the
-  // gate immediately breaks — Best Basket still requires a free account even
-  // though it no longer requires Premium.
+  // gate immediately breaks — both tools are Premium-gated now, which requires
+  // an account a fortiori.
   for (const page of [BULK, BASKET]) {
     const src = read(page);
     assert.ok(!/No account needed/i.test(src), `${page} still claims "no account needed"`);
@@ -86,17 +85,17 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /if \(!loaded \|\| user\) return/, "still only shown to signed-out visitors");
 });
 
-test("the popup's comparison pitches Best Basket but never Bulk Pricer", () => {
+test("the popup's comparison never pitches a Premium-gated tool", () => {
   const src = read(POPUP);
   // Scope to the COMPARISON array itself (not the whole file — a comment is
-  // allowed to explain, in prose, that Bulk Pricer stays Premium) so this checks
-  // what's actually PITCHED as a free-account perk, not whether the tool names
-  // appear anywhere.
+  // allowed to explain, in prose, that these tools are Premium only) so this
+  // checks what's actually PITCHED as a free-account perk, not whether the tool
+  // names appear anywhere.
   const rowsMatch = src.match(/const COMPARISON[^=]*=\s*\[([\s\S]*?)\n\];/);
   assert.ok(rowsMatch, "expected a COMPARISON array declaration");
   const rows = rowsMatch![1];
   assert.ok(!/Bulk Pricer/.test(rows), "popup must not pitch Bulk Pricer — it's Premium only");
-  assert.match(rows, /Best Basket/, "popup must pitch Best Basket — it's a free account perk, and advertising it is the point");
+  assert.ok(!/Best Basket/.test(rows), "popup must not pitch Best Basket — it moved back to Premium only");
   assert.match(rows, /Price alerts/, "popup should name what an account actually unlocks");
   assert.match(rows, /Watchlist/, "popup should name what an account actually unlocks");
   // 4-6 rows: fewer reads as thin, more makes the card tall enough to reopen the

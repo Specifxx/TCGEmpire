@@ -110,8 +110,8 @@ export async function GET(req: Request, { params }: { params: { provider: string
     // First-ever sign-in: credit any referrer. NO PREMIUM IS GRANTED HERE — the
     // automatic signup-time Premium preview was removed on 2026-08-23 (see the
     // note where SIGNUP_PREMIUM_DAYS used to be defined in lib/premium.ts). The
-    // ACCOUNT tier — alerts, portfolio, watchlist, Best Basket — is granted by
-    // virtue of the account existing and is the durable payoff on its own.
+    // ACCOUNT tier — alerts, portfolio, watchlist — is granted by virtue of the
+    // account existing and is the durable payoff on its own.
     await applyReferral(user.id).catch(() => {});
     // Which CTA produced this account. The clicked sign-in surface set a
     // short-lived rc_signup_src cookie (see lib/signup-source.ts); the value is

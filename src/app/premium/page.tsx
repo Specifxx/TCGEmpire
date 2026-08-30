@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "RiftCompare Premium — power tools for buyers & sellers",
-  description: "RiftCompare Premium: the Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds Best Basket.",
+  description: "RiftCompare Premium: the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -26,6 +26,12 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     body: "Paste an entire want-list, trade pile or collection and price every card at once, each matched to its cheapest live store price with a running total.",
     href: "/bulk-pricer",
     cta: "Open Bulk Pricer",
+  },
+  {
+    title: "Best Basket",
+    body: "Paste a decklist or use your wishlist and get the cheapest way to actually buy the whole thing — the store split with the lowest landed cost once postage and free-shipping thresholds are factored in.",
+    href: "/tools/best-basket",
+    cta: "Open Best Basket",
   },
   {
     title: "Value Finder screener",
@@ -57,6 +63,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
 // `true`/`false` render a tick/dash; a string renders verbatim.
 const INCLUDED = [
   "Bulk Pricer",
+  "Best Basket optimiser",
   "Value Finder screener",
   "Rising Cards",
   "Full Deal Finder list",
@@ -86,7 +93,7 @@ export default async function PremiumPage() {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "RiftCompare Premium",
-            description: "The Bulk Pricer, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.",
+            description: "The Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, the full Deal Finder list and an ad-free RiftCompare.",
             brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
             offers: {
               "@type": "Offer",
@@ -108,7 +115,7 @@ export default async function PremiumPage() {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : "Price comparison is free for everyone, and a free account adds alerts, your portfolio and Best Basket. Premium adds the Bulk Pricer, the pro screeners and an ad-free site — cancel anytime."}
+            : "Price comparison is free for everyone, and a free account adds alerts and your portfolio. Premium adds the Bulk Pricer, Best Basket, the pro screeners and an ad-free site — cancel anytime."}
         </p>
       </div>
 

@@ -17,7 +17,7 @@
 //
 // EVERY ROW IS A REAL ENTITLEMENT, checkable against the code:
 //   anon/account gates  lib/premium.ts — hasAccount() / isPremium()
-//   Best Basket         api/basket 401 + tools/best-basket hasAccount()
+//   Best Basket         api/basket 403 + tools/best-basket isPremium()
 //   Deal Finder etc.    the "Top pick vs Full list" split is the free teaser
 //
 // `false` renders an em dash, `true` a tick, a string renders as-is — the rows
@@ -39,11 +39,11 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Condition Impact Calculator", anon: true, account: true, premium: true },
   { feature: "Price alerts", anon: false, account: true, premium: true },
   { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
-  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: true, premium: true },
   { feature: "Deal Finder", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
   { feature: "Value Finder screener", anon: false, account: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
+  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, premium: true },
   { feature: "Ad-free experience", anon: false, account: false, premium: true },
 ];
 

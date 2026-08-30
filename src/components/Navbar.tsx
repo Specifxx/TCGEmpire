@@ -61,7 +61,7 @@ export function Navbar() {
             navigational each item is:
               • below lg — logo, Database, Explore, Marketplace, country, burger.
               • from lg  — everything else at once: the navigation links (Sealed,
-                Decks, Best Basket, Blog), Database moving into this row, the
+                Decks, Blog), Database moving into this row, the
                 Premium upsell (96px, opens a dialog) and the Discord icon (36px,
                 external).
             Everything hidden at a given width is in the hamburger via
@@ -128,18 +128,15 @@ export function Navbar() {
           <Link href="/decks" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Decks
           </Link>
-          {/* Best Basket — the multi-store cart optimiser (cheapest way to buy
-              several cards, postage included). Previously reachable only from
-              the ⌘K launcher, the mega-menu, /tools and a handful of contextual
-              links — never from the header, never from the homepage — despite
-              being the hardest feature in this category to replicate (it needs
-              per-store shipping data, not just prices) and the highest-intent
-              moment it answers ("I have a list, what's the cheapest way to buy
-              it") having no header presence at all. Same md:block treatment as
-              Sealed/Decks/Blog. */}
-          <Link href="/tools/best-basket" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
-            Best Basket
-          </Link>
+          {/* Best Basket USED TO sit here (a header link, added when the tool was
+              free with any account — see its own git history for why). Removed
+              when Best Basket moved back to the Premium tier: a header-level slot
+              is for something every visitor can act on immediately, not a tool
+              most visitors would just bounce off a paywall for. It's still
+              reachable from the ⌘K launcher, the mega-menu, /tools and its own
+              contextual links (deck pages, card pages, etc.) via nav-groups.ts —
+              nothing became an orphan, it just lost the one slot that implied
+              "free to everyone". */}
           {/* Blog — the header's one link into our own writing. It exists because
               the hand-written content was previously reachable only from the
               footer and the mega-menu, which made the only genuinely original
