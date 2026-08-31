@@ -115,12 +115,13 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
-          # RH10 is the current history project (see src/lib/db-history.ts) — RH9 is
+          # RH11 is the current history project (see src/lib/db-history.ts) — RH10 is
           # its at-limit rollback, and everything older is a dead fallback kept only
-          # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH10 is
-          # missing here, db-history.ts falls through to RH9 (or, at the end of the
+          # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH11 is
+          # missing here, db-history.ts falls through to RH10 (or, at the end of the
           # chain, to the OPERATIONAL database), so keep this list in sync with
           # db-history.ts / db-chains.ts.
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
           RH8: ${{ secrets.RH8 || vars.RH8 }}
@@ -149,6 +150,7 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
           # Same chain as the Import prices step above — see its comment.
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
           RH8: ${{ secrets.RH8 || vars.RH8 }}

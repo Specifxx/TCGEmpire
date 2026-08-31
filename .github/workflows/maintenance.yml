@@ -36,7 +36,8 @@ on:
           - migrate-history-db-to-hdu4 # CURRENT history cutover: full pg_dump/restore of HISTORY_DATABASE_URL_3 into HISTORY_DATABASE_URL_4 + row-count verification. Rotates because HISTORY_DATABASE_URL_3 is over its 5 GB monthly transfer allowance. One lean COPY-format pass per table (not compression — Neon bills the pre-compression bytes), so it is the cheapest way to drain a project that is at/over its limit. RUN THIS BEFORE deploying the HISTORY_DATABASE_URL_4-first chain.
           - migrate-history-db-to-rh8 # LEGACY (HISTORY_DATABASE_URL_4 → RH8 cutover, 2026-08-23, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh9 on 2026-08-25.
           - migrate-history-db-to-rh9 # LEGACY (HISTORY RH8 → RH9 cutover, 2026-08-25, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh10 on 2026-08-28 (RH9 reached its 5 GB monthly transfer allowance).
-          - migrate-history-db-to-rh10 # CURRENT history cutover (2026-08-28): full pg_dump/restore of RH9 into RH10 + row-count verification. Rotates because RH9 reached its 5 GB monthly transfer allowance. RH10 is a NEW project created for this cutover. THE TARGET IS NOT A RECYCLED NAME: every real history project reports User=0; the guard below enforces that before anything is written (it once caught RH5 holding 85 User rows — a full operational snapshot whose TRUNCATE ... CASCADE would have destroyed real accounts). RUN THIS BEFORE deploying the RH10-first chain.
+          - migrate-history-db-to-rh10 # LEGACY (HISTORY RH9 → RH10 cutover, 2026-08-28, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh11 on 2026-08-30 (RH10 reached its 5 GB monthly transfer allowance).
+          - migrate-history-db-to-rh11 # CURRENT history cutover (2026-08-30): full pg_dump/restore of RH10 into RH11 + row-count verification. Rotates because RH10 reached its 5 GB monthly transfer allowance. RH11 is a NEW project created for this cutover. THE TARGET IS NOT A RECYCLED NAME: every real history project reports User=0; the guard below enforces that before anything is written (it once caught RH5 holding 85 User rows — a full operational snapshot whose TRUNCATE ... CASCADE would have destroyed real accounts). RUN THIS BEFORE deploying the RH11-first chain.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
@@ -175,13 +176,13 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # RH10 is the CURRENT project (2026-08-28, after RH9 reached its 5 GB Neon
+          # RH11 is the CURRENT project (2026-08-30, after RH10 reached its 5 GB Neon
           # network-transfer allowance — see db-history.ts, which explains why this
-          # chain is CURRENT-first rather than newest-first). RH9 is the rollback;
+          # chain is CURRENT-first rather than newest-first). RH10 is the rollback;
           # everything below it is dead. This is a schema-push TARGET chain, so it
           # mirrors the app's precedence exactly — pushing a new column into any
           # project other than the one the app reads is how a green deploy 500s.
-          HISTORY_DB: ${{ secrets.RH10 || vars.RH10 || secrets.RH9 || vars.RH9 || secrets.RH8 || vars.RH8 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
+          HISTORY_DB: ${{ secrets.RH11 || vars.RH11 || secrets.RH10 || vars.RH10 || secrets.RH9 || vars.RH9 || secrets.RH8 || vars.RH8 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -219,6 +220,7 @@ jobs:
       - name: Migrate history to the new history database
         if: inputs.task == 'migrate-history'
         env:
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
           RH8: ${{ secrets.RH8 || vars.RH8 }}
@@ -230,13 +232,13 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: |
-          TARGET="${RH10:-${RH9:-${RH8:-${HISTORY_DATABASE_URL_4:-${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-$RH6}}}}}}}}"
+          TARGET="${RH11:-${RH10:-${RH9:-${RH8:-${HISTORY_DATABASE_URL_4:-${HISTORY_DATABASE_URL_3:-${HISTORY_DATABASE_URL_2:-${HISTORY_DATABASE_URL:-${RH7:-$RH6}}}}}}}}}"
           if [ -z "$TARGET" ]; then
-            echo "::error::No target history DB visible to Actions (RH10 / RH9 / RH8 / HISTORY_DATABASE_URL_4 / _3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6)."
+            echo "::error::No target history DB visible to Actions (RH11 / RH10 / RH9 / RH8 / HISTORY_DATABASE_URL_4 / _3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6)."
             exit 1
           fi
-          if [ -z "${RH10:-}" ]; then
-            echo "::warning::RH10 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
+          if [ -z "${RH11:-}" ]; then
+            echo "::warning::RH11 is not visible to Actions — this is copying into a project that is NOT the current one. Add it under Settings → Secrets and variables → Actions."
           fi
           echo "Pushing schema to the target history database…"
           # Non-fatal: a forked history DB can carry EXTRA columns this ref's schema
@@ -981,6 +983,158 @@ jobs:
           echo "  4. THEN MEASURE. The operational side was measured at ~0.12 GB/day"
           echo "     (scripts/audit-egress.ts); the history side never has been. If"
           echo "     RH8 drains in days too, measure it rather than rotating again."
+
+      - name: Migrate the HISTORY database (RH10 → RH11) via pg_dump/pg_restore
+        # THE EIGHTH HISTORY ROTATION. RH10 reached its 5 GB monthly transfer
+        # allowance, so history rotates onto RH11.
+        #
+        # A ROTATION BUYS AN ALLOWANCE, NOT A FIX. If RH11 also drains in days,
+        # run audit-egress against it a few hours after cutover and fix the query
+        # it names rather than provisioning RH12.
+        #
+        # THE TARGET IS RH11, A NEW PROJECT. It starts empty, so the schema push
+        # creates its tables and the TRUNCATE afterwards is a no-op. The User-row
+        # guard below still runs first: a MISSING "User" table reads as 0 (see
+        # `|| echo 0`), which is correct — an absent table is proof this is not an
+        # operational database. That guard is what caught RH5 on 2026-08-23 holding
+        # 85 User rows (a full operational snapshot), before its TRUNCATE ... CASCADE
+        # could destroy real accounts; keep it BEFORE the schema push.
+        if: inputs.task == 'migrate-history-db-to-rh11'
+        env:
+          # SOURCE is pinned to the ONE variable holding the live data (RH10), not a
+          # fallback chain: a chain would resolve RH11-first the moment the app
+          # chain is flipped, pointing source and target at the same database, and
+          # the migration would silently no-op while reporting every row count as
+          # matching. Same trap documented on migrate-main-db and the rh10 step.
+          SOURCE_HISTORY_URL: ${{ secrets.RH10 || vars.RH10 }}
+          TARGET_HISTORY_URL: ${{ secrets.RH11 || vars.RH11 }}
+          # Only for the "did RH11 accidentally get set to the operational database?"
+          # guard below, before anything destructive runs.
+          OPERATIONAL_URL: ${{ secrets.RM11 || vars.RM11 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_HISTORY_URL" ]; then
+            echo "::error::RH11 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name RH11)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_HISTORY_URL" ]; then
+            echo "::error::RH10 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_HISTORY_URL" = "$TARGET_HISTORY_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — RH11 must be a different Neon project than RH10. Aborting before doing anything."
+            exit 1
+          fi
+          if [ -n "${OPERATIONAL_URL:-}" ] && [ "$TARGET_HISTORY_URL" = "$OPERATIONAL_URL" ]; then
+            echo "::error::RH11 resolves to the OPERATIONAL database. This step TRUNCATES its target — aborting rather than wiping production data."
+            exit 1
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_HISTORY_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          # ── IS THIS ACTUALLY A HISTORY PROJECT? ──────────────────────────
+          # CHECKED FIRST, BEFORE THE SCHEMA PUSH, AND THAT ORDER IS THE POINT.
+          # A history project holds no accounts, so rows in "User" mean this
+          # variable points at an operational database and nothing below may run.
+          # A MISSING table is itself proof the target is not operational, and
+          # `|| echo 0` handles it — so this is safe to run before the push, and
+          # running it first means no schema-altering command touches a database
+          # we have not yet established is safe to touch (the RH5 lesson).
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to touch it. Every real history project in the rotation reports User=0; run the probe-databases task and pick one that does."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          # SCHEMA PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER.
+          # `prisma db push` introspects the target first, and over Neon's
+          # PgBouncer that introspection comes back EMPTY on a stale/empty
+          # database — the push then fails with P1014 ("the underlying table for
+          # model Card does not exist") immediately after a verified restore. The
+          # direct host is the pooled host minus "-pooler".
+          DIRECT_TARGET_URL="${TARGET_HISTORY_URL/-pooler/}"
+          echo "== Bringing the target's schema up to date (new project — create the tables) =="
+          DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss
+
+          echo "== What the target holds BEFORE this run (RH11 is new, so expect zeroes or absent tables) =="
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            echo "  $T: $(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null || echo '(absent)')"
+          done
+
+          # DUMP BEFORE TRUNCATE, always — if the source refuses reads (it is at
+          # its cap), we must not have already destroyed the target's contents.
+          echo "== Dumping Card + ClickEvent + PriceHistory from RH10 =="
+          if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -f history.dump; then
+            echo "::error::Could not read RH10. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts rebuild from the next price import onward). Nothing was written to RH11."
+            exit 1
+          fi
+          echo "Dump size: $(du -h history.dump | cut -f1)"
+
+          echo "== Clearing the target's history tables for a clean re-sync (no-op on a new project) =="
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+
+          # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
+          # rows must land first or every COPY fails the FK. The dump file is
+          # LOCAL, so this second pass costs zero source transfer.
+          echo "== Restoring Card (the FK parent) =="
+          pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
+          echo "== Restoring ClickEvent + PriceHistory =="
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+
+          echo "== Verifying row counts (source vs target) =="
+          # COUNT(*) transfers one integer per table rather than re-reading data.
+          set +e
+          MISMATCH=0
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            SRC=$(psql "$SOURCE_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch — do NOT deploy the RH11-first chain yet. Re-run this task, or inspect the pg_restore output above."
+            exit 1
+          fi
+          echo "All tables match — RH11 now holds a full copy of the history data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything the"
+          echo "     price importer wrote to RH10 in the meantime is included."
+          echo "  2. db-chains.ts, scripts/build-db-push.sh and the workflow chains"
+          echo "     put RH11 FIRST, so a deploy moves history reads/writes onto it."
+          echo "     Confirm RH11 is set in Vercel for Production, Preview AND Development."
+          echo "  3. Leave RH10 set as the rollback; remove it only once RH11 has been"
+          echo "     serving cleanly for a while."
+          echo "  4. THEN MEASURE. If RH11 drains in days too, run audit-egress against"
+          echo "     it and fix the query it names rather than rotating to RH12."
 
       - name: Migrate the HISTORY database (RH9 → RH10) via pg_dump/pg_restore
         # THE SEVENTH HISTORY ROTATION. RH9 reached its 5 GB monthly transfer
