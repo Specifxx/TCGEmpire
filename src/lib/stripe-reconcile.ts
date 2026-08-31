@@ -6,6 +6,7 @@ import { SUPPORT_EMAIL, SITE_URL } from "./site";
 import {
   customerIdOf,
   entitledUntilFromSubscription,
+  ENTITLED_STATUSES,
   extendedPremiumUntil,
   userIdFromSubscription,
 } from "./stripe-entitlement";
@@ -29,10 +30,15 @@ import {
 // access. Subscriptions that entitle someone but match no account are reported
 // AND emailed — an unhealable case must never be silent.
 
-// Everything currently entitled to access. `canceled` is deliberately absent: a
-// canceled sub keeps whatever time was already stamped, it just stops extending,
-// so reconciling it would be a no-op by construction.
-const STATUSES: Stripe.SubscriptionListParams.Status[] = ["active", "trialing", "past_due"];
+// Everything currently entitled to access — read from stripe-entitlement.ts's
+// ENTITLED_STATUSES rather than a second hardcoded list, which is exactly how
+// this policy drifted before (see that file's note on the churchless@gmail.com
+// incident: `past_due` used to be here too, and reconciling it granted a full
+// extra period on an invoice nobody had actually paid). `canceled` is
+// deliberately absent for a different reason: a canceled sub keeps whatever
+// time was already stamped, it just stops extending, so reconciling it would
+// be a no-op by construction.
+const STATUSES = [...ENTITLED_STATUSES] as Stripe.SubscriptionListParams.Status[];
 
 export interface ReconcileExtension {
   email: string | null;

@@ -90,13 +90,29 @@ export function periodEndFromSubscription(sub: unknown): Date | null {
   return latest;
 }
 
-/** Statuses that entitle access through the current period end. `past_due`
- *  included on purpose: Stripe is still retrying the charge inside its dunning
- *  window and the period was genuinely started — cutting access mid-retry over
- *  a soft card decline creates exactly the support tickets this file exists to
- *  prevent. `canceled` earns nothing new but keeps already-paid time (the
- *  stamp is extend-only — see resolveEntitlement). */
-const ENTITLED_STATUSES = new Set(["active", "trialing", "past_due"]);
+/** Statuses that entitle access through the current period end.
+ *
+ * `past_due` is DELIBERATELY EXCLUDED (reversed 2026-08-31 — the
+ * churchless@gmail.com incident). It used to be included on the reasoning
+ * that Stripe is still retrying the charge inside its dunning window, so
+ * cutting access mid-retry over a soft decline would just create support
+ * tickets. What that missed: `past_due`'s `current_period_end` is the NEXT
+ * period Stripe is trying to bill, not the one already paid for — so
+ * treating it as entitled doesn't merely extend a grace window, it grants an
+ * entire additional period on an invoice that was never actually paid.
+ * churchless's renewal was declined for insufficient funds and the site
+ * extended him anyway, from a trial that had already ended to a further
+ * paid-through date a month out. `canceled`/`unpaid`/`incomplete` all earn
+ * nothing new either, for the same reason: no confirmed payment, no new
+ * entitlement. Every one of them still KEEPS already-paid time, because the
+ * stamp is extend-only (see extendedPremiumUntil below) — this set only ever
+ * decides what counts as freshly earned, never what gets taken away.
+ *
+ * Exported so every consumer that lists Stripe subscriptions by status
+ * (lib/stripe-reconcile.ts, scripts/audit-premium-vs-stripe.ts) reads from
+ * this ONE definition — three independent hardcoded copies is exactly how
+ * this policy drifted out of sync with itself the first time. */
+export const ENTITLED_STATUSES = new Set(["active", "trialing"]);
 
 /** What a subscription entitles its user to right now, or null if nothing. */
 export function entitledUntilFromSubscription(sub: unknown): Date | null {

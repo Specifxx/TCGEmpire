@@ -102,15 +102,22 @@ test("junk period ends (0, NaN, missing) resolve to null, never Invalid Date", (
 
 // ── Entitlement by status ───────────────────────────────────────────────────
 
-test("active, trialing and past_due entitle through the period end", () => {
-  for (const status of ["active", "trialing", "past_due"]) {
+test("active and trialing entitle through the period end", () => {
+  for (const status of ["active", "trialing"]) {
     const until = entitledUntilFromSubscription({ status, current_period_end: T1 });
     assert.equal(until?.getTime(), T1 * 1000, `${status} must entitle`);
   }
 });
 
-test("canceled/unpaid/incomplete subscriptions entitle nothing new", () => {
-  for (const status of ["canceled", "unpaid", "incomplete", "incomplete_expired", ""]) {
+test("past_due/canceled/unpaid/incomplete subscriptions entitle nothing new (the churchless@gmail.com incident, Aug 2026)", () => {
+  // past_due used to entitle — deliberately, on the theory that Stripe was
+  // still retrying the charge inside its dunning window. What that missed:
+  // past_due's current_period_end is the NEXT period Stripe is trying to
+  // bill, not the one already paid for, so treating it as entitled grants an
+  // entire additional period on an invoice nobody actually paid. Confirmed
+  // against a real incident: a trial's conversion charge was declined for
+  // insufficient funds, and the site extended the account anyway.
+  for (const status of ["past_due", "canceled", "unpaid", "incomplete", "incomplete_expired", ""]) {
     assert.equal(entitledUntilFromSubscription({ status, current_period_end: T1 }), null, `${status} must not entitle`);
   }
 });

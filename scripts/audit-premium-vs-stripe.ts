@@ -35,6 +35,7 @@
 import type Stripe from "stripe";
 import { prisma } from "../src/lib/db";
 import { stripe, stripeEnabled } from "../src/lib/stripe";
+import { ENTITLED_STATUSES } from "../src/lib/stripe-entitlement";
 
 const FIX = process.env.FIX === "1";
 
@@ -46,13 +47,18 @@ async function main() {
     process.exit(1);
   }
 
+  // Reads ENTITLED_STATUSES rather than its own hardcoded list — this used to
+  // include `past_due` directly, which is exactly the shape of the
+  // churchless@gmail.com incident (see stripe-entitlement.ts's note): FIX=1
+  // would have stamped premiumUntil out to a past_due subscription's next
+  // period end even though that period was never actually paid for.
   const subs: Stripe.Subscription[] = [];
-  for (const status of ["active", "trialing", "past_due"] as const) {
+  for (const status of ENTITLED_STATUSES as Set<Stripe.SubscriptionListParams.Status>) {
     // auto-pagination: a missed subscriber is the entire failure mode here, so
     // never cap the page at Stripe's default 10.
     for await (const s of stripe().subscriptions.list({ status, limit: 100 })) subs.push(s);
   }
-  console.log(`Stripe: ${subs.length} active/trialing/past_due subscription(s).\n`);
+  console.log(`Stripe: ${subs.length} ${[...ENTITLED_STATUSES].join("/")} subscription(s).\n`);
 
   const problems: { email: string; sub: string; kind: Problem; detail: string }[] = [];
   let ok = 0;
