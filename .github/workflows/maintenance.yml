@@ -54,6 +54,7 @@ on:
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
+          - diagnose-billing # read-only: why does ONE account have (or lack) Premium, per Stripe's own records? Dumps the DB row's billing fields, then every Stripe subscription on the linked customer (ALL statuses, not just entitled ones) with its latest invoice and, if that invoice's payment failed, the actual decline reason (email input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
           - repair-history-card-ids # THE FIX for blank price charts: rewrites a history project's Card.id values onto the LIVE catalogue, matching on externalId, so PriceHistory rows join again (the FK cascades them). Every history project currently has 0% of its cardIds resolving against the live Card table, because the operational catalogue was REBUILT rather than restored and every card got a fresh cuid. DRY RUN unless dry_run is set to false. Optional `source` input picks which history variable to repair (default: whichever db-history.ts resolves).
@@ -4313,6 +4314,20 @@ jobs:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
         run: npx tsx scripts/diagnose-card.ts
+
+      # Answers "why does this account have (or lack) Premium?" with Stripe's own
+      # records instead of a guess: every subscription on the linked customer,
+      # ALL statuses (not just the ones that currently entitle access), each
+      # with its latest invoice and, when that invoice's payment failed, the
+      # actual payment_intent decline reason. Read-only — never writes to
+      # Stripe or the database. Written for the churchless@gmail.com incident
+      # (Aug 2026): a payment failed but the account had Premium anyway.
+      - name: Diagnose one account's billing
+        if: inputs.task == 'diagnose-billing'
+        env:
+          TARGET_EMAIL: ${{ inputs.email }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: npx tsx scripts/diagnose-billing.ts
 
       - name: Vendetta pipeline (official gallery → import)
         if: inputs.task == 'vendetta-pipeline'
