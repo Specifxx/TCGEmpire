@@ -20,7 +20,7 @@ export function usePremiumDialog() {
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
 
-// "$4.99" → "$0". Derived rather than hardcoded so a re-denominated
+// "$9.99" → "$0". Derived rather than hardcoded so a re-denominated
 // PREMIUM_PRICE_AMOUNT (£, €, A$…) carries its symbol through instead of this
 // silently claiming dollars. Falls back to "$" if the amount is bare digits.
 const ZERO_DUE_TODAY = `${PREMIUM_PRICE_AMOUNT.replace(/[\d.,]+.*$/, "") || "$"}0`;
@@ -57,8 +57,8 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Monthly is the default even when annual is offered. Annual is the better
-  // value and says so on its own toggle (−35%), but defaulting to it puts the
-  // larger number ($39) in front of someone who has not decided to pay anything
+  // value and says so on its own toggle (−33%), but defaulting to it puts the
+  // larger number ($79.99) in front of someone who has not decided to pay anything
   // yet. Monthly is the lower-commitment first step; annual is one tap away for
   // anyone who wants it.
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");

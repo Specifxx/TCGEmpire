@@ -85,7 +85,7 @@ export default async function PremiumPage() {
   const checkoutLive = premiumCheckoutEnabled();
   const dbUser = user ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true } }) : null;
   const trialEligible = premiumTrialEnabled() && !!user && !already && !dbUser?.trialStartedAt;
-  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "4.99";
+  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "9.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
   const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
