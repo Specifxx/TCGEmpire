@@ -280,7 +280,7 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
     category: "blog",
     title: "Riftbound Radiance: Release Date & What's Confirmed",
     excerpt:
-      "Riftbound: Radiance lands 23 October 2026 with around 180 cards and five new champion Legends. Here's every confirmed detail, what hasn't been revealed, and the one Radiance card you can already look up today.",
+      "Riftbound: Radiance lands 23 October 2026 with ~180 cards and five new champion Legends. Every confirmed detail and what's still unrevealed.",
     author: "RiftCompare",
     date: "2026-08-27",
     readMins: 7,
@@ -1702,7 +1702,7 @@ Honestly, weigh this against your actual goal. If you want a complete set for th
     category: "blog",
     title: "Vendetta's New Card Types: Unit-Gear & Decrees",
     excerpt:
-      "Vendetta adds two new card concepts to Riftbound — Unit-Gear, which is both a unit and a piece of gear, and Decrees, a cycle of rivalry spells. Here's how they work.",
+      "Vendetta adds two new card concepts — Unit-Gear, both a unit and a piece of gear, and Decrees, a cycle of rivalry spells. Here's how they work.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-07",
@@ -2089,7 +2089,7 @@ We'll update this guide the moment any further changes to either ban list are an
     category: "blog",
     title: "Riftbound's July 2026 Ban List Update",
     excerpt:
-      "Riot just announced Riftbound's second ban wave: Stealthy Pursuer (over an infinite Recruit combo), The Arena's Greatest and Aspirant's Climb, effective 24 July — and a brand-new Constructed 2v2 ban list starting with Master Yi, Wuju Bladesman.",
+      "Riot's second Riftbound ban wave: Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — plus a new 2v2 ban list led by Master Yi.",
     author: "RiftCompare",
     date: "2026-07-17",
     updated: "2026-07-31",
@@ -2150,7 +2150,7 @@ For the complete, always-current picture — including March's original 7 bans �
     category: "blog",
     title: "Riftbound × T1 Worlds Champion Collection",
     excerpt:
-      "Riot's first-ever single-team Riftbound collaboration: a serialised, player-signed Signature Edition at US$360 and a US$70 Player Bundle honouring T1's sixth World Championship. What's in each, and the five champions T1 picked.",
+      "Riot's first single-team Riftbound collab: a signed Signature Edition (US$360) and a US$70 Player Bundle honouring T1's sixth Worlds title.",
     author: "RiftCompare",
     date: "2026-07-17",
     // Rewritten 9 Aug 2026: the drawing timetable and prices are published, the
@@ -3002,7 +3002,7 @@ For the full picture of the set, read the **[complete card gallery](/blog/every-
     category: "blog",
     title: "Riftbound Vendetta Chase Cards — Every Tier",
     excerpt:
-      "Vendetta is out. Here's every chase-card tier in the set — signed Signature Legends, connecting-art Rival Overnumbers, Showcases, alt-arts and the Epic sleepers — each with a live gallery and real prices compared across every store.",
+      "Vendetta is out. Every chase-card tier — signed Legends, Rival Overnumbers, Showcases, alt-arts and Epic sleepers — with a live gallery and real prices.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-31",
@@ -3406,7 +3406,7 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
     category: "blog",
     title: "RiftCompare Is Now Live in the EU",
     excerpt:
-      "RiftCompare's sixth market is here: the eurozone, priced natively in EUR from eleven real EU stores — not a currency conversion over UK prices. Here's exactly what changed and why.",
+      "RiftCompare's sixth market is here: the eurozone, priced natively in EUR from eleven real EU stores — not a UK conversion. What changed and why.",
     author: "RiftCompare",
     date: "2026-08-24",
     updated: "2026-08-24",
@@ -3481,7 +3481,7 @@ Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/bu
     category: "blog",
     title: "Best Riftbound Price Comparison Sites, Ranked",
     excerpt:
-      "TCGplayer, Cardmarket, Bilgewater Market, TCG Snoop, TCGCompare and more — every real Riftbound price site compared on independent-store coverage, delivered cost, and whether the price you see is a live listing or someone else's reference number.",
+      "TCGplayer, Cardmarket, Bilgewater Market and more — every real Riftbound price site compared on coverage, delivered cost, and live vs. reference pricing.",
     author: "RiftCompare",
     date: "2026-08-24",
     updated: "2026-08-24",
@@ -3619,7 +3619,7 @@ The fastest way to judge any of this is to pick a card you already know the pric
     category: "blog",
     title: "Riftbound Vendetta Card List: All 166 Cards",
     excerpt:
-      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards plus Showcase alt-arts, Overnumbers and promos, live from our database with prices.",
+      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards plus Showcase alt-arts, Overnumbers and promos, with live prices.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-08-19",
@@ -3726,7 +3726,7 @@ If you're gearing up for a set's own Pre-Rift week, our **[Vendetta card databas
     category: "blog",
     title: "Riftbound Regional Qualifier: Los Angeles",
     excerpt:
-      "The final Riftbound Regional Qualifier of 2026 lands at the Los Angeles Convention Center, September 25–27 — here's the venue, ticket tiers, requirements and the exclusive promos on offer.",
+      "The final Riftbound Regional Qualifier of 2026 lands at the LA Convention Center, Sept 25–27 — venue, tickets, requirements and exclusive promos.",
     author: "RiftCompare",
     date: "2026-07-26",
     updated: "2026-07-26",
@@ -4156,7 +4156,7 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
     category: "blog",
     title: "Vendetta Nexus Night Promo Cards: All 7 Confirmed",
     excerpt:
-      "Riftbound Vendetta's weekly Nexus Night events hand out a 25-card promo cycle — Mel, Newly Awakened is the chase card. 7 of 25 promos are confirmed as of this update: Mel plus the full 6-card promo rune cycle, with live prices.",
+      "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle led by Mel, Newly Awakened. 7 of 25 confirmed so far, with live prices.",
     author: "RiftCompare",
     date: "2026-08-01",
     updated: "2026-08-19",
@@ -4249,7 +4249,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
     category: "blog",
     title: "Riftbound's 2027 Set Roadmap",
     excerpt:
-      "Riot has mapped Riftbound's releases through 2027 — Radiance in October, Legacy in January, The Reckoning in April, and two unnamed sets after. What each means if you're buying.",
+      "Riot has mapped Riftbound's releases through 2027 — Radiance, Legacy, The Reckoning and two unnamed sets. What each means for buyers.",
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 7,
@@ -4366,7 +4366,7 @@ Every set gets a page on RiftCompare the moment its cards are catalogued, with l
     category: "blog",
     title: "Riftbound Legacy: Pack & Templating Changes",
     excerpt:
-      "Legacy trades a common for a dedicated Legend or Battlefield slot, is the first set built for draft, and changes how card text is written. Here's what each change does in plain language.",
+      "Legacy trades a common for a Legend or Battlefield slot, is the first set built for draft, and changes how card text is written — plain language.",
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 8,
@@ -4495,7 +4495,7 @@ None of it is actionable in August 2026. It is actionable in January 2027, and t
     category: "blog",
     title: "Riftbound's August 2026 State of the Game",
     excerpt:
-      "Riot's August State of the Game covered ban philosophy, 2v2, collector products and language rollout. Here are the takeaways that actually change what you should buy and track.",
+      "Riot's August State of the Game covered ban philosophy, 2v2, collector products and language rollout — the takeaways that change what to buy and track.",
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 7,
@@ -5150,7 +5150,7 @@ If you're coming from League of Legends and want the easiest way in, starting wi
     category: "blog",
     title: "Shen's Underrated Vendetta Signature Card",
     excerpt:
-      "Our case for why the Shen, Eye of Twilight Signature — known to collectors as \"Armpit Boi\" — deserves more attention than it's getting. Opinion, with the real prices shown alongside it.",
+      "Our case for why the Shen, Eye of Twilight Signature — collectors call it \"Armpit Boi\" — deserves more attention. Opinion, with real prices.",
     author: "RiftCompare",
     date: "2026-08-13",
     readMins: 5,
@@ -5240,7 +5240,7 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
     category: "blog",
     title: "Every Ahri Card in Riftbound",
     excerpt:
-      "Twelve Ahri printings across three different cards, from US$8.95 to US$3,420.28 — with the two prints that are visually identical except for a signature worth US$3,046.",
+      "Twelve Ahri printings across three cards, from US$8.95 to US$3,420.28 — including two prints that look identical except for a signature worth US$3,046.",
     author: "RiftCompare",
     date: "2026-08-15",
     readMins: 6,
@@ -5395,7 +5395,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
     category: "blog",
     title: "Are Riftbound Cards a Real Investment?",
     excerpt:
-      "Our price tracking for Riftbound only goes back eleven days. Here's what that actually means for anyone asking whether these cards are an investment — with the real prices, real fees and real risks, not a guess dressed up as one.",
+      "Our Riftbound price tracking only goes back eleven days. What that means for anyone asking if these cards are an investment — real numbers, no guessing.",
     author: "RiftCompare",
     date: "2026-08-15",
     readMins: 9,
@@ -5573,7 +5573,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     category: "blog",
     title: "RiftCompare Premium: Every Feature Explained",
     excerpt:
-      "Everything RiftCompare Premium actually includes — Value Finder, Rising Cards, the full Deal Finder and the Bulk Pricer — with pricing, screenshots and honest FAQs.",
+      "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
     updated: "2026-08-26",

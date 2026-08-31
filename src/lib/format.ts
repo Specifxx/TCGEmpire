@@ -45,6 +45,18 @@ export function normalizeSearch(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+// Trim text down to a length that survives a ~160-char meta description (Google's
+// SERP truncation point) without cutting mid-word. Shared by every metadata
+// generator that builds a description from longer prose (card pages, blog posts)
+// so they can't independently drift on the truncation rule.
+export function clampText(s: string, max: number): string {
+  const flat = s.replace(/\s+/g, " ").trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
+}
+
 export function timeAgo(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const seconds = Math.floor((Date.now() - d.getTime()) / 1000);

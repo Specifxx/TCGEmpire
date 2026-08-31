@@ -5,7 +5,18 @@ import { getArticle, getArticles } from "@/lib/articles";
 import { getBlogPost } from "@/lib/posts";
 import { ArticleView } from "@/components/ArticleView";
 import { SITE_URL } from "@/lib/site";
+import { clampText } from "@/lib/format";
 import { hreflangForCountryGuide, pageAlternates, pageOpenGraph } from "@/lib/seo";
+
+// Soft cap at generation time — belt-and-suspenders alongside actually keeping
+// each post's own `excerpt` under this length (see lib/articles.ts). An SEO
+// audit found 19 of 36 published posts' excerpts rendering straight into
+// <meta name="description"> past Google's ~155-160 char SERP truncation point
+// (as long as 246 chars) with nothing to catch it — this is that catch, so a
+// future post can't silently reintroduce the same bug just by writing a long
+// excerpt. clampText is shared with card/[id]/page.tsx, which needed the
+// identical truncate-on-a-word-boundary rule for the same reason.
+const DESCRIPTION_MAX = 155;
 
 // Pre-render the file-based posts.
 // ISR: 24 hours, with the price importer's /api/revalidate POST purging this
@@ -33,6 +44,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // A DRAFT is noindexed: it is reachable by direct URL so it can be reviewed,
   // but it must not be indexed while it still has unverified content in it.
   const isDraft = !!getArticle(params.slug)?.draft;
+  const description = clampText(a.excerpt, DESCRIPTION_MAX);
   return {
     // " — RiftCompare", not " — RiftCompare Blog": matches the suffix every
     // other indexed page on the site uses (the root layout's title template,
@@ -42,7 +54,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // titles are already long, that was enough on its own to push a lot of
     // otherwise-fine titles past Google's ~60-char SERP truncation point.
     title: { absolute: `${a.title} — RiftCompare` },
-    description: a.excerpt,
+    description,
     ...(isDraft ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(`/blog/${a.slug}`, {
       types: { "text/markdown": `${SITE_URL}/llm/blog/${a.slug}` },

@@ -47,6 +47,22 @@ const POPULAR_CHAMPION_SLUGS = ["vex", "draven", "azir", "leblanc", "irelia"];
 // content is a permutation, and /browse?page=2&size=10 shows entirely different
 // cards than /browse?page=2 — they must never share a canonical). Out-of-range
 // pages are noindex'd so the scheme can't manufacture indexable empty soft-404s.
+//
+// RE-CONFIRMED, not changed, by a later audit that flagged this as a duplicate-
+// canonical bug and pointed at /blog and /gallery as the "correct" model. Neither
+// is actually comparable: /blog's `?page=` and /gallery's are not read by either
+// route at all (both paginate, if at all, purely client-side over a page that
+// serves the SAME full HTML regardless of the query string) — their shared
+// canonical is a side effect of having nothing paginated to protect, not a
+// deliberate pagination policy. /browse is the one route on this site with REAL
+// server-driven pagination (Prisma skip/take produces a genuinely different card
+// set per page), which is exactly the case Google's pagination guidance is about,
+// and self-referencing canonicals are what that guidance actually recommends —
+// canonicalising every page back to page 1 would tell Google pages 2-15 are
+// duplicates and drop their card links from the index, the opposite of the fix
+// asked for. The real, separate bug that audit also found — every paginated
+// page sharing byte-identical title/description with page 1 — is fixed below
+// instead, without touching canonicalization.
 const isCleanPagination = (searchParams: CardQuery) =>
   Object.entries(searchParams).every(([k, v]) => k === "page" || v == null || v === "");
 
@@ -65,10 +81,23 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
   // RiftCompare") already appends it once; adding it by hand doubled the
   // suffix ("... | RiftCompare — RiftCompare"), caught visually while
   // verifying this change.
+  //
+  // PAGE-AWARE title/description (page > 1): a later audit found every
+  // paginated view sharing byte-identical title/description with page 1 —
+  // fixed here, belt-and-suspenders alongside each page's own self-referencing
+  // canonical below (see isCleanPagination's comment for why that canonical
+  // stays self-referencing rather than pointing at page 1 — this is the other,
+  // independent half of the same finding: even pages that are correctly NOT
+  // duplicates of each other in Google's eyes still read as one in the SERP
+  // snippet if the words are identical, which is a real CTR cost regardless of
+  // canonicalization).
+  const pageSuffix = page > 1 ? ` — Page ${page}` : "";
   const base = {
-    title: q ? `${q} — Riftbound cards & prices` : "Riftbound Cards — Browse & Compare Prices",
+    title: q ? `${q} — Riftbound cards & prices${pageSuffix}` : `Riftbound Cards — Browse & Compare Prices${pageSuffix}`,
     description:
-      "Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — find the cheapest place to buy. Updated daily.",
+      page > 1
+        ? `Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — page ${page}. Updated daily.`
+        : "Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — find the cheapest place to buy. Updated daily.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {
