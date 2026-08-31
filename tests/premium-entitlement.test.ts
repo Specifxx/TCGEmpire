@@ -143,6 +143,46 @@ test("userId and customer resolve from either string or object shapes", () => {
   assert.equal(customerIdOf({}), null);
 });
 
+// ── The churchless@gmail.com incident (Aug 2026) ────────────────────────────
+//
+// A payment FAILED, yet the account was granted Premium anyway. Root cause:
+// checkout.session.completed fires once the customer finishes Stripe's hosted
+// Checkout UI — not once the charge is confirmed (a card can fail 3DS/bank
+// authentication after Checkout closes, or the payment method can be a
+// delayed one). entitledUntilFromSubscription() was already computing the
+// correct null for a non-entitled subscription (see the "canceled/unpaid/
+// incomplete" test above) — the bug was a fallback grant that treated
+// "successfully checked Stripe and it says no" exactly like "couldn't check
+// Stripe at all" and granted a grace window regardless. Fixed by scoping that
+// grace grant to ONLY the retrieval-failure catch block.
+
+test("a successfully-read, non-entitled checkout subscription grants nothing", () => {
+  const src = read("src/app/api/marketplace/stripe/webhook/route.ts");
+  const start = src.indexOf("async function premiumStarted");
+  const end = src.indexOf("\nasync function premiumRenewed");
+  assert.ok(start > 0 && end > start, "expected to locate premiumStarted()'s full body");
+  const fn = src.slice(start, end);
+
+  // The retrieval must be try/caught, with the grace-window grant living ONLY
+  // inside the catch — unreachable once the subscription is read successfully.
+  const catchAt = fn.indexOf("} catch (e) {");
+  assert.ok(catchAt > 0, "subscription retrieval must be try/caught");
+  const catchEnd = fn.indexOf("\n  }\n", catchAt) + "\n  }\n".length;
+  const tryBody = fn.slice(0, catchAt);
+  const catchBody = fn.slice(catchAt, catchEnd);
+  assert.doesNotMatch(tryBody, /stampPremium/, "the try body must only READ the subscription, never grant directly");
+  assert.match(catchBody, /stampPremium/, "a genuine retrieval failure (we never learned the real status) still gets a grace grant");
+
+  // Past the try/catch, a successfully-read subscription must be re-checked
+  // for real entitlement and return WITHOUT granting when it has none.
+  const afterCatch = fn.slice(catchEnd);
+  assert.match(afterCatch, /const until = entitledUntilFromSubscription\(sub\)/, "must re-check real entitlement on the successfully-read subscription");
+  const untilCheck = afterCatch.match(/if \(!until\) \{([\s\S]*?)\n {2}\}/);
+  assert.ok(untilCheck, "expected an explicit `if (!until)` guard right after the entitlement check");
+  assert.match(untilCheck![1], /return;/, "a non-entitled subscription must return without granting anything");
+  assert.doesNotMatch(untilCheck![1], /stampPremium/, "the non-entitled branch must never call stampPremium");
+});
+
 // ── Wiring pins (source-level) ──────────────────────────────────────────────
 
 test("the webhook handles both invoice events and subscription lifecycle events", () => {

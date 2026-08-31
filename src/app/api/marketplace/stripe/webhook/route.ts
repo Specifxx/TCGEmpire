@@ -111,6 +111,20 @@ export async function POST(req: Request) {
 // free trial, the card is fingerprinted and checked against past trials FIRST — a
 // reused card's trial is cancelled and NO entitlement is granted (entitlement is
 // only ever written here, so a blocked abuser never gets a moment of access).
+//
+// PAYMENT MUST SUCCEED BEFORE ANYTHING IS GRANTED (the churchless@gmail.com
+// incident, Aug 2026). `checkout.session.completed` fires once the customer
+// finishes the Checkout UI — which is NOT the same thing as the charge having
+// gone through: a card that fails 3DS/bank authentication after Checkout closes,
+// or a delayed payment method, leaves the subscription in a non-entitled status
+// (incomplete/incomplete_expired/unpaid) even though this event still fires.
+// `entitledUntilFromSubscription` was already computing the correct null for
+// that case — the bug was a fallback below it that treated "checked Stripe and
+// it says no" exactly like "couldn't check Stripe at all" and granted a grace
+// window either way. Only a genuine RETRIEVAL failure (network/API error — we
+// never learned the real status) still gets that grace, and only because the
+// checkout session itself completing is real signal the charge likely landed;
+// a successfully-read non-entitled subscription now grants nothing, ever.
 async function premiumStarted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId ?? session.client_reference_id;
   if (!userId) {
@@ -120,45 +134,68 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
   const isTrial = session.metadata?.trial === "1";
   const customerId = customerIdOf(session);
   const subId = typeof session.subscription === "string" ? session.subscription : null;
+  if (!subId) {
+    console.error(`stripe webhook: premium checkout ${session.id} completed with no subscription id`);
+    return;
+  }
 
-  let until: Date | null = null;
-  if (subId) {
-    try {
-      // Expand the default payment method so we can read the card fingerprint.
-      // The retrieve goes through the SDK's own pinned API version, so its
-      // shape is stable regardless of the webhook endpoint's version — but the
-      // period end still goes through the tolerant reader, so an SDK version
-      // bump can't silently null it.
-      const sub = await stripe().subscriptions.retrieve(subId, { expand: ["default_payment_method"] });
-      until = entitledUntilFromSubscription(sub);
+  let sub: Stripe.Subscription;
+  try {
+    // Expand the default payment method so we can read the card fingerprint.
+    // The retrieve goes through the SDK's own pinned API version, so its shape
+    // is stable regardless of the webhook endpoint's version — but the period
+    // end still goes through the tolerant reader, so an SDK version bump can't
+    // silently null it.
+    sub = await stripe().subscriptions.retrieve(subId, { expand: ["default_payment_method"] });
+  } catch (e) {
+    console.error(`stripe webhook: subscription read failed for checkout ${session.id}:`, e);
+    // We genuinely don't know the real status — the checkout session completing
+    // is the best signal we have, so grant a short grace window that the next
+    // renewal event or the daily reconcile cron will correct once Stripe is
+    // reachable again. This is the ONLY path that may grant without confirmed
+    // entitlement, and only because entitlement couldn't be checked at all.
+    const grace = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS : 32) * 86400_000);
+    await stampPremium(userId, grace, customerId, `checkout ${session.id} (grace — subscription unreadable)`);
+    if (isTrial) {
+      await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
+    }
+    return;
+  }
 
-      if (isTrial) {
-        const pm = sub.default_payment_method;
-        const fingerprint = pm && typeof pm !== "string" ? pm.card?.fingerprint ?? null : null;
-        if (fingerprint) {
-          const seen = await prisma.trialRedemption.findUnique({ where: { cardFingerprint: fingerprint } });
-          if (seen && seen.userId !== userId) {
-            // This card already had a free trial (on any account) → refuse this one.
-            await stripe().subscriptions.cancel(subId).catch(() => {});
-            // Mark the account as having attempted a trial so it can't loop, but grant
-            // nothing.
-            await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
-            return;
-          }
-          if (!seen) {
-            await prisma.trialRedemption.create({ data: { cardFingerprint: fingerprint, userId } }).catch(() => {});
-          }
-        }
+  if (isTrial) {
+    const pm = sub.default_payment_method;
+    const fingerprint = pm && typeof pm !== "string" ? pm.card?.fingerprint ?? null : null;
+    if (fingerprint) {
+      const seen = await prisma.trialRedemption.findUnique({ where: { cardFingerprint: fingerprint } });
+      if (seen && seen.userId !== userId) {
+        // This card already had a free trial (on any account) → refuse this one.
+        await stripe().subscriptions.cancel(subId).catch(() => {});
+        // Mark the account as having attempted a trial so it can't loop, but grant
+        // nothing.
+        await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
+        return;
       }
-    } catch (e) {
-      console.error(`stripe webhook: subscription read failed for checkout ${session.id}:`, e);
-      /* fall through to the grace default */
+      if (!seen) {
+        await prisma.trialRedemption.create({ data: { cardFingerprint: fingerprint, userId } }).catch(() => {});
+      }
     }
   }
-  // If the subscription read failed: grant a short grace window that the precise
-  // period end (renewal events / the reconcile cron) will correct —
-  // PREMIUM_TRIAL_DAYS for a trial, ~a month for a paid start.
-  if (!until) until = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS : 32) * 86400_000);
+
+  const until = entitledUntilFromSubscription(sub);
+  if (!until) {
+    // Stripe was reachable and says this subscription does not entitle access
+    // right now (payment failed, requires action, or was never completed) —
+    // grant NOTHING. If the payment later succeeds, invoice.paid /
+    // customer.subscription.updated (or checkout.session.async_payment_succeeded
+    // re-running this same function) will stamp premium then, correctly.
+    console.error(
+      `stripe webhook: checkout ${session.id} completed but subscription ${subId} is not entitled (status "${sub.status}") — granting nothing`
+    );
+    if (isTrial) {
+      await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
+    }
+    return;
+  }
 
   await stampPremium(userId, until, customerId, `checkout ${session.id}`);
   if (isTrial) {
