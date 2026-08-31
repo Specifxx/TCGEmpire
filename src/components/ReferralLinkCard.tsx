@@ -5,7 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 
 // The referral program's first-ever UI. The server side has been complete for
 // a while — ReferralCapture writes the ?ref= cookie on any landing, and
-// applyReferral grants the referrer REFERRAL_PREMIUM_MONTHS when the referred
+// applyReferral grants the referrer REFERRAL_PREMIUM_DAYS when the referred
 // visitor creates an account — but nothing anywhere generated or showed a
 // member their link, so the channel sat at exactly zero. This card turns every
 // existing member into a free-account acquisition channel; the reward costs
@@ -13,9 +13,9 @@ import { trackEvent } from "@/lib/analytics";
 // signup the growth plan is after.
 //
 // Server component parent (profile/page.tsx) passes the fully-built URL and
-// the months figure and hides the card entirely when the program is off
-// (REFERRAL_PREMIUM_MONTHS=0) — this client half only handles the copy button.
-export function ReferralLinkCard({ url, months }: { url: string; months: number }) {
+// the days figure and hides the card entirely when the program is off
+// (REFERRAL_PREMIUM_DAYS=0) — this client half only handles the copy button.
+export function ReferralLinkCard({ url, days }: { url: string; days: number }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -35,7 +35,7 @@ export function ReferralLinkCard({ url, months }: { url: string; months: number 
       <p className="mt-1 text-sm text-slate-400">
         Share your link — you get{" "}
         <span className="font-semibold text-gold">
-          {months === 1 ? "1 month" : `${months} months`} of Premium
+          {days === 1 ? "1 day" : `${days} days`} of Premium
         </span>{" "}
         for every friend who creates a free account.
       </p>

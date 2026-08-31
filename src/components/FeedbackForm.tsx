@@ -16,9 +16,9 @@ type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; grante
 // still account-only (there is nothing to attach a grant to without an account),
 // but it is now an INCENTIVE shown alongside a working form, not a gate in front
 // of one.
-export function FeedbackForm({ months }: { months: number }) {
+export function FeedbackForm({ days }: { days: number }) {
   const { user, premium, loaded } = useMe();
-  const moLabel = `${months} month${months === 1 ? "" : "s"}`;
+  const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
   const [rating, setRating] = useState(0);
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
@@ -72,7 +72,7 @@ export function FeedbackForm({ months }: { months: number }) {
         <h2 className="mt-3 text-lg font-bold text-brand-200">Thank you — this genuinely helps.</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
           {state.granted
-            ? `Your ${moLabel} of Premium is now active. Enjoy the pro tools!`
+            ? `Your ${dayLabel} of Premium is now active. Enjoy the pro tools!`
             : premium
             ? "You're already Premium — but your feedback still means a lot."
             : user
@@ -203,16 +203,16 @@ export function FeedbackForm({ months }: { months: number }) {
 
       {/* The reward is an incentive to sign in, NEVER a gate — the form above
           works either way. */}
-      {months > 0 && !user && (
+      {days > 0 && !user && (
         <p className="text-center text-xs text-slate-500">
           No account needed. If you{" "}
           <Link href="/login?next=/feedback" className="text-brand-400 hover:underline">sign in first</Link>, your first
-          feedback also unlocks <strong className="text-gold">{moLabel} of Premium</strong>.
+          feedback also unlocks <strong className="text-gold">{dayLabel} of Premium</strong>.
         </p>
       )}
-      {months > 0 && user && !premium && (
+      {days > 0 && user && !premium && (
         <p className="text-center text-xs text-slate-500">
-          Your first feedback unlocks <strong className="text-gold">{moLabel} of Premium</strong> — one per account.
+          Your first feedback unlocks <strong className="text-gold">{dayLabel} of Premium</strong> — one per account.
         </p>
       )}
     </form>

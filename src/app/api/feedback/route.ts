@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
-import { grantPremiumMonths, feedbackPremiumActive, FEEDBACK_PREMIUM_MONTHS } from "@/lib/premium";
+import { grantPremiumDays, feedbackPremiumActive, FEEDBACK_PREMIUM_DAYS } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -125,10 +125,10 @@ export async function POST(req: Request) {
     let granted = false;
     let premiumUntil: Date | null = null;
     if (user && prior === 0 && feedbackPremiumActive()) {
-      premiumUntil = await grantPremiumMonths(user.id, FEEDBACK_PREMIUM_MONTHS);
+      premiumUntil = await grantPremiumDays(user.id, FEEDBACK_PREMIUM_DAYS);
       granted = !!premiumUntil;
     }
-    return NextResponse.json({ ok: true, granted, months: FEEDBACK_PREMIUM_MONTHS, premiumUntil });
+    return NextResponse.json({ ok: true, granted, days: FEEDBACK_PREMIUM_DAYS, premiumUntil });
   } catch {
     return NextResponse.json({ error: "Couldn't send that right now — please try again." }, { status: 500 });
   }

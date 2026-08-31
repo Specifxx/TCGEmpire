@@ -8,7 +8,7 @@
 // must never block or fail signup.
 import { cookies } from "next/headers";
 import { prisma } from "./db";
-import { grantPremiumMonths, REFERRAL_PREMIUM_MONTHS } from "./premium";
+import { grantPremiumDays, REFERRAL_PREMIUM_DAYS } from "./premium";
 import { REFERRAL_COOKIE } from "./referral-cookie";
 
 export { REFERRAL_COOKIE };
@@ -28,10 +28,10 @@ export async function applyReferral(newUserId: string): Promise<void> {
     });
     if (!referrer || referrer.id === newUserId) return;
 
-    // Reward the referrer with +1 month of Premium per friend who joins (best-effort).
+    // Reward the referrer with +3 days of Premium per friend who joins (best-effort).
     // Called exactly once per new signup (cookie is cleared above), so it's one grant
-    // per referred user. No-op when REFERRAL_PREMIUM_MONTHS=0.
-    await grantPremiumMonths(referrer.id, REFERRAL_PREMIUM_MONTHS).catch(() => {});
+    // per referred user. No-op when REFERRAL_PREMIUM_DAYS=0.
+    await grantPremiumDays(referrer.id, REFERRAL_PREMIUM_DAYS).catch(() => {});
   } catch {
     // Referral is a bonus, never a gate — swallow everything.
   }

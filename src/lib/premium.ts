@@ -185,14 +185,18 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 // deliberately reintroduced; see its own comment and the access-tier note above
 // for why this is safe against the failure mode the original, week-long version
 // of this had.
-export const FEEDBACK_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_MONTHS ?? 1)));
-// +1 month of Premium to the REFERRER for each friend who signs up via their link.
-export const REFERRAL_PREMIUM_MONTHS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_MONTHS ?? 1)));
+//
+// Day-granular, not month-granular: a full calendar month was a disproportionate
+// reward for a single form submission or a single friend signing up (2026-08-31 —
+// cut from 1 month to 1 week for feedback, 3 days for referral).
+export const FEEDBACK_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.FEEDBACK_PREMIUM_DAYS ?? 7)));
+// +3 days of Premium to the REFERRER for each friend who signs up via their link.
+export const REFERRAL_PREMIUM_DAYS = Math.max(0, Math.floor(Number(process.env.REFERRAL_PREMIUM_DAYS ?? 3)));
 export function feedbackPremiumActive(): boolean {
-  return FEEDBACK_PREMIUM_MONTHS > 0;
+  return FEEDBACK_PREMIUM_DAYS > 0;
 }
 export function referralPremiumActive(): boolean {
-  return REFERRAL_PREMIUM_MONTHS > 0;
+  return REFERRAL_PREMIUM_DAYS > 0;
 }
 
 // NO PREMIUM ON SIGNUP. REMOVED 2026-08-23, DELIBERATELY AND ENTIRELY.

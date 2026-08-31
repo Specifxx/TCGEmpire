@@ -69,7 +69,7 @@ test("/login converts ?src= into stashed attribution without inflating the click
 
 test("the referral program finally has a share surface, gated on the program being on", () => {
   const profile = read("src/app/profile/page.tsx");
-  assert.match(profile, /REFERRAL_PREMIUM_MONTHS > 0 && \(/);
+  assert.match(profile, /REFERRAL_PREMIUM_DAYS > 0 && \(/);
   assert.match(profile, /\$\{SITE_URL\}\/\?ref=\$\{user\.id\}/);
   const card = read("src/components/ReferralLinkCard.tsx");
   assert.match(card, /trackEvent\("referral_link_copied"\)/);

@@ -5588,7 +5588,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
-      "**You can also get a month of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
+      "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
     browseCta: {
       href: "/premium",
@@ -5614,11 +5614,11 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Is there a free trial?",
-        a: "Yes — 14 days, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 14 days unless you cancel before then. New accounts also get one full day of Premium automatically just for signing up, no trial or card needed.",
+        a: "Yes — 14 days, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 14 days unless you cancel before then.",
       },
       {
         q: "Can I get RiftCompare Premium for free?",
-        a: "You can earn a full free month without paying anything: submit feedback once at riftcompare.com/feedback and it unlocks a month of Premium automatically, no card required. Every new account also gets a one-day Premium preview the moment it's created.",
+        a: "You can earn free Premium two ways, no card required either way: submit feedback once at riftcompare.com/feedback and it unlocks a full week automatically, or share your referral link from your profile and every friend who creates a free account earns you 3 days.",
       },
       {
         q: "Can I cancel RiftCompare Premium anytime?",
@@ -5730,8 +5730,8 @@ The two tools solve genuinely different problems: Bulk Pricer is about knowing a
 
 You don't have to subscribe to try it:
 
-- **Every new account gets a free 1-day Premium preview**, automatically, the moment you sign up — no card, no trial to remember to cancel.
-- **[Submit feedback once](/feedback)** — a bug report, a feature request, anything genuinely useful — and it unlocks a full **month of Premium, free**, no card required either.
+- **[Invite a friend](/profile)** — share your referral link, and every friend who creates a free account earns you **3 days of Premium**, free.
+- **[Submit feedback once](/feedback)** — a bug report, a feature request, anything genuinely useful — and it unlocks a full **week of Premium, free**, no card required either.
 
 Neither of these requires ever entering a payment method. If Premium turns out to not be for you, both simply expire with nothing charged.
 
