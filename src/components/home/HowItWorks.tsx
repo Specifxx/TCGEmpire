@@ -69,6 +69,23 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
           <span className="text-brand-400" aria-hidden>▸</span> View our store list
         </Link>
       </div>
+
+      {/* Trust strip — the site's real E-E-A-T pages (methodology, about/team)
+          exist but were only ever linked from the site-wide footer, buried
+          among 20+ other links with no on-page signal near the actual prices.
+          A first-time visitor has no reason yet to trust a number pulled
+          together from dozens of stores without something here answering
+          "says who, checked how" — kept to one quiet line, not a redesign. */}
+      <p className="mt-3 text-xs text-slate-500">
+        Prices verified daily ·{" "}
+        <Link href="/methodology" className="underline-offset-2 hover:text-slate-300 hover:underline">
+          See our methodology
+        </Link>{" "}
+        ·{" "}
+        <Link href="/about" className="underline-offset-2 hover:text-slate-300 hover:underline">
+          Meet the team
+        </Link>
+      </p>
     </section>
   );
 }

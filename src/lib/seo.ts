@@ -94,23 +94,33 @@ export const COUNTRY_GUIDE_SLUGS: Record<Country, string> = {
 
 /** BCP-47 tag per market. UK's region subtag is GB, not UK.
  *
- *  EU IS THE AWKWARD ONE. hreflang's region subtag must be an ISO 3166-1
- *  alpha-2 COUNTRY code; "EU" is a UN M.49 region and search engines reject or
- *  ignore it, so "en-EU" would be a broken annotation rather than a useful one.
- *  The EU guide is therefore annotated en-ES — English content targeted at
- *  Spain, the market's anchor country (see country.ts's EU_ANCHOR_ISO), which
- *  is what the page genuinely is. It under-claims: a French or Dutch reader is
- *  served by the same page and this tag doesn't say so. Under-claiming is the
- *  right side to err on here — hreflangForCountryGuide's header exists because
- *  the opposite (inventing locale annotations for pages that don't differ) is
- *  the failure this file refuses to commit. */
+ *  EU IS THE AWKWARD ONE, and used to be annotated en-ES (English targeted at
+ *  Spain, the market's anchor country for Shopify/eBay — see country.ts's
+ *  EU_ANCHOR_ISO). That was wrong, not just an under-claim: hreflang's region
+ *  subtag exists to say WHO a page is for, and this page is not for Spain
+ *  specifically — it is pan-European English content for shoppers in ~20
+ *  member states, with nothing in its copy, currency formatting or content
+ *  that singles Spain out. en-ES told Google the opposite of that.
+ *
+ *  hreflang's region subtag must be an ISO 3166-1 alpha-2 COUNTRY code, and
+ *  "EU" is a UN M.49 region — search engines reject or ignore it, so "en-EU"
+ *  is not a legal fix either. The correct BCP-47 tag for "English, no
+ *  particular country" is simply the bare language subtag: "en". That is a
+ *  real, standard hreflang value (search engines match it against any en-*
+ *  visitor not already served by a more specific tag — en-US/en-GB/en-AU/
+ *  en-CA/en-SG here), not a fabrication like en-EU would be, and it is the
+ *  genuinely accurate claim for this page: EU_ANCHOR_ISO's job is choosing
+ *  ONE country for Shopify/eBay's country-code-shaped APIs (see country.ts),
+ *  a completely different question with a completely different right answer
+ *  — hreflang has no such API constraint forcing a single-country tag, so it
+ *  should just say what the page actually is. */
 const HREFLANG: Record<Country, string> = {
   US: "en-US",
   UK: "en-GB",
   AU: "en-AU",
   CA: "en-CA",
   SG: "en-SG",
-  EU: "en-ES",
+  EU: "en",
 };
 
 /**
