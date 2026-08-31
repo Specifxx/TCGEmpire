@@ -37,11 +37,11 @@ set -uo pipefail
 # OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain shape itself, not
 # just the project, was the thing being replaced).
 CURRENT_OP="RM11"
-# Rotated again on 2026-08-28: RH9 reached its 5 GB monthly allowance, and RH10 —
+# Rotated again on 2026-08-31: RH10 reached its 5 GB monthly allowance, and RH11 —
 # a NEW project, empty before the restore — took its place. The chains are
 # CURRENT-first, not newest-first; see the long note on HISTORY_URL in
 # src/lib/db-history.ts.
-CURRENT_HIST="RH10"
+CURRENT_HIST="RH11"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -84,11 +84,11 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${RH10:-}" ]; then
+if [ -n "${RH11:-}" ]; then
+  HIST="$RH11"; HIST_SOURCE="RH11"
+elif [ -n "${RH10:-}" ]; then
+  # Rollback: served 2026-08-28 to 2026-08-31, reachable, at/near its allowance.
   HIST="$RH10"; HIST_SOURCE="RH10"
-elif [ -n "${RH9:-}" ]; then
-  # Rollback: served 2026-08-25 to 2026-08-28, reachable, at/near its allowance.
-  HIST="$RH9"; HIST_SOURCE="RH9"
 else
   # No separate history project — history shares the operational database, which
   # the push above already covered. _4/_3/_2/HISTORY_DATABASE_URL (bare) were
