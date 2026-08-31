@@ -845,7 +845,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
     category: "blog",
     title: "Riftbound Card Price Comparison",
     excerpt:
-      "How Riftbound card price comparison actually works — sticker price vs total cost, which markets are tracked, and how to find the genuinely cheapest place to buy.",
+      "How Riftbound card price comparison works — sticker price vs total cost, which markets are tracked, and how to find the genuinely cheapest place to buy.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 8,
@@ -938,7 +938,7 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [how to choose 
     category: "blog",
     title: "RiftCompare Review: An Honest Look",
     excerpt:
-      "A straight review of RiftCompare — what the Riftbound TCG price comparison tool does well, what it doesn't do, who it suits, and how it compares to checking stores yourself.",
+      "A straight review of RiftCompare — what it does well, what it doesn't, who it suits, and how it compares to checking stores yourself.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 8,

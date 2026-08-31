@@ -147,7 +147,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Are the Riftbound prices shown in my local currency?",
-    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore and CAD in Canada — so there are no surprise currency conversions.",
+    a: "Yes. Prices are shown in the local currency of your selected market — AUD in Australia, USD in the US, GBP in the UK, SGD in Singapore, CAD in Canada and EUR in the EU — so there are no surprise currency conversions.",
   },
 ];
 
@@ -296,8 +296,15 @@ export default async function HomePage() {
             webPage({
               name: "RiftCompare — Riftbound Prices & Card Database",
               href: "/",
+              // Market list matches the <meta name="description"> above and the
+              // hreflang set (lib/seo.ts's regionHomeHreflang()) exactly — this
+              // used to say "US, UK, Australia, Canada and Singapore", dropping
+              // the EU market added 2026-08-23. Structured data disagreeing with
+              // the visible/meta copy about something as checkable as "which
+              // markets does this page cover" is exactly the kind of drift a
+              // crawler (or an AI answer engine) can catch and penalise.
               description:
-                "Riftbound prices compared live across stores in the US, UK, Australia, Canada and Singapore — total cost including shipping, no hidden fees.",
+                "Riftbound prices compared live across stores in the US, UK, Australia, Canada, Singapore and the EU — total cost including shipping, no hidden fees.",
             }),
             // Matches the visible FAQ accordion in the About+FAQ section above
             // exactly (same FAQS array) — faqPage() is the shared builder every

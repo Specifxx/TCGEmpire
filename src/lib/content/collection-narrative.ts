@@ -124,20 +124,44 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
     let s =
       `Prices run from ${money(lo, c.currency)} to ${money(hi, c.currency)}, with a median of ` +
       `${money(median, c.currency)}.`;
-    if (topDecileShare >= 55) {
+    // THREE bands, not two — the middle 26-54% used to add nothing, which is why
+    // a set whose value genuinely isn't lopsided in either direction (neither a
+    // few chase cards carrying it nor an unusually even spread) got only the
+    // bare "prices run from…" sentence above and read as thinner than sets
+    // whose numbers happened to land in one of the two flagged bands. Same
+    // computed `topDecileShare`, same honesty rule (only true things, nothing
+    // padded) — this just states the unremarkable case explicitly instead of
+    // silently saying nothing about it.
+    //
+    // GUARDED on total_ > 0: an all-$0.00 collection (every member priced but
+    // worthless — a real, if rare, case) makes topDecileShare a 0/0 NaN, and the
+    // new middle band is the one branch of the three that would otherwise print
+    // it straight into the sentence ("for NaN% of the group's total value").
+    // The original two-branch version never hit this because `NaN >= 55` and
+    // `NaN <= 25` are both false — this preserves that same silent skip for the
+    // one case where there is genuinely nothing true to say about concentration.
+    if (total_ > 0 && topDecileShare >= 55) {
       s +=
         ` The value is heavily concentrated: the most expensive ${topDecileCount === 1 ? "card alone accounts" : `${topDecileCount} cards account`} ` +
         `for ${topDecileShare}% of what it would cost to buy one of everything here. If you are completing this set of cards, ` +
         `that handful is the whole budget — the rest is close to bulk.`;
-    } else if (topDecileShare <= 25) {
+    } else if (total_ > 0 && topDecileShare <= 25) {
       s +=
         ` Value is spread unusually evenly — no single card dominates the cost, so completing this group is a steady ` +
         `accumulation rather than one expensive purchase.`;
+    } else if (total_ > 0) {
+      s +=
+        ` The priciest ${plural(topDecileCount, "card")} here ${topDecileCount === 1 ? "accounts" : "account"} for ${topDecileShare}% of the group's ` +
+        `total value — a fairly ordinary spread, tilted toward the top end without one or two cards carrying the whole group.`;
     }
     out.push(s);
 
     if (c.siteMedianCents != null && c.siteMedianCents > 0) {
       const vs = Math.round(((median - c.siteMedianCents) / c.siteMedianCents) * 100);
+      // Same completeness fix as the concentration band above: under 20% either
+      // way used to add nothing at all. Stated plainly, it's still a real,
+      // useful fact — "this group prices about like everything else" is the
+      // honest answer for most sets, not a gap to leave blank.
       if (Math.abs(vs) >= 20) {
         out.push(
           `Against the ${money(c.siteMedianCents, c.currency)} median across every priced Riftbound card we track, ` +
@@ -145,6 +169,11 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
             (vs > 0
               ? `a premium group, and one worth checking postage on before buying card by card.`
               : `which makes it one of the cheaper places to buy in bulk, where a single combined order beats paying postage per card.`),
+        );
+      } else {
+        out.push(
+          `That ${money(median, c.currency)} median is close to the ${money(c.siteMedianCents, c.currency)} median across every ` +
+            `priced Riftbound card we track — ${subject} prices roughly in line with the rest of the game, no unusual premium or discount either way.`,
         );
       }
     }

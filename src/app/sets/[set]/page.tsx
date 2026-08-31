@@ -74,12 +74,6 @@ export async function generateMetadata({
     `${set.name} Card List & Prices`,
   ];
   const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
-  const descCandidates = [
-    `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
-    `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
-    `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
-  ];
-  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
@@ -100,7 +94,44 @@ export async function generateMetadata({
   // cached, so the damage outlasts the outage by far more than a 500 would.
   // Unknown therefore fails OPEN for indexability; Math.max(1, …) below already
   // collapses a negative to a single page, so pagination stays sane too.
+  //
+  // Moved ABOVE the description below (it used to run after) so the description
+  // can branch on it: see the cardCount === 0 case there.
   const cardCount = await prisma.card.count({ where: { setCode: set.code } }).catch(() => -1);
+  // PRE-RELEASE BRANCH: cardCount === 0 (not < 1 — a -1 lookup failure keeps the
+  // normal "complete card list" copy, matching the fail-open bias above, rather
+  // than switching every set to pre-release wording on a transient DB blip).
+  //
+  // Found live on /sets/radiance: with 0 cards imported and the page correctly
+  // noindexed, the description STILL claimed "The complete Riftbound Radiance
+  // card list — every card with images, plus live prices... Updated daily" —
+  // false today, harmless only because noindex currently holds, and a landmine
+  // that depends on a human remembering to also touch this copy on launch day
+  // (23 Oct 2026 for Radiance) after removing the noindex. Branching on the
+  // same cardCount the noindex itself reads means the honest copy and the
+  // indexability both flip together, automatically, the moment cards import —
+  // no separate step to forget.
+  const releaseDateLabel = set.releasedOn
+    ? new Date(`${set.releasedOn}T00:00:00Z`).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+  const descCandidates =
+    cardCount === 0
+      ? [
+          releaseDateLabel
+            ? `Riftbound ${set.name} releases ${releaseDateLabel} — this page will list every card with live prices from launch day.`
+            : `Riftbound ${set.name} hasn't released yet — this page will list every card with live prices from launch day.`,
+        ]
+      : [
+          `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
+          `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+          `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+        ];
+  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
   // A filtered/searched view (like /browse's ?q=) is a permutation of the same
   // content, not a distinct page — noindex it and point Google at the clean set page.
   const filtered = !isCleanPagination(searchParams);

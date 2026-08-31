@@ -28,6 +28,7 @@ import { getDuplicateCardIds } from "./card-duplicates";
 import { DEFAULT_COUNTRY } from "./country";
 import { hasAnyMarketPrice } from "./market-rows";
 import { staticPageDate } from "./static-page-dates";
+import { normalizeSearch } from "./format";
 import { AUTHORS } from "./content/authors";
 import { REGION_HOME_PATH } from "./seo";
 
@@ -186,7 +187,7 @@ async function core(): Promise<SitemapEntry[]> {
 
 async function cards(): Promise<SitemapEntry[]> {
   const day = await priceDay();
-  const [rows, empty, dupes] = await Promise.all([
+  const [rows, empty, dupes, maxLastSeenByCard] = await Promise.all([
     // The BASELINE market's column, not the AU one. `lowestPriceCents` is
     // Australia (see schema.prisma) while DEFAULT_COUNTRY is "US" — the market
     // the card page actually renders for a crawler, and the one whose rows gate
@@ -225,6 +226,15 @@ async function cards(): Promise<SitemapEntry[]> {
     // their canonical at the original and carry noindex, so only the canonical
     // URL belongs here. Also self-healing — merge the rows and they come back.
     getDuplicateCardIds(),
+    // PER-CARD freshness — see the note on `lastModified` below for why this
+    // replaced the single global `day`. groupBy over the whole RetailerPrice
+    // table (not one query per card): 1,400+ cards is exactly the scale where
+    // an N+1 query pattern would matter, and this is one query regardless of
+    // catalogue size.
+    prisma.retailerPrice
+      .groupBy({ by: ["cardId"], _max: { lastSeen: true } })
+      .then((rows) => new Map(rows.map((r) => [r.cardId, r._max.lastSeen])))
+      .catch(() => new Map<string, Date | null>()),
   ]);
   return rows.filter((c) => !empty.has(c.id) && !dupes.has(c.id)).map((c) => {
     // "Priced" means priced in ANY market we track, not just the baseline one.
@@ -238,10 +248,21 @@ async function cards(): Promise<SitemapEntry[]> {
       // Priced cards (the ones people search for) rank slightly higher; their
       // prices refresh with every snapshot, so that day is their real lastmod.
       priority: priced ? 0.8 : 0.5,
-      // Unpriced cards have no price history to anchor a date to — their own
-      // import date (createdAt) is still a real fact about the record, never a
-      // fabricated "now". (Also covers a priceDay lookup failure for priced cards.)
-      lastModified: priced ? day ?? c.createdAt : c.createdAt,
+      // PER-CARD, not the single global `day` this used to stamp on every priced
+      // card alike. An SEO audit found cards.xml's ~1,400 URLs collapsing to only
+      // 2 distinct lastmod values total — every currently-priced card sharing
+      // the ONE calendar day of the catalogue's most recent price snapshot,
+      // regardless of whether THIS card's own listings were actually touched
+      // that day. RetailerPrice.lastSeen is the same per-listing freshness
+      // timestamp the card page's own "updated Xh ago" text already reads (see
+      // CardMarketSection.tsx's timeAgo(p.lastSeen)) — its per-card MAX is a
+      // real fact about when this specific card's data last changed, not a
+      // catalogue-wide approximation. Falls back to `day` (old behaviour) only
+      // if the groupBy above found no row for this card despite it being
+      // "priced" (shouldn't happen — hasAnyMarketPrice and RetailerPrice rows
+      // come from the same import — but a stale Card.lowestPrice* column
+      // outliving its RetailerPrice rows isn't impossible), then to createdAt.
+      lastModified: priced ? maxLastSeenByCard.get(c.id) ?? day ?? c.createdAt : c.createdAt,
       // Image sitemap: surface each card's unique art to image search (absolute URLs only).
       ...(c.imageUrl && c.imageUrl.startsWith("http") ? { images: [c.imageUrl] } : {}),
     };
@@ -283,11 +304,29 @@ async function sets(): Promise<SitemapEntry[]> {
     .then((rows) => new Map(rows.map((c) => [c.setCode, c._count._all])))
     .catch(() => null);
 
+  // PER-SET freshness — same fix as cards()/stores()/champions() above. A set
+  // page's content is an aggregate over every card in it, so its honest lastmod
+  // is the MOST RECENT listing touch among its OWN cards, not the catalogue-wide
+  // `day` every set used to share alike (Vendetta repricing today told Google
+  // nothing had changed on Origins, which hasn't seen a real update in months).
+  // A raw query, not groupBy: "which set" lives on Card, one join away from
+  // RetailerPrice, which groupBy alone can't cross — fully static SQL, no
+  // interpolated values, so no escaping concern.
+  const lastSeenBySet = await prisma
+    .$queryRaw<{ setCode: string; maxLastSeen: Date | null }[]>`
+      SELECT c."setCode" AS "setCode", MAX(rp."lastSeen") AS "maxLastSeen"
+      FROM "RetailerPrice" rp
+      JOIN "Card" c ON c.id = rp."cardId"
+      GROUP BY c."setCode"
+    `
+    .then((rows) => new Map(rows.map((r) => [r.setCode, r.maxLastSeen])))
+    .catch(() => new Map<string, Date | null>());
+
   // comingSoon sets that DO have cards are included at lower priority: pre-release
   // query volume ("riftbound vendetta") is real, the page is live/indexable and
-  // linked from the blog, and it self-upgrades the day singles land. All sets
-  // share the same priceDay signal — a comingSoon set still gets an honest,
-  // non-fabricated date rather than none at all.
+  // linked from the blog, and it self-upgrades the day singles land. A
+  // comingSoon set with no listings yet still gets an honest, non-fabricated
+  // date (the shared `day` fallback) rather than none at all.
   // Each set contributes TWO URLs: the price-first set page and its visual card
   // gallery (/sets/<slug>/gallery). They target different intents — "vendetta
   // prices" vs "vendetta card gallery" — so both belong in the index. The gallery
@@ -295,12 +334,13 @@ async function sets(): Promise<SitemapEntry[]> {
   // queries, but the set page is still the commercial destination.
   return SETS.filter((s) => !countByCode || (countByCode.get(s.code) ?? 0) > 0).flatMap((s) => {
     const galleryIndexable = !galleryCountByCode || (galleryCountByCode.get(s.code) ?? 0) > 0;
+    const setLastModified = lastSeenBySet.get(s.code) ?? day;
     return [
       {
         url: `${SITE_URL}/sets/${s.slug}`,
         changeFrequency: "daily" as const,
         priority: s.comingSoon ? 0.6 : 0.85,
-        lastModified: day,
+        lastModified: setLastModified,
       },
       ...(galleryIndexable
         ? [
@@ -308,7 +348,7 @@ async function sets(): Promise<SitemapEntry[]> {
               url: `${SITE_URL}/sets/${s.slug}/gallery`,
               changeFrequency: "daily" as const,
               priority: s.comingSoon ? 0.5 : 0.8,
-              lastModified: day,
+              lastModified: setLastModified,
             },
           ]
         : []),
@@ -370,15 +410,33 @@ async function champions(): Promise<SitemapEntry[]> {
   // Only champions that actually have cards — the hub page calls notFound() for
   // an empty one, and submitting a URL that 404s is worse than omitting it.
   const counts = await Promise.all(CHAMPIONS.map((c) => prisma.card.count({ where: championCardWhere(c) })));
+  // PER-CHAMPION freshness — same fix as cards()/stores() above, applied here
+  // via a relation filter (RetailerPrice → Card) rather than a groupBy, since
+  // "which champion" isn't a plain column to group by. One aggregate query per
+  // champion, matching the `counts` query above's own shape (CHAMPIONS is a
+  // few dozen entries, not the ~1,400-card scale a groupBy exists to spare).
+  const lastSeens = await Promise.all(
+    CHAMPIONS.map((c) =>
+      prisma.retailerPrice
+        .aggregate({ where: { card: championCardWhere(c) }, _max: { lastSeen: true } })
+        .then((r) => r._max.lastSeen)
+        .catch(() => null)
+    )
+  );
   // Hubs under the threshold carry robots: noindex (see app/champions/[slug]),
   // so submitting them here would ask Google to index URLs we're telling it not
   // to — the contradiction that fills the "Excluded by noindex tag" bucket.
-  return CHAMPIONS.filter((_, i) => counts[i] >= CHAMPION_THIN_THRESHOLD).map((c) => ({
-    url: `${SITE_URL}/champions/${c.slug}`,
-    changeFrequency: "daily" as const,
-    priority: 0.8,
-    lastModified: day,
-  }));
+  // Index into `counts`/`lastSeens` BEFORE filtering — filtering first (as the
+  // facets() function above does) would silently shift the two arrays out of
+  // sync with the filtered CHAMPIONS list.
+  return CHAMPIONS.map((c, i) => ({ c, count: counts[i], lastSeen: lastSeens[i] }))
+    .filter(({ count }) => count >= CHAMPION_THIN_THRESHOLD)
+    .map(({ c, lastSeen }) => ({
+      url: `${SITE_URL}/champions/${c.slug}`,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+      lastModified: lastSeen ?? day,
+    }));
 }
 
 async function stores(): Promise<SitemapEntry[]> {
@@ -386,17 +444,25 @@ async function stores(): Promise<SitemapEntry[]> {
   // Only stores with real live inventory. Several tracked retailers are
   // deliberately directory-only; their page exists and is linked, but a page
   // whose only content is "nothing in stock" is thin and noindexed.
+  //
+  // _max: { lastSeen: true } added alongside the existing _count — free on the
+  // same groupBy, and PER-STORE freshness (see cards()'s own note on the same
+  // fix): a store whose listings haven't actually been touched in days must not
+  // share the same lastmod as one that was just re-scraped, which is what the
+  // old blanket `day` stamp did for every store page alike.
   const stocked = await prisma.retailerPrice.groupBy({
     by: ["retailer"],
     where: { inStock: true },
     _count: { _all: true },
+    _max: { lastSeen: true },
   });
   const byKey = new Map(stocked.map((r) => [r.retailer, r._count._all]));
+  const lastSeenByKey = new Map(stocked.map((r) => [r.retailer, r._max.lastSeen]));
   return STORE_PAGES.filter((s) => (byKey.get(s.key) ?? 0) >= STORE_THIN_THRESHOLD).map((s) => ({
     url: `${SITE_URL}/stores/${s.slug}`,
     changeFrequency: "daily" as const,
     priority: 0.6,
-    lastModified: day,
+    lastModified: lastSeenByKey.get(s.key) ?? day,
   }));
 }
 
@@ -414,12 +480,42 @@ function decksModified(day: Date | undefined): Date | undefined {
 }
 
 async function decks(): Promise<SitemapEntry[]> {
-  const day = decksModified(await priceDay());
-  return META_DECKS.map((d) => ({
+  const day = await priceDay();
+  // PER-DECK freshness — same fix as cards()/sets()/champions()/stores() above,
+  // combined with decksModified()'s existing "or the tier list itself moved"
+  // rule rather than replacing it: a deck page's honest lastmod is still the
+  // LATER of (its own cards' prices, the metagame re-cut date), just computed
+  // per deck instead of every one of the ~10 decks sharing the whole
+  // catalogue's single most-recent price day.
+  //
+  // Only ~10 decks (prisma/meta-decks.json), so resolving each one's card names
+  // to real Card rows and querying its own price freshness is one query per
+  // deck (matching champions()'s own per-item query count) rather than needing
+  // a batched groupBy the way cards() does at 1,400+ rows.
+  const allNames = [...new Set(META_DECKS.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]))];
+  const cardIdsByName = await prisma.card
+    .findMany({ where: { nameNormalized: { in: allNames.map(normalizeSearch) } }, select: { id: true, nameNormalized: true } })
+    .then((rows) => {
+      const map = new Map<string, string[]>();
+      for (const r of rows) map.set(r.nameNormalized, [...(map.get(r.nameNormalized) ?? []), r.id]);
+      return map;
+    })
+    .catch(() => new Map<string, string[]>());
+  const lastSeenByDeck = await Promise.all(
+    META_DECKS.map((d) => {
+      const ids = [d.legend, ...d.cards.map((c) => c.name)].flatMap((n) => cardIdsByName.get(normalizeSearch(n)) ?? []);
+      if (ids.length === 0) return Promise.resolve(null);
+      return prisma.retailerPrice
+        .aggregate({ where: { cardId: { in: ids } }, _max: { lastSeen: true } })
+        .then((r) => r._max.lastSeen)
+        .catch(() => null);
+    })
+  );
+  return META_DECKS.map((d, i) => ({
     url: `${SITE_URL}/decks/${d.slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.7,
-    lastModified: day,
+    lastModified: decksModified(lastSeenByDeck[i] ?? day),
   }));
 }
 

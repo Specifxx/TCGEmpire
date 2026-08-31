@@ -1,12 +1,22 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { COUNTRIES, COUNTRY_COOKIE, DEFAULT_COUNTRY, EUR_DISPLAY_COOKIE, INTL_ENABLED, normalizeCountry, pickPrice, type Country } from "@/lib/country";
+import { REGION_HOME_PATH } from "@/lib/seo";
 import { formatMoney } from "@/lib/format";
 import { gbpCentsToEur } from "@/lib/fx";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
+
+// The six region-home URLs ("/" for US, "/au"/"/uk"/"/ca"/"/sg"/"/eu" — see
+// lib/seo.ts's REGION_HOME_PATH). Each one is the ONLY page on the site whose
+// <title>/H1/canonical name a specific market, so these are the only routes
+// where a resolved `country` that disagrees with the URL is a real bug (every
+// other route is intentionally URL-stable — see CountrySwitcher's own doc
+// comment — and has no per-market canonical to disagree with in the first
+// place).
+const REGION_HOME_PATHS = new Set(Object.values(REGION_HOME_PATH));
 
 type PricedCard = { lowestPriceCents: number | null; lowestPriceCentsUs?: number | null; lowestPriceCentsUk?: number | null; lowestPriceCentsCa?: number | null; lowestPriceCentsSg?: number | null; lowestPriceCentsEu?: number | null };
 
@@ -96,9 +106,36 @@ export function CountryProvider({ initial, children }: { initial: Country; child
   // initial country's native currency; reconciled below just like `country`.
   const [currency, setCurrency] = useState<string>(COUNTRIES[INTL_ENABLED ? initial : DEFAULT_COUNTRY].currency);
   const router = useRouter();
+  const pathname = usePathname();
   // Shares the module-level /api/me fetch cache with NavUser/PremiumProvider —
   // this doesn't add a second request.
   const { user: meUser, loaded: meLoaded } = useMe();
+
+  // Send a visitor whose market disagrees with the CURRENT region-home page to
+  // the page that's actually telling the truth about it, instead of letting
+  // that page's content re-render in the resolved market while its own
+  // <title>/H1/canonical keep naming whichever market the URL says. Found on
+  // "/": a visitor with a stored "AU" preference got AU prices and "AU
+  // stores" copy under a "Riftbound Prices (US)" title/canonical, because
+  // HomeSections' below-the-fold sections localise to `country` (see that
+  // file's own doc comment) regardless of which of the six region-home pages
+  // is actually mounted — "/" has no lockCountry to hold it to US the way
+  // CinematicHero's `region` prop holds /au/uk/ca/sg/eu to their own market
+  // up top. router.replace (not push): this is a correction, not a real new
+  // navigation entry, and it must never leave a /-vs-/au ping-pong in history.
+  //
+  // ONLY called with a country resolved from a genuinely STORED preference —
+  // an explicit prior cookie/localStorage pick, or a signed-in account's
+  // remembered market — never from the anonymous geo-fetch guess below. A
+  // first-time visitor with no stored preference yet must still be able to
+  // land on and stay on any of the six region-home pages directly (a search
+  // result for "riftbound prices australia", a shared /au link) without being
+  // bounced home just because their IP doesn't match; only a preference the
+  // visitor (or their account) actually chose before should ever redirect them.
+  const goToOwnRegionHome = (c: Country) => {
+    const target = REGION_HOME_PATH[c];
+    if (REGION_HOME_PATHS.has(pathname) && target !== pathname) router.replace(target);
+  };
 
   // Pages are server-rendered/cached with the US default (DEFAULT_COUNTRY) baked
   // in (the shared chrome deliberately no longer reads the country cookie — that dynamic read
@@ -129,6 +166,7 @@ export function CountryProvider({ initial, children }: { initial: Country; child
     if (cookieCountry) {
       const c = normalizeCountry(cookieCountry);
       if (c !== country) setState(c);
+      goToOwnRegionHome(c);
       if (c === "UK" && (cookieCurrency === "EUR" || cookieCurrency === "GBP")) {
         setCurrency(cookieCurrency);
         return;
@@ -188,6 +226,7 @@ export function CountryProvider({ initial, children }: { initial: Country; child
       setState((prev) => (c !== prev ? c : prev));
       if (c !== "UK") setCurrency(COUNTRIES[c].currency);
       persist(COUNTRY_COOKIE, c);
+      goToOwnRegionHome(c);
     } else {
       // First time this signed-in account has been seen — persist whatever
       // market it's currently resolved to (cookie or geo-detected) so it's

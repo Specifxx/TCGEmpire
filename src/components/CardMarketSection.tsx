@@ -6,11 +6,11 @@ import { OutboundLink } from "./OutboundLink";
 import { TcgMarketPrice } from "./TcgMarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
-import { timeAgo } from "@/lib/format";
+import { formatMoney, timeAgo } from "@/lib/format";
 import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from "@/lib/market-rows";
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
-import { COUNTRIES, COUNTRY_LIST } from "@/lib/country";
+import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
 import { isFallbackRetailer, normaliseCondition, CONDITIONS } from "@/lib/constants";
 import { isPaidLink } from "@/lib/affiliate";
 
@@ -170,51 +170,55 @@ export function CardPriceMetrics({
   might: number | null;
   power: number | null;
 }) {
-  const { country, fmt, secondaryFmt } = useCountry();
-  const m = useMemo(() => computeMarket(rows, country), [rows, country]);
-  // For a European shopper browsing the UK market, `fmt` above already shows the
-  // EUR-converted price; `secondaryFmt` gives back the real GBP figure (the one
-  // that's actually charged) as a small reference note. null for everyone else.
-  const sub = (gbpCents: number | null) => (gbpCents != null ? secondaryFmt(gbpCents) ?? undefined : undefined);
-
-  // WHICH MARKET THESE NUMBERS ARE FOR. Without saying so, this block read
-  // "CHEAPEST PRICE —" / "IN STOCK AT 0 stores" for an AU visitor while the
-  // generated About paragraph directly below said "one tracked store in the
-  // United States has it, at US$91.06" — two true statements about two
-  // different markets, presented as if they contradicted each other.
+  // PINNED TO DEFAULT_COUNTRY — never useCountry()'s live, visitor-following
+  // country. This is the headline stat block directly under the H1: the one
+  // figure a crawler, an AI answer engine, or a visitor skimming the top of
+  // the page treats as "the price of this card." The page's <title>, meta
+  // description and Product JSON-LD (see card/[id]/page.tsx's `baseline`) are
+  // ALL computed server-side from this same DEFAULT_COUNTRY baseline — this
+  // block used to instead read useCountry() and silently relabel itself
+  // "Cheapest price · Australia" in A$ for any visitor with a stored non-US
+  // preference, so a cookie-less crawl and a live AU session disagreed about
+  // the one number both were supposed to answer identically, with nothing on
+  // the URL, title or canonical to explain why.
   //
-  // The page is ISR-cached once for every market, so the prose CANNOT follow
-  // the visitor's selection (see the note on `baseline` in card/[id]/page.tsx);
-  // the prose therefore names its market, and so does this. Both are now
-  // explicit rather than one of them being implicitly local.
-  const place = COUNTRIES[country].place;
+  // Per-market pricing still belongs on this page — it's the whole point of
+  // the site — it just belongs in a CLEARLY LABELED comparison instead of
+  // silently overwriting the headline: CardMarketsTable's "price by market"
+  // table names every row's own market explicitly, and the price-comparison
+  // list right below this block does too (see its own "· place" heading) —
+  // both are genuinely comparative displays, not a single claim of record.
+  // This tile is the claim of record, so it stays fixed to what the record says.
+  const place = COUNTRIES[DEFAULT_COUNTRY].place;
+  const fmt = (cents: number) => formatMoney(cents, COUNTRIES[DEFAULT_COUNTRY].currency);
+  const m = useMemo(() => computeMarket(rows, DEFAULT_COUNTRY), [rows]);
 
   // Stocked somewhere else but not here: the single most useful thing to say to
   // a visitor staring at "0 stores", and computable for free — `rows` already
   // carries every market's listings.
   const elsewhere = useMemo(
-    () => (m.storeCount > 0 ? null : stockElsewhere(rows, country, COUNTRY_LIST)),
-    [rows, country, m.storeCount],
+    () => (m.storeCount > 0 ? null : stockElsewhere(rows, DEFAULT_COUNTRY, COUNTRY_LIST)),
+    [rows, m.storeCount],
   );
 
   return (
     <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:grid-cols-4 sm:gap-3">
-      {/* ONE cheapest-price figure — the same `m.lowest` the price table's #1
-          row shows, so the two can never disagree. This used to split into
-          "Standard from" + a separate "✦ Foil from" tile whenever the card had
-          any foil listing, which became an outright contradiction once the
-          table below stopped splitting by finish: on a card whose cheapest
-          copy IS the foil, the header read "Standard from US$12.00" directly
-          above a table whose #1 row was badged "Cheapest" at US$5.00. Same
-          rule as the price-history chart's "Now" (see PriceChart's
-          nowOverrideCents): every headline price on this page comes from the
-          one computeMarket() call. The foil premium is still spelled out —
-          in the generated About prose, which has room to explain it, and on
-          each foil row's own ✦ chip. */}
+      {/* ONE cheapest-price figure, pinned to DEFAULT_COUNTRY (see the note
+          above `place`) — this used to split into "Standard from" + a
+          separate "✦ Foil from" tile whenever the card had any foil listing,
+          which became an outright contradiction once the table below stopped
+          splitting by finish: on a card whose cheapest copy IS the foil, the
+          header read "Standard from US$12.00" directly above a table whose #1
+          row was badged "Cheapest" at US$5.00. The foil premium is still
+          spelled out — in the generated About prose, which has room to
+          explain it, and on each foil row's own ✦ chip.
+          No `sub` reference conversion here (unlike the price table's own
+          rows): that only ever applies to a live UK-market-shown-as-EUR
+          session, and this tile never shows a market other than the fixed
+          US baseline. */}
       <Metric
         label={`Cheapest price · ${place}`}
         value={m.lowest != null ? fmt(m.lowest) : "—"}
-        sub={sub(m.lowest)}
         highlight
       />
       <Metric
@@ -318,8 +322,19 @@ export function CardPriceComparison({
     <>
       <div className="card-surface mt-4 overflow-hidden sm:mt-6">
         <div className="flex items-center justify-between border-b border-ink-700 p-3 sm:p-4">
+          {/* Named by market, unlike before: this list follows the VISITOR's
+              own market (useCountry()) rather than the page's fixed baseline
+              — deliberately, since showing a shopper their own real, buyable
+              local stores is the entire point of the table (see the file
+              header). That is a different thing from CardPriceMetrics'
+              headline tile above, which is pinned to one fixed market because
+              it stands in for the page's own metadata claim — but naming
+              this list's market too means the two can never read as silently
+              contradicting each other just because neither says which
+              market it's showing. */}
           <h2 className="font-bold text-white">
-            Price comparison <span className="text-slate-500">({prices.length})</span>
+            Price comparison <span className="text-slate-500">({prices.length})</span>{" "}
+            <span className="text-sm font-normal text-slate-500">· {COUNTRIES[country].place}</span>
           </h2>
           {/* Oldest row in the table, not the cheapest row's timestamp — a single
               "updated Xh ago" over the whole panel used the freshest row's stamp to

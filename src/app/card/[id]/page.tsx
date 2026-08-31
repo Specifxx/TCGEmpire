@@ -10,7 +10,7 @@ import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition } from "
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
-import { formatMoney, normalizeSearch } from "@/lib/format";
+import { clampText, formatMoney, normalizeSearch } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
 import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
@@ -82,15 +82,9 @@ const whereParam = (p: string) => ({ OR: [{ slug: p }, { id: p }] });
 const BASELINE_CURRENCY = COUNTRIES[DEFAULT_COUNTRY].currency;
 const fmtBaselineMoney = (cents: number) => formatMoney(cents, BASELINE_CURRENCY);
 
-// Trim printed card text down to something that survives a ~160-char meta
-// description without cutting mid-word.
-function clampText(s: string, max: number): string {
-  const flat = s.replace(/\s+/g, " ").trim();
-  if (flat.length <= max) return flat;
-  const cut = flat.slice(0, max);
-  const lastSpace = cut.lastIndexOf(" ");
-  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
-}
+// clampText (trim printed card text down to something that survives a ~160-char
+// meta description without cutting mid-word) now lives in lib/format.ts — shared
+// with the blog post metadata template, which needed the identical rule.
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const card = await prisma.card.findFirst({
