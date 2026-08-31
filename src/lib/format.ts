@@ -54,7 +54,15 @@ export function clampText(s: string, max: number): string {
   if (flat.length <= max) return flat;
   const cut = flat.slice(0, max);
   const lastSpace = cut.lastIndexOf(" ");
-  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\s]+$/, "")}…`;
+  // BOTH branches must leave room for the "…" appended below, not just the
+  // word-boundary one. A 2026-08-31 audit still found a description over the
+  // cap: the word-boundary branch cuts at `lastSpace < max`, so its "+ 1 for
+  // the ellipsis" always lands at or under `max` — but a string with no good
+  // word boundary near the end (one long word spanning past `max * 0.6`) fell
+  // through to the raw `cut`, which is already `max` chars on its own, and
+  // appending "…" to that overshoots by exactly one character every time.
+  // `max - 1` here closes that gap the same way the other branch already had.
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut.slice(0, max - 1)).replace(/[,;:.\s]+$/, "")}…`;
 }
 
 export function timeAgo(date: Date | string): string {

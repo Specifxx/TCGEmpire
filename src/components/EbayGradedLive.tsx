@@ -71,7 +71,13 @@ export function EbayGradedLive({ listings }: { listings: GradedRow[] }) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={l.imageUrl}
+                    // Empty alt + aria-hidden, not missing: the listing title right
+                    // below (l.title) already carries this photo's full description,
+                    // same pattern as every other redundant-thumbnail-beside-text
+                    // image in this codebase (UserMenu, SearchBar, market/records,
+                    // /c/[token] — see those for the convention this was missing).
                     alt=""
+                    aria-hidden="true"
                     loading="lazy"
                     decoding="async"
                     className="h-14 w-11 shrink-0 rounded object-cover"

@@ -81,8 +81,11 @@ export default async function SharedCollectionPage({ params }: { params: { token
             <li key={`${h.card.id}-${h.condition}-${h.isFoil}-${i}`} className="flex items-center gap-3 px-3 py-2.5">
               <Link href={cardHref(h.card)} className="flex min-w-0 flex-1 items-center gap-3 hover:text-brand-300">
                 {h.card.imageThumbUrl && (
+                  // Empty alt + aria-hidden: the card name/set/collector text right
+                  // beside it already describes this thumbnail — same convention as
+                  // market/records/page.tsx's CardCell and UserMenu.tsx's avatar.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={h.card.imageThumbUrl} alt="" loading="lazy" decoding="async" className="h-12 w-9 shrink-0 rounded object-cover" />
+                  <img src={h.card.imageThumbUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-12 w-9 shrink-0 rounded object-cover" />
                 )}
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold text-white">

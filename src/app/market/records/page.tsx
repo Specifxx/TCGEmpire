@@ -98,8 +98,11 @@ function CardCell({ card }: { card: RecordRow["card"] }) {
   return (
     <Link href={cardHref(card)} className="flex min-w-0 items-center gap-2 hover:text-brand-300">
       {card.imageThumbUrl && (
+        // Empty alt + aria-hidden: the card name/set/collector text right beside it
+        // already describes this thumbnail — same convention as /c/[token]'s
+        // holdings list and UserMenu.tsx's avatar.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={card.imageThumbUrl} alt="" loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded object-cover" />
+        <img src={card.imageThumbUrl} alt="" aria-hidden="true" loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded object-cover" />
       )}
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-white">{cardDisplayName(card.name, card)}</span>
