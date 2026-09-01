@@ -99,10 +99,9 @@ export const RELEASES: ReleaseEntry[] = [
     code: "RAD",
     date: "2026-10-23",
     cards: 180,
-    approxCards: true,
     champions: ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV"],
     preordersHref: "/radiance-preorders",
-    note: "Riot's Set 5. A step up in size from Vendetta, with five champion Legends who have no Riftbound card yet.",
+    note: "Riot's Set 5 — a confirmed 180 cards (66 of them Showcase treatments), a step up from Vendetta. Five champion Legends are named so far, with four more still unrevealed.",
   },
   {
     name: "Legacy",

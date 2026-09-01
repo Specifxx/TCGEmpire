@@ -280,19 +280,19 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
     category: "blog",
     title: "Riftbound Radiance: Release Date & What's Confirmed",
     excerpt:
-      "Riftbound: Radiance lands 23 October 2026 with ~180 cards and five new champion Legends. Every confirmed detail and what's still unrevealed.",
+      "Riftbound: Radiance lands 23 October 2026 with 180 confirmed cards and five new champion Legends. Every confirmed detail and what's still unrevealed.",
     author: "RiftCompare",
     date: "2026-08-27",
     readMins: 7,
     tags: ["radiance", "news", "set", "release date", "seraphine"],
     hero: {
       src: "/blog/riftbound-radiance-what-we-know.png",
-      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with around 180 cards",
+      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with 180 confirmed cards",
     },
     summary: [
       "**Radiance releases 23 October 2026** — the fifth Riftbound set, and the next one you will actually be able to buy.",
-      "**Around 180 cards** — the second-largest Riftbound set so far, behind only Origins.",
-      "**Five new champion Legends are confirmed**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments — the second-largest Riftbound set so far, behind only Origins.",
+      "**Five new champion Legends are confirmed, with four more still unrevealed**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
       "**The card list has not been revealed.** Anyone showing you Radiance decklists today is guessing — we will publish the gallery the day it is real.",
       "**One Radiance card already exists in print**: Seraphine, Not Alone shipped inside the T1 Signature Edition months early, which is why it is not tournament-legal yet.",
     ],
@@ -303,11 +303,11 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
       },
       {
         q: "How many cards are in Riftbound Radiance?",
-        a: "Around 180 in the main set. That is larger than Vendetta's 166 and smaller than Origins' 298, making it the second-biggest Riftbound set released so far. Expect alternate-art, Signature and overnumbered printings on top of that base count, as with every previous set.",
+        a: "180, confirmed by Riot — 66 of those are Showcase treatments. That is larger than Vendetta's 166 and smaller than Origins' 298, making it the second-biggest Riftbound set so far. Expect Signature and overnumbered printings beyond the 180, the same way every previous set has had chase printings beyond its base count.",
       },
       {
         q: "Which champions are in Riftbound Radiance?",
-        a: "Five new champion Legends are confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. Riot has not published the full card list, so the rest of the set — including which existing champions get new printings — is not yet known.",
+        a: "Five new champion Legends are confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. Riot has also said four more champions are still to be revealed. The full card list has not been published, so the rest of the set — including which existing champions get new printings — is not yet known.",
       },
       {
         q: "Can I see the Radiance card list yet?",
@@ -337,7 +337,7 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
       label: "See the Radiance countdown →",
       blurb: "The exact time remaining until release, plus every set date we track.",
     },
-    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to roughly **180 cards**, and it brings **five new champion Legends**. That is the confirmed core — and this page is deliberately limited to what is actually confirmed, because the card list has not been revealed and the internet is already full of Radiance "leaks" that are nothing of the sort.
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to a confirmed **180 cards** (66 of them Showcase treatments), and it brings **five new champion Legends** — with four more still unrevealed. That is the confirmed core — and this page is deliberately limited to what is actually confirmed, because the card list has not been revealed and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
 ## Radiance at a glance
 
@@ -345,8 +345,8 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
 | --- | --- |
 | **Set number** | 5 |
 | **Release date** | 23 October 2026 |
-| **Card count** | ~180 main set |
-| **New champion Legends** | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV |
+| **Card count** | 180 (66 Showcase), confirmed |
+| **New champion Legends** | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV (+4 unrevealed) |
 | **Set code** | RAD |
 | **Card list revealed?** | **No** |
 
@@ -354,13 +354,13 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
 
 Riftbound has shipped five sets so far — Origins (298 cards), Origins: Proving Grounds (24), Spirit Forged (221), Unleashed (219) and Vendetta (166). Radiance is the sixth release and the fifth mainline set.
 
-Radiance reverses a shrink. The previous set was the smallest mainline release to date, and Radiance is expected to land at roughly **180 cards** — second only to Origins among everything shipped so far. That matters more than it sounds. **A bigger set spreads the print run across more cards**, which generally means each individual chase card is scarcer relative to demand — the same dynamic that keeps Origins' top cards expensive despite Origins being the largest set of all. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
+Radiance reverses a shrink. The previous set was the smallest mainline release to date, and Radiance lands at a confirmed **180 cards** — second only to Origins among everything shipped so far. That matters more than it sounds. **A bigger set spreads the print run across more cards**, which generally means each individual chase card is scarcer relative to demand — the same dynamic that keeps Origins' top cards expensive despite Origins being the largest set of all. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
 
 ## The five champions
 
-Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**.
+Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV** — and said four more are still to be revealed, for nine new Legends across the set in total.
 
-All five are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. What has *not* been said is which domains they sit in, what their abilities do, or which existing champions get new printings alongside them — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+All five named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining four. What has *not* been said is which domains any of them sit in, what their abilities do, or which existing champions get new printings alongside them — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
 
 If you want the wider picture of who is already in the game, we maintain **[which League of Legends champions are in Riftbound](/guides/league-of-legends-champions-in-riftbound)**.
 
@@ -4268,7 +4268,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
     faq: [
       {
         q: "When does Riftbound Radiance release?",
-        a: "Radiance, the fifth Riftbound set, is scheduled for 23 October 2026 with around 180 cards. Preview season and Pre-Rift launch events run in the weeks before it.",
+        a: "Radiance, the fifth Riftbound set, is scheduled for 23 October 2026 with a confirmed 180 cards (66 Showcase). Preview season and Pre-Rift launch events run in the weeks before it.",
       },
       {
         q: "What is the next Riftbound set after Radiance?",
@@ -4296,7 +4296,7 @@ This post is the buyer's-eye view: what is coming, when, and which of it should 
 
 | Set | # | Release | Cards | The short version |
 | --- | --- | --- | --- | --- |
-| **Radiance** | 5 | 23 Oct 2026 | ~180 | Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV; a step up in size from Vendetta |
+| **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, +4 unrevealed; a step up in size from Vendetta |
 | **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
 | *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
 | **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
@@ -4307,7 +4307,7 @@ Two things stand out before any of the detail. First, the cadence is roughly qua
 
 ## Radiance (Set 5) — 23 October 2026
 
-Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, with a card pool around 180 — a step up from [Vendetta's](/sets/vendetta) 166.
+Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, plus four more champions still unrevealed, in a confirmed 180-card pool (66 Showcase) — a step up from [Vendetta's](/sets/vendetta) 166.
 
 The pattern we have watched through four launches now is consistent enough to plan around: sealed is at its most expensive in the launch window, chase singles spike hardest in the first fortnight, and the mid-value playables drift down for about a month as supply catches up. [Why Riftbound prices change](/guides/why-riftbound-card-prices-change) sets out the mechanics behind that.
 
@@ -4713,7 +4713,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
     summary: [
       "**Five sets are out today, in this order**: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, then Vendetta (31 Jul 2026).",
       "**Origins is the biggest so far** — 298 base cards, plus 54 Showcase treatments on top.",
-      "**Radiance (Set 5) is next**, dated 23 October 2026 with around 180 cards — the only future set with a confirmed date right now.",
+      "**Radiance (Set 5) is next**, dated 23 October 2026 with a confirmed 180 cards (66 Showcase) — the only future set with a confirmed date right now.",
       "Everything after Radiance (Legacy, The Reckoning, two unnamed sets) is covered in full in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap) — this page sticks to what's already out.",
     ],
     faq: [
@@ -4731,7 +4731,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
       },
       {
         q: "When is the next Riftbound set?",
-        a: "Radiance, 23 October 2026 — around 180 cards, with five new champion Legends confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+        a: "Radiance, 23 October 2026 — a confirmed 180 cards (66 Showcase), with five new champion Legends confirmed so far and four more still unrevealed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
       },
       {
         q: "Which Riftbound set has the most cards?",
@@ -4754,9 +4754,9 @@ Once it is on sale, the Vault will be price-compared the same way as every other
 | 3 | **Spirit Forged** | SFD | 221 (+66 Showcase) | — |
 | 4 | **[Unleashed](/sets/unleashed)** | UNL | 219 (+61 Showcase) | — |
 | 5 | **[Vendetta](/sets/vendetta)** | VEN | 166 | 31 Jul 2026 |
-| 6 | **[Radiance](/release-dates)** | RAD | ~180 (announced) | 23 Oct 2026 |
+| 6 | **[Radiance](/release-dates)** | RAD | 180 total (66 Showcase) | 23 Oct 2026 |
 
-The **Cards** column is each set's own printed total — the denominator on every card in it. Origins collector numbers run 001/298 to 298/298, so Origins is 298; Spirit Forged cards are numbered out of /221 and Unleashed out of /219. That number is checkable on any single card you own, which is why we use it in preference to a catalogue row count: printings above the total (Signatures, over-numbered chase cards, promos) are real cards but they are not part of the base run, and counting them inflates a set. We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
+The **Cards** column is each released set's own printed total — the denominator on every card in it. Origins collector numbers run 001/298 to 298/298, so Origins is 298; Spirit Forged cards are numbered out of /221 and Unleashed out of /219. That number is checkable on any single card you own, which is why we use it in preference to a catalogue row count: printings above the total (Signatures, over-numbered chase cards, promos) are real cards but they are not part of the base run, and counting them inflates a set. Radiance hasn't shipped, so there's no collector number to check yet — its 180 is Riot's own confirmed total, of which 66 are Showcase treatments, unlike the "+N Showcase" figures above it, which are printings on top of an already-released base count. We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
 
 ## Origins — the launch set
 
@@ -4778,7 +4778,7 @@ Unleashed is the one worth a closer look if you're buying rather than just catal
 
 ## What's next: Radiance and beyond
 
-[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with around 180 cards and five confirmed new champion Legends: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. It's the only future set with a real, Riot-confirmed release date right now.
+[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with a confirmed 180 cards (66 Showcase) and five new champion Legends named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more still unrevealed. It's the only future set with a real, Riot-confirmed release date right now.
 
 Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
 

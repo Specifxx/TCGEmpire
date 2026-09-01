@@ -109,11 +109,13 @@ function buildFaqs(now: Date): { q: string; a: string }[] {
     if (next.cards != null) {
       faqs.push({
         q: `How many cards are in ${next.name}?`,
-        a: `${next.approxCards ? "Around " : ""}${next.cards} cards in the base set${
+        a: `${next.approxCards ? "Around " : ""}${next.cards} cards${
           latest?.cards != null ? ` — ${latest.name}, the current set, has ${latest.cards}` : ""
-        }. The exact final count, including alternate-art and chase printings on top of the base numbering, ${
-          next.approxCards ? "has not been published yet" : "is confirmed"
-        }.`,
+        }. ${
+          next.approxCards
+            ? "The exact final count, and how it splits across rarities and printings, has not been published yet."
+            : "That figure is confirmed by Riot. The rarity and printing breakdown isn't public yet — it lands with the full card list."
+        }`,
       });
     }
     if (next.champions?.length) {
