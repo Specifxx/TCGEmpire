@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { compositeSeries, INDEX_SIZE } from "../src/lib/market-index";
+import { compositeSeries, computeStats, INDEX_SIZE } from "../src/lib/market-index";
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -20,6 +20,19 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 // Deliberately NOT restored: the separate Weekly Market Report (auto-generated
 // blog posts) — its generator was already dead before the Index was removed,
 // and it wasn't what was asked for. No test here should assume it exists.
+//
+// 2026-09-01, second pass: the restored file assumed PriceHistory still wrote a
+// snapshot per card per day, because that was true when this module was first
+// written. It no longer is — HISTORY_MIN_INTERVAL_DAYS in price-import.ts now
+// gates writes to at most once every 7 days, a cost control adopted at some
+// point after this file's original version predates. Two consequences pinned
+// below: (1) the old rolling 45-DAY read window was quietly capping the index
+// to ~6 actual snapshots instead of 45, so it's gone — the whole basket's
+// history is read every time, which is cheap now that snapshots are sparse;
+// (2) day-scoped caching and "1 day"/"30-day" labels were both silently wrong
+// under the new cadence (a "day" apart is now really "whatever the write
+// interval currently is"), so the cache moved to week-scoped and the labels
+// were reworded to not name a specific interval.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("compositeSeries rebases every region to 100 at the common start, then equal-weight averages", () => {
@@ -56,11 +69,76 @@ test("compositeSeries returns an empty series rather than throwing when nothing 
   assert.deepEqual(compositeSeries([[{ t: 0, v: 100 }]]), [], "a single-point-only input has no region with >=2 points");
 });
 
-test("the core computation sources sydneyDayKey from its canonical home, not a local redefinition", () => {
+test("the core computation caches on sydneyWeekKey, imported from its canonical home", () => {
+  // NOT sydneyDayKey — PriceHistory writes at most once every 7 days (see the
+  // file-header note above), so a day-scoped key recomputed an unchanged answer
+  // up to seven times for nothing. price-history.ts's own getPriceHistory()
+  // already made this exact fix for the same reason; market-index.ts's restored
+  // version hadn't caught up to it until now.
   const src = read("src/lib/market-index.ts");
-  assert.match(src, /import\s*\{[^}]*sydneyDayKey[^}]*\}\s*from\s*"\.\/price-history"/, "must import, not redefine, the day-key helper");
-  assert.doesNotMatch(codeOnly(src), /export function sydneyDayKey/, "a second definition would silently diverge from price-history.ts's");
+  assert.match(src, /import\s*\{[^}]*sydneyWeekKey[^}]*\}\s*from\s*"\.\/price-history"/, "must import, not redefine, the week-key helper");
+  assert.doesNotMatch(codeOnly(src), /sydneyDayKey/, "no day-scoped cache key should survive anywhere in this file");
+  assert.doesNotMatch(codeOnly(src), /export function sydneyWeekKey/, "a second definition would silently diverge from price-history.ts's");
   assert.equal(INDEX_SIZE, 200);
+});
+
+test("the PriceHistory read has no time-window cutoff — the whole basket's history is used", () => {
+  const code = codeOnly(read("src/lib/market-index.ts"));
+  assert.doesNotMatch(code, /WINDOW_DAYS/, "the old rolling-window constant must be gone, not just unused");
+  assert.doesNotMatch(code, /day:\s*\{\s*gte:/, "the PriceHistory query must not filter by a cutoff date");
+  // The query itself: scoped to country + this basket's card ids, nothing else.
+  assert.match(
+    code,
+    /dbHistory\.priceHistory\.findMany\(\{\s*where:\s*\{\s*country,\s*cardId:\s*\{\s*in:\s*cards\.map/,
+    "must still be scoped to the basket, just not to a recent window",
+  );
+});
+
+test("both cache functions revalidate on a week-plus-slack TTL, matching the week-keyed cache", () => {
+  const code = codeOnly(read("src/lib/market-index.ts"));
+  const matches = [...code.matchAll(/revalidate:\s*(8 \* 86400|172800)/g)];
+  assert.equal(matches.length, 2, "expected exactly two unstable_cache calls (region + global)");
+  for (const m of matches) assert.equal(m[1], "8 * 86400", `found a stale 172800 (2-day) TTL: ${m[0]}`);
+});
+
+test("no surviving 'daily'/'1 day'/'30-day' label claims the index moves faster than it actually does", () => {
+  // A sweep across every user-facing surface this cadence fix touched. Each one
+  // specifically claimed a cadence (daily updates, "1 day", "30-day, daily")
+  // that stopped being true once PriceHistory moved to weekly writes.
+  const checks: [string, RegExp][] = [
+    ["src/app/market/page.tsx", /\bdaily\b/i],
+    ["src/app/market/page.tsx", /label="1 day"/],
+    ["src/app/market/opengraph-image.tsx", /updated daily/i],
+    ["src/components/IndexStats.tsx", /30-day, daily/],
+    ["src/components/IndexConstituents.tsx", /label="1-day"/],
+    ["src/app/llm/market/route.ts", /\bA daily\b/],
+    ["src/app/llm/market/route.ts", /`- Change: 1d /],
+    ["src/app/llms-full.txt/route.ts", /`- Change: 1d /],
+    ["src/app/api/v1/index.json/route.ts", /\bA daily\b/],
+  ];
+  for (const [path, pattern] of checks) {
+    assert.doesNotMatch(codeOnly(read(path)), pattern, `${path} still matches ${pattern}`);
+  }
+});
+
+test("computeStats sizes its volatility window in snapshots, not a hard-coded day count", () => {
+  // Synthetic base-100 series: 20 points, alternating +5%/-5% so every return is
+  // the same magnitude — lets the test assert on lookback SIZE without needing
+  // to hand-derive a stdev. Only the last VOLATILITY_LOOKBACK_POINTS (13) points
+  // should feed the calculation; an inflated first stretch that would change the
+  // reading if (wrongly) included proves the slice is actually bounded.
+  const points = [];
+  let v = 100;
+  for (let i = 0; i < 20; i++) {
+    v = i < 7 ? v * 1.5 : v * (i % 2 === 0 ? 1.05 : 0.95); // wild early swings, steady recent ones
+    points.push({ t: i * 86_400_000, v });
+  }
+  const constituents: Parameters<typeof computeStats>[1] = [];
+  const stats = computeStats(points, constituents);
+  assert.ok(stats.volatilityPct != null, "20 points should clear the 5-return minimum");
+  // A stdev computed over ALL 20 points (including the wild early ×1.5 jumps)
+  // would be far larger than one computed over just the steady last 13.
+  assert.ok(stats.volatilityPct! < 10, `volatility ${stats.volatilityPct}% looks like it included the early ×1.5 jumps, not just the recent steady moves`);
 });
 
 test("/market is a real, dynamic page wired to the restored computation", () => {

@@ -83,7 +83,7 @@ export default async function Image() {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ color: "#cbd5e1", fontSize: 30, fontWeight: 500, maxWidth: 820 }}>
-            The Riftbound singles market in one number — updated daily.
+            The Riftbound singles market in one number — updated weekly.
           </div>
           <div style={{ color: accent, fontSize: 26, fontWeight: 700 }}>riftcompare.com/market</div>
         </div>

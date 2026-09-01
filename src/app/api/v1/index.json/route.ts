@@ -52,7 +52,7 @@ export async function GET(req: Request) {
     status: "ready",
     name: "The RiftCompare Index",
     description:
-      "A daily search-weighted price index of the most-searched Riftbound: League of Legends TCG singles (base 100).",
+      "A search-weighted price index of the most-searched Riftbound: League of Legends TCG singles (base 100), updated weekly.",
     market: index.market,
     base: 100,
     startDay: index.startDay,

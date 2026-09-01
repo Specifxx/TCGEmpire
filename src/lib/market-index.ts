@@ -7,36 +7,55 @@
 //     signal — the index tracks what players actually care about.
 //   • WEIGHTS: proportional to each card's search volume, capped at 20% so no
 //     single card IS the index. (Like cap-weighted stock indices.)
-//   • VALUE: each day's index is the weighted average of constituents' lowest
-//     live prices (PriceHistory), normalised so the first tracked day = 100.
+//   • VALUE: each tracked snapshot is the weighted average of constituents' lowest
+//     live prices (PriceHistory), normalised so the first tracked snapshot = 100.
 //     "Index 112" therefore reads as "the watched market is up 12%".
 //
 // The constituent set is derived fresh from today's search data and applied
-// retroactively across the window, so the series is internally consistent on any
-// given day (no divisor gymnastics); history may revise slightly as demand shifts.
+// retroactively across the WHOLE history, so the series is internally consistent
+// on any given point (no divisor gymnastics); history may revise slightly as
+// demand shifts.
+//
+// NO TIME WINDOW ON THE READ, DELIBERATELY. PriceHistory now writes one snapshot
+// per card per market at most once every 7 days (HISTORY_MIN_INTERVAL_DAYS in
+// price-import.ts — a cost control adopted after this file was first written).
+// This module used to cap its own read to a rolling 45 days, back when that meant
+// ~45 rows per card; under the current weekly cadence 45 days is only ~6 rows, so
+// the cap was quietly starving the chart of history that already exists for free
+// — Origins-era cards especially have far more than 6 weeks of real snapshots.
+// Reading everything for today's 200 constituents costs at most (weeks tracked ×
+// 200 cards) rows per market — small and slow-growing, nowhere near the ~1,400-
+// card DAILY scans that caused the original egress crisis — so there's no reason
+// to backfill into a separate table or re-truncate the read: the source data IS
+// the backfill.
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
-import { sydneyDayKey, type PricePoint } from "./price-history";
+import { sydneyWeekKey, type PricePoint } from "./price-history";
 
 // A market the Index can be computed for: one region, or the GLOBAL composite that
 // blends every region into a single currency-agnostic number (the default).
 export type MarketScope = Country | "GLOBAL";
 
 export const INDEX_SIZE = 200;
-// index chart window: 180 → 90 → 45 (history-DB egress cuts, each halving the
-// per-recompute PriceHistory read — this reads INDEX_SIZE × WINDOW_DAYS rows per
-// region, ×5 regions for the GLOBAL composite). 45 days still clears the 30-day
-// (d30) stat with a 15-day margin; only the visible chart range/high-low window
-// shortens from ~3 months to ~6 weeks.
-const WINDOW_DAYS = 45;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
-// Don't chart a day until most of the basket (by weight) has price data — early
-// sparse days would otherwise swing the base around.
+// Don't chart a snapshot until most of the basket (by weight) has price data —
+// early sparse snapshots would otherwise swing the base around. Matters more now
+// that history reaches back arbitrarily far: a newer set's cards simply won't
+// have data yet for the weeks before they existed, which this correctly waits out
+// rather than starting the series on 1-2 old cards' prices alone.
 const MIN_COVERAGE = 0.6;
+// Realised-volatility lookback, in SNAPSHOTS not days — PriceHistory's write
+// cadence is a runtime cost-control decision (see the file-header note), not a
+// contract this file should hard-code a day-count against. 13 snapshots is
+// ~1 quarter at today's weekly cadence; if the cadence ever changes again this
+// keeps measuring "the last several snapshots" rather than silently mis-sizing
+// the window the way the old `slice(-31)` (~31 DAYS under daily writes) quietly
+// became ~31 WEEKS once writes moved to weekly.
+const VOLATILITY_LOOKBACK_POINTS = 13;
 
 export type IndexConstituent = {
   id: string;
@@ -47,7 +66,7 @@ export type IndexConstituent = {
   imageThumbUrl: string | null;
   weightPct: number; // share of the index, 0–100
   priceCents: number; // current lowest price in the market
-  d1pct: number | null; // its own 1-day (day-over-day) move, %
+  d1pct: number | null; // its own move since the previous snapshot, %
   d7pct: number | null; // its own 7-day move, %
 };
 
@@ -66,16 +85,16 @@ export type MarketStats = {
   advancing: number; // constituents up over 7 days (market breadth)
   declining: number; // constituents down over 7 days
   unchanged: number; // flat / no 7-day read
-  volatilityPct: number | null; // 30-day realised volatility (stdev of daily % returns)
+  volatilityPct: number | null; // recent realised volatility (stdev of the last several snapshot-to-snapshot % moves)
 };
 
 export type MarketIndex = {
   market: MarketScope;
   currency: string; // currency the constituent prices below are quoted in
   priceMarket: Country; // region the constituent prices are sourced from (= market, or the reference region for GLOBAL)
-  points: PricePoint[]; // daily closes, base 100 (v = index value)
+  points: PricePoint[]; // one point per tracked snapshot, base 100 (v = index value)
   latest: number;
-  d1: number | null; // % vs previous close
+  d1: number | null; // % vs the previous tracked snapshot ("Latest" in the UI, not "1 day")
   d7: number | null;
   d30: number | null;
   sinceStart: number | null; // % vs base (= latest - 100)
@@ -84,8 +103,9 @@ export type MarketIndex = {
   stats: MarketStats;
 };
 
-// Derive the market statistics from the (base-100) series and the basket. Pure.
-function computeStats(points: PricePoint[], constituents: IndexConstituent[]): MarketStats {
+// Derive the market statistics from the (base-100) series and the basket. Pure —
+// exported (like compositeSeries) so tests can exercise it directly.
+export function computeStats(points: PricePoint[], constituents: IndexConstituent[]): MarketStats {
   const prices = constituents.map((c) => c.priceCents).filter((p) => p > 0);
   const basketValueCents = prices.reduce((a, b) => a + b, 0); // one of each card
   const priced = prices.length;
@@ -117,8 +137,9 @@ function computeStats(points: PricePoint[], constituents: IndexConstituent[]): M
     else declining++;
   }
 
-  // 30-day realised volatility: standard deviation of daily % returns.
-  const recent = points.slice(-31);
+  // Recent realised volatility: standard deviation of the last several
+  // snapshot-to-snapshot % moves (see VOLATILITY_LOOKBACK_POINTS).
+  const recent = points.slice(-VOLATILITY_LOOKBACK_POINTS);
   const returns: number[] = [];
   for (let i = 1; i < recent.length; i++) {
     const prev = recent[i - 1].v;
@@ -182,10 +203,12 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   const weights = raw.map((w) => Math.min(w, cap));
   const totalW = weights.reduce((a, b) => a + b, 0);
 
-  // 3. Price history for the basket.
-  const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
+  // 3. The FULL price history for the basket — no time cutoff. See the file
+  //    header: at today's weekly write cadence this is cheap, and it's what
+  //    makes the index's own history reach back as far as its constituents'
+  //    real tracked prices do, immediately, with no separate backfill step.
   const hist = await dbHistory.priceHistory.findMany({
-    where: { country, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
+    where: { country, cardId: { in: cards.map((c) => c.id) } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
@@ -200,8 +223,10 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   }
   const days = [...daySet].sort((a, b) => a - b);
 
-  // 4. Daily weighted average with carry-forward for gaps; start the series once
-  //    coverage (by weight) clears the threshold.
+  // 4. Weighted average per tracked snapshot, with carry-forward for gaps (a
+  //    constituent priced two weeks ago but not this week keeps its last known
+  //    price rather than dropping out); start the series once coverage (by
+  //    weight) clears the threshold.
   const carried = new Map<string, number>();
   const rawSeries: PricePoint[] = [];
   for (const t of days) {
@@ -243,7 +268,9 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
       for (const t of ts) if (t <= lastT - 7 * 86400_000) thenT = t;
       d7 = pctChange(series.get(lastT)!, series.get(thenT));
       if (thenT === lastT) d7 = null;
-      // 1-day = day-over-day: last snapshot vs the immediately preceding one.
+      // Latest move: last snapshot vs the immediately preceding one — NOT
+      // "1 day", since a "day" apart is whatever the write cadence currently
+      // is (weekly at the time of writing). Labelled "Latest" wherever shown.
       d1 = pctChange(series.get(lastT)!, series.get(ts[ts.length - 2]));
     }
     return {
@@ -337,13 +364,17 @@ function pointStats(points: PricePoint[]) {
   };
 }
 
-// Day-scoped cache around the per-region compute: the first request for a given
-// (market, Sydney-day) reads PriceHistory once; every other caller that day — pages,
-// bots, /api, OG images — gets the cached blob and touches the history DB zero times.
-// Auto-refreshes at the day rollover, so no on-demand ping (CRON_SECRET) is needed.
+// WEEK-scoped cache around the per-region compute, matching PriceHistory's own
+// write cadence (see the file header) — the same fix price-history.ts's own
+// getPriceHistory() needed for the same reason: a day-scoped key was recomputing
+// an unchanged answer up to seven times for nothing. The first request for a
+// given (market, ISO week) reads PriceHistory once; every other caller that
+// week — pages, bots, /api, OG images — gets the cached blob and touches the
+// history DB zero times. Auto-refreshes at the week rollover, so no on-demand
+// ping (CRON_SECRET) is needed.
 function getRegionIndex(country: Country): Promise<MarketIndex | null> {
-  return unstable_cache(() => computeRegionIndex(country), ["rc-region-index", country, sydneyDayKey()], {
-    revalidate: 172800, // 2-day safety TTL; the day-keyed key is what actually refreshes it
+  return unstable_cache(() => computeRegionIndex(country), ["rc-region-index", country, sydneyWeekKey()], {
+    revalidate: 8 * 86400, // one week + a day of slack; the week-keyed key is what actually refreshes it
     tags: [CONTENT_TAG],
   })();
 }
@@ -370,18 +401,19 @@ async function computeGlobalIndex(): Promise<MarketIndex | null> {
   };
 }
 
-// Day-scoped cache for the GLOBAL composite (its region sub-calls are cached too,
-// but caching the composite avoids re-compositing on every request as well).
+// Week-scoped cache for the GLOBAL composite, same reasoning as getRegionIndex
+// (its region sub-calls are cached too, but caching the composite avoids
+// re-compositing on every request as well).
 function getGlobalIndex(): Promise<MarketIndex | null> {
-  return unstable_cache(() => computeGlobalIndex(), ["rc-global-index", sydneyDayKey()], {
-    revalidate: 172800,
+  return unstable_cache(() => computeGlobalIndex(), ["rc-global-index", sydneyWeekKey()], {
+    revalidate: 8 * 86400,
     tags: [CONTENT_TAG],
   })();
 }
 
 // Default is the GLOBAL composite; pass a region for that market's own index. Both
-// paths are day-cached, so the history DB is read at most once per market per day
-// no matter how many pages/bots/API callers hit the index.
+// paths are week-cached, so the history DB is read at most once per market per
+// week no matter how many pages/bots/API callers hit the index.
 export async function getMarketIndex(market: MarketScope = "GLOBAL"): Promise<MarketIndex | null> {
   return market === "GLOBAL" ? getGlobalIndex() : getRegionIndex(market);
 }

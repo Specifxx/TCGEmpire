@@ -19,16 +19,16 @@ export async function GET() {
   }
   lines.push(
     "",
-    "> A daily search-weighted price index of the most-searched Riftbound: League of Legends TCG " +
-      "singles (base 100). Global composite; switch regions on the page.",
+    "> A search-weighted price index of the most-searched Riftbound: League of Legends TCG " +
+      "singles (base 100), updated weekly. Global composite; switch regions on the page.",
     "",
     `- Level: ${index.latest.toFixed(1)} (base 100 on ${index.startDay})`,
-    `- Change: 1d ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`
+    `- Change: latest ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`
   );
   if (index.stats) {
     lines.push(
       `- Index value (cost of one of each card): ${formatMoney(index.stats.basketValueCents, index.currency)}`,
-      `- Breadth: ${index.stats.advancing} advancing / ${index.stats.declining} declining · range ${index.stats.low.toFixed(1)}–${index.stats.high.toFixed(1)} · 30d volatility ${index.stats.volatilityPct == null ? "—" : index.stats.volatilityPct + "%"}`
+      `- Breadth: ${index.stats.advancing} advancing / ${index.stats.declining} declining · range ${index.stats.low.toFixed(1)}–${index.stats.high.toFixed(1)} · recent volatility ${index.stats.volatilityPct == null ? "—" : index.stats.volatilityPct + "%"}`
     );
   }
   lines.push("", "## Constituents (top 50 by weight)", "", "| Card | Set | Weight | Price | 7d |", "|---|---|---|---|---|");

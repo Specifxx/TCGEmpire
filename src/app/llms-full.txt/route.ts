@@ -30,7 +30,7 @@ export async function GET() {
     if (index) {
       lines.push("## The RiftCompare Index (global composite, base 100)");
       lines.push(`- Level: ${index.latest.toFixed(1)} (base 100 on ${index.startDay})`);
-      lines.push(`- Change: 1d ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`);
+      lines.push(`- Change: latest ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`);
       if (index.stats) {
         lines.push(
           `- Index value (cost of one of each card): ${formatMoney(index.stats.basketValueCents, index.currency)} · ` +

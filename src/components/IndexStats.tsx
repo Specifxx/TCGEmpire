@@ -55,7 +55,7 @@ export function IndexStats({ index }: { index: MarketIndex }) {
         <Stat
           label="Volatility"
           value={s.volatilityPct == null ? "—" : `${s.volatilityPct.toFixed(2)}%`}
-          sub="30-day, daily"
+          sub="recent, per snapshot"
         />
       </div>
     </div>

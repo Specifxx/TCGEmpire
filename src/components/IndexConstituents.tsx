@@ -102,7 +102,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
               <SortTh label="Card" col="name" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" />
               <SortTh label="Weight" col="weight" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
               <SortTh label="Price" col="price" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
-              <SortTh label="1-day" col="d1" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
+              <SortTh label="Latest" col="d1" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
               <SortTh label="7-day" col="d7" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-4" align="right" />
             </tr>
           </thead>

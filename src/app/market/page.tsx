@@ -39,7 +39,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "The RiftCompare Index — Riftbound Market Tracker | RiftCompare" },
   description:
-    "One number for the global Riftbound market: a weighted daily index of the most-searched cards — like a stock index for the game. Updated daily, free to cite.",
+    "One number for the global Riftbound market: a weighted index of the most-searched cards — like a stock index for the game. Updated weekly, free to cite.",
   keywords: [
     "RiftCompare Index",
     "Riftbound market index",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "The RiftCompare Index — the Riftbound market in one number",
     description:
-      "One number for the global Riftbound market: a weighted daily index of the most-searched cards — like a stock index for the game. Updated daily, free to cite.",
+      "One number for the global Riftbound market: a weighted index of the most-searched cards — like a stock index for the game. Updated weekly, free to cite.",
     url: `${SITE_URL}/market`,
   },
 };
@@ -155,7 +155,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         "@context": "https://schema.org",
         "@type": "Dataset",
         name: "The RiftCompare Index",
-        description: `Daily weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards${isGlobal ? " across every market we track" : ""}. Base 100 on ${index.startDay}.`,
+        description: `Weekly weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards${isGlobal ? " across every market we track" : ""}. Base 100 on ${index.startDay}.`,
         url: `${SITE_URL}/market`,
         creator: { "@type": "Organization", name: "RiftCompare", "@id": `${SITE_URL}/#org`, url: SITE_URL },
         license: `${SITE_URL}/market#cite`,
@@ -204,7 +204,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             The Riftbound market in one number. The Index tracks the live prices of the{" "}
             {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
-            search-weighted daily index — like a stock index for the game. When the cards players
+            search-weighted index, updated weekly — like a stock index for the game. When the cards players
             actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
             {isGlobal ? (
               <>By default it&apos;s the <strong className="text-slate-200">global composite</strong> — every region we track, blended into one currency-agnostic number. Use the Market selector to drill into a single region.</>
@@ -245,7 +245,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <Delta label="1 day" pct={index.d1} />
+                    <Delta label="Latest" pct={index.d1} />
                     <Delta label="7 days" pct={index.d7} />
                     <Delta label="30 days" pct={index.d30} />
                     <Delta label="All time" pct={index.sinceStart} />
@@ -263,7 +263,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                   <IndexChart points={index.points} />
                 </div>
                 <p className="mt-2 text-[11px] text-slate-600">
-                  + rising prices · − falling prices · recalculated daily after the price refresh.
+                  + rising prices · − falling prices · recalculated weekly, matching the price-history snapshot.
                 </p>
                 <div className="mt-5 border-t border-ink-800 pt-4">
                   <IndexStats index={index} />
@@ -345,12 +345,13 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             float, so a true price×supply capitalisation can&apos;t be computed — this is the
             one-of-each basket value. Range is the index&apos;s own low–high over the tracked window (a
             52-week-range analogue). Breadth counts how many constituents rose vs fell over the last 7
-            days, and volatility is the 30-day standard deviation of the index&apos;s daily moves.
+            days, and volatility is the standard deviation of the index&apos;s most recent snapshot-to-snapshot moves.
           </p>
           <p>
             Constituents are refreshed from live search data, so the basket evolves with the
-            metagame; history is recomputed against the current basket for consistency. Prices
-            update daily after the store refresh.
+            metagame; history is recomputed against the current basket for consistency. Each
+            constituent&apos;s listed price is the current live figure; the Index&apos;s own level and
+            chart update weekly, matching the price-history snapshot.
           </p>
           <p className="text-slate-300">
             <strong>Citing the Index:</strong> journalists and creators are welcome to quote it
