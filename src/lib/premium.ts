@@ -326,7 +326,16 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     },
   });
 
-  const cardIds = [...new Set(rows.map((r) => r.cardId))].sort();
+  // Defensive: CollectionCard.card is a required relation, but a stale cardId
+  // that no longer resolves to a real Card row (a database restore/migration
+  // that didn't carry every row across in lockstep, or a card removed from
+  // the catalogue some other way) makes Prisma's `include` come back with a
+  // row whose `card` is actually missing at runtime despite the non-null
+  // type. One bad row must not 500 the entire portfolio for every OTHER
+  // holding the visitor has — drop it and keep going.
+  const validRows = rows.filter((r) => r.card != null);
+
+  const cardIds = [...new Set(validRows.map((r) => r.cardId))].sort();
   // Best-effort: a history-DB hiccup should cost the value chart and d7/d30
   // deltas, not the whole portfolio page.
   const hist = cardIds.length ? await portfolioHistory(cardIds, country, windowDays).catch(() => []) : [];
@@ -348,7 +357,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     d7ByCard.set(cardId, then === last ? null : pctChange(series.get(last)!, series.get(then)));
   }
 
-  const holdings: Holding[] = rows
+  const holdings: Holding[] = validRows
     .map((r) => {
       const market = pickPrice(r.card, country);
       const unit = market != null ? Math.round(market * condMult(r.condition)) : null;
@@ -403,7 +412,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
   const series: PricePoint[] = [];
   for (const t of days) {
     let total = 0;
-    for (const r of rows) {
+    for (const r of validRows) {
       const p = byCard.get(r.cardId)?.get(t) ?? carried.get(`${r.id}`);
       if (p == null) continue;
       carried.set(`${r.id}`, byCard.get(r.cardId)?.get(t) ?? p);
