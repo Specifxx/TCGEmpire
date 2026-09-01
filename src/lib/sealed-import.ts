@@ -7,8 +7,9 @@ import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, produ
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
-import { DEFAULT_COUNTRY, type Country } from "./country";
+import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
+import { convertCents } from "./fx";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -407,9 +408,35 @@ export async function importSealed(): Promise<number> {
     const due = forced || !newestEbaySealed || newestEbaySealed.lastSeen < staleCutoff;
     if (due) {
       await primeEbayBudget(); // respect the live daily quota for sealed searches too
+      // Cross-market trusted-reference fallback (2026-09-01): a market with NO
+      // local store/TCGplayer listing for a product — e.g. no current AU
+      // stockist for an older set's booster box — used to fall back to the
+      // flat per-type SEALED_MIN_CENTS floor alone, with no real price to
+      // anchor against. That floor is a generic "not obviously an accessory"
+      // sanity check, not a "not obviously a different, far-cheaper foreign
+      // printing" one — a genuine Chinese-print box, undisclosed in an
+      // all-English title from a seller eBay doesn't flag as China-based,
+      // clears a flat $40 floor easily while trading for a fraction of what
+      // the real English product does. Building this map ONCE, before the
+      // market loop, and reusing getSealedGroups' own 15-minute memo (each
+      // market gets fetched again inside refreshEbaySealedMarket below, for
+      // its own market's search — same cache, no extra DB cost) means every
+      // market can borrow another market's real reference price instead.
+      const marketRefs = new Map<string, Map<string, { cents: number; currency: string }>>();
+      for (const m of EBAY_SEALED_MARKETS) {
+        const groups = await getSealedGroups(m.country);
+        const currency = currencyOf(m.country);
+        for (const g of groups) {
+          const nonEbay = g.listings.filter((l) => !l.retailer.startsWith("ebay")).map((l) => l.priceCents);
+          if (!nonEbay.length) continue;
+          const byCountry = marketRefs.get(g.groupKey) ?? new Map<string, { cents: number; currency: string }>();
+          byCountry.set(m.country, { cents: Math.min(...nonEbay), currency });
+          marketRefs.set(g.groupKey, byCountry);
+        }
+      }
       for (const mkt of EBAY_SEALED_MARKETS) {
         if (isEbayRateLimited()) break;
-        count += await refreshEbaySealedMarket(mkt);
+        count += await refreshEbaySealedMarket(mkt, marketRefs);
       }
     } else {
       console.log("eBay sealed: skipped (refreshed within the last 20h).");
@@ -509,6 +536,11 @@ const EBAY_SEALED_MARKETS = [
  */
 async function refreshEbaySealedMarket(
   mkt: (typeof EBAY_SEALED_MARKETS)[number],
+  // Cross-market trusted-reference fallback — see its own build site in
+  // importSealed() for why this exists. groupKey -> country -> that market's
+  // OWN trusted (non-eBay) reference in ITS OWN currency; converted into
+  // this market's currency only where it's actually borrowed, below.
+  marketRefs: Map<string, Map<string, { cents: number; currency: string }>>,
 ): Promise<number> {
   let count = 0;
   // Groups are read for THIS market: the reference price below is compared
@@ -516,6 +548,7 @@ async function refreshEbaySealedMarket(
   // has no currency column — an AUD reference against a USD listing would
   // reject good listings and admit bad ones.
   const groups = await getSealedGroups(mkt.country);
+  const mktCurrency = currencyOf(mkt.country);
   // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
   // AU store currently lists (e.g. the Unleashed pack) — so they appear once
   // available, with an image pulled from the eBay listing.
@@ -570,7 +603,22 @@ async function refreshEbaySealedMarket(
     // price validate this run's — exactly the self-reinforcing loop the
     // "trusted = non-eBay" rule exists to prevent.
     const nonEbay = g.listings.filter((l) => !l.retailer.startsWith("ebay")).map((l) => l.priceCents);
-    return nonEbay.length ? Math.min(...nonEbay) : null;
+    if (nonEbay.length) return Math.min(...nonEbay);
+    // No local reference for this market — borrow another market's, in
+    // EBAY_SEALED_MARKETS' own priority order (US first, the dominant
+    // TCGplayer-covered market), FX-converted into this market's currency.
+    // Without this a market with zero local stockists for a product fell
+    // back to the flat per-type floor alone, with nothing to catch a
+    // realistically-priced-but-wrong listing — e.g. an undisclosed Chinese
+    // print clearing a flat $40 AUD "Booster Box" floor with room to spare.
+    const byCountry = marketRefs.get(g.groupKey);
+    if (!byCountry) return null;
+    for (const m of EBAY_SEALED_MARKETS) {
+      if (m.country === mkt.country) continue;
+      const ref = byCountry.get(m.country);
+      if (ref) return convertCents(ref.cents, ref.currency, mktCurrency);
+    }
+    return null;
   };
   const searchList = [
     ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, language: undefined as "CN" | "KR" | undefined, referenceCents: trustedRef(g) })),
