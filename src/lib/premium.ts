@@ -20,6 +20,19 @@ import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "./site";
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
 // history read is cached — so viewing your portfolio repeatedly in a day reads the
 // history DB once. Keyed by the sorted card-id list so any wishlist change re-keys.
+//
+// LIVE CRASH (2026-09-01): "t.day.getTime is not a function". unstable_cache
+// persists its return value as JSON — a real Prisma call hands back genuine
+// Date objects, but a CACHE HIT replays them through a JSON round-trip first,
+// which turns every Date into an ISO string (Date has a toJSON, a plain string
+// does not turn back into a Date on the way out). The type below still says
+// `day: Date` because that's true on a cache MISS, so nothing caught this at
+// compile time — only a warm cache, in production, exposed the lie. Every
+// caller (getPortfolio's `h.day.getTime()`) trusted that type completely.
+// Re-hydrating `day` here, once, at the one place this cache is read, means
+// every consumer gets a real Date either way instead of each one needing to
+// remember to guard against a cache hit that looks identical to a miss until
+// this exact line throws.
 function portfolioHistory(
   cardIds: string[],
   country: Country,
@@ -35,7 +48,7 @@ function portfolioHistory(
       }),
     ["rc-portfolio-hist", country, String(windowDays), sydneyWeekKey(), cardIds.join(",")],
     { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
-  )();
+  )().then((rows) => rows.map((r) => ({ ...r, day: new Date(r.day) })));
 }
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
