@@ -350,13 +350,61 @@ export default function ReleaseDatesPage() {
         />
       </div>
 
+      {/* Take the countdown elsewhere: an iframe embed for another site, and a
+          calendar file for a phone or computer — a calendar app already syncs
+          across every device its owner uses, which answers "have it on my
+          phone AND my computer" without building a separate widget for each.
+          Gated on `next` the same as the countdown itself: nothing to embed or
+          add to a calendar when no release is dated. Placed right after the
+          email signup rather than lower on the page — it's the same "keep me
+          posted" intent as the newsletter box above it, just for people who'd
+          rather have it on a device or another page than in their inbox. */}
+      {next && nextInstant && (
+        <div className="mt-8">
+          <h2 className="mb-3 text-lg font-extrabold text-white">Take this countdown with you</h2>
+          <div className="card-surface grid gap-5 p-5 sm:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-bold text-white">📅 Add it to your calendar</h3>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                One tap adds {next.name}&apos;s release date to Apple Calendar, Google Calendar or Outlook — synced to
+                every device you already use it on, phone and computer alike.
+              </p>
+              <a href="/release-dates/calendar" className="btn-primary mt-3 inline-flex text-sm">
+                Add {next.name} to calendar
+              </a>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">🔗 Embed it on your own site</h3>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                A small, live, ticking countdown — drop it into a blog, a Discord-linked site, or anywhere else that
+                takes an <code className="rounded bg-ink-800 px-1 py-0.5">&lt;iframe&gt;</code>. Updates itself; nothing
+                to maintain.
+              </p>
+              <CopyPostButton
+                text={`<iframe src="${SITE_URL}/embed/release-countdown" width="320" height="150" style="border:0;border-radius:14px;" loading="lazy" title="Riftbound release countdown"></iframe>`}
+                label="Copy embed code"
+                copiedHint="Paste it into your site's HTML."
+                className="mt-3"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-10">
         <h2 className="mb-3 text-lg font-extrabold text-white">Every Riftbound release, in order</h2>
-        {/* Wide content scrolls inside its own container rather than pushing the
-            page sideways on a phone. */}
-        <div className="card-surface overflow-x-auto">
+        {/* Capped height with its own scroll, not the page's — the calendar
+            only grows (six sets already, and every future one adds a row), so
+            fixing this now means the page stops getting taller release after
+            release instead of needing a second pass once it's unwieldy. The
+            header row is sticky WITHIN that scroll so the column labels don't
+            scroll away — bg-ink-900 matches card-surface's own background,
+            or the sticky row would show whatever scrolls up through it. Wide
+            content still scrolls sideways rather than pushing the page itself
+            sideways on a phone (unchanged from before). */}
+        <div className="card-surface max-h-80 overflow-x-auto overflow-y-auto">
           <table className="w-full min-w-[36rem] border-collapse text-left">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-ink-900">
               <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th scope="col" className="px-4 py-3">Set</th>
                 <th scope="col" className="px-4 py-3">Release</th>
@@ -405,44 +453,6 @@ export default function ReleaseDatesPage() {
               </Link>
               .
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* Take the countdown elsewhere: an iframe embed for another site, and a
-          calendar file for a phone or computer — a calendar app already syncs
-          across every device its owner uses, which answers "have it on my
-          phone AND my computer" without building a separate widget for each.
-          Gated on `next` the same as the countdown itself: nothing to embed or
-          add to a calendar when no release is dated. */}
-      {next && nextInstant && (
-        <div className="mt-10">
-          <h2 className="mb-3 text-lg font-extrabold text-white">Take this countdown with you</h2>
-          <div className="card-surface grid gap-5 p-5 sm:grid-cols-2">
-            <div>
-              <h3 className="text-sm font-bold text-white">📅 Add it to your calendar</h3>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                One tap adds {next.name}&apos;s release date to Apple Calendar, Google Calendar or Outlook — synced to
-                every device you already use it on, phone and computer alike.
-              </p>
-              <a href="/release-dates/calendar" className="btn-primary mt-3 inline-flex text-sm">
-                Add {next.name} to calendar
-              </a>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">🔗 Embed it on your own site</h3>
-              <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                A small, live, ticking countdown — drop it into a blog, a Discord-linked site, or anywhere else that
-                takes an <code className="rounded bg-ink-800 px-1 py-0.5">&lt;iframe&gt;</code>. Updates itself; nothing
-                to maintain.
-              </p>
-              <CopyPostButton
-                text={`<iframe src="${SITE_URL}/embed/release-countdown" width="320" height="150" style="border:0;border-radius:14px;" loading="lazy" title="Riftbound release countdown"></iframe>`}
-                label="Copy embed code"
-                copiedHint="Paste it into your site's HTML."
-                className="mt-3"
-              />
-            </div>
           </div>
         </div>
       )}

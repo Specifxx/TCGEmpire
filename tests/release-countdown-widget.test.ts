@@ -68,11 +68,29 @@ test("the calendar route names no set in code either", () => {
   assert.doesNotMatch(src, /vendetta/i);
 });
 
-test("/release-dates links to both new surfaces, gated on there being an active countdown", () => {
+test("/release-dates links to both new surfaces, gated on there being an active countdown, right after the email signup", () => {
   const src = read("src/app/release-dates/page.tsx");
   assert.match(src, /href="\/release-dates\/calendar"/);
   assert.match(src, /\/embed\/release-countdown/);
-  assert.match(src, /\{next && nextInstant && \(\s*<div className="mt-10">\s*<h2[^>]*>Take this countdown with you/, "the whole section must be gated the same way the countdown itself is");
+  assert.match(src, /\{next && nextInstant && \(\s*<div className="mt-8">\s*<h2[^>]*>Take this countdown with you/, "the whole section must be gated the same way the countdown itself is");
+  // Ordering: right after <NewsletterSignup ... />, before "Every Riftbound
+  // release, in order" — reported directly, so pin the position, not just
+  // the section's existence.
+  const newsletterAt = src.indexOf("<NewsletterSignup");
+  const takeItAt = src.indexOf("Take this countdown with you");
+  const calendarTableAt = src.indexOf("Every Riftbound release, in order");
+  assert.ok(newsletterAt > -1 && takeItAt > -1 && calendarTableAt > -1, "expected all three sections to exist");
+  assert.ok(newsletterAt < takeItAt, "the embed/calendar section must come after the newsletter signup");
+  assert.ok(takeItAt < calendarTableAt, "the embed/calendar section must come before the full release table");
+});
+
+test("the full release table has its own capped, scrollable height with a sticky header", () => {
+  const src = read("src/app/release-dates/page.tsx");
+  const tableSectionAt = src.indexOf("Every Riftbound release, in order");
+  const section = src.slice(tableSectionAt, tableSectionAt + 1200);
+  assert.match(section, /max-h-\d+[\s\S]{0,20}overflow-y-auto/, "the table's own container must cap height and scroll vertically");
+  assert.match(section, /overflow-x-auto/, "must keep the existing horizontal scroll for narrow viewports");
+  assert.match(section, /<thead className="sticky top-0[^"]*bg-ink-900/, "the header row must stay visible while scrolling, with a background matching card-surface");
 });
 
 // ── Functional: actually run the handlers, not just read their source ────────
