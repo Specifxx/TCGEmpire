@@ -16,10 +16,15 @@ import { useEffect, useRef, useState } from "react";
 export function CopyPostButton({
   text,
   label = "Copy post",
+  copiedHint = "Paste it straight into Discord.",
   className,
 }: {
   text: string;
   label?: string;
+  // Shown briefly after a successful copy. Defaults to this component's
+  // original social-post framing; callers copying something else (an embed
+  // snippet, a code block) should pass their own so the hint stays true.
+  copiedHint?: string;
   className?: string;
 }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
@@ -56,7 +61,7 @@ export function CopyPostButton({
         )}
         {state === "copied" && (
           <span className="text-xs text-brand-400" role="status">
-            Paste it straight into Discord.
+            {copiedHint}
           </span>
         )}
       </div>

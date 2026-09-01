@@ -5,6 +5,7 @@ import { pageAlternates } from "@/lib/seo";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ReleaseCountdownTimer } from "@/components/ReleaseCountdownTimer";
+import { CopyPostButton } from "@/components/CopyPostButton";
 import {
   RELEASES,
   assumedStreetInstant,
@@ -404,6 +405,44 @@ export default function ReleaseDatesPage() {
               </Link>
               .
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Take the countdown elsewhere: an iframe embed for another site, and a
+          calendar file for a phone or computer — a calendar app already syncs
+          across every device its owner uses, which answers "have it on my
+          phone AND my computer" without building a separate widget for each.
+          Gated on `next` the same as the countdown itself: nothing to embed or
+          add to a calendar when no release is dated. */}
+      {next && nextInstant && (
+        <div className="mt-10">
+          <h2 className="mb-3 text-lg font-extrabold text-white">Take this countdown with you</h2>
+          <div className="card-surface grid gap-5 p-5 sm:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-bold text-white">📅 Add it to your calendar</h3>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                One tap adds {next.name}&apos;s release date to Apple Calendar, Google Calendar or Outlook — synced to
+                every device you already use it on, phone and computer alike.
+              </p>
+              <a href="/release-dates/calendar" className="btn-primary mt-3 inline-flex text-sm">
+                Add {next.name} to calendar
+              </a>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">🔗 Embed it on your own site</h3>
+              <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                A small, live, ticking countdown — drop it into a blog, a Discord-linked site, or anywhere else that
+                takes an <code className="rounded bg-ink-800 px-1 py-0.5">&lt;iframe&gt;</code>. Updates itself; nothing
+                to maintain.
+              </p>
+              <CopyPostButton
+                text={`<iframe src="${SITE_URL}/embed/release-countdown" width="320" height="150" style="border:0;border-radius:14px;" loading="lazy" title="Riftbound release countdown"></iframe>`}
+                label="Copy embed code"
+                copiedHint="Paste it into your site's HTML."
+                className="mt-3"
+              />
+            </div>
           </div>
         </div>
       )}
