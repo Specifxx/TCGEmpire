@@ -79,7 +79,7 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   const src = read(POPUP);
   assert.ok(!/api\/promo/.test(src), "popup must not depend on a promo endpoint");
   assert.ok(!/promo\?\.active/.test(src), "popup must not gate on promo.active");
-  assert.match(src, /setPhase\("shown"\)/, "popup must still have its auto-show path");
+  assert.match(src, /setShown\(true\)/, "popup must still have its auto-show path");
   // The only conditions on showing are: loaded, signed out, not an auth page,
   // not already dismissed.
   assert.match(src, /if \(!loaded \|\| user\) return/, "still only shown to signed-out visitors");
@@ -98,8 +98,8 @@ test("the popup's comparison never pitches a Premium-gated tool", () => {
   assert.ok(!/Best Basket/.test(rows), "popup must not pitch Best Basket — it moved back to Premium only");
   assert.match(rows, /Price alerts/, "popup should name what an account actually unlocks");
   assert.match(rows, /Watchlist/, "popup should name what an account actually unlocks");
-  // 4-6 rows: fewer reads as thin, more makes the card tall enough to reopen the
-  // short-phone dismiss bug tests/signup-popup-dismissible.test.ts guards.
+  // 4-6 rows: fewer reads as thin, more makes a bigger interruption than a
+  // corner slide-in card should ever be (see tests/signup-slidein.test.ts).
   const rowCount = (rows.match(/\{\s*label:/g) ?? []).length;
   assert.ok(rowCount >= 4 && rowCount <= 6, `expected 4-6 comparison rows, found ${rowCount}`);
 });

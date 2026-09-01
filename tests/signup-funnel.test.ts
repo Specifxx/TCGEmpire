@@ -91,7 +91,7 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
-  assert.match(src, /const PROMO_VARIANT = "comparison"/, "the variant must be a named constant, not inlined at each call");
+  assert.match(src, /const PROMO_VARIANT = "comparison_slidein"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });
@@ -353,7 +353,7 @@ test("the signup promo stays off the buy path", () => {
   // Which trigger fired has to be separable in GA4, or the three cases average
   // together and none of them can be judged.
   assert.match(src, /trigger: firedAs/, "the impression must report which trigger fired");
-  assert.match(src, /trigger: "post_buy"/, "the post-buy path must label itself");
+  assert.match(src, /reveal\("post_buy"\)/, "the post-buy path must label itself");
 
   // Private mode must fail toward protecting the buy, not toward showing.
   assert.match(

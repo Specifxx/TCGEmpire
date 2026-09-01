@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { BUY_CLICK_EVENT, buyLinksOnPage, hasBoughtThisSession } from "@/lib/buy-intent";
@@ -37,14 +36,31 @@ import { AuthForm } from "./AuthForm";
 // rather than pretending alerts are account-only, because they aren't.
 const SEEN_KEY = "rc_signup_promo_seen";
 
-// THE PROMO IS NOW TIMED AROUND buy_click, NOT JUST AROUND THE CLOCK.
+// A CORNER SLIDE-IN, NOT A MODAL (2026-09-01). This used to be a full-screen
+// dialog — backdrop, scroll-locked, focus-trapped, centred card. That shape had
+// already cost this codebase one production incident on its own (see
+// tests/signup-slidein.test.ts's header for the short-phone history) and, more
+// basically, is a much bigger interruption than the ask ("create a free account")
+// warrants. PremiumSlideIn already proved the pattern for the logged-in audience:
+// a small corner card that never blocks scroll, never traps focus, and yields to
+// any REAL modal (checks the shared body[data-rc-dialog] flag, same as before —
+// but no longer SETS it, since it no longer blocks anything itself). The two
+// audiences are exclusive by construction (signed-out here, signed-in-non-Premium
+// there), so sharing PremiumSlideIn's exact corner and z-tier is safe — they can
+// never be on screen at the same time for the same visitor.
 //
-// buy_click is the event every affiliate dollar depends on, and this dialog is
-// the only thing on the site that can cover it up. A pure delay — 5s, then 15s,
-// then 30s — only changes HOW LONG the interruption waits before landing on top
-// of the buy button. It never stops it landing there.
+// The CONTENT below — the honest COMPARISON table, the timing/trigger logic, the
+// dismissal persistence — is UNCHANGED from the modal version. Only the outer
+// chrome moved.
+
+// THE PROMO IS TIMED AROUND buy_click, NOT JUST AROUND THE CLOCK.
 //
-// So the trigger is now conditional on where the visitor is and what they have
+// buy_click is the event every affiliate dollar depends on, and this popup is one
+// of the few things on the site that could cover it up. A pure delay — 5s, then
+// 15s, then 30s — only changes HOW LONG the interruption waits before landing on
+// top of the buy button. It never stops it landing there.
+//
+// So the trigger is conditional on where the visitor is and what they have
 // already done, in three cases:
 //
 //   1. NO BUY LINK ON THE PAGE (homepage, guides, blog, hubs) — nothing to
@@ -55,7 +71,7 @@ const SEEN_KEY = "rc_signup_promo_seen";
 //      This is a card page, and the visitor is doing the exact thing the site
 //      exists for. BUY_SURFACE_BACKSTOP_MS is the concession: someone who has
 //      sat on a card page for two minutes without clicking out is not about to,
-//      so the dialog eventually shows rather than never showing at all.
+//      so the popup eventually shows rather than never showing at all.
 //
 //   3. THEY HAVE ALREADY CLICKED A BUY LINK — show shortly after. Buy links
 //      open in a NEW TAB (OutboundLink's target="_blank"), so the visitor is
@@ -96,24 +112,27 @@ const PV_KEY = "rc_pv_count";
 // sign_up following.
 const MIN_PAGEVIEWS = 1;
 
-// Distinguishes this comparison layout from the perk-list version it replaced,
-// on signup_promo_shown/_dismissed, so the two are separable rather than
-// averaged together across the changeover.
+// Distinguishes this layout from whatever came before it, on signup_promo_shown/
+// _dismissed, so variants are separable rather than averaged together across a
+// changeover — same convention as PROMO_VARIANT always had. Bumped from
+// "comparison" to "comparison_slidein" for the 2026-09-01 chrome change: the
+// CONTENT (the comparison table) is identical, only the modal-vs-slide-in shell
+// changed, and that is exactly the kind of change this field exists to separate.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "comparison";
+const PROMO_VARIANT = "comparison_slidein";
 
 // The comparison itself. EVERY ROW IS DERIVED FROM A REAL ENTITLEMENT CHECK —
 // nothing here is aspirational:
 //
 //   Compare prices   no gate anywhere (deliberately: it's the whole site)
-//   Watchlist        app/watching redirect + api/alerts/watchlist/* 401
+//   Watchlist        app/watching redirect + api/alerts/watchlist routes 401
 //   Price alerts     api/alerts/subscribe — anonymous EMAIL path exists and stays
-//   Portfolio        app/portfolio redirect + api/collection/*, portfolio/export 401
+//   Portfolio        app/portfolio redirect + api/collection routes, portfolio/export 401
 //
 // `browsing: false` renders an em dash; a string renders as-is, for the rows
 // where signed-out visitors genuinely get something. One of the four is not a
@@ -121,12 +140,13 @@ const PROMO_VARIANT = "comparison";
 // is a dark pattern, and this one is checkable against the code by anyone.
 //
 // Premium-gated tools (Bulk Pricer, Best Basket, the screeners) are deliberately
-// absent: this dialog never mentions the paid tier. Best Basket lived here as a
+// absent: this popup never mentions the paid tier. Best Basket lived here as a
 // free-account perk until it moved back to Premium (see lib/premium.ts's tier
 // note) — removed rather than left inaccurate, since every row above is a promise
-// this dialog makes about what signing up gets you. Keep this list at 4-6 rows —
-// the card's height is load-bearing on short phones (see the overlay's own note
-// below).
+// this popup makes about what signing up gets you. Keep this list at 4-6 rows —
+// a slide-in card reads worse the taller it gets, same reasoning that used to be
+// about a modal's off-screen close button and is now just about not being a
+// bigger interruption than a corner card should be.
 const COMPARISON: { label: string; desc: string; browsing: string | false }[] = [
   { label: "Compare every store + eBay", desc: "Live prices on every card", browsing: "Yes" },
   { label: "Watchlist", desc: "Save cards and pick up where you left off", browsing: false },
@@ -137,17 +157,9 @@ const COMPARISON: { label: string; desc: string; browsing: string | false }[] = 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded } = useMe();
   const pathname = usePathname();
-  const [phase, setPhase] = useState<"hidden" | "shown">("hidden");
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const closeRef = useRef<HTMLButtonElement | null>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const [shown, setShown] = useState(false);
+  const [entered, setEntered] = useState(false); // drives the slide-in transition
 
-  // Auto-show once per session, after a delay — only for a signed-out visitor,
-  // off the auth pages. Deliberately fires on the homepage too — an
-  // earlier version excluded "/" on accessibility grounds (see DECISIONS.md's
-  // Phase 5 section); that exclusion was a product call, not a technical
-  // constraint, and has since been reversed: the homepage is now explicitly
-  // in scope.
   // Count route views once per pathname, separately from the arming effect
   // below — that one re-runs when auth state loads, and counting there would
   // double-increment the same page.
@@ -175,7 +187,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
       /* private mode — worst case it can show again next page load */
     }
     if (seen) return;
-    // Engagement gate: never a modal over the FIRST page of a session (see
+    // Engagement gate: never interrupt the FIRST page of a session (see
     // MIN_PAGEVIEWS above). Deliberately does NOT mark SEEN_KEY when it skips —
     // the visitor still gets the promo once they've browsed further.
     if (pageviews < MIN_PAGEVIEWS) return;
@@ -187,25 +199,28 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     const trigger = bought ? "post_buy" : onBuySurface ? "buy_surface_backstop" : "timer";
     const delay = bought ? POST_BUY_DELAY_MS : onBuySurface ? BUY_SURFACE_BACKSTOP_MS : PROMO_DELAY_MS;
 
+    const reveal = (firedAs: string) => {
+      setShown(true);
+      // Next paint → play the transition from the off-screen start state, same
+      // double-rAF as PremiumSlideIn (one frame isn't reliably enough for the
+      // browser to have committed the initial off-screen styles first).
+      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
+      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, trigger: firedAs });
+    };
+
     const t = setTimeout(() => {
-      // Never stack on top of another dialog. FeedbackWidget sets this flag
-      // while its panel is open; opening a full-screen signup wall over a
-      // visitor who is mid-sentence writing us feedback would lose the feedback
-      // AND read as the exact "wall of asks" this popup's own delay exists to
-      // avoid. Deliberately does NOT mark SEEN_KEY when it skips, so that
-      // visitor still gets the promo on a later visit rather than silently
-      // losing it forever.
+      // Never slide in on top of a real modal. FeedbackWidget sets this flag
+      // while its panel is open; sliding a signup pitch in over a visitor who is
+      // mid-sentence writing us feedback would lose the feedback AND read as the
+      // exact "wall of asks" this popup's own delay exists to avoid. Deliberately
+      // does NOT mark SEEN_KEY when it skips, so that visitor still gets the
+      // promo on a later visit rather than silently losing it forever.
       if (document.body.dataset.rcDialog === "1") return;
       // Last check before it lands: if a buy link is on the page and STILL has
       // not been clicked, the backstop is what fired, and that is fine — but a
       // visitor who bought in the meantime should be recorded as post_buy, not
       // as the backstop, or the comparison between the two is polluted.
-      const firedAs = hasBoughtThisSession() && trigger !== "timer" ? "post_buy" : trigger;
-      setPhase("shown");
-      // Impression event — with dismiss (below) this makes the popup's
-      // conversion rate knowable for the first time: shown vs dismissed vs
-      // sign_in_click(source=popup) vs sign_up.
-      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, trigger: firedAs });
+      reveal(hasBoughtThisSession() && trigger !== "timer" ? "post_buy" : trigger);
     }, delay);
 
     // A buy click while the timer is running re-arms it to the short post-buy
@@ -217,8 +232,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
       clearTimeout(t);
       buyTimer = setTimeout(() => {
         if (document.body.dataset.rcDialog === "1") return;
-        setPhase("shown");
-        trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, trigger: "post_buy" });
+        reveal("post_buy");
       }, POST_BUY_DELAY_MS);
     };
     if (!bought) window.addEventListener(BUY_CLICK_EVENT, onBuy);
@@ -230,8 +244,15 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     };
   }, [loaded, user, pathname]);
 
+  // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
+  // actually unmounting, instead of popping out instantly.
+  const hide = useCallback(() => {
+    setEntered(false);
+    setTimeout(() => setShown(false), 250);
+  }, []);
+
   const dismiss = useCallback(() => {
-    setPhase("hidden");
+    hide();
     trackEvent("signup_promo_dismissed", { variant: PROMO_VARIANT });
     // PERSISTS THE DISMISSAL for the rest of the browser session. The arming
     // effect above reads SEEN_KEY before it re-arms, so a dismissed promo does
@@ -244,195 +265,105 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     } catch {
       /* private mode */
     }
-    // Hand focus back where the visitor was, rather than stranding it on a
-    // removed node (which drops screen readers to the top of the document).
-    const prev = returnFocusRef.current;
-    if (prev && document.contains(prev)) prev.focus();
-  }, []);
+  }, [hide]);
 
-  // ESC to close, a focus trap, and a background scroll lock for as long as this
-  // is open — the same contract FeedbackWidget already implements. Its absence
-  // here was a genuine keyboard trap: with the close button rendered off-screen
-  // (see the layout note below) there was NO way to dismiss this dialog at all.
+  // Esc dismisses it — non-trapping, because this is not a modal (matches
+  // PremiumSlideIn exactly: no focus trap, no scroll lock, no aria-modal).
   useEffect(() => {
-    if (phase !== "shown") return;
-    // Claim the shared dialog flag so FeedbackWidget can't open on top of us,
-    // mirroring the check this component already makes before auto-opening.
-    document.body.dataset.rcDialog = "1";
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        dismiss();
-        return;
-      }
-      if (e.key !== "Tab" || !cardRef.current) return;
-      const focusable = cardRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([type="hidden"]), textarea, select, [tabindex]:not([tabindex="-1"])'
-      );
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-      delete document.body.dataset.rcDialog;
+    if (!shown) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") dismiss();
     };
-  }, [phase, dismiss]);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [shown, dismiss]);
 
-  // Move focus to the close button when it opens: it is the first thing a
-  // keyboard or screen-reader user needs, and focusing it also guarantees the
-  // scroll container reveals it.
-  useEffect(() => {
-    if (phase !== "shown") return;
-    returnFocusRef.current = document.activeElement as HTMLElement | null;
-    closeRef.current?.focus();
-  }, [phase]);
-
-  if (phase === "hidden") return null;
+  if (!shown) return null;
 
   return (
-    // THE OVERLAY IS A SCROLL CONTAINER, and that is the whole fix. This used to
-    // be `fixed inset-0 flex items-center justify-center` with an
-    // `overflow-hidden` card and no scrolling anywhere. Once the card was taller
-    // than the viewport, centring overflowed it EQUALLY IN BOTH DIRECTIONS, so
-    // the close button — pinned to the card's top — sat ABOVE the top of the
-    // screen with no way to reach it. Measured before this change: the button
-    // rendered at y = -131 on a 375x667 iPhone SE, y = -188 once Safari's
-    // toolbars were showing, and y = -234 on a 360x480 window. The card covered
-    // the full width, so there was no backdrop left to tap either, and there was
-    // no ESC handler. On a short phone this dialog was genuinely inescapable.
-    //
-    // `min-h-full` on the inner wrapper (NOT `h-full`) is the load-bearing
-    // detail: the wrapper grows to the card's height when the card is taller
-    // than the viewport, so centring has nothing left to overflow and the
-    // container simply scrolls instead.
-    //
-    // h-[100dvh] is for iOS Safari specifically — the reported browser. `inset-0`
-    // resolves against the LARGE viewport there, so the bottom of a full-height
-    // fixed element sits behind the address/tab bars; the dynamic viewport unit
-    // tracks the chrome as it shows and hides. Paired with safe-area insets below
-    // so nothing lands under a notch or the home indicator.
-    <div className="fixed inset-0 z-[75] h-[100dvh] overflow-y-auto overscroll-contain">
-      <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
-      {/* The dismiss handler lives on this WRAPPER, not on the backdrop behind
-          it. The wrapper stretches over the whole scroll area to do its
-          centring, so it covers the backdrop — putting the handler on the
-          backdrop alone meant a tap on empty space hit this element instead and
-          did nothing, silently costing the easiest escape route on a phone.
-          The card stops propagation so taps inside it never dismiss. */}
-      <div
-        onClick={dismiss}
-        className="relative flex min-h-full items-center justify-center p-4"
-        style={{
-          paddingTop: "max(1rem, env(safe-area-inset-top))",
-          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
-        }}
-      >
-        <div
-          ref={cardRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="signup-promo-title"
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-md rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl"
-        >
+    // Bottom-LEFT, same corner and z-tier as PremiumSlideIn (z-[70], under every
+    // real modal — signup no longer being one of them). Safe to share: this
+    // audience (signed-out) and PremiumSlideIn's (signed-in, non-Premium) are
+    // mutually exclusive for any one visitor, so the two can never stack.
+    <div
+      role="region"
+      aria-label="Create a free RiftCompare account"
+      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-all duration-300 sm:bottom-4 sm:w-auto ${
+        entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
+      <div className="relative overflow-hidden rounded-xl border border-brand-500/50 bg-ink-900 shadow-2xl">
+        <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
+          <span className="rounded border border-brand-400/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-300">
+            Free account
+          </span>
+          <span className="text-xs font-semibold text-slate-200">What it adds</span>
           <button
-            ref={closeRef}
             onClick={dismiss}
-            aria-label="Close"
-            className="absolute right-2 top-2 z-20 tap-icon rounded-full bg-ink-950/80 text-slate-300 hover:bg-ink-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            aria-label="Dismiss"
+            className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
           >
             ✕
           </button>
+        </div>
 
-          {/* Every line here is vertical space on a phone, and an earlier
-              version of this card (icon + chip + heading + two-line paragraph +
-              three described perks + a footnote) reached ~955px against a 553px
-              viewport — which is what pushed the close button off-screen and
-              made the dialog genuinely inescapable. The comparison below is
-              denser than the perk chips it replaced, so it is deliberately
-              capped at 5 short rows with tight leading; verified closable at
-              360x640. Adding rows here is not free. */}
-          <div className="px-5 pb-2 pt-6">
-            <h2 id="signup-promo-title" className="font-display text-center text-lg font-bold text-white">
-              What a free account adds
-            </h2>
-            <p className="mx-auto mt-1 max-w-xs text-center text-xs leading-relaxed text-slate-400">
-              You keep everything you already have. No card, no spam.
-            </p>
+        <div className="px-4 pb-1 pt-3">
+          <p className="text-xs leading-relaxed text-slate-400">You keep everything you already have. No card, no spam.</p>
 
-            {/* Two tier columns, one row per feature. Semantically a table
-                because it IS one — a screen reader announcing "Watchlist,
-                Browsing: no, Free account: yes" is exactly the comparison a
-                sighted visitor gets from the marks. */}
-            <table className="mt-3 w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-ink-800">
-                  <th scope="col" className="pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    <span className="sr-only">Feature</span>
+          {/* Two tier columns, one row per feature. Semantically a table because
+              it IS one — a screen reader announcing "Watchlist, Browsing: no,
+              Free account: yes" is exactly the comparison a sighted visitor gets
+              from the marks. */}
+          <table className="mt-2.5 w-full border-collapse text-left">
+            <thead>
+              <tr className="border-b border-ink-800">
+                <th scope="col" className="pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  <span className="sr-only">Feature</span>
+                </th>
+                <th scope="col" className="w-[64px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  Browsing
+                </th>
+                <th scope="col" className="w-[64px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-brand-300">
+                  Free
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON.map((row) => (
+                <tr key={row.label} className="border-b border-ink-800/60 last:border-0">
+                  <th scope="row" className="py-1.5 pr-2 font-normal">
+                    <span className="block text-xs font-semibold leading-tight text-slate-200">{row.label}</span>
+                    <span className="block text-[10px] leading-tight text-slate-500">{row.desc}</span>
                   </th>
-                  <th scope="col" className="w-[68px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                    Browsing
-                  </th>
-                  <th scope="col" className="w-[68px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-brand-300">
-                    Free
-                  </th>
+                  <td className="px-1 text-center align-middle">
+                    {row.browsing === false ? (
+                      <span className="text-slate-600" aria-label="Not included">—</span>
+                    ) : (
+                      <span className="text-[10px] font-medium leading-tight text-slate-400">{row.browsing}</span>
+                    )}
+                  </td>
+                  <td className="px-1 text-center align-middle">
+                    <span className="font-bold text-brand-400" aria-label="Included">✓</span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {COMPARISON.map((row) => (
-                  <tr key={row.label} className="border-b border-ink-800/60 last:border-0">
-                    <th scope="row" className="py-1.5 pr-2 font-normal">
-                      <span className="block text-xs font-semibold leading-tight text-slate-200">{row.label}</span>
-                      <span className="block text-[10px] leading-tight text-slate-500">{row.desc}</span>
-                    </th>
-                    <td className="px-1 text-center align-middle">
-                      {row.browsing === false ? (
-                        <span className="text-slate-600" aria-label="Not included">—</span>
-                      ) : (
-                        <span className="text-[10px] font-medium leading-tight text-slate-400">{row.browsing}</span>
-                      )}
-                    </td>
-                    <td className="px-1 text-center align-middle">
-                      <span className="font-bold text-brand-400" aria-label="Included">✓</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-          <div className="px-5 pb-5 pt-3">
-            <AuthForm providers={providers} bare compact source="popup" next={pathname ?? undefined} />
-            {/* A SECOND, OBVIOUS WAY OUT, in the thumb zone. The ✕ is a small
-                target in a top corner — the hardest place to reach one-handed on
-                a large phone — so the primary escape is now a full-width control
-                right where the visitor's thumb already is, directly under the
-                sign-in buttons. */}
-            <button
-              type="button"
-              onClick={dismiss}
-              className="mt-3 w-full rounded-lg px-3 py-2.5 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-            >
-              Maybe later
-            </button>
-            {/* No "See Premium" link here any more. It was the last Premium
-                mention left in the dialog, and it pointed the one visitor
-                actually engaging with a free-account pitch at the paid tier
-                instead — a second ask stacked on the first. */}
-          </div>
+        <div className="px-4 pb-4 pt-2">
+          <AuthForm providers={providers} bare compact source="popup" next={pathname ?? undefined} />
+          <button
+            type="button"
+            onClick={dismiss}
+            className="mt-2 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          >
+            Maybe later
+          </button>
+          {/* No "See Premium" link here any more. It was the last Premium
+              mention left in the popup, and it pointed the one visitor
+              actually engaging with a free-account pitch at the paid tier
+              instead — a second ask stacked on the first. */}
         </div>
       </div>
     </div>

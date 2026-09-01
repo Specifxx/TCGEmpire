@@ -186,8 +186,11 @@ export function PremiumSlideIn() {
   return (
     // Bottom-LEFT so it never collides with the bottom-right feedback pill
     // (FeedbackWidget, fixed bottom-4 right-4). Lifted to bottom-20 on phones so
-    // it clears that pill; z-[70] keeps it under every real modal (signup z-75,
-    // feedback panel z-85, premium dialog z-120) while sitting above page chrome.
+    // it clears that pill; z-[70] keeps it under every real modal (feedback panel
+    // z-85, premium dialog z-120) while sitting above page chrome. SignupPromoPopup
+    // shares this exact z-tier now too (it became a non-modal slide-in itself,
+    // 2026-09-01) — safe, since the two audiences (signed-out here, signed-in
+    // non-Premium there) can never both apply to the same visitor at once.
     <div
       role="region"
       aria-label="RiftCompare Premium offer"
