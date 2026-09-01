@@ -82,7 +82,7 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /setShown\(true\)/, "popup must still have its auto-show path");
   // The only conditions on showing are: loaded, signed out, not an auth page,
   // not already dismissed.
-  assert.match(src, /if \(!loaded \|\| user\) return/, "still only shown to signed-out visitors");
+  assert.match(src, /if \(!loaded \|\| user \|\| shown\) return/, "still only shown to signed-out visitors");
 });
 
 test("the popup's comparison never pitches a Premium-gated tool", () => {
@@ -136,22 +136,16 @@ test("the popup's honesty guarantees: no fake scarcity, and the tie row stays", 
   assert.match(src, /You keep everything you already have/, "the copy must say signing up costs them nothing");
 });
 
-test("the promo delay is one named 15s constant, never a scattered literal", () => {
-  // Was 5s, which fired while a visitor was still reading the first thing they
-  // landed on — 26% of visitors saw the dialog, 78% dismissed it, and
-  // pages/visitor and buy_click both fell. The delay must stay a single named
-  // export so it can't drift between the component and anything that reasons
-  // about its timing.
+test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {
+  // History, oldest to newest: a bare 5s timer (26% shown, 78% dismissed,
+  // pages/visitor and buy_click both fell) → a named 30s constant plus a
+  // buy_click-aware 3-case system so the delay could never cost a buy_click →
+  // no delay at all, by explicit instruction. Each step was a real, deliberate
+  // decision — this test pins the current one and guards against the old
+  // constants quietly reappearing.
   const src = read(POPUP);
-  // Every timing the promo can use is a named export. The delay ladder ended at
-  // 30s for pages with nothing to interrupt; the other two exist because a delay
-  // alone only changes how long the interruption waits before landing on the buy
-  // button, it never moves it off the buy path. See the component's header.
-  assert.match(src, /export const PROMO_DELAY_MS = 30_000;/, "the no-buy-link delay must stay a named constant");
-  assert.match(src, /export const BUY_SURFACE_BACKSTOP_MS = /, "the buy-surface backstop must be named");
-  assert.match(src, /export const POST_BUY_DELAY_MS = /, "the post-buy delay must be named");
-  assert.match(src, /\}, delay\)/, "the timer must read a computed named delay, not a literal");
-  assert.ok(!/setTimeout\([\s\S]{0,400}?\}, \d{3,}\)/.test(src), "no hardcoded millisecond literal may drive the promo timer");
+  assert.doesNotMatch(src, /PROMO_DELAY_MS|BUY_SURFACE_BACKSTOP_MS|POST_BUY_DELAY_MS/, "the old delay constants must be fully gone");
+  assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not gate showing itself behind a setTimeout");
 });
 
 test("a dismissed promo stays dismissed for the rest of the session", () => {
@@ -166,7 +160,7 @@ test("a dismissed promo stays dismissed for the rest of the session", () => {
 
 test("the promo never fires for a signed-in visitor", () => {
   const src = read(POPUP);
-  assert.match(src, /if \(!loaded \|\| user\) return;/, "the arming effect must bail for a signed-in user");
+  assert.match(src, /if \(!loaded \|\| user \|\| shown\) return;/, "the arming effect must bail for a signed-in user");
 });
 
 test("the retired WEEK-long signup comp's specific machinery stays gone", () => {

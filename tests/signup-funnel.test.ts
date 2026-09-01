@@ -91,7 +91,7 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
-  assert.match(src, /const PROMO_VARIANT = "comparison_slidein"/, "the variant must be a named constant, not inlined at each call");
+  assert.match(src, /const PROMO_VARIANT = "comparison_instant"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });
@@ -267,20 +267,14 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the popup gates on engagement, now via the delay rather than a second pageview", () => {
+test("the popup shows instantly — no delay, no pageview gate (2026-09-01, explicit product decision)", () => {
+  // Reverses the earlier delay/engagement-gate history this file used to pin:
+  // 5s timer → relaxed pageview gate → buy_click-aware 3-case timing → and now
+  // no timer at all. Each step was a real, deliberate product decision, not
+  // drift — this test pins the CURRENT one.
   const src = read("src/components/SignupPromoPopup.tsx");
-  // MIN_PAGEVIEWS was 2 because a 5s timer fired on page ONE for everyone, and
-  // requiring a second pageview was the only way to express "has engaged".
-  // PROMO_DELAY_MS is 15s now and expresses that directly, so the pageview gate
-  // relaxed to 1 — stacking both gated the dialog twice for one reason, and with
-  // bounce up 5pts it excluded every single-page session from ever seeing the
-  // pitch. The counter itself stays (it's how the gate is enforced at all).
-  assert.match(src, /const MIN_PAGEVIEWS = 1/);
-  assert.match(src, /if \(pageviews < MIN_PAGEVIEWS\) return/);
-  assert.match(src, /export const PROMO_DELAY_MS = 30_000;/, "the delay must carry the engagement gate now");
-  // The pageview counter increments once per pathname, in its own effect —
-  // counting inside the arming effect would double-count when auth state loads.
-  assert.match(src, /lastCountedPath/);
+  assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not delay showing itself behind a setTimeout");
+  assert.doesNotMatch(src, /PROMO_DELAY_MS|MIN_PAGEVIEWS|PV_KEY/, "the old delay/pageview-gate machinery must be fully gone, not just unused");
   // The hard-won dismissibility contract must survive this change untouched.
   assert.match(src, /SKIP_PATHS/);
   assert.match(src, /document\.body\.dataset\.rcDialog/);
@@ -306,59 +300,42 @@ test("/login leads with account creation, not returning-user framing", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE PROMO MUST NOT LAND ON TOP OF A BUY CLICK.
+// THE POPUP NO LONGER AVOIDS THE BUY PATH — DELIBERATELY (2026-09-01).
 //
-// buy_click is the event every affiliate dollar depends on. The delay ladder
-// (5s → 15s → 30s) only ever changed how long the interruption waited before
-// covering the buy button; it never moved it off the buy path. The trigger is
-// now conditional on what is on the page and what the visitor has already done:
+// It used to time itself around buy_click specifically so it could never land
+// on top of the buy button (see git history — the removed 3-case
+// timer/backstop/post-buy system). That protection is gone on purpose, by
+// explicit instruction: the popup now shows instantly regardless of what else
+// is on the page. See the component's own header comment for the accepted
+// trade-off this reopens.
 //
-//   no buy link on the page  → ordinary timer (PROMO_DELAY_MS)
-//   buy link, not clicked    → hold off until BUY_SURFACE_BACKSTOP_MS
-//   already clicked a buy    → POST_BUY_DELAY_MS, the only moment that cannot
-//                              cost a buy_click because it already happened
-//
-// The page-has-a-buy-link fact comes from OutboundLink REGISTERING ITSELF, not
-// from a list of "pages with buy links" — such a list rots the first time a new
-// surface renders one, and the failure mode is silent (the popup goes back to
-// covering the buy button on exactly the new page nobody remembered to add).
+// OutboundLink's own buy-signal machinery (registerBuyLink/markBuyClick) is
+// UNCHANGED and still pinned below — it's general infrastructure other
+// features (PremiumSlideIn's post-buy framing, future ones) can still use, and
+// still deserves its own ordering guarantee even though the popup no longer
+// consumes it.
 // ─────────────────────────────────────────────────────────────────────────────
-test("the signup promo stays off the buy path", () => {
+test("the popup no longer references buy-click/buy-intent signals at all", () => {
   const src = read("src/components/SignupPromoPopup.tsx");
+  assert.doesNotMatch(src, /buy-intent|BUY_CLICK_EVENT|buyLinksOnPage|hasBoughtThisSession/, "buy-click awareness must be fully removed, not just unused");
+});
+
+test("OutboundLink's own buy-signal ordering still holds, independent of who consumes it", () => {
   const outbound = read("src/components/OutboundLink.tsx");
-  const intent = read("src/lib/buy-intent.ts");
-
-  // The popup asks the shared signal, rather than testing the pathname.
-  assert.match(src, /buyLinksOnPage\(\)/, "the popup must ask whether a buy link is present");
-  assert.match(src, /hasBoughtThisSession\(\)/, "the popup must know whether the buy already happened");
-  assert.doesNotMatch(
-    src,
-    /startsWith\("\/card/,
-    "a hardcoded card-page path would rot — the signal must come from OutboundLink registering itself"
-  );
-
-  // OutboundLink is what makes the rule self-maintaining, on BOTH halves.
   assert.match(outbound, /registerBuyLink\(\)/, "OutboundLink must register its presence on mount");
   assert.match(outbound, /markBuyClick\(\)/, "OutboundLink must record the click");
-  // Order matters: the flag must be set before the beacon, or a re-arm can race it.
+  // Order matters: the flag must be set before the beacon, or a consumer
+  // reading it in response to the beacon can race it.
   const markAt = outbound.indexOf("markBuyClick()");
   const trackAt = outbound.indexOf('trackEvent("buy_click"');
   assert.ok(markAt > -1 && trackAt > -1 && markAt < trackAt, "markBuyClick() must run before the buy_click beacon");
 
-  // A buy click mid-timer must re-arm to the short delay, or the best moment on
-  // the site is missed while the two-minute backstop runs out.
-  assert.match(src, /addEventListener\(BUY_CLICK_EVENT/, "a buy during the wait must re-arm the promo");
-  assert.match(src, /removeEventListener\(BUY_CLICK_EVENT/, "and must be cleaned up");
-
-  // Which trigger fired has to be separable in GA4, or the three cases average
-  // together and none of them can be judged.
-  assert.match(src, /trigger: firedAs/, "the impression must report which trigger fired");
-  assert.match(src, /reveal\("post_buy"\)/, "the post-buy path must label itself");
-
-  // Private mode must fail toward protecting the buy, not toward showing.
+  const intent = read("src/lib/buy-intent.ts");
+  // Private mode must fail toward "has not bought" — whatever consumes this
+  // signal should get the conservative answer, not a throw.
   assert.match(
     intent,
     /catch\s*\{[\s\S]{0,400}?return false;/,
-    "an unreadable session must read as 'has not bought', which keeps the promo off the buy path"
+    "an unreadable session must read as 'has not bought'"
   );
 });

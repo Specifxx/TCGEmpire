@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
-import { BUY_CLICK_EVENT, buyLinksOnPage, hasBoughtThisSession } from "@/lib/buy-intent";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
 
@@ -49,82 +48,41 @@ const SEEN_KEY = "rc_signup_promo_seen";
 // there), so sharing PremiumSlideIn's exact corner and z-tier is safe — they can
 // never be on screen at the same time for the same visitor.
 //
-// The CONTENT below — the honest COMPARISON table, the timing/trigger logic, the
-// dismissal persistence — is UNCHANGED from the modal version. Only the outer
-// chrome moved.
+// The CONTENT below — the honest COMPARISON table, the dismissal persistence —
+// is UNCHANGED from the modal version. The outer chrome moved (see above), and
+// as of the same date the TIMING changed too: see the note below.
 
-// THE PROMO IS TIMED AROUND buy_click, NOT JUST AROUND THE CLOCK.
+// NO DELAY, NO BUY-CLICK-AWARE TIMING (2026-09-01, explicit product decision).
 //
-// buy_click is the event every affiliate dollar depends on, and this popup is one
-// of the few things on the site that could cover it up. A pure delay — 5s, then
-// 15s, then 30s — only changes HOW LONG the interruption waits before landing on
-// top of the buy button. It never stops it landing there.
+// This used to be timed around buy_click — a 30s base delay, held off longer on
+// a page with an un-clicked buy link, shown fast right after one WAS clicked —
+// specifically so it could never cover the affiliate buy button. That system is
+// gone on purpose: it shows the instant a signed-out visitor is eligible, on
+// any page, with no wait and no buy-link awareness.
 //
-// So the trigger is conditional on where the visitor is and what they have
-// already done, in three cases:
-//
-//   1. NO BUY LINK ON THE PAGE (homepage, guides, blog, hubs) — nothing to
-//      interrupt, so the ordinary timer runs. This is the 30s the delay ladder
-//      was heading towards anyway.
-//
-//   2. A BUY LINK IS ON THE PAGE AND THEY HAVE NOT CLICKED ONE YET — hold off.
-//      This is a card page, and the visitor is doing the exact thing the site
-//      exists for. BUY_SURFACE_BACKSTOP_MS is the concession: someone who has
-//      sat on a card page for two minutes without clicking out is not about to,
-//      so the popup eventually shows rather than never showing at all.
-//
-//   3. THEY HAVE ALREADY CLICKED A BUY LINK — show shortly after. Buy links
-//      open in a NEW TAB (OutboundLink's target="_blank"), so the visitor is
-//      still on our page, has got exactly what they came for, and is at a
-//      natural pause. It is the best signup moment on the site and the only one
-//      that CANNOT cost a buy_click, because the click already happened.
-//
-// Which of the three fired is reported as `trigger` on signup_promo_shown, so
-// they are separable in GA4 rather than averaged. If post_buy converts better
-// than timer (it should — value already delivered), that is the argument for
-// leaning further into it.
-export const PROMO_DELAY_MS = 30_000;
-
-// Case 2: a page with a buy link, no buy click yet. Long enough to be clear of
-// the decision, short enough to still reach a browser who never clicks out.
-export const BUY_SURFACE_BACKSTOP_MS = 120_000;
-
-// Case 3: after a buy_click. Short — the tab has already opened over us, and the
-// visitor's attention comes back to this page within a few seconds.
-export const POST_BUY_DELAY_MS = 8_000;
-
+// KNOWN, ACCEPTED TRADE-OFF, not an oversight: the whole reason the old system
+// existed was that a bare delay (an earlier 5s version) measurably cost the
+// site — bounce rose, pages/visitor fell, buy_click fell, and 78% of visitors
+// dismissed it outright. Going instant reopens exactly that risk, including
+// landing on top of a card page's buy button. If pages/visitor or buy_click
+// drop again after this ships, that history is the first thing to revisit —
+// but the instruction behind this version was explicit and repeated, so this
+// is not a "someone forgot" gap the way the pre-timing version once was.
 const SKIP_PATHS = ["/login", "/verify"];
-// Session pageview counter (see the gate below). Incremented once per route.
-const PV_KEY = "rc_pv_count";
-// Only arm the popup once the session has seen this many pages.
-//
-// WAS 2, NOW 1 — and the delay above is why. This gate existed because a 5s
-// timer fired on page ONE for everyone, before the visitor had extracted any
-// value; requiring a second pageview was the only way to express "has actually
-// engaged". PROMO_DELAY_MS now expresses that directly: 15 seconds on a page is
-// itself the engagement signal, so stacking a second-pageview requirement on
-// top gated the dialog twice for the same reason.
-//
-// It also cost the reach that matters most. Bounce rose 5pts over the rollout,
-// so a large and growing share of sessions are a single page — under
-// MIN_PAGEVIEWS = 2 those visitors could never see the pitch at all, no matter
-// how long they stayed. Set back to 2 if shows-per-visitor climbs without
-// sign_up following.
-const MIN_PAGEVIEWS = 1;
 
-// Distinguishes this layout from whatever came before it, on signup_promo_shown/
-// _dismissed, so variants are separable rather than averaged together across a
-// changeover — same convention as PROMO_VARIANT always had. Bumped from
-// "comparison" to "comparison_slidein" for the 2026-09-01 chrome change: the
-// CONTENT (the comparison table) is identical, only the modal-vs-slide-in shell
-// changed, and that is exactly the kind of change this field exists to separate.
+// Distinguishes this behaviour from every version before it, on
+// signup_promo_shown/_dismissed, so variants are separable in GA4 rather than
+// averaged together across the changeover — same convention this field has
+// always followed. "comparison" (the original modal) → "comparison_slidein"
+// (chrome became a slide-in) → "comparison_instant" (the delay/buy-click
+// timing was removed entirely). Each name records which axis changed.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "comparison_slidein";
+const PROMO_VARIANT = "comparison_instant";
 
 // The comparison itself. EVERY ROW IS DERIVED FROM A REAL ENTITLEMENT CHECK —
 // nothing here is aspirational:
@@ -160,89 +118,32 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
 
-  // Count route views once per pathname, separately from the arming effect
-  // below — that one re-runs when auth state loads, and counting there would
-  // double-increment the same page.
-  const lastCountedPath = useRef<string | null>(null);
   useEffect(() => {
-    if (!pathname || lastCountedPath.current === pathname) return;
-    lastCountedPath.current = pathname;
-    try {
-      const n = Number(sessionStorage.getItem(PV_KEY) ?? "0") || 0;
-      sessionStorage.setItem(PV_KEY, String(n + 1));
-    } catch {
-      /* private mode — the gate below fails open on its own read */
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!loaded || user) return;
+    if (!loaded || user || shown) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
     let seen = false;
-    let pageviews = MIN_PAGEVIEWS; // private-mode fallback: fail open, old behavior
     try {
       seen = sessionStorage.getItem(SEEN_KEY) === "1";
-      pageviews = Number(sessionStorage.getItem(PV_KEY) ?? "0") || 0;
     } catch {
       /* private mode — worst case it can show again next page load */
     }
     if (seen) return;
-    // Engagement gate: never interrupt the FIRST page of a session (see
-    // MIN_PAGEVIEWS above). Deliberately does NOT mark SEEN_KEY when it skips —
-    // the visitor still gets the promo once they've browsed further.
-    if (pageviews < MIN_PAGEVIEWS) return;
+    // Never slide in on top of a real modal. FeedbackWidget sets this flag
+    // while its panel is open; sliding a signup pitch in over a visitor who is
+    // mid-sentence writing us feedback would lose the feedback entirely.
+    // Deliberately does NOT mark SEEN_KEY when it skips, so that visitor still
+    // gets the promo on the next page rather than silently losing it forever.
+    if (document.body.dataset.rcDialog === "1") return;
 
-    // Which of the three cases above applies right now. Re-evaluated inside the
-    // timer too, because a visitor can click Buy while it is still counting.
-    const bought = hasBoughtThisSession();
-    const onBuySurface = buyLinksOnPage();
-    const trigger = bought ? "post_buy" : onBuySurface ? "buy_surface_backstop" : "timer";
-    const delay = bought ? POST_BUY_DELAY_MS : onBuySurface ? BUY_SURFACE_BACKSTOP_MS : PROMO_DELAY_MS;
-
-    const reveal = (firedAs: string) => {
-      setShown(true);
-      // Next paint → play the transition from the off-screen start state, same
-      // double-rAF as PremiumSlideIn (one frame isn't reliably enough for the
-      // browser to have committed the initial off-screen styles first).
-      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
-      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, trigger: firedAs });
-    };
-
-    const t = setTimeout(() => {
-      // Never slide in on top of a real modal. FeedbackWidget sets this flag
-      // while its panel is open; sliding a signup pitch in over a visitor who is
-      // mid-sentence writing us feedback would lose the feedback AND read as the
-      // exact "wall of asks" this popup's own delay exists to avoid. Deliberately
-      // does NOT mark SEEN_KEY when it skips, so that visitor still gets the
-      // promo on a later visit rather than silently losing it forever.
-      if (document.body.dataset.rcDialog === "1") return;
-      // Last check before it lands: if a buy link is on the page and STILL has
-      // not been clicked, the backstop is what fired, and that is fine — but a
-      // visitor who bought in the meantime should be recorded as post_buy, not
-      // as the backstop, or the comparison between the two is polluted.
-      reveal(hasBoughtThisSession() && trigger !== "timer" ? "post_buy" : trigger);
-    }, delay);
-
-    // A buy click while the timer is running re-arms it to the short post-buy
-    // delay. Without this, someone who buys 5 seconds into a card page would
-    // still wait out the full two-minute backstop — the moment we most want is
-    // the one we would miss.
-    let buyTimer: ReturnType<typeof setTimeout> | undefined;
-    const onBuy = () => {
-      clearTimeout(t);
-      buyTimer = setTimeout(() => {
-        if (document.body.dataset.rcDialog === "1") return;
-        reveal("post_buy");
-      }, POST_BUY_DELAY_MS);
-    };
-    if (!bought) window.addEventListener(BUY_CLICK_EVENT, onBuy);
-
-    return () => {
-      clearTimeout(t);
-      if (buyTimer) clearTimeout(buyTimer);
-      window.removeEventListener(BUY_CLICK_EVENT, onBuy);
-    };
-  }, [loaded, user, pathname]);
+    setShown(true);
+    // Next paint → play the transition from the off-screen start state, same
+    // double-rAF as PremiumSlideIn (one frame isn't reliably enough for the
+    // browser to have committed the initial off-screen styles first). This is
+    // the animation settling in, not a deliberate wait — it's a couple of
+    // frames, not a timer.
+    requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
+    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT });
+  }, [loaded, user, shown, pathname]);
 
   // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
   // actually unmounting, instead of popping out instantly.

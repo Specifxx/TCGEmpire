@@ -68,11 +68,14 @@ test("the honest comparison table survives the chrome change unchanged", () => {
   assert.match(code, /<AuthForm providers=\{providers\} bare compact source="popup"/, "must still embed AuthForm the same way");
 });
 
-test("the timing/trigger system (buy_click-aware) is untouched by the shell change", () => {
+test("shows instantly — the buy_click-aware timing system was removed after this file was first written (2026-09-01)", () => {
+  // This test originally pinned the OPPOSITE: that the delay/trigger system
+  // survived the modal→slide-in chrome change untouched. It was then removed
+  // entirely by explicit instruction ("no timer... shows on any page"), a
+  // second, later change to the same component. Pinning its absence here
+  // keeps this file honest about what's actually true today instead of
+  // quietly describing a system that no longer exists.
   const code = codeOnly(read(SRC));
-  assert.match(code, /export const PROMO_DELAY_MS = 30_000;/);
-  assert.match(code, /export const BUY_SURFACE_BACKSTOP_MS = /);
-  assert.match(code, /export const POST_BUY_DELAY_MS = /);
-  assert.match(code, /buyLinksOnPage\(\)/);
-  assert.match(code, /hasBoughtThisSession\(\)/);
+  assert.doesNotMatch(code, /PROMO_DELAY_MS|BUY_SURFACE_BACKSTOP_MS|POST_BUY_DELAY_MS/);
+  assert.doesNotMatch(code, /buyLinksOnPage\(\)|hasBoughtThisSession\(\)/);
 });
