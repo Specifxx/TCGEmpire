@@ -10,6 +10,7 @@ import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { sydneyWeekKey } from "./price-history";
+import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail } from "./email";
@@ -321,6 +322,9 @@ export interface Portfolio {
   d7: number | null;
   d30: number | null;
   pnl: PnL | null; // null when no cost basis is recorded anywhere
+  // Benchmark: the RiftCompare Index move over the same windows, so the portfolio's
+  // performance can be read against the market ("you're beating the market by X").
+  index: { d7: number | null; d30: number | null } | null;
 }
 
 const condMult = (condition: string) => CONDITION_MULTIPLIER[condition] ?? 1;
@@ -443,6 +447,10 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     return best?.v;
   };
 
+  // Market benchmark for the same windows (best-effort — never block the page).
+  const idx = await getMarketIndex(country).catch(() => null);
+  const index = idx ? { d7: idx.d7, d30: idx.d30 } : null;
+
   return {
     totalCents: holdings.reduce((s, h) => s + h.valueCents, 0),
     pricedCount: holdings.filter((h) => h.unitCents != null).length,
@@ -453,6 +461,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     d7: pctChange(latest, at(7)),
     d30: pctChange(latest, at(30)),
     pnl,
+    index,
   };
 }
 

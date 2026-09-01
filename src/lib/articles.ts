@@ -126,7 +126,7 @@ export interface Article {
   closeups?: ArticleCloseUp[];
   // Override for the "Ready to buy?" CTA at the end of the article — lets a guide
   // point somewhere more specific than the generic card database (e.g. a browse
-  // view pre-filtered to the mechanic it just explained). Omit for
+  // view pre-filtered to the mechanic it just explained, or the Index). Omit for
   // the default /browse CTA.
   browseCta?: { href: string; label: string; blurb: string };
   // Attach a LIVE, market-specific data section (stores stocking Riftbound in
@@ -1583,7 +1583,7 @@ And if you're simply risk-averse - you'd rather know exactly what you're getting
 
 The healthiest way to use box EV is as one input alongside your own goals, not as a green light to rip. Ask what you're actually optimizing for: a specific card, a fun opening experience, or the best expected return on money spent. Each of those has a different right answer, and EV only speaks directly to the last one.
 
-A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and decide from there. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
+A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
   },
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
@@ -1639,6 +1639,65 @@ Manually checking five or six retailers for every card you're curious about does
 The honest version of this: arbitrage in a TCG market is a volume-and-diligence game, not a jackpot game. Gaps tend to be modest per card and close relatively quickly once a few people notice them, which is exactly what happened in every collectible market that came before this one. The people who do well at it check consistently, act quickly when a real gap appears, and don't overpay in fees or shipping to chase a thin margin.
 
 It also doesn't require a large bankroll to start. Watching a handful of cards you already understand, comparing listings regularly, and only acting when the math clearly works after costs is a sustainable approach. Treat any comparison tool as a way to see the market faster and more completely than you could by hand - not as a guarantee that every gap it surfaces is worth taking.`,
+  },
+  {
+    slug: "understanding-the-riftcompare-index-methodology",
+    category: "guide",
+    title: "What Is the RiftCompare Index? How It's Calculated",
+    excerpt:
+      "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
+    author: "RiftCompare",
+    date: "2026-07-01",
+    readMins: 4,
+    tags: ["riftcompare-index", "methodology", "riftbound-tcg", "market-data"],
+    body: `## What the RiftCompare Index Actually Measures
+
+The RiftCompare Index is a single number meant to answer one question: *is the Riftbound secondary market, taken as a whole, worth more or less than it used to be?* It is not the price of any one card, and it isn't an average of "everything for sale." It's a tracked basket of specific cards whose combined value is rebased to a starting point, so the day-to-day movement of that basket tells you something about market direction rather than about one chase card getting hot.
+
+Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a fixed group of cards, tracked every day, combined into one line you can watch over time.
+
+This matters because individual card prices are noisy. A single copy selling low because a seller needed cash fast, or high because two collectors got into a bidding war, can make a card's price chart look dramatic without meaning anything about the format or the game's overall health. An index smooths that out by design.
+
+## How the Basket of Cards Is Chosen
+
+Not every card in Riftbound belongs in the Index, and that's intentional. A useful index needs cards that are actually liquid - meaning they trade often enough that a snapshot price reflects real transactions, not a single stale listing sitting untouched for weeks.
+
+In practice that means the basket leans toward:
+
+- Cards with consistent trading volume across multiple listings, rather than cards that rarely change hands
+- A spread across rarity tiers, so the Index isn't just tracking mythic-rarity chase cards while ignoring the commons and uncommons that make up most of what people actually buy and sell
+- Cards that have been available long enough to have a real price history, rather than something that hit the market yesterday
+
+The goal is representativeness, not completeness. Trying to include every printed card would let thinly-traded, hard-to-price cards drag the number around based on one or two outlier sales. A smaller, deliberately chosen basket produces a steadier, more trustworthy signal.
+
+### Why the Basket Doesn't Change Every Week
+
+If the basket shifted constantly, the Index would stop being comparable to itself over time. Part of the value of an index is that you can look at it in six months and know it's still measuring roughly the same thing it was measuring today. Basket composition is reviewed periodically rather than adjusted in response to short-term hype around any one card.
+
+## How Daily Snapshots and Rebasing Work
+
+Every card in the basket gets a price snapshot on a regular cadence - effectively a daily "closing price" pulled from tracked listings and completed sales. Those individual snapshots are combined into a single basket value for that day.
+
+That raw basket value, in dollars, isn't very readable on its own - it's just a sum of a bunch of card prices, and the actual dollar figure doesn't mean much by itself. So the Index gets **rebased**: the very first snapshot is set to a round starting value (this is standard practice for any price index, financial or otherwise), and every day after that is expressed relative to that starting point.
+
+The practical effect is that you read the Index as a percentage move from its starting line, not as a dollar amount. If the Index is above its starting value, the basket of tracked cards is worth more in aggregate than when tracking began. If it's below, the basket is worth less. The specific starting number itself is arbitrary - what matters is the trend line it produces.
+
+This is also why the Index is most useful looked at over stretches of time rather than a single day. One day's snapshot can wobble for the same reasons a single card's price can wobble - a slow listing day, a temporary gap in completed sales for a card or two in the basket. The trend across weeks and months is where the signal lives.
+
+## Index vs. Movers: Two Different Questions
+
+It's worth being explicit about what the Index is *not* for, because [/movers](/movers) exists to answer a genuinely different question. Movers is about which individual cards changed price the most recently - the specific singles that jumped or dropped week over week, useful if you're trying to time a buy or sell on a particular card.
+
+The Index doesn't try to do that job. It won't tell you that one card spiked because of a tournament result or a reprint rumor. What it tells you is whether the *format as a whole* is trending up or down. A card can be a huge mover in either direction while the Index barely budges, because it's one card out of a basket. Conversely, the Index can drift steadily even when no single card is making headlines that week - that's often the more meaningful signal, since it reflects broad, sustained demand rather than one card's news cycle.
+
+If you're deciding whether to buy a specific card right now, check Movers. If you're trying to understand whether Riftbound singles in general have gotten more or less expensive since you started collecting, the Index is the number to watch.
+
+## Using the Index as a New Collector
+
+If you're still getting oriented in the game itself, it's worth pairing this with our [beginner's guide to Riftbound](/guides/riftbound-for-beginners) before you lean too heavily on market data - understanding what makes a card mechanically strong or scarce will help you interpret *why* the Index moves the way it does, not just that it moved.
+
+Used honestly, the Index is a health check, not a trading signal. It won't tell you when to buy a specific card. It will tell you, over time, whether the market you're buying into is expanding or contracting.
+`,
   },
   {
     slug: "riftbound-set-checklist-how-to-complete-a-set",
@@ -3918,6 +3977,7 @@ Note what is *not* on that list: reveal-day hype on its own, and social-media sp
 You don't have to take any of this on trust — the whole point of RiftCompare is that you can check.
 
 - **[Price movers](/movers)** — which cards are climbing or cooling right now, per market.
+- **[The RiftCompare Index](/market)** — the market as a whole rather than one card. Methodology is documented in **[how the Index works](/guides/understanding-the-riftcompare-index-methodology)**.
 - **Any card page** — the full store-by-store table ranked by delivered cost, plus that card's price history chart as it accumulates.
 - **[Price watch](/browse)** — save a card and get told when it moves, instead of checking manually.
 
@@ -5606,7 +5666,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and an ad-free site.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and an ad-free site.",
       },
       {
         q: "What's the difference between a free account and Premium?",
@@ -5640,7 +5700,7 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
       ],
     },
-    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
+    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
 Short version: Premium is $9.99/mo (or $79.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
 
@@ -5666,7 +5726,7 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Compare prices across every store + eBay | ✓ | ✓ | ✓ |
 | Full card database, search & browse | ✓ | ✓ | ✓ |
 | Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
-| Movers & daily wrap | ✓ | ✓ | ✓ |
+| RiftCompare Index & daily movers | ✓ | ✓ | ✓ |
 | Condition Impact Calculator | ✓ | ✓ | ✓ |
 | Price alerts | — | ✓ | ✓ |
 | Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |

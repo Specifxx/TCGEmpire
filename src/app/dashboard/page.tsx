@@ -91,6 +91,7 @@ export default async function DashboardPage() {
       <h2 className="mb-3 mt-8 text-lg font-extrabold text-white">Market &amp; account</h2>
       <div className="flex flex-wrap gap-2 text-sm">
         <Link href="/movers" className="btn-ghost">Price movers</Link>
+        <Link href="/market" className="btn-ghost">RiftCompare Index</Link>
         <Link href="/browse" className="btn-ghost">Browse cards</Link>
         <Link href="/premium" className="btn-ghost">Membership</Link>
       </div>

@@ -73,17 +73,82 @@ export function buildOpenApiSpec() {
       title: "RiftCompare Data API",
       version: "1.1.0",
       description:
-        "Public, read-only Riftbound: League of Legends TCG price data — whole-catalog " +
+        "Public, read-only Riftbound: League of Legends TCG price data — the RiftCompare Index, whole-catalog " +
         "price summaries, per-card search/lookup/history and store-by-store listings (including real total " +
         "delivered cost — item price plus shipping), and sealed-product prices, all by market.\n\n" +
         "**Authentication: none.** Every endpoint below is open — no API key, no account, no signed request. " +
         "**Rate limits: none enforced today.** Cache responses for at least as long as their `Cache-Control` " +
         "header says; infrastructure-level throttling may apply to abusive traffic without notice.\n\n" +
         "Free to use, with attribution to RiftCompare (https://riftcompare.com).",
-      contact: { url: `${SITE_URL}/editorial-policy` },
+      contact: { url: `${SITE_URL}/market#cite` },
     },
     servers: [{ url: SITE_URL }],
     paths: {
+      "/api/v1/index.json": {
+        get: {
+          operationId: "getIndex",
+          summary: "The RiftCompare Index — level, deltas, key stats and constituents.",
+          parameters: [MARKET_PARAM_WITH_GLOBAL],
+          responses: {
+            "200": {
+              description:
+                "The index snapshot (`status: \"ready\"`), or a `status: \"warming\"` placeholder if this " +
+                "market doesn't have enough price history yet — never a 5xx for that case.",
+              content: {
+                "application/json": {
+                  schema: {
+                    oneOf: [
+                      {
+                        type: "object",
+                        properties: {
+                          status: { type: "string", enum: ["ready"] },
+                          name: { type: "string" },
+                          description: { type: "string" },
+                          market: { type: "string" },
+                          base: { type: "integer", enum: [100] },
+                          startDay: { type: "string", format: "date" },
+                          level: { type: "number" },
+                          currency: CURRENCY,
+                          change: {
+                            type: "object",
+                            properties: {
+                              d1: { type: ["number", "null"] },
+                              d7: { type: ["number", "null"] },
+                              d30: { type: ["number", "null"] },
+                              sinceStart: { type: ["number", "null"] },
+                            },
+                          },
+                          stats: { type: ["object", "null"] },
+                          constituents: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                name: { type: "string" },
+                                setCode: { type: "string" },
+                                collectorNumber: { type: "string" },
+                                weightPct: { type: "number" },
+                                priceCents: MONEY_CENTS,
+                                d7pct: { type: ["number", "null"] },
+                                url: { type: "string", format: "uri" },
+                              },
+                            },
+                          },
+                          source: { type: "string", format: "uri" },
+                          license: { type: "string", format: "uri" },
+                          generatedAt: { type: "string", format: "date-time" },
+                        },
+                        required: ["status", "market", "level", "currency", "constituents"],
+                      },
+                      warmingSchema("entries"),
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       "/api/v1/cards.json": {
         get: {
           operationId: "getCardsSummary",

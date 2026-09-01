@@ -51,7 +51,7 @@ export async function pingIndexNow(paths: string[]): Promise<number> {
 // content (prices ARE the content), so resubmit the hubs, the set pages and all
 // card pages. Card list comes from the DB; failures degrade to just the hubs.
 export async function pingAfterPriceRefresh(): Promise<number> {
-  const hubs = ["/", "/browse", "/movers", "/sealed", "/tools/box-ev"];
+  const hubs = ["/", "/browse", "/movers", "/market", "/sealed", "/tools/box-ev"];
   const sets = SETS.filter((s) => !s.comingSoon).map((s) => `/sets/${s.slug}`);
   const cards = await prisma.card
     .findMany({ select: { id: true, slug: true }, orderBy: { searchCount: "desc" } })

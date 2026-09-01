@@ -62,7 +62,8 @@ export const NAV_GROUPS: NavGroup[] = [
       // query (caught by tests/nav-search.test.ts). The pre-order keywords below
       // still carry every intent that should land here.
       { href: "/radiance-preorders", label: "Radiance pre-orders", emoji: "🛒", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
-      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers", "how is the market"], popular: true },
+      { href: "/market", label: "Market Index", emoji: "📊", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
+      { href: "/movers", label: "Daily Movers", emoji: "📈", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
       { href: "/stores/tracked", label: "Stores we track", emoji: "🏪", keywords: ["stores", "shops", "retailers", "which stores"] },
       { href: "/bulk-pricer", label: "Bulk Pricer", emoji: "📋", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
@@ -221,7 +222,7 @@ export const POPULAR_LINKS: NavGroupLink[] = NAV_GROUPS.flatMap((g) => g.links).
 export const PRIMARY_NAV: { href: string; label: string }[] = [
   { href: "/browse", label: "Cards" },
   { href: "/sealed", label: "Sealed" },
-  { href: "/movers", label: "Movers" },
+  { href: "/market", label: "Index" },
   { href: "/blog", label: "Blog" },
 ];
 
@@ -250,25 +251,12 @@ const byTitle = Object.fromEntries(
 // column-balance ceiling this file's own header comment guards. Reading the
 // whole group (rather than naming the one link) means a future Miscellaneous
 // entry lands somewhere real instead of silently vanishing from the footer.
-//
-// /stores/suggest is pinned the same way, for the same reason: removing the
-// retired Market Index from the Prices group left Shop one link short of the
-// ceiling against Learn & play (the tallest column, which owns Help). "Suggest a
-// store" also just reads better next to "Stores we track" in Shop than buried in
-// Help. NAV_GROUPS itself is untouched — only its footer column changes.
 const miscLinks = byTitle["Miscellaneous"] ?? [];
-const helpLinks = byTitle["Help"] ?? [];
-const suggestStore = helpLinks.find((l) => l.href === "/stores/suggest");
-const helpFooterLinks = helpLinks.filter((l) => l.href !== "/stores/suggest");
 
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [
-      ...(byTitle["Prices"] ?? []),
-      ...miscLinks,
-      ...(suggestStore ? [suggestStore] : []),
-    ],
+    links: [...(byTitle["Prices"] ?? []), ...miscLinks],
   },
   {
     title: "Browse & collect",
@@ -283,7 +271,7 @@ export const FOOTER_GROUPS: NavGroup[] = [
     links: [
       ...(byTitle["Games"] ?? []),
       ...(byTitle["Guides & News"] ?? []),
-      ...helpFooterLinks,
+      ...(byTitle["Help"] ?? []),
     ],
   },
 ];

@@ -34,8 +34,8 @@ export async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], op
 
 // Calendar day in Australia/Sydney. PriceHistory changes once a day, so
 // history-derived reads are cached with this in the key (recompute daily, not per
-// request). This is the canonical home for the helper; screener.ts and premium.ts
-// import it from here.
+// request). This is the canonical home for the helper; screener.ts and
+// market-index.ts import it from here (avoids an import cycle with market-index).
 export function sydneyDayKey(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
 }

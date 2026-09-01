@@ -44,6 +44,7 @@ const DEFAULT_PATHS: [string, string][] = [
   ["/blog", "blog hub"],
   ["/about", "static / policy"],
   ["/movers", "tool"],
+  ["/market", "tool"],
   ["/marketplace", "marketplace"],
   ["/decks", "decks"],
 ];

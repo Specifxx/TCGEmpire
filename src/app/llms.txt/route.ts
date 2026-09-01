@@ -11,6 +11,7 @@ const DESC: Record<string, string> = {
   "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
+  "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
   "/tools/deal-finder": "Deal Finder: cards worth more on eBay than in stores, plus the cheapest cards to buy on eBay.",
   "/tools/value-finder": "Finds undervalued cards trading below their fair market value.",
@@ -57,13 +58,15 @@ export function GET() {
   lines.push("");
   lines.push(
     "For AI agents: clean markdown versions of key pages live under `/llm/` — e.g. " +
-      "`/llm/card/<id>`, `/llm/blog/<slug>` and `/llm/guides/<slug>` (also linked from each page as " +
-      "`rel=alternate type=text/markdown`). Every page carries JSON-LD structured data."
+      "`/llm/market`, `/llm/card/<id>`, `/llm/blog/<slug>` and `/llm/guides/<slug>` (also linked from each page as " +
+      "`rel=alternate type=text/markdown`). Every page carries JSON-LD structured data, and the " +
+      "RiftCompare Index is available as JSON (see Data)."
   );
   lines.push("");
 
   // Machine-readable data endpoints first — the highest-value surface for agents.
   lines.push("## Data (machine-readable)");
+  lines.push(`- [RiftCompare Index (JSON)](${abs("/api/v1/index.json")}): the live index level, deltas, key stats and constituents.`);
   lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all five markets.`);
   lines.push(`- [Per-card listings (JSON)](${abs("/api/v1/card/<id>/listings.json")}?market=US): every store's listing for one card, cheapest total delivered cost first — pass \`?market=\`.`);
   lines.push(`- [Card search (JSON)](${abs("/api/cards")}?q=<query>&market=US): free-text search with filters and pagination — pass \`?market=\` for a deterministic, cacheable, cross-origin response.`);

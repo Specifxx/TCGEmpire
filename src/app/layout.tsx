@@ -186,6 +186,7 @@ const orgJsonLd = {
         "Riftbound: League of Legends TCG",
         "Trading card game prices",
         "Trading card price comparison",
+        "The RiftCompare Index",
         "Sealed trading card products",
       ],
       // Markets served (drives regional entity understanding without per-locale URLs).
@@ -212,7 +213,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across the United States, Australia, the United Kingdom, Singapore, Canada and the EU.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across the United States, Australia, the United Kingdom, Singapore, Canada and the EU, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",

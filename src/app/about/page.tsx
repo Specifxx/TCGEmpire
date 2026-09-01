@@ -89,7 +89,8 @@ export default async function AboutPage() {
             Several times a day we collect public price and stock information from store catalogues and
             marketplaces, match each listing to the correct card and printing, and record the lowest live
             price per market. Those daily snapshots also power our{" "}
-            <Link href="/movers" className="text-brand-400 hover:underline">price movers</Link> and
+            <Link href="/movers" className="text-brand-400 hover:underline">price movers</Link>, the{" "}
+            <Link href="/market" className="text-brand-400 hover:underline">RiftCompare Index</Link> and
             every card&rsquo;s price-history chart. We only ever use publicly available information and we
             always request each store&rsquo;s local price, so the numbers you see are what you&rsquo;d
             actually pay.
