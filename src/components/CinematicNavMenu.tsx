@@ -7,6 +7,8 @@ import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
+import { useMe } from "@/lib/use-me";
+import { usePremiumDialog } from "./PremiumDialog";
 
 // Shared by the Popular grid and the full category panels below — both need
 // the identical active-pathname/external branching, so it's factored out
@@ -38,6 +40,8 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
 // single accent (brand green). Fully prefers-reduced-motion safe.
 export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
+  const { premium, premiumCheckout, trialEligible, trialDays } = useMe();
+  const { open: openPremium } = usePremiumDialog();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -208,6 +212,56 @@ export function CinematicNavMenu() {
                 </p>
               )}
             </div>
+
+            {/* Premium spotlight — reported directly: "the way to see Premium [on
+                phone] is clicking the three bars and finding the premium
+                feature which is way too hidden." Premium was already IN this
+                menu (the ⭐ tile in Popular below, popular:true in
+                nav-groups.ts) but as one of nine equal tiles in a grid you
+                have to scan, not the first thing seen. This is the fix: the
+                very first thing rendered below the filter box, spotlighted
+                and gold like every other Premium surface (PremiumButton,
+                UserMenu's "✦ Get Premium", PremiumSlideIn) instead of sharing
+                the Popular grid's neutral brand-green treatment.
+
+                Signed-out visitors see it too, deliberately — this differs
+                from SignupPromoPopup's signed-out-only "no Premium pitch"
+                rule, but that rule is about an UNSOLICITED auto-popup
+                interrupting a browse session, not a menu the visitor chose to
+                open. The ⭐ Premium tile below was already visible to
+                signed-out visitors in this exact overlay; this only makes
+                that existing, already-public entry more prominent, matching
+                how the header's own PremiumButton and /premium itself are
+                public to every visitor regardless of auth state.
+
+                Only shown in the default (unfiltered, not-showing-everything)
+                view, same as Popular below — once someone is actively
+                searching or has asked to see the full index, they are in
+                "I know what I want" mode and a promo banner is noise. Hidden
+                for anyone already Premium (isPremium() covers admins too, via
+                useMe()) and while checkout itself isn't configured. */}
+            {!filtering && !showAll && !premium && premiumCheckout ? (
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  openPremium();
+                }}
+                className="mt-7 flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 p-4 text-left transition-colors hover:border-gold/60 hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+              >
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-gold">
+                    ✦ Premium
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm font-semibold text-white">
+                    {trialEligible ? "Try Premium free" : "Unlock the pro tools, go ad-free"}
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm font-bold text-gold">
+                  {trialEligible && trialDays > 0 ? `${trialDays}-day trial →` : "See plans →"}
+                </span>
+              </button>
+            ) : null}
 
             {/* Default view: the curated Popular set, flat (no category
                 headers — the whole point is "glance, tap, done" instead of
