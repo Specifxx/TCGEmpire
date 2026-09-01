@@ -169,8 +169,14 @@ export function PriceChart({
           <polygon points={area} fill={`url(#${fillId})`} />
           <polyline points={line} fill="none" stroke="#34d17e" strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
 
-          {/* scatter dots (skip when very dense) */}
-          {n <= 60 && data.map((p, i) => <circle key={i} cx={x(i)} cy={y(p.v)} r="1.8" fill="#34d17e" fillOpacity="0.65" />)}
+          {/* scatter dots (skip when very dense) — a dark ring separates each point
+              from the line/fill beneath it, the same contrast trick the hover dot
+              below already uses, so every tracked day reads as a distinct marker
+              rather than disappearing into the line. */}
+          {n <= 60 &&
+            data.map((p, i) => (
+              <circle key={i} cx={x(i)} cy={y(p.v)} r="3" fill="#34d17e" stroke="#0b0f14" strokeWidth="1.25" />
+            ))}
 
           {/* x labels (first / last) */}
           <text x={PAD.l} y={H - 6} textAnchor="start" className="fill-slate-500" fontSize="10">{fmtDate(data[0].t)}</text>
