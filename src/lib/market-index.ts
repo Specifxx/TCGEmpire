@@ -16,18 +16,29 @@
 // on any given point (no divisor gymnastics); history may revise slightly as
 // demand shifts.
 //
-// NO TIME WINDOW ON THE READ, DELIBERATELY. PriceHistory now writes one snapshot
+// EFFECTIVELY NO TIME WINDOW ON THE READ. PriceHistory now writes one snapshot
 // per card per market at most once every 7 days (HISTORY_MIN_INTERVAL_DAYS in
 // price-import.ts — a cost control adopted after this file was first written).
 // This module used to cap its own read to a rolling 45 days, back when that meant
 // ~45 rows per card; under the current weekly cadence 45 days is only ~6 rows, so
 // the cap was quietly starving the chart of history that already exists for free
 // — Origins-era cards especially have far more than 6 weeks of real snapshots.
-// Reading everything for today's 200 constituents costs at most (weeks tracked ×
-// 200 cards) rows per market — small and slow-growing, nowhere near the ~1,400-
-// card DAILY scans that caused the original egress crisis — so there's no reason
-// to backfill into a separate table or re-truncate the read: the source data IS
-// the backfill.
+//
+// This history DB has its own 5 GB/month Neon network-transfer allowance (the
+// reason it's a separate project from the operational DB at all — see
+// db-history.ts), and that allowance has been exhausted by real mistakes before
+// (RH5 through RH11 — see scripts/audit-egress.ts's header for the timeline), so
+// "it'll probably be fine" isn't good enough here on its own. The actual bound:
+// reading everything for today's 200 constituents costs at most (weeks tracked ×
+// 200 cards) rows per market, cached for a full week (see getRegionIndex below),
+// which as of this writing (~months of tracked history) is single-digit MB a
+// week — a small fraction of the monthly allowance, and nowhere near the ~1,400-
+// card DAILY scans that caused the original crisis. MAX_LOOKBACK_DAYS below is
+// the belt-and-suspenders version of that argument: a circuit breaker, not a
+// real limit today, so the read stays bounded even after years of accumulated
+// history rather than trusting the current numbers to stay small forever.
+// Verify the real row counts against production with `npx tsx
+// scripts/audit-history.ts` (prints PriceHistory's actual total row count).
 import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
@@ -41,6 +52,11 @@ import { sydneyWeekKey, type PricePoint } from "./price-history";
 export type MarketScope = Country | "GLOBAL";
 
 export const INDEX_SIZE = 200;
+// Circuit breaker, not a real limit today (see the file header): at today's
+// weekly write cadence this is ~104 snapshots per card, comfortably more history
+// than the site has accumulated at time of writing. It exists purely so the read
+// stays bounded years from now without anyone having to remember to revisit it.
+const MAX_LOOKBACK_DAYS = 730;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
 // Don't chart a snapshot until most of the basket (by weight) has price data —
 // early sparse snapshots would otherwise swing the base around. Matters more now
@@ -203,12 +219,13 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   const weights = raw.map((w) => Math.min(w, cap));
   const totalW = weights.reduce((a, b) => a + b, 0);
 
-  // 3. The FULL price history for the basket — no time cutoff. See the file
-  //    header: at today's weekly write cadence this is cheap, and it's what
-  //    makes the index's own history reach back as far as its constituents'
-  //    real tracked prices do, immediately, with no separate backfill step.
+  // 3. Essentially the FULL price history for the basket — MAX_LOOKBACK_DAYS is a
+  //    circuit breaker, not a real cutoff today (see the file header). It's what
+  //    makes the index's own history reach back as far as its constituents' real
+  //    tracked prices do, immediately, with no separate backfill step.
+  const cutoff = new Date(Date.now() - MAX_LOOKBACK_DAYS * 86400_000);
   const hist = await dbHistory.priceHistory.findMany({
-    where: { country, cardId: { in: cards.map((c) => c.id) } },
+    where: { country, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });

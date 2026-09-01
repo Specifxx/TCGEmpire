@@ -82,15 +82,18 @@ test("the core computation caches on sydneyWeekKey, imported from its canonical 
   assert.equal(INDEX_SIZE, 200);
 });
 
-test("the PriceHistory read has no time-window cutoff — the whole basket's history is used", () => {
+test("the PriceHistory read uses a generous multi-year circuit breaker, not the old ~6-snapshot 45-day window", () => {
   const code = codeOnly(read("src/lib/market-index.ts"));
-  assert.doesNotMatch(code, /WINDOW_DAYS/, "the old rolling-window constant must be gone, not just unused");
-  assert.doesNotMatch(code, /day:\s*\{\s*gte:/, "the PriceHistory query must not filter by a cutoff date");
-  // The query itself: scoped to country + this basket's card ids, nothing else.
+  assert.doesNotMatch(code, /\bWINDOW_DAYS\b/, "the old 45-day rolling-window constant must be gone, not just unused");
+  assert.match(code, /const MAX_LOOKBACK_DAYS = (\d+);/, "expected a named, generous lookback bound");
+  const days = Number(/const MAX_LOOKBACK_DAYS = (\d+);/.exec(code)![1]);
+  assert.ok(days >= 365, `MAX_LOOKBACK_DAYS=${days} is not generous enough to function as a "not a real limit today" backfill`);
+  // The query itself: scoped to country + this basket's card ids + the (generous) cutoff.
+  // (.*? not [^)]* for the map callback — cards.map((c) => c.id) nests parens.)
   assert.match(
     code,
-    /dbHistory\.priceHistory\.findMany\(\{\s*where:\s*\{\s*country,\s*cardId:\s*\{\s*in:\s*cards\.map/,
-    "must still be scoped to the basket, just not to a recent window",
+    /dbHistory\.priceHistory\.findMany\(\{\s*where:\s*\{\s*country,\s*cardId:\s*\{\s*in:\s*cards\.map\(.*?\)\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\}/,
+    "must be scoped to the basket AND the circuit-breaker cutoff",
   );
 });
 
