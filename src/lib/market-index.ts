@@ -1,20 +1,28 @@
 // The RiftCompare Index — one number for the health of the Riftbound singles
 // market, like a stock index for the game. Methodology (kept simple enough to
-// explain to a journalist in two sentences):
+// explain to a journalist in two sentences — the full worked formula is public
+// at /guides/understanding-the-riftcompare-index-methodology):
 //
 //   • CONSTITUENTS: the 200 most-searched cards on RiftCompare that currently have
 //     a live price in the selected market. Search volume is our purest demand
 //     signal — the index tracks what players actually care about.
 //   • WEIGHTS: proportional to each card's search volume, capped at 20% so no
 //     single card IS the index. (Like cap-weighted stock indices.)
-//   • VALUE: each tracked snapshot is the weighted average of constituents' lowest
-//     live prices (PriceHistory), normalised so the first tracked snapshot = 100.
-//     "Index 112" therefore reads as "the watched market is up 12%".
+//   • VALUE: CHAIN-LINKED, not a plain weighted average. Each tracked snapshot's
+//     % move is computed only from constituents priced at BOTH it and the
+//     previous charted snapshot, then that move is multiplied onto the running
+//     level (100 at the first charted snapshot). "Index 112" reads as "the
+//     watched market is up 12% since tracking began."
 //
-// The constituent set is derived fresh from today's search data and applied
-// retroactively across the WHOLE history, so the series is internally consistent
-// on any given point (no divisor gymnastics); history may revise slightly as
-// demand shifts.
+// The constituent set is derived fresh from today's search data — so when a new
+// set releases and its cards climb into the top 200 by search, THIS is what
+// keeps that basket change from itself moving the Index: a card with no price
+// yet (or no price history in the earlier snapshot) simply isn't part of the
+// return calculation for the step it debuts on, chain-linking's whole point. No
+// persisted divisor, no rebalance date to track, no per-set special case —
+// ordinary week-to-week demand reshuffling is handled by the exact same
+// mechanism as a brand new set arriving. See computeRegionIndex step 4 below for
+// the actual arithmetic.
 //
 // EFFECTIVELY NO TIME WINDOW ON THE READ. PriceHistory now writes one snapshot
 // per card per market at most once every 7 days (HISTORY_MIN_INTERVAL_DAYS in
@@ -58,11 +66,13 @@ export const INDEX_SIZE = 200;
 // stays bounded years from now without anyone having to remember to revisit it.
 const MAX_LOOKBACK_DAYS = 730;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
-// Don't chart a snapshot until most of the basket (by weight) has price data —
-// early sparse snapshots would otherwise swing the base around. Matters more now
-// that history reaches back arbitrarily far: a newer set's cards simply won't
-// have data yet for the weeks before they existed, which this correctly waits out
-// rather than starting the series on 1-2 old cards' prices alone.
+// Coverage floor, used twice: (1) don't START the series until most of the
+// basket (by weight) has SOME price yet — a newer set's cards simply won't have
+// data for the weeks before they existed, which this correctly waits out rather
+// than starting on 1-2 old cards' prices alone; (2) don't CHART a step whose
+// chain-linked return would rest on too thin a common basket between it and the
+// previous charted point — a real gap in tracked data, not a set launch (which
+// chain-linking already handles without needing this gate at all).
 const MIN_COVERAGE = 0.6;
 // Realised-volatility lookback, in SNAPSHOTS not days — PriceHistory's write
 // cadence is a runtime cost-control decision (see the file-header note), not a
@@ -185,6 +195,78 @@ export function computeStats(points: PricePoint[], constituents: IndexConstituen
 const pctChange = (now: number, then: number | undefined): number | null =>
   then == null || then === 0 ? null : Math.round(((now - then) / then) * 1000) / 10;
 
+// CHAIN-LINKED level from a basket's raw price history. Pure — exported (like
+// compositeSeries and computeStats) so tests can exercise it directly with
+// synthetic data, and the piece that answers "what happens when a new set's
+// cards enter the basket":
+//
+// Rather than averaging PRICE LEVELS at each snapshot (where a newly-arrived,
+// likely differently-priced card would jump the average the instant it
+// appears), each step computes a % RETURN using only the constituents priced
+// at BOTH this step and the previous CHARTED one, and multiplies that onto the
+// running level (100 at the first charted snapshot). A debuting card has no
+// earlier price to form a ratio from, so it simply sits out the step it debuts
+// on — then joins the return calculation from the next step, once it has two
+// consecutive prices. The basket can change completely over time (a new set's
+// cards climbing into the top-200 by search being the biggest case, but any
+// ordinary week-to-week demand reshuffle works the same way) and the level
+// still never jumps on that account alone; only actual price moves do.
+//
+// `byCard` and `days` come from the caller's PriceHistory scan; `cardIds` and
+// `weights` are parallel arrays (weights[i] is cardIds[i]'s weight).
+export function chainLinkSeries(
+  days: number[],
+  byCard: Map<string, Map<number, number>>,
+  cardIds: string[],
+  weights: number[],
+): PricePoint[] {
+  const totalW = weights.reduce((a, b) => a + b, 0);
+  if (totalW <= 0) return [];
+  const carried = new Map<string, number>();
+
+  // Advance `carried` to reflect day `t` (fresh snapshot if one exists, else
+  // whatever was already known) and return this day's basket-weight coverage.
+  function advance(t: number): number {
+    let wSum = 0;
+    cardIds.forEach((id, i) => {
+      const fresh = byCard.get(id)?.get(t);
+      if (fresh != null) carried.set(id, fresh);
+      if (carried.has(id)) wSum += weights[i];
+    });
+    return wSum / totalW;
+  }
+
+  let startIdx = -1;
+  for (let k = 0; k < days.length; k++) {
+    if (advance(days[k]) >= MIN_COVERAGE) { startIdx = k; break; }
+  }
+  if (startIdx === -1) return [];
+
+  const points: PricePoint[] = [{ t: days[startIdx], v: 100 }];
+  let level = 100;
+  let lastCharted = new Map(carried); // prices as of the last point actually charted
+
+  for (let k = startIdx + 1; k < days.length; k++) {
+    advance(days[k]);
+    let numerator = 0;
+    let denominator = 0;
+    let commonW = 0;
+    cardIds.forEach((id, i) => {
+      const prevPrice = lastCharted.get(id);
+      const currPrice = carried.get(id);
+      if (prevPrice == null || currPrice == null) return; // not present at both ends of this step
+      numerator += weights[i] * currPrice;
+      denominator += weights[i] * prevPrice;
+      commonW += weights[i];
+    });
+    if (commonW / totalW < MIN_COVERAGE || denominator === 0) continue; // too thin a common basket to trust this step
+    level *= numerator / denominator;
+    points.push({ t: days[k], v: Math.round(level * 10) / 10 });
+    lastCharted = new Map(carried);
+  }
+  return points;
+}
+
 // Resilient like getPriceMovers: any DB error returns null (the page shows its
 // "warming up" state) instead of crashing the page or the build.
 async function computeRegionIndex(country: Country): Promise<MarketIndex | null> {
@@ -240,29 +322,11 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   }
   const days = [...daySet].sort((a, b) => a - b);
 
-  // 4. Weighted average per tracked snapshot, with carry-forward for gaps (a
-  //    constituent priced two weeks ago but not this week keeps its last known
-  //    price rather than dropping out); start the series once coverage (by
-  //    weight) clears the threshold.
-  const carried = new Map<string, number>();
-  const rawSeries: PricePoint[] = [];
-  for (const t of days) {
-    let sum = 0;
-    let wSum = 0;
-    cards.forEach((c, i) => {
-      const p = byCard.get(c.id)?.get(t) ?? carried.get(c.id);
-      if (p == null) return;
-      carried.set(c.id, byCard.get(c.id)?.get(t) ?? p);
-      sum += weights[i] * p;
-      wSum += weights[i];
-    });
-    if (wSum / totalW >= MIN_COVERAGE) rawSeries.push({ t, v: sum / wSum });
-  }
-  if (rawSeries.length < 2) return null;
-
-  // 5. Normalise to base 100 at the first charted day.
-  const base = rawSeries[0].v;
-  const points = rawSeries.map((p) => ({ t: p.t, v: Math.round((p.v / base) * 1000) / 10 }));
+  // 4. Chain-linked level (see chainLinkSeries above for the full reasoning —
+  //    this is the piece that keeps a new set's cards entering the basket, or
+  //    any other constituent reshuffle, from itself moving the Index).
+  const points = chainLinkSeries(days, byCard, cards.map((c) => c.id), weights);
+  if (points.length < 2) return null;
 
   const latest = points[points.length - 1].v;
   const at = (daysBack: number): number | undefined => {

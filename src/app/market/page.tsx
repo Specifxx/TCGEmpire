@@ -327,9 +327,22 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             players actually trade. Its constituents are the {INDEX_SIZE} most-searched cards on
             RiftCompare with a live price in the selected market, weighted by search volume with a
             20% cap per card — so a chase card moves the Index more than a bulk common, and no
-            single card dominates it. Each day&apos;s value is the weighted average of the
-            constituents&apos; lowest in-stock prices across every store we track, normalised to 100
-            at the start of the series: an Index of 112 means the watched market is up 12%.
+            single card dominates it. The level is <strong className="text-slate-300">chain-linked</strong>,
+            not a plain average: rather than averaging price levels at each snapshot, every step
+            computes a percentage move using only cards priced at both that snapshot and the
+            previous one, then applies that move to a running level starting at 100. That is what
+            keeps a new set&apos;s cards climbing into the basket — or any other constituent
+            turnover — from jumping the Index the moment they arrive: a debuting card has no
+            earlier price to compare against, so it simply sits out the step it debuts on. An
+            Index of 112 means the watched market is up 12% since tracking began. The full
+            step-by-step formula is published in the{" "}
+            <Link
+              href="/guides/understanding-the-riftcompare-index-methodology"
+              className="text-brand-400 hover:underline"
+            >
+              methodology guide
+            </Link>
+            .
           </p>
           <p>
             <strong className="text-slate-300">The Global composite</strong> (the default) rebases

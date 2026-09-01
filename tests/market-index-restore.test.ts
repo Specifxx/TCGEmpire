@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { compositeSeries, computeStats, INDEX_SIZE } from "../src/lib/market-index";
+import { compositeSeries, computeStats, chainLinkSeries, INDEX_SIZE } from "../src/lib/market-index";
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -33,6 +33,18 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 // under the new cadence (a "day" apart is now really "whatever the write
 // interval currently is"), so the cache moved to week-scoped and the labels
 // were reworded to not name a specific interval.
+//
+// 2026-09-01, third pass: backfilling meant the constituent list (today's top
+// 200 by search) can now span far more history than it used to, and a new
+// set's cards climb into that top 200 within weeks of release — with a full
+// backfill and no time window, a plain per-snapshot weighted average would
+// jump the instant those new, differently-priced cards entered. Replaced with
+// chain-linking (see chainLinkSeries below): each step is a % return computed
+// only from constituents priced at both it and the previous charted step, so
+// a debuting card simply has nothing to compare against until it has two
+// consecutive prices, and can't move the level on entry alone. The formula
+// this pins is also now published on /market and in the methodology guide
+// article — pinned below too, so the tests fail if the two ever disagree.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("compositeSeries rebases every region to 100 at the common start, then equal-weight averages", () => {
@@ -142,6 +154,117 @@ test("computeStats sizes its volatility window in snapshots, not a hard-coded da
   // A stdev computed over ALL 20 points (including the wild early ×1.5 jumps)
   // would be far larger than one computed over just the steady last 13.
   assert.ok(stats.volatilityPct! < 10, `volatility ${stats.volatilityPct}% looks like it included the early ×1.5 jumps, not just the recent steady moves`);
+});
+
+// ── chainLinkSeries: the piece that keeps a new set's cards from jumping the Index ──
+
+test("chainLinkSeries: a new constituent entering the basket does not move the level, but a genuine price move still propagates", () => {
+  const DAY = 86_400_000;
+  const t0 = Date.UTC(2026, 7, 1);
+  const days = [0, 1, 2, 3, 4].map((i) => t0 + i * DAY);
+  const [d0, d1, d2, d3, d4] = days;
+
+  // A, B, C are tracked from day 0. D doesn't exist in the basket (and has no
+  // price history at all) until day 2 — a stand-in for a brand-new set's card
+  // climbing into the top-200-by-search basket. D's price (900) is wildly
+  // different from A/B/C's (50-100) and D's weight (300) is the single
+  // largest in the basket, deliberately, so a level change on its entry would
+  // be obvious if chain-linking weren't doing its job.
+  const byCard = new Map<string, Map<number, number>>([
+    ["A", new Map([[d0, 100], [d1, 100], [d2, 100], [d3, 120], [d4, 120]])], // +20% genuine move at day 3
+    ["B", new Map([[d0, 50], [d1, 50], [d2, 50], [d3, 50], [d4, 50]])],
+    ["C", new Map([[d0, 80], [d1, 80], [d2, 80], [d3, 80], [d4, 80]])],
+    ["D", new Map([[d2, 900], [d3, 900], [d4, 900]])], // enters at day 2, no earlier price
+  ]);
+  const cardIds = ["A", "B", "C", "D"];
+  const weights = [300, 200, 200, 300]; // A+B+C = 700/1000 = 70% ≥ MIN_COVERAGE without D
+
+  const points = chainLinkSeries(days, byCard, cardIds, weights);
+  const byDay = new Map(points.map((p) => [p.t, p.v]));
+
+  assert.equal(byDay.get(d0), 100, "series starts at day 0 — A+B+C alone already clear the coverage floor");
+  assert.equal(byDay.get(d1), 100, "no price moved yet");
+  assert.equal(
+    byDay.get(d2), 100,
+    "D just entered with a price 9-18x the rest of the basket and the largest weight in it — the level must not move on that account alone"
+  );
+  assert.equal(
+    byDay.get(d3), 101.8,
+    "A's genuine +20% move (now with D also contributing its weight) must still propagate: (300*120+200*50+200*80+300*900)/(300*100+200*50+200*80+300*900)*100 = 101.8"
+  );
+  assert.equal(byDay.get(d4), 101.8, "nothing moved since day 3");
+});
+
+test("chainLinkSeries: the series doesn't start until basket coverage clears MIN_COVERAGE (60%)", () => {
+  const DAY = 86_400_000;
+  const t0 = Date.UTC(2026, 7, 1);
+  const days = [0, 1, 2].map((i) => t0 + i * DAY);
+  const [d0, d1, d2] = days;
+  // X and Y have equal weight (50/50) — X alone is only 50% coverage, below
+  // the 60% floor, so the series must not start until Y also has a price.
+  const byCard = new Map<string, Map<number, number>>([
+    ["X", new Map([[d0, 10], [d1, 10], [d2, 10]])],
+    ["Y", new Map([[d2, 20]])], // no price until day 2
+  ]);
+  const points = chainLinkSeries(days, byCard, ["X", "Y"], [50, 50]);
+  assert.equal(points.length, 1, "only day 2 clears 60% coverage; days 0-1 must be skipped entirely, not charted at a stale value");
+  assert.equal(points[0].t, d2);
+  assert.equal(points[0].v, 100);
+});
+
+test("chainLinkSeries returns an empty series rather than throwing on degenerate input", () => {
+  assert.deepEqual(chainLinkSeries([], new Map(), [], []), [], "no weights at all");
+  const DAY = 86_400_000;
+  const days = [0, DAY].map((t) => t);
+  // A single, always-thin constituent that never reaches the 60% floor on its own.
+  const byCard = new Map<string, Map<number, number>>([["A", new Map([[0, 10], [DAY, 10]])]]);
+  assert.deepEqual(
+    chainLinkSeries(days, byCard, ["A", "B"], [30, 70]),
+    [],
+    "B never has a price, so coverage never reaches 60% and the series must never start"
+  );
+});
+
+// ── The published formula must actually match what the code computes ────────
+
+test("the methodology guide publishes the exact chain-linking formula, not just prose", () => {
+  const guide = read("src/lib/articles.ts");
+  assert.match(guide, /slug:\s*"understanding-the-riftcompare-index-methodology"/);
+  assert.match(guide, /## The Exact Formula/);
+  assert.match(guide, /1 \+ searchCount/, "the weight formula must be spelled out literally");
+  assert.match(
+    guide,
+    /return = \( Σ w\[i\]·p\[i,t\] for i in C \) ÷ \( Σ w\[i\]·p\[i,t'\] for i in C \)/,
+    "the literal per-step return formula must be published"
+  );
+  assert.match(guide, /Index\(t\) = Index\(t'\) × return/, "the literal chain-linking recurrence must be published");
+  assert.match(guide, /## A Concrete Example: A New Set's Launch/, "the new-set scenario the formula exists for must be walked through");
+});
+
+test("/market's own methodology prose describes chain-linking, not the old plain weighted average, and links to the full formula", () => {
+  const page = codeOnly(read("src/app/market/page.tsx"));
+  assert.match(page, /chain-linked/i);
+  assert.doesNotMatch(
+    page,
+    /Each day.?s value is the weighted average/,
+    "the old plain-average description must not survive alongside the new chain-linked one"
+  );
+  assert.match(
+    page,
+    /href="\/guides\/understanding-the-riftcompare-index-methodology"/,
+    "the on-page summary must link to the full published formula"
+  );
+});
+
+test("the machine-readable index surfaces (JSON API, LLM feed) both point at the published methodology", () => {
+  const json = codeOnly(read("src/app/api/v1/index.json/route.ts"));
+  assert.match(
+    json,
+    /methodology:\s*`\$\{SITE_URL\}\/guides\/understanding-the-riftcompare-index-methodology`/,
+    "an agent consuming the JSON API should be able to find the formula without scraping the HTML page"
+  );
+  const llm = read("src/app/llm/market/route.ts");
+  assert.match(llm, /understanding-the-riftcompare-index-methodology/, "the LLM-facing markdown feed should also cite the methodology");
 });
 
 test("/market is a real, dynamic page wired to the restored computation", () => {

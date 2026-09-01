@@ -1674,15 +1674,45 @@ The goal is representativeness, not completeness. Trying to include every printe
 
 If the basket shifted constantly, the Index would stop being comparable to itself over time. Part of the value of an index is that you can look at it in six months and know it's still measuring roughly the same thing it was measuring today. Basket composition is reviewed periodically rather than adjusted in response to short-term hype around any one card.
 
-## How Snapshots and Rebasing Work
+## How the Index Actually Combines Prices — Chain-Linking
 
-Every card in the basket gets a price snapshot on a regular cadence - effectively a periodic "closing price" pulled from tracked listings and completed sales. Those individual snapshots are combined into a single basket value for that snapshot.
+Every card in the basket gets a price snapshot on a regular cadence - effectively a periodic "closing price" pulled from tracked listings and completed sales.
 
-That raw basket value, in dollars, isn't very readable on its own - it's just a sum of a bunch of card prices, and the actual dollar figure doesn't mean much by itself. So the Index gets **rebased**: the very first snapshot is set to a round starting value (this is standard practice for any price index, financial or otherwise), and every snapshot after that is expressed relative to that starting point.
+The naive way to turn a basket of prices into one number is: average them each snapshot, then rebase the first snapshot to a round starting value like 100. That's how a lot of simple indices work, and it's how an earlier version of this one worked. It has a real flaw, though: the basket isn't fixed forever - it's the 200 most-searched cards *right now*, and that list moves as the metagame shifts and, especially, whenever a new set releases and a wave of newly-revealed cards suddenly gets searched heavily. A plain average jumps the instant a differently-priced card enters or leaves the basket, whether or not anything anyone actually owns changed price at all - which makes the naive version misleading at exactly the moment it matters most, a set launch.
 
-The practical effect is that you read the Index as a percentage move from its starting line, not as a dollar amount. If the Index is above its starting value, the basket of tracked cards is worth more in aggregate than when tracking began. If it's below, the basket is worth less. The specific starting number itself is arbitrary - what matters is the trend line it produces.
+The fix is called **chain-linking**, and real financial indices use the same idea to absorb constituent changes without a discontinuity. Instead of averaging price *levels* at each snapshot, the Index computes each snapshot's *percentage move* using only the cards that have a tracked price at both that snapshot and the previous one - then multiplies that move onto a running total that starts at 100.
 
-This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. One snapshot can wobble for the same reasons a single card's price can wobble - a slow listing day, a temporary gap in completed sales for a card or two in the basket. The trend across weeks and months is where the signal lives.
+The practical effect: a card that just entered the basket - a brand-new set's card climbing into the top 200 by search, say - has no earlier price to compare against, so it simply sits out the calculation for the snapshot it debuts on. It starts contributing from the *next* charted snapshot onward, once it has two consecutive tracked prices to form a ratio from. The basket can turn over completely over months and the Index still won't move on that account alone - only real price changes do.
+
+This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. One snapshot can be thin for the same reasons a single card's price can wobble - a slow listing week, a temporary gap in completed sales for a card or two in the basket (handled by the coverage floor in the exact formula below). The trend across weeks and months is where the signal lives.
+
+## A Concrete Example: A New Set's Launch
+
+Say Origins, Spirit Forged and Unleashed cards make up most of the Index the week before a new set releases, each trading in an ordinary $5-$40 range. The set launches, hype cards get searched heavily, and within two or three weeks several of its cards - some already trading at $80 and up - climb into the top 200 by search and enter the basket.
+
+Under a plain average, that alone would drag the Index's level up sharply the moment those cards entered, even though none of the *older* cards had moved at all - a false signal blamed on "the market," when it was really just new, expensive cards joining the average. Under chain-linking, those new cards have no price before their own release, so they aren't part of any snapshot-to-snapshot return until they've been tracked for two consecutive snapshots. The Index keeps telling the same story it was already telling about the older cards, and the new set's cards only start moving the number once there's an actual prior price to compare against.
+
+## The Exact Formula
+
+The plain-English version above is what you need to interpret the number day to day. This is the literal arithmetic, published because a health check you can't check isn't much of one - and it's exactly what the code computes, not a simplified stand-in for it.
+
+**1. Constituents.** The 200 cards on RiftCompare with the highest recorded search count that currently have a live price in the selected market.
+
+**2. Weight.** Each constituent's raw weight is \`1 + searchCount\` (the +1 means a market with zero recorded searches still produces a valid weight instead of dividing by zero). Every raw weight is then capped at 20% of the basket's total raw weight - a card whose raw weight would be worth more than a fifth of the whole basket is clipped down to exactly that fifth. Call constituent *i*'s resulting weight \`w[i]\`, and the sum of every constituent's weight \`W\`.
+
+**3. Per-snapshot price.** \`p[i, t]\` is constituent *i*'s lowest tracked live price on snapshot *t*, carried forward from its last known price when this exact snapshot has no fresh reading for it (so a card briefly out of stock doesn't vanish from the calculation).
+
+**4. Starting point.** The series starts at the first snapshot \`t0\` where the combined weight of constituents with *any* known price yet is at least 60% of \`W\`. \`Index(t0) = 100\`.
+
+**5. Chain-linked step.** For each snapshot \`t\` after \`t0\`, let \`C\` be the set of constituents priced at both \`t\` and the previous *charted* snapshot \`t'\`. If \`C\`'s combined weight is below 60% of \`W\`, that snapshot is skipped - not enough of the basket has a comparable price to trust a reading - and the next snapshot is compared against the same \`t'\` instead. Otherwise:
+
+\`return = ( Σ w[i]·p[i,t] for i in C ) ÷ ( Σ w[i]·p[i,t'] for i in C )\`
+
+\`Index(t) = Index(t') × return\`
+
+That's the whole thing - five steps, no persisted state, recomputed from scratch every time from the raw tracked prices, nothing set-specific hard-coded anywhere in it. Step 5 is the literal answer to "what happens when a new set releases": a card with no price at \`t'\` is outside \`C\` for that step by construction, so it cannot affect \`return\` no matter how differently it's priced from the rest of the basket - it only starts actually moving the number from its first two consecutive tracked prices onward.
+
+**Global composite.** The default view blends every region's own Index (computed exactly as above, in that region's own currency) into one currency-agnostic number: each region is rebased to 100 at whichever region's tracked history starts latest - so a newly-added region can't jump the composite - then the regions are averaged with equal weight, snapshot by snapshot.
 
 ## Index vs. Movers: Two Different Questions
 

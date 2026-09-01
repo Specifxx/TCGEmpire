@@ -71,6 +71,7 @@ export async function GET(req: Request) {
     })),
     source: `${SITE_URL}/market`,
     license: `${SITE_URL}/market#cite`,
+    methodology: `${SITE_URL}/guides/understanding-the-riftcompare-index-methodology`,
     generatedAt: new Date().toISOString(),
   };
 

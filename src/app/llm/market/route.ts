@@ -35,6 +35,9 @@ export async function GET() {
   for (const c of index.constituents.slice(0, 50)) {
     lines.push(`| ${c.name} | ${c.setCode} ${c.collectorNumber} | ${c.weightPct}% | ${formatMoney(c.priceCents, index.currency)} | ${pct(c.d7pct)} |`);
   }
-  lines.push("", `Source: ${SITE_URL}/market · JSON: ${SITE_URL}/api/v1/index.json`);
+  lines.push(
+    "",
+    `Source: ${SITE_URL}/market · JSON: ${SITE_URL}/api/v1/index.json · Methodology (exact formula): ${SITE_URL}/guides/understanding-the-riftcompare-index-methodology`
+  );
   return md(lines);
 }
