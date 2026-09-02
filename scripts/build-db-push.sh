@@ -37,11 +37,12 @@ set -uo pipefail
 # OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain shape itself, not
 # just the project, was the thing being replaced).
 CURRENT_OP="RM11"
-# Rotated again on 2026-08-31: RH10 reached its 5 GB monthly allowance, and RH11 —
-# a NEW project, empty before the restore — took its place. The chains are
-# CURRENT-first, not newest-first; see the long note on HISTORY_URL in
-# src/lib/db-history.ts.
-CURRENT_HIST="RH11"
+# Rotated again on 2026-09-02: RH11 neared its 5 GB monthly allowance, and RH6 —
+# a RECYCLED project this time, not a fresh one — took its place, after
+# probe-databases confirmed it reports User=0 (unlike RH5, which still holds 85
+# real user rows and stays permanently excluded). The chains are CURRENT-first,
+# not newest-first; see the long note on HISTORY_URL in src/lib/db-history.ts.
+CURRENT_HIST="RH6"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -84,17 +85,17 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${RH11:-}" ]; then
+if [ -n "${RH6:-}" ]; then
+  HIST="$RH6"; HIST_SOURCE="RH6"
+elif [ -n "${RH11:-}" ]; then
+  # Rollback: served 2026-08-31 to 2026-09-02, reachable, at/near its allowance.
   HIST="$RH11"; HIST_SOURCE="RH11"
-elif [ -n "${RH10:-}" ]; then
-  # Rollback: served 2026-08-28 to 2026-08-31, reachable, at/near its allowance.
-  HIST="$RH10"; HIST_SOURCE="RH10"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. _4/_3/_2/HISTORY_DATABASE_URL (bare) were
-  # superseded; RH7 was dropped as ORPHANED (0% of its card ids resolve against
-  # the live catalogue); RH6 is a migration SOURCE, not a runtime target. RH5 is
-  # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
+  # the push above already covered. RH10, RH9, RH8, HISTORY_DATABASE_URL_4/_3/_2/
+  # bare were all superseded; RH7 was dropped as ORPHANED (0% of its card ids
+  # resolve against the live catalogue). RH5 is NOT a history project at all —
+  # it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi
 
