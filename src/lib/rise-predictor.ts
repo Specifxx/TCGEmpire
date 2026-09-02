@@ -146,7 +146,12 @@ type UniverseCard = {
 // Lookahead-free backtest of the reconstructable price-timing signal ("room to run"
 // = 1 − position-in-range at T−lag) vs realised forward return over the lag. Only
 // price data up to T−lag is used to build the historical signal.
-function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
+//
+// Exported: this validates price-timing alone (it never touches demand), so it is
+// exactly as valid for sealed-rise-predictor.ts's own products as it is for cards
+// — reused there directly rather than re-implemented, keyed by groupKey instead of
+// cardId (the map key is an opaque id either way).
+export function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
   const lagMs = BACKTEST_LAG_DAYS * 86400_000;
   const sig: number[] = [];
   const fwd: number[] = [];

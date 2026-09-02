@@ -36,7 +36,7 @@ const FAQS = [
     // DESCRIBES the tiers rather than gating anything, so it was being reported as
     // a paywalled indexable page on the strength of its own FAQ copy. Reworded
     // rather than removing the marker, which still needs to catch a real paywall.
-    a: "Most of them; a few ask you to be signed in or to be Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder, value finder and rising-cards screeners show their single best result free, with the complete list included in Premium — the bulk pricer, Best Basket and Demand Finder are also part of Premium.",
+    a: "Most of them; a few ask you to be signed in or to be Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder, value finder and rising (cards and sealed) screeners show their single best result free, with the complete list included in Premium — the bulk pricer, Best Basket and Demand Finder are also part of Premium.",
   },
   {
     q: "What does the Deal Finder do?",
@@ -136,6 +136,13 @@ const GROUPS: ToolGroup[] = [
         emoji: "📦",
         title: "Sealed prices",
         desc: "Booster boxes, packs, Proving Grounds and bundles priced across stores — with an in-stock-at-MSRP flag.",
+      },
+      {
+        href: "/tools/rising-sealed",
+        emoji: "🚀",
+        title: "Rising sealed",
+        desc: "Sealed products ranked by price-timing and supply signals — sitting near their own low, thin in-stock, not already spiking.",
+        badge: "Premium",
       },
     ],
   },

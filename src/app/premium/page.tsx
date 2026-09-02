@@ -46,6 +46,12 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     cta: "Open Rising Cards",
   },
   {
+    title: "Rising Sealed",
+    body: "Booster boxes, packs and bundles ranked by price-timing and supply signals — sitting near their own recent low, thin in-stock, not already spiking. Free shows only the top pick.",
+    href: "/tools/rising-sealed",
+    cta: "Open Rising Sealed",
+  },
+  {
     title: "Demand Finder",
     body: "The cards RiftCompare visitors are actually searching for and opening right now — raw demand by real traffic, windowed to 7 days, 30 days or all time. No price-timing filter, just the unblended number.",
     href: "/tools/demand",
@@ -72,6 +78,7 @@ const INCLUDED = [
   "Best Basket optimiser",
   "Value Finder screener",
   "Rising Cards",
+  "Rising Sealed",
   "Demand Finder",
   "Full Deal Finder list",
   "Ad-free on every page",
@@ -194,6 +201,7 @@ export default async function PremiumPage() {
           <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
           <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
+          <Link href="/tools/rising-sealed" className="btn-ghost">Rising Sealed</Link>
           <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>
           <Link href="/tools/deal-finder" className="btn-ghost">Deal Finder</Link>
           <Link href="/tools/condition-calculator" className="btn-ghost">Condition Calculator</Link>

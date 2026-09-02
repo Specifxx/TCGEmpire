@@ -21,6 +21,7 @@ const TOOLS = [
   { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", icon: "🧺" },
   { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎" },
   { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — likely to go up soon.", href: "/tools/rising", icon: "🚀" },
+  { title: "Rising Sealed", desc: "Sealed products ranked by price-timing + supply signals — likely to go up soon.", href: "/tools/rising-sealed", icon: "📦" },
   { title: "Demand Finder", desc: "The most searched and viewed cards right now, by real traffic.", href: "/tools/demand", icon: "📊" },
   { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/deal-finder", icon: "⚖️" },
   { title: "Condition Calculator", desc: "Estimate a card's value swap between NM, LP, MP, HP and DMG.", href: "/tools/condition-calculator", icon: "🩹" },

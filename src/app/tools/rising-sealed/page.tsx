@@ -4,45 +4,48 @@ import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
-import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getRisingSealed, type SealedRisePick, type SealedRiseComponents } from "@/lib/sealed-rise-predictor";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { sydneyDayKey } from "@/lib/price-history";
 import { formatMoney } from "@/lib/format";
-import { currencyOf, COUNTRY_LIST } from "@/lib/country";
-import { getCountry } from "@/lib/get-country";
-import { cardHref } from "@/lib/card-url";
+import { COUNTRIES, DEFAULT_COUNTRY, currencyOf, type Country } from "@/lib/country";
+import { MarketSwitcher } from "@/components/MarketSwitcher";
+import { sealedImageAlt } from "@/lib/image-alt";
 import { PremiumButton } from "@/components/PremiumButton";
 import { SITE_URL } from "@/lib/site";
-import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
 
+// Same reasoning as /tools/rising and every other ?param=-driven page in this
+// codebase (see /market's own file-header note for the full failure mode this
+// avoids): force-dynamic so a market variant nobody has requested yet never
+// serves a loading spinner as its complete response.
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Rising Cards — Riftbound Cards Likely to Go Up | RiftCompare" },
+  title: { absolute: "Rising Sealed — Riftbound Sealed Products Likely to Go Up | RiftCompare" },
   description:
-    "A Premium screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested, not financial advice.",
-  keywords: ["riftbound rising cards", "riftbound price predictions", "riftbound card demand", "riftbound investing", "riftbound cards going up"],
-  alternates: pageAlternates("/tools/rising"),
-  openGraph: { title: "Rising Cards — Riftbound cards likely to go up", url: `${SITE_URL}/tools/rising` },
+    "A Premium screener ranking Riftbound sealed products by price-timing and supply signals — booster boxes and packs that haven't re-rated yet. Transparent scoring, backtested, not financial advice.",
+  keywords: ["riftbound rising sealed", "riftbound sealed price predictions", "riftbound booster box investing", "riftbound sealed products going up"],
+  alternates: pageAlternates("/tools/rising-sealed"),
+  openGraph: { title: "Rising Sealed — Riftbound sealed products likely to go up", url: `${SITE_URL}/tools/rising-sealed` },
 };
 
 const RISING_FAQS = [
   {
-    q: "What is Rising Cards?",
-    a: "A screener that ranks Riftbound cards by a composite of demand and price-timing signals — cards with high or rising search interest that haven't re-rated yet (sitting near their own recent low, thin supply, not already spiking). Every input is real, quoted data; the score is a transparent weighted sum, not a black box.",
+    q: "What is Rising Sealed?",
+    a: "A screener that ranks Riftbound sealed products — booster boxes, packs, bundles and Proving Grounds kits — by a composite of price-timing and supply signals: products sitting near their own recent low, with thin in-stock supply, that haven't already spiked. Every input is real, quoted data; the score is a transparent weighted sum, not a black box.",
   },
   {
-    q: "What signals does the score use?",
-    a: "Demand (search volume), demand velocity (rising searches/day — the leading indicator), room to run (how close a card sits to its own recent low), scarcity (thin in-stock supply), momentum (an emerging, not-yet-overheated 7-day trend) and volatility. Cards that already spiked hard in the last 7 days are penalised, not rewarded.",
+    q: "What signals does the score use, and how is this different from Rising Cards?",
+    a: "Room to run (how close a product sits to its own recent low), scarcity (thin in-stock supply across tracked stores), momentum (an emerging, not-yet-overheated 7-day trend) and volatility. Unlike Rising Cards, there is no demand or demand-velocity component — sealed products aren't search/view-tracked on RiftCompare today, and a made-up demand proxy would be worse than none at all. This is a narrower, price-and-supply-only signal.",
   },
   {
     q: "Is this financial advice?",
-    a: "No. It's a heuristic screen of public price and demand data, validated with a lookahead-free backtest on the price-timing component (demand isn't historically reconstructable, so only part of the score is backtestable). Treat it as a research starting point, not a guarantee — always check a card's own price history before buying.",
+    a: "No. It's a heuristic screen of public price and inventory data, validated with a lookahead-free backtest on the room-to-run signal. Treat it as a research starting point, not a guarantee — always check a product's own price history before buying.",
   },
   {
     q: "How often does it update?",
-    a: "Once a day, alongside the daily price and demand import. Demand velocity needs a few days of snapshots to activate for any given card — until then that component sits at zero and the score leans on demand level instead.",
+    a: "The price-history side updates weekly, alongside the sealed price-history snapshot. The scarcity signal (live in-stock listing counts) can move sooner, since it's refreshed on every sealed price import.",
   },
 ];
 
@@ -85,15 +88,17 @@ function ZBar({ z, label }: { z: number; label: string }) {
   );
 }
 
-const COMPONENTS: { key: keyof RiseComponents; label: string }[] = [
-  { key: "demand", label: "Demand" },
-  { key: "velocity", label: "Velocity" },
+// All 4 components shown (unlike Rising Cards, which drops volatility from the
+// bars to fit demand+velocity+room+scarcity+momentum) — there are only 4 to
+// begin with (see SealedRiseComponents), so all of them fit comfortably.
+const COMPONENTS: { key: keyof SealedRiseComponents; label: string }[] = [
   { key: "room", label: "Room" },
   { key: "scarcity", label: "Scarcity" },
   { key: "momentum", label: "Momentum" },
+  { key: "volatility", label: "Volatility" },
 ];
 
-function ConfidenceChip({ c }: { c: RisePick["confidence"] }) {
+function ConfidenceChip({ c }: { c: SealedRisePick["confidence"] }) {
   return (
     <span className={`chip ${c === "High" ? "bg-brand-500/15 text-brand-300" : c === "Medium" ? "bg-gold/15 text-gold" : "bg-ink-800 text-slate-400"}`}>
       {c}
@@ -101,27 +106,31 @@ function ConfidenceChip({ c }: { c: RisePick["confidence"] }) {
   );
 }
 
-function CardCell({ p }: { p: RisePick }) {
+// Links out to /sealed?q= rather than a per-product href — there is no
+// /sealed/<slug> page (see SealedIndexConstituents.tsx's own comment).
+function ProductCell({ p }: { p: SealedRisePick }) {
   return (
-    <Link href={cardHref({ id: p.id, slug: p.slug })} className="flex items-center gap-2.5">
-      {p.imageThumbUrl && (
+    <Link href={`/sealed?q=${encodeURIComponent(p.name)}`} className="flex items-center gap-2.5">
+      {p.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={p.imageThumbUrl} alt={cardImageAlt({ name: p.displayName, setCode: p.setCode, collectorNumber: p.collectorNumber })} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+        <img src={p.imageUrl} alt={sealedImageAlt(p.name)} loading="lazy" decoding="async" className="h-10 w-10 shrink-0 rounded-sm bg-ink-950 object-contain" />
       )}
       <span className="min-w-0">
-        <span className="block truncate font-semibold text-white">{p.displayName}</span>
-        <span className="block text-[11px] text-slate-500">{p.setCode} · {p.collectorNumber}{p.overheated ? " · ⚠ hot" : ""}</span>
+        <span className="block truncate font-semibold text-white">{p.name}</span>
+        <span className="block text-[11px] text-slate-500">
+          {p.productType}{p.setCode ? ` · ${p.setCode}` : ""}{p.overheated ? " · ⚠ hot" : ""}
+        </span>
       </span>
     </Link>
   );
 }
 
-function RisingRow({ p, rank, currency }: { p: RisePick; rank: number; currency: string }) {
+function RisingRow({ p, rank, currency }: { p: SealedRisePick; rank: number; currency: string }) {
   return (
     <tr className="hover:bg-ink-800">
       <td className="px-3 py-2 text-slate-500">{rank}</td>
       <td className="px-3 py-2">
-        <CardCell p={p} />
+        <ProductCell p={p} />
       </td>
       <td className="px-2 py-2 text-right">
         <span className="num text-base font-extrabold text-brand-300">{p.score}</span>
@@ -144,7 +153,7 @@ function TableHead() {
     <thead>
       <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
         <th className="px-3 py-2.5 font-semibold">#</th>
-        <th className="px-3 py-2.5 font-semibold">Card</th>
+        <th className="px-3 py-2.5 font-semibold">Product</th>
         <th className="px-2 py-2.5 text-right font-semibold">Score</th>
         <th className="hidden px-2 py-2.5 font-semibold sm:table-cell">Signals</th>
         <th className="px-2 py-2.5 text-right font-semibold">Price</th>
@@ -156,24 +165,23 @@ function TableHead() {
   );
 }
 
-export default async function RisingPage({ searchParams }: { searchParams: { scope?: string } }) {
+function parseMarket(v?: string): Country {
+  const up = (v ?? "").toUpperCase();
+  return up in COUNTRIES ? (up as Country) : DEFAULT_COUNTRY;
+}
+
+export default async function RisingSealedPage({ searchParams }: { searchParams: { market?: string } }) {
   const user = await getCurrentUser();
   const premium = isPremium(user);
-  const country = getCountry();
+  const market = parseMarket(searchParams.market);
+  const currency = currencyOf(market);
 
-  const raw = (searchParams.scope ?? "").toUpperCase();
-  const scope: RiseScope = raw === "AU" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
-  const isGlobal = scope === "GLOBAL";
-  const currency = isGlobal ? "AUD" : currencyOf(scope);
-
-  // Cached per scope (heavy 400-card scan) — shared between the free teaser and the
-  // full Premium view, refreshed on the daily import via CONTENT_TAG. A free visitor
-  // triggers the same cached computation an admin/premium visitor would; only the
-  // SLICE shown differs, so there's no extra query cost for gating.
-  // Day-keyed + 48h TTL, matching top-deals.ts's identical key so one page warms
-  // the other. Was an hourly TTL with no day key — the widest PriceHistory read
-  // in the repo re-running ~hourly (see the note in top-deals.ts).
-  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards-public", scope, sydneyDayKey()], {
+  // Cached per market, shared between the free teaser and the full Premium view —
+  // same day-key + 48h TTL as /tools/rising, and for the same reason: the
+  // price-history half of the score is weekly, but the scarcity half reads live
+  // in-stock counts that can change on any price import, so a week-scoped key
+  // (like the Sealed Index's own cache) would under-refresh that half.
+  const analysis = await unstable_cache(() => getRisingSealed(market), ["rising-sealed-public", market, sydneyDayKey()], {
     revalidate: 172800,
     tags: [CONTENT_TAG],
   })();
@@ -187,41 +195,23 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           <span>/</span>
           <Link href="/tools" className="hover:text-slate-300">Tools</Link>
           <span>/</span>
-          <span className="text-slate-300">Rising Cards</span>
+          <span className="text-slate-300">Rising Sealed</span>
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Rising Cards</h1>
-          {premium && (
-            <div className="flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1">
-              {[{ code: "GLOBAL" as RiseScope, flag: "🌐", label: "Global" }, ...COUNTRY_LIST.map((c) => ({ code: c.code as RiseScope, flag: c.flag, label: c.code }))].map((opt) => {
-                const active = opt.code === scope;
-                return (
-                  <Link
-                    key={opt.code}
-                    href={opt.code === "GLOBAL" ? "/tools/rising" : `/tools/rising?scope=${opt.code}`}
-                    className={`rounded-md px-2.5 py-1 text-sm ${active ? "bg-brand-500 font-medium text-white" : "text-slate-400 hover:text-white"}`}
-                  >
-                    {opt.flag} {opt.label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Rising Sealed</h1>
+          {premium && <MarketSwitcher value={market} basePath="/tools/rising-sealed" label="Choose the market Rising Sealed ranks" />}
         </div>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          Cards ranked by a composite of <strong className="text-slate-200">demand and price-timing signals</strong> — high or
-          rising search interest that hasn&apos;t re-rated yet. Real data, transparent scoring, backtested. Not financial advice.{" "}
-          Looking for boxes and packs instead? <Link href="/tools/rising-sealed" className="text-brand-400 hover:underline">See Rising Sealed →</Link>
+          Sealed products ranked by a composite of <strong className="text-slate-200">price-timing and supply signals</strong> —
+          sitting near their own recent low, thin in-stock, not already spiking. Real data, transparent scoring. Not
+          financial advice.{" "}
+          <Link href="/market/sealed" className="text-brand-400 hover:underline">See the Sealed Index →</Link>
         </p>
       </div>
 
-      {/* ADSENSE REVIEW MODE: while the review is open the Premium gate is
-          lifted, so no crawler-reachable page carries blurred or locked
-          content — "content behind a paywall or login" is its own AdSense
-          rejection reason, and this page is in the sitemap. The Premium CTA
-          stays; an ordinary upsell link is fine, a blur overlay standing in
-          place of the content is not. Restored by setting
-          NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
+      {/* ADSENSE REVIEW MODE: see /tools/rising's identical note — the Premium
+          gate lifts during review so no crawler-reachable, sitemapped page
+          carries blurred/locked content. */}
       {!premium && !ADSENSE_REVIEW_MODE ? (
         <div className="card-surface overflow-hidden">
           <table className="w-full min-w-[560px] text-sm">
@@ -230,7 +220,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               {top ? (
                 <RisingRow p={top} rank={1} currency={currency} />
               ) : (
-                <tr><td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">Not enough data yet — check back once a few days of price history have built up.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">Not enough data yet — check back once a few weeks of sealed price history have built up.</td></tr>
               )}
             </tbody>
           </table>
@@ -238,7 +228,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             <ul className="divide-y divide-ink-800 blur-[5px]" aria-hidden>
               {[0, 1, 2, 3].map((i) => (
                 <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-60">
-                  <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
+                  <div className="h-10 w-10 shrink-0 rounded-sm bg-ink-800" />
                   <div className="flex-1 space-y-1.5"><div className="h-2.5 w-2/5 rounded bg-ink-800" /><div className="h-2 w-1/4 rounded bg-ink-800" /></div>
                   <div className="h-3 w-10 rounded bg-ink-800" />
                 </li>
@@ -246,14 +236,13 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             </ul>
             <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-transparent to-ink-900/60 p-4 text-center">
               <div>
-                <p className="text-sm font-bold text-white">Unlock the full Rising Cards list</p>
+                <p className="text-sm font-bold text-white">Unlock the full Rising Sealed list</p>
                 <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                  See all {Math.min(40, analysis.picks.length)} ranked picks, every market (or Global), with the full signal
-                  breakdown — not just the top pick.
+                  See every ranked product in every market, with the full signal breakdown — not just the top pick.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
-                  <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising-sealed" className="btn-primary text-sm">Sign in free</Link>}
+                  <Link href="/sealed" className="btn-ghost text-sm">Free sealed prices →</Link>
                 </div>
               </div>
             </div>
@@ -261,25 +250,19 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </div>
       ) : analysis.picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
-          {/* Mirrors the admin page: when history exists but is short, say how
-              short and when it unlocks, rather than implying nothing is being
-              recorded. Kept lighter than the admin copy — a visitor doesn't need
-              the internals, just an honest "not yet, and here's when". */}
           {analysis.withAnyHistory > 0 ? (
             <div>
               <p className="font-semibold text-white">Signals are still building</p>
               <p className="mx-auto mt-1 max-w-lg">
-                We track {analysis.withAnyHistory.toLocaleString()} cards&apos; prices
-                {isGlobal ? "" : ` in ${scope}`}, but ranking them needs {analysis.minPointsRequired} days of price
-                history per card and we have {analysis.deepestSeries} so far. Check back in about{" "}
-                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries)}{" "}
-                {Math.max(1, analysis.minPointsRequired - analysis.deepestSeries) === 1 ? "day" : "days"}.
+                We track {analysis.withAnyHistory.toLocaleString()} sealed {analysis.withAnyHistory === 1 ? "product" : "products"} in{" "}
+                {COUNTRIES[market].place}, but ranking them needs {analysis.minPointsRequired} weekly snapshots per product
+                and the deepest one so far has {analysis.deepestSeries}. Check back in a few weeks.
               </p>
             </div>
           ) : (
             <div>
-              <p className="font-semibold text-white">No price history yet{isGlobal ? "" : ` in ${scope}`}</p>
-              <p className="mt-1">Signals appear once daily price snapshots have built up.</p>
+              <p className="font-semibold text-white">No sealed price history yet in {COUNTRIES[market].place}</p>
+              <p className="mt-1">Signals appear once weekly price snapshots have built up.</p>
             </div>
           )}
         </div>
@@ -292,15 +275,16 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             </tbody>
           </table>
           <p className="p-3 text-[11px] text-slate-600">
-            Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
-            volatility) across the {analysis.qualifying} most-searched priced cards. Hover a signal bar for its exact
-            z-score. A research signal, not advice — always sanity-check the card&apos;s own price history.
+            Score is a 0–100 percentile of a weighted composite (room to run, scarcity, momentum, volatility) across the{" "}
+            {analysis.qualifying} tracked sealed products in {COUNTRIES[market].place} with enough price history to
+            score. Hover a signal bar for its exact z-score. A research signal, not advice — always sanity-check the
+            product&apos;s own price history.
           </p>
         </div>
       )}
 
       <section className="mt-10">
-        <h2 className="mb-3 text-xl font-extrabold text-white">How Rising Cards works</h2>
+        <h2 className="mb-3 text-xl font-extrabold text-white">How Rising Sealed works</h2>
         <div className="card-surface divide-y divide-ink-800">
           {RISING_FAQS.map((f) => (
             <div key={f.q} className="px-5 py-4">
@@ -326,18 +310,18 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
                 { "@type": "ListItem", position: 2, name: "Tools", item: `${SITE_URL}/tools` },
-                { "@type": "ListItem", position: 3, name: "Rising Cards", item: `${SITE_URL}/tools/rising` },
+                { "@type": "ListItem", position: 3, name: "Rising Sealed", item: `${SITE_URL}/tools/rising-sealed` },
               ],
             },
             {
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              name: "Riftbound Rising Cards",
-              url: `${SITE_URL}/tools/rising`,
+              name: "Riftbound Rising Sealed",
+              url: `${SITE_URL}/tools/rising-sealed`,
               applicationCategory: "UtilitiesApplication",
               operatingSystem: "Web",
               offers: { "@type": "Offer", price: "0", priceCurrency: currency },
-              description: "Ranks Riftbound cards by demand and price-timing signals to surface ones likely to rise soon.",
+              description: "Ranks Riftbound sealed products by price-timing and supply signals to surface ones likely to rise soon.",
             },
           ]),
         }}
