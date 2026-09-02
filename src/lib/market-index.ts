@@ -66,14 +66,6 @@ export const INDEX_SIZE = 200;
 // stays bounded years from now without anyone having to remember to revisit it.
 const MAX_LOOKBACK_DAYS = 730;
 const MAX_WEIGHT_SHARE = 0.2; // no constituent above 20%
-// Coverage floor, used twice: (1) don't START the series until most of the
-// basket (by weight) has SOME price yet — a newer set's cards simply won't have
-// data for the weeks before they existed, which this correctly waits out rather
-// than starting on 1-2 old cards' prices alone; (2) don't CHART a step whose
-// chain-linked return would rest on too thin a common basket between it and the
-// previous charted point — a real gap in tracked data, not a set launch (which
-// chain-linking already handles without needing this gate at all).
-const MIN_COVERAGE = 0.6;
 // Realised-volatility lookback, in SNAPSHOTS not days — PriceHistory's write
 // cadence is a runtime cost-control decision (see the file-header note), not a
 // contract this file should hard-code a day-count against. 13 snapshots is
@@ -214,6 +206,20 @@ const pctChange = (now: number, then: number | undefined): number | null =>
 //
 // `byCard` and `days` come from the caller's PriceHistory scan; `cardIds` and
 // `weights` are parallel arrays (weights[i] is cardIds[i]'s weight).
+//
+// Starts at the FIRST day any constituent has a tracked price at all — as far
+// back as the data allows, full stop. An earlier version gated the start on a
+// basket-wide coverage supermajority (most of the weight needing SOME price
+// yet before charting a single point), reasoning that starting on a sliver of
+// the basket would be untrustworthy. In practice that threw away real early
+// history: today's top-200-by-search skews toward cards that have only
+// recently accumulated enough search volume to rank, so the "most of the
+// weight" bar kept sliding later than the oldest cards' own tracked history.
+// It also wasn't buying any real protection — the per-card exclusion just
+// below (`prevPrice == null || currPrice == null`) is what actually keeps a
+// thin or growing basket from jumping the level; a coverage floor on top of
+// that only decided how much real history to hide, not whether the level was
+// trustworthy.
 export function chainLinkSeries(
   days: number[],
   byCard: Map<string, Map<number, number>>,
@@ -238,7 +244,7 @@ export function chainLinkSeries(
 
   let startIdx = -1;
   for (let k = 0; k < days.length; k++) {
-    if (advance(days[k]) >= MIN_COVERAGE) { startIdx = k; break; }
+    if (advance(days[k]) > 0) { startIdx = k; break; }
   }
   if (startIdx === -1) return [];
 
@@ -250,16 +256,14 @@ export function chainLinkSeries(
     advance(days[k]);
     let numerator = 0;
     let denominator = 0;
-    let commonW = 0;
     cardIds.forEach((id, i) => {
       const prevPrice = lastCharted.get(id);
       const currPrice = carried.get(id);
       if (prevPrice == null || currPrice == null) return; // not present at both ends of this step
       numerator += weights[i] * currPrice;
       denominator += weights[i] * prevPrice;
-      commonW += weights[i];
     });
-    if (commonW / totalW < MIN_COVERAGE || denominator === 0) continue; // too thin a common basket to trust this step
+    if (denominator === 0) continue; // nothing overlaps yet — only possible before any two consecutive prices exist
     level *= numerator / denominator;
     points.push({ t: days[k], v: Math.round(level * 10) / 10 });
     lastCharted = new Map(carried);

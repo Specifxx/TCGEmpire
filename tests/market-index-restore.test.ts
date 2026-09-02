@@ -177,12 +177,12 @@ test("chainLinkSeries: a new constituent entering the basket does not move the l
     ["D", new Map([[d2, 900], [d3, 900], [d4, 900]])], // enters at day 2, no earlier price
   ]);
   const cardIds = ["A", "B", "C", "D"];
-  const weights = [300, 200, 200, 300]; // A+B+C = 700/1000 = 70% ≥ MIN_COVERAGE without D
+  const weights = [300, 200, 200, 300];
 
   const points = chainLinkSeries(days, byCard, cardIds, weights);
   const byDay = new Map(points.map((p) => [p.t, p.v]));
 
-  assert.equal(byDay.get(d0), 100, "series starts at day 0 — A+B+C alone already clear the coverage floor");
+  assert.equal(byDay.get(d0), 100, "series starts at day 0 — A, B and C already have prices then");
   assert.equal(byDay.get(d1), 100, "no price moved yet");
   assert.equal(
     byDay.get(d2), 100,
@@ -195,33 +195,40 @@ test("chainLinkSeries: a new constituent entering the basket does not move the l
   assert.equal(byDay.get(d4), 101.8, "nothing moved since day 3");
 });
 
-test("chainLinkSeries: the series doesn't start until basket coverage clears MIN_COVERAGE (60%)", () => {
+test("chainLinkSeries starts at the first day ANY constituent has a price — not once most of the basket does", () => {
   const DAY = 86_400_000;
   const t0 = Date.UTC(2026, 7, 1);
   const days = [0, 1, 2].map((i) => t0 + i * DAY);
   const [d0, d1, d2] = days;
-  // X and Y have equal weight (50/50) — X alone is only 50% coverage, below
-  // the 60% floor, so the series must not start until Y also has a price.
+  // X is a tiny sliver of the basket (10 of 1000 total weight = 1%); Y — 99%
+  // of the weight — has no price until day 2. An earlier version of this
+  // function waited for a basket-wide coverage supermajority before starting
+  // a single point, which would have thrown away days 0-1 entirely even
+  // though real, if thin, data existed for them. Regression test for that:
+  // the series must start as soon as ANY constituent has a price, however
+  // small a slice of the basket it is on its own.
   const byCard = new Map<string, Map<number, number>>([
     ["X", new Map([[d0, 10], [d1, 10], [d2, 10]])],
-    ["Y", new Map([[d2, 20]])], // no price until day 2
+    ["Y", new Map([[d2, 500]])], // enters day 2 — a much bigger, differently-priced card
   ]);
-  const points = chainLinkSeries(days, byCard, ["X", "Y"], [50, 50]);
-  assert.equal(points.length, 1, "only day 2 clears 60% coverage; days 0-1 must be skipped entirely, not charted at a stale value");
-  assert.equal(points[0].t, d2);
-  assert.equal(points[0].v, 100);
+  const points = chainLinkSeries(days, byCard, ["X", "Y"], [10, 990]);
+  const byDay = new Map(points.map((p) => [p.t, p.v]));
+  assert.equal(byDay.get(d0), 100, "must start at day 0 on X alone (1% of the basket), not wait for Y to also have a price");
+  assert.equal(byDay.get(d1), 100, "X's price hasn't moved");
+  assert.equal(
+    byDay.get(d2), 100,
+    "Y joining with a price 50x X's, and 99% of the basket's weight, must not move the level — same entry-exclusion rule as any other new constituent"
+  );
 });
 
 test("chainLinkSeries returns an empty series rather than throwing on degenerate input", () => {
   assert.deepEqual(chainLinkSeries([], new Map(), [], []), [], "no weights at all");
   const DAY = 86_400_000;
-  const days = [0, DAY].map((t) => t);
-  // A single, always-thin constituent that never reaches the 60% floor on its own.
-  const byCard = new Map<string, Map<number, number>>([["A", new Map([[0, 10], [DAY, 10]])]]);
+  const days = [0, DAY];
   assert.deepEqual(
-    chainLinkSeries(days, byCard, ["A", "B"], [30, 70]),
+    chainLinkSeries(days, new Map(), ["A", "B"], [30, 70]),
     [],
-    "B never has a price, so coverage never reaches 60% and the series must never start"
+    "neither constituent ever has a tracked price, so the series must never start"
   );
 });
 

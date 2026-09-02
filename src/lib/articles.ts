@@ -1684,7 +1684,7 @@ The fix is called **chain-linking**, and real financial indices use the same ide
 
 The practical effect: a card that just entered the basket - a brand-new set's card climbing into the top 200 by search, say - has no earlier price to compare against, so it simply sits out the calculation for the snapshot it debuts on. It starts contributing from the *next* charted snapshot onward, once it has two consecutive tracked prices to form a ratio from. The basket can turn over completely over months and the Index still won't move on that account alone - only real price changes do.
 
-This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. One snapshot can be thin for the same reasons a single card's price can wobble - a slow listing week, a temporary gap in completed sales for a card or two in the basket (handled by the coverage floor in the exact formula below). The trend across weeks and months is where the signal lives.
+This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. The earliest stretch of the chart - back when only a handful of cards had any tracked price yet - is thinner than the rest for exactly that reason: fewer cards means more weight riding on each one. Chain-linking still keeps that stretch honest (a card joining never jumps the level, whether it's card three or card three hundred), it's just a noisier read of the market than a later week with the full basket reporting. The trend across weeks and months is where the signal lives.
 
 ## A Concrete Example: A New Set's Launch
 
@@ -1702,15 +1702,15 @@ The plain-English version above is what you need to interpret the number day to 
 
 **3. Per-snapshot price.** \`p[i, t]\` is constituent *i*'s lowest tracked live price on snapshot *t*, carried forward from its last known price when this exact snapshot has no fresh reading for it (so a card briefly out of stock doesn't vanish from the calculation).
 
-**4. Starting point.** The series starts at the first snapshot \`t0\` where the combined weight of constituents with *any* known price yet is at least 60% of \`W\`. \`Index(t0) = 100\`.
+**4. Starting point.** The series starts at the first snapshot \`t0\` where *any* constituent has a tracked price at all - as far back as the data goes, full stop. \`Index(t0) = 100\`.
 
-**5. Chain-linked step.** For each snapshot \`t\` after \`t0\`, let \`C\` be the set of constituents priced at both \`t\` and the previous *charted* snapshot \`t'\`. If \`C\`'s combined weight is below 60% of \`W\`, that snapshot is skipped - not enough of the basket has a comparable price to trust a reading - and the next snapshot is compared against the same \`t'\` instead. Otherwise:
+**5. Chain-linked step.** For each snapshot \`t\` after \`t0\`, let \`C\` be the set of constituents priced at both \`t\` and the previous *charted* snapshot \`t'\`:
 
 \`return = ( Σ w[i]·p[i,t] for i in C ) ÷ ( Σ w[i]·p[i,t'] for i in C )\`
 
 \`Index(t) = Index(t') × return\`
 
-That's the whole thing - five steps, no persisted state, recomputed from scratch every time from the raw tracked prices, nothing set-specific hard-coded anywhere in it. Step 5 is the literal answer to "what happens when a new set releases": a card with no price at \`t'\` is outside \`C\` for that step by construction, so it cannot affect \`return\` no matter how differently it's priced from the rest of the basket - it only starts actually moving the number from its first two consecutive tracked prices onward.
+That's the whole thing - five steps, no persisted state, recomputed from scratch every time from the raw tracked prices, nothing set-specific hard-coded anywhere in it. Step 5 is the literal answer to "what happens when a new set releases": a card with no price at \`t'\` is outside \`C\` for that step by construction, so it cannot affect \`return\` no matter how differently it's priced from the rest of the basket - it only starts actually moving the number from its first two consecutive tracked prices onward. Notice \`C\` doesn't need to be *most* of the basket - it just needs to be non-empty. An earlier version of this formula also required \`C\` to clear a coverage threshold before trusting a step, on the theory that a thin \`C\` meant an untrustworthy reading. It didn't actually add any protection beyond what the exclusion rule above already gives for free, and it meant the chart started later than the real data did - so it's gone.
 
 **Global composite.** The default view blends every region's own Index (computed exactly as above, in that region's own currency) into one currency-agnostic number: each region is rebased to 100 at whichever region's tracked history starts latest - so a newly-added region can't jump the composite - then the regions are averaged with equal weight, snapshot by snapshot.
 
