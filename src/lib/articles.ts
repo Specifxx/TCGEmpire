@@ -1311,6 +1311,307 @@ Want the full rules before you buy anything? The **[interactive learn page](/lea
 
 Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
   },
+  // ── Cross-game onboarding trio (2026-09-02) ─────────────────────────────────
+  // Three guides aimed at players/collectors coming FROM another TCG, not total
+  // hobby beginners — riftbound-for-beginners already owns that query. Each one
+  // does two jobs: a SAFE, structural comparison (resource system, deck size,
+  // chase-print tier) to build quick intuition, and a heavy focus on the two
+  // things a crossover reader actually wants answered — where real Riftbound
+  // cards are sold, and what the price landscape looks like — since that's
+  // RiftCompare's own product, not just an explainer topic. Comparisons are
+  // deliberately kept at "same shape, not identical rules" (no claim that a
+  // Domain literally IS a Magic color, etc.) and every rules claim routes to
+  // /guides/riftbound-rules-explained or /learn rather than re-deriving Riftbound
+  // rules from scratch here. No invented crossover promos/collabs — there are
+  // none; the comparison is genre-level (both are real, physical TCGs with a
+  // singles market), not a claimed partnership.
+  {
+    slug: "pokemon-collector-to-riftbound",
+    category: "guide",
+    title: "From Pokémon to Riftbound: A Collector's Guide",
+    excerpt:
+      "New to Riftbound from Pokémon? How the two compare, where to actually buy Riftbound cards, and what to expect on price.",
+    author: "RiftCompare",
+    date: "2026-09-02",
+    readMins: 6,
+    tags: ["beginners", "how to start", "collecting", "buying guide", "pokemon"],
+    shop: [
+      { label: "Riftbound starter decks", query: "Riftbound starter deck" },
+      { label: "Riftbound Signature cards", query: "Riftbound Signature card" },
+    ],
+    summary: [
+      "**Riftbound is a real, physical trading card game from Riot Games** (published in English by UVS Games) — the same game-store-and-online buying pattern Pokémon collectors already know, not a digital-only spinoff.",
+      "**The cheapest way in is a ready-to-play preconstructed deck**, the same role a Pokémon theme deck plays — not a booster box.",
+      "**Riftbound's chase tier — Signature, Showcase and alternate-art prints — plays the same role Illustration Rares and Secret Rares do in Pokémon**, and Signature cards are hand-signed by the card's real artist.",
+      "**RiftCompare compares live Riftbound prices** across [AU, US, UK, SG, CA and EU stores plus eBay](/stores/tracked), the same way a Pokémon collector already checks TCGplayer or eBay before buying.",
+    ],
+    faq: [
+      {
+        q: "Is Riftbound a real physical card game, or is it digital/app-based?",
+        a: "It's a real, printed trading card game from Riot Games, published in English by UVS Games and sold through game stores and online singles marketplaces — the same channels Pokémon cards move through, not an app or a digital collectible.",
+      },
+      {
+        q: "How does Riftbound's resource system compare to Pokémon Energy?",
+        a: "Pokémon attacks are powered by Energy cards attached to your Pokémon; Riftbound's plays are powered by Runes tied to your deck's Domains (Fury, Calm, Mind, Body, Chaos and Order). The shape is similar — a resource type you commit to before the game starts — but the mechanics aren't identical, so treat it as a starting intuition, not a direct swap. The full rules are in Riftbound Rules Explained or the interactive learn page.",
+      },
+      {
+        q: "What's the Riftbound equivalent of a Pokémon Illustration Rare or Secret Rare?",
+        a: "Riftbound's own chase tier: Showcase prints, alternate art, and Signature cards — hand-signed by the card's original artist. Understanding Riftbound Card Rarity covers exactly where each tier sits and what drives its premium.",
+      },
+      {
+        q: "What should a Pokémon collector buy first to try Riftbound?",
+        a: "A single preconstructed deck or Proving Grounds kit — complete and playable out of the box, the same role a Pokémon theme deck plays. Riftbound for Beginners and The Cheapest Way to Start Riftbound both cover what to buy first without overspending.",
+      },
+      {
+        q: "Are there any official Pokémon x Riftbound crossover cards?",
+        a: "No — Riftbound is a Riot Games property set in the League of Legends universe, unrelated to Pokémon or The Pokémon Company. Nothing here claims or implies an official crossover; the comparison is about how the two hobbies work, not a shared product.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Search the Riftbound card database →",
+      blurb: "Every card, every printing, with live prices compared across every store and market we track.",
+    },
+    embed: {
+      title: "Cards worth knowing, whichever game you're coming from",
+      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
+      metaStaples: { minDecks: 2 },
+      take: 12,
+    },
+    body: `If you collect or play Pokémon, you already know the rhythm: theme decks to learn on, singles to fill out a build, a chase tier that makes a binder page worth showing off, and a habit of checking prices across a few sites before you actually buy anything. **Riftbound: League of Legends TCG** — Riot Games' real, physical card game, published in English by UVS Games — runs on the same rhythm. Here's how the two connect, and how to actually find and buy real Riftbound cards without overpaying.
+
+## Riftbound is a real card game, not a spinoff
+
+This is the first thing worth being clear on: Riftbound is a genuine, in-print trading card game, sold through game and hobby stores and online singles marketplaces the same way Pokémon is — not a mobile tie-in, not a digital-only collectible, not a fan project. It's set in the League of Legends universe, so the "roster" is champions you may already recognize from the game rather than a new cast to learn from zero. If you want the full picture of what it is and how it plays, the **[interactive learn page](/learn)** walks through a complete game step by step, free, with no signup.
+
+## How the pieces map onto what you already know
+
+Nothing here is a claim that the two games are mechanically identical — they aren't — but the *shape* will feel familiar:
+
+| Pokémon | Riftbound | The honest difference |
+| --- | --- | --- |
+| Energy cards power your attacks | **Runes** tied to your deck's **Domains** power your plays | Domains (Fury, Calm, Mind, Body, Chaos, Order) are a color-identity-style constraint you commit to before building, closer to a deck archetype than a 1-for-1 Energy swap |
+| Your active/bench Pokémon | Your **Legend** and **Champion**, plus **Units** on the board | A Legend anchors your whole deck's identity the way a lead Pokémon doesn't quite |
+| Theme decks | Preconstructed decks / Proving Grounds kits | Same job: a complete, playable deck out of the box |
+| Illustration Rare / Secret Rare | **Showcase**, alternate art, **Signature** prints | Signature cards are hand-signed by the card's real artist — a direct analog to a signed slab a Pokémon collector already knows the appeal of |
+| Rotation (Standard) | No announced rotation | Every set released so far stays legal — see **[does Riftbound rotate?](/guides/riftbound-format-legality-rotation)** |
+
+For the real rules rather than the shorthand version, **[Riftbound Rules Explained](/guides/riftbound-rules-explained)** is the hub, and **[how a Riftbound deck is actually built](/guides/how-a-riftbound-deck-is-built)** covers deck construction card type by card type.
+
+## How to actually get Riftbound cards
+
+This is usually the real question once the "is this a real game" part is settled. The buying pattern is close to what you already do for Pokémon:
+
+1. **Start with a ready-to-play product.** A preconstructed deck or Proving Grounds kit is the cheapest, fastest way in — complete and playable, no singles required. Compare current listings on the **[sealed products page](/sealed)**.
+2. **Fill in the gaps with singles**, not more booster boxes. Upgrading a starter deck card-by-card is far cheaper than gambling on packs for the one card you actually want — the same logic that makes singles-hunting worthwhile in Pokémon. Search the **[card database](/browse)**.
+3. **Compare before you buy.** Riftbound cards are sold across a real, spread-out market — independent game stores, TCGplayer-style listings, and eBay — in six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). RiftCompare tracks all of it live, the same job a Pokémon collector already asks TCGplayer or eBay comps to do. See **[every store we track](/stores/tracked)**.
+
+**[Where to Buy Riftbound Cards](/guides/where-to-buy-riftbound-cards)** covers all six markets and 100+ stores in one place if you want the full breakdown before you commit to a first purchase.
+
+## What things cost, and how to keep track
+
+Prices move daily, the same way a hot Pokémon set's prices do in its first weeks — which is exactly why a live comparison tool is more useful than a number frozen at publish time. A few honest guideposts instead of a stale price list:
+
+- **Ready-to-play products are the predictable, budget-friendly entry point** — a fixed cost, no pack-opening variance.
+- **Booster boxes are the highest-variance route**, the same trade-off as a Pokémon booster box: you might pull the chase card, you might not.
+- **Chase prints (Signature, Showcase, alt-art) carry a real premium**, the same way an Illustration Rare does over its base print — **[understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** explains exactly what separates each tier.
+- **Watch price movement, don't just check once.** The **[daily movers page](/movers)** shows what's trending up or down right now, the same instinct that keeps a Pokémon collector refreshing a marketplace watchlist.
+
+## Where to start
+
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from "curious" to "playing" — what to buy first and how much to spend. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. And when you're ready to actually shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, and every store is one you can actually buy from.`,
+  },
+  {
+    slug: "one-piece-tcg-to-riftbound",
+    category: "guide",
+    title: "From One Piece TCG to Riftbound: A Collector's Guide",
+    excerpt:
+      "New to Riftbound from the One Piece Card Game? How the two compare, where to buy real Riftbound cards, and what to expect on price.",
+    author: "RiftCompare",
+    date: "2026-09-02",
+    readMins: 6,
+    tags: ["beginners", "how to start", "collecting", "buying guide", "one piece"],
+    shop: [
+      { label: "Riftbound starter decks", query: "Riftbound starter deck" },
+      { label: "Riftbound Vendetta singles", query: "Riftbound Vendetta" },
+    ],
+    summary: [
+      "**Riftbound is a real, physical trading card game from Riot Games** (published in English by UVS Games) — sold through the same game stores and online singles marketplaces the One Piece Card Game already moves through.",
+      "**Both are genuinely recent games** — One Piece TCG launched in 2022, Riftbound in 2026 — so the early-set scarcity and chase-print dynamics will feel familiar rather than needing a decade of set history to understand.",
+      "**A Riftbound deck is built around a Legend and Champion**, similar in feel to how a One Piece deck is built around its Leader card, even though the mechanics differ.",
+      "**RiftCompare compares live Riftbound prices** across [AU, US, UK, SG, CA and EU stores plus eBay](/stores/tracked) — the same live-comparison habit a One Piece TCG buyer already has for a fast-moving new set.",
+    ],
+    faq: [
+      {
+        q: "Is Riftbound similar to the One Piece Card Game in how new it is?",
+        a: "Yes, more than most comparisons — the One Piece Card Game launched in 2022 and Riftbound in 2026, so both are genuinely early in their print history rather than decades-deep formats. If you're used to how a One Piece set's early scarcity and chase prints behave, Riftbound's current five-set catalogue will feel like familiar territory.",
+      },
+      {
+        q: "How does Riftbound's Legend and Champion compare to a One Piece Leader?",
+        a: "A One Piece deck is built around its Leader card, which sets the deck's identity and colors. A Riftbound deck is built around a Legend and Champion, which similarly anchor its Domains (Fury, Calm, Mind, Body, Chaos, Order) and overall plan. The feel is close; the exact rules aren't identical — see how a Riftbound deck is actually built for the real mechanics.",
+      },
+      {
+        q: "What's the Riftbound equivalent of a One Piece Leader/Secret Rare parallel?",
+        a: "Riftbound's chase tier: Showcase prints, alternate art, and Signature cards, hand-signed by the card's original artist. Understanding Riftbound Card Rarity covers where each tier sits and what drives its price.",
+      },
+      {
+        q: "Where can I actually buy Riftbound singles and sealed product?",
+        a: "The same kind of channels the One Piece Card Game sells through — independent game stores and online singles marketplaces, in six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). Where to Buy Riftbound Cards covers all of them, and RiftCompare tracks live prices across every one.",
+      },
+      {
+        q: "Are there any official One Piece x Riftbound crossover cards?",
+        a: "No — Riftbound is a Riot Games property set in the League of Legends universe and One Piece TCG is published by Bandai; the two are unrelated. This guide compares how the two hobbies work, not a claimed partnership.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Search the Riftbound card database →",
+      blurb: "Every card, every printing, with live prices compared across every store and market we track.",
+    },
+    embed: {
+      title: "Cards worth knowing, whichever game you're coming from",
+      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
+      metaStaples: { minDecks: 2 },
+      take: 12,
+    },
+    body: `The One Piece Card Game trained a whole generation of collectors on what it's like to get into a card game while it's still young — chasing early-set scarcity, watching a fresh secondary market form in real time, learning a Leader's identity before you've memorized the full card pool. **Riftbound: League of Legends TCG**, Riot Games' real, physical card game (published in English by UVS Games), is at a similar point in its own life right now. Here's how the two connect, and — the part that actually matters once you're curious — how to find and buy real Riftbound cards without overpaying.
+
+## Riftbound is a real card game, not a spinoff
+
+Riftbound is a genuine, in-print trading card game sold through game and hobby stores and online singles marketplaces, the same way the One Piece Card Game is — not a mobile tie-in, not a digital-only collectible. It's set in the League of Legends universe, built around champions rather than the Straw Hats, but the *hobby* — opening packs, building around a leader-style card, hunting a chase print — will feel immediately familiar. The **[interactive learn page](/learn)** walks through a complete game step by step, free, no signup.
+
+## How the pieces map onto what you already know
+
+Not a claim that the two games play identically — they don't — but the shape rhymes:
+
+| One Piece TCG | Riftbound | The honest difference |
+| --- | --- | --- |
+| DON!! cards fuel your plays | **Runes** tied to your deck's **Domains** fuel yours | Domains (Fury, Calm, Mind, Body, Chaos, Order) shape which cards your deck can reliably cast, closer to a color identity than a direct DON!! swap |
+| Your Leader card sets your deck's identity | Your **Legend** and **Champion** set yours | A Legend anchors the whole deck the way a Leader does, without being rules-identical |
+| Life cards instead of a life total | (Different win-condition structure) | Worth learning properly rather than assuming a 1-for-1 — see the rules guide below |
+| Starter decks | Preconstructed decks / Proving Grounds kits | Same job: complete, playable, no singles required |
+| Secret Rare / Leader parallels | **Showcase**, alternate art, **Signature** prints | Signature cards are hand-signed by the card's real artist |
+
+For the real rules, **[Riftbound Rules Explained](/guides/riftbound-rules-explained)** is the hub, and **[how a Riftbound deck is actually built](/guides/how-a-riftbound-deck-is-built)** covers construction card type by card type — worth reading properly rather than assuming the analogy above is exact.
+
+## How to actually get Riftbound cards
+
+Once "is this a real game" is settled, this is the actual question. The buying pattern is close to what a One Piece TCG buyer already does:
+
+1. **Start with a ready-to-play product.** A preconstructed deck or Proving Grounds kit is the cheapest, fastest way in — complete out of the box. Compare current listings on the **[sealed products page](/sealed)**.
+2. **Fill in the gaps with singles.** Upgrading a starter deck card-by-card beats gambling on packs for one specific card — the same logic that makes singles-hunting worthwhile in a fast-moving new TCG. Search the **[card database](/browse)**.
+3. **Compare across the real market.** Riftbound sells through independent game stores, TCGplayer-style listings and eBay, across six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). RiftCompare tracks all of it live. See **[every store we track](/stores/tracked)**.
+
+**[Where to Buy Riftbound Cards](/guides/where-to-buy-riftbound-cards)** covers all six markets and 100+ stores in one place.
+
+## What things cost, and how to keep track
+
+Both games share the same early-life pricing pattern: prices move fast while the card pool and player base are still settling, which makes a snapshot number stale within days. A few honest guideposts instead:
+
+- **Ready-to-play products are the predictable entry point** — fixed cost, no pack-opening variance.
+- **Booster boxes are the highest-variance route** — the trade-off you already know from chasing a Leader parallel.
+- **Chase prints carry a real premium.** **[Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** explains exactly what separates Showcase, alternate art and Signature.
+- **Watch price movement, don't just check once** — the **[daily movers page](/movers)** shows what's trending right now, the same habit that keeps a young TCG's secondary market legible.
+
+## Where to start
+
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, every store is one you can actually buy from.`,
+  },
+  {
+    slug: "mtg-to-riftbound",
+    category: "guide",
+    title: "From Magic: The Gathering to Riftbound: A Player's Guide",
+    excerpt:
+      "New to Riftbound from Magic: The Gathering? How the two compare, where to buy singles, and what live Riftbound prices actually look like.",
+    author: "RiftCompare",
+    date: "2026-09-02",
+    readMins: 7,
+    tags: ["beginners", "how to start", "deckbuilding", "buying guide", "mtg"],
+    shop: [
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "Riftbound starter decks", query: "Riftbound starter deck" },
+    ],
+    summary: [
+      "**Riftbound is a real, physical trading card game from Riot Games** (published in English by UVS Games) — sold through the same LGS-and-online singles market Magic players already live in.",
+      "**Domains work a little like Magic's colors**: a deck commits to one or two of Fury, Calm, Mind, Body, Chaos or Order, and your 12 Runes have to match, the same way a manabase has to match your colors.",
+      "**No rotation has been announced** — every set released so far (Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, Vendetta) stays legal, closer to how Magic's Eternal formats behave than Standard.",
+      "**RiftCompare's whole job is what a Magic player already does on TCGplayer** — comparing real listings across independent stores (plus eBay) to find delivered cost, not just sticker price, live across [six currency markets](/stores/tracked).",
+    ],
+    faq: [
+      {
+        q: "Do Riftbound Domains work like Magic's five colors?",
+        a: "Structurally, yes — a deck commits to one or two of Riftbound's Domains (Fury, Calm, Mind, Body, Chaos, Order, plus Colorless), and your 12 Runes have to match, the same discipline a Magic manabase enforces around its colors. The mechanics aren't identical, so treat it as a starting intuition — Riftbound Rules Explained and the interactive learn page have the real rules.",
+      },
+      {
+        q: "Does Riftbound have a rotating Standard-style format?",
+        a: "No rotation has been announced. Every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal everywhere, closer to how a Magic Eternal format behaves than Standard. Does Riftbound rotate? covers the full picture, including the banlist, which does exist.",
+      },
+      {
+        q: "How big is a Riftbound deck compared to a Magic deck?",
+        a: "A Riftbound deck runs a Legend, a Champion, a roughly 40-card main deck of Units/Gear/Spells, 12 Runes, 3 Battlefields and a side deck of up to 10 — different totals from Magic's 60-card (or 100-card Commander) format, but the same idea of a defined, legal deck shape. How a Riftbound deck is actually built breaks down every part.",
+      },
+      {
+        q: "Where do Riftbound prices actually come from?",
+        a: "The same kind of real, independent secondary market Magic singles trade on — game stores and online marketplaces (plus eBay), across six currency markets: Australia, the US, the UK, Singapore, Canada and the EU. RiftCompare tracks live listings across all of them and ranks by total delivered cost, not just sticker price.",
+      },
+      {
+        q: "Are there any official Magic x Riftbound crossover cards?",
+        a: "No — Riftbound is a Riot Games property and Magic: The Gathering is published by Wizards of the Coast; the two are unrelated products. This guide compares how the two hobbies work, not a claimed partnership.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Search the Riftbound card database →",
+      blurb: "Every card, every printing, with live prices compared across every store and market we track.",
+    },
+    embed: {
+      title: "Cards worth knowing, whichever game you're coming from",
+      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
+      metaStaples: { minDecks: 2 },
+      take: 12,
+    },
+    body: `Magic players already have the instincts a new TCG rewards: read the whole card before you judge it, check a real market price before you buy, and don't assume a mechanic works the way you'd guess until you've read the actual rules text. **Riftbound: League of Legends TCG** — Riot Games' real, physical card game, published in English by UVS Games — is worth that same treatment. Here's the honest comparison, and how to actually find and buy real Riftbound cards without overpaying.
+
+## Riftbound is a real card game, not a spinoff
+
+Riftbound is a genuine, in-print trading card game, sold through game stores and online singles marketplaces the same way Magic is — not a mobile app, not a digital-only collectible. It's set in the League of Legends universe rather than Magic's multiverse, built around champions instead of planeswalkers. If you'd rather read the real rules than a comparison table, the **[interactive learn page](/learn)** walks through a complete game step by step, free, no signup, and **[Riftbound Rules Explained](/guides/riftbound-rules-explained)** is the full hub.
+
+## How the pieces map onto what you already know
+
+Structural similarity, not a rules match — the analogy is meant to build intuition fast, not to substitute for the real text:
+
+| Magic: The Gathering | Riftbound | The honest difference |
+| --- | --- | --- |
+| Lands produce mana in 5 colors | **Runes** tied to **Domains** power your plays | 7 Domains (Fury, Calm, Mind, Body, Chaos, Order, plus Colorless) rather than 5 colors; a deck commits to one or two, same discipline as a manabase |
+| A 60-card deck (100 for Commander) | A ~40-card main deck + 12 Runes + 3 Battlefields + up to 10 side deck | Different totals, same idea of a fixed, legal deck shape — **[the full anatomy](/guides/how-a-riftbound-deck-is-built)** |
+| Standard rotates; Eternal formats don't | No announced rotation | Every set so far stays legal — closer to how Magic's Eternal formats behave |
+| A banned/restricted list | A real banlist | **[The banlist explained](/guides/riftbound-banlist-explained)** and the **[July 2026 update](/blog/riftbound-july-2026-ban-list-update)** |
+| Foils, alternate arts, Secret Lairs | **Showcase**, alternate art, **Signature** prints | Signature cards are hand-signed by the card's real artist |
+| TCGplayer market price | RiftCompare's live comparison | The exact habit you already have, applied to a different game |
+
+## How to actually get Riftbound cards
+
+The buying pattern will feel immediately familiar:
+
+1. **Start with a ready-to-play product** if you want to learn the game cheaply — a preconstructed deck or Proving Grounds kit, no singles required. Compare current listings on the **[sealed products page](/sealed)**.
+2. **Buy singles for a real deck**, the way you'd build a Magic deck around a specific list rather than crack packs hoping to hit it. Search the **[card database](/browse)**, or price a whole decklist at once with the **[deck pricer](/deck)**.
+3. **Compare across the real market**, exactly like checking TCGplayer before a Magic purchase. Riftbound sells through independent game stores, marketplace listings and eBay, across six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). RiftCompare ranks by total delivered cost — postage included where a store publishes it, not just the sticker price. See **[every store we track](/stores/tracked)**.
+
+**[Where to Buy Riftbound Cards](/guides/where-to-buy-riftbound-cards)** covers all six markets and 100+ stores in one place, and **[Best Basket](/tools/best-basket)** splits a full decklist across stores to find the cheapest combined order once shipping is counted — the same problem a multi-store Magic order has.
+
+## What things cost, and how to keep track
+
+No fabricated numbers here — prices move daily and any figure printed today would be stale by the time you read it, which is exactly why a live tool beats a listicle. What's stable instead:
+
+- **Ready-to-play products are the fixed-cost entry point** — no pack-opening variance.
+- **Chase prints carry a real premium.** **[Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** covers exactly what separates a base print from Showcase, alternate art and Signature — the closest Riftbound equivalent to a Magic foil-vs-nonfoil or Secret Lair premium.
+- **Watch price movement, not just a single snapshot** — the **[daily movers page](/movers)** shows what's trending up or down right now, the same signal a Magic player reads off a price-tracking tool.
+- **A deck's real cost is total delivered cost, not the sum of sticker prices** — the same lesson every Magic player learns the first time postage eats a "cheap" multi-store order.
+
+## Where to start
+
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost, and **[Riftbound deck archetypes](/guides/riftbound-deck-archetypes-guide)** is the deckbuilding-strategy version of this guide once you're past the basics. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live.`,
+  },
   {
     slug: "riftbound-singles-vs-sealed",
     // The whole article is one decision, and it resolves in the paragraph the
