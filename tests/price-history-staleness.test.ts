@@ -40,8 +40,13 @@ test("computePriceMovers refuses to serve movers once the freshest snapshot is s
   const staleMatch = /const STALE_HISTORY_MS = (\d+) \* 86400_000/.exec(src);
   assert.ok(staleMatch, "expected STALE_HISTORY_MS in days");
   const staleDays = Number(staleMatch![1]);
-  const intervalMatch = /const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(read("src/lib/price-import.ts"));
-  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-import.ts");
+  // Canonical home is price-history.ts itself (2026-09-02) — shared with
+  // sealed-import.ts's own weekly writer; price-import.ts now imports it
+  // rather than defining it locally (see that constant's own comment for why:
+  // price-import.ts already imports FROM sealed-import.ts, so defining this
+  // in either writer would have closed a real import cycle).
+  const intervalMatch = /export const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(src);
+  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-history.ts");
   const interval = Number(intervalMatch![1]);
   assert.ok(
     staleDays > interval,

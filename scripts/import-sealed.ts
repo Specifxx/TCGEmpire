@@ -3,7 +3,7 @@
 // sealed catalogue (refreshTcgplayerSealed). Run on the price-refresh schedule so the
 // /sealed page stays populated — previously nothing scheduled the sealed importer, so
 // the table went stale/empty and the page showed nothing.
-import { importSealed, refreshTcgplayerSealed } from "../src/lib/sealed-import";
+import { importSealed, refreshTcgplayerSealed, writeSealedPriceHistory } from "../src/lib/sealed-import";
 import { prisma } from "../src/lib/db";
 
 async function main() {
@@ -17,6 +17,11 @@ async function main() {
   } catch (e) {
     console.error("TCGplayer sealed refresh failed (continuing):", e);
   }
+  // Runs LAST, after every source above has had its chance to write — feeds
+  // the Sealed Index and Rising Sealed. Best-effort internally (see its own
+  // try/catch), so a history-write hiccup never loses the listings this run
+  // already wrote.
+  await writeSealedPriceHistory();
 }
 
 main()

@@ -63,17 +63,36 @@ export function sydneyDayKey(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(new Date());
 }
 
+// Calendar day (date-only) in Australia/Sydney, as an actual Date rather than
+// sydneyDayKey's string — the price-history x-axis bucket, so there's exactly
+// one snapshot per constituent per local day. The canonical home for the same
+// reason as sydneyDayKey above: BOTH price-import.ts and sealed-import.ts
+// write snapshots and need this, and price-import.ts already imports FROM
+// sealed-import.ts (importSealed), so putting it in either writer would risk
+// a real import cycle — this module is the neutral ground both sit above.
+export function sydneyDay(d = new Date()): Date {
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(d);
+  return new Date(`${ymd}T00:00:00.000Z`);
+}
+
+// WEEKLY SNAPSHOTS, NOT DAILY — the history database's cost control. Shared by
+// every snapshot writer (PriceHistory, SealedPriceHistory): fewer writes, and
+// fewer READS, which is the larger half — every windowed history query is
+// bounded by weeks of data instead of days. Same reasoning, same home as
+// sydneyDay above (both writers need the exact same cadence).
+export const HISTORY_MIN_INTERVAL_DAYS = 7;
+
 // WEEK-scoped cache key, and the reason history reads are affordable.
 //
-// PriceHistory is written once a week now (see HISTORY_MIN_INTERVAL_DAYS in
-// price-import.ts), so a day-scoped key was forcing six whole-market re-scans a
+// PriceHistory is written once a week now (see HISTORY_MIN_INTERVAL_DAYS
+// above), so a day-scoped key was forcing six whole-market re-scans a
 // day to recompute a number that had not changed since the previous Monday. This
 // returns the ISO week's Monday, so every history-derived cache recomputes on the
 // same rollover the data itself moves on.
 //
-// Sydney, matching sydneyDayKey and the importer's own sydneyDay() — the snapshot
-// boundary is Sydney midnight, so the week boundary has to agree or a key could
-// roll a day before or after the data does.
+// Sydney, matching sydneyDayKey and sydneyDay above — the snapshot boundary is
+// Sydney midnight, so the week boundary has to agree or a key could roll a day
+// before or after the data does.
 export function sydneyWeekKey(): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Australia/Sydney",

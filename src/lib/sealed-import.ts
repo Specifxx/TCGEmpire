@@ -2,6 +2,8 @@
 // Grounds, bundles, …) from the same AU Shopify stores, into SealedListing. The
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
+import { dbHistory } from "./db-history";
+import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS } from "./price-history";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
@@ -1080,4 +1082,85 @@ export async function getSealedGroups(country: Country = DEFAULT_COUNTRY): Promi
 export async function getPreorderGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
   const all = await getAllSealedGroups(country);
   return all.filter((g) => isPreorderSetCode(g.setCode));
+}
+
+/**
+ * Weekly snapshot of every sealed group's lowest in-stock price, across every
+ * tracked market — the sealed-side counterpart to price-import.ts's own
+ * PriceHistory write (see that block for the full weekly-vs-daily cost
+ * reasoning; this reuses the exact same constant and day boundary — see
+ * sydneyDay/HISTORY_MIN_INTERVAL_DAYS's own comments in price-history.ts —
+ * so the two tables share one definition of "a week"). Feeds the Sealed
+ * Index and Rising Sealed (sealed-index.ts / sealed-rise-predictor.ts).
+ *
+ * PRE-ORDERS ARE INCLUDED HERE, deliberately, unlike getSealedGroups()'s
+ * filter — a pre-order's price genuinely moves (often the most interesting
+ * price action of a whole set's launch happens before release), and there's
+ * no reason its history shouldn't start accumulating from day one.
+ * getSealedGroups() only keeps pre-orders off the ORDINARY page/basket so a
+ * box nobody can ship yet isn't priced as though it's on a shelf; it says
+ * nothing about whether that price is worth recording for later.
+ *
+ * Reads SealedListing directly rather than going through
+ * getAllSealedGroups()/its 15-minute memo: that function does a lot of
+ * display-only work (image resolution, MSRP badges, T1 name/image overrides)
+ * this has no use for. A single unfiltered-by-market findMany is cheap
+ * regardless — the whole table is a few hundred rows across all six markets
+ * (~30 groups × 6 markets × however many stores list each).
+ */
+export async function writeSealedPriceHistory(): Promise<void> {
+  try {
+    const day = sydneyDay();
+    const newest = await dbHistory.sealedPriceHistory.findFirst({
+      orderBy: { day: "desc" },
+      select: { day: true },
+    });
+    const daysSince = newest
+      ? Math.round((day.getTime() - newest.day.getTime()) / 86400_000)
+      : Number.POSITIVE_INFINITY;
+    if (daysSince < HISTORY_MIN_INTERVAL_DAYS) {
+      console.log(
+        `Sealed price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${HISTORY_MIN_INTERVAL_DAYS}.`
+      );
+      return;
+    }
+
+    const rows = await prisma.sealedListing.findMany({
+      where: { inStock: true },
+      select: { groupKey: true, country: true, priceCents: true, productType: true },
+    });
+    // Lowest in-stock price per (groupKey, country) — same "cheapest listing
+    // wins" rule getAllSealedGroups uses for the live page, plus the same
+    // price-sanity floor (an implausibly low row for its product type is
+    // dropped rather than recorded as a real price). A nested map, not a
+    // "groupKey|country" composite string key — groupKey itself can contain
+    // "|" (see the T1 Signature Edition groups above), so concatenating with
+    // the same delimiter would be ambiguous to split back apart.
+    const lowest = new Map<string, Map<string, number>>(); // groupKey -> country -> cents
+    for (const r of rows) {
+      if (r.priceCents < sealedFloorCents(r.productType)) continue;
+      const byCountry = lowest.get(r.groupKey) ?? new Map<string, number>();
+      const cur = byCountry.get(r.country);
+      if (cur == null || r.priceCents < cur) byCountry.set(r.country, r.priceCents);
+      lowest.set(r.groupKey, byCountry);
+    }
+    if (!lowest.size) {
+      console.log("Sealed price history: no in-stock listings to snapshot.");
+      return;
+    }
+
+    const snapshot: { groupKey: string; country: string; day: Date; lowestPriceCents: number }[] = [];
+    for (const [groupKey, byCountry] of lowest) {
+      for (const [country, lowestPriceCents] of byCountry) {
+        snapshot.push({ groupKey, country, day, lowestPriceCents });
+      }
+    }
+    await dbHistory.sealedPriceHistory.deleteMany({ where: { day } });
+    await dbHistory.sealedPriceHistory.createMany({ data: snapshot });
+    console.log(`Sealed price history: recorded ${snapshot.length} points for ${day.toISOString().slice(0, 10)}.`);
+  } catch (e) {
+    // Best-effort, like every other history write — never let a snapshot
+    // failure take down the sealed import that already succeeded ahead of it.
+    console.warn("Sealed price-history snapshot failed:", e);
+  }
 }

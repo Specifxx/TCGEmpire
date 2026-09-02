@@ -9,6 +9,7 @@ import { dbHistory, ensureHistoryCards } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
+import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { refreshCardmarketPrices } from "./cardmarket";
@@ -33,13 +34,6 @@ export interface ShopifyProduct {
   url?: string;
 }
 
-
-// Calendar day (date-only) in Australia/Sydney, used as the price-history x-axis
-// bucket so there's exactly one snapshot per card per local day.
-function sydneyDay(d = new Date()): Date {
-  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(d);
-  return new Date(`${ymd}T00:00:00.000Z`);
-}
 
 export interface ImportSummary {
   stores: { name: string; products: number; priced: number; matched: number; unmatched: number }[];
@@ -1951,7 +1945,6 @@ export async function importPrices(): Promise<ImportSummary> {
     // weekday, so a missed run self-heals on the next import instead of waiting
     // a full week. Date-only arithmetic (`day` is @db.Date) keeps this immune to
     // the cron drifting by a few hours either side.
-    const HISTORY_MIN_INTERVAL_DAYS = 7;
     const newest = await dbHistory.priceHistory.findFirst({
       orderBy: { day: "desc" },
       select: { day: true },

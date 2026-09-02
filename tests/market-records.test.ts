@@ -94,9 +94,15 @@ test("a card needs real history before it can hold a record", () => {
   // now fails correctly in both directions: too few snapshots, or a cadence
   // change that makes the existing floor meaningless.
   const min = Number(/const MIN_DAYS = (\d+)/.exec(src)![1]);
-  const importSrc = read("src/lib/price-import.ts");
-  const intervalMatch = /const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(importSrc);
-  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-import.ts");
+  // Canonical home is price-history.ts (2026-09-02) — shared with
+  // sealed-import.ts's own weekly writer, so price-import.ts imports it
+  // rather than defining it locally. See price-history.ts's own comment for
+  // why: price-import.ts already imports FROM sealed-import.ts, so defining
+  // this constant in either writer instead of the neutral price-history.ts
+  // would have closed a real import cycle.
+  const historySrc = read("src/lib/price-history.ts");
+  const intervalMatch = /export const HISTORY_MIN_INTERVAL_DAYS = (\d+)/.exec(historySrc);
+  assert.ok(intervalMatch, "expected HISTORY_MIN_INTERVAL_DAYS in price-history.ts");
   const interval = Number(intervalMatch![1]);
   const coverageDays = min * interval;
   assert.ok(
