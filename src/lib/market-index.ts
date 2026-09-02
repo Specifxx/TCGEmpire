@@ -117,9 +117,17 @@ export type MarketIndex = {
   stats: MarketStats;
 };
 
+// The minimal shape computeStats actually reads — deliberately NOT
+// IndexConstituent itself, so a differently-shaped basket (e.g.
+// sealed-index.ts's own sealed constituents, which have no collectorNumber
+// or d1pct) can reuse this function without faking fields it never uses.
+// IndexConstituent already satisfies this structurally, so every existing
+// call site is unaffected.
+export type StatsConstituent = { priceCents: number; d7pct: number | null };
+
 // Derive the market statistics from the (base-100) series and the basket. Pure —
 // exported (like chainLinkSeries) so tests can exercise it directly.
-export function computeStats(points: PricePoint[], constituents: IndexConstituent[]): MarketStats {
+export function computeStats(points: PricePoint[], constituents: StatsConstituent[]): MarketStats {
   const prices = constituents.map((c) => c.priceCents).filter((p) => p > 0);
   const basketValueCents = prices.reduce((a, b) => a + b, 0); // one of each card
   const priced = prices.length;

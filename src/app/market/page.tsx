@@ -217,6 +217,16 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             </Link>{" "}
             <span className="text-slate-500">every card&apos;s highest and lowest recorded price, and the day it was set.</span>
           </p>
+          {/* Sealed products sit on a wildly different price scale (a box vs a
+              common), so they get their own equal-weighted index rather than
+              being merged into this 200-card basket — see that page's own
+              Methodology section for why. */}
+          <p className="mt-1 text-sm">
+            <Link href="/market/sealed" className="font-semibold text-brand-400 hover:underline">
+              The RiftCompare Sealed Index →
+            </Link>{" "}
+            <span className="text-slate-500">the same idea, for booster boxes, packs &amp; bundles.</span>
+          </p>
         </div>
       </section>
 
