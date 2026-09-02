@@ -1,17 +1,17 @@
-import { getMarketIndex, type MarketScope } from "@/lib/market-index";
-import { COUNTRIES } from "@/lib/country";
+import { getMarketIndex } from "@/lib/market-index";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 
 // Public, machine-readable RiftCompare Index — the citable JSON an AI agent or a
 // third-party dashboard can consume without scraping the page. Referenced as the
 // Dataset `distribution` on /market and from llms.txt.
-// `?market=AU|US|UK|SG|CA|GLOBAL`.
+// `?market=AU|US|UK|SG|CA|EU`, defaults to US.
 export const revalidate = 1800;
 
-function parseMarket(v: string | null): MarketScope {
+function parseMarket(v: string | null): Country {
   const up = (v ?? "").toUpperCase();
-  // Registry-driven so a new market can't silently fall through to GLOBAL.
-  return up in COUNTRIES ? (up as MarketScope) : "GLOBAL";
+  // Registry-driven so a new market can't silently fall through to the default.
+  return up in COUNTRIES ? (up as Country) : DEFAULT_COUNTRY;
 }
 
 export async function GET(req: Request) {

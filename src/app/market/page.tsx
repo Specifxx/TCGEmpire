@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getMarketIndex, INDEX_SIZE, type MarketScope, type IndexConstituent } from "@/lib/market-index";
+import { getMarketIndex, INDEX_SIZE, type IndexConstituent } from "@/lib/market-index";
 import { IndexChart } from "@/components/IndexChart";
 import { MarketSwitcher } from "@/components/MarketSwitcher";
-import { COUNTRIES, type Country } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -59,12 +59,13 @@ export const metadata: Metadata = {
   },
 };
 
-function parseMarket(v?: string): MarketScope {
+function parseMarket(v?: string): Country {
   const up = (v ?? "").toUpperCase();
   // Validated against the market registry rather than a hand-written || chain —
-  // that chain had silently gone stale: it never listed SG, so ?market=SG rendered
-  // the GLOBAL index instead of Singapore's, and CA would have done the same.
-  return up in COUNTRIES ? (up as Country) : "GLOBAL";
+  // that chain had silently gone stale: it never listed SG, so ?market=SG fell
+  // back to the default instead of rendering Singapore's, and CA would have
+  // done the same.
+  return up in COUNTRIES ? (up as Country) : DEFAULT_COUNTRY;
 }
 
 // A compact gainers/fallers column derived from the Index constituents' own 7-day moves.
@@ -115,7 +116,6 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 
 export default async function IndexPage({ searchParams }: { searchParams: { market?: string } }) {
   const market = parseMarket(searchParams.market);
-  const isGlobal = market === "GLOBAL";
   // getMarketIndex is day-cached internally (once per market per Sydney day, shared
   // across every caller), so it needs no page-level wrapper — that only re-serialised
   // the same blob without cutting history-DB reads. Auto-refreshes at the day rollover.
@@ -132,11 +132,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
     .sort((a, b) => (a.d7pct ?? 0) - (b.d7pct ?? 0))
     .slice(0, 5);
 
-  // Display chrome. GLOBAL has no single currency/region, so prices fall back to the
-  // composite's reference region (carried on the index as `currency`/`priceMarket`).
-  const heading = isGlobal ? "Global" : `${COUNTRIES[market as Country].code}`;
-  const currency = index?.currency ?? (isGlobal ? "USD" : COUNTRIES[market as Country].currency);
-  const priceMarket = index?.priceMarket ?? "AU";
+  const heading = COUNTRIES[market].code;
+  const currency = index?.currency ?? COUNTRIES[market].currency;
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -155,7 +152,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         "@context": "https://schema.org",
         "@type": "Dataset",
         name: "The RiftCompare Index",
-        description: `Weekly weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards${isGlobal ? " across every market we track" : ""}. Base 100 on ${index.startDay}.`,
+        description: `Weekly weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards. Base 100 on ${index.startDay}.`,
         url: `${SITE_URL}/market`,
         creator: { "@type": "Organization", name: "RiftCompare", "@id": `${SITE_URL}/#org`, url: SITE_URL },
         license: `${SITE_URL}/market#cite`,
@@ -206,11 +203,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
             search-weighted index, updated weekly — like a stock index for the game. When the cards players
             actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
-            {isGlobal ? (
-              <>By default it&apos;s the <strong className="text-slate-200">global composite</strong> — every region we track, blended into one currency-agnostic number. Use the Market selector to drill into a single region.</>
-            ) : (
-              <>You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market as Country].place}</strong> market, priced from {COUNTRIES[market as Country].adjective} stores. Switch back to Global at the top right.</>
-            )}
+            You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market].place}</strong> market,
+            priced from {COUNTRIES[market].adjective} stores. Switch markets using the selector at the top right.
           </p>
           {/* The Index is today's number; records are the same data asked the
               other way round ("what is the most this has ever been?"). Linked
@@ -238,7 +232,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
                     <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                      {heading} {isGlobal ? "composite" : "market"} · base 100 on {index.startDay}
+                      {heading} market · base 100 on {index.startDay}
                     </div>
                     <div className="num text-5xl font-extrabold text-white">
                       {index.latest.toFixed(1)}
@@ -254,7 +248,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 {/* One self-contained, quotable summary sentence — the format AI answer
                     engines lift verbatim (a real, dated statistic). */}
                 <p className="mt-3 max-w-2xl text-sm text-slate-400">
-                  As of {lastDataDay ?? index.startDay}, the RiftCompare {isGlobal ? "global" : heading} index sits at{" "}
+                  As of {lastDataDay ?? index.startDay}, the RiftCompare {heading} index sits at{" "}
                   <strong className="text-slate-200">{index.latest.toFixed(1)}</strong>
                   {index.d7 == null ? null : <> — {index.d7 > 0 ? "up" : index.d7 < 0 ? "down" : "flat"} {Math.abs(index.d7)}% over 7 days</>}
                   {index.stats ? <>, with {index.stats.advancing} of {index.constituents.length} tracked cards higher on the week</> : null}.
@@ -279,9 +273,6 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             <p className="mb-3 text-sm text-slate-400">
               The {index.constituents.length} most-searched cards with a live price, weighted by
               search volume (capped at 20% each). Scroll within the list to see them all.
-              {isGlobal && (
-                <> Prices shown in {currency}, from the {COUNTRIES[priceMarket].place} market as a global reference.</>
-              )}
             </p>
             {/* Interactive: filter by card/gainers/fallers, and click any heading to
                 sort ascending/descending. Capped-height inner scroll + sticky header. */}
@@ -307,9 +298,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <div>
             <p className="text-lg font-semibold text-white">The Index is warming up</p>
             <p className="mt-1 text-sm">
-              We need a few days of price history{isGlobal ? "" : " in this market"} before the chart
-              means anything. Check back soon{isGlobal ? "" : " — or switch to Global"}, or see
-              what&apos;s moving today.
+              We need a few days of price history in this market before the chart means anything.
+              Check back soon, or see what&apos;s moving today.
             </p>
             <Link href="/movers" className="btn-primary mt-4">Price movers →</Link>
           </div>
@@ -345,12 +335,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             .
           </p>
           <p>
-            <strong className="text-slate-300">The Global composite</strong> (the default) chain-links
-            every region&apos;s own index together the same way each region chain-links its own
-            constituents, equal weight per region — so it starts as early as any region&apos;s own
-            tracked history goes back, a region coming online later can&apos;t jump it, and it tracks
-            worldwide price direction without mixing currencies. Pick a region from the Market
-            selector to see that market&apos;s own index in its local currency.
+            The Index defaults to the US market; pick a different region from the Market selector
+            to see that market&apos;s own index, priced in its own local currency.
           </p>
           <p>
             <strong className="text-slate-300">Key statistics.</strong> Index value is what it would

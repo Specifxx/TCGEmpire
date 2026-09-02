@@ -51,13 +51,9 @@ import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { pickPrice, priceField, COUNTRY_LIST, COUNTRIES, type Country } from "./country";
+import { pickPrice, priceField, DEFAULT_COUNTRY, COUNTRIES, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
 import { sydneyWeekKey, historySource, type PricePoint } from "./price-history";
-
-// A market the Index can be computed for: one region, or the GLOBAL composite that
-// blends every region into a single currency-agnostic number (the default).
-export type MarketScope = Country | "GLOBAL";
 
 export const INDEX_SIZE = 200;
 // Circuit breaker, not a real limit today (see the file header): at today's
@@ -88,8 +84,8 @@ export type IndexConstituent = {
   d7pct: number | null; // its own 7-day move, %
 };
 
-// The "key statistics" a market is expected to report, derived from the basket and
-// the index series — so both the regional indices and the GLOBAL composite carry them.
+// The "key statistics" a market is expected to report, derived from the basket
+// and the index series.
 export type MarketStats = {
   // "Index value" = the cost to buy ONE copy of each constituent (Σ of their lowest
   // prices). NOT a circulating-supply market cap — singles have no public float, so a
@@ -107,9 +103,9 @@ export type MarketStats = {
 };
 
 export type MarketIndex = {
-  market: MarketScope;
+  market: Country;
   currency: string; // currency the constituent prices below are quoted in
-  priceMarket: Country; // region the constituent prices are sourced from (= market, or the reference region for GLOBAL)
+  priceMarket: Country; // region the constituent prices are sourced from (= market)
   points: PricePoint[]; // one point per tracked snapshot, base 100 (v = index value)
   latest: number;
   d1: number | null; // % vs the previous tracked snapshot ("Latest" in the UI, not "1 day")
@@ -122,7 +118,7 @@ export type MarketIndex = {
 };
 
 // Derive the market statistics from the (base-100) series and the basket. Pure —
-// exported (like compositeSeries) so tests can exercise it directly.
+// exported (like chainLinkSeries) so tests can exercise it directly.
 export function computeStats(points: PricePoint[], constituents: IndexConstituent[]): MarketStats {
   const prices = constituents.map((c) => c.priceCents).filter((p) => p > 0);
   const basketValueCents = prices.reduce((a, b) => a + b, 0); // one of each card
@@ -188,9 +184,9 @@ const pctChange = (now: number, then: number | undefined): number | null =>
   then == null || then === 0 ? null : Math.round(((now - then) / then) * 1000) / 10;
 
 // CHAIN-LINKED level from a basket's raw price history. Pure — exported (like
-// compositeSeries and computeStats) so tests can exercise it directly with
-// synthetic data, and the piece that answers "what happens when a new set's
-// cards enter the basket":
+// computeStats) so tests can exercise it directly with synthetic data, and
+// the piece that answers "what happens when a new set's cards enter the
+// basket":
 //
 // Rather than averaging PRICE LEVELS at each snapshot (where a newly-arrived,
 // likely differently-priced card would jump the average the instant it
@@ -395,56 +391,6 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
  }
 }
 
-// ── Global composite ────────────────────────────────────────────────────────────
-// Every region's own index chain-linked together — the same mechanism a region
-// uses on its own constituents (see chainLinkSeries above), one level up: a
-// region's already-base-100 series stands in for a constituent's price series,
-// equal weight for every region (matching this composite's long-standing
-// design — see the guide article's "Global composite" section).
-//
-// An earlier version rebased every region to 100 at the LATEST-starting live
-// region's first day, then simple-averaged the rebased levels — which meant
-// the composite could never start any earlier than whichever region had been
-// live for the SHORTEST time, no matter how much history the others had. Chain-
-// linking fixes that the same way it fixes a new set's cards entering a
-// regional basket: a region with no reading yet simply isn't part of the
-// return for the step it joins on (see the exclusion rule in chainLinkSeries),
-// so the composite can start as early as ANY region's own history goes back,
-// and a region joining later still can't jump it.
-export function compositeSeries(pointSets: PricePoint[][]): PricePoint[] {
-  const live = pointSets.filter((pts) => pts.length >= 2);
-  if (!live.length) return [];
-  const byRegion = new Map<string, Map<number, number>>();
-  const ids: string[] = [];
-  live.forEach((pts, i) => {
-    const id = `r${i}`;
-    ids.push(id);
-    byRegion.set(id, new Map(pts.map((p) => [p.t, p.v])));
-  });
-  const weights = ids.map(() => 1); // equal-weight across regions, as before
-  const days = [...new Set(live.flatMap((pts) => pts.map((p) => p.t)))].sort((a, b) => a - b);
-  return chainLinkSeries(days, byRegion, ids, weights);
-}
-
-// Headline figures (latest + window moves) from a base-100 series.
-function pointStats(points: PricePoint[]) {
-  const latest = points[points.length - 1].v;
-  const at = (daysBack: number): number | undefined => {
-    const target = points[points.length - 1].t - daysBack * 86400_000;
-    let best: PricePoint | undefined;
-    for (const p of points) if (p.t <= target) best = p;
-    return best?.v;
-  };
-  return {
-    latest,
-    d1: pctChange(latest, points[points.length - 2]?.v),
-    d7: pctChange(latest, at(7)),
-    d30: pctChange(latest, at(30)),
-    sinceStart: pctChange(latest, points[0].v),
-    startDay: new Date(points[0].t).toISOString().slice(0, 10),
-  };
-}
-
 // WEEK-scoped cache around the per-region compute, matching PriceHistory's own
 // write cadence (see the file header) — the same fix price-history.ts's own
 // getPriceHistory() needed for the same reason: a day-scoped key was recomputing
@@ -460,41 +406,12 @@ function getRegionIndex(country: Country): Promise<MarketIndex | null> {
   })();
 }
 
-async function computeGlobalIndex(): Promise<MarketIndex | null> {
-  const regions = (await Promise.all(COUNTRY_LIST.map((c) => getRegionIndex(c.code)))).filter(
-    (r): r is MarketIndex => r != null
-  );
-  if (!regions.length) return null;
-  const points = compositeSeries(regions.map((r) => r.points));
-  if (points.length < 2) return null;
-  // The composite is currency-agnostic, but its constituent table needs real prices:
-  // source them from a reference region — US (the de-facto global TCG price) when
-  // live, otherwise whichever region has data.
-  const ref = regions.find((r) => r.market === "US") ?? regions[0];
-  return {
-    market: "GLOBAL",
-    currency: ref.currency,
-    priceMarket: ref.priceMarket,
-    points,
-    ...pointStats(points),
-    constituents: ref.constituents,
-    stats: computeStats(points, ref.constituents),
-  };
-}
-
-// Week-scoped cache for the GLOBAL composite, same reasoning as getRegionIndex
-// (its region sub-calls are cached too, but caching the composite avoids
-// re-compositing on every request as well).
-function getGlobalIndex(): Promise<MarketIndex | null> {
-  return unstable_cache(() => computeGlobalIndex(), ["rc-global-index", sydneyWeekKey()], {
-    revalidate: 8 * 86400,
-    tags: [CONTENT_TAG],
-  })();
-}
-
-// Default is the GLOBAL composite; pass a region for that market's own index. Both
-// paths are week-cached, so the history DB is read at most once per market per
-// week no matter how many pages/bots/API callers hit the index.
-export async function getMarketIndex(market: MarketScope = "GLOBAL"): Promise<MarketIndex | null> {
-  return market === "GLOBAL" ? getGlobalIndex() : getRegionIndex(market);
+// Defaults to US. There used to also be a GLOBAL composite blending every
+// region into one currency-agnostic number (see compositeSeries in git
+// history, 2026-09-02) — removed per request: one region, priced in its own
+// real currency, is a more legible number than a blend across six markets of
+// uneven depth. Week-cached, so the history DB is read at most once per
+// market per week no matter how many pages/bots/API callers hit the index.
+export async function getMarketIndex(market: Country = DEFAULT_COUNTRY): Promise<MarketIndex | null> {
+  return getRegionIndex(market);
 }

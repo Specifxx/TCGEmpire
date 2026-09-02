@@ -26,9 +26,9 @@ export async function GET() {
   lines.push("");
 
   try {
-    const index = await getMarketIndex("GLOBAL");
+    const index = await getMarketIndex();
     if (index) {
-      lines.push("## The RiftCompare Index (global composite, base 100)");
+      lines.push(`## The RiftCompare Index (${index.market} market, base 100)`);
       lines.push(`- Level: ${index.latest.toFixed(1)} (base 100 on ${index.startDay})`);
       lines.push(`- Change: latest ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`);
       if (index.stats) {

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { compositeSeries, computeStats, chainLinkSeries, INDEX_SIZE } from "../src/lib/market-index";
+import { computeStats, chainLinkSeries, INDEX_SIZE } from "../src/lib/market-index";
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -45,54 +45,14 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 // consecutive prices, and can't move the level on entry alone. The formula
 // this pins is also now published on /market and in the methodology guide
 // article — pinned below too, so the tests fail if the two ever disagree.
+//
+// 2026-09-02, fourth pass: the GLOBAL composite (every region chain-linked
+// together into one currency-agnostic number, briefly the default view) was
+// removed per request — one region, priced in its own real currency, beat a
+// blend across six markets of uneven depth. getMarketIndex() now defaults to
+// US and there is no other market scope; compositeSeries is gone along with
+// it. No test below should assume GLOBAL exists.
 // ─────────────────────────────────────────────────────────────────────────────
-
-test("compositeSeries chain-links regions together: starts at the EARLIEST region's data, and a later-joining region can't jump it", () => {
-  // 2026-09-02: this used to rebase every region to 100 at the LATEST-starting
-  // live region's first day and simple-average the rebased levels — so the
-  // composite could never start any earlier than whichever region had been
-  // live for the shortest time. Rewritten to chain-link regions together the
-  // same way a region chain-links its own constituents (see chainLinkSeries).
-  const DAY = 86_400_000;
-  const t0 = Date.UTC(2026, 7, 1);
-  const [d0, d1, d2, d3] = [0, 1, 2, 3].map((i) => t0 + i * DAY);
-  // Region A is tracked from d0. Region B doesn't exist until d1, and its own
-  // level (500) is a wildly different scale from A's (~100) — deliberately, so
-  // a jump on B's entry would be obvious if the exclusion rule weren't working.
-  const regionA = [
-    { t: d0, v: 100 },
-    { t: d1, v: 100 },
-    { t: d2, v: 100 },
-    { t: d3, v: 110 }, // genuine +10% move
-  ];
-  const regionB = [
-    { t: d1, v: 500 },
-    { t: d2, v: 500 },
-    { t: d3, v: 500 },
-  ];
-  const points = compositeSeries([regionA, regionB]);
-  const byDay = new Map(points.map((p) => [p.t, p.v]));
-  assert.equal(byDay.get(d0), 100, "must start at d0 — region A's own earliest point — not wait for region B");
-  assert.equal(byDay.get(d1), 100, "region B just joined at 5x region A's level; must not move the composite");
-  assert.equal(byDay.get(d2), 100, "still nothing has actually moved");
-  assert.equal(
-    byDay.get(d3), 101.7,
-    "region A's genuine +10% move must still propagate, B included: (110+500)/(100+500)*100 = 101.7"
-  );
-});
-
-test("compositeSeries drops a region with fewer than 2 points instead of dividing by a single-point series", () => {
-  const t0 = Date.UTC(2026, 7, 1);
-  const real = [{ t: t0, v: 100 }, { t: t0 + 86_400_000, v: 105 }];
-  const tooShort = [{ t: t0, v: 999 }]; // a region that hasn't accumulated history yet
-  const points = compositeSeries([real, tooShort]);
-  assert.equal(points[points.length - 1].v, 105, "the short region must not distort the composite");
-});
-
-test("compositeSeries returns an empty series rather than throwing when nothing is live yet", () => {
-  assert.deepEqual(compositeSeries([]), []);
-  assert.deepEqual(compositeSeries([[{ t: 0, v: 100 }]]), [], "a single-point-only input has no region with >=2 points");
-});
 
 test("the core computation caches on sydneyWeekKey, imported from its canonical home", () => {
   // NOT sydneyDayKey — PriceHistory writes at most once every 7 days (see the
@@ -124,11 +84,14 @@ test("the PriceHistory read uses a generous multi-year circuit breaker, not the 
   assert.match(code, /const \{ source, convert \} = historySource\(country\)/, "must resolve CA/EU to their historySource before reading");
 });
 
-test("both cache functions revalidate on a week-plus-slack TTL, matching the week-keyed cache", () => {
+test("the region cache revalidates on a week-plus-slack TTL, matching the week-keyed cache", () => {
+  // Was "expected exactly two unstable_cache calls (region + global)" until the
+  // GLOBAL composite (and its own separate cache) was removed 2026-09-02 — one
+  // unstable_cache call now, getRegionIndex's.
   const code = codeOnly(read("src/lib/market-index.ts"));
   const matches = [...code.matchAll(/revalidate:\s*(8 \* 86400|172800)/g)];
-  assert.equal(matches.length, 2, "expected exactly two unstable_cache calls (region + global)");
-  for (const m of matches) assert.equal(m[1], "8 * 86400", `found a stale 172800 (2-day) TTL: ${m[0]}`);
+  assert.equal(matches.length, 1, "expected exactly one unstable_cache call (getRegionIndex)");
+  assert.equal(matches[0][1], "8 * 86400", `found a stale 172800 (2-day) TTL: ${matches[0][0]}`);
 });
 
 test("no surviving 'daily'/'1 day'/'30-day' label claims the index moves faster than it actually does", () => {
@@ -292,7 +255,7 @@ test("the machine-readable index surfaces (JSON API, LLM feed) both point at the
 test("/market is a real, dynamic page wired to the restored computation", () => {
   const src = read("src/app/market/page.tsx");
   assert.match(src, /export const dynamic = "force-dynamic"/, "searchParams-driven — an ISR window here previously served loading.tsx as the final response");
-  assert.match(src, /import \{ getMarketIndex, INDEX_SIZE, type MarketScope, type IndexConstituent \} from "@\/lib\/market-index"/);
+  assert.match(src, /import \{ getMarketIndex, INDEX_SIZE, type IndexConstituent \} from "@\/lib\/market-index"/);
   assert.match(src, /<IndexChart points=\{index\.points\}/);
   assert.match(src, /<IndexStats index=\{index\}/);
   assert.match(src, /<IndexConstituents constituents=\{index\.constituents\}/);
@@ -314,7 +277,7 @@ test("the satellite routes (public JSON, embed badge, LLM feed, OG image) all ex
 
 test("the embed badge validates ?market against the full country registry, not a hand-written AU/US/UK list", () => {
   // The original route only recognised AU/US/UK, silently folding SG and CA into
-  // the GLOBAL composite — the exact staleness /market's own parseMarket comment
+  // the default market — the exact staleness /market's own parseMarket comment
   // warns about. Fixed to match on restore.
   const src = codeOnly(read("src/app/embed/index/route.ts"));
   assert.match(src, /up in COUNTRIES/, "must validate against the COUNTRIES registry like /market does");
@@ -341,6 +304,46 @@ test("GET /api/v1/index.json responds 200 with a real status field, live data or
   const body = await res.json();
   assert.ok(body.status === "ready" || body.status === "warming", `unexpected status: ${body.status}`);
   assert.equal(res.headers.get("X-Robots-Tag"), "noindex");
+});
+
+// ── GLOBAL composite removed 2026-09-02 — the Index now defaults to US ───────
+
+test("GET /api/v1/index.json defaults to the US market when ?market= is omitted", async () => {
+  const { GET } = await import("../src/app/api/v1/index.json/route");
+  const res = await GET(new Request("https://riftcompare.com/api/v1/index.json"));
+  const body = await res.json();
+  // `market` is echoed straight from parseMarket() even on the "warming" branch
+  // (no live DB needed to prove the default), so this holds regardless of
+  // whether this environment has data.
+  assert.equal(body.market, "US", `expected the default market to be US, got ${body.market}`);
+});
+
+test("no trace of the GLOBAL composite survives anywhere in the Index's code or docs", () => {
+  const checks: [string, RegExp][] = [
+    ["src/lib/market-index.ts", /GLOBAL|MarketScope|compositeSeries|computeGlobalIndex|getGlobalIndex/],
+    ["src/app/market/page.tsx", /GLOBAL|isGlobal|MarketScope/],
+    ["src/components/MarketSwitcher.tsx", /GLOBAL|includeGlobal/],
+    ["src/app/api/v1/index.json/route.ts", /GLOBAL|MarketScope/],
+    ["src/app/embed/index/route.ts", /GLOBAL|MarketScope/],
+    ["src/app/market/opengraph-image.tsx", /GLOBAL/],
+    ["src/app/llm/market/route.ts", /GLOBAL/],
+    ["src/app/llms-full.txt/route.ts", /GLOBAL|global composite/i],
+    ["src/lib/openapi.ts", /GLOBAL|MARKET_PARAM_WITH_GLOBAL/],
+    ["src/lib/articles.ts", /Global composite/],
+  ];
+  for (const [path, pattern] of checks) {
+    assert.doesNotMatch(codeOnly(read(path)), pattern, `${path} still matches ${pattern}`);
+  }
+});
+
+test("getMarketIndex and /market's own parseMarket both default to DEFAULT_COUNTRY, not a hardcoded market", () => {
+  const lib = codeOnly(read("src/lib/market-index.ts"));
+  assert.match(lib, /import \{ pickPrice, priceField, DEFAULT_COUNTRY, COUNTRIES, type Country \} from "\.\/country"/);
+  assert.match(lib, /export async function getMarketIndex\(market: Country = DEFAULT_COUNTRY\)/);
+
+  const page = codeOnly(read("src/app/market/page.tsx"));
+  assert.match(page, /function parseMarket\(v\?: string\): Country \{/);
+  assert.match(page, /return up in COUNTRIES \? \(up as Country\) : DEFAULT_COUNTRY;/);
 });
 
 test("GET /embed/index returns real, frameable HTML either way", async () => {

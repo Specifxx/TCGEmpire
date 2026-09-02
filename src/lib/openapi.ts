@@ -28,12 +28,6 @@ const MARKET_PARAM = {
   description: "Market scope. Determines which stores, currency and shipping estimates the response reflects.",
 };
 
-const MARKET_PARAM_WITH_GLOBAL = {
-  ...MARKET_PARAM,
-  schema: { type: "string", enum: ["GLOBAL", ...MARKET_ENUM], default: "GLOBAL" },
-  description: "Market scope; GLOBAL is a currency-agnostic composite across all five markets.",
-};
-
 const CARD_ID_PARAM = {
   name: "id",
   in: "path",
@@ -88,7 +82,7 @@ export function buildOpenApiSpec() {
         get: {
           operationId: "getIndex",
           summary: "The RiftCompare Index — level, deltas, key stats and constituents.",
-          parameters: [MARKET_PARAM_WITH_GLOBAL],
+          parameters: [MARKET_PARAM],
           responses: {
             "200": {
               description:

@@ -188,10 +188,13 @@ test("the records page is discoverable", () => {
 });
 
 test("the market switcher offers no Global option here", () => {
-  const src = read(PAGE);
   // A record is a price in ONE market's own currency; an all-time high of A$180
-  // and one of US$120 do not combine into a number worth printing. Offering the
-  // option and then coercing it to a default market is worse than not offering
-  // it.
-  assert.match(src, /includeGlobal=\{false\}/, "records cannot be aggregated across currencies");
+  // and one of US$120 do not combine into a number worth printing. This used to
+  // be MarketSwitcher's includeGlobal={false} prop, opting THIS page out of an
+  // option every other page defaulted to. The GLOBAL composite was removed
+  // entirely 2026-09-02 (see market-index.ts) — MarketSwitcher never offers it
+  // to any page now, so there's nothing left for this page to opt out of.
+  const src = codeOnly(read(PAGE));
+  assert.doesNotMatch(src, /includeGlobal/, "the prop no longer exists on MarketSwitcher — must not be reintroduced here");
+  assert.match(src, /<MarketSwitcher[\s\S]{0,150}basePath="\/market\/records"/, "must still use the shared switcher, unchanged otherwise");
 });

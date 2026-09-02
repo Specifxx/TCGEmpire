@@ -13,7 +13,7 @@ export default async function Image() {
   let level: string | null = null;
   let d7: number | null = null;
   try {
-    const index = await getMarketIndex("GLOBAL");
+    const index = await getMarketIndex();
     if (index) {
       level = index.latest.toFixed(1);
       d7 = index.d7;

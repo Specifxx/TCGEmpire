@@ -307,7 +307,6 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
           <MarketSwitcher
             value={country}
             basePath="/market/records"
-            includeGlobal={false}
             label="Choose the market these records cover"
           />
           {asOf && <span className="text-xs text-slate-500">Latest data {asOf}</span>}

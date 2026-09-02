@@ -11,7 +11,7 @@ const md = (lines: string[]) =>
 const pct = (p: number | null | undefined) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`);
 
 export async function GET() {
-  const index = await getMarketIndex("GLOBAL").catch(() => null);
+  const index = await getMarketIndex().catch(() => null);
   const lines: string[] = ["# The RiftCompare Index"];
   if (!index) {
     lines.push("", "The index is warming up — not enough price history yet. See " + `${SITE_URL}/market`);
@@ -20,7 +20,7 @@ export async function GET() {
   lines.push(
     "",
     "> A search-weighted price index of the most-searched Riftbound: League of Legends TCG " +
-      "singles (base 100), updated weekly. Global composite; switch regions on the page.",
+      `singles (base 100), updated weekly. ${index.market} market by default; switch regions on the page.`,
     "",
     `- Level: ${index.latest.toFixed(1)} (base 100 on ${index.startDay})`,
     `- Change: latest ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`
