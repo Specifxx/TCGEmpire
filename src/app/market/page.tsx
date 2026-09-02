@@ -345,10 +345,12 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             .
           </p>
           <p>
-            <strong className="text-slate-300">The Global composite</strong> (the default) rebases
-            each regional index to 100 at their common start, then equal-weight averages them day by
-            day — so it tracks worldwide price direction without mixing currencies. Pick a region
-            from the Market selector to see that market&apos;s own index in its local currency.
+            <strong className="text-slate-300">The Global composite</strong> (the default) chain-links
+            every region&apos;s own index together the same way each region chain-links its own
+            constituents, equal weight per region — so it starts as early as any region&apos;s own
+            tracked history goes back, a region coming online later can&apos;t jump it, and it tracks
+            worldwide price direction without mixing currencies. Pick a region from the Market
+            selector to see that market&apos;s own index in its local currency.
           </p>
           <p>
             <strong className="text-slate-300">Key statistics.</strong> Index value is what it would

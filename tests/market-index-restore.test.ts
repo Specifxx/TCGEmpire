@@ -47,25 +47,38 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 // article — pinned below too, so the tests fail if the two ever disagree.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("compositeSeries rebases every region to 100 at the common start, then equal-weight averages", () => {
+test("compositeSeries chain-links regions together: starts at the EARLIEST region's data, and a later-joining region can't jump it", () => {
+  // 2026-09-02: this used to rebase every region to 100 at the LATEST-starting
+  // live region's first day and simple-average the rebased levels — so the
+  // composite could never start any earlier than whichever region had been
+  // live for the shortest time. Rewritten to chain-link regions together the
+  // same way a region chain-links its own constituents (see chainLinkSeries).
   const DAY = 86_400_000;
   const t0 = Date.UTC(2026, 7, 1);
-  // Region A has one extra early day (t0) that region B doesn't — the composite
-  // must start at t0+1*DAY (the youngest region's first day), not t0.
+  const [d0, d1, d2, d3] = [0, 1, 2, 3].map((i) => t0 + i * DAY);
+  // Region A is tracked from d0. Region B doesn't exist until d1, and its own
+  // level (500) is a wildly different scale from A's (~100) — deliberately, so
+  // a jump on B's entry would be obvious if the exclusion rule weren't working.
   const regionA = [
-    { t: t0, v: 100 },
-    { t: t0 + DAY, v: 110 }, // common start: rebases to 100
-    { t: t0 + 2 * DAY, v: 121 }, // +10% from its own rebase point
+    { t: d0, v: 100 },
+    { t: d1, v: 100 },
+    { t: d2, v: 100 },
+    { t: d3, v: 110 }, // genuine +10% move
   ];
   const regionB = [
-    { t: t0 + DAY, v: 50 }, // common start: rebases to 100
-    { t: t0 + 2 * DAY, v: 55 }, // +10%
+    { t: d1, v: 500 },
+    { t: d2, v: 500 },
+    { t: d3, v: 500 },
   ];
   const points = compositeSeries([regionA, regionB]);
-  assert.equal(points.length, 2, "the pre-common-start day must not appear in the composite");
-  assert.equal(points[0].t, t0 + DAY);
-  assert.equal(points[0].v, 100, "both regions are exactly 100 at their shared rebase point");
-  assert.equal(points[1].v, 110, "both regions moved +10%, so the equal-weight composite also reads +10%");
+  const byDay = new Map(points.map((p) => [p.t, p.v]));
+  assert.equal(byDay.get(d0), 100, "must start at d0 — region A's own earliest point — not wait for region B");
+  assert.equal(byDay.get(d1), 100, "region B just joined at 5x region A's level; must not move the composite");
+  assert.equal(byDay.get(d2), 100, "still nothing has actually moved");
+  assert.equal(
+    byDay.get(d3), 101.7,
+    "region A's genuine +10% move must still propagate, B included: (110+500)/(100+500)*100 = 101.7"
+  );
 });
 
 test("compositeSeries drops a region with fewer than 2 points instead of dividing by a single-point series", () => {
@@ -100,13 +113,15 @@ test("the PriceHistory read uses a generous multi-year circuit breaker, not the 
   assert.match(code, /const MAX_LOOKBACK_DAYS = (\d+);/, "expected a named, generous lookback bound");
   const days = Number(/const MAX_LOOKBACK_DAYS = (\d+);/.exec(code)![1]);
   assert.ok(days >= 365, `MAX_LOOKBACK_DAYS=${days} is not generous enough to function as a "not a real limit today" backfill`);
-  // The query itself: scoped to country + this basket's card ids + the (generous) cutoff.
-  // (.*? not [^)]* for the map callback — cards.map((c) => c.id) nests parens.)
+  // The query itself: scoped to the (historySource-resolved) country + this
+  // basket's card ids + the (generous) cutoff. (.*? not [^)]* for the map
+  // callback — cards.map((c) => c.id) nests parens.)
   assert.match(
     code,
-    /dbHistory\.priceHistory\.findMany\(\{\s*where:\s*\{\s*country,\s*cardId:\s*\{\s*in:\s*cards\.map\(.*?\)\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\}/,
+    /dbHistory\.priceHistory\.findMany\(\{\s*where:\s*\{\s*country:\s*source,\s*cardId:\s*\{\s*in:\s*cards\.map\(.*?\)\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\}/,
     "must be scoped to the basket AND the circuit-breaker cutoff",
   );
+  assert.match(code, /const \{ source, convert \} = historySource\(country\)/, "must resolve CA/EU to their historySource before reading");
 });
 
 test("both cache functions revalidate on a week-plus-slack TTL, matching the week-keyed cache", () => {

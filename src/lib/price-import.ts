@@ -1899,9 +1899,20 @@ export async function importPrices(): Promise<ImportSummary> {
   console.log(`Lowest recompute: ${changed} cards changed (no null-reset window).`);
   summary.cardsPriced = lowAuReal.size;
 
-  // Snapshot today's lowest price per card PER MARKET for the price-over-time chart
-  // (each market in its own currency). One point per card per market per Sydney day;
-  // a same-day re-run (e.g. a deploy) replaces the day's rows.
+  // Snapshot today's lowest price per card PER TRACKED MARKET for the
+  // price-over-time chart (each market in its own currency). One point per
+  // card per market per Sydney day; a same-day re-run (e.g. a deploy)
+  // replaces the day's rows.
+  //
+  // AU/US/UK/SG only — CA and EU are NOT written here (2026-09-02). Every
+  // real reader of this table already resolves CA to US's rows and EU to
+  // UK's, converted, via historySource() in price-history.ts, so a second
+  // full copy of the catalogue's history for each of them was pure duplication:
+  // CAD and EUR prices a currency conversion away from a market already being
+  // snapshotted, at the full weekly cost of an independently-tracked one. Live
+  // current prices for CA and EU (lowestPriceCentsCa/Eu, above) are completely
+  // unaffected — they still come from CA/EU's own real store and eBay scrape,
+  // every import, same as always. Only the HISTORY archive is deduplicated.
   try {
     const day = sydneyDay();
     // Split-history setups: make sure every card exists in the history DB first
@@ -1921,14 +1932,10 @@ export async function importPrices(): Promise<ImportSummary> {
       const us = lowUs.get(c.id) ?? null;
       const uk = lowUkReal.get(c.id) ?? null;
       const sg = lowSgReal.get(c.id) ?? null;
-      const ca = lowCa.get(c.id) ?? null;
-      const eu = lowEu.get(c.id) ?? null;
       if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
       if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
       if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
       if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
-      if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
-      if (eu != null) rows.push({ cardId: c.id, country: "EU", day, lowestPriceCents: eu });
     }
     // WEEKLY SNAPSHOTS, NOT TWICE-DAILY. This is the history database's cost
     // control, and it works on both sides of the ledger at once:
@@ -1962,7 +1969,7 @@ export async function importPrices(): Promise<ImportSummary> {
       if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
       const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
       console.log(
-        `Price history: recorded ${rows.length} points (AU/US/UK/SG/CA/EU) for ${day.toISOString().slice(0, 10)}` +
+        `Price history: recorded ${rows.length} points (AU/US/UK/SG) for ${day.toISOString().slice(0, 10)}` +
           (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
       );
     }

@@ -53,7 +53,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, COUNTRY_LIST, COUNTRIES, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
-import { sydneyWeekKey, type PricePoint } from "./price-history";
+import { sydneyWeekKey, historySource, type PricePoint } from "./price-history";
 
 // A market the Index can be computed for: one region, or the GLOBAL composite that
 // blends every region into a single currency-agnostic number (the default).
@@ -309,9 +309,13 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   //    circuit breaker, not a real cutoff today (see the file header). It's what
   //    makes the index's own history reach back as far as its constituents' real
   //    tracked prices do, immediately, with no separate backfill step.
+  //    CA/EU are historySource()-derived from US/UK (see price-history.ts) — this
+  //    read transparently follows that redirect, so a CA or EU Index is exactly
+  //    as real as any other market's, just converted.
+  const { source, convert } = historySource(country);
   const cutoff = new Date(Date.now() - MAX_LOOKBACK_DAYS * 86400_000);
   const hist = await dbHistory.priceHistory.findMany({
-    where: { country, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
+    where: { country: source, cardId: { in: cards.map((c) => c.id) }, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
@@ -322,7 +326,7 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   for (const h of hist) {
     const t = h.day.getTime();
     daySet.add(t);
-    (byCard.get(h.cardId) ?? byCard.set(h.cardId, new Map()).get(h.cardId)!).set(t, h.lowestPriceCents);
+    (byCard.get(h.cardId) ?? byCard.set(h.cardId, new Map()).get(h.cardId)!).set(t, convert(h.lowestPriceCents));
   }
   const days = [...daySet].sort((a, b) => a - b);
 
@@ -392,42 +396,34 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
 }
 
 // ── Global composite ────────────────────────────────────────────────────────────
-// Every regional index rebased to 100 at the COMMON history start (the youngest
-// region's first day), then equal-weight averaged day by day. Rebasing first means
-// a young market joining can't jump the composite the way a naive average of
-// differently-aged base-100 series would.
+// Every region's own index chain-linked together — the same mechanism a region
+// uses on its own constituents (see chainLinkSeries above), one level up: a
+// region's already-base-100 series stands in for a constituent's price series,
+// equal weight for every region (matching this composite's long-standing
+// design — see the guide article's "Global composite" section).
+//
+// An earlier version rebased every region to 100 at the LATEST-starting live
+// region's first day, then simple-averaged the rebased levels — which meant
+// the composite could never start any earlier than whichever region had been
+// live for the SHORTEST time, no matter how much history the others had. Chain-
+// linking fixes that the same way it fixes a new set's cards entering a
+// regional basket: a region with no reading yet simply isn't part of the
+// return for the step it joins on (see the exclusion rule in chainLinkSeries),
+// so the composite can start as early as ANY region's own history goes back,
+// and a region joining later still can't jump it.
 export function compositeSeries(pointSets: PricePoint[][]): PricePoint[] {
-  const live = pointSets.filter((p) => p.length >= 2);
+  const live = pointSets.filter((pts) => pts.length >= 2);
   if (!live.length) return [];
-  const start = Math.max(...live.map((p) => p[0].t));
-  const rebased = live
-    .map((pts) => {
-      let base: number | null = null;
-      for (const p of pts) {
-        if (p.t <= start) base = p.v;
-        else break;
-      }
-      if (base == null || base === 0) return null;
-      return pts.filter((p) => p.t >= start).map((p) => ({ t: p.t, v: (p.v / base) * 100 }));
-    })
-    .filter((x): x is PricePoint[] => x != null);
-  if (!rebased.length) return [];
-  const days = [...new Set(rebased.flatMap((pts) => pts.map((p) => p.t)))].sort((a, b) => a - b);
-  const cursor = rebased.map(() => 0);
-  // Every series is exactly 100 at its base point (≤ start), so 100 is the correct
-  // carry-forward seed for any gap day before a region's first on-window point.
-  const lastV = rebased.map(() => 100);
-  const out: PricePoint[] = [];
-  for (const t of days) {
-    rebased.forEach((pts, i) => {
-      while (cursor[i] < pts.length && pts[cursor[i]].t <= t) {
-        lastV[i] = pts[cursor[i]].v;
-        cursor[i]++;
-      }
-    });
-    out.push({ t, v: Math.round((lastV.reduce((a, b) => a + b, 0) / lastV.length) * 10) / 10 });
-  }
-  return out;
+  const byRegion = new Map<string, Map<number, number>>();
+  const ids: string[] = [];
+  live.forEach((pts, i) => {
+    const id = `r${i}`;
+    ids.push(id);
+    byRegion.set(id, new Map(pts.map((p) => [p.t, p.v])));
+  });
+  const weights = ids.map(() => 1); // equal-weight across regions, as before
+  const days = [...new Set(live.flatMap((pts) => pts.map((p) => p.t)))].sort((a, b) => a - b);
+  return chainLinkSeries(days, byRegion, ids, weights);
 }
 
 // Headline figures (latest + window moves) from a base-100 series.

@@ -13,7 +13,7 @@ import { pickPrice, priceField, type Country } from "./country";
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";
 import { CONTENT_TAG, HISTORY_TAG } from "./revalidate-content";
-import { sydneyDayKey, sydneyWeekKey } from "./price-history";
+import { sydneyDayKey, sydneyWeekKey, historySource } from "./price-history";
 
 const SCAN_CARDS = 400; // most-searched priced cards to consider
 const WINDOW_DAYS = 35; // 5 weekly snapshots fit inside this
@@ -68,17 +68,19 @@ async function computeBaselines(country: Country): Promise<Baseline[]> {
   ).map((c) => c.id);
   if (!ids.length) return [];
 
+  const { source, convert } = historySource(country);
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
   const hist = await dbHistory.priceHistory.findMany({
-    where: { country, cardId: { in: ids }, day: { gte: cutoff } },
+    where: { country: source, cardId: { in: ids }, day: { gte: cutoff } },
     select: { cardId: true, lowestPriceCents: true },
   });
 
   const byCard = new Map<string, number[]>();
   for (const h of hist) {
+    const v = convert(h.lowestPriceCents);
     const series = byCard.get(h.cardId);
-    if (series) series.push(h.lowestPriceCents);
-    else byCard.set(h.cardId, [h.lowestPriceCents]);
+    if (series) series.push(v);
+    else byCard.set(h.cardId, [v]);
   }
 
   const out: Baseline[] = [];

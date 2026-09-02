@@ -30,7 +30,7 @@
  */
 import { prisma } from "../src/lib/db";
 import { dbHistory } from "../src/lib/db-history";
-import { getPriceMovers, type Mover, type PriceMovers } from "../src/lib/price-history";
+import { getPriceMovers, historySource, type Mover, type PriceMovers } from "../src/lib/price-history";
 import { sendEmail, isEmailEnabled } from "../src/lib/email";
 import { formatMoney } from "../src/lib/format";
 import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "../src/lib/country";
@@ -252,7 +252,11 @@ async function main() {
     // RM3 cutover. So it returned 0 every Friday and the promo silently skipped
     // with "no price history yet" — the exact quiet failure the comment above
     // promises to prevent.
-    const historyRows = await dbHistory.priceHistory.count({ where: { country: market } });
+    // CA/EU have no rows of their own (historySource()-derived from US/UK —
+    // see price-import.ts) — check the market this promo will ACTUALLY read,
+    // or this guard would report a false "no history" the moment CA/EU's own
+    // old rows age past whatever window getPriceMovers reads.
+    const historyRows = await dbHistory.priceHistory.count({ where: { country: historySource(market).source } });
     if (historyRows === 0) {
       console.log(`[promo] no price history for ${market} yet — nothing to report, skipping.`);
       return;

@@ -8,12 +8,16 @@ import { gbpCentsToEur } from "@/lib/fx";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import type { PricePoint } from "@/lib/price-history";
 
-// Steam-style localized price history using REAL per-market data. The importer records
-// a genuine daily lowest-price series for every market (AU/US/UK/SG/CA/EU), so instead of
-// converting one market's numbers we show the visitor's OWN market history — client-
-// fetched so the /card route stays cookie-free ISR. SSR renders the DEFAULT_COUNTRY
-// baseline (so crawlers get a real series); after mount we swap to the visitor's
-// market and re-fetch on every country switch. The API is CDN-cached per (card,market).
+// Steam-style localized price history using REAL per-market data — genuinely
+// tracked for AU/US/UK/SG, and historySource()-derived (a currency conversion
+// of US/UK's own tracked series, applied server-side in getPriceHistory) for
+// CA/EU, so this component shows the visitor's OWN market history either way
+// without needing to know which — client-fetched so the /card route stays
+// cookie-free ISR. SSR renders the DEFAULT_COUNTRY baseline (so crawlers get a
+// real series); after mount we swap to the visitor's market and re-fetch on
+// every country switch. The API is CDN-cached per (card,market). (Unrelated to
+// the separate showEur/gbpCentsToEur path below, which is a UK-market
+// visitor's own OPT-IN display-currency preference, not a market's data.)
 export function LocalizedPriceHistory({
   cardId,
   initialPoints,

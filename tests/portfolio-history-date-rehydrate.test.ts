@@ -31,7 +31,10 @@ test("portfolioHistory re-hydrates `day` into a real Date after the cache read",
   assert.match(fn, /unstable_cache/, "must still be the cached read");
   assert.match(
     fn,
-    /\.then\(\(rows\)\s*=>\s*rows\.map\(\(r\)\s*=>\s*\(\{\s*\.\.\.r,\s*day:\s*new Date\(r\.day\)\s*\}\)\)\)/,
+    // [^}]* (not a fixed field list) — this test's only concern is the `day`
+    // re-hydration; whatever else the row-mapper does (e.g. currency-converting
+    // a CA/EU-derived read, added 2026-09-02) isn't this bug's business.
+    /\.then\(\(rows\)\s*=>\s*rows\.map\(\(r\)\s*=>\s*\(\{\s*\.\.\.r,\s*day:\s*new Date\(r\.day\)[^}]*\}\)\)\)/,
     "must re-wrap every row's day in `new Date(...)` after unstable_cache resolves"
   );
 });

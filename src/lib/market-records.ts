@@ -28,7 +28,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect, withStoreCounts } from "./cards";
 import { DEFAULT_COUNTRY, type Country } from "./country";
-import { cachedOrDirect, sydneyWeekKey, STALE_HISTORY_MS } from "./price-history";
+import { cachedOrDirect, sydneyWeekKey, STALE_HISTORY_MS, historySource } from "./price-history";
 import { HISTORY_TAG } from "./revalidate-content";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -93,12 +93,13 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
 async function computeAllTimeRecords(country: Country, limit: number): Promise<AllTimeRecords> {
   try {
+    const { source, convert } = historySource(country);
     // ── Query 1: rank every card by aggregate, server-side. ──────────────────
     // _count is the day count (one row per card/country/day by the model's
     // unique key), which is what MIN_DAYS gates on.
     const agg = await dbHistory.priceHistory.groupBy({
       by: ["cardId"],
-      where: { country },
+      where: { country: source },
       _max: { lowestPriceCents: true, day: true },
       _min: { lowestPriceCents: true },
       _count: { _all: true },
@@ -120,8 +121,12 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
     type Cand = { cardId: string; peak: number; trough: number; days: number };
     const cands: Cand[] = [];
     for (const r of agg) {
-      const peak = r._max.lowestPriceCents;
-      const trough = r._min.lowestPriceCents;
+      // Converted immediately, same as query 2 below — both use the same
+      // `convert` closure, so the peak/trough EQUALITY match against query 2's
+      // rows (further down) still holds: convert() is deterministic, so
+      // convert(x) === convert(x) regardless of which query read x first.
+      const peak = r._max.lowestPriceCents == null ? null : convert(r._max.lowestPriceCents);
+      const trough = r._min.lowestPriceCents == null ? null : convert(r._min.lowestPriceCents);
       if (peak == null || trough == null) continue;
       if (peak < MIN_CENTS) continue;
       if (r._count._all < MIN_DAYS) continue;
@@ -149,7 +154,7 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
 
     // ── Query 2: exact days + today's price, for the shortlist ONLY. ─────────
     const points = await dbHistory.priceHistory.findMany({
-      where: { country, cardId: { in: ids } },
+      where: { country: source, cardId: { in: ids } },
       orderBy: { day: "asc" },
       select: { cardId: true, day: true, lowestPriceCents: true },
     });
@@ -160,12 +165,13 @@ async function computeAllTimeRecords(country: Country, limit: number): Promise<A
       const c = shortlist.get(p.cardId);
       const d = detail.get(p.cardId);
       if (!c || !d) continue;
+      const v = convert(p.lowestPriceCents);
       // Rows arrive oldest→newest, so the LAST write wins for `now` and the
       // FIRST match wins for each record day — which is the "first reached"
       // semantic, not "most recently touched".
-      d.now = p.lowestPriceCents;
-      if (d.peakDay == null && p.lowestPriceCents === c.peak) d.peakDay = isoDay(p.day);
-      if (d.troughDay == null && p.lowestPriceCents === c.trough) d.troughDay = isoDay(p.day);
+      d.now = v;
+      if (d.peakDay == null && v === c.peak) d.peakDay = isoDay(p.day);
+      if (d.troughDay == null && v === c.trough) d.troughDay = isoDay(p.day);
     }
 
     // Hydrate tiles for everything we might show, in one operational-DB read.

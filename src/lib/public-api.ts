@@ -12,7 +12,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
-import { cachedOrDirect, sydneyDayKey } from "./price-history";
+import { cachedOrDirect, sydneyDayKey, historySource } from "./price-history";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
 import { effectiveShippingCents, shippingPolicyUrl } from "./retailers";
@@ -58,9 +58,10 @@ function nearest(points: Point[], targetT: number): number {
 }
 
 async function computeBulkCardSummary(country: Country): Promise<BulkCardEntry[]> {
+  const { source, convert } = historySource(country);
   const cutoff = new Date(Date.now() - SUMMARY_WINDOW_DAYS * 86400_000);
   const rows = await dbHistory.priceHistory.findMany({
-    where: { country, day: { gte: cutoff } },
+    where: { country: source, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
@@ -69,7 +70,7 @@ async function computeBulkCardSummary(country: Country): Promise<BulkCardEntry[]
   const series = new Map<string, Point[]>();
   for (const r of rows) {
     const arr = series.get(r.cardId) ?? [];
-    arr.push({ t: r.day.getTime(), v: r.lowestPriceCents });
+    arr.push({ t: r.day.getTime(), v: convert(r.lowestPriceCents) });
     series.set(r.cardId, arr);
   }
 

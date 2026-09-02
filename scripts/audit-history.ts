@@ -7,11 +7,19 @@
  * or a scale jump (broken index) is obvious in the log. Also prints which DB
  * it actually connected to.
  *
+ * CA and EU showing "—" (or a row count that stops growing) from 2026-09-02
+ * onward is EXPECTED, not a gap: they no longer get their own snapshot rows
+ * (see price-import.ts's write-skip) — every real reader derives their history
+ * from US's and UK's own rows instead, converted (see historySource() in
+ * price-history.ts). This script deliberately shows the RAW table, not that
+ * derivation, so it can't be used to spot-check CA/EU's actual (converted)
+ * numbers — read them from the site (a card page, or /market?market=CA) instead.
+ *
  * Usage: npx tsx scripts/audit-history.ts
  */
 import { dbHistory, HISTORY_URL_SOURCE } from "../src/lib/db-history";
 
-const CC = ["AU", "US", "UK", "SG", "CA"];
+const CC = ["AU", "US", "UK", "SG", "CA", "EU"];
 
 function median(xs: number[]): number {
   if (!xs.length) return 0;

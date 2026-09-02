@@ -9,7 +9,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
-import { sydneyWeekKey } from "./price-history";
+import { sydneyWeekKey, historySource } from "./price-history";
 import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
@@ -39,17 +39,18 @@ function portfolioHistory(
   country: Country,
   windowDays: number,
 ): Promise<{ cardId: string; day: Date; lowestPriceCents: number }[]> {
+  const { source, convert } = historySource(country);
   const cutoff = new Date(Date.now() - windowDays * 86400_000);
   return unstable_cache(
     () =>
       dbHistory.priceHistory.findMany({
-        where: { country, cardId: { in: cardIds }, day: { gte: cutoff } },
+        where: { country: source, cardId: { in: cardIds }, day: { gte: cutoff } },
         orderBy: { day: "asc" },
         select: { cardId: true, day: true, lowestPriceCents: true },
       }),
     ["rc-portfolio-hist", country, String(windowDays), sydneyWeekKey(), cardIds.join(",")],
     { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
-  )().then((rows) => rows.map((r) => ({ ...r, day: new Date(r.day) })));
+  )().then((rows) => rows.map((r) => ({ ...r, day: new Date(r.day), lowestPriceCents: convert(r.lowestPriceCents) })));
 }
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";

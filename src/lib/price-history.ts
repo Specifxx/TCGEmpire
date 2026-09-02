@@ -1,16 +1,39 @@
 // Price-history helpers: per-card time series for the charts, the weekly
 // "movers" used by the homepage Price Watch, and the homepage's "recently
-// updated" feed. PriceHistory records one lowest-price point per card PER
-// MARKET per Sydney day (AU/US/UK/SG/CA/EU — see price-import.ts's snapshot
-// write), so every function here takes a `country` and is priced in that
-// market's own currency; nothing below is AU-only despite this file's history.
+// updated" feed. PriceHistory records one lowest-price point per card per
+// TRACKED market per Sydney day — AU/US/UK/SG (see price-import.ts's snapshot
+// write); CA and EU are not separately tracked, and are transparently derived
+// from US and UK via historySource() below. Every function here still takes a
+// `country` and returns it priced in THAT market's own currency; nothing
+// below is AU-only despite this file's history.
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect, withStoreCounts } from "./cards";
-import { DEFAULT_COUNTRY, type Country } from "./country";
+import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
+import { convertCents } from "./fx";
 import type { CardTileData } from "@/components/CardTile";
 import { HISTORY_TAG } from "./revalidate-content";
+
+// CA and EU don't get their own PriceHistory rows (see price-import.ts's
+// snapshot-write skip, added 2026-09-02) — a store footprint a currency
+// conversion away from an already-tracked market (US for CA, UK for EU) isn't
+// worth doubling the history DB's row count for. Resolves a market to the
+// market whose PriceHistory rows should actually be queried on its behalf,
+// plus the conversion to apply to every price read from those rows to get
+// back to `country`'s own currency. Every real PriceHistory reader in the
+// codebase goes through this — see its call sites — so a derived market's
+// history behaves exactly like a real one to every caller except this file
+// and price-import.ts, which are the only two that need to know it's derived
+// at all.
+const HISTORY_SOURCE: Partial<Record<Country, Country>> = { CA: "US", EU: "UK" };
+export function historySource(country: Country): { source: Country; convert: (cents: number) => number } {
+  const source = HISTORY_SOURCE[country] ?? country;
+  if (source === country) return { source, convert: (c) => c };
+  const from = currencyOf(source);
+  const to = currencyOf(country);
+  return { source, convert: (c) => convertCents(c, from, to) };
+}
 
 // One week plus a day of slack. The cache keys below are week-scoped, so the TTL
 // only has to outlive one key — a shorter TTL (the old 48h) would expire the
@@ -70,12 +93,13 @@ export function sydneyWeekKey(): string {
 export type PricePoint = { t: number; v: number };
 
 // Daily lowest-price points for one card in one market (oldest → newest), in that
-// market's OWN currency. The importer records a real point per card per market per
-// Sydney day (AU/US/UK/SG/CA/EU — see price-import.ts), so each market has its own genuine
-// series — no currency conversion needed. Resilient: returns [] on any DB error so a
-// page never crashes over the chart.
+// market's OWN currency. AU/US/UK/SG each have a genuine tracked series (see
+// price-import.ts); CA and EU are historySource()-derived from US and UK, converted
+// back to CAD/EUR below. Resilient: returns [] on any DB error so a page never
+// crashes over the chart.
 async function computePriceHistory(cardId: string, country: Country, take: number): Promise<PricePoint[]> {
   try {
+    const { source, convert } = historySource(country);
     // TAKE THE NEWEST `take` POINTS, THEN RESTORE ASCENDING ORDER FOR THE CHART.
     //
     // This was `orderBy: { day: "asc" }, take` — which takes the OLDEST `take`
@@ -85,12 +109,12 @@ async function computePriceHistory(cardId: string, country: Country, take: numbe
     // to save egress would have brought that forward rather than avoided it, so
     // the ordering is fixed here first.
     const rows = await dbHistory.priceHistory.findMany({
-      where: { cardId, country },
+      where: { cardId, country: source },
       orderBy: { day: "desc" },
       take,
       select: { day: true, lowestPriceCents: true },
     });
-    return rows.reverse().map((r) => ({ t: r.day.getTime(), v: r.lowestPriceCents }));
+    return rows.reverse().map((r) => ({ t: r.day.getTime(), v: convert(r.lowestPriceCents) }));
   } catch {
     return [];
   }
@@ -185,9 +209,10 @@ export const STALE_HISTORY_MS = 10 * 86400_000;
 async function computePriceMovers(country: Country, limit: number): Promise<PriceMovers> {
  const empty: PriceMovers = { spiking: [], plummeting: [], value: [] };
  try {
+  const { source, convert } = historySource(country);
   const cutoff = new Date(Date.now() - WINDOW_DAYS * 86400_000);
   const rows = await dbHistory.priceHistory.findMany({
-    where: { country, day: { gte: cutoff } },
+    where: { country: source, day: { gte: cutoff } },
     orderBy: { day: "asc" },
     select: { cardId: true, day: true, lowestPriceCents: true },
   });
@@ -199,7 +224,7 @@ async function computePriceMovers(country: Country, limit: number): Promise<Pric
   const series = new Map<string, PricePoint[]>();
   for (const r of rows) {
     const arr = series.get(r.cardId) ?? [];
-    arr.push({ t: r.day.getTime(), v: r.lowestPriceCents });
+    arr.push({ t: r.day.getTime(), v: convert(r.lowestPriceCents) });
     series.set(r.cardId, arr);
   }
 
@@ -288,9 +313,10 @@ const RECENT_MAX = 80; // upper bound requested for the homepage feed
 // PriceHistory rows for it genuinely differ.
 async function computeRecentlyUpdated(country: Country, limit: number): Promise<RecentUpdate[]> {
   try {
+    const { source, convert } = historySource(country);
     const cutoff = new Date(Date.now() - RECENT_WINDOW_DAYS * 86400_000);
     const rows = await dbHistory.priceHistory.findMany({
-      where: { country, day: { gte: cutoff } },
+      where: { country: source, day: { gte: cutoff } },
       orderBy: { day: "asc" },
       select: { cardId: true, day: true, lowestPriceCents: true },
     });
@@ -302,7 +328,7 @@ async function computeRecentlyUpdated(country: Country, limit: number): Promise<
     const series = new Map<string, { day: number; v: number }[]>();
     for (const r of rows) {
       const arr = series.get(r.cardId) ?? [];
-      arr.push({ day: r.day.getTime(), v: r.lowestPriceCents });
+      arr.push({ day: r.day.getTime(), v: convert(r.lowestPriceCents) });
       series.set(r.cardId, arr);
     }
 

@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { priceField, pickPrice, currencyOf, COUNTRIES, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
-import type { PricePoint } from "./price-history";
+import { historySource, type PricePoint } from "./price-history";
 import { cardDisplayName } from "./card-name";
 import { getDemandVelocity, demandSnapshotDays } from "./demand-snapshot";
 import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats";
@@ -252,6 +252,15 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
 
   // Bulk fetch — never per-card. For GLOBAL, pull every market's history/supply (no
   // country filter); for a single market, filter to it.
+  //
+  // GLOBAL is left reading raw per-country rows below — it already picks
+  // whichever market has the most points for each card (see "best coverage"
+  // further down), so CA/EU rows just lose that comparison once they stop
+  // growing, no special-casing needed. The single-market case is different: a
+  // visitor who explicitly picks CA or EU would otherwise see this predictor's
+  // data go stale the moment CA/EU stop getting their own PriceHistory rows
+  // (see price-import.ts), so it's redirected via historySource() like every
+  // other single-market history reader in the codebase.
   const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);
   const [histRows, supplyRows, velocity, snapshotDays] = await Promise.all([
     // PriceHistory lives in the split-off history database (see lib/db-history.ts)
@@ -267,7 +276,9 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       where: {
         cardId: { in: ids },
         day: { gte: cutoff },
-        country: isGlobal ? { in: KNOWN_COUNTRIES } : scope,
+        // Direct `scope === "GLOBAL"` (not the `isGlobal` alias) so TS narrows
+        // `scope` to Country in the false branch, for historySource() below.
+        country: scope === "GLOBAL" ? { in: KNOWN_COUNTRIES } : historySource(scope).source,
       },
       orderBy: { day: "asc" },
       select: { cardId: true, country: true, day: true, lowestPriceCents: true },
@@ -308,8 +319,9 @@ async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       basisById.set(cardId, best);
     }
   } else {
+    const { convert } = historySource(scope);
     for (const r of histRows) {
-      (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
+      (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: convert(r.lowestPriceCents) });
       basisById.set(r.cardId, scope);
     }
   }

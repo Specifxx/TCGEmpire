@@ -62,7 +62,11 @@ test("rise-predictor filters retired markets out of the GLOBAL history query", (
   );
   assert.match(
     src,
-    /country: isGlobal \? \{ in: KNOWN_COUNTRIES \} : scope/,
+    // The single-market half changed 2026-09-02 (CA/EU now redirect through
+    // historySource — see tests/history-source-consolidation.test.ts) — this
+    // test's own concern is only the GLOBAL half, which is untouched: still a
+    // literal `{ in: KNOWN_COUNTRIES }`, never every retired market's rows.
+    /country: scope === "GLOBAL" \? \{ in: KNOWN_COUNTRIES \} : historySource\(scope\)\.source/,
     "the GLOBAL branch must constrain country at the database, not read every retired market's rows back"
   );
 });
