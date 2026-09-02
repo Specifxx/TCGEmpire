@@ -12,8 +12,10 @@ const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/
 // HISTORY at all — SealedListing is a live-only table, wiped and rewritten
 // wholesale on every import (see that model's own schema comment), so there
 // was nothing to chart, chain-link, or feed a "rising" signal from. This pins
-// the new SealedPriceHistory model and its weekly writer, the foundation the
-// Sealed Index and Rising Sealed (added in the same pass) both depend on.
+// the new SealedPriceHistory model and its weekly writer, the foundation
+// Rising Sealed depends on. (A Sealed Index also fed by this table shipped
+// the same pass and was removed the same day per request — see this model's
+// own schema comment — but the table and writer stayed for Rising Sealed.)
 //
 // Deliberately unlike PriceHistory: SealedPriceHistory has NO Prisma relation
 // to a persistent per-product row (SealedListing has none to point at) — it's

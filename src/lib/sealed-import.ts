@@ -1090,8 +1090,9 @@ export async function getPreorderGroups(country: Country = DEFAULT_COUNTRY): Pro
  * PriceHistory write (see that block for the full weekly-vs-daily cost
  * reasoning; this reuses the exact same constant and day boundary — see
  * sydneyDay/HISTORY_MIN_INTERVAL_DAYS's own comments in price-history.ts —
- * so the two tables share one definition of "a week"). Feeds the Sealed
- * Index and Rising Sealed (sealed-index.ts / sealed-rise-predictor.ts).
+ * so the two tables share one definition of "a week"). Feeds Rising Sealed
+ * (sealed-rise-predictor.ts) — a Sealed Index also fed by this table was
+ * removed 2026-09-02 per request, but this writer stayed for Rising Sealed.
  *
  * PRE-ORDERS ARE INCLUDED HERE, deliberately, unlike getSealedGroups()'s
  * filter — a pre-order's price genuinely moves (often the most interesting

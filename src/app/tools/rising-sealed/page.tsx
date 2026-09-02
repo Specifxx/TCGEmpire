@@ -107,7 +107,8 @@ function ConfidenceChip({ c }: { c: SealedRisePick["confidence"] }) {
 }
 
 // Links out to /sealed?q= rather than a per-product href — there is no
-// /sealed/<slug> page (see SealedIndexConstituents.tsx's own comment).
+// /sealed/<slug> page to link to (the tile on /sealed opens an in-place
+// quick-view popup instead — see SealedTile.tsx).
 function ProductCell({ p }: { p: SealedRisePick }) {
   return (
     <Link href={`/sealed?q=${encodeURIComponent(p.name)}`} className="flex items-center gap-2.5">
@@ -204,8 +205,7 @@ export default async function RisingSealedPage({ searchParams }: { searchParams:
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Sealed products ranked by a composite of <strong className="text-slate-200">price-timing and supply signals</strong> —
           sitting near their own recent low, thin in-stock, not already spiking. Real data, transparent scoring. Not
-          financial advice.{" "}
-          <Link href="/market/sealed" className="text-brand-400 hover:underline">See the Sealed Index →</Link>
+          financial advice.
         </p>
       </div>
 

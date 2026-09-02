@@ -1,16 +1,9 @@
 import { formatMoney, formatMoneyCompact } from "@/lib/format";
-import type { MarketStats } from "@/lib/market-index";
+import type { MarketIndex } from "@/lib/market-index";
 
 // The "key statistics" panel for the RiftCompare Index — the stats a real market
 // reports: index value (one-of-each basket), average/median price, the period range,
 // breadth (advancers vs decliners) and realised volatility. Server component.
-//
-// Prop is deliberately the minimal shape this actually reads — not the full
-// MarketIndex — so the Sealed Index (a differently-shaped SealedMarketIndex,
-// with no priceMarket or card-shaped constituents) can reuse this same panel.
-// Same reasoning as market-index.ts's own StatsConstituent. MarketIndex still
-// satisfies this structurally, so the existing /market call site is unaffected.
-type StatsPanelIndex = { stats: MarketStats; currency: string; startDay: string };
 
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "up" | "down" }) {
   return (
@@ -24,7 +17,7 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
   );
 }
 
-export function IndexStats({ index }: { index: StatsPanelIndex }) {
+export function IndexStats({ index }: { index: MarketIndex }) {
   const s = index.stats;
   // Defensive: a MarketIndex served from a pre-`stats` cache blob would lack this.
   if (!s) return null;

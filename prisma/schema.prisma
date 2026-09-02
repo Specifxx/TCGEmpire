@@ -486,8 +486,13 @@ model PriceHistory {
 }
 
 // Weekly snapshot of a sealed product group's lowest live in-stock price — the
-// same role PriceHistory plays for Card, feeding the Sealed Index and Rising
-// Sealed (see sealed-index.ts / sealed-rise-predictor.ts). Added 2026-09-02.
+// same role PriceHistory plays for Card, feeding Rising Sealed (see
+// sealed-rise-predictor.ts). Added 2026-09-02.
+//
+// A Sealed Index (/market/sealed) briefly read this table too, chain-linking
+// the whole catalogue into one number the same way market-index.ts does for
+// singles. Removed the same day per request ("it's useless") — this table and
+// its writer stayed, since Rising Sealed still depends on both.
 //
 // Keyed by groupKey as a BARE STRING, not a Prisma relation, deliberately —
 // unlike Card, there is no persistent per-product row to foreign-key against:
@@ -498,8 +503,8 @@ model PriceHistory {
 // there is no FK, a row here survives even if its groupKey is later retired
 // from SealedListing entirely (the product stopped being sold anywhere) —
 // which is correct, not a bug: its price history stays real and chartable,
-// it just stops gaining new points and drops out of the live constituent list
-// (see sealed-index.ts's "must currently have a live price" gate).
+// it just stops gaining new points and drops out of Rising Sealed's own
+// "must currently have a live price" universe (sealed-rise-predictor.ts).
 //
 // Written by writeSealedPriceHistory() (sealed-import.ts), at most once every
 // HISTORY_MIN_INTERVAL_DAYS (price-import.ts's constant, exported and reused
@@ -522,7 +527,7 @@ model SealedPriceHistory {
 
   @@unique([groupKey, country, day])
   @@index([groupKey, country, day])
-  // Serves a whole-market read (the Sealed Index's basket-wide history scan).
+  // Serves Rising Sealed's whole-market read (sealed-rise-predictor.ts).
   @@index([country, day])
 }
 

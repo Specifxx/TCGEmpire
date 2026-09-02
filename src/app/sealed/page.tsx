@@ -229,9 +229,7 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
             Booster boxes, packs, Proving Grounds, bundles and other sealed Riftbound
             products — priced across {info.adjective} stores so you can find the cheapest.
             Wondering if a box is worth ripping?{" "}
-            <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>{" "}
-            Curious where sealed prices are trending?{" "}
-            <Link href="/market/sealed" className="text-brand-400 hover:underline">See the Sealed Index →</Link>
+            <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the EV calculator →</Link>
           </p>
           {usingFallback && (
             <p className="mt-2 text-xs text-slate-500">

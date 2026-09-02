@@ -17,12 +17,12 @@ const PAGE = "src/app/tools/rising-sealed/page.tsx";
 // backtesting a second time.
 //
 // HONEST LIMITS, structurally enforced: there is no search/view-tracking
-// signal for sealed products (a deliberate choice, not an oversight — see
-// sealed-index.ts's own file header for the same reasoning), so unlike cards'
-// RiseComponents (which carries a `velocity` field that is legitimately zero
-// until DemandSnapshot rows accrue), SealedRiseComponents has NO demand or
-// velocity field at all. These tests pin that absence structurally, not just
-// in prose — a zeroed-out fake field would be worse than an honestly missing one.
+// signal for sealed products (a deliberate choice, not an oversight), so
+// unlike cards' RiseComponents (which carries a `velocity` field that is
+// legitimately zero until DemandSnapshot rows accrue), SealedRiseComponents
+// has NO demand or velocity field at all. These tests pin that absence
+// structurally, not just in prose — a zeroed-out fake field would be worse
+// than an honestly missing one.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("reuses backtest() and computeSignals() rather than reimplementing lookahead-free backtesting", () => {
@@ -60,7 +60,7 @@ test("scarcity is a real live in-stock listing count, not a demand proxy", () =>
 
 test("universe is the whole shipped (non-preorder) catalogue, no SCAN/DISPLAY cap — the catalogue is already small", () => {
   const code = codeOnly(read(LIB));
-  assert.match(code, /getSealedGroups\(market\)/, "must use the shipped-only listing, matching sealed-index.ts's own constituent rule");
+  assert.match(code, /getSealedGroups\(market\)/, "must use the shipped-only (non-preorder) listing");
   assert.doesNotMatch(code, /getAllSealedGroups|getPreorderGroups/);
   assert.doesNotMatch(code, /\bSCAN\b|\bDISPLAY\b/, "no scan/display cap — every qualifying product is shown, ranked");
 });
@@ -68,7 +68,7 @@ test("universe is the whole shipped (non-preorder) catalogue, no SCAN/DISPLAY ca
 test("single-market scope only — no GLOBAL, no historySource()/CA-EU derivation", () => {
   const code = codeOnly(read(LIB));
   assert.match(code, /export async function getRisingSealed\(market: Country = DEFAULT_COUNTRY\)/);
-  assert.doesNotMatch(code, /GLOBAL/, "matches sealed-index.ts's own removal of a cross-region composite");
+  assert.doesNotMatch(code, /GLOBAL/, "no cross-region composite — one region in its own currency beats a blend");
   assert.doesNotMatch(code, /historySource/, "every market's sealed history is tracked natively — no derivation layer needed");
   assert.match(
     code,

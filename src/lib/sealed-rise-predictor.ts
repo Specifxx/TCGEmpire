@@ -16,18 +16,16 @@ import { zScores, percentileRanks, clamp } from "./stats";
 // HONEST LIMITS (surfaced in the UI): this is PRICE-TIMING AND SUPPLY ONLY —
 // there is deliberately no demand component and no demand-velocity component.
 // Rising Cards' demand signal is real search/view traffic (Card.searchCount,
-// DemandSnapshot); nothing equivalent is tracked for sealed products today
-// (see sealed-index.ts's own file header for the same reasoning), and
-// inventing a demand proxy would dress up a made-up number as if it meant
-// something. So unlike RiseComponents, SealedRiseComponents simply has no
-// demand/velocity fields at all — not zeroed-out placeholders, genuinely
+// DemandSnapshot); nothing equivalent is tracked for sealed products today,
+// and inventing a demand proxy would dress up a made-up number as if it
+// meant something. So unlike RiseComponents, SealedRiseComponents simply has
+// no demand/velocity fields at all — not zeroed-out placeholders, genuinely
 // absent — and the backtest (which only ever validated price-timing, never
 // demand — see backtest's own comment) is exactly as valid here as for cards.
 //
-// SCOPE: a single market — no GLOBAL, for the same reason sealed-index.ts has
-// none: one region priced in its own real currency beats a blend, and every
-// market's sealed history is already tracked natively (no CA/EU derivation
-// needed here either).
+// SCOPE: a single market — no GLOBAL. One region priced in its own real
+// currency beats a blend, and every market's sealed history is already
+// tracked natively (no CA/EU derivation needed here either).
 
 const HISTORY_DAYS = 120; // matches rise-predictor.ts's own window
 const MIN_POINTS = 5; // price points needed to trust the signals — same bar as cards
