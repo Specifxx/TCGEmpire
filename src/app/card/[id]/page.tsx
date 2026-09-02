@@ -667,9 +667,9 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     .map((n) => playedAlongsideByName.get(n))
     .filter((m): m is NonNullable<typeof m> => m != null);
 
-  // AU price history (day-cached — see lib/price-history) reused here for the
+  // AU price history (week-cached — see lib/price-history) reused here for the
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch
-  // (default take=120), so this never doubles the day's history read.
+  // (default take=60), so this never doubles the week's history read.
   const history = await getPriceHistory(card.id, DEFAULT_COUNTRY);
 
   // ── Editorial narrative ────────────────────────────────────────────────────

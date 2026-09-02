@@ -70,7 +70,7 @@ export function PriceChart({
   if (points.length < 2) {
     return (
       <p className="text-sm text-slate-400">
-        We&apos;re still collecting daily price points for this card — check back soon as the history builds up.
+        We&apos;re still collecting price points for this card — check back soon as the history builds up.
       </p>
     );
   }

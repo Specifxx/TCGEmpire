@@ -68,7 +68,7 @@ test("price-import.ts no longer writes CA or EU PriceHistory rows, but still wri
 
 test("price-history.ts's own 3 PriceHistory readers all resolve through historySource", () => {
   const code = codeOnly(read("src/lib/price-history.ts"));
-  assert.match(code, /where:\s*\{\s*cardId,\s*country:\s*source\s*\}/, "computePriceHistory");
+  assert.match(code, /where:\s*\{\s*cardId,\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}/, "computePriceHistory");
   assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}[\s\S]{0,400}orderBy:\s*\{\s*day:\s*"asc"\s*\}[\s\S]{0,600}latestRowDay/, "computePriceMovers");
   assert.match(code, /where:\s*\{\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}[\s\S]{0,600}latestDay/, "computeRecentlyUpdated");
   // Every extracted price is converted at the point it's read, not left raw.

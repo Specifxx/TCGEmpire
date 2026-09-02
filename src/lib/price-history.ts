@@ -93,47 +93,95 @@ export const HISTORY_MIN_INTERVAL_DAYS = 7;
 // Sydney, matching sydneyDayKey and sydneyDay above — the snapshot boundary is
 // Sydney midnight, so the week boundary has to agree or a key could roll a day
 // before or after the data does.
-export function sydneyWeekKey(): string {
+//
+// `d` defaults to now (every existing cache-key caller), but takes any date —
+// collapseToWeekly below reuses it to find which week a HISTORICAL row falls
+// in, rather than duplicating the same Monday-alignment logic a second time.
+export function sydneyWeekKey(d = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Australia/Sydney",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     weekday: "short",
-  }).formatToParts(new Date());
+  }).formatToParts(d);
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
-  const d = new Date(`${get("year")}-${get("month")}-${get("day")}T00:00:00Z`);
+  const monday = new Date(`${get("year")}-${get("month")}-${get("day")}T00:00:00Z`);
   // Shift back to Monday. getUTCDay(): 0 = Sunday, so Sunday counts as 6 days in.
-  const back = (d.getUTCDay() + 6) % 7;
-  d.setUTCDate(d.getUTCDate() - back);
-  return d.toISOString().slice(0, 10);
+  const back = (monday.getUTCDay() + 6) % 7;
+  monday.setUTCDate(monday.getUTCDate() - back);
+  return monday.toISOString().slice(0, 10);
 }
 
 export type PricePoint = { t: number; v: number };
 
-// Daily lowest-price points for one card in one market (oldest → newest), in that
-// market's OWN currency. AU/US/UK/SG each have a genuine tracked series (see
-// price-import.ts); CA and EU are historySource()-derived from US and UK, converted
-// back to CAD/EUR below. Resilient: returns [] on any DB error so a page never
-// crashes over the chart.
+// Circuit breaker on the per-card history read — a single card's own row
+// count within 2 years is cheap regardless (at most ~730 rows even if every
+// day had one), so this isn't a real limit today; it just keeps the read
+// bounded years from now instead of trusting that to stay true forever. Its
+// own constant, not shared with market-index.ts/sealed-index.ts's identical
+// 730 — those are basket-wide reads across a whole catalogue and deliberately
+// independent of this file's single-card one.
+const MAX_LOOKBACK_DAYS = 730;
+
+// Collapses same-ISO-week rows into one — the fix for "All" effectively
+// showing a point per day. PriceHistory wrote one row per card per TRACKED
+// day until HISTORY_MIN_INTERVAL_DAYS (above) moved writes to weekly; every
+// card tracked before that switch still has that dense daily-era history
+// sitting in the table. Reading it raw meant a fixed `take` (below) got
+// spent on a few months of dense daily rows before it ever reached anything
+// older — "All" clipped to however far back `take` daily rows reached, not
+// how far back the card's real history goes.
+//
+// Bucketing collapses that legacy density to (at most) one point per week —
+// the same granularity the writer itself uses going forward — so a `take` of
+// 60 now means what its own comment always claimed: "over a year of chart",
+// regardless of how the underlying rows were written. A card whose rows are
+// ALREADY one per week (every card going forward) is unaffected: bucketing a
+// group of one row is a no-op.
+//
+// The bucket's value is the REAL lowest price recorded that week, kept with
+// the REAL day it happened — not an average, and not the week's Monday.
+// Every PriceHistory row is already "the lowest price that day" by
+// construction (see price-import.ts's snapshot write), so taking the lowest
+// of those across a week is the same rule applied one level up, not a
+// different one — and it keeps this codebase's one consistent promise for a
+// plotted point: a price someone could genuinely have paid, on the day the
+// tooltip says.
+export function collapseToWeekly<T extends { day: Date; lowestPriceCents: number }>(rows: T[]): T[] {
+  const byWeek = new Map<string, T>();
+  for (const r of rows) {
+    const key = sydneyWeekKey(r.day);
+    const cur = byWeek.get(key);
+    if (!cur || r.lowestPriceCents < cur.lowestPriceCents) byWeek.set(key, r);
+  }
+  return [...byWeek.values()].sort((a, b) => a.day.getTime() - b.day.getTime());
+}
+
+// Weekly-bucketed lowest-price points for one card in one market (oldest →
+// newest), in that market's OWN currency — see collapseToWeekly above for why
+// this is weekly even where the underlying rows are still legacy-daily.
+// AU/US/UK/SG each have a genuine tracked series (see price-import.ts); CA and
+// EU are historySource()-derived from US and UK, converted back to CAD/EUR
+// below. Resilient: returns [] on any DB error so a page never crashes over
+// the chart.
 async function computePriceHistory(cardId: string, country: Country, take: number): Promise<PricePoint[]> {
   try {
     const { source, convert } = historySource(country);
-    // TAKE THE NEWEST `take` POINTS, THEN RESTORE ASCENDING ORDER FOR THE CHART.
-    //
-    // This was `orderBy: { day: "asc" }, take` — which takes the OLDEST `take`
-    // rows, not the most recent. It has been harmless only because no card has
-    // had more than `take` points yet; the moment one did, its chart would have
-    // frozen on the oldest window and never moved again. Cutting `take` (below)
-    // to save egress would have brought that forward rather than avoided it, so
-    // the ordering is fixed here first.
+    const cutoff = new Date(Date.now() - MAX_LOOKBACK_DAYS * 86400_000);
+    // No `take` at the query level any more — the old `orderBy: desc, take`
+    // could only ever return the newest N RAW rows, which for a card with
+    // legacy daily history meant "the newest N" was a few months, not "as far
+    // back as we have" (see collapseToWeekly's own comment). Bounded instead
+    // by MAX_LOOKBACK_DAYS, then bucketed to weekly, THEN capped to `take`
+    // points — so `take` now limits real WEEKS of history, not raw rows.
     const rows = await dbHistory.priceHistory.findMany({
-      where: { cardId, country: source },
-      orderBy: { day: "desc" },
-      take,
+      where: { cardId, country: source, day: { gte: cutoff } },
+      orderBy: { day: "asc" },
       select: { day: true, lowestPriceCents: true },
     });
-    return rows.reverse().map((r) => ({ t: r.day.getTime(), v: convert(r.lowestPriceCents) }));
+    const weekly = collapseToWeekly(rows).slice(-take);
+    return weekly.map((r) => ({ t: r.day.getTime(), v: convert(r.lowestPriceCents) }));
   } catch {
     return [];
   }
