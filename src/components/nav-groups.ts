@@ -134,6 +134,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/games/pairs", label: "Pairs", emoji: "🧠", keywords: ["pairs", "memory", "matching"], hideInFooter: true },
       { href: "/games/twenty48", label: "Riftbound 2048", emoji: "🔢", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
       { href: "/games/zoomed", label: "Zoomed In", emoji: "🔍", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
+      { href: "/games/space-invaders", label: "Space Invaders", emoji: "👾", keywords: ["space invaders", "shooter", "arcade"], hideInFooter: true },
       { href: "/games", label: "All Games", emoji: "🎮", keywords: ["games", "play", "fun", "quiz", "minigames"] },
     ],
   },
@@ -237,7 +238,7 @@ export const PRIMARY_NAV: { href: string; label: string }[] = [
 // COLUMN BALANCE is the thing to preserve when editing. The four columns are
 // deliberately kept within roughly 8-15 links of each other; a column at twice
 // its neighbours' height leaves a ragged block of whitespace under the other
-// three. Links flagged `hideInFooter` (the six secondary mini-games, whose
+// three. Links flagged `hideInFooter` (the seven secondary mini-games, whose
 // /games hub is here) are dropped: the launcher is the complete index, the
 // footer is a curated block.
 const byTitle = Object.fromEntries(
