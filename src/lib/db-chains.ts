@@ -42,13 +42,23 @@
 /**
  * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM11 — the ONLY operational variable, in service since 2026-08-29 (RM10, its
- *         predecessor, neared its 5 GB monthly transfer allowance). Like RM10
- *         and RM9 before it, it is a SINGLE name, not a chain — a deliberate
- *         departure from the RM3 through RM8 era, when each was a FALLBACK CHAIN
- *         (CURRENT-first, falling through to older, often exhausted projects),
- *         and every real outage this database has had traced back to that
- *         shape, not to the database itself.
+ *   RM6 — the ONLY operational variable, in service since 2026-09-03. Unlike
+ *        RM9/RM10/RM11 (each a freshly provisioned, genuinely empty project),
+ *        this cutover deliberately RECYCLES RM6 — the account it was live on
+ *        2026-08-17..08-20 before rotating to RM7 (see migrate-main-db-to-rm7's
+ *        own note) — rather than provisioning a new RM12. Its own 5 GB monthly
+ *        transfer allowance had long since reset, which is the whole point of
+ *        reusing it. migrate-main-db-rm11-to-rm6 restored a row-count verified
+ *        copy of RM11 (User 281, Card 1,429, RetailerPrice 90,721, and 32 other
+ *        tables, every one matching exactly) over RM6's old snapshot — which
+ *        held User=186 before the wipe: real data, but months stale against
+ *        RM11's current state, and gone once the restore's `pg_restore --clean`
+ *        dropped and recreated every table from the RM11 dump.
+ *        Like RM11, RM10 and RM9 before it, RM6 is a SINGLE name, not a
+ *        chain — a deliberate departure from the RM3 through RM8 era, when
+ *        each was a FALLBACK CHAIN (CURRENT-first, falling through to older,
+ *        often exhausted projects), and every real outage this database has
+ *        had traced back to that shape, not to the database itself.
  *
  * ── WHY THIS IS ONE NAME NOW, NOT ANOTHER CHAIN ──────────────────────────────
  * resolveVar() below selects the first variable that is merely SET — precedence,
@@ -64,16 +74,16 @@
  * project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
- * RM3 through RM10 and DATABASE_URL_2 are retired and stay out of this chain —
- * available to the migration tasks by explicit name (see
- * migrate-main-db-to-rm11 and its predecessors in .github/workflows/maintenance.yml).
+ * RM3 through RM11 (bar RM6 itself) and DATABASE_URL_2 are retired and stay out
+ * of this chain — available to the migration tasks by explicit name (see
+ * migrate-main-db-rm11-to-rm6 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM11"] as const;
+export const OPERATIONAL_VARS = ["RM6"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.

@@ -31,12 +31,14 @@ set -uo pipefail
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
 #
-# CUT OVER TO RM11 ON 2026-08-29 (RM10 neared its 5 GB monthly transfer
+# CUT OVER TO RM6 ON 2026-09-03 (RM11 neared its 5 GB monthly transfer
 # allowance): this is no longer a rotation onto another fallback-chain member —
-# RM11 is the ONLY operational variable now (see the long note on
+# RM6 is the ONLY operational variable now (see the long note on
 # OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain shape itself, not
-# just the project, was the thing being replaced).
-CURRENT_OP="RM11"
+# just the project, was the thing being replaced). RM6 is a RECYCLED project
+# (live once already, 2026-08-17..08-20), not a fresh one — its own allowance
+# had long since reset.
+CURRENT_OP="RM6"
 # Rotated again on 2026-09-02: RH11 neared its 5 GB monthly allowance, and RH6 —
 # a RECYCLED project this time, not a fresh one — took its place, after
 # probe-databases confirmed it reports User=0 (unlike RH5, which still holds 85
@@ -47,27 +49,27 @@ CURRENT_HIST="RH6"
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
 #
-# GATES ON RM11, not bare DATABASE_URL. The original check was
+# GATES ON RM6, not bare DATABASE_URL. The original check was
 # `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable, then widened as the chain grew
 # and narrowed back down here on 2026-08-23 when the chain was replaced by a
 # single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
 # why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM11:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM11) — skipping schema push."
+   || [ -z "${RM6:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM6) — skipping schema push."
   exit 0
 fi
 
-# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM11
+# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM6
 # must be copied into it or `prisma db push` would migrate whatever DATABASE_URL
-# happens to hold while the app (src/lib/db-chains.ts) reads RM11. A green deploy
+# happens to hold while the app (src/lib/db-chains.ts) reads RM6. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM11"
-SOURCE="RM11"
+export DATABASE_URL="$RM6"
+SOURCE="RM6"
 # Name the winner, never the value (it's a credential). There is only one
-# possible value now (the gate above already required RM11 to be set), but this
+# possible value now (the gate above already required RM6 to be set), but this
 # stays as the one line that answers "which database did this build actually
 # write to?" without anyone having to guess from a bare P1001 host.
 echo "[build-db-push] operational DB source for this build: $SOURCE"
