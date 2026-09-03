@@ -190,18 +190,53 @@ async function fetchPage(from: number, productTypeName?: string[]): Promise<{ it
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// A single page failure (403/502/a transient network blip — all observed in
+// production, e.g. workflow run 33685886911 dying on page 0 with a 403, and
+// run 33636059799 dying on page 10 with a 502) used to be immediately fatal to
+// that page: page 0 had no retry at all, and the pagination loop below gave up
+// on the WHOLE fetch the instant any later page errored once. Both are common
+// on TCGplayer's public search endpoint and neither is a "the catalogue is
+// this small" signal — retrying the SAME page a few times, with backoff,
+// resolves the transient case without losing any coverage. What retries still
+// can't fix — a sustained block for the rest of a run — is caught downstream:
+// refreshTcgplayerPrices() compares the resulting row count against what is
+// already in the database and refuses to overwrite a complete prior catalogue
+// with a truncated one (see its own comment), so a bad run degrades to "stale
+// but complete", never "silently missing most of the catalogue".
+async function fetchPageRetrying(
+  from: number,
+  productTypeName?: string[],
+  attempts = 4,
+): Promise<{ items: TcgProduct[]; total: number }> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fetchPage(from, productTypeName);
+    } catch (e) {
+      if (i >= attempts - 1) throw e;
+      console.warn(`TCGplayer page from=${from} attempt ${i + 1}/${attempts} failed:`, (e as Error).message);
+      await sleep(1000 * 2 ** i); // 1s, 2s, 4s
+    }
+  }
+}
+
 // Fetch every Riftbound card product (paginated), excluding sealed products.
+//
+// A page that still fails after fetchPageRetrying()'s own retries stops the
+// fetch here and returns whatever was collected so far. This function does NOT
+// know or claim that is the full catalogue — the caller that WRITES the result
+// (refreshTcgplayerPrices) is the one responsible for not treating a short
+// list as if the catalogue actually shrank; see that function's own guard.
 export async function fetchTcgplayerProducts(): Promise<TcgProduct[]> {
-  const first = await fetchPage(0);
+  const first = await fetchPageRetrying(0);
   const out: TcgProduct[] = [...first.items];
   for (let from = PAGE_SIZE; from < first.total; from += PAGE_SIZE) {
     await sleep(250);
     try {
-      const pg = await fetchPage(from);
+      const pg = await fetchPageRetrying(from);
       if (pg.items.length === 0) break;
       out.push(...pg.items);
     } catch (e) {
-      console.warn(`TCGplayer page from=${from} failed:`, (e as Error).message);
+      console.warn(`TCGplayer page from=${from} gave up after retries:`, (e as Error).message);
       break;
     }
   }
@@ -210,18 +245,19 @@ export async function fetchTcgplayerProducts(): Promise<TcgProduct[]> {
 
 // Fetch the SEALED product catalogue (booster boxes/cases, packs, Champion Decks,
 // Nexus Night promo packs, Pre-Rift kits, …) — a separate product type from cards.
+// Same retry-then-give-up shape as fetchTcgplayerProducts() above, same reason.
 export async function fetchTcgplayerSealed(): Promise<TcgProduct[]> {
   const PT = ["Sealed Products"];
-  const first = await fetchPage(0, PT);
+  const first = await fetchPageRetrying(0, PT);
   const out: TcgProduct[] = [...first.items];
   for (let from = PAGE_SIZE; from < first.total; from += PAGE_SIZE) {
     await sleep(250);
     try {
-      const pg = await fetchPage(from, PT);
+      const pg = await fetchPageRetrying(from, PT);
       if (pg.items.length === 0) break;
       out.push(...pg.items);
     } catch (e) {
-      console.warn(`TCGplayer sealed page from=${from} failed:`, (e as Error).message);
+      console.warn(`TCGplayer sealed page from=${from} gave up after retries:`, (e as Error).message);
       break;
     }
   }
@@ -366,12 +402,37 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   return { total: items.length, matched: rows.length, rows, unmatchedSamples };
 }
 
+// A write that would shrink one market's row count by more than this is refused
+// rather than trusted (see the guard below). TCGplayer's real catalogue only
+// grows between refresh cycles — sets don't get de-listed — so any drop this
+// large is far more likely a fetch cut short by fetchPageRetrying() giving up
+// (a sustained block) than a genuine catalogue change. 0.85 leaves headroom for
+// ordinary noise (a handful of products delisted/relisted) without masking the
+// failure this exists to catch: production was observed at 431 rows against a
+// prior 1,244 (35%) the day this guard was added.
+const COVERAGE_DROP_FLOOR = 0.85;
+
 // Replace all TCGplayer rows with a fresh pull, for the US (USD), UK (GBP), SG
-// (SGD) and AU (AUD) markets. Products are fetched ONCE and reused for all.
-// Returns rows written.
-export async function refreshTcgplayerPrices(): Promise<number> {
+// (SGD), AU (AUD) and CA (CAD) markets. Products are fetched ONCE and reused
+// for all, so a fetch that was cut short (see fetchTcgplayerProducts's own
+// comment) degrades every market identically, not just one.
+//
+// UNCONDITIONALLY DELETING AND REPLACING USED TO BE "SUCCESS" as long as
+// rows.length > 0 — so a run that only reached page 9 of the catalogue before
+// a transient block would happily DELETE a complete prior catalogue and
+// replace it with ~30% of it. That is exactly how /tools/box-ev's coverage
+// silently collapsed: it reads ONLY this table (see box-ev.ts's own header for
+// why), so a degraded TCGplayer refresh shows up there as most pools going
+// "understated" — CI never sees it, nothing errors, the site just quietly
+// gets worse. Same principle as scripts/migrate-history.ts's "copied nothing
+// is NOT success" guard: a write that would shrink coverage by more than a
+// card game's real catalogue could plausibly shrink in one refresh cycle is
+// refused rather than trusted, and the existing (older but complete) rows are
+// kept until a run that isn't truncated comes along to replace them.
+export async function refreshTcgplayerPrices(): Promise<{ written: number; byCountry: Record<string, number> }> {
   const products = await fetchTcgplayerProducts();
   let written = 0;
+  const byCountry: Record<string, number> = {};
   for (const mkt of [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
     const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
     console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
@@ -382,9 +443,19 @@ export async function refreshTcgplayerPrices(): Promise<number> {
       console.warn(`TCGplayer ${mkt.country}: 0 rows built — keeping existing rows.`);
       continue;
     }
+    const existing = await prisma.retailerPrice.count({ where: { retailer: mkt.retailer } });
+    if (existing > 0 && rows.length < existing * COVERAGE_DROP_FLOOR) {
+      console.warn(
+        `::warning::TCGplayer ${mkt.country}: refusing to replace ${existing} existing rows with only ` +
+          `${rows.length} (under ${Math.round(COVERAGE_DROP_FLOOR * 100)}% of existing) — almost certainly a ` +
+          `truncated fetch, not real catalogue shrinkage. Keeping the existing rows; the next run will retry.`,
+      );
+      continue;
+    }
     await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
     await prisma.retailerPrice.createMany({ data: rows });
     written += rows.length;
+    byCountry[mkt.country] = rows.length;
   }
-  return written;
+  return { written, byCountry };
 }

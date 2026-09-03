@@ -1737,8 +1737,16 @@ export async function importPrices(): Promise<ImportSummary> {
   // Isolated so a TCGplayer hiccup never fails the rest of the import.
   try {
     if (!onlyCountry || onlyCountry === "US") {
-      const n = await refreshTcgplayerPrices();
-      if (n > 0) summary.stores.push({ name: "TCGplayer (US)", products: n, priced: n, matched: n, unmatched: 0 });
+      // byCountry.US specifically, NOT `written` — `written` sums rows across
+      // all five currency markets (US/UK/SG/AU/CA), which all reuse the SAME
+      // underlying product fetch. Reporting that sum under a "TCGplayer (US)"
+      // label used to make this line read as ~5x the real US coverage (e.g.
+      // 2,155 when only 431 US cards actually got a fresh price), masking the
+      // exact truncated-fetch failure refreshTcgplayerPrices()'s own guard now
+      // catches — see its comment.
+      const { byCountry } = await refreshTcgplayerPrices();
+      const us = byCountry.US ?? 0;
+      if (us > 0) summary.stores.push({ name: "TCGplayer (US)", products: us, priced: us, matched: us, unmatched: 0 });
     }
   } catch (e) {
     console.warn("TCGplayer import failed:", e);

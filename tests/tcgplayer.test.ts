@@ -74,3 +74,68 @@ test("the promo-collision fix landed BEFORE the higher-price-wins collision rule
   const bestSetAt = src.indexOf("if (!prev || marketForCompare > prev.market) best.set(");
   assert.ok(scAt >= 0 && bestSetAt >= 0 && scAt < bestSetAt);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported directly again, months later: "box ev calc feature is significantly
+// wrong... need to use TCGPlayer market price so that we have at least 98% of
+// cards populated". Different root cause from the incident above — this time
+// coverage, not a price-inflation outlier. Traced on live production: run
+// 33636059799 hit a transient 502 on page 10 of TCGplayer's paginated search
+// (from=450) and fetchTcgplayerProducts()'s per-page catch just `break`d,
+// silently returning the 450 products it had so far as if that were the whole
+// catalogue. refreshTcgplayerPrices() had no way to tell "the catalogue is
+// really this small" apart from "the fetch gave up early" — its only gate was
+// `rows.length === 0` — so it happily deleteMany()'d a complete prior
+// catalogue and replaced it with the 431 cards that fetch matched (down from
+// 1,244 on a clean run two days earlier). /tools/box-ev reads ONLY this table,
+// so every pool's "N/total priced" collapsed toward "— understated" with
+// nothing in CI or the logs surfacing it: the very next run's own summary line
+// even read "TCGplayer (US): 2,155 products, 0 unmatched" — actually the SUM
+// of that same degraded 431-row fetch written across all 5 currency markets,
+// mislabelled as if it were 2,155 distinct, fully-matched US products.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a page that fails is retried before the fetch gives up on it", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  assert.ok(
+    src.includes("async function fetchPageRetrying("),
+    "expected a retry wrapper around fetchPage — a single transient 403/502 must not truncate the whole catalogue",
+  );
+  // Both product fetchers must go through the retrying wrapper, not the raw
+  // one-shot fetchPage — including page 0, which used to have NO retry at all
+  // (see run 33685886911: a bare 403 on page 0 killed the entire refresh).
+  const productsAt = src.indexOf("export async function fetchTcgplayerProducts()");
+  const sealedAt = src.indexOf("export async function fetchTcgplayerSealed()");
+  assert.ok(productsAt >= 0 && sealedAt >= 0);
+  const productsBody = src.slice(productsAt, sealedAt);
+  const sealedBody = src.slice(sealedAt);
+  for (const [name, body] of [["fetchTcgplayerProducts", productsBody], ["fetchTcgplayerSealed", sealedBody]] as const) {
+    assert.ok(!/\bfetchPage\(/.test(body), `${name} must call fetchPageRetrying, not the raw fetchPage, for every page`);
+    assert.ok(body.includes("fetchPageRetrying("), `${name} must call fetchPageRetrying`);
+  }
+});
+
+test("refreshTcgplayerPrices refuses to replace existing rows with a much smaller set", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  const fnAt = src.indexOf("export async function refreshTcgplayerPrices()");
+  assert.ok(fnAt >= 0);
+  const body = src.slice(fnAt);
+  const countAt = body.indexOf("prisma.retailerPrice.count(");
+  const floorAt = body.indexOf("rows.length < existing * COVERAGE_DROP_FLOOR");
+  const deleteAt = body.indexOf("prisma.retailerPrice.deleteMany(");
+  assert.ok(countAt >= 0, "expected refreshTcgplayerPrices to check the EXISTING row count before writing");
+  assert.ok(floorAt >= 0, "expected a coverage-drop comparison against the existing count");
+  assert.ok(deleteAt >= 0);
+  // Ordering matters exactly like the promo-collision fix above: the guard is
+  // worthless if the destructive delete already ran by the time it's checked.
+  assert.ok(countAt < floorAt && floorAt < deleteAt, "the coverage-drop guard must run BEFORE deleteMany, not after");
+});
+
+test("the TCGplayer (US) import summary reports the US market's own row count, not the 5-market sum", () => {
+  // `written` sums rows across US/UK/SG/AU/CA, which all reuse ONE product
+  // fetch — reporting that sum under a "TCGplayer (US)" label is exactly what
+  // hid the degraded run above behind a healthy-looking "2,155 products"
+  // instead of the real "431 matched in the US market".
+  const src = readCode("src/lib/price-import.ts");
+  assert.ok(src.includes("byCountry.US"), "expected the (US) summary line to read byCountry.US specifically");
+});

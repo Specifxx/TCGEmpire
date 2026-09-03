@@ -6,8 +6,8 @@ import { prisma } from "../src/lib/db";
 
 async function main() {
   console.log("Refreshing TCGplayer US + UK (GBP)…");
-  const n = await refreshTcgplayerPrices();
-  console.log("TCGplayer rows written:", n);
+  const { written } = await refreshTcgplayerPrices();
+  console.log("TCGplayer rows written:", written);
 
   console.log("Recomputing lowest price per market…");
   const [au, us, uk] = await Promise.all([
