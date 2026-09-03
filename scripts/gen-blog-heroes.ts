@@ -239,6 +239,49 @@ const HEROES: Hero[] = [
     title: "Best Basket: Cheapest Way to Buy a Deck",
     chips: ["Free with account", "Shipping included", "vs. naive total"],
   },
+  // The three crossover-onboarding guides below reference another game's NAME
+  // in plain text only — no logos, mascots, card frames or artwork from any of
+  // them. That is the same nominative-fair-use reference the article's own
+  // <title>/<h1> already makes (see articles.ts's own note on these three: "no
+  // invented crossover promos/collabs — there are none"), just rendered instead
+  // of typeset. Keeps every hero on this file's one drawing routine and its one
+  // real IP — RiftCompare's own brand mark and palette — rather than sourcing a
+  // photo of someone else's cards, which stock-photo licensing does NOT clear:
+  // a license to use the PHOTOGRAPH is not a license to depict a third party's
+  // copyrighted card art or trademarked logo/mascot inside it.
+  {
+    slug: "pokemon-collector-to-riftbound",
+    kicker: "Guide · From Pokémon",
+    title: "From Pokémon to Riftbound",
+    chips: ["Same LGS + online buying", "Start with a preconstructed deck", "No official crossover"],
+    motif: {
+      kind: "checklist",
+      label: "Carries over",
+      items: ["Physical cards", "LGS + online stores", "Preconstructed decks", "Chase alt-arts"],
+    },
+  },
+  {
+    slug: "one-piece-tcg-to-riftbound",
+    kicker: "Guide · From One Piece TCG",
+    title: "From One Piece TCG to Riftbound",
+    chips: ["Both genuinely recent games", "Same singles marketplaces", "No official crossover"],
+    motif: {
+      kind: "checklist",
+      label: "Carries over",
+      items: ["Physical cards", "Early-set scarcity", "Singles marketplaces", "Chase prints"],
+    },
+  },
+  {
+    slug: "mtg-to-riftbound",
+    kicker: "Guide · From Magic: The Gathering",
+    title: "From MTG to Riftbound",
+    chips: ["Domains work like colors", "Same LGS + singles market", "No official crossover"],
+    motif: {
+      kind: "checklist",
+      label: "Carries over",
+      items: ["Domains ≈ colors", "Runes ≈ manabase", "Constructed formats", "Singles market"],
+    },
+  },
 ];
 
 const esc = (s: string) =>
