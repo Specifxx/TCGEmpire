@@ -167,6 +167,69 @@
     ],
     "fingerprint": "a806fcdbe289c7cb"
   },
+  "/blog/mtg-to-riftbound.png": {
+    "src": "/blog/mtg-to-riftbound.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 32769,
+    "webp": "/blog/mtg-to-riftbound.webp",
+    "webpBytes": 28614,
+    "avif": "/blog/mtg-to-riftbound.avif",
+    "avifBytes": 17585,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/mtg-to-riftbound-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/mtg-to-riftbound-768w.webp"
+      }
+    ],
+    "fingerprint": "14d21b04f1e747d1"
+  },
+  "/blog/one-piece-tcg-to-riftbound.png": {
+    "src": "/blog/one-piece-tcg-to-riftbound.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 56307,
+    "webp": "/blog/one-piece-tcg-to-riftbound.webp",
+    "webpBytes": 51108,
+    "avif": "/blog/one-piece-tcg-to-riftbound.avif",
+    "avifBytes": 26508,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/one-piece-tcg-to-riftbound-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/one-piece-tcg-to-riftbound-768w.webp"
+      }
+    ],
+    "fingerprint": "ed8149bc9aa37812"
+  },
+  "/blog/pokemon-collector-to-riftbound.png": {
+    "src": "/blog/pokemon-collector-to-riftbound.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 54297,
+    "webp": "/blog/pokemon-collector-to-riftbound.webp",
+    "webpBytes": 38834,
+    "avif": "/blog/pokemon-collector-to-riftbound.avif",
+    "avifBytes": 29610,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/pokemon-collector-to-riftbound-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/pokemon-collector-to-riftbound-768w.webp"
+      }
+    ],
+    "fingerprint": "c85bda6cec6e5383"
+  },
   "/blog/premium/00-pricing-cards.png": {
     "src": "/blog/premium/00-pricing-cards.png",
     "width": 1280,

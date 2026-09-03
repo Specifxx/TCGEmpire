@@ -1335,6 +1335,10 @@ Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compar
     date: "2026-09-02",
     readMins: 6,
     tags: ["beginners", "how to start", "collecting", "buying guide", "pokemon"],
+    hero: {
+      src: "/blog/pokemon-collector-to-riftbound.png",
+      alt: "From Pokémon to Riftbound — a collector's guide, comparing physical-card buying and the preconstructed-deck entry point",
+    },
     shop: [
       { label: "Riftbound starter decks", query: "Riftbound starter deck" },
       { label: "Riftbound Signature cards", query: "Riftbound Signature card" },
@@ -1431,6 +1435,10 @@ Prices move daily, the same way a hot Pokémon set's prices do in its first week
     date: "2026-09-02",
     readMins: 6,
     tags: ["beginners", "how to start", "collecting", "buying guide", "one piece"],
+    hero: {
+      src: "/blog/one-piece-tcg-to-riftbound.png",
+      alt: "From One Piece TCG to Riftbound — a collector's guide, comparing two genuinely recent physical card games and their singles markets",
+    },
     shop: [
       { label: "Riftbound starter decks", query: "Riftbound starter deck" },
       { label: "Riftbound Vendetta singles", query: "Riftbound Vendetta" },
@@ -1527,6 +1535,10 @@ Both games share the same early-life pricing pattern: prices move fast while the
     date: "2026-09-02",
     readMins: 7,
     tags: ["beginners", "how to start", "deckbuilding", "buying guide", "mtg"],
+    hero: {
+      src: "/blog/mtg-to-riftbound.png",
+      alt: "From Magic: The Gathering to Riftbound — a player's guide, comparing Domains to colors and Runes to a manabase",
+    },
     shop: [
       { label: "Riftbound singles", query: "Riftbound TCG singles" },
       { label: "Riftbound starter decks", query: "Riftbound starter deck" },
