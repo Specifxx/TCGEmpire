@@ -4,7 +4,15 @@ import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
 import { ArticleView } from "@/components/ArticleView";
 import { SITE_URL } from "@/lib/site";
+import { clampText } from "@/lib/format";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+
+// Same ~155-char soft cap as /blog/[slug]/page.tsx, and the same reason: an SEO
+// audit found published excerpts rendering straight into <meta
+// name="description"> past Google's SERP truncation point with nothing to
+// catch it. Guides share the identical `excerpt` field and the identical risk
+// — this was the one metadata generator that hadn't picked up the fix yet.
+const DESCRIPTION_MAX = 155;
 
 // ISR rather than a pure build-time static render. A guide can now carry a LIVE
 // data block (Article.topValue / Article.marketData), and the build sandbox has
@@ -33,13 +41,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = getArticle(params.slug);
   if (!a || a.category !== "guide") return notFoundMetadata("Guide");
+  const description = clampText(a.excerpt, DESCRIPTION_MAX);
   return {
     // " — RiftCompare", matching every other indexed page's suffix (the root
     // layout's title template, and TITLE_SUFFIX in lib/deck-groups.ts) — see
     // the identical note in blog/[slug]/page.tsx for why the longer, category-
     // naming suffix was dropped.
     title: { absolute: `${a.title} — RiftCompare` },
-    description: a.excerpt,
+    description,
     // Reachable by direct URL for review, but never indexed while unfinished.
     ...(a.draft ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(`/guides/${a.slug}`, {

@@ -78,19 +78,30 @@ export const OPERATIONAL_VARS = ["RM11"] as const;
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   RH11                   — in service since 2026-08-31. A NEW project, created
- *                            for this cutover, so it started genuinely empty
- *                            (Card/ClickEvent/PriceHistory all 0 before the
- *                            restore) and carries no orphaned term of its own.
- *                            migrate-history-db-to-rh11 restored a row-count
- *                            verified copy of RH10 (Card 1,434, ClickEvent 698,
- *                            PriceHistory 336,656).
- *   RH10                   — the rollback: served 2026-08-28 to 2026-08-31 and
+ *   RH6                    — in service since 2026-09-02. Unlike RH8 through
+ *                            RH11 (each a freshly provisioned, genuinely empty
+ *                            project), this cutover deliberately RECYCLES RH6 —
+ *                            the account it retired to in 2026-08-04, which had
+ *                            been sitting as a drained migration source ever
+ *                            since. A 2026-09-02 probe-databases run confirmed it
+ *                            reports User=0 (a real history project, unlike
+ *                            RH5 — see below), and migrate-history-db-to-rh6
+ *                            re-checked that live, immediately before truncating
+ *                            it, rather than trusting the probe's memory.
+ *                            The migrate-history top-up task ran FIRST and drained
+ *                            RH6's own deep 2026-06-06..08-04 rows (249,155 of
+ *                            them) forward into RH11, so nothing from RH6's prior
+ *                            term was lost in the TRUNCATE below it.
+ *                            migrate-history-db-to-rh6 then restored a row-count
+ *                            verified copy of RH11 (Card 1,434, ClickEvent 698,
+ *                            PriceHistory 341,824 — up from RH11's own 336,656
+ *                            precisely because of that top-up).
+ *   RH11                    — the rollback: served 2026-08-31 to 2026-09-02 and
  *                            holds every row written in that window. At/near its
  *                            5 GB transfer allowance, which is why this rotation
  *                            happened, but still reachable. Only ever selected if
- *                            RH11 is UNSET — a safety net for a missing secret, not
- *                            a health check, so a slow-but-present RH11 never
+ *                            RH6 is UNSET — a safety net for a missing secret, not
+ *                            a health check, so a slow-but-present RH6 never
  *                            silently demotes to it (resolveVar is precedence,
  *                            never health; see OPERATIONAL_VARS above for the
  *                            outage that shape caused on the operational side).
@@ -103,17 +114,18 @@ export const OPERATIONAL_VARS = ["RM11"] as const;
  * probe found it holding User=85, CollectionCard=374, Order=4,
  * MarketplaceListing=11, RetailerPrice=39,635 — a full OPERATIONAL snapshot from
  * an early term, not a history project at all. It was briefly the intended target
- * of the RH8 rotation; the migration's User-row guard refused it. It is also one
- * of the account-recovery sources probe-databases exists to find, so it should be
- * left intact rather than reused.
+ * of the RH8 rotation; the migration's User-row guard refused it. A 2026-09-02
+ * probe (run to pick THIS rotation's target) confirmed it still holds that same
+ * data — RH5 remains permanently excluded, never a candidate to recycle. It is
+ * also one of the account-recovery sources probe-databases exists to find, so it
+ * should be left intact rather than reused.
  *
- * RH9 drops out of this cutover (it was RH10's rollback, and a chain only needs
- * one). RH8, HISTORY_DATABASE_URL_4/_3, HISTORY_DATABASE_URL (bare) and _2 were
- * superseded earlier. RH7 is orphaned — 0% of its card ids resolve against the
- * live catalogue. RH6 still holds the deep 2026-06-06..08-04 history and IS
- * joinable, but it is a migration source to be drained forward, not a runtime target.
+ * RH10 drops out of this cutover (it was RH11's rollback, and a chain only needs
+ * one). RH9, RH8, HISTORY_DATABASE_URL_4/_3, HISTORY_DATABASE_URL (bare) and _2
+ * were superseded earlier. RH7 is orphaned — 0% of its card ids resolve against
+ * the live catalogue.
  */
-export const HISTORY_VARS = ["RH11", "RH10", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["RH6", "RH11", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {
