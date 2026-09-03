@@ -15,7 +15,7 @@ import { pageAlternates } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
   description:
-    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
+    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Space Invaders, Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
   keywords: [
     "Riftbound games",
     "Riftle",
@@ -25,12 +25,13 @@ export const metadata: Metadata = {
     "card price game",
     "higher or lower TCG",
     "Riftbound quiz",
+    "Riftbound Space Invaders",
   ],
   alternates: pageAlternates("/games"),
   openGraph: {
     title: "Riftbound Games — Free Daily Puzzles & Arcade | RiftCompare",
     description:
-      "Riftle, Higher or Lower, Price Check, Zoomed In and Pairs — free Riftbound mini-games built on live card data.",
+      "Riftle, Higher or Lower, Price Check, Zoomed In, Pairs and Space Invaders — free Riftbound mini-games built on live card data.",
     url: `${SITE_URL}/games`,
   },
 };
@@ -109,6 +110,14 @@ const GAMES = [
     desc: "Whack-a-mole with cards: tap them as they pop, dodge the bombs, beat the clock. Pricier cards score more.",
     accent: "from-orange-500/20 to-ink-850",
   },
+  {
+    href: "/games/space-invaders",
+    emoji: "👾",
+    name: "Space Invaders",
+    tag: "Arcade",
+    desc: "Classic formation shooter: shoot down waves of real cards before they reach you. Pricier cards score more.",
+    accent: "from-violet-500/20 to-ink-850",
+  },
 ];
 
 export default async function GamesPage() {
@@ -135,7 +144,7 @@ export default async function GamesPage() {
     "@type": "ItemList",
     name: "Riftbound Games",
     description:
-      "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
+      "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048, Card Smash and Space Invaders.",
     url: `${SITE_URL}/games`,
       // Edges back to the site-level graph in app/layout.tsx. Without them this
       // node is an island and the Organization/WebSite entity signals — sameAs,
