@@ -150,6 +150,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/pack-sim`, changeFrequency: "weekly", priority: 0.8, lastModified: staticPageDate("/games/pack-sim") },
     { url: `${SITE_URL}/games/twenty48`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/twenty48") },
     { url: `${SITE_URL}/games/card-smash`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/card-smash") },
+    { url: `${SITE_URL}/games/space-invaders`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/space-invaders") },
     { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7, lastModified: latestBlog },
     // The release calendar. This slot used to be a per-set countdown URL that had
