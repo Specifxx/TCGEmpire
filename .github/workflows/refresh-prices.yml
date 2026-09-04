@@ -35,6 +35,7 @@ on:
       - "src/lib/retailers.ts"
       - "src/lib/tcgplayer.ts"
       - "src/lib/cardmarket.ts"
+      - "src/lib/cardtrader.ts"
       - "src/lib/sealed-import.ts"
       - "scripts/import-prices.ts"
       - "scripts/import-sealed.ts"
@@ -115,6 +116,18 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
+          # EU price sources. CardTrader needs its token (previously missing from
+          # this step entirely, which meant it silently never ran on the schedule
+          # even once CARDTRADER_API_TOKEN was set as a repo secret — Actions only
+          # exposes a secret to a step that names it here). Cardmarket needs NO
+          # secret at all — it fetches its own public data with zero config — so
+          # every CARDMARKET_* var here is an optional override, not a requirement.
+          CARDTRADER_API_TOKEN: ${{ secrets.CARDTRADER_API_TOKEN }}
+          CARDMARKET_DISABLED: ${{ vars.CARDMARKET_DISABLED }}
+          CARDMARKET_PRODUCTLIST_URL: ${{ vars.CARDMARKET_PRODUCTLIST_URL }}
+          CARDMARKET_PRODUCTLIST_NONSINGLES_URL: ${{ vars.CARDMARKET_PRODUCTLIST_NONSINGLES_URL }}
+          CARDMARKET_PRICEGUIDE_URL: ${{ vars.CARDMARKET_PRICEGUIDE_URL }}
+          CARDMARKET_EUR_TO_GBP: ${{ vars.CARDMARKET_EUR_TO_GBP }}
           # RH11 is the current history project (see src/lib/db-history.ts) — RH10 is
           # its at-limit rollback, and everything older is a dead fallback kept only
           # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH11 is
@@ -149,6 +162,12 @@ jobs:
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
+          # Cardmarket sealed (EU) — zero-config like its singles pass above; see
+          # that step's comment. Optional overrides only.
+          CARDMARKET_DISABLED: ${{ vars.CARDMARKET_DISABLED }}
+          CARDMARKET_PRODUCTLIST_URL: ${{ vars.CARDMARKET_PRODUCTLIST_URL }}
+          CARDMARKET_PRODUCTLIST_NONSINGLES_URL: ${{ vars.CARDMARKET_PRODUCTLIST_NONSINGLES_URL }}
+          CARDMARKET_PRICEGUIDE_URL: ${{ vars.CARDMARKET_PRICEGUIDE_URL }}
           # Same chain as the Import prices step above — see its comment.
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}

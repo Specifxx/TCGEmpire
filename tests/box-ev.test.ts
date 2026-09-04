@@ -11,6 +11,8 @@ import {
   DEFAULT_SPECIALS_PER_BOX,
   DEFAULT_PACKS,
   SPECIAL_POOLS,
+  CHASE_POOLS,
+  CHASE_RATES,
   type PoolKey,
 } from "../src/lib/box-ev";
 import { chasePrintRarity, isOvernumbered, isSignature } from "../src/lib/constants";
@@ -131,7 +133,11 @@ test("NO outlier cap — the expensive chase card is the signal, not noise", () 
 
 // ── Rates ────────────────────────────────────────────────────────────────────
 
-test("the special slot is split by card count and does NOT inflate the old total", () => {
+test("AltArt, Overnumbered and Signature take Riot's own published rate, not a shared split", () => {
+  // 2026-09-04 site-owner correction: "Alt art is 1 in 12 packs and
+  // overnumbered is 1 in 72 packs" — exactly PULL_RATES' own figures
+  // (lib/pack-composition.ts), which is what caught the old model inverting
+  // them (see the next test).
   const counts = new Map<PoolKey, number>([
     ["Showcase", 10],
     ["AltArt", 24],
@@ -140,28 +146,52 @@ test("the special slot is split by card count and does NOT inflate the old total
   ]);
   const rates = derivedRates({ counts, packs: DEFAULT_PACKS, specialsPerBox: DEFAULT_SPECIALS_PER_BOX });
 
-  // THE GUARD: total special pulls per box must still equal the one stated
-  // assumption. Bolting independent rates onto each new pool would have counted
-  // the same hit slot four times and quietly inflated every box's EV.
-  const perBox = SPECIAL_POOLS.reduce((a, p) => a + rates[p] * DEFAULT_PACKS, 0);
-  assert.ok(Math.abs(perBox - DEFAULT_SPECIALS_PER_BOX) < 1e-9, `got ${perBox} specials/box`);
-
-  // Bigger pool → bigger share.
-  assert.ok(rates.Overnumbered > rates.AltArt);
-  assert.ok(rates.AltArt > rates.Showcase);
-  assert.ok(rates.Showcase > rates.Signature);
+  assert.ok(Math.abs(rates.AltArt - 1 / 12) < 1e-9, `got ${rates.AltArt}`);
+  assert.ok(Math.abs(rates.Overnumbered - 1 / 72) < 1e-9, `got ${rates.Overnumbered}`);
+  assert.ok(Math.abs(rates.Signature - 1 / 720) < 1e-9, `got ${rates.Signature}`);
+  assert.deepEqual(rates.AltArt, CHASE_RATES.AltArt);
+  assert.deepEqual(rates.Overnumbered, CHASE_RATES.Overnumbered);
+  assert.deepEqual(rates.Signature, CHASE_RATES.Signature);
 });
 
-test("a pool with no cards gets no share of the special slot", () => {
+test("THE BUG: a bigger pool of cards must not change its own chase rate", () => {
+  // The old model split one shared budget by card count, so Overnumbered (31
+  // cards in this fixture) outweighed AltArt (24 cards) — backwards from
+  // Riot's real numbers, where AltArt is six times MORE common than
+  // Overnumbered. A per-pool count can never move a rate that is Riot's own
+  // published figure.
+  const small = derivedRates({
+    counts: new Map<PoolKey, number>([["AltArt", 1], ["Overnumbered", 1]]),
+    packs: DEFAULT_PACKS,
+    specialsPerBox: DEFAULT_SPECIALS_PER_BOX,
+  });
+  const big = derivedRates({
+    counts: new Map<PoolKey, number>([["AltArt", 500], ["Overnumbered", 500]]),
+    packs: DEFAULT_PACKS,
+    specialsPerBox: DEFAULT_SPECIALS_PER_BOX,
+  });
+  assert.equal(small.AltArt, big.AltArt);
+  assert.equal(small.Overnumbered, big.Overnumbered);
+  assert.ok(small.AltArt > small.Overnumbered, "alt art is the more common chase print, not the rarer one");
+});
+
+test("Showcase alone still spends the full specials-per-box estimate", () => {
+  const counts = new Map<PoolKey, number>([["Showcase", 10]]);
+  const rates = derivedRates({ counts, packs: DEFAULT_PACKS, specialsPerBox: DEFAULT_SPECIALS_PER_BOX });
+  assert.ok(Math.abs(rates.Showcase * DEFAULT_PACKS - DEFAULT_SPECIALS_PER_BOX) < 1e-9);
+  assert.deepEqual(SPECIAL_POOLS, ["Showcase"]);
+});
+
+test("a pool with no cards in this set gets a zero rate, published or not", () => {
   const counts = new Map<PoolKey, number>([["Showcase", 5], ["Signature", 0]]);
   const rates = derivedRates({ counts, packs: 24, specialsPerBox: 0.33 });
   assert.equal(rates.Signature, 0);
   assert.ok(rates.Showcase > 0);
 });
 
-test("no special cards at all leaves every special rate at zero rather than dividing by zero", () => {
+test("no special cards at all leaves every chase/special rate at zero rather than dividing by zero", () => {
   const rates = derivedRates({ counts: new Map(), packs: 24, specialsPerBox: 0.33 });
-  for (const p of SPECIAL_POOLS) assert.equal(rates[p], 0, p);
+  for (const p of [...CHASE_POOLS, ...SPECIAL_POOLS]) assert.equal(rates[p], 0, p);
   assert.equal(rates.Common, DEFAULT_BASE_RATES.Common);
 });
 

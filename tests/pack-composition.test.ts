@@ -12,7 +12,7 @@ import {
   EPIC_UPGRADE_PER_RARE_SLOT,
   FOIL_UPGRADE_CHANCE,
 } from "../src/lib/pack-composition";
-import { DEFAULT_BASE_RATES } from "../src/lib/box-ev";
+import { DEFAULT_BASE_RATES, CHASE_RATES } from "../src/lib/box-ev";
 import { NAV_GROUPS, FOOTER_GROUPS } from "../src/components/nav-groups";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +86,20 @@ test("per-box rates convert at the real box size", () => {
   assert.equal(byKey.altart.onePerPacks, PACKS_PER_BOX / 2);
   assert.equal(byKey.overnumbered.onePerPacks, PACKS_PER_BOX * 3);
   assert.equal(byKey.signature.onePerPacks, PACKS_PER_BOX * 3 * 10);
+});
+
+test("the box-EV calculator's chase rates are this same published table, not a second estimate", () => {
+  // THE DRIFT THIS TEST EXISTS FOR: box-ev.ts used to invent its own
+  // proportional-split estimate for AltArt/Overnumbered/Signature instead of
+  // reading the rates Riot actually published here — the same mistake this
+  // file's own header describes for the base rarities, recurring one file
+  // over. A 2026-09-04 site-owner correction ("Alt art is 1 in 12 packs and
+  // overnumbered is 1 in 72 packs") caught it; this pins the two files
+  // together so it cannot happen silently again.
+  const byKey = Object.fromEntries(PULL_RATES.map((r) => [r.key, r]));
+  assert.ok(Math.abs(CHASE_RATES.AltArt - 1 / byKey.altart.onePerPacks!) < 1e-9);
+  assert.ok(Math.abs(CHASE_RATES.Overnumbered - 1 / byKey.overnumbered.onePerPacks!) < 1e-9);
+  assert.ok(Math.abs(CHASE_RATES.Signature - 1 / byKey.signature.onePerPacks!) < 1e-9);
 });
 
 test("the simulator deals from the shared composition, not its own numbers", () => {

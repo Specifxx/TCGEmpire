@@ -98,11 +98,10 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // was added — a hand-listed subset silently readmits a reference price as a
 // buyable store the moment a new market appears.
 // The day predicted in this comment arrived on 2026-08-23: Cardmarket now writes
-// a native-EUR row for the EU market (lib/cardmarket.ts), so the list is no
-// longer empty. It is still gated OFF at the source by CARDMARKET_ENABLED, and
-// registering the key here regardless is the point — the exclusion has to be in
-// place BEFORE the flag flips, not after, or the first enabled run lets a
-// marketplace aggregate set lowestPriceCentsEu and outrank real EU stores.
+// a native-EUR row for the EU market (lib/cardmarket.ts) automatically, on
+// every price-refresh run — registering the key here BEFORE that shipped is
+// the point — or the very first run would have let a marketplace aggregate
+// set lowestPriceCentsEu and outrank real EU stores.
 export const EU_FALLBACK_RETAILERS: readonly string[] = [CARDMARKET_EU_RETAILER];
 export const ALL_FALLBACK_RETAILERS: readonly string[] = [
   ...AU_FALLBACK_RETAILERS,

@@ -111,12 +111,16 @@ test("CardTrader is the EU source and is NOT treated as a converted UK fallback"
   assert.ok(!fallback.includes("CARDTRADER"), "CardTrader must not be a UK fallback retailer");
 });
 
-test("the Cardmarket integration stays legally gated — CardTrader does not unlock it", () => {
-  // lib/cardmarket.ts is fully implemented but flagged off because Cardmarket's
-  // terms require their prior written agreement to present their prices, and their
-  // API is closed to new applicants. Adding an alternative EU source must not be
-  // mistaken for permission to flip that flag.
+test("Cardmarket and CardTrader are independent EU sources — neither's config unlocks the other", () => {
+  // Cardmarket's redisplay-licence gate is resolved (2026-09-04 support
+  // confirmation — see lib/cardmarket.ts's header) and it now fetches its own
+  // public data with zero configuration, unlike CardTrader which still needs
+  // its own token. Different gating shapes on purpose: they must stay
+  // independently controllable (CARDMARKET_DISABLED vs simply omitting
+  // CARDTRADER_API_TOKEN), never coupled to each other.
   const cm = read("src/lib/cardmarket.ts");
-  assert.match(cm, /CARDMARKET_ENABLED === "true"/, "Cardmarket must remain behind its env flag");
-  assert.match(cm, /prior written agreement|written confirmation/i, "the legal gate rationale must stay documented");
+  assert.doesNotMatch(cm, /CARDMARKET_ENABLED\b/, "the old standalone legal-gate boolean must be gone entirely");
+  assert.match(cm, /CARDMARKET_DISABLED/, "Cardmarket must gate on its own kill switch, not CardTrader's token");
+  assert.doesNotMatch(cm, /process\.env\.CARDTRADER_API_TOKEN/, "Cardmarket must never READ CardTrader's credential (mentioning it in prose, as above, is fine)");
+  assert.match(cm, /2026-09-04/, "the permission confirmation must stay documented, not silently assumed");
 });
