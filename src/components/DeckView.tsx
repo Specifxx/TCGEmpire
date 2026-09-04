@@ -190,7 +190,18 @@ export function DeckView({
               Open in Deck Builder →
             </Link>
             {bestBasketHref && (
-              <Link href={bestBasketHref} className="btn-ghost mt-2 w-full text-center text-sm">
+              // nofollow: bestBasketHref carries a unique base64 ?list= per deck, and
+              // /tools/best-basket is Premium-gated — a crawler is never signed in and
+              // premium, so every one of these renders the SAME "Go Premium" gate as
+              // the bare URL (same title/meta/H1 too, since best-basket's metadata is
+              // static). Reported directly: a site audit's duplicate-content export
+              // flagged 13 byte-identical /tools/best-basket?list=... URLs, one per
+              // deck here — the canonical already keeps them out of the index, but
+              // nofollow is what stops Google spending a crawl on each one to find
+              // that out. Same convention as the dynamic /login?next= links (see
+              // components/UserMenu.tsx) — a real link for a signed-in visitor,
+              // nothing for a crawler to gain by following.
+              <Link href={bestBasketHref} rel="nofollow" className="btn-ghost mt-2 w-full text-center text-sm">
                 Price this deck in Best Basket →
               </Link>
             )}

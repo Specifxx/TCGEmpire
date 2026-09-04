@@ -262,3 +262,47 @@ test("every image on the page has descriptive alt text", () => {
     assert.ok(!/alt=""/.test(img), "deck art is meaningful, not decorative");
   }
 });
+
+// ── Best Basket handoff: nofollow, not noindex ──────────────────────────────
+// Reported directly: a site audit's duplicate-content export flagged 13 URLs
+// under /tools/best-basket?list=..., one per deck, as byte-identical (same
+// title/meta/H1/content-hash). best-basket's metadata is a static export and
+// the tool itself is Premium-gated, so a crawler — never signed in, never
+// Premium — renders the exact same "Go Premium" gate regardless of which
+// list= it was given; the canonical (already present) keeps them out of the
+// index, but nothing stopped Google spending a crawl on each one to find
+// that out. Fixed at the source: the ONE internal link that mints a fresh
+// list= per deck (DeckView.tsx's bestBasketHref) now carries rel="nofollow",
+// the same convention already used for the dynamic /login?next= links (see
+// components/UserMenu.tsx) — real for a signed-in visitor, nothing for a
+// crawler to gain by following.
+test("the Best Basket handoff link is nofollow", () => {
+  const src = code("src/components/DeckView.tsx");
+  const at = src.indexOf("bestBasketHref &&");
+  assert.ok(at >= 0, "expected the conditional Best Basket link");
+  const block = src.slice(at, src.indexOf("</Link>", at));
+  assert.match(block, /<Link href=\{bestBasketHref\}[^>]*rel="nofollow"/, "the handoff link must be nofollow");
+});
+
+test("best-basket's own Sign-in link is nofollow when it carries a list=", () => {
+  const src = code("src/app/tools/best-basket/page.tsx");
+  const at = src.indexOf("login?next=");
+  assert.ok(at >= 0, "expected the Sign-in-free login link");
+  const block = src.slice(src.lastIndexOf("<Link", at), src.indexOf("</Link>", at));
+  assert.match(block, /rel="nofollow"/, "the list-carrying login link must be nofollow too");
+});
+
+// The deliberate OTHER side of this decision: /deck?list=... (the free deck
+// builder/pricer, no Premium gate) computes a real per-list total server-side
+// and ships it in a dynamic OG card for link-sharing — genuinely differentiated
+// content, unlike best-basket's static gate. Its own canonical already keeps it
+// out of the index, so nofollowing builderHref too would just cost Google the
+// chance to see that real content, for no corresponding benefit. Pinned so a
+// future "make it consistent with bestBasketHref" edit doesn't quietly do that.
+test("the free Deck Builder handoff link is NOT nofollow — it has real per-list content", () => {
+  const src = code("src/components/DeckView.tsx");
+  const at = src.indexOf("<Link href={builderHref}");
+  assert.ok(at >= 0, "expected the Deck Builder link");
+  const block = src.slice(at, src.indexOf("</Link>", at));
+  assert.ok(!/rel="nofollow"/.test(block), "builderHref must stay followable — /deck computes real content per list=");
+});
