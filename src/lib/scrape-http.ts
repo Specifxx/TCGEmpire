@@ -33,6 +33,34 @@ export function isRateLimited(res: Response): boolean {
   return res.status === 429;
 }
 
+// Foreign-language / non-English printings. Riftbound's Chinese release shares
+// our cards' collector numbers but trades far cheaper, so an unfiltered listing
+// keeps surfacing as the "cheapest" for a completely different (much rarer,
+// English-only) product — first caught on eBay (a $40 Kai'Sa Survivor AA priced
+// off a Chinese listing) and on TCGplayer (the "Dazzling Aurora bug": a cheap
+// Simplified-Chinese product beating the English one on TCGplayer's own search).
+// Catches: any CJK character in the title (a Chinese/Japanese/Korean card name,
+// or 中文/简体/繁體), OR a short region/language word an all-English title can
+// still carry (cn/chs/cht/jp/kr/asia/simplified/traditional/mandarin/…).
+//
+// ONE canonical pattern for every price source, not one per file. This used to
+// be reinvented per source — TCGplayer's own copy (CJK range only, plus a
+// narrower "chinese|simplified|traditional|japanese|korean" word list, no short
+// codes) had already drifted from this one before this file existed, and there
+// was no THIRD copy at all for the ~100 general Shopify/WooCommerce store feeds
+// price-import.ts scrapes — so a store that also stocks the Chinese print of a
+// card matched it as the English card's own "best" price with zero language
+// check ever running (2026-09-03 user report: "the best price often comes back
+// as some Chinese listing for a completely different product"). Every source
+// checking the exact same regex is the only way that stops recurring per source.
+export const FOREIGN_LANG =
+  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chs|cht|jp|jpn|kr|kor|asia|asian|simplified|traditional|mandarin|cantonese)\b/i;
+
+// A title indicating a non-English printing — see FOREIGN_LANG above.
+export function isForeignLanguageTitle(title: string | null | undefined): boolean {
+  return FOREIGN_LANG.test(title ?? "");
+}
+
 // Minimal robots.txt reader: only understands flat Disallow/Allow prefixes under
 // a `User-agent: *` group — no wildcards, no `$` anchors, no Crawl-delay. That
 // covers every real-world case of a robots.txt blocking a Shopify products.json

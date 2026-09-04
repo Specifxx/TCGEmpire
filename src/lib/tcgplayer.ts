@@ -20,6 +20,7 @@ import type { Prisma } from "@prisma/client";
 import { TCGPLAYER_AU_RETAILER,
   TCGPLAYER_CA_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { USD_TO } from "@/lib/fx";
+import { isForeignLanguageTitle } from "@/lib/scrape-http";
 
 const SEARCH_URL = "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
 const PRODUCT_LINE = "riftbound-league-of-legends-trading-card-game";
@@ -127,10 +128,14 @@ export function englishAnyLowest(p: TcgProduct): number | null {
 // our card. CJK characters in the product/set name, or an explicit language word, are
 // dead giveaways. (Defence-in-depth: the English-listing requirement below already
 // drops these, since their English-filtered listing preview is empty.)
-const CJK_RE = /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
+//
+// Shared with every other price source (see FOREIGN_LANG's own comment for why
+// this file's own copy — CJK range only, a narrower word list, no short region
+// codes like "cht"/"jp" — had already drifted from eBay's before this import
+// existed, and price-import.ts's ~100 general store feeds had no check of their
+// own at all).
 export function isNonEnglishProduct(p: TcgProduct): boolean {
-  const s = `${p.productName ?? ""} ${p.setName ?? ""}`;
-  return CJK_RE.test(s) || /\b(chinese|simplified|traditional|japanese|korean)\b/i.test(s);
+  return isForeignLanguageTitle(`${p.productName ?? ""} ${p.setName ?? ""}`);
 }
 
 // TCGplayer's "Riftbound Organized Play Promotional Cards" set \u2014 event-exclusive
