@@ -1762,10 +1762,10 @@ export async function importPrices(): Promise<ImportSummary> {
   }
 
   // ---- Cardmarket (UK + EU fallback price) -------------------------------------
-  // Runs automatically once CARDMARKET_PRODUCTLIST_URL/CARDMARKET_PRICEGUIDE_URL
-  // are configured — no separate flag (see cardmarket.ts's header for the
-  // 2026-09-04 support confirmation that resolved its licence gate, and its
-  // configuration note for why the files are read from disk rather than fetched).
+  // Zero-config: auto-fetches Cardmarket's own public product-list/price-guide
+  // JSON on every run (see cardmarket.ts's header for the 2026-09-04 support
+  // confirmation that resolved its licence gate, the verified public URLs, and
+  // why matching is scoped to unambiguous single-print cards).
   //
   // Writes TWO rows per card: an EUR→GBP conversion for UK, and the SAME figure
   // unconverted for EU — Cardmarket quotes in euro, so for the eurozone this is
