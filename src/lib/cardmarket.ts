@@ -1,46 +1,56 @@
-// Cardmarket as a UK price source — DISABLED by default (feature-flagged off).
+// Cardmarket as a UK/EU price source — runs automatically once the two data
+// files below are configured. No separate on/off switch: exactly like
+// lib/cardtrader.ts, the PRESENCE of its configuration IS the flag.
 //
-// Why a flag, and why off:
-//   1. LEGAL GATE. Cardmarket's API/Terms restrict redistributing/displaying their
-//      price data ("presentation of the trading cards and their respective prices
-//      requires Cardmarket's prior written agreement"). Their June-2024 public
-//      Price-Guide/Product-List download is more permissive in tone but does NOT
-//      clearly license third-party commercial redisplay. DO NOT enable this until
-//      you have written confirmation from Cardmarket that showing their price-guide
-//      data on this site (with attribution) is permitted.
-//   2. UNVERIFIED DATA CONTRACT. The public download is bot-protected, so the exact
-//      file URLs, delimiter and column names below are taken from Cardmarket's
-//      documentation and MUST be confirmed against the real files (open them in a
-//      browser / logged-in session) before flipping the flag. Everything that could
-//      differ is an env-overridable constant so you can correct it without a code
-//      change, then validate with `buildCardmarketRows` (a dry-run, no DB writes).
+// Two things used to gate this, and only one remains:
+//   1. LEGAL GATE — RESOLVED 2026-09-04. Cardmarket's Terms require their prior
+//      written agreement to present their price data, and this module stayed off
+//      until that agreement existed. It now does: David, Cardmarket Support Team
+//      Lead, in direct response to a request to use the public price-guide and
+//      product-catalogue downloads for exactly this purpose —
 //
-// What it does once enabled: downloads Cardmarket's Riftbound Product List + Price
-// Guide CSVs, joins them on idProduct, matches each product to our catalogue, takes
-// the LOW (lowest current listing) price, converts EUR→GBP, and writes one
-// `cardmarket` RetailerPrice row per card for the UK market.
+//        "The price guide and product catalogue files are publicly available
+//        (https://www.cardmarket.com/en/Riftbound/Data), so you do not need
+//        access to our API to use them. You can download the data on demand
+//        and use it however you see fit."
 //
-// How it's surfaced: Cardmarket's LOW is an EUR→GBP-converted MARKETPLACE aggregate
-// (many EU sellers), not a single verified in-stock UK SKU — exactly like the
-// converted TCGplayer-UK price. So it is a UK FALLBACK source (see
-// UK_FALLBACK_RETAILERS): it never undercuts a genuine GBP listing for the headline
-// "from" price, and it's hidden from the breakdown when a real GBP listing exists.
+//      A partnership/affiliate arrangement is separately "subject to approval"
+//      (contact Tracy Rutkowski, Head of Marketing, for that) — irrelevant to
+//      this module, which only reads the public files. Whether the Data page
+//      itself still requires being logged in is unconfirmed from here (see the
+//      access note below); either way, no API key or partner approval is needed.
+//   2. UNVERIFIED DATA CONTRACT — STILL OPEN. cardmarket.com blocks every
+//      automated client (see the access note below), so the exact column names
+//      below are still taken from documentation, not a real downloaded file, and
+//      the support reply itself warns the moved-from-API downloads may carry
+//      FEWER fields than before ("not every piece of information you might
+//      expect in the files is included"). Confirm the real headers against an
+//      actual download and validate with `buildCardmarketRows` (a dry-run, no DB
+//      writes) before trusting the numbers a real run produces. Everything that
+//      could differ is an env-overridable constant so a mismatch is a config
+//      change, not a code change.
+//
+// What it does once configured: downloads Cardmarket's Riftbound Product List +
+// Price Guide CSVs, joins them on idProduct, matches each product to our
+// catalogue, takes the LOW (lowest current listing) price, and writes one
+// `cardmarket` (UK, EUR→GBP converted) and one `cardmarket_eu` (EU, native EUR)
+// RetailerPrice row per card.
+//
+// How it's surfaced: Cardmarket's LOW is a MARKETPLACE aggregate across many EU
+// sellers, not a single verified in-stock SKU — exactly like the converted
+// TCGplayer-UK price. So both rows are FALLBACK sources (see
+// UK_FALLBACK_RETAILERS / EU_FALLBACK_RETAILERS): neither ever undercuts a
+// genuine local listing for the headline "from" price, and both are hidden from
+// the breakdown whenever a real listing exists.
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { gunzipSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER } from "@/lib/constants";
 
-// ---- feature flag -------------------------------------------------------------
-// Off unless CARDMARKET_ENABLED === "true". Nothing is fetched, written, or shown
-// while this is false.
-export function isCardmarketEnabled(): boolean {
-  return process.env.CARDMARKET_ENABLED === "true";
-}
-
-// ---- configuration (verify before enabling) -----------------------------------
-// The Riftbound Product List + Price Guide. Blank by default so an accidental
-// enable can't hit a wrong endpoint.
+// ---- configuration --------------------------------------------------------------
+// The Riftbound Product List + Price Guide. Blank by default so a missing config
+// can't hit an empty URL.
 //
 // ── THESE ARE NOT SCRAPE TARGETS, AND CANNOT BE (checked 2026-08-23) ─────────
 // www.cardmarket.com sits behind a Cloudflare WAF that returns a hard 403
@@ -48,24 +58,31 @@ export function isCardmarketEnabled(): boolean {
 // an outright block. Their robots.txt separately Disallows ClaudeBot, GPTBot,
 // CCBot, Bytespider and Google-Extended, and carries an Article 4 EU DSM
 // reservation of rights over text-and-data-mining. Getting around any of that
-// would be circumventing an access control the operator deliberately put up.
-// DO NOT point this at a scraper, a headless browser, or a proxy service.
+// would be circumventing an access control the operator deliberately put up —
+// the 2026-09-04 support confirmation covers USING the published files, not
+// scraping the site to get them. DO NOT point this at a scraper, a headless
+// browser, or a proxy service.
 //
 // ── THE SUPPORTED ROUTE ─────────────────────────────────────────────────────
-// Cardmarket PUBLISHES these two files to logged-in account holders at
-// https://www.cardmarket.com/Data/Download — widened in 2024 from API users to
-// all users, price guide refreshed once daily, catalogue on each new release.
-// A human downloads them and points this at the result. That is why both values
-// now accept a LOCAL FILE PATH as well as a URL (see readCsv below): the normal
-// operating mode is "a person downloaded two files", not "a server fetched two
-// URLs". New API applications are closed, so there is no key to get instead.
-//
-// What is still unresolved is the LICENCE to redisplay those prices on this site
-// — see the legal gate in this file's header. Having the files is not permission
-// to publish them, and CARDMARKET_ENABLED stays false until someone has that in
-// writing.
+// Cardmarket publishes these two files at
+// https://www.cardmarket.com/en/Riftbound/Data — price guide refreshed once
+// daily, catalogue on each new release; see this file's header for the support
+// confirmation that using them is permitted. A human downloads them and points
+// this at the result. That is why both values accept a LOCAL FILE PATH as well
+// as a URL (see readCsv below): the normal operating mode is "a person
+// downloaded two files", not "a server fetched two URLs" — the WAF above blocks
+// the latter regardless of permission. New API applications are closed, so
+// there is no key to get instead, and none is needed for this route.
 const PRODUCTLIST_URL = process.env.CARDMARKET_PRODUCTLIST_URL ?? "";
 const PRICEGUIDE_URL = process.env.CARDMARKET_PRICEGUIDE_URL ?? "";
+
+// ---- feature flag -----------------------------------------------------------
+// Presence of BOTH files IS the flag, exactly like CARDTRADER_API_TOKEN in
+// lib/cardtrader.ts — no separate on/off switch to forget to flip. Nothing is
+// fetched, written, or shown until someone configures where the files live.
+export function isCardmarketEnabled(): boolean {
+  return !!PRODUCTLIST_URL && !!PRICEGUIDE_URL;
+}
 
 // EUR→GBP rate for the conversion. Like USD_TO_GBP in tcgplayer.ts this is a hand-set
 // reference rate (exact FX isn't critical for a "from"/reference figure). Override
@@ -327,11 +344,10 @@ function cardmarketProductUrl(prod: Record<string, string>): string {
     : "https://www.cardmarket.com/en/Riftbound";
 }
 
-// Replace all Cardmarket rows with a fresh pull. No-op (returns skipped) while the
-// flag is off or the URLs aren't configured. Isolated try/catch lives in the caller.
+// Replace all Cardmarket rows with a fresh pull. No-op (returns skipped) while
+// the files aren't configured. Isolated try/catch lives in the caller.
 export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; written: number; reason?: string }> {
-  if (!isCardmarketEnabled()) return { skipped: true, written: 0, reason: "CARDMARKET_ENABLED!=true" };
-  if (!PRODUCTLIST_URL || !PRICEGUIDE_URL) {
+  if (!isCardmarketEnabled()) {
     return { skipped: true, written: 0, reason: "CARDMARKET_PRODUCTLIST_URL / CARDMARKET_PRICEGUIDE_URL not set" };
   }
 
