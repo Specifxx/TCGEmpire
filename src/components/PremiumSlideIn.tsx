@@ -60,7 +60,12 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 //      just previously absent from the one surface logged-in browsers actually
 //      see unprompted.
 // Every entry here must be a real Premium-only TIER_COMPARISON row.
-const PITCH_TOOLS: { emoji: string; label: string }[] = [
+//
+// EXPORTED so SignupPromoPopup's Premium pitch (2026-09-04) can reuse the exact
+// same list rather than growing its own hand-typed copy — the drift this file's
+// own header comment describes ("a hand-written sentence... drifted out of
+// date") is exactly what a second copy would risk again.
+export const PITCH_TOOLS: { emoji: string; label: string }[] = [
   { emoji: "📋", label: "Bulk Pricer" },
   { emoji: "🧺", label: "Best Basket" },
   { emoji: "🔎", label: "Value Finder" },

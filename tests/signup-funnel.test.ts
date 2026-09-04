@@ -91,7 +91,7 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
-  assert.match(src, /const PROMO_VARIANT = "comparison_instant"/, "the variant must be a named constant, not inlined at each call");
+  assert.match(src, /const PROMO_VARIANT = "premium_pitch"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });

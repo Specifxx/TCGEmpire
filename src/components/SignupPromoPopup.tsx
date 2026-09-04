@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
+import { PITCH_TOOLS } from "./PremiumSlideIn";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
 // suppresses it for the rest of that session/tab, but it comes back on the next
@@ -13,44 +15,55 @@ import { AuthForm } from "./AuthForm";
 // effect at all (see the `user` check below). Fires on every route, including the
 // homepage.
 //
-// THIS POPUP IS A NO-ACCOUNT → FREE-ACCOUNT MOMENT, AND NOTHING ELSE.
+// THIS IS NOW A PREMIUM PITCH, NOT A FREE-ACCOUNT MOMENT (2026-09-04, explicit
+// product instruction: "change the sign up pop up ... to a get premium pop up").
 //
-// Premium is deliberately absent. Earlier versions led with a comp — first a free
-// WEEK of Premium, later a shorter automatic signup preview threaded in as a
-// prop — which made the ask about the paid tier at the exact moment the visitor
-// had not yet agreed to the free one. The signup grant itself still happens
-// server-side in the OAuth callback. THAT GRANT IS NOW GONE TOO — removed
-// 2026-08-23, see lib/premium.ts — so no signup surface offers Premium at all,
-// and this dialog was already the one that never did.
+// Collapses what used to be two separate touchpoints into one. Before this: a
+// signed-out visitor saw an honest free-account comparison here; ONLY once they
+// had signed up AND browsed a couple more pages did PremiumSlideIn (see that
+// file) ever mention Premium at all. That is a real gap for a visitor who came
+// in already wanting the pro tools — they had to survive a whole separate,
+// later, dwell-gated nudge before anyone told them Premium existed. This popup
+// now leads with Premium directly, and its one CTA (the same OAuth buttons every
+// signup surface uses) sends them to /premium after the round trip instead of
+// back to wherever they were — sign-up is the necessary first step toward
+// buying Premium, not a separate errand to run some other day.
 //
-// It also no longer sells a search allowance. A tiered search cap shipped as this
-// popup's headline and was removed a day later — see api/search/route.ts for what
-// it cost. Manufacturing a limit to sell the fix is the shape of thing this
-// component should never do again.
+// THIS IS NOT THE COMP THAT WAS REMOVED 2026-08-23. That removal (see
+// lib/premium.ts's "NO PREMIUM ON SIGNUP" note) deleted an AUTOMATIC grant —
+// creating an account used to silently hand over some real days of the paid
+// tier for free, no purchase involved. Nothing here grants anything: this is a
+// pitch plus a redirect, the exact same pattern PremiumDialog.tsx already uses
+// for a signed-out visitor who clicks "Get Premium" elsewhere on the site
+// (`<Link href="/login?next=/premium">Create a free account to start →</Link>`)
+// — just surfaced as the FIRST thing a new visitor sees instead of something
+// they have to go find. Premium itself is still only ever reached by a real
+// Stripe trial/checkout on /premium, same as always.
 //
-// What replaced both: an honest side-by-side of what browsing already gives you
-// against what an account adds, built from the actual entitlement checks in the
-// codebase (see COMPARISON below). Row one is a tie on purpose — signing up takes
-// nothing away — and the price-alerts row concedes the anonymous email path
-// rather than pretending alerts are account-only, because they aren't.
+// The free ACCOUNT tier (watchlist, price alerts, portfolio) still exists and
+// is still real — it's what /login's own AuthForm sells (see its PERKS list)
+// and what a visitor gets regardless of whether they ever pay for Premium. This
+// popup just isn't the surface that leads with it any more.
 const SEEN_KEY = "rc_signup_promo_seen";
 
 // A CORNER SLIDE-IN, NOT A MODAL (2026-09-01). This used to be a full-screen
 // dialog — backdrop, scroll-locked, focus-trapped, centred card. That shape had
 // already cost this codebase one production incident on its own (see
 // tests/signup-slidein.test.ts's header for the short-phone history) and, more
-// basically, is a much bigger interruption than the ask ("create a free account")
-// warrants. PremiumSlideIn already proved the pattern for the logged-in audience:
-// a small corner card that never blocks scroll, never traps focus, and yields to
-// any REAL modal (checks the shared body[data-rc-dialog] flag, same as before —
-// but no longer SETS it, since it no longer blocks anything itself). The two
-// audiences are exclusive by construction (signed-out here, signed-in-non-Premium
-// there), so sharing PremiumSlideIn's exact corner and z-tier is safe — they can
-// never be on screen at the same time for the same visitor.
+// basically, is a much bigger interruption than a corner card needs to be.
+// PremiumSlideIn already proved the pattern for the logged-in audience: a small
+// corner card that never blocks scroll, never traps focus, and yields to any
+// REAL modal (checks the shared body[data-rc-dialog] flag, same as before — but
+// no longer SETS it, since it no longer blocks anything itself). The two
+// audiences are exclusive by construction (signed-out here, signed-in-non-
+// Premium there), so sharing PremiumSlideIn's exact corner, z-tier AND now its
+// gold Premium colouring is safe — they can never be on screen at the same time
+// for the same visitor, and a visitor who does see both across two sessions
+// should recognise them as the same offer, not two different ones.
 //
-// The CONTENT below — the honest COMPARISON table, the dismissal persistence —
-// is UNCHANGED from the modal version. The outer chrome moved (see above), and
-// as of the same date the TIMING changed too: see the note below.
+// The MECHANICS below — dismissal persistence, non-modal behaviour, entrance/
+// exit transition — are UNCHANGED from every version before this one. Only the
+// PITCH (this file's whole body, below) and the CTA's destination changed.
 
 // NO DELAY, NO BUY-CLICK-AWARE TIMING (2026-09-01, explicit product decision).
 //
@@ -67,56 +80,47 @@ const SEEN_KEY = "rc_signup_promo_seen";
 // landing on top of a card page's buy button. If pages/visitor or buy_click
 // drop again after this ships, that history is the first thing to revisit —
 // but the instruction behind this version was explicit and repeated, so this
-// is not a "someone forgot" gap the way the pre-timing version once was.
-const SKIP_PATHS = ["/login", "/verify"];
+// is not a "someone forgot" gap the way the pre-timing version once was. The
+// same trade-off now applies to a Premium pitch rather than a free-account one,
+// which is a strictly bigger ask of a visitor who has seen nothing else yet —
+// worth watching signup_promo_dismissed and sign_up for after this ships.
+//
+// /premium is also skipped — no point pitching "sign up to reach Premium" to a
+// visitor already standing on the page that sells it (same reasoning
+// PremiumSlideIn's own SKIP_PATHS already applies).
+const SKIP_PATHS = ["/login", "/verify", "/premium"];
 
 // Distinguishes this behaviour from every version before it, on
 // signup_promo_shown/_dismissed, so variants are separable in GA4 rather than
 // averaged together across the changeover — same convention this field has
-// always followed. "comparison" (the original modal) → "comparison_slidein"
-// (chrome became a slide-in) → "comparison_instant" (the delay/buy-click
-// timing was removed entirely). Each name records which axis changed.
+// always followed. "comparison" (the original modal, free-account pitch) →
+// "comparison_slidein" (chrome became a slide-in) → "comparison_instant" (the
+// delay/buy-click timing was removed entirely) → "premium_pitch" (the pitch
+// itself changed from a free-account comparison to Premium, 2026-09-04). Each
+// name records which axis changed; this one changes CONTENT, not chrome or
+// timing, so it gets a genuinely new name rather than another suffix.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "comparison_instant";
-
-// The comparison itself. EVERY ROW IS DERIVED FROM A REAL ENTITLEMENT CHECK —
-// nothing here is aspirational:
-//
-//   Compare prices   no gate anywhere (deliberately: it's the whole site)
-//   Watchlist        app/watching redirect + api/alerts/watchlist routes 401
-//   Price alerts     api/alerts/subscribe — anonymous EMAIL path exists and stays
-//   Portfolio        app/portfolio redirect + api/collection routes, portfolio/export 401
-//
-// `browsing: false` renders an em dash; a string renders as-is, for the rows
-// where signed-out visitors genuinely get something. One of the four is not a
-// flat "no", and saying so is the point — a comparison that overstates the wall
-// is a dark pattern, and this one is checkable against the code by anyone.
-//
-// Premium-gated tools (Bulk Pricer, Best Basket, the screeners) are deliberately
-// absent: this popup never mentions the paid tier. Best Basket lived here as a
-// free-account perk until it moved back to Premium (see lib/premium.ts's tier
-// note) — removed rather than left inaccurate, since every row above is a promise
-// this popup makes about what signing up gets you. Keep this list at 4-6 rows —
-// a slide-in card reads worse the taller it gets, same reasoning that used to be
-// about a modal's off-screen close button and is now just about not being a
-// bigger interruption than a corner card should be.
-const COMPARISON: { label: string; desc: string; browsing: string | false }[] = [
-  { label: "Compare every store + eBay", desc: "Live prices on every card", browsing: "Yes" },
-  { label: "Watchlist", desc: "Save cards and pick up where you left off", browsing: false },
-  { label: "Price alerts", desc: "Get told when a card hits your price", browsing: "One card, by email" },
-  { label: "Portfolio", desc: "What your collection is worth, and what it's made you", browsing: false },
-];
+const PROMO_VARIANT = "premium_pitch";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
-  const { user, loaded } = useMe();
+  const { user, loaded, trialDays } = useMe();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
+
+  // A brand-new account has, by definition, never started a trial before — so
+  // unlike PremiumSlideIn's `trialEligible` (which useMe() only computes for a
+  // SIGNED-IN user, checking their own trialStartedAt), eligibility here needs
+  // no per-user check at all. `trialDays` itself is plain config (the
+  // configured trial LENGTH, 0 if the trial is off) and is populated by
+  // /api/me for signed-out callers too — see lib/use-me.ts's Me type and
+  // api/me/route.ts's unconditional `trialDays: PREMIUM_TRIAL_DAYS`.
+  const trialAvailable = trialDays > 0;
 
   useEffect(() => {
     if (!loaded || user || shown) return;
@@ -181,24 +185,26 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
 
   if (!shown) return null;
 
+  const heading = trialAvailable ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`;
+
   return (
     // Bottom-LEFT, same corner and z-tier as PremiumSlideIn (z-[70], under every
-    // real modal — signup no longer being one of them). Safe to share: this
-    // audience (signed-out) and PremiumSlideIn's (signed-in, non-Premium) are
-    // mutually exclusive for any one visitor, so the two can never stack.
+    // real modal). Safe to share: this audience (signed-out) and PremiumSlideIn's
+    // (signed-in, non-Premium) are mutually exclusive for any one visitor, so the
+    // two can never stack.
     <div
       role="region"
-      aria-label="Create a free RiftCompare account"
+      aria-label="RiftCompare Premium — sign up to get started"
       className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-all duration-300 sm:bottom-4 sm:w-auto ${
         entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
-      <div className="relative overflow-hidden rounded-xl border border-brand-500/50 bg-ink-900 shadow-2xl">
+      <div className="relative overflow-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
-          <span className="rounded border border-brand-400/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-300">
-            Free account
+          <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+            Premium
           </span>
-          <span className="text-xs font-semibold text-slate-200">What it adds</span>
+          <span className="text-xs font-semibold text-slate-200">{heading}</span>
           <button
             onClick={dismiss}
             aria-label="Dismiss"
@@ -209,51 +215,47 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         </div>
 
         <div className="px-4 pb-1 pt-3">
-          <p className="text-xs leading-relaxed text-slate-400">You keep everything you already have. No card, no spam.</p>
+          <p className="text-xs leading-relaxed text-slate-400">RiftCompare Premium adds the pro tools and goes ad-free:</p>
 
-          {/* Two tier columns, one row per feature. Semantically a table because
-              it IS one — a screen reader announcing "Watchlist, Browsing: no,
-              Free account: yes" is exactly the comparison a sighted visitor gets
-              from the marks. */}
-          <table className="mt-2.5 w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-ink-800">
-                <th scope="col" className="pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  <span className="sr-only">Feature</span>
-                </th>
-                <th scope="col" className="w-[64px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  Browsing
-                </th>
-                <th scope="col" className="w-[64px] pb-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-brand-300">
-                  Free
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON.map((row) => (
-                <tr key={row.label} className="border-b border-ink-800/60 last:border-0">
-                  <th scope="row" className="py-1.5 pr-2 font-normal">
-                    <span className="block text-xs font-semibold leading-tight text-slate-200">{row.label}</span>
-                    <span className="block text-[10px] leading-tight text-slate-500">{row.desc}</span>
-                  </th>
-                  <td className="px-1 text-center align-middle">
-                    {row.browsing === false ? (
-                      <span className="text-slate-600" aria-label="Not included">—</span>
-                    ) : (
-                      <span className="text-[10px] font-medium leading-tight text-slate-400">{row.browsing}</span>
-                    )}
-                  </td>
-                  <td className="px-1 text-center align-middle">
-                    <span className="font-bold text-brand-400" aria-label="Included">✓</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* Same chip row as PremiumSlideIn, same shared PITCH_TOOLS — see that
+              file's own header comment for why this is a hand-maintained list
+              pinned against TIER_COMPARISON by tests/premium-slidein.test.ts,
+              rather than a second one drifting here independently. */}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {PITCH_TOOLS.map((t) => (
+              <span
+                key={t.label}
+                className="inline-flex items-center gap-1 rounded-full bg-ink-800 px-2 py-1 text-[10px] font-semibold text-slate-300"
+              >
+                <span aria-hidden>{t.emoji}</span>
+                {t.label}
+              </span>
+            ))}
+          </div>
+
+          {/* Same rule as PremiumSlideIn: while a trial is available, the price
+              stays off this card entirely — the full "$0 due today, then
+              $X/mo after N days, card required" breakdown is what /premium
+              itself shows before anything is charged, and repeating a partial
+              version here risks reading as a different, contradicting number.
+              Once there's no trial to lean on, the price belongs here, same as
+              it always has. */}
+          {!trialAvailable && PREMIUM_PRICE_AMOUNT ? (
+            <p className="mt-2 text-[11px] text-slate-500">
+              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} · locked in
+              for good, cancel anytime
+            </p>
+          ) : null}
         </div>
 
-        <div className="px-4 pb-4 pt-2">
-          <AuthForm providers={providers} bare compact source="popup" next={pathname ?? undefined} />
+        <div className="px-4 pb-4 pt-3">
+          <p className="text-xs font-semibold text-slate-300">Sign up to get started — free, no card needed:</p>
+          {/* next="/premium", not the current page: the whole point of this
+              redesign is that sign-up IS the first step toward Premium, so the
+              OAuth round trip lands the visitor ready to start a trial or
+              check out, instead of back where they were with Premium still
+              something they have to go find later. */}
+          <AuthForm providers={providers} bare compact source="popup" next="/premium" />
           <button
             type="button"
             onClick={dismiss}
@@ -261,10 +263,6 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
           >
             Maybe later
           </button>
-          {/* No "See Premium" link here any more. It was the last Premium
-              mention left in the popup, and it pointed the one visitor
-              actually engaging with a free-account pitch at the paid tier
-              instead — a second ask stacked on the first. */}
         </div>
       </div>
     </div>

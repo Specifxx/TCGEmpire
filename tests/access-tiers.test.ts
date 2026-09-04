@@ -85,55 +85,50 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /if \(!loaded \|\| user \|\| shown\) return/, "still only shown to signed-out visitors");
 });
 
-test("the popup's comparison never pitches a Premium-gated tool", () => {
+test("the popup's Premium pitch names only real Premium-only tools, reused from PremiumSlideIn", () => {
+  // 2026-09-04: the popup flipped from a free-account comparison to a Premium
+  // pitch (explicit product instruction — see the component's own header
+  // comment for the full reasoning and why this is NOT the removed signup
+  // comp). It must not grow its own hand-typed tool list — PremiumSlideIn's
+  // PITCH_TOOLS is already pinned against TIER_COMPARISON by
+  // tests/premium-slidein.test.ts, and a second copy here would be exactly the
+  // "same claim written twice, updated once" drift TierComparisonTable's own
+  // header comment warns about.
   const src = read(POPUP);
-  // Scope to the COMPARISON array itself (not the whole file — a comment is
-  // allowed to explain, in prose, that these tools are Premium only) so this
-  // checks what's actually PITCHED as a free-account perk, not whether the tool
-  // names appear anywhere.
-  const rowsMatch = src.match(/const COMPARISON[^=]*=\s*\[([\s\S]*?)\n\];/);
-  assert.ok(rowsMatch, "expected a COMPARISON array declaration");
-  const rows = rowsMatch![1];
-  assert.ok(!/Bulk Pricer/.test(rows), "popup must not pitch Bulk Pricer — it's Premium only");
-  assert.ok(!/Best Basket/.test(rows), "popup must not pitch Best Basket — it moved back to Premium only");
-  assert.match(rows, /Price alerts/, "popup should name what an account actually unlocks");
-  assert.match(rows, /Watchlist/, "popup should name what an account actually unlocks");
-  // 4-6 rows: fewer reads as thin, more makes a bigger interruption than a
-  // corner slide-in card should ever be (see tests/signup-slidein.test.ts).
-  const rowCount = (rows.match(/\{\s*label:/g) ?? []).length;
-  assert.ok(rowCount >= 4 && rowCount <= 6, `expected 4-6 comparison rows, found ${rowCount}`);
+  assert.match(src, /import \{ PITCH_TOOLS \} from "\.\/PremiumSlideIn"/, "must reuse the shared tool list, not a local copy");
+  assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
+  assert.ok(!/const COMPARISON/.test(src), "the old free-account COMPARISON table must be gone");
 });
 
-test("the popup is a free-account moment only — Premium never appears in it", () => {
-  // The dialog used to lead with a Premium comp (first a free WEEK, later the
-  // shorter automatic signup preview threaded down as a prop). That made the
-  // ask about the PAID tier at the moment the visitor hadn't yet agreed to the
-  // free one. That signup grant has since been removed entirely (2026-08-23),
-  // so no surface offers Premium for registering any more. What this test pins
-  // is narrower and still worth pinning: the POPUP never mentions Premium.
+test("the popup is a Premium pitch, but grants nothing automatically", () => {
+  // The removed signup comp (2026-08-23, see lib/premium.ts's "NO PREMIUM ON
+  // SIGNUP" note) silently handed new accounts real days of the paid tier for
+  // free. This is a different mechanism: a pitch plus a redirect to /premium,
+  // where Premium is still only ever reached by a real Stripe trial or
+  // checkout — the exact same pattern PremiumDialog.tsx already uses for a
+  // signed-out visitor ("Create a free account to start →"). What must hold is
+  // that NOTHING here grants Premium outright.
   const src = read(POPUP);
-  assert.ok(!/signupPremiumDays/.test(src), "the popup must not take or thread the Premium-preview prop");
-  // Scoped to JSX/copy, not comments: the header comment legitimately explains
-  // WHY Premium is absent, and must not itself trip this assertion.
-  const withoutComments = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-  assert.ok(!/Premium/.test(withoutComments), "no Premium copy may render in the popup");
+  assert.ok(!/signupPremiumDays/.test(src), "the popup must not take or thread a Premium-preview prop");
+  assert.ok(!/grantPremiumDays|grantPremiumMonths/.test(src), "the popup must never call a Premium-granting function itself");
+  assert.match(src, /next="\/premium"/, "the CTA must route the OAuth round trip to \/premium (a redirect, not a grant)");
 });
 
-test("the popup's honesty guarantees: no fake scarcity, and the tie row stays", () => {
+test("the popup's honesty guarantees survive the pitch change: no fake scarcity, price only shown when true", () => {
   const src = read(POPUP);
-  // Row one is a deliberate tie — signing up takes nothing away — and the
-  // price-alerts row concedes the anonymous email path rather than claiming
-  // alerts are account-only, which they are not (api/alerts/subscribe).
-  const rowsMatch = src.match(/const COMPARISON[^=]*=\s*\[([\s\S]*?)\n\];/);
-  assert.ok(rowsMatch, "expected a COMPARISON array declaration");
-  const rows = rowsMatch![1];
-  assert.match(rows, /browsing: "Yes"/, "at least one row must credit browsing with a full yes");
-  assert.match(rows, /browsing: "One card, by email"/, "the alerts row must concede the anonymous email path");
   // Countdowns, seat counts and "expires in" pressure are exactly what this
-  // dialog must never grow.
+  // popup must never grow, in either its old or new pitch.
   assert.ok(!/only \d+ (left|spots|seats)/i.test(src), "no fake scarcity");
   assert.ok(!/expires? in/i.test(src), "no countdown pressure");
-  assert.match(src, /You keep everything you already have/, "the copy must say signing up costs them nothing");
+  // Signing up itself must still cost nothing and need no card — only the
+  // language changed (the old copy said this about a free-account comparison;
+  // the new copy says it about the sign-up step of the Premium pitch).
+  assert.match(src, /free, no card needed/i, "the copy must still say signing up costs nothing and needs no card");
+  // The price line is conditional on there being no trial to lean on instead
+  // (same rule PremiumSlideIn already follows) — it must never render
+  // unconditionally, which would repeat a possibly-different number from
+  // whatever /premium ends up actually charging.
+  assert.match(src, /!trialAvailable && PREMIUM_PRICE_AMOUNT/, "the price line must stay conditional on no trial being available");
 });
 
 test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {

@@ -23,6 +23,15 @@ const SRC = "src/components/SignupPromoPopup.tsx";
 // content height. tests/signup-popup-dismissible.test.ts is retired along with
 // it; this file pins the NEW contract instead, mirroring
 // tests/premium-slidein.test.ts's own coverage of the same pattern.
+//
+// 2026-09-04: the CHROME above stayed put, but the CONTENT it wraps flipped
+// from an honest free-account comparison to a Premium pitch (explicit product
+// instruction — see the component's own header comment). The mechanical tests
+// below (non-modal, dismissible, corner/sizing/entrance, instant timing) are
+// untouched, since none of that changed; the content-specific tests further
+// down were rewritten to match what actually renders now. See
+// tests/access-tiers.test.ts for the honesty/no-automatic-grant guarantees on
+// the new pitch itself.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("it is NON-MODAL: it yields to real modals and never blocks them", () => {
@@ -57,15 +66,52 @@ test("shares PremiumSlideIn's exact corner, sizing and entrance pattern", () => 
   assert.match(code, /setTimeout\(\(\) => setShown\(false\), 250\)/, "must let the exit transition finish before unmounting, same 250ms as PremiumSlideIn");
 });
 
-test("the honest comparison table survives the chrome change unchanged", () => {
-  // The redesign only ever meant to change the outer shell — the actual content
-  // (and the guarantees tests/access-tiers.test.ts pins about it: no Premium-
-  // gated tools, the tie row, the anonymous-alerts concession) must still exist,
-  // just inside the new wrapper.
+test("the popup embeds AuthForm the same way it always has", () => {
+  // 2026-09-04: the PITCH inside this card changed from a free-account
+  // comparison table to a Premium pitch (see tests/access-tiers.test.ts for
+  // the content-honesty guarantees on that new pitch). The embed itself did
+  // not — still bare + compact, still attributed to "popup".
   const code = codeOnly(read(SRC));
-  assert.match(code, /const COMPARISON:/, "the COMPARISON table must still exist");
-  assert.match(code, /<table/, "must still render a real table, not a demoted div layout");
   assert.match(code, /<AuthForm providers=\{providers\} bare compact source="popup"/, "must still embed AuthForm the same way");
+});
+
+// ── The Premium pitch (2026-09-04) ──────────────────────────────────────────
+// Replaces the tests this file used to run against the free-account COMPARISON
+// table, which no longer exists — see the component's own header comment for
+// the full reasoning behind the change and tests/access-tiers.test.ts for the
+// honesty/no-automatic-grant guarantees on the new content.
+
+test("the CTA sends the OAuth round trip to /premium, not back to the current page", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(code, /next="\/premium"/, "AuthForm must be given a literal /premium next, not pathname");
+  assert.doesNotMatch(code, /next=\{pathname/, "must not fall back to returning the visitor to where they were");
+});
+
+test("/premium is in SKIP_PATHS — no point pitching a sign-up-for-Premium popup on the page that already sells it", () => {
+  const code = codeOnly(read(SRC));
+  const skipMatch = code.match(/const SKIP_PATHS = \[([^\]]*)\]/);
+  assert.ok(skipMatch, "expected a SKIP_PATHS declaration");
+  assert.match(skipMatch![1], /"\/premium"/, "SKIP_PATHS must include /premium, mirroring PremiumSlideIn's own list");
+});
+
+test("trial framing is computed from trialDays (config), not trialEligible (which requires sign-in)", () => {
+  // useMe()'s trialEligible is only ever true for a SIGNED-IN user (it checks
+  // their own trialStartedAt) — always false for the signed-out audience this
+  // popup targets, per lib/use-me.ts's own Me type comment. A brand-new
+  // account has by definition never used the trial, so eligibility here only
+  // needs the trial to be configured at all (trialDays > 0), which api/me's
+  // route returns unconditionally, signed in or not.
+  const code = codeOnly(read(SRC));
+  assert.match(code, /const trialAvailable = trialDays > 0/, "must derive eligibility from config, not the signed-in-only flag");
+  assert.doesNotMatch(code, /trialEligible/, "must not reference the signed-in-only trialEligible flag at all");
+});
+
+test("the heading and badge match PremiumSlideIn's Premium colouring, not the old brand-blue free-account styling", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(code, /border-gold\/50/, "the card border must be gold, matching PremiumSlideIn");
+  assert.match(code, /border-gold\/40[^"]*text-gold/s, "the badge must be gold-styled");
+  assert.match(code, />\s*Premium\s*</, "the badge text must say Premium");
+  assert.match(code, /trialAvailable \? "Try Premium free" : `Unlock \$\{PITCH_TOOLS\.length\} power tools`/, "heading logic must mirror PremiumSlideIn's own");
 });
 
 test("shows instantly — the buy_click-aware timing system was removed after this file was first written (2026-09-01)", () => {

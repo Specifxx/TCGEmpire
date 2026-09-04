@@ -224,15 +224,15 @@ export function CinematicNavMenu() {
                 UserMenu's "✦ Get Premium", PremiumSlideIn) instead of sharing
                 the Popular grid's neutral brand-green treatment.
 
-                Signed-out visitors see it too, deliberately — this differs
-                from SignupPromoPopup's signed-out-only "no Premium pitch"
-                rule, but that rule is about an UNSOLICITED auto-popup
-                interrupting a browse session, not a menu the visitor chose to
-                open. The ⭐ Premium tile below was already visible to
-                signed-out visitors in this exact overlay; this only makes
-                that existing, already-public entry more prominent, matching
-                how the header's own PremiumButton and /premium itself are
-                public to every visitor regardless of auth state.
+                Signed-out visitors see it too, deliberately — this is a menu
+                the visitor chose to open, not an unsolicited auto-popup like
+                SignupPromoPopup (which pitches Premium too as of 2026-09-04,
+                but on its own separate frequency cap — see that component).
+                The ⭐ Premium tile below was already visible to signed-out
+                visitors in this exact overlay; this only makes that existing,
+                already-public entry more prominent, matching how the header's
+                own PremiumButton and /premium itself are public to every
+                visitor regardless of auth state.
 
                 Only shown in the default (unfiltered, not-showing-everything)
                 view, same as Popular below — once someone is actively
