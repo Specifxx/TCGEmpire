@@ -52,3 +52,42 @@ test("refreshEbaySealedMarket receives and threads the map through, not a fresh 
   );
   assert.match(code, /refreshEbaySealedMarket\(mkt, marketRefs\)/, "the call site must pass the shared map through");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The SAME Origins Booster Box report recurred: the cross-market borrow above
+// only helps when at least ONE tracked market has a live store/TCGplayer
+// reference. Origins Booster Box apparently had none anywhere at the time, so
+// trustedRef still fell all the way through to the flat $40 AUD floor with
+// nothing behind it — exactly the gap this file's first test already named as
+// the failure mode, just not yet fully closed. Pin the third tier: the
+// published MSRP (msrp.ts), consulted only once both real tiers come up empty.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("trustedRef falls back to the published MSRP when NO market has a reference at all", () => {
+  const code = codeOnly(read(SRC));
+  const fnStart = code.indexOf("const trustedRef = (g: SealedGroup)");
+  assert.ok(fnStart >= 0, "expected to find trustedRef");
+  const fn = code.slice(fnStart, code.indexOf("\n  };", fnStart) + 5);
+
+  assert.match(
+    fn,
+    /return msrpCents\(g\.productType,\s*mkt\.country\)\s*;\s*\n\s*\};/,
+    "the last statement must fall back to msrpCents(), not straight to null"
+  );
+  // Order matters: MSRP must be tried AFTER both real-reference tiers, never
+  // instead of them — a live store price is always more current than a
+  // published RRP and must keep winning when one exists.
+  const nonEbayAt = fn.indexOf("nonEbay.length");
+  const byCountryAt = fn.indexOf("byCountry");
+  const msrpAt = fn.indexOf("msrpCents(");
+  assert.ok(nonEbayAt >= 0 && byCountryAt > nonEbayAt && msrpAt > byCountryAt, "tier order must be: local store -> cross-market -> MSRP");
+});
+
+test("msrpCents is imported from the shared msrp.ts table, not re-derived locally", () => {
+  const code = codeOnly(read(SRC));
+  assert.match(
+    code,
+    /import\s*\{[^}]*\bmsrpCents\b[^}]*\}\s*from\s*["'](\.\/msrp|@\/lib\/msrp)["']/,
+    "must reuse the shared RRP table rather than hardcoding prices again"
+  );
+});

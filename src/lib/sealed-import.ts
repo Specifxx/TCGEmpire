@@ -609,18 +609,25 @@ async function refreshEbaySealedMarket(
     // No local reference for this market — borrow another market's, in
     // EBAY_SEALED_MARKETS' own priority order (US first, the dominant
     // TCGplayer-covered market), FX-converted into this market's currency.
-    // Without this a market with zero local stockists for a product fell
-    // back to the flat per-type floor alone, with nothing to catch a
-    // realistically-priced-but-wrong listing — e.g. an undisclosed Chinese
-    // print clearing a flat $40 AUD "Booster Box" floor with room to spare.
     const byCountry = marketRefs.get(g.groupKey);
-    if (!byCountry) return null;
-    for (const m of EBAY_SEALED_MARKETS) {
-      if (m.country === mkt.country) continue;
-      const ref = byCountry.get(m.country);
-      if (ref) return convertCents(ref.cents, ref.currency, mktCurrency);
+    if (byCountry) {
+      for (const m of EBAY_SEALED_MARKETS) {
+        if (m.country === mkt.country) continue;
+        const ref = byCountry.get(m.country);
+        if (ref) return convertCents(ref.cents, ref.currency, mktCurrency);
+      }
     }
-    return null;
+    // STILL nothing — no tracked store lists this product in ANY market this
+    // run. This used to fall straight through to the flat per-type floor alone
+    // (sealedFloorCents' `absolute`), which is how a real Chinese-market Origins
+    // Booster Box — titled and shipped in a way that clears every other guard —
+    // got published as our AU price: a $229 AUD product with zero local
+    // stockists needs only clear $40 to look legitimate. msrp.ts's published RRP
+    // is a THIRD reference tier for exactly this gap: stable, doesn't depend on
+    // us currently tracking a live store, and unlike a scraped price can't itself
+    // be wrong. Markets msrp.ts doesn't cover (SG/CA/EU) fall through to null,
+    // unchanged from before.
+    return msrpCents(g.productType, mkt.country);
   };
   const searchList = [
     ...groups.map((g) => ({ groupKey: g.groupKey, setCode: g.setCode, name: g.name, productType: g.productType, imageUrl: g.imageUrl, language: undefined as "CN" | "KR" | undefined, referenceCents: trustedRef(g) })),

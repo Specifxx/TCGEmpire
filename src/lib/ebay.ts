@@ -941,7 +941,9 @@ const SEALED_MIN_CENTS: Record<string, number> = {
 };
 
 // The minimum price an eBay sealed listing must clear to be trusted: the larger of the
-// per-type floor and 50% of the known store/TCGplayer reference (when we have one).
+// per-type floor and 50% of the known reference (when we have one) — a live store/
+// TCGplayer price where one exists, otherwise the published MSRP (see msrp.ts and
+// sealed-import.ts's trustedRef) for a product with no current stockist at all.
 export function sealedFloorCents(productType: string, referenceCents?: number | null): number {
   const absolute = SEALED_MIN_CENTS[productType] ?? 300;
   const relative = referenceCents && referenceCents > 0 ? Math.round(referenceCents * 0.5) : 0;
@@ -949,9 +951,10 @@ export function sealedFloorCents(productType: string, referenceCents?: number | 
 }
 
 // Lowest legitimate AU eBay listing for a sealed product (booster box, pack, …).
-// `referenceCents` is the trusted store/TCGplayer price for this product (when known)
-// — listings priced implausibly below it (or below the per-type floor) are dropped as
-// accessories / mis-listings.
+// `referenceCents` is the trusted price for this product (when known) — a live store/
+// TCGplayer price, or the published MSRP when no store carries it (see trustedRef in
+// sealed-import.ts) — listings priced implausibly below it (or below the per-type
+// floor) are dropped as accessories / mis-listings / undisclosed foreign printings.
 export async function searchEbaySealed(
   name: string,
   productType: string,
