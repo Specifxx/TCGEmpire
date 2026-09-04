@@ -14,6 +14,7 @@ import { EBAY_CAMPAIGN_ID, ebayAffiliateUrl } from "./affiliate";
 // isCrystalRose() rather than re-testing /^sp\d/ here keeps one definition of
 // what a Crystal Rose printing IS — the same reason classifySealed is shared.
 import { isCrystalRose } from "./constants";
+import { FOREIGN_LANG } from "./scrape-http";
 
 const TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token";
 const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
@@ -218,14 +219,11 @@ export function parseGrade(title: string): ParsedGrade {
 // matched before still matches.
 const EXCLUDE = new RegExp(`${NOT_A_SINGLE.source}|${GRADED_SLAB.source}`, "i");
 
-// Foreign-language / non-English printings that EXCLUDE's English word-list misses.
-// Riftbound's Chinese release shares our cards' collector numbers but trades far
-// cheaper, so a Chinese listing kept surfacing as the "cheapest" (e.g. a $40 Kai'Sa
-// Survivor AA). We catch them by: any CJK character in the title (a Chinese/Japanese/
-// Korean card name, or 中文/简体/繁體), OR short region/language codes EXCLUDE can't
-// (cn/chs/cht/jp/kr/asia/simplified/traditional/…).
-const FOREIGN_LANG =
-  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chs|cht|jp|jpn|kr|kor|asia|asian|simplified|traditional|mandarin|cantonese)\b/i;
+// Foreign-language / non-English printings that EXCLUDE's English word-list
+// misses — see FOREIGN_LANG's own definition (scrape-http.ts) for the full
+// history and why it is shared with every other price source now (TCGplayer,
+// and the ~100 general store feeds price-import.ts scrapes), not kept as this
+// file's own separate copy.
 
 // A listing that is (or is very likely) a non-English printing — by title language or
 // by shipping from mainland China (overwhelmingly the Simplified-Chinese print when an

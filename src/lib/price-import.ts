@@ -17,7 +17,7 @@ import { refreshCardTraderPrices } from "./cardtrader";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
 import { USD_TO } from "./fx";
-import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
+import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
@@ -1321,6 +1321,15 @@ function setFromTotal(total?: string): string | null {
 export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null {
   const { byNum, byNumAny, byName, starIds, overIds, promoByName, promoByNum, promoByNumAny } = idx;
   const t = p.title;
+  // Riftbound's Chinese release shares our cards' collector numbers but trades
+  // far cheaper, and this matcher had NO language check at all — unlike the
+  // TCGplayer and eBay sources, which each learned this the hard way (see
+  // FOREIGN_LANG's own comment). A store that also stocks the Chinese print
+  // under the same collection matched it as the English card's own listing,
+  // so its price (often a fraction of the real one) could win as "cheapest"
+  // for a completely different, English-only product. Checked FIRST, before
+  // any other signal in the title gets a chance to match.
+  if (isForeignLanguageTitle(t)) return null;
   // Never match a multi-card listing (playset/lot/bundle) to a single card — its
   // price is for the whole group, not one card.
   if (MULTI_CARD.test(t)) return null;
