@@ -139,3 +139,83 @@ test("the TCGplayer (US) import summary reports the US market's own row count, n
   const src = readCode("src/lib/price-import.ts");
   assert.ok(src.includes("byCountry.US"), "expected the (US) summary line to read byCountry.US specifically");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported directly again: riftcompare.com/card/teemo-swift-scout-ogn-263-298-
+// promo — a manually-added alternate-art promo (OGN 263/298, isPromo: true) —
+// linked to TCGplayer product 653061, the BASE "Origins - Teemo, Swift Scout"
+// listing, instead of its own alt-art promo listing (670598, "Riftbound
+// Promotional Cards - Teemo, Swift Scout - Alternate Art").
+//
+// The mirror image of the incident above. That one was a promo PRODUCT
+// colliding with a real card via set+number; isPromoProduct(p) fixed it by
+// excluding promo PRODUCTS from ever being matched that way. This one is a
+// promo CARD on our own side reusing a base card's collector number — nothing
+// excluded IT from populating byKey, so building byKey with a plain Map.set()
+// let whichever of the two cards came last in prisma.card.findMany()'s
+// (unordered) result silently steal the other's entry. Verified against a real
+// Postgres locally: reproduced the exact live symptom on the pre-fix code
+// (promo card resolved to the base product's price; the base card lost its own
+// price entirely), then confirmed the fix resolves each product to its own
+// correct card.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("promo cards are excluded from byKey/bySetlessNum, the same way promo products are", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  assert.ok(src.includes("isPromo: true"), "the cards query must select isPromo to be able to exclude promo cards");
+  const loopAt = src.indexOf("for (const c of cards)");
+  const byKeySetAt = src.indexOf("byKey.set(", loopAt);
+  const continueAt = src.indexOf("if (c.isPromo) continue;", loopAt);
+  assert.ok(loopAt >= 0 && byKeySetAt >= 0 && continueAt >= 0, "expected the cards loop, its byKey.set, and an isPromo skip");
+  assert.ok(continueAt < byKeySetAt, "the isPromo skip must run BEFORE byKey.set — after is worthless, the collision has already happened");
+});
+
+test("byExternal is still populated for a promo card BEFORE the isPromo skip", () => {
+  // The skip must land after byExternal.set(c.externalId, ...) — a promo card
+  // still needs to be reachable by its own externalId (either its own
+  // "tcg-<productId>" link, or a PROMO_PRODUCT_OVERRIDES entry keyed to it);
+  // skipping too early would silently make every promo card unpriceable.
+  const src = readCode("src/lib/tcgplayer.ts");
+  const loopAt = src.indexOf("for (const c of cards)");
+  const byExternalSetAt = src.indexOf("byExternal.set(c.externalId", loopAt);
+  const continueAt = src.indexOf("if (c.isPromo) continue;", loopAt);
+  assert.ok(byExternalSetAt >= 0 && continueAt >= 0);
+  assert.ok(byExternalSetAt < continueAt, "byExternal must be populated before the isPromo skip, not after");
+});
+
+test("PROMO_PRODUCT_OVERRIDES seeds byExternal with the verified Teemo alt-art pin", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  const overridesAt = src.indexOf("const PROMO_PRODUCT_OVERRIDES");
+  assert.ok(overridesAt >= 0, "expected the promo-product override map");
+  assert.match(
+    src,
+    /"promo-ogn-263-teemo-swift-scout-altart":\s*670598/,
+    "the live-verified TCGplayer product id for Teemo's alt-art promo must be pinned by the card's OWN existing externalId",
+  );
+  // Renaming the externalId instead of pinning a product id against the
+  // existing one is the wrong fix: scripts/add-manual-cards.ts upserts a
+  // manual card by matching its externalId, so a changed externalId would
+  // make that lookup miss the already-live row and mint a genuine duplicate
+  // under the new id, rather than fixing the one that's already indexed and
+  // linked. This override map must never require editing manual-cards.json's
+  // externalId field to work.
+  const manualCards = read("prisma/manual-cards.json");
+  assert.ok(
+    manualCards.includes('"promo-ogn-263-teemo-swift-scout-altart"'),
+    "the override's key must match manual-cards.json's card verbatim — an unreferenced pin fixes nothing",
+  );
+
+  // Feeds byExternal using the SAME "tcg-<productId>" convention the product-
+  // match loop already checks for cards created directly from TCGplayer — no
+  // second lookup path needed in the hot loop.
+  const seedLoopAt = src.indexOf("for (const [cardExternalId, productId] of Object.entries(PROMO_PRODUCT_OVERRIDES))");
+  assert.ok(seedLoopAt >= 0, "expected a loop seeding byExternal from the override map");
+  const seedBody = src.slice(seedLoopAt, seedLoopAt + 300);
+  assert.match(seedBody, /byExternal\.set\(`tcg-\$\{productId\}`/, "must register under the exact tcg-<id> key the product loop looks up");
+
+  // Ordering: the seed loop reads byExternal.get(cardExternalId), so it must
+  // run AFTER the cards loop has populated byExternal from real cards — same
+  // "ordering matters" discipline as the incident above.
+  const cardsLoopAt = src.indexOf("for (const c of cards)");
+  assert.ok(cardsLoopAt >= 0 && cardsLoopAt < seedLoopAt, "the override-seeding loop must run after the cards loop, not before");
+});
