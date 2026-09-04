@@ -1762,9 +1762,10 @@ export async function importPrices(): Promise<ImportSummary> {
   }
 
   // ---- Cardmarket (UK + EU fallback price) -------------------------------------
-  // Flag-gated OFF (CARDMARKET_ENABLED) and pending a licence sign-off — see
-  // cardmarket.ts's header for the gate and its configuration note for why the
-  // files are read from disk rather than fetched.
+  // Runs automatically once CARDMARKET_PRODUCTLIST_URL/CARDMARKET_PRICEGUIDE_URL
+  // are configured — no separate flag (see cardmarket.ts's header for the
+  // 2026-09-04 support confirmation that resolved its licence gate, and its
+  // configuration note for why the files are read from disk rather than fetched).
   //
   // Writes TWO rows per card: an EUR→GBP conversion for UK, and the SAME figure
   // unconverted for EU — Cardmarket quotes in euro, so for the eurozone this is
@@ -1790,9 +1791,9 @@ export async function importPrices(): Promise<ImportSummary> {
   }
 
   // ---- CardTrader (EU singles, from EU sellers, in euro) -----------------------
-  // The EU source that is actually available. Cardmarket above stays gated behind
-  // CARDMARKET_ENABLED because presenting their prices needs their prior written
-  // agreement; CardTrader's API is open to any account holder, so this one runs.
+  // A second, independent EU source alongside Cardmarket above. CardTrader's API
+  // is open to any account holder, so it needs only CARDTRADER_API_TOKEN; unlike
+  // Cardmarket it is not a marketplace-aggregate fallback (see below).
   //
   // NOT a fallback retailer, unlike Cardmarket/TCGplayer-*: each row is one real
   // in-stock listing from one identified EU seller quoted in euro, so it can carry

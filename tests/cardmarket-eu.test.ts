@@ -11,9 +11,11 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 // ─────────────────────────────────────────────────────────────────────────────
 // Cardmarket is the EU market's only realistic reference price — and the one
 // source whose figure needs NO conversion, because it quotes in euro and the EU
-// market prices in euro. It stays flag-gated off pending a redisplay licence
-// (see lib/cardmarket.ts's header); these tests pin the wiring so that when the
-// flag flips, the first run is correct rather than exploratory.
+// market prices in euro. Its redisplay-licence gate is resolved (2026-09-04
+// Cardmarket support confirmation — see lib/cardmarket.ts's header); it now
+// gates purely on having the two data files configured, exactly like
+// CardTrader gates on its API token. These tests pin the wiring so a real run
+// is correct rather than exploratory.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CARDS = [
@@ -23,23 +25,34 @@ const PRODUCTS = parseCsv(
   `idProduct;Name;"Set Name";Number;Rarity\n612345;Vi, Piltover Enforcer;Origins;123/298;Rare\n`,
 );
 
-test("it stays OFF until someone resolves the licence", () => {
-  assert.equal(isCardmarketEnabled(), false, "CARDMARKET_ENABLED must not default on");
-  assert.match(
-    read("src/lib/cardmarket.ts"),
-    /LEGAL GATE/,
-    "the licence gate must stay documented at the top of the module",
-  );
+test("it stays off until the two files are configured, with no separate switch", () => {
+  // No CARDMARKET_ENABLED env var is set in this test run, so with no files
+  // configured either, the source must report itself off.
+  assert.equal(isCardmarketEnabled(), false, "with no product-list/price-guide configured, this must read false");
+  const src = read("src/lib/cardmarket.ts");
+  assert.doesNotMatch(src, /CARDMARKET_ENABLED/, "the old standalone legal-gate flag must be fully gone, not just unused");
+  assert.match(src, /!!PRODUCTLIST_URL\s*&&\s*!!PRICEGUIDE_URL/, "presence of the files must BE the flag, like CardTrader's token");
+});
+
+test("the redisplay-licence confirmation stays documented, not silently assumed", () => {
+  // The gate this file used to enforce ("DO NOT enable until you have written
+  // confirmation") is resolved, not deleted — the confirmation itself must stay
+  // in the file so a future reader can see what changed and why, the same way
+  // every other resolved-provenance comment in this codebase cites its source.
+  const src = read("src/lib/cardmarket.ts");
+  assert.match(src, /2026-09-04/, "the date of the support confirmation must stay in the file");
+  assert.match(src, /use it however you see fit/i, "the actual confirmation wording must be quoted, not paraphrased away");
 });
 
 test("it must never impersonate a browser to get past the block", () => {
   // cardmarket.com returns a hard Cloudflare 403 to automated clients. Sending a
   // fake Chrome User-Agent to defeat that is circumventing an access control the
   // operator deliberately put up, and the module used to carry exactly such a
-  // header. The supported route is a human downloading the published files.
+  // header. The supported route is a human downloading the published files —
+  // the 2026-09-04 confirmation covers USING those files, not scraping for them.
   const src = read("src/lib/cardmarket.ts");
   assert.doesNotMatch(src, /User-Agent[^\n]*Chrome/i, "no browser impersonation in the Cardmarket fetch path");
-  assert.match(src, /cardmarket\.com\/Data\/Download/, "the supported download route must be documented in-file");
+  assert.match(src, /cardmarket\.com\/en\/Riftbound\/Data/, "the supported download route must be documented in-file");
 });
 
 test("the EU row is NATIVE euro — no FX between Cardmarket and the shopper", () => {

@@ -111,12 +111,15 @@ test("CardTrader is the EU source and is NOT treated as a converted UK fallback"
   assert.ok(!fallback.includes("CARDTRADER"), "CardTrader must not be a UK fallback retailer");
 });
 
-test("the Cardmarket integration stays legally gated — CardTrader does not unlock it", () => {
-  // lib/cardmarket.ts is fully implemented but flagged off because Cardmarket's
-  // terms require their prior written agreement to present their prices, and their
-  // API is closed to new applicants. Adding an alternative EU source must not be
-  // mistaken for permission to flip that flag.
+test("Cardmarket's permission is resolved, but it still gates on its own configured files — CardTrader does not unlock it", () => {
+  // Cardmarket's redisplay-licence gate is resolved (2026-09-04 support
+  // confirmation — see lib/cardmarket.ts's header), but that is not the same as
+  // having the actual files: it still runs only once someone configures
+  // CARDMARKET_PRODUCTLIST_URL/CARDMARKET_PRICEGUIDE_URL, exactly like CardTrader
+  // gates on its own token. Adding one EU source must never be mistaken for
+  // silently enabling the other.
   const cm = read("src/lib/cardmarket.ts");
-  assert.match(cm, /CARDMARKET_ENABLED === "true"/, "Cardmarket must remain behind its env flag");
-  assert.match(cm, /prior written agreement|written confirmation/i, "the legal gate rationale must stay documented");
+  assert.doesNotMatch(cm, /CARDMARKET_ENABLED/, "the old standalone legal-gate flag must be gone entirely");
+  assert.match(cm, /CARDMARKET_PRODUCTLIST_URL/, "Cardmarket must still gate on its own configured files, not CardTrader's");
+  assert.match(cm, /2026-09-04/, "the permission confirmation must stay documented, not silently assumed");
 });
