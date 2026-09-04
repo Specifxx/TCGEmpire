@@ -15,9 +15,12 @@ import {
   verdictFor,
   DEFAULT_PACKS,
   DEFAULT_SPECIALS_PER_BOX,
+  SPECIAL_POOLS,
   POOL_LABEL,
   type PoolKey,
 } from "@/lib/box-ev";
+
+const isEstimatedPool = (p: PoolKey) => (SPECIAL_POOLS as readonly string[]).includes(p);
 
 // Box EV explorer. RiftCompare supplies the half nobody else has — a real market
 // price for every card in the set, including the chase prints — and the player
@@ -272,7 +275,7 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
           <span>
             <span className="font-bold text-white">Pull rates</span>
             <span className="ml-2 text-xs text-slate-500">
-              {specialsPerBox} special print{specialsPerBox === 1 ? "" : "s"} per box · tune the assumptions
+              {specialsPerBox} Showcase print{specialsPerBox === 1 ? "" : "s"} per box (estimate) · tune the assumptions
             </span>
           </span>
           <span className={`shrink-0 text-slate-500 transition-transform ${showRates ? "rotate-180" : ""}`} aria-hidden>▾</span>
@@ -281,17 +284,18 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
         {showRates && (
           <div className="mt-4 border-t border-ink-800 pt-4">
             <p className="text-[11px] leading-relaxed text-slate-500">
-              <strong className="text-gold">Riot has never published Riftbound pull rates.</strong> The base
-              rarity rates come from a community pull-rate guide built on observed box and case data. The chase
-              rates are <em>derived</em>, not measured: you set how many special-treatment prints a box yields,
-              and that budget is split across the special pools in proportion to how many cards each contains.
-              That split is itself a rough assumption — signatures are widely reported as rarer than their share
-              of the card count implies — so every rate below is individually editable.
+              The base rarity rates come from a community pull-rate guide built on observed box and case data.{" "}
+              <strong className="text-gold">Alt Art, Over-numbered and Signature are Riot&apos;s own published
+              rates</strong> — from the same pull-rate table the{" "}
+              <Link href="/games/pack-sim" className="text-brand-400 hover:underline">pack simulator</Link> deals
+              from, not an estimate. Only <strong className="text-gold">Showcase</strong> has no published rate:
+              you set how many Showcase prints a box yields below. Every rate stays individually editable
+              regardless.
             </p>
 
             <label className="mt-4 block">
               <span className="mb-1 block text-xs font-medium text-slate-400">
-                Special-treatment prints per box
+                Showcase prints per box (estimate)
               </span>
               <input
                 type="number" min="0" step="0.01" value={specialsPerBox}
@@ -299,8 +303,8 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
                 className="input max-w-[12rem]"
               />
               <span className="mt-1 block text-[11px] text-slate-600">
-                Default 0.33 ≈ one every three boxes — the same rate this tool always used for Showcase, so
-                counting the chase tiers doesn&apos;t silently inflate the total.
+                Default 0.33 ≈ one every three boxes. Applies to Showcase only — Alt Art, Over-numbered and
+                Signature use the published rate below and don&apos;t draw from this number.
               </span>
             </label>
 
@@ -309,7 +313,7 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
                 <label key={l.pool} className="block">
                   <span className="mb-1 block text-[11px] font-medium text-slate-400">
                     {POOL_LABEL[l.pool]}
-                    {l.chase && <span className="ml-1 text-brand-400">*</span>}
+                    {isEstimatedPool(l.pool) && <span className="ml-1 text-brand-400">*</span>}
                   </span>
                   <input
                     type="number" min="0" step="0.0001"
@@ -333,7 +337,7 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
               reset to defaults
             </button>
             <p className="mt-2 text-[10px] text-slate-600">
-              <span className="text-brand-400">*</span> derived estimate, not official odds.
+              <span className="text-brand-400">*</span> estimated — Riot has not published a Showcase rate.
             </p>
           </div>
         )}
@@ -401,8 +405,9 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
           A ✦ marks a card priced from a foil-only listing — a different physical product from a base pull.
         </p>
         <p className="mt-2">
-          Pull rates are <strong className="text-slate-500">estimates you control</strong>, never official odds.
-          EV is an average across many boxes: the distribution is heavily skewed by the chase tiers, so most
+          Base rarity and Showcase rates are <strong className="text-slate-500">estimates you control</strong>;
+          Alt Art, Over-numbered and Signature use Riot&apos;s own published odds. Every rate stays editable
+          either way. EV is an average across many boxes: the distribution is heavily skewed by the chase tiers, so most
           boxes come in under it. It also assumes every card could be sold at market price, and bulk commons
           effectively cannot be. Want a specific card?{" "}
           <Link href="/browse" className="text-brand-400 hover:underline">Buying the single</Link> is the surer
