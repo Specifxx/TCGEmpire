@@ -30,6 +30,7 @@
 
 import { isCrystalRose, isOvernumbered, isSignature, RARITY_KEYS } from "./constants";
 import { printingKind } from "./content/card-narrative";
+import { PACKS_PER_BOX, PULL_RATES } from "./pack-composition";
 
 // ── Pools ────────────────────────────────────────────────────────────────────
 // A "pool" is a set of cards one pack slot can produce. Base rarities plus the
@@ -214,39 +215,70 @@ export const DEFAULT_BASE_RATES: Record<string, number> = {
   Epic: 0.25, // ~1 in 4 packs
 };
 
-export const DEFAULT_PACKS = 24;
+export const DEFAULT_PACKS = PACKS_PER_BOX;
 
-// ── The special-treatment slot ───────────────────────────────────────────────
+// ── Chase-print rates: Riot's own published table ───────────────────────────
 //
-// Riot publishes NO odds for signature, over-numbered or alt-art prints. The
-// temptation is to invent one rate per tier; that would be four fabricated
-// numbers wearing the authority of a calculator, and it would also silently
-// INFLATE the EV — the old model already spent ~1-in-72-packs on Showcase, so
-// bolting three more independent rates on top would count the same hit slot
-// four times over.
+// This used to say "Riot publishes NO odds for signature, over-numbered or
+// alt-art prints" and invent a single shared "specials per box" budget, split
+// across all three chase pools plus Showcase in proportion to how many cards
+// each contained. That was wrong on two counts: Riot HAS published these odds
+// (Nik Davidson's "Collectability in Riftbound: Origins" post, already sourced
+// at lib/pack-composition.ts as PULL_RATES and read by the pack-opening
+// simulator), and the proportional split actively inverted them — a set has
+// far more Alt Art cards than Over-numbered ones, so the split handed
+// Over-numbered the BIGGER share of the slot when Riot's real numbers make it
+// the rarer of the two by 6x. Site-owner correction, 2026-09-04: "Alt art is 1
+// in 12 packs and overnumbered is 1 in 72 packs" — exactly PULL_RATES' own
+// altart/overnumbered figures, which is what pointed at the bug.
 //
-// Instead there is ONE assumption, and the user can see and change it: how many
-// special-treatment cards a box yields. The default 0.33/box is not a new claim
-// — it is exactly the Showcase rate the tool already used (0.0139/pack × 24
-// packs ≈ 0.33), so switching to this model does not move the headline number
-// on its own. It is then split across the four special pools IN PROPORTION TO
-// HOW MANY CARDS EACH POOL CONTAINS.
+// Reading the SAME table the pack simulator already reads, rather than
+// re-deriving a second estimate here, is what stops this page and pack-sim
+// disagreeing about the same cards — the exact drift pack-composition.ts's own
+// top comment exists to prevent (it already happened once, for the base rates,
+// before that file existed; tests/pack-composition.test.ts pins the two files
+// against each other so it cannot happen silently again).
+const CHASE_PULL_RATE_KEY: Record<(typeof CHASE_POOLS)[number], string> = {
+  AltArt: "altart",
+  Overnumbered: "overnumbered",
+  Signature: "signature",
+};
+
+function sourcedChaseRate(pool: (typeof CHASE_POOLS)[number]): number {
+  const onePerPacks = PULL_RATES.find((r) => r.key === CHASE_PULL_RATE_KEY[pool])?.onePerPacks;
+  return onePerPacks ? 1 / onePerPacks : 0;
+}
+
+/** Expected cards per pack for each chase pool, straight off Riot's published table. */
+export const CHASE_RATES: Record<(typeof CHASE_POOLS)[number], number> = {
+  AltArt: sourcedChaseRate("AltArt"),
+  Overnumbered: sourcedChaseRate("Overnumbered"),
+  Signature: sourcedChaseRate("Signature"),
+};
+
+// ── The one remaining estimate: Showcase ─────────────────────────────────────
 //
-// That proportional split is itself a crude assumption and the UI says so:
-// signatures are widely reported as rarer than their share of the card count
-// would imply. Every derived rate stays individually editable for exactly that
-// reason.
+// Showcase is a genuine rarity tier (RARITY_KEYS), not a chase-print variant,
+// and Riot's post never mentions a rate for it — so it is still an assumption,
+// and the user can see and change it. The default 0.33/box is not a new claim:
+// it is exactly the rate this tool has always used for Showcase alone
+// (0.0139/pack × 24 packs ≈ 0.33). Before this fix that number was diluted
+// across four pools instead of paying for just the one it was ever measured
+// against; now that AltArt/Overnumbered/Signature have their own sourced
+// rates, Showcase goes back to spending the whole slot on itself.
 export const DEFAULT_SPECIALS_PER_BOX = 0.33;
 
-/** Pools that share the one special-treatment slot. */
-export const SPECIAL_POOLS = ["Showcase", ...CHASE_POOLS] as const;
+/** The one pool still priced off the specials-per-box estimate rather than a Riot-published rate. */
+export const SPECIAL_POOLS = ["Showcase"] as const;
 
 /**
  * Expected cards per pack for every pool.
  *
- * Base pools take their community rate. The special pools split
- * `specialsPerBox` by card count, then divide by `packs` to reach a per-pack
- * figure. A pool with no cards gets 0 rather than a share of the slot.
+ * Base pools take their community rate. AltArt/Overnumbered/Signature take
+ * Riot's own published rate, unaffected by how many cards of that pool this
+ * set happens to have. Showcase alone is still estimated: `specialsPerBox` per
+ * box, divided by `packs`. A pool with no cards in this set gets 0 rather than
+ * a rate it can never pay out.
  */
 export function derivedRates(opts: {
   counts: Map<PoolKey, number>;
@@ -257,12 +289,11 @@ export function derivedRates(opts: {
   const rates = {} as Record<PoolKey, number>;
   for (const p of POOL_ORDER) rates[p] = DEFAULT_BASE_RATES[p] ?? 0;
 
-  const specialTotal = SPECIAL_POOLS.reduce((a, p) => a + (counts.get(p) ?? 0), 0);
+  for (const p of CHASE_POOLS) rates[p] = (counts.get(p) ?? 0) > 0 ? CHASE_RATES[p] : 0;
+
   const perPack = Math.max(1, packs);
-  for (const p of SPECIAL_POOLS) {
-    const n = counts.get(p) ?? 0;
-    rates[p] = specialTotal > 0 ? (specialsPerBox * (n / specialTotal)) / perPack : 0;
-  }
+  rates.Showcase = (counts.get("Showcase") ?? 0) > 0 ? specialsPerBox / perPack : 0;
+
   return rates;
 }
 
