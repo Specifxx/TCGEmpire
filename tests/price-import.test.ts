@@ -121,3 +121,31 @@ test("a bare 'R' token cannot be read as a rune number on a normal card", () => 
   assert.equal(resolve("Existential Dread [Unleashed] R"), null);
   assert.equal(resolve("Existential Dread - 134/219 - Rare"), "unl-134");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Foreign-language listings.
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported directly: "the best price often comes back as some chinese listing
+// for a completely different product". Riftbound's Chinese release shares our
+// cards' collector numbers, and this matcher had NO language check at all —
+// unlike TCGplayer and eBay, which each already learned this the hard way (the
+// "Dazzling Aurora bug" and a $40 Kai'Sa Survivor AA, respectively — see
+// FOREIGN_LANG's own comment in scrape-http.ts). A store stocking the Chinese
+// print under the same collection matched it as the English card's own
+// listing, so its price — usually a fraction of the real one — could win as
+// "cheapest" for a completely different, English-only card.
+test("a Chinese-language listing never resolves to the English card it shares a number with", () => {
+  assert.equal(resolve("Existential Dread - 134/219 - 简体中文"), null);
+  assert.equal(resolve("Ionian Ambush (Simplified Chinese) 134/298"), null);
+  assert.equal(resolve("Kennen, Heart of the Tempest CHS 197*/166"), null);
+  // CJK characters alone, no English word needed.
+  assert.equal(resolve("寂静的哀伤 - 134/219"), null);
+});
+
+test("an ordinary English listing is unaffected by the language check", () => {
+  // The regression to guard against: a false positive on a legitimately English
+  // title. None of these carry a CJK character or a whole-word region/language
+  // code, so the check must never fire on them.
+  assert.equal(resolve("Existential Dread - 134/219"), "unl-134");
+  assert.equal(resolve("Kennen, Heart of the Tempest (197*/166) Signature"), "ven-197s");
+});
