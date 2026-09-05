@@ -3621,7 +3621,7 @@ Riftbound officially arrived in Southeast Asia this month, and Singapore's card 
 ## What you get in Singapore
 
 - **Live SGD prices for every Riftbound card** — the full database, every set from Origins to the upcoming [Vendetta](/sets/vendetta), each card showing the cheapest live price in Singapore dollars.
-- **11 Singapore stores tracked** — Hideout, Action Point Games, 1Collectibles TCG, Flagship Games, SC Collection, Mana Pro, OneMtg, Card Arena, Dueller's Point, Caesar Cards and Zoomies Gaming (see the full [stores we track](/stores/tracked) list). Stores without a webstore yet are listed and start showing prices the moment they sell online.
+- **11 Singapore stores tracked** — Hideout, Action Point Games, The TCG Alchemists, GOAT TCG, Team Card Game, TCG Club House, Apex Player's Guild, TEFUDA, Chonky Collectibles, 4elements and Brints Collectibles (see the full [stores we track](/stores/tracked) list).
 - **eBay Singapore** — every card is also checked against [ebay.com.sg] listings, so marketplace deals show up right next to local store prices.
 - **TCGplayer reference pricing** — for cards no local store has in stock yet, we show TCGplayer's market price converted to SGD as an honest reference (clearly a reference, never pretending to be a local listing).
 - **Everything else RiftCompare does** — [price history charts](/movers) on every card, the [sealed products comparison](/sealed), the [deck pricer](/deck) that prices a whole 40-card list in one click, and [price-drop alerts](/browse).
@@ -3658,11 +3658,11 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
-    body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 19 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
+    body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 16 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
 
 ## Why Australians use RiftCompare
 
-- **Every AU store in one search.** We track live AUD prices at Cherry Collectables, Ozzie Collectables, The Final Boss Collectables, Plenty of Games, The Adventurers Guild, Mana Market, Steel City Games, Cardbot, Good Games (and Good Games Adelaide), Vault Games, Mint Collectables, The Card Hub Australia, PokéBox, Spellroo Gaming, Spindown, 88 Games Arena, Elemental Arcade and Fluke & Box — plus **eBay Australia** ([full list](/stores/tracked)).
+- **Every AU store in one search.** We track live AUD prices at Cherry Collectables, Ozzie Collectables, The Final Boss Collectables, Plenty of Games, The Adventurers Guild, Mana Market, Cardbot, Good Games Adelaide, Mint Collectables, The Card Hub Australia, PokéBox, Spellroo Gaming, Spindown, 88 Games Arena, Elemental Arcade and Fluke & Box — plus **eBay Australia** ([full list](/stores/tracked)).
 - **Ranked by what you actually pay.** Australia is where postage decides the deal: a $1.50 card with $3.95 tracked shipping isn't cheap. Every comparison ranks stores by **total delivered cost**, with each store's free-shipping threshold factored in automatically.
 - **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
 - **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple postage charges.
@@ -3702,7 +3702,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
 
 ## Why US players use RiftCompare
 
-- **TCGplayer, eBay AND independent stores in one comparison.** We track live USD prices at 33 US stores — The Mythic Store, Danireon Cards & Games, Gear Gaming, Misty Mountain Games, Hobbiesville, NP Collectibles, The CG Realm, Bards & Cards, PunkOuter Games, GG Legends, The Booster Box, Cardboard and Die, Cape Fear Collectibles, Mystery MTG, OneStopTCG and more ([full list](/stores/tracked)) — alongside **TCGplayer's market price** and **eBay** listings, side by side.
+- **TCGplayer, eBay AND independent stores in one comparison.** We track live USD prices at 26 US stores — The Mythic Store, Danireon Cards & Games, Gear Gaming, Misty Mountain Games, Hobbiesville, NP Collectibles, The CG Realm, Bards & Cards, PunkOuter Games, GG Legends, Cardboard and Die, Cape Fear Collectibles, Mystery MTG, OneStopTCG and more ([full list](/stores/tracked)) — alongside **TCGplayer's market price** and **eBay** listings, side by side.
 - **The independents frequently beat TCGplayer.** Market price is an average, not a floor — our comparison regularly surfaces indie-store listings well under it on the exact same card.
 - **Prices refresh daily**, with [price history](/movers) on every card so you can tell a real dip from a spike, plus [price movers](/movers) to catch cards climbing early.
 - **Whole-deck pricing.** The [deck pricer](/deck) prices a complete list across every store at once and finds the cheapest combination of orders.
@@ -3742,7 +3742,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK]
 
 ## Why UK players use RiftCompare
 
-- **14 UK stores plus eBay UK, one search.** We track live GBP prices at Total Cards, Axion Now, Card Goblin, Thistle Tavern, Spellbound Games, Forbidden Planet, Zatu Games, Boards & Swords, Goblin Gaming, The Card Vault, Gathering Games, Harlequins Games, Travelling Man and Monster Card Corner ([full list](/stores/tracked)) — with **eBay UK** listings right alongside.
+- **23 UK stores plus eBay UK, one search.** We track live GBP prices at Total Cards, Axion Now, Card Goblin, Thistle Tavern, Spellbound Games, Forbidden Planet, Zatu Games, Boards & Swords, Goblin Gaming, Monster Card Corner, Yard's Games, Red Sun Collectables and more ([full list](/stores/tracked)) — with **eBay UK** listings right alongside.
 - **Everything in pounds.** Prices display in GBP, ranked by **total delivered cost** including each store's postage and free-shipping threshold. When no UK shop stocks a card, we show TCGplayer's market price converted to GBP as an honest reference — clearly marked, never pretending to be a local listing.
 - **Daily updates + [price history](/movers)** on every card, so you can see the trend before you commit.
 - **Whole-deck pricing.** The [deck pricer](/deck) works out the cheapest way to buy an entire list across every UK store, consolidating postage.
@@ -3778,11 +3778,11 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
-    body: `Looking to buy Riftbound cards in Canada? With 20 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
+    body: `Looking to buy Riftbound cards in Canada? With 18 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
 
 ## Why Canadians use RiftCompare
 
-- **20 Canadian stores in one search.** We track live CAD prices at The Trading Card Shop, Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Black Knight Games, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games and Hobbiesville ([full list](/stores/tracked)).
+- **18 Canadian stores in one search.** We track live CAD prices at Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games and Hobbiesville ([full list](/stores/tracked)).
 - **Ranked by what you actually pay.** Every comparison ranks stores by total delivered cost, with each store's free-shipping threshold factored in automatically.
 - **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
 - **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple shipping charges.
