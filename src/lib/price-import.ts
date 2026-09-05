@@ -9,14 +9,14 @@ import { dbHistory, ensureHistoryCards } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
-import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS } from "./price-history";
+import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, GLOBAL_HISTORY_COUNTRY } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
-import { USD_TO } from "./fx";
+import { USD_TO, convertCents } from "./fx";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
 import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
@@ -1911,20 +1911,22 @@ export async function importPrices(): Promise<ImportSummary> {
   console.log(`Lowest recompute: ${changed} cards changed (no null-reset window).`);
   summary.cardsPriced = lowAuReal.size;
 
-  // Snapshot today's lowest price per card PER TRACKED MARKET for the
-  // price-over-time chart (each market in its own currency). One point per
-  // card per market per Sydney day; a same-day re-run (e.g. a deploy)
-  // replaces the day's rows.
+  // Snapshot today's GLOBAL lowest price per card for the price-over-time
+  // chart: the cheapest price found in ANY tracked market that day, converted
+  // to USD cents and written as ONE row (country=GLOBAL_HISTORY_COUNTRY). One
+  // point per card per Sydney day; a same-day re-run (e.g. a deploy) replaces
+  // the day's rows.
   //
-  // AU/US/UK/SG only — CA and EU are NOT written here (2026-09-02). Every
-  // real reader of this table already resolves CA to US's rows and EU to
-  // UK's, converted, via historySource() in price-history.ts, so a second
-  // full copy of the catalogue's history for each of them was pure duplication:
-  // CAD and EUR prices a currency conversion away from a market already being
-  // snapshotted, at the full weekly cost of an independently-tracked one. Live
-  // current prices for CA and EU (lowestPriceCentsCa/Eu, above) are completely
-  // unaffected — they still come from CA/EU's own real store and eBay scrape,
-  // every import, same as always. Only the HISTORY archive is deduplicated.
+  // CHANGED 2026-09-05 from one row per TRACKED MARKET (AU/US/UK/SG) to one
+  // GLOBAL row. 2026-09-02 had already stopped writing CA/EU as pure
+  // currency-converted duplicates of US/UK; this finishes the same idea for
+  // the four markets that were still each getting their own row — every real
+  // reader already resolves through historySource() in price-history.ts,
+  // which now maps EVERY market to this one GLOBAL series and converts the
+  // stored USD figure back to that market's own currency on read, the same
+  // "write once, convert on read" trick CA/EU already used. Live current
+  // prices per market (Card.lowestPriceCents*, above) are completely
+  // unaffected — only the HISTORY archive is consolidated.
   try {
     const day = sydneyDay();
     // Split-history setups: make sure every card exists in the history DB first
@@ -1940,14 +1942,20 @@ export async function importPrices(): Promise<ImportSummary> {
       // rounding error; losing the day is not. (null = single-database setup,
       // where the FK is against the same Card table and always satisfied.)
       if (writable && !writable.has(c.id)) continue;
-      const au = lowAuReal.get(c.id) ?? null;
-      const us = lowUs.get(c.id) ?? null;
-      const uk = lowUkReal.get(c.id) ?? null;
-      const sg = lowSgReal.get(c.id) ?? null;
-      if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
-      if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
-      if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
-      if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
+      // Convert each tracked market's own lowest price to USD cents, then take
+      // the actual minimum across whichever markets have a price today — the
+      // cheapest this card is available ANYWHERE, in one common currency.
+      const usdCandidates: number[] = [];
+      for (const [country, cents] of [
+        ["AU", lowAuReal.get(c.id) ?? null],
+        ["US", lowUs.get(c.id) ?? null],
+        ["UK", lowUkReal.get(c.id) ?? null],
+        ["SG", lowSgReal.get(c.id) ?? null],
+      ] as [Country, number | null][]) {
+        if (cents != null) usdCandidates.push(convertCents(cents, currencyOf(country), "USD"));
+      }
+      if (usdCandidates.length === 0) continue;
+      rows.push({ cardId: c.id, country: GLOBAL_HISTORY_COUNTRY, day, lowestPriceCents: Math.min(...usdCandidates) });
     }
     // WEEKLY SNAPSHOTS, NOT TWICE-DAILY. This is the history database's cost
     // control, and it works on both sides of the ledger at once:
@@ -1980,7 +1988,7 @@ export async function importPrices(): Promise<ImportSummary> {
       if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
       const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
       console.log(
-        `Price history: recorded ${rows.length} points (AU/US/UK/SG) for ${day.toISOString().slice(0, 10)}` +
+        `Price history: recorded ${rows.length} GLOBAL points (USD) for ${day.toISOString().slice(0, 10)}` +
           (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
       );
     }

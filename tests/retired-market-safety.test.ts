@@ -26,6 +26,19 @@ const RISE = "src/lib/rise-predictor.ts";
 // catches the class. It was reproducible from the outside: the default view 500'd
 // while ?scope=AU / ?scope=US / ?scope=UK all returned 200, because the non-GLOBAL
 // branch takes its market from the validated `scope`, never from the DB string.
+//
+// 2026-09-05: rise-predictor.ts's GLOBAL branch stopped reading raw per-country
+// PriceHistory rows entirely — every scope now reads the single GLOBAL sentinel
+// series (see historySource() in price-history.ts), so there is no `r.country`
+// left to cast or guard in this file at all; the whole vulnerable code path
+// (parse an unconstrained text column, cast it, index into COUNTRIES) is gone
+// by construction, not defended against. The two tests that used to pin that
+// cast+guard were removed for exactly that reason — there's nothing left in
+// rise-predictor.ts for them to assert. The general lesson survives where a raw
+// country column IS still read: scripts/backfill-global-history.ts's own
+// `!(r.country in COUNTRIES)` guard, for the identical reason (a historical NZ
+// row must be excluded from a price computation, never silently mis-priced by
+// currencyOf()'s fallback).
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("currencyOf survives a market code that no longer exists", () => {
@@ -39,35 +52,18 @@ test("currencyOf survives a market code that no longer exists", () => {
   assert.equal(currencyOf("SG"), "SGD");
 });
 
-test("rise-predictor validates PriceHistory.country before casting it to Country", () => {
+test("rise-predictor no longer casts a raw PriceHistory.country at all — GLOBAL reads the same filtered series as every scope", () => {
   const src = read(RISE);
-  // The bare cast is the bug. Any reintroduction must fail here.
-  assert.ok(
-    !/\(r\.country as Country\)\s*\|\|/.test(src),
-    "must not cast a raw PriceHistory.country straight to Country and coalesce — validate against COUNTRIES first"
-  );
+  // The bare cast was the bug; the guard was the fix; both are gone now
+  // because there's nothing left to cast or guard (see the header note above).
+  // Any reintroduction of raw per-country parsing here should fail this test.
+  assert.ok(!/\(r\.country as Country\)/.test(src), "must not cast PriceHistory.country to Country — there is no per-country row left to read");
+  assert.ok(!/raw in COUNTRIES/.test(src), "the per-country guard has nothing left to guard — GLOBAL_HISTORY_COUNTRY is filtered at the query, not validated in app code");
+  assert.ok(!/KNOWN_COUNTRIES/.test(src), "KNOWN_COUNTRIES was only ever needed to constrain a per-country query that no longer exists");
   assert.match(
     src,
-    /if \(!\(raw in COUNTRIES\)\) continue;/,
-    "unknown market codes must be SKIPPED (not folded into a live market — that would merge another currency's prices into its range)"
-  );
-});
-
-test("rise-predictor filters retired markets out of the GLOBAL history query", () => {
-  const src = read(RISE);
-  assert.match(
-    src,
-    /const KNOWN_COUNTRIES = Object\.keys\(COUNTRIES\) as Country\[\]/,
-    "expected a KNOWN_COUNTRIES list derived from COUNTRIES, so it can never drift from the supported set"
-  );
-  assert.match(
-    src,
-    // The single-market half changed 2026-09-02 (CA/EU now redirect through
-    // historySource — see tests/history-source-consolidation.test.ts) — this
-    // test's own concern is only the GLOBAL half, which is untouched: still a
-    // literal `{ in: KNOWN_COUNTRIES }`, never every retired market's rows.
-    /country: scope === "GLOBAL" \? \{ in: KNOWN_COUNTRIES \} : historySource\(scope\)\.source/,
-    "the GLOBAL branch must constrain country at the database, not read every retired market's rows back"
+    /where:\s*\{\s*cardId:\s*\{\s*in:\s*ids\s*\},\s*day:\s*\{\s*gte:\s*cutoff\s*\},\s*country:\s*GLOBAL_HISTORY_COUNTRY\s*\}/,
+    "every scope (GLOBAL included) must filter to the single GLOBAL sentinel at the database"
   );
 });
 

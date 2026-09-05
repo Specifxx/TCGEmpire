@@ -1,25 +1,29 @@
 /**
- * Read-only diagnostic for the price-history DB (the one db-history.ts resolves —
- * RH6 in prod as of 2026-07-31, after RH5 exhausted its monthly Neon
- * network-transfer allowance).
+ * Read-only diagnostic for the price-history DB (the one db-history.ts
+ * resolves — RH7 in prod as of 2026-09-04).
  * Prints, for the last 14 Sydney days and per country: row count, distinct
  * cards, and min/median/max lowestPriceCents — so a gap (missing recent days)
  * or a scale jump (broken index) is obvious in the log. Also prints which DB
  * it actually connected to.
  *
- * CA and EU showing "—" (or a row count that stops growing) from 2026-09-02
- * onward is EXPECTED, not a gap: they no longer get their own snapshot rows
- * (see price-import.ts's write-skip) — every real reader derives their history
- * from US's and UK's own rows instead, converted (see historySource() in
- * price-history.ts). This script deliberately shows the RAW table, not that
- * derivation, so it can't be used to spot-check CA/EU's actual (converted)
- * numbers — read them from the site (a card page, or /market?market=CA) instead.
+ * GLOBAL is where every REAL row lands since 2026-09-05 (see price-import.ts's
+ * snapshot write) — one row per card per day, the cheapest price found in any
+ * tracked market that day, in USD cents. AU/US/UK/SG/CA/EU are kept in this
+ * table as a visible sanity check, not because they're expected to hold
+ * anything current: CA and EU already showed "—" from 2026-09-02 (see the
+ * historySource() consolidation that started this), and AU/US/UK/SG join them
+ * from 2026-09-05 onward. A market column that starts growing again after
+ * that date is the bug, not the other way around. This script deliberately
+ * shows the RAW table, not historySource()'s conversion, so it can't be used
+ * to spot-check GLOBAL's converted per-market numbers — read those from the
+ * site (a card page, or /market?market=CA) instead.
  *
  * Usage: npx tsx scripts/audit-history.ts
  */
 import { dbHistory, HISTORY_URL_SOURCE } from "../src/lib/db-history";
+import { GLOBAL_HISTORY_COUNTRY } from "../src/lib/price-history";
 
-const CC = ["AU", "US", "UK", "SG", "CA", "EU"];
+const CC = [GLOBAL_HISTORY_COUNTRY, "AU", "US", "UK", "SG", "CA", "EU"];
 
 function median(xs: number[]): number {
   if (!xs.length) return 0;

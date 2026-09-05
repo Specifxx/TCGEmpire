@@ -46,12 +46,15 @@ test("sydneyDay and HISTORY_MIN_INTERVAL_DAYS have one canonical home (price-his
   // could silently diverge (two writers disagreeing about what "a week" means
   // would make the two tables' cadences drift apart from each other).
   const priceImport = codeOnly(read("src/lib/price-import.ts"));
-  assert.match(priceImport, /import\s*\{\s*sydneyDay,\s*HISTORY_MIN_INTERVAL_DAYS\s*\}\s*from\s*"\.\/price-history"/);
+  // Allows other named imports on the same line (e.g. GLOBAL_HISTORY_COUNTRY,
+  // added alongside these two for the GLOBAL history write) — the invariant
+  // this test actually cares about is "imported, not redefined locally".
+  assert.match(priceImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bHISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
   assert.doesNotMatch(priceImport, /function sydneyDay\(/, "must not redefine sydneyDay locally");
   assert.doesNotMatch(priceImport, /const HISTORY_MIN_INTERVAL_DAYS/, "must not redefine the constant locally");
 
   const sealedImport = codeOnly(read("src/lib/sealed-import.ts"));
-  assert.match(sealedImport, /import\s*\{\s*sydneyDay,\s*HISTORY_MIN_INTERVAL_DAYS\s*\}\s*from\s*"\.\/price-history"/);
+  assert.match(sealedImport, /import\s*\{[^}]*\bsydneyDay\b[^}]*\bHISTORY_MIN_INTERVAL_DAYS\b[^}]*\}\s*from\s*"\.\/price-history"/);
 });
 
 test("no import cycle: price-history.ts (the shared home) imports neither price-import.ts nor sealed-import.ts", () => {

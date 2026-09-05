@@ -1,11 +1,13 @@
 // Price-history helpers: per-card time series for the charts, the weekly
 // "movers" used by the homepage Price Watch, and the homepage's "recently
-// updated" feed. PriceHistory records one lowest-price point per card per
-// TRACKED market per Sydney day — AU/US/UK/SG (see price-import.ts's snapshot
-// write); CA and EU are not separately tracked, and are transparently derived
-// from US and UK via historySource() below. Every function here still takes a
-// `country` and returns it priced in THAT market's own currency; nothing
-// below is AU-only despite this file's history.
+// updated" feed. PriceHistory records ONE lowest-price point per card per
+// Sydney day (see price-import.ts's snapshot write) — the cheapest price
+// found in ANY tracked market that day, stored as USD cents under the single
+// country="GLOBAL" sentinel (GLOBAL_HISTORY_COUNTRY below). Every function
+// here still takes a `country` and returns it priced in THAT market's own
+// currency; historySource() is the one place that knows the stored series is
+// USD/GLOBAL, not the caller's own market — nothing below is AU-only despite
+// this file's history.
 import { unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
@@ -15,24 +17,30 @@ import { convertCents } from "./fx";
 import type { CardTileData } from "@/components/CardTile";
 import { HISTORY_TAG } from "./revalidate-content";
 
-// CA and EU don't get their own PriceHistory rows (see price-import.ts's
-// snapshot-write skip, added 2026-09-02) — a store footprint a currency
-// conversion away from an already-tracked market (US for CA, UK for EU) isn't
-// worth doubling the history DB's row count for. Resolves a market to the
-// market whose PriceHistory rows should actually be queried on its behalf,
-// plus the conversion to apply to every price read from those rows to get
-// back to `country`'s own currency. Every real PriceHistory reader in the
-// codebase goes through this — see its call sites — so a derived market's
-// history behaves exactly like a real one to every caller except this file
-// and price-import.ts, which are the only two that need to know it's derived
-// at all.
-const HISTORY_SOURCE: Partial<Record<Country, Country>> = { CA: "US", EU: "UK" };
-export function historySource(country: Country): { source: Country; convert: (cents: number) => number } {
-  const source = HISTORY_SOURCE[country] ?? country;
-  if (source === country) return { source, convert: (c) => c };
-  const from = currencyOf(source);
+// The one PriceHistory.country value every snapshot is written under since
+// 2026-09-05 (see price-import.ts's snapshot write) — the day's lowest price
+// across every tracked market, converted to USD cents. A literal string
+// constant, not a Country: PriceHistory.country is a plain text column and
+// this value must never be looked up in COUNTRIES/currencyOf like a real
+// market code (see rise-predictor.ts's own guard against exactly that, for
+// the retired "NZ" market code left behind by an earlier removal).
+export const GLOBAL_HISTORY_COUNTRY = "GLOBAL";
+
+// No market gets its own PriceHistory rows any more — 2026-09-02 stopped
+// writing CA/EU as pure currency-converted duplicates of US/UK; 2026-09-05
+// finished the idea for AU/US/UK/SG too, once it was clear the four
+// "independently tracked" markets were really the same handful of stores
+// undercutting each other, not four separate price stories. Resolves a
+// market to the ONE series that should actually be queried on its behalf
+// (always GLOBAL now) plus the conversion to apply to every price read from
+// it to get back to `country`'s own currency. Every real PriceHistory reader
+// in the codebase goes through this — see its call sites — so the single
+// shared series behaves exactly like a real per-market one to every caller
+// except this file and price-import.ts, which are the only two that need to
+// know it's a shared USD series at all.
+export function historySource(country: Country): { source: typeof GLOBAL_HISTORY_COUNTRY; convert: (usdCents: number) => number } {
   const to = currencyOf(country);
-  return { source, convert: (c) => convertCents(c, from, to) };
+  return { source: GLOBAL_HISTORY_COUNTRY, convert: (usdCents) => convertCents(usdCents, "USD", to) };
 }
 
 // One week plus a day of slack. The cache keys below are week-scoped, so the TTL

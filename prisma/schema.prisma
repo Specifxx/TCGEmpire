@@ -470,7 +470,13 @@ model StoreSuggestion {
 model PriceHistory {
   id               String   @id @default(cuid())
   cardId           String
-  // Market this point is for (AU/NZ/US/UK); each market is priced in its own currency.
+  // Historically the market this point was for (AU/US/UK/SG, each priced in
+  // its own currency), one row per card per market per day. Since 2026-09-05
+  // every snapshot instead writes a single "GLOBAL" row per card per day: the
+  // lowest price found in ANY tracked market that day, converted to USD cents
+  // (see price-import.ts's snapshot write and price-history.ts's
+  // GLOBAL_HISTORY_COUNTRY / historySource()). Old per-market rows predating
+  // that change may still exist for history already on record.
   country          String   @default("AU")
   // Calendar day in Australia/Sydney (stored date-only), the chart's x-axis.
   day              DateTime @db.Date

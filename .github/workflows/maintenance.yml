@@ -47,6 +47,8 @@ on:
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
+          - backfill-global-history # ONE-TIME (phase 1 of 2): collapses existing per-market PriceHistory rows (AU/US/UK/SG/CA/EU) into one GLOBAL row per card per day, in USD cents — see scripts/backfill-global-history.ts's own header for why this must run BEFORE the GLOBAL-reading code deploys. Additive only, never deletes. Honours dry_run.
+          - backfill-global-history-delete-old # ONE-TIME (phase 2 of 2): deletes the per-market rows phase 1 superseded. Only run this AFTER the GLOBAL-reading code has deployed and been prod-verified — see the script's own header for why the ordering matters. Honours dry_run.
           - audit-premium-vs-stripe # READ-ONLY (unless dry_run=false): walk every live Stripe subscription and assert the DB agrees — account exists, premiumUntil covers what they paid for, and the renewal link still resolves. Run after any restore that rolled the database back.
           - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
@@ -4800,6 +4802,20 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/audit-history.ts
+
+      - name: Backfill existing PriceHistory into GLOBAL rows (phase 1 of 2 — populate)
+        if: inputs.task == 'backfill-global-history'
+        env:
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+        run: npx tsx scripts/backfill-global-history.ts
+
+      - name: Delete PriceHistory rows superseded by the GLOBAL backfill (phase 2 of 2 — cleanup)
+        if: inputs.task == 'backfill-global-history-delete-old'
+        env:
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+        run: npx tsx scripts/backfill-global-history.ts --delete-old
 
       # Compares EVERY history project against each other, where audit-history
       # only inspects the single one db-history.ts currently resolves, and
