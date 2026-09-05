@@ -5,12 +5,15 @@ import { join } from "node:path";
 
 import {
   buildCardmarketRows,
+  buildCardmarketRankedRows,
   buildCardmarketSealedRows,
   inferExpansionSetCodes,
   isCardmarketEnabled,
+  isCardmarketRankingEnabled,
   EUR_TO_GBP,
   type CardmarketProduct,
   type CardmarketPriceEntry,
+  type CardmarketRankableCard,
 } from "../src/lib/cardmarket";
 import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER, EU_FALLBACK_RETAILERS, isFallbackRetailer } from "../src/lib/constants";
 
@@ -154,6 +157,121 @@ test("both singles rows are reference sources, never buyable stores", () => {
   assert.ok(isFallbackRetailer(CARDMARKET_EU_RETAILER));
   assert.ok(EU_FALLBACK_RETAILERS.includes(CARDMARKET_EU_RETAILER));
   assert.notEqual(CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER, "UK and EU must be separate retailer keys — RetailerPrice has no country in its unique key");
+});
+
+// ── Chase prints, recovered by rank ─────────────────────────────────────────
+// A real 3-print family pulled live during review: idExpansion 6399, name
+// "Aphelios, Exalted", idProducts 866775/866971/867003, priced at
+// €0.02 / €37.99 / €380 — the exact evidence cited in lib/cardmarket.ts's
+// header for RANK_MIN_STEP. The card DEFINITIONS below (collector numbers,
+// which pool each is) are illustrative test fixtures — this file has no live
+// DB to confirm Aphelios's actual real-world print lineup against — but the
+// idProduct/name/idExpansion/price values are the genuine ones observed.
+const REAL_APHELIOS: CardmarketProduct[] = [
+  { idProduct: 866775, name: "Aphelios, Exalted", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6399, idMetacard: 458346, dateAdded: "2026-01-19 15:14:30" },
+  { idProduct: 866971, name: "Aphelios, Exalted", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6399, idMetacard: 458346, dateAdded: "2026-01-19 16:42:11" },
+  { idProduct: 867003, name: "Aphelios, Exalted", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6399, idMetacard: 458346, dateAdded: "2026-01-19 17:19:17" },
+];
+const APHELIOS_PRICES: CardmarketPriceEntry[] = [
+  { idProduct: 866775, idCategory: 1655, low: 0.02, avg: 0.22, trend: 0.2 },
+  { idProduct: 866971, idCategory: 1655, low: 37.99, avg: null, trend: 65 },
+  { idProduct: 867003, idCategory: 1655, low: 380, avg: 399.99, trend: 399.99 },
+];
+const APHELIOS_CARDS: CardmarketRankableCard[] = [
+  { id: "sfd-aphelios-base", setCode: "SFD", name: "Aphelios, Exalted", nameNormalized: "aphelios exalted", collectorNumber: "045/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: false },
+  { id: "sfd-aphelios-over", setCode: "SFD", name: "Aphelios, Exalted", nameNormalized: "aphelios exalted", collectorNumber: "230/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: true },
+  { id: "sfd-aphelios-sig", setCode: "SFD", name: "Aphelios, Exalted", nameNormalized: "aphelios exalted", collectorNumber: "230*/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: false },
+];
+
+test("REAL DATA: a genuine 3-print family is ranked, and the priciest slot lands on the rarest pool (Signature)", () => {
+  const m = buildCardmarketRankedRows(APHELIOS_CARDS, REAL_APHELIOS, APHELIOS_PRICES);
+  assert.equal(m.familiesConsidered, 1);
+  assert.equal(m.familiesRanked, 1);
+
+  const sigEu = m.rows.find((r) => r.cardId === "sfd-aphelios-sig" && r.retailer === CARDMARKET_EU_RETAILER);
+  assert.ok(sigEu, "the Signature card must get a row");
+  assert.equal(sigEu!.priceCents, 38000, "the priciest print (€380) must land on the rarest pool, Signature");
+  assert.match(sigEu!.title, /ranked 3\/3 by price/i);
+  assert.match(sigEu!.title, /not matched to a specific listing/i, "the estimate provenance must stay in the data, not just a comment");
+
+  const baseEu = m.rows.find((r) => r.cardId === "sfd-aphelios-base" && r.retailer === CARDMARKET_EU_RETAILER);
+  assert.equal(baseEu!.priceCents, 2, "the cheapest print (€0.02) must land on the base (least rare) pool");
+
+  const overEu = m.rows.find((r) => r.cardId === "sfd-aphelios-over" && r.retailer === CARDMARKET_EU_RETAILER);
+  assert.equal(overEu!.priceCents, 3799, "the middle price must land on the middle pool (Over-numbered)");
+
+  const sigUk = m.rows.find((r) => r.cardId === "sfd-aphelios-sig" && r.retailer === CARDMARKET_RETAILER);
+  assert.equal(sigUk!.priceCents, Math.round(380 * EUR_TO_GBP * 100));
+});
+
+test("a family whose prices sit too close together is rejected — no confident order to guess", () => {
+  const closeProducts: CardmarketProduct[] = [
+    { idProduct: 1, name: "Close Call Card", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 7000, idMetacard: 1, dateAdded: "2026-01-01" },
+    { idProduct: 2, name: "Close Call Card", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 7000, idMetacard: 1, dateAdded: "2026-01-01" },
+  ];
+  const closePrices: CardmarketPriceEntry[] = [
+    { idProduct: 1, idCategory: 1655, low: 10, avg: null, trend: null },
+    { idProduct: 2, idCategory: 1655, low: 15, avg: null, trend: null }, // only 1.5x — below RANK_MIN_STEP
+  ];
+  const closeCards: CardmarketRankableCard[] = [
+    { id: "close-base", setCode: "SFD", name: "Close Call Card", nameNormalized: "close call card", collectorNumber: "050/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
+    { id: "close-alt", setCode: "SFD", name: "Close Call Card", nameNormalized: "close call card", collectorNumber: "050a/221", rarity: "Showcase", variant: "a", isPromo: false, isOvernumbered: false },
+  ];
+  const m = buildCardmarketRankedRows(closeCards, closeProducts, closePrices);
+  assert.equal(m.familiesConsidered, 1, "the sizes matched, so it was a candidate");
+  assert.equal(m.familiesRanked, 0, "but the prices were too close to trust an order");
+  assert.equal(m.rows.length, 0);
+});
+
+test("GATE 1: a family whose group sizes disagree between us and Cardmarket is never ranked", () => {
+  // Cardmarket has 2 prints; we only know of 1 card by that name — a real
+  // count mismatch, not just noisy pricing. Must abort rather than guess
+  // which Cardmarket product is real.
+  const products: CardmarketProduct[] = [
+    { idProduct: 1, name: "Mismatched Card", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 7001, idMetacard: 1, dateAdded: "2026-01-01" },
+    { idProduct: 2, name: "Mismatched Card", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 7001, idMetacard: 1, dateAdded: "2026-01-01" },
+  ];
+  const prices: CardmarketPriceEntry[] = [
+    { idProduct: 1, idCategory: 1655, low: 1, avg: null, trend: null },
+    { idProduct: 2, idCategory: 1655, low: 100, avg: null, trend: null },
+  ];
+  const cards: CardmarketRankableCard[] = [
+    { id: "mismatched-only", setCode: "SFD", name: "Mismatched Card", nameNormalized: "mismatched card", collectorNumber: "060/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
+  ];
+  const m = buildCardmarketRankedRows(cards, products, prices);
+  assert.equal(m.familiesConsidered, 0, "a size mismatch never even becomes a candidate");
+  assert.equal(m.rows.length, 0);
+});
+
+test("GATE 2: a promo among the candidates aborts the whole family rather than ranking around it", () => {
+  // poolOf() returns null for a promo — a hole in the ranking, not a rankable
+  // pool. The whole family must abort, not silently rank the other two.
+  const products: CardmarketProduct[] = [
+    { idProduct: 1, name: "Promo Mixed Card", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 7002, idMetacard: 1, dateAdded: "2026-01-01" },
+    { idProduct: 2, name: "Promo Mixed Card", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 7002, idMetacard: 1, dateAdded: "2026-01-01" },
+  ];
+  const prices: CardmarketPriceEntry[] = [
+    { idProduct: 1, idCategory: 1655, low: 1, avg: null, trend: null },
+    { idProduct: 2, idCategory: 1655, low: 100, avg: null, trend: null },
+  ];
+  const cards: CardmarketRankableCard[] = [
+    { id: "promo-mixed-base", setCode: "SFD", name: "Promo Mixed Card", nameNormalized: "promo mixed card", collectorNumber: "070/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
+    { id: "promo-mixed-promo", setCode: "SFD", name: "Promo Mixed Card", nameNormalized: "promo mixed card", collectorNumber: "070/221", rarity: "Common", variant: null, isPromo: true, isOvernumbered: false },
+  ];
+  const m = buildCardmarketRankedRows(cards, products, prices);
+  assert.equal(m.familiesConsidered, 1, "sizes matched, so it reached the classification gate");
+  assert.equal(m.familiesRanked, 0, "but a promo can't be ranked, so the family aborts");
+  assert.equal(m.rows.length, 0);
+});
+
+test("the ranked pass has its own kill switch, independent of CARDMARKET_DISABLED", () => {
+  delete process.env.CARDMARKET_RANKED_DISABLED;
+  assert.equal(isCardmarketRankingEnabled(), true, "with nothing configured, this must default ON");
+  process.env.CARDMARKET_RANKED_DISABLED = "true";
+  assert.equal(isCardmarketRankingEnabled(), false);
+  delete process.env.CARDMARKET_DISABLED; // must not be the same flag
+  assert.equal(isCardmarketEnabled(), true, "disabling ranking must not disable Cardmarket itself");
+  delete process.env.CARDMARKET_RANKED_DISABLED;
 });
 
 // ── Sealed ───────────────────────────────────────────────────────────────────

@@ -154,6 +154,39 @@ export function isPromoProduct(p: TcgProduct): boolean {
   return PROMO_SET_RE.test(p.setName ?? "");
 }
 
+// The other half of the same problem, on OUR side of the match. A promo CARD
+// (manual-cards.json, isPromo: true) frequently reuses a real base card's own
+// collector number — same reason a promo PRODUCT does (see isPromoProduct's
+// doc comment above) — so it must never populate byKey/bySetlessNum below,
+// or it silently collides with the base card's own entry there.
+//
+// FOUND LIVE: riftcompare.com/card/teemo-swift-scout-ogn-263-298-promo (a
+// manual alternate-art promo, OGN 263/298) was showing TCGplayer product
+// 653061 — the BASE "Origins - Teemo, Swift Scout" listing — instead of its
+// own alt-art promo listing (670598). Root cause: both cards key to the same
+// "OGN|263" in byKey, and whichever of the two happened to be LAST in
+// prisma.card.findMany()'s (unordered) result silently overwrote the other's
+// entry — so the base product's price landed on the promo card, and the real
+// base card lost its own price entirely as the same-shaped side effect.
+//
+// Excluding every promo card from byKey/bySetlessNum here means NONE of them
+// get a number-based match any more (matching isPromoProduct's own choice for
+// promo PRODUCTS) — so PROMO_PRODUCT_OVERRIDES below is what gives a promo
+// card WITH a verified TCGplayer listing its price back, the same way an
+// externalId does for a card we created directly from TCGplayer.
+//
+// Manually-verified TCGplayer product IDs for specific promo cards, keyed by
+// the CARD's OWN, ALREADY-LIVE externalId from manual-cards.json — never a
+// NEW externalId. scripts/add-manual-cards.ts upserts a manual card by
+// matching its externalId; renaming the one already in the database would
+// make that lookup miss, orphaning the real (already-indexed, already-linked)
+// row and creating a genuine duplicate under the new id instead of fixing
+// anything. Seeding this map is the only change needed on the pricing side —
+// see how it feeds into byExternal below.
+const PROMO_PRODUCT_OVERRIDES: Record<string, number> = {
+  "promo-ogn-263-teemo-swift-scout-altart": 670598, // riftbound-promotional-cards, alternate art
+};
+
 function searchBody(from: number, productTypeName?: string[]) {
   const term: Record<string, string[]> = { productLineName: [PRODUCT_LINE] };
   if (productTypeName) term.productTypeName = productTypeName;
@@ -317,7 +350,7 @@ export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA
 // decides). Exported separately so a dry-run can inspect the match quality.
 export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
-  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true } });
+  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true, isPromo: true } });
   const byKey = new Map<string, string>();
   const byExternal = new Map<string, string>();
   // Set-less numbers (the "R04a"-style rune printings, "NN1", "WB25"…) keyed by the
@@ -327,13 +360,28 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   // .json, the official-gallery importer). Matched below against the product's setName.
   const bySetlessNum = new Map<string, string>();
   for (const c of cards) {
+    // Cards we created FROM TCGplayer carry externalId "tcg-<productId>" — price them
+    // directly by that link (their numbers, e.g. promo runes "R03a", don't parse to a set).
+    if (c.externalId) byExternal.set(c.externalId, c.id);
+    // Promo cards never populate byKey/bySetlessNum — see the long comment on
+    // PROMO_PRODUCT_OVERRIDES above for why (they reuse a base card's number,
+    // and a plain map .set() here silently lets one steal or lose the other's
+    // entry). A promo card can only be priced via byExternal from here on:
+    // its own "tcg-<productId>" link, or a PROMO_PRODUCT_OVERRIDES entry.
+    if (c.isPromo) continue;
     const [num, total] = c.collectorNumber.split("/");
     const sc = setFromTotal(total);
     if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
     else bySetlessNum.set(`${c.setCode}|${numKey(num)}`, c.id);
-    // Cards we created FROM TCGplayer carry externalId "tcg-<productId>" — price them
-    // directly by that link (their numbers, e.g. promo runes "R03a", don't parse to a set).
-    if (c.externalId) byExternal.set(c.externalId, c.id);
+  }
+  // Seed byExternal with the verified promo-product pins: for each override, if
+  // the card it names is actually in the database (found via its OWN, unchanged
+  // externalId), register the product's id under the exact same "tcg-<id>" key
+  // the loop above already uses for TCGplayer-created cards — the product-match
+  // loop below needs no separate lookup path for this.
+  for (const [cardExternalId, productId] of Object.entries(PROMO_PRODUCT_OVERRIDES)) {
+    const cardId = byExternal.get(cardExternalId);
+    if (cardId) byExternal.set(`tcg-${productId}`, cardId);
   }
 
   const unmatchedSamples: string[] = [];

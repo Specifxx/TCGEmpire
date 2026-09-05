@@ -71,13 +71,46 @@
 //     e.g. "Ahri, Nine-Tailed Fox" is one card family, several prints), and
 //     Cardmarket lists each PRINT as a separate idProduct with nothing to
 //     distinguish which is which. Matching by name can't tell them apart
-//     either. So: any (expansion, name) with more than one Cardmarket product,
-//     or any (set, name) with more than one of OUR cards, is skipped rather
-//     than guessed. This trades chase-print coverage (the cards this site
-//     otherwise cares most about pricing) for correctness — an ordinary card
-//     with no print siblings still matches cleanly, which is most of a set.
-//     "Understated, never wrong" — the same trade-off box-ev.ts makes for
-//     unpriced cards.
+//     either. buildCardmarketRows() skips these entirely — "understated,
+//     never wrong", the same trade-off box-ev.ts makes for unpriced cards.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// RECOVERING THE CHASE PRINTS: buildCardmarketRankedRows() (2026-09-04).
+// ─────────────────────────────────────────────────────────────────────────────
+// The strict pass above skips every print family with a sibling — which means
+// it skips exactly the signature/over-numbered/alt-art cards this site's
+// visitors most want a price for. That's a real gap, and it's closeable: for
+// an ambiguous family, we independently know two orderings that SHOULD agree —
+//   • OUR side: `poolOf()` (lib/box-ev.ts, the same classifier the box-EV
+//     calculator trusts) ranks each of our candidate cards by real Riot pull
+//     rate — base rarity, then Alt Art (1-in-12), then Over-numbered (1-in-72),
+//     then Signature (1-in-720) — POOL_ORDER's own order.
+//   • CARDMARKET'S side: sorting that family's products by LOW price ascending.
+// Rarer print → pricier print is not a certainty for any ONE card, but real
+// data backs it as a strong pattern: a genuine 3-print family pulled from the
+// live catalogue during review priced at €0.02 / €37.99 / €380 — a ~1,900×
+// then ~10× jump, not a close call. So this is a deliberate, narrow exception
+// to "never guess", gated by THREE independent checks, ALL required:
+//   1. GROUP SIZES MUST MATCH EXACTLY — our candidate count for (set, name)
+//      must equal Cardmarket's product count for (expansion, name). A mismatch
+//      means one side has catalogued something the other hasn't; abort rather
+//      than force an uneven zip.
+//   2. EVERY CANDIDATE MUST CLASSIFY — if poolOf() can't place one of our
+//      candidates (a promo, an unparseable number), the whole family aborts
+//      rather than rank around a hole.
+//   3. EVERY ADJACENT PRICE STEP MUST CLEAR RANK_MIN_STEP — if any two
+//      consecutive ranks are priced too close together, the ordering isn't
+//      trustworthy for THIS family; abort that family specifically rather
+//      than force a guess onto near-identical prices. A quiet, cheap chase
+//      print (low demand keeping it near its neighbour) fails this check and
+//      is correctly left unpriced, same as before.
+// Rows built this way carry the SAME fallback treatment as every other
+// Cardmarket row (never a headline "from" price, always labelled as a
+// reference) PLUS an explicit provenance marker in `title` — ranked by price
+// within its family, not matched against one specific verified listing — so
+// the distinction survives into the data, not just this comment. Independent
+// kill switch: CARDMARKET_RANKED_DISABLED turns off only this pass, leaving
+// the strict, ambiguity-free matching above untouched.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // HOW IT'S SURFACED.
@@ -107,6 +140,7 @@ import { gunzipSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER } from "@/lib/constants";
 import { classifySealed } from "@/lib/sealed-import";
+import { poolOf, POOL_ORDER, type PoolCard } from "@/lib/box-ev";
 
 // ---- configuration ----------------------------------------------------------
 // Riftbound's Cardmarket game id — see the header for how these three URLs
@@ -131,6 +165,11 @@ const PRICEGUIDE_URL =
 // Cardmarket ever asks us to stop).
 export function isCardmarketEnabled(): boolean {
   return process.env.CARDMARKET_DISABLED !== "true";
+}
+
+/** Independent kill switch for JUST the ranked/heuristic pass — see header. */
+export function isCardmarketRankingEnabled(): boolean {
+  return process.env.CARDMARKET_RANKED_DISABLED !== "true";
 }
 
 // EUR→GBP rate for the UK singles conversion. Like USD_TO_GBP in tcgplayer.ts
@@ -365,6 +404,121 @@ function cardmarketProductUrl(idProduct: number): string {
   return `https://www.cardmarket.com/en/Riftbound/Products/Singles?idProduct=${idProduct}`;
 }
 
+// ---- singles, tier 2: ambiguous families recovered by price rank -----------
+// See the file header ("RECOVERING THE CHASE PRINTS") for the full rationale
+// and the three gates every family must clear.
+
+export interface CardmarketRankableCard extends PoolCard {
+  id: string;
+  setCode: string;
+  name: string;
+  nameNormalized: string;
+}
+
+export type CardmarketRankedMatch = {
+  /** Ambiguous families with matching group sizes on both sides — the candidate pool. */
+  familiesConsidered: number;
+  /** Of those, how many cleared every gate and got ranked. */
+  familiesRanked: number;
+  rows: Prisma.RetailerPriceCreateManyInput[];
+};
+
+// Every adjacent rank must be at least this many times pricier than the rank
+// below it. €0.02/€37.99/€380 (a real family pulled during review) clears this
+// with enormous room; the point is to reject the close calls, not this one.
+const RANK_MIN_STEP = 2;
+
+export function buildCardmarketRankedRows(
+  cards: readonly CardmarketRankableCard[],
+  products: readonly CardmarketProduct[],
+  prices: readonly CardmarketPriceEntry[],
+): CardmarketRankedMatch {
+  const ourNamesBySet = new Map<string, Set<string>>();
+  const ourGroups = new Map<string, CardmarketRankableCard[]>();
+  for (const c of cards) {
+    const nn = c.nameNormalized || normName(c.name);
+    const namesSet = ourNamesBySet.get(c.setCode) ?? new Set<string>();
+    namesSet.add(nn);
+    ourNamesBySet.set(c.setCode, namesSet);
+    const key = `${c.setCode}|${nn}`;
+    const g = ourGroups.get(key) ?? [];
+    g.push(c);
+    ourGroups.set(key, g);
+  }
+
+  const expansionSetCode = new Map(
+    inferExpansionSetCodes(products, ourNamesBySet).map((m) => [m.idExpansion, m.setCode]),
+  );
+
+  const cmGroups = new Map<string, CardmarketProduct[]>();
+  for (const p of products) {
+    if (p.idCategory !== SINGLE_CATEGORY) continue;
+    const key = `${p.idExpansion}|${normName(p.name)}`;
+    const g = cmGroups.get(key) ?? [];
+    g.push(p);
+    cmGroups.set(key, g);
+  }
+
+  const priceByProduct = new Map<number, CardmarketPriceEntry>();
+  for (const pr of prices) priceByProduct.set(pr.idProduct, pr);
+
+  const rows: Prisma.RetailerPriceCreateManyInput[] = [];
+  let familiesConsidered = 0;
+  let familiesRanked = 0;
+
+  for (const [cmKey, cmProducts] of cmGroups) {
+    if (cmProducts.length < 2) continue; // the unambiguous case is buildCardmarketRows()'s job
+    const idExpansion = Number(cmKey.slice(0, cmKey.indexOf("|")));
+    const setCode = expansionSetCode.get(idExpansion);
+    if (!setCode) continue;
+
+    const nn = normName(cmProducts[0].name);
+    const ourCandidates = ourGroups.get(`${setCode}|${nn}`);
+    // GATE 1: group sizes must match exactly.
+    if (!ourCandidates || ourCandidates.length !== cmProducts.length) continue;
+    familiesConsidered++;
+
+    // GATE 2: every candidate must classify to a real pool.
+    const ranked = ourCandidates
+      .map((card) => ({ card, pool: poolOf(card) }))
+      .sort((a, b) => (a.pool ? POOL_ORDER.indexOf(a.pool) : -1) - (b.pool ? POOL_ORDER.indexOf(b.pool) : -1));
+    if (ranked.some((r) => r.pool == null)) continue;
+
+    const priced = cmProducts
+      .map((product) => ({ product, low: priceByProduct.get(product.idProduct)?.low ?? null }))
+      .sort((a, b) => (a.low ?? Infinity) - (b.low ?? Infinity));
+    if (priced.some((r) => r.low == null || !(r.low > 0))) continue; // every member needs a real price
+
+    // GATE 3: every adjacent step must clear RANK_MIN_STEP.
+    let stepsOk = true;
+    for (let i = 1; i < priced.length; i++) {
+      if (priced[i].low! < priced[i - 1].low! * RANK_MIN_STEP) { stepsOk = false; break; }
+    }
+    if (!stepsOk) continue;
+
+    familiesRanked++;
+    for (let i = 0; i < ranked.length; i++) {
+      const cardId = ranked[i].card.id;
+      const lowEur = priced[i].low!;
+      const product = priced[i].product;
+      const base = {
+        cardId,
+        retailerName: "Cardmarket",
+        // Provenance stays in the data, not just this file's comments — see header.
+        title: `${product.name} — ranked ${i + 1}/${cmProducts.length} by price within its print family (not matched to a specific listing)`,
+        url: cardmarketProductUrl(product.idProduct),
+        condition: "NM",
+        isFoil: false,
+        inStock: true,
+      };
+      rows.push({ ...base, retailer: CARDMARKET_RETAILER, priceCents: Math.round(lowEur * EUR_TO_GBP * 100), currency: "GBP", country: "UK" });
+      rows.push({ ...base, retailer: CARDMARKET_EU_RETAILER, priceCents: Math.round(lowEur * 100), currency: "EUR", country: "EU" });
+    }
+  }
+
+  return { familiesConsidered, familiesRanked, rows };
+}
+
 /** Replace all Cardmarket singles rows with a fresh pull. Isolated try/catch lives in the caller. */
 export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; written: number; reason?: string }> {
   if (!isCardmarketEnabled()) return { skipped: true, written: 0, reason: "CARDMARKET_DISABLED=true" };
@@ -373,7 +527,12 @@ export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; wri
     readJson<{ products: CardmarketProduct[] }>(PRODUCTLIST_SINGLES_URL),
     readJson<{ priceGuides: CardmarketPriceEntry[] }>(PRICEGUIDE_URL),
   ]);
-  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, name: true, nameNormalized: true } });
+  const cards = await prisma.card.findMany({
+    select: {
+      id: true, setCode: true, name: true, nameNormalized: true,
+      collectorNumber: true, rarity: true, variant: true, isOvernumbered: true, isPromo: true,
+    },
+  });
 
   const m = buildCardmarketRows(cards, products.products, priceGuide.priceGuides);
   console.log(
@@ -382,14 +541,25 @@ export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; wri
       `${m.skippedUnmappedExpansion} unmapped-expansion, ${m.skippedNoPrice} no-price.`,
   );
   if (m.unmatchedSamples.length) console.log(`Cardmarket unmatched (sample): ${m.unmatchedSamples.slice(0, 8).join(" | ")}`);
-  if (m.rows.length === 0) {
+
+  // Tier 2: recover chase prints the strict pass above had to skip — see the
+  // "RECOVERING THE CHASE PRINTS" header section. Independently switchable.
+  let rankedRows: Prisma.RetailerPriceCreateManyInput[] = [];
+  if (isCardmarketRankingEnabled()) {
+    const ranked = buildCardmarketRankedRows(cards, products.products, priceGuide.priceGuides);
+    rankedRows = ranked.rows;
+    console.log(`Cardmarket ranked (chase prints): ${ranked.familiesConsidered} ambiguous families sized-matched, ${ranked.familiesRanked} ranked (${ranked.rows.length} rows).`);
+  }
+
+  const allRows = [...m.rows, ...rankedRows];
+  if (allRows.length === 0) {
     console.warn("Cardmarket singles: 0 rows built — keeping existing rows.");
     return { skipped: false, written: 0, reason: "0 rows built" };
   }
 
   await prisma.retailerPrice.deleteMany({ where: { retailer: { in: [CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER] } } });
-  await prisma.retailerPrice.createMany({ data: m.rows });
-  return { skipped: false, written: m.rows.length };
+  await prisma.retailerPrice.createMany({ data: allRows });
+  return { skipped: false, written: allRows.length };
 }
 
 // ---- sealed: SealedListing --------------------------------------------------
