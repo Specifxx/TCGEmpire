@@ -2398,8 +2398,17 @@ jobs:
           # quoted form never matches pg_restore -l's real output. This step has
           # never run (RM4 was already refusing connections when it was written),
           # so the bug was only found when the newer task exercised it.
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM5 has NOT been touched."
               exit 1
             fi
@@ -2575,8 +2584,17 @@ jobs:
           # would also match "CollectionCard". TABLE DATA rather than TABLE is
           # deliberate: it is the data section that a truncated dump loses, and
           # pg_dump emits a TABLE DATA entry even for a table with zero rows.
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. DATABASE_URL has NOT been touched."
               exit 1
             fi
@@ -2770,8 +2788,17 @@ jobs:
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM7 has NOT been touched."
               exit 1
             fi
@@ -2972,8 +2999,17 @@ jobs:
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM6 has NOT been touched."
               exit 1
             fi
@@ -3166,8 +3202,17 @@ jobs:
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM11 has NOT been touched."
               exit 1
             fi
@@ -3365,8 +3410,17 @@ jobs:
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM10 has NOT been touched."
               exit 1
             fi
@@ -3561,8 +3615,17 @@ jobs:
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM9 has NOT been touched."
               exit 1
             fi
@@ -3814,8 +3877,17 @@ jobs:
           # Anchored on "TABLE DATA public <name> " — pg_restore -l prints the
           # identifier UNQUOTED. The trailing space matters: without it "Card"
           # also matches "CollectionCard".
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM8 has NOT been touched."
               exit 1
             fi
@@ -4082,8 +4154,17 @@ jobs:
           # Anchored on "TABLE DATA public <name> " — pg_restore -l prints the
           # identifier UNQUOTED. The trailing space matters: without it "Card"
           # also matches "CollectionCard".
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM7 has NOT been touched."
               exit 1
             fi
@@ -4299,8 +4380,17 @@ jobs:
             exit 1
           fi
           echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. RM6 has NOT been touched."
               exit 1
             fi
@@ -4494,8 +4584,17 @@ jobs:
           # Anchored on "TABLE DATA public <name> " — pg_restore -l prints the
           # identifier UNQUOTED. The trailing space matters: without it "Card"
           # also matches "CollectionCard".
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
           for T in User Card MarketplaceListing; do
-            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
               echo "::error::the dump has no data section for table $T — it is incomplete. DATABASE_URL_2 has NOT been touched."
               exit 1
             fi
