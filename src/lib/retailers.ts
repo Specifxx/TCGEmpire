@@ -196,6 +196,18 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.50 · free over $50",
   },
+  // Real Brompton, SA business (Troll Aus Pty Ltd); confirmed Shopify with a
+  // live riftbound-singles collection of collector-numbered cards, AUD
+  // confirmed on a live product page, when verified 2026-09-05.
+  trollaustralia: {
+    key: "trollaustralia",
+    name: "Troll Australia",
+    base: "https://www.trollaustralia.com.au",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  },
 
   // ---- United States stores (country: "US"; prices in USD; uses eBay US) --------
   // The US market is much deeper — these carry thousands of in-stock singles between
@@ -1161,6 +1173,23 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   },
+  // Previously tracked under this same key, then dropped from RETAILERS at some
+  // point before this file's current history begins (see the stale-reference
+  // note on STORES_WITH_POLICY below, which is what flagged that this key used
+  // to exist). Re-verified fresh 2026-09-05: real CAD Shopify store (region
+  // selector resolves to Canada), live riftbound-tcg-singles-all collection
+  // with real in-stock collector-numbered singles — re-added on that evidence,
+  // not on the strength of the old entry.
+  kanzengames: {
+    key: "kanzengames",
+    name: "KanZenGames",
+    base: "https://kanzengames.com",
+    collections: ["riftbound-tcg-singles-all"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
   // The four stores below were REJECTED from the 2026-07 US batch specifically
   // because they're Canadian (see the researched-and-rejected list in the US
   // section above) — they were never bad leads, just filed under the wrong
@@ -1271,9 +1300,9 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     access; absence of a search hit is not proof of absence of stock.
 
   // ---- Eurozone stores (country: "EU"; prices in EUR via ?country=ES) --------
-  // Eleven stores across six countries (DE 3, IT 3, ES 2, AT/PT/NL 1 each).
+  // Twelve stores across six countries (DE 4, IT 3, ES 2, AT/PT/NL 1 each).
   //
-  // ── WHY ELEVEN AND NOT NINETY-SIX ────────────────────────────────────────────
+  // ── WHY TWELVE AND NOT NINETY-SIX ────────────────────────────────────────────
   // This list was 96 stores for about an hour on 2026-08-23, and that number was
   // close to meaningless. It was ranked on RAW IN-STOCK PRODUCT COUNT inside a
   // store's Riftbound collections — which counts booster boxes, playmats, sleeves
@@ -1301,7 +1330,13 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //
   // Re-run it yourself with `npx tsx scripts/probe-eu-stores.ts --registry`
   // before spending another pass on discovery. Two independent exhaustive sweeps
-  // returning the same eleven stores is the answer, not a stopping point.
+  // returning the same eleven stores was the answer — and a twelfth (added
+  // 2026-09-05) doesn't undo that: Battle Bear Kaiserslautern (battlebearkl,
+  // battle-bear-kl.de) is a second, separately-run storefront for the same
+  // Battle Bear brand already tracked here as Saarbrücken (battlebearsb) — one
+  // brand, two physical locations, two domains, same precedent as
+  // pokebox/pokeboxusa and the Danireon US/CA pair elsewhere in this file — not
+  // a gap either sweep missed.
   //
   // The structural reason, which matters more than the number: European singles
   // trading is concentrated on CARDMARKET and CARDTRADER, not on individual
@@ -1310,7 +1345,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // lib/pending-platforms.ts for why — they double-count stock that is also
   // listed directly, and they need their own adapter, not a retailers.ts row).
   //
-  // Getting EU price coverage past eleven shops therefore means a REFERENCE
+  // Getting EU price coverage past twelve shops therefore means a REFERENCE
   // source, not more stores. Cardmarket is wired for exactly that as of
   // 2026-08-23 — including a native-EUR row that needs no FX conversion, which
   // makes it a better fit for this market than for any other — and is
@@ -1318,7 +1353,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // is the actual unblock.
   //
   // SHIPPING: unverified placeholder estimates (€4.95 · free over €60), uniform
-  // so nobody mistakes them for researched per-store rates. Nine of the eleven
+  // so nobody mistakes them for researched per-store rates. Ten of the twelve
   // publish a real policy page and are in STORES_WITH_POLICY. The estimate is
   // weaker here than in any other market — a EU shopper routinely buys across a
   // border, where postage runs several times the domestic rate — so the
@@ -1422,6 +1457,20 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. €4.95 · free over €60",
     country: "EU",
   },
+  // A second, separately-run Battle Bear location (see the EU section comment
+  // above) — same brand as battlebearsb, different city and domain.
+  battlebearkl: {
+    key: "battlebearkl",
+    name: "Battle Bear Kaiserslautern",
+    base: "https://battle-bear-kl.de",
+    // DE · 662 in-stock singles when probed 2026-09-05, EUR confirmed under
+    // ?country=ES (Spain-anchored country selector reads "Spain (EUR €)")
+    collections: ["riftbound-einzelkarten", "riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
   timetwister: {
     key: "timetwister",
     name: "Timetwister Games",
@@ -1513,7 +1562,10 @@ const STORES_WITH_POLICY = new Set([
   // onboardgaming above), but this Set was never cleaned up to match. Harmless at
   // runtime (shippingPolicyUrl() guards on RETAILERS[key] existing) but stale, and
   // it's exactly the kind of drift that made the homepage/tracked-page store counts
-  // disagree — see the count-consistency fix in src/app/page.tsx.
+  // disagree — see the count-consistency fix in src/app/page.tsx. kanzengames is
+  // back in RETAILERS (CA section, re-verified 2026-09-05) but deliberately not
+  // re-added here — its shipping-policy page hasn't been re-confirmed, so it
+  // shows the estimate rather than risking a link to a page nobody's checked.
   // UK
   "thistletavern", "cardgoblin", "axionnow", "spellboundgames", "totalcards",
   "boardsandswords", "forbiddenplanet", "zatugames", "goblingaming",
@@ -1534,7 +1586,7 @@ const STORES_WITH_POLICY = new Set([
   // cross-border EU order costs well above it, so the store's own policy page is
   // the only honest number for most of these orders.
   "manamarketeu", "universetcg", "lichcards", "trinketmage",
-  "elduelista", "gsgameon", "battlebearsb", "timetwister",
+  "elduelista", "gsgameon", "battlebearsb", "battlebearkl", "timetwister",
   "nordiclegends",
 ]);
 

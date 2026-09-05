@@ -3658,11 +3658,11 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
-    body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 16 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
+    body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 17 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
 
 ## Why Australians use RiftCompare
 
-- **Every AU store in one search.** We track live AUD prices at Cherry Collectables, Ozzie Collectables, The Final Boss Collectables, Plenty of Games, The Adventurers Guild, Mana Market, Cardbot, Good Games Adelaide, Mint Collectables, The Card Hub Australia, PokéBox, Spellroo Gaming, Spindown, 88 Games Arena, Elemental Arcade and Fluke & Box — plus **eBay Australia** ([full list](/stores/tracked)).
+- **Every AU store in one search.** We track live AUD prices at Cherry Collectables, Ozzie Collectables, The Final Boss Collectables, Plenty of Games, The Adventurers Guild, Mana Market, Cardbot, Good Games Adelaide, Mint Collectables, The Card Hub Australia, PokéBox, Spellroo Gaming, Spindown, 88 Games Arena, Elemental Arcade, Fluke & Box and Troll Australia — plus **eBay Australia** ([full list](/stores/tracked)).
 - **Ranked by what you actually pay.** Australia is where postage decides the deal: a $1.50 card with $3.95 tracked shipping isn't cheap. Every comparison ranks stores by **total delivered cost**, with each store's free-shipping threshold factored in automatically.
 - **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
 - **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple postage charges.
@@ -3778,11 +3778,11 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
-    body: `Looking to buy Riftbound cards in Canada? With 18 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
+    body: `Looking to buy Riftbound cards in Canada? With 19 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
 
 ## Why Canadians use RiftCompare
 
-- **18 Canadian stores in one search.** We track live CAD prices at Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games and Hobbiesville ([full list](/stores/tracked)).
+- **19 Canadian stores in one search.** We track live CAD prices at Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games, Hobbiesville and KanZenGames ([full list](/stores/tracked)).
 - **Ranked by what you actually pay.** Every comparison ranks stores by total delivered cost, with each store's free-shipping threshold factored in automatically.
 - **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
 - **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple shipping charges.
