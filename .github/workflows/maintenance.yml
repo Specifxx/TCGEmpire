@@ -69,9 +69,10 @@ on:
           - migrate-main-db-to-rm9 # LEGACY (RM8 → RM9 cutover, 2026-08-23, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-to-rm10 on 2026-08-26.
           - migrate-main-db-to-rm10 # LEGACY (RM9 → RM10 cutover, 2026-08-26, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-to-rm11 on 2026-08-29.
           - migrate-main-db-to-rm11 # LEGACY (RM10 → RM11 cutover, 2026-08-29, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-rm11-to-rm6 on 2026-09-03.
-          - migrate-main-db-rm11-to-rm6 # CURRENT operational cutover (2026-09-03): full pg_dump/restore of the live RM11 project into RM6 + all-table row-count verification + a schema re-push. RM6 is a RECYCLED project (last live 2026-08-17..08-20, stopped once its own 5 GB allowance ran out) rather than a fresh one — its Neon monthly transfer allowance has long since reset, and it still holds that old snapshot, so this restore's `--clean` pass WIPES it before writing RM11's current data over it. Named with BOTH endpoints, not just the target, because "rm6" was already used once for a different source (DATABASE_URL_2 → RM6, see migrate-main-db-to-rm6 below) — reusing that bare name here would be ambiguous. RM6 becomes the ONLY operational variable — no fallback chain behind it (see src/lib/db-chains.ts) — so this is a one-way cutover, not a rollback pre-stage. RUN THIS BEFORE deploying the RM6-only chain.
+          - migrate-main-db-rm6-to-rm7 # CURRENT operational cutover (2026-09-05): full pg_dump/restore of the live RM6 project into RM7 + all-table row-count verification + a schema re-push. RM7 is a RECYCLED project (last live 2026-08-20..~08-23, stopped once its own 5 GB allowance ran out) rather than a fresh one — its Neon monthly transfer allowance has long since reset. UNLIKE the other recycled targets, RM7's old contents needed checking, not assuming: a 2026-09-05 probe-databases run found RM7's User/Order/MarketplaceListing counts sit exactly where the chain's own history predicts (Order=9 and MarketplaceListing=57 identical across all six generations since, User climbing by a plausible organic amount at each hop) — so its 2026-08-20..08-23 data is already safely represented forward, not orphaned, and this restore's `--clean` pass safely WIPES it before writing RM6's current data over it. Named with BOTH endpoints because "rm7" was already used once for a different source (RM6-as-of-August → RM7, see migrate-main-db-to-rm7 below) — reusing that bare name here would be ambiguous. RUN THIS BEFORE deploying the RM7-only chain.
+          - migrate-main-db-rm11-to-rm6 # LEGACY (RM11 → RM6 cutover, 2026-09-03, kept for reference): full pg_dump/restore of the live RM11 project into RM6 + all-table row-count verification + a schema re-push. Superseded by migrate-main-db-rm6-to-rm7 on 2026-09-05 (RM6 in turn nearing its own 5 GB allowance).
           - migrate-main-db-to-rm8 # LEGACY (RM7 → RM8 cutover, kept for reference): full pg_dump/restore of the live RM7 project into RM8 + all-table row-count verification + a schema re-push. RM6 stopped being live on 2026-08-20, so RM6 was the actual source used (RM7 had already died — see the step's own note). Superseded by migrate-main-db-to-rm9 on 2026-08-23.
-          - migrate-main-db-to-rm7 # CURRENT operational cutover (2026-08-20): full pg_dump/restore of the live RM6 project into RM7 + row-count verification. RM6 exhausted its 5 GB monthly transfer allowance just three days after the 2026-08-17 cutover onto it — the same ~2 GB/day burn every prior project has shown. RUN THIS BEFORE deploying the RM7-first chain.
+          - migrate-main-db-to-rm7 # LEGACY (RM6 → RM7 cutover, 2026-08-20, kept for reference): full pg_dump/restore of the live RM6 project into RM7 + row-count verification. RM6 exhausted its 5 GB monthly transfer allowance just three days after the 2026-08-17 cutover onto it. Superseded by migrate-main-db-to-rm8 on 2026-08-23. RM7's NAME is reused again by migrate-main-db-rm6-to-rm7 above, for a different (September) source.
           - migrate-main-db-to-rm6 # LEGACY (DATABASE_URL_2 → RM6 cutover, kept for reference): full pg_dump/restore of the live DATABASE_URL_2 project into RM6 + row-count verification. DATABASE_URL_2 hit 4.8 of its 5 GB monthly transfer allowance just three days after the 2026-08-14 cutover onto it, so it rotated onto RM6 — a genuinely NEW project (RM3, the obvious rested candidate, was already at its own capacity).
           - migrate-main-db-to-du2 # LEGACY (DATABASE_URL → DATABASE_URL_2 cutover, kept for reference): full pg_dump/restore of the live DATABASE_URL project into DATABASE_URL_2 + row-count verification. DATABASE_URL burned 4 of its 5 GB in the two days since the last rotation, so it rotates onto DATABASE_URL_2 — the second project in the chain, idle for months, so its monthly allowance has long since reset (probe-databases on 2026-08-14 confirmed it REACHABLE). DESTRUCTIVE to the target, which still holds a months-old snapshot (104 users vs 151 live); dumps before it restores and verifies row counts after.
           - migrate-main-db-to-original # LEGACY (RM5 → DATABASE_URL cutover, kept for reference): full pg_dump/restore of RM5 into the ORIGINAL project (the DATABASE_URL secret) + row-count verification. Rotates BACK onto the first project this site ever used, whose monthly Neon allowance has reset, because RM5 is nearing its own. DESTRUCTIVE to the target (it still holds the old catalogue it served months ago) — dumps before it restores and verifies row counts after. RUN THIS BEFORE deploying the DATABASE_URL-first chain.
@@ -83,7 +84,7 @@ on:
         type: boolean
         default: false
       overwrite_live_db:
-        description: "migrate-main-db-rm11-to-rm6/to-rm11/rm10/rm9/rm8/rm7/rm6/du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
+        description: "migrate-main-db-rm6-to-rm7/rm11-to-rm6/to-rm11/rm10/rm9/rm8/rm7/rm6/du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
         type: boolean
         default: false
       ebay_sg:
@@ -2628,11 +2629,225 @@ jobs:
           echo "  3. Leave RM5 set as the rollback fallback; remove it only once the"
           echo "     original project has been serving cleanly for a while."
 
+      - name: Migrate main (operational) database to RM7
+        # CURRENT operational cutover (2026-09-05). RM6 is nearing its 5 GB
+        # monthly transfer allowance (live since 2026-09-03); RM7 replaces it,
+        # still as a SINGLE name — after this, src/lib/db-chains.ts's
+        # OPERATIONAL_VARS holds RM7 alone. See the long note there for why the
+        # chain shape stays one name.
+        #
+        # RM7 IS A RECYCLED NAME, REUSED A SECOND TIME. It was live once already
+        # (2026-08-20..~08-23, before RM8 replaced it once RM7's own transfer
+        # allowance was exhausted) and has sat idle since — its own allowance
+        # long since reset, which is the whole point of reusing it again here.
+        #
+        # UNLIKE THE OTHER RECYCLED TARGETS, THIS ONE NEEDED CHECKING FIRST,
+        # not assuming: RM7's old snapshot is not an empty or catalogue-only
+        # husk like RH7's was — it holds real rows (User/Order/MarketplaceListing)
+        # from its 2026-08-20..08-23 live window. A 2026-09-05 probe-databases
+        # run answered the actual question — is that data unique, or already
+        # carried forward? — with row counts, not a guess:
+        #   RM7 (died)  User=189  Order=9  MarketplaceListing=57
+        #   RM8         User=190  Order=9  MarketplaceListing=57
+        #   RM9         User=209  Order=9  MarketplaceListing=57
+        #   RM10        User=238  Order=9  MarketplaceListing=57
+        #   RM11        User=281  Order=9  MarketplaceListing=57
+        #   RM6 (live)  User=295  Order=9  MarketplaceListing=57
+        # Order and MarketplaceListing are IDENTICAL across all six generations
+        # spanning two weeks — expected, since the marketplace feature was
+        # disabled shortly after (no code path creates a new Order or
+        # MarketplaceListing any more) — and User climbs monotonically by a
+        # plausible organic amount at every hop. That is what "already carried
+        # forward, then grew normally" looks like; it is not what "restarted
+        # from an unrelated, smaller population that happened to match" would
+        # look like. So RM7's 2026-08-20..08-23 window is NOT an orphaned last
+        # copy — it is already safely represented in the current chain, and
+        # this is a normal recycled-target rotation like RM6/RH7's.
+        #
+        # SOURCE IS RM6, THE CURRENTLY LIVE PROJECT. Pinned by NAME on both
+        # ends, deliberately NOT using the job-level DATABASE_URL default —
+        # reusing that default here would point source and target at the same
+        # database once the RM7 cutover ships, and the migration would silently
+        # no-op while reporting every row count as matching.
+        #
+        # RUN THIS BEFORE the commit that flips OPERATIONAL_VARS to ["RM7"]
+        # ships, not after. Deploying that flip while RM7 still holds only its
+        # old snapshot is the 2026-08-22 outage shape (see the RM8 task below)
+        # — a database can only be promoted safely once it already holds the
+        # data traffic is about to depend on.
+        #
+        # PriceHistory/ClickEvent DATA is excluded (schema kept): those are
+        # served from the history project, and copying them would spend RM6's
+        # transfer allowance on rows this database does not serve.
+        #
+        # Read-only against the source — safe to re-run. Each run fully
+        # re-syncs the target from the source's CURRENT state, so run it once
+        # for the bulk copy and again immediately before cutting traffic over.
+        if: inputs.task == 'migrate-main-db-rm6-to-rm7'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::RM7 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name RM7)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::RM6 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database. RM7 must point at a DIFFERENT Neon project than RM6. Aborting before doing anything."
+            exit 1
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # ── SAFETY: never overwrite the database production is serving ──────
+          # READS db-chains.ts, NOT db.ts — db.ts delegates to
+          # resolveUrl(OPERATIONAL_VARS) and holds no process.env reference of
+          # its own, so parse the head of OPERATIONAL_VARS straight out of the
+          # single source of truth (tests/db-chain.test.ts keeps it honest).
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "RM7" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — RM7 is LIVE. src/lib/db-chains.ts resolves it first, so it is the database production is serving right now. This task would restore the frozen RM6 over it and discard every row written since the cutover. Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::RM7 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
+          fi
+
+          echo "== Can the source still be reached at all? =="
+          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM7 has NOT been touched. Run probe-databases to see which projects still answer."
+            exit 1
+          fi
+          echo "Source answered — proceeding."
+
+          # RM7's own pre-restore contents, for the record — see the step
+          # header for why these are expected to be non-zero and already
+          # superseded (verified 2026-09-05 by row-count continuity through
+          # RM8..RM6), not a reason to stop. `|| true` per iteration: a target
+          # whose schema has drifted must not kill this step under
+          # `bash -e {0}` before a single byte is restored.
+          echo "== What RM7 (TARGET) holds BEFORE we replace it (its 2026-08-20..08-23 snapshot) =="
+          for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — table missing or unreadable)";; esac
+            echo "  target $T: $N"
+          done
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Dumping the operational database (schema + data) =="
+          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+            --exclude-table-data='public."PriceHistory"' \
+            --exclude-table-data='public."ClickEvent"' \
+            -f main.dump; then
+            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly its transfer allowance dying mid-stream. RM7 has NOT been touched; a partial dump is never restored."
+            exit 1
+          fi
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+          for T in User Card MarketplaceListing; do
+            if ! pg_restore -l main.dump | grep -qE "TABLE DATA public ${T} "; then
+              echo "::error::the dump has no data section for table $T — it is incomplete. RM7 has NOT been touched."
+              exit 1
+            fi
+          done
+          echo "Dump contains a data section for every expected table — proceeding to restore."
+
+          echo "== Restoring into RM7 (existing objects — including its old 2026-08-20..08-23 snapshot — dropped and replaced) =="
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
+
+          echo "== Verifying row counts (source vs RM7) =="
+          sleep 3
+          set +e
+          TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc \
+            "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('PriceHistory','ClickEvent') ORDER BY tablename")
+          if [ -z "$TABLES" ]; then
+            echo "::error::could not enumerate source tables — refusing to report an unverified migration as verified."
+            exit 1
+          fi
+          echo "Verifying $(printf '%s\n' "$TABLES" | wc -l) tables."
+          MISMATCH=0
+          for T in $(printf 'public.%s\n' $TABLES); do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project.)"
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT deploy the RM7-only chain yet."
+            exit 1
+          fi
+          echo "All verified tables match — RM7 now holds a full copy of the operational data."
+
+          # ── RE-ALIGN THE SCHEMA TO THE DEPLOYED CODE ────────────────────────
+          echo ""
+          echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
+            echo "::error::schema push against RM7 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
+            exit 1
+          fi
+          echo "TARGET schema now matches this ref."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything written"
+          echo "     to RM6 in the meantime (signups, orders, price imports) is included."
+          echo "  2. Ship the commit that sets OPERATIONAL_VARS = [\"RM7\"] in"
+          echo "     src/lib/db-chains.ts (and the matching CURRENT_OP in"
+          echo "     scripts/build-db-push.sh, and every workflow's DATABASE_URL"
+          echo "     default) — that is the actual cutover; this task alone does not"
+          echo "     move traffic. Confirm RM7 is set in Vercel for Production,"
+          echo "     Preview AND Development first."
+          echo "  3. THE BURN RATE IS STILL UNEXPLAINED. A new project buys time, not"
+          echo "     a fix — run audit-egress a few hours after cutover and fix the"
+          echo "     query it names (see the note on RetailerPrice in src/lib/db.ts)."
+
       - name: Migrate main (operational) database to RM6
-        # THE CURRENT CUTOVER (2026-09-03). RM11 is nearing its 5 GB monthly
-        # transfer allowance; RM6 replaces it, still as a SINGLE name — after
-        # this, src/lib/db-chains.ts's OPERATIONAL_VARS holds RM6 alone. See
-        # the long note there for why the chain shape stays one name.
+        # LEGACY (RM11 → RM6 cutover, 2026-09-03, kept for reference). Superseded
+        # by migrate-main-db-rm6-to-rm7 on 2026-09-05 (RM6 in turn nearing its own
+        # 5 GB monthly transfer allowance).
         #
         # RM6 IS A RECYCLED PROJECT, NOT A NEW ONE. It was last live 2026-08-17
         # to 2026-08-20 (see migrate-main-db-to-rm7's own note) and still holds
@@ -3715,6 +3930,13 @@ jobs:
           echo "     project too in roughly two days. Find the cause before it does."
 
       - name: Migrate main (operational) database to RM7
+        # LEGACY (RM6 → RM7 cutover, 2026-08-20, kept for reference). Superseded
+        # by migrate-main-db-to-rm8 on 2026-08-23 (RM7 exhausted its own 5 GB
+        # transfer allowance within about three days of going live) — and RM7's
+        # NAME is reused again by migrate-main-db-rm6-to-rm7 above, for the
+        # 2026-09-05 cutover (a different SOURCE, RM6-as-of-September, not the
+        # RM6 this step originally read from).
+        #
         # 2026-08-20 cutover. RM6 exhausted its 5 GB monthly network transfer
         # allowance just THREE DAYS after the 2026-08-17 rotation onto it — the
         # same ~2 GB/day burn every prior project has shown.
