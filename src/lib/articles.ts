@@ -6158,6 +6158,13 @@ If neither of those describes how you use the site, the free tier — which stil
     date: "2026-09-05",
     readMins: 8,
     tags: ["news", "set", "release", "prices"],
+    // Seraphine is the post's throughline — she is half the K/DA argument and the
+    // whole of the "already trading, not yet legal" one — so the card itself is the
+    // thumbnail. Local file rather than the CDN so next/image has a manifest entry.
+    hero: {
+      src: "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+      alt: "Seraphine, Not Alone — the T1 2025 Worlds Champion Collection card that becomes tournament-legal when Radiance releases",
+    },
     summary: [
       "**Radiance releases 23 October 2026.** Riot has confirmed **180 cards, 66 of them Showcase** — and unlike every earlier set, that headline number *includes* the Showcase treatments.",
       "Like-for-like, that is a base run of about **114** — the smallest of any main Riftbound set. Radiance is not the biggest set since Origins, and it is not even bigger than [Vendetta](/sets/vendetta).",
