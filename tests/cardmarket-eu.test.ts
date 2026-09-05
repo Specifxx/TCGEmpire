@@ -38,6 +38,25 @@ test("the redisplay-licence confirmation stays documented, not silently assumed"
   assert.match(src, /use it however you see fit/i, "the actual confirmation wording must be quoted, not paraphrased away");
 });
 
+test("THE BUG: an empty-string override env var must not defeat the public-URL/rate defaults", () => {
+  // Found by actually running this in production (2026-09-04): GitHub Actions
+  // sets an env var to "" (not unset) when the ${{ vars.X }} behind it doesn't
+  // exist, so every CARDMARKET_*_URL resolved to "", readJson("") tried to
+  // open "" as a local file, and Cardmarket wrote zero rows on its first live
+  // run. `??` only falls through on null/undefined and does not catch "" — the
+  // fix is `||`, which does. Same failure mode hit CARDMARKET_EUR_TO_GBP:
+  // Number("") is 0, which would have silently zeroed every UK price once the
+  // URL bug was fixed. Pinned at the source level since these are module-load
+  // constants derived once from process.env, not something a runtime test can
+  // toggle after import.
+  const src = read("src/lib/cardmarket.ts");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_PRODUCTLIST_URL\s*\?\?/, "PRODUCTLIST_SINGLES_URL must use || , not ??");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_PRODUCTLIST_NONSINGLES_URL\s*\?\?/, "PRODUCTLIST_NONSINGLES_URL must use || , not ??");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_PRICEGUIDE_URL\s*\?\?/, "PRICEGUIDE_URL must use || , not ??");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_EUR_TO_GBP\s*\?\?/, "EUR_TO_GBP must use || , not ??");
+  assert.match(src, /process\.env\.CARDMARKET_PRODUCTLIST_URL\s*\|\|/, "the working fallback pattern must actually be present");
+});
+
 test("it must never impersonate a browser to get past the block", () => {
   // The Cloudflare-guarded www.cardmarket.com is not what this module talks
   // to — see the header — but the discipline still applies: never disguise
