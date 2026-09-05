@@ -45,7 +45,9 @@ jobs:
           # separate history project (src/lib/db-history.ts). Without these, that
           # client falls all the way through its chain to DATABASE_URL — the
           # OPERATIONAL database, whose PriceHistory is deliberately empty — and
-          # the audit reports a false "PriceHistory is EMPTY".
+          # the audit reports a false "PriceHistory is EMPTY". RH7 is CURRENT; RH6
+          # is its rollback.
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
           HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}

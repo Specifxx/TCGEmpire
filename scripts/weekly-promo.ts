@@ -246,7 +246,7 @@ async function main() {
     //
     // dbHistory, NOT prisma — and this guard is the reason the bug it was written
     // to catch went unnoticed for so long. PriceHistory lives in the separate
-    // history project (RH6, see src/lib/db-history.ts); getPriceMovers() below
+    // history project (RH7, see src/lib/db-history.ts); getPriceMovers() below
     // correctly reads it via dbHistory, but this pre-check queried the
     // OPERATIONAL database, whose PriceHistory is deliberately empty since the
     // RM3 cutover. So it returned 0 every Friday and the promo silently skipped

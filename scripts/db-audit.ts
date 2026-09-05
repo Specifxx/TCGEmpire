@@ -168,7 +168,7 @@ async function main() {
   // ── Freshness ────────────────────────────────────────────────────────────────
   section("Freshness");
   // dbHistory, NOT prisma: PriceHistory lives in the separate history project
-  // (RH6 — see src/lib/db-history.ts). This read used the OPERATIONAL client,
+  // (RH7 — see src/lib/db-history.ts). This read used the OPERATIONAL client,
   // whose PriceHistory table is deliberately empty (migrate-main-db excludes its
   // data when copying into RM3), so this check reported a false
   // "PriceHistory is EMPTY" every run.
