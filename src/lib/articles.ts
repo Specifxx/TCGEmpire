@@ -6264,6 +6264,196 @@ We deliberately don't predict what individual cards will do — see [why Riftbou
 
 We'll be watching Singapore's Top 8 the moment it's final, and updating the tier list the same way we did after Barcelona: from the actual decklists, not a guess at what they'll say.`,
   },
+  {
+    slug: "riftbound-radiance-biggest-release-since-origins",
+    category: "blog",
+    title: "Why Radiance Will Be Riftbound's Biggest Release Since Origins",
+    excerpt:
+      "Radiance is the smallest main Riftbound set yet by base cards — and by some distance the most Showcase-dense. Why 23 October is still the game's biggest release since Origins: it completes K/DA and unlocks a Seraphine that already trades.",
+    author: "RiftCompare Markets Desk",
+    date: "2026-09-05",
+    readMins: 8,
+    tags: ["news", "set", "release", "prices"],
+    // Seraphine is the post's throughline — she is half the K/DA argument and the
+    // whole of the "already trading, not yet legal" one — so the card itself is the
+    // thumbnail. Local file rather than the CDN so next/image has a manifest entry.
+    hero: {
+      src: "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+      alt: "Seraphine, Not Alone — the T1 2025 Worlds Champion Collection card that becomes tournament-legal when Radiance releases",
+    },
+    summary: [
+      "**Radiance releases 23 October 2026.** Riot has confirmed **180 cards, 66 of them Showcase** — and unlike every earlier set, that headline number *includes* the Showcase treatments.",
+      "Like-for-like, that is a base run of about **114** — the smallest of any main Riftbound set. Radiance is not the biggest set since Origins, and it is not even bigger than [Vendetta](/sets/vendetta).",
+      "What it is: **the most chase-dense set Riftbound has printed.** Showcase cards are about **37%** of Radiance's card list, against 23% for Spirit Forged, 22% for Unleashed and 15% for Origins.",
+      "It also **completes K/DA**. Ahri and Kai'Sa came in Origins, Akali in Vendetta; Radiance brings Seraphine and Evelynn. Riot has **not** announced K/DA cards — that connection is our inference from the champion list.",
+      "If you plan to open rather than buy singles, run [box EV](/tools/box-ev) against the singles market once real prices exist.",
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "riftbound radiance booster box" },
+      { label: "Vendetta booster boxes", query: "riftbound vendetta booster box" },
+    ],
+    embeds: [
+      {
+        title: "The three K/DA champions already in Riftbound",
+        note: "Ahri and Kai'Sa debuted in Origins, Akali in Vendetta. Prices are live and move daily — click any card for its full price history.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "kai-sa-daughter-of-the-void-ogn-299-298",
+          "akali-rogue-assassin-ven-189",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "kai-sa-daughter-of-the-void-ogn-247-298",
+          "akali-rogue-assassin-ven-139",
+        ],
+      },
+      {
+        title: "Seraphine, Not Alone — already trading, not yet legal",
+        note: "The T1 Worlds Champion Collection Seraphine. Radiance is what makes her legal for sanctioned play.",
+        slugs: ["seraphine-not-alone-t1s-005-005-promo"],
+      },
+    ],
+    browseCta: {
+      href: "/radiance-countdown",
+      label: "Radiance countdown & card list",
+      blurb: "Release date, confirmed champions and every Radiance card as reveals land.",
+    },
+    faq: [
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, per Riot's products-and-sets rundown. See our [2027 set roadmap](/blog/riftbound-2027-set-roadmap) for the full schedule through The Reckoning.",
+      },
+      {
+        q: "How many cards are in Radiance?",
+        a: "Riot has confirmed 180, of which 66 are Showcase treatments. Read that carefully: unlike Origins, Spirit Forged and Unleashed — whose headline figures are base cards with Showcase printings on top — Radiance's 180 already includes its Showcase cards. The implied base run is about 114.",
+      },
+      {
+        q: "Is Radiance bigger than Vendetta?",
+        a: "Only if you compare the two numbers without adjusting for what they count. Vendetta's 166 is a base run; Radiance's 180 is a base run plus 66 Showcase. On a like-for-like base-card basis Radiance is the smaller set.",
+      },
+      {
+        q: "Which champions debut in Radiance?",
+        a: "Five are named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more champion Legends still unrevealed, so nine is the expected total. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
+      },
+      {
+        q: "Will Radiance have K/DA cards?",
+        a: "Riot has not announced any. What is confirmed is that Seraphine and Evelynn debut in Radiance, which would put all five K/DA members — Ahri, Akali, Evelynn, Kai'Sa and Seraphine — in the game for the first time. The K/DA connection is our inference from the champion list, not a Riot announcement.",
+      },
+      {
+        q: "Can I play the T1 Seraphine card now?",
+        a: "No. Seraphine, Not Alone is from the [T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection) and is not legal for sanctioned play until Radiance releases on 23 October 2026.",
+      },
+      {
+        q: "Is Radiance a good set to buy sealed?",
+        a: "There is no honest answer before real prices exist. Once Radiance singles are trading, compare a box's cost against the sum of what is inside it using the [box EV calculator](/tools/box-ev) rather than buying on set hype.",
+      },
+    ],
+    body: `
+Riftbound's fifth set, **Radiance**, lands on **23 October 2026**. It will be the biggest release the game has had since Origins.
+
+It will not be the biggest set. It will, in fact, be the smallest main set Riftbound has printed — and that is worth getting out of the way in the first section rather than burying it.
+
+## First, the thing that is not true
+
+Riot has confirmed Radiance at **180 cards, 66 of them Showcase**. That number gets quoted next to the other sets' totals as though it were the same kind of measurement. It isn't.
+
+For Origins, Spirit Forged and Unleashed, the headline figure is the **base run**, and Showcase printings sit on top of it as additional alt-art versions of cards already in that numbering. Radiance's 180 **already includes** its 66 Showcase treatments. Comparing 180 against 166 is comparing a total against a subtotal.
+
+| Set | Base run | Showcase | Whole card list | Champion debuts |
+| --- | --- | --- | --- | --- |
+| [Origins](/sets/origins) | 298 | +54 | 352 | 12 |
+| [Spirit Forged](/sets/spiritforged) | 221 | +66 | 287 | 12 |
+| [Unleashed](/sets/unleashed) | 219 | +61 | 280 | 12 |
+| [Vendetta](/sets/vendetta) | 166 | not published | — | 9 |
+| **[Radiance](/sets/radiance)** | **~114** | **66** | **180** | **9 expected** |
+
+*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has five named so far with four more unrevealed. The 24-card Proving Grounds starter set is excluded.*
+
+So the honest position is that Radiance is the smallest main set to date on base cards, and that it is not bigger than Vendetta once both numbers are counted the same way. If "biggest" means "most cards", this post ends here.
+
+It doesn't, because that table contains the actual story — just not in the column people were looking at.
+
+## 1. It is the most chase-dense set Riftbound has printed
+
+Sixty-six Showcase cards is the same Showcase count as **Spirit Forged** — a set with roughly twice the base run. Put as a share of the whole card list:
+
+| Set | Showcase share of the card list |
+| --- | --- |
+| Origins | ~15% |
+| Unleashed | ~22% |
+| Spirit Forged | ~23% |
+| **Radiance** | **~37%** |
+
+More than a third of Radiance's card list is a Showcase treatment. Nothing else in Riftbound is close.
+
+That is the number that actually matters for a release. Sealed demand, box EV and the top end of the singles market are all driven by chase density rather than by how many commons a set contains — a small set stuffed with premium treatments is a bigger commercial event than a large set that isn't. It also cuts the other way for anyone opening: a higher Showcase share means the value in a box is concentrated in fewer, more expensive cards, which widens the spread between a good box and a bad one.
+
+## 2. It completes K/DA
+
+K/DA is Riot's virtual pop group, and the five members are Ahri, Akali, Evelynn, Kai'Sa and Seraphine.
+
+Three are already in Riftbound. **Ahri** and **Kai'Sa** debuted in Origins; **Akali** arrived in Vendetta. Radiance brings **Seraphine** and **Evelynn** — the last two.
+
+[[embed:0]]
+
+Those existing three are not marginal cards. Their base Rare printings trade for pocket change, but the Showcase versions sit in the hundreds and the signature Showcase printings in the thousands. Whatever the mechanism — champion popularity, art, or both — the market has already shown it will pay a substantial premium for a K/DA champion in a chase frame.
+
+Radiance is the set that completes the group for the first time. A collector who wants all five has had no way to finish, and from 23 October they will.
+
+**A necessary caveat.** Riot has not announced K/DA-themed cards, alternate arts or a K/DA subset in Radiance. What is confirmed is the champion list. The observation that this list completes K/DA is ours, drawn from the roster — not something Riot has said. If you are buying on the expectation of a K/DA treatment tier, you are buying on an inference, and you should size the position accordingly.
+
+## 3. Seraphine is already trading, and Radiance is her unlock
+
+This is the genuinely unusual one.
+
+A Seraphine card already exists and already has a price: **Seraphine, Not Alone**, from the [T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection). It is not legal for sanctioned play until Radiance releases.
+
+[[embed:1]]
+
+So the market is currently pricing a card that cannot be played, on a known unlock date. That is a rare, clean setup: most format-legality questions in trading card games are speculative, and this one has a date on it. Whatever premium legality is worth, it resolves on 23 October.
+
+It also means Radiance does not arrive cold. Seraphine has had months of price discovery before her set exists.
+
+## 4. It lands in the Q4 buying window
+
+Radiance releases on 23 October. Its first eight weeks of singles trading and sealed sales therefore fall inside the Northern-Hemisphere holiday buying period — the stretch when sealed product moves as gifts rather than only to players and openers.
+
+Vendetta, by contrast, released on 31 July, into the quietest part of the calendar.
+
+This is a statement about the date, not a claim about Riot's marketing plans. But the date alone changes who is buying: a set that is on shelves through November and December is bought by people who were never going to build a deck with it, and that is demand a July release does not get.
+
+## 5. It is the last set before the pool jumps
+
+Riot's roadmap has **Legacy** arriving on 29 January 2027 at around 346 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
+
+That makes Radiance the last release into a relatively small card pool, and the last before a set built for a different format arrives. Bigger sets historically push commons and uncommons cheaper while concentrating value at the top of the rarity ladder — which, for a set that is already 37% Showcase, is worth watching.
+
+Treat this as a structural observation about supply, not a prediction about any individual card. Card pools widen in every trading card game, and plenty of cards from small early sets end up worthless anyway.
+
+## What this means if you are buying
+
+- **If you want to play:** the champion debuts are the reason to care — five named, four still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs or Jarvan IV is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
+- **If you want to open sealed:** wait for real prices and run [box EV](/tools/box-ev) against the singles market. A 37% Showcase share makes the variance between boxes higher than in any previous set, which is exactly when buying singles beats opening.
+- **If you are tracking the K/DA thesis:** the three existing members are already priced. Set a [price alert](/alerts) on them rather than checking manually — if Radiance does ship a K/DA tier, the existing three are likely to move on the announcement, not on release day.
+- **If you are selling:** the window between reveal season and release is usually when interest in the *previous* set is weakest. [Movers](/movers) will show you whether that is happening to Vendetta.
+
+## What would make this call wrong
+
+Worth stating plainly, because a prediction with no failure condition is not a prediction.
+
+- **Chase density cuts both ways.** A high Showcase share is only bullish if the treatments are desirable. If Radiance's Showcase art is poorly received, a set that is more than a third Showcase has an unusually large share of its print run that nobody wants.
+- **The base run really is small.** About 114 base cards is the thinnest main set Riftbound has shipped. If the format-relevant cards among them are few, competitive demand will be weak regardless of the collector story.
+- **The K/DA inference may simply be wrong.** Riot may debut Seraphine and Evelynn as ordinary Legends with no thematic tie at all. The champion list is the only confirmed part.
+- **Preorder prices routinely sit above post-release singles.** That has been true for every Riftbound set so far, and buying the hype window is the most reliable way to lose money on a release that is otherwise doing well.
+- **Legacy is barely three months later.** A much larger, draft-focused set in January could pull collector money forward and cut Radiance's run short — the opposite of the scarcity argument above.
+
+## The short version
+
+Radiance is the smallest main set Riftbound has printed and the most chase-dense by a wide margin, arriving at an unusually good moment: it completes a five-member group the market already pays up for, it resolves the legality of a card that is already trading, and it sits in the gifting window.
+
+That combination is why it will be the biggest release since Origins. None of it is because the set is big — it is the opposite.
+
+Track it on the [Radiance countdown](/radiance-countdown), where every card appears as reveals land.
+`,
+  },
   ...SEO_PACK_ARTICLES,
 ];
 
