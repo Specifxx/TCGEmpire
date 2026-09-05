@@ -184,6 +184,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/feedback", label: "Suggest a feature", emoji: "💡", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
       { href: "/stores/suggest", label: "Suggest a store", emoji: "➕", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
       { href: "/about", label: "About RiftCompare", emoji: "ℹ️", keywords: ["about", "who we are", "riftcompare", "compare"] },
+      { href: "/creators", label: "Socials & Creators", emoji: "🤝", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok", "embed", "embed widget"] },
       // The header's own Discord icon is desktop-only (Navbar.tsx, lg:grid) —
       // below that breakpoint (everything under 1024px: every phone AND the
       // whole 640-1023px tablet range) it was reachable from NOWHERE, despite
