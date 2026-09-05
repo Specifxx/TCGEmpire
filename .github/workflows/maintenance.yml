@@ -47,6 +47,7 @@ on:
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
+          - audit-store-health # read-only: prints every tracked store (retailers.ts) with ZERO RetailerPrice rows at all (candidates to remove as stale/dead), plus every other open store-health alert. Same computation /admin/store-health renders, without needing admin auth to see it.
           - backfill-global-history # ONE-TIME (phase 1 of 2): collapses existing per-market PriceHistory rows (AU/US/UK/SG/CA/EU) into one GLOBAL row per card per day, in USD cents — see scripts/backfill-global-history.ts's own header for why this must run BEFORE the GLOBAL-reading code deploys. Additive only, never deletes. Honours dry_run.
           - backfill-global-history-delete-old # ONE-TIME (phase 2 of 2): deletes the per-market rows phase 1 superseded. Only run this AFTER the GLOBAL-reading code has deployed and been prod-verified — see the script's own header for why the ordering matters. Honours dry_run.
           - audit-premium-vs-stripe # READ-ONLY (unless dry_run=false): walk every live Stripe subscription and assert the DB agrees — account exists, premiumUntil covers what they paid for, and the renewal link still resolves. Run after any restore that rolled the database back.
@@ -4867,6 +4868,10 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Audit store health (read-only — which tracked stores have zero listings)
+        if: inputs.task == 'audit-store-health'
+        run: npx tsx scripts/audit-store-health.ts
 
       - name: Audit card indexability (read-only census)
         # THE SILENT TRAFFIC KILLER. A card page noindexes itself and leaves the
