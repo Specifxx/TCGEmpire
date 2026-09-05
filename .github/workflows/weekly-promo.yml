@@ -45,13 +45,13 @@ jobs:
       - run: npx prisma generate
       - name: Generate and send promo pack
         env:
-          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
-          # RM6 is the only operational variable now (2026-09-03 cutover — see
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          # RM7 is the only operational variable now (2026-09-05 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM6 || vars.RM6) && 'RM6' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
           # The whole promo is built from price MOVERS, which come from
           # PriceHistory in the separate history project (src/lib/db-history.ts).
           # These were never set here, so that client fell through its entire

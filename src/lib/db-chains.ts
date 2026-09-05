@@ -42,19 +42,32 @@
 /**
  * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM6 — the ONLY operational variable, in service since 2026-09-03. Unlike
- *        RM9/RM10/RM11 (each a freshly provisioned, genuinely empty project),
- *        this cutover deliberately RECYCLES RM6 — the account it was live on
- *        2026-08-17..08-20 before rotating to RM7 (see migrate-main-db-to-rm7's
- *        own note) — rather than provisioning a new RM12. Its own 5 GB monthly
- *        transfer allowance had long since reset, which is the whole point of
- *        reusing it. migrate-main-db-rm11-to-rm6 restored a row-count verified
- *        copy of RM11 (User 281, Card 1,429, RetailerPrice 90,721, and 32 other
- *        tables, every one matching exactly) over RM6's old snapshot — which
- *        held User=186 before the wipe: real data, but months stale against
- *        RM11's current state, and gone once the restore's `pg_restore --clean`
- *        dropped and recreated every table from the RM11 dump.
- *        Like RM11, RM10 and RM9 before it, RM6 is a SINGLE name, not a
+ *   RM7 — the ONLY operational variable, in service since 2026-09-05. RM6
+ *        (live only since 2026-09-03) neared its own 5 GB monthly transfer
+ *        allowance after about two days — the same ~2 GB/day burn every prior
+ *        project has shown. This cutover RECYCLES RM7 — the account it was
+ *        live on 2026-08-20..~08-23, before RM8 replaced it once RM7's OWN
+ *        allowance ran out — rather than provisioning a new RM12.
+ *
+ *        UNLIKE RM6/RM11/RM10/RM9's own recycling, RM7's old contents needed
+ *        checking, not assuming: it held real User/Order/MarketplaceListing
+ *        rows from that 2026-08-20..08-23 window, and whether that data had
+ *        ever been carried forward was an open question (see the reconciliation
+ *        task this rotation closed). A 2026-09-05 probe-databases run answered
+ *        it with row counts: Order (9) and MarketplaceListing (57) are IDENTICAL
+ *        across every generation from RM7 through RM6 (expected — the
+ *        marketplace feature was disabled shortly after, so nothing creates a
+ *        new one any more), and User climbs monotonically by a plausible
+ *        organic amount at each hop (189 → 190 → 209 → 238 → 281 → 295) — the
+ *        signature of data that was carried forward and grew normally, not two
+ *        disjoint populations that happen to be close. So RM7's old window was
+ *        already safely represented, and migrate-main-db-rm6-to-rm7 restored a
+ *        row-count verified copy of RM6 (User 296, Card 1,429, RetailerPrice
+ *        90,946, and 33 other tables, every one matching exactly) over it,
+ *        `pg_restore --clean` dropping and recreating every table from the RM6
+ *        dump.
+ *
+ *        Like RM6, RM11, RM10 and RM9 before it, RM7 is a SINGLE name, not a
  *        chain — a deliberate departure from the RM3 through RM8 era, when
  *        each was a FALLBACK CHAIN (CURRENT-first, falling through to older,
  *        often exhausted projects), and every real outage this database has
@@ -66,24 +79,24 @@
  * error, it silently demotes every read to a stale or empty fallback, and ~84
  * `.catch(() => [])` sites across src/ turn that into missing data rather than
  * an error page (see the 2026-08-22 outage this comment used to describe in
- * detail — RM7 exhausted its transfer allowance, the "rollback" RM8 turned out
- * to be reachable and completely empty because the migration that fills a
- * fallback had never been run, and the site showed no in-stock listings for
- * hours before anyone thought to suspect the database). A single name can still
- * fail, but it fails LOUDLY — P1001, not silence — which is the trade this
- * project now makes deliberately: no emergency fallback lever, but no more
+ * detail — RM7 exhausted its transfer allowance that time, the "rollback" RM8
+ * turned out to be reachable and completely empty because the migration that
+ * fills a fallback had never been run, and the site showed no in-stock listings
+ * for hours before anyone thought to suspect the database). A single name can
+ * still fail, but it fails LOUDLY — P1001, not silence — which is the trade
+ * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
- * RM3 through RM11 (bar RM6 itself) and DATABASE_URL_2 are retired and stay out
+ * RM3 through RM11 (bar RM7 itself) and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm11-to-rm6 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm6-to-rm7 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM6"] as const;
+export const OPERATIONAL_VARS = ["RM7"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
