@@ -173,7 +173,13 @@ export function isPromoProduct(p: TcgProduct): boolean {
 // get a number-based match any more (matching isPromoProduct's own choice for
 // promo PRODUCTS) — so PROMO_PRODUCT_OVERRIDES below is what gives a promo
 // card WITH a verified TCGplayer listing its price back, the same way an
-// externalId does for a card we created directly from TCGplayer.
+// externalId does for a card we created directly from TCGplayer. A promo card
+// with no pin here still gets a price: see the fallback pass in
+// buildTcgplayerRows, below the main product-matching loop, which clones
+// whatever price its base sibling resolved to rather than showing nothing —
+// an explicit product decision to trade a small risk of a wrong price for
+// full coverage, made after this same fix originally left every unpinned
+// promo card with no TCGplayer price at all.
 //
 // Manually-verified TCGplayer product IDs for specific promo cards, keyed by
 // the CARD's OWN, ALREADY-LIVE externalId from manual-cards.json — never a
@@ -359,18 +365,28 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   // from TCGplayer but silently missed every rune added any other way (manual-cards
   // .json, the official-gallery importer). Matched below against the product's setName.
   const bySetlessNum = new Map<string, string>();
+  // A promo card that ends up with no price of its own (no externalId match, no
+  // PROMO_PRODUCT_OVERRIDES pin) still gets a best-effort one from the fallback
+  // pass below `best`'s construction — recorded here, while collectorNumber is
+  // already split out, as (promo card id, the SAME key its base sibling would
+  // occupy in byKey/bySetlessNum).
+  const promoFallbackKeys: { cardId: string; key: string; setless: boolean }[] = [];
   for (const c of cards) {
     // Cards we created FROM TCGplayer carry externalId "tcg-<productId>" — price them
     // directly by that link (their numbers, e.g. promo runes "R03a", don't parse to a set).
     if (c.externalId) byExternal.set(c.externalId, c.id);
+    const [num, total] = c.collectorNumber.split("/");
+    const sc = setFromTotal(total);
     // Promo cards never populate byKey/bySetlessNum — see the long comment on
     // PROMO_PRODUCT_OVERRIDES above for why (they reuse a base card's number,
     // and a plain map .set() here silently lets one steal or lose the other's
-    // entry). A promo card can only be priced via byExternal from here on:
-    // its own "tcg-<productId>" link, or a PROMO_PRODUCT_OVERRIDES entry.
-    if (c.isPromo) continue;
-    const [num, total] = c.collectorNumber.split("/");
-    const sc = setFromTotal(total);
+    // entry). A promo card can still be priced from here on: its own
+    // "tcg-<productId>" link, a PROMO_PRODUCT_OVERRIDES entry, or — lacking
+    // either — the base-sibling fallback below, keyed by what's recorded here.
+    if (c.isPromo) {
+      promoFallbackKeys.push({ cardId: c.id, key: sc ? `${sc}|${numKey(num)}` : `${c.setCode}|${numKey(num)}`, setless: !sc });
+      continue;
+    }
     if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
     else bySetlessNum.set(`${c.setCode}|${numKey(num)}`, c.id);
   }
@@ -432,6 +448,28 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     // When collector numbers collide, the higher market price is the English print.
     const marketForCompare = market ?? price;
     if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, p });
+  }
+
+  // Best-effort fallback: a promo card that got no price of its own above (no
+  // externalId match, no PROMO_PRODUCT_OVERRIDES pin) clones whatever price its
+  // base sibling resolved to, rather than showing nothing. Explicit product
+  // call, made after the fix for riftcompare.com/card/teemo-swift-scout-
+  // ogn-263-298-promo removed ALL promo pricing that lacked a pin: the trade
+  // is a small risk of a wrong price/link (a promo variant showing its base
+  // card's TCGplayer listing) in exchange for full TCGplayer coverage on every
+  // promo card. Runs strictly after `best` is fully resolved and only ever
+  // ADDS a promo card's own key — the base card's slot stays keyed to the base
+  // card's own id, set only in the cards loop above, so this can never
+  // reintroduce the collision that loop exists to prevent.
+  for (const { cardId: promoId, key, setless } of promoFallbackKeys) {
+    const baseCardId = setless ? bySetlessNum.get(key) : byKey.get(key);
+    if (!baseCardId) continue;
+    for (const foil of ["false", "true"]) {
+      const promoSlot = `${promoId}|${foil}`;
+      if (best.has(promoSlot)) continue; // already has its own verified price
+      const baseBest = best.get(`${baseCardId}|${foil}`);
+      if (baseBest) best.set(promoSlot, baseBest);
+    }
   }
 
   const rows: Prisma.RetailerPriceCreateManyInput[] = [];
