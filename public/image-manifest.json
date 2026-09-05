@@ -473,6 +473,27 @@
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
   },
+  "/blog/riftbound-meta-shift-radiance-singapore.png": {
+    "src": "/blog/riftbound-meta-shift-radiance-singapore.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 45239,
+    "webp": "/blog/riftbound-meta-shift-radiance-singapore.webp",
+    "webpBytes": 31372,
+    "avif": "/blog/riftbound-meta-shift-radiance-singapore.avif",
+    "avifBytes": 20591,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-meta-shift-radiance-singapore-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-meta-shift-radiance-singapore-768w.webp"
+      }
+    ],
+    "fingerprint": "a3b5a78f8473f7e9"
+  },
   "/blog/riftbound-radiance-what-we-know.png": {
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,

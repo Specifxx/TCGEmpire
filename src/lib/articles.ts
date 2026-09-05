@@ -6148,6 +6148,122 @@ Being straightforward here, since the point of this post is accuracy over hype: 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
   },
+  {
+    slug: "riftbound-meta-shift-radiance-singapore",
+    category: "blog",
+    title: "Riftbound Meta Shift: Singapore, Radiance & What's Next",
+    excerpt:
+      "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final to Ornn. Singapore is deciding round two live, and Radiance's five confirmed champions show where Riot's marketing already went.",
+    author: "RiftCompare",
+    date: "2026-09-05",
+    readMins: 12,
+    tags: ["meta", "tournament", "regionals", "radiance", "predictions", "singapore"],
+    hero: {
+      src: "/blog/riftbound-meta-shift-radiance-singapore.png",
+      alt: "How the Riftbound meta shifts next — Kennen's grip on the meta down, Ornn up after Barcelona, Radiance arriving 23 October",
+    },
+    summary: [
+      "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
+      "**Our own tracked tier list agrees with Barcelona rather than contradicting it**: Kennen's 58% win rate is the best in the format's top tier, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically.",
+      "**The Regional Qualifier: Singapore is running right now** (4–6 Sept) — Southeast Asia's biggest organised Riftbound event so far. Day 1's results aren't final as of writing, and this article doesn't invent ones that don't exist yet.",
+      "**Radiance releases 23 October 2026** with five confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
+      "Want the real, live-priced decklists behind all of this instead of the analysis? **[See today's meta decks](/decks).**",
+    ],
+    faq: [
+      {
+        q: "Did Ornn actually beat Kennen at a Riftbound Regional Qualifier?",
+        a: "Yes — at the Regional Qualifier: Barcelona (21–23 August 2026), the largest Regional Qualifier the game has run at over 2,200 players. Kennen was the most-played legend in the room, at 12.7% of the field, and still put three copies into the Top 8. Ornn — a legend that wasn't a Day 1 favourite — won the final anyway.",
+      },
+      {
+        q: "Is Kennen still a good deck after losing to Ornn at Barcelona?",
+        a: "By the numbers we track, yes — Kennen's 58% win rate is the best in the format's current top tier, ahead of every other Tier 1 or Tier 2 deck. One lost final doesn't erase that; it shows the deck has a real, beatable weak point once the field has a full Swiss to prepare specifically for it, which is a different claim than \"Kennen is bad.\"",
+      },
+      {
+        q: "What is the Regional Qualifier: Singapore, and has it finished?",
+        a: "A two-day, US$25,000 Riftbound tournament at Singapore EXPO, 4–6 September 2026 — the penultimate Regional Qualifier of the 2026 season, and the biggest organised Riftbound event Southeast Asia has hosted. As of this article, Day 1 Swiss rounds are still underway, so no final result exists yet to report.",
+      },
+      {
+        q: "Which Riftbound Radiance champions has Riot confirmed?",
+        a: "Five so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV and Ziggs. Four more are set to be revealed during Preview Season, 28 September through 9 October 2026, ahead of Radiance's 23 October street date.",
+      },
+      {
+        q: "Which Radiance champions is Riot actually promoting hardest?",
+        a: "Going by where the marketing has already landed rather than a guess: Seraphine and Evelynn headline the set's two-player Showdown Deck, and Jarvan IV and Ziggs are the champions on the booster box art — the two highest-visibility spots any Riftbound set has. That's a statement about promotional placement, not a prediction of which deck will actually be best.",
+      },
+    ],
+    embeds: [
+      {
+        title: "The cards behind the decks setting the pace",
+        note: "Pulled live from the same real tournament results the tier list above is built from — every card here is genuinely played in a top-tier list, not a hand-picked guess.",
+        metaStaples: { minDecks: 2 },
+        take: 12,
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See today's real, live-priced meta decks →",
+      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — updated as new results, including Singapore's, come in.",
+    },
+    body: `Riftbound's competitive calendar has never been this compressed. As of today, the **Regional Qualifier: Singapore** is in its first Swiss rounds at Singapore EXPO — the direct follow-up to the biggest field the format has ever drawn, and the result that came out of it. In three weeks, the **Regional Qualifier: Los Angeles** closes out the 2026 season. A week after that, Radiance's Preview Season starts spoiling Riot's fifth set. Seven weeks from today, Radiance actually ships. Four events, seven weeks, and each one moves the format in a different way. Here's what's confirmed, what already changed, and what we can honestly say about where this is headed — without inventing results that haven't happened yet.
+
+## The result that reset expectations
+
+The **Regional Qualifier: Barcelona** (21–23 August 2026) was the largest Regional Qualifier Riftbound has run — over 2,200 players, more than any Vendetta-season event before it. Going into the cut, **Kennen, Heart of the Tempest** was the format's clear presumptive best deck: the single most-played legend in the building, at 12.7% of the entire field, and it put three copies into the Top 8.
+
+It didn't win. **Ornn** — a legend nobody was building around going in — beat it in the final. That's worth being precise about, because it's easy to overstate. Ornn's win doesn't mean Kennen is bad; a deck can genuinely be the format's best and still drop one best-of series, and Kennen's own win rate (below) says it's still winning more often than almost anything else in the format. What it does prove is that the format has a real, beatable weak point once you reach single elimination against a room that has spent an entire Swiss preparing for one specific deck — and Ornn found it. Reports on the winning list describe a Gear-heavy shell — Guardian Angel, Sterak's Gage, equipment built to survive to the late game rather than race — which tracks with what [our own archetype breakdown](/guides/riftbound-deck-archetypes-guide) already says about the Gear tag: a Midrange deck built to out-value board stats rather than match them turn for turn. Beating an aggressive, disruption-heavy deck by simply refusing to die to it isn't a new idea in Riftbound. It's just not one Barcelona's field had built an answer for yet.
+
+## Where the meta actually sits
+
+Barcelona is one 2,200-player snapshot. The tier list we track pulls from ten real tournament results across the whole Vendetta season, and it agrees with Barcelona more than it contradicts it:
+
+- **Irelia, Blade Dancer** — Tier 1, 10% of the field, 52% win rate. Still the single most-played legend across the decks we price, [Calm/Chaos Tempo](/decks/archetype/tempo) built around Irelia snowballing the board, now splashing Akali's Vendetta package for a faster clock.
+- **Kennen, Heart of the Tempest** — Tier 2, 9% of the field, and this is the number that actually matters after Barcelona: the **highest win rate in the format's top tier, at 58%**. [Order/Chaos Aggro/Disruption](/decks/archetype/aggro), and the most expensive list in the meta to assemble.
+- **Master Yi, Wuju Bladesman** — Tier 2, 9%, 47% win rate. The cheapest genuine tier-2 shell, flooding cheap Body/Calm units and closing with combat tricks.
+- **Diana, Scorn of the Moon** — Tier 2, 5%, 42% win rate. Chaos/Mind spell tempo, and the deck that won the very first real Vendetta event.
+- Below that: **Viktor** posts the single best win rate on the *entire* list — 63%, at roughly a third of Kennen's price to build — with Ezreal close behind at 62%. Both are small samples, which is exactly why they sit at Tier 3 rather than above Kennen despite the raw number. But it's the same shape as Ornn's run at Barcelona: an undersized deck with an outsized win rate is precisely the kind of thing a Swiss field hasn't practiced against.
+
+Read the top two together and Barcelona makes complete sense. Kennen wins more than half of every match it plays — more than any deck in the format's top tier — which is exactly why every serious Day 2 competitor spent Swiss learning how to beat it specifically, and one of them did, in the round that actually mattered.
+
+[[embed:0]]
+
+## What Singapore is actually deciding, right now
+
+The **Regional Qualifier: Singapore** runs 4–6 September at Singapore EXPO — the [penultimate Regional Qualifier of the 2026 season](/blog/riftbound-2026-regional-qualifier-los-angeles), with Los Angeles closing it out three weeks later. It's also, by a clear margin, the biggest organised Riftbound event Southeast Asia has hosted: a US$25,000 prize pool, Top 64 finishers earning Regional Championship invitations without needing to travel internationally to earn them, and full broadcast coverage from 10am SGT on both days.
+
+As of writing, Day 1's eight Swiss rounds are still underway — the field that advances to Day 2 needs 18+ match points, then five more Swiss rounds cut to a single-elimination Top 8. The honest answer to "what happened in Singapore" is: nothing final yet, and we're not going to fill that gap with a guess. What we can say is what the event is actually testing. A second Kennen title says Barcelona was a one-off. A second surprise winner — Ornn again, or something else entirely — says the format's ceiling deck now has a target on it everywhere, not just in one city, on one weekend.
+
+There's a second story here that has nothing to do with which legend wins. Every Regional Qualifier before this one has meant travel for Southeast Asian players chasing a Regional Championship invitation — flying to whichever city Riot's calendar landed on, the same barrier plenty of regional TCG scenes deal with. A US$25,000 event at Singapore EXPO, with Top 64 finishers earning those invitations on home ground, is a genuinely different proposition: it's the reason organisers are already calling this the biggest organised Riftbound event Southeast Asia has hosted, independent of who actually wins it. Singapore and Los Angeles — the season's last two stops — both carry the same competitor reward: an exclusive **Jayce, Brilliant Inventor** promo print for top finishers, on top of the invitation itself. So the collecting angle and the competitive one are, for once, the same story: whoever takes Singapore's Top 8 walks away with both a Regional Championship invite and a card that won't exist outside this circuit.
+
+The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)** — the toolkit every Singapore decklist is built from, same as Barcelona's before it.
+
+## The bigger shift: Radiance, in seven weeks
+
+Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments, the second-largest set so far behind only Origins. Preview Season runs **28 September through 9 October**, with Pre-Rift events **16–22 October** immediately before street date. That preview window opens three days after Los Angeles closes out the Regional Qualifier season — the same week the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
+
+Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today: Ekko is a Champion Unit in the blue domain — Mind, in Riftbound's own domain key — with a card called *Ingenious* carrying an Empowered effect: discount a unit into play, and it dies at end of turn. That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
+
+Radiance isn't the only structural shift on the calendar, either — just the next one. [Legacy](/guides/riftbound-sets-in-order), Riot's Set 6, ships 29 January 2027 as the largest set announced so far and the first designed specifically for draft, changing pack composition itself: a common slot becomes a Legend-or-Battlefield slot. That's a bigger structural change than any single champion reveal, and it's one more reason "the meta" is worth thinking of as something that keeps moving on a schedule, not settling once and staying settled.
+
+## Which champions is Riot actually pushing?
+
+Riot hasn't published a marketing plan, and we're not going to pretend it has. But a set tips its hand in the same few places every time, and Radiance already has:
+
+1. **Seraphine and Evelynn** headline the two-player Showdown Deck — the single highest-visibility product every Riftbound set ships alongside its boosters, built to be bought and played the same day.
+2. **Jarvan IV and Ziggs** are the champions on the booster box art — the image on every physical pack sold at retail, seen by every buyer whether or not they follow the competitive scene at all.
+3. **Ekko** got the first single-card mechanical reveal, ahead of the other four confirmed champions and all four still-unrevealed ones.
+
+Put together, those five aren't a guess at who'll be good — they're simply where Radiance's marketing real estate has already gone, read off where their cards are placed rather than anything Riot has said outright. Whether any of them ends up being Radiance's best deck is a separate question, and it's the one thing actually worth refusing to predict: Kennen was the format's best deck by win rate at Barcelona and still lost the final. A champion getting the box art is a promotional fact, not a tier list.
+
+## What this actually means for buyers and deckbuilders
+
+We deliberately don't predict what individual cards will do — see [why Riftbound prices actually change](/guides/why-riftbound-card-prices-change) for the real mechanics behind that, instead of a guess dressed up as one. What's actually actionable right now:
+
+- **If you're building for the rest of the Vendetta season**, Kennen's win rate is still the best in the format's top tier — one lost final is a data point, not a pattern — and [the meta decks page](/decks) prices every real tournament list live, cheapest store first, in your own currency. Priced Viktor's budget shell is on the same page, for a fraction of Kennen's cost to assemble.
+- **If you're buying into Radiance**, the five confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
+- **If you just want to know what's shipping and when**, without a hard-coded countdown that goes stale the day it's wrong, [the release calendar](/release-dates) rolls itself forward automatically as each date passes — Radiance, Legacy and everything Riot has announced beyond it.
+
+We'll be watching Singapore's Top 8 the moment it's final, and updating the tier list the same way we did after Barcelona: from the actual decklists, not a guess at what they'll say.`,
+  },
   ...SEO_PACK_ARTICLES,
 ];
 

@@ -60,7 +60,14 @@ type Motif =
    * rather than decoration and is why it was worth a fourth motif instead of
    * reusing checklist. Up to 9 items, 3 per row.
    */
-  | { kind: "grid"; label: string; items: { text: string; color: string }[] };
+  | { kind: "grid"; label: string; items: { text: string; color: string }[] }
+  /**
+   * A short ranked list where the DIRECTION of each row is the point — a legend
+   * rising, falling or newly arriving. For a post about the metagame actually
+   * moving (a tournament result, a set landing), where "which way is this
+   * going" is the claim a checklist's flat ticks can't make.
+   */
+  | { kind: "movers"; label: string; items: { text: string; dir: "up" | "down" | "new" }[] };
 
 interface Hero {
   slug: string;
@@ -282,6 +289,28 @@ const HEROES: Hero[] = [
       items: ["Domains ≈ colors", "Runes ≈ manabase", "Constructed formats", "Singles market"],
     },
   },
+  {
+    slug: "riftbound-meta-shift-radiance-singapore",
+    kicker: "Meta report · Tournaments",
+    title: "How the Meta Shifts Next",
+    chips: ["Barcelona's Kennen upset", "Singapore RQ, live", "Radiance in 7 weeks"],
+    motif: {
+      kind: "movers",
+      label: "Reading the shift",
+      // Not a claim about where any of these NET out by October — see the
+      // article's own refusal to predict individual card prices. Each row is a
+      // real, sourced direction: Kennen was still the most-played legend in the
+      // room at Barcelona AND lost the final to Ornn, so its grip on the format
+      // as the presumptive best deck is the thing that slipped, not its play
+      // rate; Ornn is the deck that just proved it; Radiance is a genuinely new
+      // entrant to whatever the metagame becomes after it.
+      items: [
+        { text: "Kennen's grip on the meta", dir: "down" },
+        { text: "Ornn, after Barcelona", dir: "up" },
+        { text: "Radiance, Oct 23", dir: "new" },
+      ],
+    },
+  },
 ];
 
 const esc = (s: string) =>
@@ -418,20 +447,21 @@ function motifSvg(m: Motif): string {
   // tiles use a solid fill at reduced opacity plus a full-opacity top edge,
   // rather than the outline-only treatment the other motifs use — a thumbnail
   // this small needs the colour to read at a glance, not on close inspection.
-  const TILE_W = 118;
-  const TILE_H = 46;
-  const GAP = 14;
-  const COLS = 3;
-  const tiles = m.items.slice(0, 9);
-  const rowCount = Math.ceil(tiles.length / COLS);
-  const gridW = COLS * TILE_W + (COLS - 1) * GAP;
-  const gridH = rowCount * TILE_H + (rowCount - 1) * GAP;
-  const left = R - gridW;
-  // Bottom-aligned to y=620, same reasoning as checklist's `top`: growing
-  // downward from a fixed top risks the last row crowding the 630 edge as the
-  // item count (and therefore row count) varies per post.
-  const gridTop = 620 - gridH;
-  return `<g ${FONT}>
+  if (m.kind === "grid") {
+    const TILE_W = 118;
+    const TILE_H = 46;
+    const GAP = 14;
+    const COLS = 3;
+    const tiles = m.items.slice(0, 9);
+    const rowCount = Math.ceil(tiles.length / COLS);
+    const gridW = COLS * TILE_W + (COLS - 1) * GAP;
+    const gridH = rowCount * TILE_H + (rowCount - 1) * GAP;
+    const left = R - gridW;
+    // Bottom-aligned to y=620, same reasoning as checklist's `top`: growing
+    // downward from a fixed top risks the last row crowding the 630 edge as the
+    // item count (and therefore row count) varies per post.
+    const gridTop = 620 - gridH;
+    return `<g ${FONT}>
     <text x="${R}" y="${gridTop - 26}" fill="#94a3b8" font-size="22" letter-spacing="4" text-anchor="end">${esc(m.label.toUpperCase())}</text>
     ${tiles
       .map((it, i) => {
@@ -444,6 +474,34 @@ function motifSvg(m: Motif): string {
       <rect x="${x}" y="${y}" width="${TILE_W}" height="4" rx="2" fill="${it.color}"/>
       <text x="${x + TILE_W / 2}" y="${y + TILE_H / 2 + 8}" fill="#ffffff" font-size="20" font-weight="bold" text-anchor="middle">${esc(it.text)}</text>
     </g>`;
+      })
+      .join("\n    ")}
+  </g>`;
+  }
+
+  // movers — same bottom-aligned row layout as checklist, but each row carries
+  // a direction instead of a tick: a filled triangle pointing up (rising, brand
+  // green) or down (falling, a red that reads against the dark background), or
+  // a small diamond for "new" (accent blue — arrived, no prior direction to
+  // show). Colour AND shape both carry meaning here, unlike checklist's uniform
+  // ticks, which is what makes "the metagame is moving" legible at thumbnail
+  // size rather than just "here is a list".
+  const MOVER_DOWN = "#f87171";
+  const moverRows = m.items.slice(0, 5);
+  const moverTop = 596 - (moverRows.length - 1) * 36;
+  const moverMark = (dir: "up" | "down" | "new", y: number): string => {
+    const cx = R - 44;
+    if (dir === "up") return `<path d="M ${cx - 10} ${y + 5} L ${cx} ${y - 13} L ${cx + 10} ${y + 5} Z" fill="${BRAND}"/>`;
+    if (dir === "down") return `<path d="M ${cx - 10} ${y - 13} L ${cx} ${y + 5} L ${cx + 10} ${y - 13} Z" fill="${MOVER_DOWN}"/>`;
+    return `<rect x="${cx - 7}" y="${y - 13}" width="14" height="14" rx="3" transform="rotate(45 ${cx} ${y - 6})" fill="${ACCENT}"/>`;
+  };
+  return `<g ${FONT}>
+    <text x="${R}" y="${moverTop - 40}" fill="#94a3b8" font-size="22" letter-spacing="4" text-anchor="end">${esc(m.label.toUpperCase())}</text>
+    ${moverRows
+      .map((it, i) => {
+        const y = moverTop + i * 36;
+        return `<text x="${R - 58}" y="${y}" fill="#cbd5e1" font-size="27" text-anchor="end">${esc(it.text)}</text>
+    ${moverMark(it.dir, y)}`;
       })
       .join("\n    ")}
   </g>`;
