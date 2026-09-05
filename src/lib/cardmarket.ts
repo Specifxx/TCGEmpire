@@ -146,15 +146,23 @@ import { poolOf, POOL_ORDER, type PoolCard } from "@/lib/box-ev";
 // Riftbound's Cardmarket game id — see the header for how these three URLs
 // were found and verified. All three are overridable (a wrong id, a moved
 // bucket path, or a local file for testing) without a code change.
+//
+// `|| `, NOT `??` — GitHub Actions sets an env var to the EMPTY STRING when
+// the repo variable behind it (${{ vars.X }}) doesn't exist, rather than
+// leaving it unset. `??` only falls through on null/undefined, so it doesn't
+// catch that — the very first live run after this shipped hit exactly this:
+// every CARDMARKET_*_URL resolved to "", readJson("") tried to open "" as a
+// local file, and Cardmarket wrote zero rows in production. `||` treats ""
+// the same as unset, which is what "optional override" is supposed to mean.
 const CARDMARKET_GAME_ID = 22;
 const PRODUCTLIST_SINGLES_URL =
-  process.env.CARDMARKET_PRODUCTLIST_URL ??
+  process.env.CARDMARKET_PRODUCTLIST_URL ||
   `https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_${CARDMARKET_GAME_ID}.json`;
 const PRODUCTLIST_NONSINGLES_URL =
-  process.env.CARDMARKET_PRODUCTLIST_NONSINGLES_URL ??
+  process.env.CARDMARKET_PRODUCTLIST_NONSINGLES_URL ||
   `https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_${CARDMARKET_GAME_ID}.json`;
 const PRICEGUIDE_URL =
-  process.env.CARDMARKET_PRICEGUIDE_URL ??
+  process.env.CARDMARKET_PRICEGUIDE_URL ||
   `https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_${CARDMARKET_GAME_ID}.json`;
 
 // ---- feature flag -------------------------------------------------------------
@@ -175,8 +183,10 @@ export function isCardmarketRankingEnabled(): boolean {
 // EUR→GBP rate for the UK singles conversion. Like USD_TO_GBP in tcgplayer.ts
 // this is a hand-set reference rate (exact FX isn't critical for a
 // "from"/reference figure). Override with CARDMARKET_EUR_TO_GBP to refresh
-// without a deploy.
-export const EUR_TO_GBP = Number(process.env.CARDMARKET_EUR_TO_GBP ?? "0.86");
+// without a deploy. `||`, not `??` — see PRODUCTLIST_SINGLES_URL's comment
+// above: an empty-string env var (Actions' shape for an unset repo variable)
+// would otherwise make this Number("") === 0, silently zeroing every UK price.
+export const EUR_TO_GBP = Number(process.env.CARDMARKET_EUR_TO_GBP || "0.86");
 
 // ---- the wire schema, verified live 2026-09-04 (see header) -------------------
 export interface CardmarketProduct {
