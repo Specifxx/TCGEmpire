@@ -22,10 +22,12 @@ export const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61591482521
 export const SITE_URL = "https://riftcompare.com";
 
 // Display price for RiftCompare Premium. Amount + period render the big price on the
-// /premium pricing card; PREMIUM_PRICE_LABEL is the compact "$9.99/mo" used in CTAs.
+// /premium pricing card; PREMIUM_PRICE_LABEL is the compact "$14.99/mo" used in CTAs.
 // These are DISPLAY ONLY — set them to match the recurring price you created in
-// Stripe (override any of them via the NEXT_PUBLIC_* env vars).
-export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$9.99";
+// Stripe (override any of them via the NEXT_PUBLIC_* env vars). Raised from $9.99
+// to $14.99 (2026-09) — the increase announced below; see that section for how the
+// "lock in your price" copy retired itself the moment this line changed.
+export const PREMIUM_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_PRICE_AMOUNT || "$14.99";
 export const PREMIUM_PRICE_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_PRICE_PERIOD || "month";
 export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${PREMIUM_PRICE_AMOUNT}/mo`;
 
@@ -45,16 +47,21 @@ export function annualSavingPct(): number {
 }
 
 // ── Announced price increase ────────────────────────────────────────────────
-// Premium's price is going up for NEW subscribers, to $19.99/mo — a real,
-// decided change (2026-09), not yet scheduled to an exact date, hence the
-// default below rather than a dated countdown. When the real cutover happens,
-// the fix is ONE edit: bump PREMIUM_PRICE_AMOUNT itself to $19.99. The moment
-// it matches PREMIUM_NEXT_PRICE_AMOUNT, premiumPriceIncreaseAnnounced() goes
-// false and every "lock in your price" surface below retires itself — no
-// second flag to remember to flip off. Same self-retiring shape as
-// release-calendar.ts's countdown, and for the same reason: a manually-retired
-// banner is exactly the failure mode /vendetta-countdown and
-// /radiance-countdown both died from.
+// RETIRED 2026-09: the increase this section announced (originally $9.99 →
+// $19.99, "coming soon") landed at $14.99 instead — PREMIUM_PRICE_AMOUNT above
+// was bumped to $14.99, and PREMIUM_NEXT_PRICE_AMOUNT below was brought down to
+// match it rather than left pointing at the old $19.99 figure. The moment the
+// two agree, premiumPriceIncreaseAnnounced() goes false and every "lock in
+// your price" surface (the /premium page, the Premium dialog, the corner
+// slide-in, the signed-out popup) retires its banner on its own — no second
+// flag to hunt down, which is the entire reason this shipped as an
+// amount-comparison instead of a manually-maintained boolean. Same self-
+// retiring shape as release-calendar.ts's countdown, and for the same reason:
+// a manually-retired banner is exactly the failure mode /vendetta-countdown
+// and /radiance-countdown both died from.
+//
+// To announce a NEW increase later, set this to the new target price — the
+// banners come back on their own, no other edit required.
 //
 // The "your price never rises while you stay subscribed" half of this is true
 // regardless of whether an increase is announced — checkout always creates a
@@ -63,7 +70,7 @@ export function annualSavingPct(): number {
 // price (see api/premium/checkout's one-shot line_items and the absence of any
 // subscriptions.update price-sync). An announced increase only changes WHY
 // that existing guarantee is worth acting on today, not whether it holds.
-export const PREMIUM_NEXT_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT || "$19.99";
+export const PREMIUM_NEXT_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT || "$14.99";
 export function premiumPriceIncreaseAnnounced(): boolean {
   return PREMIUM_NEXT_PRICE_AMOUNT !== PREMIUM_PRICE_AMOUNT;
 }

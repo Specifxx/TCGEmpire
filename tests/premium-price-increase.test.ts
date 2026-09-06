@@ -5,38 +5,47 @@ import { join } from "node:path";
 import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_NEXT_PRICE_AMOUNT,
+  PREMIUM_ANNUAL_AMOUNT,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
   premiumLockInTail,
+  annualSavingPct,
 } from "../src/lib/site";
+import { ARTICLES } from "../src/lib/articles";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// "secure the current price before it increases" — a real, decided Premium
-// price change (2026-09), not yet scheduled to an exact date. The honesty rule
-// this file exists to pin: /editorial-policy's own line is "nothing here
-// describes a process we don't actually run", and that applies to marketing
-// copy exactly as much as to an article. Two things make the claim actually
-// true rather than just persuasive-sounding:
-//   • the "your price never rises while subscribed" guarantee holds REGARDLESS
-//     of whether an increase is announced — checkout always creates a new
-//     subscription against whatever price is currently configured, and nothing
-//     migrates an existing subscription to a different one;
-//   • the banner is SELF-RETIRING: the day the real cutover happens and
-//     PREMIUM_PRICE_AMOUNT is bumped to match PREMIUM_NEXT_PRICE_AMOUNT, the
-//     announcement switches itself off with no second flag to remember — the
-//     exact failure mode /vendetta-countdown and /radiance-countdown both died
-//     from (see tests/release-calendar.test.ts's own header for that history).
+// "secure the current price before it increases" — a real Premium price
+// increase (2026-09). It landed at $14.99 (the original announcement, kept live
+// for a few days, named $19.99 as the target — the actual number that shipped
+// was $14.99), which is why PREMIUM_NEXT_PRICE_AMOUNT was brought down to match
+// PREMIUM_PRICE_AMOUNT rather than left pointing at the old figure: the
+// announcement's whole job was done the moment the real price caught up to it,
+// and it retires itself rather than needing a second edit to switch off. The
+// honesty rule this file exists to pin: /editorial-policy's own line is
+// "nothing here describes a process we don't actually run", and that applies to
+// marketing copy exactly as much as to an article. Two things make the "lock in
+// your price" claim true regardless of whether an increase is CURRENTLY
+// announced:
+//   • the "your price never rises while subscribed" guarantee holds either way
+//     — checkout always creates a new subscription against whatever price is
+//     currently configured, and nothing migrates an existing subscription to a
+//     different one;
+//   • the banner is SELF-RETIRING: the day PREMIUM_PRICE_AMOUNT is bumped to
+//     match PREMIUM_NEXT_PRICE_AMOUNT, the announcement switches itself off
+//     with no second flag to remember — the exact failure mode
+//     /vendetta-countdown and /radiance-countdown both died from (see
+//     tests/release-calendar.test.ts's own header for that history).
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("today's decided price increase is what the site actually announces", () => {
-  // Pins the real business decision (current $9.99 → $19.99, no fixed date) so
-  // a careless edit changes it loudly rather than silently.
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$9.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$19.99");
-  assert.equal(premiumPriceIncreaseAnnounced(), true);
+test("the increase that just landed is reflected as today's price, and the announcement has retired", () => {
+  // Pins the real, current business state (live price $14.99, nothing further
+  // announced) so a careless edit changes it loudly rather than silently.
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$14.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$14.99");
+  assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
 test("the announcement is keyed on the two prices actually disagreeing, not a separate flag", () => {
@@ -68,13 +77,33 @@ test("the lock-in guarantee is unconditional: checkout never migrates an existin
   }
 });
 
-test("the full sentence and the compact tail both name the real future price when announced", () => {
+test("with nothing currently announced, the copy reads as the plain evergreen guarantee", () => {
+  // No open increase to reference right now, so neither string should name a
+  // price at all — inventing one here (even today's own $14.99) would read as
+  // an announcement that doesn't exist.
   const line = premiumLockInLine();
-  assert.ok(line.includes(PREMIUM_PRICE_AMOUNT), "must still state today's price");
-  assert.ok(line.includes(PREMIUM_NEXT_PRICE_AMOUNT), "must state the announced future price");
-
+  assert.equal(line, "Subscribe now and lock in this price for good — it never rises while you stay subscribed.");
   const tail = premiumLockInTail();
-  assert.ok(tail.includes(PREMIUM_NEXT_PRICE_AMOUNT), "the compact caption must also name the future price");
+  assert.equal(tail, "locked in for good, cancel anytime");
+});
+
+test("the announced-increase branch is still correctly wired, for whenever the next one is set", () => {
+  // Structural rather than behavioural, since flipping premiumPriceIncreaseAnnounced()
+  // at runtime would mean re-importing the module under a different env — the
+  // same "test the branch structurally" approach release-calendar.test.ts takes
+  // for cases it can't cheaply flip either. Proves that WHEN
+  // PREMIUM_NEXT_PRICE_AMOUNT next disagrees with PREMIUM_PRICE_AMOUNT, both
+  // helpers still name both figures rather than silently reusing the retired
+  // wording.
+  const src = read("src/lib/site.ts");
+  const lineFnAt = src.indexOf("export function premiumLockInLine()");
+  const tailFnAt = src.indexOf("export function premiumLockInTail()");
+  assert.ok(lineFnAt >= 0 && tailFnAt >= 0);
+  const lineBody = src.slice(lineFnAt, tailFnAt);
+  assert.match(lineBody, /PREMIUM_NEXT_PRICE_AMOUNT/, "premiumLockInLine's announced branch must reference the future price");
+  assert.match(lineBody, /PREMIUM_PRICE_AMOUNT/, "premiumLockInLine's announced branch must still reference today's price");
+  const tailBody = src.slice(tailFnAt);
+  assert.match(tailBody, /PREMIUM_NEXT_PRICE_AMOUNT/, "premiumLockInTail's announced branch must reference the future price");
 });
 
 test("no surface invents an exact date for an increase that doesn't have one yet", () => {
@@ -137,4 +166,46 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
     "PremiumSlideIn.tsx: the whole component's render must be gated behind !premium",
   );
   assert.ok(eligibleAt < bannerAt, "PremiumSlideIn.tsx: the eligibility gate must be defined before the banner it protects");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOUND live while landing this exact increase: the editorial article about
+// Premium's pricing (riftcompare-premium-explained) had its own hand-typed
+// $9.99/$79.99/33%/$119.88 figures — none of them wired to lib/site.ts at all,
+// so bumping PREMIUM_PRICE_AMOUNT changed every LIVE surface (the page, the
+// dialog, both nudges) and silently left this one article quoting the retired
+// price and a stale savings percentage. Markdown prose can't import a
+// constant, so the fix here is this test: it re-derives every number the
+// article states from the SAME constants the rest of the site reads, the same
+// principle tests/deck-archetypes-article.test.ts and
+// tests/best-cards-article.test.ts already apply to their own numeric claims.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("the Premium-explained article states the price the site actually charges, not a stale one", () => {
+  const article = ARTICLES.find((a) => a.slug === "riftcompare-premium-explained");
+  assert.ok(article, "expected the riftcompare-premium-explained article to exist");
+
+  const savePct = annualSavingPct();
+  const monthlyNum = Number(PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, ""));
+  const yearlyPayingMonthly = (monthlyNum * 12).toFixed(2);
+
+  const haystack = [
+    article!.excerpt,
+    ...(article!.summary ?? []),
+    ...(article!.faq ?? []).map((f) => f.a),
+    article!.body,
+  ].join("\n");
+
+  assert.ok(haystack.includes(PREMIUM_PRICE_AMOUNT), `article must quote today's actual monthly price (${PREMIUM_PRICE_AMOUNT})`);
+  assert.ok(haystack.includes(PREMIUM_ANNUAL_AMOUNT), `article must quote today's actual annual price (${PREMIUM_ANNUAL_AMOUNT})`);
+  assert.ok(haystack.includes(`${savePct}%`), `article's stated annual saving must match the computed ${savePct}%`);
+  assert.ok(
+    haystack.includes(`$${yearlyPayingMonthly}`),
+    `article's "paying monthly for a year" comparison must equal 12× today's monthly price ($${yearlyPayingMonthly})`,
+  );
+
+  // Belt-and-braces: a price this test doesn't happen to check for (a third
+  // plan, a regional variant) could still go stale silently — so also assert
+  // the RETIRED price is gone outright, not just that the current one is present.
+  assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
 });
