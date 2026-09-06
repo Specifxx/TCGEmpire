@@ -17,32 +17,32 @@ const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// "secure the current price before it increases" — a real Premium price
-// increase (2026-09). It landed at $14.99 (the original announcement, kept live
-// for a few days, named $19.99 as the target — the actual number that shipped
-// was $14.99), which is why PREMIUM_NEXT_PRICE_AMOUNT was brought down to match
-// PREMIUM_PRICE_AMOUNT rather than left pointing at the old figure: the
-// announcement's whole job was done the moment the real price caught up to it,
-// and it retires itself rather than needing a second edit to switch off. The
-// honesty rule this file exists to pin: /editorial-policy's own line is
-// "nothing here describes a process we don't actually run", and that applies to
-// marketing copy exactly as much as to an article. Two things make the "lock in
-// your price" claim true regardless of whether an increase is CURRENTLY
-// announced:
-//   • the "your price never rises while subscribed" guarantee holds either way
-//     — checkout always creates a new subscription against whatever price is
-//     currently configured, and nothing migrates an existing subscription to a
-//     different one;
-//   • the banner is SELF-RETIRING: the day PREMIUM_PRICE_AMOUNT is bumped to
-//     match PREMIUM_NEXT_PRICE_AMOUNT, the announcement switches itself off
-//     with no second flag to remember — the exact failure mode
-//     /vendetta-countdown and /radiance-countdown both died from (see
-//     tests/release-calendar.test.ts's own header for that history).
+// "secure the current price before it increases" — the mechanism behind a real
+// Premium price change. The honesty rule this file exists to pin:
+// /editorial-policy's own line is "nothing here describes a process we don't
+// actually run", and that applies to marketing copy exactly as much as to an
+// article. Two things make the claim actually true rather than just
+// persuasive-sounding:
+//   • the "your price never rises while subscribed" guarantee holds REGARDLESS
+//     of whether an increase is announced — checkout always creates a new
+//     subscription against whatever price is currently configured, and nothing
+//     migrates an existing subscription to a different one;
+//   • the banner is SELF-RETIRING: the day the real cutover happens and
+//     PREMIUM_PRICE_AMOUNT is bumped to match PREMIUM_NEXT_PRICE_AMOUNT, the
+//     announcement switches itself off with no second flag to remember — the
+//     exact failure mode /vendetta-countdown and /radiance-countdown both died
+//     from (see tests/release-calendar.test.ts's own header for that history).
+//
+// The originally-announced increase (from $9.99 to $19.99) landed 2026-09-06,
+// except the real decided cutover price came in at $14.99, not $19.99 — see
+// site.ts's own header for that. With no further increase currently decided,
+// the two amounts are pinned EQUAL, which is what proves the banner actually
+// retired rather than just changed its number.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the increase that just landed is reflected as today's price, and the announcement has retired", () => {
-  // Pins the real, current business state (live price $14.99, nothing further
-  // announced) so a careless edit changes it loudly rather than silently.
+test("today's decided price increase is what the site actually announces", () => {
+  // Pins the real business decision (current $14.99, no announced future
+  // increase) so a careless edit changes it loudly rather than silently.
   assert.equal(PREMIUM_PRICE_AMOUNT, "$14.99");
   assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$14.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
@@ -77,33 +77,28 @@ test("the lock-in guarantee is unconditional: checkout never migrates an existin
   }
 });
 
-test("with nothing currently announced, the copy reads as the plain evergreen guarantee", () => {
-  // No open increase to reference right now, so neither string should name a
-  // price at all — inventing one here (even today's own $14.99) would read as
-  // an announcement that doesn't exist.
-  const line = premiumLockInLine();
-  assert.equal(line, "Subscribe now and lock in this price for good — it never rises while you stay subscribed.");
-  const tail = premiumLockInTail();
-  assert.equal(tail, "locked in for good, cancel anytime");
+test("with no announcement live, the full sentence and the compact tail both say the price is locked in for good", () => {
+  // Live constants are currently equal (see the test above) — no increase is
+  // announced right now, so both helpers must return their steady-state copy,
+  // not the "raising Premium's price soon" branch.
+  assert.equal(premiumLockInLine(), "Subscribe now and lock in this price for good — it never rises while you stay subscribed.");
+  assert.equal(premiumLockInTail(), "locked in for good, cancel anytime");
 });
 
-test("the announced-increase branch is still correctly wired, for whenever the next one is set", () => {
-  // Structural rather than behavioural, since flipping premiumPriceIncreaseAnnounced()
-  // at runtime would mean re-importing the module under a different env — the
-  // same "test the branch structurally" approach release-calendar.test.ts takes
-  // for cases it can't cheaply flip either. Proves that WHEN
-  // PREMIUM_NEXT_PRICE_AMOUNT next disagrees with PREMIUM_PRICE_AMOUNT, both
-  // helpers still name both figures rather than silently reusing the retired
-  // wording.
+test("the announced-increase branch, when it DOES fire, names both the current and future price", () => {
+  // Can't flip PREMIUM_NEXT_PRICE_AMOUNT at runtime to exercise this branch live
+  // (it's a module-level constant read once at import) — so this checks the
+  // branch's own template source instead, the same way the self-retiring
+  // comparison itself is checked structurally in the test above it.
   const src = read("src/lib/site.ts");
   const lineFnAt = src.indexOf("export function premiumLockInLine()");
+  const lineBody = src.slice(lineFnAt, lineFnAt + 400);
+  assert.match(lineBody, /\$\{PREMIUM_PRICE_AMOUNT\}/, "the announced sentence must still state today's price");
+  assert.match(lineBody, /\$\{PREMIUM_NEXT_PRICE_AMOUNT\}/, "the announced sentence must state the future price");
+
   const tailFnAt = src.indexOf("export function premiumLockInTail()");
-  assert.ok(lineFnAt >= 0 && tailFnAt >= 0);
-  const lineBody = src.slice(lineFnAt, tailFnAt);
-  assert.match(lineBody, /PREMIUM_NEXT_PRICE_AMOUNT/, "premiumLockInLine's announced branch must reference the future price");
-  assert.match(lineBody, /PREMIUM_PRICE_AMOUNT/, "premiumLockInLine's announced branch must still reference today's price");
-  const tailBody = src.slice(tailFnAt);
-  assert.match(tailBody, /PREMIUM_NEXT_PRICE_AMOUNT/, "premiumLockInTail's announced branch must reference the future price");
+  const tailBody = src.slice(tailFnAt, tailFnAt + 300);
+  assert.match(tailBody, /\$\{PREMIUM_NEXT_PRICE_AMOUNT\}/, "the announced compact caption must also name the future price");
 });
 
 test("no surface invents an exact date for an increase that doesn't have one yet", () => {

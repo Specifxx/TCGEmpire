@@ -5979,7 +5979,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-08-26",
+    updated: "2026-09-06",
     readMins: 11,
     tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
@@ -5987,7 +5987,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare Premium is $14.99/mo or $79.99/yr** (works out to about $6.67/mo, a 56% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
+      "**RiftCompare Premium is $14.99/mo or $119.99/yr** (works out to about $10/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
       "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
@@ -6001,7 +6001,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "$14.99/month, or $79.99/year if you pay annually (about $6.67/month, a 56% saving versus paying monthly — $179.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+        a: "$14.99/month, or $119.99/year if you pay annually (about $10/month, a 33% saving versus paying monthly — $179.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
@@ -6045,7 +6045,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $14.99/mo (or $79.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
+Short version: Premium is $14.99/mo (or $119.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -6054,7 +6054,7 @@ Short version: Premium is $14.99/mo (or $79.99/yr), and it unlocks five tools yo
 | Plan | Price | Works out to | Trial |
 | --- | --- | --- | --- |
 | Monthly | $14.99/month | $14.99/month | 14 days free |
-| Annual | $79.99/year | ≈ $6.67/month (**56% off**, vs $179.88/yr paying monthly) | 14 days free |
+| Annual | $119.99/year | ≈ $10/month (**33% off**, vs $179.88/yr paying monthly) | 14 days free |
 
 Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch.
 
