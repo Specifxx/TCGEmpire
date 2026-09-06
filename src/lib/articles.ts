@@ -6158,9 +6158,13 @@ If neither of those describes how you use the site, the free tier — which stil
     date: "2026-09-05",
     readMins: 12,
     tags: ["meta", "tournament", "regionals", "radiance", "predictions", "singapore"],
+    // Kennen is the post's throughline — the most-played legend at Barcelona and
+    // still the format's highest win rate — so the card itself is the thumbnail,
+    // the same treatment the Radiance post gives Seraphine. Local file rather
+    // than the CDN so next/image has a build-time manifest entry for it.
     hero: {
-      src: "/blog/riftbound-meta-shift-radiance-singapore.png",
-      alt: "How the Riftbound meta shifts next — Kennen's grip on the meta down, Ornn up after Barcelona, Radiance arriving 23 October",
+      src: "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
+      alt: "Kennen, Heart of the Tempest — the most-played legend at the Barcelona Regional Qualifier, and still the format's highest win rate after losing the final to Ornn",
     },
     summary: [
       "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
