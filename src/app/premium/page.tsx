@@ -7,7 +7,15 @@ import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
 import { TierComparisonTable } from "@/components/TierComparisonTable";
-import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
+import {
+  SITE_URL,
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  PREMIUM_ANNUAL_AMOUNT,
+  PREMIUM_NEXT_PRICE_AMOUNT,
+  premiumPriceIncreaseAnnounced,
+  premiumLockInLine,
+} from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -136,7 +144,19 @@ export default async function PremiumPage() {
       {/* Pricing (upgrade view) — monthly + optional annual best-value plan */}
       {!already && (
         <>
-          <div className={`mx-auto mt-6 grid gap-4 ${annualLive ? "max-w-2xl sm:grid-cols-2" : "max-w-md"}`}>
+          {premiumPriceIncreaseAnnounced() && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
+              <p className="text-sm font-bold text-gold">
+                ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} now
+              </p>
+              <p className="mt-1 text-xs text-gold/80">
+                New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
+                effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
+                subscription stays active — no action needed later.
+              </p>
+            </div>
+          )}
+          <div className={`mx-auto ${premiumPriceIncreaseAnnounced() ? "mt-4" : "mt-6"} grid gap-4 ${annualLive ? "max-w-2xl sm:grid-cols-2" : "max-w-md"}`}>
             {/* Monthly */}
             <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700">
               <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
@@ -186,9 +206,7 @@ export default async function PremiumPage() {
               ))}
             </ul>
             <p className="mt-4 text-center text-[11px] text-slate-500">Cancel anytime · secure checkout by Stripe</p>
-            <p className="mt-1 text-center text-[11px] font-medium text-gold/80">
-              Subscribe now and your price is locked in for good — it never goes up while you stay subscribed, even as we add more tools.
-            </p>
+            <p className="mt-1 text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
           </div>
         </>
       )}

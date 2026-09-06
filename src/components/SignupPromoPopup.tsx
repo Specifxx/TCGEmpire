@@ -6,7 +6,7 @@ import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
 import { PITCH_TOOLS } from "./PremiumSlideIn";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumLockInTail } from "@/lib/site";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
 // suppresses it for the rest of that session/tab, but it comes back on the next
@@ -242,8 +242,8 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
               it always has. */}
           {!trialAvailable && PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} · locked in
-              for good, cancel anytime
+              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} ·{" "}
+              {premiumLockInTail()}
             </p>
           ) : null}
         </div>

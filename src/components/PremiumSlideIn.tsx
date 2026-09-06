@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
 import { trackEvent } from "@/lib/analytics";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumLockInTail } from "@/lib/site";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "the dialog converts well but few people open it".
@@ -248,8 +248,8 @@ export function PremiumSlideIn() {
           </div>
           {!trialEligible && PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-center text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} · locked in
-              for good, cancel anytime
+              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} ·{" "}
+              {premiumLockInTail()}
             </p>
           ) : null}
         </div>
