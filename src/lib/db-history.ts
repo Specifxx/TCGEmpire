@@ -25,68 +25,59 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH7 is the CURRENT history project — cut over 2026-09-04 when RH6 reached its
-// 5 GB monthly network-transfer allowance after only two days in service (RH6
-// took over from RH11 on 2026-09-02; RH11 replaced RH10, which served from
-// 2026-08-28; RH10 replaced RH9, which served from 2026-08-25; RH9 replaced RH8,
-// which served from 2026-08-23; RH8 replaced HISTORY_DATABASE_URL_4, which
-// served from 2026-08-21; _4 replaced _3, which replaced _2 on 2026-08-19; _2
-// replaced HISTORY_DATABASE_URL; that replaced RH7 on 2026-08-16 — the same
-// name now back in service; RH7's first term replaced RH6's first term on
-// 2026-08-04; that replaced RH5 on 2026-07-31).
+// RH6 is the CURRENT history project — cut over 2026-09-06 when RH7 exceeded
+// its 5 GB monthly network-transfer allowance after only two days in service
+// (RH7 took over from RH6 on 2026-09-04; RH6's own first term this round ran
+// 2026-09-02..09-04, taking over from RH11; RH11 replaced RH10, which served
+// from 2026-08-28; RH10 replaced RH9, which served from 2026-08-25; RH9
+// replaced RH8, which served from 2026-08-23; RH8 replaced
+// HISTORY_DATABASE_URL_4, which served from 2026-08-21; _4 replaced _3, which
+// replaced _2 on 2026-08-19; _2 replaced HISTORY_DATABASE_URL; that replaced
+// RH7's FIRST term on 2026-08-16; RH7's first term replaced RH6's very first
+// term on 2026-08-04; that replaced RH5 on 2026-07-31).
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Read the head as "in service
 // today", never as a timeline — several rotations went BACKWARDS onto recycled
-// names (_2, _3, _4 are among the oldest in the list, and now RH6 and RH7 both)
-// because Neon's caps are per project per month, so a long-retired project has
-// a fully reset allowance.
+// names (_2, _3, _4 are among the oldest in the list, and RH6/RH7 have now each
+// cycled through twice) because Neon's caps are per project per month, so a
+// long-retired project has a fully reset allowance.
 //
-// RH7 IS RECYCLED, UNLIKE RH8 THROUGH RH11 — AND THAT IS A DELIBERATE, VERIFIED
-// EXCEPTION, NOT A REVERSION, THE SAME AS RH6'S OWN RECYCLING TWO DAYS EARLIER.
-// RH8 through RH11 were each provisioned NEW after the 2026-08-23 incident: RH5,
-// the intended target of that rotation, turned out to hold User=85,
-// CollectionCard=374, Order=4 and RetailerPrice=39,635 — a full OPERATIONAL
-// snapshot from an early term. The migration's User-row guard refused it;
-// without that guard the TRUNCATE ... CASCADE would have destroyed real account
-// data. RH7 itself is a NAME that was previously in service (2026-08-04 to
-// 2026-08-16) and had been sitting ORPHANED since — 0% of its card ids resolved
-// against the live catalogue even before this cutover, the same catalogue-
-// rebuild drift ensureHistoryCards() below exists to repair, which makes its old
-// PriceHistory rows unlinkable regardless of where they're stored (unlike RH6's
-// still-relevant pre-cutover rows two rotations ago). That is why THIS cutover
-// skipped the drain-forward top-up RH6's needed — there was nothing in RH7
-// worth preserving. migrate-history-db-rh6-to-rh7's own live guard confirmed
-// target public."User" rows: 0 immediately before truncating it, rather than
-// trusting db-chains.ts's memory of the earlier orphan finding. Before recycling
-// ANY name — on some future rotation — re-run that guard (or probe-databases)
-// and confirm User=0 fresh; never assume a prior finding still holds.
+// THIS ROTATION IS NOT THE USUAL "NEXT RECYCLED NAME" HOP. RH8 through RH11,
+// the obvious next candidates (each was a genuinely fresh project when first
+// provisioned, unlike RH6/RH7's repeated recycling), are NOT SET in GitHub
+// Actions at all — a 2026-09-06 probe-history run reported all four as
+// `NOT SET`, not merely unreachable; the secrets/vars were removed sometime
+// after their own terms ended. Provisioning a fresh RH12 needs owner action
+// this codebase cannot take on its own, so this cutover falls back to RH6 — see
+// the long note on HISTORY_VARS in src/lib/db-chains.ts for the full account,
+// including why RH6 could NOT simply be pointed at as-is (it predates the
+// 2026-09-05 GLOBAL-history migration and holds zero country="GLOBAL" rows —
+// the ADDITIVE `migrate-history` task, not a destructive dump/restore, is what
+// safely merged RH7's current GLOBAL series into it).
 //
-// A recycled name carries a second trap: the older vars are also migration
-// SOURCES in .github/workflows/maintenance.yml, so a name that is both target
-// and listed source makes a migration silently no-op while reporting every row
-// count as matching. migrate-history-db-rh6-to-rh7's task pins SOURCE = RH6
-// only, never a fallback chain that could resolve back to RH7 itself.
+// A recycled name carries a trap: the older vars are also migration SOURCES in
+// .github/workflows/maintenance.yml, so a name that is both target and listed
+// source makes a migration silently no-op while reporting every row count as
+// matching. Verify any pg_dump-based step pins its SOURCE explicitly, never a
+// fallback chain that could resolve back to the target itself.
 //
-// THIRTEEN PROJECT-TERMS IN JUST OVER FIVE WEEKS IS A READ-PATTERN PROBLEM, NOT
-// A CAPACITY ONE — and this rotation is another data point, not a new one:
-// recycling RH7 instead of provisioning RH12 is exactly what the note below has
-// been arguing for since the RH11 cutover. A fresh (or recycled) project still
-// buys only a couple of days at the current burn rate, so treat the next
-// exhaustion as a signal to find the query, not to rotate again. getEmptyCardIds()
-// in lib/card-price-state.ts and getRisingCards() in lib/top-deals.ts — both
-// named as prime suspects on prior rotations — were rewritten to stop
-// grouping/scanning the whole PriceHistory table per request (see those
-// functions' own comments). The egress guard below still logs any single
-// history query returning ≥1 MB — grep the Vercel logs for
+// FOURTEEN PROJECT-TERMS IN JUST OVER FIVE WEEKS IS A READ-PATTERN PROBLEM, NOT
+// A CAPACITY ONE — and this rotation is another data point, not a new one.
+// Recycling RH6 rather than waiting on a fresh RH12 buys only a couple of days
+// at the current burn rate if the read pattern hasn't actually improved, so
+// treat the next exhaustion as a signal to find the query, not to rotate again.
+// getEmptyCardIds() in lib/card-price-state.ts and getRisingCards() in
+// lib/top-deals.ts — both named as prime suspects on prior rotations — were
+// rewritten to stop grouping/scanning the whole PriceHistory table per request
+// (see those functions' own comments). The egress guard below still logs any
+// single history query returning ≥1 MB — grep the Vercel logs for
 // "[egress-guard:history]" if the allowance still drains fast; that names the
-// next offender, and measuring it (scripts/audit-egress.ts) beats a fourteenth
+// next offender, and measuring it (scripts/audit-egress.ts) beats a fifteenth
 // project.
 //
-// RH6 is kept as the rollback fallback and every older var below it is a
+// RH7 is kept as the rollback fallback and every older var below it is a
 // read-only fallback/migration source; treat them as dead, never the primary
-// target. Once everything's copied across (see the
-// `migrate-history-db-rh6-to-rh7` task in .github/workflows/maintenance.yml) and
-// nothing references the older vars anymore, they can be removed entirely.
+// target.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
 // a few places that cannot import this module (scripts/build-db-push.sh runs
@@ -110,12 +101,12 @@ export const HISTORY_URL_SOURCE =
     ? "DATABASE_URL (no history project set — history shares the operational DB)"
     : resolveVar(HISTORY_VARS)!;
 
-if (HISTORY_URL_SOURCE !== "RH7") {
+if (HISTORY_URL_SOURCE !== "RH6") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH7 — the current ` +
-      `history project is missing from this environment. RH6 is the rollback (served ` +
-      `2026-09-02 to 2026-09-04, near its allowance); RH11/RH10/RH9/RH8/_2/_3/_4 are spent. ` +
-      `Expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH6 — the current ` +
+      `history project is missing from this environment. RH7 is the rollback (served ` +
+      `2026-09-04 to 2026-09-06, over its allowance); RH11/RH10/RH9/RH8 are not even set; ` +
+      `RH5/_2/_3/_4 are spent. Expect P1001 or writes landing in the wrong place.`
   );
 }
 

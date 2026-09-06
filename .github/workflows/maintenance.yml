@@ -39,7 +39,7 @@ on:
           - migrate-history-db-to-rh10 # LEGACY (HISTORY RH9 → RH10 cutover, 2026-08-28, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh11 on 2026-08-30 (RH10 reached its 5 GB monthly transfer allowance).
           - migrate-history-db-to-rh11 # LEGACY (RH10 → RH11 cutover, 2026-08-30, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh6 on 2026-09-02 (RH11 nearing its 5 GB monthly transfer allowance).
           - migrate-history-db-to-rh6 # LEGACY (RH11 → RH6 cutover, 2026-09-02, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-rh6-to-rh7 on 2026-09-04 (RH6 nearing its 5 GB monthly transfer allowance).
-          - migrate-history-db-rh6-to-rh7 # CURRENT history cutover (2026-09-04): full pg_dump/restore of the live RH6 project into RH7 + row-count verification. Rotates because RH6 is nearing its 5 GB monthly transfer allowance. THE TARGET IS RH7 — ALREADY USED ONCE BEFORE (see the bare `migrate-history-db` task above, an early RH6 → RH7 rotation, kept for reference) and currently ORPHANED per src/lib/db-chains.ts (0% of its card ids resolve against the live catalogue) — this restore's `--clean` pass wipes that stale snapshot before writing RH6's current data over it. Named with BOTH endpoints, not just the target, because "rh7" was already used once for a different source (the bare `migrate-history-db` task) — reusing that name here would be ambiguous. RUN THIS BEFORE deploying the RH7-first chain.
+          - migrate-history-db-rh6-to-rh7 # LEGACY (RH6 → RH7 cutover, 2026-09-04, kept for reference): full pg_dump/restore of the live RH6 project into RH7 + row-count verification. Superseded by the additive `migrate-history` task on 2026-09-06 (RH7 exceeded its 5 GB monthly transfer allowance, and RH8-RH11 are no longer set in Actions at all, so this rotation fell back to RH6 rather than the usual next recycled name — see src/lib/db-chains.ts's HISTORY_VARS note for the full account).
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
@@ -63,7 +63,7 @@ on:
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
           - check-cards      # read-only: fail if any card page would render a price in one component and "—" in another (hero vs prose vs JSON-LD)
           - repair-history-card-ids # THE FIX for blank price charts: rewrites a history project's Card.id values onto the LIVE catalogue, matching on externalId, so PriceHistory rows join again (the FK cascades them). Every history project currently has 0% of its cardIds resolving against the live Card table, because the operational catalogue was REBUILT rather than restored and every card got a fresh cuid. DRY RUN unless dry_run is set to false. Optional `source` input picks which history variable to repair (default: whichever db-history.ts resolves).
-          - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
+          - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH11 / RH10 / RH9 / RH8 / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
           - migrate-main-db-to-rm9 # LEGACY (RM8 → RM9 cutover, 2026-08-23, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-to-rm10 on 2026-08-26.
@@ -1154,22 +1154,15 @@ jobs:
           echo "     it and fix the query it names rather than rotating to RH12."
 
       - name: Migrate the HISTORY database (RH6 → RH7) via pg_dump/pg_restore
-        # THE TENTH HISTORY ROTATION. RH6 is nearing its 5 GB monthly transfer
-        # allowance, so history rotates onto RH7.
-        #
-        # THE TARGET IS RH7, A RECYCLED NAME — already used once before (see the
-        # bare `migrate-history-db` task above, an early RH6 → RH7 rotation) and
-        # currently ORPHANED per src/lib/db-chains.ts's own note: 0% of its card
-        # ids resolve against the live catalogue, i.e. it holds a stale snapshot
-        # from a catalogue that has since moved on. This restore's `--clean` pass
-        # wipes that snapshot before writing RH6's current data over it — same
-        # shape as every other recycled-target rotation (RM6, RH6 itself), and
-        # the User-row guard below still runs first regardless, because "this
-        # name is known safe" and "safe right now" are not the same guarantee.
-        #
-        # A ROTATION BUYS AN ALLOWANCE, NOT A FIX. If RH7 also drains in days,
-        # run audit-egress against it a few hours after cutover and fix the query
-        # it names rather than provisioning a new project.
+        # LEGACY (2026-09-04 cutover, kept for reference). SUPERSEDED 2026-09-06:
+        # RH7 exceeded its 5 GB monthly transfer allowance after only two days,
+        # and RH8-RH11 — the usual next recycled names — are no longer set in
+        # GitHub Actions at all. That rotation fell back to RH6 via the ADDITIVE
+        # `migrate-history` task instead of a step shaped like this one, because
+        # RH6 predates the 2026-09-05 GLOBAL-history migration and a destructive
+        # dump/restore would have discarded RH6's own older per-market archive
+        # for no reason. See src/lib/db-chains.ts's HISTORY_VARS note for the
+        # full account.
         if: inputs.task == 'migrate-history-db-rh6-to-rh7'
         env:
           # SOURCE is pinned to the ONE variable holding the live data (RH6), not
@@ -2285,8 +2278,8 @@ jobs:
           probe "HISTORY_DATABASE_URL_3 (rollback)" "${P_HISTORY_DATABASE_URL_3:-}" || true
           probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}" || true
           probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}" || true
-          probe "RH7 (current)"        "${P_RH7:-}" || true
-          probe "RH6 (retired)"        "${P_RH6:-}" || true
+          probe "RH6 (current)"        "${P_RH6:-}" || true
+          probe "RH7 (retired)"        "${P_RH7:-}" || true
           probe "RH5"                  "${P_RH5:-}" || true
           echo ""
           echo "Read-only survey complete — nothing was written to any database."
@@ -5040,7 +5033,7 @@ jobs:
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
           # Route history/click WRITES to the current history project (db-history.ts).
-          # RH7 must lead: without it this step's PriceHistory rows land in an
+          # RH6 must lead: without it this step's PriceHistory rows land in an
           # exhausted project, or (chain exhausted) in the OPERATIONAL database.
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
