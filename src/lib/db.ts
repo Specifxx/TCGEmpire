@@ -64,36 +64,39 @@ import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM6 is the ONLY operational Neon project, cut over 2026-09-03 (RM11 neared its
-// 5 GB monthly transfer allowance) — a deliberate departure from every rotation
-// before RM9 (DATABASE_URL → DATABASE_URL_2 → RM3 → RM4 → RM5 → DATABASE_URL →
-// DATABASE_URL_2 → RM6 → RM7 → RM8), each of which was a multi-entry FALLBACK
-// CHAIN, current-first. Every real outage this database has caused traced back to
-// that shape, not to the database itself:
+// RM7 is the ONLY operational Neon project, cut over 2026-09-05 (RM6 neared its
+// 5 GB monthly transfer allowance after only about two days live) — a deliberate
+// departure from every rotation before RM9 (DATABASE_URL → DATABASE_URL_2 → RM3
+// → RM4 → RM5 → DATABASE_URL → DATABASE_URL_2 → RM6 → RM7 → RM8), each of which
+// was a multi-entry FALLBACK CHAIN, current-first. Every real outage this
+// database has caused traced back to that shape, not to the database itself:
 //
-// RM6 IS A RECYCLED NAME, not a new project — it was live once already
-// (2026-08-17..08-20, before rotating to RM7) and has been sitting idle since,
-// its own transfer allowance long since reset. See src/lib/db-chains.ts's own
-// OPERATIONAL_VARS comment for the verified row counts this cutover restored.
-// resolveVar() selects the first variable that is merely SET — precedence,
-// never health — so an exhausted CURRENT project stayed selected instead of
-// failing over, and ~84 `.catch(() => [])` sites across src/ turned the
-// resulting query failures into empty arrays. AN EXHAUSTED DATABASE PRESENTS
-// AS MISSING DATA, NOT AS AN ERROR PAGE. The 2026-08-22 outage is the sharpest
-// example: RM7 went over its transfer allowance, and the "rollback" RM8 turned
-// out to be reachable and completely empty because the migration that fills a
-// fallback had never been run — the site showed no in-stock listings for hours
-// before anyone thought to suspect the database. A single name trades away the
+// RM7 IS A RECYCLED NAME, not a new project — it was live once already
+// (2026-08-20..~08-23, before rotating to RM8) and has been sitting idle since,
+// its own transfer allowance long since reset. Unlike the other recycled names,
+// its old contents needed checking rather than assuming: see
+// src/lib/db-chains.ts's own OPERATIONAL_VARS comment for the row-count
+// evidence that its 2026-08-20..08-23 window was already carried forward, and
+// the verified row counts this cutover restored. resolveVar() selects the first
+// variable that is merely SET — precedence, never health — so an exhausted
+// CURRENT project stayed selected instead of failing over, and ~84
+// `.catch(() => [])` sites across src/ turned the resulting query failures into
+// empty arrays. AN EXHAUSTED DATABASE PRESENTS AS MISSING DATA, NOT AS AN ERROR
+// PAGE. The 2026-08-22 outage is the sharpest example: RM7 itself went over its
+// transfer allowance that time, and the "rollback" RM8 turned out to be
+// reachable and completely empty because the migration that fills a fallback
+// had never been run — the site showed no in-stock listings for hours before
+// anyone thought to suspect the database. A single name trades away the
 // emergency-fallback lever, but it fails LOUDLY (P1001) instead of silently
 // serving garbage, which is the trade this project now makes on purpose.
 //
-// ⚠ THE BURN RATE ITSELF IS STILL UNSOLVED. Eight consecutive projects have
+// ⚠ THE BURN RATE ITSELF IS STILL UNSOLVED. Nine consecutive projects have
 // now been exhausted the same way (~2 GB/day), which makes this a systemic
 // read-volume problem, not bad luck with allowances. A new project buys time,
 // not a fix.
 //
-// SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice is 81,452 rows (counted
-// during the 2026-08-23 cutover) against Card's 1,429. Any hot path that reads
+// SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice is 90,946 rows (counted
+// during the 2026-09-05 cutover) against Card's 1,429. Any hot path that reads
 // RetailerPrice without a `take`/narrow `select`, or any cache that silently
 // stops caching it, moves tens of MB per request — which is the only shape of
 // bug that reaches 2 GB/day at this traffic level. Start there.
@@ -101,9 +104,9 @@ const BIG_RESULT_BYTES = 1_000_000;
 // THE NAME HAZARD, and it is worth reading before touching anything here.
 // prisma/schema.prisma reads env("DATABASE_URL") directly, and nearly every
 // script assigns `DATABASE_URL=<something> npx tsx …` to aim Prisma at a
-// database. The operational variable is RM6, so anything that runs Prisma MUST
-// copy RM6 into DATABASE_URL first or it will talk to whatever DATABASE_URL
-// happens to hold while the app talks to RM6. scripts/build-db-push.sh does
+// database. The operational variable is RM7, so anything that runs Prisma MUST
+// copy RM7 into DATABASE_URL first or it will talk to whatever DATABASE_URL
+// happens to hold while the app talks to RM7. scripts/build-db-push.sh does
 // exactly that copy. Locally this all still resolves to the dev Postgres in
 // .env.local, which is why local dev is unaffected.
 //
@@ -114,7 +117,7 @@ const BIG_RESULT_BYTES = 1_000_000;
 // that moment — with a bare `Error: Command "npm run build" exited with 1` and
 // nothing in it naming a database.
 //
-// RM3 through RM11 (bar RM6 itself) and DATABASE_URL_2 are retired and reachable
+// RM3 through RM11 (bar RM7 itself) and DATABASE_URL_2 are retired and reachable
 // BY NAME from the migrate-* tasks in .github/workflows/maintenance.yml, which
 // is where draining a project before switching it off belongs. Draining must
 // not depend on the runtime chain — and there is no runtime chain to depend on now.
@@ -153,7 +156,7 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 // with a separate history database also in play there is no way to tell from
 // the error alone WHICH client was pointed where. Logging the winning var name
 // once at module init makes the next P1001 self-diagnosing — in particular it
-// distinguishes "RM6 is down" from "RM6 is unset in this environment".
+// distinguishes "RM7 is down" from "RM7 is unset in this environment".
 const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 
 // DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
@@ -173,13 +176,13 @@ const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM6") {
+if (OPERATIONAL_URL_SOURCE !== "RM7") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM6. ` +
-      `RM6 is the only operational project as of the 2026-09-03 cutover — there is no fallback ` +
-      `chain anymore, so this means RM6 is simply missing from this environment. If this appears ` +
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM7. ` +
+      `RM7 is the only operational project as of the 2026-09-05 cutover — there is no fallback ` +
+      `chain anymore, so this means RM7 is simply missing from this environment. If this appears ` +
       `in a Vercel build log, check Settings -> Environment Variables -> is "Production" (or ` +
-      `"Preview") ticked for RM6.`
+      `"Preview") ticked for RM7.`
   );
 }
 

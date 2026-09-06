@@ -145,13 +145,34 @@ test("no script declares its own operational-database chain", () => {
   for (const f of readdirSync(dir)) {
     if (!f.endsWith(".ts")) continue;
     const src = readFileSync(join(dir, f), "utf8");
-    // A local array literal of operational variable NAMES. The canonical list is
-    // imported, so a file that imports it has no such literal.
+    // A file that imports OPERATIONAL_VARS is trusted not to also hand-roll a
+    // second copy right next to the import.
+    const importsChain = /OPERATIONAL_VARS.*from ".*db-chains"/.test(src);
+
+    // Shape 1: a local array literal of operational variable NAMES.
     for (const m of src.matchAll(/const\s+\w*(?:OPERATIONAL|MAIN)\w*(?:_VARS|_URLS)?\s*=\s*\[([^\]]*)\]/g)) {
       const body = m[1];
       if (!/["'](?:RM\d|DATABASE_URL)/.test(body)) continue;
       const line = src.slice(0, m.index).split("\n").length;
       offenders.push(`scripts/${f}:${line} — ${m[0].replace(/\s+/g, " ").slice(0, 100)}`);
+    }
+
+    // Shape 2: a hand-rolled `process.env.RM6 || process.env.DATABASE_URL_2 ||
+    // ...` fallback chain — no array literal, so shape 1's regex never matches
+    // it, and this is exactly the form scripts/validate-decks.ts had (found
+    // 2026-09-05, during the RM6→RM7 rotation): its own HAS_DB gate hard-coded
+    // "RM6 || DATABASE_URL_2 || DATABASE_URL || RM3", three of which were
+    // already retired, so a rotation past RM6 would have silently skipped the
+    // whole name-validation pass. Two-or-more chained process.env reads of an
+    // operational-looking name, in one file that does NOT import the chain, is
+    // the same drift-prone shape as the array-literal case above.
+    if (!importsChain) {
+      for (const m of src.matchAll(
+        /process\.env\.(?:RM\d+|DATABASE_URL\d*)(?:\s*\|\|\s*process\.env\.(?:RM\d+|DATABASE_URL\d*)){1,}/g
+      )) {
+        const line = src.slice(0, m.index).split("\n").length;
+        offenders.push(`scripts/${f}:${line} — ${m[0].replace(/\s+/g, " ").slice(0, 100)}`);
+      }
     }
   }
 

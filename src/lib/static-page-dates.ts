@@ -22,6 +22,7 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/radiance-preorders": "2026-08-15",
   "/feedback": "2026-07-26",
   "/about": "2026-07-26",
+  "/creators": "2026-09-05",
   "/contact": "2026-07-26",
   "/support": "2026-07-26",
   "/privacy": "2026-08-02",

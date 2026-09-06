@@ -22,11 +22,18 @@
  */
 import { normalizeSearch } from "../src/lib/format";
 import metaDecksData from "../prisma/meta-decks.json";
+import { OPERATIONAL_VARS, resolveVar } from "../src/lib/db-chains";
 
-// Mirrors src/lib/db.ts's fallback chain — RM6 is the current project.
-const HAS_DB = Boolean(
-  process.env.RM6 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL || process.env.RM3
-);
+// Used to hand-list its own copy of the chain ("RM6 || DATABASE_URL_2 ||
+// DATABASE_URL || RM3") — exactly the drift db-chains.ts's own header warns
+// about. It went stale silently: OPERATIONAL_VARS moved on to a single-name
+// chain and this kept checking three retired variables that will never be set
+// again, so a rotation past RM6 would have made HAS_DB false — and the name
+// check silently skipped — even with a perfectly healthy database one env var
+// away. Importing OPERATIONAL_VARS means a future rotation updates this file
+// for free.
+const RESOLVED_DB_VAR = resolveVar(OPERATIONAL_VARS);
+const HAS_DB = Boolean(RESOLVED_DB_VAR);
 
 const MAIN_TOTAL = 56; // incl. the legend
 const RUNES = 12;
@@ -102,7 +109,7 @@ function checkRules() {
 async function checkNames() {
   if (!HAS_DB) {
     console.log(
-      "\nName check: SKIPPED — no RM6 / DATABASE_URL_2 / DATABASE_URL / RM3 set.\n" +
+      `\nName check: SKIPPED — no operational database set (${OPERATIONAL_VARS.join(" / ")}).\n` +
         "  (Set one to verify every deck card resolves to a real catalogue card.)"
     );
     return;
