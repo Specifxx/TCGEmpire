@@ -140,11 +140,16 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // site's highest-volume, ~1,400 pages) was more than enough to explain it.
   const ident = `Riftbound ${card.setCode} ${card.collectorNumber}`;
   const tail = hasPrice ? "Card Text & Live Prices" : "Card Text, Stats & Printings";
+  // Every candidate keeps `ident` (which carries collectorNumber) — the ONLY
+  // field that disambiguates two distinct printings sharing the same
+  // displayName + setCode (e.g. an NN1 promo vs. a 042b/298 promo of the same
+  // card). A prior version's final fallback dropped it down to bare setCode,
+  // so two such printings could render byte-identical <title>s — a real
+  // duplicate-title collision Google flagged on two Calm Rune (Promo) pages.
   const titleCandidates = [
     `${displayName} — ${ident} | ${tail}`,
     `${displayName} — ${ident} | ${hasPrice ? "Live Prices" : "Card Text"}`,
     `${displayName} — ${ident}`,
-    `${displayName} — Riftbound ${card.setCode}`,
   ];
   const title =
     titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
