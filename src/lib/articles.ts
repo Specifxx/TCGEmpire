@@ -6458,6 +6458,129 @@ That combination is why it will be the biggest release since Origins. None of it
 Track it on the [Radiance countdown](/radiance-countdown), where every card appears as reveals land.
 `,
   },
+  {
+    slug: "why-riftbound-could-become-a-top-two-tcg",
+    category: "blog",
+    title: "Why Riftbound Could Be a Top-Two Trading Card Game by 2028",
+    excerpt:
+      "Riot has turned one audience into a hit twice, with Valorant and TFT. The brand, audience and mechanics case for Riftbound reaching the TCG top two by 2028.",
+    author: "RiftCompare",
+    date: "2026-09-06",
+    readMins: 10,
+    tags: ["opinion", "market analysis", "league of legends", "esports", "riftbound", "trading card games"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
+    },
+    summary: [
+      "**Riot Games has already turned one audience into a second hit twice** — Teamfight Tactics and Valorant — in genres it had never shipped in before, and both grew into durable, top-tier products rather than fading after launch.",
+      "**League of Legends' player base (commonly cited around 120-135 million monthly)** is larger on its own than the total player counts reported for Magic: The Gathering or Pokémon TCG Pocket.",
+      "**Riftbound's early numbers — a reported 300%+ post-launch search surge and a 2025 TCGplayer top-ten finish — match the growth shape Valorant and TFT showed before they became durable**, rather than a typical hype-then-fade launch.",
+      "**The One Piece Card Game reached TCGplayer's top three by GMV in about four years** with no built-in audience anywhere close to League's — proof a new entrant can reach the top of this market without decades of history behind it.",
+      "**This is opinion, not a guarantee.** The biggest risks are that League's audience simply doesn't convert to a physical collectible at the same rate it converted to Valorant or TFT, or that a faster set cadence outpaces the game's own balance.",
+    ],
+    faq: [
+      {
+        q: "Is this a guarantee Riftbound will become a top-two trading card game?",
+        a: "No — this is an opinion piece built on Riot Games' track record and Riftbound's early numbers, not a certainty. See \"What would make this call wrong\" below for the specific ways it could fail to happen.",
+      },
+      {
+        q: "How many people play League of Legends?",
+        a: "Riot has reported figures as high as 152 million monthly active players at its 2022 peak, with more recent third-party estimates commonly in the 120-135 million range.",
+      },
+      {
+        q: "How fast did Valorant grow after launch?",
+        a: "Valorant's closed-beta reveal reportedly drew 1.7 million peak concurrent Twitch viewers, the game reportedly reached 3 million peak daily players within two months of its June 2020 launch, and third-party tracking (ActivePlayer.io) put its monthly active players at roughly 33 million in early 2026.",
+      },
+      {
+        q: "What makes Riftbound's mechanics 'easy to learn, hard to master'?",
+        a: "A Rune resource system similar to what other trading card games already use, layered with keywords like Hidden (playing a facedown card as a surprise), Action/Reaction (timing), and Vendetta's Empower/Flow/Burn package — simple building blocks that combine into real deckbuilding depth.",
+      },
+      {
+        q: "Has a new trading card game reached the top of the market before, without decades of history?",
+        a: "Yes — the One Piece Card Game launched in 2022 and, per TCGplayer's own reporting, reached the platform's top three games by GMV alongside Magic and Pokémon by the first quarter of 2026.",
+      },
+      {
+        q: "What could stop Riftbound from reaching top-two status?",
+        a: "The clearest risks are League's audience not converting to a physical collectible at the rate Valorant or TFT converted an existing gaming audience, a set cadence or power creep that outpaces the game's balance, and a rival publisher running the same brand-plus-game strategy first or better.",
+      },
+    ],
+    browseCta: {
+      href: "/sets",
+      label: "Browse every Riftbound set →",
+      blurb: "See every set released so far, and how the format has grown since Origins.",
+    },
+    body: `Riftbound launched in the West on 31 October 2025. It's one trading card game among dozens on shelves right now, made by a video game company that had never shipped a physical card product before its first set. Calling it a candidate for a top-two trading card game by 2028 — ahead of Yu-Gi-Oh!, Digimon and Disney Lorcana, competing directly with Magic: The Gathering and Pokémon for first and second place — is a big claim.
+
+This is an opinion piece, not a market report. We track prices, not predictions, and nothing below is guaranteed. But the case for taking this seriously is stronger than "it's a fun game with a popular license attached." It rests on three things: a publisher with an unusually good track record of turning one audience into a second hit, a starting audience larger than any new trading card game has ever launched with, and a ruleset that doesn't ask more of a new player than the genre already does. Here's the argument, with the numbers behind it.
+
+## Riot has done this before — twice
+
+League of Legends is Riot Games' first product, and by some distance its biggest: it has run for over fifteen years and, at its 2022 peak, reported around 152 million monthly active players, settling more recently into a range commonly cited around 120-135 million. That alone would make League one of the largest gaming audiences on the planet. What matters more for Riftbound is what Riot did with that audience twice already.
+
+The first swing was Teamfight Tactics, an auto-battler spun out of League's own in-client shop as a side mode in mid-2019. It wasn't an obviously safe move — auto-battlers were a genre with no proven blockbuster at the time. Riot shipped it as a standalone client anyway, and TFT reportedly cleared 33 million monthly active players within its first ten weeks. A mobile release the following March turned out to be the real growth driver, reportedly pushing the split toward roughly 60% mobile and 40% PC, and TFT has remained one of the more durable auto-battlers years after most of the genre's other entrants faded.
+
+The second swing was bigger: Valorant, a tactical shooter launched into a genre already dominated by Counter-Strike and, at the time, Overwatch. Riot's closed beta reveal alone reportedly drew 1.7 million peak concurrent Twitch viewers, and the game reportedly reached 3 million peak daily players within two months of its June 2020 launch. Unlike most shooters, which spike at launch and decay hard afterward, Valorant kept climbing for years — recent third-party tracking (ActivePlayer.io) puts its monthly active player base at roughly 33 million in early 2026, and it's now routinely described as one of the two biggest competitive shooters in the world alongside Counter-Strike.
+
+Two swings, two hits, in two genres Riot had never shipped in before. That's the track record Riftbound is riding on, and it's the reason "it's just a card game with a League skin on it" undersells what's being attempted here.
+
+## An audience no new trading card game has ever had
+
+Compare that installed base to the trading card games it would need to pass. Magic: The Gathering, in its fourth decade, is commonly estimated at somewhere between 40 and 50 million total players worldwide, though estimates vary by source and by definition of "player." Pokémon TCG's mobile spinoff, Pocket, reportedly reached somewhere between 26 and 33 million monthly active users in its own launch window. League of Legends alone — before counting anyone who plays Valorant or TFT, or the people who've never played a Riot game but watch League esports — is larger than either of those figures on its own.
+
+And the audience isn't just big, it's engaged in a way that translates unusually well to a collectible product. League's 2024 World Championship reportedly drew 6.94 million peak concurrent viewers, over 50 million total viewers, and more than 190 million hours watched — commonly cited as the most-watched esports event ever recorded. An audience that already shows up in those numbers to watch a storyline play out is an audience that has already demonstrated it will pay attention to a universe of champions, factions and lore for hundreds of hours a year. Turning a fraction of "people who watch Ahri and Jinx compete" into "people who collect Ahri and Jinx" is a much shorter walk than getting a stranger to care about a franchise from a standing start, which is the position every other new trading card game launches from.
+
+## Riftbound's early numbers already look like the pattern
+
+It's early — Riftbound has been on shelves in the West for less than a year at time of writing — but the first data points line up with the Valorant and TFT curves rather than with a typical new-TCG launch that fades after the initial hype window. Search interest reportedly rose more than 300% after release compared to the preorder period, an unusual shape: most licensed products peak at preorder and decline once the initial hype settles. TCGplayer reportedly logged more than 6,300 searches per hour for Riftbound product at its peak, and the game reportedly finished 2025 as a top-ten best-seller across TCGplayer's full catalog of more than 750 products — a strong result for a card game that had existed for barely two months of that year.
+
+None of that proves Riftbound becomes a top-two TCG. But it's the same early shape Valorant and TFT showed before they became durable, and it's a shape most new trading card games don't get to show at all — because most new trading card games don't have a global esport and a 150 million-plus player base to draw the initial spike from in the first place.
+
+It's also worth naming that a new entrant reaching the top of this market isn't unprecedented on its own. The One Piece Card Game launched in 2022 and, per TCGplayer's own reporting, was sitting alongside Magic and Pokémon among the top three games by sales on the platform by the first quarter of 2026 — a four-year climb built on licensed IP and a competitive scene, with none of the built-in audience Riftbound starts with. If a shonen anime license without an existing 150 million-player base can reach the top three in four years, a card game backed by League of Legends starting from a much larger base doesn't need a miracle to get there faster.
+
+## The game has to hold up its end, too — and it might
+
+None of the brand math matters if the game underneath it isn't good, and this is the part that's easiest to get wrong when a big license is attached. Riftbound's own game director, Dave Guskin, has described the design goal as "easy to learn and difficult to master," with social, multiplayer play prioritized over solitaire deckbuilding puzzles — the same design philosophy Riot has applied to League and Valorant, where a new player can be doing something meaningful in their first game while a veteran still has years of depth left to find.
+
+The mechanics back that framing up. Runes — the resource system that pays for your plays — work close enough to what Magic or Pokémon players already know that the on-ramp is short. Where Riftbound earns its "not too complicated, but deep" reputation is in a handful of well-designed keywords layered on top of that simple base:
+
+- **Hidden** lets you pay a cost to place a Spell, Unit or Gear facedown at a battlefield on your own turn. From the next turn on, it can be played for free at Reaction speed — a genuine mind game, since your opponent has to play around a card they can't see.
+- **Action** and **Reaction** define when something can be played at all, with Reaction cards playable on essentially anyone's turn — Riftbound's version of the "instant speed" concept that gives Magic much of its interactivity.
+- **Empower**, **Flow** and **Burn**, introduced in the Vendetta set, are built to combo with each other: Empower upgrades a card already in play for an extra cost, Flow lets you play cards straight out of your trash, and Burn sends cards to the trash — so a deck built around all three can deliberately burn its own cards for Flow fuel, or burn an opponent's resources to disrupt them.
+
+That's a real skill ceiling — reading a hidden card, sequencing an Empower/Flow/Burn engine, playing around Reaction speed — sitting on top of a resource system simple enough that a new player isn't lost on turn one. It's the same shape as League's own reputation: trivial to start, genuinely hard to master, which is exactly the reputation a game needs if it's going to hold an audience for years rather than a launch window.
+
+Here's a rough sketch of the field Riftbound is trying to break into, sized by publicly reported player figures rather than sales:
+
+| Game | Publisher's IP track record | Reported player base | Time to reach current scale |
+| --- | --- | --- | --- |
+| Magic: The Gathering | First major TCG, no prior franchise to draw on | ~40-50M total players | ~32 years |
+| Pokémon TCG | Backed by one of the largest media franchises ever | Tens of millions, plus 26-33M MAU on Pocket alone | ~30 years |
+| One Piece Card Game | Backed by a top anime license, no house-published game before it | Reached TCGplayer's top-3 by GMV | ~4 years |
+| Riftbound | Backed by League of Legends, plus two prior hits (TFT, Valorant) in unrelated genres | Early-stage, drawing from a 120M+ MAU base | Under 1 year so far |
+
+## What this means if you're buying or collecting
+
+- **If you're building a collection for the long term**, the brand argument above is a reason to treat Riftbound as more than a launch-window fad — but buy singles you actually want, not speculative sealed product, until there's a longer price history to lean on. [Compare live prices across every store we track](/market) before paying preorder premiums.
+- **If you're a League or Valorant player who's never touched a card game**, the on-ramp really is short. Runes work like the resource systems in other TCGs, and champions you already know — start with [Ahri's card page](/champions/ahri) if she's your main — are already in the game as Legends.
+- **If you want to understand the deckbuilding depth before buying in**, the [Hidden keyword](/keywords/hidden) and the [Action/Reaction timing system](/guides/riftbound-timing-keywords-explained) are the two mechanics worth learning first; between them they explain most of what makes a game between two decent players interesting.
+- **If you're tracking the newest set**, [Vendetta](/sets/vendetta) is where the Empower/Flow/Burn interactions above actually live, and it's the best current test of whether Riftbound's "simple but deep" design holds up in practice.
+
+## What would make this call wrong
+
+A prediction with no failure condition isn't a prediction, so here's what would break this thesis:
+
+- **League's audience simply doesn't convert.** Watching Ahri on stage at Worlds and wanting to own a piece of cardboard with her on it are different behaviors, and the conversion rate could turn out to be much lower than Valorant's or TFT's — those were still video games played on the same screen League is already played on, not a physical product that requires a trip to a store or a different kind of purchase entirely.
+- **The set cadence or power creep turns off the format.** Riftbound's roadmap already has a much larger set, Legacy, arriving in early 2027. If new sets outpace the game's ability to stay balanced, the "difficult to master" reputation curdles into "impossible to keep up with," which is a common way trading card games lose players rather than gain them.
+- **A stronger competitor launches with the same playbook.** Riot isn't the only company with a media franchise and an existing audience. If another publisher runs the same brand-plus-game strategy better or first, Riftbound's advantage shrinks fast.
+- **The market itself doesn't grow fast enough to fit two more winners.** Even a market projected to grow from roughly $15 billion in 2026 to over $24 billion by 2031 — per GMInsights, an approximately 10% annual growth rate — has to make room for Riftbound without simply taking share from Magic and Pokémon, which are not standing still themselves.
+
+## The short version
+
+Riot Games has turned one audience into a second hit twice — Teamfight Tactics and Valorant, in two genres it hadn't shipped in before — and both times the growth curve looked less like a typical launch spike and more like a durable climb. Riftbound is the same company running a similar playbook on an even larger built-in audience, against a genre where the current top players took decades to get where they are, and where a licensed newcomer with no such built-in audience — the One Piece Card Game — has already climbed into the top three within about four years.
+
+That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to be wrong about it for any of the reasons above. But it's a bet grounded in a track record Riot has already delivered on twice, not just optimism about a good license — and it's why we think this is one of the more interesting long-term stories in the entire trading card game market right now.`,
+  },
   ...SEO_PACK_ARTICLES,
 ];
 
