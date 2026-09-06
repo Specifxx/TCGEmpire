@@ -86,10 +86,11 @@ test("no surface invents an exact date for an increase that doesn't have one yet
   const datePattern = /\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|\d{4}-\d{2}-\d{2}/;
   assert.ok(!datePattern.test(premiumLockInLine()), "premiumLockInLine must not name a specific date");
   assert.ok(!datePattern.test(premiumLockInTail()), "premiumLockInTail must not name a specific date");
-  for (const f of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx"]) {
+  for (const f of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx", "src/components/PremiumSlideIn.tsx"]) {
     const src = read(f);
     const banner = /Price increasing soon[\s\S]{0,400}/.exec(src);
-    if (banner) assert.ok(!datePattern.test(banner[0]), `${f}: the price-increase banner must not hard-code a date`);
+    assert.ok(banner, `${f}: expected the price-increase banner`);
+    assert.ok(!datePattern.test(banner![0]), `${f}: the price-increase banner must not hard-code a date`);
   }
 });
 
@@ -113,7 +114,11 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
   // An already-Premium visitor is grandfathered regardless of any announcement
   // — showing them urgency to \"lock in\" a price they're already locked into
   // is either confusing or, worse, reads as a threat that THEIR price might
-  // rise too.
+  // rise too. The page and dialog gate the banner itself, immediately above
+  // it; the slide-in instead gates its ENTIRE render behind `!premium` much
+  // earlier (see premium-slidein.test.ts's own "only ever targets a...
+  // non-Premium user" test for that), so the banner text just has to exist
+  // somewhere after that check, not immediately above it.
   for (const file of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx"]) {
     const src = read(file);
     const bannerAt = src.indexOf("Price increasing soon");
@@ -121,4 +126,15 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
     const before = src.slice(Math.max(0, bannerAt - 400), bannerAt);
     assert.match(before, /!already|!premium/, `${file}: the banner must be gated behind a "not already Premium" check`);
   }
+
+  const slideIn = read("src/components/PremiumSlideIn.tsx");
+  const eligibleAt = slideIn.indexOf("const eligible =");
+  const bannerAt = slideIn.indexOf("Price increasing soon");
+  assert.ok(eligibleAt >= 0 && bannerAt >= 0, "PremiumSlideIn.tsx: expected both the eligibility gate and the banner");
+  assert.match(
+    slideIn.slice(eligibleAt, eligibleAt + 200),
+    /!premium/,
+    "PremiumSlideIn.tsx: the whole component's render must be gated behind !premium",
+  );
+  assert.ok(eligibleAt < bannerAt, "PremiumSlideIn.tsx: the eligibility gate must be defined before the banner it protects");
 });

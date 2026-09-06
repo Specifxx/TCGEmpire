@@ -5,7 +5,13 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { usePremiumDialog } from "./PremiumDialog";
 import { trackEvent } from "@/lib/analytics";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumLockInTail } from "@/lib/site";
+import {
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  PREMIUM_NEXT_PRICE_AMOUNT,
+  premiumPriceIncreaseAnnounced,
+  premiumLockInTail,
+} from "@/lib/site";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "the dialog converts well but few people open it".
@@ -221,6 +227,16 @@ export function PremiumSlideIn() {
           <p className="text-xs leading-relaxed text-slate-400">
             You&apos;ve been comparing prices — Premium adds the pro tools and goes ad-free:
           </p>
+          {/* Same real, decided increase the dialog and /premium announce (see
+              lib/site.ts) — sized down for this card rather than the full
+              two-line banner, which would double the slide-in's height and cut
+              against its own "low-intrusion" design (see this file's header). */}
+          {premiumPriceIncreaseAnnounced() && (
+            <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
+              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              {PREMIUM_NEXT_PRICE_AMOUNT}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {PITCH_TOOLS.map((t) => (
               <span
