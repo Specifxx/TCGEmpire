@@ -114,7 +114,7 @@ test("the popup is a Premium pitch, but grants nothing automatically", () => {
   assert.match(src, /next="\/premium"/, "the CTA must route the OAuth round trip to \/premium (a redirect, not a grant)");
 });
 
-test("the popup's honesty guarantees survive the pitch change: no fake scarcity, price only shown when true", () => {
+test("the popup's honesty guarantees survive the pitch change: no fake scarcity, price is real and never contradicts the trial", () => {
   const src = read(POPUP);
   // Countdowns, seat counts and "expires in" pressure are exactly what this
   // popup must never grow, in either its old or new pitch.
@@ -124,11 +124,13 @@ test("the popup's honesty guarantees survive the pitch change: no fake scarcity,
   // language changed (the old copy said this about a free-account comparison;
   // the new copy says it about the sign-up step of the Premium pitch).
   assert.match(src, /free, no card needed/i, "the copy must still say signing up costs nothing and needs no card");
-  // The price line is conditional on there being no trial to lean on instead
-  // (same rule PremiumSlideIn already follows) — it must never render
-  // unconditionally, which would repeat a possibly-different number from
-  // whatever /premium ends up actually charging.
-  assert.match(src, /!trialAvailable && PREMIUM_PRICE_AMOUNT/, "the price line must stay conditional on no trial being available");
+  // The price line now renders UNCONDITIONALLY (2026-09-06: "we also need to
+  // show the prices for non logged in users" — it used to hide entirely
+  // whenever a trial was configured, which is the default, so most signed-out
+  // visitors never saw a price at all). What still has to hold is that it
+  // never reads as a contradiction of the trial CTA sitting right above it.
+  assert.ok(!/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src), "the price line must no longer be hidden while a trial is available");
+  assert.match(src, /trialAvailable \? " after your free trial" : ""/, "the price must be worded so it doesn't contradict an available trial");
 });
 
 test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {

@@ -238,7 +238,7 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // 2. The two NON-navigational items defer to xl, which is what buys the
   //    1024-1056 band its headroom. Premium stays reachable from UserMenu and
   //    /premium; Discord from the footer.
-  assert.match(src, /<PremiumButton className="[^"]*\bxl:block\b/, "the Premium button must defer to xl");
+  assert.match(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the Premium link must defer to xl");
   assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\bxl:grid\b/, "the Discord icon must defer to xl");
 });
 

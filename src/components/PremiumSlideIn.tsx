@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/use-me";
-import { usePremiumDialog } from "./PremiumDialog";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
 import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
@@ -14,11 +13,14 @@ import {
 } from "@/lib/site";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
-// at the funnel gap behind "the dialog converts well but few people open it".
-// The gated tools (Deal Finder, Value Finder, Bulk Pricer) already sell hard with
-// their own blur walls, but most logged-in free users never visit a tool page;
-// they browse prices. This puts one Premium moment in front of that browsing
-// majority, at a natural pause a few pages into a session.
+// at the funnel gap behind "most logged-in free users never see a Premium pitch
+// at all". The gated tools (Deal Finder, Value Finder, Bulk Pricer) already sell
+// hard with their own blur walls, but most logged-in free users never visit a
+// tool page; they browse prices. This puts one Premium moment in front of that
+// browsing majority, at a natural pause a few pages into a session. The CTA
+// used to open the site-wide upsell dialog; it now goes straight to /premium
+// (2026-09-06 — see accept()'s own comment), so this is purely a discovery
+// nudge, not a step toward a checkout flow that happens somewhere else.
 //
 // DELIBERATELY NOT A MODAL. It is a corner slide-in that never covers content,
 // never locks scroll, and yields to any real modal — it checks the shared
@@ -90,7 +92,7 @@ function readNum(store: Storage | undefined | null, key: string): number {
 
 export function PremiumSlideIn() {
   const { user, premium, premiumCheckout, trialEligible, trialDays, loaded } = useMe();
-  const { open: openPremium } = usePremiumDialog();
+  const router = useRouter();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
@@ -168,6 +170,7 @@ export function PremiumSlideIn() {
 
   const accept = useCallback(() => {
     trackEvent("premium_slidein_click", { trial_eligible: trialEligible });
+    firePremiumClickBeacon("button"); // used to fire inside the dialog's open() — see that helper's own header
     try {
       // Engaged, not rejected: a long snooze rather than a dismissal strike, so
       // not buying THIS time doesn't burn one of their two permanent no's.
@@ -176,8 +179,8 @@ export function PremiumSlideIn() {
       /* ignore */
     }
     hide();
-    openPremium(); // opens the shared dialog (which fires its own /api/premium/click beacon)
-  }, [hide, openPremium, trialEligible]);
+    router.push("/premium"); // straight to the page — no dialog in between (2026-09-06)
+  }, [hide, router, trialEligible]);
 
   // Esc closes it — non-trapping, because this is not a modal.
   useEffect(() => {

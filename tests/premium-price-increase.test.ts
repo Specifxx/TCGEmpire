@@ -110,7 +110,12 @@ test("no surface invents an exact date for an increase that doesn't have one yet
   const datePattern = /\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|\d{4}-\d{2}-\d{2}/;
   assert.ok(!datePattern.test(premiumLockInLine()), "premiumLockInLine must not name a specific date");
   assert.ok(!datePattern.test(premiumLockInTail()), "premiumLockInTail must not name a specific date");
-  for (const f of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx", "src/components/PremiumSlideIn.tsx"]) {
+  for (const f of [
+    "src/app/premium/page.tsx",
+    "src/components/PremiumDialog.tsx",
+    "src/components/PremiumSlideIn.tsx",
+    "src/components/SignupPromoPopup.tsx",
+  ]) {
     const src = read(f);
     const banner = /Price increasing soon[\s\S]{0,400}/.exec(src);
     assert.ok(banner, `${f}: expected the price-increase banner`);
@@ -203,4 +208,79 @@ test("the Premium-explained article states the price the site actually charges, 
   // plan, a regional variant) could still go stale silently — so also assert
   // the RETIRED price is gone outright, not just that the current one is present.
   assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "get rid of the pop up when you click premium and send them straight to the
+// page" (2026-09-06, explicit product instruction). Every "✦ Premium" / "✦ Get
+// Premium" entry point used to call usePremiumDialog().open(); each now
+// navigates straight to /premium instead. PremiumButton itself is UNCHANGED —
+// it still opens the dialog, deliberately, for the ~10 gated-tool-wall CTAs
+// ("Upgrade now · $X/mo") that were never part of this instruction and still
+// benefit from a one-click checkout without leaving the page they're on.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("every literal 'Premium' nav entry point navigates straight to /premium, not the dialog", () => {
+  for (const file of [
+    "src/components/Navbar.tsx",
+    "src/components/CinematicNavMenu.tsx",
+    "src/components/UserMenu.tsx",
+  ]) {
+    const src = read(file);
+    assert.match(src, /PremiumNavLink/, `${file} must use PremiumNavLink, not the dialog, for its "Premium" link`);
+    assert.ok(!/usePremiumDialog/.test(src), `${file} must no longer import the dialog hook at all`);
+  }
+
+  const slideIn = read("src/components/PremiumSlideIn.tsx");
+  assert.ok(!/usePremiumDialog/.test(slideIn), "PremiumSlideIn must no longer import the dialog hook");
+  assert.match(slideIn, /router\.push\(["']\/premium["']\)/, "PremiumSlideIn's CTA must navigate straight to /premium");
+});
+
+test("PremiumButton (the gated-tool-wall CTA) still opens the dialog — this instruction never touched it", () => {
+  // The one deliberate exception, pinned so a future pass doesn't "finish the
+  // job" by ripping the dialog out of the ~10 tool pages that still want a
+  // one-click, stay-on-the-page checkout.
+  const src = read("src/components/PremiumButton.tsx");
+  assert.match(src, /usePremiumDialog/, "PremiumButton must still open the shared dialog");
+  const usages = [
+    "src/app/bulk-pricer/page.tsx",
+    "src/app/tools/value-finder/page.tsx",
+    "src/app/tools/deal-finder/page.tsx",
+  ];
+  for (const f of usages) {
+    assert.match(read(f), /<PremiumButton/, `${f} must still use the dialog-opening PremiumButton`);
+  }
+});
+
+test("the premium-interest beacon still fires from every retired dialog entry point", () => {
+  // PremiumDialog's own open() used to be the ONLY place this beacon fired —
+  // losing it silently would blind the admin-facing "who clicked a Premium CTA"
+  // signal the moment the dialog stopped being what those links open.
+  const helper = read("src/lib/analytics.ts");
+  assert.match(helper, /export function firePremiumClickBeacon/, "expected the shared beacon helper");
+  assert.match(helper, /api\/premium\/click/, "the helper must hit the same endpoint the dialog used to");
+
+  const navLink = read("src/components/PremiumNavLink.tsx");
+  assert.match(navLink, /firePremiumClickBeacon/, "PremiumNavLink must fire the beacon on click");
+
+  const slideIn = read("src/components/PremiumSlideIn.tsx");
+  const acceptAt = slideIn.indexOf("const accept = ");
+  assert.ok(acceptAt >= 0, "expected PremiumSlideIn's accept() handler");
+  assert.match(slideIn.slice(acceptAt, acceptAt + 500), /firePremiumClickBeacon/, "PremiumSlideIn's CTA must fire the beacon before navigating");
+});
+
+test("SignupPromoPopup always shows a price, even while a free trial is available", () => {
+  // "we also need to show the prices for non logged in users" (2026-09-06) —
+  // the price used to disappear entirely whenever a trial was configured
+  // (which is the default), so a signed-out visitor almost never saw one.
+  const src = read("src/components/SignupPromoPopup.tsx");
+  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
+  assert.ok(priceBlockAt >= 0, "expected an unconditional price block (not gated on !trialAvailable)");
+  assert.ok(
+    !/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src),
+    "the price block must no longer be hidden while a trial is available",
+  );
+  const block = src.slice(priceBlockAt, priceBlockAt + 400);
+  assert.match(block, /trialAvailable \? " after your free trial" : ""/, "must say 'after your free trial' rather than contradict the trial CTA");
+  assert.match(block, /premiumLockInTail\(\)/, "must still use the shared lock-in helper");
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PremiumNavLink } from "./PremiumNavLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
@@ -8,7 +9,6 @@ import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
 import { useMe } from "@/lib/use-me";
-import { usePremiumDialog } from "./PremiumDialog";
 
 // Shared by the Popular grid and the full category panels below — both need
 // the identical active-pathname/external branching, so it's factored out
@@ -41,7 +41,6 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
 export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
   const { premium, premiumCheckout, trialEligible, trialDays } = useMe();
-  const { open: openPremium } = usePremiumDialog();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -241,12 +240,8 @@ export function CinematicNavMenu() {
                 for anyone already Premium (isPremium() covers admins too, via
                 useMe()) and while checkout itself isn't configured. */}
             {!filtering && !showAll && !premium && premiumCheckout ? (
-              <button
-                type="button"
-                onClick={() => {
-                  close();
-                  openPremium();
-                }}
+              <PremiumNavLink
+                onClick={close}
                 className="mt-7 flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 p-4 text-left transition-colors hover:border-gold/60 hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
               >
                 <span className="min-w-0">
@@ -260,7 +255,7 @@ export function CinematicNavMenu() {
                 <span className="shrink-0 text-sm font-bold text-gold">
                   {trialEligible && trialDays > 0 ? `${trialDays}-day trial →` : "See plans →"}
                 </span>
-              </button>
+              </PremiumNavLink>
             ) : null}
 
             {/* Default view: the curated Popular set, flat (no category

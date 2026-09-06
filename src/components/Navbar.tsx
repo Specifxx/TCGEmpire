@@ -7,7 +7,7 @@ import { HeaderSearchSlot } from "./HeaderSearchSlot";
 import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { NavUser } from "./NavUser";
-import { PremiumButton } from "./PremiumButton";
+import { PremiumNavLink } from "./PremiumNavLink";
 import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
 
@@ -156,11 +156,13 @@ export function Navbar() {
               non-deferred nav item besides the logo and Database. That keeps
               the above-the-fold interactive-target budget (scripts/homepage-
               audit.mjs) comfortably in range. */}
-          {/* Premium — one-click into the upsell dialog from anywhere.
+          {/* Premium — straight to the full pricing page, not the upsell dialog
+              (2026-09-06: the dialog is retired as a navigation entry point —
+              see PremiumButton's own header for where it's still used).
               At xl, not lg: see the Discord icon below for the shared reason. */}
-          <PremiumButton className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">
+          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">
             ✦ Premium
-          </PremiumButton>
+          </PremiumNavLink>
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
               the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}

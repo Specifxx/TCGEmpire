@@ -35,13 +35,13 @@ test("only shown in the default glance view, never while filtering or showing ev
   assert.match(code, /!filtering\s*&&\s*!showAll\s*&&\s*!premium\s*&&\s*premiumCheckout/, "must share Popular's own visibility condition");
 });
 
-test("the CTA opens the shared Premium dialog and closes the menu first", () => {
+test("the CTA goes straight to /premium and closes the menu, no dialog in between (2026-09-06)", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /usePremiumDialog/, "must reuse the site-wide Premium dialog, not a bespoke checkout");
-  const btnAt = code.indexOf("openPremium();");
-  assert.ok(btnAt > 0, "must call openPremium()");
-  const closeAt = code.lastIndexOf("close();", btnAt);
-  assert.ok(closeAt > 0 && closeAt < btnAt, "must close the overlay before opening the dialog, not leave both open");
+  assert.ok(!/usePremiumDialog/.test(code), "must no longer open the site-wide Premium dialog");
+  const linkAt = code.indexOf("<PremiumNavLink");
+  assert.ok(linkAt > 0, "must use PremiumNavLink, which navigates straight to /premium");
+  const closeAt = code.indexOf("onClick={close}", linkAt);
+  assert.ok(closeAt > linkAt, "must close the overlay on click, via the same PremiumNavLink");
 });
 
 test("CinematicNavMenu is mounted inside the Premium dialog provider", () => {

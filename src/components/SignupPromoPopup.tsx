@@ -6,7 +6,13 @@ import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
 import { PITCH_TOOLS } from "./PremiumSlideIn";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumLockInTail } from "@/lib/site";
+import {
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  PREMIUM_NEXT_PRICE_AMOUNT,
+  premiumPriceIncreaseAnnounced,
+  premiumLockInTail,
+} from "@/lib/site";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
 // suppresses it for the rest of that session/tab, but it comes back on the next
@@ -217,6 +223,17 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         <div className="px-4 pb-1 pt-3">
           <p className="text-xs leading-relaxed text-slate-400">RiftCompare Premium adds the pro tools and goes ad-free:</p>
 
+          {/* Same real, decided increase the dialog, /premium and PremiumSlideIn
+              announce (see lib/site.ts) — same compact treatment PremiumSlideIn
+              uses, for the same reason (this card is a low-intrusion nudge, not
+              a full banner). Nothing renders while no increase is announced. */}
+          {premiumPriceIncreaseAnnounced() && (
+            <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
+              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              {PREMIUM_NEXT_PRICE_AMOUNT}
+            </p>
+          )}
+
           {/* Same chip row as PremiumSlideIn, same shared PITCH_TOOLS — see that
               file's own header comment for why this is a hand-maintained list
               pinned against TIER_COMPARISON by tests/premium-slidein.test.ts,
@@ -233,17 +250,17 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             ))}
           </div>
 
-          {/* Same rule as PremiumSlideIn: while a trial is available, the price
-              stays off this card entirely — the full "$0 due today, then
-              $X/mo after N days, card required" breakdown is what /premium
-              itself shows before anything is charged, and repeating a partial
-              version here risks reading as a different, contradicting number.
-              Once there's no trial to lean on, the price belongs here, same as
-              it always has. */}
-          {!trialAvailable && PREMIUM_PRICE_AMOUNT ? (
+          {/* ALWAYS shown now (2026-09-06, explicit product instruction: "we
+              also need to show the prices for non logged in users"). Used to
+              hide entirely while a trial was available, on the theory that a
+              price next to a free-trial CTA would read as a contradiction —
+              worded around that here instead of dropping the price: "after
+              your free trial" makes clear the number isn't charged today, so
+              it sits next to the trial CTA without contradicting it. */}
+          {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} ·{" "}
-              {premiumLockInTail()}
+              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD}
+              {trialAvailable ? " after your free trial" : ""} · {premiumLockInTail()}
             </p>
           ) : null}
         </div>
