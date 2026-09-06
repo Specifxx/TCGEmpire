@@ -2,7 +2,8 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { priceField, pickPrice, currencyOf, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
-import type { PricePoint } from "./price-history";
+import { historySource, GLOBAL_HISTORY_COUNTRY, type PricePoint } from "./price-history";
+import { usdCentsToCountry } from "./fx";
 import { cardDisplayName } from "./card-name";
 import { getDemandVelocity, demandSnapshotDays } from "./demand-snapshot";
 import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats";
@@ -20,12 +21,21 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // backtest validates the price-timing signal only (demand isn't historically
 // reconstructable). (3) Thin price history ⇒ low confidence. Not financial advice.
 
-// Scope: a single market, or GLOBAL. Demand (search/view) is already market-agnostic,
-// and the price-timing signals (trend7/posPct/volatility) are percentages — currency-
-// neutral — so GLOBAL uses each card's best-covered market series for timing and its
-// total cross-market supply. The DISPLAYED price uses that card's basis market.
+// Scope: a single market, or GLOBAL. Demand (search/view) is already market-agnostic;
+// so is price history now (see historySource() in price-history.ts) — every market
+// reads the same GLOBAL series, so a single-market scope's "market" only ever
+// decides which currency the stored USD figure converts to, never which rows get
+// read. GLOBAL's price-timing signals (trend7/posPct/volatility) are percentages —
+// currency-neutral regardless — and its total cross-market supply is unaffected by
+// any of this. The DISPLAYED price and currency use that card's basis market: its
+// own live per-market price, not the (now currency-agnostic) history series.
 export type RiseScope = Country | "GLOBAL";
-const MARKET_PREF: Country[] = ["AU", "US", "NZ", "UK"]; // reference order for a GLOBAL card's displayed price
+// Reference order for a GLOBAL card's displayed price. Must cover EVERY market in
+// COUNTRIES: a card priced only in a market missing from this list falls through
+// to the "AU" default and renders AU's price (or a dash) under an AU label, which
+// is silently wrong rather than loudly broken. SG/CA were missing for both of
+// their launches; EU was added with its own on 2026-08-23.
+const MARKET_PREF: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
 
 const SCAN = 400; // universe: most-searched priced cards
 const HISTORY_DAYS = 120;
@@ -125,17 +135,22 @@ type UniverseCard = {
   searchCount: number;
   viewCount: number;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz: number | null;
   lowestPriceCentsUs: number | null;
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
   lowestPriceCentsCa: number | null;
+  lowestPriceCentsEu: number | null;
 };
 
 // Lookahead-free backtest of the reconstructable price-timing signal ("room to run"
 // = 1 − position-in-range at T−lag) vs realised forward return over the lag. Only
 // price data up to T−lag is used to build the historical signal.
-function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
+//
+// Exported: this validates price-timing alone (it never touches demand), so it is
+// exactly as valid for sealed-rise-predictor.ts's own products as it is for cards
+// — reused there directly rather than re-implemented, keyed by groupKey instead of
+// cardId (the map key is an opaque id either way).
+export function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
   const lagMs = BACKTEST_LAG_DAYS * 86400_000;
   const sig: number[] = [];
   const fwd: number[] = [];
@@ -170,16 +185,51 @@ function backtest(seriesById: Map<string, PricePoint[]>): RiseBacktest | null {
   };
 }
 
+// The "nothing to show" result. Shared so the empty-universe path and the
+// failure path below can't drift apart.
+function emptyAnalysis(scope: RiseScope): RiseAnalysis {
+  return {
+    picks: [], universeSize: 0, qualifying: 0,
+    withAnyHistory: 0, deepestSeries: 0, minPointsRequired: MIN_POINTS,
+    demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0,
+    backtest: null, generatedAt: new Date().toISOString(), scope,
+  };
+}
+
+// NEVER let a data anomaly 500 the page. Every other reader of PriceHistory in
+// this codebase already degrades to an empty result on failure
+// (computePriceMovers in price-history.ts, screener.ts); this
+// module was the one that didn't, which is the only reason a single bad country
+// string became a hard 500 on /tools/rising instead of an empty screener. The
+// page renders its "no price history yet" branch from this shape, so an outage
+// here now costs freshness, not availability.
+//
+// The throw is logged, not swallowed silently — a persistently empty screener
+// with a stack trace in the function logs is diagnosable; one without isn't.
 export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
+  try {
+    return await computeRisingCards(scope);
+  } catch (err) {
+    console.error(`[rise-predictor] getRisingCards(${scope}) failed — serving an empty analysis:`, err);
+    return emptyAnalysis(scope);
+  }
+}
+
+async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
   const isGlobal = scope === "GLOBAL";
   // Universe: most-searched cards priced in the scope market (any market for GLOBAL).
   const priced = isGlobal
     ? {
+        // Every priced market, not just the original three — a card priced ONLY
+        // in SG/CA is still a real, rankable card, and omitting those columns
+        // here quietly excluded them from the GLOBAL universe entirely.
         OR: [
           { lowestPriceCents: { not: null } },
-          { lowestPriceCentsNz: { not: null } },
           { lowestPriceCentsUs: { not: null } },
           { lowestPriceCentsUk: { not: null } },
+          { lowestPriceCentsSg: { not: null } },
+          { lowestPriceCentsCa: { not: null } },
+          { lowestPriceCentsEu: { not: null } },
         ],
       }
     : { [priceField(scope)]: { not: null } };
@@ -192,33 +242,38 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       id: true, slug: true, name: true, setCode: true, collectorNumber: true,
       variant: true, isPromo: true, rarity: true, imageThumbUrl: true,
       searchCount: true, viewCount: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+      // MUST list every field UniverseCard declares. The `as UniverseCard[]` cast
+      // below is a lie the compiler cannot catch: an unselected column arrives as
+      // `undefined`, so pickPrice() returned null and the price rendered as "—"
+      // for every card whose basis market was SG or CA.
+      lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true,
+      lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true,
     },
   })) as UniverseCard[];
 
   const ids = universe.map((c) => c.id);
-  if (!ids.length) {
-    return {
-      picks: [], universeSize: 0, qualifying: 0,
-      withAnyHistory: 0, deepestSeries: 0, minPointsRequired: MIN_POINTS,
-      demandPriceSpearman: 0, velocityActive: false, snapshotDays: 0,
-      backtest: null, generatedAt: new Date().toISOString(), scope,
-    };
-  }
+  if (!ids.length) return emptyAnalysis(scope);
 
-  // Bulk fetch — never per-card. For GLOBAL, pull every market's history/supply (no
-  // country filter); for a single market, filter to it.
+  // Bulk fetch — never per-card.
+  //
+  // Every scope reads the SAME rows now: historySource() maps every market to
+  // the one GLOBAL series (see price-history.ts), so there is no longer a
+  // per-market row set to filter to or pick the best of. What differs between
+  // scopes is only how the stored USD figure gets converted afterward —
+  // GLOBAL defers that until each card's own basis market is known (see
+  // basisMarketOf below); a single market converts up front via
+  // historySource(scope).convert, same as every other single-market reader.
   const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);
   const [histRows, supplyRows, velocity, snapshotDays] = await Promise.all([
     // PriceHistory lives in the split-off history database (see lib/db-history.ts)
-    // — every other reader of this table (price-history.ts, market-index.ts,
-    // screener.ts) already goes through dbHistory; this one was still reading the
+    // — every other reader of this table (price-history.ts, screener.ts) already
+    // goes through dbHistory; this one was still reading the
     // OPERATIONAL client, landing a 400-card × 120-day pull on the database
     // that's actually strained. Fixed to match the established pattern.
     dbHistory.priceHistory.findMany({
-      where: { cardId: { in: ids }, day: { gte: cutoff }, ...(isGlobal ? {} : { country: scope }) },
+      where: { cardId: { in: ids }, day: { gte: cutoff }, country: GLOBAL_HISTORY_COUNTRY },
       orderBy: { day: "asc" },
-      select: { cardId: true, country: true, day: true, lowestPriceCents: true },
+      select: { cardId: true, day: true, lowestPriceCents: true },
     }),
     prisma.retailerPrice.groupBy({
       by: ["cardId"],
@@ -229,39 +284,35 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     demandSnapshotDays(),
   ]);
 
-  // Price series per card. Single market → its rows. GLOBAL → the market with the MOST
-  // points for that card (best coverage); % timing signals are currency-neutral, so
-  // this is sound. basisById records which market drove each card.
+  // Price series per card, one series each (there is only one series now,
+  // period). GLOBAL leaves the stored USD figure unconverted here — the
+  // display market (bm) is decided per-card below from each card's own live
+  // price fields, not from this series, so there's nothing to convert TO yet.
+  // computeSignals() below is percentage-based, so raw USD scores identically
+  // to any other currency; spark converts once bm is known (see the `built`
+  // loop further down). A single market converts up front since its currency
+  // is fixed for the whole query.
   const seriesById = new Map<string, PricePoint[]>();
-  const basisById = new Map<string, Country>();
   if (isGlobal) {
-    const byCardCountry = new Map<string, Map<Country, PricePoint[]>>();
-    for (const r of histRows) {
-      const c = (r.country as Country) || "AU";
-      let m = byCardCountry.get(r.cardId);
-      if (!m) byCardCountry.set(r.cardId, (m = new Map()));
-      (m.get(c) ?? m.set(c, []).get(c)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
-    }
-    for (const [cardId, m] of byCardCountry) {
-      let best: Country = "AU";
-      let bestLen = -1;
-      for (const [c, pts] of m) if (pts.length > bestLen) { bestLen = pts.length; best = c; }
-      seriesById.set(cardId, m.get(best)!);
-      basisById.set(cardId, best);
-    }
-  } else {
     for (const r of histRows) {
       (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: r.lowestPriceCents });
-      basisById.set(r.cardId, scope);
+    }
+  } else {
+    const { convert } = historySource(scope);
+    for (const r of histRows) {
+      (seriesById.get(r.cardId) ?? seriesById.set(r.cardId, []).get(r.cardId)!).push({ t: r.day.getTime(), v: convert(r.lowestPriceCents) });
     }
   }
   const supplyById = new Map<string, number>(supplyRows.map((r) => [r.cardId, r._count._all]));
   const velocityActive = velocity.size > 0;
 
-  // Market for a card's displayed price: its series market, else (GLOBAL) the first
-  // market that actually has a price, else the scope market.
+  // Market for a card's displayed price: `scope` for a single market, else
+  // (GLOBAL) the first market that actually has a live price. There is no
+  // longer a per-market history series to prefer one basis over another —
+  // every card shares the same GLOBAL series (see historySource()) — so this
+  // is purely a function of the card's own live price fields now.
   const basisMarketOf = (card: UniverseCard): Country =>
-    basisById.get(card.id) ?? (isGlobal ? MARKET_PREF.find((c) => pickPrice(card, c) != null) ?? "AU" : scope);
+    isGlobal ? MARKET_PREF.find((c) => pickPrice(card, c) != null) ?? "AU" : scope;
 
   // Qualifying set: enough price history to trust the signals.
   type Row = { card: UniverseCard; s: Signals; points: PricePoint[]; listings: number };
@@ -352,7 +403,10 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
       searchPerDay: vel?.searchPerDay ?? null,
       searchGrowthPct: vel?.searchGrowthPct ?? null,
       historyPoints: pts,
-      spark: r.points.slice(-30).map((p) => p.v),
+      // GLOBAL's series is stored in raw USD (see seriesById above) — convert
+      // to bm's currency here so the sparkline matches priceCents/currency,
+      // the same currency every other reader of `points` already assumes.
+      spark: r.points.slice(-30).map((p) => (isGlobal ? usdCentsToCountry(p.v, bm) : p.v)),
       confidence,
       overheated: r.s.trend7 > OVERHEAT_PCT,
     };

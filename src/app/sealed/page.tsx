@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
-import { COUNTRIES } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
 import { gbpCentsToEur } from "@/lib/fx";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { OutboundLink } from "@/components/OutboundLink";
@@ -12,8 +12,20 @@ import { SealedSort } from "@/components/SealedSort";
 import { SealedTile } from "@/components/SealedTile";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
-export const revalidate = 86400;
+// searchParams-driven (q/type/set/min/max/instock/atmsrp/sort), so the route is
+// per-request dynamic regardless — same reasoning as /browse, /market and
+// /sets/[set]. DB load is unaffected: getSealedGroups() keeps its own 15-minute
+// per-market in-process memo (see lib/sealed-import.ts), so this is one DB pull
+// per market per warm lambda per TTL either way.
+//
+// This was `revalidate = 86400` alongside a sealed/loading.tsx. That pair — an
+// ISR window on a page that ALSO reads searchParams, with a route-level Suspense
+// boundary — meant the first request for any filter combination the cache hadn't
+// seen returned the loading spinner as the COMPLETE response, with real content
+// only on a second visit. A crawler's first look at a URL saw no products.
+export const dynamic = "force-dynamic";
 
 interface SealedParams {
   q?: string | string[];
@@ -30,11 +42,9 @@ const csvParam = (v?: string | string[]) => one(v).split(",").map((s) => s.trim(
 const isFilteredParams = (sp: SealedParams) =>
   Boolean(one(sp.q) || one(sp.type) || one(sp.set) || one(sp.min) || one(sp.max) || one(sp.instock) || one(sp.atmsrp));
 
-// Marketplace hosts per site market (NZ has no local eBay/Amazon — the AU sites
-// are the closest and ship there).
+// Marketplace hosts per site market.
 const MARKETPLACE_HOSTS: Record<string, { ebay: string; amazon: string }> = {
   AU: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
-  NZ: { ebay: "ebay.com.au", amazon: "amazon.com.au" },
   US: { ebay: "ebay.com", amazon: "amazon.com" },
   UK: { ebay: "ebay.co.uk", amazon: "amazon.co.uk" },
 };
@@ -56,8 +66,8 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
       ? `${q} — Riftbound sealed products`
       : "Riftbound Sealed Prices — Boxes, Packs & Sets",
     description:
-      "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, NZ, US, UK & SG stores — find the cheapest sealed. Updated daily.",
-    alternates: { canonical: "/sealed" },
+      "Compare live prices on Riftbound booster boxes, packs, bundles & Proving Grounds across AU, US, UK & SG stores — find the cheapest sealed. Updated daily.",
+    alternates: pageAlternates("/sealed"),
     robots: isFilteredParams(searchParams) ? { index: false, follow: true } : undefined,
   };
 }
@@ -65,14 +75,19 @@ export async function generateMetadata({ searchParams }: { searchParams: SealedP
 export default async function SealedPage({ searchParams }: { searchParams: SealedParams }) {
   const country = getCountry();
   const info = COUNTRIES[country];
-  // Sealed data is sourced per market (AU/NZ stores + US TCGplayer). For a market
-  // with no rows of its own (e.g. UK), fall back to AU so the page is never blank —
-  // and price it in AUD so the currency stays honest.
+  // Sealed data is sourced per market (AU stores + US TCGplayer). For a market
+  // with no rows of its own (e.g. UK), fall back to the default market so the page
+  // is never blank — and price it in that market's currency so the currency stays
+  // honest.
+  //
+  // The fallback was AU, chosen when AU was the default market. US is now both the
+  // default AND the market with the broadest sealed coverage (TCGplayer), so an
+  // unserved visitor lands somewhere fuller rather than in AUD for no reason.
   let all = await getSealedGroups(country);
   let priceCountry = country;
-  if (all.length === 0 && country !== "AU") {
-    all = await getSealedGroups("AU");
-    priceCountry = "AU";
+  if (all.length === 0 && country !== DEFAULT_COUNTRY) {
+    all = await getSealedGroups(DEFAULT_COUNTRY);
+    priceCountry = DEFAULT_COUNTRY;
   }
   const usingFallback = priceCountry !== country;
   const q = one(searchParams.q).trim();
@@ -110,6 +125,11 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
   if (sort === "price_asc") groups = [...groups].sort((a, b) => (a.lowestPriceCents ?? Infinity) - (b.lowestPriceCents ?? Infinity));
   else if (sort === "price_desc") groups = [...groups].sort((a, b) => (b.lowestPriceCents ?? -1) - (a.lowestPriceCents ?? -1));
   else if (sort === "name") groups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === "new")
+    // Newest first. A null firstSeenAt (the tracking row hasn't been written yet —
+    // see recordSealedFirstSeen) sorts LAST, not first: "unknown" must never look
+    // like "just added" the way it would if missing sorted as epoch-0 descending.
+    groups = [...groups].sort((a, b) => (b.firstSeenAt?.getTime() ?? -1) - (a.firstSeenAt?.getTime() ?? -1));
   else
     // Default: float the freshly-live Vendetta (VEN) sealed to the top via a stable
     // sort, leaving every other group in its (already-filtered) order.

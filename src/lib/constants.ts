@@ -13,6 +13,19 @@ export const TCGPLAYER_UK_RETAILER = "tcgplayer_uk";
 // TCGplayer-UK — it's a converted reference: a marketplace "from" aggregate, not a
 // single verified in-stock UK listing. It's therefore treated as a fallback too.
 export const CARDMARKET_RETAILER = "cardmarket";
+// The EU market's Cardmarket row. A SEPARATE retailer key from the UK one above
+// because RetailerPrice is uniquely keyed on [cardId, retailer, condition,
+// isFoil] with no country in the key — one key serving two markets would collide
+// and silently keep whichever row was written last. Same reason eBay has
+// ebay/ebay_us/ebay_uk and the marketplace has marketplace_*.
+export const CARDMARKET_EU_RETAILER = "cardmarket_eu";
+
+// Retailer key for CardTrader, the EU market's price source (lib/cardtrader.ts).
+// UNLIKE the two above, this is NOT a converted fallback: each row is one real,
+// in-stock listing from one identified EU seller, quoted in EUR, so it can carry
+// the EU "from" price on its own the way a genuine Shopify store listing carries
+// the UK's. Kept out of UK_FALLBACK_RETAILERS deliberately for that reason.
+export const CARDTRADER_RETAILER = "cardtrader";
 
 // Converted, non-buyable-as-shown UK price sources. These are EXCLUDED from the UK
 // "from" price and HIDDEN from the UK listing breakdown whenever a genuine GBP
@@ -50,52 +63,52 @@ export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
 export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
 export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
 
-// Registered but NOT produced — see the AU/NZ note below. No TCG_NZ market
-// exists in tcgplayer.ts, and this exists so that if one is ever added it lands
-// as a reference price rather than as a New Zealand "store".
-export const TCGPLAYER_NZ_RETAILER = "tcgplayer_nz";
-export const NZ_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_NZ_RETAILER];
+// eBay CA. For SINGLES this key is written by price-import.ts's US pass (CA rows
+// are FX-derived from the US Browse results, not a separate ~1,400-card search —
+// see the note at that write site); for SEALED (sealed-import.ts) it's a real,
+// separate Browse search, since sealed is only ~30 product groups per market and
+// a native search there is cheap. Defined here (constants.ts imports nothing) so
+// both files can share the one key without creating an import cycle between them
+// — price-import.ts already imports sealed-import.ts's importSealed().
+export const EBAY_CA_RETAILER = "ebay_ca";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RULE: a converted reference price is never a row in the price comparison.
 // ─────────────────────────────────────────────────────────────────────────────
-// TCGplayer is a US marketplace. Its AU/NZ/UK/SG/CA figures are its USD market
+// TCGplayer is a US marketplace. Its AU/UK/SG/CA figures are its USD market
 // price run through an FX rate — useful as a "what is this worth?" reference,
 // but NOT a local listing: nobody can buy from "TCGplayer Australia", the price
 // excludes international postage and duty, and showing it as a store would let
-// it undercut the real AU/NZ stores we exist to compare. Cardmarket is the same
+// it undercut the real AU stores we exist to compare. Cardmarket is the same
 // shape for the UK.
 //
 // So they are excluded ENTIRELY — not deprioritised — from:
 //   • the comparison rows and store count      (computeMarket, market-rows.ts)
 //   • the QuickView price list                 (components/QuickView.tsx)
-//   • the marketplace "beat this price" query  (app/marketplace/page.tsx)
 //   • the lowestPriceCents* columns            (price-import.ts)
 // They survive only in the Deal Finder (arbitrage needs a sell-side reference)
 // and in the card page's clearly-labelled TcgMarketPrice block.
 //
-// AUSTRALIA AND NEW ZEALAND, EXPLICITLY — a standing product rule, not an
-// implementation detail: TCGplayer must never appear as a price-comparison row
-// in either market.
-//
-// AU is covered by AU_FALLBACK_RETAILERS above. NZ has no TCGplayer row at all
-// today (it is absent from TCG_MARKETS in tcgplayer.ts), which means the rule
-// held only because nothing wrote the row — add a `TCG_NZ` and NZ would start
-// showing TCGplayer as a buyable local store immediately, with no filter
-// standing in the way. NZ_FALLBACK_RETAILERS closes that: the key is registered
-// as a reference source in advance, so the guard is structural rather than
-// incidental. It costs one array entry and removes a live footgun.
+// AUSTRALIA, EXPLICITLY — a standing product rule, not an implementation
+// detail: TCGplayer must never appear as a price-comparison row there, covered
+// by AU_FALLBACK_RETAILERS above.
 //
 // Use this union rather than hand-listing the per-market arrays. Three call
 // sites did the latter and every one of them was missing a market by the time CA
 // was added — a hand-listed subset silently readmits a reference price as a
 // buyable store the moment a new market appears.
+// The day predicted in this comment arrived on 2026-08-23: Cardmarket now writes
+// a native-EUR row for the EU market (lib/cardmarket.ts) automatically, on
+// every price-refresh run — registering the key here BEFORE that shipped is
+// the point — or the very first run would have let a marketplace aggregate
+// set lowestPriceCentsEu and outrank real EU stores.
+export const EU_FALLBACK_RETAILERS: readonly string[] = [CARDMARKET_EU_RETAILER];
 export const ALL_FALLBACK_RETAILERS: readonly string[] = [
   ...AU_FALLBACK_RETAILERS,
   ...UK_FALLBACK_RETAILERS,
   ...SG_FALLBACK_RETAILERS,
   ...CA_FALLBACK_RETAILERS,
-  ...NZ_FALLBACK_RETAILERS,
+  ...EU_FALLBACK_RETAILERS,
 ];
 
 /** True when `retailer` is a converted reference price, not a buyable store. */
@@ -237,8 +250,76 @@ export function pricePrioritySetCodes(now: Date = new Date()): string[] {
     return released >= cutoff && released <= at;
   }).map((s) => s.code);
 }
+/**
+ * The most recently RELEASED set — latest `releasedOn` that is not in the future.
+ *
+ * Exists so a surface can point at "the current set" without naming one. The
+ * homepage used to hard-code Vendetta (a launch band, plus a link to its card
+ * gallery); the band is gone, and the gallery link stays but follows whichever
+ * set is current, so it moves to Radiance on 23 Oct 2026 with no edit.
+ *
+ * Takes `now` for the same reason pricePrioritySetCodes() does: a module-level
+ * constant would freeze the answer for the lifetime of the process, and it makes
+ * the rollover testable without waiting for the date.
+ */
+export function newestReleasedSet(now: Date = new Date()): SetInfo | undefined {
+  const at = now.getTime();
+  return SETS.filter((s) => {
+    if (!s.releasedOn) return false;
+    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    return !Number.isNaN(released) && released <= at;
+  }).sort((a, b) => (a.releasedOn! < b.releasedOn! ? 1 : -1))[0];
+}
+
 export const setBySlug = (slug: string): SetInfo | undefined => SETS.find((s) => s.slug === slug);
 export const setByCode = (code: string): SetInfo | undefined => SETS.find((s) => s.code === code);
+
+/**
+ * The next set that hasn't released yet — symmetric with newestReleasedSet()
+ * above. Lets a surface (the homepage's release-hype card) point at "the next
+ * set" without naming one, so it rolls from Radiance to Legacy on its own once
+ * Radiance ships, with no code change.
+ *
+ * Prefers the earliest dated `comingSoon` entry; an undated one (announced but
+ * no release date yet) sorts after any dated entry, since "no date" is further
+ * from certain than "has a date, just further out."
+ */
+export function nextUpcomingSet(now: Date = new Date()): SetInfo | undefined {
+  const at = now.getTime();
+  return SETS.filter((s) => {
+    if (!s.comingSoon) return false;
+    if (!s.releasedOn) return true;
+    const released = Date.parse(`${s.releasedOn}T00:00:00Z`);
+    return Number.isNaN(released) || released > at;
+  }).sort((a, b) => {
+    if (!a.releasedOn && !b.releasedOn) return 0;
+    if (!a.releasedOn) return 1;
+    if (!b.releasedOn) return -1;
+    return a.releasedOn < b.releasedOn ? -1 : 1;
+  })[0];
+}
+
+/**
+ * Has this set code NOT shipped yet? — i.e. anything a store sells for it today is
+ * a PRE-ORDER, not stock it can post you.
+ *
+ * Date-driven like every other helper here, so it needs no edit on release day:
+ * Radiance stops being a pre-order set the moment 23 Oct 2026 passes, and its
+ * listings graduate into the normal sealed pages on their own.
+ *
+ * An unknown code reads as released. That is the safe default: the only thing
+ * this flag suppresses is a "pre-order" label and separate treatment, so guessing
+ * "released" for a code we don't recognise shows a real listing plainly rather
+ * than hiding it behind a badge that might be wrong.
+ */
+export function isPreorderSetCode(code: string | null | undefined, now: Date = new Date()): boolean {
+  if (!code) return false;
+  const set = setByCode(code);
+  if (!set?.comingSoon) return false;
+  if (!set.releasedOn) return true; // announced, no date — still unreleased
+  const released = Date.parse(`${set.releasedOn}T00:00:00Z`);
+  return Number.isNaN(released) || released > now.getTime();
+}
 
 export interface RarityInfo {
   key: string;
@@ -282,6 +363,54 @@ export const CONDITION_MULTIPLIER: Record<string, number> = {
   HP: 0.55,
   DMG: 0.4,
 };
+
+// Normalise a RAW condition string from any of the four writers into one of our
+// five grades, or null when it genuinely can't be told. Four incompatible source
+// vocabularies feed RetailerPrice.condition (see prisma/schema.prisma) with no
+// mapping between them today:
+//   • Shopify stores — the store's own variant title verbatim ("Near Mint", "NM",
+//     "Lightly Played", or a non-condition title like "Default Title")
+//   • eBay Browse API — eBay's OWN condition vocabulary ("New", "Used", "Brand
+//     New", "Very Good", "Good", "Acceptable" — not a TCG grading scale at all)
+//   • TCGplayer — always the literal string "NM", stamped onto an algorithmic
+//     ALL-CONDITION market price (see the note at price-import.ts's TCGplayer import)
+//   • Cardmarket — same shape, always "NM" over a converted low price
+//
+// price-import.ts's private conditionRank() solves a DIFFERENT problem — picking
+// the best-condition Shopify variant to price — and its `return 0` default quietly
+// treats anything unrecognised as Near Mint. That default is fine for its actual
+// job (Shopify variant titles are rarely enigmatic) but would be actively wrong
+// applied to eBay's condition vocabulary: an eBay "Used" listing is not NM, and
+// mapping it there is worse than showing nothing. This function is stricter —
+// eBay's non-TCG conditions map explicitly, and anything neither writer's shape
+// matches returns null rather than guessing.
+export function normaliseCondition(raw: string | null | undefined): keyof typeof CONDITIONS | null {
+  const t = (raw ?? "").trim().toLowerCase();
+  if (!t || t === "default title") return null;
+  // TCG-grading-scale phrasing (Shopify variant titles, and our own labels).
+  if (/near\s*mint|\bnm\b|\bmint\b/.test(t)) return "NM";
+  if (/light(ly)?\s*play|\blp\b/.test(t)) return "LP";
+  if (/moderate(ly)?\s*play|\bmp\b/.test(t)) return "MP";
+  if (/heav(ily)?\s*play|\bhp\b/.test(t)) return "HP";
+  if (/damaged|\bdmg\b|\bdamage\b/.test(t)) return "DMG";
+  // eBay's raw-card condition vocabulary is its OWN 4-tier scale for the trading
+  // cards category — "Near Mint or Better / Excellent / Very Good / Poor" — not a
+  // TCG grading scale and not the generic New/Used item condition. Mapped by
+  // relative rank onto our 5-tier scale (best → worst), since guessing a mapping
+  // for anything eBay actually returns is worse than getting the order wrong.
+  // Checked AFTER the TCG-scale patterns above but deliberately BEFORE any bare
+  // "poor" could be mistaken for the TCG-tradition "poor = damaged" — eBay's own
+  // "Poor" means the worst of ITS four tiers, not a synonym for actually damaged:
+  if (/near\s*mint\s*or\s*better/.test(t)) return "NM";
+  if (/^excellent$/.test(t)) return "LP";
+  if (/very\s*good/.test(t)) return "MP";
+  if (/^poor$/.test(t)) return "HP";
+  // Generic eBay item-condition strings (used outside the raw-card scale, e.g.
+  // sealed product listings): "New"/"Brand New" is the closest real equivalent of
+  // Near Mint for an unopened item.
+  if (/^(brand\s*new|new(\s+other)?)$/.test(t)) return "NM";
+  return null;
+}
 
 export function domainInfo(key: string): DomainInfo {
   return DOMAINS[(key as DomainKey)] ?? DOMAINS.Colorless;
@@ -362,3 +491,73 @@ export function isCrystalRose(setCode: string, collectorNumber: string): boolean
 export function conditionInfo(key: string): ConditionInfo {
   return CONDITIONS[key] ?? CONDITIONS.NM;
 }
+
+// ─── The one exception: printings with NO RETAIL CHANNEL ─────────────────────
+// "No listing anywhere" is a signal because almost every printing is SOLD by the
+// stores we scrape, so an absent listing means something. For a printing Riot
+// never sells through retail at all, it means nothing — the page can never earn
+// its way out of the empty bucket no matter how sought-after the card is.
+//
+// The Riftbound × T1 2025 Worlds Champion Collection (T1S) is the first of these:
+// distributed by lottery on the Riot Merch Store, 10,125 copies per language,
+// never stocked by a shop. Its six printings carry full card data, self-hosted
+// art, rules text, our own editorial coverage and — via the name-matched
+// "other printings" block — a live-priced retail sibling for four of the five
+// champions. That is not a thin page; it is a page with no price, which is a
+// different thing, and the page says so in its own words.
+//
+// WHY THIS ONE IS A HAND-MAINTAINED LIST when nothing else here is: "does a shop
+// sell this" is a fact about the world, not about our data. No query we can run
+// derives it, so it cannot be inferred — it has to be asserted, once, per
+// collector product. Keep this list short and keep the bar high: a set belongs
+// here only when it has NO retail distribution at all.
+//
+// The bar has two parts: a set code here is necessary but not sufficient —
+// cardIsSubstantial() in card-price-state.ts also requires real rules text and real art, so a
+// half-entered manual card still stays out of the index.
+export interface NoRetailChannelProduct {
+  /** The product as Riot names it. */
+  product: string;
+  /** How you get one, in a clause that reads inside a sentence. */
+  distribution: string;
+  /** Published print run per language edition. */
+  copiesPerLanguage: number;
+  /** Language editions produced, each with its own print run and numbering. */
+  languages: string[];
+  /** Top of the serial range printed on the one serialised card per box. */
+  serialTop: number;
+  /** Distinct champions sharing that serial range — copies-per-champion is the quotient. */
+  cardsInSet: number;
+  /** Published price of the headline edition, formatted. */
+  price: string;
+  /** Our own coverage, for the card page to link to. */
+  articleSlug: string;
+}
+
+// The facts a card page needs to explain itself when it has no price. Kept here
+// beside the predicate so "this set has no retail channel" and "here is why"
+// cannot drift apart, and deliberately small: published figures only, no
+// analysis (that lives in the article this points at).
+export const NO_RETAIL_CHANNEL: Record<string, NoRetailChannelProduct> = {
+  T1S: {
+    product: "Riftbound × T1 2025 Worlds Champion Collection",
+    distribution: "a drawing on the Riot Merch Store",
+    copiesPerLanguage: 10_125,
+    languages: ["English", "Chinese", "Korean"],
+    serialTop: 2025,
+    cardsInSet: 5,
+    price: "US$360",
+    articleSlug: "riftbound-t1-worlds-champion-collection",
+  },
+};
+
+export const NO_RETAIL_CHANNEL_SETS: ReadonlySet<string> = new Set(Object.keys(NO_RETAIL_CHANNEL));
+
+export function hasNoRetailChannel(setCode: string | null | undefined): boolean {
+  return setCode != null && setCode in NO_RETAIL_CHANNEL;
+}
+
+export function noRetailChannelProduct(setCode: string | null | undefined): NoRetailChannelProduct | null {
+  return setCode != null ? NO_RETAIL_CHANNEL[setCode] ?? null : null;
+}
+

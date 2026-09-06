@@ -5,7 +5,10 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 // JSON Feed 1.1 (jsonfeed.org) — the machine-readable companion to /feed.xml, easier
 // for agents and modern readers to parse than RSS. Same content: blog posts (incl.
 // the daily market reports) + guides, newest first.
-export const revalidate = 600;
+// ISR: 24 hours; purged on demand by the price importer (lib/revalidate-content.ts).
+// It was 600, which regenerated this 144x a day to publish a feed whose contents
+// only change when an article ships (a deploy) or the importer runs.
+export const revalidate = 86400;
 
 export async function GET() {
   const [blog, guides] = [await getBlogPosts(), getArticles("guide")];

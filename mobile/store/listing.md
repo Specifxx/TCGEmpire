@@ -20,14 +20,14 @@ Shared metadata for the Apple App Store and Google Play. Adjust freely.
 ## Promotional text (Apple, ≤ 170 chars)
 
 > Find the cheapest place to buy every Riftbound TCG card. Live prices from stores
-> across Australia, New Zealand and the US — updated daily.
+> across Australia and the US — updated daily.
 
 ## Full description
 
 > **RiftCompare is the fastest way to find the cheapest Riftbound cards.**
 >
 > Browse the complete Riftbound TCG card database and compare live prices across
-> dozens of stores in Australia, New Zealand and the United States — so you always
+> dozens of stores in Australia and the United States — so you always
 > know the best place to buy.
 >
 > **Features**
@@ -36,7 +36,7 @@ Shared metadata for the Apple App Store and Google Play. Adjust freely.
 > • Tap straight through to the cheapest store to buy
 > • Build and price-check decks
 > • Wishlist the cards you're hunting
-> • Switch between AU, NZ and US pricing
+> • Switch between AU and US pricing
 >
 > Prices are sourced from public store listings and may change — always confirm on
 > the retailer's site before buying.

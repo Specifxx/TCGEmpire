@@ -1,9 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePremium } from "./PremiumProvider";
 import { AD_STRATEGY, AD_UNITS_ENABLED, ADSENSE_CLIENT_ID } from "@/lib/adsense";
+
+// Mounts the real ad unit only once its slot scrolls near the viewport, so an ad
+// request fires on demand rather than for every slot on the page at once (a
+// homepage can carry a dozen). rootMargin pre-loads slightly before the slot is
+// actually visible, so scrolling into it doesn't show a pop-in. Falls back to
+// "already in view" when IntersectionObserver isn't available (very old
+// browsers / non-DOM test environments) so the ad still renders.
+function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
+  const ref = useRef<T>(null);
+  const [near, setNear] = useState(false);
+
+  useEffect(() => {
+    if (near) return;
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near, rootMargin]);
+
+  return [ref, near] as const;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // One in-content slot. Renders exactly one of three things:
@@ -132,6 +166,7 @@ export function AdSlot({
   pageIsNoindex?: boolean;
 }) {
   const premium = usePremium();
+  const [ref, near] = useNearViewport<HTMLDivElement>();
   if (premium) return null;
 
   // Nothing at all on a page not worth indexing — not even a house promo. The
@@ -139,10 +174,15 @@ export function AdSlot({
   if (pageIsThin || pageIsNoindex) return null;
 
   const canServeUnit = AD_UNITS_ENABLED && AD_STRATEGY === "manual" && Boolean(slot);
+  // The real ad only mounts (and only pushes an ad request) once this slot is
+  // near the viewport — see useNearViewport above. Until then, and for every
+  // slot that can't serve a real unit, the house promo fills the same
+  // fixed-height box, so there's no visible pop-in and no CLS either way.
+  const showRealUnit = canServeUnit && near;
 
   return (
-    <div className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>
-      {canServeUnit ? (
+    <div ref={ref} className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>
+      {showRealUnit ? (
         <>
           {/* Google requires ad units to be distinguishable from content. */}
           <span className="absolute left-1 top-1 z-10 rounded bg-ink-950/70 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">

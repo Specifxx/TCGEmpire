@@ -27,16 +27,10 @@ const TOOLS: Tool[] = [
     desc: "Who clicked a Premium CTA or started checkout — interest ahead of conversion.",
   },
   {
-    href: "/admin/store-suggestions",
-    title: "Store suggestions",
-    icon: "🏪",
-    desc: "Review stores submitted via the Suggest-a-store form — approve, reject or delete.",
-  },
-  {
-    href: "/admin/social",
-    title: "Social posts",
-    icon: "📣",
-    desc: "Paste-ready X posts generated from live data — daily market post, spoiler replies, evergreen.",
+    href: "/admin/subscriptions",
+    title: "Subscription metrics",
+    icon: "📊",
+    desc: "MRR, churn, LTV, plan mix and cohort retention — the revenue read, straight from Stripe.",
   },
   {
     href: "/admin/clicks",
@@ -45,28 +39,10 @@ const TOOLS: Tool[] = [
     desc: "Per-store affiliate click counts (7d / 30d / all-time), by market and type.",
   },
   {
-    href: "/admin/feedback",
-    title: "Feedback",
-    icon: "💬",
-    desc: "Feedback from the on-site form (users earn Premium for their first submission).",
-  },
-  {
     href: "/admin/messages",
     title: "Inbox",
     icon: "✉️",
-    desc: "Contact & feedback messages sent through the site.",
-  },
-  {
-    href: "/admin/support",
-    title: "Support tickets",
-    icon: "🆘",
-    desc: "Marketplace support requests — order problems, payments, disputes.",
-  },
-  {
-    href: "/admin/marketplace",
-    title: "Marketplace",
-    icon: "🛒",
-    desc: "Disputed orders, seller suspensions, and force release/refund tools.",
+    desc: "Contact messages, store suggestions, feedback and wrong-price reports — everything sent in through a site form.",
   },
   {
     href: "/admin/rising",
@@ -84,7 +60,13 @@ const TOOLS: Tool[] = [
     href: "/admin/loyalty",
     title: "Loyal users",
     icon: "🏆",
-    desc: "Top marketplace buyers/sellers, biggest collections, longest-tenured Premium members.",
+    desc: "Biggest collections and longest-tenured Premium members.",
+  },
+  {
+    href: "/admin/store-health",
+    title: "Store data health",
+    icon: "🩺",
+    desc: "Per-store checks — stale fetch, dropped listings, frozen or jumped prices — for a scraper breaking silently.",
   },
 ];
 

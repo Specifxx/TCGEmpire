@@ -87,7 +87,7 @@ async function launch() {
   chart(img, 60, W - 60, 1120, 260);
 
   // footer
-  img.print({ font: f16, x: 110, y: 1200, text: "AU / NZ / US / UK / SG   ·   PRICE HISTORY   ·   UPDATED DAILY" });
+  img.print({ font: f16, x: 110, y: 1200, text: "AU / US / UK / SG / CA   ·   PRICE HISTORY   ·   UPDATED DAILY" });
   img.print({ font: f32, x: 110, y: 1235, text: "riftcompare.com" });
 
   mkdirSync("scratch", { recursive: true });

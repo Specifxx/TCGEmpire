@@ -7,7 +7,6 @@ export interface ListingQuery {
   rarity?: string;
   type?: string;
   condition?: string;
-  foil?: string;
   min?: string;
   max?: string;
   sort?: string;
@@ -50,7 +49,9 @@ export function buildWhere(query: ListingQuery): Prisma.ListingWhereInput {
 
   const conditions = csv(query.condition);
   if (conditions) where.condition = { in: conditions };
-  if (query.foil === "1") where.isFoil = true;
+  // No `?foil=1` narrowing: foil is not a filter dimension anywhere on the
+  // site (see MarketplaceClient's filter row and CardMarketSection's price
+  // table) — a foil listing ranks by price alongside everything else.
 
   const priceFilter: Prisma.IntFilter = {};
   if (query.min) priceFilter.gte = dollarsToCents(query.min);

@@ -33,7 +33,6 @@ const click = (id: string) => `https://partner.tcgplayer.com/c/${ACCOUNT}/${id}/
 // about speed; everyone else cares whether TCGplayer ships to them.
 function tagline(country: string): string {
   if (country === "US") return "Fast US shipping";
-  if (country === "NZ") return "Ships to New Zealand";
   if (country === "UK") return "Ships to the UK";
   if (country === "AU") return "Ships to Australia";
   return "Ships worldwide";
@@ -44,7 +43,7 @@ function Banner({ w, h, country }: { w: number; h: number; country: string }) {
   return (
     <span
       className="relative inline-block overflow-hidden rounded-lg border border-sky-500/30 bg-gradient-to-r from-ink-900 via-[#0d1828] to-ink-900"
-      style={{ width: w, height: h }}
+      style={{ width: w, height: h, maxWidth: "100%" }}
     >
       <OutboundLink
         href={click(pickId(w, h))}
@@ -111,23 +110,31 @@ export function TcgplayerAd({
   const desk = dims(size);
   const mid = dims("leaderboard");
   const mob = dims(mobile === "rect" ? "mobileRect" : "mobile");
+  // See the matching note in EbayAd: a fixed 728px leaderboard cannot render at
+  // Tailwind's sm (640px). It overflowed the document by ~44px at 640 and ~14px
+  // at 700 on every page that carries one. md (768 − 32px padding = 736) is the
+  // first breakpoint it fits. Literal class strings, never interpolated, so
+  // Tailwind's JIT can see them.
+  const wide = size !== "rect";
+  const deskShow = wide ? "hidden max-w-full md:inline-block" : "hidden max-w-full sm:inline-block";
+  const mobShow = wide ? "max-w-full md:hidden" : "max-w-full sm:hidden";
   return (
-    <div className={`flex flex-col items-center ${className ?? ""}`}>
+    <div className={`flex max-w-full flex-col items-center ${className ?? ""}`}>
       {size === "billboard" ? (
         <>
-          <span className="hidden lg:inline-block">
+          <span className="hidden max-w-full lg:inline-block">
             <Banner {...desk} country={country} />
           </span>
-          <span className="hidden sm:inline-block lg:hidden">
+          <span className="hidden max-w-full md:inline-block lg:hidden">
             <Banner {...mid} country={country} />
           </span>
         </>
       ) : (
-        <span className="hidden sm:inline-block">
+        <span className={deskShow}>
           <Banner {...desk} country={country} />
         </span>
       )}
-      <span className="sm:hidden">
+      <span className={mobShow}>
         <Banner {...mob} country={country} />
       </span>
       {disclosure && <AffiliateDisclosure partner="tcgplayer" tight className="max-w-2xl text-center" />}

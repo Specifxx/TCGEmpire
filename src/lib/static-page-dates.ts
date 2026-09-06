@@ -13,34 +13,34 @@ const STATIC_PAGE_DATES: Record<string, string> = {
   "/deck": "2026-07-29",
   "/bulk-pricer": "2026-07-29",
   "/trade": "2026-07-29",
-  "/riftle": "2026-07-29",
+  "/riftle": "2026-08-10",
   "/tools": "2026-07-29",
-  "/tools/best-basket": "2026-07-26",
+  "/tools/best-basket": "2026-08-17",
+  "/tools/selling-fees": "2026-08-21",
   "/premium": "2026-07-29",
-  "/radiance-countdown": "2026-08-04",
+  "/release-dates": "2026-08-27",
+  "/radiance-preorders": "2026-08-15",
   "/feedback": "2026-07-26",
   "/about": "2026-07-26",
+  "/creators": "2026-09-05",
   "/contact": "2026-07-26",
-  "/returns": "2026-07-29",
   "/support": "2026-07-26",
   "/privacy": "2026-08-02",
-  "/editorial-policy": "2026-08-01",
+  "/editorial-policy": "2026-08-17",
+  "/methodology": "2026-08-17",
   "/authors": "2026-08-01",
   "/terms": "2026-08-01",
   "/games/higher-lower": "2026-07-29",
   "/games/price-check": "2026-07-29",
   "/games/zoomed": "2026-07-29",
   "/games/pairs": "2026-07-29",
-  "/games/pack-sim": "2026-07-29",
+  "/games/pack-sim": "2026-08-10",
   "/games/twenty48": "2026-07-29",
   "/games/card-smash": "2026-07-29",
-  "/stores/tracked": "2026-07-29",
+  "/games/space-invaders": "2026-09-03",
+  "/stores/tracked": "2026-08-17",
   "/stores/suggest": "2026-07-26",
   "/keywords": "2026-07-29",
-  "/marketplace/faq": "2026-07-26",
-  "/marketplace/buyer-protection": "2026-07-26",
-  "/marketplace/shipping": "2026-07-26",
-  "/marketplace/terms": "2026-07-28",
   // Fallbacks only — /guides and /blog normally derive their lastmod from the
   // newest article in each category (see sitemap-data.ts's editorial section).
   "/guides": "2026-07-29",
@@ -65,7 +65,6 @@ export function staticPageDate(path: string): Date {
 //   page              visible line        this table    last commit
 //   /privacy          1 August 2026       2026-08-01    2026-08-02
 //   /terms            12 June 2026        2026-08-01    2026-08-01
-//   /marketplace/terms 18 July 2026       2026-07-26    2026-07-28
 //
 // /terms was the worst: it gained a whole moderation section (+195 lines) while
 // still telling readers it had not changed since 12 June — and its own "Changes

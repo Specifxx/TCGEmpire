@@ -3,19 +3,19 @@ import Link from "next/link";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
-import { MARKETPLACE_PUBLIC } from "@/lib/marketplace";
 import { storeSlug } from "@/lib/store-pages";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "Stores we track — every Riftbound retailer in the comparison",
   description:
-    "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, New Zealand, the US, the UK, Singapore and Canada). Don't see your store? Request it.",
-  alternates: { canonical: "/stores/tracked" },
+    "The full list of Riftbound stores RiftCompare compares prices across, by market (Australia, the US, the UK, Singapore, Canada and the EU). Don't see your store? Request it.",
+  alternates: pageAlternates("/stores/tracked"),
 };
 
-const MARKETS: Country[] = ["AU", "NZ", "US", "UK", "SG", "CA"];
+const MARKETS: Country[] = ["AU", "US", "UK", "SG", "CA", "EU"];
 
 const FAQS = [
   {
@@ -24,11 +24,11 @@ const FAQS = [
   },
   {
     q: "Does RiftCompare include postage in the price comparison?",
-    a: "Yes. The price table on every card page ranks stores by total delivered cost — the listed price plus the retailer's estimated postage to your area. Free-shipping thresholds are factored in automatically, so a store with slightly higher card prices but free shipping will often rank above a cheaper store that charges for delivery.",
+    a: "Yes, but it isn't the primary sort. The price table on every card page ranks stores by item price first, with a store's known postage only breaking ties between otherwise-equal prices — that way a store isn't penalised in the ranking just because its shipping cost happens to be known upfront when a competitor's isn't. Delivered cost (price plus postage) is always shown alongside the price so you can compare on it yourself, and free-shipping thresholds are factored into that figure automatically.",
   },
   {
     q: "Which countries does RiftCompare cover?",
-    a: "RiftCompare covers Australia, New Zealand, the United States, the United Kingdom, Singapore, and Canada. Each market shows prices in its local currency (AUD, NZD, USD, GBP, SGD, CAD) from retailers that actually ship to buyers in that region. Switch markets using the country selector in the navigation.",
+    a: "RiftCompare covers Australia, the United States, the United Kingdom, Singapore, Canada and the eurozone. Each market shows prices in its local currency (AUD, USD, GBP, SGD, CAD, EUR) from retailers that actually ship to buyers in that region — the EU market pools stores across the single market, since they all price in EUR and ship to each other duty-free. Switch markets using the country selector in the navigation.",
   },
   {
     q: "Can I trust the prices shown on RiftCompare?",
@@ -67,33 +67,11 @@ export default function TrackedStoresPage() {
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Stores we track</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           RiftCompare compares live prices across <span className="num text-slate-300">{total}</span> Riftbound retailers
-          plus eBay and our own RiftCompare Marketplace, grouped by market below. Every card&apos;s comparison ranks these
-          by total delivered cost (price + postage), and prices refresh daily.
+          plus eBay, grouped by market below. Every card&apos;s comparison ranks these
+          by item price, with delivered cost (price + postage) shown alongside so you can compare on it yourself, and
+          prices refresh daily.
         </p>
       </div>
-
-      {/* RiftCompare Marketplace — our own P2P source, not a third-party retailer, so
-          it gets its own featured callout rather than being lost in the per-market
-          grids below. It's a live source in every market (see MARKETPLACE_RETAILER
-          in lib/marketplace.ts) whenever a card has an active listing. */}
-      {MARKETPLACE_PUBLIC && (
-        <Link
-          href="/marketplace"
-          className="card-surface flex flex-wrap items-center justify-between gap-4 border-brand-500/40 bg-gradient-to-br from-brand-500/10 via-ink-900 to-ink-900 p-5 transition-colors hover:border-brand-500/70"
-        >
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="chip bg-brand-500 text-[10px] font-extrabold uppercase tracking-wide text-ink-950">RiftCompare Marketplace</span>
-              <span className="text-xs text-slate-400">buy directly from verified sellers — funds held until delivery</span>
-            </div>
-            <p className="mt-2 text-sm text-slate-300">
-              Our own P2P marketplace — tracked as a live source in every market below (Australia, New Zealand, the US,
-              the UK, Singapore and Canada) whenever a card has an active listing, alongside the independent stores.
-            </p>
-          </div>
-          <span className="btn-primary shrink-0 whitespace-nowrap">Browse the Marketplace →</span>
-        </Link>
-      )}
 
       {byMarket.map((m) => (
         <section key={m.code}>

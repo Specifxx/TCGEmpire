@@ -10,22 +10,26 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
-  const items = await prisma.collectionCard.findMany({
-    where: { userId: user.id },
-    orderBy: { updatedAt: "desc" },
-    take: 2000, // egress rule: even power collections stay bounded per request
+  try {
+    const items = await prisma.collectionCard.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+      take: 2000, // egress rule: even power collections stay bounded per request
 
-    include: {
-      card: {
-        select: {
-          id: true, name: true, slug: true, setCode: true, collectorNumber: true,
-          imageThumbUrl: true, variant: true, isPromo: true, rarity: true,
-          lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      include: {
+        card: {
+          select: {
+            id: true, name: true, slug: true, setCode: true, collectorNumber: true,
+            imageThumbUrl: true, variant: true, isPromo: true, rarity: true,
+            lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true,
+          },
         },
       },
-    },
-  });
-  return NextResponse.json({ items });
+    });
+    return NextResponse.json({ items });
+  } catch {
+    return NextResponse.json({ error: "Couldn't load your collection right now — please try again." }, { status: 500 });
+  }
 }
 
 const schema = z.object({
@@ -48,13 +52,17 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   const d = parsed.data;
 
-  const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true } });
-  if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  try {
+    const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true } });
+    if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
 
-  const item = await prisma.collectionCard.upsert({
-    where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
-    create: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil, quantity: d.quantity, note: d.note ?? null, costBasisCents: d.costBasisCents ?? null },
-    update: { quantity: { increment: d.quantity }, ...(d.note ? { note: d.note } : {}), ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}) },
-  });
-  return NextResponse.json({ ok: true, item });
+    const item = await prisma.collectionCard.upsert({
+      where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
+      create: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil, quantity: d.quantity, note: d.note ?? null, costBasisCents: d.costBasisCents ?? null },
+      update: { quantity: { increment: d.quantity }, ...(d.note ? { note: d.note } : {}), ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}) },
+    });
+    return NextResponse.json({ ok: true, item });
+  } catch {
+    return NextResponse.json({ error: "Couldn't save that right now — please try again." }, { status: 500 });
+  }
 }

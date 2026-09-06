@@ -18,47 +18,63 @@
 # appears in, so that question never has to be asked again.
 set -uo pipefail
 
+# The CURRENT project for each database. Declared once, here, because the "you
+# resolved to a dead fallback" warnings below used to hard-code the name in the
+# condition AND in the message text — three places per database, and a cutover
+# updated the chain but not the warnings. That is not hypothetical: after the
+# RM3->RM4 and RH6->RH7 cutovers on 2026-08-04, every production deploy printed
+# a ::warning:: naming the CURRENT database as the "exhausted/dead fallback". A
+# warning that cries wolf on every green build is worse than no warning,
+# because it teaches you to scroll past the one line that was supposed to
+# answer "which database did this build actually write to?".
+#
+# tests/db-chain.test.ts asserts these two values still match the head of each
+# chain, so the next cutover fails a test instead of quietly lying in a log.
+#
+# CUT OVER TO RM7 ON 2026-09-05 (RM6 neared its 5 GB monthly transfer
+# allowance after only about two days live): this is no longer a rotation onto
+# another fallback-chain member — RM7 is the ONLY operational variable now (see
+# the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain
+# shape itself, not just the project, was the thing being replaced). RM7 is a
+# RECYCLED project (live once already, 2026-08-20..~08-23), not a fresh one —
+# its own allowance had long since reset, and a 2026-09-05 probe-databases run
+# confirmed its old window's data was already carried forward (see db-chains.ts).
+CURRENT_OP="RM7"
+# Rotated again on 2026-09-04: RH6 neared its 5 GB monthly allowance after only
+# two days, and RH7 — a RECYCLED project, previously live 2026-08-04..08-16 and
+# orphaned since — took its place. Its own live migration guard confirmed User=0
+# immediately before truncating it (no separate probe-databases run preceded
+# this one, unlike the RH6 rotation before it). The chains are CURRENT-first,
+# not newest-first; see the long note on HISTORY_URL in src/lib/db-history.ts.
+CURRENT_HIST="RH7"
+
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
 #
-# GATES ON THE WHOLE OPERATIONAL CHAIN, not bare DATABASE_URL. The original check
-# was `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
-# DATABASE_URL was the only operational variable. It has since become
-# RM3 || DATABASE_URL_2 || DATABASE_URL (lib/db.ts), and lib/db.ts explicitly tells
-# the owner the older vars can eventually be deleted — at which point this line
-# would exit 0 on every deploy and silently stop pushing schema to BOTH the
-# operational AND the history database, while logging a benign-looking "skipping".
-# A green deploy against an un-migrated database is exactly the failure this
-# script exists to prevent.
+# GATES ON RM7, not bare DATABASE_URL. The original check was
+# `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
+# DATABASE_URL was the only operational variable, then widened as the chain grew
+# and narrowed back down here on 2026-08-23 when the chain was replaced by a
+# single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
+# why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM4:-}${RM3:-}${DATABASE_URL_2:-}${DATABASE_URL:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM4 / RM3 / DATABASE_URL_2 / DATABASE_URL) — skipping schema push."
+   || [ -z "${RM7:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM7) — skipping schema push."
   exit 0
 fi
 
-# RM3-first, same order as lib/db.ts and every GitHub Actions workflow. Unlike the
-# app runtime (which can silently keep serving from a stale connection until the next
-# cold start), this ALWAYS reflects the current build's actual environment.
-if [ -n "${RM4:-}" ]; then
-  export DATABASE_URL="$RM4"
-  SOURCE="RM4"
-elif [ -n "${RM3:-}" ]; then
-  export DATABASE_URL="$RM3"
-  SOURCE="RM3"
-elif [ -n "${DATABASE_URL_2:-}" ]; then
-  export DATABASE_URL="$DATABASE_URL_2"
-  SOURCE="DATABASE_URL_2"
-else
-  SOURCE="DATABASE_URL"
-fi
-# Name the winner, never the value (it's a credential). This is the one line that
-# turns "P1001 against some unfamiliar host" into an immediate answer: if SOURCE is
-# anything other than RM3, RM3 is missing from THIS Vercel environment/scope — check
-# Settings -> Environment Variables -> RM3 -> is "Production" (or "Preview") ticked.
+# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM7
+# must be copied into it or `prisma db push` would migrate whatever DATABASE_URL
+# happens to hold while the app (src/lib/db-chains.ts) reads RM7. A green deploy
+# against an un-migrated database is exactly the failure this script exists to
+# prevent.
+export DATABASE_URL="$RM7"
+SOURCE="RM7"
+# Name the winner, never the value (it's a credential). There is only one
+# possible value now (the gate above already required RM7 to be set), but this
+# stays as the one line that answers "which database did this build actually
+# write to?" without anyone having to guess from a bare P1001 host.
 echo "[build-db-push] operational DB source for this build: $SOURCE"
-if [ "$SOURCE" != "RM3" ]; then
-  echo "::warning::[build-db-push] RM3 is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${SOURCE}, which lib/db.ts documents as an exhausted/dead fallback. If db push below fails with P1001, this is almost certainly why."
-fi
 
 # A failed push doesn't fail the build — see the block comment at the bottom for why.
 if ! prisma db push --skip-generate --accept-data-loss; then
@@ -67,43 +83,33 @@ fi
 
 # History database (PriceHistory/ClickEvent) — same optional, best-effort push.
 #
-# BUG FIXED HERE (2026-07-31): this block used to read ONLY
-#   HISTORY_DATABASE_URL_3 / HISTORY_DATABASE_URL_2
-# — the two OLDEST, long-dead projects, in the reverse of the app's own
-# precedence. It had never been updated when the history DB moved _2 -> _3 -> _4
-# -> RH5 -> RH6 -> RH7, so on every Vercel deploy it either pushed the schema into an exhausted
-# project the app never reads, or (when only the current var was set) silently
-# pushed nothing at all while reporting success. That is precisely how a new
-# column can 500 the admin clicks page in production despite a green deploy.
-#
-# This chain now MIRRORS src/lib/db-history.ts exactly, newest-first. Keep the two
-# in sync — if you add a project there, add it here in the same position.
+# BUG FIXED 2026-07-31 (this chain used to read the two OLDEST, long-dead
+# projects, reversed): fixed again 2026-08-19 for the _2 -> _3 rotation, and
+# again 2026-08-21 for the _3 -> _4 rotation. This chain MIRRORS
+# src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
+# rotate there, rotate here into the same position.
+# tests/db-chain.test.ts compares the two lists and fails if they drift.
 if [ -n "${RH7:-}" ]; then
   HIST="$RH7"; HIST_SOURCE="RH7"
 elif [ -n "${RH6:-}" ]; then
+  # Rollback: served 2026-09-02 to 2026-09-04, reachable, near its allowance.
   HIST="$RH6"; HIST_SOURCE="RH6"
-elif [ -n "${RH5:-}" ]; then
-  HIST="$RH5"; HIST_SOURCE="RH5"
-elif [ -n "${HISTORY_DATABASE_URL_4:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_4"; HIST_SOURCE="HISTORY_DATABASE_URL_4"
-elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
-elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
-elif [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
 else
+  # No separate history project — history shares the operational database, which
+  # the push above already covered. RH11, RH10, RH9, RH8, HISTORY_DATABASE_URL_4/
+  # _3/_2/bare were all superseded. RH5 is NOT a history project at all — it
+  # holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi
 
 if [ -n "$HIST" ]; then
   # Same rule as the operational push above: name the winning variable, never its
-  # value. If this says anything other than RH7, RH7 is missing from THIS Vercel
-  # environment/scope — which means the schema is being pushed to an exhausted
-  # project while the app reads a brand-new, TABLE-LESS one.
+  # value. If this says anything other than $CURRENT_HIST, that variable is missing
+  # from THIS Vercel environment/scope — which means the schema is being pushed to
+  # an exhausted project while the app reads a brand-new, TABLE-LESS one.
   echo "[build-db-push] history DB source for this build: $HIST_SOURCE"
-  if [ "$HIST_SOURCE" != "RH6" ]; then
-    echo "::warning::[build-db-push] RH6 is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${HIST_SOURCE}, which db-history.ts documents as an exhausted/dead fallback."
+  if [ "$HIST_SOURCE" != "$CURRENT_HIST" ]; then
+    echo "::warning::[build-db-push] ${CURRENT_HIST} is not visible in this build (VERCEL_ENV=${VERCEL_ENV:-unset}) — falling back to ${HIST_SOURCE}, which db-history.ts documents as an exhausted/dead fallback."
   fi
   DATABASE_URL="$HIST" prisma db push --skip-generate --accept-data-loss || true
 else
@@ -119,6 +125,35 @@ fi
 tsx scripts/marketplace-seed.ts || true
 tsx scripts/fix-altart-rarity.ts || true
 tsx scripts/grant-early-premium.ts || true
+
+# IndexNow: submit every blog/guide URL on every deploy, not just once a day.
+# See the script's own header for why this exists — a real content change
+# (a new or edited post) used to wait on the next scheduled batch (up to 24h)
+# before anything told Bing/Yandex/Seznam/Naver it existed. `|| true` for the
+# same reason as the three scripts above: best-effort, never blocks the build.
+# No-ops outside production (pingIndexNow's own isProduction() gate).
+tsx scripts/indexnow-ping-deploy.ts || true
+
+# MANUAL CARDS — the backstop catalogue for printings our automated sources
+# genuinely cannot see (Organized-Play promos, the drawing-only T1 Worlds
+# Champion Collection, alt-art rune cycles). See prisma/manual-cards.json.
+#
+# WHY THIS IS HERE NOW. This script was the only automated writer to the card
+# table, and add-manual-cards.ts was NOT in it — its single caller was a
+# `workflow_dispatch`-gated step in maintenance.yml (task: cards-manual). So
+# adding an entry to manual-cards.json, committing it and deploying did exactly
+# nothing: the JSON claimed to be the source of truth while the live database
+# never heard about it until someone remembered to fire a workflow by hand. Six
+# T1 printings shipped in the repo, were referenced by two published articles and
+# 404'd in production for that reason alone.
+#
+# Safe to run every deploy, for the same reasons as the three scripts above:
+# it UPSERTS by externalId (never wipes, never touches a card not listed), skips
+# any entry with a FILL_ME placeholder, and is idempotent — a second run reports
+# UPDATEs and changes nothing. `|| true` because a catalogue backstop must never
+# be the reason a deploy fails; the dispatchable maintenance job stays as the
+# manual escape hatch for running it out-of-band.
+tsx scripts/add-manual-cards.ts || true
 
 # Never exit non-zero: everything above is best-effort maintenance that must not
 # block `next build` from running — this preserves the original inline script's

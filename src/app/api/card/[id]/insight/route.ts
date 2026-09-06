@@ -4,9 +4,7 @@ import { getPriceHistory } from "@/lib/price-history";
 import { getInsight } from "@/lib/ai-insight";
 import { COUNTRIES, currencyOf, type Country } from "@/lib/country";
 
-// Market insight for a card (the "Price Take" panel), in a given market. The
-// route path stays /insight: it is a cached URL, not user-facing branding, and
-// renaming it would strand every cached response for no reader benefit. Country
+// AI market insight for a card (the "AI Tips" panel), in a given market. Country
 // comes from the URL (?country=US) so the CDN caches per (card, market). Verdict is
 // from our price data; prose is LLM-written when a key is set, else a rule fallback.
 export async function GET(req: Request, { params }: { params: { id: string } }) {

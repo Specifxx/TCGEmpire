@@ -4,8 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
+import { TierComparisonTable } from "./TierComparisonTable";
 import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
-import { MARKETPLACE_FEE_BPS, MARKETPLACE_PREMIUM_FEE_BPS } from "@/lib/marketplace-policy";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
 // wherever they hit a wall — no navigating to /premium first. Any client component
@@ -17,17 +17,13 @@ export function usePremiumDialog() {
   return useContext(PremiumDialogContext);
 }
 
-const FEATURES: { k: string; v: string }[] = [
-  { k: "Marketplace seller fee", v: `${MARKETPLACE_PREMIUM_FEE_BPS / 100}% instead of ${MARKETPLACE_FEE_BPS / 100}%` },
-  { k: "Best-Basket optimiser", v: "cheapest multi-store cart" },
-  { k: "Value Finder", v: "undervalued-card screener" },
-  { k: "Rising Cards", v: "demand + price-timing screener" },
-  { k: "Arbitrage finder", v: "full flips & deals list" },
-  { k: "Ad-free", v: "no ads on any page" },
-];
-
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
+
+// "$9.99" → "$0". Derived rather than hardcoded so a re-denominated
+// PREMIUM_PRICE_AMOUNT (£, €, A$…) carries its symbol through instead of this
+// silently claiming dollars. Falls back to "$" if the amount is bare digits.
+const ZERO_DUE_TODAY = `${PREMIUM_PRICE_AMOUNT.replace(/[\d.,]+.*$/, "") || "$"}0`;
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,12 +53,15 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 
 function PremiumDialog({ onClose }: { onClose: () => void }) {
   const { user, premium, premiumCheckout, trialEligible, trialDays, premiumAnnual, loaded } = useMe();
-  const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
   const savePct = annualSavingPct();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Default to the best-value plan when annual is offered; force monthly otherwise.
-  const [plan, setPlan] = useState<"monthly" | "annual">("annual");
+  // Monthly is the default even when annual is offered. Annual is the better
+  // value and says so on its own toggle (−33%), but defaulting to it puts the
+  // larger number ($79.99) in front of someone who has not decided to pay anything
+  // yet. Monthly is the lower-commitment first step; annual is one tap away for
+  // anyone who wants it.
+  const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const activePlan = premiumAnnual ? plan : "monthly";
 
   useEffect(() => {
@@ -99,9 +98,35 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="RiftCompare Premium">
+    // THE OVERLAY SCROLLS; THE CARD DOES NOT CENTRE ITSELF OFF-SCREEN.
+    //
+    // This was `fixed inset-0 flex items-center justify-center` with an
+    // overflow-hidden card and no scroll container anywhere — the exact shape
+    // that made SignupPromoPopup impossible to close on short phones (fixed in
+    // 263eaeb, and measured there: the close button rendered at y = -131 on a
+    // 375x667 iPhone SE). Once a centred card grows taller than the viewport it
+    // overflows EQUALLY in both directions, so the header — and the ✕ pinned to
+    // it — sits above the top of the screen with nothing to scroll to reach it.
+    //
+    // That was latent here while the body was six short list rows. Adding the
+    // full tier table makes it certain, so the layout is fixed in the same
+    // commit rather than shipped broken and patched later:
+    //   overflow-y-auto on the overlay  — it becomes the scroll container
+    //   min-h-full (not h-full) wrapper — grows to a taller-than-viewport card
+    //                                     instead of overflowing above it
+    //   h-[100dvh] + safe-area insets   — inset-0 resolves against the LARGE
+    //                                     viewport on iOS Safari, which puts a
+    //                                     fixed element behind the browser chrome
+    //   max-h + internal scroll on the table so the CTA stays reachable
+    <div
+      className="fixed inset-0 z-[120] h-[100dvh] overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="RiftCompare Premium"
+    >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+      <div className="relative flex min-h-full items-center justify-center">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
         {/* Terminal-style header bar */}
         <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 px-5 py-3">
           <div className="flex items-center gap-2">
@@ -119,15 +144,16 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             Unlock the pro screeners and go ad-free. The portfolio tracker and price comparison stay free.
           </p>
 
-          <ul className="mt-4 divide-y divide-ink-800 border-y border-ink-800">
-            {FEATURES.map((f) => (
-              <li key={f.k} className="flex items-center gap-3 py-2.5">
-                <span className="text-gold" aria-hidden>▸</span>
-                <span className="text-sm font-semibold text-white">{f.k}</span>
-                <span className="ml-auto text-right text-xs text-slate-500">{f.v}</span>
-              </li>
-            ))}
-          </ul>
+          {/* The SAME rows /premium shows — see TierComparisonTable's header for
+              why this is imported rather than restated. Capped in height with its
+              own scroll so a 14-row table can never push the CTA below the fold
+              on a short screen. */}
+          <div className="mt-4 max-h-[45vh] overflow-y-auto rounded-lg border border-ink-800">
+            <TierComparisonTable compact />
+          </div>
+          <p className="mt-2 text-center text-[11px] text-slate-500">
+            Scroll the table for the full list · every row is a real entitlement
+          </p>
 
           <div className="mt-5">
             {!loaded ? (
@@ -138,7 +164,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                 <Link href="/tools" onClick={onClose} className="btn-ghost mt-2 text-sm">Go to your tools →</Link>
               </div>
             ) : !user ? (
-              <Link href="/register?next=/premium" onClick={onClose} className={GOLD_BTN}>
+              <Link href="/login?next=/premium" onClick={onClose} className={GOLD_BTN}>
                 Create a free account to start →
               </Link>
             ) : !premiumCheckout ? (
@@ -168,8 +194,30 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                   </div>
                 )}
 
-                {/* Price for the selected plan */}
-                {activePlan === "annual" ? (
+                {/* Price for the selected plan.
+                    While the visitor is trial-eligible the headline number is
+                    what they will actually be charged today — zero — because
+                    that is the number the decision turns on. The real price and
+                    the day it starts sit directly underneath in the same block,
+                    not in fine print further down: "$0" alone would be a lie by
+                    omission, and a card IS required to start. */}
+                {trialEligible ? (
+                  <div className="mb-3 text-center">
+                    <div className="flex items-baseline justify-center gap-1.5">
+                      <span className="num text-4xl font-extrabold text-white">{ZERO_DUE_TODAY}</span>
+                      <span className="text-sm text-slate-400">due today</span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-400">
+                      then{" "}
+                      <span className="font-semibold text-slate-200">
+                        {activePlan === "annual"
+                          ? `${PREMIUM_ANNUAL_AMOUNT}/yr`
+                          : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`}
+                      </span>{" "}
+                      after your {trialDays}-day free trial
+                    </p>
+                  </div>
+                ) : activePlan === "annual" ? (
                   <div className="mb-3">
                     <AnnualPriceBlock size="sm" />
                   </div>
@@ -192,8 +240,13 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                 <p className="mt-2 text-center text-[11px] leading-snug text-slate-500">
                   {(() => {
                     const priceAfter = activePlan === "annual" ? `${PREMIUM_ANNUAL_AMOUNT}/yr` : PREMIUM_PRICE_LABEL || "billed monthly";
+                    // On the trial path the price block above already states the
+                    // amount and when it starts, so repeating it here just makes
+                    // the same sentence twice. What is left to say is the part
+                    // the block above does NOT cover: a card is needed up front,
+                    // and cancelling is free.
                     return trialEligible ? (
-                      <>Card required. Free for {dayPhrase}, then {priceAfter} — cancel anytime.</>
+                      <>Card required to start · cancel anytime before it converts.</>
                     ) : (
                       <>{priceAfter} · cancel anytime.</>
                     );
@@ -215,6 +268,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             </Link>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

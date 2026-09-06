@@ -13,8 +13,9 @@ on:
     # the 07:00 run does the full catalogue across all four markets, and the 19:00
     # run does the promo/signature/overnumbered chase set (a 20h gate keeps the
     # full pass to one a day, a 10h gate lets the chase pass run in between).
-    # Auctions and the sealed search follow BOTH runs. Roughly 3,500 Browse calls
-    # a day all told, against eBay's 5,000/day limit less a 600 reserve —
+    # The sealed search follows BOTH runs. Roughly 2,850 Browse calls a day all
+    # told (the chase-auction pass was removed on 2026-08-20, returning ~960
+    # calls/day), against eBay's 5,000/day limit less a 600 reserve —
     # tests/affiliate-priority.test.ts models the whole day and fails if it stops
     # fitting.
     - cron: "0 7 * * *"
@@ -34,6 +35,7 @@ on:
       - "src/lib/retailers.ts"
       - "src/lib/tcgplayer.ts"
       - "src/lib/cardmarket.ts"
+      - "src/lib/cardtrader.ts"
       - "src/lib/sealed-import.ts"
       - "scripts/import-prices.ts"
       - "scripts/import-sealed.ts"
@@ -77,7 +79,13 @@ jobs:
       # schedule. Do those by hand via maintenance.yml's db-push task.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          # RM7 is the only operational variable now (2026-09-05 cutover — see
+          # src/lib/db-chains.ts). This is set explicitly rather than left to
+          # lib/db.ts's own resolution because Actions collapses everything into
+          # one DATABASE_URL before the job starts, so process.env-based
+          # resolution can't see which secret actually won. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -91,7 +99,13 @@ jobs:
           fi
       - name: Import prices
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          # RM7 is the only operational variable now (2026-09-05 cutover — see
+          # src/lib/db-chains.ts). This is set explicitly rather than left to
+          # lib/db.ts's own resolution because Actions collapses everything into
+          # one DATABASE_URL before the job starts, so process.env-based
+          # resolution can't see which secret actually won. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
@@ -102,12 +116,28 @@ jobs:
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           # Manual run with "ebay_force" ticked bypasses the once-a-day eBay gate.
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
-          # RH7 is the current history project (see src/lib/db-history.ts) — RH6/RH5
-          # exhausted its Neon transfer allowance on 2026-07-31 and _4 went
-          # unreachable (P1001) before that; both are kept only as dead fallbacks.
-          # THIS STEP WRITES PriceHistory — if RH7 is missing here, db-history.ts
-          # falls through to a dead project (or, at the end of the chain, to the
-          # OPERATIONAL database), so keep this list in sync with db-history.ts.
+          # EU price sources. CardTrader needs its token (previously missing from
+          # this step entirely, which meant it silently never ran on the schedule
+          # even once CARDTRADER_API_TOKEN was set as a repo secret — Actions only
+          # exposes a secret to a step that names it here). Cardmarket needs NO
+          # secret at all — it fetches its own public data with zero config — so
+          # every CARDMARKET_* var here is an optional override, not a requirement.
+          CARDTRADER_API_TOKEN: ${{ secrets.CARDTRADER_API_TOKEN }}
+          CARDMARKET_DISABLED: ${{ vars.CARDMARKET_DISABLED }}
+          CARDMARKET_PRODUCTLIST_URL: ${{ vars.CARDMARKET_PRODUCTLIST_URL }}
+          CARDMARKET_PRODUCTLIST_NONSINGLES_URL: ${{ vars.CARDMARKET_PRODUCTLIST_NONSINGLES_URL }}
+          CARDMARKET_PRICEGUIDE_URL: ${{ vars.CARDMARKET_PRICEGUIDE_URL }}
+          CARDMARKET_EUR_TO_GBP: ${{ vars.CARDMARKET_EUR_TO_GBP }}
+          # RH7 is the current history project (see src/lib/db-history.ts) — RH6 is
+          # its at-limit rollback, and everything older is a dead fallback kept only
+          # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH7 is
+          # missing here, db-history.ts falls through to RH6 (or, at the end of the
+          # chain, to the OPERATIONAL database), so keep this list in sync with
+          # db-history.ts / db-chains.ts.
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
+          RH10: ${{ secrets.RH10 || vars.RH10 }}
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
@@ -115,25 +145,34 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          # Never set anywhere in this workflow before — importMarketplaceListings()
-          # (lib/marketplace.ts) early-returns 0 without it, so every scheduled/manual/
-          # push-triggered import silently skipped syncing marketplace listings into
-          # the price comparison, regardless of what's actually listed. Mirrors the
-          # production value (see docs/MARKETPLACE.md); override via a repo variable
-          # if that ever needs to differ from CI.
-          NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-prices.ts
       - name: Import sealed products
-        # Populate the /sealed page (booster boxes/packs across AU/NZ/US). Nothing
+        # Populate the /sealed page (booster boxes/packs across AU/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
-          DATABASE_URL: ${{ secrets.RM4 || vars.RM4 || secrets.RM3 || vars.RM3 || secrets.DATABASE_URL_2 || vars.DATABASE_URL_2 || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+          # RM7 is the only operational variable now (2026-09-05 cutover — see
+          # src/lib/db-chains.ts). This is set explicitly rather than left to
+          # lib/db.ts's own resolution because Actions collapses everything into
+          # one DATABASE_URL before the job starts, so process.env-based
+          # resolution can't see which secret actually won. See src/lib/db.ts.
+          DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
           EBAY_REFRESH: ${{ github.event_name != 'push' }}
           EBAY_FORCE: ${{ inputs.ebay_force && '1' || '' }}
+          # Cardmarket sealed (EU) — zero-config like its singles pass above; see
+          # that step's comment. Optional overrides only.
+          CARDMARKET_DISABLED: ${{ vars.CARDMARKET_DISABLED }}
+          CARDMARKET_PRODUCTLIST_URL: ${{ vars.CARDMARKET_PRODUCTLIST_URL }}
+          CARDMARKET_PRODUCTLIST_NONSINGLES_URL: ${{ vars.CARDMARKET_PRODUCTLIST_NONSINGLES_URL }}
+          CARDMARKET_PRICEGUIDE_URL: ${{ vars.CARDMARKET_PRICEGUIDE_URL }}
           # Same chain as the Import prices step above — see its comment.
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
+          RH10: ${{ secrets.RH10 || vars.RH10 }}
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
@@ -141,13 +180,6 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
-          # Never set anywhere in this workflow before — importMarketplaceListings()
-          # (lib/marketplace.ts) early-returns 0 without it, so every scheduled/manual/
-          # push-triggered import silently skipped syncing marketplace listings into
-          # the price comparison, regardless of what's actually listed. Mirrors the
-          # production value (see docs/MARKETPLACE.md); override via a repo variable
-          # if that ever needs to differ from CI.
-          NEXT_PUBLIC_MARKETPLACE_PUBLIC: ${{ vars.NEXT_PUBLIC_MARKETPLACE_PUBLIC || '1' }}
         run: npx tsx scripts/import-sealed.ts
 
       - name: Revalidate site pages (on-demand ISR)

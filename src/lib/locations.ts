@@ -13,12 +13,6 @@ export const AU_STATES: { value: string; label: string }[] = [
   { value: "NT", label: "Northern Territory (NT)" },
 ];
 
-export const NZ_REGIONS: { value: string; label: string }[] = [
-  "Auckland", "Wellington", "Canterbury", "Waikato", "Bay of Plenty", "Otago",
-  "Manawatū-Whanganui", "Hawke's Bay", "Taranaki", "Northland", "Southland",
-  "Nelson", "Tasman", "Marlborough", "Gisborne", "West Coast",
-].map((r) => ({ value: r, label: r }));
-
 export const US_STATES: { value: string; label: string }[] = [
   ["AL","Alabama"],["AK","Alaska"],["AZ","Arizona"],["AR","Arkansas"],["CA","California"],
   ["CO","Colorado"],["CT","Connecticut"],["DE","Delaware"],["DC","District of Columbia"],
@@ -38,7 +32,6 @@ export const DEFAULT_COUNTRY = "Australia";
 // Country name for a market code.
 export const MARKET_COUNTRY: Record<string, string> = {
   AU: "Australia",
-  NZ: "New Zealand",
   US: "United States",
   UK: "United Kingdom",
   // SG was missing here (added alongside CA) — an absent market falls back to a
@@ -46,6 +39,12 @@ export const MARKET_COUNTRY: Record<string, string> = {
   // prefilling.
   SG: "Singapore",
   CA: "Canada",
+  // NO "EU" ENTRY, DELIBERATELY — and this one is a real decision, not the
+  // oversight the SG note above describes. "EU" is ~20 countries, so any value
+  // here would prefill the wrong country for most European sellers, which is
+  // worse than prefilling nothing: a wrong value that looks filled-in gets
+  // submitted, an empty field gets answered. The documented fallback (free-text
+  // country field, no prefill) is the right outcome for this market.
 };
 
 // Canadian provinces/territories — Canada Post two-letter codes.
@@ -68,7 +67,6 @@ export const CA_PROVINCES: { value: string; label: string }[] = [
 // The state/region dropdown options for a country name (null = free-text region).
 export function statesFor(country: string): { value: string; label: string }[] | null {
   if (country === "Australia") return AU_STATES;
-  if (country === "New Zealand") return NZ_REGIONS;
   if (country === "United States") return US_STATES;
   if (country === "Canada") return CA_PROVINCES;
   return null;

@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
-import { buildCardWhere, buildCardOrderBy, cardTileSelect } from "./cards";
-import { pickPrice, priceField, type Country } from "./country";
+import { buildCardWhere, buildCardOrderBy, cardTileSelect, withStoreCounts } from "./cards";
+import { DEFAULT_COUNTRY, pickPrice, priceField, type Country } from "./country";
 import type { CardTileData } from "@/components/CardTile";
 
 // "Most popular cards" — the most-SEARCHED Riftbound singles in the visitor's market,
@@ -10,7 +10,7 @@ import type { CardTileData } from "@/components/CardTile";
 // card, so the section leads with the chase/high-value cards people actually want.
 // Priced-only so every tile shows a real price. Optional setCode scopes it to one
 // set (e.g. the Vendetta homepage strip) instead of the whole database.
-export async function getPopularCards(limit = 12, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
+export async function getPopularCards(limit = 12, country: Country = DEFAULT_COUNTRY, setCode?: string): Promise<CardTileData[]> {
   const field = priceField(country);
   const cards = (await prisma.card.findMany({
     where: buildCardWhere({ set: setCode, priced: "1" }, country),
@@ -22,7 +22,11 @@ export async function getPopularCards(limit = 12, country: Country = "AU", setCo
     take: limit,
     select: cardTileSelect(country),
   })) as CardTileData[];
-  return cards;
+  // Ship EVERY market's in-stock count, not just `country`'s. The homepage
+  // renders this with DEFAULT_COUNTRY and is then ISR-cached while CardTile
+  // re-prices to the visitor's market on the client, so a count baked for one
+  // market would sit beside another market's price. See storeCountsByCountry.
+  return withStoreCounts(cards);
 }
 
 // "Cheapest cards" — the lowest-priced Riftbound singles in the visitor's market,
@@ -31,7 +35,7 @@ export async function getPopularCards(limit = 12, country: Country = "AU", setCo
 // prices really are the lowest), then break ties by the widest store coverage — that
 // way the section leads with well-stocked bargains, which is the coverage we want to
 // boast about, rather than an obscure card that happens to sit in a single shop.
-export async function getCheapestCards(limit = 12, country: Country = "AU"): Promise<CardTileData[]> {
+export async function getCheapestCards(limit = 12, country: Country = DEFAULT_COUNTRY): Promise<CardTileData[]> {
   const cards = (await prisma.card.findMany({
     where: buildCardWhere({ priced: "1" }, country),
     orderBy: buildCardOrderBy("price_asc", country),
@@ -40,27 +44,28 @@ export async function getCheapestCards(limit = 12, country: Country = "AU"): Pro
     select: cardTileSelect(country),
   })) as CardTileData[];
 
-  return cards
+  const ranked = cards
     .sort(
       (a, b) =>
         (pickPrice(a, country)! - pickPrice(b, country)!) ||
         b._count.retailerPrices - a._count.retailerPrices
     )
     .slice(0, limit);
+  return withStoreCounts(ranked);
 }
 
 // "Most valuable cards" — the highest-priced Riftbound singles in the visitor's
 // market. Powers the value-checker lander's live proof block ("what's worth the
 // most right now"). Priced-only so every tile shows a real figure. Optional
 // setCode scopes it to one set (e.g. Vendetta's "chase cards" on the homepage).
-export async function getValuableCards(limit = 12, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
+export async function getValuableCards(limit = 12, country: Country = DEFAULT_COUNTRY, setCode?: string): Promise<CardTileData[]> {
   const cards = (await prisma.card.findMany({
     where: buildCardWhere({ set: setCode, priced: "1" }, country),
     orderBy: buildCardOrderBy("price_desc", country),
     take: limit,
     select: cardTileSelect(country),
   })) as CardTileData[];
-  return cards;
+  return withStoreCounts(cards);
 }
 
 // Editorial display-order tiebreak among priced Signature Legends — these
@@ -86,7 +91,7 @@ function chaseSortTier(name: string): number {
 // feature). Only tops up with the next most valuable (PRICED) non-signature
 // cards if the set has fewer Signatures than `limit` — never invents a price,
 // never hides a real Signature to make room for something else.
-export async function getChaseCards(limit = 8, country: Country = "AU", setCode?: string): Promise<CardTileData[]> {
+export async function getChaseCards(limit = 8, country: Country = DEFAULT_COUNTRY, setCode?: string): Promise<CardTileData[]> {
   const baseWhere = buildCardWhere({ set: setCode }, country);
   const signatures = (await prisma.card.findMany({
     where: { ...baseWhere, collectorNumber: { contains: "*" } },
@@ -97,7 +102,7 @@ export async function getChaseCards(limit = 8, country: Country = "AU", setCode?
   // Array#sort is stable — this reorders by tier while preserving the
   // price-desc (nulls-last) order the query already gave within each tier.
   signatures.sort((a, b) => chaseSortTier(a.name) - chaseSortTier(b.name));
-  if (signatures.length >= limit) return signatures;
+  if (signatures.length >= limit) return withStoreCounts(signatures);
   const pricedWhere = buildCardWhere({ set: setCode, priced: "1" }, country);
   const rest = (await prisma.card.findMany({
     where: { ...pricedWhere, id: { notIn: signatures.map((c) => c.id) } },
@@ -105,5 +110,5 @@ export async function getChaseCards(limit = 8, country: Country = "AU", setCode?
     take: limit - signatures.length,
     select: cardTileSelect(country),
   })) as CardTileData[];
-  return [...signatures, ...rest];
+  return withStoreCounts([...signatures, ...rest]);
 }

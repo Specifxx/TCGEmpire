@@ -26,12 +26,15 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
         </div>
         <p className="mt-0.5 text-xs text-slate-400">
           {watching
-            ? "Added — enter your email in the popup to get drop alerts."
-            : "We'll email you when it drops. No account needed."}
+            ? "Added — finish in the popup to get drop alerts."
+            : "We'll email you when it drops — free, and with an account your watchlist syncs everywhere."}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <button onClick={watch} className="btn-primary text-sm">
+        {/* btn-ghost, not btn-primary: this is another "watch this price"
+            affordance (same family as PriceWatchButton above it on the page) —
+            the in-stock retailer buy buttons are the page's only primary CTA. */}
+        <button onClick={watch} className="btn-ghost text-sm">
           {watching ? "✓ Watching" : "Email me when it drops"}
         </button>
         {!premium && (

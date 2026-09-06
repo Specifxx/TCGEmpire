@@ -1,37 +1,27 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { track } from "@vercel/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
+import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS } from "@/lib/constants";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
-import { affiliateUrl, ebayAffiliateUrl, outboundRel } from "@/lib/affiliate";
+import { affiliateUrl, ebayLabel, ebaySearchUrl as buildEbaySearchUrl, outboundRel, isPaidLink } from "@/lib/affiliate";
 import { OutboundLink } from "./OutboundLink";
+import { ReportPriceButton } from "./ReportPriceButton";
 import { EbayAdCarouselLive, type AdListing } from "./EbayAdCarouselLive";
 import { EbayTabs, type EbayTab } from "./EbayTabs";
 import { EbayGradedLive, type GradedRow } from "./EbayGradedLive";
-import { EbayAuctionsLive, type AuctionRow } from "./EbayAuctionsLive";
-import { AffiliateDisclosure } from "./AffiliateDisclosure";
+import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
+import { timeAgo } from "@/lib/format";
 import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
-import { PriceTake } from "./PriceTake";
 import type { PricePoint } from "@/lib/price-history";
-
-// eBay marketplace per country for the quota-fallback search link. NZ has no
-// eBay of its own — eBay AU ships there, so NZ falls back to it.
-const EBAY_MKT: Record<string, { domain: string; label: string } | undefined> = {
-  AU: { domain: "ebay.com.au", label: "eBay Australia" },
-  NZ: { domain: "ebay.com.au", label: "eBay AU (ships to NZ)" },
-  US: { domain: "ebay.com", label: "eBay" },
-  UK: { domain: "ebay.co.uk", label: "eBay UK" },
-  SG: { domain: "ebay.com.sg", label: "eBay Singapore" },
-};
 
 interface RetailerPrice {
   id: string;
@@ -44,6 +34,7 @@ interface RetailerPrice {
   inStock: boolean;
   country: string;
   isFoil: boolean;
+  lastSeen?: string;
 }
 
 const Ctx = createContext<{ open: (card: CardTileData) => void }>({ open: () => {} });
@@ -68,7 +59,7 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
     // event by design — it's the main engagement signal for "which cards do
     // people actually stop to look at", distinct from search/view counts
     // (which mix quickview opens with full page loads and API traffic).
-    track("quickview_open", { card: c.slug ?? c.id });
+    trackEvent("quickview_open", { card: c.slug ?? c.id });
   }, []);
 
   const close = useCallback(() => {
@@ -103,7 +94,6 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   const [prices, setPrices] = useState<RetailerPrice[] | null>(null);
   const [adListings, setAdListings] = useState<AdListing[]>([]);
   const [graded, setGraded] = useState<GradedRow[]>([]);
-  const [auctions, setAuctions] = useState<AuctionRow[]>([]);
   const [ebayCheckedAt, setEbayCheckedAt] = useState<string | null>(null);
   const [history, setHistory] = useState<PricePoint[] | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
@@ -138,7 +128,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
       .then((r) => r.json())
-      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setAuctions(d.ebayAuctions ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
+      .then((d) => { if (alive) { setPrices(d.retailerPrices ?? []); setAdListings(d.ebayAdListings ?? []); setGraded(d.ebayGradedListings ?? []); setEbayCheckedAt(d.ebayCheckedAt ?? null); } })
       .catch(() => { if (alive) setPrices([]); });
     // Region-specific price history (its own currency), keyed by URL for clean caching.
     fetch(`/api/card/${ref}/history?country=${country}`)
@@ -168,15 +158,34 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
     })
     .sort((a, b) => a.priceCents - b.priceCents || a.delivered - b.delivered);
 
+  // One entry per STORE for the report picker — in-stock and out-of-stock alike,
+  // since "you list it as available and it isn't" is one of the issue types and
+  // those are precisely the rows it applies to. Deduped by retailer: a store can
+  // hold several rows (condition and foil are part of RetailerPrice's key) and
+  // the picker asks which STORE is wrong, not which row.
+  const reportable = (() => {
+    const byRetailer = new Map<string, { listingId: string; retailer: string; retailerName: string }>();
+    // NOT countryRows — that one is filtered to in-stock rows for the buy list.
+    const all = (prices ?? []).filter((r) => r.country === country && !isFallbackRetailer(r.retailer));
+    for (const p of all) {
+      if (!byRetailer.has(p.retailer)) {
+        byRetailer.set(p.retailer, { listingId: p.id, retailer: p.retailer, retailerName: p.retailerName });
+      }
+    }
+    return [...byRetailer.values()];
+  })();
+
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
   // Whenever this market has no live eBay row for the card, offer an
   // affiliate-tagged eBay search — a thin market must never be a dead end.
-  // (NZ has no local eBay; eBay AU ships there.)
-  const ebayMkt = EBAY_MKT[country];
+  // (Domain/label come from lib/affiliate.ts, not a local copy — this map
+  // used to lack a CA entry, silently dropping the fallback for CA visitors
+  // specifically.)
+  const ebayMkt = { label: ebayLabel(country) };
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
   const ebaySearchUrl =
-    prices !== null && ebayMkt && !hasEbay
-      ? ebayAffiliateUrl(`https://www.${ebayMkt.domain}/sch/i.html?_nkw=${encodeURIComponent(`${cardSearchName(card.name, card)} Riftbound`)}`)
+    prices !== null && !hasEbay
+      ? buildEbaySearchUrl(country, `${cardSearchName(card.name, card)} Riftbound`, "quickview")
       : null;
 
   return (
@@ -238,13 +247,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             {/* Tabs appear only for what this card actually has in this market,
                 so an ordinary card shows exactly the compact carousel it always
                 did with no tab chrome (EbayTabs hides the tablist for one tab).
-                Chase cards gain Graded and Auctions.
+                Chase cards gain a Graded tab.
 
                 marketCents is derived here from the card's own price column
                 rather than sent by the API: `price(card)` is already the
                 visitor-market figure the modal displays above, so deriving it
-                guarantees the "× raw" multiple and the "% of Buy It Now" cite
-                the same number the user is looking at. */}
+                guarantees the "× raw" multiple cites the same number the user
+                is looking at. */}
             <EbayTabs
               className="mt-3"
               label={`eBay listings for ${card.name}`}
@@ -275,23 +284,6 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                       } satisfies EbayTab,
                     ]
                   : []),
-                ...(auctions.some((a) => a.country === country && new Date(a.endsAt).getTime() > Date.now())
-                  ? [
-                      {
-                        key: "auctions",
-                        label: "Auctions",
-                        count: auctions.filter(
-                          (a) => a.country === country && new Date(a.endsAt).getTime() > Date.now(),
-                        ).length,
-                        content: (
-                          <EbayAuctionsLive
-                            auctions={auctions.map((a) => ({ ...a, marketCents: lowest ?? null }))}
-                            bare
-                          />
-                        ),
-                      } satisfies EbayTab,
-                    ]
-                  : []),
               ]}
             />
             {/* One disclosure for the whole panel — every tab is affiliate-tagged
@@ -309,7 +301,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 </div>
               ) : (
                 <>
-                  <button onClick={addToCollection} disabled={coll === "saving"} className="btn-primary flex-1 justify-center text-sm">
+                  {/* btn-ghost, not btn-primary: the in-stock retailer buy buttons
+                      above are the page's only primary (filled) CTA — this is a
+                      secondary action and shouldn't compete with them visually. */}
+                  <button onClick={addToCollection} disabled={coll === "saving"} className="btn-ghost flex-1 justify-center text-sm">
                     {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : "＋ Add to collection"}
                   </button>
                   <button
@@ -334,7 +329,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <div className="py-4 text-sm text-slate-500">
                   <p>No in-stock listings right now.</p>
                   {/* Never a dead end: a zero-stock modal still offers the
-                      affiliate eBay search (eBay AU for NZ, which has no eBay). */}
+                      affiliate eBay search. */}
                   {ebaySearchUrl && ebayMkt && (
                     <>
                       <a
@@ -362,9 +357,18 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500">
                           {p.isFoil && <span className="font-semibold text-gold">✦ Foil</span>}
-                          {p.condition && <span>{p.condition}</span>}
+                          {(() => {
+                            const grade = normaliseCondition(p.condition);
+                            return grade ? (
+                              <span title={p.condition ? `Store listed as "${p.condition}"` : undefined}>{CONDITIONS[grade].label}</span>
+                            ) : (
+                              p.condition && <span>{p.condition}</span>
+                            );
+                          })()}
+                          {p.lastSeen && <span>updated {timeAgo(p.lastSeen)}</span>}
+                          {isPaidLink(affiliateUrl(p.url, p.retailer)) && <PaidLinkTag />}
                         </div>
                       </div>
                       <div className="text-right">
@@ -385,7 +389,21 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                           )}
                         </div>
                       </div>
-                      <OutboundLink href={affiliateUrl(p.url, p.retailer)} retailer={p.retailer} country={country} className={`${buyButtonClass(p.retailer)} px-3 py-1.5 text-xs`}>
+                      <OutboundLink
+                        href={affiliateUrl(p.url, p.retailer)}
+                        retailer={p.retailer}
+                        country={country}
+                        cardId={card.id}
+                        cardName={cardDisplayName(card.name, card)}
+                        price={p.priceCents / 100}
+                        positionInList={i + 1}
+                        pageType="card_detail"
+                        inStock
+                        variant={p.isFoil ? "foil" : "nonfoil"}
+                        condition={p.condition}
+                        surface="modal"
+                        className={`${buyButtonClass(p.retailer)} px-3 py-1.5 text-xs`}
+                      >
                         {buyButtonLabel(p.retailer)}
                       </OutboundLink>
                     </li>
@@ -396,6 +414,21 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <a href={href} className="mt-2 block text-center text-xs text-brand-400 hover:underline">
                   See all {inStock.length} stores →
                 </a>
+              )}
+              {/* Same control the full card page carries, on the surface most
+                  people actually compare prices on — the popup is where a
+                  browse-page visitor sees our number without ever loading the
+                  card page, so a report link only on the page would miss them.
+                  Reports the FULL fetched list, not the six rows rendered above:
+                  the store with the wrong price may be the seventh. */}
+              {reportable.length > 0 && (
+                <div className="mt-2 text-center">
+                  <ReportPriceButton
+                    compact
+                    subject={{ kind: "card", cardId: card.id, name: cardDisplayName(card.name, card) }}
+                    listings={reportable}
+                  />
+                </div>
               )}
               {/* The comparison rows' buy buttons are affiliate-tagged wherever the
                   retailer is a partner (eBay, TCGplayer) — disclose right here,
@@ -419,6 +452,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 href={ebaySearchUrl}
                 retailer="ebay_no_listing"
                 country={country}
+                cardId={card.id}
+                cardName={cardDisplayName(card.name, card)}
+                pageType="card_detail"
+                surface="modal"
                 className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.05] p-3 hover:border-amber-500/45"
               >
                 <span className="min-w-0 text-xs text-slate-300">
@@ -437,14 +474,16 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Price history <span className="font-normal normal-case text-slate-600">· {country}</span>
                 </div>
-                <PriceChart points={history} currency={currency} compact />
+                {/* nowOverrideCents: the same "Now disagrees with the header
+                    cheapest price" fix as the full card page — history is a
+                    daily import snapshot, inStock[0] is this modal's own
+                    live cheapest row, already sorted price-ascending above. */}
+                <PriceChart points={history} currency={currency} compact nowOverrideCents={inStock[0]?.priceCents ?? null} />
               </div>
             )}
 
-            {/* Price Take — funny buy/hold/wait read */}
-            <div className="mt-4">
-              <PriceTake cardId={card.id} compact />
-            </div>
+            {/* AI Tips is gated off every purchase surface (this modal has a
+                buy button above) — same reasoning as the full card page. */}
           </div>
         </div>
       </div>

@@ -14,12 +14,21 @@ import type { Country } from "@/lib/country";
 type MsrpByMarket = Partial<Record<Country, number>>;
 
 const MSRP: Record<string, MsrpByMarket> = {
-  "Booster Box": { AU: 22900, NZ: 24900, US: 14400, UK: 12900 },
-  "Booster Case": { AU: 275000, NZ: 299000, US: 172800, UK: 154800 },
-  "Proving Grounds": { AU: 4500, NZ: 4900, US: 2900, UK: 2500 },
-  "Starter Set": { AU: 3500, NZ: 3900, US: 2200, UK: 1900 },
-  "Box Set": { AU: 6500, NZ: 6900, US: 3900, UK: 3500 },
-  "Bundle": { AU: 5500, NZ: 5900, US: 3500, UK: 2900 },
+  "Booster Box": { AU: 22900, US: 14400, UK: 12900 },
+  "Booster Case": { AU: 275000, US: 172800, UK: 154800 },
+  "Proving Grounds": { AU: 4500, US: 2900, UK: 2500 },
+  "Starter Set": { AU: 3500, US: 2200, UK: 1900 },
+  "Box Set": { AU: 6500, US: 3900, UK: 3500 },
+  "Bundle": { AU: 5500, US: 3500, UK: 2900 },
+  // Riftbound × T1 2025 Worlds Champion Collection. US ONLY, deliberately: Riot
+  // published the English price in USD and the other two editions in CNY (¥2,025 /
+  // ¥399) and KRW (₩500,000 / ₩100,000) — there is no published AUD/GBP RRP to
+  // put here, and this table never guesses. The English edition is sold through a
+  // Riot Merch Store drawing rather than retail, so "at MSRP" here means "a resale
+  // listing at or under what a winner paid", which is exactly the comparison a
+  // buyer who missed the drawing wants.
+  "T1 Signature Edition": { US: 36000 },
+  "T1 Player Bundle": { US: 7000 },
 };
 
 // The MSRP for a product type in a market, or null if we don't publish one.

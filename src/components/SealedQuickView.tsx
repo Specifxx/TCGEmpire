@@ -1,8 +1,10 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
+import { ReportPriceButton } from "./ReportPriceButton";
 import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { useCountry } from "./CountryProvider";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
@@ -20,11 +22,10 @@ type OpenArg = { group: SealedGroup; currency: string };
 const Ctx = createContext<{ open: (group: SealedGroup, currency: string) => void }>({ open: () => {} });
 export const useSealedQuickView = () => useContext(Ctx);
 
-// eBay hosts per market (NZ has no local eBay — the AU site ships there). Mirrors
-// the marketplace hosts the /sealed page uses for its secondary-market searches.
+// eBay hosts per market. Mirrors the marketplace hosts the /sealed page uses
+// for its secondary-market searches.
 const EBAY_HOST: Record<string, string> = {
   AU: "ebay.com.au",
-  NZ: "ebay.com.au",
   US: "ebay.com",
   UK: "ebay.co.uk",
 };
@@ -32,7 +33,12 @@ const EBAY_HOST: Record<string, string> = {
 export function SealedQuickViewProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OpenArg | null>(null);
 
-  const open = useCallback((group: SealedGroup, currency: string) => setState({ group, currency }), []);
+  const open = useCallback((group: SealedGroup, currency: string) => {
+    setState({ group, currency });
+    // Sealed twin of QuickView's quickview_open — same event name, so the two
+    // surfaces roll up into one engagement metric rather than splitting it.
+    trackEvent("quickview_open", { card: group.groupKey });
+  }, []);
   const close = useCallback(() => setState(null), []);
 
   return (
@@ -58,6 +64,13 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
   }, [onClose]);
 
   const listings = group.listings;
+  // One entry per STORE, in-stock and out-of-stock alike ("you list it as
+  // available and it isn't" is one of the issue types). Deduped defensively —
+  // grouping should already give one row per retailer, but the picker must never
+  // show the same store twice.
+  const reportable = [
+    ...new Map(listings.map((l) => [l.retailer, { retailer: l.retailer, retailerName: l.retailerName }])).values(),
+  ];
   const lowest = group.lowestPriceCents;
   const host = EBAY_HOST[country] ?? EBAY_HOST.AU;
   const ebayHref = ebayAffiliateUrl(`https://www.${host}/sch/i.html?_nkw=${encodeURIComponent(group.name)}`);
@@ -165,6 +178,22 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                   Search eBay for more listings →
                 </OutboundLink>
               </p>
+            )}
+            {/* Sealed's ONLY report surface, and it has to be: there is no
+                /sealed/<slug> detail route (see this file's header) and the
+                /sealed tiles show a cheapest price without naming the store, so
+                this modal is the only place a visitor can see which store's
+                number is wrong. Sealed listings carry no id of their own, so the
+                report identifies them by groupKey + retailer + market — which is
+                what the API looks them up by. */}
+            {reportable.length > 0 && (
+              <div className="mt-2 text-center">
+                <ReportPriceButton
+                  compact
+                  subject={{ kind: "sealed", groupKey: group.groupKey, name: group.name }}
+                  listings={reportable}
+                />
+              </div>
             )}
             {/* This modal carries affiliate-tagged store + eBay links exactly like
                 the singles quick-view, so it needs its own in-popup disclosure. */}

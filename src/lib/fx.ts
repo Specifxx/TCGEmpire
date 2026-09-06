@@ -22,12 +22,19 @@ const rate = (v: string | undefined, fallback: number): number => {
 export const USD_TO: Record<string, number> = {
   USD: 1,
   AUD: rate(process.env.NEXT_PUBLIC_USD_TO_AUD, 1.5),
-  NZD: rate(process.env.NEXT_PUBLIC_USD_TO_NZD, 1.65),
   GBP: rate(process.env.NEXT_PUBLIC_USD_TO_GBP, 0.79),
   SGD: rate(process.env.NEXT_PUBLIC_USD_TO_SGD, 1.35),
   CAD: rate(process.env.NEXT_PUBLIC_USD_TO_CAD, 1.37),
-  // Not a market currency (no EUR store/eBay market) — just a reference display
-  // conversion offered to UK-market visitors who think in Euro. See gbpCentsToEur.
+  // The EU market's REAL currency since 2026-08-23 — eurozone stores and eBay ES
+  // both price natively in EUR, so this is a market rate like AUD/GBP/SGD/CAD
+  // above, not a display convenience. Germany (DE) briefly held that role on
+  // 2026-08-20 before the eurozone-wide market replaced the single-country one
+  // (see country.ts's header note).
+  //
+  // It still ALSO backs gbpCentsToEur below, which is now a narrower thing than
+  // it was: an EU visitor no longer lands on the UK market by geo, so that
+  // conversion only runs for someone who deliberately switched to UK stores and
+  // wants the GBP figure shown in Euro.
   EUR: rate(process.env.NEXT_PUBLIC_USD_TO_EUR, 0.92),
 };
 

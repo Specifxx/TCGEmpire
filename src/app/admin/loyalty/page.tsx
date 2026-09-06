@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NOT_SEED_WHERE } from "@/lib/premium";
-import { getSellerRatings } from "@/lib/marketplace";
-import { formatMoney } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +15,11 @@ export const metadata: Metadata = {
 
 const TOP_N = 25;
 
-// "Loyal" here means demonstrated commitment we can actually measure — repeat
-// marketplace spend, completed sales, collection size, and sustained Premium
-// membership — NOT visit frequency, since the app has no login/session
-// recency tracking anywhere (no lastSeenAt-style field on User). If that's
-// wanted later it needs a new column + a stamp on session read, which doesn't
-// exist today.
+// "Loyal" here means demonstrated commitment we can actually measure —
+// collection size and sustained Premium membership — NOT visit frequency,
+// since the app has no login/session recency tracking anywhere (no
+// lastSeenAt-style field on User). If that's wanted later it needs a new
+// column + a stamp on session read, which doesn't exist today.
 export default async function LoyaltyAdminPage({ searchParams }: { searchParams: { key?: string } }) {
   const token = process.env.ADMIN_TOKEN;
   const keyOk = !!token && searchParams.key === token;
@@ -32,40 +29,15 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
   const now = new Date();
   const keySuffix = keyOk && !me?.isAdmin ? `?key=${encodeURIComponent(token!)}` : "";
 
-  type Buyer = { userId: string; displayName: string; email: string; orders: number; spentCents: number; firstOrderAt: Date };
-  type Seller = { userId: string; displayName: string; email: string; shopName: string; sales: number; rating: { avg: number; count: number } | null; shopSince: Date };
   type Collector = { userId: string; displayName: string; email: string; cards: number; since: Date };
   type PremiumMember = { userId: string; displayName: string; email: string; memberSince: Date; premiumUntil: Date };
 
-  let buyers: Buyer[] = [];
-  let sellers: Seller[] = [];
   let collectors: Collector[] = [];
   let premiumMembers: PremiumMember[] = [];
   let error = false;
 
   try {
-    const [buyerAgg, sellerRows, collectorAgg, premiumRows] = await Promise.all([
-      prisma.order.groupBy({
-        by: ["buyerId"],
-        where: { kind: "MARKETPLACE", status: { in: ["PAID", "SHIPPED", "COMPLETED"] } },
-        _sum: { totalCents: true },
-        _count: { _all: true },
-        _min: { createdAt: true },
-        orderBy: { _sum: { totalCents: "desc" } },
-        take: TOP_N,
-      }),
-      prisma.sellerProfile.findMany({
-        where: { completedSalesCount: { gt: 0 } },
-        orderBy: { completedSalesCount: "desc" },
-        take: TOP_N,
-        select: {
-          userId: true,
-          shopName: true,
-          completedSalesCount: true,
-          createdAt: true,
-          user: { select: { displayName: true, email: true } },
-        },
-      }),
+    const [collectorAgg, premiumRows] = await Promise.all([
       prisma.collectionCard.groupBy({
         by: ["userId"],
         _count: { _all: true },
@@ -81,39 +53,12 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
       }),
     ]);
 
-    const buyerIds = buyerAgg.map((b) => b.buyerId);
     const collectorIds = collectorAgg.map((c) => c.userId);
-    const buyerAndCollectorUsers = await prisma.user.findMany({
-      where: { id: { in: [...new Set([...buyerIds, ...collectorIds])] } },
+    const collectorUsers = await prisma.user.findMany({
+      where: { id: { in: [...new Set(collectorIds)] } },
       select: { id: true, displayName: true, email: true },
     });
-    const userById = new Map(buyerAndCollectorUsers.map((u) => [u.id, u]));
-
-    buyers = buyerAgg
-      .map((b) => {
-        const u = userById.get(b.buyerId);
-        if (!u) return null;
-        return {
-          userId: b.buyerId,
-          displayName: u.displayName,
-          email: u.email,
-          orders: b._count._all,
-          spentCents: b._sum.totalCents ?? 0,
-          firstOrderAt: b._min.createdAt!,
-        };
-      })
-      .filter((x): x is Buyer => x != null);
-
-    const ratings = await getSellerRatings(sellerRows.map((s) => s.userId));
-    sellers = sellerRows.map((s) => ({
-      userId: s.userId,
-      displayName: s.user.displayName,
-      email: s.user.email,
-      shopName: s.shopName,
-      sales: s.completedSalesCount,
-      rating: ratings.get(s.userId) ?? null,
-      shopSince: s.createdAt,
-    }));
+    const userById = new Map(collectorUsers.map((u) => [u.id, u]));
 
     collectors = collectorAgg
       .map((c) => {
@@ -144,8 +89,6 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
     if (existing) existing.tags.push(label);
     else categoriesByUser.set(userId, { displayName, email, tags: [label] });
   };
-  buyers.forEach((b) => tag(b.userId, b.displayName, b.email, "Buyer"));
-  sellers.forEach((s) => tag(s.userId, s.displayName, s.email, "Seller"));
   collectors.forEach((c) => tag(c.userId, c.displayName, c.email, "Collector"));
   premiumMembers.forEach((p) => tag(p.userId, p.displayName, p.email, "Premium"));
   const multiSignal = [...categoriesByUser.values()].filter((u) => u.tags.length >= 2).sort((a, b) => b.tags.length - a.tags.length);
@@ -162,9 +105,9 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
       </nav>
       <h1 className="text-2xl font-bold text-white">🏆 Loyal users</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        The users showing the most real, measurable commitment — repeat marketplace spend, completed sales, collection
-        size, and sustained Premium membership. There&apos;s no login/visit-frequency tracking in the app today, so
-        this is built entirely from transactions and account data, not &ldquo;how often they show up.&rdquo;
+        The users showing the most real, measurable commitment — collection size and sustained Premium membership.
+        There&apos;s no login/visit-frequency tracking in the app today, so this is built entirely from collection and
+        account data, not &ldquo;how often they show up.&rdquo;
       </p>
 
       {error ? (
@@ -204,85 +147,6 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
               </div>
             </section>
           )}
-
-          <section className="mt-8">
-            <div className="mb-2 flex items-baseline justify-between">
-              <h2 className="text-lg font-semibold text-white">Top marketplace buyers</h2>
-              <span className="text-xs text-slate-500">by completed spend · top {TOP_N}</span>
-            </div>
-            {buyers.length === 0 ? (
-              <Empty>No completed marketplace purchases yet.</Empty>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
-                      <th className="px-3 py-2 font-medium">#</th>
-                      <th className="px-3 py-2 font-medium">User</th>
-                      <th className="px-3 py-2 text-right font-medium">Orders</th>
-                      <th className="px-3 py-2 text-right font-medium">Total spent</th>
-                      <th className="px-3 py-2 text-right font-medium">Buying since</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {buyers.map((b, i) => (
-                      <tr key={b.userId} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
-                        <td className="px-3 py-2 text-slate-500">{i + 1}</td>
-                        <td className="px-3 py-2">
-                          <div className="font-medium text-white">{b.displayName}</div>
-                          <div className="text-xs text-slate-500">{b.email}</div>
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums text-slate-300">{b.orders}</td>
-                        <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-300">{formatMoney(b.spentCents, "AUD")}</td>
-                        <td className="px-3 py-2 text-right text-xs text-slate-500">{fmtDate(b.firstOrderAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p className="px-3 pb-3 pt-1 text-[11px] text-slate-600">PAID/SHIPPED/COMPLETED orders only. Mixed currencies summed at face value.</p>
-              </div>
-            )}
-          </section>
-
-          <section className="mt-8">
-            <div className="mb-2 flex items-baseline justify-between">
-              <h2 className="text-lg font-semibold text-white">Top marketplace sellers</h2>
-              <span className="text-xs text-slate-500">by completed sales · top {TOP_N}</span>
-            </div>
-            {sellers.length === 0 ? (
-              <Empty>No completed sales yet.</Empty>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
-                      <th className="px-3 py-2 font-medium">#</th>
-                      <th className="px-3 py-2 font-medium">Shop</th>
-                      <th className="px-3 py-2 text-right font-medium">Sales</th>
-                      <th className="px-3 py-2 text-right font-medium">Rating</th>
-                      <th className="px-3 py-2 text-right font-medium">Selling since</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sellers.map((s, i) => (
-                      <tr key={s.userId} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
-                        <td className="px-3 py-2 text-slate-500">{i + 1}</td>
-                        <td className="px-3 py-2">
-                          <div className="font-medium text-white">{s.shopName}</div>
-                          <div className="text-xs text-slate-500">{s.displayName} · {s.email}</div>
-                        </td>
-                        <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-300">{s.sales}</td>
-                        <td className="px-3 py-2 text-right tabular-nums text-slate-300">
-                          {s.rating && s.rating.count > 0 ? `★ ${s.rating.avg.toFixed(1)} (${s.rating.count})` : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-right text-xs text-slate-500">{fmtDate(s.shopSince)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
 
           <section className="mt-8">
             <div className="mb-2 flex items-baseline justify-between">

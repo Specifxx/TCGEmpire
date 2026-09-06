@@ -11,6 +11,16 @@ import { priceField } from "@/lib/country";
 // Typeahead search for the navbar dropdown. Returns full tile data so a result can
 // open the same instant quick-view modal as the browse grid, plus any matching
 // sealed products (booster boxes/packs/etc.).
+//
+// SEARCH IS UNMETERED FOR EVERYONE — anonymous, free account, Premium alike.
+// A tiered daily allowance (10/100/unlimited, an httpOnly counter cookie) shipped
+// here and was removed after one day in production: it cost ~1.1 pages/visitor
+// and ~40% of buy_click while the gate it powered converted nobody. Search is the
+// site's core value and the top of every funnel that ends in a buy_click — capping
+// it taxed the behaviour we actually want. Do not reintroduce a growth-motivated
+// meter here; if this route ever needs protection it should be genuine
+// abuse/cost limiting via lib/rate-limit.ts, applied by IP and sized so no real
+// user ever reaches it.
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();

@@ -13,7 +13,7 @@ Swap in real numbers where you see `[…]`.
 
 > Tired of opening 10 tabs to find the cheapest Riftbound card? I built **RiftCompare** 🟢
 >
-> Search any Riftbound TCG card → see the lowest live price across 60+ stores + eBay, in your currency (🇦🇺🇳🇿🇺🇸🇬🇧).
+> Search any Riftbound TCG card → see the lowest live price across 60+ stores + eBay, in your currency (🇦🇺🇺🇸🇬🇧).
 >
 > Free, no account needed. Find the cheapest place to buy:
 > 👉 https://riftcompare.com
@@ -22,7 +22,7 @@ Swap in real numbers where you see `[…]`.
 
 1/ I play Riftbound and got sick of checking a dozen shops to find the cheapest single. So I made a price-comparison site for it: RiftCompare 🔎
 
-2/ Search any card → it shows the lowest live price across 60+ stores (AU/NZ/US/UK) + eBay, sorted cheapest-first, and links you straight to the shop. Updated daily.
+2/ Search any card → it shows the lowest live price across 60+ stores (AU/US/UK) + eBay, sorted cheapest-first, and links you straight to the shop. Updated daily.
 
 3/ It also prices a whole decklist at once, compares sealed boxes, and has a trade calculator for working out fair card-for-card swaps.
 
@@ -39,7 +39,7 @@ Swap in real numbers where you see `[…]`.
 >
 > What it does:
 > - Search any Riftbound card → lowest live price across 60+ stores + eBay, sorted cheapest-first
-> - Pick your region (AU / NZ / US / UK) and it shows local prices in your currency
+> - Pick your region (AU / US / UK) and it shows local prices in your currency
 > - Price a whole decklist at once, compare sealed booster boxes, and a trade calculator for fair swaps
 > - Free, no account needed
 >
@@ -51,7 +51,7 @@ Swap in real numbers where you see `[…]`.
 
 ## Discord — community announcement
 
-> 👋 Made a free tool for the community: **RiftCompare** — search any Riftbound card and instantly see the cheapest price across 60+ stores + eBay (AU/NZ/US/UK, in your currency). Also prices full decklists, compares sealed, and has a trade calculator. No login needed → https://riftcompare.com — feedback very welcome!
+> 👋 Made a free tool for the community: **RiftCompare** — search any Riftbound card and instantly see the cheapest price across 60+ stores + eBay (AU/US/UK, in your currency). Also prices full decklists, compares sealed, and has a trade calculator. No login needed → https://riftcompare.com — feedback very welcome!
 
 *(Post in #self-promo / #tools / #resources channels where allowed, or DM a server's mods to ask first.)*
 
@@ -62,14 +62,14 @@ Swap in real numbers where you see `[…]`.
 **Tagline (≤60 chars):** Find the cheapest Riftbound TCG cards across every store
 
 **Description:**
-> RiftCompare is a free price-comparison tool for the Riftbound: League of Legends Trading Card Game. Search any card and instantly compare live prices across 60+ stores and eBay in Australia, New Zealand, the US and the UK — sorted cheapest-first, in your local currency. Price whole decklists, compare sealed booster boxes, and work out fair trades with the built-in trade calculator. No account required.
+> RiftCompare is a free price-comparison tool for the Riftbound: League of Legends Trading Card Game. Search any card and instantly compare live prices across 60+ stores and eBay in Australia, the US and the UK — sorted cheapest-first, in your local currency. Price whole decklists, compare sealed booster boxes, and work out fair trades with the built-in trade calculator. No account required.
 
 ---
 
 ## One-line blurbs (bios, link lists, "submit a site" forms)
 
 - *Compare live Riftbound TCG card prices across every store and find the cheapest place to buy.*
-- *The Riftbound card database & price comparison — singles and sealed, AU/NZ/US/UK.*
+- *The Riftbound card database & price comparison — singles and sealed, AU/US/UK.*
 - *Free Riftbound price comparison: search any card, see the lowest price across 60+ stores.*
 
 ---

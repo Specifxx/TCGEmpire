@@ -19,11 +19,11 @@ const cardSelect = {
   imageThumbUrl: true,
   imageUrl: true,
   lowestPriceCents: true,
-  lowestPriceCentsNz: true,
   lowestPriceCentsUs: true,
   lowestPriceCentsUk: true,
   lowestPriceCentsSg: true,
   lowestPriceCentsCa: true,
+  lowestPriceCentsEu: true,
 } as const;
 
 type DeckCard = {
@@ -37,11 +37,11 @@ type DeckCard = {
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz: number | null;
   lowestPriceCentsUs: number | null;
   lowestPriceCentsUk: number | null;
   lowestPriceCentsSg: number | null;
   lowestPriceCentsCa: number | null;
+  lowestPriceCentsEu: number | null;
 };
 
 export async function POST(req: Request) {

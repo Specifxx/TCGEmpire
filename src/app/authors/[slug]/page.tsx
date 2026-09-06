@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { AUTHORS, authorBySlug } from "@/lib/content/authors";
 import { getArticles } from "@/lib/articles";
 import { SITE_URL, CONTACT_EMAIL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -18,7 +19,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   return {
     title: `${author.name} — ${author.role}`,
     description: author.bio[0].slice(0, 160),
-    alternates: { canonical: `/authors/${author.slug}` },
+    alternates: pageAlternates(`/authors/${author.slug}`),
   };
 }
 

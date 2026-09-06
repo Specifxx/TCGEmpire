@@ -11,7 +11,7 @@ import { useCountry } from "./CountryProvider";
 // this is a first-class "buy this card" action, shown to everyone (Premium
 // included) and NOT labelled as an ad. It's affiliate-tagged (ebayAffiliateUrl adds
 // the mkevt/campid tracking params) and click-tracked via OutboundLink so it shows
-// up in /admin/clicks. Region-aware domain; NZ shops eBay AU (which ships there).
+// up in /admin/clicks. Region-aware domain.
 //
 // This is deliberately additive to the honest local price comparison — it never
 // replaces or outranks a genuinely-cheaper local listing; it's the always-present
@@ -24,11 +24,13 @@ import { useCountry } from "./CountryProvider";
 // though affiliate.ts has carried a verified ebay.ca rotation all along.
 const EBAY_LABEL: Record<string, { label: string; note?: string }> = {
   AU: { label: "eBay Australia" },
-  NZ: { label: "eBay Australia", note: "ships to New Zealand" },
   US: { label: "eBay" },
   UK: { label: "eBay UK" },
   SG: { label: "eBay Singapore" },
   CA: { label: "eBay Canada" },
+  // Matches affiliate.ts's EBAY_LABEL exactly — the click really does land on
+  // ebay.es, so this must not promise "eBay Europe".
+  EU: { label: "eBay Spain" },
 };
 
 function truncate(s: string, n: number) {

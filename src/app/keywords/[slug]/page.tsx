@@ -9,6 +9,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { KEYWORDS, keywordBySlug } from "@/lib/keywords";
 import { getArticle } from "@/lib/articles";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -36,18 +37,29 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const kw = keywordBySlug(params.slug);
   if (!kw) return notFoundMetadata("Keyword");
   const title = `${kw.name} — Riftbound Keyword Reference | RiftCompare`;
-  const description = `Quick rules reference for ${kw.name} in Riftbound, plus every card printed with it so far, live-priced. Want the full breakdown? See the complete ${kw.name} guide.`;
+  // Lead with the keyword's OWN direct answer rather than a template sentence.
+  // The previous description varied only by the keyword's name, so all three
+  // keyword pages read as one description (GROWTH-AUDIT.md § 4) — and they all
+  // belong to the same set, so there was no other varying fact to add. The
+  // directAnswer is per-keyword prose that already exists in lib/keywords.ts,
+  // sourced against Riot's Core Rules, so this adds NO new rules claim: it
+  // surfaces the definition the page already renders. It is also a better
+  // snippet — someone searching "riftbound empower" wants the definition, not a
+  // description of the page.
+  const answer = kw.directAnswer.replace(/\s+/g, " ").trim();
+  const lead = answer.length > 96 ? `${answer.slice(0, answer.lastIndexOf(" ", 96)).replace(/[,;:.]$/, "")}…` : answer;
+  const description = `${lead} Plus every card printed with ${kw.name}, live-priced.`;
   return {
     title: { absolute: title },
     description,
-    alternates: { canonical: `/keywords/${kw.slug}` },
+    alternates: pageAlternates(`/keywords/${kw.slug}`),
     keywords: [
       `riftbound ${kw.name.toLowerCase()} keyword`,
       `riftbound ${kw.name.toLowerCase()} reference`,
       `riftbound ${kw.name.toLowerCase()} rules`,
       `riftbound ${kw.name.toLowerCase()} cards`,
     ],
-    openGraph: { title, description, url: `${SITE_URL}/keywords/${kw.slug}` },
+    openGraph: pageOpenGraph({ title, description, url: `/keywords/${kw.slug}` }),
   };
 }
 

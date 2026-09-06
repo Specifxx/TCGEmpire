@@ -1,4 +1,5 @@
 import { buildDeckCart, type DeckCartLine } from "@/lib/deck-basket";
+import type { BasketPlan } from "@/lib/basket";
 import { formatMoney } from "@/lib/format";
 import { type Country } from "@/lib/country";
 import { getDisplayCurrency } from "@/lib/get-country";
@@ -13,6 +14,33 @@ import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 // public (affiliate-monetized). Renders nothing if no cards are buyable yet.
 export async function DeckCart({ lines, country }: { lines: DeckCartLine[]; country: Country }) {
   const plan = await buildDeckCart(lines, country);
+  return <DeckCartView plan={plan} country={country} />;
+}
+
+/**
+ * The rendering half, split out so a caller that has ALREADY run the optimiser
+ * can show the same table without running it twice. The deck-group landing pages
+ * need the plan's own numbers (total, store count) for their FAQ copy and their
+ * JSON-LD before the markup is built, and a second buildDeckCart() call for the
+ * same deck would double this page's database reads for an identical answer —
+ * which the egress rules in lib/db.ts exist to prevent.
+ *
+ * `heading`/`note` default to the per-deck wording, so <DeckCart> renders
+ * byte-identically to before this split.
+ */
+export function DeckCartView({
+  plan,
+  country,
+  heading = "Build this deck — cheapest cart",
+  note,
+  className = "mt-6",
+}: {
+  plan: BasketPlan | null;
+  country: Country;
+  heading?: string;
+  note?: string;
+  className?: string;
+}) {
   if (!plan || plan.stores.length === 0) return null;
 
   // A European shopper browsing the UK market (real GBP stores) sees the cart
@@ -22,14 +50,16 @@ export async function DeckCart({ lines, country }: { lines: DeckCartLine[]; coun
   const fmt = (c: number) => formatMoney(isEurDisplay ? gbpCentsToEur(c) : c, currency);
 
   return (
-    <section className="card-surface mt-6 overflow-hidden">
+    <section className={`card-surface overflow-hidden ${className}`}>
       <div className="border-b border-ink-700 p-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-bold text-white">Build this deck — cheapest cart</h2>
+            <h2 className="font-bold text-white">{heading}</h2>
             <p className="mt-0.5 text-xs text-slate-500">
-              {plan.matchedCards} cards priced, bought across {plan.storeCount}{" "}
-              {plan.storeCount === 1 ? "store" : "stores"} to minimise total delivered cost.
+              {note ??
+                `${plan.matchedCards} cards priced, bought across ${plan.storeCount} ${
+                  plan.storeCount === 1 ? "store" : "stores"
+                } to minimise total delivered cost.`}
             </p>
           </div>
           <div className="text-right">

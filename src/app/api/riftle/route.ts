@@ -31,22 +31,26 @@ export async function GET(req: Request) {
   const seedParam = url.searchParams.get("seed");
   const seed = seedParam && seedSchema.safeParse(seedParam).success ? seedParam : null;
 
-  if (url.searchParams.get("reveal") === "1") {
-    const card = seed ? await getCardForSeed(unlimitedSeed(seed)) : await getDailyCard(day);
-    return NextResponse.json({ day, card });
-  }
-  if (url.searchParams.get("hints") === "1") {
-    const hints = seed ? await getHintsForSeed(unlimitedSeed(seed)) : await getDailyHints(day);
+  try {
+    if (url.searchParams.get("reveal") === "1") {
+      const card = seed ? await getCardForSeed(unlimitedSeed(seed)) : await getDailyCard(day);
+      return NextResponse.json({ day, card });
+    }
+    if (url.searchParams.get("hints") === "1") {
+      const hints = seed ? await getHintsForSeed(unlimitedSeed(seed)) : await getDailyHints(day);
+      return NextResponse.json(
+        { day, hints },
+        { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
+      );
+    }
+    const names = await getPoolNames();
     return NextResponse.json(
-      { day, hints },
+      { day, attempts: RIFTLE_ATTEMPTS, names },
       { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
     );
+  } catch {
+    return NextResponse.json({ error: "Couldn't load today's puzzle — please try again." }, { status: 500 });
   }
-  const names = await getPoolNames();
-  return NextResponse.json(
-    { day, attempts: RIFTLE_ATTEMPTS, names },
-    { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
-  );
 }
 
 const schema = z.object({ name: z.string().min(1).max(80), seed: seedSchema.optional() });
@@ -57,18 +61,22 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid guess" }, { status: 400 });
 
-  const guess = await resolveGuess(parsed.data.name);
-  if (!guess) return NextResponse.json({ error: "Card not found — pick a name from the suggestions." }, { status: 404 });
+  try {
+    const guess = await resolveGuess(parsed.data.name);
+    if (!guess) return NextResponse.json({ error: "Card not found — pick a name from the suggestions." }, { status: 404 });
 
-  const answer = parsed.data.seed
-    ? await getCardForSeed(unlimitedSeed(parsed.data.seed))
-    : await getDailyCard();
-  if (!answer) return NextResponse.json({ error: "No puzzle today" }, { status: 503 });
+    const answer = parsed.data.seed
+      ? await getCardForSeed(unlimitedSeed(parsed.data.seed))
+      : await getDailyCard();
+    if (!answer) return NextResponse.json({ error: "No puzzle today" }, { status: 503 });
 
-  const feedback = compareGuess(guess, answer);
-  return NextResponse.json({
-    day: riftleDay(),
-    feedback,
-    ...(feedback.correct ? { card: answer } : {}),
-  });
+    const feedback = compareGuess(guess, answer);
+    return NextResponse.json({
+      day: riftleDay(),
+      feedback,
+      ...(feedback.correct ? { card: answer } : {}),
+    });
+  } catch {
+    return NextResponse.json({ error: "Couldn't check that guess — please try again." }, { status: 500 });
+  }
 }

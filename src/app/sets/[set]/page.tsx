@@ -7,7 +7,6 @@ import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { CardTile } from "@/components/CardTile";
 import { EbayPicks } from "@/components/EbayPicks";
-import { EbayAuctions } from "@/components/EbayAuctions";
 import { CountUp } from "@/components/CountUp";
 import { Reveal } from "@/components/Reveal";
 import { Filters } from "@/components/Filters";
@@ -24,9 +23,12 @@ import {
   parsePageSize,
 } from "@/lib/cards";
 import { getCountry } from "@/lib/get-country";
-import { priceField } from "@/lib/country";
+import { priceField, COUNTRIES } from "@/lib/country";
+import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
+import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic — same
 // tradeoff as /browse.
@@ -72,18 +74,64 @@ export async function generateMetadata({
     `${set.name} Card List & Prices`,
   ];
   const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
-  const descCandidates = [
-    `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
-    `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
-    `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
-  ];
-  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
   // page; these empty set URLs are the bulk of the "discovered/crawled – not indexed"
   // pile. It flips back to indexable automatically the moment cards are imported.
-  const cardCount = await prisma.card.count({ where: { setCode: set.code } });
+  // GUARDED, and the -1 sentinel matters. This route is force-dynamic, so this
+  // count runs against the database on EVERY request — and an unguarded await in
+  // generateMetadata throws before the page renders at all, i.e. a hard 500
+  // rather than a degraded page. /browse makes the identical call and already
+  // guards it (`.catch(() => 0)`); this one did not, which is why a spike in
+  // 5xx on 2026-08-13 landed on /sets/[set] specifically while /browse rode it
+  // out: the operational database was days from exhausting its Neon transfer
+  // allowance (the rotation onto DATABASE_URL_2 followed on 2026-08-14).
+  //
+  // -1, NOT 0, because `cardCount === 0` below emits robots:noindex for
+  // genuinely empty sets. Falling back to 0 would mean a transient database
+  // blip tells Google to drop a real, fully-populated set page — and noindex is
+  // cached, so the damage outlasts the outage by far more than a 500 would.
+  // Unknown therefore fails OPEN for indexability; Math.max(1, …) below already
+  // collapses a negative to a single page, so pagination stays sane too.
+  //
+  // Moved ABOVE the description below (it used to run after) so the description
+  // can branch on it: see the cardCount === 0 case there.
+  const cardCount = await prisma.card.count({ where: { setCode: set.code } }).catch(() => -1);
+  // PRE-RELEASE BRANCH: cardCount === 0 (not < 1 — a -1 lookup failure keeps the
+  // normal "complete card list" copy, matching the fail-open bias above, rather
+  // than switching every set to pre-release wording on a transient DB blip).
+  //
+  // Found live on /sets/radiance: with 0 cards imported and the page correctly
+  // noindexed, the description STILL claimed "The complete Riftbound Radiance
+  // card list — every card with images, plus live prices... Updated daily" —
+  // false today, harmless only because noindex currently holds, and a landmine
+  // that depends on a human remembering to also touch this copy on launch day
+  // (23 Oct 2026 for Radiance) after removing the noindex. Branching on the
+  // same cardCount the noindex itself reads means the honest copy and the
+  // indexability both flip together, automatically, the moment cards import —
+  // no separate step to forget.
+  const releaseDateLabel = set.releasedOn
+    ? new Date(`${set.releasedOn}T00:00:00Z`).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+  const descCandidates =
+    cardCount === 0
+      ? [
+          releaseDateLabel
+            ? `Riftbound ${set.name} releases ${releaseDateLabel} — this page will list every card with live prices from launch day.`
+            : `Riftbound ${set.name} hasn't released yet — this page will list every card with live prices from launch day.`,
+        ]
+      : [
+          `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
+          `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+          `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
+        ];
+  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
   // A filtered/searched view (like /browse's ?q=) is a permutation of the same
   // content, not a distinct page — noindex it and point Google at the clean set page.
   const filtered = !isCleanPagination(searchParams);
@@ -110,13 +158,10 @@ export async function generateMetadata({
       `cheapest Riftbound ${set.name} cards`,
       `Riftbound ${set.name} value`,
     ],
-    alternates: {
-      canonical: canonicalPath,
-      // Single cookie-switched URL is the global default for all four markets.
-      languages: { "x-default": `${SITE_URL}${canonicalPath}` },
-    },
+    // Single cookie-switched URL is the global default for all four markets.
+    alternates: pageAlternates(canonicalPath, { languages: { "x-default": `${SITE_URL}${canonicalPath}` } }),
     ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title: `${title} | RiftCompare`, description, url: `${SITE_URL}${canonicalPath}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
   };
 }
 
@@ -168,6 +213,56 @@ export default async function SetPage({
     : await runQuery();
   const [total, cards] = totalInSet === 0 ? [0, []] : [totalFiltered, cardsFiltered];
   const totalPages = Math.max(1, Math.ceil(total / size));
+
+  // ── Data-derived editorial intro (GROWTH-AUDIT.md § 3) ─────────────────────
+  // This template measured 459 median prose words while carrying 347 inbound
+  // internal links — the best-linked thin page on the site. buildCollectionNarrative
+  // already supported kind: "set" and had simply never been called here; it is
+  // the same generator the champion hubs and facets use, so the analytical tone
+  // matches by construction.
+  //
+  // DEFAULT VIEW ONLY, and its own lean query. The grid above is one page of 60
+  // cards, which cannot describe a set's price distribution — the narrative needs
+  // every card's price, but only four scalar fields of each, so this pulls ~60
+  // bytes a row instead of a full tile payload (see the egress rules in lib/db.ts).
+  // Filtered and paged views skip it entirely: they canonicalise elsewhere, so
+  // they are not the indexed page this prose exists for, and they must not pay
+  // for a query they don't render.
+  const narrativeMembers = isDefaultView
+    ? await unstable_cache(
+        () =>
+          prisma.card.findMany({
+            where: { setCode: set.code },
+            select: { name: true, rarity: true, collectorNumber: true, [priceField(country)]: true },
+          }),
+        ["set-narrative", set.code, country],
+        { revalidate: 3600, tags: [CONTENT_TAG] },
+      )().catch((e) => {
+        // A narrative is worth less than the page. Degrade to no intro.
+        console.error(`sets/${set.slug}: narrative query failed, rendering without the intro:`, e);
+        return [] as Record<string, unknown>[];
+      })
+    : [];
+  const siteMedianCents = isDefaultView ? await getSiteMedianCents(country) : null;
+  const intro =
+    narrativeMembers.length > 0
+      ? buildCollectionNarrative({
+          kind: "set",
+          label: set.name,
+          currency: COUNTRIES[country].currency,
+          place: COUNTRIES[country].place,
+          members: narrativeMembers.map((c) => {
+            const row = c as Record<string, unknown>;
+            return {
+              name: String(row.name),
+              priceCents: (row[priceField(country)] as number | null) ?? null,
+              rarity: row.rarity as string | undefined,
+              collectorNumber: row.collectorNumber as string | undefined,
+            };
+          }),
+          siteMedianCents,
+        })
+      : [];
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
   // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
@@ -246,6 +341,18 @@ export default async function SetPage({
               (paginated, filter-driven); a chunk of arriving traffic actually wants
               to LOOK at the set — "<set> card gallery" is its own query cluster —
               so give that intent a first-class exit rather than burying it. */}
+          {/* Data-derived intro: scale and price coverage, the range and where the
+              value is concentrated, the cards worth knowing about by name, and
+              what that means for a buyer. Every figure comes from this set's own
+              rows — see the query above. Renders on the default view only. */}
+          {intro.length > 0 && (
+            <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+              {intro.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          )}
+
           {totalInSet > 0 && (
             <p className="mt-3 text-sm">
               <Link href={`/sets/${set.slug}/gallery`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">
@@ -306,9 +413,13 @@ export default async function SetPage({
               <div className="mx-auto mt-6 max-w-lg border-t border-ink-800 pt-5 text-left">
                 <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for Vendetta</p>
                 <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
-                  <li><Link href="/blog/riftbound-vendetta-everything-you-need-to-know" className="text-brand-400 hover:underline">Everything you need to know →</Link></li>
+                  {/* The "everything you need to know" and "new mechanics roundup"
+                      posts were retired in the Aug 2026 low-performer prune (see
+                      next.config.js redirects) — these link their surviving
+                      equivalents instead. */}
+                  <li><Link href="/blog/riftbound-vendetta-nexus-night-promo-cards" className="text-brand-400 hover:underline">Nexus Night promo cards →</Link></li>
                   <li><Link href="/guides/riftbound-empower-explained" className="text-brand-400 hover:underline">Empower mechanic explained →</Link></li>
-                  <li><Link href="/blog/riftbound-vendetta-new-mechanics-flow-burn-empower" className="text-brand-400 hover:underline">New mechanics: Flow, Burn &amp; Empower →</Link></li>
+                  <li><Link href="/guides/riftbound-flow-explained" className="text-brand-400 hover:underline">Flow mechanic explained →</Link></li>
                   <li><Link href="/blog/riftbound-vendetta-unit-gear-decrees" className="text-brand-400 hover:underline">New card types: Unit-Gear &amp; Decrees →</Link></li>
                   <li><Link href="/guides/building-for-riftbound-vendetta" className="text-brand-400 hover:underline">Deckbuilding guide &amp; synergies →</Link></li>
                   <li><Link href="/guides/best-riftbound-vendetta-decks" className="text-brand-400 hover:underline">Best Vendetta decks &amp; archetypes →</Link></li>
@@ -387,18 +498,6 @@ export default async function SetPage({
         setCode={set.code}
         heading={`${set.name} singles on eBay right now`}
         fallbackQuery={`Riftbound ${set.name}`}
-      />
-
-      {/* Chase-card auctions closing soonest, across the whole set. This is the
-          one surface where the deadline is the product: a set hub is browsed,
-          not searched, so "three of this set's chase cards are mid-auction and
-          the first closes in four hours" is a reason to be here now rather than
-          a link to somewhere else. Renders nothing when none are live. */}
-      <EbayAuctions
-        setCode={set.code}
-        take={6}
-        heading={`${set.name} chase cards — auctions ending soon`}
-        showCardName
       />
 
       {/* Internal links to the other sets (crawl + UX) */}

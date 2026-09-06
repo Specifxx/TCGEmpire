@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { pickPrice, type Country } from "@/lib/country";
 import { sendAlertConfirmationEmail } from "@/lib/email";
@@ -13,7 +14,7 @@ const schema = z.object({
   email: z.string().trim().toLowerCase().email().max(200),
   // The card ids to watch (the user's wishlist). Capped to keep one request cheap.
   cardIds: z.array(z.string().min(1)).min(1).max(500),
-  market: z.enum(["AU", "NZ", "US", "UK", "SG", "CA"]).default("AU"),
+  market: z.enum(["AU", "US", "UK", "SG", "CA", "EU"]).default("AU"),
 });
 
 // Subscribe an email to price-drop alerts for a set of wishlisted cards. No account
@@ -30,6 +31,19 @@ export async function POST(req: Request) {
   }
   const { email, cardIds, market } = parsed.data;
 
+  // Attach ownership when this request happens to carry a session AND that
+  // session's address matches the one being subscribed. Someone signed in who
+  // reaches this older modal path gets an account-owned row, so it shows up on
+  // /watchlist rather than becoming an invisible email-only watch.
+  //
+  // THE EMAIL COMPARISON IS THE SECURITY BOUNDARY. The address arrives in the
+  // request body, so trusting it alone would let any signed-in user POST a
+  // stranger's address and claim that person's watches. No session, or a
+  // mismatched address, stays NULL — which is simply the anonymous flow,
+  // unchanged.
+  const me = await getCurrentUser();
+  const userId = me && me.email === email ? me.id : null;
+
   // Only watch cards that actually exist; capture today's lowest price as the
   // baseline so we alert on FUTURE drops, not on the price they're already at.
   const cards = await prisma.card.findMany({
@@ -37,11 +51,11 @@ export async function POST(req: Request) {
     select: {
       id: true,
       lowestPriceCents: true,
-      lowestPriceCentsNz: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,
       lowestPriceCentsCa: true,
+      lowestPriceCentsEu: true,
     },
   });
   if (cards.length === 0) {
@@ -61,6 +75,7 @@ export async function POST(req: Request) {
   const result = await prisma.priceAlert.createMany({
     data: cards.map((c) => ({
       email,
+      userId,
       cardId: c.id,
       market,
       unsubToken,
@@ -77,8 +92,10 @@ export async function POST(req: Request) {
   // repeat heart-click.
   if (result.count > 0) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
-    // Don't block the response on the network round-trip.
-    void sendAlertConfirmationEmail(email, total, unsubUrl);
+    // Don't block the response on the network round-trip. `userId == null`
+    // means this watch has no account behind it — those recipients (and only
+    // those) get the create-a-free-account block in the confirmation.
+    void sendAlertConfirmationEmail(email, total, unsubUrl, userId == null);
   }
 
   return NextResponse.json({ ok: true, added: result.count, watching: total });

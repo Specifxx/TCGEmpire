@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { SideNav } from "@/components/SideNav";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -12,22 +14,62 @@ import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
 import { DEFAULT_COUNTRY } from "@/lib/country";
-import { CONTACT_EMAIL, DISCORD_URL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { CONTACT_EMAIL, DISCORD_URL, FACEBOOK_URL, INSTAGRAM_URL, SITE_NAME, SITE_URL, X_URL } from "@/lib/site";
 import { IMPACT_SITE_VERIFICATION } from "@/lib/affiliate";
-import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
 import { FooterNav } from "@/components/FooterNav";
-import { NativeShell } from "@/components/NativeShell";
-import { ReferralCapture } from "@/components/ReferralCapture";
-import { FooterAds } from "@/components/FooterAds";
-import { PriceAlertModal } from "@/components/PriceAlertModal";
-import { SignupPromoPopup } from "@/components/SignupPromoPopup";
+import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
-import { MetaPixel } from "@/components/MetaPixel";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { GAPageViewTracker } from "@/components/GAPageViewTracker";
+import { SignupWelcome } from "@/components/SignupWelcome";
+import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
+
+// Neither is needed for the initial paint or SEO: the alert modal only opens in
+// response to a PriceWatchButton click, and the signup popup waits 25s before
+// showing itself. ssr:false + dynamic import keeps both out of the JS the
+// browser has to parse/execute before first paint.
+const PriceAlertModal = dynamic(() => import("@/components/PriceAlertModal").then((m) => m.PriceAlertModal), {
+  ssr: false,
+});
+const SignupPromoPopup = dynamic(() => import("@/components/SignupPromoPopup").then((m) => m.SignupPromoPopup), {
+  ssr: false,
+});
+// Low-intrusion Premium nudge for logged-in non-Premium users (a corner slide-in,
+// not a modal). ssr:false — it renders nothing until a few pages into a session,
+// so there's nothing for a crawler to see and no reason to ship it server-side.
+const PremiumSlideIn = dynamic(() => import("@/components/PremiumSlideIn").then((m) => m.PremiumSlideIn), {
+  ssr: false,
+});
+// Retention nudge: offer monthly Premium subscribers a one-click switch to annual.
+// ssr:false and self-gated to premium/monthly users — renders nothing for everyone
+// else, and never coincides with the non-Premium slide-in above.
+const AnnualSwitchNudge = dynamic(() => import("@/components/AnnualSwitchNudge").then((m) => m.AnnualSwitchNudge), {
+  ssr: false,
+});
+// The always-available feedback launcher. ssr:false because it renders nothing
+// until a visitor clicks it, so there is no content for a crawler to miss and no
+// reason to pay for it in the server HTML.
+const FeedbackWidget = dynamic(() => import("@/components/FeedbackWidget").then((m) => m.FeedbackWidget), {
+  ssr: false,
+});
+// Real footer ad content — kept SSR'd (ssr: true, the default) for the same
+// reason the rest of the site's ad units are: an AdSense reviewer or crawler
+// fetching raw HTML must still see it. Only the JS is split out of the
+// initial hydration bundle.
+const FooterAds = dynamic(() => import("@/components/FooterAds").then((m) => m.FooterAds));
+// Both render nothing on the web (NativeShell no-ops outside the Capacitor
+// native app; ReferralCapture is a pure side-effect that writes a cookie) —
+// ssr:false costs nothing content-wise and keeps their JS out of the bundle
+// every browser visitor has to parse before hydration.
+const NativeShell = dynamic(() => import("@/components/NativeShell").then((m) => m.NativeShell), { ssr: false });
+const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").then((m) => m.ReferralCapture), {
+  ssr: false,
+});
 
 // PREVIEW BRANCH — emulates the official Riftbound/League of Legends site's
 // typographic DNA (a sharp, flared serif for titling over a clean humanist sans
@@ -63,7 +105,7 @@ export const metadata: Metadata = {
     template: "%s — RiftCompare",
   },
   description:
-    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
+    "The Riftbound TCG card database and price comparison. Browse every card and compare live prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
   applicationName: SITE_NAME,
   // NO `keywords` meta. Google has ignored it since 2009 and Bing treats stuffing
   // it as a negative signal; it only ever advertised our target terms to
@@ -87,7 +129,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "RiftCompare — Riftbound Card Database & Price Comparison",
     description:
-      "Compare live Riftbound TCG card prices across stores in Australia, New Zealand, the US, the UK, Singapore and Canada to find the cheapest place to buy.",
+      "Compare live Riftbound TCG card prices across stores in Australia, the US, the UK, Singapore, Canada and the EU to find the cheapest place to buy.",
   },
   twitter: { card: "summary_large_image" },
   // Opt into large image thumbnails + full text snippets in Google/Bing results
@@ -100,10 +142,21 @@ export const metadata: Metadata = {
   // Search engine site verification. Google's "HTML tag" method verifies a
   // URL-prefix property INSTANTLY (no DNS propagation wait) — the token below is
   // served in <head> on every page. Override per-deploy via env if needed.
+  //
+  // Bing Webmaster Tools uses the same "meta tag" method, keyed `msvalidate.01`
+  // — Next's `verification.other` emits it as a second <meta name="..."> next to
+  // Google's. UNLIKE Google's, there is no real token to fall back to here: this
+  // repo has never had one, so — deliberately, unlike GOOGLE_SITE_VERIFICATION
+  // above — nothing renders until BING_SITE_VERIFICATION is set in the deploy
+  // env. A fabricated placeholder would just fail Bing's verification check
+  // silently; omitting the tag entirely until a real token exists is the
+  // correct failure mode. Bing + DuckDuckGo + Brave (Bing-indexed) are ~45% of
+  // this site's search referrals and were unmonitored before this.
   verification: {
     google:
       process.env.GOOGLE_SITE_VERIFICATION ??
       "fPFxAkXOBeYdNPNbNGo-ZItApU0457uWVkbPkfzzzXs",
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } } : {}),
   },
 };
 
@@ -122,10 +175,10 @@ const orgJsonLd = {
       url: SITE_URL,
       logo: `${SITE_URL}/icon-512.png`,
       // Linked profiles — entity signals tying the org to its community presence.
-      // ADD real profile URLs here as they exist (X/Twitter, YouTube, Reddit) and a
-      // Wikidata item once created; each `sameAs` strengthens entity disambiguation
-      // for AI answer engines (Gemini/Perplexity) where brand signals outweigh links.
-      sameAs: [DISCORD_URL],
+      // ADD real profile URLs here as they exist (YouTube, Reddit) and a Wikidata
+      // item once created; each `sameAs` strengthens entity disambiguation for AI
+      // answer engines (Gemini/Perplexity) where brand signals outweigh links.
+      sameAs: [DISCORD_URL, INSTAGRAM_URL, X_URL, FACEBOOK_URL],
       // What this entity is authoritative about — helps NER map "RiftCompare" to the
       // specific TCG-pricing entity rather than a generic term.
       knowsAbout: [
@@ -137,13 +190,21 @@ const orgJsonLd = {
         "Sealed trading card products",
       ],
       // Markets served (drives regional entity understanding without per-locale URLs).
+      // ORDER MATCHES COUNTRY_LIST (lib/country.ts) — United States first, because
+      // DEFAULT_COUNTRY is "US": that's the market Googlebot's single crawled/
+      // cached render actually shows, so it should lead here too. This used to
+      // lead with Australia, a leftover from when DEFAULT_COUNTRY itself was "AU"
+      // (see the history note on card/[id]/page.tsx) — never revisited after the
+      // default market changed. Also added the EU market, missing entirely since
+      // its 2026-08-23 launch (six markets in the ARTICLES/COUNTRY_LIST sense, but
+      // this array still said five).
       areaServed: [
-        { "@type": "Country", name: "Australia" },
-        { "@type": "Country", name: "New Zealand" },
         { "@type": "Country", name: "United States" },
+        { "@type": "Country", name: "Australia" },
         { "@type": "Country", name: "United Kingdom" },
         { "@type": "Country", name: "Singapore" },
         { "@type": "Country", name: "Canada" },
+        { "@type": "Country", name: "European Union" },
       ],
       contactPoint: {
         "@type": "ContactPoint",
@@ -152,7 +213,7 @@ const orgJsonLd = {
         availableLanguage: "English",
       },
       description:
-        "Riftbound: League of Legends TCG card database and live price-comparison across Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, home of the RiftCompare Index.",
+        "Riftbound: League of Legends TCG card database and live price-comparison across the United States, Australia, the United Kingdom, Singapore, Canada and the EU, home of the RiftCompare Index.",
     },
     {
       "@type": "WebSite",
@@ -177,14 +238,28 @@ const orgJsonLd = {
 // resolved client-side instead (CountryProvider reconciles from
 // document.cookie + /api/geo; NavUser/PremiumProvider fetch /api/me).
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // Neutral lang="en": one cookie-switched URL serves all four English markets
-  // (AU/NZ/US/UK), so a single market tag like en-AU would mislabel the others.
+  // Neutral lang="en": one cookie-switched URL serves all three English markets
+  // (AU/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
       <head>
         {/* Google Consent Mode v2 defaults — MUST be the first thing that runs, so
             the ad/measurement tags below never fire against an unset state. */}
         <ConsentDefaults />
+        {/* Google Analytics 4. Mounted AFTER ConsentDefaults on purpose — Consent
+            Mode only applies to hits queued behind its defaults, so the order of
+            these two lines is load-bearing, not cosmetic. See the component
+            header for why this is not Google's verbatim snippet. */}
+        <GoogleAnalytics />
+        {/* Fires GA4's page_view explicitly on every client-side route change —
+            see the component header for why this replaced relying on GA4's
+            Enhanced Measurement History-API auto-detection. */}
+        <GAPageViewTracker />
+        {/* GA4 User-ID. Renders nothing; sets an opaque per-account identifier once
+            /api/me resolves and consent allows, and clears it on sign-out. Safe to
+            mount in <head> — it is a client component with no markup, so it does
+            not depend on being anywhere in particular. */}
+        <GoogleAnalyticsUser />
         {/* Impact / TCGplayer affiliate site-ownership verification. Impact looks for
             the non-standard `value` attribute, so spread it past the meta typing. */}
         <meta {...({ name: "impact-site-verification", value: IMPACT_SITE_VERIFICATION } as any)} />
@@ -207,10 +282,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight
-            to content. Visually hidden until focused (WCAG 2.4.1 Level A). */}
+            to content. Visually hidden until focused (WCAG 2.4.1 Level A).
+            focus:min-h-11 + flex/items-center: measured ~36px tall once
+            focused (py-2 + text-sm alone) — short of this site's 44px mobile
+            tap-target floor. Still keyboard-first in practice (Tab then
+            Enter, not a touch tap), but there's no reason to leave a known,
+            cheap-to-fix gap against the same floor everything else on the
+            page now meets. */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-brand-400 focus:ring-2 focus:ring-brand-400"
         >
           Skip to main content
         </a>
@@ -223,12 +304,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CommandLauncherProvider>
               <MegaMenuProvider>
                 <Navbar />
+                <SideNav />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
                     block (right under the hero) carries the "it's here" message
                     with real prices instead of a repeating marquee claim. */}
-                <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
-                <PriceAlertModal />
+                {/* pl-[var(--sidenav-w)] on this OUTER wrapper, not on <main> itself
+                    — combining a pl-* utility with container-app's own px-* on the
+                    SAME element is a well-known Tailwind footgun (both set
+                    padding-left; which one wins depends on generated CSS order,
+                    not className order). Keeping them on separate elements sidesteps
+                    that entirely. 0 below xl, so a no-op everywhere SideNav is
+                    hidden; SideNav itself is `position: fixed`, not a layout
+                    participant, so this is what actually reserves its space. */}
+                <div className="pl-[var(--sidenav-w)]">
+                  <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
+                </div>
+                <PriceAlertModal providers={enabledProviders()} />
                 <SignupPromoPopup providers={enabledProviders()} />
+                {/* Signed-in, non-Premium browsing nudge — the signed-out
+                    counterpart of SignupPromoPopup. The two never overlap by
+                    audience. */}
+                <PremiumSlideIn />
+                {/* Its mirror image: monthly-Premium → annual retention nudge.
+                    Mutually exclusive with PremiumSlideIn by `premium` state. */}
+                <AnnualSwitchNudge />
+
+                {/* Converts the OAuth callback's one-time ?welcome= param into
+                    the sign_up analytics event, then strips it from the URL.
+                    Renders nothing. */}
+                <SignupWelcome />
+                {/* Feedback launcher. Deliberately never auto-opens — see the
+                    component header for why a second uninvited dialog would be
+                    self-defeating here. It hides itself over the ad zone below. */}
+                <FeedbackWidget />
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>
@@ -238,16 +346,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             is left unmonetised. Both are CPC/affiliate: they pay on click-through
             purchases, so placement-where-relevant beats raw banner count.
             FooterAds reads the market from the client country context (inside
-            CountryProvider) so the layout stays cookie-free and cacheable. */}
-        <FooterAds />
+            CountryProvider) so the layout stays cookie-free and cacheable.
+            SideNav is `position: fixed` and spans the FULL page height (it
+            doesn't scroll away), so the ad zone needs the same pl-[var(--sidenav-w)]
+            reservation as <main> above — without it, the fixed panel would sit
+            on top of (not beside) these banners once scrolled into view. */}
+        <div className="pl-[var(--sidenav-w)]">
+          <FooterAds />
+        </div>
         </CountryProvider>
-        <footer className="container-app border-t border-ink-800 py-8 text-center text-xs text-slate-500">
+        <footer className="border-t border-ink-800 py-8 text-center text-xs text-slate-500">
+        <div className="container-app pl-[var(--sidenav-w)]">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
-              when the xl SideNav is absent (mobile, homepage, smaller desktops).
-              4 columns on desktop, collapsible accordions on mobile — see
-              FooterNav / nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
+              on mobile/tablet, where the xl-and-up SideNav is hidden. 4 columns
+              on desktop, collapsible accordions on mobile — see FooterNav /
+              nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
+          {/* Share band. The site's only other share controls are per-article
+              (ArticleShare) and per-card (ShareButton), so there was nowhere to
+              share RiftCompare ITSELF from — the thing a happy visitor is most
+              likely to want to pass on. Sits in the footer on every page:
+              always reachable, never an interruption. */}
+          <div className="mb-5 flex flex-col items-center gap-2 border-y border-ink-800/70 py-4">
+            <span className="text-xs text-slate-400">Find RiftCompare useful? Send it to someone who buys Riftbound.</span>
+            <ShareRow source="footer" size="sm" />
+          </div>
           <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
             <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
             <span className="text-ink-700">·</span>
@@ -257,27 +381,61 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-ink-700">·</span>
             <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
             <span className="text-ink-700">·</span>
-            {/* Returns sits OUTSIDE the MARKETPLACE_NAV_VISIBLE gate on purpose:
-                Google Merchant Center and Shopping ads need a conventional return
-                policy reachable from every page regardless of whether marketplace
-                navigation is currently surfaced. */}
-            <Link href="/returns" className="tap-link text-slate-300 hover:text-brand-400">Returns &amp; shipping</Link>
-            <span className="text-ink-700">·</span>
-            {MARKETPLACE_NAV_VISIBLE && (
-              <>
-                <Link href="/marketplace/terms" className="tap-link text-slate-300 hover:text-brand-400">Marketplace terms</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/buyer-protection" className="tap-link text-slate-300 hover:text-brand-400">Buyer protection</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/shipping" className="tap-link text-slate-300 hover:text-brand-400">Shipping &amp; tracking</Link>
-                <span className="text-ink-700">·</span>
-                <Link href="/marketplace/faq" className="tap-link text-slate-300 hover:text-brand-400">Marketplace FAQ</Link>
-                <span className="text-ink-700">·</span>
-              </>
-            )}
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
             <span className="text-ink-700">·</span>
+            <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
+            <span className="text-ink-700">·</span>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
+            <span className="text-ink-700">·</span>
+            {/* Discord was header-only (see Navbar.tsx) plus the Organization
+                JSON-LD's sameAs below — the homepage-redesign brief's footer
+                table explicitly lists it as something the footer itself must
+                show, so it gets a real row here too. A plain external <a>
+                (not FooterNav/NAV_GROUPS): NAV_GROUPS also feeds the ⌘K
+                command launcher, whose keyboard-select path calls Next's
+                router.push(href) — built for internal routes, not an
+                external https:// URL — so adding it there risked a broken
+                launcher entry for the sake of one footer link. This row
+                already carries other plain external links (RiftboundStocks.com
+                below, the mailto: link) with the same pattern. */}
+            <a
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#5865F2]"
+            >
+              Discord
+            </a>
+            <span className="text-ink-700">·</span>
+            {/* Same plain-external-link pattern as Discord above — official
+                social profiles, also listed in the Organization JSON-LD's
+                sameAs for entity-disambiguation SEO (see orgJsonLd below). */}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#E1306C]"
+            >
+              Instagram
+            </a>
+            <span className="text-ink-700">·</span>
+            <a
+              href={X_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-white"
+            >
+              X
+            </a>
+            <span className="text-ink-700">·</span>
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap-link text-slate-300 hover:text-[#1877F2]"
+            >
+              Facebook
+            </a>
             <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders
                 nothing where no message applies). Required for a published
@@ -285,23 +443,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <PrivacySettingsLink />
             <a href={`mailto:${CONTACT_EMAIL}`} className="tap-link text-gold hover:underline">{CONTACT_EMAIL}</a>
           </div>
-          {/* Cross-promotion: our sister site for the Pokémon TCG. */}
+          {/* Cross-promotion: our other Riftbound side project. Cheeky on purpose —
+              per owner request 2026-08-13. */}
           <p className="mb-2">
-            Collect <strong className="font-semibold text-slate-400">Pokémon</strong> cards too? Compare
-            prices across every English card on our sister site{" "}
+            Yes, we know Riftbound cards aren&apos;t literally stocks. Try telling
+            that to{" "}
+            {/* tap-link: measured ~15px tall on mobile (a plain inline <a>,
+                min-height doesn't apply without a flex/inline-flex display) —
+                same fix as this row's other plain external links above. */}
             <a
-              href="https://dexcompare.app"
+              href="https://riftboundstocks.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-brand-400 hover:underline"
+              className="tap-link font-semibold text-brand-400 hover:underline"
             >
-              DexCompare.app
+              RiftboundStocks.com
             </a>
-            .
+            , our other site, where we track them like the market&apos;s open anyway.
           </p>
           <p>
             RiftCompare · Riftbound card database &amp; price comparison for
-            Australia, New Zealand, the US, the UK, Singapore and Canada. Prices are sourced from public store listings and may be out
+            Australia, the US, the UK, Singapore, Canada and the EU. Prices are sourced from public store listings and may be out
             of date — always confirm on the retailer&apos;s site.
           </p>
           {/* Riot's Legal Jibber Jabber policy requires this EXACT notice, displayed
@@ -314,6 +476,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             policy using assets owned by Riot Games. Riot Games does not endorse or
             sponsor this project.
           </p>
+          <p className="mt-2">&copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
+        </div>
         </footer>
         {/* Detects the Capacitor native runtime and shows native AdMob ads, styles
             the status bar and wires the Android back button. No-op on the web. */}
@@ -325,9 +489,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Outside the consent message's scope this mounts after a short grace
             period, so non-EEA measurement is unaffected. */}
         <ConsentGatedAnalytics />
-        {/* Meta Pixel — ad measurement + retargeting for Meta (Facebook/Instagram)
-            ads. Production + web only; see the component for the guards. */}
-        <MetaPixel />
         </PremiumDialogProvider>
         </PremiumProvider>
       </body>

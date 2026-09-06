@@ -61,8 +61,8 @@ async function main() {
       id: true, slug: true, name: true, nameNormalized: true, externalId: true,
       setCode: true, setName: true, collectorNumber: true, variant: true,
       isPromo: true, domain: true, type: true, rarity: true, imageUrl: true, imageThumbUrl: true,
-      lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true,
-      lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+      lowestPriceCents: true, lowestPriceCentsUs: true,
+      lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true,
       ebayCheckedAt: true,
     },
   });
@@ -135,11 +135,11 @@ async function main() {
   // (so an SG-only phantom-price bug was undetectable) and CA would have been too.
   const MARKETS: { code: string; field: PriceField }[] = [
     { code: "AU", field: "lowestPriceCents" },
-    { code: "NZ", field: "lowestPriceCentsNz" },
     { code: "US", field: "lowestPriceCentsUs" },
     { code: "UK", field: "lowestPriceCentsUk" },
     { code: "SG", field: "lowestPriceCentsSg" },
     { code: "CA", field: "lowestPriceCentsCa" },
+    { code: "EU", field: "lowestPriceCentsEu" },
   ];
   for (const m of MARKETS) {
     const phantom = cards.filter((c) => c[m.field] != null && !stock.get(`${c.id}|${m.code}`));
@@ -162,13 +162,13 @@ async function main() {
     zombies.length
   );
   const badCountry = await prisma.retailerPrice.groupBy({ by: ["country"], _count: { _all: true } });
-  const unknownMarkets = badCountry.filter((r) => !["AU", "NZ", "US", "UK"].includes(r.country));
+  const unknownMarkets = badCountry.filter((r) => !["AU", "US", "UK", "SG", "CA"].includes(r.country));
   report("listings with an unknown market code", unknownMarkets.map((r) => `"${r.country}" × ${r._count._all}`));
 
   // ── Freshness ────────────────────────────────────────────────────────────────
   section("Freshness");
   // dbHistory, NOT prisma: PriceHistory lives in the separate history project
-  // (RH6 — see src/lib/db-history.ts). This read used the OPERATIONAL client,
+  // (RH7 — see src/lib/db-history.ts). This read used the OPERATIONAL client,
   // whose PriceHistory table is deliberately empty (migrate-main-db excludes its
   // data when copying into RM3), so this check reported a false
   // "PriceHistory is EMPTY" every run.

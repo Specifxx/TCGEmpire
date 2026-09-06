@@ -1,13 +1,16 @@
 /**
- * User/Premium census — read-only. Reports real (non-seed) user count, how many
- * have already been granted the early-adopter Premium comp, and how many active
- * Premium accounts exist (paid or comped), so a signup-promo decision can be made
- * from real numbers instead of guessing.
+ * User/Premium census — read-only. Reports the real (non-seed) user count and how
+ * many active Premium accounts exist (paid or comped), so signup/pricing decisions
+ * can be made from real numbers instead of guessing.
+ *
+ * `earlyPremiumGranted` is still counted because the COLUMN still exists and marks
+ * the accounts that received the retired early-adopter comp — useful history when
+ * reading churn, even though nothing grants it any more.
  *
  * Usage: npx tsx scripts/audit-users.ts
  */
 import { prisma } from "../src/lib/db";
-import { NOT_SEED_WHERE, EARLY_PREMIUM_LIMIT, EARLY_PREMIUM_DAYS } from "../src/lib/premium";
+import { NOT_SEED_WHERE } from "../src/lib/premium";
 
 async function main() {
   const totalReal = await prisma.user.count({ where: NOT_SEED_WHERE });
@@ -20,8 +23,7 @@ async function main() {
   });
 
   console.log(`Real (non-seed) users: ${totalReal}`);
-  console.log(`Early-adopter promo granted: ${earlyGranted} (limit ${EARLY_PREMIUM_LIMIT}, ${EARLY_PREMIUM_DAYS} days each)`);
-  console.log(`Remaining early-adopter slots: ${Math.max(0, EARLY_PREMIUM_LIMIT - totalReal)}`);
+  console.log(`Held the retired early-adopter comp: ${earlyGranted}`);
   console.log(`Currently active Premium (paid + comped): ${activePremium}`);
   console.log(`New real signups in the last 7 days: ${last7d}`);
 }

@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { MARKETPLACE_NAV_VISIBLE } from "./nav-groups";
 import { useMe } from "@/lib/use-me";
+import { markSignupSource } from "@/lib/signup-source";
 import { usePremiumDialog } from "./PremiumDialog";
 
 // Auth routes we never want to "return to" after sign-in (would loop).
-const AUTH_PATHS = ["/login", "/register", "/forgot", "/reset", "/verify"];
+const AUTH_PATHS = ["/login", "/verify"];
 
 export interface MenuUser {
   displayName: string;
@@ -16,6 +16,9 @@ export interface MenuUser {
   avatarUrl: string | null;
   emailVerified: boolean;
   balanceCents: number;
+  // The account's remembered market (see prisma User.preferredCountry) — null
+  // until backfilled or explicitly chosen. Used by CountryProvider, not this menu.
+  preferredCountry: string | null;
 }
 
 // Profile icon (top-right) + dropdown. Signed out → a "sign in" person icon linking
@@ -52,19 +55,48 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   }, []);
 
   if (!user) {
+    // A VISIBLE text button on sm+ — the icon-only person glyph was the entire
+    // signed-out chrome, and an unlabeled 20px outline is not a call to action.
+    //
+    // "Log in / Sign up", not "Sign in" alone: a lone "Sign in" reads as a door
+    // for people who already have an account, so a first-time visitor has no
+    // reason to think it's for them — naming both halves is what makes the
+    // header an entry point rather than a return path. One link, not two: both
+    // words go to the same OAuth screen (there is no separate registration
+    // flow — see /login), so splitting them into two controls would imply a
+    // distinction the auth system doesn't have.
+    //
+    // The width is the cost, and this header has fought real overflow battles at
+    // 640-790px (see scripts/mobile-check.ts's TABLET_WIDTHS sweep, which is the
+    // check to run after touching this string). It fits because `sm:` starts at
+    // 640 and the nav links collapse into the overflow menu below `md`. Below
+    // `sm` the icon still stays — its label carries both words for screen
+    // readers even though the glyph can't. Both keep rel="nofollow" and the
+    // ?next= carry (see the SEO note above).
     return (
-      <Link
-        href={loginHref}
-        rel="nofollow"
-        aria-label="Sign in"
-        title="Sign in"
-        className="tap-icon rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white"
-      >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
-        </svg>
-      </Link>
+      <>
+        <Link
+          href={loginHref}
+          rel="nofollow"
+          onClick={() => markSignupSource("navbar")}
+          className="btn-primary hidden whitespace-nowrap px-3 py-1.5 text-xs sm:inline-flex"
+        >
+          Log in / Sign up
+        </Link>
+        <Link
+          href={loginHref}
+          rel="nofollow"
+          aria-label="Log in or sign up"
+          title="Log in or sign up"
+          onClick={() => markSignupSource("navbar")}
+          className="tap-icon rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white sm:hidden"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
+          </svg>
+        </Link>
+      </>
     );
   }
 
@@ -134,13 +166,10 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
-            <MenuLink href="/marketplace/sell" onClick={() => setOpen(false)}>Seller dashboard</MenuLink>
-            {MARKETPLACE_NAV_VISIBLE && (
-              <>
-                <MenuLink href="/marketplace/orders" onClick={() => setOpen(false)}>🛒 My marketplace orders</MenuLink>
-                <MenuLink href="/marketplace/funds" onClick={() => setOpen(false)}>💰 Seller funds</MenuLink>
-              </>
-            )}
+            <MenuLink href="/watching" onClick={() => setOpen(false)}>🔔 My watchlist</MenuLink>
+            {/* The P2P marketplace was removed entirely (2026-08), so the seller
+                dashboard / orders / funds links this menu used to carry are gone
+                with it — the site is back to pure price comparison. */}
             <MenuLink href="/feedback" onClick={() => setOpen(false)}>
               Feedback{!premium ? <span className="text-gold"> · get Premium</span> : null}
             </MenuLink>

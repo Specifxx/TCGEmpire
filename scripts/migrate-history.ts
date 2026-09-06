@@ -3,33 +3,62 @@
  * into the CURRENT history database — used when a Neon history project exhausts its
  * monthly network-transfer allowance or goes unreachable, and is replaced.
  *
- *   target  = RH7 if set, else RH6, else RH5, else HISTORY_DATABASE_URL_4, else
- *             HISTORY_DATABASE_URL — mirrors src/lib/db-history.ts's own priority,
- *             so this script always fills whatever the app itself reads.
- *   sources = main DATABASE_URL + every OLDER history project (RH6, RH5, _4, base,
- *             _2, _3), in order
+ *   target  = resolveVar(HISTORY_VARS) from src/lib/db-chains.ts — CURRENT-first,
+ *             the exact same resolution src/lib/db-history.ts uses at runtime, so
+ *             this script always fills whatever the app itself reads.
+ *   sources = main DATABASE_URL + every OTHER history project this app has ever
+ *             used (the full inventory below, not just HISTORY_VARS — a rotation
+ *             drains projects that dropped out of the runtime chain long ago), in
+ *             order; the target is filtered out by URL
+ *
+ * FIXED 2026-09-02: target used to be a SEPARATE hardcoded fallback chain
+ * (HISTORY_DATABASE_URL_4 || _3 || _2 || HISTORY_DATABASE_URL || RH7 || RH6 ||
+ * RH5) instead of importing HISTORY_VARS — exactly the drift db-chains.ts's own
+ * header warns this file is prone to. It had silently fallen three rotations
+ * behind (RH11's cutover never touched it), so a run with every RH8-RH11
+ * secret AND the retired HISTORY_DATABASE_URL_4 all still visible in CI chose
+ * the ancient _4 project as target: copyCards() then tried to insert current-
+ * schema Card rows (with lowestPriceCentsEu) into a database from before that
+ * column existed, and Prisma rejected every row with P2022. Importing
+ * HISTORY_VARS instead of re-declaring the order here makes this the same
+ * failure mode db-chains.ts already solved for MAIN_URL below.
+ *
+ * NOTE (2026-08-21): HISTORY_DATABASE_URL_3 (in use since 2026-08-19) went over
+ * its monthly Neon network-transfer allowance after only TWO DAYS —
+ * HISTORY_DATABASE_URL_4 is its replacement. _3 is now a source only.
+ *
+ * NOTE (2026-08-19): HISTORY_DATABASE_URL_2 (in use since 2026-08-16) came
+ * within reach of its monthly Neon network-transfer allowance after only THREE
+ * DAYS — HISTORY_DATABASE_URL_3 was its replacement, now itself superseded (see
+ * the note above).
  *
  * NOTE (2026-08-04): RH6 (in use since 2026-07-31) came within reach of its
  * monthly Neon network-transfer allowance after only FOUR DAYS — RH7 is its
  * replacement. RH6 is now a source only.
  *
- * Six projects in ~two weeks means the burn rate, not the capacity, is the
- * problem: RH7 buys about another four days on its own. Before provisioning an
- * RH8, grep the Vercel logs for "[egress-guard:history]" — db-history.ts already
- * logs any single history query returning >=1 MB, which names the offender.
+ * Eight projects in ~three weeks means the burn rate, not the capacity, is the
+ * problem: a fresh project has been buying only a few days at a time. The
+ * 2026-08-21 rotation ships a fix alongside itself — see getEmptyCardIds() in
+ * lib/card-price-state.ts, named as the prime suspect on every prior rotation's
+ * own notes. If the allowance still drains fast, grep the Vercel logs for
+ * "[egress-guard:history]" — db-history.ts already logs any single history
+ * query returning >=1 MB, which names the next offender.
  *
- * PREFER THE pg_dump PATH FOR A BULK COPY. This Prisma-based copier reads every
- * row over the uncompressed Postgres wire protocol, which is the most expensive
- * possible way to drain a project that is ALREADY out of transfer allowance. The
- * `migrate-history-db` task in .github/workflows/maintenance.yml does the same job
- * with `pg_dump --format=custom` (compressed on the wire) and should be used for
- * the initial RH6 -> RH7 bulk copy. Keep this script for what it is genuinely
- * better at: topping up the target from SEVERAL sources at once, tolerating a
- * source that refuses reads, and de-duplicating on the way in.
+ * PREFER THE pg_dump PATH FOR A BULK COPY. This Prisma-based copier re-reads the
+ * whole Card table on top of every history table it copies — a genuinely
+ * redundant read — and NEITHER approach benefits from pg_dump's compression
+ * flags: Neon's own docs say those run client-side, after the data has already
+ * crossed the network, so they never reduce billed transfer
+ * (https://neon.com/docs/introduction/network-transfer). The
+ * `migrate-history-db-to-hdu4` task in .github/workflows/maintenance.yml does the
+ * same job via `pg_dump`'s COPY format, reading each table exactly once, and
+ * should be used for a bulk copy. Keep this script for what it is genuinely
+ * better at: topping up the target from SEVERAL sources at once, tolerating a source that
+ * refuses reads, and de-duplicating on the way in.
  *
  * NOTE (2026-07-26): HISTORY_DATABASE_URL_4 (the project in use since 2026-07-20)
- * went unreachable (P1001, connection refused). _4 is a source only; it will fail
- * gracefully below (skipped with a loud log) since it can no longer be read.
+ * went unreachable at the time (P1001, connection refused). It was reprovisioned
+ * for the 2026-08-21 rotation above and is now the target, not a source.
  *
  * The target is filled from ALL sources with skipDuplicates (the PriceHistory
  * unique key [cardId, country, day] dedupes overlaps), so running it is safe and
@@ -39,44 +68,49 @@
  * Usage (CI): npx tsx scripts/migrate-history.ts
  */
 import { PrismaClient } from "@prisma/client";
+import { OPERATIONAL_VARS, HISTORY_VARS, resolveVar, resolveUrl } from "../src/lib/db-chains";
 
-// RM3-first, matching src/lib/db.ts. This was bare DATABASE_URL, which only
-// happened to work because maintenance.yml sets a job-level DATABASE_URL from
-// the RM3 chain. MAIN_URL feeds copyCards() — the Card rows that satisfy
-// PriceHistory's foreign key in the target — so if it ever resolved to the OLD
-// exhausted operational project, the target's Card table would be seeded from
-// stale data and copyTable()'s FK filter would then silently DROP every
-// PriceHistory row for any card created since the RM3 cutover, reported only as
-// "skipped N rows for cards not in the target".
-const MAIN_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
-const TARGET_URL =
-  process.env.RH7 || process.env.RH6 || process.env.RH5 || process.env.HISTORY_DATABASE_URL_4 || process.env.HISTORY_DATABASE_URL;
-const TARGET_LABEL =
-  process.env.RH7 ? "RH7"
-  : process.env.RH6 ? "RH6"
-  : process.env.RH5 ? "RH5"
-  : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : "HISTORY_DATABASE_URL";
+// CURRENT-first, mirroring src/lib/db.ts's OPERATIONAL_URL exactly. MAIN_URL
+// feeds copyCards() — the Card rows that satisfy PriceHistory's foreign key in
+// the target — so if it resolves to an OLD operational project, the target's
+// Card table gets seeded from stale data and copyTable()'s FK filter then
+// silently DROPS every PriceHistory row for any card created since, reported
+// only as "skipped N rows for cards not in the target".
+//
+// Imported, never re-typed. This list had drifted THREE times (see the note in
+// src/lib/db-chains.ts); the last drift left it RM6-first after the RM7 cutover,
+// which is exactly the stale-Card failure the paragraph above describes.
+const MAIN_URL = resolveUrl(OPERATIONAL_VARS);
+// CURRENT-first, imported from db-chains.ts rather than re-declared here — see
+// the FIXED 2026-09-02 note above for why a locally-hardcoded copy of this
+// order is exactly the failure mode this file otherwise repeats.
+const TARGET_LABEL = resolveVar(HISTORY_VARS);
+const TARGET_URL = TARGET_LABEL ? process.env[TARGET_LABEL] : undefined;
 
-if (!MAIN_URL) { console.error("No operational database is set (RM3 / DATABASE_URL_2 / DATABASE_URL)."); process.exit(1); }
-if (!TARGET_URL) { console.error("None of RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4 / HISTORY_DATABASE_URL is set — point one at the current history project first."); process.exit(1); }
-if (TARGET_LABEL !== "RH7") {
-  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not RH7 — RH7 is not visible in this environment. Every older project is exhausted/dead; this is almost certainly not what you want.`);
+if (!MAIN_URL) { console.error(`No operational database is set (${OPERATIONAL_VARS.join(" / ")}).`); process.exit(1); }
+if (!TARGET_URL) { console.error(`None of ${HISTORY_VARS.join(" / ")} is set — point one at the current history project first.`); process.exit(1); }
+if (TARGET_LABEL !== HISTORY_VARS[0]) {
+  console.warn(`⚠  Target resolved to ${TARGET_LABEL}, not ${HISTORY_VARS[0]} — the current history project is not visible in this environment. This is almost certainly not what you want.`);
 }
+
+// Every history-database variable this app has EVER used, current and retired
+// alike — a superset of HISTORY_VARS (the runtime chain), because this
+// script's job is topping up the target from every project that might still
+// hold rows the runtime chain no longer looks at, not just the live fallback
+// path. Kept as an explicit inventory (see the equivalent note in
+// src/lib/db-chains.ts) rather than trimmed as each project retires, so a
+// future rotation is automatically a source without anyone remembering to
+// re-add a line.
+const ALL_HISTORY_VARS = [
+  "RH11", "RH10", "RH9", "RH8", "RH7", "RH6", "RH5",
+  "HISTORY_DATABASE_URL_4", "HISTORY_DATABASE_URL_3", "HISTORY_DATABASE_URL_2", "HISTORY_DATABASE_URL",
+] as const;
 
 // Every distinct source to pull from (main + older history projects), excluding the
 // target itself. De-duplicated by URL so we never read the same DB twice.
 const sourceUrls = [
   { label: "main (DATABASE_URL)", url: MAIN_URL },
-  // RH6 first among the history sources: it served 2026-07-31 → 2026-08-04, so
-  // it holds the newest rows. The TARGET_URL filter below keeps it out when it
-  // is itself the target (i.e. RH7 not visible in this environment).
-  { label: "RH6", url: process.env.RH6 },
-  { label: "RH5", url: process.env.RH5 },
-  { label: "HISTORY_DATABASE_URL_4", url: process.env.HISTORY_DATABASE_URL_4 },
-  { label: "HISTORY_DATABASE_URL", url: process.env.HISTORY_DATABASE_URL },
-  { label: "HISTORY_DATABASE_URL_2", url: process.env.HISTORY_DATABASE_URL_2 },
-  { label: "HISTORY_DATABASE_URL_3", url: process.env.HISTORY_DATABASE_URL_3 },
+  ...ALL_HISTORY_VARS.map((name) => ({ label: name, url: process.env[name] })),
 ].filter((s): s is { label: string; url: string } => !!s.url && s.url !== TARGET_URL);
 // Dedupe by URL.
 const seenUrl = new Set<string>();

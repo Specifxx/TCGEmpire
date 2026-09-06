@@ -4,6 +4,7 @@ import { FilterableArticles, type ArticleSection } from "@/components/Filterable
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
 // revisit occasionally as new guides prove themselves. Empower Explained alone
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
   title: "Riftbound Guides — Learn the Game & Build Decks",
   description:
     "Beginner-friendly guides for Riftbound: League of Legends TCG — deckbuilding, where to buy, and more.",
-  alternates: { canonical: "/guides" },
+  alternates: pageAlternates("/guides"),
 };
 
 export default function GuidesPage() {

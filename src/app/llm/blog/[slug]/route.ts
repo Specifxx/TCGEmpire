@@ -1,3 +1,4 @@
+import { draftNoindexHeaders } from "@/lib/articles";
 import { getBlogPost } from "@/lib/posts";
 import { SITE_URL } from "@/lib/site";
 
@@ -20,5 +21,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     "",
     `Source: ${SITE_URL}/blog/${post.slug}`,
   ].join("\n");
-  return new Response(md + "\n", { headers: { "Content-Type": "text/markdown; charset=utf-8" } });
+  return new Response(md + "\n", {
+    headers: { "Content-Type": "text/markdown; charset=utf-8", ...draftNoindexHeaders(params.slug) },
+  });
 }

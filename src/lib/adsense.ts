@@ -84,11 +84,22 @@ export const ADSENSE_LOADER_SRC =
 // ─────────────────────────────────────────────────────────────────────────────
 // Review mode
 // ─────────────────────────────────────────────────────────────────────────────
-// While the site is under AdSense review, surfaces that reviewers penalise are
-// neutralised: the homepage Premium teaser shows its real content instead of a
-// locked count, blurred Premium previews render unblurred, and the AI-generated
-// price commentary module is hidden. Flip to "false" after approval to restore
-// them. See docs/adsense-remediation.md § Phase 9.
+// While the site is under AdSense review, this flag can neutralise surfaces
+// that reviewers penalise: the homepage Premium teaser shows its real content
+// instead of a locked count, blurred Premium previews render unblurred, and the
+// AI-generated price commentary module is hidden. See docs/adsense-remediation.md
+// § Phase 9.
+//
+// DEFAULT FLIPPED TO CLOSED on 2026-08-20 (was default-open): riftcompare.com's
+// third AdSense review is still pending, but the paywall bypass this flag causes
+// — /tools/deal-finder, /tools/rising, /tools/value-finder and /portfolio fully
+// open to every signed-in user, Premium or not — was found live in production
+// and is a real revenue bug, not a cosmetic one. Explicit business call: the
+// paywall now takes priority over AdSense approval odds. Set
+// NEXT_PUBLIC_ADSENSE_REVIEW_MODE=true (and ADSENSE_REVIEW_MODE=true to match,
+// see below) ONLY if review mode needs to go back on for a future submission —
+// and remember Vercel's dashboard value, if any is still set from the earlier
+// default-open era, overrides this code default either way.
 //
 // THIS FLAG NEVER GATES THE LOADER SCRIPT OR THE OWNERSHIP META TAG. Those two
 // must render on every page unconditionally; review mode only controls page
@@ -102,13 +113,13 @@ export const ADSENSE_LOADER_SRC =
 const REVIEW_RAW = (
   process.env.NEXT_PUBLIC_ADSENSE_REVIEW_MODE ??
   process.env.ADSENSE_REVIEW_MODE ??
-  "true"
+  "false"
 )
   .trim()
   .toLowerCase();
 
-/** Default TRUE — opting out is explicit ("false"/"0"/"off"). */
-export const ADSENSE_REVIEW_MODE = !["false", "0", "off", "no"].includes(REVIEW_RAW);
+/** Default FALSE (paywall enforced) — opting into review mode is explicit ("true"/"1"/"on"). */
+export const ADSENSE_REVIEW_MODE = ["true", "1", "on", "yes"].includes(REVIEW_RAW);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ad strategy — Auto ads XOR manual units, never both

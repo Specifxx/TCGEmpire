@@ -22,15 +22,28 @@ export type HubIntro = { paragraphs: string[] };
 export const HUB_INTROS: Record<string, HubIntro> = {
   "/cards": {
     paragraphs: [
-      "Every Riftbound card we track, sliced the ways people actually search for them: by card type, by rarity, and by printing. Each facet below is its own page with the full list, live prices from stores in Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada, and a breakdown of where the money in that slice actually sits.",
+      "Every Riftbound card we track, sliced the ways people actually search for them: by card type, by rarity, and by printing. Each facet below is its own page with the full list, live prices from stores in Australia, the United States, the United Kingdom, Singapore and Canada, and a breakdown of where the money in that slice actually sits.",
       "Type is the most useful cut if you are building a deck — you know you need runes, or a legend, and want to see what is available and what it costs. Rarity is the most useful cut if you are opening product and want to know what a pull is worth. Printing is for collectors: alternate arts, promos, Signature prints and overnumbered cards trade completely separately from the base card, often at several times the price, and each has its own page here.",
       "Facets with only a handful of cards are left out of search deliberately — a page listing three cards is a list, not a resource — but every one is still linked and browsable from here.",
+    ],
+  },
+  "/cards/rarity": {
+    paragraphs: [
+      "Riftbound cards have five rarity tiers, from most to least common: Common, Uncommon, Rare, Epic and Showcase. Rarity is printed on the card itself and is fixed — it never changes between reprints of the same card — which makes it the most reliable single signal for \"how hard was this to pull\" and, usually, \"roughly what should this cost.\"",
+      "It is not the only signal, though: a Common chase card that sees heavy tournament play can trade for more than an Epic nobody plays, and Showcase — Riftbound's premium alternate-art treatment — carries its own collector premium on top of whatever the base card is worth. Rarity tells you the print odds, not the market price; the tier pages below show both.",
+      "Each tier below links to its own page with the full card list at that rarity and live prices across every store we track.",
+    ],
+  },
+  "/gallery": {
+    paragraphs: [
+      "Every Riftbound card, laid out to look at rather than filter through — full-size art, one set at a time, with instant client-side search and no pagination. This exists for a different question than the card database answers: not \"what does this cost\" but \"what does this set actually look like.\"",
+      "Each set has its own gallery page with every printing on one screen — base cards, alternate arts, Signature prints and Overnumbered chase cards together. Pick a set below to open it, or use the full filterable database if you already know what you are pricing rather than browsing.",
     ],
   },
   "/sets": {
     paragraphs: [
       "Riftbound sets in release order, each with its own page carrying the full card list, live prices and where that set's value is concentrated. Set pages are the right starting point for two questions in particular: what is in a set before you buy sealed, and which cards from it are worth the most right now.",
-      "Prices on every set page are the cheapest live listing we have recorded for each card, compared across all six markets we cover and refreshed daily. Sealed product for each set — boxes, packs, decks — is priced separately on the sealed products page, because the interesting question is usually whether a box is worth more opened than sealed, and that only makes sense with both numbers side by side.",
+      "Prices on every set page are the cheapest live listing we have recorded for each card, compared across all five markets we cover and refreshed daily. Sealed product for each set — boxes, packs, decks — is priced separately on the sealed products page, because the interesting question is usually whether a box is worth more opened than sealed, and that only makes sense with both numbers side by side.",
     ],
   },
   "/champions": {
@@ -66,6 +79,13 @@ export const HUB_INTROS: Record<string, HubIntro> = {
       "The cheapest card is rarely the cheapest order. Postage is charged per store, so a shopping list split across five shops to save a few cents on each card routinely costs more delivered than buying the whole list from two. This works out which combination of stores actually costs least.",
       "Give it the cards you want and it prices every viable split across the stores that stock them, including each store's postage, and ranks the results by what you would actually pay at the door. Usually the answer is not the split with the cheapest individual cards.",
       "Postage figures are our own per-store estimates for a single-card order, documented on each store's page, not rates quoted by the shop. Confirm at checkout — a store running free shipping over a threshold can change the answer.",
+    ],
+  },
+  "/tools/demand": {
+    paragraphs: [
+      "Two numbers, tracked per card since the day it was added: how many times it's been searched for, and how many times its page has been opened. Search is the purest read on intent — someone typed the card's name because they wanted it. Views are broader, catching browsing as well as buying.",
+      "Both are cumulative counters, so 'trending' has to mean 'accrued the most in a window', not just 'has the biggest running total' — a card that's been on the site since launch would always win that comparison. This ranks by what actually happened inside the window you pick, measured against a daily snapshot.",
+      "This is deliberately not a price prediction. High demand can mean a card is about to move, or it can mean everyone already owns one and is just checking its current value. Rising Cards folds demand into a scored, backtested signal built for that question — this page is the unblended number underneath it.",
     ],
   },
   "/tools/deal-finder": {

@@ -11,9 +11,11 @@
  * The answers live in the server-rendered DOM regardless of the <details> state,
  * which is what a crawler reads.
  */
+const DEFAULT_HEADING = "Frequently asked questions";
+
 export function HubFaq({
   faqs,
-  heading = "Frequently asked questions",
+  heading = DEFAULT_HEADING,
   className,
 }: {
   faqs: { q: string; a: string }[];

@@ -117,15 +117,17 @@ const CHECKS: Check[] = [
     minText: 800,
   },
 
-  // ── The release countdown: always the NEXT set ───────────────────────────
+  // ── The release calendar: always leads with the NEXT set ─────────────────
   {
-    path: "/radiance-countdown",
-    label: "Radiance countdown (new)",
+    path: "/release-dates",
+    label: "release dates",
     optional: true,
-    // Event schema is emitted only while the date is still ahead — this asserting
-    // is the point: if it survives past 23 Oct 2026 the page is claiming an
-    // upcoming event that already happened, and this check will say so.
-    must: ['"@type":"FAQPage"', "23 October 2026", "Radiance"],
+    // Deliberately set-agnostic assertions. The old check demanded the literal
+    // string "23 October 2026", which would have started failing the day
+    // Radiance shipped — the exact staleness this page was rebuilt to end. What
+    // must always hold is that the page renders its FAQ schema and its full
+    // calendar, whichever set happens to be next.
+    must: ['"@type":"FAQPage"', "Riftbound release dates", "Every Riftbound release, in order", "Vendetta"],
     minText: 900,
   },
 

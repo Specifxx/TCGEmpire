@@ -5,7 +5,9 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
 import { MyCollection } from "@/components/MyCollection";
-import { ShippingAddressCard } from "@/components/ShippingAddressCard";
+import { ReferralLinkCard } from "@/components/ReferralLinkCard";
+import { REFERRAL_PREMIUM_DAYS } from "@/lib/premium";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = { robots: { index: false } }; // auth/utility — never indexed
 
@@ -15,10 +17,12 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/profile");
 
-  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true, passwordHash: true } });
+  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { googleId: true, discordId: true } });
 
+  // Password sign-in was removed; Google and Discord are the only ways in, so a
+  // "Password" row here would advertise a method nothing can use. The column is
+  // still on the model — see the note in api/auth/oauth/[provider]/callback.
   const methods = [
-    { label: "Password", on: !!account?.passwordHash },
     { label: "Google", on: !!account?.googleId },
     { label: "Discord", on: !!account?.discordId },
   ];
@@ -46,8 +50,12 @@ export default async function ProfilePage() {
       {/* My Collection — cards the user owns, valued live (separate from wishlist) */}
       <MyCollection />
 
-      {/* Saved shipping address — prefills Marketplace checkout */}
-      <ShippingAddressCard />
+      {/* Referral link — hidden entirely when the program is off. The capture
+          + grant machinery (ReferralCapture, applyReferral) has existed all
+          along; this is its first UI. */}
+      {REFERRAL_PREMIUM_DAYS > 0 && (
+        <ReferralLinkCard url={`${SITE_URL}/?ref=${user.id}`} days={REFERRAL_PREMIUM_DAYS} />
+      )}
 
       {/* Account & security */}
       <div className="card-surface mt-5 p-5">

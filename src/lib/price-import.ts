@@ -7,26 +7,33 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory, ensureHistoryCards } from "./db-history";
 import { RETAILER_LIST, RetailerInfo } from "./retailers";
-import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, searchEbayAuctions, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
+import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
+import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, GLOBAL_HISTORY_COUNTRY } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
-import { importMarketplaceListings } from "./marketplace";
 import { refreshCardmarketPrices } from "./cardmarket";
-import { AU_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered } from "./constants";
+import { refreshCardTraderPrices } from "./cardtrader";
+import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
 import { currencyOf, isoCountry, priceField, type Country } from "./country";
-import { USD_TO } from "./fx";
-import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
+import { USD_TO, convertCents } from "./fx";
+import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows, isForeignLanguageTitle } from "./scrape-http";
+import { CONVENTIONAL_SINGLES_HANDLES, decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 
 export interface ShopifyVariant { title: string; price: string; available: boolean }
-export interface ShopifyProduct { title: string; handle: string; variants: ShopifyVariant[] }
-
-// Calendar day (date-only) in Australia/Sydney, used as the price-history x-axis
-// bucket so there's exactly one snapshot per card per local day.
-function sydneyDay(d = new Date()): Date {
-  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(d);
-  return new Date(`${ymd}T00:00:00.000Z`);
+export interface ShopifyProduct {
+  title: string;
+  handle: string;
+  variants: ShopifyVariant[];
+  // The product's real page URL. Shopify products don't set it — their URL is
+  // always `${base}/products/${handle}`, which productUrl() below builds. A
+  // WooCommerce product MUST set it: its permalink is whatever the shop's
+  // WordPress permalink structure says (/producto/<slug>/, /tienda/<cat>/<slug>/,
+  // …), so the Shopify shape would produce a 404 on every outbound buy link —
+  // the click that earns the site money, pointed at a dead page.
+  url?: string;
 }
+
 
 export interface ImportSummary {
   stores: { name: string; products: number; priced: number; matched: number; unmatched: number }[];
@@ -48,8 +55,16 @@ const STOP =
   /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
-  const m = seg.match(/^0*(\d+)([a-z]*)/i);
-  const base = m ? m[1] + m[2].toLowerCase() : seg.toLowerCase();
+  // Riftbound collector numbers come in two shapes, and BOTH have to normalise
+  // here or the index and the title parser stop agreeing:
+  //   * a plain sequence number — "007", "007a", "223*"
+  //   * a LETTER-PREFIXED cycle number — "R01" / "R01a" / "R01b" for the six
+  //     basic runes every set prints, "t01" for token cards. These carry no
+  //     "/total" at all.
+  // The prefix is part of the card's identity so it is kept; the digits are still
+  // leading-zero normalised, so "R1" and "R01" resolve to the same card.
+  const m = seg.match(/^([a-z]*)0*(\d+)([a-z]*)/i);
+  const base = m ? m[1].toLowerCase() + m[2] + m[3].toLowerCase() : seg.toLowerCase();
   // A "*" marks a Signature print (e.g. "223*/221"), a DIFFERENT card from the
   // plain overnumbered "223/221" — keep their keys distinct so listings don't mix.
   return seg.includes("*") ? `${base}s` : base;
@@ -63,15 +78,73 @@ function cleanProductName(title: string): string {
     .replace(/\[[^\]]*\]/g, " ")
     .replace(STOP, " ");
 }
+// The rune cycle's collector number: "R01", "R02a", "R02b" — a letter prefix, one
+// to three digits and an optional print letter, with NO "/total" after it. Only
+// "R" is accepted, deliberately: this pattern is loose enough that opening it to
+// any letter would start reading store SKUs ("B12", "S2") as collector numbers,
+// and a wrong number is worse than no number — it makes resolveCardId reject the
+// listing outright. Runes are the only letter-prefixed cycle stores actually list.
+//
+// There is deliberately NO set-prefixed variant ("[UNL - R02a]") to go with the
+// `pref` branch below. It isn't needed — every set that prints runes is already
+// recognisable from the title by SET_FROM_TITLE, which reads both the set name
+// and its code — and a `([A-Za-z]{2,4})\s*-\s*` prefix would happily read the
+// word "Rune" itself out of "Fury Rune - R01" and hand resolveCardId "RUNE" as a
+// confident set code, which matches no set and drops the listing.
+const RUNE_BARE = new RegExp(String.raw`\bR\d{1,3}[a-z]?\b`, "i");
+
 // Parse a collector number from any store title format, e.g.:
-//   "(299*/298)", "(053/219)", "OGN-128/298", "[OGN - 213/298]", "239*/221"
+//   "(299*/298)", "(053/219)", "OGN-128/298", "[OGN - 213/298]", "239*/221",
+//   "(R02b) (R02b) - Unleashed Foil", "Calm Rune (R02a) [UNL - R02a]"
 // Keys are normalised via numKey so "039" and "39" compare equal (the leading-zero
 // bug that previously mis-assigned base cards to their alt-art printings).
+//
+// THE RUNE BRANCHES ARE NOT COSMETIC. Every set prints its six basic runes three
+// times — base ("R02"), alt-art ("R02a") and a second special ("R02b") — and all
+// three share one name, "Calm Rune". Because the rune number has no "/total",
+// this function used to return null for every one of those listings, which skips
+// the number-disambiguation guard in resolveCardId entirely and lets name-only
+// matching collapse all three prints onto the base card. In a market where the
+// only listings a store carried were the alt-arts, that is exactly what happened:
+// base runes worth about ten cents were showing $13.70 in one region and $15.00 in AU,
+// carrying the alt-art's price, in the database and therefore in the pack sim too.
+// Every set code the catalogue actually knows about. parseNumber's no-total
+// pattern is anchored to this so a "XX-123" fragment can never invent a set.
+const SET_CODES = new Set(SETS.map((s) => s.code.toUpperCase()));
+
 function parseNumber(title: string): { setCode: string | null; key: string; total: string } | null {
   const pref = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (pref) return { setCode: pref[1].toUpperCase(), key: numKey(pref[2] + pref[3]), total: pref[4] };
   const bare = title.match(/(\d+)([a-z*]*)\s*\/\s*(\d+)/);
   if (bare) return { setCode: null, key: numKey(bare[1] + bare[2]), total: bare[3] };
+  // SETCODE-NUMBER with NO "/total" — e.g. "OGN-181 Pack of Wonders U".
+  //
+  // Every pattern above requires a "/total", so a store that numbers its titles
+  // this way matched NOTHING, and the failure was invisible: the importer fetched
+  // the catalogue fine and simply recorded zero prices, which reads identically to
+  // a store that carries no Riftbound singles.
+  //
+  // Found on 2026-08-23 at apgtcg.com (apextcg), whose Riftbound singles
+  // collection returns 250 products in exactly this format and contributed zero
+  // rows. store-health reported it as `no-listings` alongside 39 others.
+  //
+  // ANCHORED TO REAL SET CODES ON PURPOSE. A bare /([A-Za-z]{2,4})-(\d+)/ would
+  // match "Deck-2", "Vol-3", a date, or a SKU fragment and hand back a confident
+  // setCode that isn't one — and confidentSetCode is what the name path uses to
+  // choose between same-named cards in different sets, so a wrong hit there
+  // attaches a real price to the wrong printing. Requiring a known code makes a
+  // false positive impossible; the cost is that a genuinely new set needs adding
+  // to SETS first, which it does anyway to have cards at all.
+  const noTotal = title.match(/\b([A-Za-z]{2,4})\s*-\s*(\d+)([a-z*]*)\b(?!\s*\/)/);
+  if (noTotal && SET_CODES.has(noTotal[1].toUpperCase())) {
+    // total stays "" so setFromTotal() declines — the set comes from the explicit
+    // prefix, which is the only evidence this shape carries.
+    return { setCode: noTotal[1].toUpperCase(), key: numKey(noTotal[2] + noTotal[3]), total: "" };
+  }
+  // No "/total" anywhere — the shape a rune number has. `total` stays "" so
+  // setFromTotal() simply declines and the set still has to come from the title.
+  const rune = title.match(RUNE_BARE);
+  if (rune) return { setCode: null, key: numKey(rune[0]), total: "" };
   return null;
 }
 
@@ -163,7 +236,7 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
     // country=XX is CRITICAL: Shopify Markets serves a different price per visitor
     // country, and our (US) server was getting US/default prices — e.g. $33 when the
     // real AU price is $45. Forcing the store's market gives the local shopper price
-    // (AUD for AU stores, NZD for NZ stores).
+    // (AUD for AU stores, USD for US stores, etc).
     const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${isoCountry(cc)}&_=${Date.now()}`;
     let res: Response;
     try {
@@ -223,7 +296,7 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
     select: { id: true, cardId: true, priceCents: true, url: true, country: true },
     orderBy: { priceCents: "asc" },
   });
-  // Cheapest in-stock listing per card PER MARKET (AU and NZ are verified separately).
+  // Cheapest in-stock listing per card PER MARKET, verified separately.
   const cheapest = new Map<string, { id: string; priceCents: number; url: string; country: string }>();
   for (const r of rows) {
     const k = `${r.cardId}|${r.country}`;
@@ -235,6 +308,18 @@ async function verifyCheapestListings(onlyCountry?: string): Promise<number> {
   // cache-bust query param — that returned a stale/blocked response from the runner;
   // the plain URL returns the live price) with a browser UA, and one retry.
   async function fetchProductPrice(url: string, country: string): Promise<{ priceCents: number } | null> {
+    // `${url}.json` is a SHOPIFY convention. A WooCommerce product URL is a
+    // WordPress permalink (/producto/<slug>/ …) with no .json sibling, so this
+    // would spend two requests per listing to get two 404s and return null —
+    // which the caller reads as "couldn't verify, keep the feed price", i.e. the
+    // right outcome reached the expensive way. Skipping outright is free and
+    // says what is actually true: there is nothing to verify against here.
+    //
+    // Costs nothing today — the Woo stores in RETAILERS contribute sealed, not
+    // RetailerPrice rows, so none of their URLs reach this function — and stops
+    // that from silently becoming a per-listing double request the day one of
+    // them starts listing singles.
+    if (!/\/products\//.test(url)) return null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(`${url}.json?country=${isoCountry(country as Country)}`, {
@@ -345,8 +430,20 @@ const EBAY_SKIP_RARITIES = new Set(["Common", "Uncommon"]);
  * cheapest price would make the floor mean different things in different
  * markets, and a card would drift in and out of the search set as exchange
  * rates moved.
+ *
+ * Lowered $20→$10→$5, all on 2026-08-20. The first drop was funded by
+ * Germany's removal from EBAY_ROTATING_MARKETS (~350 Browse calls/day freed —
+ * see EBAY_ALWAYS_MARKETS below) and measured for real: a forced production
+ * run read "347 of 1429 cards searched" (up from a 280-card baseline at $20).
+ * The second drop to $5 is funded by removing the chase-auction pass entirely
+ * (refreshEbayAuctions and the EbayAuction model, deleted the same day —
+ * ~960 Browse calls/day for a countdown widget, the single most expensive
+ * line in the whole quota model relative to what it returned). Read the real
+ * card count this adds off the "eBay catalogue: X of Y cards searched" log
+ * line on the next run — any move past $5 should be made from that number,
+ * not a second guess.
  */
-export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 2000);
+export const EBAY_MIN_VALUE_USD_CENTS = Number(process.env.EBAY_MIN_VALUE_CENTS ?? 500);
 
 export function eBayWorthSearching(
   c: {
@@ -468,68 +565,79 @@ export interface EbayMarketCfg { country: string; marketplace: string; currency:
 /**
  * Searched on EVERY run.
  *
- * ── WHY UK AND SG CAME BACK (2026-08-08) ────────────────────────────────────
- * They were demoted to a rotation on 2026-08-03 for one reason: 4 markets ×
- * ~1,400 cards = 5,600 Browse calls did not fit a ~4,280 budget, and a run that
- * overspent had its last market discarded whole. The fix then was to search
- * fewer markets.
+ * ── WHY UK AND SG LEFT AGAIN, AND WHY THAT IS NOT A REVERSAL (2026-08-23) ───
+ * They were demoted to a rotation on 2026-08-03 (4 markets × ~1,400 cards did
+ * not fit a ~4,280 budget), promoted back on 2026-08-08 when the value floor
+ * cut the searched catalogue to ~240 cards, and are rotating again now. The
+ * 2026-08-08 promotion was NOT wrong and is not being undone on its own terms:
+ * four always-markets still fit. What changed is that a FIFTH market exists.
  *
- * The $20 value floor (see eBayWorthSearching) removed the cause instead: the
- * searched catalogue is now ~240 cards, not ~1,400, so 4 × ~240 ≈ 960 calls —
- * roughly a fifth of what forced the demotion. UK and SG no longer have to take
- * turns, and neither is ever ~48h stale again.
+ * The choice was never "does UK fit daily" — it was how to spend the headroom
+ * the value floor bought. Two ways to add EU:
+ *   (a) five always-markets — ~78% of the spendable budget;
+ *   (b) two always + a three-way rotation — 3 markets a day, ~48%.
  *
- * THIS LIST IS LOAD-BEARING IN THREE PLACES, not one. The catalogue pass builds
- * from ebayMarketsForDay, but refreshEbayChasePrintings and refreshEbayAuctions
- * are handed EBAY_ALWAYS_MARKETS directly — and the auction pass runs TWICE a
- * day (once per pass). Adding a market here multiplies all three, so a fifth
- * market costs far more than one catalogue sweep. tests/affiliate-priority.test.ts
- * models the whole day rather than the catalogue alone, for exactly that reason.
+ * BE HONEST ABOUT THIS: (a) FITS. At the numbers tests/affiliate-priority.test.ts
+ * models, five daily markets come in under budget with room to spare, so the
+ * rotation is not arithmetic, it is headroom — and it is worth having only
+ * because the input to that arithmetic is known to be understated. CATALOGUE
+ * there is a $10-floor measurement that the $5 floor has never been re-measured
+ * against (the constant says so itself), and a set launch inflates the searched
+ * set further, because a just-released set's cards have no TCGplayer price yet
+ * and "unknown ≠ cheap" keeps every one of them. 78% of budget against a number
+ * biased low in both directions is thin; 48% is not.
  *
- * ORDER MATTERS AND IS NOT ALPHABETICAL. US is first deliberately — see
- * EBAY_PRIORITY_MARKET. The chase and auction passes walk this array as declared
- * (they take no dayIndex, so they cannot call ebayMarketsForDay), so pinning US
- * in the rotation alone would still have left it second in two of the three
- * passes. Both mechanisms are needed; the test suite asserts both.
+ * The price of (b) is staleness: UK and SG go from ~24h to ~72h between
+ * refreshes, and EU starts there. AU and US stay daily because they are the
+ * largest markets and US is the default one. If the $5-floor catalogue is ever
+ * measured and turns out comfortable, promoting UK and SG back is a two-line
+ * change — and the budget test is written to fail if the rotation stops earning
+ * its staleness, rather than leaving it in place out of habit.
+ *
+ * THIS LIST IS LOAD-BEARING IN TWO PLACES, not one — and the second one is the
+ * trap this change had to avoid. The catalogue pass builds from
+ * ebayMarketsForDay, but refreshEbayChasePrintings used to be handed
+ * EBAY_ALWAYS_MARKETS directly, and it is a whole second pass over the day (it
+ * alternates with the catalogue pass across the 07:00/19:00 runs — chaseDue is
+ * gated on `!ebayDue`, so one or the other fires per invocation, never both;
+ * the PRINTINGS get refreshed twice a day, the chase pass itself runs once).
+ * Shrinking this list would therefore have silently stopped refreshing UK and
+ * SG promos/signatures
+ * — the thinnest, most volatile, most expensive prices on the site — while
+ * every other part of those markets kept updating. It is now handed
+ * ebayMarketsForDay() instead (see the call site), so the chase set follows the
+ * same rotation the catalogue does. tests/affiliate-priority.test.ts models the
+ * whole day rather than the catalogue alone, for exactly that reason.
  */
 export const EBAY_ALWAYS_MARKETS: EbayMarketCfg[] = [
-  { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
   { country: "AU", marketplace: "EBAY_AU", currency: "AUD", retailer: "ebay" },
-  { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
-  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+  { country: "US", marketplace: "EBAY_US", currency: "USD", retailer: "ebay_us" },
 ];
 
 /**
- * The market that always searches FIRST, never rotating into a later slot.
+ * Rotated one per day, in this order — so each of these refreshes every third
+ * day, not daily, and is at most ~72h stale.
  *
- * Search order decides who starves: refreshEbayMarkets walks the list and breaks
- * the moment the Browse budget latches, and a market cut off partway has its
- * whole pass discarded rather than half-saved. First place is therefore the only
- * slot that is guaranteed to complete.
+ * UK and SG moved here from EBAY_ALWAYS_MARKETS on 2026-08-23 to make room for
+ * EU without a fifth always-market; see the note above for the arithmetic.
+ * Germany briefly held this list alone on 2026-08-20 (see country.ts's header
+ * note) before the eurozone-wide market replaced the single-country one.
  *
- * US holds it for two reasons:
- *   • It is the default market and the largest share of traffic.
- *   • CA is DERIVED from the US result set (see EBAY_CA_RETAILER and the write
- *     site), and the derivation is skipped when the US pass truncates. So a
- *     starved US pass costs two markets, not one — no other market has that
- *     property.
+ * ORDER IS NOT ALPHABETICAL AND NOT ARBITRARY. ebayMarketsForDay indexes this
+ * with `dayIndex % length`, so the order only decides WHICH day each market
+ * lands on, not how often — every entry gets exactly one day in three. It is
+ * written UK → SG → EU so a reader can check the log line against the list.
  *
- * The cost is that US no longer shares the risk: whatever slot it vacates, some
- * other market now occupies. That is an accepted trade, not an oversight — the
- * remaining three still rotate among themselves so none of THEM is permanently
- * last, and at ~79% of budget a truncation is far less likely than it was when
- * this rotation was written and overspending was routine.
+ * EU is the market with the least proven per-day cost (it is new, and its store
+ * coverage is still growing), which is the same reason DE launched in a rotation
+ * slot rather than as an always-market: a rotation slot costs nothing on the two
+ * days in three it is not picked.
  */
-export const EBAY_PRIORITY_MARKET = "US";
-
-/**
- * Rotated one per day, in this order — EMPTY, because every market we search is
- * now a daily one. Kept rather than deleted: the rotation is the release valve
- * if the searched catalogue grows back (a large set launches with no TCGplayer
- * prices, and "unknown ≠ cheap" keeps all of them), and re-adding a market here
- * needs no other change. ebayMarketsForDay handles the empty case explicitly.
- */
-export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
+export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [
+  { country: "UK", marketplace: "EBAY_GB", currency: "GBP", retailer: "ebay_uk" },
+  { country: "SG", marketplace: "EBAY_SG", currency: "SGD", retailer: "ebay_sg" },
+  { country: "EU", marketplace: "EBAY_ES", currency: "EUR", retailer: "ebay_eu" },
+];
 
 /**
  * The markets a run on `dayIndex` will search, IN THE ORDER IT WILL SEARCH THEM.
@@ -542,83 +650,150 @@ export const EBAY_ROTATING_MARKETS: EbayMarketCfg[] = [];
  * the write site — a partial set would shrink coverage). So whichever market is
  * last in the array is the one that loses everything when a run overspends.
  *
- * The original fixed [AU, US] order made starvation systematic rather than
- * shared: AU had first claim every single day and was never once dropped, while
- * US took the loss every time, silently, along with CA (derived from the US
- * pass). That is a plausible contributor to US eBay coverage looking thin.
+ * With a fixed [AU, US] order that made starvation systematic rather than
+ * shared: AU had first claim on quota every single day and was never once
+ * dropped, while US — the default market and the larger share of traffic — took
+ * the loss every time, silently, along with CA (derived from the US pass). That
+ * is a plausible contributor to US eBay coverage looking thin in reporting.
  *
- * ── WHY US IS PINNED AND THE REST ROTATE (2026-08-08) ───────────────────────
- * The answer to that was briefly "rotate everything", which shared the risk
- * evenly — including handing the last slot to US one day in four, reintroducing
- * exactly the failure that motivated the change. US is now pinned to first (see
- * EBAY_PRIORITY_MARKET, which also explains why US specifically), and the
- * remaining markets rotate among THEMSELVES so none of them is permanently last.
+ * Rotating by day makes the loser different each day instead of always the same
+ * market. It does not create quota; it stops one market monopolising it.
  *
- * A rotation, not a `reverse()`: reverse was sufficient for two markets, but
- * with three rotating it yields only two orderings and one of them could never
- * escape the last slot.
+ * ── WHY A ROTATION AND NOT A REVERSE (2026-08-08) ───────────────────────────
+ * This used to alternate with `reverse()` on odd days, which was sufficient for
+ * exactly two always-markets. With four it would produce only two orderings —
+ * [AU,US,UK,SG] and [SG,UK,US,AU] — so US and UK could NEVER lead, and the
+ * starvation this function exists to prevent would simply move to a new pair.
+ * Rotating by dayIndex gives every market the lead, and the last (first to be
+ * dropped) slot, once every n days.
  */
+/**
+ * The rotation's day number. Keyed off the Australia/Sydney calendar day (the
+ * same boundary the price history uses) so "today's market" is STABLE for the
+ * whole day: the 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual
+ * re-run all pick the same one instead of ping-ponging and double-spending
+ * quota on two different markets.
+ *
+ * Extracted from refreshEbayMarkets on 2026-08-23 because the chase pass now
+ * needs the same number (see the call site in importPrices). Two copies of this
+ * expression is exactly how the evening chase pass would end up refreshing a
+ * DIFFERENT market than the morning catalogue pass on a day the two computed
+ * the boundary a millisecond apart.
+ */
+export function ebayDayIndex(): number {
+  return Math.floor(sydneyDay().getTime() / 86_400_000);
+}
+
 export function ebayMarketsForDay(dayIndex: number): EbayMarketCfg[] {
-  const lead = EBAY_ALWAYS_MARKETS.filter((m) => m.country === EBAY_PRIORITY_MARKET);
-  // filter, not splice-around-an-index: if EBAY_PRIORITY_MARKET is ever set to a
-  // market that is not in the always-list, `lead` is simply empty and everything
-  // rotates — rather than an index of -1 quietly reordering or dropping a market.
-  const rest = EBAY_ALWAYS_MARKETS.filter((m) => m.country !== EBAY_PRIORITY_MARKET);
-  const n = rest.length;
+  const n = EBAY_ALWAYS_MARKETS.length;
   // `% n` twice with an added n: dayIndex is derived from a clock and is always
   // positive today, but a negative index would otherwise produce a negative
   // slice offset and silently return a SHORTER market list — a dropped market,
   // not an error.
   const offset = n === 0 ? 0 : ((dayIndex % n) + n) % n;
-  const always = [...lead, ...rest.slice(offset), ...rest.slice(0, offset)];
+  const always = [...EBAY_ALWAYS_MARKETS.slice(offset), ...EBAY_ALWAYS_MARKETS.slice(0, offset)];
   // No rotating markets today. Indexing an empty array here would yield
   // `undefined` and append it, and the pass would crash on `mkt.marketplace`
   // rather than simply searching the always-markets.
-  if (EBAY_ROTATING_MARKETS.length === 0) return always;
-  return [...always, EBAY_ROTATING_MARKETS[dayIndex % EBAY_ROTATING_MARKETS.length]];
+  const r = EBAY_ROTATING_MARKETS.length;
+  if (r === 0) return always;
+  const today = EBAY_ROTATING_MARKETS[((dayIndex % r) + r) % r];
+
+  // ── THE ROTATING MARKET GOES FIRST, NOT LAST (2026-08-23) ──────────────────
+  // Appending it — the obvious reading of "always-markets, then today's extra" —
+  // reintroduces exactly the systematic starvation the day-rotation above exists
+  // to prevent, and does so at the worst possible target. The last market in this
+  // array is the one discarded whole when the budget latches (see the header
+  // note), so appending would make the rotating market the FIRST casualty on
+  // every single overspend.
+  //
+  // That is worse than it sounds, because the loss is not symmetric. AU and US
+  // run daily: dropping one costs it ~24 extra hours. A rotating market only
+  // comes round every `r` days, so dropping it on its one day costs it ~2×72h —
+  // and since the same market would be last on every one of its turns, a market
+  // near the budget edge could go unpriced indefinitely while its store rows
+  // stayed fresh, which reads as "eBay has no listings here" rather than as a
+  // quota problem.
+  //
+  // First claim to the least-frequently-refreshed market inverts that: the
+  // casualty is always one of the daily markets, which lose the least by being
+  // skipped, and which one it is still alternates by day via `offset` above —
+  // the 2026-08-05 fix, intact.
+  return [today, ...always];
 }
 
-/** eBay CA rows are derived from the US pass — see the note at the write site. */
-export const EBAY_CA_RETAILER = "ebay_ca";
+// EBAY_CA_RETAILER moved to constants.ts (2026-08-20) so sealed-import.ts can
+// share it without an import cycle — see the note there. Rows here are still
+// derived from the US pass, not a separate search; see the write site below.
 
-// ── Chase-tier auctions ──────────────────────────────────────────────────────
-// Auctions are searched for a SMALL, high-value subset, never the whole
-// catalogue. Three reasons, in order of importance:
-//
-//  1. Quota. The singles pass runs 4 markets against a shared daily budget, and
-//     this pass runs TWICE a day (once per singles pass) across all four — so a
-//     card added here costs 8 calls/day, not one. A per-card auction call across
-//     the whole catalogue would not fit, and the market that lost would be a
-//     real coverage gap rather than a missing widget.
-//  2. Inventory. Nobody auctions a common. Auctions exist for the tier where
-//     price discovery actually happens.
-//  3. Value. A bid on a $2 card tells a reader nothing. A bid at 51% of the
-//     cheapest Buy It Now on a $180 Signature, closing in five hours, is the
-//     whole point of the feature.
-//
-// The tier is defined the same way the site already defines "chase" for display
-// (see getChaseCards): signature prints first, then by value.
-//
-// ── WHY 120 (2026-08-08) ────────────────────────────────────────────────────
-// Doubled from 60 once the value floor freed the budget. The ceiling that
-// matters is not quota but INVENTORY: the eligible pool is cards at or above
-// AUCTION_MIN_VALUE_CENTS in that market's own currency, measured on 2026-08-08
-// as AU 200 / US 204 / UK 156 / SG 174. Past roughly 150 the extra calls query a
-// tier that has no more cards in it, so they buy nothing.
-//
-// Held at 120 rather than pushed to the pool size because of a cross-pass
-// interaction that is easy to miss: the quota is DAILY, not per-run, so the
-// auction pass that runs after the 07:00 import is spending the same allowance
-// the 19:00 chase pass needs. "Auctions run last and yield" is true within a
-// run — it does not protect the evening pass from the morning's auctions. At 120
-// a day models to ~79% of the spendable budget, leaving real room for a set
-// launch, when every unpriced new card is kept by design (unknown ≠ cheap) and
-// the searched catalogue roughly doubles.
-export const AUCTION_CARDS_PER_MARKET = Number(process.env.EBAY_AUCTION_CARDS ?? 120);
-/** Auctions on cards below this (in the market's own cents) aren't worth a call. */
-export const AUCTION_MIN_VALUE_CENTS = Number(process.env.EBAY_AUCTION_MIN_CENTS ?? 2000);
-/** Live auctions kept per card per market. */
-const AUCTIONS_PER_CARD = 3;
+/**
+ * Every Riftbound product a SHOPIFY store lists, de-duplicated across its
+ * overlapping collections. Extracted from importPrices' loop when WooCommerce
+ * became a second platform — the loop now picks a fetcher and knows nothing else
+ * about how either platform is read.
+ */
+async function fetchShopifyStoreProducts(store: RetailerInfo): Promise<ShopifyProduct[]> {
+  // Auto-discover the store's Riftbound collections, then union in the handles
+  // configured in retailers.ts AND the conventional BinderPOS ones.
+  //
+  // THE CONVENTIONAL HANDLES ARE NOT BELT-AND-BRACES. Sitemap discovery misses
+  // BinderPOS singles collections routinely — four of the nine deepest eurozone
+  // singles catalogues were invisible to it while serving 250 cards at
+  // /collections/riftbound-single (see CONVENTIONAL_SINGLES_HANDLES). Since a
+  // missing handle here reads exactly like "this store has no Riftbound stock",
+  // the failure was silent and cost real coverage. Two extra 404s per store is
+  // the entire price of never repeating it.
+  const discovered = await discoverRiftboundCollections(store.base);
+  const handles = Array.from(
+    new Set([...discovered, ...(store.collections ?? []), ...CONVENTIONAL_SINGLES_HANDLES]),
+  );
+
+  const products: ShopifyProduct[] = [];
+  const seen = new Set<string>();
+  for (const handle of handles) {
+    for (const p of await fetchCollection(store, handle)) {
+      if (seen.has(p.handle)) continue; // de-dup across overlapping collections
+      seen.add(p.handle);
+      products.push(p);
+    }
+  }
+  return products;
+}
+
+/**
+ * The same, for a WOOCOMMERCE store, via the WordPress Store API.
+ *
+ * Returns the SHOPIFY product shape deliberately. Everything downstream —
+ * resolveCardId, MULTI_CARD, conditionRank, the write side — is shared, and the
+ * cheapest way to keep it shared is to make the adapter responsible for speaking
+ * the shape the rest of the file already speaks. A parallel Woo-flavoured
+ * pipeline would have to re-implement every one of those and would drift.
+ *
+ * NOTE ON ?country=: there is no equivalent here, and none is needed. Shopify
+ * Markets serves a different price per visitor country, which is why the Shopify
+ * fetcher must force one; a WooCommerce shop has ONE price list and states its
+ * currency on every product (see lib/woocommerce.ts). The probe checks that
+ * currency matches the market before a store is ever added.
+ */
+async function fetchWooStoreProducts(store: RetailerInfo): Promise<ShopifyProduct[]> {
+  const allowed = await robotsAllows(store.base);
+  if (!allowed("/wp-json/wc/store/v1/products")) {
+    console.warn(`${store.name}: robots.txt disallows the WooCommerce Store API — skipping.`);
+    return [];
+  }
+  const categories = await discoverWooRiftboundCategories(store.base, store.collections ?? []);
+  const products: ShopifyProduct[] = [];
+  const seen = new Set<number>();
+  for (const [i, id] of categories.entries()) {
+    if (i > 0) await sleep(REQUEST_DELAY_MS);
+    for (const p of await fetchWooCategory(store.base, id)) {
+      if (seen.has(p.id)) continue; // de-dup across overlapping categories
+      seen.add(p.id);
+      products.push({ title: decodeEntities(p.name), handle: p.slug, variants: wooVariants(p), url: p.permalink });
+    }
+  }
+  return products;
+}
 
 export async function refreshEbayMarkets(
   cards: { id: string; name: string; setCode: string; collectorNumber: string; isPromo: boolean }[]
@@ -641,20 +816,32 @@ export async function refreshEbayMarkets(
   // Each market has its own retailer key so eBay AU + US rows for the same card never
   // collide on the unique [cardId, retailer, condition, isFoil] key.
   //
-  // ── QUOTA BUDGET: WHY SG AND CA ALTERNATE BY DAY ────────────────────────────
-  // Every market costs ~1 Browse call per card (~1.1k cards), and the real spendable
-  // budget is `liveRemaining − QUOTA_RESERVE` ≈ 4,400 on a clean day. Six markets
-  // would need ~6.6k and five ~5.5k, so a single pass covering every market EVERY
-  // day is arithmetically impossible — it would always run out partway and leave the
-  // trailing market(s) unrefreshed. Rather than let that happen implicitly (which
-  // silently starves whichever market sorts last), the two newest/smallest markets
-  // take turns: AU/US/UK refresh daily, and SG and CA get every other day. That
-  // fits ~4×1.1k ≈ 4.4k inside the budget, and each rotating market is at most ~24h
-  // staler than the others — far better than one of them being permanently skipped.
+  // ── QUOTA BUDGET: WHY THREE MARKETS A DAY, NOT FIVE ─────────────────────────
+  // Every market costs ~1 Browse call per SEARCHED card, and the searched
+  // catalogue is ~350 cards, not the ~1.1k this note used to assume (the value
+  // floor in eBayWorthSearching is what cut it — see the figures there, read off
+  // a real production run). The real spendable budget is
+  // `liveRemaining − QUOTA_RESERVE` ≈ 4,400 on a clean day.
+  //
+  // A DAY is a full catalogue pass plus a chase pass (they alternate across the
+  // 07:00/19:00 runs — chaseDue is gated on `!ebayDue`, so exactly one of them
+  // fires per invocation), plus the sealed sweep. Both eBay passes now walk the
+  // SAME day's market list, so a market costs ~(catalogue + chase) per day, not
+  // ~catalogue.
+  //
+  // At three markets that is ~48% of the spendable budget. Five daily markets
+  // would be ~78% — which fits, and the rotation is a deliberate headroom choice
+  // rather than an arithmetic necessity; see the note on EBAY_ALWAYS_MARKETS for
+  // why that headroom is worth buying with staleness (the catalogue constant is
+  // measured at a floor that has since dropped, and a set launch inflates it).
+  //
+  // AU and US refresh daily (largest market, and the default one). UK, SG and EU
+  // take turns one per day, so a run searches 3 markets rather than 4 — LESS
+  // than before EU existed. Each rotating market is at most ~72h stale, which is
+  // the real cost of this design and the number to watch if a market's prices
+  // start looking wrong. CA still costs nothing: its rows are derived from the
+  // US pass and converted (see the write site below).
   const ALWAYS = EBAY_ALWAYS_MARKETS;
-  // Empty today — every market we search is a daily one. See the note on
-  // EBAY_ROTATING_MARKETS for why UK and SG left the rotation on 2026-08-08 and
-  // why the mechanism is kept rather than deleted.
   const ROTATING = EBAY_ROTATING_MARKETS;
   const ALL = [...ALWAYS, ...ROTATING];
 
@@ -667,11 +854,7 @@ export async function refreshEbayMarkets(
     markets = ALL.filter((m) => m.country === onlyMarket);
     console.log(`EBAY_ONLY_MARKET=${onlyMarket} — restricting the eBay pass to ${markets.length} market(s).`);
   } else {
-    // Keyed off the Australia/Sydney calendar day (the same day boundary the price
-    // history uses), so which market is "today's" is STABLE for the whole day: the
-    // 07:00 and 19:00 UTC runs, a deploy-triggered run and a manual re-run all pick
-    // the same one instead of ping-ponging and double-spending quota.
-    const dayIndex = Math.floor(sydneyDay().getTime() / 86_400_000);
+    const dayIndex = ebayDayIndex();
     // Built by ebayMarketsForDay rather than assembled here. This line used to
     // be its own copy of the same expression, which meant the pure function the
     // budget tests assert against was NOT the one production ran — the two could
@@ -682,9 +865,12 @@ export async function refreshEbayMarkets(
       `eBay market rotation: ${markets.map((m) => m.country).join(" → ")} ` +
         `(search order; the LAST market is the one dropped if the budget runs out. ` +
         `${ALWAYS.map((m) => m.country).join("/")} daily, priority rotating by Sydney day` +
-        // Empty today: every market is daily. Without this the line printed a
-        // dangling ", alternate by Sydney day" with nothing named in front of it.
-        (ROTATING.length ? `; ${ROTATING.map((m) => m.country).join("/")} alternate by Sydney day` : "") +
+        // Guarded because the rotation can legitimately be empty (it was, between
+        // 2026-08-08 and 2026-08-23). Without this the line printed a dangling
+        // ", alternate by Sydney day" with nothing named in front of it.
+        (ROTATING.length
+          ? `; ${ROTATING.map((m) => m.country).join("/")} one per day (each every ${ROTATING.length}d)`
+          : "") +
         `; use EBAY_ONLY_MARKET=<code> to refresh one off-cycle).`
     );
   }
@@ -919,8 +1105,8 @@ export async function refreshEbayMarkets(
  * Handing it a 150-card subset would therefore delete every eBay row in that
  * market and write back only the subset — silently dropping ~600 cards' prices
  * twice a day, with no error and no warning. This pass scopes its delete to the
- * cardIds it actually refreshed, exactly as the ad-carousel and auction writes
- * already do.
+ * cardIds it actually refreshed, exactly as the ad-carousel write already
+ * does.
  *
  * Returns the number of price rows written.
  */
@@ -1050,133 +1236,6 @@ export async function refreshEbayChasePrintings(markets: EbayMarketCfg[]): Promi
   return written;
 }
 
-/**
- * Live auctions on the chase tier, per market.
- *
- * Runs AFTER the singles pass on purpose. Both draw on the same Browse budget,
- * and if there is only enough quota for one of them it must be the price
- * comparison: a market missing its prices is a broken product, a market missing
- * its auction widget is a missing widget. `isEbayRateLimited()` is already
- * latched by then if singles used everything up, so this simply does nothing.
- *
- * Returns the number of auction rows written.
- */
-export async function refreshEbayAuctions(markets: EbayMarketCfg[]): Promise<number> {
-  if (!isEbayEnabled() || isEbayRateLimited()) return 0;
-  let written = 0;
-  // Read once, outside the market loop — the value floor is a USD figure and
-  // does not vary by marketplace, so re-reading the whole RetailerPrice table
-  // per market would buy nothing.
-  const tcgValues = await tcgplayerUsValues();
-
-  for (const mkt of markets) {
-    if (isEbayRateLimited()) break;
-
-    // The chase tier for THIS market: signature prints first (the site's own
-    // definition of chase — see getChaseCards), then by local value. Cards with
-    // no local price at all are excluded rather than ranked last: with no
-    // reference price there is nothing to compare a bid against, which is the
-    // only reason the auction is worth showing.
-    const priceCol = priceField(mkt.country as Country);
-    const cards = await prisma.card.findMany({
-      where: {
-        // The value floor doubles as the release filter: an unreleased set has
-        // no priced cards in any market, so it cannot reach this threshold.
-        [priceCol]: { gte: AUCTION_MIN_VALUE_CENTS },
-      },
-      orderBy: [
-        { collectorNumber: "desc" }, // "*" sorts high — signature prints lead
-        { [priceCol]: { sort: "desc", nulls: "last" } },
-      ],
-      // Over-fetch, because the rarity filter below runs in JS (effective rarity
-      // isn't a column). Without headroom a run of skipped cards would silently
-      // return fewer than AUCTION_CARDS_PER_MARKET chase cards.
-      take: AUCTION_CARDS_PER_MARKET * 3,
-      select: {
-        id: true, name: true, setCode: true, collectorNumber: true, isPromo: true,
-        rarity: true, variant: true,
-      },
-    });
-    // Same exclusion as the price pass, for the same reason — and it costs
-    // nothing here, since a Common almost never clears the value floor anyway.
-    // Applying it explicitly means "no eBay for Commons" holds across every
-    // surface rather than depending on a threshold that could later move.
-    const targets = cards
-      .filter((c) => eBayWorthSearching(c, tcgValues.get(c.id)))
-      .slice(0, AUCTION_CARDS_PER_MARKET);
-    if (targets.length === 0) continue;
-
-    const rows: Prisma.EbayAuctionCreateManyInput[] = [];
-    const reached = new Set<string>();
-    let truncated = false;
-    for (const c of targets) {
-      if (isEbayRateLimited()) {
-        truncated = true;
-        break;
-      }
-      reached.add(c.id);
-      const [rawNum, total] = c.collectorNumber.split("/");
-      const found = await searchEbayAuctions(
-        {
-          name: c.name,
-          setCode: c.setCode,
-          number: rawNum.replace(/\*/g, ""),
-          total: total ?? "",
-          isSignature: c.collectorNumber.includes("*"),
-          isPromo: c.isPromo,
-          marketplace: mkt.marketplace,
-        },
-        AUCTIONS_PER_CARD,
-      );
-      for (const a of found) {
-        rows.push({
-          cardId: c.id,
-          country: mkt.country,
-          itemId: a.itemId,
-          currentBidCents: a.currentBidCents,
-          bidCount: a.bidCount,
-          buyItNowCents: a.buyItNowCents,
-          currency: a.currency,
-          endsAt: a.endsAt,
-          url: a.url,
-          title: a.title,
-          imageUrl: a.imageUrl,
-          condition: a.condition ?? null,
-          isGraded: a.isGraded,
-        });
-      }
-    }
-
-    // Scoped to the cards this market actually REACHED, so a budget that ran out
-    // partway cannot clear auctions for cards it never checked — the same rule
-    // the ad-carousel write above learned the hard way. Ended auctions are swept
-    // separately below, so a card that legitimately has none is still cleared.
-    const reachedIds = [...reached];
-    for (let i = 0; i < reachedIds.length; i += 1000) {
-      await prisma.ebayAuction.deleteMany({
-        where: { country: mkt.country, cardId: { in: reachedIds.slice(i, i + 1000) } },
-      });
-    }
-    if (rows.length > 0) {
-      await prisma.ebayAuction.createMany({ data: rows, skipDuplicates: true });
-      written += rows.length;
-    }
-    console.log(
-      `eBay auctions ${mkt.country}: ${rows.length} live across ${reached.size} chase cards` +
-        (truncated ? " (budget ran out — partial)" : ""),
-    );
-  }
-
-  // Sweep anything that has closed since the last pass, in every market. A row
-  // that outlives its auction is the failure this feature most has to avoid: it
-  // carries a live affiliate link to a listing nobody can bid on. The renderer
-  // hides them too, but the read side should not be serving them at all.
-  const swept = await prisma.ebayAuction.deleteMany({ where: { endsAt: { lte: new Date() } } });
-  if (swept.count > 0) console.log(`eBay auctions: swept ${swept.count} ended.`);
-
-  return written;
-}
-
 // ── Title → card resolution (extracted to module scope so it's independently
 // testable — see scripts/test-parsing.ts — without needing a live DB) ──────────
 export type CardLite = {
@@ -1262,6 +1321,15 @@ function setFromTotal(total?: string): string | null {
 export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null {
   const { byNum, byNumAny, byName, starIds, overIds, promoByName, promoByNum, promoByNumAny } = idx;
   const t = p.title;
+  // Riftbound's Chinese release shares our cards' collector numbers but trades
+  // far cheaper, and this matcher had NO language check at all — unlike the
+  // TCGplayer and eBay sources, which each learned this the hard way (see
+  // FOREIGN_LANG's own comment). A store that also stocks the Chinese print
+  // under the same collection matched it as the English card's own listing,
+  // so its price (often a fraction of the real one) could win as "cheapest"
+  // for a completely different, English-only product. Checked FIRST, before
+  // any other signal in the title gets a chance to match.
+  if (isForeignLanguageTitle(t)) return null;
   // Never match a multi-card listing (playset/lot/bundle) to a single card — its
   // price is for the whole group, not one card.
   if (MULTI_CARD.test(t)) return null;
@@ -1280,7 +1348,23 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
     const promoName = nameKey(cleanProductName(t).replace(PROMO_WORDS, " "));
     const byNameHit = promoByName.get(promoName);
     if (byNameHit) return byNameHit;
-    if (num) return promoByNum.get(`${setCode}|${num.key}`) ?? promoByNumAny.get(num.key) ?? null;
+    if (num) {
+      const bySet = promoByNum.get(`${setCode}|${num.key}`);
+      if (bySet) return bySet;
+      // THE ANY-SET FALLBACK NEEDS A SET-UNIQUE NUMBER. It reaches across every
+      // set for a number, which is only defensible when the number itself can
+      // only belong to one of them — and a "/total" is exactly what makes that
+      // true ("134/219" is UNL and nothing else). A rune-cycle number has no
+      // total and is not unique at all: every set prints R01–R06, in base, "a"
+      // and "b" prints. Without this guard an Organized-Play rune listing that
+      // names no set (or names Unleashed, whose "b" runes we hold as ordinary
+      // Showcase cards rather than promos) fell through to whichever set's
+      // promo happened to be indexed first — reliably Vendetta's, because those
+      // are the only R-numbered promos in the catalogue. Leave it unmatched
+      // instead; a promo we cannot place is not a promo we should price.
+      if (confidentSetCode || !num.total) return null;
+      return promoByNumAny.get(num.key) ?? null;
+    }
     return null;
   }
   // NOTE: "Foil" is NOT an alt-art signal — nearly every listing (incl. base
@@ -1407,21 +1491,10 @@ export async function importPrices(): Promise<ImportSummary> {
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
-    // Auto-discover the store's Riftbound collections; fall back to any handles
-    // configured explicitly in retailers.ts.
-    let handles = await discoverRiftboundCollections(store.base);
-    if (!handles.length) handles = store.collections ?? [];
-    handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
-
-    const products: ShopifyProduct[] = [];
-    const seen = new Set<string>();
-    for (const handle of handles) {
-      for (const p of await fetchCollection(store, handle)) {
-        if (seen.has(p.handle)) continue; // de-dup across overlapping collections
-        seen.add(p.handle);
-        products.push(p);
-      }
-    }
+    const products =
+      store.platform === "woocommerce"
+        ? await fetchWooStoreProducts(store)
+        : await fetchShopifyStoreProducts(store);
     if (!products.length) {
       summary.stores.push({ name: store.name, products: 0, priced: 0, matched: 0, unmatched: 0 });
       continue;
@@ -1477,7 +1550,7 @@ export async function importPrices(): Promise<ImportSummary> {
         retailer: store.key,
         retailerName: store.name,
         title: p.title,
-        url: `${store.base}/products/${p.handle}`,
+        url: productUrl(store.base, p),
         condition: best.title && best.title !== "Default Title" ? best.title : null,
         isFoil: /foil/i.test(p.title),
         priceCents,
@@ -1511,11 +1584,13 @@ export async function importPrices(): Promise<ImportSummary> {
   if (corrected) console.log(`Verified cheapest listings — corrected ${corrected} stale prices.`);
 
   // ---- eBay AU + US (optional; only when EBAY_CLIENT_ID/SECRET are set) ---------
-  // eBay covers EVERY card per market, but only ONCE a day, and NEVER on a deploy
-  // (push). AU/US/UK/SG/CA ≈ 5×~1k calls; primeEbayBudget() reads the LIVE remaining
-  // quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's ~5,000/day
-  // Browse limit — it just stops early, dropping the last market(s) in the array
-  // (CA first, by design — see refreshEbayMarkets). NZ is store-only (no eBay).
+  // eBay covers EVERY searched card per market, but only ONCE a day, and NEVER on
+  // a deploy (push). A run searches 3 markets — AU and US daily plus one of
+  // UK/SG/EU — at ~350 cards each, so ≈ 1k calls; primeEbayBudget() reads the LIVE
+  // remaining quota and reserves QUOTA_RESERVE, so this can never exhaust eBay's
+  // ~5,000/day Browse limit — it just stops early, dropping the last market(s) in
+  // the array (see refreshEbayMarkets for why that loser rotates rather than
+  // always being the same market).
   // Cards are ordered by search demand so the most-wanted are covered first if the
   // quota is ever hit.
   //  - ebayDue:     last eBay refresh was > 20h ago (so it runs ~once a day).
@@ -1550,11 +1625,13 @@ export async function importPrices(): Promise<ImportSummary> {
     // including the chase pass's own. That is what stops the chase pass firing
     // repeatedly, and it is a bug I shipped: gating chase on _min made it a latch
     // the chase pass could not clear, so it stayed due for the whole 10-20h
-    // window. There are THREE daily invocations of this import, not two —
-    // .github/workflows/refresh-prices.yml at 07:00 and 19:00, and vercel.json's
-    // own cron at 18:00 — so it fired at 18:00 and again at 19:00, roughly 420
-    // wasted Browse calls, with each primeEbayBudget() also clearing a
-    // rate-limit latch the morning pass had set.
+    // window. There are now TWO daily invocations of this import —
+    // .github/workflows/refresh-prices.yml at 07:00 and 19:00. A vercel.json cron
+    // used to run it a THIRD time at 18:00; that was removed (2026-08-24) because
+    // it double-fired an hour before the 19:00 GitHub run — ~420 wasted Browse
+    // calls, and each primeEbayBudget() also cleared a rate-limit latch the
+    // morning pass had set. With it gone the chase pass simply moves to 19:00
+    // (see chaseCutoff below), which is where the 20h/10h gate always intended it.
     _min: { lastSeen: true },
     _max: { lastSeen: true },
   });
@@ -1562,9 +1639,11 @@ export async function importPrices(): Promise<ImportSummary> {
   const newestPerMarket = new Map(lastPerMarket.map((r) => [r.retailer, r._max.lastSeen]));
   const HOUR = 60 * 60 * 1000;
   const fullCutoff = Date.now() - 20 * HOUR;
-  // 10h after the LAST eBay write of any kind. With the full pass at 07:00 that
-  // clears at 18:00 (the Vercel cron), and the 19:00 run then sees a 1h-old
-  // write and correctly does nothing.
+  // 10h after the LAST eBay write of any kind. With the full pass at 07:00, the
+  // 19:00 GitHub run sees a 12h-old write (> 10h) and correctly runs the chase
+  // pass — exactly once a day, opposite the full pass. (Before the 18:00 Vercel
+  // cron was removed, chase fired there instead and the 19:00 run no-opped on a
+  // 1h-old write; same once-a-day chase, one fewer wasteful full import.)
   const chaseCutoff = Date.now() - 10 * HOUR;
   // EBAY_FORCE=1 bypasses the once-a-day gate, e.g. to push out an eBay matching fix
   // (like the Chinese-listing exclusion) the same day instead of waiting ~20h.
@@ -1606,8 +1685,8 @@ export async function importPrices(): Promise<ImportSummary> {
     });
     // Value floor reference. Read once for the whole pass — TCGplayer is imported
     // AFTER this block, so these are yesterday's figures; that is fine for a
-    // threshold (a card does not cross $20 and back inside a day) and it avoids
-    // reordering the import for a filter.
+    // threshold (a card does not cross the floor and back inside a day) and it
+    // avoids reordering the import for a filter.
     const tcgValues = await tcgplayerUsValues();
     const ebayTargets = ebayCards.filter((c) => eBayWorthSearching(c, tcgValues.get(c.id)));
     const skipped = ebayCards.length - ebayTargets.length;
@@ -1626,20 +1705,19 @@ export async function importPrices(): Promise<ImportSummary> {
         `~${skipped * 3} calls/day saved.`,
     );
     const n = await refreshEbayMarkets(ebayTargets);
-    summary.stores.push({ name: "eBay (AU/US/UK/SG/CA)", products: ebayTargets.length, priced: n, matched: n, unmatched: 0 });
-
-    // Chase-tier auctions, on whatever budget the price pass left. Deliberately
-    // last and deliberately unguarded by its own quota check — refreshEbayAuctions
-    // no-ops when the budget is already latched, so prices always win the tie.
-    // Only the always-markets: the rotating market is at most ~48h stale by
-    // design, which is fine for a price and useless for an auction countdown.
-    try {
-      const a = await refreshEbayAuctions(EBAY_ALWAYS_MARKETS);
-      if (a > 0) summary.stores.push({ name: "eBay auctions (chase)", products: a, priced: a, matched: a, unmatched: 0 });
-    } catch (e) {
-      // An auction widget must never fail the price import.
-      console.warn("eBay auction pass failed:", e);
-    }
+    // Named off the real lists rather than a hand-typed string: the previous
+    // literal still said "AU/US/UK/SG/CA" and would have gone on saying it
+    // after the rotation change, misreporting which markets a run covered.
+    // CA is appended separately — it is derived from the US pass, not searched.
+    summary.stores.push({
+      name: `eBay (${EBAY_ALWAYS_MARKETS.map((m) => m.country).join("/")} daily` +
+        `${EBAY_ROTATING_MARKETS.length ? ` + ${EBAY_ROTATING_MARKETS.map((m) => m.country).join("/")} rotating` : ""}` +
+        `, CA derived)`,
+      products: ebayTargets.length,
+      priced: n,
+      matched: n,
+      unmatched: 0,
+    });
   } else if (chaseDue && isEbayEnabled() && ebayAllowed) {
     // The evening pass: promo / Signature / overnumbered printings only. These
     // are thin markets — often one or two live listings — so a single sale moves
@@ -1647,12 +1725,16 @@ export async function importPrices(): Promise<ImportSummary> {
     // track, which makes a stale figure on one the most costly kind of wrong.
     await primeEbayBudget();
     try {
-      const n = await refreshEbayChasePrintings(EBAY_ALWAYS_MARKETS);
+      // The SAME market set the catalogue pass used today, not
+      // EBAY_ALWAYS_MARKETS. Those were the same list until 2026-08-23; once UK
+      // and SG moved into the rotation they stopped being, and passing the
+      // always-list here would have quietly frozen UK/SG/EU chase prices — the
+      // thinnest and most volatile on the site — at whatever the catalogue pass
+      // last wrote, while the rest of those markets kept moving. Same dayIndex
+      // as that pass, so the evening run refreshes the market the morning run
+      // priced rather than a different one.
+      const n = await refreshEbayChasePrintings(ebayMarketsForDay(ebayDayIndex()));
       summary.stores.push({ name: "eBay chase (2nd daily)", products: n, priced: n, matched: n, unmatched: 0 });
-      // Auctions ride along: their whole value is a deadline, so a 12-hourly
-      // countdown is worth far more than a daily one, and the cards are the same.
-      const a = await refreshEbayAuctions(EBAY_ALWAYS_MARKETS);
-      if (a > 0) summary.stores.push({ name: "eBay auctions (chase)", products: a, priced: a, matched: a, unmatched: 0 });
     } catch (e) {
       console.warn("eBay chase pass failed:", e);
     }
@@ -1664,22 +1746,42 @@ export async function importPrices(): Promise<ImportSummary> {
   // Isolated so a TCGplayer hiccup never fails the rest of the import.
   try {
     if (!onlyCountry || onlyCountry === "US") {
-      const n = await refreshTcgplayerPrices();
-      if (n > 0) summary.stores.push({ name: "TCGplayer (US)", products: n, priced: n, matched: n, unmatched: 0 });
+      // byCountry.US specifically, NOT `written` — `written` sums rows across
+      // all five currency markets (US/UK/SG/AU/CA), which all reuse the SAME
+      // underlying product fetch. Reporting that sum under a "TCGplayer (US)"
+      // label used to make this line read as ~5x the real US coverage (e.g.
+      // 2,155 when only 431 US cards actually got a fresh price), masking the
+      // exact truncated-fetch failure refreshTcgplayerPrices()'s own guard now
+      // catches — see its comment.
+      const { byCountry } = await refreshTcgplayerPrices();
+      const us = byCountry.US ?? 0;
+      if (us > 0) summary.stores.push({ name: "TCGplayer (US)", products: us, priced: us, matched: us, unmatched: 0 });
     }
   } catch (e) {
     console.warn("TCGplayer import failed:", e);
   }
 
-  // ---- Cardmarket (UK fallback price) ------------------------------------------
-  // Flag-gated OFF (CARDMARKET_ENABLED) and pending a ToS sign-off — see cardmarket.ts.
-  // When enabled it adds an EUR→GBP-converted marketplace "from" price as a UK
-  // FALLBACK source (UK_FALLBACK_RETAILERS). Isolated so it never fails the import.
+  // ---- Cardmarket (UK + EU fallback price) -------------------------------------
+  // Zero-config: auto-fetches Cardmarket's own public product-list/price-guide
+  // JSON on every run (see cardmarket.ts's header for the 2026-09-04 support
+  // confirmation that resolved its licence gate, the verified public URLs, and
+  // why matching is scoped to unambiguous single-print cards).
+  //
+  // Writes TWO rows per card: an EUR→GBP conversion for UK, and the SAME figure
+  // unconverted for EU — Cardmarket quotes in euro, so for the eurozone this is
+  // the one reference source with no FX rate in the middle. Both are FALLBACKS
+  // (UK_FALLBACK_RETAILERS / EU_FALLBACK_RETAILERS): a marketplace aggregate
+  // across many sellers must never undercut a real store's in-stock listing.
+  //
+  // Worth more to EU than to UK, which is why the gate is worth resolving: the UK
+  // has 28 tracked stores and TCGplayer, while the EU has eleven stores for a
+  // whole continent because European singles trading happens on Cardmarket and
+  // CardTrader rather than on shop websites. Isolated so it never fails the import.
   try {
-    if (!onlyCountry || onlyCountry === "UK") {
+    if (!onlyCountry || onlyCountry === "UK" || onlyCountry === "EU") {
       const r = await refreshCardmarketPrices();
       if (!r.skipped && r.written > 0) {
-        summary.stores.push({ name: "Cardmarket (UK)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
+        summary.stores.push({ name: "Cardmarket (UK+EU)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
       } else if (r.skipped) {
         console.log(`Cardmarket: skipped (${r.reason}).`);
       }
@@ -1688,14 +1790,30 @@ export async function importPrices(): Promise<ImportSummary> {
     console.warn("Cardmarket import failed:", e);
   }
 
-  // ---- RiftCompare Marketplace (our own verified-seller listings) --------------
-  // Surface verified sellers' cheapest active listing per market as a source, so
-  // marketplace cards show up in the comparison. Isolated so it never fails the run.
+  // ---- CardTrader (EU singles, from EU sellers, in euro) -----------------------
+  // A second, independent EU source alongside Cardmarket above. CardTrader's API
+  // is open to any account holder, so it needs only CARDTRADER_API_TOKEN; unlike
+  // Cardmarket it is not a marketplace-aggregate fallback (see below).
+  //
+  // NOT a fallback retailer, unlike Cardmarket/TCGplayer-*: each row is one real
+  // in-stock listing from one identified EU seller quoted in euro, so it can carry
+  // the EU "from" price the way a Shopify store's listing carries the UK's. That
+  // matters most here — the comment above notes the EU has eleven stores for a
+  // whole continent, and measured against the live API, CardTrader prices 99.6% of
+  // Unleashed and 95.1% of Origins from EU sellers alone.
+  //
+  // Isolated like every other source so it can never fail the whole import.
   try {
-    const n = await importMarketplaceListings();
-    if (n > 0) summary.stores.push({ name: "RiftCompare Marketplace", products: n, priced: n, matched: n, unmatched: 0 });
+    if (!onlyCountry || onlyCountry === "EU") {
+      const r = await refreshCardTraderPrices();
+      if (!r.skipped && r.written > 0) {
+        summary.stores.push({ name: "CardTrader (EU)", products: r.written, priced: r.written, matched: r.written, unmatched: 0 });
+      } else if (r.skipped) {
+        console.log(`CardTrader: skipped (${r.reason}).`);
+      }
+    }
   } catch (e) {
-    console.warn("Marketplace import failed:", e);
+    console.warn("CardTrader import failed:", e);
   }
 
   // Recompute each card's lowest live price PER MARKET from IN-STOCK listings only,
@@ -1708,23 +1826,36 @@ export async function importPrices(): Promise<ImportSummary> {
   // then refuses to show as a store (computeMarket in lib/market-rows.ts excludes
   // them from the comparison too). A card with no real local listing gets null here
   // — "no price yet" — rather than a misleading converted figure.
-  // CA has no converted-reference source of its own (no tcgplayer_ca — see the
-  // note in constants.ts), so like NZ it takes every in-stock row for the market
-  // with no fallback-retailer exclusion.
-  const [pricedAuReal, pricedNz, pricedUs, pricedSgReal, pricedUkReal, pricedCa] = await Promise.all([
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...AU_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "NZ" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US" }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...SG_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...UK_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
-    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA" }, _min: { priceCents: true } }),
+  // EVERY market uses the SAME exclusion list the card page's computeMarket()
+  // applies (isFallbackRetailer, backed by ALL_FALLBACK_RETAILERS) rather than
+  // its own per-market list. Naming one list per market is what let CA drift:
+  // the comment here used to say "CA has no converted-reference source of its
+  // own (no tcgplayer_ca)", but refreshTcgplayerPrices() iterates TCG_CA and
+  // writes a converted tcgplayer_ca row for essentially the whole catalogue, so
+  // /browse and the "cheapest cards" strip advertised a Canadian "from" price
+  // that the card page then refused to show as a store. The read side already
+  // filtered country-agnostically; the write side asking the same question the
+  // same way is what stops the next added market repeating it. "tcgplayer" (US)
+  // is deliberately NOT in that list — it is a real buyable store there.
+  const [pricedAuReal, pricedUs, pricedSgReal, pricedUkReal, pricedCa, pricedEu] = await Promise.all([
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "AU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "US", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "SG", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "UK", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "CA", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
+    // EU_FALLBACK_RETAILERS is empty today (no permitted EUR reference source —
+    // see constants.ts), so this exclusion is a no-op for EU right now. It is
+    // written anyway, identically to every other market, because the failure it
+    // prevents is silent: the day a reference row appears it would otherwise set
+    // lowestPriceCentsEu and present a converted aggregate as a buyable price.
+    prisma.retailerPrice.groupBy({ by: ["cardId"], where: { inStock: true, country: "EU", retailer: { notIn: [...ALL_FALLBACK_RETAILERS] } }, _min: { priceCents: true } }),
   ]);
   const lowAuReal = new Map(pricedAuReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
-  const lowNz = new Map(pricedNz.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUs = new Map(pricedUs.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowSgReal = new Map(pricedSgReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowUkReal = new Map(pricedUkReal.map((r) => [r.cardId, r._min.priceCents ?? null]));
   const lowCa = new Map(pricedCa.map((r) => [r.cardId, r._min.priceCents ?? null]));
+  const lowEu = new Map(pricedEu.map((r) => [r.cardId, r._min.priceCents ?? null]));
   // Diff-based update: write each card STRAIGHT to its new lowest only when it
   // changed. We must NOT reset every card to null first (the old approach) — that
   // briefly showed "No price yet" for the whole catalogue on every import/deploy
@@ -1734,11 +1865,11 @@ export async function importPrices(): Promise<ImportSummary> {
     select: {
       id: true,
       lowestPriceCents: true,
-      lowestPriceCentsNz: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
       lowestPriceCentsSg: true,
       lowestPriceCentsCa: true,
+      lowestPriceCentsEu: true,
     },
   });
   let changed = 0;
@@ -1750,28 +1881,28 @@ export async function importPrices(): Promise<ImportSummary> {
     // from the comparison entirely — see lib/market-rows.ts). Reference prices
     // stay queryable for the Deal Finder via AU/UK/SG_FALLBACK_RETAILERS directly.
     const nAu = lowAuReal.get(c.id) ?? null;
-    const nNz = lowNz.get(c.id) ?? null;
     const nUs = lowUs.get(c.id) ?? null;
     const nUk = lowUkReal.get(c.id) ?? null;
     const nSg = lowSgReal.get(c.id) ?? null;
     const nCa = lowCa.get(c.id) ?? null;
+    const nEu = lowEu.get(c.id) ?? null;
     if (
       nAu !== c.lowestPriceCents ||
-      nNz !== c.lowestPriceCentsNz ||
       nUs !== c.lowestPriceCentsUs ||
       nUk !== c.lowestPriceCentsUk ||
       nSg !== c.lowestPriceCentsSg ||
-      nCa !== c.lowestPriceCentsCa
+      nCa !== c.lowestPriceCentsCa ||
+      nEu !== c.lowestPriceCentsEu
     ) {
       await prisma.card.update({
         where: { id: c.id },
         data: {
           lowestPriceCents: nAu,
-          lowestPriceCentsNz: nNz,
           lowestPriceCentsUs: nUs,
           lowestPriceCentsUk: nUk,
           lowestPriceCentsSg: nSg,
           lowestPriceCentsCa: nCa,
+          lowestPriceCentsEu: nEu,
         },
       });
       changed++;
@@ -1780,32 +1911,87 @@ export async function importPrices(): Promise<ImportSummary> {
   console.log(`Lowest recompute: ${changed} cards changed (no null-reset window).`);
   summary.cardsPriced = lowAuReal.size;
 
-  // Snapshot today's lowest price per card PER MARKET for the price-over-time chart
-  // (each market in its own currency). One point per card per market per Sydney day;
-  // a same-day re-run (e.g. a deploy) replaces the day's rows.
+  // Snapshot today's GLOBAL lowest price per card for the price-over-time
+  // chart: the cheapest price found in ANY tracked market that day, converted
+  // to USD cents and written as ONE row (country=GLOBAL_HISTORY_COUNTRY). One
+  // point per card per Sydney day; a same-day re-run (e.g. a deploy) replaces
+  // the day's rows.
+  //
+  // CHANGED 2026-09-05 from one row per TRACKED MARKET (AU/US/UK/SG) to one
+  // GLOBAL row. 2026-09-02 had already stopped writing CA/EU as pure
+  // currency-converted duplicates of US/UK; this finishes the same idea for
+  // the four markets that were still each getting their own row — every real
+  // reader already resolves through historySource() in price-history.ts,
+  // which now maps EVERY market to this one GLOBAL series and converts the
+  // stored USD figure back to that market's own currency on read, the same
+  // "write once, convert on read" trick CA/EU already used. Live current
+  // prices per market (Card.lowestPriceCents*, above) are completely
+  // unaffected — only the HISTORY archive is consolidated.
   try {
     const day = sydneyDay();
     // Split-history setups: make sure every card exists in the history DB first
     // (PriceHistory has an FK to Card there too). No-op on single-DB setups.
-    await ensureHistoryCards(existing.map((c) => c.id));
+    const writable = await ensureHistoryCards(existing.map((c) => c.id));
     const rows: { cardId: string; country: string; day: Date; lowestPriceCents: number }[] = [];
     for (const c of existing) {
-      const au = lowAuReal.get(c.id) ?? null;
-      const nz = lowNz.get(c.id) ?? null;
-      const us = lowUs.get(c.id) ?? null;
-      const uk = lowUkReal.get(c.id) ?? null;
-      const sg = lowSgReal.get(c.id) ?? null;
-      const ca = lowCa.get(c.id) ?? null;
-      if (au != null) rows.push({ cardId: c.id, country: "AU", day, lowestPriceCents: au });
-      if (nz != null) rows.push({ cardId: c.id, country: "NZ", day, lowestPriceCents: nz });
-      if (us != null) rows.push({ cardId: c.id, country: "US", day, lowestPriceCents: us });
-      if (uk != null) rows.push({ cardId: c.id, country: "UK", day, lowestPriceCents: uk });
-      if (sg != null) rows.push({ cardId: c.id, country: "SG", day, lowestPriceCents: sg });
-      if (ca != null) rows.push({ cardId: c.id, country: "CA", day, lowestPriceCents: ca });
+      // Skip any card the history DB could not be given a Card row for. The
+      // write below is ONE createMany, so a single unsatisfiable foreign key
+      // rejects every row in the batch — that is how one card with a stale
+      // duplicate slug cost eleven days of price history for all ~1,400 cards
+      // while the import kept reporting success. Losing one card's point is a
+      // rounding error; losing the day is not. (null = single-database setup,
+      // where the FK is against the same Card table and always satisfied.)
+      if (writable && !writable.has(c.id)) continue;
+      // Convert each tracked market's own lowest price to USD cents, then take
+      // the actual minimum across whichever markets have a price today — the
+      // cheapest this card is available ANYWHERE, in one common currency.
+      const usdCandidates: number[] = [];
+      for (const [country, cents] of [
+        ["AU", lowAuReal.get(c.id) ?? null],
+        ["US", lowUs.get(c.id) ?? null],
+        ["UK", lowUkReal.get(c.id) ?? null],
+        ["SG", lowSgReal.get(c.id) ?? null],
+      ] as [Country, number | null][]) {
+        if (cents != null) usdCandidates.push(convertCents(cents, currencyOf(country), "USD"));
+      }
+      if (usdCandidates.length === 0) continue;
+      rows.push({ cardId: c.id, country: GLOBAL_HISTORY_COUNTRY, day, lowestPriceCents: Math.min(...usdCandidates) });
     }
-    await dbHistory.priceHistory.deleteMany({ where: { day } });
-    if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
-    console.log(`Price history: recorded ${rows.length} points (AU/NZ/US/UK/SG/CA) for ${day.toISOString().slice(0, 10)}.`);
+    // WEEKLY SNAPSHOTS, NOT TWICE-DAILY. This is the history database's cost
+    // control, and it works on both sides of the ledger at once:
+    //
+    //   • fewer writes — this ran on every import, i.e. twice a day, writing
+    //     ~1,400 cards x 6 markets each time;
+    //   • fewer READS, which is the larger half. Every windowed history query is
+    //     "all cards in this market over N days". At one point per week instead
+    //     of one per day, the same window returns roughly a seventh as many rows,
+    //     for every reader — movers, charts, screener, portfolio, public API.
+    //
+    // Gated on the distance from the newest existing snapshot rather than on a
+    // weekday, so a missed run self-heals on the next import instead of waiting
+    // a full week. Date-only arithmetic (`day` is @db.Date) keeps this immune to
+    // the cron drifting by a few hours either side.
+    const newest = await dbHistory.priceHistory.findFirst({
+      orderBy: { day: "desc" },
+      select: { day: true },
+    });
+    const daysSince = newest
+      ? Math.round((day.getTime() - newest.day.getTime()) / 86400_000)
+      : Number.POSITIVE_INFINITY;
+
+    if (daysSince < HISTORY_MIN_INTERVAL_DAYS) {
+      console.log(
+        `Price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${HISTORY_MIN_INTERVAL_DAYS}.`
+      );
+    } else {
+      await dbHistory.priceHistory.deleteMany({ where: { day } });
+      if (rows.length > 0) await dbHistory.priceHistory.createMany({ data: rows });
+      const skipped = writable ? existing.filter((c) => !writable.has(c.id)).length : 0;
+      console.log(
+        `Price history: recorded ${rows.length} GLOBAL points (USD) for ${day.toISOString().slice(0, 10)}` +
+          (skipped ? ` — ${skipped} card(s) skipped: no Card row in the history DB` : "") + "."
+      );
+    }
   } catch (e) {
     console.warn("Price-history snapshot failed:", e);
   }

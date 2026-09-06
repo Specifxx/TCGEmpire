@@ -10,11 +10,12 @@ import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
   description:
-    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
+    "Free Riftbound mini-games: Riftle (the daily guess-the-card puzzle), a pack opening simulator, Riftbound 2048, Card Smash, Space Invaders, Higher or Lower with live card prices, Price Check, the Zoomed In art quiz and Pairs memory. No signup, endlessly replayable.",
   keywords: [
     "Riftbound games",
     "Riftle",
@@ -24,12 +25,13 @@ export const metadata: Metadata = {
     "card price game",
     "higher or lower TCG",
     "Riftbound quiz",
+    "Riftbound Space Invaders",
   ],
-  alternates: { canonical: "/games" },
+  alternates: pageAlternates("/games"),
   openGraph: {
     title: "Riftbound Games — Free Daily Puzzles & Arcade | RiftCompare",
     description:
-      "Riftle, Higher or Lower, Price Check, Zoomed In and Pairs — free Riftbound mini-games built on live card data.",
+      "Riftle, Higher or Lower, Price Check, Zoomed In, Pairs and Space Invaders — free Riftbound mini-games built on live card data.",
     url: `${SITE_URL}/games`,
   },
 };
@@ -45,6 +47,19 @@ const GAMES = [
     tag: "Daily + Unlimited",
     desc: "Guess the mystery card in 8 tries with Wordle-style clues on set, type, domain, rarity, cost and might.",
     accent: "from-brand-600/30 to-ink-850",
+    featured: true,
+  },
+  {
+    // SECOND, and featured, so it gets the wide hero tile. It is the only game
+    // here targeting a head term of its own ("riftbound pack opening
+    // simulator") and it carries the sourced pack-structure and pull-rate
+    // tables — it earns the position that the other six mini-games do not.
+    href: "/games/pack-sim",
+    emoji: "🎁",
+    name: "Pack Opening Simulator",
+    tag: "Rip packs",
+    desc: "Open virtual Riftbound packs dealt to Riot's real 14-card pack structure, from the actual card pool, with a live price on every pull.",
+    accent: "from-emerald-500/20 to-ink-850",
     featured: true,
   },
   {
@@ -80,14 +95,6 @@ const GAMES = [
     accent: "from-blue-500/20 to-ink-850",
   },
   {
-    href: "/games/pack-sim",
-    emoji: "🎁",
-    name: "Pack Opening Simulator",
-    tag: "Rip packs",
-    desc: "Open virtual Riftbound packs built from real cards and live prices. See what your pull is worth — no money, all the dopamine.",
-    accent: "from-emerald-500/20 to-ink-850",
-  },
-  {
     href: "/games/twenty48",
     emoji: "🧬",
     name: "Riftbound 2048",
@@ -102,6 +109,14 @@ const GAMES = [
     tag: "Reflex",
     desc: "Whack-a-mole with cards: tap them as they pop, dodge the bombs, beat the clock. Pricier cards score more.",
     accent: "from-orange-500/20 to-ink-850",
+  },
+  {
+    href: "/games/space-invaders",
+    emoji: "👾",
+    name: "Space Invaders",
+    tag: "Arcade",
+    desc: "Classic formation shooter: shoot down waves of real cards before they reach you. Pricier cards score more.",
+    accent: "from-violet-500/20 to-ink-850",
   },
 ];
 
@@ -129,7 +144,7 @@ export default async function GamesPage() {
     "@type": "ItemList",
     name: "Riftbound Games",
     description:
-      "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048 and Card Smash.",
+      "Free Riftbound mini-games built on live card data — Riftle, Higher or Lower, Price Check, Zoomed In, Pairs, Pack Opening Simulator, Riftbound 2048, Card Smash and Space Invaders.",
     url: `${SITE_URL}/games`,
       // Edges back to the site-level graph in app/layout.tsx. Without them this
       // node is an island and the Organization/WebSite entity signals — sameAs,
@@ -171,7 +186,7 @@ export default async function GamesPage() {
             🏆 <strong className="text-white">Make a free account</strong> to save your scores and climb the global leaderboards.
           </p>
           <div className="flex shrink-0 gap-2">
-            <Link href="/register?next=/games" className="btn-primary text-sm">Create account</Link>
+            <Link href="/login?next=/games" className="btn-primary text-sm">Sign in</Link>
             <Link href="/login?next=/games" className="btn-ghost text-sm">Sign in</Link>
           </div>
         </div>

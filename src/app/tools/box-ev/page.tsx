@@ -7,6 +7,7 @@ import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
 import { BoxEvCalculator, type BoxEvSet, type PullCard } from "@/components/BoxEvCalculator";
 import { poolOf, POOL_ORDER, type PoolKey } from "@/lib/box-ev";
+import { pageAlternates } from "@/lib/seo";
 import { AdSlot } from "@/components/AdSlot";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,9 +22,9 @@ import { AdSlot } from "@/components/AdSlot";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: { absolute: "Riftbound Booster Box EV Calculator — Is a Box Worth Opening? | RiftCompare" },
+  title: { absolute: "Riftbound Booster Box EV Calculator | RiftCompare" },
   description:
-    "Expected value of a Riftbound booster box, built from TCGplayer market prices and including the signature, over-numbered and alt-art chase pulls that most EV maths leaves out. Tune the pull rates yourself.",
+    "Expected value of a Riftbound booster box, from real TCGplayer prices — including signature, over-numbered and alt-art chase pulls. Tune the pull rates yourself.",
   keywords: [
     "Riftbound box EV",
     "Riftbound booster box value",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     "Riftbound expected value",
     "TCG box EV calculator",
   ],
-  alternates: { canonical: "/tools/box-ev" },
+  alternates: pageAlternates("/tools/box-ev"),
   openGraph: {
     title: "Riftbound Booster Box EV Calculator",
     description: "Expected value per box from real market prices — is opening worth it?",
@@ -195,7 +196,7 @@ export default async function BoxEvPage() {
           <span>/</span>
           <span className="text-slate-300">Box EV Calculator</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Booster Box EV Calculator</h1>
+        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Riftbound Booster Box EV Calculator</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Is a Riftbound booster box worth opening? Every card is valued at its{" "}
           <strong className="text-slate-200">TCGplayer market price</strong>, and the chase prints most EV maths
@@ -243,6 +244,14 @@ export default async function BoxEvPage() {
           <Link href="/browse" className="text-brand-400 hover:underline">buying the singles</Link> is almost
           always cheaper and always certain — and either way,{" "}
           <Link href="/sealed" className="text-brand-400 hover:underline">compare box prices</Link> before you buy.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          If you would rather feel that distribution than read about it,{" "}
+          <Link href="/games/pack-sim" className="text-brand-400 hover:underline">
+            open some virtual packs
+          </Link>{" "}
+          — same card pool, same pack structure, live prices on every pull, and no money. A dozen
+          packs of mostly bulk makes the argument above far better than a paragraph does.
         </p>
       </section>
     </div>

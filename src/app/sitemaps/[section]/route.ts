@@ -28,7 +28,19 @@ export async function GET(_req: Request, { params }: { params: { section: string
   const body = entries
     .map((e) => {
       const parts = [`    <loc>${esc(e.url)}</loc>`];
-      if (e.lastModified) parts.push(`    <lastmod>${e.lastModified.toISOString().slice(0, 10)}</lastmod>`);
+      // FULL timestamp, not `.slice(0, 10)` (date-only) — the sitemap protocol
+      // accepts either (sitemaps.org: "You can employ a full date and time or a
+      // date"), and date-only was silently discarding real distinctness the
+      // per-entry queries above already compute. cards()/sets()/champions()/
+      // decks()/stores() each aggregate a genuine per-item MAX(RetailerPrice.lastSeen)
+      // — different stores' price-import batches land seconds-to-minutes apart
+      // within a run — but truncating to YYYY-MM-DD collapsed an entire day's
+      // worth of distinct batch timestamps into one identical string, which is
+      // how a 2026-08-30 SEO audit found cards.xml's ~1,400 URLs sharing only 2
+      // distinct <lastmod> values despite every card page showing a different
+      // "updated Xh ago". The fix is here, not in those per-entry queries: they
+      // were already computing the right Date, this was throwing its precision away.
+      if (e.lastModified) parts.push(`    <lastmod>${e.lastModified.toISOString()}</lastmod>`);
       if (e.changeFrequency) parts.push(`    <changefreq>${e.changeFrequency}</changefreq>`);
       if (e.priority != null) parts.push(`    <priority>${e.priority.toFixed(1)}</priority>`);
       for (const img of e.images ?? []) parts.push(`    <image:image><image:loc>${esc(img)}</image:loc></image:image>`);

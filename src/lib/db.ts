@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 
 // ─── DATA-EGRESS RULES (read before adding queries) ────────────────────────────
 // Neon's free tier has a 5 GB/month NETWORK TRANSFER allowance. DexCompare has
@@ -29,6 +30,31 @@ import { PrismaClient } from "@prisma/client";
 //      count is unbounded.
 //   4. Whole-table reads belong in workflows/scripts (daily refresh, seeds),
 //      never in request handlers.
+//   5. NEVER give unstable_cache a `revalidate` LOWER than the page's own
+//      `export const revalidate`. This rule cost five database projects before
+//      anyone found it, and none of the rules above would have caught it,
+//      because the offending query was small and correctly cached.
+//
+//      An unstable_cache revalidate is not scoped to its own entry: Next.js
+//      applies it to the whole ROUTE SEGMENT, taking the lower of the two
+//      (server/web/spec-extension/unstable-cache.js sets `store.revalidate =
+//      options.revalidate` unless the store's is already smaller). So one
+//      `{ revalidate: 300 }` inside a component on a `revalidate = 86400` page
+//      silently re-ran EVERY query on that page — including all the uncached
+//      ones around it — 288× a day instead of once.
+//
+//      That is exactly what components/EbayCardPanel.tsx did to /card/[id]
+//      until 2026-08-14: ~10 uncached round trips × ~60 KB × 288 × ~200 hot
+//      card URLs ≈ 2 GB/day, matching the observed burn almost exactly. It is
+//      invisible in the source — the only evidence was
+//      .next/prerender-manifest.json showing every /card/* route at
+//      initialRevalidateSeconds: 300 instead of 86400.
+//
+//      TO CHECK: after a build, grep that manifest for a route whose
+//      initialRevalidateSeconds is lower than the `export const revalidate` in
+//      its page.tsx. If freshness genuinely needs a shorter window than the
+//      page, fetch it CLIENT-side instead — that is the only way the TTL cannot
+//      propagate to the segment.
 //
 // The egress guard below makes violations VISIBLE: any single query returning
 // a ~1 MB+ payload logs loudly to the Vercel function logs instead of silently
@@ -38,27 +64,71 @@ import { PrismaClient } from "@prisma/client";
 const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
 const BIG_RESULT_BYTES = 1_000_000;
 
-// RM4 is the CURRENT operational Neon project (cut over 2026-08-04, after RM3
-// exhausted its monthly network-transfer allowance — RM3 itself replaced
-// DATABASE_URL_2, which replaced the original DATABASE_URL, each for the same
-// reason). Prefer it the moment it's set (in both Vercel and GitHub Actions),
-// same pattern as db-history.ts's fallback chain.
+// RM7 is the ONLY operational Neon project, cut over 2026-09-05 (RM6 neared its
+// 5 GB monthly transfer allowance after only about two days live) — a deliberate
+// departure from every rotation before RM9 (DATABASE_URL → DATABASE_URL_2 → RM3
+// → RM4 → RM5 → DATABASE_URL → DATABASE_URL_2 → RM6 → RM7 → RM8), each of which
+// was a multi-entry FALLBACK CHAIN, current-first. Every real outage this
+// database has caused traced back to that shape, not to the database itself:
 //
-// THIS HAS NOW HAPPENED FOUR TIMES, so treat the chain as a rotation rather than
-// an accident: each project runs out, a new one is created, it goes on the FRONT
-// of this list, and the old one stays exactly one release as a rollback.
+// RM7 IS A RECYCLED NAME, not a new project — it was live once already
+// (2026-08-20..~08-23, before rotating to RM8) and has been sitting idle since,
+// its own transfer allowance long since reset. Unlike the other recycled names,
+// its old contents needed checking rather than assuming: see
+// src/lib/db-chains.ts's own OPERATIONAL_VARS comment for the row-count
+// evidence that its 2026-08-20..08-23 window was already carried forward, and
+// the verified row counts this cutover restored. resolveVar() selects the first
+// variable that is merely SET — precedence, never health — so an exhausted
+// CURRENT project stayed selected instead of failing over, and ~84
+// `.catch(() => [])` sites across src/ turned the resulting query failures into
+// empty arrays. AN EXHAUSTED DATABASE PRESENTS AS MISSING DATA, NOT AS AN ERROR
+// PAGE. The 2026-08-22 outage is the sharpest example: RM7 itself went over its
+// transfer allowance that time, and the "rollback" RM8 turned out to be
+// reachable and completely empty because the migration that fills a fallback
+// had never been run — the site showed no in-stock listings for hours before
+// anyone thought to suspect the database. A single name trades away the
+// emergency-fallback lever, but it fails LOUDLY (P1001) instead of silently
+// serving garbage, which is the trade this project now makes on purpose.
 //
-// The older vars are kept ONLY as fallbacks so a deploy can't hard-fail if RM4
-// is momentarily missing from one environment; treat them as dead/read-only,
-// never the primary target. Once RM4 is confirmed live everywhere and the data
-// is verified across (see migrate-main-db-rm4 in maintenance.yml), they can be
-// deleted and this collapsed back to a single var.
+// ⚠ THE BURN RATE ITSELF IS STILL UNSOLVED. Nine consecutive projects have
+// now been exhausted the same way (~2 GB/day), which makes this a systemic
+// read-volume problem, not bad luck with allowances. A new project buys time,
+// not a fix.
 //
-// NOTE the ordering rule for any future rotation: the NEWEST project goes
-// first. Getting this backwards silently keeps the site on the exhausted
-// database while looking correct.
-const OPERATIONAL_URL =
-  process.env.RM4 || process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+// SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice is 90,946 rows (counted
+// during the 2026-09-05 cutover) against Card's 1,429. Any hot path that reads
+// RetailerPrice without a `take`/narrow `select`, or any cache that silently
+// stops caching it, moves tens of MB per request — which is the only shape of
+// bug that reaches 2 GB/day at this traffic level. Start there.
+//
+// THE NAME HAZARD, and it is worth reading before touching anything here.
+// prisma/schema.prisma reads env("DATABASE_URL") directly, and nearly every
+// script assigns `DATABASE_URL=<something> npx tsx …` to aim Prisma at a
+// database. The operational variable is RM7, so anything that runs Prisma MUST
+// copy RM7 into DATABASE_URL first or it will talk to whatever DATABASE_URL
+// happens to hold while the app talks to RM7. scripts/build-db-push.sh does
+// exactly that copy. Locally this all still resolves to the dev Postgres in
+// .env.local, which is why local dev is unaffected.
+//
+// RM4's exhaustion (2026-08-10) is the sharpest example of what an unplanned
+// rotation costs on its own: a clean 43-minute price import at 19:30 UTC to
+// refusing every connection by 04:35 the next morning, and because `next build`
+// prerenders 22 database-backed pages, every Vercel deploy failed outright from
+// that moment — with a bare `Error: Command "npm run build" exited with 1` and
+// nothing in it naming a database.
+//
+// RM3 through RM11 (bar RM7 itself) and DATABASE_URL_2 are retired and reachable
+// BY NAME from the migrate-* tasks in .github/workflows/maintenance.yml, which
+// is where draining a project before switching it off belongs. Draining must
+// not depend on the runtime chain — and there is no runtime chain to depend on now.
+//
+// THE LIST ITSELF LIVES IN src/lib/db-chains.ts and is imported here. Everything
+// that runs in Node imports it too, so the copies that used to drift (seven
+// scripts, db-history.ts) no longer exist. Only two consumers genuinely cannot
+// import it — scripts/build-db-push.sh (bash, runs pre-build) and the `env:`
+// blocks of .github/workflows/{maintenance,refresh-prices,db-audit,
+// weekly-promo}.yml — and tests/db-chain.test.ts pins both to db-chains.ts.
+const OPERATIONAL_URL = resolveUrl(OPERATIONAL_VARS);
 
 // Ensure a generous connect_timeout (the standard libpq/Postgres connection
 // param, in seconds) is set. WHY: Neon's pooled compute suspends when idle and
@@ -83,26 +153,36 @@ function withConnectTimeout(url: string | undefined, seconds: number): string | 
 
 // Which var actually won, by NAME (never the value — it contains credentials).
 // A Neon P1001 ("Can't reach database server at ep-…") names only the host, and
-// with three fallback vars plus a separate history database in play there is no
-// way to tell from the error alone WHICH client was pointed where. Logging the
-// winning var name once at module init makes the next P1001 self-diagnosing —
-// in particular it distinguishes "RM3 is down" from "RM3 is unset in this
-// environment, so we silently fell back to the exhausted old database".
-export const OPERATIONAL_URL_SOURCE = process.env.RM4
-  ? "RM4"
-  : process.env.RM3
-  ? "RM3"
-  : process.env.DATABASE_URL_2
-  ? "DATABASE_URL_2"
-  : process.env.DATABASE_URL
-  ? "DATABASE_URL"
-  : "NONE";
+// with a separate history database also in play there is no way to tell from
+// the error alone WHICH client was pointed where. Logging the winning var name
+// once at module init makes the next P1001 self-diagnosing — in particular it
+// distinguishes "RM7 is down" from "RM7 is unset in this environment".
+const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 
-if (OPERATIONAL_URL_SOURCE !== "RM4") {
+// DB_SOURCE_NAME: the same answer, supplied by whoever set the URL.
+//
+// Learned the hard way on 2026-08-10. The chain above can only see variables the
+// PROCESS can see, and every workflow in .github/workflows collapses the whole
+// chain into ONE `DATABASE_URL:` value before the job starts. Inside Actions
+// process.env.RM5 is therefore always undefined and this always reported
+// "DATABASE_URL" — regardless of which secret actually won. While diagnosing the
+// RM4 outage that read as "we silently fell through to the dead original
+// database", which is precisely the failure this diagnostic was written to rule
+// out, and it cost a round trip before the always-true-ness was spotted.
+//
+// So the workflows now also export DB_SOURCE_NAME with the winning variable's
+// NAME (never its value), and it wins here when present. On Vercel the real
+// variables ARE visible, nothing sets DB_SOURCE_NAME, and this resolves natively
+// exactly as before.
+export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
+
+if (OPERATIONAL_URL_SOURCE !== "RM7") {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM4. ` +
-      `RM4 is the current project; the others are exhausted/read-only fallbacks kept only so a ` +
-      `deploy can't hard-fail. If this appears in a Vercel build log, RM4 is missing from that environment.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM7. ` +
+      `RM7 is the only operational project as of the 2026-09-05 cutover — there is no fallback ` +
+      `chain anymore, so this means RM7 is simply missing from this environment. If this appears ` +
+      `in a Vercel build log, check Settings -> Environment Variables -> is "Production" (or ` +
+      `"Preview") ticked for RM7.`
   );
 }
 

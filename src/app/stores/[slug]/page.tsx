@@ -6,11 +6,12 @@ import { prisma } from "@/lib/db";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { shippingPolicyUrl } from "@/lib/retailers";
-import { STORE_PAGES, storeBySlug, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
+import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { breadcrumb } from "@/lib/jsonld";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -55,21 +56,48 @@ async function storeStats(key: string) {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const store = storeBySlug(params.slug);
   if (!store) return notFoundMetadata("Store");
-  const { count } = await storeStats(store.key);
+  const { count, cheapest } = await storeStats(store.key);
   const place = COUNTRIES[(store.country ?? "AU") as Country];
-  const title = `${store.name} Riftbound Singles — Live Prices & Stock | RiftCompare`;
+  // Market-disambiguated where two keys share a trading name (see
+  // lib/store-pages.ts) — otherwise the two pages ship the same <title>.
+  const label = storePageName(store, place.label);
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: checked WITH
+  // " | RiftCompare" appended. The previous single fixed string had no length
+  // guard at all — computed over all 132 store pages, 97 rendered over 65 chars
+  // and 39 over 70, part of Bing's 397 "Title too long" warnings. `label` itself
+  // can carry a market-disambiguation suffix (e.g. "Danireon Cards & Games
+  // (United States)" — see storePageName's own doc comment for why that exists
+  // and can't be dropped), so even the shortest candidate here isn't guaranteed
+  // to clear 60 for every store; the bare label is the honest final fallback.
+  const titleCandidates = [
+    `${label} Riftbound Singles — Live Prices & Stock`,
+    `${label} Riftbound Singles — Live Prices`,
+    `${label} — Riftbound Singles`,
+    `${label} — Riftbound Store`,
+    label,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   return {
-    title: { absolute: title },
+    title: { absolute: `${title} | RiftCompare` },
+    // NAMES A CARD THIS STORE ACTUALLY HAS. The previous sentence varied only by
+    // the store's name and a stock count, so 43 of the 79 store pages read as one
+    // description to a near-duplicate detector — digits are discounted, and
+    // "Australian store" is shared by every AU store (GROWTH-AUDIT.md § 4).
+    // storeStats() already fetched the 24 cheapest in-stock listings for the page
+    // body, so the card name costs no extra query, and it is the most varying
+    // real fact available: it is this store's own cheapest live listing.
     description:
-      `Compare live Riftbound singles prices at ${store.name}${count > 0 ? ` — ${count} cards in stock right now` : ""}. ` +
-      `See how this ${place.adjective} store's prices stack up against every other store we track.`,
-    alternates: { canonical: `/stores/${store.slug}` },
+      `Compare live Riftbound singles prices at ${label}${count > 0 ? ` — ${count} cards in stock` : ""}` +
+      `${cheapest[0] ? `, from ${cheapest[0].card.name} at ${formatMoney(cheapest[0].priceCents, place.currency)}` : ""}. ` +
+      `See how this ${place.adjective} store compares to every other store we track.`,
+    alternates: pageAlternates(`/stores/${store.slug}`),
     // Thin guard: a store with no live inventory (several tracked retailers are
     // deliberately directory-only) would be a page whose only content is
     // "nothing in stock". Real page, still linked, just not submitted for
     // indexing until it has something to show.
     ...(count >= 0 && count < STORE_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title, description: `Live Riftbound prices and stock at ${store.name}.`, url: `${SITE_URL}/stores/${store.slug}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: `Live Riftbound prices and stock at ${label}.`, url: `/stores/${store.slug}` }),
   };
 }
 
@@ -109,7 +137,7 @@ export default async function StorePage({ params }: { params: { slug: string } }
       <div>
         <Breadcrumbs trail={trail} />
         <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-          {store.name} — Riftbound singles, live prices &amp; stock
+          {storePageName(store, info.label)} — Riftbound singles, live prices &amp; stock
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           {count > 0 ? (

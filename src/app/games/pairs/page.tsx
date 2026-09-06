@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EbayAd } from "@/components/EbayAd";
 import { getCountry } from "@/lib/get-country";
+import { pageAlternates } from "@/lib/seo";
 import { Pairs } from "@/components/games/Pairs";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Pairs — Riftbound Card Memory Game",
   description:
     "Classic memory with real Riftbound card art: flip the 4×4 grid, match all eight pairs in the fewest moves. Free, fast and endlessly replayable.",
-  alternates: { canonical: "/games/pairs" },
+  alternates: pageAlternates("/games/pairs"),
 };
 
 export default function PairsPage() {

@@ -14,9 +14,34 @@ export interface RetailerInfo {
   freeOverCents: number; // order total at/above which shipping is free
   shippingNote: string;
   // Market the store serves. Omitted = "AU" (the original Australian stores).
-  // NZ/US/UK/SG/CA stores are scraped with ?country=NZ/US/GB/SG/CA and priced in
-  // NZD/USD/GBP/SGD/CAD. eBay runs for AU + US + UK + SG + CA.
-  country?: "AU" | "NZ" | "US" | "UK" | "SG" | "CA";
+  // US/UK/SG/CA stores are scraped with ?country=US/GB/SG/CA and priced in
+  // USD/GBP/SGD/CAD.
+  //
+  // "EU" is a MARKET, not a country: eurozone stores are all scraped with
+  // ?country=ES (isoCountry("EU") — see lib/country.ts's EU_ANCHOR_ISO) whatever
+  // member state they are actually in, because Shopify Markets needs one ISO
+  // country and every eurozone store quotes the same EUR price across the single
+  // market. A store whose Shopify Markets does NOT cover Spain will silently
+  // serve some other currency to that request, which is why every EU entry below
+  // has to clear scripts/probe-eu-stores.ts's currency proof before it is added.
+  //
+  // eBay runs for AU + US daily; UK, SG and EU take turns one per day (see
+  // EBAY_ALWAYS_MARKETS / EBAY_ROTATING_MARKETS in price-import.ts).
+  country?: "AU" | "US" | "UK" | "SG" | "CA" | "EU";
+  // Storefront platform. Omitted = "shopify", which every store here was until
+  // 2026-08-23 — the importer's whole discovery path was built around Shopify's
+  // /collections/<handle>/products.json.
+  //
+  // "woocommerce" reads the WordPress Store API instead (/wp-json/wc/store/v1 —
+  // see lib/woocommerce.ts). This is NOT cosmetic metadata: pointing the Shopify
+  // path at a Woo store does not fail, it silently finds nothing, which is the
+  // trap lib/pending-platforms.ts's header describes. Get it wrong and the store
+  // gets a page on /stores/tracked that never shows a price.
+  //
+  // Verify a store's platform with the matching probe before setting this —
+  // scripts/probe-eu-stores.ts for Shopify, scripts/probe-woocommerce-stores.ts
+  // for Woo — rather than inferring it from the domain or the theme.
+  platform?: "shopify" | "woocommerce";
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -214,110 +239,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 1000,
     freeOverCents: 15000,
     shippingNote: "est. $10 standard · free over $150",
-  },
-
-  // ---- New Zealand stores (country: "NZ"; prices in NZD; never use eBay) -------
-  // Collections are mostly auto-discovered from each store's Shopify sitemap; a few
-  // explicit handles are given as a fallback. Shipping figures are NZD estimates.
-  cardmasters: {
-    key: "cardmasters",
-    name: "Card Masters",
-    base: "https://cardmasters.co.nz",
-    collections: ["riftbound-league-of-legends-singles"],
-    shippingFlatCents: 350,
-    freeOverCents: 6000,
-    shippingNote: "est. NZ$3.50 · free over NZ$60",
-    country: "NZ",
-  },
-  tcgcollectornz: {
-    key: "tcgcollectornz",
-    name: "TCG Collector NZ",
-    base: "https://tcgcollectornz.com",
-    collections: ["riftbound-all-singles"],
-    shippingFlatCents: 300,
-    freeOverCents: 5000,
-    shippingNote: "est. NZ$3.00 · free over NZ$50",
-    country: "NZ",
-  },
-  cardmerchant: {
-    key: "cardmerchant",
-    name: "Card Merchant NZ",
-    base: "https://cardmerchant.co.nz",
-    collections: ["riftbound-singles"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. NZ$2.50 · free over NZ$50",
-    country: "NZ",
-  },
-  ironknight: {
-    key: "ironknight",
-    name: "Iron Knight Gaming",
-    base: "https://ironknightgaming.co.nz",
-    collections: ["riftbound-singles-in-stock"],
-    shippingFlatCents: 300,
-    freeOverCents: 5000,
-    shippingNote: "est. NZ$3.00 · free over NZ$50",
-    country: "NZ",
-  },
-  calicokeep: {
-    key: "calicokeep",
-    name: "Calico Keep",
-    base: "https://www.calicokeep.co.nz",
-    collections: ["riftbound-single-in-stock"],
-    shippingFlatCents: 350,
-    freeOverCents: 6000,
-    shippingNote: "est. NZ$3.50 · free over NZ$60",
-    country: "NZ",
-  },
-  cardbotnz: {
-    key: "cardbotnz",
-    name: "Card Bot NZ",
-    base: "https://cardbot.co.nz",
-    collections: ["riftbound-origins-singles"],
-    shippingFlatCents: 200,
-    freeOverCents: 4000,
-    shippingNote: "est. NZ$2.00 · free over NZ$40",
-    country: "NZ",
-  },
-  gamingdna: {
-    key: "gamingdna",
-    name: "Gaming DNA",
-    base: "https://gamingdna.co.nz",
-    collections: ["riftbound-league-of-legends-tcg"],
-    shippingFlatCents: 300,
-    freeOverCents: 5000,
-    shippingNote: "est. NZ$3.00 · free over NZ$50",
-    country: "NZ",
-  },
-  beagames: {
-    key: "beagames",
-    name: "Bea Games",
-    base: "https://www.beadndgames.co.nz",
-    collections: ["riftbound-league-of-legends-singles"],
-    shippingFlatCents: 300,
-    freeOverCents: 5000,
-    shippingNote: "est. NZ$3.00 · free over NZ$50",
-    country: "NZ",
-  },
-  shuffleandcut: {
-    key: "shuffleandcut",
-    name: "Shuffle n Cut Games",
-    base: "https://www.shuffleandcutgames.co.nz",
-    collections: ["riftbound"],
-    shippingFlatCents: 350,
-    freeOverCents: 6000,
-    shippingNote: "est. NZ$3.50 · free over NZ$60",
-    country: "NZ",
-  },
-  gameroost: {
-    key: "gameroost",
-    name: "Game Roost",
-    base: "https://www.gameroost.co.nz",
-    collections: ["riftbound-league-of-legends-tcg-auckland"],
-    shippingFlatCents: 350,
-    freeOverCents: 6000,
-    shippingNote: "est. NZ$3.50 · free over NZ$60",
-    country: "NZ",
   },
 
   // ---- United States stores (country: "US"; prices in USD; uses eBay US) --------
@@ -940,6 +861,201 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "UK",
   },
 
+  // ---- More United Kingdom stores (round 2, 2026-08-13) -----------------------
+  // Sourced from the OFFICIAL Riftbound Gaming Network store registry (the API
+  // behind locator.riftbound.uvsgames.com — game_id=3), swept across 13 UK
+  // population centres, then filtered to stores that pass the importer's own
+  // pipeline. Unlike the CA batch, every store below was fetched DIRECTLY from
+  // this session (third-party egress worked), so these are OBSERVED values, not
+  // best-known guesses:
+  //   * robots.txt allows /collections/*/products.json
+  //   * the Shopify sitemap exposes a live Riftbound collection
+  //   * the feed returns real in-stock GBP singles (count at probe time below)
+  //   * CURRENCY PROVEN, not assumed: products.json carries no currency, so a
+  //     store whose Shopify Markets doesn't cover GB would silently return its
+  //     default currency for the importer to mislabel as GBP. Each store's
+  //     product page was re-fetched under the same ?country=GB and its JSON-LD
+  //     priceCurrency / og:price:currency / Shopify.currency read back — all GBP,
+  //     with the page price matching the feed price. This caught nothing bad in
+  //     the UK, but it is why the four USD-default-looking stores here (Mox in
+  //     the Hole among them) are safe: their US-market homepage render says USD
+  //     while the GB market genuinely serves GBP.
+  // Re-verify any time with `npx tsx scripts/probe-uk-stores.ts`.
+  //
+  // SHIPPING: the flat/free-over figures are UNVERIFIED PLACEHOLDER estimates
+  // (£1.50 · free over £30) — deliberately uniform so nobody mistakes them for
+  // researched per-store rates. Ten of the fourteen have a real Shopify
+  // shipping-policy page and are in STORES_WITH_POLICY below, so the UI links
+  // shoppers to the store's own current rate instead of showing a guess. Free-text
+  // policies can't be parsed into a number reliably, so none is fabricated here.
+  yardsgames: {
+    key: "yardsgames",
+    name: "Yard's Games",
+    base: "https://yardsgames.com",
+    collections: ["riftbound"], // probe: 1024 in-stock singles, e.g. "Horns of the Dragon [VEN - 118/166]"
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  redsun: {
+    key: "redsun",
+    name: "Red Sun Collectables",
+    base: "https://redsuncollectables.com",
+    collections: ["riftbound-singles"], // probe: 950 in stock
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  evolutiontcg: {
+    key: "evolutiontcg",
+    name: "Evolution Trading Cards",
+    base: "https://evolutiontradingcards.co.uk",
+    collections: ["riftbound-single"], // probe: 687 in stock, e.g. "Grim Resolve - Unleashed (Common)"
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  // Dice Saloon runs its singles catalogue on a SEPARATE domain from its main
+  // storefront (dicesaloon.com) — the singles site is the one with the feed.
+  dicesaloon: {
+    key: "dicesaloon",
+    name: "Dice Saloon",
+    base: "https://dicesaloonsingles.co.uk",
+    collections: ["riftbound-singles"], // probe: 653 in stock, e.g. "Lightning Rush (156)"
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  impactleague: {
+    key: "impactleague",
+    name: "Impact League TCG",
+    base: "https://impactleaguetcg.co.uk",
+    collections: ["riftbound-singles"], // probe: 448 in stock
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  bulwarkgames: {
+    key: "bulwarkgames",
+    name: "Bulwark Games",
+    base: "https://bulwarkgames.co.uk",
+    collections: ["riftbound-singles"], // probe: 424 in stock, e.g. "Wages Of Pain (70)"
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  unioncounty: {
+    key: "unioncounty",
+    name: "Union County Games",
+    base: "https://unioncountygames.co.uk",
+    collections: ["riftbound-singles"], // probe: 413 in stock, e.g. "The Candlelit Sanctum (291)"
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  livingrealms: {
+    key: "livingrealms",
+    name: "Living Realms",
+    base: "https://livingrealms.co.uk",
+    collections: ["riftbound-league-of-legends-tcg-singles"], // probe: 235 in stock
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  moxinthehole: {
+    key: "moxinthehole",
+    name: "Mox in the Hole",
+    base: "https://moxinthehole.co.uk",
+    collections: ["riftbound-singles-all"], // probe: 71 in stock (GBP confirmed under ?country=GB)
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  rollnplay: {
+    key: "rollnplay",
+    name: "Roll N Play",
+    base: "https://rollnplay.co.uk",
+    collections: ["riftbound"], // probe: 55 in stock
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  nostalgiatcg: {
+    key: "nostalgiatcg",
+    name: "Nostalgia TCG",
+    base: "https://nostalgiatcg.com",
+    collections: ["riftbound-league-of-legends"], // probe: 22 in stock across the four set collections
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  gamerslodge: {
+    key: "gamerslodge",
+    name: "The Gamers Lodge",
+    base: "https://thegamerslodge.com",
+    collections: ["riftbound-single"], // probe: 13 in stock
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  // The two below stock Riftbound ORGANIZED-PLAY PROMO singles rather than a
+  // general singles range — a small catalogue, but real cards at real GBP prices
+  // (e.g. Knightly's "Jinx - Loose Cannon (251)" at £62.57), and promos are
+  // exactly where a comparison site earns its keep. 7th City's 46 promo cards
+  // were all out of stock at probe time, so it yields nothing until they restock
+  // — tracked, never fabricated, same as the SG stores below.
+  knightlygaming: {
+    key: "knightlygaming",
+    name: "Knightly Gaming",
+    base: "https://knightlygaming.co.uk",
+    collections: ["riftbound-organized-play-promotional-cards-opp"],
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  seventhcity: {
+    key: "seventhcity",
+    name: "7th City Collectables",
+    base: "https://7thcitycollectables.com",
+    collections: ["riftbound-promotional-cards"],
+    shippingFlatCents: 150,
+    freeOverCents: 3000,
+    shippingNote: "est. £1.50 · free over £30",
+    country: "UK",
+  },
+  // ---- UK leads checked and NOT added ----------------------------------------
+  // All probed live this session; each is a real UK store, none is a bad lead —
+  // they simply fail the "does the importer get real singles out of it?" test.
+  // Re-check when they restock; this list is here so nobody re-researches them.
+  //   - magicmadhouse.co.uk, chaoscards.co.uk, bigorbitcards.co.uk,
+  //     elementgames.co.uk, waylandgames.co.uk — the biggest UK Riftbound
+  //     stockists by far, but NOT Shopify (no sitemap/products.json), so there
+  //     is nothing to scrape. Unchanged from the original UK research.
+  //   - Bristol Independent Gaming, Dice and Dumplings, Hull Pops, The Dice Cup,
+  //     Offworld Outpost — live Riftbound collections, but the in-stock rows are
+  //     EVENT TICKETS ("Riftbound Nexus Night", "Summoner Skirmish"), not cards.
+  //     resolveCardId drops those, so they'd add a store with zero priced cards.
+  //   - Ultimate TCG, Retro Gamer Bros, Pixel and Block, Collecteebles, Redcaps,
+  //     Onyx Dawn, Incom Gaming, TokyoToys, Chester Le Geek, Entoyment, JustPlay,
+  //     Sarahs Shinies, Bad Wolf Gaming, Hex Labs, The Ludoquist, Snaps Games,
+  //     TridentCards, Elemental Cards — sealed-only Riftbound ranges at probe
+  //     time (boxes/decks, no singles collection). Sealed is imported separately
+  //     and these add no singles coverage, so they're left out rather than
+  //     padding the store count.
+
   // ---- Singapore stores (country: "SG"; prices in SGD; uses eBay SG) ------------
   // Verified real Singapore LGS/online shops with live Riftbound singles on Shopify
   // (legitimacy over quantity — a Riftbound distribution partner among them).
@@ -1108,7 +1224,11 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   gameacademia: {
     key: "gameacademia",
     name: "Game Academia",
-    base: "https://game-academia.myshopify.com",
+    // Their branded domain, not the raw myshopify one they were listed under —
+    // both serve the identical feed (verified side by side: same SGD collections,
+    // same products, both robots-allowed), but this is the address the store
+    // actually trades under and the one shoppers should be linked to.
+    base: "https://www.game-academia.com",
     collections: [],
     shippingFlatCents: 250,
     freeOverCents: 6000,
@@ -1191,6 +1311,151 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "in-store (Woodlands) · webstore not auto-priced",
     country: "SG",
   },
+  // ---- More Singapore stores (round 5, 2026-08-13) ----------------------------
+  // SG was the thinnest market on the site (only ~10 of the 22 tracked stores
+  // returned anything, and just five carried real singles). This round swept the
+  // OFFICIAL Riftbound Gaming Network registry — all 113 retailers listed within
+  // 60 miles of Singapore — three ways, because most SG shops trade through
+  // Instagram/Carousell rather than a website:
+  //   1. the `website` field, 2. the domain of the store's contact EMAIL (which
+  //   surfaced Team Card Game), and 3. name-derived domain guesses for the
+  //   social-only ones (which is the ONLY way The TCG Alchemists — now the
+  //   largest SG catalogue on the site at 3,676 in-stock singles — was found).
+  // Every store below was fetched directly and passes the same bar as the UK
+  // batch above: robots.txt allows the feed, the sitemap exposes a live Riftbound
+  // collection, and the CURRENCY IS PROVEN SGD (product page re-fetched under
+  // ?country=SG; JSON-LD priceCurrency, og:price:currency and Shopify.currency
+  // all SGD, page price matching the feed price). That check mattered here: five
+  // of these render a USD homepage to a US visitor and would otherwise have
+  // looked like non-SG stores, while their SG market genuinely prices in SGD.
+  // Re-verify with `npx tsx scripts/probe-sg-stores.ts`.
+  //
+  // SHIPPING figures are the same UNVERIFIED PLACEHOLDER estimates used by the
+  // rest of the SG list (S$2.50 · free over S$60); only TEFUDA and The Avid
+  // Collectors have a real shipping-policy page (see STORES_WITH_POLICY).
+  tcgalchemists: {
+    key: "tcgalchemists",
+    name: "The TCG Alchemists",
+    base: "https://thetcgalchemists.com",
+    // probe: 3,676 in-stock singles across four set collections, e.g.
+    // "OGN-012/298 Noxus Hopeful" @ S$0.50 — the deepest SG catalogue found.
+    collections: ["riftbound-set-1"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  // Re-verified 2026-08-14: live SGD Shopify store, riftbound-singles and
+  // riftbound-origins collections both real and populated. Free-shipping
+  // threshold corrected to a confirmed value — the site's own banner reads
+  // "Free Shipping within Singapore on Orders $80 & Up!" — not the S$60
+  // estimate this entry launched with.
+  goattcg: {
+    key: "goattcg",
+    name: "GOAT TCG",
+    base: "https://www.goattcg.com",
+    collections: ["riftbound-origins"], // probe: 1,332 in stock (English + Chinese printings)
+    shippingFlatCents: 250,
+    freeOverCents: 8000, // confirmed: site banner reads "Free Shipping within Singapore on Orders $80 & Up!"
+    shippingNote: "est. S$2.50 · free over S$80",
+    country: "SG",
+  },
+  teamcardgame: {
+    key: "teamcardgame",
+    name: "Team Card Game",
+    base: "https://teamcardgame.com",
+    collections: ["riftbound-origin-singles-ogn"], // probe: 1,240 in stock
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  // Trades under its myshopify.com domain — that IS the live storefront (there is
+  // no custom domain in front of it), not a staging URL. Same situation the
+  // Australian "plenty-of-games-au.myshopify.com" entry has had since launch.
+  tcgclubhouse: {
+    key: "tcgclubhouse",
+    name: "TCG Club House",
+    base: "https://tcgclubhouse.myshopify.com",
+    collections: ["riftbound-set-1-origins-ogn"], // probe: 888 in stock across all four sets
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  apextcg: {
+    key: "apextcg",
+    name: "Apex Player's Guild",
+    base: "https://apgtcg.com",
+    collections: ["riftbound-singles"], // probe: 435 in stock, e.g. "OGN-181 Pack of Wonders U"
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  tefuda: {
+    key: "tefuda",
+    name: "TEFUDA",
+    base: "https://tefudagames.com",
+    collections: ["riftbound-unleashed-singles"], // probe: 372 in stock
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  // The three below are real SGD Shopify stores with a LIVE Riftbound collection
+  // that is currently empty or fully sold out, so they price nothing today and
+  // populate the moment they restock — the same "tracked, never fabricated"
+  // treatment OneMtg and Card Arena already get above. Chonky is the notable one:
+  // 1,318 Riftbound products cataloged, every one out of stock at probe time.
+  chonkycollectibles: {
+    key: "chonkycollectibles",
+    name: "Chonky Collectibles",
+    base: "https://chonkycollectibles.com",
+    collections: ["riftbound-origins-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  avidcollectors: {
+    key: "avidcollectors",
+    name: "The Avid Collectors",
+    base: "https://www.theavidcollectors.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  kenkyohobby: {
+    key: "kenkyohobby",
+    name: "Kenkyo Hobby",
+    base: "https://www.kenkyohobby.com",
+    collections: ["riftbound-league-of-legends-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 6000,
+    shippingNote: "est. S$2.50 · free over S$60",
+    country: "SG",
+  },
+  // ---- SG leads checked and NOT added ----------------------------------------
+  //   - cardscentral.com, duellerspoint.com (already listed above as
+  //     directory-only), cardconnectsg.com, metagamestcg.com — real SG shops
+  //     openly selling Riftbound SINGLES, but none is Shopify (no products.json),
+  //     so there is nothing for the importer to read. These are the single
+  //     biggest remaining SG opportunity and need platform support, not a
+  //     retailers.ts entry — deliberately NOT guessed at.
+  //   - Grey Ogre, Sentinel Games, Paint & Play, Level Up Games (blitzandpeaces),
+  //     1Collectibles' main domain, Cardboard Collectible — Shopify SG stores
+  //     whose only Riftbound stock is SEALED, filed outside any Riftbound-named
+  //     collection. Checked with a /search/suggest.json + /collections.json pass
+  //     (the same trick that caught Toy Snowman's mis-handled collection in CA),
+  //     so this is "no singles", not "not looked for".
+  //   - ~60 further name-derived domain guesses for the social-only registry
+  //     stores (Card Affinity, Hotspot TCG, TCG Junction, Dorans Cards, Genie
+  //     TCG, Edition Vault, …) resolved to no Shopify store, or to one with no
+  //     Riftbound at all. The SG registry is now swept; the market's remaining
+  //     depth is on Carousell/Shopee and non-Shopify platforms.
 
   // ---- Canada stores (country: "CA"; prices in CAD via ?country=CA) ------------
   // New market, added 2026-07-29. Canada is a genuinely deep Riftbound market —
@@ -1412,9 +1677,9 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // for stores that do serve US shoppers). These CA-market twins scrape the SAME
   // domain with ?country=CA to get the real CAD price for Canadian shoppers.
   //
-  // Two entries for one brand is an established pattern here — cf. cardbot/
-  // cardbotnz and pokebox/pokeboxusa — the difference is those are separate
-  // per-country domains while these are one domain served by Shopify Markets.
+  // Two entries for one brand is an established pattern here — cf.
+  // pokebox/pokeboxusa — the difference is those are separate per-country
+  // domains while these are one domain served by Shopify Markets.
   // Distinct retailer keys keep their RetailerPrice rows from colliding on
   // @@unique([cardId, retailer, condition, isFoil]).
   danireonca: {
@@ -1446,12 +1711,206 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     — real Canadian TCG stores, but no Riftbound collection surfaced in
   //     search this pass. Worth a direct re-check when someone has live network
   //     access; absence of a search hit is not proof of absence of stock.
+
+  // ---- Eurozone stores (country: "EU"; prices in EUR via ?country=ES) --------
+  // Eleven stores across six countries (DE 3, IT 3, ES 2, AT/PT/NL 1 each).
+  //
+  // ── WHY ELEVEN AND NOT NINETY-SIX ────────────────────────────────────────────
+  // This list was 96 stores for about an hour on 2026-08-23, and that number was
+  // close to meaningless. It was ranked on RAW IN-STOCK PRODUCT COUNT inside a
+  // store's Riftbound collections — which counts booster boxes, playmats, sleeves
+  // and tournament tickets. Re-measured on the only thing that makes a store a
+  // price source (in-stock listings carrying a COLLECTOR NUMBER, i.e. ones the
+  // importer can actually match to a card), 60 of those 96 Shopify stores turned
+  // out to have FIVE between them clearing ten singles, and the 36 WooCommerce
+  // stores had none at all.
+  //
+  // Every store below clears MIN_SINGLES_FOR_STORE (see lib/woocommerce.ts) on a
+  // live probe: `npx tsx scripts/probe-eu-stores.ts`. Their measured in-stock
+  // singles counts, at the time of adding, are on each entry — not decoration,
+  // but the number to re-check when one of these looks wrong.
+  //
+  // ── THE HONEST CEILING, NOW MEASURED AGAINST THE FULL REGISTRY ──────────────
+  // ELEVEN is what exists, and this is no longer an inference from however many
+  // domains a search happened to surface. UVS Games publishes the authoritative
+  // Riftbound retailer list — the data behind locator.riftbound.uvsgames.com — and
+  // it was pulled in full: 8,445 stores worldwide, 2,047 in the eurozone, 951
+  // unique shop domains once social-media "websites" are dropped.
+  //
+  //   * 421 domains from a multi-lane research sweep      -> 10 clear the bar
+  //   * 581 registry domains NOT in that sweep, full probe ->  0 clear the bar
+  //   * language-specific searches in ES/DE/IT/NL/FR/PT    ->  1 (Lichcards)
+  //
+  // Re-run it yourself with `npx tsx scripts/probe-eu-stores.ts --registry`
+  // before spending another pass on discovery. Two independent exhaustive sweeps
+  // returning the same eleven stores is the answer, not a stopping point.
+  //
+  // The structural reason, which matters more than the number: European singles
+  // trading is concentrated on CARDMARKET and CARDTRADER, not on individual
+  // webshops. Both are marketplaces, and this repo deliberately keeps
+  // marketplaces out of RETAILERS (see the Fetch TCG note in
+  // lib/pending-platforms.ts for why — they double-count stock that is also
+  // listed directly, and they need their own adapter, not a retailers.ts row).
+  //
+  // Getting EU price coverage past eleven shops therefore means a REFERENCE
+  // source, not more stores. Cardmarket is wired for exactly that as of
+  // 2026-08-23 — including a native-EUR row that needs no FX conversion, which
+  // makes it a better fit for this market than for any other — and is
+  // feature-gated off pending a redisplay licence. See lib/cardmarket.ts. That
+  // is the actual unblock.
+  //
+  // SHIPPING: unverified placeholder estimates (€4.95 · free over €60), uniform
+  // so nobody mistakes them for researched per-store rates. Nine of the eleven
+  // publish a real policy page and are in STORES_WITH_POLICY. The estimate is
+  // weaker here than in any other market — a EU shopper routinely buys across a
+  // border, where postage runs several times the domestic rate — so the
+  // delivered-cost ranking is right within a country and optimistic across one.
+  manamarketeu: {
+    key: "manamarketeu",
+    name: "Mana Market EU",
+    base: "https://manamarket.eu",
+    // AT · 814 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-display", "riftbound-single", "riftbound", "riftbound-singles"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  universetcg: {
+    key: "universetcg",
+    name: "Universe TCG",
+    base: "https://www.universetcg.com",
+    // ES · 750 in-stock singles when probed 2026-08-23
+    collections: ["riftbound", "riftbound-spiritforged", "riftbound-vendetta", "riftbound-unleashed"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  endturn: {
+    key: "endturn",
+    name: "End Turn",
+    base: "https://www.endturn.pt",
+    // PT · 697 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-single", "riftbound", "unleashed-riftbound", "riftbound-champion-decks"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  lichcards: {
+    key: "lichcards",
+    name: "Lichcards",
+    base: "https://lichcards.nl",
+    // NL · 570 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-single", "riftbound", "riftbound-display", "riftbound-champion-decks"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  trinketmage: {
+    key: "trinketmage",
+    name: "Trinket Mage",
+    base: "https://trinket-mage.eu",
+    // DE · 551 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-single", "riftbound-origins", "riftbound-champion-decks", "riftbound-display"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  elduelista: {
+    key: "elduelista",
+    name: "El Duelista",
+    base: "https://www.elduelista.com",
+    // ES · 521 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-tcg-promo", "riftbound-champion-decks", "riftbound-display", "accesorios-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  trextcg: {
+    key: "trextcg",
+    name: "T-REX TCG",
+    base: "https://www.t-rextcg.com",
+    // IT · 514 in-stock singles when probed 2026-08-23
+    collections: ["riftbound", "riftbound-single", "riftbound-champion-decks", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  gsgameon: {
+    key: "gsgameon",
+    name: "GS-GameOn",
+    base: "https://www.gs-gameon.com",
+    // IT · 472 in-stock singles when probed 2026-08-23
+    collections: ["riftbound", "riftbound-card-game-unleashed", "riftbound-league-of-legends-tcg-vendetta", "riftbound-display"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  battlebearsb: {
+    key: "battlebearsb",
+    name: "Battle Bear Saarbr\u00fccken",
+    base: "https://www.battle-bear-sb.de",
+    // DE · 205 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-events", "riftbound-einzelkarten", "riftbound-single"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  timetwister: {
+    key: "timetwister",
+    name: "Timetwister Games",
+    base: "https://timetwistergames.it",
+    // IT · 114 in-stock singles when probed 2026-08-23
+    collections: ["rfb-riftbound", "riftbound", "riftbound-single", "unleashed-riftbound"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+  nordiclegends: {
+    key: "nordiclegends",
+    name: "Nordic Legends",
+    base: "https://nordic-legends.com",
+    // DE · 86 in-stock singles when probed 2026-08-23
+    collections: ["riftbound-display", "riftbound", "riftbound-single", "riftbound-champion-decks"],
+    shippingFlatCents: 495,
+    freeOverCents: 6000,
+    shippingNote: "est. €4.95 · free over €60",
+    country: "EU",
+  },
+
+  // ---- Eurozone leads found and NOT added ------------------------------------
+  //   - latiendascum.com — the store that ASKED to be listed (an inbound request
+  //     naming the Spanish market, 2026-08-23), and the reason this market exists
+  //     at all. It is a real Spanish shop and it is NOT added, because it runs
+  //     PrestaShop, not Shopify: /products.json and /collections.json both return
+  //     its 404 template, so discoverRiftboundCollections()/fetchCollection()
+  //     would build the wrong endpoint shape entirely and silently find nothing —
+  //     the store would appear on /stores/tracked with a store page that never
+  //     shows a single price. That is worse for them than not being listed. This
+  //     is a platform gap, not a permission one: its robots.txt allows `*` (it
+  //     disallows named AI crawlers only). See lib/pending-platforms.ts.
+  //   - ~27 further Spanish shops on PrestaShop and ~72 more eurozone shops on
+  //     WooCommerce, same blocker, same file.
+  //   - The 292 probe rejections are not all platform gaps: most are Shopify
+  //     stores with no Riftbound collection or no in-stock singles, and a handful
+  //     serve a non-EUR currency to a ?country=ES request. Re-run the probe before
+  //     assuming any of them is still a "no" — several are clearly growing.
+
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
 // The market a store serves (defaults to AU for the original stores).
-export function retailerCountry(retailerKey: string): "AU" | "NZ" | "US" | "UK" | "SG" | "CA" {
+export function retailerCountry(retailerKey: string): NonNullable<RetailerInfo["country"]> {
   return RETAILERS[retailerKey]?.country ?? "AU";
 }
 
@@ -1487,8 +1946,7 @@ const STORES_WITH_POLICY = new Set([
   "cherry", "finalboss", "plenty", "adventurers", "manamarket", "cardbot", "ggadelaide",
   "goodgames", "vaultgames", "mintcollectables", "cardhub", "pokebox", "spellroo", "spindown",
   "gamesarena88",
-  "cardmasters", "tcgcollectornz", "cardmerchant", "ironknight", "calicokeep", "cardbotnz",
-  "gamingdna", "beagames", "shuffleandcut", "gameroost", "bardsandcards", "mythicstore",
+  "bardsandcards", "mythicstore",
   "cgrealm", "danireon", "punkouter", "gglegends", "stompinggrounds", "cardboardanddie",
   "mistymountain", "theboosterbox", "npcollectibles", "capefear", "hobbiesville", "mysterymtg",
   // Note: "gamersguildaz", "kanzengames", "hauntedgamecafe", "hobbyaddicts" were
@@ -1502,10 +1960,37 @@ const STORES_WITH_POLICY = new Set([
   "thistletavern", "cardgoblin", "axionnow", "spellboundgames", "totalcards",
   "boardsandswords", "forbiddenplanet", "zatugames", "cardvault", "goblingaming",
   "gatheringgames", "harlequins", "travellingman", "monstercardcorner",
+  // UK round 2 — each fetched this session and confirmed to serve a real
+  // /policies/shipping-policy page. The other four of that batch (Evolution,
+  // Living Realms, Roll N Play, Knightly Gaming) 404 there and are deliberately
+  // left out, so they keep showing the estimate rather than linking a dead page.
+  "yardsgames", "redsun", "dicesaloon", "impactleague", "bulwarkgames",
+  "unioncounty", "moxinthehole", "nostalgiatcg", "gamerslodge", "seventhcity",
+  // SG — the first Singapore entries here. Only these two of the round-5 batch
+  // publish a policy page; the rest (incl. the big three singles catalogues) 404.
+  "tefuda", "avidcollectors",
+  // EU — the nine of eleven that publish a real /policies/shipping-policy page,
+  // each confirmed on a live probe. End Turn and T-REX TCG 404 there and keep
+  // showing the estimate rather than linking a dead page. Worth more here than in
+  // any other market: the €4.95 placeholder is a DOMESTIC figure and a
+  // cross-border EU order costs well above it, so the store's own policy page is
+  // the only honest number for most of these orders.
+  "manamarketeu", "universetcg", "lichcards", "trinketmage",
+  "elduelista", "gsgameon", "battlebearsb", "timetwister",
+  "nordiclegends",
 ]);
 
 // The store's shipping-policy page URL, or null if it doesn't have one / isn't a store.
+//
+// /policies/shipping-policy is a SHOPIFY path — it is Shopify that publishes
+// merchant policies at fixed URLs, and no other platform does. A WooCommerce shop
+// puts its shipping terms on whatever page its owner made, so there is no URL to
+// derive. The platform check is here rather than left to "just don't add Woo keys
+// to the Set" because that convention is invisible at the call site and one wrong
+// entry would send shoppers to a 404 in place of a shipping cost — worse than the
+// estimate it was meant to improve on.
 export function shippingPolicyUrl(retailerKey: string): string | null {
   const r = RETAILERS[retailerKey];
-  return r && STORES_WITH_POLICY.has(retailerKey) ? `${r.base}/policies/shipping-policy` : null;
+  if (!r || (r.platform ?? "shopify") !== "shopify") return null;
+  return STORES_WITH_POLICY.has(retailerKey) ? `${r.base}/policies/shipping-policy` : null;
 }

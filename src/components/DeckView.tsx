@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ResolvedDeck, ResolvedCardData, ResolvedCard } from "@/lib/meta-decks";
 import { DomainBadge } from "./Badge";
 import { TierBadge } from "./TierBadge";
@@ -10,6 +10,7 @@ import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { cardImageAlt } from "@/lib/image-alt";
+import { trackEvent } from "@/lib/analytics";
 
 // Tidy display for cards our data labels with a precon suffix (e.g. OGS starter
 // legends imported as "Master, Wuju Bladesman - Starter").
@@ -27,9 +28,23 @@ const GROUPS: { title: string; sections: string[]; muted?: boolean }[] = [
   { title: "Side Deck", sections: ["sideboard"], muted: true },
 ];
 
-export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHref: string }) {
+export function DeckView({
+  deck,
+  builderHref,
+  bestBasketHref,
+}: {
+  deck: ResolvedDeck;
+  builderHref: string;
+  /** Same decklist, pre-filled into the Premium-gated Best Basket optimiser — a
+   *  handoff, not a duplicate of the free inline <DeckCart> below. Optional so
+   *  other DeckView callers (deck GROUP pages, which already show their own
+   *  Best-Basket-style cart) aren't forced to wire it. */
+  bestBasketHref?: string;
+}) {
   const { fmt, country } = useCountry();
   const label = COUNTRIES[country].label;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { trackEvent("deck_view", { deck_id: deck.slug, archetype: deck.archetype }); }, [deck.slug]);
   // The big image on the left follows whichever card you hover (defaults to legend).
   const [preview, setPreview] = useState<ResolvedCardData | null>(deck.legendCard);
   const bigImage = preview?.imageUrl ?? preview?.imageThumbUrl ?? deck.imageUrl;
@@ -174,6 +189,22 @@ export function DeckView({ deck, builderHref }: { deck: ResolvedDeck; builderHre
             <Link href={builderHref} className="btn-primary mt-3 w-full text-center">
               Open in Deck Builder →
             </Link>
+            {bestBasketHref && (
+              // nofollow: bestBasketHref carries a unique base64 ?list= per deck, and
+              // /tools/best-basket is Premium-gated — a crawler is never signed in and
+              // premium, so every one of these renders the SAME "Go Premium" gate as
+              // the bare URL (same title/meta/H1 too, since best-basket's metadata is
+              // static). Reported directly: a site audit's duplicate-content export
+              // flagged 13 byte-identical /tools/best-basket?list=... URLs, one per
+              // deck here — the canonical already keeps them out of the index, but
+              // nofollow is what stops Google spending a crawl on each one to find
+              // that out. Same convention as the dynamic /login?next= links (see
+              // components/UserMenu.tsx) — a real link for a signed-in visitor,
+              // nothing for a crawler to gain by following.
+              <Link href={bestBasketHref} rel="nofollow" className="btn-ghost mt-2 w-full text-center text-sm">
+                Price this deck in Best Basket →
+              </Link>
+            )}
             <p className="mt-2 text-center text-[11px] text-slate-600">Hover a card to preview it here.</p>
           </div>
         </div>

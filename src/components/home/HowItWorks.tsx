@@ -18,7 +18,13 @@ const STEPS = [
     n: 2,
     Icon: ScaleIcon,
     title: "Compare every store",
-    body: "See live prices from every store in your market side by side — ranked by total delivered cost (item + postage), plus eBay.",
+    // "ranked by total delivered cost" overclaimed: computeMarket() ranks by
+    // item price (postage only breaks ties), because most stores don't
+    // publish shipping until checkout — showing a store's known postage but
+    // never letting it decide the ranking would otherwise penalise a store
+    // for being upfront about a cost eBay's checkout hides. Softened to what
+    // actually happens.
+    body: "See live prices from every store in your market side by side — ranked by price, with delivered cost shown where stores publish postage, plus eBay.",
   },
   {
     n: 3,
@@ -63,6 +69,23 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
           <span className="text-brand-400" aria-hidden>▸</span> View our store list
         </Link>
       </div>
+
+      {/* Trust strip — the site's real E-E-A-T pages (methodology, about/team)
+          exist but were only ever linked from the site-wide footer, buried
+          among 20+ other links with no on-page signal near the actual prices.
+          A first-time visitor has no reason yet to trust a number pulled
+          together from dozens of stores without something here answering
+          "says who, checked how" — kept to one quiet line, not a redesign. */}
+      <p className="mt-3 text-xs text-slate-500">
+        Prices verified daily ·{" "}
+        <Link href="/methodology" className="underline-offset-2 hover:text-slate-300 hover:underline">
+          See our methodology
+        </Link>{" "}
+        ·{" "}
+        <Link href="/about" className="underline-offset-2 hover:text-slate-300 hover:underline">
+          Meet the team
+        </Link>
+      </p>
     </section>
   );
 }

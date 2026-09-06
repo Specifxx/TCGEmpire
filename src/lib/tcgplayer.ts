@@ -20,6 +20,7 @@ import type { Prisma } from "@prisma/client";
 import { TCGPLAYER_AU_RETAILER,
   TCGPLAYER_CA_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { USD_TO } from "@/lib/fx";
+import { isForeignLanguageTitle } from "@/lib/scrape-http";
 
 const SEARCH_URL = "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
 const PRODUCT_LINE = "riftbound-league-of-legends-trading-card-game";
@@ -60,6 +61,11 @@ export function setCodeFromSetName(setName?: string): string | null {
   if (/spiritforged|spirit\s*forged/.test(s)) return "SFD";
   if (/unleashed/.test(s)) return "UNL";
   if (/vendetta/.test(s)) return "VEN";
+  // Pokémon's "Astral Radiance" reaches this function too (the sealed importer
+  // shares it), and it must never be typed as Riftbound's Radiance — see
+  // FOREIGN_RADIANCE in lib/sealed-import.ts, which drops those titles outright.
+  // Excluded here as well so the set signal is wrong in neither layer.
+  if (/radiance/.test(s) && !/astral/.test(s)) return "RAD";
   if (/origins/.test(s)) return "OGN";
   return null;
 }
@@ -122,11 +128,70 @@ export function englishAnyLowest(p: TcgProduct): number | null {
 // our card. CJK characters in the product/set name, or an explicit language word, are
 // dead giveaways. (Defence-in-depth: the English-listing requirement below already
 // drops these, since their English-filtered listing preview is empty.)
-const CJK_RE = /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]/;
+//
+// Shared with every other price source (see FOREIGN_LANG's own comment for why
+// this file's own copy — CJK range only, a narrower word list, no short region
+// codes like "cht"/"jp" — had already drifted from eBay's before this import
+// existed, and price-import.ts's ~100 general store feeds had no check of their
+// own at all).
 export function isNonEnglishProduct(p: TcgProduct): boolean {
-  const s = `${p.productName ?? ""} ${p.setName ?? ""}`;
-  return CJK_RE.test(s) || /\b(chinese|simplified|traditional|japanese|korean)\b/i.test(s);
+  return isForeignLanguageTitle(`${p.productName ?? ""} ${p.setName ?? ""}`);
 }
+
+// TCGplayer's "Riftbound Organized Play Promotional Cards" set \u2014 event-exclusive
+// metal reprints (Prize Wall, Best Of, \u2026) that Riot gives out at tournaments, NOT
+// a booster-pack pull. Its products reuse the SAME collector number as the real
+// card they depict (a metal "Ahri, Nine-Tailed Fox" is still numbered 255/298),
+// so byKey/setFromTotal matching below can't tell a promo apart from the base
+// card by number alone \u2014 and once matched to the same cardId, the "when two
+// products collide, keep the higher market price" rule (built for the English-
+// vs-Chinese-duplicate case) picked the promo's four-figure metal-card price
+// over the real card's every time, turning e.g. a $0.34 common into a "$4,400
+// rare" on /tools/box-ev. Detected by setName, not productName: the SET carries
+// the signal ("Riftbound Organized Play Promotional Cards"), not the card name.
+const PROMO_SET_RE = /organized\s*play|promotional\s*cards?/i;
+export function isPromoProduct(p: TcgProduct): boolean {
+  return PROMO_SET_RE.test(p.setName ?? "");
+}
+
+// The other half of the same problem, on OUR side of the match. A promo CARD
+// (manual-cards.json, isPromo: true) frequently reuses a real base card's own
+// collector number — same reason a promo PRODUCT does (see isPromoProduct's
+// doc comment above) — so it must never populate byKey/bySetlessNum below,
+// or it silently collides with the base card's own entry there.
+//
+// FOUND LIVE: riftcompare.com/card/teemo-swift-scout-ogn-263-298-promo (a
+// manual alternate-art promo, OGN 263/298) was showing TCGplayer product
+// 653061 — the BASE "Origins - Teemo, Swift Scout" listing — instead of its
+// own alt-art promo listing (670598). Root cause: both cards key to the same
+// "OGN|263" in byKey, and whichever of the two happened to be LAST in
+// prisma.card.findMany()'s (unordered) result silently overwrote the other's
+// entry — so the base product's price landed on the promo card, and the real
+// base card lost its own price entirely as the same-shaped side effect.
+//
+// Excluding every promo card from byKey/bySetlessNum here means NONE of them
+// get a number-based match any more (matching isPromoProduct's own choice for
+// promo PRODUCTS) — so PROMO_PRODUCT_OVERRIDES below is what gives a promo
+// card WITH a verified TCGplayer listing its price back, the same way an
+// externalId does for a card we created directly from TCGplayer. A promo card
+// with no pin here still gets a price: see the fallback pass in
+// buildTcgplayerRows, below the main product-matching loop, which clones
+// whatever price its base sibling resolved to rather than showing nothing —
+// an explicit product decision to trade a small risk of a wrong price for
+// full coverage, made after this same fix originally left every unpinned
+// promo card with no TCGplayer price at all.
+//
+// Manually-verified TCGplayer product IDs for specific promo cards, keyed by
+// the CARD's OWN, ALREADY-LIVE externalId from manual-cards.json — never a
+// NEW externalId. scripts/add-manual-cards.ts upserts a manual card by
+// matching its externalId; renaming the one already in the database would
+// make that lookup miss, orphaning the real (already-indexed, already-linked)
+// row and creating a genuine duplicate under the new id instead of fixing
+// anything. Seeding this map is the only change needed on the pricing side —
+// see how it feeds into byExternal below.
+const PROMO_PRODUCT_OVERRIDES: Record<string, number> = {
+  "promo-ogn-263-teemo-swift-scout-altart": 670598, // riftbound-promotional-cards, alternate art
+};
 
 function searchBody(from: number, productTypeName?: string[]) {
   const term: Record<string, string[]> = { productLineName: [PRODUCT_LINE] };
@@ -169,18 +234,53 @@ async function fetchPage(from: number, productTypeName?: string[]): Promise<{ it
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// A single page failure (403/502/a transient network blip — all observed in
+// production, e.g. workflow run 33685886911 dying on page 0 with a 403, and
+// run 33636059799 dying on page 10 with a 502) used to be immediately fatal to
+// that page: page 0 had no retry at all, and the pagination loop below gave up
+// on the WHOLE fetch the instant any later page errored once. Both are common
+// on TCGplayer's public search endpoint and neither is a "the catalogue is
+// this small" signal — retrying the SAME page a few times, with backoff,
+// resolves the transient case without losing any coverage. What retries still
+// can't fix — a sustained block for the rest of a run — is caught downstream:
+// refreshTcgplayerPrices() compares the resulting row count against what is
+// already in the database and refuses to overwrite a complete prior catalogue
+// with a truncated one (see its own comment), so a bad run degrades to "stale
+// but complete", never "silently missing most of the catalogue".
+async function fetchPageRetrying(
+  from: number,
+  productTypeName?: string[],
+  attempts = 4,
+): Promise<{ items: TcgProduct[]; total: number }> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fetchPage(from, productTypeName);
+    } catch (e) {
+      if (i >= attempts - 1) throw e;
+      console.warn(`TCGplayer page from=${from} attempt ${i + 1}/${attempts} failed:`, (e as Error).message);
+      await sleep(1000 * 2 ** i); // 1s, 2s, 4s
+    }
+  }
+}
+
 // Fetch every Riftbound card product (paginated), excluding sealed products.
+//
+// A page that still fails after fetchPageRetrying()'s own retries stops the
+// fetch here and returns whatever was collected so far. This function does NOT
+// know or claim that is the full catalogue — the caller that WRITES the result
+// (refreshTcgplayerPrices) is the one responsible for not treating a short
+// list as if the catalogue actually shrank; see that function's own guard.
 export async function fetchTcgplayerProducts(): Promise<TcgProduct[]> {
-  const first = await fetchPage(0);
+  const first = await fetchPageRetrying(0);
   const out: TcgProduct[] = [...first.items];
   for (let from = PAGE_SIZE; from < first.total; from += PAGE_SIZE) {
     await sleep(250);
     try {
-      const pg = await fetchPage(from);
+      const pg = await fetchPageRetrying(from);
       if (pg.items.length === 0) break;
       out.push(...pg.items);
     } catch (e) {
-      console.warn(`TCGplayer page from=${from} failed:`, (e as Error).message);
+      console.warn(`TCGplayer page from=${from} gave up after retries:`, (e as Error).message);
       break;
     }
   }
@@ -189,18 +289,19 @@ export async function fetchTcgplayerProducts(): Promise<TcgProduct[]> {
 
 // Fetch the SEALED product catalogue (booster boxes/cases, packs, Champion Decks,
 // Nexus Night promo packs, Pre-Rift kits, …) — a separate product type from cards.
+// Same retry-then-give-up shape as fetchTcgplayerProducts() above, same reason.
 export async function fetchTcgplayerSealed(): Promise<TcgProduct[]> {
   const PT = ["Sealed Products"];
-  const first = await fetchPage(0, PT);
+  const first = await fetchPageRetrying(0, PT);
   const out: TcgProduct[] = [...first.items];
   for (let from = PAGE_SIZE; from < first.total; from += PAGE_SIZE) {
     await sleep(250);
     try {
-      const pg = await fetchPage(from, PT);
+      const pg = await fetchPageRetrying(from, PT);
       if (pg.items.length === 0) break;
       out.push(...pg.items);
     } catch (e) {
-      console.warn(`TCGplayer sealed page from=${from} failed:`, (e as Error).message);
+      console.warn(`TCGplayer sealed page from=${from} gave up after retries:`, (e as Error).message);
       break;
     }
   }
@@ -255,7 +356,7 @@ export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA
 // decides). Exported separately so a dry-run can inspect the match quality.
 export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: TcgProduct[]): Promise<TcgMatchResult> {
   const items = products ?? (await fetchTcgplayerProducts());
-  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true } });
+  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, collectorNumber: true, externalId: true, isPromo: true } });
   const byKey = new Map<string, string>();
   const byExternal = new Map<string, string>();
   // Set-less numbers (the "R04a"-style rune printings, "NN1", "WB25"…) keyed by the
@@ -264,14 +365,39 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   // from TCGplayer but silently missed every rune added any other way (manual-cards
   // .json, the official-gallery importer). Matched below against the product's setName.
   const bySetlessNum = new Map<string, string>();
+  // A promo card that ends up with no price of its own (no externalId match, no
+  // PROMO_PRODUCT_OVERRIDES pin) still gets a best-effort one from the fallback
+  // pass below `best`'s construction — recorded here, while collectorNumber is
+  // already split out, as (promo card id, the SAME key its base sibling would
+  // occupy in byKey/bySetlessNum).
+  const promoFallbackKeys: { cardId: string; key: string; setless: boolean }[] = [];
   for (const c of cards) {
-    const [num, total] = c.collectorNumber.split("/");
-    const sc = setFromTotal(total);
-    if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
-    else bySetlessNum.set(`${c.setCode}|${numKey(num)}`, c.id);
     // Cards we created FROM TCGplayer carry externalId "tcg-<productId>" — price them
     // directly by that link (their numbers, e.g. promo runes "R03a", don't parse to a set).
     if (c.externalId) byExternal.set(c.externalId, c.id);
+    const [num, total] = c.collectorNumber.split("/");
+    const sc = setFromTotal(total);
+    // Promo cards never populate byKey/bySetlessNum — see the long comment on
+    // PROMO_PRODUCT_OVERRIDES above for why (they reuse a base card's number,
+    // and a plain map .set() here silently lets one steal or lose the other's
+    // entry). A promo card can still be priced from here on: its own
+    // "tcg-<productId>" link, a PROMO_PRODUCT_OVERRIDES entry, or — lacking
+    // either — the base-sibling fallback below, keyed by what's recorded here.
+    if (c.isPromo) {
+      promoFallbackKeys.push({ cardId: c.id, key: sc ? `${sc}|${numKey(num)}` : `${c.setCode}|${numKey(num)}`, setless: !sc });
+      continue;
+    }
+    if (sc) byKey.set(`${sc}|${numKey(num)}`, c.id);
+    else bySetlessNum.set(`${c.setCode}|${numKey(num)}`, c.id);
+  }
+  // Seed byExternal with the verified promo-product pins: for each override, if
+  // the card it names is actually in the database (found via its OWN, unchanged
+  // externalId), register the product's id under the exact same "tcg-<id>" key
+  // the loop above already uses for TCGplayer-created cards — the product-match
+  // loop below needs no separate lookup path for this.
+  for (const [cardExternalId, productId] of Object.entries(PROMO_PRODUCT_OVERRIDES)) {
+    const cardId = byExternal.get(cardExternalId);
+    if (cardId) byExternal.set(`tcg-${productId}`, cardId);
   }
 
   const unmatchedSamples: string[] = [];
@@ -293,7 +419,11 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     if (isNonEnglishProduct(p)) continue; // drop obvious foreign-language products
     const numStr = p.customAttributes?.number;
     const [num, total] = (numStr ?? "").split("/");
-    const sc = setFromTotal(total);
+    // Organized Play promo reprints reuse a real card's collector number but are
+    // a different physical product (see isPromoProduct's doc comment) — never
+    // resolve them via number+set, only via an explicit externalId link, exactly
+    // like the set-less runes a few lines below.
+    const sc = isPromoProduct(p) ? null : setFromTotal(total);
     // Match by set+number first; then by externalId (our TCGplayer-created cards);
     // finally, for set-less numbers ("R04a" runes), by the product's own setName —
     // the only set signal such a printing has.
@@ -320,6 +450,28 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, p });
   }
 
+  // Best-effort fallback: a promo card that got no price of its own above (no
+  // externalId match, no PROMO_PRODUCT_OVERRIDES pin) clones whatever price its
+  // base sibling resolved to, rather than showing nothing. Explicit product
+  // call, made after the fix for riftcompare.com/card/teemo-swift-scout-
+  // ogn-263-298-promo removed ALL promo pricing that lacked a pin: the trade
+  // is a small risk of a wrong price/link (a promo variant showing its base
+  // card's TCGplayer listing) in exchange for full TCGplayer coverage on every
+  // promo card. Runs strictly after `best` is fully resolved and only ever
+  // ADDS a promo card's own key — the base card's slot stays keyed to the base
+  // card's own id, set only in the cards loop above, so this can never
+  // reintroduce the collision that loop exists to prevent.
+  for (const { cardId: promoId, key, setless } of promoFallbackKeys) {
+    const baseCardId = setless ? bySetlessNum.get(key) : byKey.get(key);
+    if (!baseCardId) continue;
+    for (const foil of ["false", "true"]) {
+      const promoSlot = `${promoId}|${foil}`;
+      if (best.has(promoSlot)) continue; // already has its own verified price
+      const baseBest = best.get(`${baseCardId}|${foil}`);
+      if (baseBest) best.set(promoSlot, baseBest);
+    }
+  }
+
   const rows: Prisma.RetailerPriceCreateManyInput[] = [];
   for (const [key, b] of best) {
     const isFoil = key.endsWith("|true");
@@ -341,12 +493,37 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   return { total: items.length, matched: rows.length, rows, unmatchedSamples };
 }
 
+// A write that would shrink one market's row count by more than this is refused
+// rather than trusted (see the guard below). TCGplayer's real catalogue only
+// grows between refresh cycles — sets don't get de-listed — so any drop this
+// large is far more likely a fetch cut short by fetchPageRetrying() giving up
+// (a sustained block) than a genuine catalogue change. 0.85 leaves headroom for
+// ordinary noise (a handful of products delisted/relisted) without masking the
+// failure this exists to catch: production was observed at 431 rows against a
+// prior 1,244 (35%) the day this guard was added.
+const COVERAGE_DROP_FLOOR = 0.85;
+
 // Replace all TCGplayer rows with a fresh pull, for the US (USD), UK (GBP), SG
-// (SGD) and AU (AUD) markets. Products are fetched ONCE and reused for all.
-// Returns rows written.
-export async function refreshTcgplayerPrices(): Promise<number> {
+// (SGD), AU (AUD) and CA (CAD) markets. Products are fetched ONCE and reused
+// for all, so a fetch that was cut short (see fetchTcgplayerProducts's own
+// comment) degrades every market identically, not just one.
+//
+// UNCONDITIONALLY DELETING AND REPLACING USED TO BE "SUCCESS" as long as
+// rows.length > 0 — so a run that only reached page 9 of the catalogue before
+// a transient block would happily DELETE a complete prior catalogue and
+// replace it with ~30% of it. That is exactly how /tools/box-ev's coverage
+// silently collapsed: it reads ONLY this table (see box-ev.ts's own header for
+// why), so a degraded TCGplayer refresh shows up there as most pools going
+// "understated" — CI never sees it, nothing errors, the site just quietly
+// gets worse. Same principle as scripts/migrate-history.ts's "copied nothing
+// is NOT success" guard: a write that would shrink coverage by more than a
+// card game's real catalogue could plausibly shrink in one refresh cycle is
+// refused rather than trusted, and the existing (older but complete) rows are
+// kept until a run that isn't truncated comes along to replace them.
+export async function refreshTcgplayerPrices(): Promise<{ written: number; byCountry: Record<string, number> }> {
   const products = await fetchTcgplayerProducts();
   let written = 0;
+  const byCountry: Record<string, number> = {};
   for (const mkt of [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
     const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
     console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
@@ -357,9 +534,19 @@ export async function refreshTcgplayerPrices(): Promise<number> {
       console.warn(`TCGplayer ${mkt.country}: 0 rows built — keeping existing rows.`);
       continue;
     }
+    const existing = await prisma.retailerPrice.count({ where: { retailer: mkt.retailer } });
+    if (existing > 0 && rows.length < existing * COVERAGE_DROP_FLOOR) {
+      console.warn(
+        `::warning::TCGplayer ${mkt.country}: refusing to replace ${existing} existing rows with only ` +
+          `${rows.length} (under ${Math.round(COVERAGE_DROP_FLOOR * 100)}% of existing) — almost certainly a ` +
+          `truncated fetch, not real catalogue shrinkage. Keeping the existing rows; the next run will retry.`,
+      );
+      continue;
+    }
     await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
     await prisma.retailerPrice.createMany({ data: rows });
     written += rows.length;
+    byCountry[mkt.country] = rows.length;
   }
-  return written;
+  return { written, byCountry };
 }

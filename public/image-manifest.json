@@ -1,13 +1,34 @@
 {
+  "/blog/best-basket-cheapest-riftbound-deck.png": {
+    "src": "/blog/best-basket-cheapest-riftbound-deck.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 40831,
+    "webp": "/blog/best-basket-cheapest-riftbound-deck.webp",
+    "webpBytes": 24836,
+    "avif": "/blog/best-basket-cheapest-riftbound-deck.avif",
+    "avifBytes": 13650,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/best-basket-cheapest-riftbound-deck-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/best-basket-cheapest-riftbound-deck-768w.webp"
+      }
+    ],
+    "fingerprint": "9ac0750e15cef860"
+  },
   "/blog/best-riftbound-marketplaces.png": {
     "src": "/blog/best-riftbound-marketplaces.png",
     "width": 1200,
     "height": 630,
-    "bytes": 42401,
+    "bytes": 40967,
     "webp": "/blog/best-riftbound-marketplaces.webp",
-    "webpBytes": 21424,
+    "webpBytes": 22300,
     "avif": "/blog/best-riftbound-marketplaces.avif",
-    "avifBytes": 15522,
+    "avifBytes": 12470,
     "variants": [
       {
         "w": 480,
@@ -18,17 +39,59 @@
         "src": "/blog/best-riftbound-marketplaces-768w.webp"
       }
     ],
-    "fingerprint": "c4a61ca6b8009622"
+    "fingerprint": "48ea18b6b4af45e7"
+  },
+  "/blog/best-riftbound-price-comparison-sites.png": {
+    "src": "/blog/best-riftbound-price-comparison-sites.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49738,
+    "webp": "/blog/best-riftbound-price-comparison-sites.webp",
+    "webpBytes": 24420,
+    "avif": "/blog/best-riftbound-price-comparison-sites.avif",
+    "avifBytes": 14177,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/best-riftbound-price-comparison-sites-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/best-riftbound-price-comparison-sites-768w.webp"
+      }
+    ],
+    "fingerprint": "9034ded795bc64ec"
+  },
+  "/blog/buy-riftbound-cards-europe.png": {
+    "src": "/blog/buy-riftbound-cards-europe.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 44420,
+    "webp": "/blog/buy-riftbound-cards-europe.webp",
+    "webpBytes": 22298,
+    "avif": "/blog/buy-riftbound-cards-europe.avif",
+    "avifBytes": 14872,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/buy-riftbound-cards-europe-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/buy-riftbound-cards-europe-768w.webp"
+      }
+    ],
+    "fingerprint": "abc9b5fb802a349e"
   },
   "/blog/currency-conversion-fees.png": {
     "src": "/blog/currency-conversion-fees.png",
     "width": 1200,
     "height": 630,
-    "bytes": 50805,
+    "bytes": 41481,
     "webp": "/blog/currency-conversion-fees.webp",
-    "webpBytes": 20526,
+    "webpBytes": 20452,
     "avif": "/blog/currency-conversion-fees.avif",
-    "avifBytes": 11689,
+    "avifBytes": 11646,
     "variants": [
       {
         "w": 480,
@@ -39,17 +102,17 @@
         "src": "/blog/currency-conversion-fees-768w.webp"
       }
     ],
-    "fingerprint": "d5ec4b8772e97d35"
+    "fingerprint": "0f9c54bf7405466c"
   },
   "/blog/ebay-bidding-strategies.png": {
     "src": "/blog/ebay-bidding-strategies.png",
     "width": 1200,
     "height": 630,
-    "bytes": 49890,
+    "bytes": 44086,
     "webp": "/blog/ebay-bidding-strategies.webp",
-    "webpBytes": 18938,
+    "webpBytes": 19972,
     "avif": "/blog/ebay-bidding-strategies.avif",
-    "avifBytes": 10990,
+    "avifBytes": 12740,
     "variants": [
       {
         "w": 480,
@@ -60,17 +123,17 @@
         "src": "/blog/ebay-bidding-strategies-768w.webp"
       }
     ],
-    "fingerprint": "904b958f5042f96f"
+    "fingerprint": "1deb105805dc2947"
   },
   "/blog/how-to-choose-a-riftbound-marketplace.png": {
     "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
     "width": 1200,
     "height": 630,
-    "bytes": 48832,
+    "bytes": 59915,
     "webp": "/blog/how-to-choose-a-riftbound-marketplace.webp",
-    "webpBytes": 21050,
+    "webpBytes": 20776,
     "avif": "/blog/how-to-choose-a-riftbound-marketplace.avif",
-    "avifBytes": 12008,
+    "avifBytes": 12227,
     "variants": [
       {
         "w": 480,
@@ -81,17 +144,17 @@
         "src": "/blog/how-to-choose-a-riftbound-marketplace-768w.webp"
       }
     ],
-    "fingerprint": "aa8de7f8db58d461"
+    "fingerprint": "577074768cb5162b"
   },
   "/blog/most-expensive-riftbound-cards.png": {
     "src": "/blog/most-expensive-riftbound-cards.png",
     "width": 1200,
     "height": 630,
-    "bytes": 48827,
+    "bytes": 43806,
     "webp": "/blog/most-expensive-riftbound-cards.webp",
-    "webpBytes": 21348,
+    "webpBytes": 22264,
     "avif": "/blog/most-expensive-riftbound-cards.avif",
-    "avifBytes": 17056,
+    "avifBytes": 14313,
     "variants": [
       {
         "w": 480,
@@ -102,17 +165,176 @@
         "src": "/blog/most-expensive-riftbound-cards-768w.webp"
       }
     ],
-    "fingerprint": "d016e1ece2e9aa86"
+    "fingerprint": "a806fcdbe289c7cb"
+  },
+  "/blog/mtg-to-riftbound.png": {
+    "src": "/blog/mtg-to-riftbound.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 32769,
+    "webp": "/blog/mtg-to-riftbound.webp",
+    "webpBytes": 28614,
+    "avif": "/blog/mtg-to-riftbound.avif",
+    "avifBytes": 17585,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/mtg-to-riftbound-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/mtg-to-riftbound-768w.webp"
+      }
+    ],
+    "fingerprint": "14d21b04f1e747d1"
+  },
+  "/blog/one-piece-tcg-to-riftbound.png": {
+    "src": "/blog/one-piece-tcg-to-riftbound.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 56307,
+    "webp": "/blog/one-piece-tcg-to-riftbound.webp",
+    "webpBytes": 51108,
+    "avif": "/blog/one-piece-tcg-to-riftbound.avif",
+    "avifBytes": 26508,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/one-piece-tcg-to-riftbound-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/one-piece-tcg-to-riftbound-768w.webp"
+      }
+    ],
+    "fingerprint": "ed8149bc9aa37812"
+  },
+  "/blog/pokemon-collector-to-riftbound.png": {
+    "src": "/blog/pokemon-collector-to-riftbound.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 54297,
+    "webp": "/blog/pokemon-collector-to-riftbound.webp",
+    "webpBytes": 38834,
+    "avif": "/blog/pokemon-collector-to-riftbound.avif",
+    "avifBytes": 29610,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/pokemon-collector-to-riftbound-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/pokemon-collector-to-riftbound-768w.webp"
+      }
+    ],
+    "fingerprint": "c85bda6cec6e5383"
+  },
+  "/blog/premium/00-pricing-cards.png": {
+    "src": "/blog/premium/00-pricing-cards.png",
+    "width": 1280,
+    "height": 700,
+    "bytes": 25536,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "8d2baac39a9f6585"
+  },
+  "/blog/premium/01-premium-header.png": {
+    "src": "/blog/premium/01-premium-header.png",
+    "width": 1280,
+    "height": 400,
+    "bytes": 16038,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "3fa250aa9a29534e"
+  },
+  "/blog/premium/02-feature-cards-bottom.png": {
+    "src": "/blog/premium/02-feature-cards-bottom.png",
+    "width": 1280,
+    "height": 900,
+    "bytes": 40157,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/premium/02-feature-cards-bottom.avif",
+    "avifBytes": 37633,
+    "variants": [],
+    "fingerprint": "1c1f0193687cae67"
+  },
+  "/blog/premium/03-value-finder.png": {
+    "src": "/blog/premium/03-value-finder.png",
+    "width": 1280,
+    "height": 420,
+    "bytes": 19916,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "a3cf6c2085fcd464"
+  },
+  "/blog/premium/04-rising-cards.png": {
+    "src": "/blog/premium/04-rising-cards.png",
+    "width": 1280,
+    "height": 420,
+    "bytes": 19496,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "01966f5e8d5b4012"
+  },
+  "/blog/premium/05-deal-finder.png": {
+    "src": "/blog/premium/05-deal-finder.png",
+    "width": 1280,
+    "height": 660,
+    "bytes": 40022,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "ed7897afa1039427"
+  },
+  "/blog/premium/06-condition-calculator.png": {
+    "src": "/blog/premium/06-condition-calculator.png",
+    "width": 1280,
+    "height": 1555,
+    "bytes": 71697,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "71210f866b044cd3"
+  },
+  "/blog/premium/07-marketplace-sell.png": {
+    "src": "/blog/premium/07-marketplace-sell.png",
+    "width": 1280,
+    "height": 420,
+    "bytes": 20288,
+    "webp": null,
+    "webpBytes": null,
+    "avif": null,
+    "avifBytes": null,
+    "variants": [],
+    "fingerprint": "e0129bbfa0b52c18"
   },
   "/blog/riftbound-2027-set-roadmap.png": {
     "src": "/blog/riftbound-2027-set-roadmap.png",
     "width": 1200,
     "height": 630,
-    "bytes": 43845,
+    "bytes": 52641,
     "webp": "/blog/riftbound-2027-set-roadmap.webp",
-    "webpBytes": 22278,
+    "webpBytes": 23286,
     "avif": "/blog/riftbound-2027-set-roadmap.avif",
-    "avifBytes": 13391,
+    "avifBytes": 14907,
     "variants": [
       {
         "w": 480,
@@ -123,17 +345,17 @@
         "src": "/blog/riftbound-2027-set-roadmap-768w.webp"
       }
     ],
-    "fingerprint": "dc56591bde285357"
+    "fingerprint": "766ae31fa4824ab1"
   },
   "/blog/riftbound-august-2026-state-of-the-game-takeaways.png": {
     "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways.png",
     "width": 1200,
     "height": 630,
-    "bytes": 53564,
+    "bytes": 48420,
     "webp": "/blog/riftbound-august-2026-state-of-the-game-takeaways.webp",
-    "webpBytes": 21106,
+    "webpBytes": 22778,
     "avif": "/blog/riftbound-august-2026-state-of-the-game-takeaways.avif",
-    "avifBytes": 12484,
+    "avifBytes": 16084,
     "variants": [
       {
         "w": 480,
@@ -144,17 +366,17 @@
         "src": "/blog/riftbound-august-2026-state-of-the-game-takeaways-768w.webp"
       }
     ],
-    "fingerprint": "93f8fcf66cb2191e"
+    "fingerprint": "17f4e67ad6bff499"
   },
   "/blog/riftbound-card-price-comparison.png": {
     "src": "/blog/riftbound-card-price-comparison.png",
     "width": 1200,
     "height": 630,
-    "bytes": 46702,
+    "bytes": 48523,
     "webp": "/blog/riftbound-card-price-comparison.webp",
-    "webpBytes": 21552,
+    "webpBytes": 23152,
     "avif": "/blog/riftbound-card-price-comparison.avif",
-    "avifBytes": 15461,
+    "avifBytes": 13037,
     "variants": [
       {
         "w": 480,
@@ -165,17 +387,17 @@
         "src": "/blog/riftbound-card-price-comparison-768w.webp"
       }
     ],
-    "fingerprint": "e270c3bb8f676c30"
+    "fingerprint": "1fd35b894ea71e1b"
   },
   "/blog/riftbound-card-values.png": {
     "src": "/blog/riftbound-card-values.png",
     "width": 1200,
     "height": 630,
-    "bytes": 43248,
+    "bytes": 55604,
     "webp": "/blog/riftbound-card-values.webp",
-    "webpBytes": 19628,
+    "webpBytes": 18712,
     "avif": "/blog/riftbound-card-values.avif",
-    "avifBytes": 10135,
+    "avifBytes": 16760,
     "variants": [
       {
         "w": 480,
@@ -186,17 +408,59 @@
         "src": "/blog/riftbound-card-values-768w.webp"
       }
     ],
-    "fingerprint": "69da8aa819e875f1"
+    "fingerprint": "052a52da511b82a4"
+  },
+  "/blog/riftbound-deck-archetypes-guide.png": {
+    "src": "/blog/riftbound-deck-archetypes-guide.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43242,
+    "webp": "/blog/riftbound-deck-archetypes-guide.webp",
+    "webpBytes": 29974,
+    "avif": "/blog/riftbound-deck-archetypes-guide.avif",
+    "avifBytes": 18018,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-deck-archetypes-guide-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-deck-archetypes-guide-768w.webp"
+      }
+    ],
+    "fingerprint": "027bfb2831227774"
+  },
+  "/blog/riftbound-format-legality-rotation.png": {
+    "src": "/blog/riftbound-format-legality-rotation.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 53105,
+    "webp": "/blog/riftbound-format-legality-rotation.webp",
+    "webpBytes": 38448,
+    "avif": "/blog/riftbound-format-legality-rotation.avif",
+    "avifBytes": 24644,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-format-legality-rotation-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-format-legality-rotation-768w.webp"
+      }
+    ],
+    "fingerprint": "5c9764ffa81af7c7"
   },
   "/blog/riftbound-legacy-pack-changes-and-card-templating.png": {
     "src": "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
     "width": 1200,
     "height": 630,
-    "bytes": 45410,
+    "bytes": 44728,
     "webp": "/blog/riftbound-legacy-pack-changes-and-card-templating.webp",
-    "webpBytes": 27386,
+    "webpBytes": 25642,
     "avif": "/blog/riftbound-legacy-pack-changes-and-card-templating.avif",
-    "avifBytes": 18315,
+    "avifBytes": 20582,
     "variants": [
       {
         "w": 480,
@@ -207,17 +471,38 @@
         "src": "/blog/riftbound-legacy-pack-changes-and-card-templating-768w.webp"
       }
     ],
-    "fingerprint": "f573c4f051b218f8"
+    "fingerprint": "9ff9bbe81cbe5b70"
+  },
+  "/blog/riftbound-radiance-what-we-know.png": {
+    "src": "/blog/riftbound-radiance-what-we-know.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 42161,
+    "webp": "/blog/riftbound-radiance-what-we-know.webp",
+    "webpBytes": 23210,
+    "avif": "/blog/riftbound-radiance-what-we-know.avif",
+    "avifBytes": 13231,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-radiance-what-we-know-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-radiance-what-we-know-768w.webp"
+      }
+    ],
+    "fingerprint": "8758e0f892e05396"
   },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",
     "width": 1200,
     "height": 630,
-    "bytes": 42632,
+    "bytes": 49735,
     "webp": "/blog/riftbound-variant-glossary.webp",
-    "webpBytes": 20918,
+    "webpBytes": 21498,
     "avif": "/blog/riftbound-variant-glossary.avif",
-    "avifBytes": 13446,
+    "avifBytes": 12485,
     "variants": [
       {
         "w": 480,
@@ -228,17 +513,59 @@
         "src": "/blog/riftbound-variant-glossary-768w.webp"
       }
     ],
-    "fingerprint": "1367a8b7adca33e4"
+    "fingerprint": "5174632f8c43553d"
+  },
+  "/blog/riftcompare-launches-in-the-eu.png": {
+    "src": "/blog/riftcompare-launches-in-the-eu.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48641,
+    "webp": "/blog/riftcompare-launches-in-the-eu.webp",
+    "webpBytes": 20704,
+    "avif": "/blog/riftcompare-launches-in-the-eu.avif",
+    "avifBytes": 12062,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftcompare-launches-in-the-eu-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftcompare-launches-in-the-eu-768w.webp"
+      }
+    ],
+    "fingerprint": "26b4930ed3966c7a"
+  },
+  "/blog/riftcompare-premium-explained.png": {
+    "src": "/blog/riftcompare-premium-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 44742,
+    "webp": "/blog/riftcompare-premium-explained.webp",
+    "webpBytes": 29714,
+    "avif": "/blog/riftcompare-premium-explained.avif",
+    "avifBytes": 16840,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftcompare-premium-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftcompare-premium-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "711924d98a63c1af"
   },
   "/blog/riftcompare-review.png": {
     "src": "/blog/riftcompare-review.png",
     "width": 1200,
     "height": 630,
-    "bytes": 50582,
+    "bytes": 34753,
     "webp": "/blog/riftcompare-review.webp",
-    "webpBytes": 19166,
+    "webpBytes": 19442,
     "avif": "/blog/riftcompare-review.avif",
-    "avifBytes": 11260,
+    "avifBytes": 11463,
     "variants": [
       {
         "w": 480,
@@ -249,17 +576,17 @@
         "src": "/blog/riftcompare-review-768w.webp"
       }
     ],
-    "fingerprint": "d155c00ef6b1a784"
+    "fingerprint": "e820064a51168ed3"
   },
   "/blog/tcgplayer-fees.png": {
     "src": "/blog/tcgplayer-fees.png",
     "width": 1200,
     "height": 630,
-    "bytes": 60210,
+    "bytes": 51210,
     "webp": "/blog/tcgplayer-fees.webp",
-    "webpBytes": 20134,
+    "webpBytes": 19426,
     "avif": "/blog/tcgplayer-fees.avif",
-    "avifBytes": 12299,
+    "avifBytes": 11294,
     "variants": [
       {
         "w": 480,
@@ -270,7 +597,28 @@
         "src": "/blog/tcgplayer-fees-768w.webp"
       }
     ],
-    "fingerprint": "c076dea240cd7a64"
+    "fingerprint": "8782fe89369f45f7"
+  },
+  "/blog/where-to-buy-riftbound-cards.png": {
+    "src": "/blog/where-to-buy-riftbound-cards.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 53575,
+    "webp": "/blog/where-to-buy-riftbound-cards.webp",
+    "webpBytes": 23592,
+    "avif": "/blog/where-to-buy-riftbound-cards.avif",
+    "avifBytes": 13846,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/where-to-buy-riftbound-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/where-to-buy-riftbound-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "036be5419dbdeb2d"
   },
   "/icon-512.png": {
     "src": "/icon-512.png",
@@ -826,6 +1174,187 @@
     "variants": [],
     "avif": "/signature-cards/zed-master-of-shadows-ven191.avif",
     "avifBytes": 89266
+  },
+  "/t1-worlds-cards/ambessa-the-wolf-t1s001.jpg": {
+    "src": "/t1-worlds-cards/ambessa-the-wolf-t1s001.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 118111,
+    "webp": "/t1-worlds-cards/ambessa-the-wolf-t1s001.webp",
+    "webpBytes": 93236,
+    "avif": "/t1-worlds-cards/ambessa-the-wolf-t1s001.avif",
+    "avifBytes": 60315,
+    "variants": [],
+    "fingerprint": "baae2c7cabcc6691"
+  },
+  "/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg": {
+    "src": "/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg",
+    "width": 744,
+    "height": 1039,
+    "bytes": 115595,
+    "webp": "/t1-worlds-cards/galio-indefatigable-t1s003-signature.webp",
+    "webpBytes": 111112,
+    "avif": "/t1-worlds-cards/galio-indefatigable-t1s003-signature.avif",
+    "avifBytes": 71100,
+    "variants": [],
+    "fingerprint": "520403cc57a73e38"
+  },
+  "/t1-worlds-cards/galio-indefatigable-t1s003.jpg": {
+    "src": "/t1-worlds-cards/galio-indefatigable-t1s003.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 107378,
+    "webp": "/t1-worlds-cards/galio-indefatigable-t1s003.webp",
+    "webpBytes": 102942,
+    "avif": "/t1-worlds-cards/galio-indefatigable-t1s003.avif",
+    "avifBytes": 66191,
+    "variants": [],
+    "fingerprint": "b564a35103a2e273"
+  },
+  "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.jpg": {
+    "src": "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.jpg",
+    "width": 744,
+    "height": 1036,
+    "bytes": 121656,
+    "webp": "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.webp",
+    "webpBytes": 97410,
+    "avif": "/t1-worlds-cards/miss-fortune-buccaneer-t1s004.avif",
+    "avifBytes": 62840,
+    "variants": [],
+    "fingerprint": "a7b0dc56e3325ad7"
+  },
+  "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg": {
+    "src": "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+    "width": 744,
+    "height": 1036,
+    "bytes": 113297,
+    "webp": "/t1-worlds-cards/seraphine-not-alone-t1s005.webp",
+    "webpBytes": 89160,
+    "avif": "/t1-worlds-cards/seraphine-not-alone-t1s005.avif",
+    "avifBytes": 60417,
+    "variants": [],
+    "fingerprint": "38226525eccb3079"
+  },
+  "/t1-worlds-cards/t1-signature-edition-box-cn.jpg": {
+    "src": "/t1-worlds-cards/t1-signature-edition-box-cn.jpg",
+    "width": 1100,
+    "height": 635,
+    "bytes": 49904,
+    "webp": "/t1-worlds-cards/t1-signature-edition-box-cn.webp",
+    "webpBytes": 27660,
+    "avif": "/t1-worlds-cards/t1-signature-edition-box-cn.avif",
+    "avifBytes": 21012,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-cn-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-cn-768w.webp"
+      }
+    ],
+    "fingerprint": "9654e967de5cee35"
+  },
+  "/t1-worlds-cards/t1-signature-edition-box-en.jpg": {
+    "src": "/t1-worlds-cards/t1-signature-edition-box-en.jpg",
+    "width": 1100,
+    "height": 1100,
+    "bytes": 80287,
+    "webp": "/t1-worlds-cards/t1-signature-edition-box-en.webp",
+    "webpBytes": 49084,
+    "avif": "/t1-worlds-cards/t1-signature-edition-box-en.avif",
+    "avifBytes": 30437,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-en-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-en-768w.webp"
+      }
+    ],
+    "fingerprint": "ec1de0a8b3243c36"
+  },
+  "/t1-worlds-cards/t1-signature-edition-box-kr.jpg": {
+    "src": "/t1-worlds-cards/t1-signature-edition-box-kr.jpg",
+    "width": 1100,
+    "height": 1100,
+    "bytes": 86625,
+    "webp": "/t1-worlds-cards/t1-signature-edition-box-kr.webp",
+    "webpBytes": 50966,
+    "avif": "/t1-worlds-cards/t1-signature-edition-box-kr.avif",
+    "avifBytes": 32057,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-kr-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-signature-edition-box-kr-768w.webp"
+      }
+    ],
+    "fingerprint": "b5c304455eee0102"
+  },
+  "/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg": {
+    "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards.jpg",
+    "width": 1536,
+    "height": 730,
+    "bytes": 115799,
+    "webp": "/t1-worlds-cards/t1-worlds-champion-collection-cards.webp",
+    "webpBytes": 101032,
+    "avif": "/t1-worlds-cards/t1-worlds-champion-collection-cards.avif",
+    "avifBytes": 81010,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards-768w.webp"
+      },
+      {
+        "w": 1200,
+        "src": "/t1-worlds-cards/t1-worlds-champion-collection-cards-1200w.webp"
+      }
+    ],
+    "fingerprint": "1803814c3ef1da4c"
+  },
+  "/t1-worlds-cards/t1-worlds-signature-edition.jpg": {
+    "src": "/t1-worlds-cards/t1-worlds-signature-edition.jpg",
+    "width": 1000,
+    "height": 932,
+    "bytes": 102998,
+    "webp": "/t1-worlds-cards/t1-worlds-signature-edition.webp",
+    "webpBytes": 66696,
+    "avif": "/t1-worlds-cards/t1-worlds-signature-edition.avif",
+    "avifBytes": 48591,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/t1-worlds-cards/t1-worlds-signature-edition-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/t1-worlds-cards/t1-worlds-signature-edition-768w.webp"
+      }
+    ],
+    "fingerprint": "4bbdd681bbc1bbc1"
+  },
+  "/t1-worlds-cards/xin-zhao-vigilant-t1s002.jpg": {
+    "src": "/t1-worlds-cards/xin-zhao-vigilant-t1s002.jpg",
+    "width": 744,
+    "height": 1038,
+    "bytes": 111556,
+    "webp": "/t1-worlds-cards/xin-zhao-vigilant-t1s002.webp",
+    "webpBytes": 86828,
+    "avif": "/t1-worlds-cards/xin-zhao-vigilant-t1s002.avif",
+    "avifBytes": 58607,
+    "variants": [],
+    "fingerprint": "661664c9278d7d5e"
   },
   "/vendetta-archetypes.png": {
     "src": "/vendetta-archetypes.png",

@@ -25,30 +25,106 @@ export const IMPACT_SITE_VERIFICATION = "ebb0400c-dec0-45ae-a56e-e7bb1596e965";
 export const TCGPLAYER_IMPACT_LINK =
   process.env.TCGPLAYER_IMPACT_LINK || "https://partner.tcgplayer.com/c/7385758/1780961/21018";
 
-// eBay Partner Network link parameters per marketplace. The Browse API is supposed
-// to return pre-tagged URLs (itemAffiliateWebUrl) when we pass the campaign, but in
-// practice it often returns the plain itemWebUrl, so we tag links ourselves here —
-// this is the standard "ePN smart link" format and is what actually credits clicks.
-// mkevt=1 is the critical flag (without it the click is NOT tracked); mkrid is the
-// marketplace rotation id (verified against eBay's EPN docs).
-const EBAY_MARKETS: Record<string, { mkrid: string; siteid: string; customid: string }> = {
-  "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au" },
-  "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us" },
-  "ebay.co.uk": { mkrid: "710-53481-19255-0", siteid: "3", customid: "rc-uk" },
-  // customid only (no verified mkrid/siteid for these rotations yet) would break
-  // tracking, so these deliberately reuse eBay's documented per-site ids:
-  // Canada (English) siteid 2, Singapore siteid 216. If EPN reports these as
-  // uncredited, replace the mkrid values with the real rotation ids from the EPN
-  // dashboard — the customid is what distinguishes them in reporting either way.
-  "ebay.ca": { mkrid: "706-53473-19255-0", siteid: "2", customid: "rc-ca" },
-  "ebay.com.sg": { mkrid: "711-53200-19255-0", siteid: "216", customid: "rc-sg" },
+// eBay Partner Network link parameters per marketplace we actually have a real,
+// commission-eligible rotation for. The Browse API is supposed to return
+// pre-tagged URLs (itemAffiliateWebUrl) when we pass the campaign, but in
+// practice it often returns the plain itemWebUrl, so we tag links ourselves here
+// — this is the standard "ePN smart link" format and is what actually credits
+// clicks. mkevt=1 is the critical flag (without it the click is NOT tracked);
+// mkrid is the marketplace rotation id.
+//
+// UK and CA verified directly against the live EPN dashboard on 2026-08-14 (CA's
+// was previously an unverified placeholder — see git history — that turned out
+// to be correct).
+//
+// Germany's brief 2026-08-20 add-then-remove (see country.ts's header note) had
+// an "ebay.de" entry here too; it's gone along with the rest of the DE market —
+// any stray ebay.de URL now falls through to the generic eBay-TLD fallback below
+// (US rotation) like every other untracked eBay TLD.
+//
+// ── ES, AND WHY A WRONG ROTATION ID CANNOT COST US THE AFFILIATE ────────────
+// ES (2026-08-23, with the EU market) has never been checked against the live
+// EPN dashboard — the same starting state CA was in, and CA turned out correct.
+// siteid 186 is eBay's own public, stable platform Site ID for Spain (a Trading
+// API constant, not affiliate-specific) and the mkrid is the published EPN
+// rotation id for that site, from the same public source the four above came
+// from, which is why they match it exactly.
+//
+// Three separate things now make that uncertainty harmless rather than a risk
+// to the commission, which is the whole point of the design below:
+//
+//   1. `campid` IS THE ATTRIBUTION. It names our EPN campaign and is set on
+//      every link unconditionally. mkrid names which marketplace rotation the
+//      click belongs to WITHIN that campaign — a reporting dimension, not the
+//      identity of who gets paid.
+//   2. REAL LISTINGS DON'T USE THIS TABLE AT ALL any more. The Browse API is
+//      called with `X-EBAY-C-ENDUSERCTX: affiliateCampaignId=…` (see lib/ebay.ts)
+//      and returns `itemAffiliateWebUrl` — a URL eBay itself built, carrying
+//      eBay's own correct rotation for that marketplace. ebayAffiliateUrl now
+//      PRESERVES that rotation instead of stamping ours over it (it used to
+//      overwrite it, which is what would actually have put a guessed id in front
+//      of real buyers). This table is now the fallback for links WE construct —
+//      chiefly search links.
+//   3. Every id here is env-overridable (EBAY_MKRID_<code> / EBAY_SITEID_<code>),
+//      so a wrong one is a dashboard value away from being corrected, with no
+//      deploy.
+//
+// Keeping an ebay.es entry at all is still the right call: without one, an
+// ebay.es URL hits the generic fallback below, which REWRITES THE HOST to
+// www.ebay.com (see ebayAffiliateUrl) — so a European buyer clicking a €-priced
+// listing would land on the US site seeing dollars, defeating the market's whole
+// premise. A possibly-imperfect rotation id on the right site beats a perfect one
+// on the wrong site.
+interface EbayMarketIds { mkrid: string; siteid: string; customid: string; code: string }
+const EBAY_MARKETS: Record<string, EbayMarketIds> = {
+  "ebay.com.au": { mkrid: "705-53470-19255-0", siteid: "15", customid: "rc-au", code: "AU" },
+  "ebay.com": { mkrid: "711-53200-19255-0", siteid: "0", customid: "rc-us", code: "US" },
+  "ebay.co.uk": { mkrid: "710-53481-19255-0", siteid: "3", customid: "rc-uk", code: "UK" },
+  "ebay.ca": { mkrid: "706-53473-19255-0", siteid: "2", customid: "rc-ca", code: "CA" },
+  "ebay.es": { mkrid: "1185-53479-19255-0", siteid: "186", customid: "rc-eu", code: "ES" },
 };
 
-function ebayMarket(hostname: string) {
+// Env override for one market's rotation/site ids, e.g. EBAY_MKRID_ES. Read at
+// call time rather than module load so a Vercel variable change takes effect on
+// the next request without a redeploy — the point being that correcting a
+// rotation id should be a 30-second operation, not a code change. `||` (not
+// `??`) so a var accidentally set to an empty string falls back to the code
+// default rather than emitting `mkrid=`, which would untrack the click outright.
+function rotationFor(m: EbayMarketIds): { mkrid: string; siteid: string } {
+  return {
+    mkrid: process.env[`EBAY_MKRID_${m.code}`] || m.mkrid,
+    siteid: process.env[`EBAY_SITEID_${m.code}`] || m.siteid,
+  };
+}
+
+// eBay Partner Network has NO commissionable program for Singapore at all —
+// confirmed against EPN's own help documentation on 2026-08-14. This was never
+// a "find the right rotation id" problem the way CA looked like one; there is
+// no ebay.com.sg rotation to have. So every ebay.com.sg URL — whether WE built
+// it (a search link) or eBay's own Browse API handed it back (a real listing
+// found via the EBAY_SG marketplace search — see lib/ebay.ts) — reroutes onto
+// the US site/rotation instead of being tagged in place.
+//
+// Confirmed this is a like-for-like swap, not a guess at some unrelated
+// substitute: a real SG-marketplace listing pulled from production for this
+// project carried the EXACT SAME eBay item id as that card's UK listing
+// (137597929650) — eBay serves the identical inventory across its site
+// fronts, it just presents it under a different domain/currency per site.
+//
+// customid keeps reporting the market as "rc-sg", not "rc-us" — see
+// ebayMarket() — specifically so EPN's by-custom-id report can still show
+// what Singapore-origin traffic is worth, even though eBay credits it under
+// the US rotation.
+const SG_HOST = "ebay.com.sg";
+const SG_REROUTE_TO = "ebay.com";
+const SG_CUSTOM_ID = "rc-sg";
+
+function ebayMarket(hostname: string): (EbayMarketIds & { realHost: string }) | null {
   const h = hostname.replace(/^www\./i, "").toLowerCase();
-  if (EBAY_MARKETS[h]) return EBAY_MARKETS[h];
+  if (h === SG_HOST) return { ...EBAY_MARKETS[SG_REROUTE_TO], customid: SG_CUSTOM_ID, realHost: SG_REROUTE_TO };
+  if (EBAY_MARKETS[h]) return { ...EBAY_MARKETS[h], realHost: h };
   // Any other eBay TLD still gets tracked — fall back to the US rotation.
-  if (/(?:^|\.)ebay\./i.test(h)) return EBAY_MARKETS["ebay.com"];
+  if (/(?:^|\.)ebay\./i.test(h)) return { ...EBAY_MARKETS["ebay.com"], realHost: "ebay.com" };
   return null;
 }
 
@@ -89,40 +165,120 @@ export function ebayAffiliateUrl(url: string, source?: string): string {
     const u = new URL(url);
     const m = ebayMarket(u.hostname);
     if (!m) return url;
+    // Applies the SG -> US reroute (see ebayMarket): the URL's own host is
+    // swapped to the site whose mkrid/siteid we're actually tagging it with,
+    // so the three never disagree with each other. A no-op for every other
+    // market, since realHost already equals the URL's own (www-stripped) host.
+    const rerouted = u.hostname.replace(/^www\./i, "").toLowerCase() !== m.realHost;
+    if (rerouted) {
+      u.hostname = `www.${m.realHost}`;
+    }
+    // ── PREFER EBAY'S OWN ROTATION OVER OUR TABLE'S ───────────────────────────
+    // The Browse API is called with our campaign in X-EBAY-C-ENDUSERCTX and hands
+    // back `itemAffiliateWebUrl` — a URL eBay built itself, already carrying the
+    // correct rotation for whichever marketplace the listing came from. This
+    // function used to overwrite that with our own mkrid/siteid unconditionally,
+    // which threw away authoritative data in favour of a hand-maintained table
+    // and put a hand-written rotation id in front of every real listing click.
+    //
+    // Now a URL that arrives already tagged keeps its rotation, and we only add
+    // the parts eBay cannot know: our campaign and our placement sub-id. Our
+    // table becomes the fallback for links WE construct — chiefly search links,
+    // which eBay never sees and so cannot tag.
+    //
+    // NOT applied when rerouting: an ebay.com.sg listing's own rotation is a
+    // Singapore one, and Singapore has no EPN program at all (see the SG note
+    // above). Carrying it onto ebay.com would tag the click for a rotation that
+    // does not exist on the site it lands on — the one case where eBay's answer
+    // is the wrong one for us, because we deliberately moved the destination.
+    const preTagged = !rerouted && u.searchParams.get("mkevt") === "1" && !!u.searchParams.get("mkrid");
+    const rot = rotationFor(m);
     u.searchParams.set("mkevt", "1"); // marks the click as a tracked EPN event (required)
     u.searchParams.set("mkcid", "1"); // channel: eBay Partner Network
-    u.searchParams.set("mkrid", m.mkrid); // marketplace rotation id
-    u.searchParams.set("siteid", m.siteid);
+    if (!preTagged) {
+      u.searchParams.set("mkrid", rot.mkrid); // marketplace rotation id
+      u.searchParams.set("siteid", rot.siteid);
+    }
+    // ALWAYS ours, pre-tagged or not: campid is the campaign that gets credited,
+    // and it is the one parameter that must never be left to chance.
     u.searchParams.set("campid", EBAY_CAMPAIGN_ID);
     u.searchParams.set("toolid", "10001");
-    // sub-id so EPN reports are segmentable — by market always, by placement too
-    // when the caller knows it.
-    u.searchParams.set("customid", affiliateSubId(m.customid, source));
+    // ── LINK SHAPE IS PART OF THE SUB-ID ────────────────────────────────────
+    // An eBay outbound link is one of two very different things, and until now
+    // EPN could not tell them apart:
+    //   • an ITEM link  (/itm/<id>) — the buyer lands on the exact card they
+    //     were looking at, one click from checkout;
+    //   • a SEARCH link (/sch/i.html?_nkw=…) — they land on a result list and
+    //     have to find it themselves, if it is even there.
+    // Those should not convert alike, but with both reporting the same customid
+    // there was no way to prove it either way — which is exactly the question
+    // asked when US conversion (0.78%) was compared against AU (3%).
+    //
+    // Derived from the URL rather than passed in by callers, deliberately:
+    // there are eight separate places that build eBay links, and a parameter
+    // every one of them had to remember to set correctly would be wrong
+    // somewhere within a month. The URL cannot lie about its own shape.
+    const shape = /\/itm\//.test(u.pathname) ? "product" : /\/sch\//.test(u.pathname) ? "search" : null;
+    u.searchParams.set("customid", affiliateSubId(m.customid, source, shape));
     return u.toString();
   } catch {
     return url;
   }
 }
 
-// The eBay marketplace a given RiftCompare market shops on. NZ has no eBay of
-// its own and eBay AU ships there, so it deliberately maps to the AU domain.
+// The eBay marketplace a given RiftCompare market shops on.
+// SG is left as "ebay.com.sg" here too — this is the LOGICAL site the market
+// shops on, not necessarily where a link actually ends up; ebayAffiliateUrl's
+// SG reroute (see ebayMarket above) is what actually redirects it onto
+// ebay.com before tagging, since that happens for BOTH a URL built from this
+// map (a search link) and a real listing URL the Browse API hands back
+// directly. Keeping the reroute in that one place, rather than also baking
+// it in here, means there's exactly one spot that needs to know Singapore has
+// no EPN program — not two that could drift apart.
 //
-// This lives here, beside ebayAffiliateUrl, because four components had grown
-// their own private copy of it (EbayBuyCta, EbayAd, PartnersStrip,
-// ArticleShopStrip) and they had already drifted: EbayAd's copy is missing SG
-// and CA, so those markets were being sent to ebay.com.au. A map that five
-// surfaces need is a shared fact, not five local constants.
+// This map lives here, beside ebayAffiliateUrl, because four components had
+// grown their own private copy of it (EbayBuyCta, EbayAd, PartnersStrip,
+// ArticleShopStrip) and they had already drifted: EbayAd's copy was missing
+// SG and CA, so those markets were being sent to ebay.com.au. A map that
+// eight surfaces need is a shared fact, not eight local constants.
 const EBAY_DOMAIN: Record<string, string> = {
   AU: "ebay.com.au",
-  NZ: "ebay.com.au", // no eBay NZ; eBay AU ships there
   US: "ebay.com",
   UK: "ebay.co.uk",
   SG: "ebay.com.sg",
   CA: "ebay.ca",
+  // eBay has no pan-European site front, so the EU market shops on Spain's —
+  // the same anchor country the rest of the market resolves to (see country.ts's
+  // EU_ANCHOR_ISO) and the marketplace lib/ebay.ts searches (EBAY_ES). All three
+  // must name the same country or a listing found in one currency would be
+  // linked in another.
+  EU: "ebay.es",
 };
 
 export function ebayDomain(country: string): string {
   return EBAY_DOMAIN[country] ?? EBAY_DOMAIN.US;
+}
+
+// Human-readable label for "which eBay am I searching" copy. Deliberately NOT
+// derived from EBAY_DOMAIN: SG's logical domain is still ebay.com.sg (above),
+// but the link a Singapore visitor actually lands on is ebay.com (see the SG
+// reroute), so a "Singapore" label would claim a site the click never visits.
+// Unqualified "eBay" is what US already uses for the same site, so SG reuses
+// it verbatim rather than inventing a third phrasing for one destination.
+const EBAY_LABEL: Record<string, string> = {
+  AU: "eBay Australia",
+  US: "eBay",
+  UK: "eBay UK",
+  SG: "eBay",
+  CA: "eBay Canada",
+  // "eBay Spain", not "eBay Europe": the click really does land on ebay.es, and
+  // this label's whole job (per the note above) is to not claim a site the
+  // visitor never visits.
+  EU: "eBay Spain",
+};
+
+export function ebayLabel(country: string): string {
+  return EBAY_LABEL[country] ?? EBAY_LABEL.US;
 }
 
 // An affiliate-tagged eBay SEARCH on the visitor's own marketplace. `source` is
@@ -213,4 +369,26 @@ export function affiliateUrl(
 export function outboundRel(_href: string): string {
   void _href;
   return "nofollow sponsored noopener noreferrer";
+}
+
+// Is this outbound URL ACTUALLY monetised — i.e. did affiliateUrl() do something to
+// it, or would it fall through untouched? Mirrors the three live branches in
+// affiliateUrl() above (eBay / Amazon / TCGplayer) plus DIRECT_PROGRAMS, which is
+// checked structurally so a store added there is automatically covered without a
+// second hand-maintained list. Used to gate a per-link "Paid link" disclosure: with
+// DIRECT_PROGRAMS empty today, the ~60 Shopify store links earn nothing, and
+// labelling every row "Paid link" regardless would over-disclose on the majority of
+// rows — the FTC concern this exists to address is UNDER-disclosure, not padding
+// every link with a label that isn't true for it.
+export function isPaidLink(href: string | null | undefined): boolean {
+  if (!href) return false;
+  try {
+    const u = new URL(href);
+    if (/(?:^|\.)ebay\./i.test(u.hostname)) return true;
+    if (/(?:^|\.)amazon\./i.test(u.hostname)) return true;
+    if (TCGPLAYER_IMPACT_LINK && /(?:^|\.)tcgplayer\.com$/i.test(u.hostname)) return true;
+    return directProgramUrl(u) != null;
+  } catch {
+    return false;
+  }
 }

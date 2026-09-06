@@ -28,13 +28,22 @@ const STALE_ID = "6262011577596407";
 const DEFAULT_PATHS: [string, string][] = [
   ["/", "home"],
   ["/browse", "browse / index"],
-  ["/card/jinx-loose-cannon-ogn-251", "card (priced)"],
+  // A card slug is cardSlug() from lib/card-url.ts: name + setCode + collectorNumber,
+  // and the collector number carries the SET TOTAL ("251/298" -> "251-298"). This
+  // fixture used to read ".../ogn-251" with the total missing, so it 404'd on every
+  // run — and because a 404 also has no loader and no ownership meta, one dead
+  // fixture reported itself as three separate failures and made this gate look like
+  // a live AdSense fault. Verified against production: /browse links
+  // /card/caitlyn-patrolling-ogn-068-298, /card/calm-rune-ogn-042-298, etc.
+  ["/card/jinx-loose-cannon-ogn-251-298", "card (priced)"],
+  ["/card/caitlyn-patrolling-ogn-068-298", "card (base print)"],
   ["/sets", "set index"],
   ["/domains/fury", "domain facet"],
   ["/cards/rarity/rare", "rarity facet"],
   ["/guides", "guides hub"],
   ["/blog", "blog hub"],
   ["/about", "static / policy"],
+  ["/movers", "tool"],
   ["/market", "tool"],
   ["/marketplace", "marketplace"],
   ["/decks", "decks"],

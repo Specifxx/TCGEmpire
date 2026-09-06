@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCountry } from "@/lib/get-country";
+import { normalizeCountry } from "@/lib/country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -12,10 +13,12 @@ import { CardTile } from "@/components/CardTile";
 import { Pagination } from "@/components/Pagination";
 import { PageSizeSelect } from "@/components/PageSizeSelect";
 import { AdSlot } from "@/components/AdSlot";
+import { CHAMPIONS } from "@/lib/champions";
 import {
   buildCardOrderBy,
   buildCardWhere,
   cardTileSelect,
+  trimTileArtFallback,
   CardQuery,
   parsePageNum,
   parsePageSize,
@@ -24,6 +27,12 @@ import { SITE_URL } from "@/lib/site";
 
 // searchParams-driven (filters/pagination), so the route stays dynamic.
 export const dynamic = "force-dynamic";
+
+// Breakout Google Trends champions get first billing in the cross-link row
+// below. Deliberately a short curated list, not all ~80 champions — this is
+// a discovery aid on the default view, not a directory (that's what
+// /champions itself, linked right after these, is for).
+const POPULAR_CHAMPION_SLUGS = ["vex", "draven", "azir", "leblanc", "irelia"];
 
 // Browse is the main "buy Riftbound cards" landing page, so give it a strong title
 // and description. Metadata is market-neutral: Googlebot crawls mostly from US IPs,
@@ -38,16 +47,57 @@ export const dynamic = "force-dynamic";
 // content is a permutation, and /browse?page=2&size=10 shows entirely different
 // cards than /browse?page=2 — they must never share a canonical). Out-of-range
 // pages are noindex'd so the scheme can't manufacture indexable empty soft-404s.
+//
+// RE-CONFIRMED, not changed, by a later audit that flagged this as a duplicate-
+// canonical bug and pointed at /blog and /gallery as the "correct" model. Neither
+// is actually comparable: /blog's `?page=` and /gallery's are not read by either
+// route at all (both paginate, if at all, purely client-side over a page that
+// serves the SAME full HTML regardless of the query string) — their shared
+// canonical is a side effect of having nothing paginated to protect, not a
+// deliberate pagination policy. /browse is the one route on this site with REAL
+// server-driven pagination (Prisma skip/take produces a genuinely different card
+// set per page), which is exactly the case Google's pagination guidance is about,
+// and self-referencing canonicals are what that guidance actually recommends —
+// canonicalising every page back to page 1 would tell Google pages 2-15 are
+// duplicates and drop their card links from the index, the opposite of the fix
+// asked for. The real, separate bug that audit also found — every paginated
+// page sharing byte-identical title/description with page 1 — is fixed below
+// instead, without touching canonicalization.
 const isCleanPagination = (searchParams: CardQuery) =>
   Object.entries(searchParams).every(([k, v]) => k === "page" || v == null || v === "");
 
 export async function generateMetadata({ searchParams }: { searchParams: CardQuery }): Promise<Metadata> {
   const q = (searchParams.q ?? "").trim();
   const page = parsePageNum(searchParams.page);
+  // Title leads with the exact phrase "Riftbound Cards" (2026-08-20 SEO audit):
+  // /browse is the site's card-database/browse-intent page, while "/" targets
+  // the comparison-intent "Riftbound prices" query — deliberately differentiated
+  // now rather than both pages competing with near-identical "Riftbound Card
+  // Database ... Prices"-shaped titles, which the same audit flagged as a real
+  // keyword-cannibalization risk (66 internal article links already send
+  // "card database"/"compare every store" anchor text here, vs. zero to "/").
+  // NO manual "| RiftCompare" suffix — title is a plain string here (not
+  // wrapped in { absolute: ... }), so layout.tsx's title template ("%s —
+  // RiftCompare") already appends it once; adding it by hand doubled the
+  // suffix ("... | RiftCompare — RiftCompare"), caught visually while
+  // verifying this change.
+  //
+  // PAGE-AWARE title/description (page > 1): a later audit found every
+  // paginated view sharing byte-identical title/description with page 1 —
+  // fixed here, belt-and-suspenders alongside each page's own self-referencing
+  // canonical below (see isCleanPagination's comment for why that canonical
+  // stays self-referencing rather than pointing at page 1 — this is the other,
+  // independent half of the same finding: even pages that are correctly NOT
+  // duplicates of each other in Google's eyes still read as one in the SERP
+  // snippet if the words are identical, which is a real CTR cost regardless of
+  // canonicalization).
+  const pageSuffix = page > 1 ? ` — Page ${page}` : "";
   const base = {
-    title: q ? `${q} — Riftbound cards & prices` : "Riftbound Card Database — All Cards & Prices",
+    title: q ? `${q} — Riftbound cards & prices${pageSuffix}` : `Riftbound Cards — Browse & Compare Prices${pageSuffix}`,
     description:
-      "Browse every Riftbound TCG card and compare live prices across local stores in AU, NZ, US, UK & SG to find the cheapest place to buy singles. Updated daily.",
+      page > 1
+        ? `Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — page ${page}. Updated daily.`
+        : "Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — find the cheapest place to buy. Updated daily.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {
@@ -62,13 +112,22 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
   return { ...base, alternates: { canonical: "/browse" } };
 }
 
-export default async function BrowsePage({ searchParams }: { searchParams: CardQuery }) {
+export default async function BrowsePage({ searchParams }: { searchParams: CardQuery & { market?: string } }) {
   // The route reads searchParams so it is per-request dynamic regardless — the
   // cookie read costs nothing extra here, and sort/filter MUST use the visitor's
   // market or the grid renders local prices in AU-column order (US$12 above US$3)
   // and price filters drop cards with no AU listing. Only the METADATA is
   // market-neutral (that's what Googlebot indexes).
-  const country = getCountry();
+  //
+  // ?market=US (etc.) is an explicit override of the cookie/geo default, so an
+  // agent (which carries neither) can construct a deterministic URL for
+  // "cheapest X for a US buyer" instead of the market being invisible client
+  // state. normalizeCountry() safely coerces anything invalid to the US
+  // default, so an unrecognised value degrades to today's behaviour rather
+  // than erroring. No explicit noindex/canonical handling needed here: like
+  // every other filter param, a non-empty searchParams object already falls
+  // through generateMetadata's default branch to `canonical: "/browse"`.
+  const country = searchParams.market ? normalizeCountry(searchParams.market) : getCountry();
   const where = buildCardWhere(searchParams, country);
   const orderBy = buildCardOrderBy(searchParams.sort, country);
   const size = parsePageSize(searchParams.size);
@@ -160,9 +219,34 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           <div className="mb-4">
             <h1 className="font-display text-2xl font-extrabold text-white">Buy Riftbound Cards</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">
-              Browse every Riftbound TCG single and compare live prices across local stores in AU, NZ,
+              Browse every Riftbound TCG single and compare live prices across local stores in AU,
               US &amp; UK to find the cheapest place to buy.
             </p>
+            {/* Popular-champion cross-links — /browse had no path into the
+                per-champion hub pages at all (card pages already link to
+                them; this was the other half the brief asked for). Only
+                on the default view, matching the H1/subhead above it, so a
+                filtered/searched view (noindexed, canonicalized to plain
+                /browse) doesn't carry a duplicate set of the same links. */}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-slate-500">Popular champions:</span>
+              {POPULAR_CHAMPION_SLUGS.map((slug) => {
+                const champ = CHAMPIONS.find((c) => c.slug === slug);
+                if (!champ) return null;
+                return (
+                  <Link
+                    key={slug}
+                    href={`/champions/${slug}`}
+                    className="chip border border-ink-700 px-2.5 py-1 font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+                  >
+                    {champ.name}
+                  </Link>
+                );
+              })}
+              <Link href="/champions" className="text-brand-400 hover:underline">
+                All champions →
+              </Link>
+            </div>
           </div>
         )}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -203,7 +287,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {cards.map((c) => (
-                <CardTile key={c.id} card={c} />
+                <CardTile key={c.id} card={trimTileArtFallback(c)} />
               ))}
             </div>
             <Pagination page={page} totalPages={totalPages} params={searchParams as Record<string, string | undefined>} />

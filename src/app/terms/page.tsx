@@ -3,11 +3,14 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: `The terms and conditions for using ${SITE_NAME}.`,
-  alternates: { canonical: "/terms" },
+  description:
+    `The terms of using ${SITE_NAME}: what our price comparison does and does not guarantee, how ` +
+    `affiliate links work, account rules and acceptable use.`,
+  alternates: pageAlternates("/terms"),
 };
 
 
@@ -43,9 +46,8 @@ export default function TermsPage() {
           <p>
             Prices, stock levels and other data are gathered from public third-party sources and are
             provided for general information only. They may be delayed, incomplete or inaccurate, and can
-            change at any time. {SITE_NAME} does not sell the cards listed (other than through its own
-            clearly-identified marketplace, where applicable) and is not responsible for any third-party
-            store, its prices, stock, or fulfilment. <strong className="text-white">Always confirm the
+            change at any time. {SITE_NAME} does not sell the cards listed and is not responsible for any
+            third-party store, its prices, stock, or fulfilment. <strong className="text-white">Always confirm the
             price and availability on the retailer&rsquo;s own website before purchasing.</strong>
           </p>
           <p>
@@ -53,8 +55,7 @@ export default function TermsPage() {
             third-party retailer.</strong> When you follow a link from {SITE_NAME} and buy from a
             store, the contract is between you and that store alone. Payment, delivery, warranties,
             returns, refunds and disputes are governed by that store&rsquo;s own terms, not ours, and
-            we have no authority to intervene in them. (Our own Marketplace, described in 3a below,
-            is the one exception and is covered by its own terms.)
+            we have no authority to intervene in them.
           </p>
           <p>
             Prices are recorded snapshots, not live lookups — see our{" "}
@@ -68,25 +69,12 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-white">3. Affiliate links &amp; advertising</h2>
           <p>
             The Site is supported by third-party advertising (including Google AdSense), affiliate
-            commissions, Premium subscriptions and marketplace fees. Some outbound links are
+            commissions and Premium subscriptions. Some outbound links are
             affiliate links through which we may earn a commission at no extra cost to you; these
             are marked and disclosed next to the link. Advertising never affects the prices we show
             or the order in which results are ranked. See our{" "}
             <Link href="/privacy" className="text-brand-400 hover:underline">Privacy Policy</Link> for how
             advertising and cookies are handled.
-          </p>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">3a. Marketplace</h2>
-          <p>
-            {SITE_NAME} Marketplace lets signed-in users buy and sell Riftbound cards directly with each other.
-            {SITE_NAME} facilitates these transactions (payment, escrow, tracking, dispute support) as described in
-            our dedicated{" "}
-            <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link>,{" "}
-            <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">Buyer Protection</Link>, and{" "}
-            <Link href="/marketplace/shipping" className="text-brand-400 hover:underline">Shipping &amp; Tracking</Link> pages,
-            which apply in addition to these Terms whenever you use the Marketplace.
           </p>
         </section>
 
@@ -114,24 +102,20 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">6. User content &amp; moderation</h2>
           <p>
-            If you post content on the Site — including Marketplace listings, listing descriptions,
-            seller profiles, reviews and messages — you remain responsible for it and grant us a
-            non-exclusive licence to display it on the Site.
+            If you post content on the Site — including reviews, feedback, store suggestions and
+            messages — you remain responsible for it and grant us a non-exclusive licence to display
+            it on the Site.
           </p>
           <p>
-            <strong className="text-white">Marketplace listings are moderated.</strong> Listings are
-            subject to our{" "}
-            <Link href="/marketplace/listing-policy" className="text-brand-400 hover:underline">listing content policy</Link>,
-            reviewed against it, and removed when they breach it. Only verified sellers may list.
-            Submitted text is stored and rendered as plain text — it is never interpreted as HTML or
-            script — so a listing cannot inject markup, styling or code into any page.
+            <strong className="text-white">Submitted content is moderated.</strong> It is reviewed
+            and removed if it is unlawful, misleading, infringing, abusive or spam. Submitted text is
+            stored and rendered as plain text — it is never interpreted as HTML or script — so it
+            cannot inject markup, styling or code into any page.
           </p>
           <p>
-            Anyone can report a listing using the <strong className="text-white">Report listing</strong>{" "}
-            control on the listing itself, or by emailing{" "}
+            Anyone can report content by emailing{" "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-gold hover:underline">{CONTACT_EMAIL}</a>.
-            Reported listings are reviewed and, where they breach the policy, removed; repeat
-            breaches cost the seller their selling privileges.
+            Reported content is reviewed and removed where it breaches these Terms.
           </p>
         </section>
 

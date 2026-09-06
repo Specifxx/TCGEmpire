@@ -170,7 +170,10 @@ test("the chase pass NEVER deletes rows it did not refresh", () => {
   // writes back only the subset — ~600 cards' prices gone, twice a day, silently.
   const src = read("src/lib/price-import.ts");
   const fn = src.slice(src.indexOf("export async function refreshEbayChasePrintings"));
-  const body = fn.slice(0, fn.indexOf("\n/**"));
+  // Ends at the function's own closing brace (column 0) rather than at the next
+  // block comment: that boundary silently moved when the auction pass below it
+  // was deleted, and the slice then swallowed unrelated functions.
+  const body = fn.slice(0, fn.indexOf("\n}\n"));
   const deletes = body.match(/deleteMany\(\{[^}]*\}[^)]*\)/g) ?? [];
   assert.ok(deletes.length >= 3, "expected scoped deletes for prices, carousel and graded");
   for (const d of deletes) {
@@ -201,18 +204,22 @@ test("the chase gate uses a stamp the chase pass can actually advance", () => {
   );
 });
 
-test("the third cron is accounted for", () => {
-  // The comment that justified the 10h cutoff enumerated only the two GitHub
-  // Actions crons. vercel.json runs the same import a third time at 18:00.
+test("the import runs exactly twice a day, and the gate comment says so", () => {
+  // The redundant vercel.json cron (18:00) was removed 2026-08-24: it double-
+  // fired an hour before the 19:00 GitHub run, wasting ~420 eBay Browse calls
+  // and a whole operational import. The 20h/10h eBay gate was always tuned for
+  // the 07:00 (full) + 19:00 (chase) pair, so the chase pass just moves to 19:00.
+  // This test keeps reality and the gate comment in lockstep in BOTH directions:
+  // vercel.json must NOT re-add the import cron, and GitHub must keep exactly two.
   const vercel = JSON.parse(read("vercel.json"));
   const refresh = (vercel.crons ?? []).filter((c: any) => c.path === "/api/cron/refresh-prices");
-  assert.equal(refresh.length, 1, "vercel.json should still schedule the price refresh");
+  assert.equal(refresh.length, 0, "vercel.json must not schedule the price import (GitHub Actions owns it)");
   const gha = read(".github/workflows/refresh-prices.yml");
   const crons = [...gha.matchAll(/cron:\s*"([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(crons.length + refresh.length, 3, "expected 3 daily import invocations in total");
+  assert.equal(crons.length + refresh.length, 2, "expected exactly 2 daily import invocations in total");
   // If a schedule moves, the reasoning in the gate comment has to move with it.
   const src = read("src/lib/price-import.ts");
-  assert.match(src, /THREE daily invocations/, "the gate must document all three invocations");
+  assert.match(src, /TWO daily invocations/, "the gate must document the two invocations");
 });
 
 test("a failed search never deletes a price row", () => {
@@ -221,7 +228,7 @@ test("a failed search never deletes a price row", () => {
   // means one transient 5xx wipes a live price on a chase card, twice a day.
   const ebay = read("src/lib/ebay.ts");
   const fn = ebay.slice(ebay.indexOf("export async function searchEbayLowest"));
-  const body = fn.slice(0, fn.indexOf("export async function searchEbayAuctions"));
+  const body = fn.slice(0, fn.indexOf("// Keyword each sealed product type"));
   // Every non-answer path must mark the call failed.
   assert.ok(body.includes("status?: { ok: boolean }"), "must expose a status out-param");
   assert.ok(
@@ -231,7 +238,7 @@ test("a failed search never deletes a price row", () => {
 
   const importer = read("src/lib/price-import.ts");
   const chase = importer.slice(importer.indexOf("export async function refreshEbayChasePrintings"));
-  const chaseBody = chase.slice(0, chase.indexOf("\n/**"));
+  const chaseBody = chase.slice(0, chase.indexOf("\n}\n"));
   assert.match(
     chaseBody,
     /if \(!status\.ok\) \{\s*reached\.delete\(c\.id\);/,
@@ -341,20 +348,9 @@ test("bare mode is only ever used where a parent discloses", () => {
   // AffiliateDisclosure's rule: if an affiliate link renders, its disclosure
   // renders. `bare` suppresses the inner one, so it is only safe under a parent
   // that provides one.
-  for (const f of ["src/components/EbayAdCarouselLive.tsx", "src/components/EbayAuctionsLive.tsx"]) {
+  for (const f of ["src/components/EbayAdCarouselLive.tsx"]) {
     const src = read(f);
     assert.match(src, /\{!bare && <AffiliateDisclosure|\{!bare && \(\s*<div className="border-t/, `${f} must gate its disclosure on !bare`);
   }
 });
 
-test("the auctions view does not remount on every countdown tick", () => {
-  // It re-renders once a minute. A component declared in the render body gets a
-  // new identity each time, so React would unmount and remount the whole list —
-  // restarting image loads and dropping focus once a minute.
-  const src = read("src/components/EbayAuctionsLive.tsx");
-  assert.ok(
-    !/const Shell = bare\s*\?\s*\(\{/.test(src),
-    "wrapper must not be a component defined inside render",
-  );
-  assert.match(src, /const body = \(/, "the wrapper should be chosen at the JSX level");
-});

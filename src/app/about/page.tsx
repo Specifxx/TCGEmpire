@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@/lib/db";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
+import { HowItWorks } from "@/components/home/HowItWorks";
+
+// This page had no DB read at all before HowItWorks (below) needed a live
+// card count for its subhead — a daily revalidation window is plenty fresh
+// for a number that only grows by a set's worth of cards every few weeks,
+// same convention /sets already uses for its own per-set counts.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "About RiftCompare",
   description:
     "RiftCompare is an independent price-comparison and database for Riftbound: League of Legends TCG — how it started, how it works, and who's behind it.",
-  alternates: { canonical: "/about" },
+  alternates: pageAlternates("/about"),
 };
 
 const breadcrumbLd = {
@@ -27,7 +36,8 @@ const aboutLd = {
   publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const totalCards = await prisma.card.count();
   return (
     <article className="mx-auto max-w-3xl">
       <script
@@ -48,12 +58,20 @@ export default function AboutPage() {
           <p>
             {SITE_NAME} is a free price-comparison tool and card database for{" "}
             <strong className="text-white">Riftbound: League of Legends TCG</strong>. We track live prices
-            for every Riftbound card across dozens of stores in Australia, New Zealand, the United States,
-            the United Kingdom, Singapore and Canada, and show you the cheapest place to buy — alongside
+            for every Riftbound card across dozens of stores in Australia, the United States,
+            the United Kingdom, Singapore, Canada and the EU, and show you the cheapest place to buy — alongside
             price history, set checklists, sealed-product prices, deck pricing and more. Everything is free
             to use, with no account required.
           </p>
         </section>
+
+        {/* The homepage's old three-step "search → compare → buy" explainer,
+            unchanged — moved here per the homepage-redesign brief (the
+            homepage itself now proves the same point with a live example,
+            ProofStrip, instead of describing it). This is the one place on
+            the site that still spells the mechanic out for a first-time
+            visitor who lands directly on /about rather than the homepage. */}
+        <HowItWorks totalCards={totalCards} />
 
         <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Why we built it</h2>
@@ -92,30 +110,15 @@ export default function AboutPage() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-bold text-white">The RiftCompare Marketplace</h2>
-          <p>
-            Alongside price comparison, {SITE_NAME} also runs its own peer-to-peer{" "}
-            <Link href="/marketplace" className="text-brand-400 hover:underline">Marketplace</Link>, where
-            verified sellers list Riftbound singles for sale directly to other players. For most listings
-            {SITE_NAME} is acting purely as the facilitator — payment is processed by Stripe and held in
-            escrow until delivery is confirmed, and the seller (not {SITE_NAME}) is who you&rsquo;re buying
-            from. A small number of listings are marked &ldquo;Official Store&rdquo; and are sold directly
-            by {SITE_NAME} itself. Full details are in the{" "}
-            <Link href="/marketplace/terms" className="text-brand-400 hover:underline">Marketplace Terms</Link>{" "}
-            and{" "}
-            <Link href="/marketplace/buyer-protection" className="text-brand-400 hover:underline">Buyer Protection</Link>{" "}
-            pages.
-          </p>
-        </section>
-
-        <section className="space-y-2">
           <h2 className="text-lg font-bold text-white">Independent &amp; community-made</h2>
           <p>
             {SITE_NAME} is an independent project, not affiliated with or endorsed by Riot Games or any
             store we compare. Card names and artwork are the property of their respective owners and are
             used to identify the cards being priced. We also run a sister site,{" "}
             <a href="https://dexcompare.app" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">DexCompare</a>,
-            for the Pokémon TCG.
+            for the Pokémon TCG — and{" "}
+            <a href="https://riftboundstocks.com" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">RiftboundStocks.com</a>,
+            for treating Riftbound cards like they&rsquo;re on a stock ticker.
           </p>
         </section>
 

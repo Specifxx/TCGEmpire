@@ -1,7 +1,6 @@
 import { SITE_NAME, SITE_URL } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
-import { formatPremiumDuration } from "./premium-format";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -31,6 +30,46 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     return res.ok;
   } catch (e) {
     console.warn("[email] send failed:", e);
+    return false;
+  }
+}
+
+export function isBrevoEnabled(): boolean {
+  return !!process.env.BREVO_API_KEY;
+}
+
+// Splits the same "Name <email@x.com>" string EMAIL_FROM already uses for
+// Resend into Brevo's separate sender.name/sender.email fields.
+function parseFrom(raw: string): { name: string; email: string } {
+  const m = raw.match(/^(.*)<(.+)>$/);
+  if (m) return { name: m[1]!.trim().replace(/^"|"$/g, ""), email: m[2]!.trim() };
+  return { name: SITE_NAME, email: raw.trim() };
+}
+
+// Sends via Brevo (app.brevo.com) instead of Resend. Used ONLY for the weekly
+// digest to registered accounts (see lib/user-digest.ts) so that larger,
+// recurring audience never eats into the Resend quota the rest of the app's
+// transactional email (verification, password reset, price alerts, the
+// opt-in newsletter) depends on. Free tier: 300 emails/day, no card required
+// — app.brevo.com → SMTP & API → API Keys. The sender address must be
+// verified inside Brevo separately from Resend's domain verification.
+export async function sendEmailBrevo(to: string, subject: string, html: string): Promise<boolean> {
+  const key = process.env.BREVO_API_KEY;
+  if (!key) {
+    console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
+    return false;
+  }
+  const sender = parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`);
+  try {
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html }),
+    });
+    if (!res.ok) console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
+    return res.ok;
+  } catch (e) {
+    console.warn("[email] Brevo send failed:", e);
     return false;
   }
 }
@@ -94,6 +133,29 @@ function alertFooter(unsubUrl: string): string {
   </td></tr>`;
 }
 
+// One-row "create a free account" block for MARKETING-ADJACENT emails going to
+// people we know DON'T have an account (anonymous price-alert watchers, the
+// newsletter list). These lists get value from us indefinitely and, until this
+// existed, were never once asked to register — the softest possible audience,
+// asked nowhere. Deliberately NOT added to user-digest or transactional sends:
+// those recipients are registered already, and an account CTA there is noise.
+//
+// The link lands on /login?src=email…, which AuthForm converts into
+// markSignupSource("email") — so email-attributed signups show up in
+// User.signupSource and the admin breakdown, closing the loop.
+export function accountCtaBlock(campaign: string, line?: string): string {
+  const copy =
+    line ??
+    "Price alerts, a live portfolio and a watchlist you can manage in one place — free.";
+  const url = `${SITE_URL}/login?src=email&utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
+  return `<tr><td style="padding:4px 32px 20px">
+    <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px">
+      <div style="font-size:13px;line-height:1.5;color:#b8c0cc">${copy}</div>
+      <a href="${url}" style="display:inline-block;margin-top:10px;border:1px solid #34d17e;color:#34d17e;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">Create your free account</a>
+    </div>
+  </td></tr>`;
+}
+
 export function emailShell(heading: string, inner: string, footer: string): string {
   return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
@@ -122,27 +184,33 @@ function dropRow(item: PriceDropItem): string {
 
 // The daily "a card on your wishlist got cheaper" email. Lists every card that
 // dropped since the last check in one message.
-export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string): Promise<boolean> {
+// `anonymous` = this address has no linked account (PriceAlert.userId is null).
+// Only THOSE recipients get the account CTA — its "your existing alerts come
+// with you" promise is claimAlertsForUser's adopt-by-email behavior, which is
+// meaningless (and the CTA is pure noise) for someone already signed up.
+export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string, anonymous = false): Promise<boolean> {
   const count = items.length;
   const heading = count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`;
   const intro = `Good news — ${count === 1 ? "a card you're watching" : "some cards you're watching"} dropped in price:`;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
     <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>
+    ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   const subject = count === 1 ? `Price drop: ${items[0]!.name} is now ${formatMoney(items[0]!.newCents, currencyOf(items[0]!.market))}` : `Price drops on ${count} of your wishlist cards`;
   return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
 }
 
 // Sent once when someone subscribes via the wishlist pop-up, confirming the watch
 // and surfacing the unsubscribe link up front.
-export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string): Promise<boolean> {
+export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string, anonymous = false): Promise<boolean> {
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're all set — we'll email you whenever the price drops on
       ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on your wishlist. We check prices once a day.
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Browse cards</a></td></tr>
+    ${anonymous ? accountCtaBlock("alert-confirm", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
   return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, alertFooter(unsubUrl)));
 }
 
@@ -174,43 +242,11 @@ function announcementFooter(unsubUrl: string): string {
 // The weekly digest itself; `inner` is built by lib/newsletter.ts so the content
 // (movers tables, Index summary) lives next to the data that produces it.
 export async function sendNewsletterDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
-  return sendEmail(to, subject, emailShell(heading, inner, newsletterFooter(unsubUrl)));
-}
-
-// Sent right after signup to accounts that received the early-adopter Premium comp
-// (the first EARLY_PREMIUM_LIMIT users) — tells them it's already active and shows
-// off the features so they actually use them. Transactional (account status), so it
-// carries a plain footer rather than a newsletter unsubscribe.
-export async function sendEarlyAdopterEmail(to: string, days: number): Promise<boolean> {
-  const mo = formatPremiumDuration(days);
-  const features: [string, string][] = [
-    ["Best-Basket optimiser", "the cheapest multi-store cart for any want-list"],
-    ["Value Finder", "cards trading below their 30-day average"],
-    ["Deal Finder", "spot cards worth more on eBay than in stores"],
-    ["Ad-free", "no ads anywhere on the site"],
-  ];
-  const inner = `
-    <tr><td style="padding:8px 32px 12px;font-size:15px;line-height:1.6;color:#e6ebf2">
-      You're one of RiftCompare's first users — so we've unlocked
-      <strong style="color:#f2c94c">${mo} of RiftCompare Premium</strong> on your account, free.
-      It's already active. No card, no catch — just a thank-you for being early.
-    </td></tr>
-    <tr><td style="padding:0 32px 12px">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${features
-          .map(
-            ([k, v]) => `<tr><td style="padding:8px 0;border-bottom:1px solid #233047;font-size:14px">
-              <span style="color:#f2c94c">▸</span>&nbsp;<strong style="color:#fff">${k}</strong>
-              <span style="color:#8b95a5"> — ${v}</span></td></tr>`
-          )
-          .join("")}
-      </table>
-    </td></tr>
-    <tr><td style="padding:8px 32px 24px"><a href="${SITE_URL}/premium?utm_source=email&utm_medium=email&utm_campaign=early-adopter" style="display:inline-block;background:#f2c94c;color:#1a1405;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See everything Premium does →</a></td></tr>`;
-  const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
-    Sent once because your new account qualified for the early-adopter Premium reward. RiftCompare · Riftbound card price comparison.
-  </td></tr>`;
-  return sendEmail(to, `You've got ${mo} of RiftCompare Premium — on us 🎁`, emailShell("Welcome, founding user", inner, footer));
+  // The newsletter list (NewsletterSubscriber) is captured without an account,
+  // so the weekly digest carries the generic account CTA. Some subscribers may
+  // also hold accounts — acceptable noise for one soft block, unlike the alert
+  // emails where the caller knows userId and gates it precisely.
+  return sendEmail(to, subject, emailShell(heading, inner + accountCtaBlock("newsletter"), newsletterFooter(unsubUrl)));
 }
 
 // One-off release-day blast for a new set (e.g. Vendetta, 31 Jul 2026). Sent to the
@@ -219,10 +255,10 @@ export async function sendEarlyAdopterEmail(to: string, days: number): Promise<b
 // reusable for future sets.
 //
 // EVERY NUMBER IS PASSED IN, NOT HARDCODED. The previous version of this template
-// asserted "60+ stores in AU, NZ, US and the UK" in static copy. That silently went
-// stale: the comparison now covers SIX markets (Singapore and Canada were added
+// asserted "60+ stores in AU, US and the UK" in static copy. That silently went
+// stale: the comparison now covers FIVE markets (Singapore and Canada were added
 // after it was written) and well over a hundred stores, so the email was
-// understating coverage and omitting two markets entirely to real subscribers.
+// understating coverage and omitting markets entirely to real subscribers.
 // Counts now come from live queries at send time (see the script), and any stat the
 // caller can't resolve is simply omitted rather than guessed — same rule the site
 // itself follows for prices.
@@ -367,13 +403,58 @@ export async function sendReleaseDayEmail(
   return sendEmail(to, subject, emailShell(`${setName} is here`, inner, footer));
 }
 
+// ─── Weekly digest to registered accounts (not opt-in subscribers) ──────────
+
+// A separate footer from newsletterFooter above: this audience never opted
+// into anything, so the copy says so — and it points at the digest-specific
+// opt-out (UserDigestOptOut), which is deliberately its own suppression list,
+// not AnnouncementOptOut (see the long comment on that model in schema.prisma
+// for why sharing it with the one-off release-day blast would be a bug).
+function accountDigestFooter(unsubUrl: string): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you have a ${SITE_NAME} account. It's our weekly market digest, sent to every member.<br/>
+    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe from this digest</a> · RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+// Same content shape as sendNewsletterDigestEmail (built by lib/user-digest.ts
+// reusing lib/newsletter.ts's buildDigest), sent via Brevo instead of Resend.
+export async function sendUserDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
+  return sendEmailBrevo(to, subject, emailShell(heading, inner, accountDigestFooter(unsubUrl)));
+}
+
+// ─── Premium free-trial reminder ─────────────────────────────────────────────
+
+// Sent once, ~a day before a Premium free trial converts to a paid subscription
+// (see runPremiumTrialReminders in lib/premium.ts) — a card was collected up front,
+// so without this warning the first a trialist hears about the charge is the charge
+// itself. amountLabel/chargeDate come from the trialist's own live Stripe
+// subscription, never guessed, since it also has to be right for annual trials.
+function trialReminderFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you started a RiftCompare Premium free trial.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export async function sendTrialEndingEmail(to: string, chargeDate: Date, amountLabel: string): Promise<boolean> {
+  const dateLabel = chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your RiftCompare Premium free trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. Unless you cancel
+      before then, the card on file will be charged ${amountLabel} and your subscription continues automatically.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
+  return sendEmail(to, `Your RiftCompare Premium trial ends ${dateLabel}`, emailShell("Your free trial is ending soon", inner, trialReminderFooter()));
+}
+
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
 export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're on the list — every week you'll get the ${SITE_NAME} Index summary: the cards that spiked,
-      the cards that dropped, and where the best value is across AU, NZ, US and UK stores.
+      the cards that dropped, and where the best value is across AU, US, UK, SG and CA stores.
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;

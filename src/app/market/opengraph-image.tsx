@@ -13,7 +13,7 @@ export default async function Image() {
   let level: string | null = null;
   let d7: number | null = null;
   try {
-    const index = await getMarketIndex("GLOBAL");
+    const index = await getMarketIndex();
     if (index) {
       level = index.latest.toFixed(1);
       d7 = index.d7;
@@ -83,7 +83,7 @@ export default async function Image() {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ color: "#cbd5e1", fontSize: 30, fontWeight: 500, maxWidth: 820 }}>
-            The Riftbound singles market in one number — updated daily.
+            The Riftbound singles market in one number — updated weekly.
           </div>
           <div style={{ color: accent, fontSize: 26, fontWeight: 700 }}>riftcompare.com/market</div>
         </div>

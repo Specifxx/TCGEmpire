@@ -50,3 +50,23 @@ export function AffiliateDisclosure({
     </p>
   );
 }
+
+// A per-LINK companion to AffiliateDisclosure above, not a replacement for it. The
+// panel-level disclosure carries the full "at no extra cost to you" sentence; this
+// is the short tag the FTC's 2023 Endorsement Guides revision asks for immediately
+// beside the individual link itself — the guides call out the bare phrase
+// "affiliate link" as insufficient on its own for a reader in a hurry, hence
+// "Paid link" here instead. Render this ONLY where the specific link is actually
+// monetised (see isPaidLink in lib/affiliate.ts) — labelling every row, including
+// the majority of Shopify store links that earn nothing today, would be an
+// inaccurate claim in the other direction.
+export function PaidLinkTag({ className }: { className?: string }) {
+  return (
+    <span
+      className={`chip bg-ink-800 text-[10px] text-slate-400 ${className ?? ""}`}
+      title="We earn a commission on purchases through this link, at no extra cost to you."
+    >
+      Paid link
+    </span>
+  );
+}

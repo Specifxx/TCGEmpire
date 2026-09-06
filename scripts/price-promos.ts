@@ -56,7 +56,7 @@ async function main() {
   await prisma.retailerPrice.deleteMany({ where: { retailer: "ebay", cardId: { in: promoIds } } });
   if (rows.length) await prisma.retailerPrice.createMany({ data: rows });
 
-  // Recompute the AU lowest for promo cards (NZ untouched — eBay is AU-only).
+  // Recompute the AU lowest for promo cards (eBay is AU-only).
   const priced = await prisma.retailerPrice.groupBy({
     by: ["cardId"],
     where: { inStock: true, country: "AU", cardId: { in: promoIds } },

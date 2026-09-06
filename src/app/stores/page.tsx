@@ -3,6 +3,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SITE_URL, CONTACT_EMAIL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { RETAILER_LIST } from "@/lib/retailers";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
   title: "RiftCompare for Stores — Pricing Intelligence for Riftbound Retailers",
   description:
     "Sell Riftbound? RiftCompare already compares your prices against every competitor, daily. Get the same intelligence we use: a live repricing report showing exactly where you're winning, losing, and leaving margin on the table.",
-  alternates: { canonical: "/stores" },
+  alternates: pageAlternates("/stores"),
 };
 
 const PITCH = [
@@ -32,11 +34,21 @@ const PITCH = [
 ];
 
 export default async function StoresPage() {
-  // Live social proof straight from the importer (no hand-maintained numbers).
-  const [stores, listings] = await Promise.all([
-    prisma.retailerPrice.groupBy({ by: ["retailer"] }).then((r) => r.length).catch(() => 0),
-    prisma.retailerPrice.count({ where: { inStock: true } }).catch(() => 0),
-  ]);
+  // "Stores" means real, currently-tracked retailers — RETAILER_LIST.length, the
+  // same single source of truth /stores/tracked uses — NOT a raw distinct count of
+  // every `retailer` key that has ever appeared in RetailerPrice. That raw count
+  // included eBay/marketguide/TCGplayer/Cardmarket pseudo-retailers (never real
+  // local stores) and any store since removed from retailers.ts whose old rows
+  // were never deleted, so this page and /stores/tracked disagreed (110 vs 142)
+  // about how many stores the site tracks — the same drift the homepage's own
+  // stat line fixed for the same reason (see the note in app/page.tsx). Listings
+  // are restricted to the SAME trusted key set for the same reason, so the two
+  // numbers on this page describe the same set of stores as each other.
+  const validRetailerKeys = RETAILER_LIST.map((r) => r.key);
+  const stores = RETAILER_LIST.length;
+  const listings = await prisma.retailerPrice
+    .count({ where: { inStock: true, retailer: { in: validRetailerKeys } } })
+    .catch(() => 0);
 
   return (
     <div className="mx-auto max-w-3xl">

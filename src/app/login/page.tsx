@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { getCurrentUser } from "@/lib/auth";
 import { enabledProviders } from "@/lib/oauth";
+import { pageAlternates } from "@/lib/seo";
+import { sanitizeNextPath } from "@/lib/next-param";
 
 // auth/utility — never indexed. The self-referencing canonical is what collapses
 // the ?next= family: the navbar's sign-in link carries the current path as ?next=,
@@ -13,15 +15,33 @@ import { enabledProviders } from "@/lib/oauth";
 // stop Google seeing the noindex — see app/robots.ts.)
 export const metadata: Metadata = {
   robots: { index: false },
-  alternates: { canonical: "/login" },
+  alternates: pageAlternates("/login"),
 };
 
-function safe(next?: string): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
-}
+// One line of destination-specific persuasion, so a visitor bounced here off a
+// gated feature (/watching, /portfolio redirect straight to /login?next=…)
+// lands on a reason instead of a cold form. Unknown destinations get none.
+const CONTEXT_LINES: Record<string, string> = {
+  "/watching": "Sign in to see and manage every card you're watching in one place.",
+  "/portfolio": "Sign in to track what your collection is worth, live.",
+  "/profile": "Sign in to get back to your account.",
+  "/dashboard": "Sign in to open your dashboard.",
+};
 
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   const user = await getCurrentUser();
-  if (user) redirect(safe(searchParams.next));
-  return <AuthForm mode="login" providers={enabledProviders()} />;
+  // "Safe internal path" is defined once in lib/next-param.ts (the OAuth start
+  // route and callback apply the same rule); the fallbacks differ per use:
+  // an already-signed-in visitor goes to /profile, a Cancel link goes home
+  // (an unauthenticated visitor sent to /profile would just bounce back here).
+  const next = sanitizeNextPath(searchParams.next);
+  if (user) redirect(next ?? "/profile");
+  return (
+    <AuthForm
+      providers={enabledProviders()}
+      cancelHref={next ?? "/"}
+      next={next ?? undefined}
+      contextLine={next ? CONTEXT_LINES[next] : undefined}
+    />
+  );
 }

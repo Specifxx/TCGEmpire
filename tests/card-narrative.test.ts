@@ -252,7 +252,7 @@ test("a card with no listings says so honestly and offers a real alternative", (
 });
 
 // Regression: the audit caught this. A card unpriced in the BASELINE market but
-// stocked elsewhere was being told it had no listings in any of the six markets,
+// stocked elsewhere was being told it had no listings in any of the five markets,
 // which is simply false — the page is cached on one market, not sold in one.
 test("a card unpriced in the baseline market but stocked elsewhere says so accurately", () => {
   const t = text(
@@ -265,7 +265,7 @@ test("a card unpriced in the baseline market but stocked elsewhere says so accur
       history: { points: [] },
     }),
   );
-  assert.doesNotMatch(t, /no live listing for .* in any of the six markets/i);
+  assert.doesNotMatch(t, /no live listing for .* in any of the five markets/i);
   assert.match(t, /available\s+elsewhere/);
   assert.match(t, /Australia/);
   assert.match(t, /the United Kingdom/);
@@ -281,7 +281,7 @@ test("only a card with NO stock in any market claims none anywhere", () => {
       history: { points: [] },
     }),
   );
-  assert.match(t, /no live listing for .* in any of the six markets/i);
+  assert.match(t, /no live listing for .* in any of the five markets/i);
 });
 
 test("an empty card never claims a trend or a spread", () => {
@@ -389,7 +389,7 @@ const ALL_SHAPES: Partial<NarrativeInput>[] = [
     // Triggers coverageNotes() with BOTH of its fragments: a priced baseline,
     // no history yet, and exactly one stocked market. That is the combination
     // that produced the reported "…before you check back. the United States is
-    // currently the only one of our six markets…" — a lowercase sentence start
+    // currently the only one of our five markets…" — a lowercase sentence start
     // from joining two mid-sentence fragments with ". ".
     markets: [market()],
     history: { points: [] },

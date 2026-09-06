@@ -103,7 +103,7 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
   if (!priced.length) {
     out.push(
       `Every card below links to its own page with its full text, its printings, and price comparison across ` +
-        `Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada.`,
+        `Australia, the United States, the United Kingdom, Singapore and Canada.`,
     );
     return out;
   }
@@ -124,20 +124,44 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
     let s =
       `Prices run from ${money(lo, c.currency)} to ${money(hi, c.currency)}, with a median of ` +
       `${money(median, c.currency)}.`;
-    if (topDecileShare >= 55) {
+    // THREE bands, not two — the middle 26-54% used to add nothing, which is why
+    // a set whose value genuinely isn't lopsided in either direction (neither a
+    // few chase cards carrying it nor an unusually even spread) got only the
+    // bare "prices run from…" sentence above and read as thinner than sets
+    // whose numbers happened to land in one of the two flagged bands. Same
+    // computed `topDecileShare`, same honesty rule (only true things, nothing
+    // padded) — this just states the unremarkable case explicitly instead of
+    // silently saying nothing about it.
+    //
+    // GUARDED on total_ > 0: an all-$0.00 collection (every member priced but
+    // worthless — a real, if rare, case) makes topDecileShare a 0/0 NaN, and the
+    // new middle band is the one branch of the three that would otherwise print
+    // it straight into the sentence ("for NaN% of the group's total value").
+    // The original two-branch version never hit this because `NaN >= 55` and
+    // `NaN <= 25` are both false — this preserves that same silent skip for the
+    // one case where there is genuinely nothing true to say about concentration.
+    if (total_ > 0 && topDecileShare >= 55) {
       s +=
         ` The value is heavily concentrated: the most expensive ${topDecileCount === 1 ? "card alone accounts" : `${topDecileCount} cards account`} ` +
         `for ${topDecileShare}% of what it would cost to buy one of everything here. If you are completing this set of cards, ` +
         `that handful is the whole budget — the rest is close to bulk.`;
-    } else if (topDecileShare <= 25) {
+    } else if (total_ > 0 && topDecileShare <= 25) {
       s +=
         ` Value is spread unusually evenly — no single card dominates the cost, so completing this group is a steady ` +
         `accumulation rather than one expensive purchase.`;
+    } else if (total_ > 0) {
+      s +=
+        ` The priciest ${plural(topDecileCount, "card")} here ${topDecileCount === 1 ? "accounts" : "account"} for ${topDecileShare}% of the group's ` +
+        `total value — a fairly ordinary spread, tilted toward the top end without one or two cards carrying the whole group.`;
     }
     out.push(s);
 
     if (c.siteMedianCents != null && c.siteMedianCents > 0) {
       const vs = Math.round(((median - c.siteMedianCents) / c.siteMedianCents) * 100);
+      // Same completeness fix as the concentration band above: under 20% either
+      // way used to add nothing at all. Stated plainly, it's still a real,
+      // useful fact — "this group prices about like everything else" is the
+      // honest answer for most sets, not a gap to leave blank.
       if (Math.abs(vs) >= 20) {
         out.push(
           `Against the ${money(c.siteMedianCents, c.currency)} median across every priced Riftbound card we track, ` +
@@ -145,6 +169,11 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
             (vs > 0
               ? `a premium group, and one worth checking postage on before buying card by card.`
               : `which makes it one of the cheaper places to buy in bulk, where a single combined order beats paying postage per card.`),
+        );
+      } else {
+        out.push(
+          `That ${money(median, c.currency)} median is close to the ${money(c.siteMedianCents, c.currency)} median across every ` +
+            `priced Riftbound card we track — ${subject} prices roughly in line with the rest of the game, no unusual premium or discount either way.`,
         );
       }
     }
@@ -157,7 +186,15 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
 
   // ── 3. Notable members, named ──────────────────────────────────────────────
   const byPrice = [...priced].sort((a, b) => b.priceCents - a.priceCents);
-  const dearest = byPrice.slice(0, 3);
+  // DEDUPE BY NAME. A collection routinely holds several printings of one card —
+  // a base, an alternate art, a Signature — and they cluster at the top of the
+  // price sort, so the raw top 3 read "Fury Rune at $195.73, Jhin at $190.47,
+  // Fury Rune at $188.86". Naming the same card twice reads as a bug and wastes
+  // one of only three slots that exist to tell a reader something new. The
+  // dearest printing of each distinct card wins, which is also the one a "cards
+  // to know" line should be quoting.
+  const seenNames = new Set<string>();
+  const dearest = byPrice.filter((m) => !seenNames.has(m.name) && seenNames.add(m.name)).slice(0, 3);
   const cheapest = byPrice[byPrice.length - 1];
   if (dearest.length >= 2) {
     out.push(
@@ -174,11 +211,11 @@ export function buildCollectionNarrative(c: CollectionInput): string[] {
 
   // ── 4. What a buyer should actually do with this ───────────────────────────
   const buyerAdvice: Record<CollectionKind, string> = {
-    champion: `Every printing of a ${c.label} card is a separate product with its own price — a promo, an alternate art and a Signature print of the same card rarely track each other. The prices below are the cheapest live listing for each printing, compared across all six markets we cover, so building a ${c.label} deck usually means checking which market each individual card is cheapest in rather than buying the whole list from one shop.`,
+    champion: `Every printing of a ${c.label} card is a separate product with its own price — a promo, an alternate art and a Signature print of the same card rarely track each other. The prices below are the cheapest live listing for each printing, compared across all five markets we cover, so building a ${c.label} deck usually means checking which market each individual card is cheapest in rather than buying the whole list from one shop.`,
     type: `${c.label} cards are bought for play far more often than for collection, which means condition matters less than price: a lightly played copy plays identically behind a sleeve. Sorting by delivered cost rather than sticker price is worth doing here — postage regularly outweighs the card on anything at the cheap end.`,
     rarity: `Rarity sets the pull rate, not the price. Plenty of ${c.label.toLowerCase()} cards here trade below cards two tiers under them, because demand comes from whether a card is played, not from what is printed on it. The prices below are what stores actually charge today.`,
     printing: `${c.label} printings are collector products: mechanically identical to the base card, priced entirely on scarcity and looks. If you want the card to play with, the base printing is on each card's own page and is almost always cheaper. If you want this one, the comparison below is the cheapest live listing in each market.`,
-    domain: `Domain decides what a card can go in, which is why ${c.label} prices move with the ${c.label} decks that are winning rather than with the rest of the set. Cards below are priced from the cheapest live listing across all six markets we track.`,
+    domain: `Domain decides what a card can go in, which is why ${c.label} prices move with the ${c.label} decks that are winning rather than with the rest of the set. Cards below are priced from the cheapest live listing across all five markets we track.`,
     set: `Buying a set card by card and buying sealed are different questions — the box EV calculator answers the second, and the prices below answer the first. Both use the same daily price data.`,
     keyword: `Cards sharing a keyword tend to be bought together, because they are what a deck built around that mechanic actually needs. Prices below are the cheapest live listing for each, so a whole shopping list can be costed in one pass rather than card by card.`,
   };

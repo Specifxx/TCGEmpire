@@ -66,7 +66,7 @@ async function main() {
     // Don't clone identity or per-printing state from the base:
     //  - slug is @unique → cloning it makes the insert throw; promos get their own
     //    ("-promo"-suffixed) slug.
-    //  - lowest prices (ALL four markets) belong to the base's listings, not this
+    //  - lowest prices (ALL FIVE markets) belong to the base's listings, not this
     //    new printing — the importer fills them in once real promo listings match.
     //  - view/search counts and eBay state are per-printing popularity signals.
     //  - collectorNumber: the donor is matched by its BARE number (or, for runes,
@@ -86,11 +86,11 @@ async function main() {
           isPromo: true,
           slug: cardSlug({ name: base.name, setCode: base.setCode, collectorNumber, isPromo: true }),
           lowestPriceCents: null,
-          lowestPriceCentsNz: null,
           lowestPriceCentsUs: null,
           lowestPriceCentsUk: null,
           lowestPriceCentsSg: null,
           lowestPriceCentsCa: null,
+          lowestPriceCentsEu: null,
           viewCount: 0,
           searchCount: 0,
           lastViewedAt: null,

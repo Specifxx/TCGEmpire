@@ -1,6 +1,6 @@
 import { prisma } from "./db";
 import { normalizeSearch } from "./format";
-import { pickPrice, priceField, type Country } from "./country";
+import { DEFAULT_COUNTRY, pickPrice, priceField, type Country } from "./country";
 import type { Prisma } from "@prisma/client";
 import metaDecksData from "../../prisma/meta-decks.json";
 
@@ -52,6 +52,11 @@ export interface ResolvedCardData {
   domain: string;
   type: string;
   rarity: string;
+  // Printed energy cost — powers the honest per-deck curve stats on /decks
+  // (lib/deck-hub-stats.ts). Optional-null because cached resolver output from
+  // before this column joined the select can persist for up to a revalidation
+  // cycle; every consumer treats "missing" as "unknown", never as 0.
+  energyCost?: number | null;
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
@@ -96,20 +101,21 @@ const CARD_SELECT = {
   domain: true,
   type: true,
   rarity: true,
+  energyCost: true,
   imageThumbUrl: true,
   imageUrl: true,
   lowestPriceCents: true,
-  lowestPriceCentsNz: true,
   lowestPriceCentsUs: true,
   lowestPriceCentsUk: true,
   lowestPriceCentsSg: true,
   lowestPriceCentsCa: true,
+  lowestPriceCentsEu: true,
 } as const;
 
 // Build a name -> cheapest base printing map for a set of card names in ONE query.
 // (Resolving each card individually would fire ~100 queries per page and can
 // exhaust the serverless DB connection pool.) Prices reflect the selected market:
-// ResolvedCardData.lowestPriceCents is set to the AU or NZ column accordingly.
+// ResolvedCardData.lowestPriceCents is set to the market's column accordingly.
 async function buildCardMap(names: string[], country: Country): Promise<Map<string, ResolvedCardData>> {
   const keys = Array.from(new Set(names.map(normalizeSearch)));
   const field = priceField(country);
@@ -181,12 +187,12 @@ function resolveDeckFromMap(seed: MetaDeckSeed, map: Map<string, ResolvedCardDat
   };
 }
 
-export async function resolveDeck(seed: MetaDeckSeed, country: Country = "AU"): Promise<ResolvedDeck> {
+export async function resolveDeck(seed: MetaDeckSeed, country: Country = DEFAULT_COUNTRY): Promise<ResolvedDeck> {
   const map = await buildCardMap([seed.legend, ...seed.cards.map((c) => c.name)], country);
   return resolveDeckFromMap(seed, map);
 }
 
-export async function resolveAllDecks(country: Country = "AU"): Promise<ResolvedDeck[]> {
+export async function resolveAllDecks(country: Country = DEFAULT_COUNTRY): Promise<ResolvedDeck[]> {
   const allNames = META_DECKS.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]);
   const map = await buildCardMap(allNames, country);
   return META_DECKS.map((d) => resolveDeckFromMap(d, map));

@@ -48,7 +48,7 @@ export const AUTHORS: Author[] = [
     type: "Organization",
     role: "RiftCompare editorial team",
     bio: [
-      "RiftCompare is an independent price-comparison site for Riftbound: League of Legends TCG, tracking singles and sealed product across stores in Australia, New Zealand, the United States, the United Kingdom, Singapore and Canada.",
+      "RiftCompare is an independent price-comparison site for Riftbound: League of Legends TCG, tracking singles and sealed product across stores in Australia, the United States, the United Kingdom, Singapore and Canada.",
       "The guides and posts published under this byline are written by the people who run the site. They are researched against the same price database the rest of the site is built on, which means the figures quoted in an article are the figures our importer actually recorded — not estimates, and not numbers carried over from somewhere else.",
       "We are not affiliated with, endorsed by, or sponsored by Riot Games. We do not accept payment for coverage, and no retailer has any say in what we publish or how results are ranked. Where an outbound link earns us a commission it is marked as such, on the page, next to the link.",
       "What we can claim expertise in is narrow and specific: the prices. We have been importing and reconciling Riftbound listings from every store we track since the game launched, which means we know where the data is reliable, where it is thin, and where a headline number is misleading — a card listed at a low price by one shop that never has stock, a printing routinely confused with its base card, a market where postage is the real cost. That is what the guides are about, and it is why they quote figures from the same database the rest of the site runs on rather than from other sites.",
@@ -59,24 +59,6 @@ export const AUTHORS: Author[] = [
       "Card rarity, printings and variant explainers",
       "Market commentary and price analysis",
       "How-to guides for collecting, storing and selling",
-    ],
-  },
-  {
-    slug: "riftcompare-markets-desk",
-    name: "RiftCompare Markets Desk",
-    type: "Organization",
-    role: "Market data and price reporting",
-    bio: [
-      "The Markets Desk byline covers writing that is generated directly from the RiftCompare price database rather than composed by hand — index movements, price snapshots and the numbers behind our market coverage.",
-      "It is a separate byline on purpose. Anything published under it is derived from recorded data with a fixed methodology, and we would rather label that plainly than pass it off as hand-written analysis.",
-      "Prices are collected daily from public store listings and marketplace APIs, matched to a specific printing by set code and collector number rather than by name, so a promo, an alternate art and a Signature print are never conflated into one figure.",
-      "The methodology is deliberately dull and deliberately fixed: cheapest live in-stock listing per card per market, ranked by delivered cost where a store's postage is known, never converted between currencies to declare a cross-market winner. When the data cannot support a claim, the claim is left out rather than estimated. Our editorial policy sets out the whole procedure, including how often each surface refreshes and how to report a figure that is wrong.",
-      "Nothing under this byline is investment advice, and card prices can and do fall.",
-    ],
-    covers: [
-      "The RiftCompare Index",
-      "Daily price snapshots and movers",
-      "Set-level price distributions",
     ],
   },
 ];

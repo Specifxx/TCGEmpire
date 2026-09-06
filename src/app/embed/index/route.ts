@@ -1,4 +1,5 @@
-import { getMarketIndex, type MarketScope } from "@/lib/market-index";
+import { getMarketIndex } from "@/lib/market-index";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 
 // Embeddable RiftCompare Index widget — a chrome-free HTML doc (no app layout) that
@@ -8,9 +9,13 @@ import { SITE_URL } from "@/lib/site";
 // Route handler so it escapes the root layout and can be framed cross-origin.
 export const revalidate = 1800;
 
-function parseMarket(v: string | null): MarketScope {
+function parseMarket(v: string | null): Country {
   const up = (v ?? "").toUpperCase();
-  return up === "AU" || up === "NZ" || up === "US" || up === "UK" ? (up as MarketScope) : "GLOBAL";
+  // Registry-driven, matching /market's own parseMarket — the original version of
+  // this route hand-listed AU/US/UK only, which silently dropped SG and CA to the
+  // default market (the exact staleness /market's own parseMarket comment warns
+  // about) rather than actually erroring.
+  return up in COUNTRIES ? (up as Country) : DEFAULT_COUNTRY;
 }
 
 // Build a tiny SVG sparkline (no JS) from the index series.

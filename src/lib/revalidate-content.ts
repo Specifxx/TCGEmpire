@@ -11,12 +11,37 @@ import { SECTIONS } from "./sitemap-sections";
 // /api/revalidate and /api/cron/refresh-prices.
 export const CONTENT_TAG = "content";
 
+// HISTORY-DB READS ARE TAGGED SEPARATELY, AND revalidateContent() DELIBERATELY
+// DOES NOT PURGE THIS ONE.
+//
+// The whole-market history reads (movers, recently-updated, per-card charts) are
+// the single largest source of history-database egress on the site: each one is
+// "every card in this market across a window", ~1,400 cards wide, and there is
+// one per market. They were tagged CONTENT_TAG, so every price import — twice a
+// day — purged them and forced all six markets to re-scan. Their nominal 48h TTL
+// never got anywhere near expiring; the tag bust, not the timer, set the real
+// read rate.
+//
+// Splitting the tag is what lets price data stay twice-daily fresh while history
+// moves to a weekly cadence (see lib/price-history.ts). Purging this tag is now a
+// deliberate act — nothing on the import path fires it.
+export const HISTORY_TAG = "history";
+
 export function revalidateContent(): string[] {
   // GENUINELY STATIC / ISR pages (no cookie or searchParams read). Passing the
   // dynamic route pattern with "page" purges EVERY matching URL — all ~1,200
   // /card/* pages at once — which is the whole point.
   const staticPaths: [string, "page"][] = [
     ["/", "page"],
+    // Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc.)
+    // share the homepage's own getHomeStats() cache entry (lib/home-stats.ts,
+    // tagged CONTENT_TAG below) but each still needs its own page-level purge,
+    // same as "/" above, or it would keep serving its pre-import HTML for up to
+    // an hour after the tag bust.
+    ["/au", "page"],
+    ["/uk", "page"],
+    ["/sg", "page"],
+    ["/ca", "page"],
     ["/movers", "page"],
     // Box EV became genuinely static once it stopped reading cookies() for the
     // country (it now values everything in USD and converts client-side), so it
@@ -27,6 +52,24 @@ export function revalidateContent(): string[] {
     ["/card/[id]", "page"],
     ["/sets/[set]", "page"],
     ["/domains/[slug]", "page"],
+    // THE ARTICLES. Blog posts and guides embed live card galleries (see
+    // ArticleView's resolveEmbed), so they are price-derived surfaces like every
+    // path above — but they were missing from this list, and the compensation
+    // was a 600-second `export const revalidate` on both routes.
+    //
+    // That is the expensive half of the strategy this file's header describes,
+    // inverted. 56 posts + 38 guides = 94 prerendered pages regenerating 144x a
+    // day each: ~13,500 renders a day, every one of them re-running that
+    // article's embed queries, instead of the ~2 a day an import actually makes
+    // necessary. /feed.xml, /feed.json and /news-sitemap.xml carried the same
+    // 600 for the same reason and are purged here too.
+    //
+    // With the purge in place the TTL is a 24h fallback again, and freshness
+    // goes UP, not down: an import now clears these immediately rather than
+    // leaving them up to ten minutes stale.
+    ["/blog", "page"],
+    ["/blog/[slug]", "page"],
+    ["/guides/[slug]", "page"],
   ];
   for (const [p, type] of staticPaths) revalidatePath(p, type);
 
@@ -38,12 +81,21 @@ export function revalidateContent(): string[] {
   // Each child is purged BY NAME rather than via the dynamic-route pattern:
   // revalidatePath's type argument only accepts "page" | "layout", so there's no
   // supported way to purge every instance of a dynamic ROUTE HANDLER in one call.
-  // Eleven explicit paths are cheap and unambiguous.
+  // Iterating SECTIONS keeps this correct as sections are added — it is not a
+  // hand-maintained list, so a new child sitemap can't be forgotten here.
   revalidatePath("/sitemap.xml");
   for (const id of SECTIONS) revalidatePath(`/sitemaps/${id}.xml`);
 
+  // Article feeds — route handlers, so they need naming individually for the
+  // same reason the child sitemaps do (revalidatePath's type argument takes only
+  // "page" | "layout"). These three carried `export const revalidate = 600`
+  // alongside the article pages; they are purged here so they can drop to a 24h
+  // fallback with everything else.
+  for (const feed of ["/feed.xml", "/feed.json", "/news-sitemap.xml"]) revalidatePath(feed);
+
   // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
-  // /tools/box-ev) render per-request, so revalidatePath can't purge
+  // /decks/archetype/[slug], /decks/domain/[slug], /tools/box-ev) render
+  // per-request, so revalidatePath can't purge
   // them — but each wraps its heavy DB read in unstable_cache tagged CONTENT_TAG
   // (as does the homepage's cached data). Clearing the tag makes them all refetch on
   // the next request. (/sealed self-refreshes via its own 15-min in-process memo.)

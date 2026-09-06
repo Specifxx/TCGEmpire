@@ -37,6 +37,21 @@ const ADS_FRAME_SRC = [
   "https://www.google.com",
   "https://fundingchoicesmessages.google.com",
 ];
+// Google Analytics 4 (gtag.js) + its collection endpoints. Mirrors
+// GA_SCRIPT_ORIGINS / GA_CONNECT_ORIGINS in src/lib/ga.ts — next.config.js can't
+// import a TS module at config-load time, so this is a duplicated literal like
+// the ADS_* array around it. The CSP is Report-Only today, but the header
+// comment's rule is that the allow-list stays correct and complete so
+// promoting it to enforcing can never silently kill measurement.
+const GA_SCRIPT_SRC = ["https://www.googletagmanager.com"];
+const GA_CONNECT_SRC = [
+  "https://www.googletagmanager.com",
+  "https://www.google-analytics.com",
+  // Regional collectors: region1.google-analytics.com, analytics.google.com, ...
+  "https://*.google-analytics.com",
+  "https://*.analytics.google.com",
+];
+
 const ADS_CONNECT_SRC = [
   "https://pagead2.googlesyndication.com",
   "https://googleads.g.doubleclick.net",
@@ -52,13 +67,13 @@ const ADS_CONNECT_SRC = [
 
 const cspReportOnly = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")}`,
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://*.vercel-insights.com ${ADS_SCRIPT_SRC.join(" ")} ${GA_SCRIPT_SRC.join(" ")}`,
   "style-src 'self' 'unsafe-inline'",
   // Ad creatives and tracking pixels come from arbitrary advertiser domains, so
   // img-src must stay open to https: — narrowing it would blank creatives.
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")}`,
+  `connect-src 'self' https://*.vercel-insights.com https://vitals.vercel-insights.com https://cdn.riftscribe.gg ${ADS_CONNECT_SRC.join(" ")} ${GA_CONNECT_SRC.join(" ")}`,
   // Ads render inside cross-origin iframes; the consent message does too.
   `frame-src 'self' https: ${ADS_FRAME_SRC.join(" ")}`,
   "frame-ancestors 'self'",
@@ -87,6 +102,35 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    // Lets next/image re-encode (AVIF/WebP) and downsize these hotlinked CDNs
+    // instead of shipping their full-resolution source at thumbnail display
+    // size. cdn.riftscribe.gg (card art for the bulk-imported catalogue),
+    // cmsassets.rgpub.io (Riot's own CDN — card art for Vendetta and every set
+    // onward, see prisma/riftbound-cards.json vs. the live-feed import) and
+    // tcgplayer-cdn.tcgplayer.com (sealed product photos, served at a fixed
+    // 1000x1000) are single, fixed hosts, so they're safe to allow-list
+    // outright. i.ebayimg.com is listed too, but components/EbayPicksLive.tsx
+    // and EbayAdCarouselLive.tsx deliberately stay on a plain <img>: eBay
+    // listing photos come from whichever host the seller's listing happens to
+    // use, not always this one, and next/image throws for any host not on
+    // this list — see the comment at their <img> tags.
+    //
+    // cmsassets.rgpub.io was missing until 2026-08-13: every card.imageUrl /
+    // imageThumbUrl from Vendetta onward points there (see the live-feed
+    // import), and components/TodaysTopDeals.tsx renders deal.imageUrl
+    // through next/image directly — so once Vendetta started dominating
+    // "today's deals" as the newest, most-traded set, a large share of that
+    // section's thumbnails 400'd instead of rendering. cdn.riftscribe.gg-only
+    // cards (everything pre-Vendetta) were unaffected, which is why this
+    // wasn't visible until Vendetta's card mix caught up.
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.riftscribe.gg" },
+      { protocol: "https", hostname: "cmsassets.rgpub.io" },
+      { protocol: "https", hostname: "tcgplayer-cdn.tcgplayer.com" },
+      { protocol: "https", hostname: "i.ebayimg.com" },
+    ],
+  },
   async redirects() {
     return [
       // Confirmed 404 in Search Console: an incomplete/truncated deck slug (the
@@ -105,6 +149,49 @@ const nextConfig = {
         destination: "/browse",
         permanent: true,
       },
+      // Retired the "Sell us your cards" buylist lander. It described a service
+      // that doesn't exist — a four-step mail-in flow around a placeholder postal
+      // address ("PO Box 0000") that was never replaced with a real one, so every
+      // visitor who followed it to the end was told to post cards to nowhere.
+      // The page was noindex/nofollow and only reachable from the command
+      // launcher, so there is nothing indexed to preserve; the redirect is purely
+      // so a bookmark or launcher-history entry lands somewhere instead of 404ing.
+      // Points at the homepage now that the marketplace (its old target) is gone.
+      {
+        source: "/sell-cards",
+        destination: "/",
+        permanent: true,
+      },
+      // These three shipped as guides and were moved to the blog shortly after.
+      // Both routes assert the article's category (app/guides/[slug]/page.tsx
+      // notFound()s when it isn't "guide"), so the old paths became hard 404s the
+      // moment the category flipped — and they had already been served live and
+      // listed in sitemaps/content.xml. 301 rather than leave them dead.
+      //
+      // These are safe to keep permanently: /guides/[slug] is a dynamic route, so
+      // a static source here only ever shadows a slug that no longer resolves
+      // under /guides. Should any of the three ever move back, delete its entry —
+      // a permanent redirect is browser-cached and would otherwise win.
+      // how-to-read and whats-in-unleashed were then RETIRED outright in the
+      // Aug 2026 low-performer prune (zero Search Console impressions under
+      // either URL form), so their old /guides sources now point straight at
+      // each post's surviving equivalent rather than chaining through the dead
+      // /blog URL (their own /blog redirects live in the prune block below).
+      {
+        source: "/guides/how-to-read-a-riftbound-card",
+        destination: "/guides/riftbound-rules-explained",
+        permanent: true,
+      },
+      {
+        source: "/guides/every-ahri-card-in-riftbound",
+        destination: "/blog/every-ahri-card-in-riftbound",
+        permanent: true,
+      },
+      {
+        source: "/guides/whats-in-the-riftbound-unleashed-set",
+        destination: "/sets/unleashed",
+        permanent: true,
+      },
       // Retired the proxy printer entirely (thin/low-value utility page, part of
       // the AdSense Publisher Policy remediation). 301 any indexed/inbound links
       // (incl. ?list= shares) to the deck pricer, its nearest surviving equivalent.
@@ -113,14 +200,13 @@ const nextConfig = {
         destination: "/deck",
         permanent: true,
       },
-      // Retired the daily-market-wrap archive and stopped generating new auto-
-      // reports entirely (see lib/market-report.ts) — a run of near-identical
-      // templated pages, one per day forever, was exactly the "scaled content
-      // abuse" shape putting the AdSense application at risk. 301 to the real
-      // Index tool rather than 404ing any indexed/inbound links.
+      // The daily-market-wrap archive, the auto-generated market reports and the
+      // RiftCompare Index have all been retired. 301 any surviving inbound/indexed
+      // /market/wrap links to the price movers page — the closest live surface —
+      // rather than 404ing them.
       {
         source: "/market/wrap",
-        destination: "/market",
+        destination: "/movers",
         permanent: true,
       },
       // CONSOLIDATION (AdSense remediation § Phase 12b). "Where to Buy Riftbound
@@ -136,6 +222,83 @@ const nextConfig = {
         destination: "/guides/where-to-buy-riftbound-cards",
         permanent: true,
       },
+      // CONSOLIDATION (AdSense remediation § Phase 25). A second content-quality
+      // pass, prompted by a fresh AdSense rejection citing "low value content".
+      // The audit tool (scripts/adsense-audit.ts) reports 0 near-duplicate
+      // clusters at its 90%-shingle-similarity threshold, so this cluster is
+      // real but a level the automated check doesn't catch: seven posts that
+      // independently restate the same handful of facts about ONE product
+      // launch (Vendetta, 31 Jul 2026) rather than sharing literal text — same
+      // topic, same intent, different wording. Now three weeks-plus stale, they
+      // added nothing a reader couldn't get from one canonical page. Consolidated
+      // into the two pages that already covered the same ground best, and
+      // nothing unique was lost — verified article-by-article before deleting.
+      //
+      // Three "all 166 Vendetta cards" posts → the one with the actual live,
+      // filterable card gallery embedded (not just prose about the card count).
+      { source: "/guides/riftbound-vendetta-card-list", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      { source: "/blog/riftbound-vendetta-spoiler-season-complete-166-cards", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      // A third "how RiftCompare prices Vendetta cards" post that duplicated the
+      // same live gallery embed as the page above, with generic prose around it.
+      { source: "/blog/riftbound-vendetta-card-prices-where-to-buy-cheapest", destination: "/blog/every-riftbound-vendetta-card-revealed", permanent: true },
+      // Three "get ready for Vendetta" posts (a pre-release announcement, a
+      // launch-week checklist, a release-date countdown) that restated the same
+      // four-item checklist — wishlist, compare sealed, price your deck, don't
+      // overpay — into the one hub post that already contains it, plus the full
+      // set rundown the other three didn't have.
+      // …their hub post itself was then retired in the Aug 2026 low-performer
+      // prune (4 impressions in 28 days, 7 weeks after publishing), so all
+      // three — and the early-release post below — now point at the Vendetta
+      // set hub, the surviving page that answers the same query, rather than
+      // chaining through the dead post.
+      { source: "/blog/riftbound-vendetta-next-set", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-launch-week-buying-checklist", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-countdown-how-long-until-release", destination: "/sets/vendetta", permanent: true },
+      // A second general "how to buy Riftbound cards" guide that linked to the
+      // same five regional posts as its sibling and covered the same singles-
+      // vs-sealed ground; the survivor (just expanded to 6 markets / 100+ stores)
+      // already covers everything this one did.
+      { source: "/blog/where-to-buy-riftbound-singles", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
+      // CONSOLIDATION (AdSense remediation § Phase 26). A deeper editorial pass at
+      // the user's request ("a lot of irrelevant blog posts... remove"), on top of
+      // Phase 25's duplicate-topic cleanup. These seven are a different failure
+      // mode: not duplicates of each other, but posts whose entire premise has
+      // expired — a site-launch announcement now superseded by /about, a meta
+      // snapshot for a metagame that no longer exists (and was actively wrong to
+      // leave live), a "should you buy before X drops" question X has since
+      // answered, an "early trickle" trading-window post for a window that closed
+      // weeks ago, and a now-closed collectible drawing's dated logistics (its
+      // still-good analysis was merged forward, not lost — see
+      // riftbound-t1-worlds-champion-collection in src/lib/articles.ts). Each
+      // verified individually before deletion; every internal link into them was
+      // found and repointed rather than left to ride the redirect.
+      { source: "/blog/welcome-to-riftcompareau", destination: "/about", permanent: true },
+      { source: "/blog/unleashed-meta-snapshot-june-2026", destination: "/decks", permanent: true },
+      { source: "/blog/should-you-buy-riftbound-origins-before-vendetta", destination: "/guides/why-riftbound-card-prices-change", permanent: true },
+      { source: "/blog/riftbound-vendetta-is-here-early-release", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/how-to-start-buying-riftbound-vendetta-decks", destination: "/guides/best-riftbound-vendetta-decks", permanent: true },
+      { source: "/blog/riftbound-t1-signature-edition-drawing", destination: "/blog/riftbound-t1-worlds-champion-collection", permanent: true },
+      // LOW-PERFORMER PRUNE (Aug 2026, at the user's request). The ten lowest-
+      // performing blog posts by 28-day Search Console impressions, among posts
+      // published more than 7 days before the prune (the GSC monitor's
+      // worst-first /blog/ table is the ranking; posts absent from it entirely
+      // had zero impressions). Seven of the ten had literally no impressions;
+      // the other three had 2, 4 and 19 across a full month. Each 301 targets
+      // the surviving page that best answers the retired post's query — never
+      // /blog generically — per the convention of the blocks above. Internal
+      // links into all ten were found and repointed (sets/[set], keywords,
+      // blog FEATURED_POSTS), not left to ride these redirects.
+      { source: "/blog/how-to-read-a-riftbound-card", destination: "/guides/riftbound-rules-explained", permanent: true },
+      { source: "/blog/whats-in-the-riftbound-unleashed-set", destination: "/sets/unleashed", permanent: true },
+      { source: "/blog/ggez-teemo-riftbound-explained", destination: "/champions/teemo", permanent: true },
+      { source: "/blog/lee-sin-centered-nexus-night-promo", destination: "/blog/riftbound-vendetta-nexus-night-promo-cards", permanent: true },
+      { source: "/blog/mel-newly-awakened-vendetta-spotlight", destination: "/blog/riftbound-vendetta-nexus-night-promo-cards", permanent: true },
+      { source: "/blog/why-origins-cards-are-worth-more", destination: "/sets/origins", permanent: true },
+      { source: "/blog/riftbound-cards-to-watch", destination: "/movers", permanent: true },
+      { source: "/blog/riftbound-price-movers-how-to-track", destination: "/movers", permanent: true },
+      { source: "/blog/riftbound-vendetta-everything-you-need-to-know", destination: "/sets/vendetta", permanent: true },
+      { source: "/blog/riftbound-vendetta-new-mechanics-flow-burn-empower", destination: "/guides/riftbound-empower-explained", permanent: true },
+      { source: "/blog/riftbound-vendetta-synergies-with-existing-cards", destination: "/guides/building-for-riftbound-vendetta", permanent: true },
       // The tool is called "Deal Finder" in its own H1, nav entry, metadata and
       // every internal link — only the URL still said "arbitrage", a word no
       // buyer searches for. Renamed to /tools/deal-finder; this 301 preserves
@@ -160,7 +323,13 @@ const nextConfig = {
       { source: "/guides/us", destination: "/blog/buy-riftbound-cards-us", permanent: true },
       { source: "/guides/uk", destination: "/blog/buy-riftbound-cards-uk", permanent: true },
       { source: "/guides/au", destination: "/blog/buy-riftbound-cards-australia", permanent: true },
-      { source: "/guides/nz", destination: "/blog/buy-riftbound-cards-nz", permanent: true },
+      // NZ was removed as a supported market 2026-08-20 (see lib/country.ts);
+      // /nz (the region homepage), /guides/nz and /blog/buy-riftbound-cards-nz
+      // no longer exist, so any inbound link/bookmark now lands somewhere real
+      // instead of a 404.
+      { source: "/nz", destination: "/", permanent: true },
+      { source: "/guides/nz", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
+      { source: "/blog/buy-riftbound-cards-nz", destination: "/guides/where-to-buy-riftbound-cards", permanent: true },
       { source: "/guides/ca", destination: "/blog/buy-riftbound-cards-canada", permanent: true },
       { source: "/guides/sg", destination: "/blog/riftbound-price-comparison-singapore", permanent: true },
       // The watchlist/alerts explainer lives at /alerts; /watchlist is the other
@@ -178,14 +347,44 @@ const nextConfig = {
       // Sending it to the set page keeps that equity on a page that still
       // answers the query, instead of dropping it on the floor.
       { source: "/vendetta-countdown", destination: "/sets/vendetta", permanent: true },
+      // ...and /radiance-countdown, which replaced it, is retired for the same
+      // reason one release earlier than last time: a page named after a set goes
+      // stale on a date you can see coming. /release-dates is the permanent
+      // replacement — it reads lib/release-calendar.ts, counts down to whichever
+      // release is next, and needs no edit on release day. This is the last
+      // redirect this slot should ever need.
+      //
+      // 301, NOT 404: /radiance-countdown carried the "riftbound radiance
+      // release date" query and was internally linked from the nav, the
+      // homepage, the pre-order page and half a dozen articles. The destination
+      // answers the same query (it leads with Radiance's date until Radiance
+      // ships), so the equity moves rather than being dropped.
+      { source: "/radiance-countdown", destination: "/release-dates", permanent: true },
       // ROTATED-OUT META DECKS. /decks tracks the live metagame, so a legend that
       // drops out of the tier list loses its deck page. These three were Tier 1-2
       // in the Unleashed era and fell out of the Vendetta tier list; their URLs
       // were indexed and internally linked, so they 301 to the deck index rather
       // than 404. Add a line here whenever a slug leaves prisma/meta-decks.json.
+      // RETIRED PASSWORD AUTH. Sign-in is Google/Discord only; /register, /forgot
+      // and /reset no longer exist. They were linked from the navbar, a dozen
+      // in-page CTAs and previously-sent emails, so they 301 to /login — which is
+      // now both "sign in" and "create account" — rather than 404.
+      { source: "/register", destination: "/login", permanent: true },
+      { source: "/forgot", destination: "/login", permanent: true },
+      { source: "/reset", destination: "/login", permanent: true },
       { source: "/decks/leblanc-deceiver", destination: "/decks", permanent: true },
       { source: "/decks/fiora-grand-duelist", destination: "/decks", permanent: true },
       { source: "/decks/vex-gloomist", destination: "/decks", permanent: true },
+      // AI-AGENT ".md" CONVENTION. llms.txt and llms-full.txt tell agents that a
+      // card page's markdown version is reachable by appending ".md" to its URL —
+      // but /card/<slug> is a real page route, not a markdown one, so
+      // /card/<slug>.md 404'd. The actual markdown route is /llm/card/<slug> (see
+      // app/llm/card/[id]/route.ts and the card page's own rel=alternate
+      // type=text/markdown link). Rather than rewrite the docs to a less
+      // discoverable convention, this makes the documented shorthand real: a
+      // named param followed by a literal suffix in the same segment is a
+      // supported next.config.js redirect pattern.
+      { source: "/card/:slug.md", destination: "/llm/card/:slug", permanent: true },
     ];
   },
   async headers() {

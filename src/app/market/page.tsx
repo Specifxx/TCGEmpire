@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getMarketIndex, INDEX_SIZE, type MarketScope, type IndexConstituent } from "@/lib/market-index";
+import { getMarketIndex, INDEX_SIZE, type IndexConstituent } from "@/lib/market-index";
 import { IndexChart } from "@/components/IndexChart";
 import { MarketSwitcher } from "@/components/MarketSwitcher";
-import { COUNTRIES, type Country } from "@/lib/country";
+import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -13,15 +13,33 @@ import { MarketSectionNav } from "@/components/MarketSectionNav";
 import { IndexStats } from "@/components/IndexStats";
 import { IndexConstituents } from "@/components/IndexConstituents";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
-// Recompute hourly — the underlying PriceHistory only changes on the daily import,
-// so a longer cache window keeps DB egress down without losing meaningful freshness.
-export const revalidate = 3600;
+// searchParams-driven (?market=), so the route is dynamic regardless of any
+// page-level revalidate window — same reasoning as /browse and /sets/[set]. The
+// real caching lives one layer down: getMarketIndex() is itself day-cached via
+// unstable_cache (see lib/market-index.ts), shared across every caller, so this
+// page hits Postgres at most once per market per Sydney day no matter how the
+// page component itself is rendered — a page-level `revalidate` bought nothing
+// here that wasn't already bought there.
+//
+// This used to be `export const revalidate = 3600` with a market/loading.tsx
+// above it. That combination — an ISR revalidate window on a page that ALSO
+// reads searchParams, with a route-level Suspense boundary via loading.tsx — is
+// exactly what produced a real, reproducible bug: the FIRST-ever request for any
+// specific `?market=` value the ISR cache hadn't seen returned the loading.tsx
+// spinner as the COMPLETE, final response (confirmed via a bare fetch — no JS
+// execution needed to reproduce it), with the real content only appearing on a
+// second visit once the background render finished. A crawler's first (and
+// often only) visit to a URL variant would have seen nothing. force-dynamic
+// removes the ambiguity: every request blocks until the real render is ready,
+// so there's nothing to fall back to.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { absolute: "The RiftCompare Index — Riftbound Market Tracker | RiftCompare" },
   description:
-    "One number for the global Riftbound market: a weighted daily index of the most-searched cards — like a stock index for the game. Updated daily, free to cite.",
+    "One number for the global Riftbound market: a weighted index of the most-searched cards — like a stock index for the game. Updated weekly, free to cite.",
   keywords: [
     "RiftCompare Index",
     "Riftbound market index",
@@ -30,24 +48,24 @@ export const metadata: Metadata = {
     "Riftbound market health",
     "TCG market index",
   ],
-  alternates: {
-    canonical: "/market",
+  alternates: pageAlternates("/market", {
     types: { "text/markdown": `${SITE_URL}/llm/market` },
-  },
+  }),
   openGraph: {
     title: "The RiftCompare Index — the Riftbound market in one number",
     description:
-      "One number for the global Riftbound market: a weighted daily index of the most-searched cards — like a stock index for the game. Updated daily, free to cite.",
+      "One number for the global Riftbound market: a weighted index of the most-searched cards — like a stock index for the game. Updated weekly, free to cite.",
     url: `${SITE_URL}/market`,
   },
 };
 
-function parseMarket(v?: string): MarketScope {
+function parseMarket(v?: string): Country {
   const up = (v ?? "").toUpperCase();
   // Validated against the market registry rather than a hand-written || chain —
-  // that chain had silently gone stale: it never listed SG, so ?market=SG rendered
-  // the GLOBAL index instead of Singapore's, and CA would have done the same.
-  return up in COUNTRIES ? (up as Country) : "GLOBAL";
+  // that chain had silently gone stale: it never listed SG, so ?market=SG fell
+  // back to the default instead of rendering Singapore's, and CA would have
+  // done the same.
+  return up in COUNTRIES ? (up as Country) : DEFAULT_COUNTRY;
 }
 
 // A compact gainers/fallers column derived from the Index constituents' own 7-day moves.
@@ -98,7 +116,6 @@ function Delta({ label, pct }: { label: string; pct: number | null }) {
 
 export default async function IndexPage({ searchParams }: { searchParams: { market?: string } }) {
   const market = parseMarket(searchParams.market);
-  const isGlobal = market === "GLOBAL";
   // getMarketIndex is day-cached internally (once per market per Sydney day, shared
   // across every caller), so it needs no page-level wrapper — that only re-serialised
   // the same blob without cutting history-DB reads. Auto-refreshes at the day rollover.
@@ -115,11 +132,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
     .sort((a, b) => (a.d7pct ?? 0) - (b.d7pct ?? 0))
     .slice(0, 5);
 
-  // Display chrome. GLOBAL has no single currency/region, so prices fall back to the
-  // composite's reference region (carried on the index as `currency`/`priceMarket`).
-  const heading = isGlobal ? "Global" : `${COUNTRIES[market as Country].code}`;
-  const currency = index?.currency ?? (isGlobal ? "USD" : COUNTRIES[market as Country].currency);
-  const priceMarket = index?.priceMarket ?? "AU";
+  const heading = COUNTRIES[market].code;
+  const currency = index?.currency ?? COUNTRIES[market].currency;
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -138,7 +152,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         "@context": "https://schema.org",
         "@type": "Dataset",
         name: "The RiftCompare Index",
-        description: `Daily weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards${isGlobal ? " across every market we track" : ""}. Base 100 on ${index.startDay}.`,
+        description: `Weekly weighted price index of the ${index.constituents.length} most-searched Riftbound TCG cards. Base 100 on ${index.startDay}.`,
         url: `${SITE_URL}/market`,
         creator: { "@type": "Organization", name: "RiftCompare", "@id": `${SITE_URL}/#org`, url: SITE_URL },
         license: `${SITE_URL}/market#cite`,
@@ -187,13 +201,21 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             The Riftbound market in one number. The Index tracks the live prices of the{" "}
             {index?.constituents.length ?? INDEX_SIZE} most-searched cards on RiftCompare as a
-            search-weighted daily index — like a stock index for the game. When the cards players
+            search-weighted index, updated weekly — like a stock index for the game. When the cards players
             actually chase get dearer, the Index rises; when the market cools, it falls.{" "}
-            {isGlobal ? (
-              <>By default it&apos;s the <strong className="text-slate-200">global composite</strong> — every region we track, blended into one currency-agnostic number. Use the Market selector to drill into a single region.</>
-            ) : (
-              <>You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market as Country].place}</strong> market, priced from {COUNTRIES[market as Country].adjective} stores. Switch back to Global at the top right.</>
-            )}
+            You&apos;re viewing the <strong className="text-slate-200">{COUNTRIES[market].place}</strong> market,
+            priced from {COUNTRIES[market].adjective} stores. Switch markets using the selector at the top right.
+          </p>
+          {/* The Index is today's number; records are the same data asked the
+              other way round ("what is the most this has ever been?"). Linked
+              from the top rather than buried at the bottom because it is the
+              page a visitor searching "riftbound all-time high" wants, and they
+              land here. */}
+          <p className="mt-3 text-sm">
+            <Link href="/market/records" className="font-semibold text-brand-400 hover:underline">
+              All-time price records &amp; cross-market gaps →
+            </Link>{" "}
+            <span className="text-slate-500">every card&apos;s highest and lowest recorded price, and the day it was set.</span>
           </p>
         </div>
       </section>
@@ -210,14 +232,14 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
                     <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                      {heading} {isGlobal ? "composite" : "market"} · base 100 on {index.startDay}
+                      {heading} market · base 100 on {index.startDay}
                     </div>
                     <div className="num text-5xl font-extrabold text-white">
                       {index.latest.toFixed(1)}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <Delta label="1 day" pct={index.d1} />
+                    <Delta label="Latest" pct={index.d1} />
                     <Delta label="7 days" pct={index.d7} />
                     <Delta label="30 days" pct={index.d30} />
                     <Delta label="All time" pct={index.sinceStart} />
@@ -226,7 +248,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                 {/* One self-contained, quotable summary sentence — the format AI answer
                     engines lift verbatim (a real, dated statistic). */}
                 <p className="mt-3 max-w-2xl text-sm text-slate-400">
-                  As of {lastDataDay ?? index.startDay}, the RiftCompare {isGlobal ? "global" : heading} index sits at{" "}
+                  As of {lastDataDay ?? index.startDay}, the RiftCompare {heading} index sits at{" "}
                   <strong className="text-slate-200">{index.latest.toFixed(1)}</strong>
                   {index.d7 == null ? null : <> — {index.d7 > 0 ? "up" : index.d7 < 0 ? "down" : "flat"} {Math.abs(index.d7)}% over 7 days</>}
                   {index.stats ? <>, with {index.stats.advancing} of {index.constituents.length} tracked cards higher on the week</> : null}.
@@ -235,7 +257,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
                   <IndexChart points={index.points} />
                 </div>
                 <p className="mt-2 text-[11px] text-slate-600">
-                  + rising prices · − falling prices · recalculated daily after the price refresh.
+                  + rising prices · − falling prices · recalculated weekly, matching the price-history snapshot.
                 </p>
                 <div className="mt-5 border-t border-ink-800 pt-4">
                   <IndexStats index={index} />
@@ -251,9 +273,6 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             <p className="mb-3 text-sm text-slate-400">
               The {index.constituents.length} most-searched cards with a live price, weighted by
               search volume (capped at 20% each). Scroll within the list to see them all.
-              {isGlobal && (
-                <> Prices shown in {currency}, from the {COUNTRIES[priceMarket].place} market as a global reference.</>
-              )}
             </p>
             {/* Interactive: filter by card/gainers/fallers, and click any heading to
                 sort ascending/descending. Capped-height inner scroll + sticky header. */}
@@ -279,9 +298,8 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <div>
             <p className="text-lg font-semibold text-white">The Index is warming up</p>
             <p className="mt-1 text-sm">
-              We need a few days of price history{isGlobal ? "" : " in this market"} before the chart
-              means anything. Check back soon{isGlobal ? "" : " — or switch to Global"}, or see
-              what&apos;s moving today.
+              We need a few days of price history in this market before the chart means anything.
+              Check back soon, or see what&apos;s moving today.
             </p>
             <Link href="/movers" className="btn-primary mt-4">Price movers →</Link>
           </div>
@@ -299,15 +317,26 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             players actually trade. Its constituents are the {INDEX_SIZE} most-searched cards on
             RiftCompare with a live price in the selected market, weighted by search volume with a
             20% cap per card — so a chase card moves the Index more than a bulk common, and no
-            single card dominates it. Each day&apos;s value is the weighted average of the
-            constituents&apos; lowest in-stock prices across every store we track, normalised to 100
-            at the start of the series: an Index of 112 means the watched market is up 12%.
+            single card dominates it. The level is <strong className="text-slate-300">chain-linked</strong>,
+            not a plain average: rather than averaging price levels at each snapshot, every step
+            computes a percentage move using only cards priced at both that snapshot and the
+            previous one, then applies that move to a running level starting at 100. That is what
+            keeps a new set&apos;s cards climbing into the basket — or any other constituent
+            turnover — from jumping the Index the moment they arrive: a debuting card has no
+            earlier price to compare against, so it simply sits out the step it debuts on. An
+            Index of 112 means the watched market is up 12% since tracking began. The full
+            step-by-step formula is published in the{" "}
+            <Link
+              href="/guides/understanding-the-riftcompare-index-methodology"
+              className="text-brand-400 hover:underline"
+            >
+              methodology guide
+            </Link>
+            .
           </p>
           <p>
-            <strong className="text-slate-300">The Global composite</strong> (the default) rebases
-            each regional index to 100 at their common start, then equal-weight averages them day by
-            day — so it tracks worldwide price direction without mixing currencies. Pick a region
-            from the Market selector to see that market&apos;s own index in its local currency.
+            The Index defaults to the US market; pick a different region from the Market selector
+            to see that market&apos;s own index, priced in its own local currency.
           </p>
           <p>
             <strong className="text-slate-300">Key statistics.</strong> Index value is what it would
@@ -317,12 +346,13 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             float, so a true price×supply capitalisation can&apos;t be computed — this is the
             one-of-each basket value. Range is the index&apos;s own low–high over the tracked window (a
             52-week-range analogue). Breadth counts how many constituents rose vs fell over the last 7
-            days, and volatility is the 30-day standard deviation of the index&apos;s daily moves.
+            days, and volatility is the standard deviation of the index&apos;s most recent snapshot-to-snapshot moves.
           </p>
           <p>
             Constituents are refreshed from live search data, so the basket evolves with the
-            metagame; history is recomputed against the current basket for consistency. Prices
-            update daily after the store refresh.
+            metagame; history is recomputed against the current basket for consistency. Each
+            constituent&apos;s listed price is the current live figure; the Index&apos;s own level and
+            chart update weekly, matching the price-history snapshot.
           </p>
           <p className="text-slate-300">
             <strong>Citing the Index:</strong> journalists and creators are welcome to quote it
@@ -335,10 +365,6 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Sealed prices →</Link>
         </div>
       </section>
-
-      {/* The "Embed the Index" snippet block was here. Removed with the rest of the
-          widget feature — the /embed/index route still serves, so anyone who already
-          placed the iframe keeps working, but we no longer hand out new ones. */}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { MarketIndex } from "@/lib/market-index";
 // The "key statistics" panel for the RiftCompare Index — the stats a real market
 // reports: index value (one-of-each basket), average/median price, the period range,
 // breadth (advancers vs decliners) and realised volatility. Server component.
+
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "up" | "down" }) {
   return (
     <div className="rounded-lg border border-ink-800 bg-ink-950/60 p-3">
@@ -55,7 +56,7 @@ export function IndexStats({ index }: { index: MarketIndex }) {
         <Stat
           label="Volatility"
           value={s.volatilityPct == null ? "—" : `${s.volatilityPct.toFixed(2)}%`}
-          sub="30-day, daily"
+          sub="recent, per snapshot"
         />
       </div>
     </div>

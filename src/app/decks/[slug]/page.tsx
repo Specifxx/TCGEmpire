@@ -10,17 +10,43 @@ import { DeckCart } from "@/components/DeckCart";
 import type { DeckCartLine } from "@/lib/deck-basket";
 import { getCountry } from "@/lib/get-country";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { META_DECKS } from "@/lib/meta-decks";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
+
+// META_DECKS is a static 10-item list (prisma/meta-decks.json, no DB call), so
+// every deck detail page can be prerendered at build time instead of rendered
+// dynamically on each first request — the group routes already do this
+// (archetype/[slug], domain/[slug]); this was the one deck route that didn't.
+export function generateStaticParams() {
+  return META_DECKS.map((d) => ({ slug: d.slug }));
+}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const seed = getDeckSeed(params.slug);
   if (!seed) return notFoundMetadata("Deck");
   const legendName = seed.legend.replace(/\s*-\s*Starter$/i, "");
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: checked WITH
+  // " | RiftCompare" appended, wrapped in `{ absolute }` below so the root
+  // layout's title.template doesn't append its own " — RiftCompare" on top.
+  // The previous single fixed string had neither guard — every one of the 10
+  // deck pages rendered over 65 chars (several at 77), part of Bing's 397
+  // "Title too long" warnings.
+  const titleCandidates = [
+    `${seed.name} — Riftbound Meta Deck & Build Cost`,
+    `${seed.name} — Riftbound Meta Deck`,
+    `${seed.name} Riftbound Deck`,
+    `${seed.name} Deck`,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
+  const description = `${seed.description} See the full ${legendName} decklist priced live across stores.`;
   return {
-    title: `${seed.name} — Riftbound meta deck & build cost`,
-    description: `${seed.description} See the full ${legendName} decklist priced live across stores.`,
-    alternates: { canonical: `/decks/${params.slug}` },
+    title: { absolute: `${title} | RiftCompare` },
+    description,
+    alternates: pageAlternates(`/decks/${params.slug}`),
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: `/decks/${params.slug}` }),
   };
 }
 
@@ -48,6 +74,11 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
   })();
 
   const builderHref = `/deck?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
+  // Same encoded list, handed to Best Basket instead of the deck builder — the
+  // deck page already RUNS the optimiser inline (<DeckCart> below), but until now
+  // had no link to the Premium-gated tool itself, where a Premium member can
+  // re-run it against their own wishlist additions or save/revisit the result.
+  const bestBasketHref = `/tools/best-basket?list=${encodeForBuilder(deckListText(seed.legend, seed.cards))}`;
 
   // Cheapest-cart buy list: main-deck cards (excl. sideboard) that matched a
   // real card, plus the legend. Deduped by card id with summed quantities.
@@ -79,7 +110,7 @@ export default async function DeckDetailPage({ params }: { params: { slug: strin
       <Link href="/decks" className="mb-4 inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white">
         ← All meta decks
       </Link>
-      <DeckView deck={deck} builderHref={builderHref} />
+      <DeckView deck={deck} builderHref={builderHref} bestBasketHref={bestBasketHref} />
       <DeckCart lines={cartLines} country={country} />
     </div>
   );

@@ -10,15 +10,19 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in" }, { status: 401 });
 
-  const [notifications, unreadCount] = await Promise.all([
-    prisma.notification.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 30,
-      select: { id: true, type: true, title: true, body: true, href: true, readAt: true, createdAt: true },
-    }),
-    prisma.notification.count({ where: { userId: user.id, readAt: null } }),
-  ]);
+  try {
+    const [notifications, unreadCount] = await Promise.all([
+      prisma.notification.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        take: 30,
+        select: { id: true, type: true, title: true, body: true, href: true, readAt: true, createdAt: true },
+      }),
+      prisma.notification.count({ where: { userId: user.id, readAt: null } }),
+    ]);
 
-  return NextResponse.json({ notifications, unreadCount });
+    return NextResponse.json({ notifications, unreadCount });
+  } catch {
+    return NextResponse.json({ error: "Couldn't load notifications right now." }, { status: 500 });
+  }
 }

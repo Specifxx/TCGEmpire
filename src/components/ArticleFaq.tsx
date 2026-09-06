@@ -15,7 +15,9 @@ import { InlineMarkdown } from "./Markdown";
  * a 3,000-word article is a wall; the answers are still in the server-rendered
  * DOM either way, which is what a crawler reads.
  */
-export function ArticleFaq({ faq, heading = "Frequently asked questions" }: { faq: { q: string; a: string }[]; heading?: string }) {
+const DEFAULT_HEADING = "Frequently asked questions";
+
+export function ArticleFaq({ faq, heading = DEFAULT_HEADING }: { faq: { q: string; a: string }[]; heading?: string }) {
   if (!faq.length) return null;
   return (
     <section className="mt-10" id="faq">

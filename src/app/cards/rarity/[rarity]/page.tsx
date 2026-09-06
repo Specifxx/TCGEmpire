@@ -7,6 +7,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { RARITY_FACETS, rarityFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -23,13 +24,23 @@ export async function generateMetadata({ params }: { params: { rarity: string } 
   const total = await prisma.card
     .count({ where: buildCardWhere(facet.query, DEFAULT_COUNTRY) })
     .catch(() => -1);
-  const title = `Riftbound ${facet.label} Cards — Prices & Full List | RiftCompare`;
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: the previous
+  // single fixed string had no length guard — part of Bing's 397 "Title too
+  // long" warnings (small volume here, fixed for consistency with every other
+  // facet template).
+  const titleCandidates = [
+    `Riftbound ${facet.label} Cards — Prices & Full List`,
+    `Riftbound ${facet.label} Cards — Prices`,
+    `Riftbound ${facet.label} Cards`,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   return {
-    title: { absolute: title },
+    title: { absolute: `${title} | RiftCompare` },
     description: `${facet.intro} Compare live prices across every store we track.`,
-    alternates: { canonical: `/cards/rarity/${facet.slug}` },
+    alternates: pageAlternates(`/cards/rarity/${facet.slug}`),
     ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title, description: facet.intro, url: `${SITE_URL}/cards/rarity/${facet.slug}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: facet.intro, url: `/cards/rarity/${facet.slug}` }),
   };
 }
 

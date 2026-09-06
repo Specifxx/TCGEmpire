@@ -161,11 +161,11 @@ test("tile: a local price with a zero count says nothing rather than '0 stores'"
 test("tile: every per-country price column is considered", () => {
   const cols = [
     "lowestPriceCents",
-    "lowestPriceCentsNz",
     "lowestPriceCentsUs",
     "lowestPriceCentsUk",
     "lowestPriceCentsSg",
     "lowestPriceCentsCa",
+    "lowestPriceCentsEu",
   ] as const;
   // One column per tracked market — a market added to COUNTRY_LIST without a
   // column here would silently report "not stocked anywhere".

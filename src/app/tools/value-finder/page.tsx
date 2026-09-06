@@ -14,6 +14,7 @@ import { SITE_URL } from "@/lib/site";
 import { PremiumButton } from "@/components/PremiumButton";
 import { RegionToggle } from "@/components/RegionToggle";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     "riftbound card investing",
     "riftbound card prices",
   ],
-  alternates: { canonical: "/tools/value-finder" },
+  alternates: pageAlternates("/tools/value-finder"),
   openGraph: { title: "Value Finder — undervalued Riftbound cards", url: `${SITE_URL}/tools/value-finder` },
 };
 
@@ -157,7 +158,7 @@ export default async function ValueFinderPage() {
                   {user ? (
                     <PremiumButton />
                   ) : (
-                    <Link href="/register?next=/tools/value-finder" className="btn-primary text-sm">Create a free account</Link>
+                    <Link href="/login?next=/tools/value-finder" className="btn-primary text-sm">Sign in free</Link>
                   )}
                   <Link href="/browse" className="btn-ghost text-sm">Search the database →</Link>
                 </div>

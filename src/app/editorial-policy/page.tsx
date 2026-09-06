@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
-import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { STATIC_PAGE_DATES, staticPageDateLabel } from "@/lib/static-page-dates";
 import { RETAILER_LIST } from "@/lib/retailers";
+import { pageAlternates } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -11,13 +12,13 @@ export const metadata: Metadata = {
   title: "Editorial & pricing policy",
   description:
     "Who writes RiftCompare, how we collect and verify card prices, how often they refresh, how we handle affiliate links, and how to report an error.",
-  alternates: { canonical: "/editorial-policy" },
+  alternates: pageAlternates("/editorial-policy"),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Every claim on this page is checkable against the code:
 //   • store count            → lib/retailers.ts (RETAILER_LIST)
-//   • daily refresh          → vercel.json cron "0 18 * * *" → /api/cron/refresh-prices
+//   • daily refresh          → .github/workflows/refresh-prices.yml (07:00 + 19:00 UTC)
 //   • page cache windows     → `export const revalidate` on each route
 //   • affiliate marking      → outboundRel() in lib/affiliate.ts
 //   • what is generated      → lib/content/card-narrative.ts, lib/content/authors.ts
@@ -30,7 +31,11 @@ export default function EditorialPolicyPage() {
     "@type": "WebPage",
     name: "Editorial & pricing policy",
     url: `${SITE_URL}/editorial-policy`,
-    dateModified: "2026-08-01",
+    // From the shared table, not a literal. The visible "Last updated" line below
+    // already reads staticPageDateLabel("/editorial-policy"); a second hardcoded
+    // copy here meant the structured data a crawler consumes could disagree with
+    // the date a human reads, and only one of the two would ever get bumped.
+    dateModified: STATIC_PAGE_DATES["/editorial-policy"],
     publisher: { "@id": `${SITE_URL}/#org` },
     breadcrumb: {
       "@type": "BreadcrumbList",
@@ -68,10 +73,7 @@ export default function EditorialPolicyPage() {
           <p>
             Guides and posts are written by the people who run {SITE_NAME}, publishing under the{" "}
             <Link href="/authors/riftcompare-editorial" className="text-brand-400 hover:underline">RiftCompare</Link>{" "}
-            byline. Writing that is generated directly from our price database — index movements,
-            price snapshots, set-level distributions — carries a separate{" "}
-            <Link href="/authors/riftcompare-markets-desk" className="text-brand-400 hover:underline">RiftCompare Markets Desk</Link>{" "}
-            byline instead, so you can always tell which is which.
+            byline.
           </p>
           <p>
             Every guide and post shows its author, its publish date and, where it has been
@@ -111,8 +113,8 @@ export default function EditorialPolicyPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">How prices are collected</h2>
           <p>
-            We track roughly {storeCount} retailers across Australia, New Zealand, the United
-            States, the United Kingdom, Singapore and Canada, plus eBay in each market and
+            We track roughly {storeCount} retailers across Australia, the United
+            States, the United Kingdom, Singapore, Canada and the EU, plus eBay in each market and
             TCGplayer. Prices come from those stores&rsquo; own public product listings and from
             official marketplace APIs. We do not accept price submissions from retailers, and no
             retailer can pay to appear, to rank higher, or to have a competitor removed.
@@ -127,7 +129,14 @@ export default function EditorialPolicyPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-white">How often prices refresh</h2>
           <ul className="list-disc space-y-1 pl-5">
-            <li><strong className="text-white">Store prices:</strong> a full import runs once every 24 hours.</li>
+            {/* Twice, not once: .github/workflows/refresh-prices.yml is scheduled at
+                07:00 and 19:00 UTC and store prices are imported on BOTH runs. Only
+                the eBay catalogue pass is held to once a day, by the 20-hour gate in
+                lib/price-import.ts. The page claimed 24 hours for everything, which
+                understated the store cadence and misdescribed eBay's. (A redundant
+                Vercel 18:00 cron that also ran the import was removed 2026-08-24.) */}
+            <li><strong className="text-white">Store prices:</strong> a full import runs twice a day.</li>
+            <li><strong className="text-white">eBay listings:</strong> the whole catalogue is searched once every 24 hours; the chase printings (promos, signatures and overnumbered prints above a value floor) refresh twice a day.</li>
             <li><strong className="text-white">Price history:</strong> one recorded point per card per market per day, which is what the charts and trend figures are built from.</li>
             <li><strong className="text-white">Card pages:</strong> regenerated at most every 24 hours, and immediately when that card&rsquo;s data changes.</li>
             <li><strong className="text-white">Index and homepage:</strong> hourly.</li>
@@ -145,7 +154,7 @@ export default function EditorialPolicyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>A listing that hasn&rsquo;t been seen in a recent import is marked out of stock rather than left standing as a live price.</li>
             <li>Prices are compared in each market&rsquo;s own currency. We do not convert between currencies to declare a winner, because we would be publishing an exchange rate we can&rsquo;t stand behind.</li>
-            <li>Rankings are by delivered cost where a store&rsquo;s postage is known, and item price otherwise — never by what we earn.</li>
+            <li>Rankings are by item price, with a store&rsquo;s known postage breaking ties between otherwise-equal prices — delivered cost (price plus postage) is always shown alongside the price so you can compare on it yourself, but a store is never penalised in the ranking just because its postage happens to be known when a competitor&rsquo;s isn&rsquo;t. Never by what we earn.</li>
             <li>A consistency audit runs over the card database on demand, checking for duplicate records, broken identifiers, impossible prices and stale listings.</li>
           </ul>
         </section>

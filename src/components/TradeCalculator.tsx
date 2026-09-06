@@ -20,11 +20,11 @@ interface TradeCard {
   rarity?: string;
   imageThumbUrl: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
+  lowestPriceCentsEu?: number | null;
   qty: number;
 }
 
@@ -256,12 +256,12 @@ export function TradeCalculator() {
               <div className="mb-1 flex items-center gap-2">
                 <span className="text-base">🤖</span>
                 <span className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Trade Gremlin</span>
-                {/* The "✨ Live AI" / "Beta" pair is gone for the same reason it
-                    left the Price Take panel: it announced which code path ran,
+                {/* The "✨ Live AI" / "Beta" pair announced which code path ran,
                     which the reader cannot act on, and put "AI" in a header whose
-                    subject is the trade. Removing it alone would have left the
-                    roast — genuinely LLM-written via /api/trade-roast — with NO
-                    disclosure anywhere, so the footer below gained one. */}
+                    subject is the trade — so it's gone. Removing it alone would
+                    have left the roast — genuinely LLM-written via
+                    /api/trade-roast — with NO disclosure anywhere, so the footer
+                    below gained one. */}
                 <button
                   onClick={getRoast}
                   disabled={roasting}

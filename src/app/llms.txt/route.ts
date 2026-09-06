@@ -8,7 +8,7 @@ export const revalidate = 86400;
 
 // One-line descriptions for the hub pages (falls back to the nav label otherwise).
 const DESC: Record<string, string> = {
-  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/NZ/US/UK/SG/CA).",
+  "/browse": "Every Riftbound card with live lowest prices compared across stores (AU/US/UK/SG/CA/EU).",
   "/sealed": "Sealed products — booster boxes, packs and bundles — with the cheapest live price.",
   "/movers": "The biggest Riftbound price rises and falls, updated daily.",
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
@@ -16,8 +16,10 @@ const DESC: Record<string, string> = {
   "/tools/deal-finder": "Deal Finder: cards worth more on eBay than in stores, plus the cheapest cards to buy on eBay.",
   "/tools/value-finder": "Finds undervalued cards trading below their fair market value.",
   "/tools/rising": "Ranks cards by demand and price-timing signals to surface ones likely to rise soon.",
+  "/tools/demand": "Leaderboard of the most searched and viewed cards, by real traffic — raw demand, not a derived score.",
   "/tools/best-basket": "Cheapest single-store basket for a list of cards (minimises combined shipping).",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
+  "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",
   "/decks": "Tournament meta decks, each costed live from current card prices.",
   "/deck": "Deck builder — assemble a deck and price it in real time.",
   "/trade": "Trade calculator — value two sides of a card trade fairly.",
@@ -38,27 +40,10 @@ const DESC: Record<string, string> = {
   "/tools": "Every RiftCompare tool and calculator in one place.",
 };
 
-// Hubs that are NOT in NAV_GROUPS (the nav is a shortlist, not an index) but are
-// in the sitemap and are exactly what an agent answering "browse Riftbound cards
-// by X" needs. Without this list llms.txt was strictly NARROWER than the
-// crawler-facing sitemap — /movers even had a DESC entry above that the
-// NAV_GROUPS loop could never emit.
-const EXTRA_SECTION: { title: string; links: { href: string; label: string }[] } = {
-  title: "Browse the database",
-  links: [
-    { href: "/sets", label: "Sets" },
-    { href: "/champions", label: "Champions" },
-    { href: "/cards", label: "Card facets" },
-    { href: "/domains", label: "Domains" },
-    { href: "/keywords", label: "Keywords" },
-    { href: "/singles", label: "Singles" },
-    { href: "/movers", label: "Daily price movers" },
-    { href: "/alerts", label: "Price alerts & watchlists" },
-    { href: "/tools", label: "All tools" },
-  ],
-};
-
-const abs = (p: string) => `${SITE_URL}${p}`;
+// Most NAV_GROUPS hrefs are site-relative paths; the Discord link (external:
+// true) is already an absolute URL and must pass through unchanged, or this
+// would produce "https://riftcompare.comhttps://discord.gg/...".
+const abs = (p: string) => (/^https?:\/\//i.test(p) ? p : `${SITE_URL}${p}`);
 
 export function GET() {
   const lines: string[] = [];
@@ -66,7 +51,7 @@ export function GET() {
   lines.push("");
   lines.push(
     "> Free Riftbound: League of Legends TCG card database and live price comparison across " +
-      "the United States, the United Kingdom, Australia, New Zealand, Canada and Singapore — with the " +
+      "the United States, the United Kingdom, Australia, Canada and Singapore — with the " +
       "transparent total cost including shipping, and no hidden fees. Home of the RiftCompare " +
       "Index (a daily market index for Riftbound singles), price movers, sealed products and buyer tools."
   );
@@ -82,8 +67,11 @@ export function GET() {
   // Machine-readable data endpoints first — the highest-value surface for agents.
   lines.push("## Data (machine-readable)");
   lines.push(`- [RiftCompare Index (JSON)](${abs("/api/v1/index.json")}): the live index level, deltas, key stats and constituents.`);
-  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all six markets.`);
-  lines.push(`- [OpenAPI description](${abs("/api/v1/openapi.json")}): the public data API, described.`);
+  lines.push(`- [Per-card prices (JSON)](${abs("/api/v1/card/<id>/prices.json")}): every tracked store's live price for one card, all five markets.`);
+  lines.push(`- [Per-card listings (JSON)](${abs("/api/v1/card/<id>/listings.json")}?market=US): every store's listing for one card, cheapest total delivered cost first — pass \`?market=\`.`);
+  lines.push(`- [Card search (JSON)](${abs("/api/cards")}?q=<query>&market=US): free-text search with filters and pagination — pass \`?market=\` for a deterministic, cacheable, cross-origin response.`);
+  lines.push(`- [OpenAPI spec](${abs("/openapi.json")}) · [API reference](${abs("/api/docs")}): every endpoint above, described with request/response schemas — no API key required, no rate limit currently enforced.`);
+  lines.push(`- [MCP server](${abs("/api/mcp")}) (Streamable HTTP, no auth): \`search_cards\`, \`get_card_prices\`, \`cheapest_listing\`, \`list_sets\` — the same data as tool calls instead of HTTP requests. Discovery manifests: [${abs("/.well-known/mcp.json")}](${abs("/.well-known/mcp.json")}) · [${abs("/.well-known/ai-plugin.json")}](${abs("/.well-known/ai-plugin.json")}).`);
   lines.push(`- [RSS feed](${abs("/feed.xml")}) · [JSON feed](${abs("/feed.json")}): new articles.`);
   lines.push("");
 
@@ -100,12 +88,6 @@ export function GET() {
     }
     lines.push("");
   }
-
-  lines.push(`## ${EXTRA_SECTION.title}`);
-  for (const l of EXTRA_SECTION.links) {
-    lines.push(`- [${l.label}](${abs(l.href)})${DESC[l.href] ? `: ${DESC[l.href]}` : ""}`);
-  }
-  lines.push("");
 
   lines.push("## Optional");
   for (const g of optional) {

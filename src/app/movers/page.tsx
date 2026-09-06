@@ -16,8 +16,11 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 
 // ISR: the underlying PriceHistory is rewritten once per day by the price-refresh
 // workflow (GitHub Action → import-prices), so a 24-hour window keeps the page fresh
-// without recomputing the 35-day aggregation on every request. (The inner
-// unstable_cache below has a 10-min TTL so a manual re-import surfaces sooner.)
+// without recomputing the 35-day aggregation on every request.
+//
+// The inner unstable_cache below MUST NOT declare a shorter TTL than this — see
+// its own comment. It used to say 600, which quietly made this page regenerate
+// 144× a day instead of once, defeating the sentence above.
 export const revalidate = 86400;
 
 // Market-neutral metadata (no country in the title) so the page can rank globally;
@@ -34,7 +37,7 @@ export const metadata: Metadata = {
     "Riftbound cards spiking",
     "Riftbound trending cards",
   ],
-  alternates: { canonical: "/movers" },
+  alternates: pageAlternates("/movers"),
   openGraph: {
     title: "Riftbound Price Movers — Top Risers & Drops",
     description:
@@ -51,10 +54,27 @@ export default async function MoversPage() {
 
   // Deeper list than the homepage teaser. Cache the heavy 35-day aggregation
   // across regenerations (the data only changes on the daily import).
+  //
+  // THIS TTL MUST MATCH `export const revalidate` ABOVE, NEVER UNDERCUT IT.
+  // It was 600, chosen so "a manual re-import surfaces sooner" — but an
+  // unstable_cache entry does not have a private TTL. Next sets
+  // `store.revalidate = options.revalidate` unless the store's is already
+  // smaller, so the SHORTEST inner TTL becomes the whole SEGMENT's: 600 on an
+  // 86400 page re-ran this 35-day aggregation, and every uncached query beside
+  // it, 144× a day instead of once. That is the same mechanism that cost
+  // ~2 GB/day via EbayCardPanel on /card/[id] until 2026-08-14 (see the egress
+  // rules at the top of lib/db.ts); this page was missed by that sweep and was
+  // still paying it on 2026-08-22.
+  //
+  // The original goal is already met without the penalty: the price importer
+  // POSTs /api/revalidate at the end of every run, which purges this path
+  // outright — faster than a 10-minute TTL ever was. If a shorter window is
+  // genuinely needed in future, fetch it CLIENT-side; that is the only way a
+  // TTL cannot propagate to the segment.
   const movers = await unstable_cache(
     () => getPriceMovers(country, 20),
     ["price-movers-page", country],
-    { revalidate: 600 }
+    { revalidate: 86400 }
   )();
 
   const hasAny = movers.spiking.length || movers.plummeting.length || movers.value.length;

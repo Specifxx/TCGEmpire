@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
-import bcrypt from "bcryptjs";
 import { prisma } from "./db";
 
 const SESSION_COOKIE = "tcge_session";
@@ -53,16 +52,16 @@ export interface SessionUser {
   emailVerified: boolean;
   balanceCents: number;
   isAdmin: boolean;
-  isVerifiedSeller: boolean;
   // End of the current paid Premium period (drives the ad-free site etc.).
   premiumUntil: Date | null;
   // When this account first started a free trial (null = never → trial-eligible).
   trialStartedAt: Date | null;
+  // The market (AU/US/UK/SG/CA) this account browses/prices in — see the
+  // schema comment on User.preferredCountry. Raw/untyped here (auth.ts stays
+  // decoupled from lib/country.ts); consumers normalize with normalizeCountry().
+  preferredCountry: string | null;
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
 
 // One-time tokens for email verification / password reset.
 export async function createAuthToken(
@@ -89,9 +88,6 @@ export async function consumeAuthToken(
   return row.userId;
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
 
 // Issue a signed session cookie for the given user id.
 export async function createSession(userId: string): Promise<void> {
@@ -135,12 +131,9 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       emailVerified: !!user.emailVerified,
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
-      // Open selling: any signed-in user with a verified email may list on the
-      // marketplace (Stripe Connect onboarding + KYC happens separately, before
-      // payouts are enabled — see lib/connect.ts). Admins can always sell/test.
-      isVerifiedSeller: !!user.emailVerified || user.isAdmin || isAdminEmail(user.email),
       premiumUntil: user.premiumUntil,
       trialStartedAt: user.trialStartedAt,
+      preferredCountry: user.preferredCountry,
     };
   } catch {
     return null;

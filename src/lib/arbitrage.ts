@@ -5,21 +5,24 @@
 // when the winning SELL source is eBay (selling to a store has no marketplace fee).
 //
 // Egress-bounded: a few groupBy aggregates rank everything; per-listing detail
-// (urls/names) is fetched only for the page being shown. The two exceptions
-// (all of one market's eBay rows, all of TCGplayer's US rows — needed to rank by
-// delivered cost, which the DB can't compute in a groupBy) are memoized in
-// process memory below, same pattern as lib/sealed-import.ts's getSealedGroups —
-// a per-request unbounded pull is exactly what has burned through this project's
-// Neon free-tier transfer allowance before.
+// (urls/names) is fetched only for the page being shown. The three full-set pulls
+// that can't be done as a groupBy (all of one market's eBay rows and all of
+// TCGplayer's US rows — needed to rank by delivered cost — plus the cross-region
+// catalogue read) go through the SHARED Next data cache via cachedOrDirect below:
+// day-keyed and CONTENT_TAG-busted on import, so it's one pull per market per day
+// across every lambda instance. These used to be per-instance globalThis memos,
+// but those only dedupe within one warm lambda — under Vercel's fan-out every cold
+// instance re-pulled the whole set, which is exactly what has burned through this
+// project's Neon free-tier transfer allowance before.
 import { prisma } from "./db";
-import type { Country } from "./country";
+import { COUNTRY_LIST, currencyOf, pickPrice, type Country } from "./country";
 import { RETAILERS } from "./retailers";
 import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
 import { TCG_US } from "./tcgplayer";
-import { usdCentsToCountry } from "./fx";
-import { MARKETPLACE_RETAILER, MARKETPLACE_PUBLIC } from "./marketplace";
-import { MARKETPLACE_FEE_BPS } from "./marketplace-policy";
+import { usdCentsToCountry, convertCents } from "./fx";
+import { cachedOrDirect, sydneyDayKey } from "./price-history";
+import { CONTENT_TAG } from "./revalidate-content";
 import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
@@ -33,40 +36,42 @@ const MIN_NET_CENTS = 100;
 const MAX_MARGIN_PCT = 300;
 const MAX_DEAL_PCT = 80;
 
-// One in-memory pull per (country, eBay retailer) per TTL, not per request —
-// see the file header comment. Same globalThis pattern as getSealedGroups so it
-// survives hot-module-reload in dev and is shared across warm lambda invocations.
-const ARB_MEMO_TTL_MS = 15 * 60_000;
+// One pull per (country, eBay retailer) per DAY, shared across every lambda
+// instance — NOT a per-instance globalThis memo. This used to memoize into
+// process memory with a 15-min TTL; that only dedupes WITHIN one warm lambda, so
+// under Vercel's fan-out every cold instance re-pulled the whole in-stock eBay
+// set (~1,000+ rows/market) on the force-dynamic deal-finder / market-records
+// pages — one of the largest repeat main-DB reads in the app. cachedOrDirect
+// puts it in the shared Next data cache instead, day-keyed and CONTENT_TAG-busted
+// on import (the data only changes then), and falls back to a direct query in any
+// context without the incremental cache (scripts) so nothing else has to care.
 type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
-type EbayRowsMemo = Map<string, { at: number; data: EbayRow[] }>;
-const ebayRowsMemo: EbayRowsMemo = ((globalThis as unknown as { __arbEbayRows?: EbayRowsMemo }).__arbEbayRows ??= new Map());
 
-async function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
-  const cacheKey = `${country}:${ebayKey}`;
-  const hit = ebayRowsMemo.get(cacheKey);
-  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
-  const rows = await prisma.retailerPrice.findMany({
-    where: { country, inStock: true, retailer: ebayKey },
-    select: { cardId: true, priceCents: true, shippingCents: true, url: true },
-  });
-  ebayRowsMemo.set(cacheKey, { at: Date.now(), data: rows });
-  return rows;
+function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
+  return cachedOrDirect(
+    () =>
+      prisma.retailerPrice.findMany({
+        where: { country, inStock: true, retailer: ebayKey },
+        select: { cardId: true, priceCents: true, shippingCents: true, url: true },
+      }),
+    ["arb-ebay-rows", country, ebayKey, sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
 }
 
 // TCGplayer's US reference rows are market-neutral (one price per card regardless
 // of the viewer's country), so this is a single global slot, not keyed by country.
 type TcgRow = { cardId: string; priceCents: number; url: string };
-type TcgRowsMemo = { at: number; data: TcgRow[] } | undefined;
-async function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
-  const slot = globalThis as unknown as { __arbTcgRows?: TcgRowsMemo };
-  const hit = slot.__arbTcgRows;
-  if (hit && Date.now() - hit.at < ARB_MEMO_TTL_MS) return hit.data;
-  const rows = await prisma.retailerPrice.findMany({
-    where: { retailer: TCG_US.retailer, inStock: true },
-    select: { cardId: true, priceCents: true, url: true },
-  });
-  slot.__arbTcgRows = { at: Date.now(), data: rows };
-  return rows;
+function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
+  return cachedOrDirect(
+    () =>
+      prisma.retailerPrice.findMany({
+        where: { retailer: TCG_US.retailer, inStock: true },
+        select: { cardId: true, priceCents: true, url: true },
+      }),
+    ["arb-tcg-us-rows", sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
 }
 
 export type ArbSort = "profit" | "margin";
@@ -81,42 +86,47 @@ export interface ArbSource {
   feePct: number;
 }
 
-// eBay retailer key per market (NZ has no eBay coverage).
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", NZ: null, US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca" };
+// eBay retailer key per market.
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca", EU: "ebay_eu" };
 // TCGplayer retailer key per market — the same converted-reference rows used as a
 // fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
 // double as a real, always-available BUY source here. Excluded for AU on purpose:
 // unlike UK/SG (where it fills a genuine coverage gap), AU already has plenty of
 // real tracked stores, so a converted reference price would just add noise rather
-// than a real opportunity. NZ has no TCGplayer row at all, so it has none either.
+// than a real opportunity.
 export const TCGPLAYER_KEY: Record<Country, string | null> = {
   AU: null,
-  NZ: null,
   US: TCG_US.retailer,
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
-  // CA has no TCGplayer reference row: there's no tcgplayer_ca retailer (adding one
-  // would need a USD→CAD conversion source this repo doesn't have — see the note in
-  // constants.ts). Like NZ, CA's arbitrage uses real CA store rows + eBay CA only.
+  // CA's arbitrage uses real CA store rows + eBay CA only. NOT because the row is
+  // missing — tcgplayer_ca exists and refreshTcgplayerPrices() writes it (that
+  // claim was stale here and had already caused a real bug: price-import.ts
+  // believed it too and let the converted row set lowestPriceCentsCa) — but
+  // because switching it on changes what the Deal Finder recommends to Canadian
+  // users, which is a product call rather than a correctness one. Flip this to
+  // TCGPLAYER_CA_RETAILER when that call is made; nothing else stands in the way.
   CA: null,
+  // The EU market has NO reference source at all, unlike every other market
+  // here — and that is a licensing fact, not an oversight. TCGplayer publishes
+  // no EUR market price (tcgplayer.ts has no EU arm to convert from), and the
+  // obvious European equivalent, Cardmarket, is deliberately feature-flagged
+  // OFF pending written permission to redisplay its price data — read the
+  // header of lib/cardmarket.ts before assuming this is a gap to fill. Until
+  // that permission exists, EU arbitrage runs on real EU store rows + eBay ES.
+  EU: null,
 };
-const MARKETPLACE_FEE_PCT = MARKETPLACE_FEE_BPS / 10000;
-
-// All selectable sources for a market: its tracked stores + eBay + TCGplayer +
-// (once launched) the RiftCompare Marketplace — the marketplace's own listings
-// already feed into RetailerPrice (see importMarketplaceListings), so it's
-// priced alongside every other store. Stores, the Marketplace, and TCGplayer are
-// all BUY-side sources (bucketed in together via storeKeys in the page); eBay is
-// the only one ever used as a resale/sell destination (TCGplayer's own flip view
-// treats it as a fixed reference instead — see getArbitrageVsTcgplayer).
+// All selectable sources for a market: its tracked stores + eBay + TCGplayer.
+// Stores and TCGplayer are BUY-side sources (bucketed in together via storeKeys
+// in the page); eBay is the only one ever used as a resale/sell destination
+// (TCGplayer's own flip view treats it as a fixed reference instead — see
+// getArbitrageVsTcgplayer).
 export function getArbSources(country: Country): ArbSource[] {
   const stores = Object.values(RETAILERS)
     .filter((r) => (r.country ?? "AU") === country)
     .map((r) => ({ key: r.key, name: r.name, isEbay: false, feePct: 0 }));
   const ek = EBAY_KEY[country];
   const sources = ek ? [{ key: ek, name: "eBay", isEbay: true, feePct: EBAY_FEE }, ...stores] : stores;
-  const mpKey = MARKETPLACE_PUBLIC ? MARKETPLACE_RETAILER[country] : undefined;
-  if (mpKey) sources.unshift({ key: mpKey, name: "RiftCompare Marketplace", isEbay: false, feePct: MARKETPLACE_FEE_PCT });
   const tcgKey = TCGPLAYER_KEY[country];
   if (tcgKey) sources.push({ key: tcgKey, name: "TCGplayer", isEbay: false, feePct: 0 });
   return sources;
@@ -385,8 +395,7 @@ export async function getArbitrage(
 // from USD into the viewer's local currency via the shared fx table. This is a
 // REFERENCE comparison, not a specific listing — TCGplayer only has one retailer row
 // per card (US, in USD), so there's no "cheapest" to pick and no marketplace fee to
-// net off (unlike eBay's ~13% final-value fee). Available in every market, including
-// ones with no eBay coverage (e.g. NZ).
+// net off (unlike eBay's ~13% final-value fee). Available in every market.
 export async function getArbitrageVsTcgplayer(
   country: Country,
   opts: { buy: string[]; sort: ArbSort; page?: number; pageSize?: number }
@@ -508,6 +517,112 @@ export async function getArbitrageVsTcgplayer(
       .filter((x): x is ArbItem => x !== null);
 
     return { items, total, page: p, pageSize, pageCount };
+  } catch {
+    return { items: [], total: 0, page, pageSize, pageCount: 1 };
+  }
+}
+
+// ── Cross-region price gaps ──────────────────────────────────────────────────
+// Where the SAME card is priced meaningfully cheaper in another tracked market
+// than the viewer's own. Deliberately INFORMATIONAL, not a buy/sell execution
+// flow like the arbitrage functions above — acting on it means actually
+// shipping cross-border, and this models none of that (international postage
+// cost/time, customs, and whether the away market's stores will even ship
+// overseas are all real, unmodelled costs; see the disclaimer in the page
+// copy). Reuses the per-country lowestPriceCents* columns already sitting on
+// every Card row, so unlike getArbitrage above this needs no RetailerPrice
+// scan and no memoization — one Card query, one in-memory pass.
+export interface CrossRegionGap {
+  card: CardTileData;
+  homeCents: number;
+  homeCurrency: string;
+  homeCountry: Country;
+  awayCountry: Country;
+  awayCurrency: string; // the away market's OWN currency
+  awayCentsNative: number; // in awayCurrency — what it's actually listed at
+  awayCentsConverted: number; // converted into homeCurrency, for the gap math
+  gapPct: number;
+}
+
+export interface CrossRegionPage {
+  items: CrossRegionGap[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+const XREGION_MIN_HOME_CENTS = 300; // same floor as MIN_BUY_CENTS — ignore near-zero prices
+const XREGION_MIN_GAP_PCT = 20; // has to be a meaningful gap to be worth surfacing at all
+const XREGION_MAX_GAP_PCT = 300; // same outlier-guard reasoning as MAX_MARGIN_PCT — a huge gap is
+// almost always a converted reference price or a thin/stale market, not a real 300%+ difference.
+
+type XRegionRow = { card: CardTileData; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
+// Day-cached in the SHARED Next data cache, not a per-instance globalThis memo.
+// This read had no bound at all originally — a plain card.findMany with no take,
+// pulling the WHOLE catalogue (cardTileSelect, two image URLs/row, ~1,000-1,500
+// cards) on every request to the force-dynamic deal-finder cross-region tab and
+// /market/records. cachedOrDirect collapses it to one pull per home market per
+// day (CONTENT_TAG busts it on import), shared across all lambda instances.
+function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[]> {
+  return cachedOrDirect(async () => {
+  const homeCurrency = currencyOf(homeCountry);
+  const cards = await prisma.card.findMany({
+    where: { variant: null, isPromo: false },
+    select: cardTileSelect(homeCountry),
+  });
+
+  const rows: XRegionRow[] = [];
+  for (const c of cards as unknown as CardTileData[]) {
+    const homeCents = pickPrice(c, homeCountry);
+    if (homeCents == null || homeCents < XREGION_MIN_HOME_CENTS) continue;
+
+    let best: { native: number; converted: number; country: Country; pct: number } | null = null;
+    for (const info of COUNTRY_LIST) {
+      if (info.code === homeCountry) continue;
+      const awayNative = pickPrice(c, info.code);
+      if (awayNative == null) continue;
+      const awayConverted = convertCents(awayNative, info.currency, homeCurrency);
+      if (awayConverted >= homeCents) continue;
+      const pct = Math.round(((homeCents - awayConverted) / homeCents) * 1000) / 10;
+      if (pct < XREGION_MIN_GAP_PCT || pct > XREGION_MAX_GAP_PCT) continue;
+      if (!best || pct > best.pct) best = { native: awayNative, converted: awayConverted, country: info.code, pct };
+    }
+    if (!best) continue;
+    rows.push({ card: c, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
+  }
+  rows.sort((a, b) => b.pct - a.pct);
+  return rows;
+  }, ["arb-xregion-rows", homeCountry, sydneyDayKey()], { revalidate: 172800, tags: [CONTENT_TAG] });
+}
+
+export async function getCrossRegionGaps(homeCountry: Country, page = 1, pageSize = 25): Promise<CrossRegionPage> {
+  try {
+    const homeCurrency = currencyOf(homeCountry);
+    const rows = await computeCrossRegionRows(homeCountry);
+
+    const total = rows.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    const p = Math.min(Math.max(1, page), pageCount);
+    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
+
+    return {
+      items: slice.map((r) => ({
+        card: r.card,
+        homeCents: r.homeCents,
+        homeCurrency,
+        homeCountry,
+        awayCountry: r.away,
+        awayCurrency: currencyOf(r.away),
+        awayCentsNative: r.awayNative,
+        awayCentsConverted: r.awayConverted,
+        gapPct: r.pct,
+      })),
+      total,
+      page: p,
+      pageSize,
+      pageCount,
+    };
   } catch {
     return { items: [], total: 0, page, pageSize, pageCount: 1 };
   }

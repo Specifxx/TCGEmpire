@@ -41,10 +41,41 @@ model User {
   // Set the first time this account starts a free trial → one trial per account
   // (a returning user just subscribes, no second trial).
   trialStartedAt      DateTime?
+  // Dedupe stamp for the "your trial ends soon" email (see runPremiumTrialReminders
+  // in lib/premium.ts) — set once the reminder is sent so a daily cron re-run never
+  // double-emails the same trialist. Mirrors Order.shipReminderAt's convention.
+  trialReminderSentAt DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)
+  // Which sign-in CTA produced this account — one of lib/signup-source-shared's
+  // whitelisted values (navbar/popup/alert_modal/…), stamped once by the OAuth
+  // callback from the short-lived rc_signup_src cookie the clicked CTA set.
+  // Null for accounts that predate the instrumentation or arrived with no
+  // cookie (e.g. typed /login directly). Nullable + no default = additive push.
+  signupSource        String?
   createdAt           DateTime  @default(now())
+
+  // The market (AU/NZ/US/UK/SG/CA) this account browses/prices in, remembered
+  // across devices and sign-ins. Null until the account's first resolved
+  // country (cookie or geo-detected) is backfilled, or the user explicitly
+  // switches markets while signed in (see CountryProvider + POST
+  // /api/account/country) — a signed-in visitor should land on their real
+  // market on any device, not just the one that had the right cookie/geo guess.
+  preferredCountry String?
+
+  // ── Public collection share link (opt-in, revocable) ────────────────────────
+  // A random URL token. Its PRESENCE is the switch: set = /c/<token> serves a
+  // read-only view of this account's collection, null = the page 404s. There is
+  // deliberately no separate boolean — two sources of truth for "is this shared"
+  // is how a revoked share stays live because only one of them was cleared.
+  //
+  // Rotating the token (Share → Regenerate) invalidates every link already
+  // posted, which is the only revocation that actually works once a URL is in a
+  // Discord channel. The public view NEVER reads costBasisCents or any P&L
+  // figure — see lib/collection-share.ts, which selects the fields explicitly
+  // rather than passing a whole row through.
+  collectionShareId String? @unique
 
   // ── Saved default shipping address (marketplace checkout) ─────────────────────
   // Prefills the checkout address step; a fresh snapshot is copied onto each Order
@@ -76,6 +107,7 @@ model User {
   reviewsWritten      MarketplaceReview[]  @relation("ReviewsWritten")
   reviewsReceived     MarketplaceReview[]  @relation("ReviewsReceived")
   sentOrderMessages   OrderMessage[]
+  priceAlerts         PriceAlert[]
 
   @@index([googleId])
   @@index([discordId])
@@ -223,13 +255,12 @@ model Card {
   // Lowest live retailer price across all sources, set by the price importer.
   // Used for "from $X" and catalogue sorting. null = no price found.
   //   lowestPriceCents   = Australia (AUD cents), from AU stores + eBay AU
-  //   lowestPriceCentsNz = New Zealand (NZD cents), from NZ stores (no eBay)
   //   lowestPriceCentsUs = United States (USD cents), from US stores + eBay US
   //   lowestPriceCentsUk = United Kingdom (GBP cents), from UK stores + eBay UK + TCGplayer
   //   lowestPriceCentsSg = Singapore (SGD cents), from SG stores + eBay SG
   //   lowestPriceCentsCa = Canada (CAD cents), from CA stores + eBay CA
+  //   lowestPriceCentsEu = Eurozone (EUR cents), from EU stores + eBay ES (rotation)
   lowestPriceCents   Int?
-  lowestPriceCentsNz Int?
   lowestPriceCentsUs Int?
   lowestPriceCentsUk Int?
   lowestPriceCentsSg Int?
@@ -239,6 +270,8 @@ model Card {
   // the next price import; null everywhere until then, which every read path
   // already handles as "no price yet".
   lowestPriceCentsCa Int?
+  // Same additive shape as lowestPriceCentsCa above, for the same reason.
+  lowestPriceCentsEu Int?
   artSeed            Int       @default(0)
   // Popularity signals. searchCount (clicks from the search box) is the purer demand
   // metric and drives eBay prioritisation; viewCount (any open, incl. featured
@@ -261,13 +294,11 @@ model Card {
   marketplaceListings MarketplaceListing[]
   collectedBy         CollectionCard[]
   ebayAdListings      EbayAdListing[]
-  ebayAuctions        EbayAuction[]
   ebayGradedListings  EbayGradedListing[]
 
   @@index([setCode, collectorNumber])
   @@index([nameNormalized])
   @@index([lowestPriceCents])
-  @@index([lowestPriceCentsNz])
   @@index([lowestPriceCentsUs])
   @@index([lowestPriceCentsUk])
   // Sg had no index (every other market did) — added with Ca, since the homepage
@@ -275,6 +306,7 @@ model Card {
   // browse grid sorts on it, so SG was doing sequential scans for both.
   @@index([lowestPriceCentsSg])
   @@index([lowestPriceCentsCa])
+  @@index([lowestPriceCentsEu])
   @@index([domain])
   @@index([rarity])
   @@index([type])
@@ -353,18 +385,52 @@ model ContactMessage {
   @@index([createdAt])
 }
 
-// User feedback submitted via the on-site feedback form. First submission per user
-// earns a Premium grant (see /api/feedback). Kept as its own model (not
-// ContactMessage) so we can tie it to the account and track the reward.
+// Feedback / reviews submitted from anywhere on the site. Kept as its own model
+// (not ContactMessage) so we can tie it to an account when there is one and track
+// the Premium reward.
+//
+// userId IS NULLABLE, and that is the whole point. It was REQUIRED until
+// 2026-08-14, which meant /api/feedback 401'd anyone signed out and
+// components/FeedbackForm.tsx rendered a "Sign in →" wall instead of a form. So
+// the only people who could tell us the site was hard to use were the people who
+// had already committed to an account — precisely the wrong sample, and the
+// reason this table stayed near-empty. Anonymous rows carry userId: null; a
+// signed-in submission still records the account (and still earns the one-time
+// Premium grant, which anonymous submissions cannot — there is no account to
+// grant it to).
 model Feedback {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String? // null = submitted by a signed-out visitor
   message   String
   rating    Int? // optional 1–5 star rating
   createdAt DateTime @default(now())
 
+  // Optional reply address for signed-out submitters. NEVER rendered publicly —
+  // it exists so a real complaint can get a real answer. Signed-in rows leave it
+  // null (the account already has an address).
+  email       String?
+  // What the submitter wants to be called IF they consented to publication.
+  // Free text, moderated before it is ever shown.
+  displayName String?
+  // Where the feedback came from, so a complaint can be read in context: the
+  // path ("/card/foo") and which surface raised it.
+  page        String?
+  source      String  @default("page") // page | widget | riftle
+
+  // MODERATION. Nothing reaches a public surface on submission — status starts
+  // NEW and an admin must move it to APPROVED. consentPublic records whether the
+  // submitter actually ticked "you can show this publicly"; BOTH are required
+  // before display (see lib/reviews.ts). Publishing someone's words because they
+  // happened to be positive, without asking, is not something to leave possible
+  // by accident.
+  status        String    @default("NEW") // NEW | APPROVED | HIDDEN | SPAM
+  consentPublic Boolean   @default(false)
+  publishedAt   DateTime?
+
   @@index([createdAt])
   @@index([userId])
+  // Serves the public "approved reviews" read without scanning the table.
+  @@index([status, publishedAt])
 }
 
 // A "clicked Premium" intent event — someone opened the Premium upsell dialog or
@@ -404,7 +470,13 @@ model StoreSuggestion {
 model PriceHistory {
   id               String   @id @default(cuid())
   cardId           String
-  // Market this point is for (AU/NZ/US/UK); each market is priced in its own currency.
+  // Historically the market this point was for (AU/US/UK/SG, each priced in
+  // its own currency), one row per card per market per day. Since 2026-09-05
+  // every snapshot instead writes a single "GLOBAL" row per card per day: the
+  // lowest price found in ANY tracked market that day, converted to USD cents
+  // (see price-import.ts's snapshot write and price-history.ts's
+  // GLOBAL_HISTORY_COUNTRY / historySource()). Old per-market rows predating
+  // that change may still exist for history already on record.
   country          String   @default("AU")
   // Calendar day in Australia/Sydney (stored date-only), the chart's x-axis.
   day              DateTime @db.Date
@@ -416,6 +488,52 @@ model PriceHistory {
   @@unique([cardId, country, day])
   @@index([cardId, country, day])
   // Serves the Price Watch movers query (all cards in one market over a window).
+  @@index([country, day])
+}
+
+// Weekly snapshot of a sealed product group's lowest live in-stock price — the
+// same role PriceHistory plays for Card, feeding Rising Sealed (see
+// sealed-rise-predictor.ts). Added 2026-09-02.
+//
+// A Sealed Index (/market/sealed) briefly read this table too, chain-linking
+// the whole catalogue into one number the same way market-index.ts does for
+// singles. Removed the same day per request ("it's useless") — this table and
+// its writer stayed, since Rising Sealed still depends on both.
+//
+// Keyed by groupKey as a BARE STRING, not a Prisma relation, deliberately —
+// unlike Card, there is no persistent per-product row to foreign-key against:
+// SealedListing (see its own comment) is wiped and rewritten wholesale on
+// every import, so nothing durable exists to point at. SealedGroupFirstSeen
+// already established this exact convention for the same reason; this mirrors
+// it rather than inventing a new one. One consequence worth knowing: because
+// there is no FK, a row here survives even if its groupKey is later retired
+// from SealedListing entirely (the product stopped being sold anywhere) —
+// which is correct, not a bug: its price history stays real and chartable,
+// it just stops gaining new points and drops out of Rising Sealed's own
+// "must currently have a live price" universe (sealed-rise-predictor.ts).
+//
+// Written by writeSealedPriceHistory() (sealed-import.ts), at most once every
+// HISTORY_MIN_INTERVAL_DAYS (price-import.ts's constant, exported and reused
+// here rather than duplicated — see that constant's own comment for why
+// weekly, not daily). Same same-day-replace-on-rerun convention as
+// PriceHistory. Lives in the split history database (dbHistory, see
+// db-history.ts) for the same cost-isolation reason PriceHistory does — this
+// table is small today (~30 groups × 6 markets), but the isolation is free to
+// inherit and expensive to retrofit later.
+model SealedPriceHistory {
+  id               String   @id @default(cuid())
+  groupKey         String
+  // Market this point is for; each market priced in its own currency (mirrors
+  // PriceHistory.country — see that field's comment).
+  country          String
+  // Calendar day in Australia/Sydney (stored date-only), matching PriceHistory's day.
+  day              DateTime @db.Date
+  lowestPriceCents Int
+  recordedAt       DateTime @default(now())
+
+  @@unique([groupKey, country, day])
+  @@index([groupKey, country, day])
+  // Serves Rising Sealed's whole-market read (sealed-rise-predictor.ts).
   @@index([country, day])
 }
 
@@ -441,6 +559,33 @@ model DemandSnapshot {
   @@index([cardId, day])
 }
 
+// Daily snapshot of each STORE's listing count and freshness, keyed by retailer
+// (a plain String key, not a foreign key — RetailerPrice.retailer is likewise
+// unconstrained, since retailers.ts is the source of truth, not a DB table).
+// Purely additive/history: nothing reads this to render a page. It exists so a
+// silently-broken scraper can be told apart from a genuinely quiet store — the
+// two look identical in a single day's snapshot (a frozen listing count is not,
+// by itself, distinguishable from a store that just hasn't restocked), which is
+// why the health check compares TODAY's row against a 7-day trend of these
+// rows rather than a single reading. Written by /api/cron/store-health (see
+// lib/store-health.ts); one row per store per market per Australia/Sydney day,
+// same bucketing and same-day-replace convention as DemandSnapshot/PriceHistory.
+model StoreHealthSnapshot {
+  id               String    @id @default(cuid())
+  retailer         String
+  country          String
+  day              DateTime  @db.Date // Australia/Sydney calendar day
+  listings         Int // total RetailerPrice rows for this store/market
+  inStock          Int // of which currently in stock
+  medianPriceCents Int? // null when the store has zero in-stock rows that day
+  lastSeen         DateTime? // most recent RetailerPrice.lastSeen for this store/market
+  recordedAt       DateTime  @default(now())
+
+  @@unique([retailer, country, day])
+  @@index([day])
+  @@index([retailer, day])
+}
+
 // An email subscription for wishlist price-drop alerts. No account required — the
 // pop-up on the wishlist heart collects an email and creates one row per card per
 // market. A daily cron (/api/cron/price-alerts) compares each card's current
@@ -449,27 +594,58 @@ model DemandSnapshot {
 // is never notified twice. lastPriceCents also tracks rises so a later dip is
 // measured against the most recent price, not a stale one.
 model PriceAlert {
-  id             String    @id @default(cuid())
-  // Lowercased, trimmed recipient address.
-  email          String
-  cardId         String
-  market         String    @default("AU") // AU | NZ | US | UK
+  id                 String    @id @default(cuid())
+  // Lowercased, trimmed recipient address. STILL the mail-routing key and STILL
+  // the dedupe key after the user-account migration: a signed-in watch is written
+  // with the account's own email, so @@unique([email, cardId, market]) below keeps
+  // deduping for accounts exactly as it did for anonymous subscribers, and the
+  // drop cron in lib/price-alerts.ts needed no change at all. Safe to keep
+  // denormalised because User.email is never updated in-app — the only
+  // prisma.user.update touching an email field is api/auth/verify (emailVerified).
+  email              String
+  // The account that owns this watch, when there is one.
+  //
+  // NULLABLE with no default, deliberately. The feature shipped account-free
+  // ("No account needed" — PriceAlertModal), so most live rows have no account to
+  // point at, and a required column could not be added by the `prisma db push`
+  // that runs on every deploy. NULL means "an email-only subscriber from the
+  // pop-up", and every read path treats it as such: the drop cron ignores this
+  // column entirely, and only the account-scoped watchlist routes filter on it.
+  userId             String?
+  cardId             String
+  market             String    @default("AU") // AU | NZ | US | UK | SG | CA
   // Last lowest price observed for this card+market (the baseline a drop is
   // measured against). null until the card first has a price in this market.
-  lastPriceCents Int?
+  lastPriceCents     Int?
+  // Lowest price we have ever EMAILED this subscriber for this card+market — the
+  // anti-spam watermark. A drop only sends a fresh email when it beats this value
+  // (a genuinely new low), or when REMINDER_INTERVAL_MS (≈2 months) has passed
+  // since lastNotifiedAt, so a price that keeps sawtoothing back down to a figure
+  // we already sent does not re-spam the subscriber. null until the first email;
+  // additive/nullable so `prisma db push` adds it with no backfill. Distinct from
+  // lastPriceCents, which keeps tracking every move so a drop can still be DETECTED
+  // against the most recent price even while emails are being suppressed.
+  lowestEmailedCents Int?
   // Per-email secret powering one-click unsubscribe (shared across all of an
   // email's rows, so one link can remove every alert for that address).
-  unsubToken     String
-  createdAt      DateTime  @default(now())
+  unsubToken         String
+  createdAt          DateTime  @default(now())
   // When we last emailed this subscriber about a drop on this card.
-  lastNotifiedAt DateTime?
+  lastNotifiedAt     DateTime?
 
-  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  // Cascade, matching every other User relation in this schema. A price watch is
+  // an opt-IN and should die with the account — the inverse of AnnouncementOptOut,
+  // which is deliberately email-keyed so an opt-OUT survives deletion. Rows with
+  // userId = NULL (every anonymous subscriber) are structurally untouched by a
+  // cascade, since it only matches rows carrying the deleted user's id.
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([email, cardId, market])
   @@index([cardId])
   @@index([email])
   @@index([unsubToken])
+  @@index([userId])
 }
 
 // A live price for a card at an external retailer, used for price comparison.
@@ -512,25 +688,9 @@ model RetailerPrice {
 // already fetches + filters up to 100 results down to the single cheapest
 // (RetailerPrice's "ebay" row); this just persists the next few from that SAME
 // response, so it costs zero additional Browse API calls/quota.
-// A LIVE eBay AUCTION on a chase-tier card.
-//
-// DELIBERATELY NOT A RetailerPrice ROW, and this is the whole design.
-// A current bid is not a price you can pay: a $12 bid on a $180 Signature would
-// sort to the top of the comparison table, become the card's "cheapest price",
-// and then propagate — lowestPriceCents feeds price history, the market index,
-// price alerts, the rise predictor, meta-deck build costs, Today's Top Deals,
-// the screener, the sitemap and the Product/Offer JSON-LD Google reads. One
-// auction row in the wrong table corrupts all of it and publishes a false price.
-// A separate table cannot make that mistake; a shared one only avoids it for as
-// long as everyone remembers to filter.
-//
-// Rows are replaced per market on each auction pass and are USELESS ONCE STALE —
-// an ended auction still carrying a live affiliate link is worse than showing
-// nothing, exactly as EbayAdListing's MAX_AGE_HOURS note argues. `endsAt` is
-// stored so both the reader and the renderer can enforce that independently.
 // A GRADED (slabbed) eBay listing for a chase card — PSA / BGS / CGC / SGC.
 //
-// Its own table for the same reason EbayAuction has one: a slab is genuinely
+// Its own table, and deliberately not a RetailerPrice row: a slab is genuinely
 // this card but is NOT comparable to a raw copy. It trades far above one, and
 // the price search excludes it precisely because it kept leaking in as a wrong
 // "cheapest" (see GRADED_SLAB in lib/ebay.ts). Keeping slabs out of
@@ -567,38 +727,6 @@ model EbayGradedListing {
 
   @@unique([itemId, country])
   @@index([cardId, country])
-}
-
-model EbayAuction {
-  id              String   @id @default(cuid())
-  cardId          String
-  country         String // marketplace the search ran against (US/AU/UK/SG)
-  // eBay's own listing id — stable identity for a listing across passes, so a
-  // re-import of the same auction updates rather than duplicating it.
-  itemId          String
-  currentBidCents Int
-  bidCount        Int      @default(0)
-  // Auctions may also carry a Buy It Now. Kept because "bid $92, or take it now
-  // for $150" is a materially different decision from a bare auction.
-  buyItNowCents   Int?
-  currency        String
-  endsAt          DateTime
-  url             String // affiliate-tagged
-  title           String
-  imageUrl        String?
-  condition       String?
-  // Graded slabs (PSA/BGS/CGC/SGC) are the category our store comparison
-  // structurally cannot cover — no tracked Shopify store lists them — so this
-  // flags the listings where eBay is the only market that exists.
-  isGraded        Boolean  @default(false)
-  updatedAt       DateTime @updatedAt
-
-  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
-
-  @@unique([itemId, country])
-  @@index([cardId, country])
-  // Drives the "ending soon" reads: next-to-close first, within one market.
-  @@index([country, endsAt])
 }
 
 model EbayAdListing {
@@ -646,6 +774,32 @@ model SealedListing {
   @@index([groupKey])
   @@index([retailer])
   @@index([country])
+}
+
+// "When was this product group first seen?" — for /sealed's "Recently Added" sort.
+// Deliberately a SEPARATE table rather than a column on SealedListing: that table
+// is wiped and rewritten wholesale per store/market on every import run
+// (deleteMany + createMany — see importSealed()), so a `createdAt` column on it
+// would reset to "now" for every still-listed product on every scrape, which is
+// exactly backwards for "recently added". This table is written once per
+// groupKey+country (skipDuplicates — see recordSealedFirstSeen()) and never
+// touched again, so it survives the listing table being rebuilt underneath it.
+//
+// country is part of the key, not just groupKey, because "recently added" is a
+// per-market question — a product a US store has carried for months is still new
+// to an AU buyer the week an AU store first lists it (getAllSealedGroups is
+// itself always scoped to one country, so this matches that shape exactly).
+//
+// firstSeenAt reflects "since this tracking existed", not the product's true
+// real-world debut — there is no historical record for anything that was already
+// in the table before this model existed, and this never guesses one; those
+// groups simply get today's date the first time this code runs against them.
+model SealedGroupFirstSeen {
+  groupKey    String
+  country     String
+  firstSeenAt DateTime @default(now())
+
+  @@id([groupKey, country])
 }
 
 // A completed trade. Either a buyer hit a listing (kind LISTING) or a seller
@@ -858,6 +1012,13 @@ model MarketplaceListing {
   status     String   @default("ACTIVE") // ACTIVE, SOLD_OUT, PAUSED, REMOVED
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  // Stable public token for /l/<shareId>, the link a seller posts into a Discord
+  // or Facebook trading group. Deliberately NOT the row id: a listing id appears
+  // in seller-only API responses and admin views, and a token that is safe to
+  // paste anywhere should never be the same string that identifies the row
+  // internally. Backfilled lazily on first share (see lib/listing-share.ts), so
+  // existing rows need no migration and a seller who never shares never gets one.
+  shareId    String?  @unique
 
   seller User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   card   Card               @relation(fields: [cardId], references: [id], onDelete: Cascade)
@@ -1020,4 +1181,109 @@ model NewsletterSubscriber {
   // Last digest edition delivered (e.g. "2026-W24") — makes the weekly send
   // idempotent: reruns and resumed partial runs only email who's still due.
   lastEditionKey String?
+}
+
+// Suppression + per-edition send-tracking for the weekly digest sent to
+// REGISTERED ACCOUNTS that never opted into the newsletter (see
+// lib/user-digest.ts). Deliberately a SEPARATE table from AnnouncementOptOut
+// even though the shape mirrors it: runReleaseDayBlast() treats the mere
+// EXISTENCE of an AnnouncementOptOut row as "already got that one-off
+// campaign" (its own idempotency marker, since users have no lastEditionKey
+// column). Minting rows there from a job that runs every week would make it
+// look like every account had already received the next set-release blast
+// the moment they'd received nothing but a weekly digest — so this audience
+// gets its own token/suppression table instead. Keyed by email (not userId)
+// so an opt-out survives account deletion, same rationale as
+// AnnouncementOptOut.
+model UserDigestOptOut {
+  email          String    @id
+  // One-click unsubscribe token, minted at first send.
+  token          String    @unique
+  createdAt      DateTime  @default(now())
+  // Null until they click unsubscribe; non-null suppresses all future sends.
+  optedOutAt     DateTime?
+  // Last digest edition delivered (e.g. "2026-W24"). The free-tier email
+  // provider caps sends per day, so one edition can take several days of the
+  // daily cron to fully clear — this is what makes each day's run resumable.
+  lastEditionKey String?
+
+  @@index([optedOutAt])
+  @@index([lastEditionKey])
+}
+
+// A visitor telling us one of our prices is wrong.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// WHY THIS TABLE EXISTS. A price comparison is only worth using if its prices
+// are right, and every price here is scraped: a store changes its markup, adds a
+// variant, restructures a product page, and one retailer's numbers quietly go
+// wrong for days. StoreHealthSnapshot catches the shapes a machine can see
+// (stale fetch, dropped listings, frozen or jumped prices). It cannot catch "the
+// listing says $12 but the page says $19" — a human standing in front of both
+// can, and until now had nowhere to say so.
+//
+// THE VALUABLE FIELD IS `retailer`, NOT ANY SINGLE ROW. One report is an
+// anecdote; five against the same store in a week is a broken scraper, and that
+// aggregate is the reason this is a table rather than an email. See
+// /admin/messages, which ranks reporters by retailer for exactly that reason.
+//
+// NO FOREIGN KEY TO Card, DELIBERATELY. Card ids are not stable across a
+// catalogue rebuild (that instability is documented at length in
+// db-history.ts's ensureHistoryCards saga), and a report is evidence about a
+// store's data — it should outlive the row it was filed against, not cascade
+// away with it. Same reasoning for the sealed side, which has no stable listing
+// id at all and is identified by (groupKey, retailer, country).
+//
+// NOTHING HERE IS PUBLISHED. Every field is admin-only; there is no public read
+// path. That is what makes it safe to accept anonymous submissions — see the
+// route for the rest of the abuse controls.
+model PriceReport {
+  id String @id @default(cuid())
+
+  kind String // "card" | "sealed"
+
+  // What was reported. Exactly one of these is set, per `kind`.
+  cardId         String?
+  sealedGroupKey String?
+
+  // RetailerPrice.id where the surface knew it (cards). Sealed listings have no
+  // id of their own, so they are identified by groupKey + retailer + country.
+  listingId String?
+
+  retailer     String
+  retailerName String
+  country      String
+
+  // WHAT OUR DATABASE SAID when the report landed — looked up server-side, never
+  // taken from the request body. A number a stranger can put straight into an
+  // admin screen is a number an admin cannot trust, and this one has to be
+  // trustworthy: it is the "before" half of the comparison the whole report is
+  // about. null means the listing had already gone by the time we looked, which
+  // is itself a useful answer.
+  shownPriceCents Int?
+  currency        String
+
+  // PRICE_WRONG | OUT_OF_STOCK | WRONG_ITEM | LINK_BROKEN | OTHER — see
+  // lib/price-report.ts, which is the single definition both the form and the
+  // API validate against.
+  issue            String
+  // What the reporter says the real price is. USER-CLAIMED and labelled as such
+  // everywhere it is shown — unlike shownPriceCents, this one cannot be verified
+  // without visiting the store, which is the admin's job, not the schema's.
+  actualPriceCents Int?
+  note             String?
+
+  userId String? // null = anonymous
+  email  String? // optional reply address, only stored when volunteered
+  ip     String? // best-effort, for abuse triage only
+  page   String? // where it was reported from, for reproducing
+
+  status    String   @default("NEW") // NEW | CONFIRMED | REJECTED | FIXED
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  // Serves the per-store rollup that turns single reports into a scraper alarm.
+  @@index([retailer, createdAt])
+  @@index([cardId])
+  @@index([sealedGroupKey])
 }

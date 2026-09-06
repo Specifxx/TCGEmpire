@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CONTACT_EMAIL } from "@/lib/site";
-import { MARKETPLACE_NAV_VISIBLE } from "@/components/nav-groups";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata = {
   title: "Contact & Feedback",
   description: "Get in touch with RiftCompare — report a price issue, suggest a store to add, or send feedback.",
-  alternates: { canonical: "/contact" },
+  alternates: pageAlternates("/contact"),
 };
 
 export default function ContactPage() {
@@ -34,15 +34,7 @@ export default function ContactPage() {
             We read every message and usually reply within a day or two.
           </p>
 
-          {MARKETPLACE_NAV_VISIBLE && (
-            <p className="mt-5 border-t border-ink-800 pt-4 text-sm text-slate-400">
-              Problem with a Marketplace order, payment, or your account?{" "}
-              <Link href="/support" className="font-semibold text-brand-300 hover:underline">
-                Open a support ticket →
-              </Link>
-            </p>
-          )}
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-5 border-t border-ink-800 pt-4 text-sm text-slate-400">
             Run a shop, or know one we&apos;re missing?{" "}
             <Link href="/stores/suggest" className="font-semibold text-brand-300 hover:underline">
               Suggest a store →
@@ -50,13 +42,6 @@ export default function ContactPage() {
           </p>
         </div>
       </div>
-
-      {MARKETPLACE_NAV_VISIBLE && (
-        <div className="mt-4 text-center text-sm text-slate-500">
-          Looking to buy or sell instead?{" "}
-          <Link href="/marketplace" className="text-brand-400 hover:underline">Visit the RiftCompare Marketplace →</Link>
-        </div>
-      )}
     </div>
   );
 }

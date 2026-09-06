@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 
 // A SECOND physical database, reserved for the write-heavy, ever-growing,
 // rarely-fully-queried tables: PriceHistory (daily price snapshots) and
@@ -17,88 +18,137 @@ import { PrismaClient } from "@prisma/client";
 // SAFE BY DEFAULT: falls back to the same database as db.ts when NO history
 // variable is set at all, so this ships as a NO-OP (same physical database,
 // identical behaviour) until a second Neon project is provisioned and the
-// current history variable — RH7, see the chain below — is added to Vercel +
-// GitHub secrets. (Adding HISTORY_DATABASE_URL today would do nothing useful:
-// it is the OLDEST project in the chain and sits fifth, behind RH7/RH6/RH5/_4.
-// If you provision a new project, give it a NEW name and put it FIRST here —
-// never re-use an older name, which is also listed as a migration SOURCE in
-// .github/workflows/maintenance.yml and would make source and target the same
-// database.) The schema
+// current history variable — HISTORY_DATABASE_URL, see the chain below — is
+// added to Vercel + GitHub secrets. The schema
 // (prisma/schema.prisma) is unchanged and shared — run `prisma db push` against
 // the new URL once to create the tables there too (the unused Card/RetailerPrice/
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH7 (secrets.RH7) is the CURRENT history project — cut over 2026-08-04 after
-// RH6 came within reach of its monthly Neon network-transfer allowance in FOUR
-// DAYS (RH6 itself replaced RH5 on 2026-07-31 for the same reason; _4 went
-// unreachable with P1001 before that, and _3/_2/base before it).
+// RH7 is the CURRENT history project — cut over 2026-09-04 when RH6 reached its
+// 5 GB monthly network-transfer allowance after only two days in service (RH6
+// took over from RH11 on 2026-09-02; RH11 replaced RH10, which served from
+// 2026-08-28; RH10 replaced RH9, which served from 2026-08-25; RH9 replaced RH8,
+// which served from 2026-08-23; RH8 replaced HISTORY_DATABASE_URL_4, which
+// served from 2026-08-21; _4 replaced _3, which replaced _2 on 2026-08-19; _2
+// replaced HISTORY_DATABASE_URL; that replaced RH7 on 2026-08-16 — the same
+// name now back in service; RH7's first term replaced RH6's first term on
+// 2026-08-04; that replaced RH5 on 2026-07-31).
 //
-// SIX PROJECTS IN ~TWO WEEKS IS A READ-PATTERN PROBLEM, NOT A CAPACITY ONE. A
-// fresh project buys roughly four days at the current burn rate, so treat the
-// next exhaustion as a signal to find the query, not to provision RH8. The
-// egress guard below already logs any single history query returning ≥1 MB —
-// grep the Vercel logs for "[egress-guard:history]" and it will name the
-// model/operation. One known offender to check first: getEmptyCardIds() in
-// lib/card-price-state.ts groups the ENTIRE PriceHistory table with no `where`,
-// no `take` and no cache, so its payload grows every day forever.
+// THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Read the head as "in service
+// today", never as a timeline — several rotations went BACKWARDS onto recycled
+// names (_2, _3, _4 are among the oldest in the list, and now RH6 and RH7 both)
+// because Neon's caps are per project per month, so a long-retired project has
+// a fully reset allowance.
 //
-// RH6 and every older var are kept ONLY as read-only fallbacks/migration sources;
-// treat them as dead, never the primary target. Once everything's copied
-// across (see the `migrate-history-db` task in .github/workflows/maintenance.yml)
-// and nothing references the older vars anymore, they can be removed entirely.
+// RH7 IS RECYCLED, UNLIKE RH8 THROUGH RH11 — AND THAT IS A DELIBERATE, VERIFIED
+// EXCEPTION, NOT A REVERSION, THE SAME AS RH6'S OWN RECYCLING TWO DAYS EARLIER.
+// RH8 through RH11 were each provisioned NEW after the 2026-08-23 incident: RH5,
+// the intended target of that rotation, turned out to hold User=85,
+// CollectionCard=374, Order=4 and RetailerPrice=39,635 — a full OPERATIONAL
+// snapshot from an early term. The migration's User-row guard refused it;
+// without that guard the TRUNCATE ... CASCADE would have destroyed real account
+// data. RH7 itself is a NAME that was previously in service (2026-08-04 to
+// 2026-08-16) and had been sitting ORPHANED since — 0% of its card ids resolved
+// against the live catalogue even before this cutover, the same catalogue-
+// rebuild drift ensureHistoryCards() below exists to repair, which makes its old
+// PriceHistory rows unlinkable regardless of where they're stored (unlike RH6's
+// still-relevant pre-cutover rows two rotations ago). That is why THIS cutover
+// skipped the drain-forward top-up RH6's needed — there was nothing in RH7
+// worth preserving. migrate-history-db-rh6-to-rh7's own live guard confirmed
+// target public."User" rows: 0 immediately before truncating it, rather than
+// trusting db-chains.ts's memory of the earlier orphan finding. Before recycling
+// ANY name — on some future rotation — re-run that guard (or probe-databases)
+// and confirm User=0 fresh; never assume a prior finding still holds.
+//
+// A recycled name carries a second trap: the older vars are also migration
+// SOURCES in .github/workflows/maintenance.yml, so a name that is both target
+// and listed source makes a migration silently no-op while reporting every row
+// count as matching. migrate-history-db-rh6-to-rh7's task pins SOURCE = RH6
+// only, never a fallback chain that could resolve back to RH7 itself.
+//
+// THIRTEEN PROJECT-TERMS IN JUST OVER FIVE WEEKS IS A READ-PATTERN PROBLEM, NOT
+// A CAPACITY ONE — and this rotation is another data point, not a new one:
+// recycling RH7 instead of provisioning RH12 is exactly what the note below has
+// been arguing for since the RH11 cutover. A fresh (or recycled) project still
+// buys only a couple of days at the current burn rate, so treat the next
+// exhaustion as a signal to find the query, not to rotate again. getEmptyCardIds()
+// in lib/card-price-state.ts and getRisingCards() in lib/top-deals.ts — both
+// named as prime suspects on prior rotations — were rewritten to stop
+// grouping/scanning the whole PriceHistory table per request (see those
+// functions' own comments). The egress guard below still logs any single
+// history query returning ≥1 MB — grep the Vercel logs for
+// "[egress-guard:history]" if the allowance still drains fast; that names the
+// next offender, and measuring it (scripts/audit-egress.ts) beats a fourteenth
+// project.
+//
+// RH6 is kept as the rollback fallback and every older var below it is a
+// read-only fallback/migration source; treat them as dead, never the primary
+// target. Once everything's copied across (see the
+// `migrate-history-db-rh6-to-rh7` task in .github/workflows/maintenance.yml) and
+// nothing references the older vars anymore, they can be removed entirely.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
-// several places that cannot import this module (GitHub Actions `env:` blocks,
-// scripts/build-db-push.sh). When you add a new project here, grep for the
-// PREVIOUS variable name across the whole repo and update every hit — a chain
-// that silently stops at an exhausted project is exactly how this repo has lost
-// a day to an "unexplained" P1001 more than once.
-const HISTORY_URL =
-  process.env.RH7 ||
-  process.env.RH6 ||
-  process.env.RH5 ||
-  process.env.HISTORY_DATABASE_URL_4 ||
-  process.env.HISTORY_DATABASE_URL ||
-  process.env.HISTORY_DATABASE_URL_2 ||
-  process.env.HISTORY_DATABASE_URL_3 ||
-  process.env.DATABASE_URL;
+// a few places that cannot import this module (scripts/build-db-push.sh runs
+// pre-build as a raw shell script; scripts/migrate-history.ts,
+// scripts/probe-history-dbs.ts and scripts/repair-history-card-ids.ts are
+// standalone scripts with their own resolution/inventory). GitHub Actions
+// `env:` blocks are NOT part of this — every script here imports dbHistory
+// from this module, so as long as a workflow step passes the var through
+// (regardless of YAML order), this one chain decides precedence for all of
+// them. When you add a new project here, grep for the PREVIOUS variable name
+// across the whole repo and update every hit in the files above — a chain that
+// silently stops at an exhausted project is exactly how this repo has lost a
+// day to an "unexplained" P1001 more than once.
+const HISTORY_URL = resolveUrl(HISTORY_VARS);
 
 // Names the winning variable (never its value — it's a credential) so a P1001
 // in the logs immediately answers "which database did it actually try?".
 // Mirrors the same diagnostic in scripts/build-db-push.sh and lib/db.ts.
 export const HISTORY_URL_SOURCE =
-  process.env.RH7 ? "RH7"
-  : process.env.RH6 ? "RH6"
-  : process.env.RH5 ? "RH5"
-  : process.env.HISTORY_DATABASE_URL_4 ? "HISTORY_DATABASE_URL_4"
-  : process.env.HISTORY_DATABASE_URL ? "HISTORY_DATABASE_URL"
-  : process.env.HISTORY_DATABASE_URL_2 ? "HISTORY_DATABASE_URL_2"
-  : process.env.HISTORY_DATABASE_URL_3 ? "HISTORY_DATABASE_URL_3"
-  : "DATABASE_URL (no history project set — history shares the operational DB)";
+  resolveVar(HISTORY_VARS) === "DATABASE_URL" || resolveVar(HISTORY_VARS) === null
+    ? "DATABASE_URL (no history project set — history shares the operational DB)"
+    : resolveVar(HISTORY_VARS)!;
 
 if (HISTORY_URL_SOURCE !== "RH7") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH7 — RH7 is missing from this ` +
-      `environment. Every older project is exhausted/dead; expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH7 — the current ` +
+      `history project is missing from this environment. RH6 is the rollback (served ` +
+      `2026-09-02 to 2026-09-04, near its allowance); RH11/RH10/RH9/RH8/_2/_3/_4 are spent. ` +
+      `Expect P1001 or writes landing in the wrong place.`
   );
 }
 
 // True when the history tables live in their OWN database. When split, PriceHistory's
 // Card foreign key means card rows must exist there too — see ensureHistoryCards().
-// Compared against the RESOLVED operational URL, not bare DATABASE_URL. db.ts
-// resolves the operational database as RM3 || DATABASE_URL_2 || DATABASE_URL,
-// so comparing to DATABASE_URL alone got this wrong in a specific, quiet way:
-// with RM3 set and no history variable at all, HISTORY_URL falls through to
-// DATABASE_URL, which is NOT the operational database — yet this returned
-// false ("not split"). ensureHistoryCards() then no-ops, and the next
-// price-import's createMany fails PriceHistory's Card foreign key, swallowed by
+// Compared against the RESOLVED operational URL, and it must stay that way even
+// now that DATABASE_URL is itself the head of the operational chain. The two are
+// not the same thing: this resolves "the operational database", which today
+// happens to be the DATABASE_URL project — but the equality below has to keep
+// comparing resolved-to-resolved, or the next rotation (onto a name that is NOT
+// DATABASE_URL) silently reintroduces the original bug: HISTORY_URL falls
+// through to DATABASE_URL, which is then NOT the operational database, and this
+// returns false ("not split"). ensureHistoryCards() then no-ops, and the next
+// price-import's createMany fails PriceHistory's Card foreign key — swallowed by
 // its try/catch as a single warning line.
+//
+// THIS LIST HAD ITSELF DRIFTED once already, which is the same bug one level up:
+// it stopped at RM3 while db.ts had moved on. So with RM5 serving and RM3 still
+// set as a fallback, "the operational database" resolved here to RM3 — a
+// different, dead project — and any comparison against it was answering about
+// the wrong database. Harmless at the time (the history project is a distinct
+// URL either way, so historyIsSplit stayed true), but a chain that is
+// wrong-but-currently-harmless is exactly how this repo has lost a day to a
+// P1001 more than once. Mirrors src/lib/db.ts's OPERATIONAL_URL, and
+// tests/db-chain.test.ts fails if the two lists ever diverge again.
 //
 // Resolved inline rather than imported from db.ts on purpose: db.ts constructs
 // the operational PrismaClient at module scope, so importing it here eagerly
 // would spin up a second client in every context that only wants history.
-const OPERATIONAL_URL = process.env.RM3 || process.env.DATABASE_URL_2 || process.env.DATABASE_URL;
+// Imported from the same place db.ts uses, so the two can no longer disagree
+// about which project "the operational database" means — a drift that once made
+// ensureHistoryCards() silently no-op.
+const OPERATIONAL_URL = resolveUrl(OPERATIONAL_VARS);
 export const historyIsSplit = HISTORY_URL !== OPERATIONAL_URL;
 
 // Ensure a generous connect_timeout (Postgres/libpq connection param, in
@@ -171,15 +221,89 @@ if (process.env.NODE_ENV !== "production") {
 // that doesn't exist THERE yet fails the whole createMany. Before writing history
 // rows, copy any missing Card rows from the operational DB. No-op when the history
 // tables share the main database, and cheap otherwise (id-set diff + tiny insert).
-export async function ensureHistoryCards(cardIds: string[]): Promise<void> {
-  if (!historyIsSplit || cardIds.length === 0) return;
+// Returns the ids that are CONFIRMED present in the history DB, so the caller can
+// drop any card it could not copy instead of losing the whole batch to one FK
+// violation. null means "not a split setup" — nothing to filter against.
+export async function ensureHistoryCards(cardIds: string[]): Promise<Set<string> | null> {
+  if (!historyIsSplit || cardIds.length === 0) return null;
   const { prisma } = await import("./db");
   const have = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
   const haveSet = new Set(have.map((c) => c.id));
   const missing = cardIds.filter((id) => !haveSet.has(id));
-  if (missing.length === 0) return;
+  if (missing.length === 0) return haveSet;
   const rows = await prisma.card.findMany({ where: { id: { in: missing } } });
-  // Strip nothing — Card has no outgoing FKs, so full rows insert cleanly.
-  await dbHistory.card.createMany({ data: rows, skipDuplicates: true });
-  console.log(`History DB: copied ${rows.length} missing card rows (FK for PriceHistory).`);
+  // Upsert BY ID rather than createMany({ skipDuplicates: true }) — createMany
+  // silently drops a row that collides with ANY unique field, not just id. That
+  // is exactly what happens for a card whose id changed in a catalogue rebuild
+  // but whose slug/externalId still belongs to a stale row left behind in this
+  // history-only Card table: the row we actually need for the FK never gets
+  // inserted, this logged as if every row succeeded (it counted rows ATTEMPTED,
+  // not rows actually written), and the next PriceHistory write for that card
+  // then failed its FK check — silently, every day, since the snapshot write
+  // is best-effort (see the try/catch around it in price-import.ts). Upsert by
+  // id either creates the row we need or throws a specific, diagnosable error
+  // (caught by that same try/catch) instead of a silent no-op.
+  let inserted = 0;
+  let repaired = 0;
+  let failed = 0;
+  for (const row of rows) {
+    // Strip nothing else — Card has no outgoing FKs, so the full row upserts cleanly.
+    try {
+      await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
+      inserted++;
+    } catch (err) {
+      // P2002 = one of Card's OTHER unique columns (slug, externalId) is already
+      // held by a DIFFERENT, older row in this history-only table. Upserting by
+      // id finds no match, falls through to CREATE, and collides.
+      //
+      // This is the same catalogue-rebuild drift the comment above describes,
+      // and switching to upsert only made it VISIBLE — it still threw, and
+      // because that throw escaped this loop it aborted the whole snapshot, so
+      // NO card got a PriceHistory row. Production sat frozen at 2026-08-09 for
+      // eleven days while every import reported success.
+      if (!isUniqueConflict(err)) {
+        failed++;
+        console.warn(`History DB: could not copy card ${row.id}:`, err);
+        continue;
+      }
+      // Free the contested value from whichever stale row holds it. Nulling is
+      // safe and lossless here: Postgres allows many NULLs in a unique column,
+      // this table exists ONLY to satisfy PriceHistory's foreign key, and
+      // nothing reads its slug/externalId — whereas DELETING the stale row
+      // would cascade away the price history attached to it.
+      try {
+        for (const field of ["slug", "externalId"] as const) {
+          const value = row[field];
+          if (!value) continue;
+          await dbHistory.card.updateMany({
+            where: { [field]: value, id: { not: row.id } },
+            data: { [field]: null },
+          });
+        }
+        await dbHistory.card.upsert({ where: { id: row.id }, create: row, update: row });
+        inserted++;
+        repaired++;
+      } catch (err2) {
+        failed++;
+        console.warn(`History DB: card ${row.id} still unresolvable after freeing its unique fields:`, err2);
+      }
+    }
+  }
+  const extra = [repaired ? `${repaired} after clearing a stale row's unique fields` : "", failed ? `${failed} FAILED` : ""]
+    .filter(Boolean)
+    .join(", ");
+  console.log(
+    `History DB: copied ${inserted}/${missing.length} missing card rows (FK for PriceHistory)${extra ? ` — ${extra}` : ""}.`
+  );
+  // Re-read rather than assuming: the caller uses this to decide which rows are
+  // safe to write, and a wrong assumption here costs the entire day's snapshot.
+  const present = await dbHistory.card.findMany({ where: { id: { in: cardIds } }, select: { id: true } });
+  return new Set(present.map((c) => c.id));
+}
+
+// Prisma's unique-constraint violation. Checked by code rather than by message so
+// a Prisma version bump can't silently turn the repair path above back into a
+// hard failure.
+function isUniqueConflict(err: unknown): boolean {
+  return !!err && typeof err === "object" && (err as { code?: string }).code === "P2002";
 }

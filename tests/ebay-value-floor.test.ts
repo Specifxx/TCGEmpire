@@ -23,11 +23,14 @@ const PROMO = { rarity: "Common", collectorNumber: "012/166", variant: null, isP
 
 // ── The floor itself ─────────────────────────────────────────────────────────
 
-test("the floor is $20 USD unless the environment overrides it", () => {
-  // Not asserted as a literal 2000 — the point is that it is a real dollar
+test("the floor is $5 USD unless the environment overrides it", () => {
+  // Not asserted as a literal 500 — the point is that it is a real dollar
   // figure in USD cents, and that the env override exists so it can be moved
-  // without a deploy if quota pressure changes.
-  assert.equal(EBAY_MIN_VALUE_USD_CENTS, Number(process.env.EBAY_MIN_VALUE_CENTS ?? 2000));
+  // without a deploy if quota pressure changes. Lowered $20→$10→$5, both moves
+  // on 2026-08-20: the first funded by Germany's removal, the second by
+  // removing the eBay auction pass entirely — see the header comment on
+  // EBAY_MIN_VALUE_USD_CENTS in price-import.ts.
+  assert.equal(EBAY_MIN_VALUE_USD_CENTS, Number(process.env.EBAY_MIN_VALUE_CENTS ?? 500));
   assert.ok(Number.isFinite(EBAY_MIN_VALUE_USD_CENTS) && EBAY_MIN_VALUE_USD_CENTS > 0);
 });
 
@@ -37,7 +40,7 @@ test("a card below the TCGplayer US floor is not searched, whatever its rarity",
   assert.equal(eBayWorthSearching(SIGNATURE, 150), false, "a $1.50 Signature is still a $1.50 card");
 });
 
-test("the floor is inclusive — a card exactly at $20 is searched", () => {
+test("the floor is inclusive — a card exactly at the floor is searched", () => {
   // A strict `>` would drop cards sitting exactly on a round number, and TCGplayer
   // market prices land on round numbers constantly.
   assert.equal(eBayWorthSearching(RARE, EBAY_MIN_VALUE_USD_CENTS), true);
@@ -83,22 +86,24 @@ test("the rarity rule and the value floor are independent gates", () => {
 
 // ── Wiring: every pass that spends quota must apply the floor ────────────────
 
-test("all three eBay passes filter on the value floor", () => {
+test("both eBay singles passes filter on the value floor", () => {
   const src = read("src/lib/price-import.ts");
-  // The catalogue pass, the twice-daily chase pass and the auction pass each
-  // spend Browse calls. A pass that read the value map but forgot to pass it
-  // would keep working and quietly spend the quota this change exists to save.
+  // The catalogue pass and the twice-daily chase pass each spend Browse calls.
+  // A pass that read the value map but forgot to pass it would keep working
+  // and quietly spend the quota this change exists to save. (Was 3 — the
+  // auction pass was the third — until refreshEbayAuctions was removed
+  // entirely on 2026-08-20.)
   const calls = src.match(/eBayWorthSearching\(c, tcgValues\.get\(c\.id\)\)/g) ?? [];
-  assert.equal(calls.length, 3, "expected the catalogue, chase and auction passes to each apply the floor");
+  assert.equal(calls.length, 2, "expected the catalogue and chase passes to each apply the floor");
   // Read once per pass, never per card — the map is a whole-table read.
   const reads = src.match(/await tcgplayerUsValues\(\)/g) ?? [];
-  assert.equal(reads.length, 3, "tcgplayerUsValues must be read once per pass, not inside a market loop");
+  assert.equal(reads.length, 2, "tcgplayerUsValues must be read once per pass, not inside a market loop");
 });
 
 test("the preview script passes the value explicitly, never as a bare .filter reference", () => {
   // `.filter(eBayWorthSearching)` type-checks and is catastrophically wrong:
   // Array.filter hands the ELEMENT INDEX to the second parameter, so every card
-  // at an index below the floor reads as a sub-$20 card and the script prints
+  // at an index below the floor reads as a sub-floor card and the script prints
   // nothing at all.
   // Comments stripped first: the script names the wrong form in a warning
   // comment on purpose, and that mention must not read as the bug itself.
@@ -110,7 +115,7 @@ test("the preview script passes the value explicitly, never as a bare .filter re
 test("cards dropped by the floor still keep a way to reach eBay", () => {
   // The justification for skipping them is that the buy path survives — the
   // surfaces fall back to an affiliate eBay SEARCH link when a card has no eBay
-  // row, which is now permanently true for sub-$20 cards as well as Commons.
+  // row, which is now permanently true for sub-floor cards as well as Commons.
   const market = read("src/components/CardMarketSection.tsx");
   assert.match(market, /const ebay = m\.hasEbay \? null : ebaySearch\[country\] \?\? null;/);
   assert.match(market, /retailer="ebay_no_listing"/);
@@ -191,10 +196,73 @@ test("the sealed exclusion is applied to the search list, before any call is mad
 
 test("every sealed market still searches every remaining product type", () => {
   // The user-facing half of the request: sealed eBay coverage is all products
-  // (minus loose packs) across all four searched marketplaces, not US-only.
+  // (minus loose packs) across all five searched marketplaces (CA added
+  // 2026-08-20), not US-only.
   const src = read("src/lib/sealed-import.ts");
-  for (const m of ["EBAY_US", "EBAY_AU", "EBAY_GB", "EBAY_SG"]) {
+  for (const m of ["EBAY_US", "EBAY_AU", "EBAY_GB", "EBAY_SG", "EBAY_CA"]) {
     assert.ok(src.includes(m), `${m} must remain in EBAY_SEALED_MARKETS`);
   }
   assert.match(src, /for \(const mkt of EBAY_SEALED_MARKETS\)/);
+});
+
+// ── The Riftbound × T1 2025 Worlds Champion Collection ────────────────────────
+// A drawing-only Riot Merch product with no set code and none of the product
+// words every other filter keys off. Before it was wired in, the Signature
+// Edition matched neither SEALED_TITLE nor RIFTBOUND_HINT (so it was dropped
+// entirely) while the Player Bundle fell into the generic "Bundle" bucket — two
+// halves of one collection, classified apart, one of them invisible.
+
+test("both halves of the T1 collection classify as their own product types", () => {
+  assert.equal(
+    classifySealed("Riftbound x T1 2025 Worlds Champion Signature Edition"),
+    "T1 Signature Edition",
+  );
+  assert.equal(
+    classifySealed("Riftbound T1 2025 Worlds Champion Player Bundle"),
+    "T1 Player Bundle",
+  );
+  // Riot's own posts shorten it to "T1 Worlds Signature Set" — same product.
+  assert.equal(
+    classifySealed("Riftbound TCG - T1 Worlds Signature Set (English) SEALED"),
+    "T1 Signature Edition",
+  );
+});
+
+test("the Player Bundle is not swallowed by the generic Bundle rule", () => {
+  // It contains the bare word "bundle", so rule order is load-bearing: the T1
+  // branches must sit ABOVE `vault bundle|worlds bundle|…|\bbundle\b`.
+  const src = read("src/lib/sealed-import.ts");
+  const t1 = src.indexOf('return "T1 Player Bundle"');
+  const generic = src.indexOf('return "Bundle"');
+  assert.ok(t1 > 0 && generic > t1, "the T1 branches must be classified before the generic Bundle rule");
+  assert.notEqual(classifySealed("Riftbound Origins Vault Bundle"), "T1 Player Bundle");
+  assert.equal(classifySealed("Riftbound Origins Vault Bundle"), "Bundle");
+});
+
+test("a Signature SINGLE is never mistaken for the T1 sealed product", () => {
+  // "Signature" on its own is a CARD treatment. Anchoring the T1 matcher on
+  // "worlds champion" (or a nearby "T1") is what keeps singles out of the sealed
+  // table — the exact failure a bare /signature/ test would cause.
+  for (const notT1 of [
+    "Zed, Master of Shadows Signature 191*/166 Vendetta",
+    "Riftbound Vayne Hunter Signature SFD 223*/221 NM",
+    // "Signature Edition" with no T1/Worlds anchor is somebody else's product.
+    "Riftbound Vendetta Signature Edition Playmat",
+  ]) {
+    assert.notEqual(classifySealed(notT1), "T1 Signature Edition", notT1);
+    assert.notEqual(classifySealed(notT1), "T1 Player Bundle", notT1);
+  }
+});
+
+test("both T1 types keep an eBay search, a price floor and a published RRP", () => {
+  // The whole point of cataloguing a drawing-only product: the ONLY market it
+  // will ever have is resale, so if it loses its eBay search it has no prices at
+  // all. The floor and RRP are what make "how far over US$360" answerable.
+  const ebay = read("src/lib/ebay.ts");
+  const msrp = read("src/lib/msrp.ts");
+  for (const type of ["T1 Signature Edition", "T1 Player Bundle"]) {
+    assert.equal(ebaySealedWorthSearching(type), true, `${type} must keep its eBay search`);
+    assert.ok(ebay.includes(`"${type}"`), `${type} needs a SEALED_TYPE_KW + SEALED_MIN_CENTS entry`);
+    assert.ok(msrp.includes(`"${type}"`), `${type} needs an MSRP entry`);
+  }
 });

@@ -13,7 +13,7 @@ export type ArticleCategory = "blog" | "guide";
 //
 // `label` is the visible anchor text and must NOT name a country — the strip
 // swaps the eBay domain per market, so "Booster boxes on eBay UK" would be a lie
-// to five of the six markets. Name the PRODUCT, not the action: "Vendetta booster
+// to four of the five markets. Name the PRODUCT, not the action: "Vendetta booster
 // boxes" beats "Click here to buy". Two to four links is the working range; past
 // that the strip reads as a link farm rather than a recommendation.
 export interface ShopLink {
@@ -50,6 +50,16 @@ export interface ArticleEmbed {
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
   rulesSet?: string;
+  // COMPETITIVE STAPLES — the cards played across the real tournament lists in
+  // prisma/meta-decks.json, ordered by how many of those decks run them.
+  //
+  // Exists so a "best cards" article does not have to hard-code a ranking that is
+  // wrong the next time the metagame is re-cut. The gallery is derived from the
+  // same seed file /decks and the archetype pages read, so it CANNOT show a card
+  // that isn't genuinely in a tournament list, and it re-orders itself when the
+  // lists are updated. `minDecks` is the floor for inclusion (default 2 — a card
+  // in one list is that deck's card, not a staple).
+  metaStaples?: boolean | { minDecks?: number };
   take?: number; // default 12
 }
 
@@ -69,6 +79,21 @@ export interface ArticleCloseUp {
 export interface Article {
   slug: string;
   category: ArticleCategory;
+  // Written but NOT published. A draft is filtered out of every public surface —
+  // the /blog and /guides indexes, both feeds, the sitemap, the Google News
+  // section, the related-posts rail and the /llm mirrors — and its page renders
+  // noindex. It stays reachable by direct URL so it can be previewed and shared
+  // for review before going live.
+  //
+  // This exists because ARTICLES had no unpublished state at all: adding an entry
+  // put it in the sitemap and the news feed on the next deploy. That makes it
+  // impossible to land a post that still has facts to verify without publishing
+  // the unverified version first — and a run of half-finished posts appearing at
+  // once is the "scaled content abuse" shape lib/posts.ts already warns about.
+  //
+  // Publishing is therefore a deliberate one-line edit (delete the flag), not a
+  // side effect of writing the file.
+  draft?: boolean;
   title: string;
   excerpt: string;
   author: string;
@@ -122,9 +147,14 @@ export interface Article {
   // this is the block a featured snippet or an AI answer engine lifts, so lead
   // with the answer rather than context.
   summary?: string[];
-  // Featured image, shown at the top of the article and used as the OG image
-  // fallback. Site-relative path into public/ (so the build-time optimiser has a
-  // manifest entry for it) plus REQUIRED descriptive alt text.
+  // Featured image, shown at the top of the article (ArticleView) and in the
+  // homepage "Latest" teaser (LatestPosts) — NOT the OG/social image, which is
+  // always a generated branded card regardless of this field (opengraph-image.tsx).
+  // Either a site-relative path into public/ (so the build-time optimiser has a
+  // manifest entry for it) or a full URL already used for card art elsewhere in
+  // the app (riftcompare.com/... re-hosted specials, or cdn.riftscribe.gg — both
+  // already allow-listed for next/image in next.config.js). REQUIRED descriptive
+  // alt text either way.
   hero?: { src: string; alt: string };
   // Attach the LIVE "most expensive cards right now" table (ArticleTopValue) for
   // one market. Used by the most-expensive-cards listicle instead of typing a
@@ -140,6 +170,480 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  {
+    slug: "riftbound-deck-archetypes-guide",
+    category: "guide",
+    title: "Riftbound Deck Archetypes: A Complete Guide",
+    excerpt:
+      "Aggro, Tempo, Midrange and six more specific tags on top of them — every real Riftbound deck archetype in the current metagame, and which to build first. Want today's actual decklists instead? See the meta decks, priced.",
+    author: "RiftCompare",
+    date: "2026-08-30",
+    readMins: 10,
+    tags: ["deckbuilding", "archetypes", "meta", "beginner", "strategy"],
+    hero: {
+      src: "/blog/riftbound-deck-archetypes-guide.png",
+      alt: "Riftbound deck archetypes guide — Aggro, Tempo, Midrange and six more, color-coded",
+    },
+    summary: [
+      "**Nine named archetypes appear in the current metagame, but only three are real pillars**: Aggro, Tempo and Midrange. Every one of the ten tournament decklists we track is fundamentally one of those three.",
+      "**The other six labels — Combo, Disruption, Value, Gear, Spell, Reach — are always a more specific tag on top of one of the big three**, never a category by themselves (e.g. \"Aggro / Combo\", \"Spell Tempo\").",
+      "**Aggro and Tempo are tied for the most-played, at 4 of the 10 tracked decks each; Midrange has 3.** The current field's one Tier 1 deck (Irelia, Blade Dancer) is Tempo.",
+      "**Domain choice and archetype are linked**, not independent — most competitive lists commit to one or two of Riftbound's seven domains, and the current decks span six of them (every domain but Colorless).",
+      "Looking for actual decklists rather than the strategy behind them? **[See the real, live-priced meta decks](/decks).**",
+    ],
+    itemList: {
+      name: "Riftbound deck archetypes",
+      items: [
+        { name: "Aggro", description: "Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter.", url: "/decks/archetype/aggro" },
+        { name: "Tempo", description: "Spend every turn more efficiently than the opponent can answer.", url: "/decks/archetype/tempo" },
+        { name: "Midrange", description: "Bigger, more efficient cards than Aggro, while still faster than a pure control shell.", url: "/decks/archetype/midrange" },
+        { name: "Combo", description: "An Aggro deck whose win condition is a specific card interaction.", url: "/decks/archetype/combo" },
+        { name: "Disruption", description: "An Aggro deck built to deny the opponent's plan as much as execute its own.", url: "/decks/archetype/disruption" },
+        { name: "Value", description: "A Midrange deck built to grind out a card-advantage edge over a long game.", url: "/decks/archetype/value" },
+        { name: "Gear", description: "A Midrange deck built around equipment rather than raw unit stats.", url: "/decks/archetype/gear" },
+        { name: "Spell", description: "A Tempo deck that wins through spell-heavy swings rather than board stats.", url: "/decks/archetype/spell" },
+        { name: "Reach", description: "A Tempo deck carrying threats that can close the game from outside combat.", url: "/decks/archetype/reach" },
+      ],
+    },
+    faq: [
+      { q: "How many domains can a Riftbound deck run?", a: "One or two, in practice. Nothing in the printed rules caps it lower than that, but your 12 runes have to match your deck's domains to reliably cast your cards, and every archetype in the current tournament metagame we track commits to exactly one or two — usually two." },
+      { q: "What's the actual difference between Aggro and Tempo in Riftbound?", a: "Aggro tries to end the game before the opponent's expensive cards matter, accepting a worse late game for a faster clock. Tempo also plays proactively, but its goal is staying ahead on board turn after turn rather than racing flat out — it's often willing to trade a slower start for a more efficient one. The two overlap enough that some real decks are tagged both (Aggro / Tempo) rather than purely one or the other." },
+      { q: "What archetype should a beginner build first?", a: "Aggro is usually the easiest to learn on: the game plan is straightforward to execute, and mistakes are cheaper because you're rarely committing your whole turn to one expensive card. That's a starting-point recommendation, not a rule — Tempo and Midrange are just as legitimate if the playstyle appeals to you more." },
+      { q: "How many Riftbound deck archetypes are there?", a: "Nine named archetypes show up across the real tournament decklists we track, but three of them — Aggro, Tempo and Midrange — are the actual pillars. The other six (Combo, Disruption, Value, Gear, Spell, Reach) are more specific tags layered onto one of those three, not separate categories of their own." },
+      { q: "How much does a competitive Riftbound deck cost?", a: "It depends entirely on which list and which market you're buying in — the honest number changes daily as prices move. The meta decks page prices every real tournament list live, cheapest first, and the budget deckbuilding guide covers how to cut that cost without leaving the archetype you want to play." },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See today's real, live-priced meta decks →",
+      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole thing right now.",
+    },
+    body: `Search "Riftbound deck" and you'll get two different answers depending on what you actually want. If you want to see what people are winning with **right now** — real tournament lists, priced card-for-card in your own currency — that's [our meta decks page](/decks), updated as results come in. If you're trying to figure out **which kind of deck to build in the first place**, that's this page: what the real archetypes are, what actually separates them, and which one fits how you want to play.
+
+## What a deck needs, in 30 seconds
+
+Every Riftbound tournament deck is the same shape: a **Legend**, a **Champion**, a ~40-card main deck of Units/Gear/Spells, 12 **Runes** matching your domains, 3 **Battlefields**, and a side deck of up to 10 — 66 cards all up since the July 2026 rules update raised the side deck from 8. If any of that is new to you, **[the full anatomy of a deck](/guides/how-a-riftbound-deck-is-built)** covers it card type by card type. This page assumes you know the parts and is about a different question: which *strategy* to build around them.
+
+## Pick a domain (or two) first
+
+Riftbound has seven domains — Fury, Calm, Mind, Body, Chaos, Order and Colorless — and almost every competitive deck commits to one or two of them, since your 12 runes have to match. Domain is a real constraint on archetype: it's not that any domain can be any archetype, it's that a domain's own cards tend to reward a particular way of playing. Fury's cheap, aggressive cards pull toward Aggro; Mind's card-advantage tools pull toward Midrange and Value; and so on. Every domain gets its own breakdown — **[Fury](/decks/domain/fury)**, **[Calm](/decks/domain/calm)**, **[Mind](/decks/domain/mind)**, **[Body](/decks/domain/body)**, **[Chaos](/decks/domain/chaos)** and **[Order](/decks/domain/order)** — each with the real decks currently playing it and what they cost to build. (Colorless isn't a domain you build a deck *in* — no domain pair commits to it in the current metagame — but colorless cards slot into any list regardless of your domains, which is why they're the format's closest thing to universal staples.)
+
+## The archetypes, compared
+
+Nine named archetypes show up across the ten real tournament decklists we track, but they're not nine equal categories. **Every single one of the ten decks is fundamentally Aggro, Tempo or Midrange** — the other six labels (Combo, Disruption, Value, Gear, Spell, Reach) never stand alone; each one is a more specific tag layered onto one of those three. "Aggro / Combo" is an Aggro deck whose plan happens to be a specific card interaction. "Spell Tempo" is a Tempo deck that wins through spells rather than board stats. Knowing that changes how you should read the list below: the first three rows are real, separate ways to build; the next six are flavors of them.
+
+| Archetype | Playstyle | Real example right now | Domains it's shown up in |
+| --- | --- | --- | --- |
+| **[Aggro](/decks/archetype/aggro)** | Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter. | Kennen, Heart of the Tempest (Tier 2) | Body, Calm, Chaos, Fury, Order |
+| **[Tempo](/decks/archetype/tempo)** | Spend every turn more efficiently than the opponent can answer, staying ahead on board rather than racing flat out. | Irelia, Blade Dancer (Tier 1 — the field's benchmark) | Body, Calm, Chaos, Mind |
+| **[Midrange](/decks/archetype/midrange)** | Bigger, more efficient cards than Aggro plays, while still moving faster than a pure control shell. | Viktor, Herald of the Arcane (Tier 3) | Body, Fury, Mind, Order |
+| **[Combo](/decks/archetype/combo)** | An Aggro deck whose win condition is a specific card interaction rather than raw pressure alone. | Akali, Rogue Assassin (Aggro / Combo) | Calm, Fury |
+| **[Disruption](/decks/archetype/disruption)** | An Aggro deck that spends as much energy denying the opponent's plan as executing its own. | Kennen, Heart of the Tempest — same deck as the Aggro row above | Chaos, Order |
+| **[Value](/decks/archetype/value)** | A Midrange deck built to grind out a card-advantage edge over a long game rather than close fast. | Viktor, Herald of the Arcane — same deck as the Midrange row above | Mind, Order |
+| **[Gear](/decks/archetype/gear)** | A Midrange deck built around equipment rather than raw unit stats — a toolbox of repeatable effects. | Jayce, Defender of Tomorrow (Gear Midrange) | Body, Mind |
+| **[Spell](/decks/archetype/spell)** | A Tempo deck that wins through spell-heavy swings instead of board stats doing the work. | Diana, Scorn of the Moon (Spell Tempo, Tier 2) | Chaos, Mind |
+| **[Reach](/decks/archetype/reach)** | A Tempo deck carrying threats that can close the game from outside straight combat. | Ezreal, Prodigal Explorer (Tempo / Reach) | Chaos, Mind |
+
+Every archetype name links to its own page — the real decks in that group, what they cost to build in your market right now, and where to buy every card.
+
+## Which should you build first?
+
+There's no universally correct answer here — this is guidance, not a rule — but a few honest starting points:
+
+- **New to competitive Riftbound?** Start with **Aggro**. It's the most forgiving archetype to learn on: your deck's plan is simple to execute, your mistakes are cheaper (a misplayed 2-drop costs less than a misplayed 6-drop), and it teaches you the game's tempo and combat math faster than any other shell.
+- **Like reacting to what your opponent does, not just executing a plan?** **Tempo** or **Disruption** reward reading the board and adjusting turn to turn, rather than following a fixed script.
+- **Prefer a deck that's forgiving of a bad matchup?** **Midrange** — and specifically **Value** — trades some explosiveness for a deck that rarely has a truly unwinnable game plan against anything.
+- **Want a defined "I did the thing" moment?** **Combo** is the one archetype built around a specific interaction actually coming together, which is a different kind of satisfying than grinding out small edges all game.
+- **Building on a budget?** Archetype and budget aren't the same axis — see the next section — but as a rule of thumb, a low curve means more commons and uncommons and fewer expensive chases, which usually (not always) makes Aggro the cheaper shelf to buy into.
+
+## Budget vs. chasing the meta
+
+Tier 1 isn't always the right target for your first deck. A Tier 1 list is the highest expected finish, but it's also the most-copied — which means its key cards are the most contested and often the most expensive. **[Best budget Riftbound decks](/guides/budget-riftbound-decks)** covers how to build something genuinely competitive without chasing the priciest cards in the format, and **[the most-played cards in the current metagame](/guides/best-riftbound-cards)** shows you which staples show up across multiple lists — the cards worth owning regardless of which single archetype you land on.
+
+Once you've picked a list, don't price it card-by-card across a dozen different stores. **[Best Basket](/tools/best-basket)** takes the whole decklist and works out the store split that's actually cheapest once postage is counted — not just the cheapest total if every store magically shipped free.
+
+## One thing that doesn't change your choice
+
+Every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in every format, and no rotation policy has been announced. That means an archetype you build today isn't on a clock: **[does Riftbound rotate?](/guides/riftbound-format-legality-rotation)** has the full picture, but the short version is that your deck stays legal for as long as the cards in it do, which so far has been indefinitely.
+
+## Where the real decklists live
+
+Everything above is about *choosing* an archetype. Once you have, **[the meta decks page](/decks)** is where the actual, current, real tournament lists live — every card, every domain split, priced live in your own market, with the cheapest place to buy each one. That's the page for "what is everyone actually playing" — this one was for "what should I play."`,
+  },
+  // ── Radiance (Set 5) — the one released set with no coverage at all until now.
+  // Deliberately category "blog", not "guide": news-sitemap.xml only admits blog
+  // posts inside a 2-day window, and a set announcement is exactly the piece that
+  // benefits from fast crawl. Every figure below is from lib/constants.ts's SETS
+  // entry or Riot's published roadmap — nothing about the card list is invented,
+  // because nothing about the card list has been revealed.
+  {
+    slug: "riftbound-radiance-what-we-know",
+    category: "blog",
+    title: "Riftbound Radiance: Release Date & What's Confirmed",
+    excerpt:
+      "Riftbound: Radiance lands 23 October 2026 with 180 confirmed cards and five new champion Legends. Every confirmed detail and what's still unrevealed.",
+    author: "RiftCompare",
+    date: "2026-08-27",
+    readMins: 7,
+    tags: ["radiance", "news", "set", "release date", "seraphine"],
+    hero: {
+      src: "/blog/riftbound-radiance-what-we-know.png",
+      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with 180 confirmed cards",
+    },
+    summary: [
+      "**Radiance releases 23 October 2026** — the fifth Riftbound set, and the next one you will actually be able to buy.",
+      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments — the second-largest Riftbound set so far, behind only Origins.",
+      "**Five new champion Legends are confirmed, with four more still unrevealed**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      "**The card list has not been revealed.** Anyone showing you Radiance decklists today is guessing — we will publish the gallery the day it is real.",
+      "**One Radiance card already exists in print**: Seraphine, Not Alone shipped inside the T1 Signature Edition months early, which is why it is not tournament-legal yet.",
+    ],
+    faq: [
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026. It is the fifth Riftbound set, following Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta.",
+      },
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "180, confirmed by Riot — 66 of those are Showcase treatments. That is larger than Vendetta's 166 and smaller than Origins' 298, making it the second-biggest Riftbound set so far. Expect Signature and overnumbered printings beyond the 180, the same way every previous set has had chase printings beyond its base count.",
+      },
+      {
+        q: "Which champions are in Riftbound Radiance?",
+        a: "Five new champion Legends are confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. Riot has also said four more champions are still to be revealed. The full card list has not been published, so the rest of the set — including which existing champions get new printings — is not yet known.",
+      },
+      {
+        q: "Can I see the Radiance card list yet?",
+        a: "No. The card list has not been revealed. RiftCompare publishes a full, filterable gallery with live prices the moment cards are officially confirmed — that is what happened with Vendetta, and Radiance will be handled the same way.",
+      },
+      {
+        q: "Is there a Radiance card I can already buy?",
+        a: "Sort of. Seraphine, Not Alone is a Radiance card that shipped early inside the Riftbound x T1 2025 Worlds Champion Collection, so copies exist before the set does. It is not legal for sanctioned play until Radiance actually releases on 23 October 2026.",
+      },
+      {
+        q: "Should I buy Vendetta cards before Radiance releases?",
+        a: "It depends on whether you are buying to play or to collect. A new set changes what decks want, which moves prices in both directions — the mechanisms behind that are covered in our guide to why Riftbound prices change. What we will not do is predict specific cards.",
+      },
+    ],
+    // Seraphine's T1 printing is a real, catalogued card (prisma/manual-cards.json),
+    // so this resolves today. If it ever stops resolving, resolveEmbed omits the
+    // tile rather than rendering a broken one.
+    embeds: [
+      {
+        title: "The one Radiance card already in print",
+        note: "Seraphine, Not Alone shipped inside the T1 Signature Edition before her own set. Drawing-only, so she carries no store price until copies reach the secondary market.",
+        slugs: ["seraphine-not-alone-t1s-005-005-promo"],
+      },
+    ],
+    browseCta: {
+      href: "/release-dates",
+      label: "See the Radiance countdown →",
+      blurb: "The exact time remaining until release, plus every set date we track.",
+    },
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to a confirmed **180 cards** (66 of them Showcase treatments), and it brings **five new champion Legends** — with four more still unrevealed. That is the confirmed core — and this page is deliberately limited to what is actually confirmed, because the card list has not been revealed and the internet is already full of Radiance "leaks" that are nothing of the sort.
+
+## Radiance at a glance
+
+| | |
+| --- | --- |
+| **Set number** | 5 |
+| **Release date** | 23 October 2026 |
+| **Card count** | 180 (66 Showcase), confirmed |
+| **New champion Legends** | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV (+4 unrevealed) |
+| **Set code** | RAD |
+| **Card list revealed?** | **No** |
+
+## Where Radiance sits in the release order
+
+Riftbound has shipped five sets so far — Origins (298 cards), Origins: Proving Grounds (24), Spirit Forged (221), Unleashed (219) and Vendetta (166). Radiance is the sixth release and the fifth mainline set.
+
+Radiance reverses a shrink. The previous set was the smallest mainline release to date, and Radiance lands at a confirmed **180 cards** — second only to Origins among everything shipped so far. That matters more than it sounds. **A bigger set spreads the print run across more cards**, which generally means each individual chase card is scarcer relative to demand — the same dynamic that keeps Origins' top cards expensive despite Origins being the largest set of all. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
+
+## The five champions
+
+Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV** — and said four more are still to be revealed, for nine new Legends across the set in total.
+
+All five named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining four. What has *not* been said is which domains any of them sit in, what their abilities do, or which existing champions get new printings alongside them — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+
+If you want the wider picture of who is already in the game, we maintain **[which League of Legends champions are in Riftbound](/guides/league-of-legends-champions-in-riftbound)**.
+
+## The odd one out: a Radiance card that already exists
+
+Here is the genuinely strange detail about this set, and the one thing about Radiance you can look up right now.
+
+**Seraphine, Not Alone is a Radiance card — and it has already been printed.** She was one of the five cards in the **[Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)**, distributed through a Riot Merch Store drawing months before her own set ships.
+
+[[embed:0]]
+
+That creates a situation with no precedent in Riftbound: a card that physically exists, that people own, and that **is not legal for sanctioned play** — because the set it belongs to has not released. Anyone who won a T1 box is holding a card they cannot play until 23 October.
+
+It is also a small, useful signal about the set. Seraphine being pulled forward for a marquee collaboration suggests she is a headline card in Radiance rather than a background one. That is inference, not confirmation — but it is inference from a real, verifiable fact rather than from a rumour.
+
+## What this means if you buy cards
+
+Three things are worth thinking about before release, and none of them require knowing the card list.
+
+**Launch windows are the most volatile pricing a set ever has.** In the first weeks after a release, a huge amount of product is opened at once while nobody yet knows which cards matter. Prices swing hard on very few trades. If you are buying to play rather than to speculate, waiting past the initial rush usually means better information and calmer prices — the full mechanism is in **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)**.
+
+**Sealed is comparable before singles are.** Booster boxes and preconstructed products are usually listed and priceable before singles exist, so if you intend to open Radiance rather than buy into it, the **[sealed comparison](/sealed)** is where to watch first. Whether opening is actually the cheaper route is a question our **[box EV guide](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles)** answers properly — and the honest answer usually depends on the singles market that does not exist yet.
+
+**A new set moves the old ones.** Radiance will change what decks want, which moves Vendetta and Unleashed prices in both directions — up for cards the new archetypes need, down for cards they replace. Watching **[price movers](/movers)** through the launch window tells you which is happening far more reliably than predicting it in advance.
+
+## What we will publish, and when
+
+We are not going to run Radiance speculation. What we will do, on the day the reveals are real:
+
+- **The full card gallery**, filterable by domain, rarity and type, straight from our database.
+- **Live prices on every card**, compared across every store we track in each market's own currency.
+- **The chase tiers** — Signature, overnumbered, alternate-art and promo printings — as they are confirmed.
+
+Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
+  },
+  // ── Format legality. "Standard format" and "format legal" returned zero matches
+  // across the whole corpus before this, despite being the question behind every
+  // expensive-card purchase. Scoped carefully: Riot has published a ban list but
+  // NOT a rotation policy, and this article says so plainly rather than inventing
+  // one — same rule /editorial-policy states for rules content.
+  {
+    slug: "riftbound-format-legality-rotation",
+    category: "guide",
+    title: "Does Riftbound Rotate? Card Legality Explained",
+    excerpt:
+      "Every Riftbound set released so far is still legal, and Riot has not announced a rotation. Here's what that actually means before you spend money on a chase card — and what would change it.",
+    author: "RiftCompare",
+    date: "2026-08-27",
+    readMins: 6,
+    tags: ["rules", "format", "rotation", "banlist", "buying guide"],
+    hero: {
+      src: "/blog/riftbound-format-legality-rotation.png",
+      alt: "Riftbound format legality — all five released sets are currently legal, with bans the only removal mechanism",
+    },
+    summary: [
+      "**No Riftbound set has rotated out.** All five released sets are currently legal in Standard.",
+      "**Riot has not published a rotation policy.** That is not the same as promising there will never be one — and we are not going to pretend it is.",
+      "**Bans are the only mechanism removing cards today**, and they are applied narrowly, a handful of cards at a time.",
+      "**Standard and 2v2 have separate ban lists.** A card legal in one can be banned in the other.",
+      "**The buying implication:** treat legality as current fact, not a permanent guarantee, and size expensive purchases accordingly.",
+    ],
+    faq: [
+      {
+        q: "Does Riftbound have rotation?",
+        a: "Not today. No Riftbound set has rotated out of legality, and every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in Standard. Riot has not published a rotation policy either way, so nobody can tell you what happens in 2028.",
+      },
+      {
+        q: "Are Origins cards still legal in Riftbound?",
+        a: "Yes. Origins is the launch set and its cards remain legal in Standard, apart from the small number that appear on the ban list. Age alone has not removed any card from play.",
+      },
+      {
+        q: "What is the difference between a ban and a rotation?",
+        a: "A ban removes one named card because it is causing a problem — it is targeted and rare. A rotation removes whole sets at once on a schedule, regardless of whether their cards are causing problems. Riftbound currently uses bans and does not use rotation.",
+      },
+      {
+        q: "Are Standard and 2v2 ban lists the same?",
+        a: "No, they are separate. A card can be legal in 1v1 Standard and banned in 2v2, or the reverse — Master Yi, Wuju Bladesman is the clearest current example, banned in 2v2 only. Check the format you actually play.",
+      },
+      {
+        q: "Could my expensive Riftbound cards become unplayable?",
+        a: "A ban is possible for any card, though bans have been applied narrowly so far. A rotation would be a much bigger change and has not been announced. The sensible position is that legality is a current fact rather than a permanent guarantee, which is worth factoring into how much you spend on a single card.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/riftbound-banlist-explained",
+      label: "See the current ban list →",
+      blurb: "Every banned card, the format it is banned in, and what it means for your deck.",
+    },
+    body: `If you are about to spend real money on a Riftbound chase card, there is one question underneath the purchase: **will this card still be legal in a year?**
+
+Here is the honest, current answer — including the part most sites skip, which is what nobody actually knows.
+
+## The short version
+
+**Riftbound does not rotate today.** Every set released so far is legal in Standard:
+
+| Set | Code | Legal in Standard? |
+| --- | --- | --- |
+| Origins | OGN | Yes |
+| Origins: Proving Grounds | OGS | Yes |
+| Spirit Forged | SFD | Yes |
+| Unleashed | UNL | Yes |
+| Vendetta | VEN | Yes |
+
+The only cards not legal are the specific ones on the **[ban list](/guides/riftbound-banlist-explained)** — a small, named set, not a whole generation of cards.
+
+## Rotation and bans are not the same thing
+
+These get conflated constantly, and the difference matters a lot for what you buy.
+
+**A ban is a scalpel.** It removes one named card because that card is distorting the format. It is targeted, it is rare, and it is announced with a reason. Riftbound's **[July 2026 ban wave](/blog/riftbound-july-2026-ban-list-update)** is the most recent example.
+
+**A rotation is a scheduled amputation.** It removes entire sets at once on a calendar, whether or not their cards were causing any problem at all. Cards that were perfectly reasonable simply stop being legal because of their age. Several long-running card games work this way; Riftbound, so far, does not.
+
+The practical difference: a ban is a small risk spread across thousands of cards, most of which will never be touched. A rotation is a certainty applied to everything you own from a given set, on a known date.
+
+## What Riot has and hasn't said
+
+This is where we are going to be more careful than most coverage of this question.
+
+**What is confirmed:** there is a ban list, it is maintained, it covers Standard and 2v2 separately, and it has been applied narrowly — a handful of cards at a time, with stated reasoning. Riot's approach to bans has been described as minimal intervention: act on genuine problems, and accept that this often means not acting at all.
+
+**What is not confirmed:** anything about rotation. Riot has not published a rotation policy, a rotation schedule, or a statement ruling rotation out. That silence is genuinely ambiguous, and we are not going to resolve it for you by guessing.
+
+You will find sites confidently telling you Riftbound "will never rotate" or "rotates after four sets". Both are inventions. **[Our editorial policy](/editorial-policy)** is that we publish rules and legality claims only where we can point at something official — and on rotation specifically, there is nothing to point at.
+
+## Why a game this young leaves the question open
+
+Riftbound launched in 2026 and has five released sets with four more announced through 2027. That is a relevant piece of context, because rotation is a problem that only becomes worth solving once a card pool gets large.
+
+A game with five sets has a manageable format. A game with fifteen has a very different one — more cards to balance, a higher barrier for new players, and more pressure to reprint. Every card game that eventually adopted rotation did so after the pool grew, not at launch. **[The 2027 roadmap](/blog/riftbound-2027-set-roadmap)** shows the pool roughly doubling over the next eighteen months, with Legacy alone at around 346 cards.
+
+None of that is evidence rotation is coming. It is the reason the question is worth keeping open rather than answering prematurely in either direction.
+
+## What this means for buying
+
+Three practical positions, in rough order of how much money is at stake.
+
+**For cards you buy to play,** legality today is what matters and today is settled. Build what you want from any released set; check the ban list for the format you actually play, since **[Standard and 2v2 differ](/guides/riftbound-banlist-explained)**.
+
+**For a single expensive chase card,** treat current legality as a fact with an unknown expiry rather than a guarantee. That is not a reason to avoid buying — it is a reason to size the purchase so that a rules change would be disappointing rather than damaging. The same logic applies to any collectible whose value depends partly on rules that someone else controls, and it is covered further in **[are Riftbound cards a real investment?](/blog/are-riftbound-cards-a-real-investment)**.
+
+**For cards you already own,** a ban usually moves the price immediately and downward, but rarely to zero — a card banned in one format can stay legal in another and stay collectable regardless. **[Price movers](/movers)** is where that reaction shows up first.
+
+## What would change this article
+
+We will update this page when any of the following happens, and not before: Riot publishes a rotation policy; a set is announced as rotating out; or the ban list changes materially. Until one of those, the answer to "does Riftbound rotate?" is a straightforward **no, and nothing has been announced** — which is a more useful answer than a confident guess in either direction.`,
+  },
+  {
+    slug: "best-riftbound-cards",
+    category: "guide",
+    title: "Best Riftbound Cards: What Winning Decks Play",
+    excerpt:
+      "Which Riftbound cards are actually the best? Not an opinion — the 48 cards that show up across the real tournament decklists in the current metagame, counted, ranked by how many decks run them, and priced live.",
+    author: "RiftCompare",
+    date: "2026-08-10",
+    readMins: 7,
+    tags: ["best cards", "meta", "staples", "deckbuilding", "buying"],
+    summary: [
+      "**\"Best\" here means most-played, measured.** We counted every card across the real tournament decklists we track and ranked them by how many separate decks run them — no personal ratings.",
+      "**48 cards appear in two or more of the 10 lists.** 20 appear in three or more. The most-played card in the format right now is **Stacked Deck**, in half of them.",
+      "**Spells dominate**: 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards.",
+      "**Most-played is not most-expensive.** If you want the grails instead, that is a [different list](/guides/most-valuable-riftbound-cards) — and the two barely overlap.",
+    ],
+    itemList: {
+      name: "Most-played Riftbound cards in the current metagame",
+      items: [
+        { name: "Stacked Deck", description: "Played in 5 of the 10 tournament decklists we track — the most-played card in the format.", url: "/card/stacked-deck-ogn-183-298" },
+        { name: "Irelia, Fervent", description: "The only champion card played across three separate decks.", url: "/card/irelia-fervent-sfd-057-221" },
+        { name: "Bellows Breath", description: "In three of the ten lists, at up to three copies.", url: "/card/bellows-breath-sfd-080-221" },
+        { name: "Stupefy", description: "In three of the ten lists, at up to three copies.", url: "/card/stupefy-ogn-095-298" },
+        { name: "Tideturner", description: "The most-played unit outside a deck's own champion package.", url: "/card/tideturner-ogn-199-298" },
+        { name: "Zhonya's Hourglass", description: "One of only two gear cards shared across three decks.", url: "/card/zhonya-s-hourglass-ogn-077-298" },
+        { name: "Seat of Power", description: "One of seven battlefields that recur across the field.", url: "/card/seat-of-power-sfd-217-221" },
+      ],
+    },
+    embeds: [
+      {
+        title: "Every card played in two or more meta decks",
+        note: "Pulled live from our database and ordered by how many of the tracked tournament decklists run each card — the most-played first. Tap any card for its full text, every printing, and the cheapest store right now.",
+        metaStaples: { minDecks: 2 },
+        take: 48,
+      },
+      {
+        title: "The core: cards in three or more decks",
+        note: "The tighter cut — cards that turned up in at least three separate lists, across different archetypes and different legends.",
+        metaStaples: { minDecks: 3 },
+        take: 24,
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See the decklists these cards come from",
+      blurb: "Every list on this page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole deck right now.",
+    },
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG single cards" },
+      { label: "Riftbound Origins singles", query: "Riftbound Origins single card" },
+    ],
+    faq: [
+      {
+        q: "What are the best cards in Riftbound?",
+        a: "Measured by how often they actually appear in winning decklists, the most-played cards in the current metagame are Stacked Deck (in 5 of the 10 tournament lists we track), then a group of twenty cards that each appear in three, including Bellows Breath, Stupefy, Tideturner, Charm, Defy, Discipline, En Garde, Cleave, Hidden Blade, Star-Crossed, Zhonya's Hourglass and Irelia, Fervent. That is a measurement of play rate, not a power rating.",
+      },
+      {
+        q: "How did you decide which cards are best?",
+        a: "By counting. We take the real tournament decklists tracked on our meta decks page, count how many separate decks play each card, and rank by that number. A card in one list is that deck's card; a card in several is a staple. Nothing on this page is a personal rating, and no card appears that is not in a real list.",
+      },
+      {
+        q: "Are the best cards the most expensive ones?",
+        a: "Largely no, and that surprises people. Play rate and price are driven by different things — a common spell that every deck wants can cost less than a chase Epic almost nobody plays, because the Epic's price comes from scarcity and art. Our most valuable Riftbound cards guide covers the price side separately.",
+      },
+      {
+        q: "Why are most of the best cards spells?",
+        a: "It is what the counting shows: 22 of the 48 shared cards are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. Units and champion cards tend to be specific to whichever legend a deck is built around, so they are less likely to be shared between decks — spells and battlefields are the slots different decks agree on.",
+      },
+      {
+        q: "How often does this list change?",
+        a: "It re-cuts whenever the underlying decklists do. The gallery on this page is generated from the same decklist data our meta decks pages use, so when a new tournament list is added the counts and the order here update with it rather than going stale.",
+      },
+      {
+        q: "What is the cheapest way to buy these cards?",
+        a: "Open any card above and compare every store we track on delivered cost, or paste a full list into the deck builder to price it in one pass. Buying a spread of cheap staples from one store usually beats buying each from its individually cheapest store once postage is counted.",
+      },
+    ],
+    body: `Ask which Riftbound cards are "best" and you will get ten different answers, most of them somebody's opinion. This page takes the boring route instead: **we counted**.
+
+Every decklist on our [meta decks page](/decks) is a real tournament result. Take all ten, count how many separate decks play each card, and rank by that number. A card that shows up in one list is that deck's card. A card that shows up in five, across different archetypes and different legends, is a card the format has agreed on — and that is a claim you can check rather than take on trust.
+
+## How this list was built
+
+- **Source:** the tournament decklists on [/decks](/decks), tracked from published event results.
+- **Sample:** 10 decks, spanning ten different archetypes from aggro through to value midrange.
+- **Rule:** count each card once per deck, however many copies it runs. Runes are excluded — every deck in a domain runs the same rune base, so counting them would tell you nothing.
+- **Cut-off:** two decks minimum. Below that it is not a staple, it is a preference.
+
+That produces **48 cards**. Twenty of them appear in three decks or more.
+
+One caveat on the gallery below: it is drawn from our own card database, so a card we have not catalogued a printing for yet will be counted here but will not have a tile. That is deliberate — showing a tile for a card we cannot price would be worse than showing one fewer.
+
+## The most-played cards in Riftbound
+
+[[embed:0]]
+
+The single most-played card in the format is **Stacked Deck**, in five of the ten lists — no other card is in more than three. Below it sits a broad, flat tier: twenty cards each appearing in three separate decks, which is what a healthy, unsettled format looks like rather than one with a single obvious best card.
+
+## What the counting shows
+
+Three things stand out, and all three are just arithmetic on the table above.
+
+**Spells are the shared language.** 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. That gap is not subtle, and it has a straightforward explanation: units and champion cards are chosen to fit whichever legend a deck is built around, so they rarely cross between decks. Spells are the slots different decks independently arrive at.
+
+**Champion cards almost never cross over.** Only two make the list at all — Irelia, Fervent in three decks and Rek'Sai, Breacher in two. Everything else in the champion slot is specific to its own list, which is what you would expect when each deck is built around a different legend.
+
+**Battlefields consolidate hard.** Each deck runs three battlefields, so the ten lists have thirty battlefield slots between them — and only seven distinct battlefields recur across more than one deck. If you are buying, that is a short list doing a lot of work.
+
+Twenty-five of the 48 are run at the full three copies in at least one list, so "buy one" and "buy a playset" are different budgets. Every card above shows its cheapest live price, and the [card database](/browse) will compare every store on delivered cost.
+
+## The core, if you are buying in
+
+[[embed:1]]
+
+These are the cards that turned up in three or more separate decks. If you are new and want the cards least likely to be wasted whatever you end up building, start here rather than with the expensive ones — and check the [cheapest way to start guide](/guides/cheapest-way-to-start-riftbound) for the wider version of that argument.
+
+[[shop]]
+
+## "Best" is not the same as "most valuable"
+
+This is the part worth being clear about, because the two lists barely overlap.
+
+Play rate and price are set by different forces. A common spell that eight decks want can cost less than an Epic almost nobody plays, because the Epic's price comes from print scarcity and art rather than from anyone putting it in a deck. Neither number is wrong — they answer different questions.
+
+- If you want to know what to **play**, this page is the list.
+- If you want to know what is **worth money**, see [the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards) and [the most expensive grails](/blog/most-expensive-riftbound-cards).
+- If you want the current **chase printings** specifically, [Vendetta's chase tiers](/blog/riftbound-vendetta-chase-cards-so-far) breaks those out by tier.
+
+## Keeping this honest
+
+The gallery above is generated from the decklist data itself, not typed into this page. When a new tournament list lands, the counts and the order change with it — and a card that is not in a real list cannot appear here at all, because there is nothing for it to be counted from.
+
+What this page deliberately does not do is tell you *why* any of these cards is good. That is a claim about how the cards play, and the honest place to check it is the card itself: open any tile above for its printed text, every printing, and what it costs right now. If you want the strategy layer, the [best Vendetta decks guide](/guides/best-riftbound-vendetta-decks) covers the archetypes these cards are assembled into.
+`,
+  },
   {
     slug: "is-riftbound-worth-getting-into",
     category: "blog",
@@ -182,7 +686,7 @@ You can get a feel for the cards completely free: play **[Riftle](/riftle)**, ou
   {
     slug: "buying-singles-vs-opening-packs",
     category: "blog",
-    title: "Buying Singles vs Opening Packs: The Smart-Money Guide",
+    title: "Buying Singles vs Opening Packs: Smart-Money Guide",
     excerpt:
       "Should you buy the exact Riftbound cards you want, or open packs and hope? The maths, the fun factor, and how to decide every time.",
     author: "RiftCompare",
@@ -308,77 +812,6 @@ Because each printing is, to a collector, a different card. The **base print** i
 Want to see the chase cards in action? Read **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)**, then **[browse the database](/browse)** and sort by price.`,
   },
   {
-    slug: "riftbound-price-movers-how-to-track",
-    category: "blog",
-    title: "What's Moving in Riftbound This Week — and How to Track It",
-    excerpt:
-      "Riftbound card prices change every day. Here's how to spot which singles are spiking, which are dropping, and where the best-value buys are — before everyone else does.",
-    author: "RiftCompare",
-    date: "2026-06-11",
-    readMins: 4,
-    tags: ["news", "prices", "movers", "investing"],
-    body: `Riftbound card prices are never still. A card that defines a winning deck at the weekend can jump 30% by Monday; a reprint or a cooling meta can send another sliding. If you buy and sell singles, knowing **which way prices are moving** is half the battle — and we built a page to show you exactly that.
-
-## Track the movers in one place
-
-Head to the **[Price Movers page](/movers)** to see, for your region, this week's:
-
-- **📈 Biggest risers** — the cards spiking up the most over the last 7 days.
-- **📉 Biggest drops** — the singles that have fallen the most, often the best time to buy.
-- **💎 Best value right now** — cards trading furthest below their recent high.
-
-Every figure is the live local price in your currency (AUD, NZD, USD or GBP), compared across the stores we track and updated daily. Switch your country at the top of the page to see your market's movers.
-
-## Why prices move
-
-- **The metagame.** When a deck starts winning events, demand for its key cards spikes. Watch the **[meta decks page](/decks)** and you'll often see a card climb right after a strong tournament weekend.
-- **Supply.** New set releases, restocks and reprints add supply and usually cool prices; cards that stop being printed drift up.
-- **Hype and spoilers.** Anticipation for an upcoming set can move prices on related cards before a single pack is opened.
-
-## How to use this as a buyer
-
-- **Buying to play?** Check the drops and best-value lists first — you'll often find the card you need is cheaper than it was a week ago.
-- **Completing a set or chasing a grail?** Set a price alert: tap the heart on any card to get an email when it falls.
-- **Always compare delivered cost.** A spiking headline price still varies store to store — open the card to see every shop ranked cheapest-first.
-
-## How to use this as a seller
-
-If you have cards sitting in a binder, the risers list tells you what's worth listing right now. List them in the **[marketplace](/marketplace)** while demand is hot.
-
-Want to dive in? **[See this week's Riftbound price movers](/movers)**, or **[browse the full database](/browse)** and sort by price to find your next pickup.`,
-  },
-  {
-    slug: "riftbound-vendetta-next-set",
-    category: "blog",
-    title: "Riftbound Vendetta: The Next Set & How to Be Ready",
-    excerpt:
-      "Vendetta is the next Riftbound: League of Legends TCG set. Here's what a new set release means for prices, and how to be ready to grab cards the moment it drops.",
-    author: "RiftCompare",
-    date: "2026-06-10",
-    readMins: 4,
-    tags: ["news", "set", "vendetta", "release"],
-    body: `**Vendetta (VEN)** is the next set on the Riftbound: League of Legends TCG release calendar, following Origins, Proving Grounds, Spirit Forged and Unleashed. Its sealed product — booster boxes and packs — is landing now and already listed on RiftCompare; the singles follow the moment cards release. A new set is the single biggest event for card prices, so it pays to be ready.
-
-## Track Vendetta on RiftCompare
-
-We've already set up the **[Vendetta set page](/sets/vendetta)**. The moment cards are released, every VEN single will appear there with live prices compared across stores — so you can find the cheapest copy of any new card from day one, in your local currency.
-
-## What a new set means for prices
-
-- **Launch-day volatility.** Sealed product and the first chase singles tend to spike at release when supply is tight, then settle over the following weeks as stock catches up. If you're not in a rush, waiting often saves money.
-- **Meta shake-up.** New cards reshape the **[metagame](/decks)**. Cards that enable a strong new deck can climb fast — keep an eye on the **[price movers](/movers)** in the weeks after release.
-- **Ripple effects on older sets.** A new set can raise demand for older cards that combo with it, and cool cards it replaces.
-
-## How to be ready
-
-1. **Wishlist now.** Browse the **[card database](/browse)** and wishlist the cards you already know you want — you'll get an email if a price drops.
-2. **Compare sealed early.** VEN booster boxes and packs are listing now — the **[sealed page](/sealed)** ranks them cheapest-first across stores. Boxes move quickly at launch.
-3. **Have your deck ready to price.** Drop your planned list into the **[deck builder](/deck)** so you can re-price it the moment the new cards go live.
-4. **Don't overpay in the rush.** Launch hype pushes prices up; RiftCompare always shows you the cheapest delivered price so you never pay the first number you see.
-
-Vendetta sealed is live now, and the singles will populate the **[Vendetta page](/sets/vendetta)** as cards release — we'll post a meta snapshot here on the blog as the set lands. In the meantime, **[browse the current sets](/browse)** or read **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to get familiar with how it all works.`,
-  },
-  {
     slug: "how-to-sell-riftbound-cards",
     category: "blog",
     title: "How to Sell Riftbound Cards for the Best Price",
@@ -387,7 +820,7 @@ Vendetta sealed is live now, and the singles will populate the **[Vendetta page]
     author: "RiftCompare",
     date: "2026-06-09",
     readMins: 5,
-    tags: ["selling", "marketplace", "prices"],
+    tags: ["selling", "prices"],
     body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
 
 ## 1. Price your cards accurately first
@@ -400,8 +833,8 @@ Before you list anything, find out what your cards are actually worth **today**.
 
 ## 2. Choose where to sell
 
-- **The RiftCompare marketplace.** If you sell regularly, becoming a **[verified seller](/marketplace)** puts your listings right inside the price comparison, in front of buyers at the moment they're choosing where to buy.
 - **eBay and local stores.** For high-value chase cards, a wider audience can help — just factor in fees and postage when you compare your net.
+- **Local trading groups and Discord communities.** Lower fees than a marketplace, but you're on your own for buyer trust and shipping protection.
 
 ## 3. Set a competitive price
 
@@ -417,12 +850,12 @@ The cards that sell fastest are the ones priced at or just under the cheapest co
 - Post quickly and communicate — repeat buyers come from good experiences.
 - Bundle small cards together so postage doesn't eat the value of a cheap sale.
 
-Ready to list? **[Sell on the marketplace](/marketplace)** or **[browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
+Ready to list? **[Browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
   },
   {
     slug: "beginner-mistakes-buying-riftbound-cards",
     category: "blog",
-    title: "5 Beginner Mistakes When Buying Riftbound Cards (and How to Avoid Them)",
+    title: "5 Beginner Mistakes Buying Riftbound Cards",
     excerpt:
       "New to buying Riftbound singles? Avoid these five common — and expensive — mistakes, and you'll build your collection for a lot less.",
     author: "RiftCompare",
@@ -471,14 +904,19 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
       { label: "Vendetta singles & sealed", query: "Riftbound Vendetta" },
     ],
     category: "guide",
-    title: "Where to Buy Riftbound Cards (Australia, NZ, US & UK)",
+    title: "Where to Buy Riftbound Cards (6 Markets, 100+ Stores)",
     excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, New Zealand, the United States and the United Kingdom, and how to always find the cheapest price.",
+      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, the United States, the United Kingdom, Singapore, Canada and the EU, and how to always find the cheapest price.",
     author: "RiftCompare",
     date: "2026-06-08",
-    readMins: 6,
+    updated: "2026-08-24",
+    hero: {
+      src: "/blog/where-to-buy-riftbound-cards.png",
+      alt: "Where to buy Riftbound cards — 6 markets and over 100 tracked stores, singles and sealed",
+    },
+    readMins: 9,
     tags: ["buying", "guide", "stores", "singles", "sealed"],
-    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, New Zealand, the United States and the United Kingdom** — and how to make sure you never overpay.
+    body: `Want to buy **Riftbound: League of Legends TCG** cards but not sure where to start? Whether you're chasing a single chase card, completing a deck, or grabbing a sealed booster box, this guide covers exactly **where to buy Riftbound cards** in **Australia, the United States, the United Kingdom, Singapore, Canada and the EU** — over 100 tracked stores between them — and how to make sure you never overpay.
 
 The short version: prices for the same card vary a lot between shops and change daily, so the smartest move is to **[compare every store at once on RiftCompare](/browse)** and buy from whichever is cheapest in your country. Here's how to do it region by region.
 
@@ -486,7 +924,7 @@ The short version: prices for the same card vary a lot between shops and change 
 
 1. **[Search the card database](/browse)** and open the card you want.
 2. Each card shows the **lowest live price across every store we track**, sorted cheapest-first, with a one-click link straight to the shop.
-3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, NZD, USD or GBP), sourced from local stores, so what you see is what you'll actually pay.
+3. Use the **country switcher** (top of the page) to set your region — prices then show in your local currency (AUD, USD, GBP, SGD, CAD or EUR), sourced from local stores, so what you see is what you'll actually pay.
 
 You can also **[price a whole deck at once](/deck)** or **[compare sealed products](/sealed)** like booster boxes and Proving Grounds.
 
@@ -497,14 +935,6 @@ Australia has a healthy spread of Riftbound retailers — dedicated TCG shops, h
 - **Singles:** [Browse the card database](/browse) with the country set to **Australia** to see the lowest AUD price across Australian stores and eBay AU.
 - **Sealed:** booster boxes, packs and Proving Grounds kits are on the **[sealed page](/sealed)**.
 - **Tip:** many AU stores offer free shipping over a threshold — buying a few cards from one shop can beat splitting an order across three.
-
-## 🇳🇿 Buying Riftbound cards in New Zealand
-
-New Zealand's Riftbound scene is growing fast, with several Kiwi TCG stores stocking singles in NZD. Buying locally avoids international shipping and currency surprises.
-
-- Set the country switcher to **New Zealand** and **[browse singles](/browse)** to compare live NZD prices across NZ stores.
-- For boxes and packs, check the **[sealed products page](/sealed)**.
-- **Tip:** NZ stock can be thinner than AU/US for rare cards — wishlist the ones you want so you're ready when they're listed.
 
 ## 🇺🇸 Buying Riftbound cards in the United States
 
@@ -521,6 +951,29 @@ UK players can buy Riftbound singles in GBP from a growing list of British TCG r
 - Set the country to the **United Kingdom** and **[browse singles](/browse)** for live GBP prices across UK stores and eBay UK.
 - **[Sealed products](/sealed)** are listed too.
 - **Tip:** the UK singles market is still maturing, so for some cards a converted reference price is shown until a genuine in-stock GBP listing appears — always confirm on the retailer's page before buying.
+
+## 🇸🇬 Buying Riftbound cards in Singapore
+
+Riftbound arrived in Southeast Asia with Singapore's card shops stocking up fast, plus eBay Singapore filling in the gaps.
+
+- Switch the country to **Singapore** and **[browse the database](/browse)** for live SGD prices across Singapore stores and eBay SG.
+- Where no local store has a card in stock yet, TCGplayer's market price converts to SGD as a clearly-marked reference — never mistaken for a local listing.
+- **Tip:** stores without their own webstore yet are still listed on the **[stores we track](/stores/tracked)** page and start showing prices the moment they sell online — worth a bookmark if you're chasing a card from a specific shop.
+
+## 🇨🇦 Buying Riftbound cards in Canada
+
+Canada has a large and growing Riftbound retailer base, with prices that swing 30–50% between stores once shipping is counted.
+
+- Set the country to **Canada** and **[search the database](/browse)** for live CAD prices across Canadian stores.
+- **[Sealed product](/sealed)** — boxes and packs — is compared the same way.
+- **Tip:** with dozens of stores tracked, free-shipping thresholds do a lot of the work — RiftCompare factors each store's threshold into the ranking automatically, so you're comparing what you'd actually pay, not just the sticker price.
+
+## 🇪🇺 Buying Riftbound cards in the EU
+
+The eurozone is priced as **one market**, not one per country — a card listed in Rotterdam is the same EUR price to a buyer in Madrid, with no conversion and no customs, because the eurozone shares both a currency and a customs union.
+
+- Switch the country to **Europe (EU)** and **[browse the database](/browse)** for live EUR prices sourced from real eurozone stores across Austria, Spain, Portugal, the Netherlands, Germany and Italy.
+- **Tip:** postage estimates shown are domestic rates. Buying across a border inside the EU needs no currency conversion or customs form, but postage itself still runs higher — check the store's shipping-policy link for the real rate before you buy. See the full **[EU buying breakdown](/blog/buy-riftbound-cards-europe)** for the exact stores and why eleven is the honest number right now, not a hundred.
 
 ## Singles vs sealed: which should you buy?
 
@@ -542,7 +995,7 @@ Set your country, **[open the card database](/browse)**, find your card, and cli
 
 ## Buying in a specific market?
 
-Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[New Zealand](/blog/buy-riftbound-cards-nz)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)**. Just want the cheapest single right now? **[See where to buy singles](/blog/where-to-buy-riftbound-singles)**.
+Deeper dives per region — real store counts, presale links and payment tips: **[Australia](/blog/buy-riftbound-cards-australia)** · **[United States](/blog/buy-riftbound-cards-us)** · **[United Kingdom](/blog/buy-riftbound-cards-uk)** · **[Singapore](/blog/riftbound-price-comparison-singapore)** · **[Canada](/blog/buy-riftbound-cards-canada)** · **[the EU](/blog/buy-riftbound-cards-europe)**.
 
 ## Where to buy Riftbound FAQ
 
@@ -554,7 +1007,7 @@ Deeper dives per region — real store counts, presale links and payment tips: *
 
 **Do Riftbound prices differ between countries?** Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all matter — see [why Riftbound prices change](/guides/why-riftbound-card-prices-change). RiftCompare prices each market in its own currency from stores that actually ship there.
 
-**Does RiftCompare sell cards directly?** RiftCompare is primarily a price-comparison tool that links you to the retailer, and it also runs its own peer-to-peer [Marketplace](/marketplace) where verified sellers list cards, with payment held until delivery is confirmed.
+**Does RiftCompare sell cards directly?** No — RiftCompare is a price-comparison tool that links you through to the retailer with the best price; you always buy from the store itself.
 
 ## Why our prices are accurate for each market
 
@@ -570,32 +1023,35 @@ market, on delivered cost.
       { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
       { q: "Is it cheaper to buy Riftbound singles or sealed product?", a: "For a specific card you've already chosen, singles are almost always cheaper — sealed means paying for many cards you didn't need. Sealed makes sense when you want the experience of opening packs." },
       { q: "Do Riftbound prices differ between countries?", a: "Yes, and not just by exchange rate. Regional allocation, local stock levels and import costs all affect price. RiftCompare prices each market in its own currency from stores that actually ship there." },
-      { q: "Does RiftCompare sell cards directly?", a: "RiftCompare is primarily a price-comparison tool that links you through to the retailer. It also runs its own peer-to-peer Marketplace where verified sellers list cards, with payment held until delivery is confirmed." },
+      { q: "Does RiftCompare sell cards directly?", a: "No — RiftCompare is a price-comparison tool that links you through to the retailer with the best price; you always buy from the store itself." },
+      { q: "Which countries does RiftCompare cover?", a: "Six markets: Australia, the United States, the United Kingdom, Singapore, Canada and the EU (priced as one eurozone market in EUR). Each is priced in its own currency from stores that actually ship there — over 100 tracked stores across all six." },
     ],
   },
   {
     slug: "cheapest-riftbound-booster-boxes",
     marketData: "US",
     category: "guide",
-    title: "Cheapest Riftbound Booster Boxes & Sealed (AU, NZ, US & UK)",
+    title: "Cheapest Riftbound Booster Boxes & Sealed",
     excerpt:
-      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, New Zealand, the US and the UK — and whether boxes or singles are better value.",
+      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, the US, the UK, Singapore, Canada and the EU — and whether boxes or singles are better value.",
     author: "RiftCompare",
     date: "2026-06-08",
     readMins: 5,
     tags: ["buying", "guide", "sealed", "booster box"],
-    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, New Zealand, the United States and the United Kingdom**.
+    body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, the United States, the United Kingdom, Singapore, Canada and the EU**.
 
 ## Compare every sealed price in one place
 
-Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, NZD, USD or GBP).
+Head to the **[sealed products page](/sealed)** to see live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores we track — sorted so the cheapest is easy to spot. Set the **country switcher** to your region first so prices show in your local currency (AUD, USD, GBP, SGD, CAD or EUR).
 
 ## By region
 
 - **🇦🇺 Australia:** Riftbound boxes sell out fast at launch — compare AUD prices across Australian stores on the **[sealed page](/sealed)** and watch for restocks.
-- **🇳🇿 New Zealand:** fewer stockists than AU, so comparing NZD prices is the easiest way to avoid overpaying.
 - **🇺🇸 United States:** the deepest market — the most competitive box pricing is usually here. Compare USD prices and check shipping.
 - **🇬🇧 United Kingdom:** UK retailers price sealed in GBP; buying domestically avoids import duty.
+- **🇸🇬 Singapore:** a growing roster of local sellers, several trading primarily through Instagram or Carousell rather than a storefront — compare SGD prices on the **[sealed page](/sealed)** to catch them alongside the traditional shops.
+- **🇨🇦 Canada:** one of the newer markets we track — compare CAD prices across Canadian stockists and factor in shipping between provinces.
+- **🇪🇺 Europe (EU):** priced in EUR across the single market, so a box listed in the Netherlands is buyable at that price from Spain with no conversion and no import duty — compare the whole eurozone at once on the **[sealed page](/sealed)**.
 
 ## Booster box vs singles: which is better value?
 
@@ -682,7 +1138,7 @@ Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by 
 
 **What makes a Riftbound card valuable?** Scarcity first, then desirability — how rarely the printing appears per box, how sought-after the champion or art is, and condition. Playability matters for ordinary singles but much less for chase prints. See [why Riftbound prices change](/guides/why-riftbound-card-prices-change).
 
-**Should I get my Riftbound cards graded?** Grading mainly matters for high-value chase cards in excellent condition, since the fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes sense.
+**Should I get my Riftbound cards graded?** Grading mainly matters for high-value chase cards in excellent condition, since the fee is fixed regardless of what the card is worth. For ordinary singles it rarely makes sense. See **[the PSA & BGS grading guide](/guides/riftbound-psa-bgs-grading-guide)** for how the two services compare and what graders actually look at.
 
 **Do Riftbound cards go up in value over time?** Some have and some haven't. Riftbound is a young game without a long price record, so treat any confident claim about future value sceptically — RiftCompare reports live prices and history rather than predictions.`,
     faq: [
@@ -694,20 +1150,147 @@ Want to find your grail? **[Browse every Riftbound card](/browse)** and sort by 
     ],
   },
   {
+    slug: "riftbound-psa-bgs-grading-guide",
+    shop: [
+      { label: "Graded Riftbound cards (PSA & BGS)", query: "Riftbound PSA graded" },
+      { label: "Signature & alt-art printings", query: "Riftbound signature alt art" },
+    ],
+    category: "guide",
+    title: "Riftbound PSA & BGS Grading Guide",
+    excerpt:
+      "How to get Riftbound cards graded — PSA vs BGS, the grading scale, what graders look for, and whether it's worth it for your card.",
+    author: "RiftCompare",
+    date: "2026-08-21",
+    readMins: 7,
+    tags: ["collecting", "grading", "guide", "condition", "chase cards", "buying"],
+    summary: [
+      "**PSA and BGS are the two grading services collectors use for Riftbound** — neither is affiliated with Riot Games or UVS Games; they grade physical trading cards from any game.",
+      "**PSA gives one overall grade, 1 (Poor) to 10 (Gem Mint)**, and is the most widely recognised, most liquid grading name in the hobby.",
+      "**BGS gives four subgrades — centering, corners, edges, surface — plus an overall grade**; a card with all four subgrades at 10 earns BGS's famous Black Label.",
+      "**Grading is worth it for Riftbound's chase tiers** — Signature, Showcase and Overnumbered printings — not for ordinary singles, where the flat submission fee usually costs more than the card is worth.",
+    ],
+    faq: [
+      {
+        q: "Should I get my Riftbound cards graded?",
+        a: "Usually only your highest-value chase cards — Signature printings, Showcase alt-arts, Overnumbered prints — since the submission fee is fixed no matter what the card is worth. For an ordinary single, grading rarely pays for itself.",
+      },
+      {
+        q: "PSA or BGS — which is better for Riftbound?",
+        a: "PSA is the more widely recognised name and the deeper resale market, which matters for liquidity when you eventually sell. BGS's four subgrades give a more granular picture of a card's condition, which some collectors prefer for display-grade copies. Neither service is exclusive to Riftbound — both grade cards from any trading card game.",
+      },
+      {
+        q: "What do graders actually look at?",
+        a: "Four things: centering (how evenly the border frames the art on all sides), corners (sharpness, no whitening or rounding), edges (no nicks, roughness or whitening), and surface (no scratches, print lines, or indentations). PSA folds these into one overall number; BGS scores each separately as a subgrade.",
+      },
+      {
+        q: "How much does it cost to grade a Riftbound card, and how long does it take?",
+        a: "Both PSA and BGS run multiple submission tiers priced by turnaround speed and the card's declared value, and both change their pricing and wait times fairly often — check the current fees and turnaround directly on PSA's or Beckett's own site before submitting, rather than trusting a number from anywhere else.",
+      },
+      {
+        q: "Is a Riftbound card officially graded by Riot or UVS Games?",
+        a: "No. PSA and BGS are independent third-party companies with no affiliation to Riftbound's publishers — they'll grade a Riftbound card exactly the way they grade a card from any other game.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/most-valuable-riftbound-cards",
+      label: "See which cards are worth grading →",
+      blurb: "The chase tiers — Signature, Showcase, Overnumbered — where grading fees are most likely to pay off.",
+    },
+    body: `**PSA and BGS** are the two names collectors mean when they talk about "getting a card graded" — independent companies with no affiliation to Riot Games or UVS Games, which grade physical trading cards from any game, Riftbound included. Here's how the two services differ, what graders are actually looking at, and when grading a Riftbound card is worth the fee.
+
+## Why grade a card at all
+
+Grading does two things: it locks the card in a tamper-evident case (a "slab") that protects it from further wear, and it puts an independent, numeric condition grade on it that a buyer doesn't have to take your word for. For a raw (ungraded) single, condition is a judgement call the seller makes at listing time — see [the Riftbound condition guide](/guides/riftbound-card-condition-guide) for how that works. A graded slab replaces that judgement call with a third party's number, which is worth something specifically on cards expensive enough that buyers want that certainty.
+
+## PSA vs BGS
+
+- **PSA (Professional Sports Authenticator)** grades on a single 1-10 scale — Poor at the bottom, Gem Mint 10 at the top — collapsing centering, corners, edges and surface into one overall number. It's the most widely recognised grading name in the hobby, and that recognition tends to translate into the deepest, most liquid resale market for a graded card.
+- **BGS (Beckett Grading Services)** grades all four criteria separately as subgrades, then combines them into an overall grade in half-point increments. A card that scores a perfect 10 on every subgrade earns BGS's **Black Label** — a genuinely rare result that carries real premium over an ordinary 10. The subgrades give a more granular read on exactly where a card falls short, which matters more to some collectors than the single PSA number does.
+
+Neither is objectively "better" — PSA's name recognition usually wins on resale liquidity, BGS's subgrades win on detail. Some collectors submit their most valuable pulls to both over time and compare.
+
+## What graders actually look at
+
+Both services score the same four things, whether or not they show it as one number or four:
+
+- **Centering** — how evenly the printed border frames the card's art and text on all four sides. A card that looks fine at a glance can still be noticeably off-center under close inspection.
+- **Corners** — sharp, undamaged corners with no whitening, fraying or rounding.
+- **Edges** — clean edges with no nicks, roughness or whitening where the card's colour gives way to white card stock.
+- **Surface** — no scratches, indentations, print lines or other marks across the front or back.
+
+You can check the first three yourself before submitting: hold the card up to a light and compare the border margins on all four sides for centering, and run a finger lightly along the edges and corners (never the printed surface) to feel for damage a photo might miss.
+
+## Is it worth it for Riftbound specifically?
+
+Grading only makes financial sense once a card's raw value clears the submission fee by a comfortable margin — so it's a question of which Riftbound printings are worth enough to clear that bar. That's [the same chase tier as the rest of the value conversation](/guides/most-valuable-riftbound-cards): Signature printings, Showcase alt-arts and Overnumbered prints, not ordinary Commons or Uncommons. Riftbound is still a young game without a long graded-sales history the way an established TCG has, so treat any specific resale-premium claim for a graded Riftbound card skeptically — the graded aftermarket for this game is still forming.
+
+## Before you submit
+
+- **Never touch the printed surface with bare fingers** — oils transfer and can affect the surface grade. Handle a card by its edges only, or wear cotton gloves.
+- **Sleeve it immediately** in a fresh penny sleeve, then a rigid toploader — a card that arrives at the grader already damaged in shipping grades exactly as it arrives.
+- **Don't try to "fix" a card** — trimming, pressing or cleaning a card before submission is grading fraud at every major service and will get the card rejected or the submitter banned, not a better grade.
+- **Check current fees and turnaround on the grader's own site** before submitting — both PSA and BGS run multiple tiers priced by speed and declared card value, and both change pricing and wait times often enough that any number printed elsewhere, including here, risks being stale by the time you read it.
+
+## Grading FAQ
+
+**Should I get my Riftbound cards graded?** Usually only your highest-value chase cards — Signature printings, Showcase alt-arts, Overnumbered prints — since the submission fee is fixed no matter what the card is worth. For an ordinary single, grading rarely pays for itself.
+
+**PSA or BGS — which is better for Riftbound?** PSA's name recognition tends to mean deeper resale liquidity; BGS's four subgrades give a more granular read on condition. Neither is exclusive to Riftbound — both grade cards from any trading card game.
+
+**What do graders actually look at?** Centering, corners, edges and surface — PSA folds these into one overall number, BGS scores each as a separate subgrade.
+
+**Is a Riftbound card officially graded by Riot or UVS Games?** No — PSA and BGS are independent companies with no affiliation to Riftbound's publishers.
+
+[[shop]]
+
+Not sure whether your card clears the bar? **[Check its live raw price across every store we track](/browse)** first — if it's nowhere near the chase tier, save the submission fee and enjoy the card raw.`,
+  },
+  {
     slug: "riftbound-for-beginners",
     category: "guide",
-    title: "Riftbound for Beginners: How to Start & What to Buy First",
+    title: "Riftbound for Beginners: How to Start",
     excerpt:
       "New to Riftbound: League of Legends TCG? Here's how the game works, how to start playing, and exactly what to buy first without overspending.",
     author: "RiftCompare",
     date: "2026-06-08",
+    updated: "2026-08-13",
     readMins: 5,
     tags: ["beginners", "guide", "how to start"],
+    hero: {
+      src: "/signature-cards/renekton-butcher-of-the-sands-ven190.jpg",
+      alt: "Renekton, Butcher of the Sands — a real Riftbound Signature card, hand-signed by its artist",
+    },
+    summary: [
+      "**Riftbound is Riot Games' physical League of Legends card game**, published in English by UVS Games — a real, official product, not a fan project.",
+      "**The cheapest way in is a ready-to-play product** (a preconstructed deck or a Proving Grounds kit), not a booster box.",
+      "**Five sets are out so far**: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — see [every set in order](/guides/riftbound-sets-in-order) for the full picture, including what's next.",
+      "Coming from League of Legends itself rather than another card game? [Here's how the two connect](/guides/is-there-a-league-of-legends-card-game).",
+    ],
+    faq: [
+      {
+        q: "What do I need to start playing Riftbound?",
+        a: "A single preconstructed deck or Proving Grounds kit is enough to play your first game — it comes complete and ready to play, no singles required.",
+      },
+      {
+        q: "Is Riftbound expensive to get into?",
+        a: "Not if you start right. A preconstructed deck is a fixed, modest cost, and you can upgrade it one card at a time with cheap singles rather than buying booster boxes hoping to pull what you need.",
+      },
+      {
+        q: "How many Riftbound sets are there for a beginner to worry about?",
+        a: "Five have released — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — but you don't need to know all of them to start. A single starter deck from any set is a complete, playable game on its own.",
+      },
+      {
+        q: "Do I need to learn the full rules before buying anything?",
+        a: "No — buy or borrow a starter deck first, then learn by playing. RiftCompare's interactive learn page walks through a full game step by step if you want the rules before you sit down.",
+      },
+    ],
     body: `**Riftbound** is the **League of Legends Trading Card Game** from Riot Games (published in English by UVS Games). If you're brand new, here's how to start playing — and exactly what to buy first without overspending.
 
 ## What is Riftbound?
 
-Riftbound is a collectible card game set in the League of Legends universe. You build a deck around a **Legend** (your champion) using cards across the game's domains — **Fury, Calm, Mind, Body, Chaos, Order** and Colorless — and card types like **Units, Spells, Gear, Runes and Battlefields**. Sets so far include **Origins (OGN)**, **Proving Grounds**, **Spirit Forged (SFD)** and **Unleashed (UNL)**.
+Riftbound is a collectible card game set in the League of Legends universe. You build a deck around a **Legend** (your champion) using cards across the game's domains — **Fury, Calm, Mind, Body, Chaos, Order** and Colorless — and card types like **Units, Spells, Gear, Runes and Battlefields**. Five sets have released so far: **Origins (OGN)**, **Origins: Proving Grounds**, **Spirit Forged (SFD)**, **Unleashed (UNL)** and **Vendetta (VEN)** — see [every Riftbound set in order](/guides/riftbound-sets-in-order) if you want the full picture, including what's coming next. Coming from the video game rather than another card game? [Here's exactly how Riftbound connects to League of Legends](/guides/is-there-a-league-of-legends-card-game).
+
+Want the full rules before you buy anything? The **[interactive learn page](/learn)** walks through a whole game step by step, domain by domain, free and with no signup.
 
 ## The easiest way to start
 
@@ -727,6 +1310,319 @@ Riftbound is a collectible card game set in the League of Legends universe. You 
 - **Price it before you buy** — drop a decklist into the **[deck pricer](/deck)** to see the full cost across stores before committing.
 
 Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
+  },
+  // ── Cross-game onboarding trio (2026-09-02) ─────────────────────────────────
+  // Three guides aimed at players/collectors coming FROM another TCG, not total
+  // hobby beginners — riftbound-for-beginners already owns that query. Each one
+  // does two jobs: a SAFE, structural comparison (resource system, deck size,
+  // chase-print tier) to build quick intuition, and a heavy focus on the two
+  // things a crossover reader actually wants answered — where real Riftbound
+  // cards are sold, and what the price landscape looks like — since that's
+  // RiftCompare's own product, not just an explainer topic. Comparisons are
+  // deliberately kept at "same shape, not identical rules" (no claim that a
+  // Domain literally IS a Magic color, etc.) and every rules claim routes to
+  // /guides/riftbound-rules-explained or /learn rather than re-deriving Riftbound
+  // rules from scratch here. No invented crossover promos/collabs — there are
+  // none; the comparison is genre-level (both are real, physical TCGs with a
+  // singles market), not a claimed partnership.
+  {
+    slug: "pokemon-collector-to-riftbound",
+    category: "guide",
+    title: "From Pokémon to Riftbound: A Collector's Guide",
+    excerpt:
+      "New to Riftbound from Pokémon? How the two compare, where to actually buy Riftbound cards, and what to expect on price.",
+    author: "RiftCompare",
+    date: "2026-09-02",
+    readMins: 6,
+    tags: ["beginners", "how to start", "collecting", "buying guide", "pokemon"],
+    hero: {
+      src: "/blog/pokemon-collector-to-riftbound.png",
+      alt: "From Pokémon to Riftbound — a collector's guide, comparing physical-card buying and the preconstructed-deck entry point",
+    },
+    shop: [
+      { label: "Riftbound starter decks", query: "Riftbound starter deck" },
+      { label: "Riftbound Signature cards", query: "Riftbound Signature card" },
+    ],
+    summary: [
+      "**Riftbound is a real, physical trading card game from Riot Games** (published in English by UVS Games) — the same game-store-and-online buying pattern Pokémon collectors already know, not a digital-only spinoff.",
+      "**The cheapest way in is a ready-to-play preconstructed deck**, the same role a Pokémon theme deck plays — not a booster box.",
+      "**Riftbound's chase tier — Signature, Showcase and alternate-art prints — plays the same role Illustration Rares and Secret Rares do in Pokémon**, and Signature cards are hand-signed by the card's real artist.",
+      "**RiftCompare compares live Riftbound prices** across [AU, US, UK, SG, CA and EU stores plus eBay](/stores/tracked), the same way a Pokémon collector already checks TCGplayer or eBay before buying.",
+    ],
+    faq: [
+      {
+        q: "Is Riftbound a real physical card game, or is it digital/app-based?",
+        a: "It's a real, printed trading card game from Riot Games, published in English by UVS Games and sold through game stores and online singles marketplaces — the same channels Pokémon cards move through, not an app or a digital collectible.",
+      },
+      {
+        q: "How does Riftbound's resource system compare to Pokémon Energy?",
+        a: "Pokémon attacks are powered by Energy cards attached to your Pokémon; Riftbound's plays are powered by Runes tied to your deck's Domains (Fury, Calm, Mind, Body, Chaos and Order). The shape is similar — a resource type you commit to before the game starts — but the mechanics aren't identical, so treat it as a starting intuition, not a direct swap. The full rules are in Riftbound Rules Explained or the interactive learn page.",
+      },
+      {
+        q: "What's the Riftbound equivalent of a Pokémon Illustration Rare or Secret Rare?",
+        a: "Riftbound's own chase tier: Showcase prints, alternate art, and Signature cards — hand-signed by the card's original artist. Understanding Riftbound Card Rarity covers exactly where each tier sits and what drives its premium.",
+      },
+      {
+        q: "What should a Pokémon collector buy first to try Riftbound?",
+        a: "A single preconstructed deck or Proving Grounds kit — complete and playable out of the box, the same role a Pokémon theme deck plays. Riftbound for Beginners and The Cheapest Way to Start Riftbound both cover what to buy first without overspending.",
+      },
+      {
+        q: "Are there any official Pokémon x Riftbound crossover cards?",
+        a: "No — Riftbound is a Riot Games property set in the League of Legends universe, unrelated to Pokémon or The Pokémon Company. Nothing here claims or implies an official crossover; the comparison is about how the two hobbies work, not a shared product.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Search the Riftbound card database →",
+      blurb: "Every card, every printing, with live prices compared across every store and market we track.",
+    },
+    embed: {
+      title: "Cards worth knowing, whichever game you're coming from",
+      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
+      metaStaples: { minDecks: 2 },
+      take: 12,
+    },
+    body: `If you collect or play Pokémon, you already know the rhythm: theme decks to learn on, singles to fill out a build, a chase tier that makes a binder page worth showing off, and a habit of checking prices across a few sites before you actually buy anything. **Riftbound: League of Legends TCG** — Riot Games' real, physical card game, published in English by UVS Games — runs on the same rhythm. Here's how the two connect, and how to actually find and buy real Riftbound cards without overpaying.
+
+## Riftbound is a real card game, not a spinoff
+
+This is the first thing worth being clear on: Riftbound is a genuine, in-print trading card game, sold through game and hobby stores and online singles marketplaces the same way Pokémon is — not a mobile tie-in, not a digital-only collectible, not a fan project. It's set in the League of Legends universe, so the "roster" is champions you may already recognize from the game rather than a new cast to learn from zero. If you want the full picture of what it is and how it plays, the **[interactive learn page](/learn)** walks through a complete game step by step, free, with no signup.
+
+## How the pieces map onto what you already know
+
+Nothing here is a claim that the two games are mechanically identical — they aren't — but the *shape* will feel familiar:
+
+| Pokémon | Riftbound | The honest difference |
+| --- | --- | --- |
+| Energy cards power your attacks | **Runes** tied to your deck's **Domains** power your plays | Domains (Fury, Calm, Mind, Body, Chaos, Order) are a color-identity-style constraint you commit to before building, closer to a deck archetype than a 1-for-1 Energy swap |
+| Your active/bench Pokémon | Your **Legend** and **Champion**, plus **Units** on the board | A Legend anchors your whole deck's identity the way a lead Pokémon doesn't quite |
+| Theme decks | Preconstructed decks / Proving Grounds kits | Same job: a complete, playable deck out of the box |
+| Illustration Rare / Secret Rare | **Showcase**, alternate art, **Signature** prints | Signature cards are hand-signed by the card's real artist — a direct analog to a signed slab a Pokémon collector already knows the appeal of |
+| Rotation (Standard) | No announced rotation | Every set released so far stays legal — see **[does Riftbound rotate?](/guides/riftbound-format-legality-rotation)** |
+
+For the real rules rather than the shorthand version, **[Riftbound Rules Explained](/guides/riftbound-rules-explained)** is the hub, and **[how a Riftbound deck is actually built](/guides/how-a-riftbound-deck-is-built)** covers deck construction card type by card type.
+
+## How to actually get Riftbound cards
+
+This is usually the real question once the "is this a real game" part is settled. The buying pattern is close to what you already do for Pokémon:
+
+1. **Start with a ready-to-play product.** A preconstructed deck or Proving Grounds kit is the cheapest, fastest way in — complete and playable, no singles required. Compare current listings on the **[sealed products page](/sealed)**.
+2. **Fill in the gaps with singles**, not more booster boxes. Upgrading a starter deck card-by-card is far cheaper than gambling on packs for the one card you actually want — the same logic that makes singles-hunting worthwhile in Pokémon. Search the **[card database](/browse)**.
+3. **Compare before you buy.** Riftbound cards are sold across a real, spread-out market — independent game stores, TCGplayer-style listings, and eBay — in six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). RiftCompare tracks all of it live, the same job a Pokémon collector already asks TCGplayer or eBay comps to do. See **[every store we track](/stores/tracked)**.
+
+**[Where to Buy Riftbound Cards](/guides/where-to-buy-riftbound-cards)** covers all six markets and 100+ stores in one place if you want the full breakdown before you commit to a first purchase.
+
+## What things cost, and how to keep track
+
+Prices move daily, the same way a hot Pokémon set's prices do in its first weeks — which is exactly why a live comparison tool is more useful than a number frozen at publish time. A few honest guideposts instead of a stale price list:
+
+- **Ready-to-play products are the predictable, budget-friendly entry point** — a fixed cost, no pack-opening variance.
+- **Booster boxes are the highest-variance route**, the same trade-off as a Pokémon booster box: you might pull the chase card, you might not.
+- **Chase prints (Signature, Showcase, alt-art) carry a real premium**, the same way an Illustration Rare does over its base print — **[understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** explains exactly what separates each tier.
+- **Watch price movement, don't just check once.** The **[daily movers page](/movers)** shows what's trending up or down right now, the same instinct that keeps a Pokémon collector refreshing a marketplace watchlist.
+
+## Where to start
+
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from "curious" to "playing" — what to buy first and how much to spend. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. And when you're ready to actually shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, and every store is one you can actually buy from.`,
+  },
+  {
+    slug: "one-piece-tcg-to-riftbound",
+    category: "guide",
+    title: "From One Piece TCG to Riftbound: A Collector's Guide",
+    excerpt:
+      "New to Riftbound from the One Piece Card Game? How the two compare, where to buy real Riftbound cards, and what to expect on price.",
+    author: "RiftCompare",
+    date: "2026-09-02",
+    readMins: 6,
+    tags: ["beginners", "how to start", "collecting", "buying guide", "one piece"],
+    hero: {
+      src: "/blog/one-piece-tcg-to-riftbound.png",
+      alt: "From One Piece TCG to Riftbound — a collector's guide, comparing two genuinely recent physical card games and their singles markets",
+    },
+    shop: [
+      { label: "Riftbound starter decks", query: "Riftbound starter deck" },
+      { label: "Riftbound Vendetta singles", query: "Riftbound Vendetta" },
+    ],
+    summary: [
+      "**Riftbound is a real, physical trading card game from Riot Games** (published in English by UVS Games) — sold through the same game stores and online singles marketplaces the One Piece Card Game already moves through.",
+      "**Both are genuinely recent games** — One Piece TCG launched in 2022, Riftbound in 2026 — so the early-set scarcity and chase-print dynamics will feel familiar rather than needing a decade of set history to understand.",
+      "**A Riftbound deck is built around a Legend and Champion**, similar in feel to how a One Piece deck is built around its Leader card, even though the mechanics differ.",
+      "**RiftCompare compares live Riftbound prices** across [AU, US, UK, SG, CA and EU stores plus eBay](/stores/tracked) — the same live-comparison habit a One Piece TCG buyer already has for a fast-moving new set.",
+    ],
+    faq: [
+      {
+        q: "Is Riftbound similar to the One Piece Card Game in how new it is?",
+        a: "Yes, more than most comparisons — the One Piece Card Game launched in 2022 and Riftbound in 2026, so both are genuinely early in their print history rather than decades-deep formats. If you're used to how a One Piece set's early scarcity and chase prints behave, Riftbound's current five-set catalogue will feel like familiar territory.",
+      },
+      {
+        q: "How does Riftbound's Legend and Champion compare to a One Piece Leader?",
+        a: "A One Piece deck is built around its Leader card, which sets the deck's identity and colors. A Riftbound deck is built around a Legend and Champion, which similarly anchor its Domains (Fury, Calm, Mind, Body, Chaos, Order) and overall plan. The feel is close; the exact rules aren't identical — see how a Riftbound deck is actually built for the real mechanics.",
+      },
+      {
+        q: "What's the Riftbound equivalent of a One Piece Leader/Secret Rare parallel?",
+        a: "Riftbound's chase tier: Showcase prints, alternate art, and Signature cards, hand-signed by the card's original artist. Understanding Riftbound Card Rarity covers where each tier sits and what drives its price.",
+      },
+      {
+        q: "Where can I actually buy Riftbound singles and sealed product?",
+        a: "The same kind of channels the One Piece Card Game sells through — independent game stores and online singles marketplaces, in six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). Where to Buy Riftbound Cards covers all of them, and RiftCompare tracks live prices across every one.",
+      },
+      {
+        q: "Are there any official One Piece x Riftbound crossover cards?",
+        a: "No — Riftbound is a Riot Games property set in the League of Legends universe and One Piece TCG is published by Bandai; the two are unrelated. This guide compares how the two hobbies work, not a claimed partnership.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Search the Riftbound card database →",
+      blurb: "Every card, every printing, with live prices compared across every store and market we track.",
+    },
+    embed: {
+      title: "Cards worth knowing, whichever game you're coming from",
+      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
+      metaStaples: { minDecks: 2 },
+      take: 12,
+    },
+    body: `The One Piece Card Game trained a whole generation of collectors on what it's like to get into a card game while it's still young — chasing early-set scarcity, watching a fresh secondary market form in real time, learning a Leader's identity before you've memorized the full card pool. **Riftbound: League of Legends TCG**, Riot Games' real, physical card game (published in English by UVS Games), is at a similar point in its own life right now. Here's how the two connect, and — the part that actually matters once you're curious — how to find and buy real Riftbound cards without overpaying.
+
+## Riftbound is a real card game, not a spinoff
+
+Riftbound is a genuine, in-print trading card game sold through game and hobby stores and online singles marketplaces, the same way the One Piece Card Game is — not a mobile tie-in, not a digital-only collectible. It's set in the League of Legends universe, built around champions rather than the Straw Hats, but the *hobby* — opening packs, building around a leader-style card, hunting a chase print — will feel immediately familiar. The **[interactive learn page](/learn)** walks through a complete game step by step, free, no signup.
+
+## How the pieces map onto what you already know
+
+Not a claim that the two games play identically — they don't — but the shape rhymes:
+
+| One Piece TCG | Riftbound | The honest difference |
+| --- | --- | --- |
+| DON!! cards fuel your plays | **Runes** tied to your deck's **Domains** fuel yours | Domains (Fury, Calm, Mind, Body, Chaos, Order) shape which cards your deck can reliably cast, closer to a color identity than a direct DON!! swap |
+| Your Leader card sets your deck's identity | Your **Legend** and **Champion** set yours | A Legend anchors the whole deck the way a Leader does, without being rules-identical |
+| Life cards instead of a life total | (Different win-condition structure) | Worth learning properly rather than assuming a 1-for-1 — see the rules guide below |
+| Starter decks | Preconstructed decks / Proving Grounds kits | Same job: complete, playable, no singles required |
+| Secret Rare / Leader parallels | **Showcase**, alternate art, **Signature** prints | Signature cards are hand-signed by the card's real artist |
+
+For the real rules, **[Riftbound Rules Explained](/guides/riftbound-rules-explained)** is the hub, and **[how a Riftbound deck is actually built](/guides/how-a-riftbound-deck-is-built)** covers construction card type by card type — worth reading properly rather than assuming the analogy above is exact.
+
+## How to actually get Riftbound cards
+
+Once "is this a real game" is settled, this is the actual question. The buying pattern is close to what a One Piece TCG buyer already does:
+
+1. **Start with a ready-to-play product.** A preconstructed deck or Proving Grounds kit is the cheapest, fastest way in — complete out of the box. Compare current listings on the **[sealed products page](/sealed)**.
+2. **Fill in the gaps with singles.** Upgrading a starter deck card-by-card beats gambling on packs for one specific card — the same logic that makes singles-hunting worthwhile in a fast-moving new TCG. Search the **[card database](/browse)**.
+3. **Compare across the real market.** Riftbound sells through independent game stores, TCGplayer-style listings and eBay, across six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). RiftCompare tracks all of it live. See **[every store we track](/stores/tracked)**.
+
+**[Where to Buy Riftbound Cards](/guides/where-to-buy-riftbound-cards)** covers all six markets and 100+ stores in one place.
+
+## What things cost, and how to keep track
+
+Both games share the same early-life pricing pattern: prices move fast while the card pool and player base are still settling, which makes a snapshot number stale within days. A few honest guideposts instead:
+
+- **Ready-to-play products are the predictable entry point** — fixed cost, no pack-opening variance.
+- **Booster boxes are the highest-variance route** — the trade-off you already know from chasing a Leader parallel.
+- **Chase prints carry a real premium.** **[Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** explains exactly what separates Showcase, alternate art and Signature.
+- **Watch price movement, don't just check once** — the **[daily movers page](/movers)** shows what's trending right now, the same habit that keeps a young TCG's secondary market legible.
+
+## Where to start
+
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, every store is one you can actually buy from.`,
+  },
+  {
+    slug: "mtg-to-riftbound",
+    category: "guide",
+    title: "From Magic: The Gathering to Riftbound: A Player's Guide",
+    excerpt:
+      "New to Riftbound from Magic: The Gathering? How the two compare, where to buy singles, and what live Riftbound prices actually look like.",
+    author: "RiftCompare",
+    date: "2026-09-02",
+    readMins: 7,
+    tags: ["beginners", "how to start", "deckbuilding", "buying guide", "mtg"],
+    hero: {
+      src: "/blog/mtg-to-riftbound.png",
+      alt: "From Magic: The Gathering to Riftbound — a player's guide, comparing Domains to colors and Runes to a manabase",
+    },
+    shop: [
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "Riftbound starter decks", query: "Riftbound starter deck" },
+    ],
+    summary: [
+      "**Riftbound is a real, physical trading card game from Riot Games** (published in English by UVS Games) — sold through the same LGS-and-online singles market Magic players already live in.",
+      "**Domains work a little like Magic's colors**: a deck commits to one or two of Fury, Calm, Mind, Body, Chaos or Order, and your 12 Runes have to match, the same way a manabase has to match your colors.",
+      "**No rotation has been announced** — every set released so far (Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, Vendetta) stays legal, closer to how Magic's Eternal formats behave than Standard.",
+      "**RiftCompare's whole job is what a Magic player already does on TCGplayer** — comparing real listings across independent stores (plus eBay) to find delivered cost, not just sticker price, live across [six currency markets](/stores/tracked).",
+    ],
+    faq: [
+      {
+        q: "Do Riftbound Domains work like Magic's five colors?",
+        a: "Structurally, yes — a deck commits to one or two of Riftbound's Domains (Fury, Calm, Mind, Body, Chaos, Order, plus Colorless), and your 12 Runes have to match, the same discipline a Magic manabase enforces around its colors. The mechanics aren't identical, so treat it as a starting intuition — Riftbound Rules Explained and the interactive learn page have the real rules.",
+      },
+      {
+        q: "Does Riftbound have a rotating Standard-style format?",
+        a: "No rotation has been announced. Every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal everywhere, closer to how a Magic Eternal format behaves than Standard. Does Riftbound rotate? covers the full picture, including the banlist, which does exist.",
+      },
+      {
+        q: "How big is a Riftbound deck compared to a Magic deck?",
+        a: "A Riftbound deck runs a Legend, a Champion, a roughly 40-card main deck of Units/Gear/Spells, 12 Runes, 3 Battlefields and a side deck of up to 10 — different totals from Magic's 60-card (or 100-card Commander) format, but the same idea of a defined, legal deck shape. How a Riftbound deck is actually built breaks down every part.",
+      },
+      {
+        q: "Where do Riftbound prices actually come from?",
+        a: "The same kind of real, independent secondary market Magic singles trade on — game stores and online marketplaces (plus eBay), across six currency markets: Australia, the US, the UK, Singapore, Canada and the EU. RiftCompare tracks live listings across all of them and ranks by total delivered cost, not just sticker price.",
+      },
+      {
+        q: "Are there any official Magic x Riftbound crossover cards?",
+        a: "No — Riftbound is a Riot Games property and Magic: The Gathering is published by Wizards of the Coast; the two are unrelated products. This guide compares how the two hobbies work, not a claimed partnership.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Search the Riftbound card database →",
+      blurb: "Every card, every printing, with live prices compared across every store and market we track.",
+    },
+    embed: {
+      title: "Cards worth knowing, whichever game you're coming from",
+      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
+      metaStaples: { minDecks: 2 },
+      take: 12,
+    },
+    body: `Magic players already have the instincts a new TCG rewards: read the whole card before you judge it, check a real market price before you buy, and don't assume a mechanic works the way you'd guess until you've read the actual rules text. **Riftbound: League of Legends TCG** — Riot Games' real, physical card game, published in English by UVS Games — is worth that same treatment. Here's the honest comparison, and how to actually find and buy real Riftbound cards without overpaying.
+
+## Riftbound is a real card game, not a spinoff
+
+Riftbound is a genuine, in-print trading card game, sold through game stores and online singles marketplaces the same way Magic is — not a mobile app, not a digital-only collectible. It's set in the League of Legends universe rather than Magic's multiverse, built around champions instead of planeswalkers. If you'd rather read the real rules than a comparison table, the **[interactive learn page](/learn)** walks through a complete game step by step, free, no signup, and **[Riftbound Rules Explained](/guides/riftbound-rules-explained)** is the full hub.
+
+## How the pieces map onto what you already know
+
+Structural similarity, not a rules match — the analogy is meant to build intuition fast, not to substitute for the real text:
+
+| Magic: The Gathering | Riftbound | The honest difference |
+| --- | --- | --- |
+| Lands produce mana in 5 colors | **Runes** tied to **Domains** power your plays | 7 Domains (Fury, Calm, Mind, Body, Chaos, Order, plus Colorless) rather than 5 colors; a deck commits to one or two, same discipline as a manabase |
+| A 60-card deck (100 for Commander) | A ~40-card main deck + 12 Runes + 3 Battlefields + up to 10 side deck | Different totals, same idea of a fixed, legal deck shape — **[the full anatomy](/guides/how-a-riftbound-deck-is-built)** |
+| Standard rotates; Eternal formats don't | No announced rotation | Every set so far stays legal — closer to how Magic's Eternal formats behave |
+| A banned/restricted list | A real banlist | **[The banlist explained](/guides/riftbound-banlist-explained)** and the **[July 2026 update](/blog/riftbound-july-2026-ban-list-update)** |
+| Foils, alternate arts, Secret Lairs | **Showcase**, alternate art, **Signature** prints | Signature cards are hand-signed by the card's real artist |
+| TCGplayer market price | RiftCompare's live comparison | The exact habit you already have, applied to a different game |
+
+## How to actually get Riftbound cards
+
+The buying pattern will feel immediately familiar:
+
+1. **Start with a ready-to-play product** if you want to learn the game cheaply — a preconstructed deck or Proving Grounds kit, no singles required. Compare current listings on the **[sealed products page](/sealed)**.
+2. **Buy singles for a real deck**, the way you'd build a Magic deck around a specific list rather than crack packs hoping to hit it. Search the **[card database](/browse)**, or price a whole decklist at once with the **[deck pricer](/deck)**.
+3. **Compare across the real market**, exactly like checking TCGplayer before a Magic purchase. Riftbound sells through independent game stores, marketplace listings and eBay, across six currency markets (Australia, the US, the UK, Singapore, Canada and the EU). RiftCompare ranks by total delivered cost — postage included where a store publishes it, not just the sticker price. See **[every store we track](/stores/tracked)**.
+
+**[Where to Buy Riftbound Cards](/guides/where-to-buy-riftbound-cards)** covers all six markets and 100+ stores in one place, and **[Best Basket](/tools/best-basket)** splits a full decklist across stores to find the cheapest combined order once shipping is counted — the same problem a multi-store Magic order has.
+
+## What things cost, and how to keep track
+
+No fabricated numbers here — prices move daily and any figure printed today would be stale by the time you read it, which is exactly why a live tool beats a listicle. What's stable instead:
+
+- **Ready-to-play products are the fixed-cost entry point** — no pack-opening variance.
+- **Chase prints carry a real premium.** **[Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** covers exactly what separates a base print from Showcase, alternate art and Signature — the closest Riftbound equivalent to a Magic foil-vs-nonfoil or Secret Lair premium.
+- **Watch price movement, not just a single snapshot** — the **[daily movers page](/movers)** shows what's trending up or down right now, the same signal a Magic player reads off a price-tracking tool.
+- **A deck's real cost is total delivered cost, not the sum of sticker prices** — the same lesson every Magic player learns the first time postage eats a "cheap" multi-store order.
+
+## Where to start
+
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost, and **[Riftbound deck archetypes](/guides/riftbound-deck-archetypes-guide)** is the deckbuilding-strategy version of this guide once you're past the basics. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live.`,
   },
   {
     slug: "riftbound-singles-vs-sealed",
@@ -824,77 +1720,6 @@ Build smart, compare prices, and you'll have a competitive Riftbound deck withou
     ],
   },
   {
-    slug: "welcome-to-riftcompareau",
-    category: "blog",
-    title: "Welcome to RiftCompare",
-    excerpt:
-      "What RiftCompare is, why we built it, and everything it now covers — card and sealed prices, decks, tools and games — across AU, NZ, US, UK and Singapore.",
-    author: "RiftCompare",
-    date: "2026-07-15",
-    readMins: 5,
-    tags: ["news", "about"],
-    body: `RiftCompare is a free price-comparison tool for **Riftbound: League of Legends TCG**. We started as an Australia-only project; today RiftCompare tracks live prices across **Australia, New Zealand, the US, the UK, Singapore and Canada**, and has grown well past a simple price table.
-
-## The problem we built this to solve
-
-Riftbound is exciting, but tracking down the cheapest copy of a specific card across dozens of independent stores is genuinely tedious — every shop prices differently, stock changes daily, overseas sites quietly show you the wrong currency, and postage costs can flip which store is actually cheapest once you account for shipping. RiftCompare does that legwork automatically: search a card once, and see every store's live price side by side, ranked by **total delivered cost** (price plus postage, with free-shipping thresholds factored in), refreshed daily.
-
-## What you can do here
-
-- **[Browse the card database](/browse)** — every Riftbound single, filterable by set, domain, rarity and type, with live prices in your market.
-- **[Buy Riftbound singles](/singles)** — the fastest path from "which card do I need" to "who's cheapest right now."
-- **[Compare sealed products](/sealed)** — booster boxes, packs, Proving Grounds and more, priced across shops.
-- **[Explore meta decks](/decks)** — real top-finishing tournament lists, with a live "build cost" so you know exactly what it costs to assemble each one.
-- **[The RiftCompare Index](/market)** and **[price movers](/movers)** — a daily read on the whole Riftbound singles market, and which cards are spiking, cooling, or quietly undervalued.
-- **[Deck pricer](/deck)** — paste or build a decklist and price the entire thing across every store in one pass.
-- **Tools** — an arbitrage/deal finder and a box-EV calculator.
-- **[Riftle](/riftle)** — our free daily Wordle-style "guess the card" game, plus an Unlimited mode.
-- **[Buy & sell on the marketplace](/marketplace)** — trade directly with verified sellers.
-- **Wishlist, price alerts and portfolio tracking** — for a free account, track the cards you want, get notified on price drops, and value your whole collection.
-
-## How prices work
-
-We pull live prices directly from each store's public product feed (and eBay) in that market's own currency — never converted or estimated — so what you see is what you'd actually pay locally. Prices refresh daily, and every listing links straight out to the store so you can buy in a couple of clicks. Where we don't yet have a local listing for a card, we point you to an eBay search for it rather than leaving the page empty.
-
-## Where we're still growing
-
-Store coverage is deepest in Australia and growing fastest in the US, UK and Singapore — we're actively finding and adding new stores in every market. If a store you use is missing, or something looks wrong, tell us via the [contact form](/contact). Thanks for stopping by, and happy hunting.`,
-  },
-  {
-    slug: "unleashed-meta-snapshot-june-2026",
-    category: "blog",
-    title: "Riftbound Unleashed Meta Snapshot — June 2026",
-    excerpt:
-      "The six decks defining the Unleashed metagame — champion, key cards, archetype and what each actually costs to build, priced live across every store we track.",
-    author: "RiftCompare",
-    date: "2026-07-15",
-    readMins: 6,
-    tags: ["meta", "decks"],
-    body: `The **Unleashed** metagame has settled into a clear top tier. Here's a breakdown of the six most-played and best-performing legends, based on tournament results aggregated by [riftDecks.com](https://riftdecks.com/legends) — what each deck actually does, its key cards, and a link to the full list with a live **build cost** priced across every store we track.
-
-## Tier 1 — the decks to beat
-
-**[Master Yi, Wuju Bladesman](/decks/master-yi-wuju-bladesman)** (Body/Calm) — the defining aggro-tempo deck. It runs Master Yi, Tempered behind a wall of cheap, resilient units (Lonely Poro, Scuttle Crab, First Mate) and closes with Zhonya's Hourglass and Trinity Force turning a single big threat into a game-ending combat trick. It wants to win the early board and never give it back.
-
-**[Irelia, Blade Dancer](/decks/irelia-blade-dancer)** (Calm/Chaos) — flexible tempo built around Irelia, Fervent, backed by Guardian Angel and Boots of Swiftness to keep her attacking through removal. Scuttle Crab and Tideturner give it the same resilient-unit foundation as Yi, but with a deeper trick suite that snowballs the board rather than racing it.
-
-**LeBlanc, Deceiver** (Mind/Order) — midrange that goes wide and converts with value. LeBlanc, Fragmented sets up disruptive plays alongside Soaring Scout, Watchful Sentry and Black Rose Dignitary, with Baited Hook picking off whatever the board state doesn't already answer.
-
-## Tier 2 — strong and popular
-
-**[Diana, Scorn of the Moon](/decks/diana-scorn-of-the-moon)** (Chaos/Mind) — spell-tempo built around Diana, Lunari. It leans on Ravenbloom Student and Tideturner for board presence, with Hwei, Brooding Painter adding a second angle of pressure once the spell package takes over.
-
-**Fiora, Grand Duelist** (Body/Order) — wide, aggressive units (Pit Rookie, First Mate, Spectral Matron) that duel down blockers and race, equipped with B.F. Sword, Shepherd's Heirloom and Baited Hook to keep Fiora, Victorious swinging through anything that tries to trade with her.
-
-**Vex, Gloomist** (Calm/Chaos) — evasive tempo/control. Vex, Apathetic backed by Scuttle Crab, Tideturner and Trevor Snoozebottom, with Boots of Swiftness protecting the pieces that actually close the game once the board is stabilized.
-
-## See the full lists (and build cost)
-
-Every deck above is a real, legal tournament list on our **[Meta Decks page](/decks)** — card-by-card, split into Legend, Champion, Main Deck, Battlefields, Runes and Side Deck, with a live **build cost** priced across every store RiftCompare tracks (not just Australia — the build cost adapts to your own market). Click through to any deck above to see the exact 40+ cards and what assembling it would cost you today.
-
-Decklists are sourced from riftDecks.com and refresh with the metagame — we'll post a new snapshot as the tier list shifts.`,
-  },
-  {
     slug: "how-a-riftbound-deck-is-built",
     category: "guide",
     title: "How a Riftbound Deck Is Built",
@@ -929,7 +1754,7 @@ Riftbound has seven domains — **Fury, Calm, Mind, Body, Chaos, Order** and **C
 
 ## Building on a budget
 
-A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced across Australian stores, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
+A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced in your own market, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
 
 ## Mulligan: keep or ship your opening hand
 
@@ -948,6 +1773,76 @@ At tournaments you play best-of-three, and between games you can swap up to your
 The two extra slots are worth more than they look. Eight slots usually forced you to cover only the two or three matchups you expected most; ten lets you keep a dedicated answer for a fourth deck without cutting your core plan, which is exactly why the change landed alongside Vendetta and its sideboard-oriented designs.
 
 Want to try these ideas out before committing? **[Price the final deck](/deck)** across every store first, so you know exactly what the build costs before you buy.`,
+  },
+  {
+    slug: "best-basket-cheapest-riftbound-deck",
+    category: "guide",
+    title: "Best Basket: The Cheapest Way to Buy a Riftbound Deck",
+    excerpt:
+      "Pricing every card at its own cheapest store usually means paying postage a dozen times over. Best Basket finds the store split that's actually cheapest delivered — here's exactly how it works.",
+    author: "RiftCompare",
+    date: "2026-08-24",
+    readMins: 6,
+    tags: ["best basket", "deckbuilding", "buying", "guide", "shipping"],
+    hero: {
+      src: "/blog/best-basket-cheapest-riftbound-deck.png",
+      alt: "Best Basket — the cheapest way to buy a Riftbound deck, comparing an optimised store split against the naive per-card total",
+    },
+    summary: [
+      "**The naive way to buy a deck — each card from whichever store has it cheapest — is usually NOT the cheapest way once shipping is counted.** A 40-card list priced that way can easily spread across a dozen stores, each charging its own postage.",
+      "**Best Basket solves a different problem**: not \"what's the cheapest price per card\" but \"what's the cheapest way to buy the WHOLE list\", factoring in every store's shipping cost and free-shipping threshold.",
+      "**It's a RiftCompare Premium tool**, and shows you the naive-split cost right alongside its optimised one, so the saving is a number you can check, not a claim.",
+      "Just pricing a list, not buying it yet? **[The free deck pricer](/deck)** needs no account at all.",
+    ],
+    browseCta: {
+      href: "/tools/best-basket",
+      label: "Try Best Basket →",
+      blurb: "Paste a decklist or use your wishlist and see the cheapest way to buy the whole thing.",
+    },
+    body: `Price a 40-card Riftbound deck the obvious way — open each card, buy it from whichever store is cheapest — and you'll usually end up with an order spread across eight, ten, sometimes fifteen different stores. Each one charges its own shipping. The "cheapest" card-by-card total quietly stops being the cheapest total once postage lands on top of it a dozen times.
+
+**[Best Basket](/tools/best-basket)** exists to fix exactly that. It's a RiftCompare Premium tool that takes a full decklist and works out the cheapest way to buy *all of it*, not the cheapest way to buy each card in isolation.
+
+## The problem, concretely
+
+Say a 40-card list has its cheapest matches spread across 12 different stores. Buy it that way and you're paying 12 separate shipping charges — plus 12 separate deliveries to track, 12 separate free-shipping thresholds you're not close enough to hit, and a much higher chance one store is out of stock by the time you check out.
+
+Consolidate the same list into, say, 3 or 4 stores instead, and you often come out **cheaper overall** even though a few individual cards cost a little more than their absolute lowest listing — because you're paying shipping 3 or 4 times instead of 12, and you're more likely to clear each store's free-shipping threshold along the way. That trade-off — a few cents more per card against dramatically less postage — is exactly the calculation nobody wants to do by hand across a 40-card list and a dozen stores' worth of shipping policies.
+
+## How Best Basket actually works
+
+1. **Give it a list.** Paste any decklist in standard list format, or point it at your own wishlist/watchlist from your account. If you got here from a deck page, your list is often already pre-filled.
+2. **It prices every viable store split** — not just the single cheapest store for each card, but combinations of stores that carry enough of the list to be worth consolidating into, each with its real shipping cost and free-shipping threshold applied.
+3. **It shows you the comparison, not just the answer.** The result names the store split, the total delivered cost, and — right alongside it — what the "naive" per-card-cheapest approach would have cost and how many stores it would have needed. You can see the saving, not just be told one exists.
+4. **You check out at each store yourself.** Best Basket tells you where to buy; it doesn't process the order. Every store in the plan gets a direct link.
+
+## Best Basket vs. the free deck pricer
+
+RiftCompare has two related tools, and it's worth knowing which one you actually want:
+
+- **[The deck pricer](/deck)** — free, no account needed. Prices every card in a list at its own cheapest store and adds it up. Good for a quick "what's this deck worth" check.
+- **[Best Basket](/tools/best-basket)** — a Premium tool. Solves the harder, more useful question: what's the cheapest way to actually *buy* the list, once you stop pretending shipping is free.
+
+If you're pricing a list out of curiosity, the deck pricer is enough. If you're actually about to place an order, Best Basket is the one that saves you real money.
+
+## When it matters most
+
+- **Full 40-card decks**, where the naive approach realistically does spread across a dozen-plus stores.
+- **Cheap-to-mid-value staples** — commons and uncommons where postage is a large fraction of the card's own price, so consolidating a handful of $1-2 cards into one store's order genuinely moves the total.
+- **Rebuilding after a rotation or ban**, when you're replacing several cards at once rather than one at a time.
+
+It matters least for a single chase card or a short shopping list of two or three cards — there's no split to optimise when everything's coming from one order anyway.
+
+## Try it
+
+**[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one from the current **[meta decks](/decks)** — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
+    faq: [
+      { q: "Is Best Basket free?", a: "No — Best Basket is a RiftCompare Premium tool. Upgrade and it's included alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list." },
+      { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered." },
+      { q: "What can I paste into Best Basket?", a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given." },
+      { q: "Do I need Premium just to price a list, not buy it?", a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-split optimisation." },
+      { q: "How much can Best Basket actually save on a full deck?", a: "It depends on the list and current stock, which is why the tool shows the real comparison rather than a fixed percentage: the naive per-card-cheapest total and store count, right next to its optimised split. Savings are largest on full 40-card lists heavy on cheap commons, where postage is a large share of each card's price." },
+    ],
   },
   {
     slug: "riftbound-booster-box-ev-worth-ripping-or-buying-singles",
@@ -1006,7 +1901,7 @@ A workable routine: check current EV estimates with the [Box EV calculator](/too
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
     category: "guide",
-    title: "Riftbound Card Arbitrage: How to Actually Spot a Real Price Gap",
+    title: "How to Find Riftbound Arbitrage",
     excerpt:
       "\"Arbitrage\" gets thrown around a lot in TCG circles - here's what it really means for Riftbound cards, and how to tell a genuine price gap from a mirage.",
     author: "RiftCompare",
@@ -1072,7 +1967,7 @@ It also doesn't require a large bankroll to start. Watching a handful of cards y
 
 The RiftCompare Index is a single number meant to answer one question: *is the Riftbound secondary market, taken as a whole, worth more or less than it used to be?* It is not the price of any one card, and it isn't an average of "everything for sale." It's a tracked basket of specific cards whose combined value is rebased to a starting point, so the day-to-day movement of that basket tells you something about market direction rather than about one chase card getting hot.
 
-Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a fixed group of cards, tracked every day, combined into one line you can watch over time.
+Think of it the way a stock index works. The S&P 500 doesn't tell you what any single company is worth - it tells you whether large-cap US equities broadly went up or down. The Index on [/market](/market) is built the same way for Riftbound singles: a fixed group of cards, tracked on a regular cadence, combined into one line you can watch over time.
 
 This matters because individual card prices are noisy. A single copy selling low because a seller needed cash fast, or high because two collectors got into a bidding war, can make a card's price chart look dramatic without meaning anything about the format or the game's overall health. An index smooths that out by design.
 
@@ -1092,15 +1987,45 @@ The goal is representativeness, not completeness. Trying to include every printe
 
 If the basket shifted constantly, the Index would stop being comparable to itself over time. Part of the value of an index is that you can look at it in six months and know it's still measuring roughly the same thing it was measuring today. Basket composition is reviewed periodically rather than adjusted in response to short-term hype around any one card.
 
-## How Daily Snapshots and Rebasing Work
+## How the Index Actually Combines Prices — Chain-Linking
 
-Every card in the basket gets a price snapshot on a regular cadence - effectively a daily "closing price" pulled from tracked listings and completed sales. Those individual snapshots are combined into a single basket value for that day.
+Every card in the basket gets a price snapshot on a regular cadence - effectively a periodic "closing price" pulled from tracked listings and completed sales.
 
-That raw basket value, in dollars, isn't very readable on its own - it's just a sum of a bunch of card prices, and the actual dollar figure doesn't mean much by itself. So the Index gets **rebased**: the very first snapshot is set to a round starting value (this is standard practice for any price index, financial or otherwise), and every day after that is expressed relative to that starting point.
+The naive way to turn a basket of prices into one number is: average them each snapshot, then rebase the first snapshot to a round starting value like 100. That's how a lot of simple indices work, and it's how an earlier version of this one worked. It has a real flaw, though: the basket isn't fixed forever - it's the 200 most-searched cards *right now*, and that list moves as the metagame shifts and, especially, whenever a new set releases and a wave of newly-revealed cards suddenly gets searched heavily. A plain average jumps the instant a differently-priced card enters or leaves the basket, whether or not anything anyone actually owns changed price at all - which makes the naive version misleading at exactly the moment it matters most, a set launch.
 
-The practical effect is that you read the Index as a percentage move from its starting line, not as a dollar amount. If the Index is above its starting value, the basket of tracked cards is worth more in aggregate than when tracking began. If it's below, the basket is worth less. The specific starting number itself is arbitrary - what matters is the trend line it produces.
+The fix is called **chain-linking**, and real financial indices use the same idea to absorb constituent changes without a discontinuity. Instead of averaging price *levels* at each snapshot, the Index computes each snapshot's *percentage move* using only the cards that have a tracked price at both that snapshot and the previous one - then multiplies that move onto a running total that starts at 100.
 
-This is also why the Index is most useful looked at over stretches of time rather than a single day. One day's snapshot can wobble for the same reasons a single card's price can wobble - a slow listing day, a temporary gap in completed sales for a card or two in the basket. The trend across weeks and months is where the signal lives.
+The practical effect: a card that just entered the basket - a brand-new set's card climbing into the top 200 by search, say - has no earlier price to compare against, so it simply sits out the calculation for the snapshot it debuts on. It starts contributing from the *next* charted snapshot onward, once it has two consecutive tracked prices to form a ratio from. The basket can turn over completely over months and the Index still won't move on that account alone - only real price changes do.
+
+This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. The earliest stretch of the chart - back when only a handful of cards had any tracked price yet - is thinner than the rest for exactly that reason: fewer cards means more weight riding on each one. Chain-linking still keeps that stretch honest (a card joining never jumps the level, whether it's card three or card three hundred), it's just a noisier read of the market than a later week with the full basket reporting. The trend across weeks and months is where the signal lives.
+
+## A Concrete Example: A New Set's Launch
+
+Say Origins, Spirit Forged and Unleashed cards make up most of the Index the week before a new set releases, each trading in an ordinary $5-$40 range. The set launches, hype cards get searched heavily, and within two or three weeks several of its cards - some already trading at $80 and up - climb into the top 200 by search and enter the basket.
+
+Under a plain average, that alone would drag the Index's level up sharply the moment those cards entered, even though none of the *older* cards had moved at all - a false signal blamed on "the market," when it was really just new, expensive cards joining the average. Under chain-linking, those new cards have no price before their own release, so they aren't part of any snapshot-to-snapshot return until they've been tracked for two consecutive snapshots. The Index keeps telling the same story it was already telling about the older cards, and the new set's cards only start moving the number once there's an actual prior price to compare against.
+
+## The Exact Formula
+
+The plain-English version above is what you need to interpret the number day to day. This is the literal arithmetic, published because a health check you can't check isn't much of one - and it's exactly what the code computes, not a simplified stand-in for it.
+
+**1. Constituents.** The 200 cards on RiftCompare with the highest recorded search count that currently have a live price in the selected market.
+
+**2. Weight.** Each constituent's raw weight is \`1 + searchCount\` (the +1 means a market with zero recorded searches still produces a valid weight instead of dividing by zero). Every raw weight is then capped at 20% of the basket's total raw weight - a card whose raw weight would be worth more than a fifth of the whole basket is clipped down to exactly that fifth. Call constituent *i*'s resulting weight \`w[i]\`, and the sum of every constituent's weight \`W\`.
+
+**3. Per-snapshot price.** \`p[i, t]\` is constituent *i*'s lowest tracked live price on snapshot *t*, carried forward from its last known price when this exact snapshot has no fresh reading for it (so a card briefly out of stock doesn't vanish from the calculation).
+
+**4. Starting point.** The series starts at the first snapshot \`t0\` where *any* constituent has a tracked price at all - as far back as the data goes, full stop. \`Index(t0) = 100\`.
+
+**5. Chain-linked step.** For each snapshot \`t\` after \`t0\`, let \`C\` be the set of constituents priced at both \`t\` and the previous *charted* snapshot \`t'\`:
+
+\`return = ( Σ w[i]·p[i,t] for i in C ) ÷ ( Σ w[i]·p[i,t'] for i in C )\`
+
+\`Index(t) = Index(t') × return\`
+
+That's the whole thing - five steps, no persisted state, recomputed from scratch every time from the raw tracked prices, nothing set-specific hard-coded anywhere in it. Step 5 is the literal answer to "what happens when a new set releases": a card with no price at \`t'\` is outside \`C\` for that step by construction, so it cannot affect \`return\` no matter how differently it's priced from the rest of the basket - it only starts actually moving the number from its first two consecutive tracked prices onward. Notice \`C\` doesn't need to be *most* of the basket - it just needs to be non-empty. An earlier version of this formula also required \`C\` to clear a coverage threshold before trusting a step, on the theory that a thin \`C\` meant an untrustworthy reading. It didn't actually add any protection beyond what the exclusion rule above already gives for free, and it meant the chart started later than the real data did - so it's gone.
+
+**Regions.** The Index defaults to the US market. Every other tracked region (AU, UK, SG, CA, EU) runs the exact same five-step computation independently, in that region's own currency - pick one from the Market selector on the page.
 
 ## Index vs. Movers: Two Different Questions
 
@@ -1120,7 +2045,7 @@ Used honestly, the Index is a health check, not a trading signal. It won't tell 
   {
     slug: "riftbound-set-checklist-how-to-complete-a-set",
     category: "guide",
-    title: "Completing a Riftbound Set on a Budget: A Collector's Plan",
+    title: "Completing a Riftbound Set on a Budget",
     excerpt:
       "Chasing a full Riftbound set doesn't have to drain your wallet. Here's the order to buy in, when packs beat singles, and how to track what's left.",
     author: "RiftCompare",
@@ -1175,113 +2100,11 @@ The part collectors underestimate isn't finding cards, it's keeping an accurate 
 Honestly, weigh this against your actual goal. If you want a complete set for the satisfaction of it, then yes, the last few commons matter as much as the chase rares even though they're worth very little individually. If your real goal is having a playable, presentable collection, the last handful of low-value commons are often not worth the shipping cost of a single-card order and are better picked up opportunistically in a bulk lot or a trade. Being honest about which goal you actually have will save you more money than any single buying tactic on this list.`,
   },
   {
-    slug: "riftbound-vendetta-everything-you-need-to-know",
-    category: "blog",
-    title: "Riftbound Vendetta: Everything You Need to Know",
-    excerpt:
-      "Riftbound: Vendetta lands 31 July 2026 with nine new Legends, three new mechanics, new card types and two-player Showdown Decks. Every card is now confirmed — here's the complete rundown.",
-    author: "RiftCompare",
-    date: "2026-07-07",
-    updated: "2026-07-31",
-    readMins: 6,
-    tags: ["news", "vendetta", "set", "release", "guide"],
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Vendetta is the next Riftbound: League of Legends TCG set, and it's a big one — a rivalries-themed expansion built around clashing champions like **Nasus vs Renekton** and **Shen vs Zed**. Here's everything that's been confirmed, in one place.
-
-## Release date
-
-**Riftbound: Vendetta released on 31 July 2026** and is out now. In-store **Pre-Rift** launch events ran from **24 July**. It's the first Riftbound set to launch simultaneously worldwide in English and Simplified Chinese.
-
-Sealed product — booster boxes and packs — is already listing, and you can compare it cheapest-first on our **[sealed page](/sealed)** right now. The singles will populate the **[Vendetta set page](/sets/vendetta)** with live prices the moment cards release.
-
-## What's in the set
-
-- **166 main-set cards** (all officially confirmed), including **50+ Showcase cards** and **nine new Champion Legends**.
-- Champions making their Riftbound debut include **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
-- **Signed Overnumbered variants** for the nine Legends, plus **22 Rival Overnumbers** — diptych cards that celebrate League's greatest rivalries and are designed to be displayed as a pair.
-
-## Three new mechanics
-
-Vendetta introduces **Flow**, **Burn** and **Empower** — three mechanics that add whole new ways to play. We break each one down in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, but in short:
-
-- **Flow** lets you play cards from your trash instead of your hand.
-- **Burn** sends cards from a deck to the trash — to fuel your own synergies, or to attack your opponent's deck directly.
-- **Empower** lets a card gain new abilities once it's in play, often after paying a cost.
-
-## New card types
-
-Vendetta also adds two new card concepts — **Unit-Gear** (a card that counts as both a unit and a piece of gear) and **Decrees** (a cycle of rivalry spells). Full detail in **[Vendetta's new card types](/blog/riftbound-vendetta-unit-gear-decrees)**.
-
-## A new way to play: Showdown Decks
-
-Vendetta debuts **Showdown Decks** — Riftbound's first ready-to-play **two-player** product, so two people can open one box and battle straight away. The first pairing is fittingly **Shen versus Zed**.
-
-## New domain pairings
-
-![Vendetta's new domain pairings — Fury + Calm, Mind + Body, and Chaos + Order](/vendetta-domains.png)
-
-Vendetta leans into new two-domain colour pairings for deckbuilding: **Fury + Calm** (red + green), **Mind + Body** (blue + orange) and **Chaos + Order** (purple + yellow) — rival domains forced together. If you're planning a deck, our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** walks through what the new mechanics and pairings point toward.
-
-## How to be ready
-
-1. **Wishlist now.** Browse the **[card database](/browse)** and wishlist what you already want — you'll get an alert if a price drops.
-2. **Compare sealed early.** VEN boxes move fast at launch; the **[sealed page](/sealed)** ranks them cheapest-first across stores.
-3. **Have your deck ready to price.** Drop a list into the **[deck pricer](/deck)** so you can total it the moment cards go live.
-4. **Don't overpay in the rush.** Launch hype pushes prices up — RiftCompare always shows the cheapest delivered price so you never pay the first number you see.
-
-**All 166 main-set cards are out.** Vendetta released worldwide on 31 July 2026. Browse every one of them, live, on the **[Vendetta set page](/sets/vendetta)**, or see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**.`,
-  },
-  {
-    slug: "riftbound-vendetta-new-mechanics-flow-burn-empower",
-    category: "blog",
-    title: "Riftbound Vendetta's New Mechanics Explained: Flow, Burn & Empower",
-    excerpt:
-      "Vendetta introduces three new Riftbound mechanics — Flow, Burn and Empower. Here's what each one does and how it changes the way you build and play.",
-    author: "RiftCompare",
-    date: "2026-07-07",
-    updated: "2026-07-17",
-    readMins: 5,
-    tags: ["vendetta", "mechanics", "gameplay", "guide"],
-    body: `![Vendetta's three new mechanics — Flow, Burn and Empower](/vendetta-mechanics.png)
-
-Riftbound: Vendetta (out **31 July 2026**) adds three brand-new mechanics — **Flow**, **Burn** and **Empower**. Each opens up a new way to play, and together they push the set toward value, recursion and building-up-over-time strategies. Here's what each one does.
-
-## Flow — play from your trash
-
-**Flow lets you play cards from your trash instead of from your hand.** It draws on the League champions who fuel their kits with Energy — your used and discarded cards become a second resource pool rather than dead weight.
-
-In practice, your trash stops being a graveyard and becomes a toolbox. Cards that get used, discarded or destroyed can come back into play, so Flow decks reward you for cycling through cards quickly and knowing what's waiting to be replayed. **→ Full guide: [Riftbound Flow explained](/guides/riftbound-flow-explained).**
-
-## Burn — send cards to the trash
-
-**Burn sends cards from a Main Deck to the trash.** There are two sides to it:
-
-- **Self-Burn** — some cards burn *your own* deck to fuel synergies. If Flow rewards a full trash, Burn is one of the fastest ways to fill it.
-- **Deck attack** — other cards burn your *opponent's* deck directly, chipping away at what they'll draw. It's Riftbound's take on a mill strategy.
-
-Burn and Flow are natural partners: Burn stocks the trash, Flow cashes it in. **→ Full guide: [Riftbound Burn explained](/guides/riftbound-burn-explained).**
-
-## Empower — grow a card after it's down
-
-**Empower gives a card the potential to gain new abilities once it's in play, often after paying a cost.** You can get a unit on the board one turn, then amplify its might or add an effect on a later turn. Under the hood, Empower sets a persistent **Empowered** status on the card — it sticks around until the card leaves play or something **Disempowers** it (the exact reverse, stripping the status). Riot's Core Rules confirm Disempower is its own action, so expect some Vendetta cards to attack an opponent's Empowered threat directly instead of just racing it.
-
-That changes sequencing: an Empower card can be a cheap early play *and* a late-game threat, so you're rewarded for planning two turns ahead rather than dumping your hand. **→ Full guide: [Riftbound Empower explained](/guides/riftbound-empower-explained).**
-
-## How they fit together
-
-The three mechanics reward **patience and recursion** over raw tempo. Burn fills the trash, Flow replays from it, and Empower turns early plays into scaling threats. Expect Vendetta decks that grind out long games and get stronger the longer they run.
-
-Vendetta's Core Rules also add a smaller, one-off action worth knowing: **Skip**, a replacement effect that erases a named part of a turn entirely — no triggers, no procedures, it just doesn't happen. So far it's on a single card rather than a full mechanic, but it's a genuinely new category of effect for the game.
-
-Want to know what to build with them? Read our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)**, see the **[new card types](/blog/riftbound-vendetta-unit-gear-decrees)** that support them, or get the full picture in **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Prices on every card go live on the **[Vendetta set page](/sets/vendetta)** as it releases.`,
-  },
-  {
     slug: "riftbound-vendetta-unit-gear-decrees",
     category: "blog",
-    title: "Riftbound Vendetta's New Card Types: Unit-Gear and Decrees",
+    title: "Vendetta's New Card Types: Unit-Gear & Decrees",
     excerpt:
-      "Vendetta adds two new card concepts to Riftbound — Unit-Gear, which is both a unit and a piece of gear, and Decrees, a cycle of rivalry spells. Here's how they work.",
+      "Vendetta adds two new card concepts — Unit-Gear, both a unit and a piece of gear, and Decrees, a cycle of rivalry spells. Here's how they work.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-07",
@@ -1305,12 +2128,12 @@ In practice, Decrees are targeted answers: if the field is full of a particular 
 
 ## The bigger picture
 
-Both card types feed Vendetta's rivalry identity — Domains pitted against their opposites, champions against their nemeses. Pair them with the set's new mechanics (**[Flow, Burn and Empower](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**) and there's a lot of new deckbuilding space to explore. Our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** digs into what to build, and the **[Vendetta set page](/sets/vendetta)** tracks live prices on every card as it releases.`,
+Both card types feed Vendetta's rivalry identity — Domains pitted against their opposites, champions against their nemeses. Pair them with the set's new mechanics (**[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)**) and there's a lot of new deckbuilding space to explore. Our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** digs into what to build, and the **[Vendetta set page](/sets/vendetta)** tracks live prices on every card as it releases.`,
   },
   {
     slug: "building-for-riftbound-vendetta",
     category: "guide",
-    title: "Building for Riftbound Vendetta: Decks, Synergies & What to Look Out For",
+    title: "Building for Riftbound Vendetta",
     excerpt:
       "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as early singles start trading.",
     author: "RiftCompare",
@@ -1351,7 +2174,7 @@ Each pairing marries two colours that usually pull in opposite directions, so th
 
 ## Let the mechanics suggest the archetypes
 
-The three new mechanics (full breakdown in **[Flow, Burn & Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**) each hint at a deck style:
+The three new mechanics (each with its own guide: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)**) each hint at a deck style:
 
 - **Flow → recursion / value decks.** Because Flow plays cards from your trash, decks that fill and re-use the trash get a second life out of every card. Prioritise cards that discard, cycle or sacrifice with upside.
 - **Burn → fuel or disruption.** Self-Burn stocks your trash fast for Flow payoffs; opponent-Burn is a genuine mill and disruption angle. Early on, Burn is most reliable as *fuel* for your own engine.
@@ -1372,14 +2195,14 @@ Nine new Legends arrive, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed a
 
 ## We'll keep this updated
 
-The whole set is out and trading, so this is genuinely the moment to start assembling a shell. The first Vendetta events have now been played and we'll add concrete decklists as the field settles. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as they land.`,
+The whole set is out and trading, so this is genuinely the moment to start assembling a shell. The first Vendetta events have now been played and we'll add concrete decklists as the field settles. For three ready-to-build archetype blueprints with the shell for each, see **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)**. For the full set overview and live card prices, see the **[Vendetta set page](/sets/vendetta)** as they land.`,
   },
   {
     slug: "best-riftbound-vendetta-decks",
     category: "guide",
-    title: "Best Riftbound Vendetta Decks: Archetypes, Synergies & How to Build Them",
+    title: "Best Riftbound Vendetta Decks",
     excerpt:
-      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with example decklists, 10-card side decks, real card visuals, and how to start buying into each one now that Vendetta singles are trading.",
+      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with decklists, side decks and where to buy the pieces now singles are trading.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-31",
@@ -1570,129 +2393,12 @@ We'll update this guide with concrete lists as a real meta forms — and keep an
 
 Early singles are already trading, which means you don't have to wait until 31 July to start — the **[Vendetta set page](/sets/vendetta)** has live prices on every confirmed card as they list. Once you've settled on a shell, drop it into the **[deck pricer](/deck)** to total every card at the cheapest live price across stores, in your currency — the fastest way to build a new-set deck without overpaying in the launch rush. For a brand-new set, **[singles are usually cheaper than sealed](/guides/riftbound-singles-vs-sealed)** for a specific deck.
 
-For the full picture, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
-  },
-  {
-    slug: "riftbound-vendetta-countdown-how-long-until-release",
-    category: "blog",
-    title: "Riftbound Vendetta Release Date — Out Now (31 July 2026)",
-    excerpt:
-      "Riftbound: Vendetta drops 31 July 2026, with Pre-Rift launch events from 24 July. Here are the key dates, what's in the set, and where to buy it now that it's out.",
-    author: "RiftCompare",
-    date: "2026-07-08",
-    updated: "2026-07-31",
-    readMins: 3,
-    tags: ["news", "vendetta", "release", "release date"],
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-**Riftbound: Vendetta is out.** The set released worldwide on **31 July 2026**, with in-store **Pre-Rift** launch events from **24 July** — so singles were already changing hands a week before the official street date.
-
-> **🔥 [See every Vendetta card with live prices →](/sets/vendetta)**
-
-Every card in the set is priced across every store we track, ranked by what you'd actually pay delivered. And if you're already looking past this set: **[Radiance (Set 5) lands 23 October 2026](/radiance-countdown)**.
-
-## The key dates
-
-- **24 July 2026** — Pre-Rift launch events begin in participating stores. First chance to open packs and play with Vendetta cards.
-- **31 July 2026** — Full worldwide retail release. Singles start appearing at stores, and the **[Vendetta set page](/sets/vendetta)** begins filling with live prices.
-
-## Why the countdown matters for buyers
-
-New-set launches follow a predictable price curve: chase cards and format staples spike hardest in the **first week** while supply is thin, then settle as more product hits shelves. Knowing exactly when release lands lets you plan — grab what you need early if you're playing at launch, or wait out the initial spike if you're only collecting.
-
-Either way, RiftCompare shows the **cheapest delivered price across every store** the moment cards go live, so you never pay the first (inflated) number you see.
-
-## How to be ready in three steps
-
-1. **Wishlist now.** Add the cards you already know you want from the **[database](/browse)** — you'll be alerted if a price moves.
-2. **Compare sealed early.** VEN boxes sell fast at launch; the **[sealed page](/sealed)** ranks them cheapest-first right now.
-3. **Have your deck list ready.** Draft it with our **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**, then price it in one click with the **[deck pricer](/deck)** on release day.
-
-For the complete rundown of what's in the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)**. Then browse **[every Vendetta card with live prices](/sets/vendetta)**.`,
-  },
-  {
-    slug: "should-you-buy-riftbound-origins-before-vendetta",
-    category: "blog",
-    title: "Should You Buy Origins Before Vendetta Drops?",
-    excerpt:
-      "A new set changes prices across the whole game. Here's how a Vendetta launch typically moves Origins prices — and whether to buy the singles you want now or wait.",
-    author: "RiftCompare",
-    date: "2026-07-06",
-    updated: "2026-07-06",
-    readMins: 4,
-    tags: ["buying", "vendetta", "value", "opinion"],
-    body: `A new set doesn't just add cards — it moves the price of the cards you already own or want. With **[Vendetta](/sets/vendetta)** landing 31 July, a lot of buyers are asking the same thing: *do I grab my Origins singles now, or wait?* Here's how to think about it.
-
-## What a new set typically does to older singles
-
-There's no single rule, but a few patterns show up again and again when a TCG expansion drops:
-
-- **Attention shifts to the new set.** Demand — and hype-driven prices — concentrate on the newest cards at launch, which can soften prices on the previous set for a while.
-- **Format staples hold or climb.** Older cards that stay legal and see play in the new meta don't get cheaper just because a new set exists — sometimes they rise as new decks want them.
-- **Reprints reset prices.** If a card from an older set gets reprinted or a functionally similar card appears, the old version can drop. Nothing about this is confirmed for Vendetta — treat it as a risk to watch, not a certainty.
-
-## So: buy now or wait?
-
-**Buy now if** the card is something you'll actually use and you don't want to risk it climbing — playable staples rarely get dramatically cheaper, and waiting can cost you.
-
-**Wait if** you're only collecting, the card isn't urgent, and you'd rather see whether launch-week attention softens Origins prices first.
-
-The honest answer for most people: **buy what you'll play, wait on what you don't need yet.**
-
-## Let the data decide instead of guessing
-
-You don't have to predict any of this — you can watch it:
-
-- **[Price movers](/movers)** shows what's climbing and falling right now, so you can see a trend forming instead of guessing.
-- **[Wishlist](/browse)** a card and get alerted when its price actually moves.
-- The **[RiftCompare Index](/market)** tracks the whole market's direction day to day.
-
-When you're ready to buy, **[compare every store](/browse)** so you pay the cheapest delivered price — the single biggest saving is almost always *where* you buy, not *when*.
-
-Planning a Vendetta deck that mixes old and new cards? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which Origins and Unleashed cards the new archetypes want — those are the ones worth locking in early.`,
-  },
-  {
-    slug: "riftbound-vendetta-launch-week-buying-checklist",
-    category: "blog",
-    title: "Riftbound Vendetta Launch-Week Buying Checklist",
-    excerpt:
-      "Pre-Rift events start 24 July and Vendetta releases 31 July. Use this launch-week checklist so you buy smart, avoid the hype tax, and never overpay in the rush.",
-    author: "RiftCompare",
-    date: "2026-07-04",
-    updated: "2026-07-31",
-    readMins: 4,
-    tags: ["buying", "vendetta", "release", "guide"],
-    body: `Launch week is the most expensive time to buy a new set on impulse — and the best time to buy it *well* if you have a plan. Here's a simple checklist to get through Vendetta's launch (Pre-Rift from **24 July**, release **31 July**) without overpaying.
-
-## Before launch (this week)
-
-- **Decide your goal.** Playing at launch, collecting, or investing? Each points to a different buy. Be honest about which you are.
-- **Draft your deck list.** Use the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)** so you know exactly which cards you need before prices spike.
-- **Wishlist your targets.** Add them from the **[database](/browse)** so a price drop pings you automatically.
-- **Check sealed now.** If you want boxes, the **[sealed page](/sealed)** already ranks VEN sealed cheapest-first — lock in before launch-week scarcity.
-
-## At launch (24–31 July)
-
-- **Don't buy the first price you see.** Launch-day listings are the highest they'll be. Always **[compare delivered prices across stores](/browse)** first — shipping included.
-- **Watch the movers.** The **[price movers](/movers)** page shows what's spiking in real time; the hottest chase cards climb fastest, so decide whether to grab early or wait them out.
-- **Price your whole deck at once.** Drop your list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price in your currency, so you buy the whole thing for the least.
-- **Switch to your region.** Prices show in AUD, NZD, USD or GBP — make sure you're seeing *your* market's real cost, delivered.
-
-## After the dust settles
-
-- **Re-check in week two.** Once more product hits shelves, non-chase singles usually ease. If a card wasn't urgent, this is often the cheaper moment.
-- **Sell into the hype if you're selling.** If you opened boxes, launch-week demand is when duplicates fetch the most — see **[how to sell Riftbound cards](/blog/how-to-sell-riftbound-cards)**.
-
-## The one rule that always saves money
-
-Wherever you are in that timeline, the biggest lever is *where* you buy, not *when*. The same card can vary a lot between stores once shipping is included — RiftCompare exists to surface the cheapest delivered option every time.
-
-Vendetta is out now — browse **[every card with live prices](/sets/vendetta)**, and read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** so nothing about the set catches you off guard.`,
+For the full picture, read the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides, and track live prices on the **[Vendetta set page](/sets/vendetta)** as cards release.`,
   },
   {
     slug: "riftbound-banlist-explained",
     category: "guide",
-    title: "Riftbound Ban List Explained: Every Currently Banned Card",
+    title: "Riftbound Ban List Explained",
     excerpt:
       "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
     author: "RiftCompare",
@@ -1783,9 +2489,9 @@ We'll update this guide the moment any further changes to either ban list are an
   {
     slug: "riftbound-july-2026-ban-list-update",
     category: "blog",
-    title: "Riftbound's July 2026 Ban List: Stealthy Pursuer, Two Battlefields Banned — Plus a New 2v2 Ban List",
+    title: "Riftbound's July 2026 Ban List Update",
     excerpt:
-      "Riot just announced Riftbound's second ban wave: Stealthy Pursuer (over an infinite Recruit combo), The Arena's Greatest and Aspirant's Climb, effective 24 July — and a brand-new Constructed 2v2 ban list starting with Master Yi, Wuju Bladesman.",
+      "Riot's second Riftbound ban wave: Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — plus a new 2v2 ban list led by Master Yi.",
     author: "RiftCompare",
     date: "2026-07-17",
     updated: "2026-07-31",
@@ -1836,69 +2542,135 @@ For the complete, always-current picture — including March's original 7 bans �
 
 *Ban reasoning and effective dates are Riot Games' own words from their 17 July 2026 announcement.*`,
   },
+  // IMAGE SLOT (author): under "## How the drawing actually works", a screenshot of
+  // the Riot Merch Store entry form once registration opens on 14 August would make
+  // the "this is a form, not a checkout" point concrete — and it is OUR screenshot,
+  // not Riot's marketing art. Save to public/blog/t1-drawing-entry-form.png and add:
+  //   ![The Riot Merch Store drawing registration form for the T1 2025 Worlds Champion Signature Edition](/blog/t1-drawing-entry-form.png)
   {
     slug: "riftbound-t1-worlds-champion-collection",
     category: "blog",
-    title: "Riftbound × T1: The 2025 Worlds Champion Collection Explained",
+    title: "Riftbound × T1 Worlds Champion Collection",
     excerpt:
-      "Riot's first-ever single-team Riftbound collaboration: a serialised, player-signed Signature Edition and a playable Player Bundle honouring T1's sixth World Championship. Here's what's in each, and the five champions T1 themselves picked.",
+      "Riot's first single-team Riftbound collab: a signed Signature Edition (US$360) and a US$70 Player Bundle honouring T1's sixth Worlds title.",
     author: "RiftCompare",
     date: "2026-07-17",
-    readMins: 4,
+    // Rewritten 9 Aug 2026: the drawing timetable and prices are published, the
+    // five collection printings are now in our database, and the original text's
+    // "Seraphine isn't catalogued yet" line was stale. A companion post
+    // (/blog/riftbound-t1-signature-edition-drawing) briefly carried the dated
+    // registration logistics so the two didn't compete for the same query; once
+    // that window closed (17 Aug 2026) it was retired and its still-evergreen
+    // analysis (scarcity math, Player Bundle comparison) merged in here — see the
+    // AdSense remediation Phase 26 note in next.config.js.
+    updated: "2026-08-25",
+    readMins: 5,
     tags: ["news", "collectibles", "esports"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
     ],
-    // Ambessa (VEN, unreleased — no prices yet) plus the three already-released base
-    // printings T1 picked. Seraphine, Not Alone isn't catalogued on RiftCompare yet
-    // (not yet imported/revealed as a standalone printing), so it's named in the
-    // text but has no embed — never a broken link.
-    embed: {
-      title: "The 5 champions T1 picked (base printings)",
-      note: "The regular, buyable printing of each card T1 selected — not the limited Signature/Player Bundle art, which isn't sold through stores.",
-      slugs: [
-        "ambessa-the-wolf-ven-084",
-        "galio-indefatigable-unl-171-219",
-        "miss-fortune-buccaneer-ogn-193-298",
-        "xin-zhao-vigilant-sfd-176-221",
-      ],
-    },
-    body: `Riot just did something it's never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third straight — with signed, serialised cards picked by the players themselves.
+    embeds: [
+      {
+        title: "The collection's own printings (T1S 001-005)",
+        note: "Drawing-only prints with all-new art in a bespoke frame, including Faker's serialised Galio. No store sells these, so they carry no price until copies reach the secondary market.",
+        slugs: [
+          "ambessa-the-wolf-t1s-001-005-promo",
+          "xin-zhao-vigilant-t1s-002-005-promo",
+          "galio-indefatigable-t1s-003-005-promo",
+          "galio-indefatigable-t1s-003s-005-promo",
+          "miss-fortune-buccaneer-t1s-004-005-promo",
+          "seraphine-not-alone-t1s-005-005-promo",
+        ],
+      },
+      {
+        title: "The retail printings of the same champions",
+        note: "The regular, buyable version of each card T1 selected — live prices across every store we track.",
+        slugs: [
+          "ambessa-the-wolf-ven-084",
+          "xin-zhao-vigilant-sfd-176-221",
+          "galio-indefatigable-unl-171-219",
+          "miss-fortune-buccaneer-ogn-193-298",
+        ],
+      },
+    ],
+    body: `> **Registration for the English Signature Edition is closed.** The window ran 14-17 August 2026; selection emails went out from 20 August, with boxes arriving from 2 September. This page is the lasting product explainer — what the collection is, what's in it, what actually makes it scarce, and what it costs — for anyone who missed the window, is deciding on the still-open Player Bundle drawing, or just wants to know what these cards are.
+
+Riot did something in July it had never done in Riftbound before: partner with a single esports team, rather than the league as a whole, on a dedicated card collection. The **Riftbound × T1 2025 Worlds Champion Collection** honours T1's sixth World Championship title — and third in a row — with signed, serialised cards picked by the players themselves.
 
 ## Two products, two very different audiences
 
-**T1 2025 Worlds Champion Signature Edition** — the premium collector's version. Riot is capping production hard: only **10,125 copies per language** (English, Chinese, Korean), each including one card serial-numbered from 1 to 2025 (marking the championship year) with a gold-stamped signature from the corresponding player. The five cards also get a new foiling effect made specifically for this collection.
+**T1 2025 Worlds Champion Signature Edition — US$360.** The collector's version, capped at **10,125 copies per language** (English, Chinese, Korean; CN¥2,025 and KR₩500,000 respectively). Every box contains one card serial-numbered from 1 to 2025 — the year of the title — carrying a gold-stamped signature from the player who chose it. All five cards use a foiling effect made specifically for this release, and the packaging is built to be displayed rather than stored.
 
-**T1 2025 Worlds Champion Player Bundle** — the accessible version, for people who actually want to play with these cards. Same five champions with different (non-serialised, non-signed) art, plus a Sleeves Pack, Deckbox, Binder, and a Metal Die — 1 in every 10 dies is a special black-and-gold variant.
+**T1 2025 Worlds Champion Player Bundle — US$70.** The version for people who want to sleeve these up and play them (CN¥399, KR₩100,000). Same five champions in different art, with no serialisation and no signature, plus a Sleeves Pack, a Deckbox, a Binder and a Metal Die — one die in ten is a black-and-gold variant.
 
 ## The 5 cards — each hand-picked by a player
 
 Every card was personally chosen by the corresponding member of T1's championship roster:
 
-- **Choi "Doran" Hyeon-jun** → Ambessa, The Wolf
-- **Lee "Faker" Sang-hyeok** → Galio, Indefatigable
-- **Lee "Gumayusi" Min-hyeong** → Miss Fortune, Buccaneer
-- **Ryu "Keria" Min-seok** → Seraphine, Not Alone
-- **Moon "Oner" Hyeon-joon** → Xin Zhao, Vigilant
+- **Choi "Doran" Hyeon-jun** → Ambessa, The Wolf — Body, 4 energy, 4 might, with Empower 3
+- **Moon "Oner" Hyeon-joon** → Xin Zhao, Vigilant — Order, 3 energy, 4 might, with Tank
+- **Lee "Faker" Sang-hyeok** → Galio, Indefatigable — Order, 3 energy, 6 might, with Deflect and Tank
+- **Lee "Gumayusi" Min-hyeong** → Miss Fortune, Buccaneer — Chaos, 4 energy, 4 might
+- **Ryu "Keria" Min-seok** → Seraphine, Not Alone — Order, 5 energy, 1 might
 
 [[embed:0]]
 
-Seraphine, Not Alone isn't in our card database yet — it hasn't been officially catalogued as a standalone printing outside this reveal, so we can't show a price for it yet. We'll add it the moment it's tracked.
+All six printings — the five cards plus Faker's serialised Galio, numbered T1S 001/005 through 005/005 — are now catalogued on RiftCompare, so each has a real page ready for the moment secondary-market listings appear.
+
+**One caveat on Seraphine.** Seraphine, Not Alone comes from **Radiance**, Riftbound's fifth set, which does not release until 23 October 2026 (see [the set roadmap](/blog/riftbound-2027-set-roadmap)). Until then it is not legal for sanctioned play, so a Player Bundle bought to actually play with arrives with one card you cannot yet use.
 
 ## How to actually get one
 
-Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you enter, you don't just add to cart. The Signature Edition's drawing opens in **August 2026**; the Player Bundle follows later in the year, with more details still to come.
+Both products are distributed through a **drawing on the Riot Merch Store**, not a normal storefront sale — you register inside a window and Riot selects entrants afterwards, rather than it being first-come, first-served. The English Signature Edition's registration window (14-17 August 2026) is now closed; if you entered, Riot's selection emails went out from 20 August, in waves, and boxes began arriving from 2 September. The **Player Bundle follows later in the year with its own drawing**, date not yet announced. Chinese and Korean editions are handled separately in-region.
+
+The one rule worth remembering for the Player Bundle drawing when it opens: Riot has confirmed there is **no Catch Up pool** — everyone who enters has the same chance regardless of prior entries or purchases, so a long purchase history buys nothing here, and neither does missing the Signature Edition window.
+
+## What actually makes these cards valuable
+
+Four things, and only one of them is the price tag.
+
+**The print run is fixed and small, and there is no reprint lever.** Riot capped this at 10,125 boxes per language before a single copy shipped. A set that sells out is normally followed by a reprint, a second wave or a promo distribution of the same art. None of those exist here — the collection commemorates a specific championship, and the serial range is literally the year.
+
+**The serial number is a one-of-one.** Every serialised card is unique: there is exactly one #0001 Galio in English and there will never be another. The three language editions are numbered separately, so a #0001 Galio exists once in English, once in Chinese and once in Korean. Riot's own returns policy makes the point better than any analysis — a damaged serialised card cannot be replaced with an identical copy, so the remedy is a full refund of the whole set. That is a company saying, in a support policy, that it cannot manufacture a second one.
+
+**There is no retail channel at all.** Every other Riftbound product we track has a shop price, which anchors resale: you can always see what a booster box costs at retail and judge a listing against it. This collection has no retail price — the only public number is the US$360 Riot charged drawing winners, and that stopped being obtainable the moment registration closed. Price discovery happens entirely on the secondary market, starting from nothing. We will report what that produces on the card pages below rather than guess at it here.
+
+**The category itself is walled off.** In the same month, Riot said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways). Serialised Riftbound cards are therefore not a thing that will exist in the ordinary product line — they are a thing that exists in dedicated collector releases, of which this is the first.
+
+And one thing that does **not** make them valuable: playability. These are the same five champions you can already buy as ordinary singles for cents apiece — and Seraphine isn't tournament-legal until Radiance releases in October. Nobody is paying US$360 for a 3-cost 6-might Galio. They are paying for the object.
+
+## Signature Edition vs Player Bundle: which is the better buy?
+
+For most people who just like the cards, the Player Bundle — and it isn't close on a per-dollar basis.
+
+The gap is worth doing as arithmetic rather than as "a fifth of the price". US$360 minus US$70 is **US$290**, and that US$290 buys exactly three things: the serialisation, the gold-stamped signature and the foiling treatment made for this release. Everything else — the five champions, exclusive art, an object you can hold — is in both.
+
+US$70 gets you the same five champions in their own exclusive art, plus sleeves, a deckbox, a binder and a metal die. If your reason for wanting this collection is "I want Faker's Galio on my shelf", the Player Bundle does that for a fifth of the price; if it is "I want a numbered card that only 2,025 people can own", it does not do that at all, and nothing else will.
+
+Worth pricing the third option honestly too: the ordinary retail printings of four of these five champions are in our database right now and cost cents. If what you want is to **play** these cards, that is the entire cost.
 
 ## Should you expect these on RiftCompare?
 
-Not directly — the Signature Edition and Player Bundle art are exclusive to this collection and distributed by drawing, so they won't show up as a normal store listing we can price-compare (any secondary-market copies that surface later on eBay would, like any other collectible). What *is* already trackable right now is the regular base printing of each of the four cataloged champions above — worth a look if the collection has you wanting the "normal" version of Faker's or Doran's pick while you wait on the drawing.
+Yes, but as a secondary market rather than a retail one. Nothing in this collection is sold through the stores we price, so there is no launch-day listing to compare; what will appear is resale — sealed boxes and loose serialised cards on [the sealed comparison](/sealed) and on individual card pages, once copies actually change hands. Both product types now carry Riot's published US price as their reference, so the useful question after the drawing is "how far above US$360 is the cheapest listing", not just "what is the cheapest listing".
 
-*Product details (print run, contents, availability) are from Riot's own announcement and reporting on it — see the collection's own page on [Riftbound's official site](https://playriftbound.com) for the latest.*`,
+What is trackable *today* is the ordinary retail printing of each champion T1 picked. If the collection has you wanting Faker's Galio or Doran's Ambessa and you would rather spend cents than US$360, those are below.
+
+[[embed:1]]
+
+## Why it is scarce, in one paragraph
+
+Each box holds exactly one serialised card in a 1-2025 range, and five champions share that range — 5 x 2,025 is 10,125, the published print run for each language. So any one champion (Faker's Galio, say) exists in roughly **2,025 serialised English copies**, not 10,125, with about 6,075 worldwide across the three languages. Add a capped run with no reprint planned, a signature stamped in gold, and no retail channel to anchor a price against, and you have the four things that actually drive a collectible's scarcity — the full breakdown is above. What you do **not** get is playability you could not buy for cents.
+
+For the wider context on where serialised and premium prints sit in this game, see [the variant and finish glossary](/guides/riftbound-variant-glossary) — and note that Riot has said it has [no plans to serialise cards in booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways), which makes this collection a deliberate one-off rather than a preview.
+
+---
+
+*Sources: Riot Games' [T1 2025 Worlds Champion Collection announcement](https://playriftbound.com/en-us/news/announcements/the-riftbound-x-t1-2025-worlds-champion-collection/) (contents, print run, prices) and the [August Merch Store Updates](https://playriftbound.com/en-us/news/announcements/august-merch-store-updates/) post of 6 August 2026 (drawing window). Product details are Riot's; the card data, analysis and market commentary are ours.*`,
   },
   {
     slug: "jayce-mel-riftbound-empower-explained",
     category: "guide",
-    title: "Jayce & Mel in Riftbound: Vendetta's New Champion Printings",
+    title: "Jayce & Mel: Vendetta's New Champion Printings",
     excerpt:
       "Every confirmed Jayce and Mel printing in Riftbound, including two brand-new Vendetta cards — real stats, domains and rarities, not speculation.",
     author: "RiftCompare",
@@ -1962,7 +2734,7 @@ Vendetta released on **31 July 2026**, so these printings now carry live prices 
 
 ## Keep track of both
 
-Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices across every store we track. For the full picture of Vendetta's new mechanics, see **[Flow, Burn and Empower explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**, and see **[every Vendetta card with live prices](/sets/vendetta)**.`,
+Bookmark this page — it updates as new Jayce or Mel printings land in the database, with live prices across every store we track. For the rest of Vendetta's new mechanics, see **[Flow explained](/guides/riftbound-flow-explained)** and **[Burn explained](/guides/riftbound-burn-explained)**, and see **[every Vendetta card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-empower-explained",
@@ -1970,16 +2742,23 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
     excerpt:
-      "A complete guide to Empower — the Riftbound: Vendetta mechanic that lets a card gain new abilities after it's in play. How it works, why it's strong, and how to build around it.",
+      "A complete guide to Riftbound's Empower mechanic — a card that gains new abilities after it's already in play. How it works and how to build around it.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
     readMins: 5,
     tags: ["vendetta", "mechanics", "empower", "disempower", "gameplay", "guide"],
+    // Backs both the FAQPage JSON-LD and the "## Empower FAQ" body section
+    // below — kept as one source so the two can't drift apart (added the
+    // Empower-vs-Empowered question requested for the empower cluster work).
     faq: [
       { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
-      { q: "Is Empower permanent?", a: "Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it." },
+      { q: "How does the Empower mechanic work?", a: "Play the card normally — it enters as a modest, often cheap unit or permanent. On a later turn, pay its Empower cost (printed in brackets in the rules box) to trigger the upgrade: bigger stats, a new ability, or an on-board effect. Some Empower cards can be upgraded more than once if the card allows it." },
+      { q: "What's the difference between Empower and Empowered?", a: "Empower is the keyword/action — paying a cost to trigger a card's upgrade. Empowered is the status that results from it: a permanent flag that sticks to the card afterwards, which other cards can check for (an 'Empowered' dependent ability only turns on while the card has that status). You Empower a card once; it stays Empowered until it leaves the board or is Disempowered." },
       { q: "What is Disempower?", a: "The reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card. You can't Disempower a card that isn't currently Empowered." },
+      { q: "Is Empower permanent?", a: "Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it." },
+      { q: "Is Empower only in Vendetta?", a: "It's introduced as a new mechanic in the Vendetta set. Cards from earlier sets can still support an Empower deck, but the keyword itself is new here." },
+      { q: "Is Empower the same as levelling up a champion?", a: "No — Empower is a general mechanic that upgrades a card in play by paying a cost, not a champion-only level system." },
       { q: "How is Empower different from Flow and Burn?", a: "Empower grows a card you already control; Flow plays cards from your trash; Burn sends cards to the trash. All three are new in Vendetta and designed to combo." },
     ],
     shop: [
@@ -2064,17 +2843,21 @@ For a full archetype breakdown, see the **[best Vendetta decks guide](/guides/be
 
 ## Empower FAQ
 
+**What is Empower in Riftbound?** Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later.
+
+**How does the Empower mechanic work?** Play the card normally — it enters as a modest, often cheap unit or permanent. On a later turn, pay its Empower cost (printed in brackets in the rules box) to trigger the upgrade: bigger stats, a new ability, or an on-board effect. Some Empower cards can be upgraded more than once if the card allows it.
+
+**What's the difference between Empower and Empowered?** Empower is the keyword/action — paying a cost to trigger a card's upgrade. Empowered is the status that results from it: a permanent flag that sticks to the card afterwards, which other cards can check for (an "Empowered" dependent ability only turns on while the card has that status). You Empower a card once; it stays Empowered until it leaves the board or is Disempowered.
+
+**What is Disempower?** The reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card. You can't Disempower a card that isn't currently Empowered.
+
+**Is Empower permanent?** Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it.
+
 **Is Empower only in Vendetta?** It's introduced as a new mechanic in the Vendetta set. Cards from earlier sets can still support an Empower deck, but the keyword itself is new here.
 
 **Is Empower the same as levelling up a champion?** No — Empower is a general mechanic that upgrades a card in play by paying a cost, not a champion-only level system.
 
-**How is Empower different from Flow and Burn?** Empower grows a card *you already control*; **[Flow](/guides/riftbound-flow-explained)** plays cards *from your trash*; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* the trash. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
-
-**What is Disempower?** It's the reverse of Empower — an instruction or cost on some cards that strips the Empowered status from a card, turning off whatever effect its Empowered ability was granting. You can't Disempower something that isn't currently Empowered.
-
-**What is Empower in Riftbound?** Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later.
-
-**Is Empower permanent?** Yes. Empowered is a status that sticks to a card indefinitely — it lasts until the card leaves the board, or until something Disempowers it.
+**How is Empower different from Flow and Burn?** Empower grows a card you already control; **[Flow](/guides/riftbound-flow-explained)** plays cards from your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards to the trash. All three are new in Vendetta and designed to combo.
 
 ## Get ready for Empower cards
 
@@ -2085,10 +2868,10 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
     category: "guide",
     title: "Riftbound Flow Explained: How the Flow Mechanic Works",
     excerpt:
-      "A complete guide to Flow — the Riftbound: Vendetta mechanic that lets you play cards from your trash instead of your hand. How it works and how to build around it.",
+      "Riftbound Flow lets you cast a card straight from your trash instead of your hand — how the mechanic works, deckbuilding tips, and every Flow card in Vendetta.",
     author: "RiftCompare",
     date: "2026-07-08",
-    updated: "2026-07-31",
+    updated: "2026-08-19",
     readMins: 4,
     tags: ["vendetta", "mechanics", "flow", "gameplay", "guide"],
     faq: [
@@ -2164,15 +2947,19 @@ Flow is the recursion engine of Vendetta. Its best partner is **[Burn](/guides/r
 
 See how Flow fits full decklists in the **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)**.
 
+## Flow vs Empower vs Burn
+
+**Flow** plays cards from your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards to the trash; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo.
+
 ## Flow FAQ
 
 **What is Flow in Riftbound?** Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand — your discarded and used cards become a second pool of plays rather than being gone for good.
 
-**How does the Flow mechanic work?** A card printed with Flow can be cast from the trash the same way you'd cast it from hand (often for its normal cost) — so anything that fills your trash first (discarding, cycling, or the **[Burn](/guides/riftbound-burn-explained)** mechanic) sets Flow up to cash in later.
+**How does the Flow mechanic work?** A card printed with Flow can be cast from the trash the same way you'd cast it from hand, often for its normal cost — so anything that fills your trash first (discarding, cycling, or the Burn mechanic) sets Flow up to cash in later.
 
 **Is Flow only in Vendetta?** Yes — Flow is introduced as a brand-new keyword in the Vendetta set; it doesn't appear on cards from earlier sets.
 
-**How is Flow different from Empower and Burn?** **Flow** plays cards *from* your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards *to* your trash; **[Empower](/guides/riftbound-empower-explained)** upgrades a card that's already *in play*. Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+**How is Flow different from Empower and Burn?** Flow plays cards from your trash; **[Burn](/guides/riftbound-burn-explained)** sends cards to your trash; **[Empower](/guides/riftbound-empower-explained)** upgrades a card that's already in play.
 
 Flow cards are live with real prices on the **[Vendetta set page](/sets/vendetta)** — compare every store on RiftCompare so you build your Flow deck for the cheapest total. Want to see the whole set at a glance? Browse the **[Vendetta card gallery](/sets/vendetta/gallery)** — all 166 cards on one page with images and prices.`,
   },
@@ -2257,7 +3044,7 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 
 ## Burn vs Flow vs Empower
 
-**Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo — read all three in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
+**Burn** sends cards to the trash; **[Flow](/guides/riftbound-flow-explained)** plays them back out; **[Empower](/guides/riftbound-empower-explained)** grows a card already in play. They're designed to combo.
 
 ## Burn FAQ
 
@@ -2272,73 +3059,278 @@ Full decklists that use Burn are in the **[best Vendetta decks guide](/guides/be
 Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta)** — RiftCompare compares every store so you pay the cheapest delivered price. Browse the whole set visually in the **[Vendetta card gallery](/sets/vendetta/gallery)**.`,
   },
   {
-    slug: "riftbound-vendetta-card-list",
+    slug: "riftbound-combat-keywords-explained",
     category: "guide",
-    title: "Riftbound Vendetta Card List — All 166 Cards Confirmed",
+    title: "Riftbound Combat Keywords Explained",
     excerpt:
-      "The complete, confirmed Riftbound: Vendetta card list — every one of the 166 main-set cards, the new champions, mechanics and product line-up, ahead of the 31 July 2026 release.",
+      "A plain-English guide to Riftbound's six combat keywords — Tank, Shield, Deflect, Assault, Backline and Ganking — how each one changes damage assignment or movement, and how to build a defensive (or aggressive) shell around them.",
     author: "RiftCompare",
-    date: "2026-07-09",
-    updated: "2026-07-31",
-    readMins: 4,
-    tags: ["vendetta", "card list", "set", "news", "guide"],
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Chasing the full **Riftbound: Vendetta** card list? **Riftbound: Vendetta is out.** It released worldwide on **31 July 2026**, and all 166 main-set cards are live with real prices. This page rounds up everything confirmed about the set; for the actual card-by-card list with images, see the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**, and the **[Vendetta set page](/sets/vendetta)** fills in live prices the moment singles go on sale.
-
-## The set at a glance
-
-- **Release:** 31 July 2026 (worldwide). In-store **Pre-Rift** launch events run from **24 July**.
-- **Size:** 166 main-set cards, plus 50+ Showcase alternate-art printings, Overnumbered chase cards, runes and promos.
-- **New champion Legends:** nine, including **Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen**.
-- **Chase cards:** signed Overnumbered variants for the nine Legends, plus **22 Rival Overnumbers** — diptych cards built to be displayed as a pair. Full detail in **[Vendetta Overnumbers explained](/guides/riftbound-vendetta-overnumbers-explained)**.
-
-## New mechanics (confirmed)
-
-Vendetta adds three mechanics — each has its own full guide:
-
-- **[Flow](/guides/riftbound-flow-explained)** — play cards from your trash.
-- **[Burn](/guides/riftbound-burn-explained)** — send cards to the trash (to fuel yourself, or attack an opponent's deck).
-- **[Empower](/guides/riftbound-empower-explained)** — upgrade a card after it's already in play.
-
-Read all three together in **[Vendetta's new mechanics explained](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
-
-## New card types & products
-
-- **Unit-Gear** and **Decrees** — two new card concepts. See **[new card types explained](/blog/riftbound-vendetta-unit-gear-decrees)**.
-- **Showdown Decks** — Riftbound's first ready-to-play **two-player** product; the debut pairing is **Shen vs Zed**.
-- **New domain pairings** for deckbuilding: **Fury + Calm**, **Mind + Body**, and **Chaos + Order**.
-
-## Where to see the full list
-
-- **[The complete card gallery](/sets/vendetta/gallery)** — every one of the 166 cards, with images and live prices, filterable by domain, rarity and type.
-- **The [Vendetta set page](/sets/vendetta)** — the same full list, plus live prices from every store we track.
-
-Planning a deck already? Our **[best Vendetta decks guide](/guides/best-riftbound-vendetta-decks)** shows which archetypes the confirmed mechanics point toward, and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** covers synergies. And browse **[every Vendetta card with live prices](/sets/vendetta)**.
-
-## Vendetta card list FAQ
-
-**How many cards are in Riftbound: Vendetta?** The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering.
-
-**When was Riftbound: Vendetta released?** 31 July 2026 worldwide, with in-store Pre-Rift launch events running from 24 July 2026.
-
-**How many Legends are in Vendetta?** Nine, including Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen.
-
-**What new mechanics does Vendetta add?** Three: [Flow](/guides/riftbound-flow-explained) (play cards from your trash), [Burn](/guides/riftbound-burn-explained) (send cards to the trash) and [Empower](/guides/riftbound-empower-explained) (upgrade a card already in play).
-
-**Where can I see every Vendetta card with prices?** The [Vendetta set page](/sets/vendetta) shows the full list with live prices from every store we track, in your own market's currency.`,
+    date: "2026-08-12",
+    readMins: 6,
+    tags: ["combat", "keywords", "rules", "deckbuilding", "guide"],
     faq: [
-      { q: "How many cards are in Riftbound: Vendetta?", a: "The main set is 166 cards, plus Showcase alternate-art printings, Overnumbered chase cards, runes and promos on top of that base numbering." },
-      { q: "When was Riftbound: Vendetta released?", a: "31 July 2026 worldwide, with in-store Pre-Rift launch events running from 24 July 2026." },
-      { q: "How many Legends are in Vendetta?", a: "Nine, including Nasus, Renekton, Akali, Mel, Ambessa, Zed and Shen." },
-      { q: "What new mechanics does Vendetta add?", a: "Three: Flow (play cards from your trash), Burn (send cards to the trash, your own or an opponent's) and Empower (upgrade a card that's already in play by paying an extra cost later)." },
-      { q: "Where can I see every Vendetta card with prices?", a: "The Vendetta set page on RiftCompare shows the full card list with live prices from every store it tracks, in your own market's currency." },
+      { q: "What's the difference between Tank and Backline?", a: "Tank must be assigned lethal combat damage first among your units; Backline must be assigned it last. They're direct opposites, and combining both on different units gives you a controlled front line and back line." },
+      { q: "What's the difference between Shield and Assault?", a: "Shield gives bonus Might only while a unit is defending; Assault gives the same kind of bonus only while it's attacking. A unit only ever benefits from one of the two in a given combat." },
+      { q: "Does Deflect stop targeting outright?", a: "No — Deflect is a tax, not a block. It adds a mandatory extra Power cost every time an opponent's spell or ability targets the Deflect card; they can still pay it and target anyway." },
+      { q: "Does Ganking give a unit an extra move?", a: "No — it widens the destinations a unit's existing standard move can reach (battlefield to battlefield, not just through base), it doesn't grant an additional movement action." },
+      { q: "Can a unit have more than one of these keywords?", a: "Yes — nothing stops a card from combining, say, Tank and Shield, making it both the unit that has to be hit first AND tougher while defending." },
+      { q: "Are these keywords new to Vendetta?", a: "No — Tank, Shield, Deflect, Assault, Backline and Ganking are core Riftbound combat rules, not mechanics introduced by a specific set, unlike Empower, Flow and Burn." },
     ],
+    embeds: [
+      {
+        title: "Cards printed with Tank",
+        note: "Real, officially catalogued cards whose rules text carries the Tank keyword.",
+        rulesContain: "[Tank]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+      {
+        title: "Cards printed with Shield",
+        note: "Real, officially catalogued cards whose rules text carries the Shield keyword.",
+        rulesContain: "[Shield",
+        rulesSet: "VEN",
+        take: 6,
+      },
+    ],
+    body: `Six of Riftbound's keywords exist purely to change what happens during combat — who has to be hit, how much Might a unit is really swinging with, and where a unit is even allowed to move. None of the six are new to a single set the way Empower, Flow and Burn are; they're part of the core combat rules, and each has its own quick-reference page with a live "every card" list — this guide is the plain-English walkthrough of how they interact.
+
+## Tank: forces damage toward itself
+
+**A unit with Tank must be assigned lethal combat damage before any of your other units that don't have Tank.** It's the classic "hit me first" ability — an attacker literally isn't allowed to assign damage anywhere else on your board until every Tank unit you control has already taken lethal. If you have more than one Tank unit, the attacker chooses which takes it. Full reference: **[Tank keyword page](/keywords/tank)**.
+
+[[embed:0]]
+
+## Shield: tougher on defense only
+
+**Shield [X] gives a unit +X Might, but only while it's defending in combat.** The bonus disappears the instant combat ends or the unit stops being the defender — it does nothing on offense, and nothing outside a fight. Multiple sources of Shield on one unit simply add together. Full reference: **[Shield keyword page](/keywords/shield)**.
+
+[[embed:1]]
+
+## Deflect: a tax on being targeted
+
+**Deflect [X] makes an opponent pay X extra Power, of any domain, every time their spell or ability targets the card with Deflect.** It doesn't stop them from targeting it — it just makes doing so more expensive, which is often enough to make a removal spell not worth casting at all.
+
+## Assault: tougher on offense only
+
+**Assault [X] is Shield's mirror image — +X Might, but only while the unit is attacking.** Where Shield rewards sitting back and letting the opponent walk into your wall, Assault rewards initiating combat yourself. A unit can't benefit from both Shield and Assault in the same combat, since it's never attacking and defending at once.
+
+## Backline: forces damage away from itself
+
+**Backline is Tank's opposite — a unit with it must be assigned lethal damage LAST, after every other unit you control without Backline already has.** It's the keyword for protecting something you don't want to lose in a small skirmish: a value engine, a card-draw source, anything you'd rather keep alive through the fight than sacrifice early.
+
+## Ganking: battlefield-to-battlefield movement
+
+**Ganking lets a unit's standard move go directly from one battlefield to another, instead of being limited to your base or an adjacent location.** It's purely additive — it never removes a move a unit already had, it just opens up a shortcut. That makes it valuable the moment your units are spread across more than one battlefield: reinforcing a fight, or bailing out of a losing one, without routing back through base first.
+
+## Building a defensive shell (or an aggressive one)
+
+**A defensive board** wants Tank on your cheapest, most expendable unit (so it absorbs the first hit), Backline on whatever you actually care about keeping, and Shield scattered across units you expect to be defending regularly. **An aggressive board** wants Assault on your biggest attackers and Ganking on anything you need to reposition into a fresh fight. Deflect works for either plan — it's valuable on any unit that's already doing its job and you don't want removed.
+
+None of these six replace deckbuilding fundamentals — a great Tank unit still needs a reasonable body underneath the keyword. But knowing exactly what each one does (and doesn't do) is the difference between reading a card correctly and guessing.
+
+Every combat-keyword card is live with real prices — browse **[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Assault](/keywords/assault)**, **[Backline](/keywords/backline)** and **[Ganking](/keywords/ganking)** on their own reference pages, or see the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game.`,
+  },
+  {
+    slug: "riftbound-timing-keywords-explained",
+    category: "guide",
+    title: "Riftbound Timing Keywords Explained",
+    excerpt:
+      "How Action, Reaction, Hidden and Ambush change WHEN a Riftbound card can be played — instant-speed tricks, facedown surprise plays, and dropping a unit into a fight already in progress.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 5,
+    tags: ["timing", "keywords", "rules", "deckbuilding", "guide"],
+    faq: [
+      { q: "What's the actual difference between Action and Reaction?", a: "Reaction includes everything Action grants — permission to play during a Showdown — plus the additional permission to play during a Closed state, Riftbound's most restrictive, truly any-time timing window. A card only needs Reaction to get both." },
+      { q: "Can you play a Hidden card the turn you hide it?", a: "No — a hidden card only gains its free cost and Reaction-speed timing starting the next turn, not immediately." },
+      { q: "Can Ambush put a unit on an empty battlefield?", a: "No — Ambush specifically requires a battlefield where you already control one or more units; an empty battlefield isn't a valid Ambush destination." },
+      { q: "Do these keywords change what a card does?", a: "No — all four are pure permissions. They change when and where a card can be played, never its actual effect once it resolves." },
+      { q: "Are Action, Reaction, Hidden and Ambush new to Vendetta?", a: "No — they're core Riftbound timing rules, not set-specific mechanics like Empower, Flow and Burn." },
+    ],
+    embeds: [
+      {
+        title: "Cards printed with Reaction",
+        note: "Real, officially catalogued cards whose rules text carries the Reaction keyword.",
+        rulesContain: "[Reaction]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+      {
+        title: "Cards printed with Ambush",
+        note: "Real, officially catalogued cards whose rules text carries the Ambush keyword.",
+        rulesContain: "[Ambush]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+    ],
+    body: `Riftbound splits a turn into states — Open, Showdown, Closed — and most cards can only be played during your own Open state, on your own turn. Four keywords exist purely to carve out exceptions to that: Action, Reaction, Hidden and Ambush. None change what a card does — only when and, for two of them, where it can be played.
+
+## Action: permission to play during a Showdown
+
+**Action lets a card or ability be played or activated during a Showdown, even on your opponent's turn** — a state that would otherwise lock most cards out. It's pure permission: an Action unit still has to be played to a base or a battlefield you control, exactly like normal. Full reference: **[Action keyword page](/keywords/action)**.
+
+## Reaction: true instant speed
+
+**Reaction includes everything Action grants, plus permission to play during a Closed state** — Riftbound's tightest timing window, and the closest thing the game has to a universal "any time" instant. A Reaction card can respond on either player's turn, which is what makes Reaction cards feel like tricks and counters rather than ordinary plays. Full reference: **[Reaction keyword page](/keywords/reaction)**.
+
+[[embed:0]]
+
+## Hidden: pay now, play later as a surprise
+
+**Hidden lets you pay a cost to place a card facedown at a battlefield you control.** From the next turn on, that facedown card gains Reaction and can be played for free — your opponent has no idea what it is until it resolves. The tradeoff: targeting from a Hidden play is usually restricted to the battlefield it was hidden at, since the card already committed to a location the moment it went facedown. Full reference: **[Hidden keyword page](/keywords/hidden)**.
+
+## Ambush: dropping into an ongoing fight
+
+**Ambush lets a unit be played to a battlefield where you already control units** — normally off-limits, since units can usually only go to your base or somewhere you already have presence — and grants it Reaction for that specific play. Full reference: **[Ambush keyword page](/keywords/ambush)**.
+
+[[embed:1]]
+
+## Building a tempo deck around timing keywords
+
+Hidden and Ambush are natural partners: hide a threat one turn, then Ambush a second unit into the same fight the next, and your opponent has to play around two unknowns instead of one visible board. Reaction abilities that Add resources let you hold energy back and still cover a cost you didn't fully plan for. None of these four keywords do anything on their own — their value is entirely in disrupting what an opponent thinks they know about the board, which is exactly why a deck built around them rewards patient, information-heavy play over straightforward curve-outs.
+
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, including the set's headline new keywords in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+  },
+  {
+    slug: "riftbound-growth-keywords-explained",
+    category: "guide",
+    title: "Riftbound Growth Keywords Explained",
+    excerpt:
+      "Eight Riftbound keywords built around scaling up over the course of a game — XP thresholds, playing multiple cards a turn, equipping gear, card selection and death triggers, all explained in plain English.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 7,
+    tags: ["deckbuilding", "keywords", "rules", "guide"],
+    faq: [
+      { q: "How do you gain the XP that Level checks for?", a: "Hunt is the most direct source — it grants XP whenever a unit with Hunt Conquers or Holds a battlefield, defaulting to 1 XP unless a higher value is printed." },
+      { q: "Does Legion need two cards WITH Legion to turn on?", a: "No — playing any one other card that turn satisfies every Legion ability you control, not just a matching pair." },
+      { q: "What's the difference between Equip and Weaponmaster?", a: "Equip is something you pay for and activate yourself, on your own timing. Weaponmaster automatically offers a discounted equip the instant a unit with that keyword is played — no separate activation needed." },
+      { q: "Does Accelerate do anything once a unit is already on the board?", a: "No — it only affects how the unit enters (readied instead of exhausted); it has no function afterward." },
+      { q: "Does Deathknell trigger if a permanent is recalled instead of dying?", a: "No — Deathknell specifically watches for the permanent being Killed and sent to the trash. If that death is replaced by something else, like a recall, the trigger never fires." },
+      { q: "Are any of these eight keywords new to Vendetta?", a: "No — Legion, Level, Hunt, Weaponmaster, Equip, Accelerate, Vision and Deathknell are all core Riftbound rules, not set-specific mechanics like Empower, Flow and Burn." },
+    ],
+    embeds: [
+      {
+        title: "Cards printed with Weaponmaster",
+        note: "Real, officially catalogued cards whose rules text carries the Weaponmaster keyword.",
+        rulesContain: "[Weaponmaster]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+      {
+        title: "Cards printed with Deathknell",
+        note: "Real, officially catalogued cards whose rules text carries the Deathknell keyword.",
+        rulesContain: "[Deathknell]",
+        rulesSet: "VEN",
+        take: 6,
+      },
+    ],
+    body: `Where the combat keywords decide who takes damage and the timing keywords decide when a card can be played, this cluster of eight is about the long game — scaling a board up, banking XP toward a threshold, arming a unit with gear, and turning a card's death into an advantage instead of a loss.
+
+## Legion: rewards playing more than one card a turn
+
+**A Legion ability is dormant until you've played a second card the same turn — then it stays active for the rest of that turn.** It's a running condition, not a one-time trigger, and playing any single other card turns on every Legion ability you control at once. Full reference: **[Legion keyword page](/keywords/legion)**.
+
+## Level: a running XP threshold
+
+**A Level [N] ability is active for as long as your XP total stays at N or more,** and goes inactive the instant it drops below — including if the card changes controller and the new controller doesn't meet the threshold. It's a long-game investment: unremarkable early, and only worth its full text once your XP engine catches up. Full reference: **[Level keyword page](/keywords/level)**.
+
+## Hunt: the XP engine behind Level
+
+**Hunt X grants that much XP whenever the unit with it Conquers OR Holds a battlefield** — both winning a fight and simply keeping a battlefield you already hold can trigger it, so a Hunt unit that sticks around keeps paying out turn after turn. It's the most direct way to reach the thresholds Level cards check for. Full reference: **[Hunt keyword page](/keywords/hunt)**.
+
+## Weaponmaster: free equipping on entry
+
+**When you play a unit with Weaponmaster, you may immediately choose an Equipment card you control and attach it, paying the Equip cost at a discount.** It only does something if you already have Gear sitting around — a payoff for a deck that plays Equipment early and expects to arm a threat later. Full reference: **[Weaponmaster keyword page](/keywords/weaponmaster)**.
+
+[[embed:0]]
+
+## Equip: attaching gear on your own timing
+
+**Equip [Cost] is an activated ability on Gear cards — pay it, choose a unit you control, and the Gear attaches to it.** It's the manual version of what Weaponmaster automates: you control exactly when it happens, rather than only getting the option the turn a Weaponmaster unit lands. Full reference: **[Equip keyword page](/keywords/equip)**.
+
+## Accelerate: pay more now, act immediately
+
+**Accelerate lets you pay an optional extra cost as you play a unit so it enters the board readied instead of exhausted** — meaning it can attack or block right away instead of sitting out its first turn. It only matters at the moment of playing the card; once the unit's on the board, Accelerate has already done its job. Full reference: **[Accelerate keyword page](/keywords/accelerate)**.
+
+## Vision: card selection on entry
+
+**Vision triggers when the permanent with it is played, letting its controller Predict** — look at the top card of their deck and choose whether to keep it there or Recycle it away. It doesn't draw an extra card; it just smooths out what you're about to draw next, and it's most valuable stacked across several sources. Full reference: **[Vision keyword page](/keywords/vision)**.
+
+## Deathknell: turning a death into value
+
+**Deathknell is short for "when I die, [Effect]" — it fires when the permanent is Killed and actually sent to the trash,** not if that death is replaced by something else (a recall, for instance). It rewards a deck that's happy to trade a unit away, or even sacrifice it deliberately, because the death itself is the payoff. Full reference: **[Deathknell keyword page](/keywords/deathknell)**.
+
+[[embed:1]]
+
+## How these eight fit together
+
+Hunt feeds Level. Legion rewards a low, wide curve of cheap cards. Equip and Weaponmaster both want a Gear-heavy shell, just on different timings. Accelerate and Vision are both about smoothing out a game plan rather than winning it outright — one skips downtime, the other skips a bad draw. Deathknell is the odd one out: it's the only keyword here that wants a unit gone, not scaled up, which makes it a natural fit alongside sacrifice effects and trades you were happy to make anyway.
+
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, or the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides for Vendetta's three headline new mechanics.`,
+  },
+  {
+    slug: "riftbound-game-actions-explained",
+    category: "guide",
+    title: "Riftbound Game Actions Explained",
+    excerpt:
+      "The verbs Riftbound cards actually use inside their ability text — Buff, Stun, Predict, Add, Repeat, Temporary, Unique and Mighty — explained precisely, straight from the Core Rules.",
+    author: "RiftCompare",
+    date: "2026-08-12",
+    readMins: 6,
+    tags: ["rules", "keywords", "beginners", "guide"],
+    faq: [
+      { q: "What's the difference between a Keyword and a Game Action in Riftbound?", a: "A Keyword is a standalone bracketed line on a card, like [Tank] or [Empower]. A Game Action is a verb used INSIDE other cards' ability text — 'Buff a unit', 'Add [2]', 'Stun a unit' — that Riot's Core Rules still defines precisely, even though it isn't its own keyword line." },
+      { q: "Can you Buff a unit that already has a Buff counter?", a: "You can still choose it, but no additional counter is placed — a unit can only hold one Buff counter at a time unless a specific effect says otherwise." },
+      { q: "Does a Stunned unit still need full damage to die?", a: "Yes — being Stunned only removes a unit's Might from that combat's damage; it still needs damage equal to its full Might to actually be killed." },
+      { q: "Is Mighty something a card grants me?", a: "No — Mighty is a derived threshold. Any unit with 5 or more current Might automatically counts as Mighty, and stops the instant that total drops." },
+      { q: "Does Unique do anything once the game has started?", a: "No — Unique is purely a deckbuilding restriction (only one copy of that named card per deck). It has zero effect once the game is underway." },
+      { q: "What happens if you Repeat a spell's effect?", a: "Paying the Repeat cost as you play a spell or ability makes its instructions execute a second time on resolution — and the choices for that second execution don't have to match the first." },
+    ],
+    body: `Not every precise rule in Riftbound is a bracketed keyword line. Riot's Core Rules also defines a set of "Game Actions" — verbs that show up inside OTHER cards' ability text, like "Buff a unit" or "Add [2]" — with the same rigor as a full keyword. This guide covers eight of them: the ones that show up most often once you start reading real cards closely.
+
+## Buff: a single counter, not a stacking bonus
+
+**Buffing places a Buff counter on a chosen unit — but only if it doesn't already have one.** A unit can hold just one Buff counter at a time by default, so re-Buffing an already-Buffed unit doesn't add anything further; it can still be chosen, the instruction just doesn't do more. Some cards check whether a Buff actually landed ("if it was buffed this way...") before triggering a bonus. Full reference: **[Buff keyword page](/keywords/buff)**.
+
+## Stun: skips one combat, doesn't kill
+
+**A Stunned unit doesn't contribute its Might to combat damage that turn** — it's a binary status, on or off, and re-Stunning an already-Stunned unit does nothing further. Stunned wears off automatically at end-of-turn cleanup, and a Stunned unit still needs damage equal to its full Might to actually die — Stun is a tempo tool for winning one fight, not permanent removal. Full reference: **[Stun keyword page](/keywords/stun)**.
+
+## Predict: looking before you draw
+
+**Predicting shows you the top card of your own Main Deck and lets you choose to keep it there or Recycle it away.** "Predict X" does this for X cards at once. It doesn't draw anything — it's pure card selection, most commonly triggered by the [Vision](/keywords/vision) keyword. Full reference: **[Predict keyword page](/keywords/predict)**.
+
+## Add: putting resources in your pool
+
+**Adding puts Energy or Power into your Rune Pool** — "Add [2]" means 2 Energy, a domain letter means Power of that domain. Abilities that Add resolve immediately rather than passing priority, which is what makes an Add ability with Reaction so flexible: it can be activated the instant a cost needs paying, mid-resolution of something else entirely. Full reference: **[Add keyword page](/keywords/add)**.
+
+## Repeat: running a spell's effect twice
+
+**Paying "Repeat [Cost]" as you play a spell or ability lets its instructions execute a second time on resolution** — the choices for that second execution (targets, modes) don't have to match the first. Multiple instances of Repeat can each be paid separately, for one additional execution per instance. Full reference: **[Repeat keyword page](/keywords/repeat)**.
+
+## Temporary: built to last exactly one round
+
+**A permanent with Temporary is automatically killed at the very start of its controller's next Beginning Phase, before scoring.** It gets the rest of the turn it entered on, plus reaches the start of the following one — then it's gone. It's how Riftbound prints a self-cleaning, one-cycle effect. Full reference: **[Temporary keyword page](/keywords/temporary)**.
+
+## Unique: a deckbuilding rule, not a gameplay effect
+
+**Unique restricts a deck to only one card of that exact name.** Unlike everything else in this guide, it does absolutely nothing once a game has started — it's checked purely when a deck list is validated. Full reference: **[Unique keyword page](/keywords/unique)**.
+
+## Mighty: a threshold, not a keyword you're granted
+
+**A unit "is Mighty" automatically whenever its current Might is 5 or greater**, and stops being Mighty the instant that total drops — there's no separate status to track, it's derived live from the number. Cards that check "while I'm Mighty..." turn their bonus on and off with the unit's stats. Full reference: **[Mighty keyword page](/keywords/mighty)**.
+
+## Why these matter even though they're not "keywords"
+
+Reading a Riftbound card correctly means reading these verbs precisely, not intuitively — "Buff" doesn't stack past one counter the way a generic "+1/+1" might in another game, and "Stun" doesn't kill even though it feels like it should. Getting a Game Action's exact rule wrong is one of the most common ways a new player misreads what a card actually does.
+
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game — combat keywords like Tank and Shield are in the **[Combat Keywords guide](/guides/riftbound-combat-keywords-explained)**, and Vendetta's three headline new mechanics are in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
   },
   {
     slug: "riftbound-vendetta-overnumbers-explained",
     category: "guide",
-    title: "Riftbound Vendetta Overnumbers & Rival Cards Explained",
+    title: "Riftbound Vendetta Overnumbers Explained",
     excerpt:
       "What are Overnumbered and Rival Overnumber cards in Riftbound: Vendetta? A guide to the set's premium chase cards — the signed Legend variants and the 22 rivalry diptychs — and why collectors want them.",
     author: "RiftCompare",
@@ -2378,15 +3370,15 @@ An **Overnumbered** card is a special printing whose collector number sits *abov
 
 Nine new champion **Legends** each get their own signed Overnumbered variant — a premium printing carrying an in-universe signature treatment, and the top-end pulls of the whole set:
 
-- **[Akali, Rogue Assassin](/card/rogue-assassin-ven-189)**
-- **[Renekton, Butcher of the Sands](/card/butcher-of-the-sands-ven-190)**
-- **[Zed, Master of Shadows](/card/master-of-shadows-ven-191)**
-- **[Nasus, Curator of the Sands](/card/curator-of-the-sands-ven-192)**
-- **[Shen, Eye of Twilight](/card/eye-of-twilight-ven-193)**
-- **[Jayce, Defender of Tomorrow](/card/defender-of-tomorrow-ven-194)**
-- **[Mel, Soul's Reflection](/card/soul-s-reflection-ven-195)**
-- **[Ambessa, Matriarch of War](/card/matriarch-of-war-ven-196)**
-- **[Kennen, Heart of the Tempest](/card/heart-of-the-tempest-ven-197)**
+- **[Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-189s-166)**
+- **[Renekton, Butcher of the Sands](/card/renekton-butcher-of-the-sands-ven-190s-166)**
+- **[Zed, Master of Shadows](/card/zed-master-of-shadows-ven-191s-166)**
+- **[Nasus, Curator of the Sands](/card/nasus-curator-of-the-sands-ven-192s-166)**
+- **[Shen, Eye of Twilight](/card/shen-eye-of-twilight-ven-193s-166)**
+- **[Jayce, Defender of Tomorrow](/card/jayce-defender-of-tomorrow-ven-194s-166)**
+- **[Mel, Soul's Reflection](/card/mel-soul-s-reflection-ven-195s-166)**
+- **[Ambessa, Matriarch of War](/card/ambessa-matriarch-of-war-ven-196s-166)**
+- **[Kennen, Heart of the Tempest](/card/kennen-heart-of-the-tempest-ven-197s-166)**
 
 ## Rival Overnumbers — the rivalry diptychs
 
@@ -2402,83 +3394,17 @@ Vendetta's rivalries theme gets its own chase cycle: **22 Rival Overnumbers** �
 
 ## Buying them without overpaying
 
-Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 60+ stores in AU, NZ, the US and the UK — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
+Premium chase cards spike hardest in the launch rush and vary a lot store to store. The moment Vendetta releases, RiftCompare compares every Overnumber's live price across 60+ stores in AU, the US and the UK — cheapest delivered first — on the **[Vendetta set page](/sets/vendetta)**. Watch the **[price movers](/movers)** too; the chase cards climb fastest at launch.
 
-For the full picture of the set, read **[everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** and the **[Vendetta card list tracker](/guides/riftbound-vendetta-card-list)**. Vendetta released on 31 July 2026 — browse **[every card with live prices](/sets/vendetta)**.`,
-  },
-  {
-    slug: "riftbound-vendetta-synergies-with-existing-cards",
-    category: "blog",
-    title: "Vendetta Synergies: How the New Mechanics Combo With Cards You Already Own",
-    excerpt:
-      "Flow, Burn and Empower don't arrive in a vacuum — they slot into shells that already exist. A detailed look at how Vendetta's new mechanics combo with current Origins, Unleashed and Spiritforged cards, domain by domain.",
-    author: "RiftCompare",
-    date: "2026-07-09",
-    updated: "2026-07-31",
-    readMins: 7,
-    tags: ["vendetta", "synergies", "combos", "deckbuilding", "gameplay"],
-    shop: [
-      { label: "Zhonya's Hourglass & Calm gear", query: "Riftbound Zhonya's Hourglass" },
-      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
-    ],
-    body: `![Vendetta's synergy loop — Burn fills the trash, Flow cashes it in](/vendetta-synergy-loop.png)
-
-The most valuable thing to work out before a set drops isn't which new cards are strongest — it's which cards you **already own** suddenly get better. Vendetta's three mechanics (**[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)**) are all engine pieces, and engines need supporting cards. Here's a domain-by-domain look at the synergies, using real cards already in the game.
-
-> **A note on timing:** Vendetta cards are still being revealed, so this is pre-release analysis grounded in the *confirmed* mechanics and *existing* cards — the exact numbers get finalised on the **[Vendetta set page](/sets/vendetta)** at launch. Every card named below is a real card you can look up today.
-
-## The core engine: Burn + Flow (Chaos)
-
-The tightest built-in synergy is **Burn feeding Flow**, and **Chaos** — Riftbound's death-and-recursion domain — already has the pieces. Chaos cards like **Morbid Return**, **Cemetery Attendant** and the **Scrapheap** gear are all built around the trash; they're exactly the kind of cards a Flow/Burn shell wants.
-
-The loop works like this:
-
-1. **Burn** a few cards from your own deck into the trash (cheap self-Burn enablers).
-2. **Flow** replays the best of them straight out of the trash.
-3. Chaos's existing trash-payoffs (return effects, "cards in trash matter" units) reward you for having a full graveyard the whole time.
-
-If you already run a Chaos recursion deck, Flow is the payoff you've been missing — it turns "cards I used" into a second hand. Watch for the cheapest self-Burn enabler at launch; that single card decides how fast the engine spins. (We track exactly that on the **[price movers](/movers)** page — enabler cards spike first.)
-
-## Empower ramp: Mind + Body (Jayce & Mel)
-
-Vendetta's confirmed **Mind + Body** pairing and its **Empower** mechanic point at the same place: bank resources, then go over the top. **Mind** already has the ramp and card-advantage tools — **Energy Conduit** gear, **Consult the Past**, apprentice-style units like **Eager Apprentice** — and Empower is what you spend that banked energy on.
-
-The synergy is a curve, not a combo: play a cheap Empower unit early, use Mind's ramp to bank energy, then **Empower it into a threat** on a later turn while your opponent has tapped out. Champions like **Jayce** and **Mel** (both arriving in Vendetta) are built to headline exactly this Mind/Body "durdle then explode" plan, and existing Mind ramp is the connective tissue.
-
-## Decrees & the domain war: Chaos + Order
-
-**Decrees** are a cycle of spells built to punish a card's **opposite domain**, and the confirmed **Chaos + Order** pairing is where that rivalry is sharpest. If your local meta is full of one domain, its rival's Decree is a sharp, on-colour answer — which makes Decrees a **sideboard-style lever** more than a combo piece.
-
-Existing removal and tempo spells set the baseline they have to beat: **Order** already has clean answers like **Cull the Weak** and **Hidden Blade**; **Chaos** has disruptive spells like **Rebuke** and **Gust**. Decrees will slot in alongside these as the "hate card" for the match-up, so a deck that already plays a flexible spell base gets the most out of them.
-
-## Unit-Gear: flexibility that rewards gear payoffs
-
-A **Unit-Gear** counts as both a unit and a piece of gear, so it turns on *anything* that already cares about gear. Every domain has gear payoffs today — **Fury's** aggressive equipment (**Iron Ballista**, **Sun Disc**), **Calm's** protective gear (**Zhonya's Hourglass**, **Mask of Foresight**), **Order's** buff pieces (**Forge of the Future**, **Symbol of the Solari**) — and a Unit-Gear is a body *and* a gear trigger in one slot.
-
-The synergy is deckbuilding efficiency: Unit-Gear lets a gear-payoff deck run fewer dead draws, because the same card is a threat when you need a board and an equipment trigger when you need value. If you built a gear-matters deck in Spiritforged or Unleashed, Unit-Gear is a straight upgrade to your curve.
-
-## Rivalry pairings: the champion synergies
-
-Vendetta's whole identity is **rivalries**, and the confirmed champion pairings are synergy prompts in themselves:
-
-- **Nasus vs Renekton** — the sibling rivalry; expect Body/Fury cards that scale (Nasus's classic "grow over time" identity pairs naturally with Empower).
-- **Shen vs Zed** — order versus shadow; the debut **Showdown Deck** is built around this exact clash, so it's the ready-made on-ramp to the set's mechanics.
-
-## How to build around this at launch
-
-1. **Audit your trash-matters and gear-matters cards** — those decks get the biggest Vendetta upgrade.
-2. **Draft your list now** with the **[Vendetta deckbuilding guide](/guides/building-for-riftbound-vendetta)** and **[best Vendetta decks](/guides/best-riftbound-vendetta-decks)**.
-3. **Price the whole deck in one click** with the **[deck pricer](/deck)** on release day, so you buy the new pieces for the least across every store.
-
-Read the mechanics in full — **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)** — and browse **[every Vendetta card with live prices](/sets/vendetta)**. Vendetta drops **31 July 2026**, and the moment it does we'll compare every card's price across AU, NZ, US &amp; UK on the **[Vendetta set page](/sets/vendetta)**.`,
+For the full picture of the set, read the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)**. Vendetta released on 31 July 2026 — browse **[every card with live prices](/sets/vendetta)**.`,
   },
   {
     slug: "riftbound-vendetta-chase-cards-so-far",
     ebayPicks: { heading: "These chase cards on eBay right now" },
     category: "blog",
-    title: "Riftbound Vendetta Chase Cards — Every Tier, With Live Prices",
+    title: "Riftbound Vendetta Chase Cards — Every Tier",
     excerpt:
-      "Vendetta is out. Here's every chase-card tier in the set — signed Signature Legends, connecting-art Rival Overnumbers, Showcases, alt-arts and the Epic sleepers — each with a live gallery and real prices compared across every store.",
+      "Vendetta is out. Every chase-card tier — signed Legends, Rival Overnumbers, Showcases, alt-arts and Epic sleepers — with a live gallery and real prices.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-07-31",
@@ -2599,13 +3525,84 @@ What demand structure tells you, and what the data can confirm as it accumulates
 - **Check stock depth, not just price.** A low headline price at one shop with no stock elsewhere is a thinner market than it looks.
 - **Watch instead of guessing.** Save a card to **[price watch](/browse)** and get told when it moves rather than refreshing manually.
 
-See the full **[Vendetta card list](/guides/riftbound-vendetta-card-list)**, browse **[every card with live prices](/sets/vendetta)**, or read **[everything you need to know about the set](/blog/riftbound-vendetta-everything-you-need-to-know)**.`,
+See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**.`,
+  },
+  {
+    slug: "buy-riftbound-cards-europe",
+    marketData: "EU",
+    category: "blog",
+    title: "Riftbound Card Prices Europe — Every EU Store, in EUR",
+    excerpt:
+      "Compare Riftbound singles across the eurozone stores that actually stock them — live EUR prices ranked by total delivered cost. Free, updated daily.",
+    author: "RiftCompare",
+    date: "2026-08-23",
+    updated: "2026-08-24",
+    readMins: 4,
+    tags: ["europe", "spain", "buying guide", "price comparison", "riftbound singles", "eur"],
+    hero: {
+      src: "/blog/buy-riftbound-cards-europe.png",
+      alt: "Riftbound card prices in Europe — eleven real eurozone stores compared, priced natively in EUR",
+    },
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `Buying **Riftbound cards in Europe** has an advantage no other market has, and most European players do not use it: the shop with the best price on your card does not have to be in your country.
+
+## Why the EU is priced as one market, not twenty
+
+The eurozone shares a currency **and** a customs union. A card listed at €4.20 by a shop in Rotterdam is €4.20 to a buyer in Madrid — no conversion, no import duty, no customs form. So "the cheapest listing in Europe" is a real, buyable number, in a way that "the cheapest listing in Germany" mostly was not: no single member state has enough Riftbound stores to make a proper comparison out of.
+
+That is exactly why RiftCompare treats the whole eurozone as one market. Switch to **Europe (EU)** in the country selector and every price on the site is in EUR, sourced from stores that will actually ship to you.
+
+## The stores we compare
+
+Eleven, across six countries, all priced natively in euro:
+
+- **🇦🇹 Austria:** Mana Market EU
+- **🇪🇸 Spain:** Universe TCG, El Duelista
+- **🇵🇹 Portugal:** End Turn
+- **🇳🇱 Netherlands:** Lichcards
+- **🇩🇪 Germany:** Trinket Mage, Battle Bear Saarbrücken, Nordic Legends
+- **🇮🇹 Italy:** T-REX TCG, GS-GameOn, Timetwister Games
+
+Every one of them stocks real Riftbound singles — hundreds of cards each, not a booster box and a playmat. The **[full tracked-store list](/stores/tracked)** has them all, and **eBay Spain** listings sit alongside them on each card page.
+
+### Why eleven and not a hundred
+
+Because eleven is how many there are. We swept 421 European shop domains for this, and most European card shops sell Riftbound **sealed product** — booster boxes, displays, champion decks — and no singles at all through their own website.
+
+The reason is structural, and it is worth knowing if you are hunting a specific card: European singles trading is concentrated on **Cardmarket** and **CardTrader**, the big pan-European marketplaces, rather than on individual shop websites the way it is in the US. The eleven shops above are the ones running a full singles inventory on their own storefront.
+
+We would rather list eleven shops that have your card than a hundred that do not.
+
+## How to find the cheapest Riftbound single in Europe
+
+1. **[Search the card database](/browse)** — every card shows its lowest live EUR price.
+2. **Open the card** for the store-by-store breakdown, in stock and ranked by what you would actually pay delivered.
+3. **Click straight through** to the exact listing and buy from the cheapest seller.
+
+Buying a whole deck? The **[deck pricer](/deck)** takes a full list and works out the cheapest way to buy all of it across every store at once, consolidating orders so you are not paying postage five times.
+
+## One honest caveat about shipping
+
+Our delivered-cost ranking uses each store's **domestic** postage estimate. Inside your own country that is close to right. Buying across a border — Spain from the Netherlands — postage runs several times higher, even though the item price needs no conversion and clears no customs. So treat a cross-border result as "cheapest item price, check their postage", and use the shipping-policy link on the store's row for the real current rate. Nine of the eleven publish one.
+
+We would rather tell you that than quietly show you a number that flatters us.
+
+## A note on where this market came from
+
+A Spanish shop wrote to us asking to be listed, and said the Spanish market was growing fast and worth covering. They were right, and this market is the result. We swept 421 eurozone shop domains looking for real singles inventory, in Spanish, German, Italian, Dutch and French — the eleven above are what actually clears the bar. Most European card shops sell sealed product only through their own site, and a good chunk of the rest run on shop platforms we cannot yet read prices from (PrestaShop, WooCommerce). That is a gap on our side, not a shortage of European shops, and it is the next thing we are fixing.
+
+Run a European store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers.
+
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** or **[Canada](/blog/buy-riftbound-cards-canada)**? We have a dedicated breakdown for those markets too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "riftbound-price-comparison-singapore",
     marketData: "SG",
     category: "blog",
-    title: "Riftbound Card Prices Singapore — Compare 11 SG Stores",
+    title: "Riftbound Card Prices Singapore — 11 Stores",
     excerpt:
       "Compare Riftbound card prices across Singapore stores, eBay SG and TCGplayer — live SGD prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -2649,7 +3646,7 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
     slug: "buy-riftbound-cards-australia",
     marketData: "AU",
     category: "blog",
-    title: "Riftbound Card Prices Australia — Compare 19 AU Stores",
+    title: "Riftbound Card Prices Australia — 19 Stores",
     excerpt:
       "Compare Riftbound card prices across Australian stores — live AUD prices at 19 AU retailers plus eBay AU, ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -2686,51 +3683,10 @@ Run an Aussie store selling Riftbound? **[Get listed free](/stores/suggest)** �
 Buying from overseas, or curious about other markets? See **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
-    slug: "buy-riftbound-cards-nz",
-    marketData: "NZ",
-    category: "blog",
-    title: "Riftbound Card Prices NZ — Compare 10 NZ Stores",
-    excerpt:
-      "Compare Riftbound card prices across New Zealand stores — live NZD prices at 10 NZ retailers, ranked by total delivered cost. Free, updated daily.",
-    author: "RiftCompare",
-    date: "2026-07-29",
-    updated: "2026-07-29",
-    readMins: 4,
-    tags: ["new zealand", "buying guide", "price comparison", "riftbound singles", "nzd"],
-    shop: [
-      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
-    ],
-    body: `Looking to **buy Riftbound cards in New Zealand** without overpaying? NZ has a smaller Riftbound scene than Australia, which makes price comparison matter even more — fewer stockists means less natural price competition, so the gap between the cheapest and most expensive NZ store for the same card is often bigger, not smaller.
-
-## Why New Zealanders use RiftCompare
-
-- **Every NZ store in one search.** We track live NZD prices at Card Masters, TCG Collector NZ, Card Merchant NZ, Iron Knight Gaming, Calico Keep, Card Bot NZ, Gaming DNA, Bea Games, Shuffle n Cut Games and Game Roost ([full list](/stores/tracked)).
-- **eBay Australia ships to NZ.** New Zealand has no eBay marketplace of its own, so wherever a card's NZ store price runs high, we also surface eBay AU listings as a real alternative — converted and ranked alongside the local stores, not hidden in a separate tab.
-- **Ranked by what you actually pay.** Every comparison ranks stores by **total delivered cost** — price plus postage, with free-shipping thresholds factored in automatically.
-- **Prices refresh daily** — [price history charts](/movers) on every card show whether you're buying a spike or a dip.
-- **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple postage charges.
-- **100% free.** No account needed to compare.
-
-## How to find the cheapest Riftbound card prices in NZ
-
-1. **[Search the database](/browse)** — every card shows its lowest live NZD price.
-2. **Open the card** for the full store-by-store table, in-stock and ranked by delivered cost, including eBay AU.
-3. **Click through and buy** — we link straight to the exact listing at the store.
-
-## Vendetta is coming — July 31
-
-**[Riftbound: Vendetta](/sets/vendetta)** releases 31 July 2026, and week-one prices always move fast. Every revealed card is already browsable, the [chase cards are mapped tier by tier](/blog/riftbound-vendetta-chase-cards-so-far), and launch-day prices land here compared across every store above. Set a [price watch](/browse) and we'll tell you when a card's price moves.
-
-Run an NZ store selling Riftbound? **[Get listed free](/stores/suggest)** — more visibility, more customers. Everyone else: start at the **[card database](/browse)** and pay less for your next pickup.
-
-Buying from overseas, or curious about other markets? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
-  },
-  {
     slug: "buy-riftbound-cards-us",
     marketData: "US",
     category: "blog",
-    title: "Riftbound Card Prices USA — Stores, TCGplayer & eBay",
+    title: "Riftbound Card Prices USA — Stores & eBay",
     excerpt:
       "Compare Riftbound card prices across US stores, TCGplayer and eBay — live USD prices ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -2764,7 +3720,7 @@ Buying from overseas, or curious about other markets? See **[Australia](/blog/bu
 
 Run a US store selling Riftbound? **[Get listed free](/stores/suggest)**. Everyone else: start at the **[card database](/browse)** and stop paying the first price you see.
 
-Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)** or **[the UK](/blog/buy-riftbound-cards-uk)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK](/blog/buy-riftbound-cards-uk)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "buy-riftbound-cards-uk",
@@ -2804,13 +3760,13 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
 
 Run a UK store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers. Everyone else: start at the **[card database](/browse)** and keep more of your budget for the cards themselves.
 
-Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US](/blog/buy-riftbound-cards-us)**? We've got a dedicated breakdown for your market too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
   },
   {
     slug: "buy-riftbound-cards-canada",
     marketData: "CA",
     category: "blog",
-    title: "Riftbound Card Prices Canada — Compare 20 Canadian Stores",
+    title: "Riftbound Card Prices Canada — 20 Stores",
     excerpt:
       "Compare Riftbound card prices across Canadian stores — live CAD prices at 20 Canadian retailers, ranked by total delivered cost. Free, updated daily.",
     author: "RiftCompare",
@@ -2844,20 +3800,251 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zeala
 
 Run a Canadian store selling Riftbound? [Get listed free](/stores/suggest) — more visibility, more customers. Everyone else: start at the [card database](/browse) and pay less for your next pickup.
 
-Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/buy-riftbound-cards-us), [New Zealand](/blog/buy-riftbound-cards-nz), [the UK](/blog/buy-riftbound-cards-uk) or [Singapore](/blog/riftbound-price-comparison-singapore)? We've got a dedicated breakdown for those markets too — or see the [full multi-market guide](/guides/where-to-buy-riftbound-cards).`,
+Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/buy-riftbound-cards-us), [the UK](/blog/buy-riftbound-cards-uk) or [Singapore](/blog/riftbound-price-comparison-singapore)? We've got a dedicated breakdown for those markets too — or see the [full multi-market guide](/guides/where-to-buy-riftbound-cards).`,
+  },
+  {
+    slug: "riftcompare-launches-in-the-eu",
+    marketData: "EU",
+    category: "blog",
+    title: "RiftCompare Is Now Live in the EU",
+    excerpt:
+      "RiftCompare's sixth market is here: the eurozone, priced natively in EUR from eleven real EU stores — not a UK conversion. What changed and why.",
+    author: "RiftCompare",
+    date: "2026-08-24",
+    updated: "2026-08-24",
+    readMins: 6,
+    tags: ["europe", "announcement", "news", "eur", "price comparison"],
+    hero: {
+      src: "/blog/riftcompare-launches-in-the-eu.png",
+      alt: "RiftCompare is now live in the EU — the sixth priced market, eleven real eurozone stores, priced natively in EUR",
+    },
+    summary: [
+      "**RiftCompare now prices the eurozone as its own market** — EUR, sourced from eleven real EU stores, not a converted UK price.",
+      "**Before this, an EU visitor saw a UK price with a currency label swapped** — same GBP stores, same GBP-shaped postage, just relabelled in EUR. That's gone.",
+      "**The eurozone is priced as ONE market, not per country**, because it shares both a currency and a customs union — a genuinely buyable price across borders in a way a single-country market couldn't be.",
+      "It exists because **a Spanish store asked us to cover their market** — see [where to buy in the EU](/blog/buy-riftbound-cards-europe) for the full store list and how to use it.",
+    ],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `**RiftCompare now has a real EU market.** Switch the country selector to **Europe (EU)** and every price is EUR, sourced from real eurozone stores — not a UK price with a currency symbol swapped, which is what an EU visitor saw here until now.
+
+## What actually changed
+
+Before today, an EU shopper landed on RiftCompare and got routed to the **UK market**: real UK stores, real GBP stock — just displayed to you in EUR at a rough conversion rate, because it was the closest currency and postage match RiftCompare had. That number was honest about being a conversion, but it was still, structurally, someone else's market wearing your currency.
+
+As of this market, that's gone for eurozone visitors. **Europe (EU) is now its own priced market**, the sixth alongside Australia, the US, the UK, Singapore and Canada — with its own real store inventory, its own EUR prices, and no conversion step in between.
+
+| | Before | Now |
+| --- | --- | --- |
+| Currency shown | EUR (display only) | EUR (native) |
+| Stores priced | UK stores (GBP inventory) | 11 real eurozone stores |
+| What "cheapest" meant | Cheapest in the UK, relabelled | Cheapest actually in the eurozone |
+| Cross-border buying | N/A — it was one country's stock | Real — same currency, same customs union |
+
+## Why the whole eurozone is one market, not one per country
+
+This is the part worth understanding, because it's not how any of RiftCompare's other markets work. Every other market on the site is one country. The EU is roughly twenty.
+
+We tried the single-country version first: **Germany, added and removed on the same day** in August. Not because German stores don't exist — because one country's worth of them wasn't enough to build a real price comparison out of. A market with three or four stores in it isn't a comparison, it's a coincidence.
+
+The eurozone fixes that structurally, not by trying harder to find German stores, but by asking a different question. Eurozone countries share a **currency** and a **customs union**. A store in Rotterdam selling at €4.20 is €4.20 to a buyer in Madrid — no conversion, no import duty, no customs form. That means "the cheapest EUR listing anywhere in the eurozone" is a genuinely buyable number, in a way "the cheapest listing in one specific country" mostly wasn't. Pool the stores across the whole currency union and you get a market deep enough to actually compare — eleven real stores, across six countries, rather than three in one.
+
+## The honest version of "eleven stores"
+
+We didn't stop at eleven because eleven was easy. We swept **421 eurozone shop domains** — Spanish, German, Italian, Dutch, French and English searches — for anything selling Riftbound. Most of what we found sells **sealed product only**: booster boxes, displays, champion decks, no singles through their own site at all. Eleven is what's left once you filter for stores that actually run a real singles inventory on their own storefront, confirmed on a live probe.
+
+That number will grow — we're actively working through stores running on platforms (WooCommerce, PrestaShop) our importer doesn't read yet, which is most of what's left. It won't come from lowering the bar.
+
+## Why this shipped now
+
+A Spanish card store wrote to us directly, asking to be listed and pointing out that the Spanish Riftbound scene was growing fast. They were right, and pulling that thread — "how many EU stores actually sell singles" — is what turned into this market. If you run a European store and want to be part of the comparison, **[the listing form is free](/stores/suggest)**.
+
+## What this doesn't cover yet — and won't pretend to
+
+The biggest source of real Riftbound singles trading in Europe isn't any of the eleven stores above — it's **Cardmarket** and **CardTrader**, the two pan-European marketplaces most European collectors already use. RiftCompare doesn't price those yet. Cardmarket's terms require their written permission before their price data can be shown elsewhere, and we're not going to quietly work around that — so it's off until that permission is in place, not hidden behind a flag hoping nobody notices. When it lands, we'll say so here.
+
+## Try it
+
+Set the country selector to **🇪🇺 Europe (EU)**, or if you're browsing from inside the eurozone it should already have picked it up automatically. **[See the full store-by-store EU buying guide](/blog/buy-riftbound-cards-europe)** for exactly which eleven stores, what they carry, and the one honest caveat about cross-border shipping. Or just **[search any card](/browse)** and see the EUR price for yourself.
+
+Buying from outside the eurozone? RiftCompare also covers **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** and **[Canada](/blog/buy-riftbound-cards-canada)** — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+    faq: [
+      { q: "Does RiftCompare support the EU?", a: "Yes — the eurozone is RiftCompare's sixth priced market, added alongside Australia, the US, the UK, Singapore and Canada. Prices are in EUR, sourced from eleven real eurozone stores across Austria, Spain, Portugal, the Netherlands, Germany and Italy." },
+      { q: "Is the EU price just a currency conversion?", a: "No, not anymore. Before this market existed, EU visitors saw UK store prices (GBP) converted and displayed in EUR. The EU is now its own market with its own real store inventory priced natively in EUR — no conversion step." },
+      { q: "Why is the EU one market instead of one per country?", a: "The eurozone shares a currency and a customs union, so a price in one member state is a real, buyable number to a shopper in another — no conversion, no import duty. That let us pool stores across the whole eurozone into one comparison deep enough to be useful, rather than splitting them into single-country markets too thin to compare." },
+      { q: "Does RiftCompare show Cardmarket prices?", a: "Not yet. Cardmarket's terms require their written permission before their price data can be redisplayed elsewhere, and RiftCompare doesn't have that yet, so it isn't shown. The eleven stores currently tracked run their own independent storefronts." },
+      { q: "How many EU stores does RiftCompare track?", a: "Eleven, across six countries — three in Germany, three in Italy, two in Spain, and one each in Austria, Portugal and the Netherlands — after sweeping 421 eurozone shop domains for stores that carry a real singles inventory, not just sealed product." },
+    ],
+  },
+  {
+    slug: "best-riftbound-price-comparison-sites",
+    category: "blog",
+    title: "Best Riftbound Price Comparison Sites, Ranked",
+    excerpt:
+      "TCGplayer, Cardmarket, Bilgewater Market and more — every real Riftbound price site compared on coverage, delivered cost, and live vs. reference pricing.",
+    author: "RiftCompare",
+    date: "2026-08-24",
+    updated: "2026-08-24",
+    readMins: 13,
+    tags: ["price comparison", "comparison", "tcgplayer", "cardmarket", "best sites", "tools", "buying guide"],
+    hero: {
+      src: "/blog/best-riftbound-price-comparison-sites.png",
+      alt: "Best Riftbound price comparison sites ranked — 10 sites scored on 5 criteria, RiftCompare #1",
+    },
+    summary: [
+      "**RiftCompare ranks #1** on the criteria that actually decide where you should buy: independent-store coverage across six real markets, delivered cost (not sticker price), and exact-printing matching. We explain exactly why below, scored against nine other real, named sites — not a strawman.",
+      "**The insight most of these sites won't tell you:** several of the biggest names in Riftbound price tracking — Magical Meta, Riftbound Stats, and TCGplayer's own market price — are reading the SAME underlying number. Check three different \"price trackers\" and you can see one figure three times, not three independent opinions.",
+      "**Marketplaces (TCGplayer, Cardmarket, eBay) show you THEIR sellers' prices**, not the market's. That's a completely different question from \"who's cheapest right now, everywhere, delivered to me\" — which is the one this list is actually built to answer.",
+      "This is our own tool, so read the ranking with that in mind — every claim below is checkable in a couple of minutes. **[Run a card you already know the price of](/browse)** and see for yourself.",
+    ],
+    itemList: {
+      name: "Best Riftbound price comparison sites, ranked",
+      items: [
+        { name: "RiftCompare", description: "Live prices from independent stores across 6 real markets, ranked by delivered cost, matched by exact printing.", url: "/browse" },
+        { name: "TCGplayer", description: "The largest US Riftbound marketplace and the reference price most other trackers actually re-display.", url: "https://www.tcgplayer.com/categories/trading-and-collectible-card-games/riftbound-league-of-legends-trading-card-game" },
+        { name: "Cardmarket", description: "Europe's dominant TCG marketplace, VAT-inclusive pricing across the eurozone.", url: "https://www.cardmarket.com" },
+        { name: "TCGCompare", description: "A multi-TCG comparison app covering 1,000+ stores, with a dedicated Riftbound section geared toward sealed product.", url: "https://www.tcgcompare.com/riftbound" },
+        { name: "Bilgewater Market", description: "A Riftbound-dedicated price database with CN/EN dual-market tracking and a peer-to-peer trade board.", url: "https://bilgewatermarket.com" },
+        { name: "eBay", description: "The largest global marketplace for Riftbound singles and sealed, with no dedicated price-comparison tooling of its own.", url: "https://www.ebay.com" },
+        { name: "TCG Snoop", description: "A multi-TCG comparison engine covering 30+ Australian stores — real, but single-market and not Riftbound-specific.", url: "https://www.tcgsnoop.com.au" },
+        { name: "Magical Meta", description: "A deck builder and tier-list site with a Riftbound price tracker built on TCGplayer's market price.", url: "https://magicalmeta.ink/riftbound" },
+        { name: "Riftbound Stats", description: "A competitive decklist and meta database with a daily TCGplayer-based price tracker attached.", url: "https://www.riftboundstats.com" },
+        { name: "PriceCharting", description: "A historical and graded-card price guide built from past eBay sales — useful for collectors, not for finding today's cheapest listing.", url: "https://www.pricecharting.com/console/riftbound-origins" },
+      ],
+    },
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
+      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
+    ],
+    body: `Search "Riftbound price comparison" or the name of pretty much any of these sites and you'll find a handful of genuinely different tools that all sound like they answer the same question. They don't. Some show you a marketplace's own listings. Some show you a reference price copied from somewhere else. Only a few actually compare independent stores against each other and tell you what you'd really pay, delivered.
+
+We ranked ten real sites — by name, on stated criteria — against the one question that actually matters when you're about to spend money: **if I search for this exact card right now, which of these tells me the truth about who's cheapest?**
+
+## How we scored these
+
+Five criteria, all checkable in a couple of minutes on any of these sites:
+
+1. **Independent-store coverage** — does it compare prices across multiple separate stores, or show one marketplace's own sellers?
+2. **Delivered cost** — does the ranking include shipping, or just the sticker price?
+3. **Live vs. reference pricing** — is the number a real in-stock listing, or a market-price estimate pulled from somewhere else?
+4. **Exact-printing precision** — does it distinguish Signature, Overnumbered, Showcase and alt-art printings, or lump "a copy of this card" together?
+5. **Market breadth** — how many countries/currencies does it actually price natively, versus converting or defaulting to one?
+
+## The ranking
+
+### 1. RiftCompare
+
+**[RiftCompare](/browse)** compares live prices from **independent stores across six real markets** — Australia, the US, the UK, Singapore, Canada and the EU — each priced natively in its own currency, plus eBay and TCGplayer reference pricing where a market has thin local coverage. Every comparison ranks by **total delivered cost** (price plus shipping, with free-shipping thresholds factored in automatically), and every match is by **exact printing** — a Signature or Overnumbered chase card is never confused with the base print.
+
+That combination — independent stores, delivered cost, exact printing, six real markets — is the actual gap every other name on this list has in at least one place. None of them clear all five criteria at once. It's also completely free, with no signup required to compare, and it's the only one on this list that adds a deal finder, a value screener, a whole-deck pricer (Best Basket), price-drop alerts and a weekly price-movers digest on top of the comparison itself.
+
+### 2. TCGplayer
+
+TCGplayer is the largest dedicated Riftbound marketplace and the industry-standard US reference price — genuinely the biggest, deepest Riftbound inventory that exists in one place, and several of the other tools on this list (see #8 and #9) build their entire price tracker on top of TCGplayer's number rather than sourcing their own. That's the catch: TCGplayer's price is **its own marketplace's listings**, not a comparison across other stores, and its "market price" is often a rolling average rather than a specific in-stock item you can click and buy right now. It's US-centric — genuinely useful internationally, but not natively priced in every other currency RiftCompare's six markets are, the way a real local market is.
+
+### 3. Cardmarket
+
+Cardmarket is Europe's dominant TCG marketplace, VAT-inclusive and deep in exactly the region RiftCompare's own EU coverage is newest and thinnest (see our [honest EU store list](/blog/buy-riftbound-cards-europe) — eleven independent stores, not a hundred). Like TCGplayer, it's a marketplace showing **its own sellers**, not a cross-store comparison — you're seeing Cardmarket listings, not Cardmarket-versus-everyone-else. If most of your buying is in the eurozone and you're comfortable with a marketplace model, it's a genuinely strong option; it just answers a different question than "who's cheapest across every store that ships to me."
+
+### 4. TCGCompare
+
+TCGCompare is a real multi-TCG comparison app with a dedicated Riftbound section, publicly claiming coverage of 1,000+ stores and price alerts across the US, UK, Canada and Europe — genuinely the broadest raw store count on this list. Its public-facing content leans heavily toward **sealed product** (booster boxes, starter decks) rather than singles-level comparison, and we couldn't confirm it applies the same exact-printing precision or delivered-cost ranking to individual card listings that it does to sealed product. If you're comparing box prices across a huge net of stores, it's worth checking; for a specific single's exact printing, verify what you're actually being shown.
+
+### 5. Bilgewater Market
+
+Bilgewater Market is the most genuinely Riftbound-native name on this list — a dedicated Riftbound price database with a real, differentiated feature nobody else here has: **dual CN/EN market tracking** and a **peer-to-peer trade board** spanning 17 currencies across a long list of regions. If you're trading directly with other collectors, especially across the English/Chinese print divide, it's a real, useful tool with no equivalent on this list. What it isn't is a live multi-store comparison engine — its core price is a market reference plus classifieds-style buy/sell listings, not a ranked, delivered-cost comparison across many independent storefronts.
+
+### 6. eBay
+
+eBay is the largest global marketplace touching Riftbound, and its sheer reach means a genuinely cheap listing does turn up there — but it has no Riftbound-specific tooling at all. No printing-precision matching, no delivered-cost ranking, no market-specific pricing beyond whichever eBay domain you happen to be on. It's a source RiftCompare itself pulls into its own comparison rather than a comparison tool in its own right.
+
+### 7. TCG Snoop
+
+TCG Snoop is a real, solid multi-TCG price comparison engine — Magic, Pokémon, Yu-Gi-Oh, Lorcana, One Piece and Riftbound — across 30+ Australian stores. It does the actual job (independent-store comparison) well for the one market it covers. The gap is scope: it's Australia-only, and Riftbound is one of several games it tracks rather than the thing it's built around, so depth on Riftbound specifically — chase-printing precision, set-by-set tooling — isn't its focus the way it is for a Riftbound-dedicated tool.
+
+### 8. Magical Meta
+
+Magical Meta is primarily a deck builder and meta/tier-list site, with a Riftbound price tracker attached that runs on **TCGplayer's market price** — hourly refreshed, but the same underlying US number as TCGplayer itself, not an independent read. Its deck builder, set explorer and sealed-product tracker are genuinely useful tools for building and pricing a list; for finding the cheapest place to actually buy a card, you're seeing TCGplayer's number with a different layout around it.
+
+### 9. Riftbound Stats
+
+Riftbound Stats markets itself around competitive data — 12,000+ decklists across 90+ events — with a price tracker layered on top, again sourced from **daily TCGplayer updates** rather than an independent multi-store read. For meta analysis and tournament data it's a strong, dedicated resource; for pricing, it's the same TCGplayer reference number showing up a third time on this list.
+
+### 10. PriceCharting
+
+PriceCharting is a historical and graded-card price guide, built from **past eBay sales** rather than live current listings. It's genuinely useful for a different job entirely — "what has this graded card actually sold for over time" — which none of the other nine tools on this list answer well. It is not the right tool for "who has this in stock and what would I pay right now," which is the question everything else on this list is trying to answer.
+
+## The ranking at a glance
+
+| Site | Independent stores | Delivered cost | Live pricing | Exact printing | Markets |
+| --- | --- | --- | --- | --- | --- |
+| **RiftCompare** | ✓ | ✓ | ✓ | ✓ | AU, US, UK, SG, CA, EU |
+| TCGplayer | — (own listings) | — | Mostly | Partial | US-centric |
+| Cardmarket | — (own listings) | — | ✓ | Partial | EU-centric |
+| TCGCompare | ✓ (sealed-focused) | Unconfirmed | ✓ | Unconfirmed | US, UK, CA, EU |
+| Bilgewater Market | — (reference + trade board) | — | Reference | — | CN, EN |
+| eBay | — (own listings) | — | ✓ | — | Global, unranked |
+| TCG Snoop | ✓ | Unconfirmed | ✓ | Unconfirmed | AU only |
+| Magical Meta | — (TCGplayer-sourced) | — | Mostly | — | US-centric |
+| Riftbound Stats | — (TCGplayer-sourced) | — | Mostly | — | US-centric |
+| PriceCharting | — (historical) | — | Historical | Partial | Global, unranked |
+
+## Why RiftCompare actually wins this
+
+Strip away the branding and every name on this list falls into one of three buckets: a **marketplace** showing you its own sellers (TCGplayer, Cardmarket, eBay), a **reference-price re-display** built on top of one of those marketplaces (Magical Meta, Riftbound Stats, and PriceCharting for historical sales), or a genuine **comparison tool** that's either narrower in scope (TCG Snoop, one market) or a different kind of tool entirely (Bilgewater Market's trade board, TCGCompare's sealed-product focus).
+
+RiftCompare is built to answer one specific, narrow question as well as it possibly can: **for this exact card, in my market, right now, who's actually cheapest once shipping is counted — and is that a real listing I can click and buy?** Every other tool on this list answers something adjacent to that. None of them answer that exact question across six real markets with delivered-cost ranking and exact-printing precision. That's not a marketing claim — it's the gap in the table above.
+
+## See it for yourself
+
+The fastest way to judge any of this is to pick a card you already know the price of and check it. **[Search the card database](/browse)** — free, no signup — or if you buy or sell regularly, **[Deal Finder](/tools/deal-finder)** surfaces the gaps between all of the above automatically instead of making you check each one by hand.
+
+## FAQ
+
+**Is RiftCompare better than TCGplayer for Riftbound prices?** For finding the cheapest place to buy right now, yes — RiftCompare compares TCGplayer's own listings against independent stores and eBay in your market, ranked by delivered cost, rather than showing only TCGplayer's own inventory. TCGplayer itself remains the deepest single marketplace and the reference price much of the rest of the industry is built on.
+
+**Does Cardmarket list Riftbound cards?** Cardmarket is a general TCG marketplace and Europe's largest, so Riftbound listings do appear there as the game grows. RiftCompare doesn't currently show Cardmarket's prices — their terms require written permission before their price data can be redisplayed elsewhere, and that permission isn't in place yet.
+
+**What is Bilgewater Market?** A Riftbound-dedicated price database and trade board, tracking both English and Chinese-market prices with a peer-to-peer buy/sell board across many currencies. It's a genuinely different tool from RiftCompare — closer to a reference price plus classifieds than a live multi-store comparison.
+
+**Is TCG Snoop good for Riftbound?** It's a real, solid multi-TCG comparison engine for the Australian market specifically, covering 30+ AU stores across several card games including Riftbound. It doesn't cover other countries, and Riftbound is one of several games it tracks rather than its focus.
+
+**Why do so many Riftbound price trackers show the same number?** Because several of them — including Magical Meta and Riftbound Stats — build their price tracker directly on top of TCGplayer's market price rather than an independent read of the market. Checking three of those tools back to back can show the same figure three times, not three independent opinions.
+
+**Is RiftCompare free to use?** Yes, entirely. The card database, price comparison, price-drop alerts and the weekly price-movers digest are free with no account needed. Premium adds the full deal-finder and value-finder lists on top of the free single-best-pick view.`,
   },
   {
     slug: "every-riftbound-vendetta-card-revealed",
     ebayPicks: { heading: "Vendetta chase cards on eBay right now" },
     category: "blog",
-    title: "Every Riftbound Vendetta Card Revealed — All 166 Confirmed",
+    title: "Riftbound Vendetta Card List: All 166 Cards",
     excerpt:
-      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards officially confirmed, plus Showcase alt-arts, Overnumbers, runes and promos, embedded live from our database. Tap any card for its page and launch-day prices.",
+      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards plus Showcase alt-arts, Overnumbers and promos, with live prices.",
     author: "RiftCompare",
     date: "2026-07-10",
-    updated: "2026-07-31",
+    updated: "2026-08-19",
     readMins: 3,
     tags: ["vendetta", "spoilers", "card gallery", "card list", "news"],
+    faq: [
+      {
+        q: "How many cards are in Riftbound Vendetta?",
+        a: "166 main-set cards, officially confirmed and all revealed. That's the base count — the set also has alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, a rune cycle and Nexus Night promos on top of the 166.",
+      },
+      {
+        q: "When did Riftbound Vendetta release?",
+        a: "31 July 2026. It was the third mainline Riftbound set, following Origins and Spirit Forged, and introduced three new mechanics: Empower, Flow and Burn.",
+      },
+      {
+        q: "Where can I see every Vendetta card in one place?",
+        a: "The gallery embedded in this article, or the full sortable Vendetta set page — both pull live from our database and show launch-day and current prices across every store we track.",
+      },
+      {
+        q: "What are Vendetta's new mechanics?",
+        a: "Empower (a card gains a new ability once it's in play), Flow (play a card straight from your trash instead of your hand), and Burn (send cards to your trash to fuel Flow). Each has its own explainer guide linked below.",
+      },
+    ],
     shop: [
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
       { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
@@ -2873,11 +4060,11 @@ Shopping from [Australia](/blog/buy-riftbound-cards-australia), [the US](/blog/b
         take: 400,
       },
     ],
-    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Vendetta is out — this is the complete base set, released 31 July 2026.
+    body: `This is the **complete Riftbound Vendetta card list and gallery** — all 166 main-set cards, officially confirmed, embedded live from our database in collector-number order. Vendetta released **31 July 2026** and this is the complete base set.
 
-**Vendetta releases 31 July 2026.** The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
+The set runs **166 main-set cards** plus alternate-art Showcase printings, Overnumbered chase cards (numbered beyond 166), SP-numbered specials, runes and tokens. The mechanics are new too — read up on **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** while you browse.
 
-Tap any card below to open its full page: rules text, printings, price history, and live store prices the moment Vendetta singles go on sale — compared across every store we track in Australia, New Zealand, the US, the UK, Singapore and Canada.
+Tap any card below to open its full page: rules text, printings, price history, and live store prices — compared across every store we track in Australia, the US, the UK, Singapore, Canada and the EU.
 
 [[embed:0]]
 
@@ -2886,531 +4073,13 @@ Tap any card below to open its full page: rules text, printings, price history, 
 - **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — Overnumbers, alt-arts and the sleeper Epics worth hunting.
 - **[Vendetta card gallery](/sets/vendetta/gallery)** — every card on one page, filterable, with live prices.
 - **[Vendetta set page](/sets/vendetta)** — the full sortable card list with live prices at release.
-- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
-- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — products, mechanics, rivalries and release details in one read.`,
-  },
-  {
-    slug: "where-to-buy-riftbound-singles",
-    category: "blog",
-    title: "Where to Buy Riftbound Singles — The Cheapest Place to Buy Single Cards",
-    excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG singles: what singles are, singles vs packs, how to find the cheapest price for any card across stores in AU, NZ, US, UK, Singapore & Canada, and how to buy safely. Free, updated daily.",
-    author: "RiftCompare",
-    date: "2026-07-14",
-    updated: "2026-07-14",
-    readMins: 5,
-    tags: ["singles", "buying guide", "price comparison", "riftbound", "how to buy"],
-    shop: [
-      { label: "Riftbound singles on eBay", query: "Riftbound singles" },
-      { label: "Vendetta singles", query: "Riftbound Vendetta" },
-    ],
-    body: `Want to **buy Riftbound singles** — the exact cards your deck needs, without opening pack after pack? This is the complete guide: what singles are, why they beat packs for deckbuilding, and — most importantly — **how to find the cheapest price for any Riftbound single**, compared across every store at once.
-
-> **The short version:** search any card on the **[RiftCompare singles hub](/singles)**, see every store's live price ranked by what you'd actually pay delivered, and buy from the cheapest. It's free, covers Australia, New Zealand, the US, the UK, Singapore and Canada, and updates daily.
-
-## What are Riftbound singles?
-
-A "single" is one individual card from the **Riftbound: League of Legends TCG**, sold on its own instead of sealed inside a booster pack or box. Champions, spells, gear, runes, alt-arts, chase cards — any of them can be bought as a single from a store or marketplace that has pulled and listed it.
-
-Singles are how nearly every competitive TCG player actually builds decks. Packs are for the fun of opening (and for gambling on chase pulls); singles are for getting the specific three copies of a card your list calls for, reliably and usually far cheaper than chasing them through packs.
-
-## Singles vs. packs: which is cheaper?
-
-For **a specific card you want**, singles win almost every time. Opening packs to find one card means buying — and paying for — dozens of cards you didn't need, plus the odds are against you. A single is a known price for the exact card.
-
-Packs and sealed product still make sense when you want the **experience** of opening, or you're speculating on a whole set's chase cards at launch. For everything else — completing a deck, grabbing a missing playset, picking up a chase card you've decided on — buy the single. Our **[sealed vs singles breakdown](/sealed)** shows the sealed side if you want to compare.
-
-## How to find the cheapest Riftbound single
-
-The same card is often priced very differently between stores once postage is counted — a card that's $2 at one shop with $4 tracked shipping isn't cheaper than a $4 card with free post. RiftCompare solves exactly this:
-
-1. **[Search the card database](/browse)** (or the **[singles hub](/singles)**) — every single shows its lowest live price in your market instantly.
-2. **Open the card** for the full store-by-store table, in stock and ranked by **total delivered cost** (price + postage, with free-shipping thresholds factored in automatically).
-3. **Click straight through** to the exact listing at the cheapest store and buy.
-
-Buying a whole deck? The **[deck pricer](/deck)** takes your full 40-card list and works out the cheapest way to buy all of it across every store at once — consolidating orders so you don't pay postage five times.
-
-## Where you can buy Riftbound singles
-
-RiftCompare compares live singles prices across a wide range of local stores plus eBay, in five markets. The full, current list is on the **[stores we track](/stores/tracked)** page. Region-by-region buying guides:
-
-- **[Buy Riftbound singles in the US](/blog/buy-riftbound-cards-us)** — TCGplayer, eBay and 19 independents compared.
-- **[Buy Riftbound singles in Australia](/blog/buy-riftbound-cards-australia)** — 19 AU stores, ranked by delivered cost.
-- **[Buy Riftbound singles in New Zealand](/blog/buy-riftbound-cards-nz)** — 10 NZ stores plus eBay AU (which ships to NZ).
-- **[Buy Riftbound singles in the UK](/blog/buy-riftbound-cards-uk)** — 14 UK stores plus eBay UK.
-- **[Buy Riftbound singles in Singapore](/blog/riftbound-price-comparison-singapore)** — local SGD prices across Singapore stores.
-
-## Buying singles safely
-
-- **Check the total, not the sticker.** Always compare delivered cost — RiftCompare does this for you, but confirm postage at checkout.
-- **Buy near-mint unless you're playing casually.** Store listings note condition; the comparison ranks by the condition shown.
-- **On eBay, prefer high-rating sellers** and check whether a listing is for a card in hand rather than a pre-order.
-- **Prices move.** Our **[price movers](/movers)** page shows which singles are climbing or cooling, so you can buy before a spike.
-
-## Start here
-
-Browse **[every Riftbound single](/singles)**, jump to a set — **[Origins](/sets/origins)**, **[Spirit Forged](/sets/spiritforged)**, **[Unleashed](/sets/unleashed)** or the new **[Vendetta](/sets/vendetta)** — or go straight to the **[cheapest cards right now](/browse?priced=1&sort=price_asc)**. Every price is compared across every store, updated daily, and completely free.
-
-Want the store-by-store breakdown for your market? See **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, or the **[general buying guide](/guides/where-to-buy-riftbound-cards)**.`,
-  },
-  {
-    slug: "how-to-buy-on-riftcompare-marketplace",
-    category: "guide",
-    title: "How to Buy Riftbound Cards on the RiftCompare Marketplace",
-    excerpt:
-      "A step-by-step guide to buying Riftbound singles directly from other players on the RiftCompare Marketplace — finding a listing, checking out, and what happens to your money until the card actually arrives.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 6,
-    tags: ["marketplace", "buying", "guide", "escrow", "p2p"],
-    browseCta: {
-      href: "/marketplace",
-      label: "Browse the Marketplace →",
-      blurb: "See live listings from verified sellers in your market, ready to buy right now.",
-    },
-    body: `RiftCompare has always compared prices across stores — now you can also buy **directly from other players** through the **[RiftCompare Marketplace](/marketplace)**, a built-in P2P marketplace with buyer protection baked in. Here's exactly how it works, start to finish.
-
-## 1. Find a listing
-
-Marketplace listings show up two places:
-
-- **[The marketplace grid](/marketplace)** — browse every active listing in your market, filter by card, and see each seller's shop, condition and price.
-- **Right inside the price comparison.** If a seller's price beats every store for a card, it appears as a normal row on that card's page, tagged **"RiftCompare Marketplace."** You don't have to go looking for it separately — it's just another price to compare.
-
-Every listing shows the card's **condition** (Near Mint through Damaged), whether it's **foil**, the **seller's shop name and rating**, and a price in your local currency. Listings only show sellers shipping within your own market — no cross-border shipping surprises.
-
-## 2. Check out
-
-Add what you want to your cart and check out through **Stripe** — the same secure checkout used for card payments everywhere else. You'll see the item price, an estimated shipping cost, and the total before you confirm.
-
-Your payment does **not** go straight to the seller. It's held by RiftCompare until the order is actually delivered — that's the whole point of buying through the marketplace instead of a direct message or a forum trade.
-
-## 3. What happens after you pay
-
-- The seller gets notified immediately and has **14 days to ship** your order and add tracking. If they don't, you're **automatically refunded in full** — no back-and-forth required.
-- Once they mark it shipped, you'll get an email with the carrier and tracking number, plus an estimated delivery window.
-- Your money stays held the whole time your order is in transit.
-
-## 4. Confirm delivery (or let it auto-release)
-
-When your card arrives, open **[My orders](/marketplace/orders)** and tap **"Got it"** to confirm delivery — this instantly releases the seller's payout and closes out the order.
-
-Forget to confirm? No problem — funds **auto-release 14 days after the order ships** either way, so a seller never gets stuck waiting on you to click a button. You can also message the seller directly from the order if you want to check in before then.
-
-## 5. Message the seller
-
-Every order has a built-in chat thread with the seller — ask about shipping, condition, anything. No need to hunt down a Discord or trade forum to sort out a question about your order.
-
-## 6. If something goes wrong
-
-Tap **"Report a problem"** on the order. This pauses the scheduled release immediately and puts a real person on it — not an automated dispute bot. Common cases:
-
-- **Never shipped in time** → automatic full refund, no report needed.
-- **Item not as described / damaged / never arrived** → report it and we'll sort out a refund.
-- **Just have a question first?** Message the seller before it becomes a problem — most things are a shipping delay, not a scam.
-
-## Why this is different from a normal trade
-
-Buying from a random seller in a Discord server or Facebook group means sending money and hoping. On the RiftCompare Marketplace, your payment is never released until you have the card in hand (or the deadline passes with no dispute) — the platform is the thing standing between "I paid" and "I got scammed," not your judgment of a stranger's profile picture.
-
-The marketplace is new, so if anything looks off, there's a "Found a bug? Report it" link on every marketplace page that comes straight to us.
-
-## Ready to buy?
-
-**[Browse the marketplace](/marketplace)** to see what's listed right now, or check a specific card's page — marketplace listings show up right alongside every store price. Have cards to sell instead? **[Open a shop](/marketplace/sell)** — it's free to list.`,
-  },
-  {
-    slug: "riftcompare-marketplace-buyer-protection-explained",
-    category: "blog",
-    title: "Is the RiftCompare Marketplace Safe? Buyer Protection, Escrow & Refunds Explained",
-    excerpt:
-      "How the RiftCompare Marketplace actually protects your money when buying Riftbound cards from another player — escrow, auto-refunds, ship deadlines and what happens if a trade goes wrong.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 5,
-    tags: ["marketplace", "safety", "escrow", "buyer-protection", "trust"],
-    browseCta: {
-      href: "/marketplace/buyer-protection",
-      label: "Read the full buyer protection policy →",
-      blurb: "The exact rules — ship deadlines, release dates and how disputes are handled.",
-    },
-    body: `Buying a card from a stranger online is always a little nerve-wracking — you're trusting someone you've never met to actually ship what they said they'd ship. The RiftCompare Marketplace is built specifically to remove that risk. Here's exactly how, with no marketing fluff.
-
-## Your money doesn't go to the seller — not yet
-
-When you pay for a marketplace order, the money is held by RiftCompare, not sent to the seller. It only gets released once one of two things happens:
-
-1. **You confirm delivery** — you tap "Got it" once the card arrives, and the seller is paid out right then.
-2. **14 days pass after the order ships** with no dispute — funds auto-release automatically, so a seller isn't left waiting forever on a buyer who forgot to click a button.
-
-Either way, a seller only ever gets paid *after* the card is genuinely on its way to you and the delivery window has had a chance to play out.
-
-## What if the seller just doesn't ship?
-
-Every seller has **14 days from payment** to mark an order shipped and add tracking. Miss that window, and the order **automatically cancels and refunds you in full** — you don't have to notice, complain, or file anything. It just happens.
-
-## What if the card isn't what was listed, or never turns up?
-
-Tap **"Report a problem"** on the order (found in **[My orders](/marketplace/orders)**). This immediately pauses the scheduled fund release — the seller doesn't get paid while your report is open — and puts it in front of our team to sort out, whether that's a refund or getting the seller to make it right.
-
-This is different from most peer-to-peer trading (Discord, Facebook groups, trade forums), where once you've sent payment there's no mechanism to get it back if the other person ghosts.
-
-## Who are these sellers, anyway?
-
-Anyone selling on the marketplace needs a **verified email account** and has to explicitly agree to the marketplace seller terms before their shop goes live. Every seller has a public shop page with **ratings and reviews from past buyers** — check it before buying from someone new, the same way you'd check feedback on any other platform.
-
-## Can I talk to the seller before worrying?
-
-Yes — every order has built-in messaging with the seller. If tracking looks stalled or you have a question about condition, message them first. Most "is this a scam?" moments turn out to be a normal shipping delay once you actually ask.
-
-## The short version
-
-| Question | Answer |
-| --- | --- |
-| Where does my payment go when I pay? | Held by RiftCompare, not the seller |
-| When does the seller get paid? | After you confirm delivery, or 14 days after shipping, whichever comes first |
-| Seller doesn't ship in time? | Automatic full refund, no action needed from you |
-| Item's wrong / damaged / never arrives? | Report it — release pauses instantly, a real person handles it |
-| Can I message the seller? | Yes, directly on the order |
-
-Full details, including the exact policy language, are on the **[buyer protection page](/marketplace/buyer-protection)**.
-
-## Ready to buy?
-
-**[Browse the marketplace](/marketplace)** and buy with your payment protected the whole way through. New here? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
-  },
-  {
-    slug: "marketplace-vs-stores-where-to-buy-riftbound",
-    category: "blog",
-    title: "Marketplace vs Stores: Where Should You Buy Riftbound Cards?",
-    excerpt:
-      "RiftCompare shows you store prices AND player-to-player marketplace listings side by side. Here's when to buy from a store and when the marketplace is the better (or cheaper) call.",
-    author: "RiftCompare",
-    date: "2026-07-20",
-    readMins: 5,
-    tags: ["marketplace", "buying", "stores", "comparison", "guide"],
-    body: `RiftCompare has always compared prices across dozens of stores. Now it also has a **[player-to-player marketplace](/marketplace)** built in — so which one should you actually buy from? Short answer: you don't have to choose, because we show you both at once. Here's how to think about it.
-
-## They're not competitors — they're the same comparison
-
-Marketplace listings don't live in a separate corner of the site. When a seller's marketplace price beats every store for a card, it shows up as **just another row** in that card's normal price comparison, tagged "RiftCompare Marketplace." You're already comparing both every time you search a card — you just might not have noticed.
-
-## When a store is the better call
-
-- **You want it today, or close to it.** Most stores have same-day or next-day dispatch and established shipping times. Marketplace sellers get 14 days to ship, which is usually faster but isn't guaranteed like a store's stated dispatch time.
-- **You're buying sealed product.** Booster boxes, Proving Grounds and packs are store territory — the marketplace is singles-only.
-- **You want the absolute path of least resistance.** Stores are businesses; there's no seller to coordinate with, no delivery confirmation step. Pay, wait, done.
-
-## When the marketplace is the better call
-
-- **The price is genuinely better.** Individual sellers don't carry store overhead, so marketplace listings frequently undercut retail — that's *why* they show up as the top price on a card page in the first place.
-- **You're after a specific condition or printing** a store doesn't have in stock. Marketplace sellers list exactly what's in their binder, including played copies at played-copy prices, alt-arts, and printings that sell out at retail in minutes.
-- **You want to actually talk to the seller.** Built-in messaging means you can ask "is this really Near Mint?" before you buy, something you can't do with a store listing.
-
-## The trust question, answered honestly
-
-The one real hesitation buying from a store vs. a marketplace seller is trust — a store is a business with a track record; a marketplace seller is a person. That's exactly why the marketplace holds your payment in **escrow** until delivery is confirmed (or auto-releases 14 days after shipping), and auto-refunds you in full if a seller doesn't ship within 14 days. You get the pricing upside of buying peer-to-peer without giving up the safety net of buying from a store. Full breakdown: **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
-
-## The practical answer
-
-Just search the card. Whatever's cheapest — store or marketplace listing — shows up first, in your currency, with shipping factored in. You don't need to decide in advance; **[the card database](/browse)** decides for you every time.
-
-## Ready to buy?
-
-**[Search any card](/browse)** to see stores and marketplace listings compared side by side, or go straight to the **[marketplace grid](/marketplace)** to browse player listings. First time buying from a seller? Start with **[how to buy on the marketplace](/guides/how-to-buy-on-riftcompare-marketplace)**.`,
-  },
-  {
-    slug: "riftcompare-marketplace-fee-cut-2-percent",
-    category: "blog",
-    title: "RiftCompare Marketplace Fees Just Dropped to 2% (1% for Premium)",
-    excerpt:
-      "We've cut the RiftCompare Marketplace seller fee from 5% to 2% — and Premium members now sell for just 1%. Here's what changed, why, and how it stacks up against Cardmarket.",
-    author: "RiftCompare",
-    date: "2026-07-22",
-    readMins: 4,
-    tags: ["marketplace", "fees", "selling", "premium", "announcement"],
-    browseCta: {
-      href: "/marketplace/sell",
-      label: "Open your seller dashboard →",
-      blurb: "List a card and see exactly what you'll receive before you confirm.",
-    },
-    body: `Starting today, selling on the **[RiftCompare Marketplace](/marketplace)** costs less — a lot less. The platform fee is down from 5% to **2%**, and if you're a **[Premium](/premium)** member it's just **1%**. No tiers to unlock, no minimum sales volume to hit first — the rate applies automatically, from your very next sale.
-
-## What actually changed
-
-- **Standard sellers**: 5% → **2%** on every completed sale.
-- **Premium sellers**: **1%** — half the standard rate, on top of everything else Premium already includes (Value Finder, Rising Cards, the full Deal Finder list, Best Basket, and an ad-free site).
-- **Evaluated per sale, not per listing.** The rate that applies is whatever your account status is *at the moment a sale completes* — upgrade to Premium today, and your very next sale is charged at 1%, even on a listing you posted weeks ago.
-- **Nothing else changes.** Same escrow protection, same 14-day ship deadline, same buyer-side experience. This is purely a fee cut.
-
-## Why we did this
-
-RiftCompare's marketplace exists to make it easier — and cheaper — for players to buy and sell directly with each other. A lower fee means more of every sale actually lands in the seller's pocket, which matters most while the marketplace is still building up its base of real listings from real players.
-
-It's also just a better deal than the alternatives. Cardmarket, the biggest general TCG marketplace, charges sellers a tiered commission — 5% for a standard "Private" seller, dropping to 3% or 1.5% only once you qualify for its Professional/Powerseller tiers — plus a Trustee Service fee (0.5–1%) and a 3% currency-conversion charge on cross-border sales, landing around 6–8% all-in for most casual sellers. RiftCompare's 2% (or 1% with Premium) beats that from the first sale, with no tiers to climb and no currency-conversion surprise.
-
-## What you actually take home
-
-Say you sell a card for $20:
-
-| | Fee | You receive |
-|---|---|---|
-| Standard | 2% ($0.40) | **$19.60** |
-| Premium | 1% ($0.20) | **$19.80** |
-
-Your seller dashboard and Seller Funds page always show the exact numbers before you list and after you sell — no need to do this math yourself.
-
-## Selling for the first time?
-
-Any signed-in, email-verified user can list a card in a couple of minutes from the **[seller dashboard](/marketplace/sell)**. Payouts go through Stripe Connect once you've completed a quick identity check, and buyer payments are held in escrow until delivery is confirmed — full details in **[how buyer protection works](/blog/riftcompare-marketplace-buyer-protection-explained)**.
-
-Already selling? The new rate applies automatically — nothing to change, nothing to opt into. Check **[Seller Funds](/marketplace/funds)** to see it reflected on your next completed sale.`,
-  },
-  {
-    slug: "riftbound-vendetta-spoiler-season-complete-166-cards",
-    category: "blog",
-    title: "Every Riftbound Vendetta Card — All 166, Out Now",
-    excerpt:
-      "Riftbound: Vendetta released on 31 July 2026. Every one of the set's 166 main-set cards is out, with live prices compared across every store we track. Here's the full recap: what's in the set, what we learned, and how to be ready.",
-    author: "RiftCompare",
-    date: "2026-07-23",
-    updated: "2026-07-31",
-    readMins: 5,
-    tags: ["vendetta", "spoilers", "news", "set", "card list"],
-    browseCta: {
-      href: "/blog/every-riftbound-vendetta-card-revealed",
-      label: "Browse the full gallery →",
-      blurb: "See all 166 confirmed Vendetta cards, filterable by domain, rarity and type.",
-    },
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Riftbound: Vendetta is out — it released worldwide on 31 July 2026. Every one of the set's **166 main-set cards** is now officially confirmed via Riot's card gallery, a week and a half ahead of the set's **31 July 2026** worldwide release. If you've been tracking the reveals piecemeal, this is the wrap-up: what's in the set, what stood out, and what's left to actually happen before boosters crack.
-
-## The headline numbers
-
-- **166 main-set cards**, plus **50+ Showcase alternate-art printings**, **Overnumbered chase cards** (numbered beyond the set — 167 and up), **SP-numbered specials**, six domain **runes**, and a promo token.
-- **Nine new Champion Legends**, several making their Riftbound debut: **Akali, Renekton, Nasus, Shen, Jayce, Mel, Kennen, Zed and Ambessa**.
-- **Three new mechanics** — Flow, Burn and Empower — see the full breakdowns: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)**, **[Empower](/guides/riftbound-empower-explained)**.
-- **Two new card concepts** — Unit-Gear and Decrees — covered in **[Vendetta's new card types](/blog/riftbound-vendetta-unit-gear-decrees)**.
-- **New domain pairings**: Fury + Calm, Mind + Body, and Chaos + Order — rival colours forced together.
-
-## What the rivalry theme actually delivered
-
-Vendetta's whole identity is built around clashing champions, and the reveals leaned all the way in: **Nasus vs Renekton**, **Shen vs Zed**, and connecting-art **Rival Overnumbers** that are designed to be collected and displayed as pairs rather than single cards. The set's first **Showdown Deck** — Riftbound's first ready-to-play two-player product — pairs **Shen versus Zed**, putting the rivalry directly into the box rather than just the flavour text.
-
-## What's confirmed vs what's still ahead
-
-To be precise about what "fully revealed" does and doesn't mean: every **card** in the set is now known — name, rules text, rarity, art. What hasn't happened yet is the **release** itself. Vendetta singles aren't buyable until **31 July 2026** (in-store Pre-Rift events start **24 July**), so there's no real tournament data, no settled metagame, and no live singles prices yet — only sealed product (booster boxes and packs) is buyable today, already comparable on our **[sealed page](/sealed)**.
-
-**Update, 24 July 2026:** Pre-Rift launch events have now started, and the first Vendetta singles are already trading early — see **[Riftbound Vendetta Is Here](/blog/riftbound-vendetta-is-here-early-release)** for what's live right now, days ahead of the 31 July street date.
-
-That's an important distinction if you're chasing a specific card: the **[Vendetta set page](/sets/vendetta)** already lists every confirmed card, and live prices are now populating as early singles surface ahead of the full retail release.
-
-## Where to go next
-
-- **[Browse every confirmed card](/blog/every-riftbound-vendetta-card-revealed)** — the full, filterable gallery.
-- **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — which Overnumbers, alt-arts and Epics to actually hunt.
-- **[Best Vendetta decks](/guides/best-riftbound-vendetta-decks)** and the **[deckbuilding guide](/guides/building-for-riftbound-vendetta)** — archetype blueprints built from the confirmed card pool.
-- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
-- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown in one read.
-
-## Common questions
-
-**Are all Riftbound Vendetta cards revealed?** Yes — all 166 main-set cards are officially confirmed, alongside Showcase alt-arts, Overnumbered chase cards, runes and promos.
-
-**How many cards are in the Vendetta set?** 166 main-set cards, plus alternate printings (Showcase, Overnumbered, SP-numbered) that sit outside that base count.
-
-**When does Riftbound Vendetta release?** 31 July 2026 worldwide, with in-store Pre-Rift launch events from 24 July.
-
-**Can I buy Vendetta singles yet?** Yes — Vendetta released worldwide on 31 July 2026 and singles are trading now. See **[Riftbound Vendetta Is Here](/blog/riftbound-vendetta-is-here-early-release)** for the details.`,
-  },
-  {
-    slug: "riftbound-vendetta-is-here-early-release",
-    category: "blog",
-    title: "Riftbound: Vendetta Is Out — Where to Buy Every Card",
-    excerpt:
-      "Riftbound: Vendetta has arrived early. Vendetta released worldwide on 31 July 2026 after a week of Pre-Rift launch events — here's what's live, where to buy it, and what to watch for through the launch window.",
-    author: "RiftCompare",
-    date: "2026-07-24",
-    updated: "2026-07-31",
-    readMins: 4,
-    tags: ["vendetta", "news", "release", "buying guide", "price comparison"],
-    browseCta: {
-      href: "/sets/vendetta",
-      label: "Shop the Vendetta set page →",
-      blurb: "Every card, live prices as they land, and sealed product ready to buy now.",
-    },
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Riftbound: Vendetta is here — a little early. In-store **Pre-Rift launch events** ran from **24 July 2026**, and the set reached its full worldwide release on **31 July 2026**. Vendetta is out everywhere now. We're seeing early listings land on eBay and a handful of local stores well before the date everyone had circled — so if you've been waiting to chase a specific card, the wait is already partly over.
-
-## What's actually happening
-
-Pre-Rift events are early, in-store play sessions Riot runs the week before a set's full release — stores get product and run games, and inevitably some of those cards end up listed for sale before the "real" launch day. That's exactly how it played out: Pre-Rift singles reached the secondary market first, and the coordinated worldwide release followed on **31 July**.
-
-## Is this the full release?
-
-Not quite, and it's worth being precise about it. This is an early trickle, not the release itself — most stores won't have Vendetta singles in stock until 31 July, and the wider market (organised availability across every retailer we track) will only fill in properly once the street date actually hits. What's different starting today is that it's no longer purely theoretical: real cards are being bought and sold, which means real prices to compare.
-
-## Where to buy Vendetta right now
-
-- **[Vendetta set page](/sets/vendetta)** — every one of the 166 confirmed cards, with live prices populating as stores and early listings appear.
-- **[Sealed product](/sealed)** — booster boxes and packs have been buyable for a while and are unaffected by the early singles trickle.
-- eBay is the fastest-moving channel for early copies — watch it closely through launch week, since Pre-Rift-sourced listings tend to be thin on stock and can move in price quickly.
-
-## What to watch for through launch week
-
-Early-window prices on a brand-new set are volatile — a handful of listings can swing the "cheapest" price around by a lot until real supply catches up. A few things worth keeping in mind:
-
-- **Don't panic-buy the first listing you see.** With so few copies trading, the first price isn't necessarily a fair one.
-- **Chase cards move first.** Overnumbers, Showcase alt-arts and Epics are the printings most likely to show up (and sell out) early — see our **[chase card tracker](/blog/riftbound-vendetta-chase-cards-so-far)**.
-- **Compare before you commit.** We're tracking every listing as it lands, delivered cost included, so the card page always shows the actual cheapest way to buy — not just the first store to list.
-- **The 31 July date still matters.** If a card you want isn't trading yet, it almost certainly will be once the full release lands — no need to overpay chasing an early copy.
-
-## Where to go next
-
-- **[Riftbound Vendetta launch-week buying checklist](/blog/riftbound-vendetta-launch-week-buying-checklist)** — how to buy smart through the rush.
-- **[Radiance release date](/radiance-countdown)** — Set 5 lands 23 October 2026.
-- **[Every Vendetta card](/blog/riftbound-vendetta-spoiler-season-complete-166-cards)** — all 166 in the set.
-- **[Chase cards, tier by tier](/blog/riftbound-vendetta-chase-cards-so-far)** — what to actually hunt for.
-- **[Everything you need to know about Vendetta](/blog/riftbound-vendetta-everything-you-need-to-know)** — the full set rundown.
-
-## Common questions
-
-**Has Riftbound Vendetta been released?** Early singles are trading now via Pre-Rift launch events (started 24 July), a week ahead of the official 31 July worldwide street date — so yes, in part, but the full release is still 31 July.
-
-**Can I buy Vendetta singles right now?** Some — early Pre-Rift copies are already surfacing on eBay and a handful of stores. Supply is thin and prices are still settling; check the **[Vendetta set page](/sets/vendetta)** for what's currently live.
-
-**Are RiftCompare's Vendetta prices live?** Yes — we're comparing every Vendetta listing we track as it appears, delivered cost included, the same as every other set.
-
-**When's the official Vendetta release date?** 31 July 2026, worldwide. That date hasn't moved — what's new is that some singles are trading a few days early.`,
-  },
-  {
-    slug: "how-to-start-buying-riftbound-vendetta-decks",
-    category: "blog",
-    title: "How to Start Buying Into Riftbound Vendetta's First Decks",
-    excerpt:
-      "Vendetta is out — it released on 31 July 2026. Here's how to actually start buying into Flow Value, Burn/Disruption or Empower Midrange today — without overpaying in the early rush.",
-    author: "RiftCompare",
-    date: "2026-07-24",
-    updated: "2026-07-31",
-    readMins: 5,
-    tags: ["vendetta", "decks", "buying guide", "news", "price comparison"],
-    shop: [
-      { label: "Jayce singles — the Empower champion", query: "Riftbound Jayce" },
-      { label: "Mel singles", query: "Riftbound Mel" },
-      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
-      { label: "Zed vs Shen Showdown Deck", query: "Riftbound Vendetta Showdown Deck" },
-    ],
-    browseCta: {
-      href: "/sets/vendetta",
-      label: "Shop Vendetta cards now →",
-      blurb: "Every confirmed card, priced live as early singles and stores list them.",
-    },
-    embed: {
-      title: "Epic-rarity picks",
-      note: "Vendetta's in-set Epics — history says one or two of these become the sleeper chases of the set, so they're worth grabbing early if a shell needs one.",
-      chaseSet: "VEN",
-      chaseTier: "epic",
-      take: 12,
-    },
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Riftbound: Vendetta is out — it **[released worldwide](/blog/riftbound-vendetta-is-here-early-release)** on **31 July 2026**, after a week of Pre-Rift launch events. If you already know which archetype you want to play, that means you don't have to wait for launch day to start buying — you just have to be smart about it while supply is thin and prices are still settling.
-
-## The three shells, in one line each
-
-Full breakdown (synergies, engine, how to pilot each) is in **[Best Riftbound Vendetta Decks](/guides/best-riftbound-vendetta-decks)** — the short version:
-
-- **Flow Value (Fury + Calm)** — Burn fills your trash, Flow replays from it. Grindy, hard to run out of gas.
-- **Burn / Disruption (Chaos + Order)** — attack their deck as a clock while self-Burn fuels your own payoffs. Highest ceiling, easiest to mis-sequence.
-- **Empower Midrange (Mind + Body)** — curve out cheap bodies, then pay to Empower them into finishers. Built around **Jayce** and **Mel**, the set's two confirmed Empower Legends.
-
-## How to actually buy in during the early trickle
-
-- **Start with the Legend.** Your Legend locks in your domains for everything else, so it's the first card worth securing — chase it on the **[Vendetta set page](/sets/vendetta)** or via the shop links below.
-- **Sealed is the steadier option right now.** Singles supply from Pre-Rift events is thin, so prices can swing hard on a handful of trades. If you want a guaranteed way in, the **[Zed vs Shen Showdown Deck](/sealed)** is a ready-to-play two-player box — a genuine way to try two shells (and the Fury/Calm and Mind/Body-adjacent rivalry) without chasing singles at all.
-- **Compare before you commit.** We track every early listing as it lands, delivered cost included, so a card's page always shows the actual cheapest way to buy it — not just the first store or eBay listing to show up.
-- **Don't overpay for a card that isn't scarce.** Early-window prices are volatile because so few copies are trading; a common enabler that spikes today is usually cheap again within days once real supply lands on 31 July.
-- **Chase cards move first and hardest.** If a shell wants a specific Overnumbered, Showcase alt-art or Epic, that's the piece most likely to be expensive early and to actually hold value — see the Epics below, and the full **[chase card tracker](/blog/riftbound-vendetta-chase-cards-so-far)**.
-
-## Price your shell before you buy
-
-Once you've picked a direction, drop your planned list into the **[deck pricer](/deck)** — it totals every card at the cheapest live price across the stores we track, in your own currency, so you know exactly what a shell costs before you start buying pieces one at a time.
-
-## Common questions
-
-**Can I actually buy Vendetta singles right now?** Yes — the set released on 31 July 2026 and singles are listed across eBay and the stores we track. Supply is thin, so prices are still settling.
-
-**Which Vendetta deck should I build first?** Empower Midrange (Jayce or Mel) is the most beginner-friendly of the three confirmed shells; Flow Value is the most resilient long-game grinder. See the **[full archetype guide](/guides/best-riftbound-vendetta-decks)** for the complete breakdown.
-
-**Is sealed or singles cheaper for a new-set deck?** It depends on supply — early in a set's life, thin singles supply can make sealed (or a preconstructed product like the Zed vs Shen Showdown Deck) the steadier option; see **[singles vs sealed](/guides/riftbound-singles-vs-sealed)** for the general rule.
-
-**Are RiftCompare's prices for these cards live?** Yes — every listing we track is compared as it lands, the same as every other Riftbound set.`,
-  },
-  {
-    slug: "riftbound-vendetta-card-prices-where-to-buy-cheapest",
-    category: "blog",
-    title: "Riftbound Vendetta Card Prices: Where to Buy for the Lowest Price",
-    excerpt:
-      "RiftCompare tracks every Riftbound Vendetta card's price live across 70+ stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay — so you always find the cheapest place to buy Vendetta singles and sealed.",
-    author: "RiftCompare",
-    date: "2026-07-24",
-    updated: "2026-07-31",
-    readMins: 4,
-    tags: ["vendetta", "price comparison", "buying guide", "news"],
-    shop: [
-      { label: "Vendetta singles on eBay", query: "Riftbound Vendetta" },
-      { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
-    ],
-    browseCta: {
-      href: "/sets/vendetta",
-      label: "See every Vendetta card's price →",
-      blurb: "All 166 cards, ranked by the cheapest live price across every store we track.",
-    },
-    embed: {
-      title: "Every Vendetta card, priced live",
-      note: "Browse all 166 confirmed cards, filterable by domain, rarity and type — tap any card for its full price comparison.",
-      setAll: "VEN",
-      filterable: true,
-      take: 400,
-    },
-    body: `![Riftbound: Vendetta — out now](/vendetta-hero.png)
-
-Riftbound: Vendetta singles are trading early, and RiftCompare is tracking every single card's price the moment it appears — live, automatically, across every store we cover. If you're wondering where to buy Vendetta cards for the least money, this is the short answer: search or browse any card on RiftCompare and we've already done the comparison for you.
-
-## How RiftCompare prices Vendetta
-
-- **70+ stores, five markets.** We compare live prices across local stores in Australia, New Zealand, the US, the UK, Singapore and Canada, plus eBay in each of those markets — the same coverage as every other Riftbound set.
-- **Ranked by delivered cost, not just sticker price.** A card's "cheapest" price accounts for shipping where we track it, not just the item price — so the store at the top of the list is genuinely the least you'll pay to get the card in hand, not just the lowest-looking number.
-- **All 166 cards, priced as they list.** Every Vendetta card has a page tracking its price, and they filled in as stores listed the set. Coverage keeps improving as more singles and stores are listing them.
-- **Updated continuously, not once a day.** As new listings land during this early trading window, the comparison updates — you're never looking at a stale price from before a store restocked or a new listing undercut it.
-
-## How to actually find the cheapest price
-
-1. **Search the card by name** (or browse the gallery below) to jump straight to its page.
-2. **Check the price table.** Every store and eBay listing we track for that card is ranked cheapest-first, delivered cost included.
-3. **Click straight through to buy.** Every price links directly to the listing — no extra searching, no guessing which store actually has stock.
-4. **Building a whole deck?** Price the entire list at once with the **[deck pricer](/deck)** rather than checking each card one by one.
-
-## Why prices are moving fast right now
-
-Vendetta is in its launch window — it released on 31 July 2026 — so supply is still settling and prices can swing quickly on just a handful of trades. That's exactly when comparing pays off most: the gap between the cheapest and most expensive listing for the same card is usually widest right after a set drops, before supply catches up. Track the **[price movers](/movers)** if you want to watch which cards are climbing or falling fastest.
-
-## Common questions
-
-**Where can I find the cheapest Riftbound Vendetta cards?** On RiftCompare — every confirmed Vendetta card is priced live across 70+ stores and eBay in five markets, ranked cheapest first. Search or browse the **[Vendetta set page](/sets/vendetta)** to see them all.
-
-**Are Vendetta prices live yet?** Yes — as early singles and stores list cards, we track and compare them automatically. Coverage keeps filling in as more stores list the set.
-
-**Does RiftCompare account for shipping?** Yes, where we track it — a card's ranked price reflects delivered cost, not just the item price, so the top listing is the genuinely cheapest way to get it in hand.
-
-**Can I price a whole Vendetta deck at once?** Yes — drop your list into the **[deck pricer](/deck)** to total every card at its cheapest live price across stores, in your own currency.`,
+- **[Radiance release date](/release-dates)** — Set 5 lands 23 October 2026.
+- **[Nexus Night promo cards](/blog/riftbound-vendetta-nexus-night-promo-cards)** — every promo confirmed for Vendetta's season, tracked as they're revealed.`,
   },
   {
     slug: "riftbound-pre-rift-rules-explained",
     category: "guide",
-    title: "Riftbound Pre-Rift Rules Explained: The Sealed Format for Launch-Week Events",
+    title: "Riftbound Pre-Rift Rules Explained",
     excerpt:
       "Pre-Rift events let you crack open a new Riftbound set and build a deck before street date — but the deck-building rules are different from Constructed. Here's exactly how Sealed works: deck size, copy limits and domain rules.",
     author: "RiftCompare",
@@ -3442,7 +4111,7 @@ That single rule changes everything else about deck-building for the event.
 
 Pre-Rift decks reward flexibility over a tuned gameplan — you're building around what you open, not what you planned. Go in with an open mind about domain pairings rather than expecting to force a specific Constructed archetype; the format is designed to make every pod's packs playable, not to reward hoarding one domain.
 
-If you're gearing up for Vendetta's own Pre-Rift week, our **[Vendetta early-access guide](/blog/riftbound-vendetta-is-here-early-release)** covers what's already tradeable, and our **[Vendetta card database](/sets/vendetta)** has live prices on every confirmed card the moment it's buyable.
+If you're gearing up for a set's own Pre-Rift week, our **[Vendetta card database](/sets/vendetta)** has live prices on every confirmed card the moment it's buyable.
 
 ## Common questions
 
@@ -3457,9 +4126,9 @@ If you're gearing up for Vendetta's own Pre-Rift week, our **[Vendetta early-acc
   {
     slug: "riftbound-2026-regional-qualifier-los-angeles",
     category: "blog",
-    title: "Riftbound Regional Qualifier: Los Angeles (Sept 25–27, 2026) — Everything We Know",
+    title: "Riftbound Regional Qualifier: Los Angeles",
     excerpt:
-      "The final Riftbound Regional Qualifier of 2026 lands at the Los Angeles Convention Center, September 25–27 — here's the venue, ticket tiers, requirements and the exclusive promos on offer.",
+      "The final Riftbound Regional Qualifier of 2026 lands at the LA Convention Center, Sept 25–27 — venue, tickets, requirements and exclusive promos.",
     author: "RiftCompare",
     date: "2026-07-26",
     updated: "2026-07-26",
@@ -3501,7 +4170,7 @@ Regional Qualifiers are also where a lot of early Vendetta singles and promos ch
   {
     slug: "riftbound-vendetta-crystal-rose-cards",
     category: "guide",
-    title: "Riftbound Vendetta's Crystal Rose Cards: All 6 Wild Rift Alt-Arts, Priced",
+    title: "Riftbound Vendetta's Crystal Rose Cards",
     excerpt:
       "Vendetta's Crystal Rose line brings six Wild Rift skins to physical cards for the first time — Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux. Here's every card, what makes them different from a normal alt-art, and live prices across every store we track.",
     author: "RiftCompare",
@@ -3565,7 +4234,7 @@ Every Crystal Rose card's cheapest current price, ranked across every store Rift
   {
     slug: "why-riftbound-card-prices-change",
     category: "guide",
-    title: "Why Riftbound Card Prices Change — And When They Usually Drop",
+    title: "Why Riftbound Card Prices Change",
     excerpt:
       "Why one Riftbound set costs more than another, why prices tend to fall after a launch, why a card costs a different amount in Australia than the US, and which events actually move the market. A plain explanation of the forces behind the numbers.",
     author: "RiftCompare",
@@ -3632,7 +4301,7 @@ This one surprises people, and it isn't just currency conversion. A card's price
 - **Import and freight costs**, which get passed through to shelf prices.
 - **Whether buying from overseas is realistic**, once postage and any duties are counted.
 
-This is exactly why RiftCompare prices each market in its own currency from stores that actually ship there, rather than converting one market's price and calling it your price. Switch markets with the country selector and the whole site re-prices: **[Australia](/blog/buy-riftbound-cards-australia)**, **[New Zealand](/blog/buy-riftbound-cards-nz)**, the **[US](/blog/buy-riftbound-cards-us)**, the **[UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** and **[Canada](/blog/buy-riftbound-cards-canada)** each have their own guide.
+This is exactly why RiftCompare prices each market in its own currency from stores that actually ship there, rather than converting one market's price and calling it your price. Switch markets with the country selector and the whole site re-prices: **[Australia](/blog/buy-riftbound-cards-australia)**, the **[US](/blog/buy-riftbound-cards-us)**, the **[UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** and **[Canada](/blog/buy-riftbound-cards-canada)** each have their own guide.
 
 ## The events that actually move prices
 
@@ -3695,7 +4364,7 @@ On that last point, our position is straightforward: we report what the market i
   {
     slug: "cheapest-way-to-start-riftbound",
     category: "guide",
-    title: "The Cheapest Way to Start Riftbound (Without Wasting Money)",
+    title: "The Cheapest Way to Start Riftbound",
     excerpt:
       "Every realistic way into Riftbound compared on cost: a ready-to-play deck, a starter product, singles for one deck, or a booster box. What each actually gets you, what to skip first, and how to check live prices in your own market.",
     author: "RiftCompare",
@@ -3776,7 +4445,6 @@ Every price comparison on RiftCompare ranks stores by **total delivered cost**, 
 Riftbound's availability and pricing genuinely differ by country. Each of these guides lists the stores we actually track locally, priced in local currency:
 
 - **[Australia](/blog/buy-riftbound-cards-australia)**
-- **[New Zealand](/blog/buy-riftbound-cards-nz)**
 - **[United States](/blog/buy-riftbound-cards-us)**
 - **[United Kingdom](/blog/buy-riftbound-cards-uk)**
 - **[Singapore](/blog/riftbound-price-comparison-singapore)**
@@ -3811,7 +4479,7 @@ Once you've played a few games, **[Riftbound for beginners](/guides/riftbound-fo
   {
     slug: "riftbound-rules-explained",
     category: "guide",
-    title: "Riftbound Rules Explained — Every Mechanic, In One Place",
+    title: "Riftbound Rules Explained",
     excerpt:
       "A hub for how Riftbound actually works: the keywords introduced in Vendetta, the chase-print numbering, deck construction, the banlist, and the event formats — each linked to a full guide.",
     author: "RiftCompare",
@@ -3836,7 +4504,6 @@ Vendetta introduced three mechanics, and they generate the bulk of current rules
 - **[Flow explained](/guides/riftbound-flow-explained)** — playing cards straight from your trash, turning discarded cards into a second pool of plays.
 - **[Burn explained](/guides/riftbound-burn-explained)** — sending cards to the trash, either your own to fuel Flow-style payoffs, or an opponent's as a deck attack.
 
-All three together, with how they interact: **[Vendetta's new mechanics](/blog/riftbound-vendetta-new-mechanics-flow-burn-empower)**.
 
 ## New card concepts
 
@@ -3848,7 +4515,6 @@ All three together, with how they interact: **[Vendetta's new mechanics](/blog/r
 
 - **[How a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** — deck construction, Legends, and how the pieces fit together.
 - **[Building for Vendetta](/guides/building-for-riftbound-vendetta)** — deckbuilding with the new set's cards and domain pairings.
-- **[Vendetta synergies with existing cards](/blog/riftbound-vendetta-synergies-with-existing-cards)** — how new cards interact with earlier sets.
 
 ## What's currently legal
 
@@ -3891,12 +4557,12 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
   {
     slug: "riftbound-vendetta-nexus-night-promo-cards",
     category: "blog",
-    title: "Riftbound Vendetta Nexus Night Promo Cards: Every One Revealed So Far",
+    title: "Vendetta Nexus Night Promo Cards: All 7 Confirmed",
     excerpt:
-      "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle at local stores — and the chase card is Mel, Newly Awakened. Here's every promo confirmed so far: Mel plus the full 6-card promo rune cycle, with live prices and pop-up card views.",
+      "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle led by Mel, Newly Awakened. 7 of 25 confirmed so far, with live prices.",
     author: "RiftCompare",
     date: "2026-08-01",
-    updated: "2026-08-01",
+    updated: "2026-08-19",
     readMins: 4,
     tags: ["vendetta", "nexus night", "promo", "chase cards", "collecting"],
     shop: [
@@ -3984,9 +4650,9 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
   {
     slug: "riftbound-2027-set-roadmap",
     category: "blog",
-    title: "Riftbound's 2027 Set Roadmap: Radiance, Legacy, The Reckoning and Two Unnamed Sets",
+    title: "Riftbound's 2027 Set Roadmap",
     excerpt:
-      "Riot has mapped Riftbound's releases through 2027 — Radiance in October, Legacy in January, The Reckoning in April, and two unnamed sets after. What each means if you're buying.",
+      "Riot has mapped Riftbound's releases through 2027 — Radiance, Legacy, The Reckoning and two unnamed sets. What each means for buyers.",
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 7,
@@ -4005,7 +4671,7 @@ Find your nearest Riftbound local game store and show up for their weekly Nexus 
     faq: [
       {
         q: "When does Riftbound Radiance release?",
-        a: "Radiance, the fifth Riftbound set, is scheduled for 23 October 2026 with around 180 cards. Preview season and Pre-Rift launch events run in the weeks before it.",
+        a: "Radiance, the fifth Riftbound set, is scheduled for 23 October 2026 with a confirmed 180 cards (66 Showcase). Preview season and Pre-Rift launch events run in the weeks before it.",
       },
       {
         q: "What is the next Riftbound set after Radiance?",
@@ -4033,7 +4699,7 @@ This post is the buyer's-eye view: what is coming, when, and which of it should 
 
 | Set | # | Release | Cards | The short version |
 | --- | --- | --- | --- | --- |
-| **Radiance** | 5 | 23 Oct 2026 | ~180 | Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV; a step up in size from Vendetta |
+| **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, +4 unrevealed; a step up in size from Vendetta |
 | **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
 | *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
 | **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
@@ -4044,7 +4710,7 @@ Two things stand out before any of the detail. First, the cadence is roughly qua
 
 ## Radiance (Set 5) — 23 October 2026
 
-Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, with a card pool around 180 — a step up from [Vendetta's](/sets/vendetta) 166.
+Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, plus four more champions still unrevealed, in a confirmed 180-card pool (66 Showcase) — a step up from [Vendetta's](/sets/vendetta) 166.
 
 The pattern we have watched through four launches now is consistent enough to plan around: sealed is at its most expensive in the launch window, chase singles spike hardest in the first fortnight, and the mid-value playables drift down for about a month as supply catches up. [Why Riftbound prices change](/guides/why-riftbound-card-prices-change) sets out the mechanics behind that.
 
@@ -4101,9 +4767,9 @@ Every set gets a page on RiftCompare the moment its cards are catalogued, with l
   {
     slug: "riftbound-legacy-pack-changes-and-card-templating",
     category: "blog",
-    title: "Riftbound Legacy: The Pack Change and Card Templating Updates, Explained",
+    title: "Riftbound Legacy: Pack & Templating Changes",
     excerpt:
-      "Legacy trades a common for a dedicated Legend or Battlefield slot, is the first set built for draft, and changes how card text is written. Here's what each change does in plain language.",
+      "Legacy trades a common for a Legend or Battlefield slot, is the first set built for draft, and changes how card text is written — plain language.",
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 8,
@@ -4230,9 +4896,9 @@ None of it is actionable in August 2026. It is actionable in January 2027, and t
   {
     slug: "riftbound-august-2026-state-of-the-game-takeaways",
     category: "blog",
-    title: "Riftbound's August 2026 State of the Game: Five Takeaways",
+    title: "Riftbound's August 2026 State of the Game",
     excerpt:
-      "Riot's August State of the Game covered ban philosophy, 2v2, collector products and language rollout. Here are the takeaways that actually change what you should buy and track.",
+      "Riot's August State of the Game covered ban philosophy, 2v2, collector products and language rollout — the takeaways that change what to buy and track.",
     author: "RiftCompare",
     date: "2026-08-04",
     readMins: 7,
@@ -4303,7 +4969,7 @@ This is a clearer product philosophy than most publishers state out loud. Serial
 
 Each additional language adds real logistical complexity — printing, distribution, rules translation, organised play support — and the team is holding off on new ones in the short term while the most recent additions establish themselves.
 
-**Why this matters:** language availability drives which regional markets get proper distribution, and regional distribution drives price. If you buy across borders, the practical read is that the current market map is stable for a while — the six markets we track are not about to be joined by a wave of new ones, and cross-border buying will keep being a question of [shipping and currency conversion](/blog/currency-conversion-fees) rather than of new regional supply.
+**Why this matters:** language availability drives which regional markets get proper distribution, and regional distribution drives price. If you buy across borders, the practical read is that the current market map is stable for a while — the five markets we track are not about to be joined by a wave of new ones, and cross-border buying will keep being a question of [shipping and currency conversion](/blog/currency-conversion-fees) rather than of new regional supply.
 
 ## 5. What we'd actually do with any of this
 
@@ -4321,19 +4987,1635 @@ Everything else — the collector product philosophy, the language pause — is 
 
 *Source: Riot Games' [August 2026 State of the Game](https://playriftbound.com/en-us/news/announcements/august-2026-state-of-the-game/), published 4 August 2026, and the accompanying [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/). The developer positions summarised above are Riot's; the interpretation and price commentary are ours. Where we have paraphrased a stated position, read the original for the full wording.*`,
   },
+  // ───────────────────────────────────────────────────────────────────────────
+  // August 2026 trending batch — ALL DRAFTS. Every one carries [TODO] markers
+  // where a fact needs verifying against Riot's own announcement; none of them
+  // may be published until those are resolved and the overlap noted on each is
+  // settled (five of the six have an existing page targeting the same query).
+  // ───────────────────────────────────────────────────────────────────────────
+  {
+    slug: "riftbound-vendetta-vault-endless-riches",
+    draft: true,
+    category: "blog",
+    title: "Riftbound Vendetta Vault & Endless Riches Explained",
+    excerpt:
+      "What the Riftbound Vendetta Vault is, what the Endless Riches card does, and how both fit with Unleashed boosters — plus whether the Vault is worth it.",
+    author: "RiftCompare",
+    date: "2026-08-08",
+    readMins: 5,
+    tags: ["vendetta", "unleashed", "sealed", "buying", "news"],
+    shop: [
+      { label: "Vendetta sealed product", query: "Riftbound Vendetta booster box" },
+      { label: "Unleashed boosters", query: "Riftbound Unleashed booster" },
+    ],
+    summary: [
+      "**The Vendetta Vault is a sealed product**, not a set — [TODO: confirm exact product type, contents and RRP].",
+      "**Endless Riches is the card people are searching for.** [TODO: confirm its exact name, rarity, set code and collector number.]",
+      "**[TODO: confirm the Unleashed relationship]** — whether the Vault contains Unleashed boosters, Vendetta boosters, or both.",
+      "**Nothing in this post is confirmed yet.** Every factual claim is marked for verification against Riot's announcement.",
+    ],
+    faq: [
+      {
+        q: "What is the Riftbound Vendetta Vault?",
+        a: "A sealed Riftbound product tied to the Vendetta set. [TODO: confirm the product type, exactly what it contains, its RRP and its release date before publishing this answer.]",
+      },
+      {
+        q: "What does Endless Riches do in Riftbound?",
+        a: "[TODO: confirm the card's full rules text, cost, type and domain. Do not paraphrase from community reporting — use the official card image or Riot's own reveal.]",
+      },
+      {
+        q: "Is the Vendetta Vault worth buying?",
+        a: "That depends on its contents against the price of the same cards bought as singles, which is exactly what our box EV tool measures. [TODO: run the numbers once contents and RRP are confirmed.]",
+      },
+      {
+        q: "How does the Vendetta Vault relate to Unleashed?",
+        a: "[TODO: confirm. Searches pair the Vault with Unleashed boosters, so the relationship needs stating explicitly — whether the Vault includes Unleashed product, or the two are simply being compared by buyers.]",
+      },
+    ],
+    browseCta: {
+      href: "/sets/vendetta",
+      label: "See the Vendetta set →",
+      blurb: "Every Vendetta card with live prices across every store we track.",
+    },
+    body: `> **This post is a draft skeleton.** The Vendetta Vault and Endless Riches are trending faster than they are documented, and nothing below has been verified against an official source yet. Every factual claim is marked **[TODO]**. Do not publish until they are resolved.
+
+The **Riftbound Vendetta Vault** is a sealed product tied to the Vendetta set, and **Endless Riches** is the card driving most of the search interest around it. **[TODO: write the real one-paragraph answer here once contents are confirmed — this intro is the featured-snippet target, so it must state plainly what the Vault is, what is in it, and what Endless Riches does.]**
+
+## What the Vendetta Vault is
+
+**[TODO: confirm all of the following before publishing.]**
+
+- **Product type:** [TODO — box set, collector bundle, or something else]
+- **Contents:** [TODO — full component list]
+- **RRP:** [TODO — per region]
+- **Release date:** [TODO]
+- **Print run:** [TODO — is it limited?]
+
+For the set itself, the **[Vendetta set page](/sets/vendetta)** already carries live prices on all 166 main-set cards, and the **[complete card gallery](/blog/every-riftbound-vendetta-card-revealed)** covers what is in the set proper.
+
+## Endless Riches, the card
+
+**[TODO: this is the highest-value section of the post — it is what most of the search traffic is actually looking for. Fill in from the official card image, not community reporting.]**
+
+- **Full name:** [TODO]
+- **Set and collector number:** [TODO]
+- **Rarity:** [TODO]
+- **Type and domain:** [TODO]
+- **Rules text:** [TODO — quote exactly]
+
+**[TODO: add a /card/ link to the Endless Riches card page once it is imported into the database.]**
+
+### Why it is being searched for
+
+**[TODO: confirm the actual reason — is it a chase card, a combo piece, a price spike, or a rules controversy? The framing of this whole post depends on the answer.]**
+
+If it turns out to be a chase-tier printing, it belongs alongside the ones we already track in **[Vendetta's chase cards](/blog/riftbound-vendetta-chase-cards-so-far)**.
+
+## How it fits with Unleashed
+
+Searches pair the Vault with **Unleashed boosters**, which needs explaining rather than assuming.
+
+**[TODO: confirm the relationship.]** The two plausible readings are that the Vault physically contains Unleashed product, or that buyers are simply weighing the Vault against Unleashed boosters as alternative purchases. These lead to completely different posts, so resolve this before writing the section.
+
+The **[Unleashed set page](/sets/unleashed)** has live prices for that set either way.
+
+## Is the Vault worth buying?
+
+The method here does not depend on the unknowns, so it is worth stating even while the numbers are missing: a sealed product is worth buying when its contents cost more bought individually than the product costs sealed, plus whatever you value the sealed experience at.
+
+Once contents and RRP are confirmed, run them through the **[box EV calculator](/tools/box-ev)**, which totals a sealed product's expected value from live singles prices. That turns "is it worth it" from an opinion into a number.
+
+**[TODO: run this and state the result, with the date the prices were sampled.]**
+
+[[shop]]
+
+## Where to buy it cheapest
+
+Once it is on sale, the Vault will be price-compared the same way as every other sealed product — see **[sealed product prices](/sealed)** for live comparisons across every store we track.
+
+**[TODO: confirm which retailers are carrying it, and whether it is a Riot Merch Store exclusive like the T1 collection.]**
+
+---
+
+*Every claim above is unverified. Check [the official Riftbound site](https://playriftbound.com) and replace each [TODO] before this post goes live.*`,
+  },
+  {
+    slug: "riftbound-sets-in-order",
+    category: "guide",
+    title: "Every Riftbound Set, In Order (And What's Next)",
+    excerpt:
+      "Origins through Vendetta, in release order, with the real card count for each — plus Radiance's confirmed date and where to check what's beyond it.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 5,
+    tags: ["sets", "guide", "origins", "vendetta", "radiance"],
+    hero: {
+      src: "/signature-cards/jayce-defender-of-tomorrow-ven194.jpg",
+      alt: "Jayce, Defender of Tomorrow — a real Riftbound Signature card from Vendetta, the newest released set",
+    },
+    summary: [
+      "**Five sets are out today, in this order**: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed, then Vendetta (31 Jul 2026).",
+      "**Origins is the biggest so far** — 298 base cards, plus 54 Showcase treatments on top.",
+      "**Radiance (Set 5) is next**, dated 23 October 2026 with a confirmed 180 cards (66 Showcase) — the only future set with a confirmed date right now.",
+      "Everything after Radiance (Legacy, The Reckoning, two unnamed sets) is covered in full in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap) — this page sticks to what's already out.",
+    ],
+    faq: [
+      {
+        q: "How many Riftbound sets are there?",
+        a: "Five sets have released as of August 2026: Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta. A sixth, Radiance, is dated for 23 October 2026, and four more are announced for later in 2027 without full detail yet — see the 2027 set roadmap for those.",
+      },
+      {
+        q: "What was the first Riftbound set?",
+        a: "Origins (set code OGN) — the foundational set the game launched with, and still the largest by card count at 298 base cards.",
+      },
+      {
+        q: "What is the newest Riftbound set?",
+        a: "Vendetta is the newest set that has actually released, on 31 July 2026, with 166 cards. Radiance is dated for 23 October 2026 but hasn't released yet.",
+      },
+      {
+        q: "When is the next Riftbound set?",
+        a: "Radiance, 23 October 2026 — a confirmed 180 cards (66 Showcase), with five new champion Legends confirmed so far and four more still unrevealed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      },
+      {
+        q: "Which Riftbound set has the most cards?",
+        a: "Origins, at 298 base cards (352 once you count its 54 Showcase alternate printings) — more than any set released since. Spirit Forged and Unleashed are the next-largest, both in the 220s.",
+      },
+    ],
+    browseCta: {
+      href: "/sets",
+      label: "Browse every set →",
+      blurb: "Every Riftbound set on one page, with live prices the moment a set's cards are catalogued.",
+    },
+    body: `Riftbound has released five sets so far, always in the same order shops and players refer to them in. Here's that order, with the real card count for each straight from our own database — not a marketing figure — plus what's actually confirmed to come next.
+
+## The sets, in order
+
+| # | Set | Code | Cards | Released |
+| --- | --- | --- | --- | --- |
+| 1 | **[Origins](/sets/origins)** | OGN | 298 (+54 Showcase) | Launch set |
+| 2 | **Origins: Proving Grounds** | OGS | 24 | Shortly after Origins |
+| 3 | **Spirit Forged** | SFD | 221 (+66 Showcase) | — |
+| 4 | **[Unleashed](/sets/unleashed)** | UNL | 219 (+61 Showcase) | — |
+| 5 | **[Vendetta](/sets/vendetta)** | VEN | 166 | 31 Jul 2026 |
+| 6 | **[Radiance](/release-dates)** | RAD | 180 total (66 Showcase) | 23 Oct 2026 |
+
+The **Cards** column is each released set's own printed total — the denominator on every card in it. Origins collector numbers run 001/298 to 298/298, so Origins is 298; Spirit Forged cards are numbered out of /221 and Unleashed out of /219. That number is checkable on any single card you own, which is why we use it in preference to a catalogue row count: printings above the total (Signatures, over-numbered chase cards, promos) are real cards but they are not part of the base run, and counting them inflates a set. Radiance hasn't shipped, so there's no collector number to check yet — its 180 is Riot's own confirmed total, of which 66 are Showcase treatments, unlike the "+N Showcase" figures above it, which are printings on top of an already-released base count. We don't have confirmed release dates for Origins, Proving Grounds, Spirit Forged or Unleashed — Riot didn't publish exact street dates for those the way it later did for Vendetta and Radiance — but the order above is the order every set list, deck legality note and "what's next" post on the game agrees on.
+
+## Origins — the launch set
+
+[Origins](/sets/origins) is where Riftbound started, and it's still the biggest set by a wide margin: 298 base cards across every domain, plus 54 additional Showcase-rarity alternate printings of cards that already exist in the base 298 — 352 individual printings in total once you count both. If you want the full breakdown by rarity, domain and card type, we've written that up separately: [what's actually in the Origins set](/guides/whats-in-the-riftbound-origins-set).
+
+## Origins: Proving Grounds — the smallest set
+
+At 24 cards, Proving Grounds is by far the smallest Riftbound release to date — closer to a focused companion set than a full expansion. It shares Origins' set-code family (OGS) and released not long after it.
+
+## Spirit Forged and Unleashed
+
+The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
+
+Unleashed is the one worth a closer look if you're buying rather than just cataloguing — two of the four most expensive cards in the game come out of it. Browse the whole set card-by-card, with live prices, on the [Unleashed set page](/sets/unleashed).
+
+## Vendetta — the current set
+
+[Vendetta](/sets/vendetta) released on 31 July 2026 with 166 cards and introduced three new mechanics — Empower, Flow and Burn — none of which existed in any earlier set. It's the most recent set that's actually out, and the one every card page, price chart and deal on RiftCompare treats as "current" until Radiance lands.
+
+## What's next: Radiance and beyond
+
+[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with a confirmed 180 cards (66 Showcase) and five new champion Legends named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more still unrevealed. It's the only future set with a real, Riot-confirmed release date right now.
+
+Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
+
+## Track prices as new sets land
+
+Every set gets its own page on RiftCompare the moment its cards are catalogued, with live prices compared across every store we track in your market. [Browse every set](/sets), or [set a price alert](/alerts) on a card or champion you're watching so you hear about it the moment a price moves — new-set launches are exactly when that matters most.`,
+  },
+  {
+    slug: "whats-in-the-riftbound-origins-set",
+    category: "guide",
+    title: "What's in the Riftbound Origins Set?",
+    excerpt:
+      "298 base cards, 54 Showcase alternates, and exactly how they split across rarity, domain and card type — the real numbers from Riftbound's first and biggest set.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 6,
+    tags: ["sets", "guide", "origins", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-305-298-8e1d15a18d1dffb2.png",
+      alt: "Yasuo, Unforgiven — a Showcase-rarity card from the Riftbound Origins set",
+    },
+    summary: [
+      "**298 base cards**, numbered 001/298 through 298/298 with no gaps — Origins is still the largest Riftbound set released.",
+      "**Rarity splits 88 Common / 84 Uncommon / 84 Rare / 42 Epic** across the base set, plus 54 Showcase-rarity alternate printings layered on top (352 total printings).",
+      "**Units are the largest card type** at 142, well ahead of Spells (84), Gear (30), Battlefields (24), Legends (12) and Runes (6).",
+      "All seven domains are represented — Fury and Calm lead at 49 cards each, Colorless sits lowest at 28.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in the Riftbound Origins set?",
+        a: "298 base cards, numbered 001/298 through 298/298. Counting the 54 additional Showcase-rarity alternate printings, there are 352 distinct Origins printings in total.",
+      },
+      {
+        q: "What is the rarity breakdown of Origins?",
+        a: "88 Common, 84 Uncommon, 84 Rare and 42 Epic across the 298 base cards — plus 54 Showcase-tier alternate printings of cards that already exist at one of those four rarities.",
+      },
+      {
+        q: "How many Legend cards are in Origins?",
+        a: "12 — the smallest card-type count in the set, well behind Units (142), Spells (84), Gear (30), Battlefields (24) and Runes (6).",
+      },
+      {
+        q: "Which domain has the most cards in Origins?",
+        a: "Fury and Calm are tied for the most at 49 cards each, followed by Mind and Body at 45 each, Chaos and Order at 41 each, and Colorless at 28.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/origins",
+      label: "Browse every Origins card →",
+      blurb: "All 298 base cards and 54 Showcase printings, with live prices across every store we track.",
+    },
+    body: `Origins is Riftbound's first and, to date, biggest set. Here's exactly what's in it — not an estimate, the real counts from our own catalogue, broken down the way a set list actually gets used: by rarity, by domain and by card type.
+
+## The headline number: 298 base cards
+
+Origins' collector numbers run from 001/298 to 298/298 with no gaps — a clean, complete base set of 298 cards. On top of that, 54 cards also have a **Showcase**-rarity alternate printing: a premium treatment of a card that already exists in the base 298, not a new card. Counting both, there are **352 individual Origins printings** in our database.
+
+That makes Origins comfortably the largest Riftbound set so far — see [every set in order](/guides/riftbound-sets-in-order) for how it compares to what came after.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 88 |
+| Uncommon | 84 |
+| Rare | 84 |
+| Epic | 42 |
+| **Base total** | **298** |
+| Showcase (alternate printings) | 54 |
+
+Commons are the largest single tier at 88, but Uncommon and Rare are printed in almost identical numbers — 84 each — which is worth knowing if you're trying to gauge how "rare" a Rare-tier Origins card actually is relative to the rest of the set.
+
+## Card type breakdown
+
+| Type | Cards |
+| --- | --- |
+| Unit | 142 |
+| Spell | 84 |
+| Gear | 30 |
+| Battlefield | 24 |
+| Legend | 12 |
+| Rune | 6 |
+
+Units make up almost half the base set on their own. Legends — the champion cards that anchor a deck — are deliberately the scarcest type at just 12, and Runes are scarcer still at 6.
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Fury | 49 |
+| Calm | 49 |
+| Mind | 45 |
+| Body | 45 |
+| Chaos | 41 |
+| Order | 41 |
+| Colorless | 28 |
+
+Every domain gets real support in Origins — the spread runs from 28 (Colorless, which is expected to be the thinnest since it's usable in any deck rather than a deck's core identity) up to 49 for Fury and Calm.
+
+## See the actual cards
+
+Numbers are useful for planning a collection goal, but the fastest way to see what's actually printed is to browse the set itself: every Origins card, its live price across every store we track, and its full rules text.
+
+[Browse the Origins set](/sets/origins) · [Origins card gallery](/sets/origins/gallery)
+
+If you're building toward a specific rarity or domain, the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) covers what separates a Showcase alternate from the base printing it comes from — worth reading before you go chasing one.`,
+  },
+  {
+    slug: "riftbound-card-condition-guide",
+    category: "guide",
+    title: "Riftbound Card Condition Guide",
+    excerpt:
+      "What separates Near Mint from Lightly Played, why grading affects the price you should pay, and the real value multipliers RiftCompare uses for each condition tier.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 6,
+    tags: ["condition", "grading", "guide", "collecting", "buying"],
+    hero: {
+      src: "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
+      alt: "Kennen, Heart of the Tempest — a real Riftbound Signature card, the kind of premium print worth careful handling",
+    },
+    summary: [
+      "**Five condition tiers, standard across the TCG hobby**: Near Mint, Lightly Played, Moderately Played, Heavily Played, Damaged — Riftbound cards use the same scale as every other trading card game.",
+      "**Prices on RiftCompare assume Near Mint** unless a listing says otherwise — that's the benchmark every store's headline price is quoted against.",
+      "**Condition is a real price multiplier, not a vague discount**: a Lightly Played card is worth roughly 85% of the same card Near Mint; Damaged drops to around 40%.",
+      "Grading is always the seller's judgement call — the same card can get graded differently by two different stores, so check listing photos on anything but a cheap common.",
+    ],
+    faq: [
+      {
+        q: "What does NM mean for a Riftbound card?",
+        a: "Near Mint — a card with no visible wear: sharp corners, no scratches or scuffs, no whitening on the edges or back. It's the benchmark condition every store's headline price assumes unless stated otherwise.",
+      },
+      {
+        q: "What's the difference between Lightly Played and Moderately Played?",
+        a: "Lightly Played (LP) means minor wear only — a little edge whitening or a faint scuff, nothing that affects how the card looks from a normal distance. Moderately Played (MP) is a step up: visible scratches, more noticeable whitening, or light surface wear you'd spot without looking closely.",
+      },
+      {
+        q: "Does card condition actually affect the price?",
+        a: "Yes, substantially. As a rough guide, Lightly Played typically prices around 85% of Near Mint, Moderately Played around 70%, Heavily Played around 55%, and Damaged around 40% — though individual stores set their own exact discounts.",
+      },
+      {
+        q: "Who decides a card's condition grade?",
+        a: "The seller, at the point of listing — Riftbound doesn't have a centralised third-party grading body the way some other collectibles do. That's why the same card can be graded slightly differently by two different stores; check listing photos before buying anything above a low-value common.",
+      },
+      {
+        q: "Should I buy graded (slabbed) Riftbound cards?",
+        a: "Third-party grading (PSA and similar) exists for Riftbound's highest-value chase cards, but it's a separate market from raw (ungraded) singles pricing, and most cards you'll buy day-to-day are traded raw. Treat a graded card's price as its own thing rather than a multiple of the raw price.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Browse Riftbound cards →",
+      blurb: "Every card's live price across every store we track — Near Mint unless a listing says otherwise.",
+    },
+    body: `Every Riftbound price you see — on RiftCompare or anywhere else — is quoted against a condition grade, whether or not the store says so out loud. Here's what each grade actually means, and why it should change what you're willing to pay.
+
+## The five condition tiers
+
+Riftbound singles use the same five-tier condition scale as most other modern trading card games:
+
+| Grade | Full name | What it looks like |
+| --- | --- | --- |
+| **NM** | Near Mint | No visible wear — sharp corners, clean surface, no edge whitening. The benchmark condition. |
+| **LP** | Lightly Played | Minor wear only: a touch of edge whitening or a faint scuff, not obvious at a glance. |
+| **MP** | Moderately Played | Visible scratches or scuffing, more noticeable whitening, wear you'd spot without looking closely. |
+| **HP** | Heavily Played | Significant wear — creasing, heavier whitening, rounded or damaged corners. Still whole and playable. |
+| **DMG** | Damaged | Structural damage: tears, water damage, heavy creasing, writing, or anything beyond cosmetic wear. |
+
+**Near Mint is the benchmark.** Unless a listing explicitly says otherwise, assume a quoted price is for a Near Mint copy — that's the condition every price comparison on RiftCompare, and effectively every store's headline price, is quoted against.
+
+## Why condition changes what you should pay
+
+Condition isn't a vague "a bit cheaper" — it's a real, fairly consistent discount off the Near Mint price. As a rough guide across the hobby:
+
+- **Lightly Played** — around 85% of Near Mint
+- **Moderately Played** — around 70% of Near Mint
+- **Heavily Played** — around 55% of Near Mint
+- **Damaged** — around 40% of Near Mint
+
+Those are typical ranges, not a fixed rule — individual stores set their own condition discounts, and a genuinely rare or expensive card can hold its value at a lower grade better than a cheap common does, simply because demand for that specific card is higher regardless of condition.
+
+## Grading is a judgement call, not a certificate
+
+Unlike some collectibles markets, raw Riftbound singles don't go through a centralised third-party grader before they're sold — the store or the seller assigns the condition at the point of listing, based on their own eye and their own standards. That means:
+
+- **The same physical card can get graded differently by two stores.** One might call a card Lightly Played where another calls it Near Mint.
+- **Photos matter more than the label.** On anything above a cheap common, look at the actual listing photos rather than trusting the grade alone — especially for corners and edges, where wear is easiest to miss in a low-resolution photo and easiest to spot in a good one.
+- **"NM/M" or "NM-M" listings** (Near Mint to Mint) are common shorthand for "as good as it gets" — factory-fresh, no handling wear at all.
+
+## Third-party grading (slabbed cards)
+
+Riftbound's highest-value chase cards — Signature printings, alt-arts, cards tied to popular champions — increasingly get sent to third-party grading services (PSA and similar), which assign a numeric grade and seal the card in a protective case. That's a genuinely different market from raw singles: a graded card's price reflects both the card and the grade, and doesn't move as a simple multiple of the raw Near Mint price. If you're buying to collect rather than to play, it's worth deciding up front whether you want raw or graded copies — the two markets can diverge significantly on a card's most expensive printings. See **[the PSA & BGS grading guide](/guides/riftbound-psa-bgs-grading-guide)** for how the two services differ and whether it's worth it for a specific card.
+
+## Buying with condition in mind
+
+When you're comparing prices — on RiftCompare or anywhere else — the condition grade is doing as much work as the number next to it. A "cheap" Moderately Played listing next to a Near Mint one at a similar price isn't actually the better deal.
+
+[Browse every Riftbound card](/browse) for live prices across every store we track, or read [how to store and protect your cards](/guides/how-to-store-and-protect-riftbound-cards) so the condition you buy at is the condition you still have next year.`,
+  },
+  {
+    slug: "is-there-a-league-of-legends-card-game",
+    category: "guide",
+    title: "Is There a League of Legends Card Game?",
+    excerpt:
+      "Searching for a League of Legends card game? Riftbound is Riot's real, physical trading card game set in the League universe — official, in stores now, with real LoL champions as playable cards.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 6,
+    tags: ["beginners", "guide", "league of legends", "new player"],
+    hero: {
+      src: "/signature-cards/zed-master-of-shadows-ven191.jpg",
+      alt: "Zed, Master of Shadows — a real, hand-signed Riftbound Signature card of the League of Legends champion",
+    },
+    summary: [
+      "**Yes — it's called Riftbound.** A real, physical trading card game from Riot Games, published in English by UVS Games, set in the League of Legends universe.",
+      "**It's official, not a fan project** — the same company that makes League of Legends made this, and it's sold in game stores worldwide.",
+      "**Real League champions are playable cards.** Ahri, Jinx, Yasuo, Zed, Lux and dozens more already have Riftbound cards — see [which champions are in Riftbound](/guides/league-of-legends-champions-in-riftbound).",
+      "**It's a different kind of game.** No client to install, no matchmaking — Riftbound is a turn-based strategy card game you play with a physical deck, closer to a board game night than a MOBA.",
+    ],
+    faq: [
+      {
+        q: "Is there a League of Legends card game?",
+        a: "Yes — it's called Riftbound: League of Legends TCG. It's a real, physical trading card game made by Riot Games (the studio behind League of Legends) and published in English by UVS Games. It's an official product, sold in game and hobby stores, not a fan-made spinoff.",
+      },
+      {
+        q: "What is Riftbound?",
+        a: "Riftbound is a collectible card game set in the League of Legends universe. Players build a deck around a Legend — a champion from League of Legends — using cards drawn from the game's six domains (Fury, Calm, Mind, Body, Chaos, Order) plus Colorless, and card types including Units, Spells, Gear, Runes and Battlefields.",
+      },
+      {
+        q: "Is Riftbound made by Riot Games?",
+        a: "Yes. Riftbound is Riot Games' own physical trading card game, published in English by UVS Games — it isn't a third-party or unofficial product.",
+      },
+      {
+        q: "Can I play as my favourite League of Legends champion in Riftbound?",
+        a: "Many League champions already have real Riftbound cards, and more are added with every new set — see the full, always-current list on the champions page to check yours specifically.",
+      },
+      {
+        q: "How is Riftbound different from League of Legends the video game?",
+        a: "They share a universe and characters, but they're different kinds of games entirely. League of Legends is a live, real-time multiplayer video game you play online. Riftbound is a turn-based physical card game — you build a deck, shuffle real cards, and play across a table (or online through unofficial simulators), with no client, matchmaking or reflexes involved.",
+      },
+      {
+        q: "How do I start playing Riftbound?",
+        a: "The cheapest way in is a preconstructed starter deck — it's complete and playable out of the box. See the full beginner's guide for exactly what to buy first.",
+      },
+    ],
+    browseCta: {
+      href: "/learn",
+      label: "Learn to play, free →",
+      blurb: "An interactive, step-by-step walkthrough of a full Riftbound game — no signup, no rules book required.",
+    },
+    body: `If you searched something like "LoL card game" or "is there a League of Legends card game" and landed here — yes. It's called **Riftbound**, and it's real: an official, physical trading card game from Riot Games, the same studio that makes League of Legends.
+
+## So, is there a League of Legends card game?
+
+Yes. **Riftbound: League of Legends TCG** is a genuine, in-print trading card game — not a fan project, not a mobile spin-off, not a mod. It's published in English by UVS Games, sold through game and hobby stores the same way Magic: The Gathering or Pokémon are, and it's set directly in the League of Legends universe: the same champions, the same world, translated into a deck-building card game you play with real cards across a table.
+
+If you've played League of Legends and are curious whether "there's a card game version," the honest short answer is: yes, and it's had real, dedicated sets released regularly since launch — five so far, with [more already dated](/guides/riftbound-sets-in-order).
+
+## What Riftbound actually is
+
+Riftbound is a collectible card game built around **Legends** — champion cards that anchor your deck. You've likely recognised the name already: Legends are drawn from League of Legends' own champion roster. Around them, you build a deck using cards from six **domains** — Fury, Calm, Mind, Body, Chaos and Order, plus a Colorless pool any deck can use — and several card types: Units, Spells, Gear, Runes and Battlefields.
+
+That's the whole shape of it. Two players build decks, take turns, and use their Legend and supporting cards to out-manoeuvre each other — the same kind of structure you'd recognise from any strategy card game, just wearing League of Legends' characters and world.
+
+## How it connects to the game you already know
+
+The connection isn't just cosmetic. Real League of Legends champions are the actual playable Legend cards — **Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn, Jhin** and dozens more already have real, released Riftbound cards, and every new set adds champions who didn't have cards before. Radiance, the next confirmed set, adds five more: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.
+
+If you're wondering whether your specific main made the cut, the [champions page](/champions) is a live, always-current list — every League champion with a Riftbound card, how many cards they have, and what those cards cost right now.
+
+## What's different from the video game
+
+It's worth being upfront about this, because the two products don't play anything alike:
+
+- **No client, no matchmaking.** League of Legends is a live online video game. Riftbound is a physical (and, through community tools, digital-simulator) card game — you build a deck ahead of time and play it out, turn by turn, rather than queuing into a live match.
+- **Strategy over reflexes.** There's no mechanical skill ceiling the way there is with last-hitting or skillshots — the game is decided by deckbuilding decisions and the choices you make each turn.
+- **A collection, not an account.** Progress in Riftbound is physical cards you own, not an account you level up. That's also why prices matter — which is the entire reason RiftCompare exists.
+
+If that sounds appealing rather than off-putting, the crossover tends to land well: the same champion identities and world-building, in a genre that rewards patient, considered play over reaction time.
+
+## How to start playing
+
+You don't need to know the full rule set before you touch a card. The fastest way in:
+
+1. **Get a starter product.** A preconstructed deck gives you a complete, playable deck immediately — no guessing what to buy. Compare prices on the [sealed products page](/sealed).
+2. **Learn by playing.** The [interactive learn page](/learn) walks through a full game step by step, domain by domain, free and with no signup — good either before or after your first real game.
+3. **Upgrade with singles, not boxes.** Once you know what your deck wants, [individual cards](/browse) are the cheapest way to improve it — far cheaper than opening boosters hoping to pull what you need.
+
+For the fuller walkthrough — what to buy first, what to skip, and how to budget your first purchase — see the [complete beginner's guide](/guides/riftbound-for-beginners).
+
+## Where to buy
+
+Once you're ready to buy anything — a starter deck, a booster box, or your first few singles — RiftCompare compares live prices across every store we track in your market, so you're not stuck taking the first price you find. [Browse the card database](/browse) or [compare sealed products](/sealed) to get started.`,
+  },
+  {
+    slug: "league-of-legends-champions-in-riftbound",
+    category: "guide",
+    title: "Which League of Legends Champions Are in Riftbound?",
+    excerpt:
+      "Ahri, Jinx, Yasuo, Zed and dozens more League of Legends champions already have real Riftbound cards, with more added every set. Here's how the champion system works, and how to check if yours does.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 5,
+    tags: ["champions", "guide", "league of legends", "new player"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
+    },
+    summary: [
+      "**Dozens of League of Legends champions already have real Riftbound cards** as Legends — the champion that anchors a deck — with more added in every new set.",
+      "**Recognisable names already in the game** include Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn and Jhin.",
+      "**Radiance, the next set, adds five more**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      "The exact, always-current list — every champion with a card, how many, and live prices — is on the [champions page](/champions), not a static list that goes stale.",
+    ],
+    faq: [
+      {
+        q: "Are League of Legends champions playable in Riftbound?",
+        a: "Yes — a League of Legends champion becomes a Legend card in Riftbound, the card that anchors and identifies your deck. Dozens of champions already have real cards, and more are added with every new set.",
+      },
+      {
+        q: "How many League of Legends champions are in Riftbound?",
+        a: "Dozens so far, and the number grows with every set — Riftbound only adds a champion once real cards for them exist, rather than announcing one in advance. See the champions page for the exact, always-current count and list.",
+      },
+      {
+        q: "Is my favourite League of Legends champion in Riftbound?",
+        a: "Check the champions page — it's a live list built directly from the card database, so it's always accurate to what's actually printed, rather than a list that can go stale.",
+      },
+      {
+        q: "What is a Legend card in Riftbound?",
+        a: "A Legend is the champion card your deck is built around — the closest thing Riftbound has to League of Legends' own champion select. Your Legend shapes what domains and strategies your deck leans into.",
+      },
+      {
+        q: "Do champions get new cards in every Riftbound set?",
+        a: "Existing champions can get additional printings and treatments, and each new set has historically introduced champions who didn't have a Riftbound card before — Radiance, the next set, adds five: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      },
+    ],
+    browseCta: {
+      href: "/champions",
+      label: "See every champion with a card →",
+      blurb: "The full, live list — every League of Legends champion with a Riftbound card, how many, and today's cheapest price.",
+    },
+    body: `If you play League of Legends and are wondering whether your main made it into Riftbound, there's a good chance they already have — and if not yet, there's a real chance they will.
+
+## How champions work in Riftbound
+
+Every League of Legends champion who appears in Riftbound does so as a **Legend** card — the card your entire deck is built around. It's the closest thing Riftbound has to picking a champion in League of Legends itself: your Legend sets the tone for which [domains](/learn) (Fury, Calm, Mind, Body, Chaos, Order) and strategies your deck leans into.
+
+Champions aren't added speculatively. A champion gets real Riftbound cards through an actual set release, not an announcement — which means the list of "who's in Riftbound" only ever reflects cards that genuinely exist and are genuinely buyable.
+
+## Champions already in the game
+
+Dozens of League of Legends champions already have real, released Riftbound cards. Recognisable names already in the game include:
+
+**Ahri**, **Jinx**, **Yasuo**, **Zed**, **Lux**, **Ezreal**, **Katarina**, **Vi**, **Caitlyn**, **Jhin**, **Lee Sin**, **Darius**, **Garen**, **Jayce**, **Mel**, **Ashe**, **Sett** — and that's a small sample, not the full list. New champions have joined with every set released so far.
+
+## Who's next: Radiance's new champions
+
+The next confirmed set, [Radiance](/release-dates), adds **five** champions who don't have a Riftbound Legend card yet: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**. If one of those is your main, Radiance — dated 23 October 2026 — is when you'll be able to build around them.
+
+## Check if your main is in Riftbound
+
+Rather than trying to keep a static list current (champions are added with every set, so any fixed list here would be out of date within weeks), the **[champions page](/champions)** is a live table built directly from the card database: every League of Legends champion with a Riftbound card, exactly how many cards they have, and today's cheapest price for each. It's the one place this list can't go stale.
+
+## Start with a champion you already know
+
+If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.`,
+  },
+  {
+    slug: "shen-eye-of-twilight-signature-underrated-vendetta",
+    category: "blog",
+    title: "Shen's Underrated Vendetta Signature Card",
+    excerpt:
+      "Our case for why the Shen, Eye of Twilight Signature — collectors call it \"Armpit Boi\" — deserves more attention. Opinion, with real prices.",
+    author: "RiftCompare",
+    date: "2026-08-13",
+    readMins: 5,
+    tags: ["opinion", "vendetta", "chase cards", "signature", "shen"],
+    hero: {
+      src: "/signature-cards/shen-eye-of-twilight-ven193.jpg",
+      alt: "Shen, Eye of Twilight Signature (VEN 193★/166) — the tightly-cropped \"Armpit Boi\" art, hand-signed by artist Oscar Vega",
+    },
+    summary: [
+      "**This is opinion, not a price call.** The numbers below are real and current; the case for \"underrated\" is our read on them, not a guarantee.",
+      "**Shen, Eye of Twilight (VEN 193★/166)** is currently US$544.66 / A$816.70 / £618.70 / S$895.78 / C$746.18 — already a genuinely expensive card, not a hidden cheap one.",
+      "**The case rests on three real things**: an unusually tight, distinctive art crop (hence the nickname), a thin two-store market that hasn't fully priced in how hard it may get to find, and Shen's broad popularity as a League of Legends champion.",
+      "**A close comparable — Ambessa, Matriarch of War's Signature — trades at a similar price on similarly thin stock**, so this isn't a case of Shen being cheap next to its peers. It's a case that the whole tier might have room to move.",
+    ],
+    faq: [
+      {
+        q: "What is the Shen \"Armpit Boi\" card in Riftbound?",
+        a: "It's the community nickname for Shen, Eye of Twilight (VEN 193★/166) — Shen's Signature-tier Legend printing from Vendetta, hand-signed by artist Oscar Vega. The nickname comes from the art's unusually tight crop, framed around a raised-arm pose.",
+      },
+      {
+        q: "Is Shen, Eye of Twilight expensive?",
+        a: "Yes — it's currently priced around US$545 / A$817, in line with other Vendetta Signature Legends, not a bargain-bin card. \"Underrated\" here refers to our view that it has room to move further, not that it's currently cheap.",
+      },
+      {
+        q: "Is the Shen Signature a good investment?",
+        a: "That's genuinely a matter of opinion, and we'd rather be straight about that than pretend otherwise. Riftbound doesn't have a long enough price history for confident predictions, and RiftCompare's role is to report real, live prices — this article is our take, not a guarantee.",
+      },
+      {
+        q: "Why is it called \"Armpit Boi\"?",
+        a: "It's a collector nickname for the card's art — an unusually tight, cropped composition built around Shen's raised arm — rather than an official Riot name.",
+      },
+    ],
+    browseCta: {
+      href: "/card/shen-eye-of-twilight-ven-193s-166",
+      label: "See live prices for this card →",
+      blurb: "Current price across every store we track, updated as the market moves.",
+    },
+    body: `A quick disclosure before anything else: **this is our opinion**, not a price call you should treat as guaranteed. Riftbound doesn't have the price history to make confident predictions about anything, and we say so on every valuation piece we publish. What follows is our honest read on one specific card, with the real numbers shown alongside it so you can weigh it yourself.
+
+## The card
+
+**Shen, Eye of Twilight** (VEN 193★/166) is Shen's Signature-tier Legend printing from [Vendetta](/sets/vendetta) — a Calm-domain Legend whose printed ability reads: *"ACTION: Give a friendly unit Tank this turn."* Like every Signature printing, it carries a real hand-signature from its artist, Oscar Vega, over a premium alternate-art treatment. It's the reason Signature cards sit at the very top of Riftbound's rarity ladder: each one is a physically unique object, not just a scarce print run.
+
+Collectors have taken to calling it **"Armpit Boi"** — and having looked at the actual card, it's an accurate description, not an exaggeration. The art is an unusually tight, close-cropped composition built around Shen's raised arm, a bolder crop than most Legend art goes for. It's a distinctive piece specifically because of that choice, not despite it.
+
+## The real numbers
+
+As of publishing, Shen, Eye of Twilight is priced at:
+
+| Market | Price |
+| --- | --- |
+| Australia | A$816.70 |
+| United States | US$544.66 |
+| United Kingdom | £618.70 |
+| Singapore | S$895.78 |
+| Canada | C$746.18 |
+
+That's already a serious price — this is not a card sitting cheap and unnoticed. It's also thinly stocked: only **two stores** carry it right now across the markets we track. [Check the live price](/card/shen-eye-of-twilight-ven-193s-166) before it moves.
+
+There's a second, separate "Shen, Eye of Twilight" printing (193/166, without the signature) at a much lower price — that's a different, non-signed Showcase alternate-art, not the same card. If you're chasing the signed one specifically, check the collector number carries the ★.
+
+## The case for underrated
+
+Here's our reasoning, laid out plainly as reasoning rather than fact:
+
+**The art is doing something few other Legends do.** Most Legend art plays it safe with a fuller, more conventional character portrait. This one commits fully to an unconventional crop, which is exactly the kind of choice that tends to age into being more sought-after, not less, once a set's early-days pricing settles down.
+
+**The stock is thin enough that the current price may not hold.** Two stores carrying a card at all six of RiftCompare's tracked markets is a genuinely small sample — a market that thin can reprice quickly in either direction the moment even one of those listings sells or a new buyer starts actively looking.
+
+**Shen's reach as a League of Legends champion is broad.** He's one of the more enduringly popular characters in League's own roster, which matters here specifically because signature Legend prices tend to track character demand as much as in-game strategic relevance.
+
+## What this isn't
+
+We checked the closest comparable we could find — **Ambessa, Matriarch of War**'s Signature printing, also from Vendetta — and it's priced within a similar band on similarly thin stock (around US$495 / A$727, two stores). So this isn't a claim that Shen's Signature is mispriced against its direct peers; it currently isn't. The case here is broader: that Vendetta's Signature Legends as a tier, Shen's included, may not have finished settling into their real price yet — and if that's right, a card with this card's specific combination of distinctive art, thin stock and character popularity is a reasonable one to have on a watchlist.
+
+## Make your own call
+
+We'd rather show you the real numbers and our actual reasoning than tell you what to do with them. If you want to track it, [set a price alert](/alerts) rather than committing based on any one article — ours included.`,
+  },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
   // so the batch stays reviewable; spread here so every existing surface (the
   // /blog and /guides indexes, the sitemap's `content` section, the feeds, the
   // related-posts module, the /llm markdown mirrors) picks them up unchanged.
+  {
+    slug: "every-ahri-card-in-riftbound",
+    category: "blog",
+    title: "Every Ahri Card in Riftbound",
+    excerpt:
+      "Twelve Ahri printings across three cards, from US$8.95 to US$3,420.28 — including two prints that look identical except for a signature worth US$3,046.",
+    author: "RiftCompare",
+    date: "2026-08-15",
+    readMins: 6,
+    tags: ["ahri", "champions", "collecting", "chase cards"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-star-298-d34b6d90cc0eee6c.png",
+      alt: "Ahri, Nine-Tailed Fox (OGN 303*/298) — the Signature printing, the most expensive Riftbound card tracked",
+    },
+    summary: [
+      "**There are twelve Ahri printings**, and they are not twelve versions of one card — they are three different cards: Nine-Tailed Fox, Inquisitive and Alluring.",
+      "**The range is enormous.** US$8.95 for the base Ahri, Inquisitive; US$3,420.28 for the Signature Nine-Tailed Fox. That is the same champion, roughly 382 times apart.",
+      "**Ahri holds the top two spots** in the whole Riftbound market — the OGN Signature Legend and the SFD Signature Unit.",
+      "**One printed signature is worth about US$3,046.** OGN 303/298 and 303*/298 are the same art, rules and rarity; only the asterisk and the signature across the artwork differ.",
+    ],
+    closeups: [
+      {
+        caption: "The white scrawl across the artwork is the artist's signature (Airi Pan). It is the only visible difference between the US$374.22 printing and the US$3,420.28 one.",
+        slugs: ["ahri-nine-tailed-fox-ogn-303s-298"],
+        topPct: 34,
+        heightPct: 28,
+      },
+    ],
+    embeds: [
+      {
+        title: "All twelve Ahri printings",
+        note: "Grouped by card and printing. Prices are live and in your own market — click any card for every store that stocks it.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "ahri-inquisitive-sfd-227s-221",
+          "ahri-inquisitive-sfd-227-221",
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "ahri-nine-tailed-fox-ogn-255-298-promo",
+          "ahri-alluring-ogn-066-298",
+          "ahri-alluring-ogn-066-298-promo",
+          "ahri-inquisitive-ven",
+          "ahri-inquisitive-ogn-119a-298",
+          "ahri-alluring-ogn-066a-298",
+          "ahri-inquisitive-ogn-119-298",
+        ],
+        take: 12,
+      },
+    ],
+    shop: [
+      { label: "Ahri singles", query: "Riftbound Ahri" },
+      { label: "Ahri Signature", query: "Riftbound Ahri signature" },
+    ],
+    faq: [
+      {
+        q: "How many Ahri cards are there in Riftbound?",
+        a: "Twelve printings as of 15 August 2026, spread across three distinct cards: Ahri, Nine-Tailed Fox (a Calm Legend), Ahri, Inquisitive (a Mind Unit) and Ahri, Alluring (a Calm Champion Unit). The rest of the twelve are alternate arts, promos and Signature versions of those three.",
+      },
+      {
+        q: "What is the most expensive Ahri card?",
+        a: "Ahri, Nine-Tailed Fox OGN 303*/298 — the Signature printing — at US$3,420.28, which is also the most expensive Riftbound card we track. Ahri, Inquisitive SFD 227*/221 is second at US$3,089.05.",
+      },
+      {
+        q: "What is the cheapest Ahri card?",
+        a: "Ahri, Inquisitive OGN 119/298, the base Epic printing, at US$8.95 with eleven stores stocking it. It is the same character and the same rules text as printings costing hundreds of times more.",
+      },
+      {
+        q: "Why are two Ahri cards with the same number priced so differently?",
+        a: "Check for an asterisk. OGN 303/298 is US$374.22 and OGN 303*/298 is US$3,420.28. The asterisk marks a Signature printing, which carries the artist's signature across the artwork. The art, the rules and the rarity are otherwise identical.",
+      },
+      {
+        q: "Which Ahri card should I buy to actually play with?",
+        a: "The cheapest printing of whichever card your deck wants, because printings are interchangeable in play. Ahri, Inquisitive at US$8.95 plays exactly the same as the US$3,089.05 Signature of the same card. Premium printings are a collecting decision, not a competitive one.",
+      },
+    ],
+    browseCta: {
+      href: "/browse?q=Ahri",
+      label: "Compare every Ahri printing →",
+      blurb: "All twelve, side by side, with live prices from every store we track in your market.",
+    },
+    body: `
+Ahri is the most valuable champion in Riftbound, and it is not close. She holds **both** of the top two spots in the entire market. She is also, at the other end, one of the cheapest champions you can put in a deck.
+
+Both of those things are true at once, and the gap between them is the whole story of how Riftbound pricing works.
+
+## Three different cards, not one
+
+The first thing that trips people up: "an Ahri card" is ambiguous, because there are **three separate cards** with her name on them.
+
+| Card | Type | Domain | First printed in |
+| --- | --- | --- | --- |
+| **Ahri, Nine-Tailed Fox** | Legend | Calm | Origins |
+| **Ahri, Inquisitive** | Unit | Mind | Origins |
+| **Ahri, Alluring** | Champion Unit | Calm | Origins |
+
+They do different things and go in different decks. A listing that just says "Ahri" tells you almost nothing — you need the collector number.
+
+## The full range
+
+Across those three cards there are **twelve printings**, and the spread is extraordinary:
+
+| Printing | Card | Live US price |
+| --- | --- | --- |
+| OGN 303*/298 | Nine-Tailed Fox *(Signature)* | **US$3,420.28** |
+| SFD 227*/221 | Inquisitive *(Signature)* | US$3,089.05 |
+| SFD 227/221 | Inquisitive | US$640.00 |
+| OGN 303/298 | Nine-Tailed Fox | US$374.22 |
+| OGN 255/298 | Nine-Tailed Fox *(promo)* | US$269.00 |
+| OGN 066/298 | Alluring *(promo)* | US$173.55 |
+| VEN SP3/006 | Inquisitive | US$92.48 |
+| OGN 119a/298 | Inquisitive *(alt art)* | US$16.90 |
+| OGN 066a/298 | Alluring *(alt art)* | US$10.25 |
+| OGN 119/298 | Inquisitive | **US$8.95** |
+
+Top to bottom that is a factor of roughly **382**. Same champion, same artwork in several cases, same rules text.
+
+[[embed:0]]
+
+## The US$3,046 signature
+
+The clearest illustration in the game sits inside this list. **Ahri, Nine-Tailed Fox** was printed twice at collector number 303:
+
+| | OGN 303/298 | OGN 303*/298 |
+| --- | --- | --- |
+| Artwork | Identical | Identical |
+| Rules text | Identical | Identical |
+| Rarity | Showcase | Showcase |
+| Artist signature | — | Printed across the art |
+| **Live US price** | US$374.22 | **US$3,420.28** |
+
+[[closeup:0]]
+
+That white scrawl is the entire difference. It is worth about **US$3,046**, or roughly nine times the price of the unsigned card.
+
+This is why the asterisk in a collector number matters more than almost anything else when you are buying. If a listing photo is low-resolution and the seller has written only "Ahri Showcase", you are looking at two possible cards an order of magnitude apart in value. Ask for the number.
+
+The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 is US$640.00 and SFD 227*/221 is US$3,089.05 — about 4.8 times, for the same reason.
+
+[[shop]]
+
+## What this means if you are buying
+
+**To play: buy the cheapest printing.** Printings are interchangeable at the table. Ahri, Inquisitive at **US$8.95** does exactly what the US$3,089.05 Signature does. Eleven stores stock the cheap one, so you will not struggle to find it.
+
+**To collect: decide which of the three cards you actually want**, then pick a tier within it. The Legend is the flagship; Inquisitive is the one with the strongest premium market in two sets; Alluring is the accessible one, with a Showcase alternate art at **US$10.25** that looks far more expensive than it is.
+
+**Whatever you do, buy by collector number.** Every real difference in this article is a number, not a name.
+
+## Related reading
+
+- [Riftbound variant glossary](/guides/riftbound-variant-glossary) — where the collector number and the asterisk live, and how to spot a Signature.
+- [The most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) — the full top of the market, live.
+- [League of Legends champions in Riftbound](/guides/league-of-legends-champions-in-riftbound) — who else has made it into the game.
+`,
+  },
+  {
+    slug: "are-riftbound-cards-a-real-investment",
+    category: "blog",
+    title: "Are Riftbound Cards a Real Investment?",
+    excerpt:
+      "Our Riftbound price tracking only goes back eleven days. What that means for anyone asking if these cards are an investment — real numbers, no guessing.",
+    author: "RiftCompare",
+    date: "2026-08-15",
+    readMins: 9,
+    tags: ["investing", "opinion", "market analysis", "risk", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-star-298-d34b6d90cc0eee6c.png",
+      alt: "Ahri, Nine-Tailed Fox (OGN 303*/298), the Signature printing — priced nine times its unsigned twin, and the clearest real example of where Riftbound value actually sits today",
+    },
+    summary: [
+      "**This is analysis, not financial advice — and the honest headline finding is that nobody has enough data yet to give real investment advice about Riftbound cards.** Our own price tracking, which follows the game's most-traded singles, only goes back eleven days as of this writing.",
+      "**We can't tell you the 7-day or 30-day return, because those numbers don't exist yet.** Not \"we won't say\" — the data literally isn't there. Neither window has enough price history behind it yet.",
+      "**What we can show you is real and current:** which printings already carry genuine scarcity premiums (one card is worth 9× its twin for a single printed signature), how volatile a market this thin already looks, and exactly what it costs to buy and sell.",
+      "**If you already own cards and want to know what they're worth, that's a different — and answerable — question.** [Set a free price alert](/alerts) rather than guessing.",
+    ],
+    faq: [
+      {
+        q: "Are Riftbound cards a good investment?",
+        a: "Nobody can honestly answer that yet, ourselves included. Riftbound has released five sets, the newest of which is two weeks old, and our own price tracking only goes back to 4 August 2026. There is no multi-year track record to point to, up or down. What we can tell you is what the market looks like today: real prices, real fees, real volatility. Whether today's prices look smart in five years is not something the data can answer yet.",
+      },
+      {
+        q: "What actually makes a Riftbound card valuable right now?",
+        a: "Print scarcity, almost entirely. A Signature printing (marked with an asterisk in the collector number) or an over-numbered chase print can be worth many times its plain twin — Ahri, Nine-Tailed Fox goes from US$374.22 unsigned to US$3,420.28 signed, identical art and rules. That's a real, observable premium for scarcity today. It is not evidence that the premium will still be there next year — nobody has owned these long enough to know.",
+      },
+      {
+        q: "What fees will I actually pay if I sell a Riftbound card?",
+        a: "It depends where you sell. eBay's final value fee for trading cards is commonly around 13.25%, charged on the total including shipping. TCGplayer charges a tiered marketplace commission plus separate payment processing, netting most sellers somewhere in the low-to-mid 80% of the sale price before shipping costs. A direct trade or local sale avoids commission entirely but gives up buyer protection.",
+      },
+      {
+        q: "Can a Riftbound card lose value overnight through no fault of the card?",
+        a: "Yes, and it's already happened. On 24 July 2026, Riot banned three cards from Standard play — Stealthy Pursuer, The Arena's Greatest and Aspirant's Climb — and introduced a separate ban list for Constructed 2v2. A card that's competitively banned doesn't stop existing, but it loses the demand that comes from being playable, which is a risk that doesn't exist for a closed, no-longer-published collectible like a vintage trading card.",
+      },
+    ],
+    browseCta: {
+      href: "/alerts",
+      label: "Track what you already own →",
+      blurb: "Free price alerts across every store we track — the honest alternative to guessing whether now is the time to sell.",
+    },
+    closeups: [
+      {
+        caption: "The white signature across the artwork is the entire visible difference between this US$3,420.28 card and its US$374.22 unsigned twin. That gap is real and current. Whether it's still there in a year is exactly the kind of thing an 11-day-old market can't tell you.",
+        slugs: ["ahri-nine-tailed-fox-ogn-303s-298"],
+        topPct: 34,
+        heightPct: 28,
+      },
+    ],
+    embeds: [
+      {
+        title: "The cards named in this article",
+        note: "Every price above is live and checkable — click through to see every store selling each printing, in your own market.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "ahri-nine-tailed-fox-ogn-303s-298",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "ahri-nine-tailed-fox-ogn-255-298-promo",
+          "diana-scorn-of-the-moon-unl-197-219",
+          "diana-scorn-of-the-moon-unl-197-219-promo",
+        ],
+        take: 6,
+      },
+    ],
+    body: `Type "are Pokémon cards a real investment" into a search engine and you'll find guides pulling on three decades of PSA grading volumes and named auction sales to answer it — Pikachu Illustrator, Charizard's climb, all of it dated, sourced, arguable but *checkable*.
+
+Type the same question with "Riftbound" instead, and there's no honest way to answer it the same way. Not because we don't want to. Because the data doesn't exist yet.
+
+That absence is itself the most useful thing we can tell you, so we're going to open with it rather than bury it, and then show you everything we actually *can* verify: today's real prices, today's real volatility, and today's real cost of doing business — none of which requires pretending we have a track record we don't.
+
+## Eleven days is not a track record
+
+We track prices for a basket of 200 of the game's most-traded singles — the broad market data behind everything else on the site. The catch is how little history sits behind it.
+
+Here's what that price data actually shows, as of this writing:
+
+| | |
+| --- | --- |
+| Tracking began | **4 August 2026** |
+| History so far | 11 days |
+| Change since start | +11.6% |
+| 1-day change | +0.4% |
+| **7-day change** | **null — not enough history** |
+| **30-day change** | **null — not enough history** |
+
+That's not a rounding artifact or a display bug. It's the honest state of the underlying data: neither the 7-day nor the 30-day change can be computed at all yet, because neither window has completed. We could report "up 11.6%" as if it means something — plenty of sites would — but eleven days of a thinly-traded, brand-new market isn't a return, it's noise that hasn't had time to average out.
+
+For scale: Riftbound has released five sets. The newest, Vendetta, came out on 31 July 2026 — two weeks before this article. We don't even have confirmed release dates for four of the other five sets in our own database, because Riot never published exact street dates for them. A market needs years to show whether an asset holds value; this one hasn't finished its first month.
+
+## What we can actually say, versus what we can't
+
+| | Riftbound cards (today) | S&P 500 |
+| --- | --- | --- |
+| Track record | 11 days of price data | ~100 years |
+| Historical average annual return | Unknown — insufficient data | Roughly 10%/year nominal, long-run average |
+| Minimum entry | Cents to low dollars for most cards | Fraction of a share via most brokers |
+| Liquidity | Thin — see the spread example below | Extremely deep, sub-cent spreads |
+| Typical selling cost | 2%–13.25%+ depending on venue | ~0.03%–0.20% fund expense ratio, or a few dollars in brokerage fees |
+| Regulatory protection | None (unregulated collectibles market) | SIPC/regulator-backed depending on jurisdiction |
+| Can the asset itself be banned/devalued by the publisher | Yes — has already happened once | Not applicable |
+
+We're showing you this table specifically *because* half of it can't be filled in. That's the point. A guide that fills in "expected return" for Riftbound with a confident-sounding number is making it up. We'd rather show you an empty cell than a fabricated one.
+
+## Where the real value already sits: print scarcity
+
+None of the above means nothing is measurable. Scarcity premiums between different printings of the *same card* are real, current, and easy to verify yourself — you don't need years of history to see that two otherwise-identical objects are priced differently today.
+
+The clearest example in the whole game: **Ahri, Nine-Tailed Fox**, printed both with and without a Signature — the artist's actual signature, stamped across the art.
+
+| Printing | Signature? | Live US price |
+| --- | --- | --- |
+| OGN 303/298 | No | US$374.22 |
+| OGN 303*/298 | Yes | **US$3,420.28** |
+
+[[closeup:0]]
+
+Same art, same rules, same rarity tier. The signature alone accounts for roughly **US$3,046** of the difference — about 9 times the unsigned price. That's a real, observable, checkable fact about today's market. It is not a prediction about tomorrow's.
+
+A second, sharper trap sits in the same data: **promo status**, which — unlike a Signature asterisk or an over-numbered collector number — leaves no visible mark on the number itself.
+
+| Card | Number | Promo? | Live US price |
+| --- | --- | --- | --- |
+| Ahri, Nine-Tailed Fox | 255/298 | No | US$2.99 |
+| Ahri, Nine-Tailed Fox | 255/298 | Yes | US$269.00 |
+| Diana, Scorn of the Moon | 197/219 | No | US$0.18 |
+| Diana, Scorn of the Moon | 197/219 | Yes | **US$1,899.99** |
+
+The Diana pair is the extreme case: two cards, identical collector number, roughly **10,000 times** apart in price, and the only difference is a promo flag you can't see by reading the number. If you're pricing anything more valuable than pocket change, check the listing's promo status specifically — the number alone won't warn you.
+
+[[embed:0]]
+
+## What volatility looks like in a market this young
+
+An 11-day-old, thinly-traded market is not going to behave like a mature one, and it doesn't. The daily volatility across the cards we track sits at **2.11%** — for comparison, a mature equity index typically runs closer to 1% on an ordinary day. Of the 200 cards we track, 89 are up, 76 are down and 35 are unchanged as of this writing — nothing close to a one-directional market.
+
+Individual cards move far harder than the aggregate. As of this writing, several of the cards we track have moved more than 100% in a week: Rhasa the Sunderer (OGN 195/298) is up 415% over 7 days on a US$3.93 card, and multiple others are up well over 100% in the same window. These aren't chase cards — they're cheap ones, which is exactly the point: in a thin market, a handful of trades at a new price can swing the reported price enormously, in either direction, on cards worth a few dollars just as easily as on five-figure Signatures.
+
+Liquidity friction shows up even inside a single day. Take Defy (OGN 045/298) — currently the listings for this one card, on the same day, in the same market, range from **US$3.93 to US$11.00**: nearly a 3x spread for the identical printing. That's not a typo or a stale listing; it's what "price discovery" looks like before a market has had time to converge. We deliberately track a broad, liquid basket of cards to smooth this kind of noise out of the overall picture — but the noise is still there in any individual card you might actually try to buy or sell.
+
+## What it costs to actually buy or sell one
+
+Whatever the price on a card page says, it isn't what you'll net if you sell, and it isn't the last dollar you'll spend if you buy. Real numbers, by venue:
+
+| Venue | Seller pays | Notes |
+| --- | --- | --- |
+| **eBay** | ~13.25% final value fee | Charged on item price *plus* shipping |
+| **TCGplayer** | Tiered commission + payment processing | Nets most sellers roughly 80–85% of sale price before shipping |
+| **Direct/local sale** | 0% commission | No buyer protection either side |
+
+None of that includes shipping, packaging, or — if you're selling across a border — currency conversion, which typically costs a further few percent depending on how you're paid. [TCGplayer fees, explained in full](/blog/tcgplayer-fees) and [currency conversion costs](/blog/currency-conversion-fees) both break these down further if you're weighing where to sell.
+
+## Grading: a separate market, not a multiplier
+
+Riftbound doesn't have a centralised third-party grading body for raw card sales — the seller assigns the condition at the point of listing, based on their own judgement, which means the same physical card can be labelled differently by two different stores. [Our condition guide](/guides/riftbound-card-condition-guide) covers what each grade actually means.
+
+Third-party grading (PSA and similar) does exist for Riftbound's highest-value chase cards, but it's its own market, running on its own pricing logic, layered on top of the raw singles market rather than a fixed multiple of it. Don't assume a graded card is simply "raw price × some standard number" — check the graded market for that specific card directly.
+
+## A risk that doesn't exist for a closed collectible
+
+Riftbound is an actively developed, competitively played game, which cuts both ways. The upside: it's built on League of Legends, one of the most-played games in the world, with a real organised competitive scene — [UVS Games ran the most recent Regional Qualifier in Los Angeles](/blog/riftbound-2026-regional-qualifier-los-angeles) in September, requiring a linked Riot Account to enter. That's genuine, ongoing investment in the game as a product, not just as a card set.
+
+The downside: Riot can change the rules under you, and already has. On **24 July 2026**, a week before Vendetta released, [Riot banned three cards from Standard play](/blog/riftbound-july-2026-ban-list-update) — Stealthy Pursuer (over a documented infinite combo), The Arena's Greatest and Aspirant's Climb — and introduced a separate ban list for Constructed 2v2 starting with Master Yi, Wuju Bladesman. A banned card doesn't vanish from existence, but it loses whatever demand came from being tournament-legal. That's a live-game risk that a closed, no-longer-printed vintage collectible simply doesn't carry, and it's worth weighing against any scarcity premium a card currently holds.
+
+## What we'd actually suggest
+
+Not "buy" and not "don't." Three practical things that don't require a track record we don't have:
+
+**If you're buying:** treat every purchase as buying a card you like, at a price you'd be fine never seeing again — because right now, nobody can tell you what it'll be worth later, including us. Compare the printing carefully (asterisk, over-numbering, and *especially* promo status) before you pay a premium.
+
+**If you're selling:** run the real fee math before you list anywhere — eBay's ~13.25% final value fee versus TCGplayer's tiered commission is the difference between a good and a bad sale on the same card.
+
+**If you already own cards and just want to know what they're worth without checking daily:** that's a genuinely answerable question, unlike the investment question. [Set a free price alert](/alerts) and let the number come to you.
+
+We built the price tracking, the price history, and the alerts specifically because we think a market this new deserves honest tools instead of confident-sounding guesses. We'll revisit this piece once there's actually enough history to say more.
+`,
+  },
+  {
+    slug: "riftcompare-premium-explained",
+    category: "blog",
+    title: "RiftCompare Premium: Every Feature Explained",
+    excerpt:
+      "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
+    author: "RiftCompare",
+    date: "2026-08-20",
+    updated: "2026-08-26",
+    readMins: 11,
+    tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
+    hero: {
+      src: "/blog/riftcompare-premium-explained.png",
+      alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
+    },
+    summary: [
+      "**RiftCompare Premium is $9.99/mo or $79.99/yr** (works out to about $6.67/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
+      "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
+      "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
+      "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
+      "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
+    ],
+    browseCta: {
+      href: "/premium",
+      label: "See RiftCompare Premium →",
+      blurb: "Full pricing, the live feature list, and the tier comparison table — updated as we ship new tools.",
+    },
+    faq: [
+      {
+        q: "How much does RiftCompare Premium cost?",
+        a: "$9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+      },
+      {
+        q: "What do you actually get with RiftCompare Premium?",
+        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Best Basket, Value Finder screener, the full Rising Cards list, and the full Deal Finder (all four views) — plus a completely ad-free site. The Condition Impact Calculator isn't in that list — it's free with any account.",
+      },
+      {
+        q: "Is price comparison free without Premium?",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and an ad-free site.",
+      },
+      {
+        q: "What's the difference between a free account and Premium?",
+        a: "A free account (no card, just an email) adds price alerts and your portfolio tracker (value history, cost-basis P&L, CSV export) on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Best Basket, Value Finder, the full Rising Cards and Deal Finder lists, and an ad-free site.",
+      },
+      {
+        q: "Is there a free trial?",
+        a: "Yes — 14 days, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 14 days unless you cancel before then.",
+      },
+      {
+        q: "Can I get RiftCompare Premium for free?",
+        a: "You can earn free Premium two ways, no card required either way: submit feedback once at riftcompare.com/feedback and it unlocks a full week automatically, or share your referral link from your profile and every friend who creates a free account earns you 3 days.",
+      },
+      {
+        q: "Can I cancel RiftCompare Premium anytime?",
+        a: "Yes. Cancel anytime from your account and your benefits run through to the end of the period you already paid for — there's no lock-in and no penalty. If you resubscribe later, note that your price is locked in for as long as you stay subscribed, so it never rises even as new tools get added.",
+      },
+      {
+        q: "Does Premium remove ads on RiftCompare?",
+        a: "Yes — every page is completely ad-free the moment you're Premium. It's automatic; there's nothing to switch on separately.",
+      },
+    ],
+    itemList: {
+      name: "What's included with RiftCompare Premium",
+      items: [
+        { name: "Bulk Pricer", description: "Price an entire want-list or collection at once, each card matched to its cheapest live store price.", url: "/bulk-pricer" },
+        { name: "Best Basket", description: "The cheapest way to actually buy a whole decklist — the store split with the lowest landed cost, postage included.", url: "/tools/best-basket" },
+        { name: "Value Finder screener", description: "Every card trading below its own 30-day average right now, ranked by discount.", url: "/tools/value-finder" },
+        { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
+        { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
+        { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
+      ],
+    },
+    body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
+
+Short version: Premium is $9.99/mo (or $79.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
+
+## How much does RiftCompare Premium cost?
+
+![The RiftCompare Premium pricing card — $4.99/month, plus the full list of what's included](/blog/premium/00-pricing-cards.png)
+
+| Plan | Price | Works out to | Trial |
+| --- | --- | --- | --- |
+| Monthly | $9.99/month | $9.99/month | 14 days free |
+| Annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 14 days free |
+
+Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch.
+
+Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
+
+## What's free, what needs a free account, and what needs Premium
+
+Everything below is real, current, and reflects exactly what each tier gets — not a marketing simplification.
+
+| Feature | No account | Free account | Premium |
+| --- | --- | --- | --- |
+| Compare prices across every store + eBay | ✓ | ✓ | ✓ |
+| Full card database, search & browse | ✓ | ✓ | ✓ |
+| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
+| RiftCompare Index & daily movers | ✓ | ✓ | ✓ |
+| Condition Impact Calculator | ✓ | ✓ | ✓ |
+| Price alerts | — | ✓ | ✓ |
+| Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |
+| Deal Finder | Top pick | Top pick | Full list |
+| Rising Cards | Top pick | Top pick | Full list |
+| Value Finder screener | — | — | ✓ |
+| Bulk Pricer | — | — | ✓ |
+| Best Basket — cheapest store split, postage included | — | — | ✓ |
+| Ad-free experience | — | — | ✓ |
+
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Premium is entirely the pro tools and an ad-free site on top of that.
+
+## The 5 tools you only get with Premium
+
+### 1. Value Finder screener
+
+![The Value Finder tool — a screener for Riftbound cards trading below their own 30-day average price](/blog/premium/03-value-finder.png)
+
+Value Finder scans every card in the database and surfaces the ones trading **below their own 30-day average right now**, ranked by how far below their usual price they sit — not just by today's dip. It's a mean-reversion signal built for value buyers and flippers: the cards here aren't necessarily cheap in absolute terms, they're cheap *relative to their own recent history*, which is a meaningfully different (and harder to eyeball) signal than "biggest % drop today."
+
+This is Premium-only outright — a free account doesn't get even a teaser of it.
+
+### 2. Rising Cards — the full list
+
+![The Rising Cards tool, showing its market toggle and demand/price-timing methodology](/blog/premium/04-rising-cards.png)
+
+Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent (not a black box) and backtested. Free accounts and anonymous visitors can see the #1 pick; Premium unlocks the full ranked list plus the per-market toggle (switch between Global and each country RiftCompare tracks).
+
+### 3. Deal Finder — all four views, full list
+
+![The Deal Finder tool, with its four tabs: Worth more on eBay, Underpriced vs TCGplayer, Cheapest on eBay, and Cross-region](/blog/premium/05-deal-finder.png)
+
+Deal Finder is the one built specifically around arbitrage — the same card, priced meaningfully differently in two places RiftCompare tracks at the same time. It has four separate views:
+
+- **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store currently charges (useful if you're deciding whether to sell)
+- **Underpriced vs TCGplayer** — cards cheaper elsewhere than TCGplayer's own listing
+- **Cheapest on eBay** — the reverse: cards where eBay is currently the cheapest place to buy
+- **Cross-region** — cards priced meaningfully cheaper in a different market RiftCompare tracks
+
+Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. Free accounts get the top result only; Premium gets the full, sortable list across all four views.
+
+### 4. Bulk Pricer
+
+Paste an entire want-list, trade pile or full collection, and Bulk Pricer matches **every card to its cheapest live store price at once**, with a running total. If you've ever priced out a stack of 40 cards one search at a time, this is the tool that turns it into one paste.
+
+(The **Condition Impact Calculator** — value a card across NM/LP/MP/HP/DMG — is free for everyone, so it's not counted among the five tools here.)
+
+### 5. Best Basket
+
+Bulk Pricer answers "what does this list cost"; Best Basket answers the harder, more useful question — **what's the cheapest way to actually buy the whole thing**. Paste a decklist or point it at your own wishlist, and it prices every viable split across the stores that carry your list, each with its real shipping cost and free-shipping threshold applied, then shows you the delivered total next to what the naive per-card-cheapest approach would have cost.
+
+The two tools solve genuinely different problems: Bulk Pricer is about knowing a value, Best Basket is about actually placing the order for the least money once postage stops being pretend-free.
+
+## Everything, at a glance
+
+![RiftCompare Premium's member dashboard: quick links to every unlocked tool](/blog/premium/01-premium-header.png)
+
+![The full tier comparison table and every Premium feature card, side by side](/blog/premium/02-feature-cards-bottom.png)
+
+## Two free ways to get Premium without paying
+
+You don't have to subscribe to try it:
+
+- **[Invite a friend](/profile)** — share your referral link, and every friend who creates a free account earns you **3 days of Premium**, free.
+- **[Submit feedback once](/feedback)** — a bug report, a feature request, anything genuinely useful — and it unlocks a full **week of Premium, free**, no card required either.
+
+Neither of these requires ever entering a payment method. If Premium turns out to not be for you, both simply expire with nothing charged.
+
+## Who should actually pay for it
+
+Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free tier already does that job completely — you'd be paying for tools you won't open. Premium earns its price for three kinds of RiftCompare users specifically:
+
+1. **Active buyers who want an edge** — Value Finder and Rising Cards exist to surface opportunities you would not have found by browsing normally.
+2. **Anyone pricing or buying a whole list at a time** — the Bulk Pricer turns a tedious, repetitive pricing task into one paste, and Best Basket does the equivalent for actually buying the list at the lowest landed cost.
+
+If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
+`,
+  },
+  {
+    slug: "riftbound-meta-shift-radiance-singapore",
+    category: "blog",
+    title: "Riftbound Meta Shift: Singapore, Radiance & What's Next",
+    excerpt:
+      "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final to Ornn. Singapore is deciding round two live, and Radiance's five confirmed champions show where Riot's marketing already went.",
+    author: "RiftCompare",
+    date: "2026-09-05",
+    readMins: 12,
+    tags: ["meta", "tournament", "regionals", "radiance", "predictions", "singapore"],
+    // Kennen is the post's throughline — the most-played legend at Barcelona and
+    // still the format's highest win rate — so the card itself is the thumbnail,
+    // the same treatment the Radiance post gives Seraphine. Local file rather
+    // than the CDN so next/image has a build-time manifest entry for it.
+    hero: {
+      src: "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
+      alt: "Kennen, Heart of the Tempest — the most-played legend at the Barcelona Regional Qualifier, and still the format's highest win rate after losing the final to Ornn",
+    },
+    summary: [
+      "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
+      "**Our own tracked tier list agrees with Barcelona rather than contradicting it**: Kennen's 58% win rate is the best in the format's top tier, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically.",
+      "**The Regional Qualifier: Singapore is running right now** (4–6 Sept) — Southeast Asia's biggest organised Riftbound event so far. Day 1's results aren't final as of writing, and this article doesn't invent ones that don't exist yet.",
+      "**Radiance releases 23 October 2026** with five confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
+      "Want the real, live-priced decklists behind all of this instead of the analysis? **[See today's meta decks](/decks).**",
+    ],
+    faq: [
+      {
+        q: "Did Ornn actually beat Kennen at a Riftbound Regional Qualifier?",
+        a: "Yes — at the Regional Qualifier: Barcelona (21–23 August 2026), the largest Regional Qualifier the game has run at over 2,200 players. Kennen was the most-played legend in the room, at 12.7% of the field, and still put three copies into the Top 8. Ornn — a legend that wasn't a Day 1 favourite — won the final anyway.",
+      },
+      {
+        q: "Is Kennen still a good deck after losing to Ornn at Barcelona?",
+        a: "By the numbers we track, yes — Kennen's 58% win rate is the best in the format's current top tier, ahead of every other Tier 1 or Tier 2 deck. One lost final doesn't erase that; it shows the deck has a real, beatable weak point once the field has a full Swiss to prepare specifically for it, which is a different claim than \"Kennen is bad.\"",
+      },
+      {
+        q: "What is the Regional Qualifier: Singapore, and has it finished?",
+        a: "A two-day, US$25,000 Riftbound tournament at Singapore EXPO, 4–6 September 2026 — the penultimate Regional Qualifier of the 2026 season, and the biggest organised Riftbound event Southeast Asia has hosted. As of this article, Day 1 Swiss rounds are still underway, so no final result exists yet to report.",
+      },
+      {
+        q: "Which Riftbound Radiance champions has Riot confirmed?",
+        a: "Five so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV and Ziggs. Four more are set to be revealed during Preview Season, 28 September through 9 October 2026, ahead of Radiance's 23 October street date.",
+      },
+      {
+        q: "Which Radiance champions is Riot actually promoting hardest?",
+        a: "Going by where the marketing has already landed rather than a guess: Seraphine and Evelynn headline the set's two-player Showdown Deck, and Jarvan IV and Ziggs are the champions on the booster box art — the two highest-visibility spots any Riftbound set has. That's a statement about promotional placement, not a prediction of which deck will actually be best.",
+      },
+    ],
+    embeds: [
+      {
+        title: "The cards behind the decks setting the pace",
+        note: "Pulled live from the same real tournament results the tier list above is built from — every card here is genuinely played in a top-tier list, not a hand-picked guess.",
+        metaStaples: { minDecks: 2 },
+        take: 12,
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See today's real, live-priced meta decks →",
+      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — updated as new results, including Singapore's, come in.",
+    },
+    body: `Riftbound's competitive calendar has never been this compressed. As of today, the **Regional Qualifier: Singapore** is in its first Swiss rounds at Singapore EXPO — the direct follow-up to the biggest field the format has ever drawn, and the result that came out of it. In three weeks, the **Regional Qualifier: Los Angeles** closes out the 2026 season. A week after that, Radiance's Preview Season starts spoiling Riot's fifth set. Seven weeks from today, Radiance actually ships. Four events, seven weeks, and each one moves the format in a different way. Here's what's confirmed, what already changed, and what we can honestly say about where this is headed — without inventing results that haven't happened yet.
+
+## The result that reset expectations
+
+The **Regional Qualifier: Barcelona** (21–23 August 2026) was the largest Regional Qualifier Riftbound has run — over 2,200 players, more than any Vendetta-season event before it. Going into the cut, **Kennen, Heart of the Tempest** was the format's clear presumptive best deck: the single most-played legend in the building, at 12.7% of the entire field, and it put three copies into the Top 8.
+
+It didn't win. **Ornn** — a legend nobody was building around going in — beat it in the final. That's worth being precise about, because it's easy to overstate. Ornn's win doesn't mean Kennen is bad; a deck can genuinely be the format's best and still drop one best-of series, and Kennen's own win rate (below) says it's still winning more often than almost anything else in the format. What it does prove is that the format has a real, beatable weak point once you reach single elimination against a room that has spent an entire Swiss preparing for one specific deck — and Ornn found it. Reports on the winning list describe a Gear-heavy shell — Guardian Angel, Sterak's Gage, equipment built to survive to the late game rather than race — which tracks with what [our own archetype breakdown](/guides/riftbound-deck-archetypes-guide) already says about the Gear tag: a Midrange deck built to out-value board stats rather than match them turn for turn. Beating an aggressive, disruption-heavy deck by simply refusing to die to it isn't a new idea in Riftbound. It's just not one Barcelona's field had built an answer for yet.
+
+## Where the meta actually sits
+
+Barcelona is one 2,200-player snapshot. The tier list we track pulls from ten real tournament results across the whole Vendetta season, and it agrees with Barcelona more than it contradicts it:
+
+- **Irelia, Blade Dancer** — Tier 1, 10% of the field, 52% win rate. Still the single most-played legend across the decks we price, [Calm/Chaos Tempo](/decks/archetype/tempo) built around Irelia snowballing the board, now splashing Akali's Vendetta package for a faster clock.
+- **Kennen, Heart of the Tempest** — Tier 2, 9% of the field, and this is the number that actually matters after Barcelona: the **highest win rate in the format's top tier, at 58%**. [Order/Chaos Aggro/Disruption](/decks/archetype/aggro), and the most expensive list in the meta to assemble.
+- **Master Yi, Wuju Bladesman** — Tier 2, 9%, 47% win rate. The cheapest genuine tier-2 shell, flooding cheap Body/Calm units and closing with combat tricks.
+- **Diana, Scorn of the Moon** — Tier 2, 5%, 42% win rate. Chaos/Mind spell tempo, and the deck that won the very first real Vendetta event.
+- Below that: **Viktor** posts the single best win rate on the *entire* list — 63%, at roughly a third of Kennen's price to build — with Ezreal close behind at 62%. Both are small samples, which is exactly why they sit at Tier 3 rather than above Kennen despite the raw number. But it's the same shape as Ornn's run at Barcelona: an undersized deck with an outsized win rate is precisely the kind of thing a Swiss field hasn't practiced against.
+
+Read the top two together and Barcelona makes complete sense. Kennen wins more than half of every match it plays — more than any deck in the format's top tier — which is exactly why every serious Day 2 competitor spent Swiss learning how to beat it specifically, and one of them did, in the round that actually mattered.
+
+[[embed:0]]
+
+## What Singapore is actually deciding, right now
+
+The **Regional Qualifier: Singapore** runs 4–6 September at Singapore EXPO — the [penultimate Regional Qualifier of the 2026 season](/blog/riftbound-2026-regional-qualifier-los-angeles), with Los Angeles closing it out three weeks later. It's also, by a clear margin, the biggest organised Riftbound event Southeast Asia has hosted: a US$25,000 prize pool, Top 64 finishers earning Regional Championship invitations without needing to travel internationally to earn them, and full broadcast coverage from 10am SGT on both days.
+
+As of writing, Day 1's eight Swiss rounds are still underway — the field that advances to Day 2 needs 18+ match points, then five more Swiss rounds cut to a single-elimination Top 8. The honest answer to "what happened in Singapore" is: nothing final yet, and we're not going to fill that gap with a guess. What we can say is what the event is actually testing. A second Kennen title says Barcelona was a one-off. A second surprise winner — Ornn again, or something else entirely — says the format's ceiling deck now has a target on it everywhere, not just in one city, on one weekend.
+
+There's a second story here that has nothing to do with which legend wins. Every Regional Qualifier before this one has meant travel for Southeast Asian players chasing a Regional Championship invitation — flying to whichever city Riot's calendar landed on, the same barrier plenty of regional TCG scenes deal with. A US$25,000 event at Singapore EXPO, with Top 64 finishers earning those invitations on home ground, is a genuinely different proposition: it's the reason organisers are already calling this the biggest organised Riftbound event Southeast Asia has hosted, independent of who actually wins it. Singapore and Los Angeles — the season's last two stops — both carry the same competitor reward: an exclusive **Jayce, Brilliant Inventor** promo print for top finishers, on top of the invitation itself. So the collecting angle and the competitive one are, for once, the same story: whoever takes Singapore's Top 8 walks away with both a Regional Championship invite and a card that won't exist outside this circuit.
+
+The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)** — the toolkit every Singapore decklist is built from, same as Barcelona's before it.
+
+## The bigger shift: Radiance, in seven weeks
+
+Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments, the second-largest set so far behind only Origins. Preview Season runs **28 September through 9 October**, with Pre-Rift events **16–22 October** immediately before street date. That preview window opens three days after Los Angeles closes out the Regional Qualifier season — the same week the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
+
+Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today: Ekko is a Champion Unit in the blue domain — Mind, in Riftbound's own domain key — with a card called *Ingenious* carrying an Empowered effect: discount a unit into play, and it dies at end of turn. That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
+
+Radiance isn't the only structural shift on the calendar, either — just the next one. [Legacy](/guides/riftbound-sets-in-order), Riot's Set 6, ships 29 January 2027 as the largest set announced so far and the first designed specifically for draft, changing pack composition itself: a common slot becomes a Legend-or-Battlefield slot. That's a bigger structural change than any single champion reveal, and it's one more reason "the meta" is worth thinking of as something that keeps moving on a schedule, not settling once and staying settled.
+
+## Which champions is Riot actually pushing?
+
+Riot hasn't published a marketing plan, and we're not going to pretend it has. But a set tips its hand in the same few places every time, and Radiance already has:
+
+1. **Seraphine and Evelynn** headline the two-player Showdown Deck — the single highest-visibility product every Riftbound set ships alongside its boosters, built to be bought and played the same day.
+2. **Jarvan IV and Ziggs** are the champions on the booster box art — the image on every physical pack sold at retail, seen by every buyer whether or not they follow the competitive scene at all.
+3. **Ekko** got the first single-card mechanical reveal, ahead of the other four confirmed champions and all four still-unrevealed ones.
+
+Put together, those five aren't a guess at who'll be good — they're simply where Radiance's marketing real estate has already gone, read off where their cards are placed rather than anything Riot has said outright. Whether any of them ends up being Radiance's best deck is a separate question, and it's the one thing actually worth refusing to predict: Kennen was the format's best deck by win rate at Barcelona and still lost the final. A champion getting the box art is a promotional fact, not a tier list.
+
+## What this actually means for buyers and deckbuilders
+
+We deliberately don't predict what individual cards will do — see [why Riftbound prices actually change](/guides/why-riftbound-card-prices-change) for the real mechanics behind that, instead of a guess dressed up as one. What's actually actionable right now:
+
+- **If you're building for the rest of the Vendetta season**, Kennen's win rate is still the best in the format's top tier — one lost final is a data point, not a pattern — and [the meta decks page](/decks) prices every real tournament list live, cheapest store first, in your own currency. Priced Viktor's budget shell is on the same page, for a fraction of Kennen's cost to assemble.
+- **If you're buying into Radiance**, the five confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
+- **If you just want to know what's shipping and when**, without a hard-coded countdown that goes stale the day it's wrong, [the release calendar](/release-dates) rolls itself forward automatically as each date passes — Radiance, Legacy and everything Riot has announced beyond it.
+
+We'll be watching Singapore's Top 8 the moment it's final, and updating the tier list the same way we did after Barcelona: from the actual decklists, not a guess at what they'll say.`,
+  },
+  {
+    slug: "riftbound-radiance-biggest-release-since-origins",
+    category: "blog",
+    title: "Why Radiance Will Be Riftbound's Biggest Release Since Origins",
+    excerpt:
+      "Radiance is the smallest main Riftbound set yet by base cards — and by some distance the most Showcase-dense. Why 23 October is still the game's biggest release since Origins: it completes K/DA and unlocks a Seraphine that already trades.",
+    author: "RiftCompare Markets Desk",
+    date: "2026-09-05",
+    readMins: 8,
+    tags: ["news", "set", "release", "prices"],
+    // Seraphine is the post's throughline — she is half the K/DA argument and the
+    // whole of the "already trading, not yet legal" one — so the card itself is the
+    // thumbnail. Local file rather than the CDN so next/image has a manifest entry.
+    hero: {
+      src: "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+      alt: "Seraphine, Not Alone — the T1 2025 Worlds Champion Collection card that becomes tournament-legal when Radiance releases",
+    },
+    summary: [
+      "**Radiance releases 23 October 2026.** Riot has confirmed **180 cards, 66 of them Showcase** — and unlike every earlier set, that headline number *includes* the Showcase treatments.",
+      "Like-for-like, that is a base run of about **114** — the smallest of any main Riftbound set. Radiance is not the biggest set since Origins, and it is not even bigger than [Vendetta](/sets/vendetta).",
+      "What it is: **the most chase-dense set Riftbound has printed.** Showcase cards are about **37%** of Radiance's card list, against 23% for Spirit Forged, 22% for Unleashed and 15% for Origins.",
+      "It also **completes K/DA**. Ahri and Kai'Sa came in Origins, Akali in Vendetta; Radiance brings Seraphine and Evelynn. Riot has **not** announced K/DA cards — that connection is our inference from the champion list.",
+      "If you plan to open rather than buy singles, run [box EV](/tools/box-ev) against the singles market once real prices exist.",
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "riftbound radiance booster box" },
+      { label: "Vendetta booster boxes", query: "riftbound vendetta booster box" },
+    ],
+    embeds: [
+      {
+        title: "The three K/DA champions already in Riftbound",
+        note: "Ahri and Kai'Sa debuted in Origins, Akali in Vendetta. Prices are live and move daily — click any card for its full price history.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "kai-sa-daughter-of-the-void-ogn-299-298",
+          "akali-rogue-assassin-ven-189",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "kai-sa-daughter-of-the-void-ogn-247-298",
+          "akali-rogue-assassin-ven-139",
+        ],
+      },
+      {
+        title: "Seraphine, Not Alone — already trading, not yet legal",
+        note: "The T1 Worlds Champion Collection Seraphine. Radiance is what makes her legal for sanctioned play.",
+        slugs: ["seraphine-not-alone-t1s-005-005-promo"],
+      },
+    ],
+    browseCta: {
+      href: "/radiance-countdown",
+      label: "Radiance countdown & card list",
+      blurb: "Release date, confirmed champions and every Radiance card as reveals land.",
+    },
+    faq: [
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, per Riot's products-and-sets rundown. See our [2027 set roadmap](/blog/riftbound-2027-set-roadmap) for the full schedule through The Reckoning.",
+      },
+      {
+        q: "How many cards are in Radiance?",
+        a: "Riot has confirmed 180, of which 66 are Showcase treatments. Read that carefully: unlike Origins, Spirit Forged and Unleashed — whose headline figures are base cards with Showcase printings on top — Radiance's 180 already includes its Showcase cards. The implied base run is about 114.",
+      },
+      {
+        q: "Is Radiance bigger than Vendetta?",
+        a: "Only if you compare the two numbers without adjusting for what they count. Vendetta's 166 is a base run; Radiance's 180 is a base run plus 66 Showcase. On a like-for-like base-card basis Radiance is the smaller set.",
+      },
+      {
+        q: "Which champions debut in Radiance?",
+        a: "Five are named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more champion Legends still unrevealed, so nine is the expected total. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
+      },
+      {
+        q: "Will Radiance have K/DA cards?",
+        a: "Riot has not announced any. What is confirmed is that Seraphine and Evelynn debut in Radiance, which would put all five K/DA members — Ahri, Akali, Evelynn, Kai'Sa and Seraphine — in the game for the first time. The K/DA connection is our inference from the champion list, not a Riot announcement.",
+      },
+      {
+        q: "Can I play the T1 Seraphine card now?",
+        a: "No. Seraphine, Not Alone is from the [T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection) and is not legal for sanctioned play until Radiance releases on 23 October 2026.",
+      },
+      {
+        q: "Is Radiance a good set to buy sealed?",
+        a: "There is no honest answer before real prices exist. Once Radiance singles are trading, compare a box's cost against the sum of what is inside it using the [box EV calculator](/tools/box-ev) rather than buying on set hype.",
+      },
+    ],
+    body: `
+Riftbound's fifth set, **Radiance**, lands on **23 October 2026**. It will be the biggest release the game has had since Origins.
+
+It will not be the biggest set. It will, in fact, be the smallest main set Riftbound has printed — and that is worth getting out of the way in the first section rather than burying it.
+
+## First, the thing that is not true
+
+Riot has confirmed Radiance at **180 cards, 66 of them Showcase**. That number gets quoted next to the other sets' totals as though it were the same kind of measurement. It isn't.
+
+For Origins, Spirit Forged and Unleashed, the headline figure is the **base run**, and Showcase printings sit on top of it as additional alt-art versions of cards already in that numbering. Radiance's 180 **already includes** its 66 Showcase treatments. Comparing 180 against 166 is comparing a total against a subtotal.
+
+| Set | Base run | Showcase | Whole card list | Champion debuts |
+| --- | --- | --- | --- | --- |
+| [Origins](/sets/origins) | 298 | +54 | 352 | 12 |
+| [Spirit Forged](/sets/spiritforged) | 221 | +66 | 287 | 12 |
+| [Unleashed](/sets/unleashed) | 219 | +61 | 280 | 12 |
+| [Vendetta](/sets/vendetta) | 166 | not published | — | 9 |
+| **[Radiance](/sets/radiance)** | **~114** | **66** | **180** | **9 expected** |
+
+*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has five named so far with four more unrevealed. The 24-card Proving Grounds starter set is excluded.*
+
+So the honest position is that Radiance is the smallest main set to date on base cards, and that it is not bigger than Vendetta once both numbers are counted the same way. If "biggest" means "most cards", this post ends here.
+
+It doesn't, because that table contains the actual story — just not in the column people were looking at.
+
+## 1. It is the most chase-dense set Riftbound has printed
+
+Sixty-six Showcase cards is the same Showcase count as **Spirit Forged** — a set with roughly twice the base run. Put as a share of the whole card list:
+
+| Set | Showcase share of the card list |
+| --- | --- |
+| Origins | ~15% |
+| Unleashed | ~22% |
+| Spirit Forged | ~23% |
+| **Radiance** | **~37%** |
+
+More than a third of Radiance's card list is a Showcase treatment. Nothing else in Riftbound is close.
+
+That is the number that actually matters for a release. Sealed demand, box EV and the top end of the singles market are all driven by chase density rather than by how many commons a set contains — a small set stuffed with premium treatments is a bigger commercial event than a large set that isn't. It also cuts the other way for anyone opening: a higher Showcase share means the value in a box is concentrated in fewer, more expensive cards, which widens the spread between a good box and a bad one.
+
+## 2. It completes K/DA
+
+K/DA is Riot's virtual pop group, and the five members are Ahri, Akali, Evelynn, Kai'Sa and Seraphine.
+
+Three are already in Riftbound. **Ahri** and **Kai'Sa** debuted in Origins; **Akali** arrived in Vendetta. Radiance brings **Seraphine** and **Evelynn** — the last two.
+
+[[embed:0]]
+
+Those existing three are not marginal cards. Their base Rare printings trade for pocket change, but the Showcase versions sit in the hundreds and the signature Showcase printings in the thousands. Whatever the mechanism — champion popularity, art, or both — the market has already shown it will pay a substantial premium for a K/DA champion in a chase frame.
+
+Radiance is the set that completes the group for the first time. A collector who wants all five has had no way to finish, and from 23 October they will.
+
+**A necessary caveat.** Riot has not announced K/DA-themed cards, alternate arts or a K/DA subset in Radiance. What is confirmed is the champion list. The observation that this list completes K/DA is ours, drawn from the roster — not something Riot has said. If you are buying on the expectation of a K/DA treatment tier, you are buying on an inference, and you should size the position accordingly.
+
+## 3. Seraphine is already trading, and Radiance is her unlock
+
+This is the genuinely unusual one.
+
+A Seraphine card already exists and already has a price: **Seraphine, Not Alone**, from the [T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection). It is not legal for sanctioned play until Radiance releases.
+
+[[embed:1]]
+
+So the market is currently pricing a card that cannot be played, on a known unlock date. That is a rare, clean setup: most format-legality questions in trading card games are speculative, and this one has a date on it. Whatever premium legality is worth, it resolves on 23 October.
+
+It also means Radiance does not arrive cold. Seraphine has had months of price discovery before her set exists.
+
+## 4. It lands in the Q4 buying window
+
+Radiance releases on 23 October. Its first eight weeks of singles trading and sealed sales therefore fall inside the Northern-Hemisphere holiday buying period — the stretch when sealed product moves as gifts rather than only to players and openers.
+
+Vendetta, by contrast, released on 31 July, into the quietest part of the calendar.
+
+This is a statement about the date, not a claim about Riot's marketing plans. But the date alone changes who is buying: a set that is on shelves through November and December is bought by people who were never going to build a deck with it, and that is demand a July release does not get.
+
+## 5. It is the last set before the pool jumps
+
+Riot's roadmap has **Legacy** arriving on 29 January 2027 at around 346 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
+
+That makes Radiance the last release into a relatively small card pool, and the last before a set built for a different format arrives. Bigger sets historically push commons and uncommons cheaper while concentrating value at the top of the rarity ladder — which, for a set that is already 37% Showcase, is worth watching.
+
+Treat this as a structural observation about supply, not a prediction about any individual card. Card pools widen in every trading card game, and plenty of cards from small early sets end up worthless anyway.
+
+## What this means if you are buying
+
+- **If you want to play:** the champion debuts are the reason to care — five named, four still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs or Jarvan IV is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
+- **If you want to open sealed:** wait for real prices and run [box EV](/tools/box-ev) against the singles market. A 37% Showcase share makes the variance between boxes higher than in any previous set, which is exactly when buying singles beats opening.
+- **If you are tracking the K/DA thesis:** the three existing members are already priced. Set a [price alert](/alerts) on them rather than checking manually — if Radiance does ship a K/DA tier, the existing three are likely to move on the announcement, not on release day.
+- **If you are selling:** the window between reveal season and release is usually when interest in the *previous* set is weakest. [Movers](/movers) will show you whether that is happening to Vendetta.
+
+## What would make this call wrong
+
+Worth stating plainly, because a prediction with no failure condition is not a prediction.
+
+- **Chase density cuts both ways.** A high Showcase share is only bullish if the treatments are desirable. If Radiance's Showcase art is poorly received, a set that is more than a third Showcase has an unusually large share of its print run that nobody wants.
+- **The base run really is small.** About 114 base cards is the thinnest main set Riftbound has shipped. If the format-relevant cards among them are few, competitive demand will be weak regardless of the collector story.
+- **The K/DA inference may simply be wrong.** Riot may debut Seraphine and Evelynn as ordinary Legends with no thematic tie at all. The champion list is the only confirmed part.
+- **Preorder prices routinely sit above post-release singles.** That has been true for every Riftbound set so far, and buying the hype window is the most reliable way to lose money on a release that is otherwise doing well.
+- **Legacy is barely three months later.** A much larger, draft-focused set in January could pull collector money forward and cut Radiance's run short — the opposite of the scarcity argument above.
+
+## The short version
+
+Radiance is the smallest main set Riftbound has printed and the most chase-dense by a wide margin, arriving at an unusually good moment: it completes a five-member group the market already pays up for, it resolves the legality of a card that is already trading, and it sits in the gifting window.
+
+That combination is why it will be the biggest release since Origins. None of it is because the set is big — it is the opposite.
+
+Track it on the [Radiance countdown](/radiance-countdown), where every card appears as reveals land.
+`,
+  },
+  {
+    slug: "why-riftbound-could-become-a-top-two-tcg",
+    category: "blog",
+    title: "Why Riftbound Could Be a Top-Two Trading Card Game by 2028",
+    excerpt:
+      "Riot has turned one audience into a hit twice, with Valorant and TFT. The brand, audience and mechanics case for Riftbound reaching the TCG top two by 2028.",
+    author: "RiftCompare",
+    date: "2026-09-06",
+    readMins: 10,
+    tags: ["opinion", "market analysis", "league of legends", "esports", "riftbound", "trading card games"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
+    },
+    summary: [
+      "**Riot Games has already turned one audience into a second hit twice** — Teamfight Tactics and Valorant — in genres it had never shipped in before, and both grew into durable, top-tier products rather than fading after launch.",
+      "**League of Legends' player base (commonly cited around 120-135 million monthly)** is larger on its own than the total player counts reported for Magic: The Gathering or Pokémon TCG Pocket.",
+      "**Riftbound's early numbers — a reported 300%+ post-launch search surge and a 2025 TCGplayer top-ten finish — match the growth shape Valorant and TFT showed before they became durable**, rather than a typical hype-then-fade launch.",
+      "**The One Piece Card Game reached TCGplayer's top three by GMV in about four years** with no built-in audience anywhere close to League's — proof a new entrant can reach the top of this market without decades of history behind it.",
+      "**This is opinion, not a guarantee.** The biggest risks are that League's audience simply doesn't convert to a physical collectible at the same rate it converted to Valorant or TFT, or that a faster set cadence outpaces the game's own balance.",
+    ],
+    faq: [
+      {
+        q: "Is this a guarantee Riftbound will become a top-two trading card game?",
+        a: "No — this is an opinion piece built on Riot Games' track record and Riftbound's early numbers, not a certainty. See \"What would make this call wrong\" below for the specific ways it could fail to happen.",
+      },
+      {
+        q: "How many people play League of Legends?",
+        a: "Riot has reported figures as high as 152 million monthly active players at its 2022 peak, with more recent third-party estimates commonly in the 120-135 million range.",
+      },
+      {
+        q: "How fast did Valorant grow after launch?",
+        a: "Valorant's closed-beta reveal reportedly drew 1.7 million peak concurrent Twitch viewers, the game reportedly reached 3 million peak daily players within two months of its June 2020 launch, and third-party tracking (ActivePlayer.io) put its monthly active players at roughly 33 million in early 2026.",
+      },
+      {
+        q: "What makes Riftbound's mechanics 'easy to learn, hard to master'?",
+        a: "A Rune resource system similar to what other trading card games already use, layered with keywords like Hidden (playing a facedown card as a surprise), Action/Reaction (timing), and Vendetta's Empower/Flow/Burn package — simple building blocks that combine into real deckbuilding depth.",
+      },
+      {
+        q: "Has a new trading card game reached the top of the market before, without decades of history?",
+        a: "Yes — the One Piece Card Game launched in 2022 and, per TCGplayer's own reporting, reached the platform's top three games by GMV alongside Magic and Pokémon by the first quarter of 2026.",
+      },
+      {
+        q: "What could stop Riftbound from reaching top-two status?",
+        a: "The clearest risks are League's audience not converting to a physical collectible at the rate Valorant or TFT converted an existing gaming audience, a set cadence or power creep that outpaces the game's balance, and a rival publisher running the same brand-plus-game strategy first or better.",
+      },
+    ],
+    browseCta: {
+      href: "/sets",
+      label: "Browse every Riftbound set →",
+      blurb: "See every set released so far, and how the format has grown since Origins.",
+    },
+    body: `Riftbound launched in the West on 31 October 2025. It's one trading card game among dozens on shelves right now, made by a video game company that had never shipped a physical card product before its first set. Calling it a candidate for a top-two trading card game by 2028 — ahead of Yu-Gi-Oh!, Digimon and Disney Lorcana, competing directly with Magic: The Gathering and Pokémon for first and second place — is a big claim.
+
+This is an opinion piece, not a market report. We track prices, not predictions, and nothing below is guaranteed. But the case for taking this seriously is stronger than "it's a fun game with a popular license attached." It rests on three things: a publisher with an unusually good track record of turning one audience into a second hit, a starting audience larger than any new trading card game has ever launched with, and a ruleset that doesn't ask more of a new player than the genre already does. Here's the argument, with the numbers behind it.
+
+## Riot has done this before — twice
+
+League of Legends is Riot Games' first product, and by some distance its biggest: it has run for over fifteen years and, at its 2022 peak, reported around 152 million monthly active players, settling more recently into a range commonly cited around 120-135 million. That alone would make League one of the largest gaming audiences on the planet. What matters more for Riftbound is what Riot did with that audience twice already.
+
+The first swing was Teamfight Tactics, an auto-battler spun out of League's own in-client shop as a side mode in mid-2019. It wasn't an obviously safe move — auto-battlers were a genre with no proven blockbuster at the time. Riot shipped it as a standalone client anyway, and TFT reportedly cleared 33 million monthly active players within its first ten weeks. A mobile release the following March turned out to be the real growth driver, reportedly pushing the split toward roughly 60% mobile and 40% PC, and TFT has remained one of the more durable auto-battlers years after most of the genre's other entrants faded.
+
+The second swing was bigger: Valorant, a tactical shooter launched into a genre already dominated by Counter-Strike and, at the time, Overwatch. Riot's closed beta reveal alone reportedly drew 1.7 million peak concurrent Twitch viewers, and the game reportedly reached 3 million peak daily players within two months of its June 2020 launch. Unlike most shooters, which spike at launch and decay hard afterward, Valorant kept climbing for years — recent third-party tracking (ActivePlayer.io) puts its monthly active player base at roughly 33 million in early 2026, and it's now routinely described as one of the two biggest competitive shooters in the world alongside Counter-Strike.
+
+Two swings, two hits, in two genres Riot had never shipped in before. That's the track record Riftbound is riding on, and it's the reason "it's just a card game with a League skin on it" undersells what's being attempted here.
+
+## An audience no new trading card game has ever had
+
+Compare that installed base to the trading card games it would need to pass. Magic: The Gathering, in its fourth decade, is commonly estimated at somewhere between 40 and 50 million total players worldwide, though estimates vary by source and by definition of "player." Pokémon TCG's mobile spinoff, Pocket, reportedly reached somewhere between 26 and 33 million monthly active users in its own launch window. League of Legends alone — before counting anyone who plays Valorant or TFT, or the people who've never played a Riot game but watch League esports — is larger than either of those figures on its own.
+
+And the audience isn't just big, it's engaged in a way that translates unusually well to a collectible product. League's 2024 World Championship reportedly drew 6.94 million peak concurrent viewers, over 50 million total viewers, and more than 190 million hours watched — commonly cited as the most-watched esports event ever recorded. An audience that already shows up in those numbers to watch a storyline play out is an audience that has already demonstrated it will pay attention to a universe of champions, factions and lore for hundreds of hours a year. Turning a fraction of "people who watch Ahri and Jinx compete" into "people who collect Ahri and Jinx" is a much shorter walk than getting a stranger to care about a franchise from a standing start, which is the position every other new trading card game launches from.
+
+## Riftbound's early numbers already look like the pattern
+
+It's early — Riftbound has been on shelves in the West for less than a year at time of writing — but the first data points line up with the Valorant and TFT curves rather than with a typical new-TCG launch that fades after the initial hype window. Search interest reportedly rose more than 300% after release compared to the preorder period, an unusual shape: most licensed products peak at preorder and decline once the initial hype settles. TCGplayer reportedly logged more than 6,300 searches per hour for Riftbound product at its peak, and the game reportedly finished 2025 as a top-ten best-seller across TCGplayer's full catalog of more than 750 products — a strong result for a card game that had existed for barely two months of that year.
+
+None of that proves Riftbound becomes a top-two TCG. But it's the same early shape Valorant and TFT showed before they became durable, and it's a shape most new trading card games don't get to show at all — because most new trading card games don't have a global esport and a 150 million-plus player base to draw the initial spike from in the first place.
+
+It's also worth naming that a new entrant reaching the top of this market isn't unprecedented on its own. The One Piece Card Game launched in 2022 and, per TCGplayer's own reporting, was sitting alongside Magic and Pokémon among the top three games by sales on the platform by the first quarter of 2026 — a four-year climb built on licensed IP and a competitive scene, with none of the built-in audience Riftbound starts with. If a shonen anime license without an existing 150 million-player base can reach the top three in four years, a card game backed by League of Legends starting from a much larger base doesn't need a miracle to get there faster.
+
+## The game has to hold up its end, too — and it might
+
+None of the brand math matters if the game underneath it isn't good, and this is the part that's easiest to get wrong when a big license is attached. Riftbound's own game director, Dave Guskin, has described the design goal as "easy to learn and difficult to master," with social, multiplayer play prioritized over solitaire deckbuilding puzzles — the same design philosophy Riot has applied to League and Valorant, where a new player can be doing something meaningful in their first game while a veteran still has years of depth left to find.
+
+The mechanics back that framing up. Runes — the resource system that pays for your plays — work close enough to what Magic or Pokémon players already know that the on-ramp is short. Where Riftbound earns its "not too complicated, but deep" reputation is in a handful of well-designed keywords layered on top of that simple base:
+
+- **Hidden** lets you pay a cost to place a Spell, Unit or Gear facedown at a battlefield on your own turn. From the next turn on, it can be played for free at Reaction speed — a genuine mind game, since your opponent has to play around a card they can't see.
+- **Action** and **Reaction** define when something can be played at all, with Reaction cards playable on essentially anyone's turn — Riftbound's version of the "instant speed" concept that gives Magic much of its interactivity.
+- **Empower**, **Flow** and **Burn**, introduced in the Vendetta set, are built to combo with each other: Empower upgrades a card already in play for an extra cost, Flow lets you play cards straight out of your trash, and Burn sends cards to the trash — so a deck built around all three can deliberately burn its own cards for Flow fuel, or burn an opponent's resources to disrupt them.
+
+That's a real skill ceiling — reading a hidden card, sequencing an Empower/Flow/Burn engine, playing around Reaction speed — sitting on top of a resource system simple enough that a new player isn't lost on turn one. It's the same shape as League's own reputation: trivial to start, genuinely hard to master, which is exactly the reputation a game needs if it's going to hold an audience for years rather than a launch window.
+
+Here's a rough sketch of the field Riftbound is trying to break into, sized by publicly reported player figures rather than sales:
+
+| Game | Publisher's IP track record | Reported player base | Time to reach current scale |
+| --- | --- | --- | --- |
+| Magic: The Gathering | First major TCG, no prior franchise to draw on | ~40-50M total players | ~32 years |
+| Pokémon TCG | Backed by one of the largest media franchises ever | Tens of millions, plus 26-33M MAU on Pocket alone | ~30 years |
+| One Piece Card Game | Backed by a top anime license, no house-published game before it | Reached TCGplayer's top-3 by GMV | ~4 years |
+| Riftbound | Backed by League of Legends, plus two prior hits (TFT, Valorant) in unrelated genres | Early-stage, drawing from a 120M+ MAU base | Under 1 year so far |
+
+## What this means if you're buying or collecting
+
+- **If you're building a collection for the long term**, the brand argument above is a reason to treat Riftbound as more than a launch-window fad — but buy singles you actually want, not speculative sealed product, until there's a longer price history to lean on. [Compare live prices across every store we track](/market) before paying preorder premiums.
+- **If you're a League or Valorant player who's never touched a card game**, the on-ramp really is short. Runes work like the resource systems in other TCGs, and champions you already know — start with [Ahri's card page](/champions/ahri) if she's your main — are already in the game as Legends.
+- **If you want to understand the deckbuilding depth before buying in**, the [Hidden keyword](/keywords/hidden) and the [Action/Reaction timing system](/guides/riftbound-timing-keywords-explained) are the two mechanics worth learning first; between them they explain most of what makes a game between two decent players interesting.
+- **If you're tracking the newest set**, [Vendetta](/sets/vendetta) is where the Empower/Flow/Burn interactions above actually live, and it's the best current test of whether Riftbound's "simple but deep" design holds up in practice.
+
+## What would make this call wrong
+
+A prediction with no failure condition isn't a prediction, so here's what would break this thesis:
+
+- **League's audience simply doesn't convert.** Watching Ahri on stage at Worlds and wanting to own a piece of cardboard with her on it are different behaviors, and the conversion rate could turn out to be much lower than Valorant's or TFT's — those were still video games played on the same screen League is already played on, not a physical product that requires a trip to a store or a different kind of purchase entirely.
+- **The set cadence or power creep turns off the format.** Riftbound's roadmap already has a much larger set, Legacy, arriving in early 2027. If new sets outpace the game's ability to stay balanced, the "difficult to master" reputation curdles into "impossible to keep up with," which is a common way trading card games lose players rather than gain them.
+- **A stronger competitor launches with the same playbook.** Riot isn't the only company with a media franchise and an existing audience. If another publisher runs the same brand-plus-game strategy better or first, Riftbound's advantage shrinks fast.
+- **The market itself doesn't grow fast enough to fit two more winners.** Even a market projected to grow from roughly $15 billion in 2026 to over $24 billion by 2031 — per GMInsights, an approximately 10% annual growth rate — has to make room for Riftbound without simply taking share from Magic and Pokémon, which are not standing still themselves.
+
+## The short version
+
+Riot Games has turned one audience into a second hit twice — Teamfight Tactics and Valorant, in two genres it hadn't shipped in before — and both times the growth curve looked less like a typical launch spike and more like a durable climb. Riftbound is the same company running a similar playbook on an even larger built-in audience, against a genre where the current top players took decades to get where they are, and where a licensed newcomer with no such built-in audience — the One Piece Card Game — has already climbed into the top three within about four years.
+
+That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to be wrong about it for any of the reasons above. But it's a bet grounded in a track record Riot has already delivered on twice, not just optimism about a good license — and it's why we think this is one of the more interesting long-term stories in the entire trading card game market right now.`,
+  },
   ...SEO_PACK_ARTICLES,
 ];
 
+// PUBLISHED articles only. Every public surface goes through here — the indexes,
+// both feeds, the sitemap, the authors pages, the /llm mirrors — so filtering
+// drafts once, at the source, covers all of them.
 export function getArticles(category?: ArticleCategory): Article[] {
-  const list = category ? ARTICLES.filter((a) => a.category === category) : ARTICLES;
+  const list = ARTICLES.filter((a) => !a.draft && (!category || a.category === category));
   return [...list].sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+// Resolves drafts too, deliberately: a draft has to be reachable by direct URL to
+// be reviewed before publication. The page renders it noindex, and nothing links
+// to it, so it cannot be found without the URL.
 export function getArticle(slug: string): Article | undefined {
   return ARTICLES.find((a) => a.slug === slug);
+}
+
+/**
+ * Response headers that keep a DRAFT out of the index.
+ *
+ * A draft still has [TODO] markers in its body. The HTML pages at /blog/<slug>
+ * and /guides/<slug> already noindex those (metadata `robots: { index: false,
+ * follow: true }`) so they stay reachable for review without being indexed — but
+ * those same pages advertise the markdown mirrors as a `text/markdown`
+ * rel=alternate, and the mirrors were serving the identical unfinished text at
+ * HTTP 200 with no robots signal at all. The noindexed page was pointing
+ * crawlers straight at an indexable copy of itself.
+ *
+ * A header rather than a 404, deliberately, on both counts: `metadata.robots`
+ * does not exist for a non-HTML response, so X-Robots-Tag is the only way to say
+ * this; and the HTML side's reasoning — reachable by direct URL for review, never
+ * indexed — applies unchanged to the mirror. Published posts get {} and are
+ * unaffected.
+ */
+export function draftNoindexHeaders(slug: string): Record<string, string> {
+  return getArticle(slug)?.draft ? { "X-Robots-Tag": "noindex, follow" } : {};
 }

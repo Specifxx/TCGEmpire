@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       select: {
         id: true, slug: true, name: true, setCode: true, collectorNumber: true,
         imageThumbUrl: true,
-        lowestPriceCents: true, lowestPriceCentsNz: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true,
+        lowestPriceCents: true, lowestPriceCentsUs: true, lowestPriceCentsUk: true, lowestPriceCentsSg: true, lowestPriceCentsCa: true, lowestPriceCentsEu: true,
       },
     });
     // findMany loses the random order — reshuffle, then strip to the game shape.

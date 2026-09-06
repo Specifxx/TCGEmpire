@@ -73,8 +73,13 @@ function parseAlt(alt: string): { type: string; name: string; rules: string } | 
 async function main() {
   let chromium;
   try {
-    // @ts-expect-error — playwright is an OPTIONAL dependency (installed in CI just
-    // for this task), so it isn't in package.json.
+    // playwright used to be an OPTIONAL dependency not listed in package.json
+    // (hence the try/catch below), but the homepage-rebuild task's audit
+    // tooling added it as a real devDependency (pinned to 1.56.1 — see
+    // DECISIONS.md), so the dynamic import now type-checks on its own and no
+    // longer needs a @ts-expect-error escape hatch. The try/catch itself
+    // stays: this script must still degrade gracefully wherever playwright
+    // genuinely isn't installed (e.g. a minimal CI image).
     ({ chromium } = await import("playwright"));
   } catch {
     console.error("Playwright not installed. Run:\n  npm i --no-save playwright && npx playwright install --with-deps chromium");

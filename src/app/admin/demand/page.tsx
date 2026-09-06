@@ -45,6 +45,12 @@ const DEFAULT_RANGE: RangeKey = "30d";
 //
 // Access is admin-only: a logged-in account with isAdmin, or the ADMIN_TOKEN env var
 // (visit /admin/demand?key=YOUR_TOKEN). Mirrors /admin/messages so there's one gate.
+//
+// This stays the internal, unrestricted version (every card, the outbound-click
+// breakdown by store, six window options) — a Premium PUBLIC version of the same
+// underlying signals shipped separately at /tools/demand (see lib/demand.ts),
+// scoped down to what a member actually wants (top 25 by search/view, no store
+// click data) rather than opening this page itself up to the world.
 export default async function AdminDemandPage({
   searchParams,
 }: {
@@ -74,11 +80,11 @@ export default async function AdminDemandPage({
     viewCount: true,
     lastViewedAt: true,
     lowestPriceCents: true,
-    lowestPriceCentsNz: true,
     lowestPriceCentsUs: true,
     lowestPriceCentsUk: true,
     lowestPriceCentsSg: true,
     lowestPriceCentsCa: true,
+    lowestPriceCentsEu: true,
   } as const;
 
   // ── Searches / views, windowed ──────────────────────────────────────────────

@@ -103,7 +103,9 @@ test("the server half stays cookie-free so host pages remain cacheable", () => {
 // ── Placement ────────────────────────────────────────────────────────────────
 
 test("the unit is on all five requested pages", () => {
-  assert.match(read("src/app/page.tsx"), /<EbayPicks \/>/, "/ must render it");
+  // "/" renders it via HomeSections.tsx (shared with the 5 region home pages)
+  // rather than inline — see that file's own header comment.
+  assert.match(read("src/components/home/HomeSections.tsx"), /<EbayPicks \/>/, "/ must render it");
   assert.match(read("src/app/browse/page.tsx"), /<EbayPicks /, "/browse must render it");
 
   // The three articles opt in through data, not a slug check in the view.

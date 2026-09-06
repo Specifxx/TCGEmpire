@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EbayAd } from "@/components/EbayAd";
 import { getCountry } from "@/lib/get-country";
+import { pageAlternates } from "@/lib/seo";
 import { Zoomed } from "@/components/games/Zoomed";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Zoomed In — Guess the Riftbound Card from Its Art",
   description:
     "Name the Riftbound card from a tiny zoomed-in patch of its artwork. Five rounds, four choices, optional zoom-out hint at half points. Free daily-replayable art quiz.",
-  alternates: { canonical: "/games/zoomed" },
+  alternates: pageAlternates("/games/zoomed"),
 };
 
 export default function ZoomedPage() {

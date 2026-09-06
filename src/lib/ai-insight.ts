@@ -7,6 +7,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { PricePoint } from "./price-history";
 import { formatMoney } from "./format";
+import { DEFAULT_COUNTRY } from "./country";
 
 const API_KEY = process.env.ANTHROPIC_API_KEY ?? "";
 // Skill default is Opus; override to a cheaper model (e.g. claude-haiku-4-5) via env.
@@ -214,7 +215,7 @@ export async function getInsight(
   card: { id: string; name: string; rarity: string; setCode: string },
   points: PricePoint[],
   currency = "AUD",
-  country = "AU",
+  country = DEFAULT_COUNTRY,
 ): Promise<Insight> {
   const key = dayKey(card.id, country);
   const hit = cache.get(key);

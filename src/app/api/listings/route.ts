@@ -30,25 +30,29 @@ export async function POST(req: Request) {
     );
   }
 
-  const card = await prisma.card.findUnique({ where: { id: parsed.data.cardId } });
-  if (!card) {
-    return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  try {
+    const card = await prisma.card.findUnique({ where: { id: parsed.data.cardId } });
+    if (!card) {
+      return NextResponse.json({ error: "Card not found" }, { status: 404 });
+    }
+
+    const listing = await prisma.listing.create({
+      data: {
+        cardId: parsed.data.cardId,
+        sellerId: user.id,
+        condition: parsed.data.condition,
+        isFoil: parsed.data.isFoil,
+        priceCents: parsed.data.priceCents,
+        quantity: parsed.data.quantity,
+        status: "ACTIVE",
+      },
+    });
+
+    // Return the canonical slug href so the client lands on /card/<slug>, not the cuid.
+    return NextResponse.json({ ok: true, listingId: listing.id, cardId: card.id, cardHref: cardHref(card) });
+  } catch {
+    return NextResponse.json({ error: "Couldn't create that listing right now — please try again." }, { status: 500 });
   }
-
-  const listing = await prisma.listing.create({
-    data: {
-      cardId: parsed.data.cardId,
-      sellerId: user.id,
-      condition: parsed.data.condition,
-      isFoil: parsed.data.isFoil,
-      priceCents: parsed.data.priceCents,
-      quantity: parsed.data.quantity,
-      status: "ACTIVE",
-    },
-  });
-
-  // Return the canonical slug href so the client lands on /card/<slug>, not the cuid.
-  return NextResponse.json({ ok: true, listingId: listing.id, cardId: card.id, cardHref: cardHref(card) });
 }
 
 // Cancel one of your own listings.
@@ -61,13 +65,17 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const listing = await prisma.listing.findUnique({ where: { id } });
-  if (!listing || listing.sellerId !== user.id) {
-    return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+  try {
+    const listing = await prisma.listing.findUnique({ where: { id } });
+    if (!listing || listing.sellerId !== user.id) {
+      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+    }
+    await prisma.listing.update({
+      where: { id },
+      data: { status: "CANCELLED" },
+    });
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Couldn't cancel that listing right now — please try again." }, { status: 500 });
   }
-  await prisma.listing.update({
-    where: { id },
-    data: { status: "CANCELLED" },
-  });
-  return NextResponse.json({ ok: true });
 }

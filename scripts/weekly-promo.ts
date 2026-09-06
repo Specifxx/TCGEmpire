@@ -23,14 +23,14 @@
  *   RESEND_API_KEY        optional — enables the promo-pack email
  *   EMAIL_FROM            optional — verified sender (defaults in lib/email)
  *   PROMO_EMAIL           optional — recipient (default: CONTACT_EMAIL)
- *   PROMO_MARKET          optional — AU | NZ | US | UK (default AU)
+ *   PROMO_MARKET          optional — AU | US | UK (default AU)
  *
  * Scheduled by .github/workflows/weekly-promo.yml (Sat 06:30 AEST, after the
  * Friday-evening price refresh, so the numbers are fresh).
  */
 import { prisma } from "../src/lib/db";
 import { dbHistory } from "../src/lib/db-history";
-import { getPriceMovers, type Mover, type PriceMovers } from "../src/lib/price-history";
+import { getPriceMovers, historySource, type Mover, type PriceMovers } from "../src/lib/price-history";
 import { sendEmail, isEmailEnabled } from "../src/lib/email";
 import { formatMoney } from "../src/lib/format";
 import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "../src/lib/country";
@@ -116,7 +116,7 @@ function redditBody(d: PromoData, market: Country): string {
   if (d.value.length)
     sections.push(`**💎 Best value vs recent high**\n\n${redditTable(d.value, cur, 5)}`);
   sections.push(
-    `Interactive version with price-history charts (covers AU / NZ / US / UK): [riftcompare.com/movers](${utm("/movers", "reddit")})`
+    `Interactive version with price-history charts (covers AU / US / UK): [riftcompare.com/movers](${utm("/movers", "reddit")})`
   );
   sections.push(
     `*Prices are the ${info.place} market in ${cur}. Disclosure: I run RiftCompare — it's a free price-comparison site; happy to answer questions or take feedback.*`
@@ -246,13 +246,17 @@ async function main() {
     //
     // dbHistory, NOT prisma — and this guard is the reason the bug it was written
     // to catch went unnoticed for so long. PriceHistory lives in the separate
-    // history project (RH6, see src/lib/db-history.ts); getPriceMovers() below
+    // history project (RH7, see src/lib/db-history.ts); getPriceMovers() below
     // correctly reads it via dbHistory, but this pre-check queried the
     // OPERATIONAL database, whose PriceHistory is deliberately empty since the
     // RM3 cutover. So it returned 0 every Friday and the promo silently skipped
     // with "no price history yet" — the exact quiet failure the comment above
     // promises to prevent.
-    const historyRows = await dbHistory.priceHistory.count({ where: { country: market } });
+    // CA/EU have no rows of their own (historySource()-derived from US/UK —
+    // see price-import.ts) — check the market this promo will ACTUALLY read,
+    // or this guard would report a false "no history" the moment CA/EU's own
+    // old rows age past whatever window getPriceMovers reads.
+    const historyRows = await dbHistory.priceHistory.count({ where: { country: historySource(market).source } });
     if (historyRows === 0) {
       console.log(`[promo] no price history for ${market} yet — nothing to report, skipping.`);
       return;

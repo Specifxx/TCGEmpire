@@ -60,7 +60,7 @@ async function main() {
 
   img.print({ font: f64, x: 105, y: 150, text: "RIFTCOMPARE" });
   img.print({ font: f32, x: 108, y: 235, text: "Live Riftbound TCG price comparison" });
-  img.print({ font: f16, x: 110, y: 292, text: "EVERY CARD  ·  70+ STORES  ·  AU / NZ / US / UK / SG  ·  UPDATED DAILY" });
+  img.print({ font: f16, x: 110, y: 292, text: "EVERY CARD  ·  70+ STORES  ·  AU / US / UK / SG / CA  ·  UPDATED DAILY" });
   img.print({ font: f16, x: 110, y: 322, text: "riftcompare.com" });
 
   mkdirSync("scratch", { recursive: true });

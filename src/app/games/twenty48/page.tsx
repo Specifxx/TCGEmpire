@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TcgplayerAd } from "@/components/TcgplayerAd";
 import { EbayAd } from "@/components/EbayAd";
 import { getCountry } from "@/lib/get-country";
+import { pageAlternates } from "@/lib/seo";
 import { Twenty48 } from "@/components/games/Twenty48";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Riftbound 2048 — Merge Cards Up the Rarity Ladder",
   description:
     "Play Riftbound 2048: the classic slide-and-merge puzzle, but you climb the rarity ladder from Common to Legend. Free, no signup, arrow keys or swipe. Compete on the global leaderboard.",
-  alternates: { canonical: "/games/twenty48" },
+  alternates: pageAlternates("/games/twenty48"),
 };
 
 export default function Twenty48Page() {

@@ -7,6 +7,7 @@ import { DEFAULT_COUNTRY } from "@/lib/country";
 import { TYPE_FACETS, typeFacetBySlug, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { FacetPageBody } from "@/components/FacetPageBody";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
 export const revalidate = 86400;
 
@@ -23,15 +24,25 @@ export async function generateMetadata({ params }: { params: { type: string } })
   const total = await prisma.card
     .count({ where: buildCardWhere(facet.query, DEFAULT_COUNTRY) })
     .catch(() => -1);
-  const title = `Riftbound ${facet.label} Cards — Prices & Full List | RiftCompare`;
+  // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: the previous
+  // single fixed string had no length guard — the longest type label pushed it
+  // past 60 chars, part of Bing's 397 "Title too long" warnings (small volume
+  // here, 6 pages, but fixed for consistency with every other facet template).
+  const titleCandidates = [
+    `Riftbound ${facet.label} Cards — Prices & Full List`,
+    `Riftbound ${facet.label} Cards — Prices`,
+    `Riftbound ${facet.label} Cards`,
+  ];
+  const title =
+    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   return {
-    title: { absolute: title },
+    title: { absolute: `${title} | RiftCompare` },
     description: `${facet.intro} Compare live prices across every store we track.`,
-    alternates: { canonical: `/cards/type/${facet.slug}` },
+    alternates: pageAlternates(`/cards/type/${facet.slug}`),
     // A real page with genuine unique copy either way — noindex only guards
     // against a page whose ONLY content would be a near-empty card grid.
     ...(total >= 0 && total < FACET_THIN_THRESHOLD ? { robots: { index: false, follow: true } } : {}),
-    openGraph: { title, description: facet.intro, url: `${SITE_URL}/cards/type/${facet.slug}` },
+    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description: facet.intro, url: `/cards/type/${facet.slug}` }),
   };
 }
 

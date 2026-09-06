@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { SETS } from "../src/lib/constants";
+import { SETS, newestReleasedSet } from "../src/lib/constants";
 import { getArticles } from "../src/lib/articles";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ test("gallery emits ItemList structured data and a canonical", () => {
   const src = read(GALLERY);
   assert.ok(src.includes('"@type": "ItemList"'), "gallery must emit ItemList JSON-LD");
   assert.ok(src.includes("itemListElement"), "ItemList must carry its items");
-  assert.ok(src.includes("canonical:"), "gallery must declare a canonical");
+  assert.ok(src.includes("pageAlternates("), "gallery must declare a canonical via the shared helper");
 });
 
 test("gallery caps its payload so a big set can't wreck LCP", () => {
@@ -66,11 +66,19 @@ test("every set's gallery is in the sitemap", () => {
   );
 });
 
-test("the Vendetta gallery is internally linked from the key surfaces", () => {
+test("the current set's gallery is internally linked from the key surfaces", () => {
   // An indexable page nothing links to is a page Google discovers late and trusts
   // little. These are the three strongest internal links available to it.
+  //
+  // The homepage surface MOVED (2026-08-09): it used to be the Vendetta launch
+  // band, which was removed once the set stopped being new. The link survived the
+  // removal but now resolves through newestReleasedSet(), so it follows whichever
+  // set is current instead of naming one — which is why this assertion looks for
+  // a template literal rather than a "/sets/vendetta/gallery" string.
   const surfaces: [string, string][] = [
-    ["src/components/home/VendettaBlock.tsx", "homepage"],
+    // Moved into HomeSections.tsx (shared with the 5 region home pages) when
+    // the homepage's feature sections were factored out of app/page.tsx.
+    ["src/components/home/HomeSections.tsx", "homepage"],
     ["src/app/sets/[set]/page.tsx", "set page"],
     ["src/lib/articles.ts", "guides/blog"],
   ];
@@ -211,4 +219,18 @@ test("SETS all resolve to a gallery path", () => {
   for (const s of SETS) {
     assert.ok(s.slug && /^[a-z0-9-]+$/.test(s.slug), `set ${s.code} needs a url-safe slug`);
   }
+});
+
+test("newestReleasedSet() follows the calendar, and ignores unreleased sets", () => {
+  // The homepage gallery link resolves through this. The failure it guards
+  // against is the one that made the Vendetta launch band need removing by hand:
+  // a surface that names one set and then quietly goes stale.
+  assert.equal(newestReleasedSet(new Date("2026-08-09T00:00:00Z"))?.code, "VEN");
+  // Radiance is dated 23 Oct 2026 — before that day it must not win, even though
+  // it carries the latest releasedOn in SETS.
+  assert.equal(newestReleasedSet(new Date("2026-10-22T00:00:00Z"))?.code, "VEN");
+  assert.equal(newestReleasedSet(new Date("2026-10-23T12:00:00Z"))?.code, "RAD");
+  // Before any set shipped, there is no "current set" to link to and the caller
+  // renders nothing rather than a broken URL.
+  assert.equal(newestReleasedSet(new Date("2020-01-01T00:00:00Z")), undefined);
 });

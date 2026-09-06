@@ -2,11 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
-import { NAV_GROUPS } from "./nav-groups";
-import { SearchBar } from "./SearchBar";
+import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
+import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
+import { useMe } from "@/lib/use-me";
+import { usePremiumDialog } from "./PremiumDialog";
+
+// Shared by the Popular grid and the full category panels below — both need
+// the identical active-pathname/external branching, so it's factored out
+// rather than duplicated (and drifting) between the two render paths.
+function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: string; onClick: () => void }) {
+  const active = !l.external && (pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href)));
+  const className = `group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
+    active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
+  }`;
+  if (l.external) {
+    return (
+      <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={className}>
+        <span className="text-lg" aria-hidden>{l.emoji}</span>
+        <span className="font-medium">{l.label}</span>
+      </a>
+    );
+  }
+  return (
+    <Link href={l.href} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>
+      <span className="text-lg" aria-hidden>{l.emoji}</span>
+      <span className="font-medium">{l.label}</span>
+    </Link>
+  );
+}
 
 // Full-screen, "movie-like" navigation overlay (ported from DexCompare). Stays
 // mounted and toggles via classes (animates in AND out): scroll-lock, Escape,
@@ -14,8 +40,58 @@ import { BrandLogo } from "./BrandLogo";
 // single accent (brand green). Fully prefers-reduced-motion safe.
 export function CinematicNavMenu() {
   const { open, setOpen } = useMegaMenu();
+  const { premium, premiumCheckout, trialEligible, trialDays } = useMe();
+  const { open: openPremium } = usePremiumDialog();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [filter, setFilter] = useState("");
+  // Reported directly: "we don't need everything to show up... have a subset
+  // of the most used features and have a way for them to look at all
+  // features only if they want to." Default view is POPULAR_LINKS (flat, no
+  // category headers); this reveals the full NAV_GROUPS panel instead —
+  // typing a filter always searches the full index regardless of this flag,
+  // since narrowing-by-search already IS "show me something specific".
+  const [showAll, setShowAll] = useState(false);
+
+  // React 18's JSX `inert` prop doesn't reliably reach the DOM (no first-class
+  // support until React 19 — the attribute was silently missing from the
+  // rendered HTML, which is exactly what let a close button and search input
+  // stay tab-reachable inside this aria-hidden subtree while closed). Setting
+  // the DOM property directly bypasses that gap; `HTMLElement.prototype.inert`
+  // itself is supported by every browser this site targets.
+  useEffect(() => {
+    if (overlayRef.current) overlayRef.current.inert = !open;
+  }, [open]);
+
+  // The panels below, narrowed by the FEATURE filter. Same matcher the ⌘K
+  // launcher uses, so "prices"/"deals"/"blog"/"alerts" behave identically on a
+  // phone and on a desktop.
+  const filtering = filter.trim().length > 0;
+  const sections = useMemo(() => {
+    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, links: g.links }));
+    const hits = searchNav(filter);
+    const byGroup = new Map<string, typeof hits>();
+    for (const h of hits) {
+      const list = byGroup.get(h.group);
+      if (list) list.push(h);
+      else byGroup.set(h.group, [h]);
+    }
+    return NAV_GROUPS.filter((g) => byGroup.has(g.title)).map((g) => ({
+      title: g.title,
+      links: byGroup.get(g.title)!,
+    }));
+  }, [filter, filtering]);
+
+  // A stale filter (or a stale "showing everything") on reopen would show a
+  // fraction — or an overwhelming amount — of the menu with no obvious reason
+  // why. Every open starts fresh: Popular, unfiltered.
+  useEffect(() => {
+    if (!open) {
+      setFilter("");
+      setShowAll(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,10 +137,11 @@ export function CinematicNavMenu() {
     // input focusable inside an aria-hidden subtree — a screen-reader user could
     // tab into controls that, as far as the accessibility tree is concerned, do
     // not exist. `inert` removes them from the tab order and from hit-testing
-    // for exactly as long as aria-hidden is set, so the two can't disagree.
+    // for exactly as long as aria-hidden is set, so the two can't disagree (set
+    // imperatively via overlayRef above — see that comment for why).
     <div
+      ref={overlayRef}
       aria-hidden={!open}
-      {...(open ? {} : { inert: true })}
       className={`fixed inset-0 z-[95] ${open ? "" : "pointer-events-none"}`}
     >
       {/* Solid backdrop — no transparency, no blur. */}
@@ -107,48 +184,140 @@ export function CinematicNavMenu() {
               </button>
             </div>
 
-            {/* Search front-and-centre */}
+            {/* FEATURE filter front-and-centre — NOT the card search.
+                This slot used to hold the card SearchBar. On a phone
+                this overlay IS the Explore menu (the ⌘K launcher's button is
+                desktop-only and ⌘K needs a keyboard), so the one input sitting
+                directly above a grid of features searched the card database
+                instead of filtering the grid — reported as "the search bar is
+                broken for the explore features… it acts like a normal search bar
+                and searches all the cards". The card search has its own
+                full-width row in the phone navbar, so nothing is lost. */}
             <div className="mx-auto mt-6 max-w-2xl">
-              <Suspense fallback={<div className="input" />}>
-                <SearchBar />
-              </Suspense>
+              <input
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter features, tools and pages…"
+                aria-label="Filter RiftCompare features"
+                className="input w-full"
+                type="search"
+              />
+              {filtering && (
+                <p className="mt-2 text-center text-xs text-slate-500">
+                  {sections.reduce((n, s2) => n + s2.links.length, 0)} feature
+                  {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "s"} match &ldquo;{filter}&rdquo; ·{" "}
+                  <Link href={`/browse?q=${encodeURIComponent(filter)}`} onClick={close} className="text-brand-400 hover:underline">
+                    search cards for &ldquo;{filter}&rdquo; instead →
+                  </Link>
+                </p>
+              )}
             </div>
 
-            {/* Category panels (flat, single accent, staggered on open) */}
-            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {NAV_GROUPS.map((sec, si) => (
-                <div
-                  key={sec.title}
-                  className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"
-                  style={{ "--cine-delay": `${si * 70}ms` } as CSSProperties}
-                >
+            {/* Premium spotlight — reported directly: "the way to see Premium [on
+                phone] is clicking the three bars and finding the premium
+                feature which is way too hidden." Premium was already IN this
+                menu (the ⭐ tile in Popular below, popular:true in
+                nav-groups.ts) but as one of nine equal tiles in a grid you
+                have to scan, not the first thing seen. This is the fix: the
+                very first thing rendered below the filter box, spotlighted
+                and gold like every other Premium surface (PremiumButton,
+                UserMenu's "✦ Get Premium", PremiumSlideIn) instead of sharing
+                the Popular grid's neutral brand-green treatment.
+
+                Signed-out visitors see it too, deliberately — this is a menu
+                the visitor chose to open, not an unsolicited auto-popup like
+                SignupPromoPopup (which pitches Premium too as of 2026-09-04,
+                but on its own separate frequency cap — see that component).
+                The ⭐ Premium tile below was already visible to signed-out
+                visitors in this exact overlay; this only makes that existing,
+                already-public entry more prominent, matching how the header's
+                own PremiumButton and /premium itself are public to every
+                visitor regardless of auth state.
+
+                Only shown in the default (unfiltered, not-showing-everything)
+                view, same as Popular below — once someone is actively
+                searching or has asked to see the full index, they are in
+                "I know what I want" mode and a promo banner is noise. Hidden
+                for anyone already Premium (isPremium() covers admins too, via
+                useMe()) and while checkout itself isn't configured. */}
+            {!filtering && !showAll && !premium && premiumCheckout ? (
+              <button
+                type="button"
+                onClick={() => {
+                  close();
+                  openPremium();
+                }}
+                className="mt-7 flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 p-4 text-left transition-colors hover:border-gold/60 hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
+              >
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-gold">
+                    ✦ Premium
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm font-semibold text-white">
+                    {trialEligible ? "Try Premium free" : "Unlock the pro tools, go ad-free"}
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm font-bold text-gold">
+                  {trialEligible && trialDays > 0 ? `${trialDays}-day trial →` : "See plans →"}
+                </span>
+              </button>
+            ) : null}
+
+            {/* Default view: the curated Popular set, flat (no category
+                headers — the whole point is "glance, tap, done" instead of
+                hunting through ~9 categories). Swaps out for the full
+                category-grouped panel below the moment a visitor filters
+                (real search intent — narrower is better) or explicitly asks
+                to see everything. */}
+            {!filtering && !showAll ? (
+              <>
+                <div className="mt-7 rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4">
                   <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
                     <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
-                    {sec.title}
+                    Popular
                   </div>
-                  <ul className="space-y-0.5">
-                    {sec.links.map((l) => {
-                      const active = pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href));
-                      return (
-                        <li key={l.href}>
-                          <Link
-                            href={l.href}
-                            onClick={close}
-                            aria-current={active ? "page" : undefined}
-                            className={`group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
-                              active ? "bg-brand-500 font-semibold text-ink-950" : "text-slate-200 hover:bg-ink-800 hover:text-white"
-                            }`}
-                          >
-                            <span className="text-lg" aria-hidden>{l.emoji}</span>
-                            <span className="font-medium">{l.label}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
+                  <ul className="grid gap-0.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {POPULAR_LINKS.map((l) => (
+                      <li key={l.href}>
+                        <FeatureLink l={l} pathname={pathname} onClick={close} />
+                      </li>
+                    ))}
                   </ul>
                 </div>
-              ))}
-            </div>
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAll(true)}
+                    className="tap-link inline-flex min-h-11 items-center rounded-md px-3 text-sm font-semibold text-brand-300 outline-none transition-colors hover:text-brand-200 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
+                  >
+                    Show all features →
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Category panels (flat, single accent, staggered on open) */
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {sections.map((sec, si) => (
+                  <div
+                    key={sec.title}
+                    className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"
+                    style={{ "--cine-delay": `${si * 70}ms` } as CSSProperties}
+                  >
+                    <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
+                      <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
+                      {sec.title}
+                    </div>
+                    <ul className="space-y-0.5">
+                      {sec.links.map((l) => (
+                        <li key={l.href}>
+                          <FeatureLink l={l} pathname={pathname} onClick={close} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

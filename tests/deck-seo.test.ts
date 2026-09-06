@@ -190,7 +190,7 @@ test("cheapest ignores unpriced decks; best win rate picks the maximum", () => {
 
 test("the page keeps its self-referencing canonical and adds no fabricated hreflang", () => {
   const page = code("src/app/decks/page.tsx");
-  assert.match(page, /alternates: \{ canonical: "\/decks" \}/, "canonical must self-reference");
+  assert.match(page, /alternates: pageAlternates\("\/decks"\)/, "canonical must self-reference via the shared helper");
   // Region is a cookie on ONE url set (lib/get-country.ts). hreflang alternates
   // would have to point at per-region URLs that do not exist — worse than none.
   assert.ok(!/hreflang/i.test(page), "no hreflang until region-segmented URLs exist");
@@ -223,8 +223,15 @@ test("robots directives are untouched", () => {
   const layout = read("src/app/layout.tsx");
   assert.match(layout, /index: true/);
   assert.match(layout, /follow: true/);
-  const page = read("src/app/decks/page.tsx");
+  // code(), not read(): this asserts /decks EMITS no noindex. It used to read the
+  // raw file, so a comment merely EXPLAINING that some linked page is noindexed
+  // failed it — which is the same prose-vs-code confusion the code() helper was
+  // added for at the top of this file. Tightened at the same time to also reject
+  // a `robots:` key in the metadata, which is the actual mechanism a future edit
+  // would use to de-index this page.
+  const page = code("src/app/decks/page.tsx");
   assert.ok(!/noindex/i.test(page), "/decks must stay indexable");
+  assert.ok(!/^\s*robots:/m.test(page), "/decks must declare no robots override at all");
 });
 
 test("deck sitemap lastmod tracks the same stamp as dateModified", () => {
@@ -254,4 +261,48 @@ test("every image on the page has descriptive alt text", () => {
     assert.match(img, /alt=\{/, "every <img> needs alt");
     assert.ok(!/alt=""/.test(img), "deck art is meaningful, not decorative");
   }
+});
+
+// ── Best Basket handoff: nofollow, not noindex ──────────────────────────────
+// Reported directly: a site audit's duplicate-content export flagged 13 URLs
+// under /tools/best-basket?list=..., one per deck, as byte-identical (same
+// title/meta/H1/content-hash). best-basket's metadata is a static export and
+// the tool itself is Premium-gated, so a crawler — never signed in, never
+// Premium — renders the exact same "Go Premium" gate regardless of which
+// list= it was given; the canonical (already present) keeps them out of the
+// index, but nothing stopped Google spending a crawl on each one to find
+// that out. Fixed at the source: the ONE internal link that mints a fresh
+// list= per deck (DeckView.tsx's bestBasketHref) now carries rel="nofollow",
+// the same convention already used for the dynamic /login?next= links (see
+// components/UserMenu.tsx) — real for a signed-in visitor, nothing for a
+// crawler to gain by following.
+test("the Best Basket handoff link is nofollow", () => {
+  const src = code("src/components/DeckView.tsx");
+  const at = src.indexOf("bestBasketHref &&");
+  assert.ok(at >= 0, "expected the conditional Best Basket link");
+  const block = src.slice(at, src.indexOf("</Link>", at));
+  assert.match(block, /<Link href=\{bestBasketHref\}[^>]*rel="nofollow"/, "the handoff link must be nofollow");
+});
+
+test("best-basket's own Sign-in link is nofollow when it carries a list=", () => {
+  const src = code("src/app/tools/best-basket/page.tsx");
+  const at = src.indexOf("login?next=");
+  assert.ok(at >= 0, "expected the Sign-in-free login link");
+  const block = src.slice(src.lastIndexOf("<Link", at), src.indexOf("</Link>", at));
+  assert.match(block, /rel="nofollow"/, "the list-carrying login link must be nofollow too");
+});
+
+// The deliberate OTHER side of this decision: /deck?list=... (the free deck
+// builder/pricer, no Premium gate) computes a real per-list total server-side
+// and ships it in a dynamic OG card for link-sharing — genuinely differentiated
+// content, unlike best-basket's static gate. Its own canonical already keeps it
+// out of the index, so nofollowing builderHref too would just cost Google the
+// chance to see that real content, for no corresponding benefit. Pinned so a
+// future "make it consistent with bestBasketHref" edit doesn't quietly do that.
+test("the free Deck Builder handoff link is NOT nofollow — it has real per-list content", () => {
+  const src = code("src/components/DeckView.tsx");
+  const at = src.indexOf("<Link href={builderHref}");
+  assert.ok(at >= 0, "expected the Deck Builder link");
+  const block = src.slice(at, src.indexOf("</Link>", at));
+  assert.ok(!/rel="nofollow"/.test(block), "builderHref must stay followable — /deck computes real content per list=");
 });

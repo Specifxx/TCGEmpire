@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "@/lib/facets";
 import { DOMAIN_PAGES } from "@/lib/domains";
 import { SITE_URL } from "@/lib/site";
+import { pageAlternates } from "@/lib/seo";
 
 // Facet index — links every card-type, rarity and printing hub in one place, plus
 // the existing domain hubs. This is the internal-linking backbone item B2 needs:
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   title: { absolute: "Browse Riftbound Cards by Type, Rarity & Printing | RiftCompare" },
   description:
     "Every way to browse the Riftbound card database — by domain, card type, rarity and printing — each with live prices across every store we track.",
-  alternates: { canonical: "/cards" },
+  alternates: pageAlternates("/cards"),
   openGraph: { title: "Browse Riftbound Cards | RiftCompare", description: "Browse by domain, type, rarity and printing.", url: `${SITE_URL}/cards` },
 };
 
@@ -53,18 +54,26 @@ export default async function CardsIndexPage() {
 
   function FacetGrid({
     title,
+    titleLink,
     facets,
     base,
     counts,
   }: {
     title: string;
+    /** Optional link rendered beside the title — e.g. rarity's own explainer hub. */
+    titleLink?: { href: string; label: string };
     facets: { slug: string; label: string }[];
     base: string;
     counts: Map<string, number> | Record<string, number>;
   }) {
     return (
       <section>
-        <h2 className="mb-3 text-lg font-extrabold text-white">{title}</h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-lg font-extrabold text-white">{title}</h2>
+          {titleLink && (
+            <Link href={titleLink.href} className="text-sm text-brand-400 hover:underline">{titleLink.label}</Link>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {facets.map((f) => {
             const n = counts instanceof Map ? counts.get(f.label) ?? 0 : counts[f.slug] ?? 0;
@@ -125,7 +134,13 @@ export default async function CardsIndexPage() {
       </section>
 
       <FacetGrid title="By card type" facets={TYPE_FACETS} base="/cards/type" counts={typeCounts} />
-      <FacetGrid title="By rarity" facets={RARITY_FACETS} base="/cards/rarity" counts={rarityCounts} />
+      <FacetGrid
+        title="By rarity"
+        titleLink={{ href: "/cards/rarity", label: "What does each tier mean? →" }}
+        facets={RARITY_FACETS}
+        base="/cards/rarity"
+        counts={rarityCounts}
+      />
       <FacetGrid title="By printing" facets={PRINTING_FACETS} base="/cards/printing" counts={printingCounts} />
 
       <section className="card-surface p-6">

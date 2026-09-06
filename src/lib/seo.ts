@@ -13,7 +13,7 @@
 // cares about without dropping the bits it doesn't.
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL } from "./site";
-import type { Country } from "./country";
+import { COUNTRIES, type Country } from "./country";
 
 /** Feed auto-discovery, declared once, re-attached by pageAlternates(). */
 const FEED_TYPES = {
@@ -76,7 +76,7 @@ export function pageOpenGraph(opts: {
  *
  * RiftCompare serves one URL set and switches market on a cookie, so there are
  * no /en-gb/ style locale paths and inventing hreflang for them would be a lie.
- * The six country buying guides are the exception: each is a genuinely distinct,
+ * The country buying guides are the exception: each is a genuinely distinct,
  * separately-indexable page about buying in ONE market, in that market's
  * currency, and they are alternates of each other in exactly the sense hreflang
  * describes.
@@ -87,19 +87,40 @@ export const COUNTRY_GUIDE_SLUGS: Record<Country, string> = {
   US: "buy-riftbound-cards-us",
   UK: "buy-riftbound-cards-uk",
   AU: "buy-riftbound-cards-australia",
-  NZ: "buy-riftbound-cards-nz",
   CA: "buy-riftbound-cards-canada",
   SG: "riftbound-price-comparison-singapore",
+  EU: "buy-riftbound-cards-europe",
 };
 
-/** BCP-47 tag per market. UK's region subtag is GB, not UK. */
+/** BCP-47 tag per market. UK's region subtag is GB, not UK.
+ *
+ *  EU IS THE AWKWARD ONE, and used to be annotated en-ES (English targeted at
+ *  Spain, the market's anchor country for Shopify/eBay — see country.ts's
+ *  EU_ANCHOR_ISO). That was wrong, not just an under-claim: hreflang's region
+ *  subtag exists to say WHO a page is for, and this page is not for Spain
+ *  specifically — it is pan-European English content for shoppers in ~20
+ *  member states, with nothing in its copy, currency formatting or content
+ *  that singles Spain out. en-ES told Google the opposite of that.
+ *
+ *  hreflang's region subtag must be an ISO 3166-1 alpha-2 COUNTRY code, and
+ *  "EU" is a UN M.49 region — search engines reject or ignore it, so "en-EU"
+ *  is not a legal fix either. The correct BCP-47 tag for "English, no
+ *  particular country" is simply the bare language subtag: "en". That is a
+ *  real, standard hreflang value (search engines match it against any en-*
+ *  visitor not already served by a more specific tag — en-US/en-GB/en-AU/
+ *  en-CA/en-SG here), not a fabrication like en-EU would be, and it is the
+ *  genuinely accurate claim for this page: EU_ANCHOR_ISO's job is choosing
+ *  ONE country for Shopify/eBay's country-code-shaped APIs (see country.ts),
+ *  a completely different question with a completely different right answer
+ *  — hreflang has no such API constraint forcing a single-country tag, so it
+ *  should just say what the page actually is. */
 const HREFLANG: Record<Country, string> = {
   US: "en-US",
   UK: "en-GB",
   AU: "en-AU",
-  NZ: "en-NZ",
   CA: "en-CA",
   SG: "en-SG",
+  EU: "en",
 };
 
 /**
@@ -116,4 +137,51 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
   }
   map["x-default"] = `${SITE_URL}/blog/${COUNTRY_GUIDE_SLUGS.US}`;
   return map;
+}
+
+/**
+ * The second honest hreflang group on the site: the homepage ("/") plus its
+ * region variants (/au, /uk, /sg, /ca, /eu — see app/au/page.tsx etc). Each is
+ * a genuinely distinct, separately-indexable page — its own H1, its own
+ * region-locked stat block, its own store list — not a re-skin, so this is not
+ * the "inventing hreflang" case hreflangForCountryGuide's header warns against.
+ *
+ * Keyed by market so the map, the routes and the sitemap entries can't drift.
+ */
+export const REGION_HOME_PATH: Record<Country, string> = {
+  US: "/",
+  UK: "/uk",
+  AU: "/au",
+  CA: "/ca",
+  SG: "/sg",
+  EU: "/eu",
+};
+
+/** hreflang map for the homepage + all region pages. x-default points at "/",
+ *  the site's default market (DEFAULT_COUNTRY, currently US). */
+export function regionHomeHreflang(): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const [country, path] of Object.entries(REGION_HOME_PATH) as [Country, string][]) {
+    map[HREFLANG[country]] = `${SITE_URL}${path === "/" ? "" : path}`;
+  }
+  map["x-default"] = SITE_URL;
+  return map;
+}
+
+/** Full <Metadata> for one of the region home pages (not "/" itself, which
+ *  keeps its own hand-written metadata in app/page.tsx). Every one of the
+ *  region-locked facts here (adjective, currency, canonical path) reads off
+ *  COUNTRIES/REGION_HOME_PATH so a page can never describe a market other than
+ *  the one it actually renders. */
+export function regionHomeMetadata(region: Exclude<Country, "US">): Metadata {
+  const info = COUNTRIES[region];
+  const path = REGION_HOME_PATH[region];
+  const title = `Compare Riftbound Card Prices Across Every ${info.adjective} Store | RiftCompare`;
+  const description = `Compare live Riftbound TCG card prices across ${info.adjective} stores in ${info.currency} — total delivered cost including ${info.adjective} shipping, updated daily. Free.`;
+  return {
+    title: { absolute: title },
+    description,
+    alternates: pageAlternates(path, { languages: regionHomeHreflang() }),
+    openGraph: pageOpenGraph({ title, description, url: path }),
+  };
 }

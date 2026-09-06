@@ -1,5 +1,5 @@
 // Refresh eBay AU (AUD) + US (USD) prices for every card, bypassing the importer's
-// once-daily gate, then recompute the AU + US lowest-price columns (NZ has no eBay).
+// once-daily gate, then recompute the AU + US lowest-price columns.
 // Use to seed US eBay data after adding US support. Run: npx tsx scripts/refresh-ebay.ts
 import { prisma } from "../src/lib/db";
 import { refreshEbayMarkets } from "../src/lib/price-import";

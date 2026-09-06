@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
 import { useCountry } from "./CountryProvider";
 
-// Market chooser: 🇦🇺 Australia (default) / 🇳🇿 New Zealand. Switching reloads
-// prices + store lists for the chosen country and persists via cookie. Hidden while
-// NZ mode is in development (the site is AU-only then).
+// Market chooser: 🇦🇺 Australia / 🇺🇸 United States / 🇬🇧 United Kingdom / 🇸🇬
+// Singapore / 🇨🇦 Canada. Switching reloads prices + store lists for the chosen
+// country and persists via cookie. Hidden entirely while INTL_ENABLED is off
+// (the site is US-only then).
 export function CountrySwitcher({ className = "" }: { className?: string }) {
   const { country, setCountry, isEurDisplay, setEurDisplay } = useCountry();
   const [open, setOpen] = useState(false);
@@ -24,7 +25,15 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
   if (!INTL_ENABLED) return null;
 
   return (
-    <div ref={ref} className={`relative ${className}`}>
+    // data-region-control: paired with CountryHeroToggle's "hero" tag — see
+    // that component's own doc comment. scripts/homepage-audit.mjs uses this
+    // to assert at most one region selector is visible above the fold at a
+    // time (the desktop scroll-gate this control's sibling search box gets
+    // via HeaderSearchSlot has no equivalent here, since the header's region
+    // switcher was never a duplicate of the hero's — it's a compact icon+code
+    // button, not a six-button strip — but the tag exists either way so the
+    // audit measures reality instead of assuming it).
+    <div ref={ref} data-region-control="nav" className={`relative ${className}`}>
       <button
         onClick={() => setOpen((o) => !o)}
         // The accessible name must CONTAIN the visible text ("US"), or a
@@ -45,7 +54,7 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-ink-700 bg-ink-850/95 p-1 shadow-2xl backdrop-blur">
           <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Shop &amp; prices for
+            Shop & prices for
           </div>
           {COUNTRY_LIST.map((c) => (
             <button

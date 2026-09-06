@@ -18,6 +18,37 @@
     "imageThumbUrl": "https://tcgplayer-cdn.tcgplayer.com/product/693156_in_400x400.jpg"
   },
   {
+    "_note": "IMAGE FIX, not a new card. The 'b' Nexus Night promo variants of these two OGN cards (197b/298 and 151b/298, distinct from the 'op' promo above and from each other's own base/alt-art prints) were imported with their BASE card's art — RiftScribe/the import pipeline had no distinct art for the 'b' promo yet at import time and silently fell back to the base image, so the promo pages were showing the wrong card face. Corrected against dotgg.gg's per-collector-number scans (static.dotgg.gg/riftbound/cards/<SET>-<number>.webp), verified by eye against both cards' real printed text: Teemo's shows the repeating 'GGEZ' holo pattern and the printed Hidden/+3 Might text; Lee Sin's shows the gold League-Splash-Team treatment and the printed Accelerate/+2 Might text. NO externalId set, deliberately: these rows already exist (created by the automated import, not this file), so matching by setCode+collectorNumber+isPromo — unambiguous for a 'b'-suffixed promo number — finds and updates the existing row. Setting a fresh externalId here would miss on the id lookup and create a duplicate card instead of fixing the real one."
+  },
+  {
+    "name": "Teemo, Scout",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "197b/298",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 2,
+    "might": 1,
+    "imageUrl": "https://static.dotgg.gg/riftbound/cards/OGN-197b.webp",
+    "imageThumbUrl": "https://static.dotgg.gg/riftbound/cards/OGN-197b.webp"
+  },
+  {
+    "name": "Lee Sin, Centered",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "151b/298",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 6,
+    "might": 6,
+    "imageUrl": "https://static.dotgg.gg/riftbound/cards/OGN-151b.webp",
+    "imageThumbUrl": "https://static.dotgg.gg/riftbound/cards/OGN-151b.webp"
+  },
+  {
     "externalId": "promo-worlds-bundle-2025-panda-teemo",
     "name": "Teemo, Swift Scout (Panda)",
     "setCode": "OGN",
@@ -186,7 +217,7 @@
     "imageThumbUrl": null
   },
   {
-    "_note": "Vendetta Signature ('*') Legend pulls — playriftbound.com's own card gallery hasn't posted these yet (Signature prints always trail the base reveal), so fetch-vendetta-official.ts can't see them. Sourced from real eBay listings (buyer-submitted photos, cross-checked against each other for the rules text/collector number), NOT RiftScribe/official art. imageUrl points at our own re-hosted crop of that photo (public/signature-cards/) as a stand-in thumbnail — swap for the official CDN asset once cards-sync/vendetta-pipeline catalogues the real print (same externalId, so it adopts in place, no duplicate). domain is the Legend's FIRST printed domain only, same simplification fetch-vendetta-official.ts's own o.domain.values[0] makes for every other Legend in this file — each of these six is actually dual-domain (Zed Fury/Chaos, Kennen Chaos/Body, Shen Calm/Body, Renekton Fury/Body, Mel Mind/Chaos, Jayce Mind/Body per the two domain pips on the card), the DB just doesn't have a second-domain column yet."
+    "_note": "Vendetta Signature ('*') Legend pulls. UPDATED 2026-08-30: playriftbound.com's official card gallery now lists all 9 Signature prints (VEN 189*-197*/166, tagged by champion — note the site's own card NAME for each is just the subtitle, e.g. 'Master of Shadows' with tags:['Zed'], not 'Zed, Master of Shadows'). imageUrl/imageThumbUrl now point at the official cmsassets.rgpub.io CDN asset (same convention as import-vendetta.ts: imageThumbUrl = imageUrl, no separate crop), replacing the earlier eBay-photo stand-ins. Confirmed by champion tag + collector number, not by name string match. Still not in fetch-vendetta-official.ts's own automated pass, so this file remains the only path to these 8 rows — VEN-196*/166 (Ambessa, 'Matriarch of War') is a 9th Signature the gallery lists, but Ambessa was never added to this manual block in the first place (no base entry to match against here), so it's deliberately left out rather than added half-tracked. domain is still the Legend's FIRST printed domain only, same simplification fetch-vendetta-official.ts's own o.domain.values[0] makes for every other Legend in this file — each of these six is actually dual-domain (Zed Fury/Chaos, Kennen Chaos/Body, Shen Calm/Body, Renekton Fury/Body, Mel Mind/Chaos, Jayce Mind/Body per the two domain pips on the card), the DB just doesn't have a second-domain column yet."
   },
   {
     "externalId": "manual-ven-191166",
@@ -200,8 +231,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you banish a card you own, empower me. Action: Disempower me, exhaust — Discard 1, then draw 1.",
-    "imageUrl": "https://riftcompare.com/signature-cards/zed-master-of-shadows-ven191.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/zed-master-of-shadows-ven191.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a88733f8062c18a7aa51a208b1aef5d0bd030007-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/a88733f8062c18a7aa51a208b1aef5d0bd030007-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-197166",
@@ -215,8 +246,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you play a card from anywhere other than your hand, empower me. Action: Disempower me, exhaust — Give a unit Assault 2 this turn.",
-    "imageUrl": "https://riftcompare.com/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/kennen-heart-of-the-tempest-ven197.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/853681913bcd2a2e2b42217e290b530b72518142-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/853681913bcd2a2e2b42217e290b530b72518142-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-193166",
@@ -230,8 +261,8 @@
     "energyCost": null,
     "might": null,
     "description": "Action: Exhaust — Give a friendly unit Tank this turn.",
-    "imageUrl": "https://riftcompare.com/signature-cards/shen-eye-of-twilight-ven193.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/shen-eye-of-twilight-ven193.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1f60702c09f95d2a2af0176c77166092cb8cf6fa-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/1f60702c09f95d2a2af0176c77166092cb8cf6fa-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-190166",
@@ -245,8 +276,8 @@
     "energyCost": null,
     "might": null,
     "description": "Reaction: Pay 2 Energy, exhaust — Add 2. Spend this Energy only to play units or activated abilities of units.",
-    "imageUrl": "https://riftcompare.com/signature-cards/renekton-butcher-of-the-sands-ven190.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/renekton-butcher-of-the-sands-ven190.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b9270494d2c18525e766b2ffa23a7c99ad9f994f-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/b9270494d2c18525e766b2ffa23a7c99ad9f994f-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-195166",
@@ -260,8 +291,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you empower something else, empower me. Disempower me, exhaust — Give a unit at a battlefield -2 Might this turn.",
-    "imageUrl": "https://riftcompare.com/signature-cards/mel-souls-reflection-ven195.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/mel-souls-reflection-ven195.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/174a22326c894454cb5878f4ce3603d43f9e599f-744x1040.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/174a22326c894454cb5878f4ce3603d43f9e599f-744x1040.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-194166",
@@ -275,8 +306,8 @@
     "energyCost": null,
     "might": null,
     "description": "Empower 2 (2 Energy). Cost 1, exhaust — Ready a gear. Empowered: Cost 1, exhaust — Ready 2 gear.",
-    "imageUrl": "https://riftcompare.com/signature-cards/jayce-defender-of-tomorrow-ven194.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/jayce-defender-of-tomorrow-ven194.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/3092eec0739ac28d36e22c3ee005feb75980d001-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/3092eec0739ac28d36e22c3ee005feb75980d001-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-189166",
@@ -290,8 +321,8 @@
     "energyCost": null,
     "might": null,
     "description": "Empower 3, exhaust. Action: Exhaust — If it's your turn, move a friendly unit in a showdown to base and if I'm Empowered, ready it.",
-    "imageUrl": "https://riftcompare.com/signature-cards/akali-rogue-assassin-ven189.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/akali-rogue-assassin-ven189.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d8262e7b24f26d1c9a18b13166d009aaf573e059-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/d8262e7b24f26d1c9a18b13166d009aaf573e059-744x1039.png?accountingTag=RB"
   },
   {
     "externalId": "manual-ven-192166",
@@ -305,8 +336,8 @@
     "energyCost": null,
     "might": null,
     "description": "When you play a unit, gear, or activated ability with Energy cost 7 or more, you may exhaust me to ready up to 2 runes.",
-    "imageUrl": "https://riftcompare.com/signature-cards/nasus-curator-of-the-sands-ven192.jpg",
-    "imageThumbUrl": "https://riftcompare.com/signature-cards/nasus-curator-of-the-sands-ven192.jpg"
+    "imageUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/964b5f9718a6648add68d894505e69bd2c5d071a-744x1039.png?accountingTag=RB",
+    "imageThumbUrl": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/game_data_live/964b5f9718a6648add68d894505e69bd2c5d071a-744x1039.png?accountingTag=RB"
   },
   {
     "_note": "Vendetta Nexus Night promo cycle (weekly local-store event pack) — sourced from riftbound.gg's own Nexus Night promo page, official Riot card art (not a fan photo). The chase card is Mel, Newly Awakened (069b/166, a 'b' promo variant of the existing 069/166 base and 069A/166 alt-art); the 6 runes (R01b-R06b) are the promo variants of the existing base rune cycle (R01-R06). riftbound.gg explicitly labels the OTHER ~18 cards shown on that page as placeholders standing in for not-yet-revealed real promos ('We will update this section soon with the promo tagged cards') — only these 7 are confirmed, so only these 7 are added here."
@@ -497,5 +528,107 @@
     "variant": "a",
     "energyCost": null,
     "might": null
+  },
+  {
+    "_note": "Riftbound x T1 2025 Worlds Champion Collection (setCode T1S, printed bottom-left as \"T1S · NNN/005 · EN\"). Riot distributes this collection by Riot Merch Store DRAWING, not through retail, so it will never appear in RiftScribe, TCGplayer's catalogue or the riftbound.gg sitemap the automated pipelines read — this file is the only way these six printings exist on RiftCompare at all. Card data was read off Riot's own reveal renders (re-hosted at public/t1-worlds-cards/, cropped out of the composite on the reveal page — same self-host approach as the Vendetta Signature block above, never a hotlink). CROSS-CHECKED, not guessed: Xin Zhao/Galio/Miss Fortune already exist in our DB as base printings (SFD 176, UNL 171, OGN 193) and their domain/type/cost/might match these renders exactly, and Ambessa, The Wolf matches VEN 084 (Body, Unit, 4 energy, 4 might, identical Empower text). Seraphine, Not Alone has no other printing — it is from the unreleased Radiance set and is NOT tournament-legal until Radiance ships — so its Order domain is read from the yellow domain bar, the same colour as the two DB-confirmed Order cards in this same frame. rarity is Showcase for all six per constants.ts chasePrintRarity(): every card here is a special treatment (new art, new frame, new foiling) of another card, so it belongs in Showcase rather than cluttering the base tier its retail printing sits in. NO SETS ENTRY on purpose — T1S is a sealed collector product, not a playable set, and adding it to constants.ts SETS would push a 5-card 'set' into pack-sim, box-EV, movers and the homepage set grid. These cards carry no store listings (they cannot be bought as singles), so card-price-state.ts noindexes their pages until secondary-market listings appear — which is correct and self-healing. Run: `npm run cards:manual` (or maintenance.yml task=cards-manual). isPromo IS TRUE on all six, deliberately: they are a promotional printing in the sense the site's own filters mean it — never sold as a retail single, only handed out through a Riot promotion — so /browse?promo=1 finds them and each tile carries the PROMO badge. TWO CONSEQUENCES worth knowing. (1) cardSlug() appends \"-promo\", so the URLs are /card/<name>-t1s-<num>-005-promo; both T1 articles' embed slug lists were updated to match and tests/content-links.test.ts covers the articles' internal links. (2) chasePrintRarity() leaves a promo's rarity alone rather than forcing Showcase, which is why rarity is set explicitly to Showcase in each entry above instead of being inferred."
+  },
+  {
+    "externalId": "manual-t1s-001-ambessa",
+    "name": "Ambessa, The Wolf",
+    "setCode": "T1S",
+    "setName": "T1 2025 Worlds Champion Collection",
+    "collectorNumber": "001/005",
+    "domain": "Body",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 4,
+    "might": 4,
+    "description": "[Empower] [3][C] ([3][C]: Empower me. Use only if not Empowered.)\n[Empowered] [>] I have +3 [S] and can't be dealt damage unless I'm in combat.",
+    "imageUrl": "https://riftcompare.com/t1-worlds-cards/ambessa-the-wolf-t1s001.jpg",
+    "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/ambessa-the-wolf-t1s001.jpg"
+  },
+  {
+    "externalId": "manual-t1s-002-xin-zhao",
+    "name": "Xin Zhao, Vigilant",
+    "setCode": "T1S",
+    "setName": "T1 2025 Worlds Champion Collection",
+    "collectorNumber": "002/005",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 3,
+    "might": 4,
+    "description": "[Tank]\nI enter ready if you have two or more other units in your base.",
+    "imageUrl": "https://riftcompare.com/t1-worlds-cards/xin-zhao-vigilant-t1s002.jpg",
+    "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/xin-zhao-vigilant-t1s002.jpg"
+  },
+  {
+    "externalId": "manual-t1s-003-galio",
+    "name": "Galio, Indefatigable",
+    "setCode": "T1S",
+    "setName": "T1 2025 Worlds Champion Collection",
+    "collectorNumber": "003/005",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 3,
+    "might": 6,
+    "description": "[Deflect]\n[Tank]\nI don't deal combat damage.",
+    "imageUrl": "https://riftcompare.com/t1-worlds-cards/galio-indefatigable-t1s003.jpg",
+    "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/galio-indefatigable-t1s003.jpg"
+  },
+  {
+    "_note": "The serialised, gold-signature print. \"003*/005\" is the collector number printed on the card, so isSignature() (constants.ts: a \"*\" anywhere in the number) flags it and cardSlug() turns the * into an \"s\" -> /card/galio-indefatigable-t1s-003s-005. The serial box in the name plate (\"0001/2025\" on Riot's render) is per-copy, not per-printing, so it is deliberately NOT stored here — one Card row covers all 10,125 serials, exactly as the DB has no per-copy identity for any other card."
+  },
+  {
+    "externalId": "manual-t1s-003s-galio-signature",
+    "name": "Galio, Indefatigable",
+    "setCode": "T1S",
+    "setName": "T1 2025 Worlds Champion Collection",
+    "collectorNumber": "003*/005",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 3,
+    "might": 6,
+    "description": "[Deflect]\n[Tank]\nI don't deal combat damage.",
+    "imageUrl": "https://riftcompare.com/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg",
+    "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/galio-indefatigable-t1s003-signature.jpg"
+  },
+  {
+    "externalId": "manual-t1s-004-miss-fortune",
+    "name": "Miss Fortune, Buccaneer",
+    "setCode": "T1S",
+    "setName": "T1 2025 Worlds Champion Collection",
+    "collectorNumber": "004/005",
+    "domain": "Chaos",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 4,
+    "might": 4,
+    "description": "You may play me to an open battlefield.\nFriendly units may be played to open battlefields.",
+    "imageUrl": "https://riftcompare.com/t1-worlds-cards/miss-fortune-buccaneer-t1s004.jpg",
+    "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/miss-fortune-buccaneer-t1s004.jpg"
+  },
+  {
+    "externalId": "manual-t1s-005-seraphine",
+    "name": "Seraphine, Not Alone",
+    "setCode": "T1S",
+    "setName": "T1 2025 Worlds Champion Collection",
+    "collectorNumber": "005/005",
+    "domain": "Order",
+    "type": "Unit",
+    "rarity": "Showcase",
+    "isPromo": true,
+    "energyCost": 5,
+    "might": 1,
+    "description": "When you play me or when I become exhausted, play a 1 [S] Recruit unit token to your base.\nI have +1 [S] for each other exhausted unit you control.",
+    "imageUrl": "https://riftcompare.com/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+    "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/seraphine-not-alone-t1s005.jpg"
   }
 ]

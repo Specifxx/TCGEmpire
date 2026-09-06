@@ -6,6 +6,19 @@ import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { cardImageAlt } from "@/lib/image-alt";
+import { trackEvent } from "@/lib/analytics";
+
+// The builder has no persisted "save deck" feature (a pasted list only ever
+// lives in a shareable URL, see share() below) — so deck_create fires on a
+// user PRICING their own pasted list, the closest real action to "created a
+// deck" this tool has. deck_id is a short, non-cryptographic hash of the list
+// text (stable for the same list, no server round-trip needed for an id that
+// only ever feeds an analytics param).
+function shortHash(text: string): string {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
 
 // UTF-8-safe base64 so a decklist (incl. accented names) survives a URL round-trip.
 function encodeList(text: string): string {
@@ -38,11 +51,11 @@ interface DeckBuilderCard {
   imageThumbUrl: string | null;
   imageUrl: string | null;
   lowestPriceCents: number | null;
-  lowestPriceCentsNz?: number | null;
   lowestPriceCentsUs?: number | null;
   lowestPriceCentsUk?: number | null;
   lowestPriceCentsSg?: number | null;
   lowestPriceCentsCa?: number | null;
+  lowestPriceCentsEu?: number | null;
 }
 
 interface Result {
@@ -69,7 +82,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
   const [preview, setPreview] = useState<DeckBuilderCard | null>(null);
   const autoPriced = useRef(false);
 
-  async function price(deck: string = text) {
+  async function price(deck: string = text, isUserAction = false) {
     if (!deck.trim()) return;
     setLoading(true);
     try {
@@ -82,6 +95,11 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
       setResult(data);
       // Default the preview to the first matched card.
       setPreview(data.items.find((i) => i.card)?.card ?? null);
+      // Only a genuine user click on "Price this deck" counts as deck_create —
+      // NOT the auto-price on a shared-link visit (that's someone viewing
+      // another person's list) and NOT the market-change re-price below (same
+      // list, not a new one).
+      if (isUserAction) trackEvent("deck_create", { deck_id: shortHash(deck.trim()), archetype: "custom" });
     } catch {
       setResult(null);
     } finally {
@@ -98,7 +116,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-price when the market (AU/NZ) changes so totals reflect the new currency/stores.
+  // Re-price when the market changes so totals reflect the new currency/stores.
   useEffect(() => {
     if (result && text.trim()) void price(text);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,7 +154,7 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             className="input font-mono text-sm"
           />
           <div className="mt-3 flex gap-2">
-            <button onClick={() => price()} disabled={loading || !text.trim()} className="btn-primary flex-1">
+            <button onClick={() => price(text, true)} disabled={loading || !text.trim()} className="btn-primary flex-1">
               {loading ? "Pricing…" : "Price this deck"}
             </button>
             <button onClick={() => setText(SAMPLE)} className="btn-ghost" type="button">

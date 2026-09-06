@@ -3,11 +3,12 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import Link from "next/link";
 import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 import { staticPageDateLabel } from "@/lib/static-page-dates";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: `How ${SITE_NAME} handles your data, cookies and third-party advertising.`,
-  alternates: { canonical: "/privacy" },
+  alternates: pageAlternates("/privacy"),
 };
 
 
@@ -144,35 +145,6 @@ export default function PrivacyPage() {
                 rel="noopener noreferrer"
               >
                 How Google uses information from sites or apps that use its services
-              </a>
-              .
-            </li>
-            <li>
-              <strong className="text-white">Meta (Facebook) Pixel.</strong> We use the Meta Pixel to
-              measure visits that arrive from our advertising on Facebook and Instagram, and to build
-              audiences for that advertising. It sets Meta&rsquo;s own cookies and reports your visit
-              to Meta.{" "}
-              <strong className="text-white">
-                It does not load unless you have consented to advertising cookies.
-              </strong>{" "}
-              Where no consent regime applies to you it loads by default; you can prevent it entirely
-              by blocking third-party cookies, and you can control how Meta uses the data in your{" "}
-              <a
-                href="https://www.facebook.com/adpreferences"
-                className="text-brand-400 hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Meta ad preferences
-              </a>
-              . See also Meta&rsquo;s{" "}
-              <a
-                href="https://www.facebook.com/privacy/policy/"
-                className="text-brand-400 hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                privacy policy
               </a>
               .
             </li>

@@ -2,15 +2,14 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import {
-  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS, EBAY_CA_RETAILER,
-  AUCTION_CARDS_PER_MARKET, EBAY_PRIORITY_MARKET,
+  orderCardsForEbay, ebayMarketsForDay, EBAY_ROTATING_MARKETS, EBAY_ALWAYS_MARKETS,
 } from "../src/lib/price-import";
 import {
-  pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer,
+  pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, SETS, isFallbackRetailer, EBAY_CA_RETAILER,
   ALL_FALLBACK_RETAILERS, AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS,
-  SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, NZ_FALLBACK_RETAILERS,
+  SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS,
 } from "../src/lib/constants";
-import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
+import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabel, EBAY_CAMPAIGN_ID } from "../src/lib/affiliate";
 import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
 import { computeMarket } from "../src/lib/market-rows";
 import { COUNTRY_LIST } from "../src/lib/country";
@@ -148,6 +147,84 @@ test("eBay links carry the tracking params EPN requires", () => {
   assert.ok(u.searchParams.get("siteid"));
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// THE AFFILIATE MUST SURVIVE A WRONG ROTATION ID.
+// ─────────────────────────────────────────────────────────────────────────────
+// The EU market ships with an ES rotation id that has never been checked against
+// the live EPN dashboard. That is acceptable ONLY because a wrong mkrid cannot
+// cost the commission — `campid` is what names the campaign that gets credited,
+// and mkrid is a reporting dimension within it. These tests pin the three things
+// that make that true, so a refactor cannot quietly turn an unverified id into
+// an untracked click.
+
+test("every market's eBay link is affiliate-tagged, EU included", () => {
+  for (const c of COUNTRY_LIST) {
+    const u = new URL(ebaySearchUrl(c.code, "Riftbound singles", "card"));
+    assert.equal(u.searchParams.get("mkevt"), "1", `${c.code}: mkevt is what makes the click count`);
+    assert.equal(u.searchParams.get("mkcid"), "1", `${c.code}: mkcid names EPN as the channel`);
+    assert.equal(u.searchParams.get("campid"), EBAY_CAMPAIGN_ID, `${c.code}: campid IS the attribution`);
+    assert.ok(u.searchParams.get("mkrid"), `${c.code}: a rotation id must be present, right or not`);
+    assert.ok(u.searchParams.get("customid"), `${c.code}: no sub-id means unattributable revenue`);
+  }
+});
+
+test("each market reports under its OWN sub-id, so EU revenue is legible", () => {
+  const ids = COUNTRY_LIST.map((c) => new URL(ebaySearchUrl(c.code, "x", "card")).searchParams.get("customid")!);
+  assert.equal(new Set(ids).size, ids.length, `markets share a customid: ${ids.join(", ")}`);
+  const eu = new URL(ebaySearchUrl("EU", "x", "card"));
+  assert.match(eu.searchParams.get("customid")!, /^rc-eu-/, "EU clicks must report as rc-eu");
+  // And they must land on a EUR site. Sending a European buyer to ebay.com to
+  // read dollars would defeat the market, however well the click is tracked.
+  assert.equal(eu.hostname, "www.ebay.es");
+});
+
+test("a URL eBay already tagged keeps EBAY'S rotation, not ours", () => {
+  // The Browse API is called with our campaign in X-EBAY-C-ENDUSERCTX and returns
+  // itemAffiliateWebUrl — a URL eBay built, carrying the correct rotation for
+  // that marketplace. Overwriting it with our hand-maintained table (which this
+  // function used to do unconditionally) throws away authoritative data and puts
+  // an unverified id in front of every real listing click. This is the workaround
+  // that makes the ES id not matter for the links that carry the most money.
+  const fromEbay = "https://www.ebay.es/itm/123?mkevt=1&mkcid=1&mkrid=EBAY-OWN-ROTATION&siteid=186&campid=old";
+  const u = new URL(ebayAffiliateUrl(fromEbay, "card"));
+  assert.equal(u.searchParams.get("mkrid"), "EBAY-OWN-ROTATION", "eBay's own rotation must be preserved");
+  assert.equal(u.searchParams.get("siteid"), "186");
+  // campid is still forced to ours — it is the one parameter that decides who
+  // gets paid, and it must never be left to whatever came back on the URL.
+  assert.equal(u.searchParams.get("campid"), EBAY_CAMPAIGN_ID);
+  assert.match(u.searchParams.get("customid")!, /^rc-eu-/);
+});
+
+test("a link we built ourselves falls back to our rotation table", () => {
+  // The other half: a search link never passes through eBay, so there is no
+  // authoritative rotation to preserve and the table is what we have.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.es/sch/i.html?_nkw=riftbound", "card"));
+  assert.equal(u.searchParams.get("mkrid"), "1185-53479-19255-0");
+  assert.equal(u.searchParams.get("siteid"), "186");
+});
+
+test("Singapore's reroute still overrides eBay's own rotation", () => {
+  // The one case where eBay's answer is the WRONG one for us: SG has no EPN
+  // program at all, so an ebay.com.sg listing's own rotation is for a site the
+  // click will not land on — we deliberately move the destination to ebay.com.
+  // Preserving eBay's rotation here would tag the click for a rotation that does
+  // not exist on the site it reaches.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.com.sg/itm/9?mkevt=1&mkrid=SG-ROTATION&siteid=216", "card"));
+  assert.equal(u.hostname, "www.ebay.com");
+  assert.notEqual(u.searchParams.get("mkrid"), "SG-ROTATION", "the SG rotation must not follow the click to ebay.com");
+  assert.equal(u.searchParams.get("campid"), EBAY_CAMPAIGN_ID);
+  assert.match(u.searchParams.get("customid")!, /^rc-sg-/, "SG traffic still reports as SG even though eBay credits it under US");
+});
+
+test("the rotation ids are env-overridable, so a wrong one is a config fix", () => {
+  const src = readFileSync("src/lib/affiliate.ts", "utf8");
+  assert.match(src, /EBAY_MKRID_\$\{m\.code\}/, "mkrid must be overridable without a deploy");
+  assert.match(src, /EBAY_SITEID_\$\{m\.code\}/, "siteid must be overridable without a deploy");
+  // `||`, not `??`: an env var set to an empty string must fall back to the code
+  // default rather than emitting `mkrid=`, which would untrack the click outright.
+  assert.match(src, /process\.env\[`EBAY_MKRID_\$\{m\.code\}`\] \|\| m\.mkrid/);
+});
+
 test("the eBay sub-id names both the market and the placement", () => {
   const u = new URL(affiliateUrl("https://www.ebay.com/itm/1", "ebay_us", "https://riftcompare.com/card/vi-destructive"));
   const custom = u.searchParams.get("customid")!;
@@ -199,7 +276,100 @@ test("non-affiliate hosts are returned untouched", () => {
 test("ebayAffiliateUrl still works without a source (existing call sites)", () => {
   const u = new URL(ebayAffiliateUrl("https://www.ebay.co.uk/itm/9"));
   assert.equal(u.searchParams.get("mkevt"), "1");
-  assert.equal(u.searchParams.get("customid"), "rc-uk");
+  // The market prefix is unchanged; the link SHAPE is now appended. See below.
+  assert.equal(u.searchParams.get("customid"), "rc-uk-product");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The sub-id records whether the buyer landed on a PRODUCT or a SEARCH page.
+// ─────────────────────────────────────────────────────────────────────────────
+// An item link drops the buyer on the exact card, one click from checkout; a
+// search link drops them on a result list they have to work through. Those
+// should not convert alike — but while both reported the same customid there was
+// no way to prove it, which is precisely the question raised when US conversion
+// (0.78%) was compared with AU (3%). The shape is derived from the URL rather
+// than passed in by callers because eight separate places build eBay links, and
+// a flag each of them had to remember would be wrong somewhere within a month.
+test("an item link and a search link report DIFFERENT customids", () => {
+  const item = new URL(ebayAffiliateUrl("https://www.ebay.com/itm/123456789", "ebay_us"));
+  const search = new URL(ebayAffiliateUrl("https://www.ebay.com/sch/i.html?_nkw=Riftbound", "ebay_us"));
+
+  // NOTE the underscore: affiliateSubId's allow-list keeps `_`, so the retailer
+  // key passes through as `ebay_us`, not `ebay-us`.
+  assert.equal(item.searchParams.get("customid"), "rc-us-ebay_us-product");
+  assert.equal(search.searchParams.get("customid"), "rc-us-ebay_us-search");
+  assert.notEqual(item.searchParams.get("customid"), search.searchParams.get("customid"));
+});
+
+test("every market tags the shape, and the market prefix survives", () => {
+  for (const [url, want] of [
+    ["https://www.ebay.com.au/itm/1", "rc-au-product"],
+    ["https://www.ebay.com/itm/1", "rc-us-product"],
+    ["https://www.ebay.co.uk/sch/i.html?_nkw=x", "rc-uk-search"],
+    ["https://www.ebay.com.sg/sch/i.html?_nkw=x", "rc-sg-search"],
+    ["https://www.ebay.ca/itm/1", "rc-ca-product"],
+  ] as const) {
+    assert.equal(new URL(ebayAffiliateUrl(url)).searchParams.get("customid"), want, url);
+  }
+});
+
+test("a URL that is neither /itm/ nor /sch/ is left unlabelled rather than guessed", () => {
+  // e.g. a seller storefront or a category page — calling it "product" would
+  // corrupt the very comparison this exists to make.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.com/str/someseller"));
+  assert.equal(u.searchParams.get("customid"), "rc-us");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Singapore has no EPN program (confirmed against EPN's own help docs,
+// 2026-08-14) — every ebay.com.sg URL reroutes onto the verified US rotation
+// instead of being tagged with an invented siteid=216 rotation that nothing
+// backs. customid keeps reporting it as SG so EPN's by-custom-id report can
+// still show what that traffic is worth.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("ebaySearchUrl(SG) builds an ebay.com link on the verified US rotation, tagged rc-sg", () => {
+  const u = new URL(ebaySearchUrl("SG", "Riftbound"));
+  assert.equal(u.hostname, "www.ebay.com");
+  assert.equal(u.searchParams.get("siteid"), "0");
+  // The US rotation id — see EBAY_MARKETS["ebay.com"] — not a Singapore-specific
+  // one, because there isn't one.
+  assert.equal(u.searchParams.get("mkrid"), "711-53200-19255-0");
+  assert.match(u.searchParams.get("customid")!, /^rc-sg\b/);
+});
+
+test("a real ebay.com.sg LISTING url (from the Browse API's EBAY_SG marketplace search, not one we built) reroutes the same way", () => {
+  // mapEbayItem() in lib/ebay.ts calls ebayAffiliateUrl on whatever host eBay's
+  // own API response carries — this must not depend on the caller knowing the
+  // URL is SG-shaped, since ebay.ts never threads a "country" through to here.
+  // No explicit source: the "product" shape below is auto-derived from the
+  // /itm/ path (see ebayAffiliateUrl), not something a caller passes in.
+  const u = new URL(ebayAffiliateUrl("https://www.ebay.com.sg/itm/137597929650"));
+  assert.equal(u.hostname, "www.ebay.com");
+  assert.equal(u.pathname, "/itm/137597929650", "item id must survive the reroute unchanged");
+  assert.equal(u.searchParams.get("siteid"), "0");
+  assert.equal(u.searchParams.get("mkrid"), "711-53200-19255-0");
+  assert.equal(u.searchParams.get("customid"), "rc-sg-product");
+});
+
+test("SG's eBay label no longer claims a Singapore-specific site", () => {
+  // The link lands on ebay.com now (see above), so a "Singapore" label would
+  // describe a destination the click never visits. Matches US, the site it
+  // actually shares.
+  assert.equal(ebayLabel("SG"), ebayLabel("US"));
+  assert.doesNotMatch(ebayLabel("SG"), /singapore/i);
+});
+
+test("UK and CA keep their own distinct, non-US rotations (only SG reroutes)", () => {
+  const us = new URL(ebayAffiliateUrl("https://www.ebay.com/itm/1"));
+  const uk = new URL(ebayAffiliateUrl("https://www.ebay.co.uk/itm/1"));
+  const ca = new URL(ebayAffiliateUrl("https://www.ebay.ca/itm/1"));
+  assert.equal(uk.hostname, "www.ebay.co.uk");
+  assert.equal(ca.hostname, "www.ebay.ca");
+  assert.notEqual(uk.searchParams.get("siteid"), us.searchParams.get("siteid"));
+  assert.notEqual(uk.searchParams.get("mkrid"), us.searchParams.get("mkrid"));
+  assert.notEqual(ca.searchParams.get("siteid"), us.searchParams.get("siteid"));
+  assert.notEqual(ca.searchParams.get("mkrid"), us.searchParams.get("mkrid"));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -208,13 +378,23 @@ test("ebayAffiliateUrl still works without a source (existing call sites)", () =
 // refreshTcgplayerPrices() looped US/UK/SG/AU and omitted CA, so Canada — a full
 // market everywhere else (its own eBay rotation, its own lowestPriceCentsCa
 // column, its own FX rate) — had no TCGplayer reference price at all.
+//
+// EU IS AN ALLOWED EXCEPTION, and it is listed here rather than the test being
+// relaxed to "most markets" so that the reason has to be restated deliberately
+// for any future market someone wants to exempt. TCGplayer publishes no EUR
+// market price to convert from, and the obvious European equivalent —
+// Cardmarket — is feature-flagged OFF pending written permission to redisplay
+// its price data (see lib/cardmarket.ts's header). If that permission ever
+// lands, EU gets a reference source and comes OUT of this list.
+const NO_TCGPLAYER_REFERENCE = new Set(["EU"]);
 
 test("every tracked market has a TCGplayer reference price", () => {
   const covered = new Set(TCG_MARKETS.map((m) => m.country));
   for (const c of COUNTRY_LIST) {
-    // NZ is the one deliberate exclusion — no eBay market and no TCGplayer
-    // reference; it is served by local stores only.
-    if (c.code === "NZ") continue;
+    if (NO_TCGPLAYER_REFERENCE.has(c.code)) {
+      assert.ok(!covered.has(c.code), `${c.code} is listed as having no TCGplayer reference but one is configured — delete the exemption`);
+      continue;
+    }
     assert.ok(covered.has(c.code), `${c.code} has no TCGplayer market configured`);
   }
 });
@@ -275,7 +455,7 @@ test("every market's TCGplayer link is affiliate-tagged", () => {
 // THE RULE: a converted TCGplayer price is never a price-comparison row.
 // ─────────────────────────────────────────────────────────────────────────────
 // Nobody can buy from "TCGplayer Australia". Showing its FX-converted USD price
-// as a store would let it undercut the real AU/NZ stores the site exists to
+// as a store would let it undercut the real AU stores the site exists to
 // compare, on a price that excludes international postage and duty.
 
 test("AUSTRALIA: TCGplayer is never a comparison row or a counted store", () => {
@@ -284,13 +464,6 @@ test("AUSTRALIA: TCGplayer is never a comparison row or a counted store", () => 
   assert.equal(v.prices.length, 0);
   assert.equal(v.storeCount, 0);
   assert.equal(v.lowest, null, "a converted price must not set the AU 'from' price");
-});
-
-test("NEW ZEALAND: there is no TCGplayer market at all, and must not be", () => {
-  // NZ is served by local stores and eBay NZ only. Nothing to filter because
-  // nothing is ever written — this pins that.
-  assert.equal(TCG_MARKETS.find((m) => m.country === "NZ"), undefined);
-  assert.equal(computeMarket([tcgRow("NZ", "tcgplayer_nz")], "NZ").storeCount, 0);
 });
 
 test("every non-US market excludes its converted TCGplayer row", () => {
@@ -318,7 +491,7 @@ test("isFallbackRetailer covers every converted variant and no real store", () =
 });
 
 test("the union covers every per-market list — a new market cannot be forgotten", () => {
-  for (const list of [AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS, NZ_FALLBACK_RETAILERS]) {
+  for (const list of [AU_FALLBACK_RETAILERS, UK_FALLBACK_RETAILERS, SG_FALLBACK_RETAILERS, CA_FALLBACK_RETAILERS]) {
     for (const r of list) assert.ok(ALL_FALLBACK_RETAILERS.includes(r), `${r} missing from the union`);
   }
 });
@@ -333,20 +506,48 @@ test("the union covers every per-market list — a new market cannot be forgotte
 // started. These pin the arithmetic so catalogue growth trips a test, not a
 // silent gap in coverage.
 
-const FULL_CATALOGUE = 1400; // every card, as of the VEN launch
+const FULL_CATALOGUE = 1429; // every card — measured 2026-08-20, up from 1400 at the VEN launch measurement
 // Cards that actually get a Browse call, after eBayWorthSearching drops
-// Common/Uncommon base prints and anything under $20 TCGplayer US. Measured from
-// production on 2026-08-08: 205 cards priced at or above the floor, plus the ~34
-// with no US price at all (kept deliberately — see the "unknown ≠ cheap" rule),
-// rounded up for the ones priced only by a non-TCGplayer US retailer.
-const CATALOGUE = 280;
+// Common/Uncommon base prints and anything under the value floor. Measured
+// from a forced production run on 2026-08-20 AT THE $10 FLOOR (the same day
+// it dropped from $20, freed by Germany's removal from EBAY_ROTATING_MARKETS
+// — see EBAY_ALWAYS_MARKETS in price-import.ts): the log line read
+// "347 of 1429 cards searched — 1082 skipped (1016 under $10 TCGplayer US,
+// rest Common/Uncommon base prints); 115 kept with no TCGplayer price". Up
+// from 280 at the old $20 floor — real growth, but far short of the ~187-card
+// ceiling the pre-measurement estimate floated; TCG price distributions are
+// more front-loaded near the floor than that estimate assumed.
+//
+// STALE AGAIN: the floor dropped a second time the same day, $10→$5, funded
+// by removing the auction pass (see the "auctions" note on dailyCalls below).
+// The real $5-floor count is not yet measured — read it off the next run's
+// "eBay catalogue: X of Y cards searched" log line and update this constant
+// then. Left at the $10 measurement as a safe (understated) floor in the
+// meantime, same reasoning as the $20→$10 gap before it.
+const CATALOGUE = 347;
+// NOT re-measured alongside CATALOGUE above — the 2026-08-20 forced run was
+// the FULL/catalogue pass (ebay_force bypasses the staleness gate and always
+// runs the full pass), not the twice-daily CHASE-ONLY pass that reports this
+// number on its own log line. Left at its last real measurement (still under
+// the $20 floor); update it from that pass's own log line next time it fires
+// due, or force it specifically to check sooner.
 const CHASE_PRINTINGS = 179; // promo+signature+overnumbered at or above the floor
-const SEALED_PER_RUN = 104;  // US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut
+// US 53 + AU 33 + UK 11 + SG 7, before the loose-pack cut — measured before the
+// 2026-08-20 CA addition and the once-a-day gate; both are directional changes
+// (CA adds a fifth market's worth of groups, the gate halves the daily total)
+// that have not yet been re-measured against a live run.
+//
+// RAISED 104 → 160 on 2026-08-23 with the EU market. Still not a measurement:
+// 104 was four markets (~26 groups each), CA made it five and EU makes it six,
+// so ~156 is the straight-line estimate and 160 is that rounded UP. Erring high
+// is deliberate — this constant only feeds an assertion that the day FITS, so an
+// overstatement can only make that assertion stricter, never hide an overspend.
+const SEALED_PER_RUN = 160;
 const SPENDABLE = 4400;      // 5000 daily limit − 600 reserve
 const SECONDS_PER_CARD = 0.75;
 // A card whose strict query returns nothing costs a SECOND Browse call for the
-// no-"Riftbound" retry. Applies to singles only (sealed and auctions each make
-// exactly one call), and is the single largest source of error in this model.
+// no-"Riftbound" retry. Applies to singles only (the sealed search makes exactly
+// one call), and is the single largest source of error in this model.
 const RETRY_RATE = 0.25;
 // Read from the workflow rather than copied, so raising one without the other
 // cannot silently reintroduce the mid-market kill.
@@ -365,17 +566,30 @@ const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.le
  * Browse calls for one whole DAY, not one pass.
  *
  * Modelling the catalogue alone is what made the old numbers wrong: the chase
- * pass and the auction pass are handed EBAY_ALWAYS_MARKETS directly, and the
- * auction and sealed passes each run TWICE a day (07:00 and 19:00 UTC). A market
- * added to ALWAYS therefore multiplies three passes, not one.
+ * pass is handed EBAY_ALWAYS_MARKETS directly, separate from the catalogue
+ * pass's own market list. A market added to ALWAYS therefore multiplies both
+ * passes, not one.
+ *
+ * The chase-AUCTION pass was a third term here (always × 120 × 2 ≈ 960
+ * calls/day) until 2026-08-20, when the auctions feature — refreshEbayAuctions
+ * and the EbayAuction model — was removed outright. `sealed` is SEALED_PER_RUN
+ * × 1, not × 2, for the same reason it used to need the ×2: sealed's eBay pass
+ * gained its own 20h staleness gate the same day (see "sealed" below) and no
+ * longer runs unconditionally on both the 07:00 and 19:00 imports.
  */
 function dailyCalls(day: number): number {
   const markets = ebayMarketsForDay(day).length;
-  const always = EBAY_ALWAYS_MARKETS.length;
-  const singles = markets * CATALOGUE + always * CHASE_PRINTINGS;
-  const auctions = always * AUCTION_CARDS_PER_MARKET * 2;
-  const sealed = SEALED_PER_RUN * 2;
-  return Math.round(singles * (1 + RETRY_RATE)) + auctions + sealed;
+  // BOTH terms use the DAY's market list, not EBAY_ALWAYS_MARKETS. The chase
+  // pass was handed the always-list until 2026-08-23, when UK and SG moved into
+  // the rotation and that stopped being the same thing — see the call site in
+  // importPrices, which now passes ebayMarketsForDay(ebayDayIndex()) so the
+  // evening chase pass refreshes the same market the morning catalogue pass
+  // priced. Modelling it as `always` here would under-count the day by a whole
+  // market's chase set, which is exactly the class of error the doc comment
+  // above says made the old numbers wrong.
+  const singles = markets * CATALOGUE + markets * CHASE_PRINTINGS;
+  const sealed = SEALED_PER_RUN;
+  return Math.round(singles * (1 + RETRY_RATE)) + sealed;
 }
 
 test("a whole day of eBay passes fits inside the Browse budget", () => {
@@ -385,18 +599,24 @@ test("a whole day of eBay passes fits inside the Browse budget", () => {
   }
 });
 
-test("the budget model counts the passes that actually run twice a day", () => {
-  // The failure this pins is an accounting one, not a runtime one: auctions and
-  // sealed were both counted once a day when each in fact runs after BOTH the
-  // 07:00 and 19:00 imports. Undercounting them is how a budget that looks
-  // comfortable turns out to be overspent in production.
-  const src = readFileSync("src/lib/price-import.ts", "utf8");
-  const auctionCalls = (src.match(/await refreshEbayAuctions\(/g) ?? []).length;
-  assert.equal(auctionCalls, 2, "auctions must run in both the full and the chase pass");
-  const sealed = readFileSync("src/lib/sealed-import.ts", "utf8");
+test("auctions are gone and sealed's eBay pass is gated to once a day", () => {
+  // Pins the two 2026-08-20 removals dailyCalls above depends on: no auction
+  // pass left to undercount, and sealed's eBay search now self-gates instead of
+  // running unconditionally on both daily imports (the old failure mode this
+  // test used to guard: a budget that looks comfortable turns out overspent in
+  // production because a twice-daily pass was modelled as once).
+  const priceImport = readFileSync("src/lib/price-import.ts", "utf8");
+  // Code patterns only, not prose — this file's own history comments legitimately
+  // name the removed function/model when explaining why the quota model changed.
   assert.ok(
-    !/ebayDue|chaseDue|lastSeen/.test(sealed),
-    "sealed has no staleness gate — if one is added, the ×2 in dailyCalls must change",
+    !/(?:async )?function refreshEbayAuctions|prisma\.ebayAuction\b/.test(priceImport),
+    "the refreshEbayAuctions function and its prisma.ebayAuction calls must be fully removed from price-import.ts",
+  );
+  const sealed = readFileSync("src/lib/sealed-import.ts", "utf8");
+  assert.match(
+    sealed,
+    /lastSeen/,
+    "sealed's eBay pass must read a staleness signal — dailyCalls models it as running once a day, not twice",
   );
 });
 
@@ -404,30 +624,67 @@ test("a day's markets fit inside the job timeout", () => {
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const markets = ebayMarketsForDay(day).length;
     // The morning job is the long one: stores, then the full catalogue across
-    // every market, then auctions.
-    const cards = markets * CATALOGUE + EBAY_ALWAYS_MARKETS.length * AUCTION_CARDS_PER_MARKET;
+    // every market.
+    const cards = markets * CATALOGUE;
     const mins = STORE_IMPORT_MIN + (cards * SECONDS_PER_CARD) / 60;
     assert.ok(mins <= JOB_TIMEOUT_MIN, `day ${day}: ~${mins.toFixed(0)} min exceeds the ${JOB_TIMEOUT_MIN} min timeout`);
   }
 });
 
-test("four daily markets fit ONLY because of the value floor", () => {
-  // UK and SG were demoted to a rotation on 2026-08-03 because 4 × the full
-  // catalogue did not fit, and promoted back on 2026-08-08 because the $20 floor
-  // shrank the searched set. Both halves are asserted: if the floor is ever
-  // removed or bypassed, four daily markets stop fitting and this fails rather
-  // than silently truncating a market's entire pass again.
+test("the rotation exists because every market daily does NOT fit", () => {
+  // The history, because the design keeps being re-litigated: UK and SG were
+  // demoted to a rotation on 2026-08-03 (4 × the full catalogue did not fit),
+  // promoted back on 2026-08-08 (the value floor — $20, then $10, now $5, all on
+  // 2026-08-20, see CATALOGUE above — shrank the searched set), and rotated again
+  // on 2026-08-23 when the EU market made five.
+  //
+  // The floor constraint has not gone away, and is asserted first: without it
+  // even four markets stop fitting.
   assert.ok(
     4 * FULL_CATALOGUE > SPENDABLE,
     "4 markets × the FULL catalogue should still not fit — that constraint has not gone away",
   );
+  // ── WHAT THE ROTATION ACTUALLY BUYS, STATED HONESTLY ──────────────────────
+  // Not "every market daily would not fit". At the constants above it WOULD —
+  // ~78% of budget — and asserting otherwise would be a comfortable lie that
+  // this file would then enforce. What the rotation buys is HEADROOM, and the
+  // reason headroom is worth staleness is that CATALOGUE is understated: it is a
+  // $10-floor measurement, the floor has since dropped to $5, and a set launch
+  // inflates the searched set further because a new set's cards have no
+  // TCGplayer price and "unknown ≠ cheap" keeps all of them.
+  //
+  // So assert the two things that are actually true and worth pinning: the
+  // rotation is load-bearing (it materially reduces the day), and the day it
+  // produces sits far enough inside budget that the understatement above cannot
+  // quietly eat it.
+  const everyMarket = EBAY_ALWAYS_MARKETS.length + EBAY_ROTATING_MARKETS.length;
+  const scheduled = EBAY_ALWAYS_MARKETS.length + Math.min(1, EBAY_ROTATING_MARKETS.length);
   assert.ok(
-    4 * CATALOGUE <= SPENDABLE,
-    "4 markets × the SEARCHED catalogue must fit, or UK/SG cannot be daily markets",
+    everyMarket > scheduled,
+    "no market is on a rotation — delete this test and the rotation, or restore one",
+  );
+  const cost = (markets: number) =>
+    Math.round(markets * (CATALOGUE + CHASE_PRINTINGS) * (1 + RETRY_RATE)) + SEALED_PER_RUN;
+  assert.ok(
+    cost(scheduled) < cost(everyMarket) * 0.8,
+    `the rotation saves too little to be worth its staleness: ${cost(scheduled)} vs ${cost(everyMarket)}`,
+  );
+  // Half the budget is the headroom the staleness is being traded for. If a
+  // growing catalogue pushes the ROTATED day past this, the rotation has stopped
+  // providing what it was chosen for and the floor/reserve need revisiting —
+  // fail here rather than discover it as a truncated market in production.
+  assert.ok(
+    cost(scheduled) <= SPENDABLE / 2,
+    `a rotated day costs ~${cost(scheduled)} of ${SPENDABLE} — past half the budget the rotation is no longer buying headroom`,
   );
 });
 
-test("every market refreshes every day — none is on a rotation", () => {
+test("the always-markets refresh every single day", () => {
+  // Renamed from "every market refreshes every day — none is on a rotation",
+  // which stopped being true on 2026-08-23. The assertion did not change and is
+  // the one that matters: whatever else moves in or out of the rotation, a market
+  // in EBAY_ALWAYS_MARKETS must appear on every day of the cycle, or "daily
+  // prices" is a claim the importer does not keep.
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
     for (const m of EBAY_ALWAYS_MARKETS) {
@@ -436,84 +693,65 @@ test("every market refreshes every day — none is on a rotation", () => {
   }
 });
 
-test("US searches first, every single day", () => {
-  // Search ORDER decides who starves. refreshEbayMarkets walks the array and
-  // breaks the moment the budget latches, and a truncated market's whole pass is
-  // discarded rather than half-saved — so first place is the only slot
-  // guaranteed to complete.
-  //
-  // US holds it permanently: it is the default market and the largest share of
-  // traffic, and CA is DERIVED from the US result set (skipped entirely when the
-  // US pass truncates), so a starved US pass costs two markets rather than one.
+test("every rotating market comes round, and only one runs per day", () => {
+  const seen = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
-    assert.equal(
-      ebayMarketsForDay(day)[0].country,
-      EBAY_PRIORITY_MARKET,
-      `day ${day}: ${EBAY_PRIORITY_MARKET} must search first`,
-    );
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    const rotating = codes.filter((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    assert.ok(rotating.length <= 1, `day ${day}: ${rotating.length} rotating markets scheduled at once`);
+    rotating.forEach((c) => seen.add(c));
   }
-  // The chase and auction passes take no dayIndex — they are handed
-  // EBAY_ALWAYS_MARKETS and walk it as declared. Pinning US in the rotation alone
-  // would still leave it second in two of the three passes that spend quota.
-  assert.equal(
-    EBAY_ALWAYS_MARKETS[0].country,
-    EBAY_PRIORITY_MARKET,
-    "the raw always-list must also lead with US — the chase and auction passes read it directly",
-  );
+  for (const m of EBAY_ROTATING_MARKETS) {
+    assert.ok(seen.has(m.country), `${m.country} never comes round in ${CYCLE_DAYS} days`);
+  }
 });
 
-test("US is never last, and the other markets share the last slot in turn", () => {
-  // The cost of pinning US is that it no longer shares the risk — whatever slot
-  // it vacates, another market occupies. That is accepted, but the remaining
-  // markets must still rotate among themselves: a fixed order would simply move
-  // the permanent-loser problem to whichever market was declared last.
+test("the rotating market is never the one dropped", () => {
+  // Search ORDER decides who starves. refreshEbayMarkets walks the array and
+  // breaks the moment the budget latches, and a truncated market's whole pass is
+  // discarded — so the market that sits LAST is the one that gets nothing.
+  //
+  // ── THIS ASSERTION WAS INVERTED UNTIL 2026-08-23 ─────────────────────────
+  // It used to require the rotating market to be last, on the reasoning that a
+  // rotating market is "the intended sacrifice … at most ~48h stale by design,
+  // whereas an always-market missing its slot is a coverage gap in a market we
+  // promise daily prices for". That reasoning was sound with ONE rotating market
+  // and four daily ones. It stopped being sound the moment the rotation held
+  // three: a rotating market is now ~72h stale by design, so dropping it on its
+  // one turn costs it ~144h, while a daily market skipped for a day costs ~48h.
+  //
+  // Worse, the old rule was not merely unfair but UNBOUNDED for the rotating
+  // market: it was last on every one of its turns, so a market sitting near the
+  // budget edge could go unpriced indefinitely while its store rows stayed fresh
+  // — indistinguishable, from the outside, from "eBay has no listings here".
+  //
+  // So the least-frequently-refreshed market now gets FIRST claim. The sacrifice
+  // is a daily market, which loses the least by being skipped.
+  if (EBAY_ROTATING_MARKETS.length === 0) return; // nothing to order
+  for (let day = 0; day < CYCLE_DAYS; day++) {
+    const codes = ebayMarketsForDay(day).map((m) => m.country);
+    const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
+    assert.equal(rotatingAt, 0, `day ${day}: the rotating market must search FIRST, got ${codes.join("→")}`);
+  }
+});
+
+test("every always-market takes the position most exposed to starvation", () => {
+  // The mirror of the test above, and the one that actually matters: giving the
+  // rotating market first claim is only fair if the trailing slot it no longer
+  // occupies is SHARED among the daily markets rather than handed to one of them
+  // permanently. A fixed [AU, US] order meant AU was never once dropped and US
+  // always was — the 2026-08-05 bug this alternation was introduced to fix, and
+  // which is easy to reintroduce by "simplifying" ebayMarketsForDay.
   const trailers = new Set<string>();
   for (let day = 0; day < CYCLE_DAYS; day++) {
     const codes = ebayMarketsForDay(day).map((m) => m.country);
-    const last = codes[codes.length - 1];
-    assert.notEqual(last, EBAY_PRIORITY_MARKET, `day ${day}: ${EBAY_PRIORITY_MARKET} must never be the dropped market`);
-    trailers.add(last);
+    trailers.add(codes[codes.length - 1]);
   }
   for (const m of EBAY_ALWAYS_MARKETS) {
-    if (m.country === EBAY_PRIORITY_MARKET) continue;
-    assert.ok(trailers.has(m.country), `${m.country} is never last — some other market always absorbs the loss`);
+    assert.ok(trailers.has(m.country), `${m.country} never sits last — every other always-market carries its risk`);
   }
-});
-
-test("pinning US does not drop or duplicate a market", () => {
-  // The failure mode of a splice-around-an-index implementation: a priority
-  // market that is not in the always-list yields index -1, which silently
-  // reorders or removes an entry instead of erroring.
-  for (let day = 0; day < CYCLE_DAYS; day++) {
-    const codes = ebayMarketsForDay(day).map((m) => m.country);
-    assert.equal(new Set(codes).size, codes.length, `day ${day}: duplicate market in ${codes.join(",")}`);
-    for (const m of EBAY_ALWAYS_MARKETS) {
-      assert.ok(codes.includes(m.country), `day ${day}: ${m.country} vanished from the order`);
-    }
-  }
-});
-
-test("the always-markets always precede any rotating one", () => {
-  // A rotating market is the intended sacrifice when quota runs short: it is at
-  // most ~48h stale by design, whereas an always-market missing its slot is a
-  // coverage gap in a market we promise daily prices for.
-  //
-  // The rotation is empty today, so this asserts the vacuous case explicitly
-  // rather than looping zero times and reporting a pass: every market a day
-  // schedules must be an always-market.
-  for (let day = 0; day < CYCLE_DAYS; day++) {
-    const codes = ebayMarketsForDay(day).map((m) => m.country);
-    if (EBAY_ROTATING_MARKETS.length === 0) {
-      for (const c of codes) {
-        assert.ok(
-          EBAY_ALWAYS_MARKETS.some((m) => m.country === c),
-          `day ${day}: ${c} is scheduled but is not an always-market`,
-        );
-      }
-      continue;
-    }
-    const rotatingAt = codes.findIndex((c) => EBAY_ROTATING_MARKETS.some((m) => m.country === c));
-    assert.equal(rotatingAt, codes.length - 1, `day ${day}: rotating market must be last, got ${codes.join("→")}`);
+  for (const m of EBAY_ROTATING_MARKETS) {
+    assert.ok(!trailers.has(m.country), `${m.country} rotates but still sits last — see the test above`);
   }
 });
 

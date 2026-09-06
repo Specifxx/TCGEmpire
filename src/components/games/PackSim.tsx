@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { RARITIES } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
 import { GameShell, RunRecap, cardUrl, useShare, type GameCard } from "./shared";
 
 // Pack Opening Simulator — rip a virtual Riftbound pack built from the real card
@@ -42,6 +43,11 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
     return () => timers.current.forEach(clearTimeout);
   }, []);
 
+  // Fires once per mount (i.e. once per page view of the simulator) — not once
+  // per set change, which setCode alone in the deps would cause.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { trackEvent("pack_sim_open", { set_id: setCode }); }, []);
+
   const openPack = useCallback(async () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
@@ -56,6 +62,7 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
       setPack(cards);
       setSetName(d.setName ?? "");
       setCurrency(d.currency ?? "AUD");
+      trackEvent("pack_sim_pack_opened", { set_id: setCode });
 
       // Sequential reveal: brisk through the commons, a beat before the final
       // (chase) card for suspense.
@@ -102,6 +109,8 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
       emoji="🎁"
       title="Pack Opening Simulator"
       tagline="Rip virtual Riftbound packs built from real cards and live prices."
+      // The page owns the <h1> and breadcrumb here — see GameShell's `chrome`.
+      chrome={false}
       bestLabel={best > 0 ? `💎 best pack ${formatMoney(best, currency)}` : undefined}
     >
       {/* Controls */}
@@ -184,7 +193,8 @@ export function PackSim({ sets }: { sets: { code: string; name: string }[] }) {
                 </div>
               </div>
               <p className="mt-2 text-center text-[11px] text-slate-600">
-                A simulator for fun — real odds aren&apos;t published. Curious whether opening actually beats buying?{" "}
+                Dealt to Riot&apos;s published pack structure and rates — the tables below cite the
+                source. Curious whether opening actually beats buying?{" "}
                 <Link href="/tools/box-ev" className="text-brand-400 hover:underline">Run the Box EV calculator →</Link>
               </p>
               <RunRecap cards={recapCards} currency={currency} title="🛒 The cards you pulled" />

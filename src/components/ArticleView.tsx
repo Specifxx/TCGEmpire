@@ -21,6 +21,9 @@ import { ArticleFaq } from "./ArticleFaq";
 import { ArticleShare } from "./ArticleShare";
 import { ArticleTopValue } from "./ArticleTopValue";
 import { Picture } from "./Picture";
+import { META_DECKS } from "@/lib/meta-decks";
+import { groupStaples } from "@/lib/deck-groups";
+import { normalizeSearch } from "@/lib/format";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -48,6 +51,39 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
       const rows = await prisma.card.findMany({ where: { slug: { in: e.slugs } }, select });
       const bySlug = new Map(rows.map((r) => [r.slug, r]));
       return e.slugs.map((sl) => bySlug.get(sl)).filter(Boolean) as unknown as CardTileData[];
+    }
+    if (e.metaStaples) {
+      // Competitive staples, from the real decklists. groupStaples() is the same
+      // function the archetype/domain deck pages use, so "played in N of the
+      // tournament lists" means the identical thing everywhere on the site.
+      const minDecks = typeof e.metaStaples === "object" ? e.metaStaples.minDecks ?? 2 : 2;
+      const staples = groupStaples(META_DECKS, minDecks);
+      if (!staples.length) return [];
+      const wanted = staples.map((s) => normalizeSearch(s.name));
+      const rows = await prisma.card.findMany({
+        where: { nameNormalized: { in: wanted }, isPromo: false },
+        select: { ...select, nameNormalized: true, collectorNumber: true },
+      });
+      // Prefer the BASE printing of each staple: a deck list names a card, not a
+      // finish, and the alternate-art or Signature print of the same card is a
+      // different (usually far pricier) product. Same rule lib/meta-decks.ts
+      // applies when it prices a decklist, so the gallery and the build costs
+      // agree about which printing "the card" means.
+      const isBase = (c: { collectorNumber: string }) =>
+        !c.collectorNumber.includes("*") && !/\d+[a-z]/i.test(c.collectorNumber);
+      const byName = new Map<string, (typeof rows)[number]>();
+      for (const r of rows) {
+        const prev = byName.get(r.nameNormalized);
+        if (!prev || (isBase(r) && !isBase(prev))) byName.set(r.nameNormalized, r);
+      }
+      // Staple order (most-played first) is the point of the gallery, so map over
+      // the staples rather than the query result. A staple with no card row is
+      // dropped silently — the article must never render a tile for a card the
+      // database doesn't have.
+      return staples
+        .map((s) => byName.get(normalizeSearch(s.name)))
+        .filter(Boolean)
+        .slice(0, e.take ?? 24) as unknown as CardTileData[];
     }
     if (e.rulesContain) {
       const rows = await prisma.card.findMany({
@@ -198,15 +234,17 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
 // next — the opposite of what the module is for.
 function relatedArticles(article: Article, take = 3): Article[] {
   const tags = new Set(article.tags);
+  // `!a.draft` throughout: an unpublished post must not be surfaced by the one
+  // module whose whole job is sending readers to another page.
   const scored = ARTICLES
-    .filter((a) => a.slug !== article.slug && a.tags.some((t) => tags.has(t)))
+    .filter((a) => !a.draft && a.slug !== article.slug && a.tags.some((t) => tags.has(t)))
     .map((a) => ({ a, overlap: a.tags.filter((t) => tags.has(t)).length }))
     .sort((x, y) => y.overlap - x.overlap || (y.a.date < x.a.date ? -1 : 1))
     .map((x) => x.a);
   if (scored.length >= take) return scored.slice(0, take);
   const seen = new Set([article.slug, ...scored.map((a) => a.slug)]);
   const filler = ARTICLES
-    .filter((a) => !seen.has(a.slug) && a.category === article.category)
+    .filter((a) => !a.draft && !seen.has(a.slug) && a.category === article.category)
     .sort((x, y) => (x.date < y.date ? 1 : -1));
   return [...scored, ...filler].slice(0, take);
 }
@@ -274,7 +312,9 @@ export async function ArticleView({ article }: { article: Article }) {
     // so the Organization's entity signals propagate rather than each post being
     // an island.
     isPartOf: { "@id": `${SITE_URL}/#website` },
-    ...(article.hero ? { image: [`${SITE_URL}${article.hero.src}`] } : {}),
+    ...(article.hero
+      ? { image: [article.hero.src.startsWith("http") ? article.hero.src : `${SITE_URL}${article.hero.src}`] }
+      : {}),
     articleSection: article.tags[0],
     wordCount: article.body.split(/\s+/).filter(Boolean).length,
   };
@@ -376,15 +416,23 @@ export async function ArticleView({ article }: { article: Article }) {
 
       {/* Featured image. `priority` because on an article this IS the LCP element,
           and <Picture> serves it as AVIF/WebP with explicit intrinsic dimensions
-          from the build-time manifest, so it can't shift the layout. */}
+          from the build-time manifest, so it can't shift the layout. `object-contain`
+          + a height cap is deliberate: a landscape generated banner still fills
+          edge-to-edge (its scaled height never reaches the cap), while a portrait
+          card photo is shown whole, letterboxed, rather than cropped or stretched
+          to banner-tall. */}
       {article.hero && (
-        <Picture
-          src={article.hero.src}
-          alt={article.hero.alt}
-          priority
-          sizes="(max-width: 768px) 100vw, 768px"
-          className="mt-5 h-auto w-full rounded-xl border border-ink-700"
-        />
+        <div className="mt-5 overflow-hidden rounded-xl border border-ink-700 bg-ink-900">
+          <Picture
+            src={article.hero.src}
+            alt={article.hero.alt}
+            priority
+            sizes="(max-width: 768px) 100vw, 768px"
+            width={744}
+            height={1039}
+            className="h-auto max-h-[480px] w-full object-contain"
+          />
+        </div>
       )}
 
       {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine
@@ -493,6 +541,19 @@ export async function ArticleView({ article }: { article: Article }) {
         </div>
         <Link href={cta.href} className="btn-primary shrink-0">{cta.label}</Link>
       </section>
+
+      {/* Explore more — a fixed set of internal links into the site's other main
+          surfaces (sealed product, decks, champion hubs), present on every blog/
+          guide page regardless of topic. The bounce rate on this template is
+          high and rising; a reader who finishes an article and has nowhere to go
+          but "Ready to buy?" (cards specifically) or a same-tag related read is
+          one who bounces if neither fits what they actually came here for. */}
+      <nav aria-label="Explore RiftCompare" className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-400">
+        <span className="text-slate-500">Explore:</span>
+        <Link href="/sealed" className="text-brand-400 hover:underline">Sealed product prices →</Link>
+        <Link href="/decks" className="text-brand-400 hover:underline">Deck prices →</Link>
+        <Link href="/champions" className="text-brand-400 hover:underline">Champion hubs →</Link>
+      </nav>
 
       {/* Related guides — same-tag articles, so a reader who liked this piece has
           somewhere obvious to go next instead of bouncing. */}

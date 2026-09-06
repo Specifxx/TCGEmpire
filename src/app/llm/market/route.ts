@@ -11,7 +11,7 @@ const md = (lines: string[]) =>
 const pct = (p: number | null | undefined) => (p == null ? "—" : `${p > 0 ? "+" : ""}${p}%`);
 
 export async function GET() {
-  const index = await getMarketIndex("GLOBAL").catch(() => null);
+  const index = await getMarketIndex().catch(() => null);
   const lines: string[] = ["# The RiftCompare Index"];
   if (!index) {
     lines.push("", "The index is warming up — not enough price history yet. See " + `${SITE_URL}/market`);
@@ -19,22 +19,25 @@ export async function GET() {
   }
   lines.push(
     "",
-    "> A daily search-weighted price index of the most-searched Riftbound: League of Legends TCG " +
-      "singles (base 100). Global composite; switch regions on the page.",
+    "> A search-weighted price index of the most-searched Riftbound: League of Legends TCG " +
+      `singles (base 100), updated weekly. ${index.market} market by default; switch regions on the page.`,
     "",
     `- Level: ${index.latest.toFixed(1)} (base 100 on ${index.startDay})`,
-    `- Change: 1d ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`
+    `- Change: latest ${pct(index.d1)} · 7d ${pct(index.d7)} · 30d ${pct(index.d30)} · all-time ${pct(index.sinceStart)}`
   );
   if (index.stats) {
     lines.push(
       `- Index value (cost of one of each card): ${formatMoney(index.stats.basketValueCents, index.currency)}`,
-      `- Breadth: ${index.stats.advancing} advancing / ${index.stats.declining} declining · range ${index.stats.low.toFixed(1)}–${index.stats.high.toFixed(1)} · 30d volatility ${index.stats.volatilityPct == null ? "—" : index.stats.volatilityPct + "%"}`
+      `- Breadth: ${index.stats.advancing} advancing / ${index.stats.declining} declining · range ${index.stats.low.toFixed(1)}–${index.stats.high.toFixed(1)} · recent volatility ${index.stats.volatilityPct == null ? "—" : index.stats.volatilityPct + "%"}`
     );
   }
   lines.push("", "## Constituents (top 50 by weight)", "", "| Card | Set | Weight | Price | 7d |", "|---|---|---|---|---|");
   for (const c of index.constituents.slice(0, 50)) {
     lines.push(`| ${c.name} | ${c.setCode} ${c.collectorNumber} | ${c.weightPct}% | ${formatMoney(c.priceCents, index.currency)} | ${pct(c.d7pct)} |`);
   }
-  lines.push("", `Source: ${SITE_URL}/market · JSON: ${SITE_URL}/api/v1/index.json`);
+  lines.push(
+    "",
+    `Source: ${SITE_URL}/market · JSON: ${SITE_URL}/api/v1/index.json · Methodology (exact formula): ${SITE_URL}/guides/understanding-the-riftcompare-index-methodology`
+  );
   return md(lines);
 }

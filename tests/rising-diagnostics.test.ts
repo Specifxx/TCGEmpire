@@ -22,6 +22,10 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const PREDICTOR = "src/lib/rise-predictor.ts";
 const ADMIN = "src/app/admin/rising/page.tsx";
 const PUBLIC = "src/app/tools/rising/page.tsx";
+// sealed-rise-predictor.ts (2026-09-02) copied this exact withAnyHistory/
+// deepestSeries/minPointsRequired pattern for the same reason — folded into
+// the same loops below so the sealed page can't quietly regress out of it.
+const PUBLIC_SEALED = "src/app/tools/rising-sealed/page.tsx";
 
 test("analysis exposes any-history and depth, not just the qualifying count", () => {
   const src = read(PREDICTOR);
@@ -52,7 +56,7 @@ test("withAnyHistory is derived from the series map, not the qualifying rows", (
 
 test("no page labels the qualifying count as 'with price history'", () => {
   // The exact regression: `sub={`${analysis.qualifying} with price history`}`.
-  for (const p of [ADMIN, PUBLIC]) {
+  for (const p of [ADMIN, PUBLIC, PUBLIC_SEALED]) {
     const src = read(p);
     assert.ok(
       !/qualifying\}\s*with price history/.test(src),
@@ -62,7 +66,7 @@ test("no page labels the qualifying count as 'with price history'", () => {
 });
 
 test("the empty state distinguishes 'nothing recorded' from 'not deep enough yet'", () => {
-  for (const p of [ADMIN, PUBLIC]) {
+  for (const p of [ADMIN, PUBLIC, PUBLIC_SEALED]) {
     const src = read(p);
     assert.ok(
       src.includes("analysis.withAnyHistory"),

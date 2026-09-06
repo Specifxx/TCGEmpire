@@ -1,200 +1,204 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { markSignupSource, stashSignupSource } from "@/lib/signup-source";
 
-// Only allow same-site relative redirects (no open-redirect to external URLs).
-function safeNext(): string {
-  if (typeof window === "undefined") return "/";
-  const n = new URLSearchParams(window.location.search).get("next");
-  return n && n.startsWith("/") && !n.startsWith("//") ? n : "/profile";
-}
+// Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
+// /forgot and /reset were removed along with their API routes.
+//
+// Existing password accounts are NOT orphaned: the OAuth callback finds a user by
+// provider id and then FALLS BACK TO EMAIL (upsertOAuthUser in
+// api/auth/oauth/[provider]/callback), linking the identity to the account that
+// already owns that address. So a member who registered with a password signs in
+// with Google or Discord on the same address and lands on their existing account,
+// wallet, listings and orders intact.
+//
+// The one group this cannot serve is someone whose account email is at a provider
+// they don't use for Google or Discord. They need support to link an identity —
+// hence the note at the bottom of the card rather than a dead end.
 
 const OAUTH_ERRORS: Record<string, string> = {
-  provider_unavailable: "That sign-in option isn't available yet — try email, or another option.",
+  provider_unavailable: "That sign-in option isn't available right now — try the other one.",
   oauth_state: "Sign-in expired or was interrupted. Please try again.",
   oauth_token: "Couldn't complete sign-in with that provider. Please try again.",
   oauth_profile: "Couldn't read your profile from that provider. Please try again.",
   oauth_noemail: "That provider didn't share an email address, which we need to create your account.",
+  oauth_unverified:
+    "That provider hasn't confirmed your email address yet. Verify it with them first, then sign in here again.",
+  oauth_session: "Something went wrong finishing sign-in. Please try again.",
 };
 
+// What a free account PERMANENTLY unlocks — same three perks the signup popup
+// pitches (its PERKS list), rendered here as the /login page's value prop so
+// the standalone page finally sells the account instead of assuming the
+// visitor already wants one.
+const PERKS = ["Price alerts", "Portfolio tracking", "Watchlist"] as const;
+
 export function AuthForm({
-  mode,
   providers,
   bare = false,
+  compact = false,
+  cancelHref,
+  source,
+  next,
+  contextLine,
+  onProviderClick: onProviderClickProp,
 }: {
-  mode: "login" | "register";
   providers: ("google" | "discord")[];
   // Skip the outer full-page wrapper (max-width + vertical padding) so this can be
-  // embedded directly inside a modal, which provides its own sizing. The full pages
-  // (/login, /register) omit this and get the original standalone layout.
+  // embedded directly inside a modal, which provides its own sizing. /login omits
+  // this and gets the original standalone layout.
   bare?: boolean;
+  // Drop the heading, the value-prop paragraph, the surrounding card chrome and
+  // the password-migration footnote, leaving just the provider buttons.
+  //
+  // For SignupPromoPopup, which already states the pitch immediately above this
+  // form. Rendering both meant the same three perks were listed TWICE, one
+  // restatement under the other, inside a dialog whose excessive height is what
+  // pushed its own close button off-screen on a phone (see the layout note in
+  // SignupPromoPopup). Height here is not cosmetic — it is the bug.
+  compact?: boolean;
+  // Standalone /login only (bare's modal already has its own close button). A
+  // visitor who lands here off a gated feature, unasked, previously had no way
+  // out but the browser Back button — a dead end matching the exact pattern
+  // WS4 collapsed elsewhere on the site. /login/page.tsx computes this from
+  // ?next=, falling back to the homepage.
+  cancelHref?: string;
+  // Which surface this form is embedded in ("popup", "alert_modal", …) — fed to
+  // markSignupSource on provider click so the sign_in_click event and, if the
+  // OAuth round trip completes, User.signupSource both carry the surface that
+  // actually converted. Defaults to "login" (the standalone page).
+  source?: string;
+  // Where to land after the OAuth round trip. Threaded into the provider hrefs
+  // as ?next=; the start route stores it in a short-lived cookie and the
+  // callback honors it (see lib/next-param.ts). Without it, sign-in dumps
+  // everyone on /profile regardless of where they started.
+  next?: string;
+  // One line of destination-specific persuasion above the buttons — e.g.
+  // /login?next=/watching renders "see and manage your watchlist" instead of a
+  // cold generic form. Supplied by login/page.tsx's next→reason map.
+  contextLine?: string;
+  // Runs just before the provider anchor navigates, in addition to the source
+  // attribution. PriceAlertModal uses it to stash the pending watch in
+  // localStorage so SignupWelcome can complete it after the OAuth round trip.
+  onProviderClick?: () => void;
 }) {
-  const router = useRouter();
-  const isRegister = mode === "register";
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState(false); // show "check your email" after signup
-  const [needsVerify, setNeedsVerify] = useState(false); // login blocked: email not verified
-  const [resendMsg, setResendMsg] = useState<string | null>(null);
+  // Off-site campaign source (?src=email from the email-footer CTAs) — captured
+  // so the provider click below attributes to the CAMPAIGN, not the generic
+  // "login" default that would otherwise clobber it.
+  const [urlSrc, setUrlSrc] = useState<string | null>(null);
+  const onProviderClick = () => {
+    markSignupSource(source ?? urlSrc ?? "login");
+    onProviderClickProp?.();
+  };
+  const oauthHref = (provider: "google" | "discord") =>
+    `/api/auth/oauth/${provider}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   // Surface OAuth failures redirected back as ?error=…
   useEffect(() => {
-    const e = new URLSearchParams(window.location.search).get("error");
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get("error");
     if (e) setError(OAUTH_ERRORS[e] ?? "Sign-in failed — please try again.");
+    // Off-site campaign attribution (?src=email from the email-footer CTAs):
+    // stash the cookie NOW (so the OAuth callback sees it even in edge flows)
+    // and remember it for the click handler above. stashSignupSource is
+    // cookie-only — recording a page LOAD as a sign_in_click would inflate the
+    // click metric. The whitelist means an arbitrary ?src= can only ever record
+    // as "other", never as invented attribution.
+    const src = params.get("src");
+    if (src) {
+      stashSignupSource(src);
+      setUrlSrc(src);
+    }
   }, []);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setNeedsVerify(false);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/auth/${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(isRegister ? { email, password, displayName } : { email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong");
-        if (data.needsVerify) setNeedsVerify(true); // login: unverified email
-        setLoading(false);
-        return;
-      }
-      // New accounts must verify their email before they can sign in.
-      if (isRegister) {
-        setRegistered(true);
-        setLoading(false);
-        return;
-      }
-      router.push(safeNext());
-      router.refresh();
-    } catch {
-      setError("Network error — please try again.");
-      setLoading(false);
-    }
-  }
-
-  async function resendVerification() {
-    setResendMsg(null);
-    try {
-      const res = await fetch("/api/auth/resend-verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      setResendMsg(
-        res.ok ? "Verification email sent — check your inbox (and spam)." : "Couldn't resend right now — try again shortly.",
-      );
-    } catch {
-      setResendMsg("Network error — try again.");
-    }
-  }
-
-  const nextQ = typeof window !== "undefined" ? window.location.search.replace(/[?&]error=[^&]*/g, "").replace(/^&/, "?") : "";
-  const wrapperClass = bare ? "" : "mx-auto max-w-md py-10";
-
-  // After signup: the account exists but can't sign in until the email is verified.
-  if (registered) {
-    return (
-      <div className={wrapperClass}>
-        <div className="card-surface p-6 text-center">
-          <h1 className="text-xl font-extrabold text-white">Check your email</h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            We&apos;ve sent a verification link to <span className="font-medium text-slate-200">{email}</span>. Click it
-            to activate your account, then sign in.
-          </p>
-          <button onClick={resendVerification} className="btn-ghost mt-4 text-sm">Resend verification email</button>
-          {resendMsg && <p className="mt-2 text-xs text-slate-400">{resendMsg}</p>}
-          <p className="mt-4 text-sm">
-            <Link href={`/login${nextQ}`} className="text-brand-400 hover:underline">Go to sign in →</Link>
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const wrapperClass = bare ? "" : "mx-auto w-full max-w-sm py-10";
 
   return (
     <div className={wrapperClass}>
-      <div className="card-surface p-6">
-        <h1 className="text-xl font-extrabold text-white">{isRegister ? "Create your account" : "Sign in"}</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          {isRegister
-            ? "Create a free account to save your wishlist and more."
-            : "Sign in to sync your wishlist and manage your listings."}
-        </p>
-
-        {/* OAuth — only render a provider's button when its env keys are configured,
-            so we never show a button that just redirects back with an error. */}
-        {providers.length > 0 && (
+      <div className={compact ? "" : "card-surface p-6"}>
+        {!bare && cancelHref && (
+          <Link href={cancelHref} className="mb-3 inline-block text-xs text-slate-500 hover:text-white">
+            ← Back
+          </Link>
+        )}
+        {!compact && (
           <>
-            <div className="mt-5 flex flex-col gap-2.5">
-              {providers.includes("google") && (
-                <a href="/api/auth/oauth/google" className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95">
-                  <GoogleIcon /> Continue with Google
-                </a>
-              )}
-              {providers.includes("discord") && (
-                <a href="/api/auth/oauth/discord" className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110">
-                  <DiscordIcon /> Continue with Discord
-                </a>
-              )}
-            </div>
-
-            <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
-              <span className="h-px flex-1 bg-ink-700" /> or with email <span className="h-px flex-1 bg-ink-700" />
-            </div>
+            {/* New-user framing on purpose: a near-zero-signup site is serving
+                first-timers, not returning members, and the OAuth flow genuinely
+                is the same button for both — so the returning case is one small
+                honest line instead of the page's whole identity. */}
+            <h1 className="text-xl font-extrabold text-white">Create your free account</h1>
+            <p className="mt-0.5 text-xs text-slate-500">Already have one? The same buttons sign you in.</p>
+            {contextLine && <p className="mt-3 text-sm font-medium text-slate-200">{contextLine}</p>}
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-slate-300">
+              {PERKS.map((perk) => (
+                <li key={perk} className="flex items-center gap-1.5">
+                  <span aria-hidden className="font-bold text-brand-400">✓</span>
+                  <span className="font-semibold">{perk}</span>
+                </li>
+              ))}
+            </ul>
           </>
         )}
 
-        <form onSubmit={submit} className="flex flex-col gap-3">
-          {isRegister && (
-            <label className="block">
-              <span className="mb-1 block text-xs font-medium text-slate-400">Display name</span>
-              <input className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. RiftCollector" autoComplete="nickname" required />
-            </label>
-          )}
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-400">Email</span>
-            <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
-          </label>
-          <label className="block">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400">Password</span>
-              {!isRegister && (
-                <Link href="/forgot" className="text-xs text-brand-400 hover:underline">Forgot password?</Link>
-              )}
-            </div>
-            <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={isRegister ? "new-password" : "current-password"} minLength={6} required />
-          </label>
+        {error && (
+          <p role="alert" className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            {error}
+          </p>
+        )}
 
-          {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
-          {needsVerify && (
-            <p className="text-xs text-slate-400">
-              <button type="button" onClick={resendVerification} className="font-medium text-brand-400 hover:underline">
-                Resend verification email
-              </button>
-              {resendMsg && <span className="ml-2">{resendMsg}</span>}
-            </p>
+        {/* Only render a provider's button when its env keys are configured, so we
+            never show a button that just redirects back with an error. */}
+        <div className="mt-5 flex flex-col gap-2.5">
+          {providers.includes("google") && (
+            <a
+              href={oauthHref("google")}
+              onClick={onProviderClick}
+              className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95"
+            >
+              <GoogleIcon /> Continue with Google
+            </a>
           )}
-
-          <button type="submit" className="btn-primary mt-1" disabled={loading}>
-            {loading ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-slate-400">
-          {isRegister ? (
-            <>Already have an account? <Link href={`/login${nextQ}`} className="text-brand-400 hover:underline">Sign in</Link></>
-          ) : (
-            <>New here? <Link href={`/register${nextQ}`} className="text-brand-400 hover:underline">Create an account</Link></>
+          {providers.includes("discord") && (
+            <a
+              href={oauthHref("discord")}
+              onClick={onProviderClick}
+              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110"
+            >
+              <DiscordIcon /> Continue with Discord
+            </a>
           )}
+        </div>
+
+        {/* Both providers are configured in production; this is the fence for a
+            misconfigured preview or a rotated secret, so the page still says
+            something true instead of rendering an empty card. */}
+        {providers.length === 0 && (
+          <p className="mt-5 rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            Sign-in is temporarily unavailable. Please try again shortly.
+          </p>
+        )}
+
+        <p className={`${compact ? "mt-3" : "mt-5"} text-center text-xs text-slate-500`}>
+          New here? Either button creates your account on the spot.
         </p>
+        {/* The password-migration note is genuinely useful on /login, where
+            someone actively troubleshooting sign-in has room to read it. In the
+            promo popup it is four lines of edge-case prose that push the dialog
+            past the height of a phone screen; /login remains one tap away. */}
+        {!compact && (
+          <p className="mt-2 text-center text-xs text-slate-500">
+            Signed up with a password before? Use the same email address with Google or Discord and you&apos;ll
+            land straight back on your existing account. If that address isn&apos;t on either,{" "}
+            <a href="/contact" className="text-brand-400 hover:underline">
+              contact us
+            </a>{" "}
+            and we&apos;ll link it for you.
+          </p>
+        )}
       </div>
     </div>
   );

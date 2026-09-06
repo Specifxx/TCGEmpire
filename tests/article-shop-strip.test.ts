@@ -108,9 +108,9 @@ test("ArticleView renders the default strip only when the body did not place one
 });
 
 test("no shop label names a country", () => {
-  // ArticleShopStrip localises the eBay domain (AU/NZ→AU, US, UK, SG), so a
+  // ArticleShopStrip localises the eBay domain (AU, US, UK, SG), so a
   // label naming one market is wrong for the rest.
-  const country = /\b(UK|USA|Australia|Australian|New Zealand|Britain|British|Canada|Canadian|Singapore|America|American)\b/;
+  const country = /\b(UK|USA|Australia|Australian|Britain|British|Canada|Canadian|Singapore|America|American)\b/;
   for (const a of ALL) {
     for (const s of a.shop ?? []) {
       assert.ok(!country.test(s.label), `${a.slug}: shop label names a country — "${s.label}"`);

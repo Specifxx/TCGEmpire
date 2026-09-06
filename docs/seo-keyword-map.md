@@ -35,7 +35,10 @@ explicit link up/down to the primary).
 | `riftbound <set name>`, `riftbound <set name> prices` | `/sets/<slug>` | — |
 | `riftbound <set> card list` | `/guides/riftbound-<set>-card-list` (exists for Vendetta only today — `riftbound-vendetta-card-list`) — **backlog item 10**: build the same template for Origins/Origins: Proving Grounds/Spiritforged/Unleashed | `every-riftbound-<set>-card-revealed` blog gallery post (Vendetta only today) — the two are DIFFERENT angles (checklist guide vs. embedded live gallery), keep both when both exist |
 | `riftbound card list` (no set named) | `/guides/riftbound-card-list` (all-sets hub — **not yet built, backlog item 12**) | — |
-| `riftbound roadmap` | `/blog/riftbound-set-roadmap-2026` (**not yet built — needs real roadmap facts from you, backlog item 11**) | — |
+| `riftbound roadmap` | `/blog/riftbound-2027-set-roadmap` (exists — corrects the slug this file previously guessed at) | — |
+| `riftbound sets in order`, `riftbound set list`, `how many riftbound sets` | `/guides/riftbound-sets-in-order` (added 2026-08-13) | Deliberately does not restate Legacy/The Reckoning/Set 8/9 facts — links out to the roadmap post for those instead, so the two can't drift apart |
+| `riftbound origins card list`, `what's in the origins set`, `origins riftbound cards` | `/guides/whats-in-the-riftbound-origins-set` (added 2026-08-13) | Real rarity/domain/type breakdown computed from the catalogue, not estimated. Secondary: `/sets/origins` for the live browsable list |
+| `riftbound card condition`, `nm lp mp hp riftbound`, `riftbound card grading` | `/guides/riftbound-card-condition-guide` (added 2026-08-13) | Distinct from `/guides/how-to-store-and-protect-riftbound-cards` (storage, not grading) — cross-linked both ways |
 | `riftbound rarities` | **Decision needed** — either a new `/guides/riftbound-rarities-explained` hub, or fold into a beefed-up `/cards` intro. See backlog item 9. Existing `/cards/rarity/<rarity>` facet pages own the per-rarity queries either way. | `/cards/rarity/<rarity>` (per-rarity facet pages, already exist for Common/Uncommon/Rare/Epic/Showcase) |
 
 ## Rules intent
@@ -52,7 +55,6 @@ explicit link up/down to the primary).
 | Query pattern | Primary URL | Notes |
 |---|---|---|
 | `buy riftbound cards australia` | `/blog/buy-riftbound-cards-australia` | Real: 19 AU stores tracked |
-| `buy riftbound cards nz` | `/blog/buy-riftbound-cards-nz` | Real: 10 NZ stores tracked |
 | `buy riftbound cards us` | `/blog/buy-riftbound-cards-us` | Real: ~19 US stores + TCGplayer + eBay |
 | `buy riftbound cards uk` | `/blog/buy-riftbound-cards-uk` | Real: 14 UK stores + eBay |
 | `riftbound singapore` | `/blog/riftbound-price-comparison-singapore` | Real: 11 SG stores |

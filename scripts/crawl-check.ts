@@ -43,7 +43,9 @@ const NON_CONTENT = [
   /^\/api\//,
   /^\/_next\//,
   /^\/login/, /^\/register/, /^\/forgot/, /^\/reset/, /^\/verify/,
-  /^\/dashboard/, /^\/profile/, /^\/admin/, /^\/portfolio/,
+  // /watching, not /watchlist: /watchlist redirects to the /alerts explainer,
+  // which IS content and should keep being crawled.
+  /^\/dashboard/, /^\/profile/, /^\/admin/, /^\/portfolio/, /^\/watching/,
   /^\/unsubscribe/, /^\/announcements\/unsubscribe/, /^\/newsletter\/unsubscribe/,
   /^\/embed\//, /^\/llm\//,
   /\.(xml|txt|json|png|jpg|jpeg|svg|ico|webp|webmanifest)$/,
@@ -226,6 +228,10 @@ async function main() {
   }
 
   const report = {
+    // See the same field in scripts/adsense-audit.ts — this is a committed
+    // artefact that scripts/adsense-guard.ts grades against on every build, so it
+    // has to say how old it is or a stale snapshot reads as a clean site.
+    generatedAt: new Date().toISOString(),
     base: BASE,
     crawled: all.length,
     contentPages: content.length,

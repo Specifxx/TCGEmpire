@@ -3,7 +3,10 @@
     "allow": [
       "PowerShell(node --version)",
       "PowerShell(npm --version)",
-      "WebFetch(domain:riftscribe.gg)"
+      "WebFetch(domain:riftscribe.gg)",
+      "Bash(find / -maxdepth 4 -iname \"*.claude\")",
+      "Bash(find / -iname \"*.sh\" -path \"*hook*\")",
+      "Bash(psql \"postgresql://postgres@127.0.0.1:5432/rift?schema=public\" -c \"select 1\")"
     ]
   }
 }

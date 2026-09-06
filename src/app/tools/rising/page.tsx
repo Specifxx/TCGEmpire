@@ -6,6 +6,7 @@ import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
+import { sydneyDayKey } from "@/lib/price-history";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
@@ -13,6 +14,7 @@ import { cardHref } from "@/lib/card-url";
 import { PremiumButton } from "@/components/PremiumButton";
 import { SITE_URL } from "@/lib/site";
 import { cardImageAlt } from "@/lib/image-alt";
+import { pageAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
   description:
     "A Premium screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested, not financial advice.",
   keywords: ["riftbound rising cards", "riftbound price predictions", "riftbound card demand", "riftbound investing", "riftbound cards going up"],
-  alternates: { canonical: "/tools/rising" },
+  alternates: pageAlternates("/tools/rising"),
   openGraph: { title: "Rising Cards — Riftbound cards likely to go up", url: `${SITE_URL}/tools/rising` },
 };
 
@@ -160,7 +162,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   const country = getCountry();
 
   const raw = (searchParams.scope ?? "").toUpperCase();
-  const scope: RiseScope = raw === "AU" || raw === "NZ" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
+  const scope: RiseScope = raw === "AU" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
   const isGlobal = scope === "GLOBAL";
   const currency = isGlobal ? "AUD" : currencyOf(scope);
 
@@ -168,8 +170,11 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // full Premium view, refreshed on the daily import via CONTENT_TAG. A free visitor
   // triggers the same cached computation an admin/premium visitor would; only the
   // SLICE shown differs, so there's no extra query cost for gating.
-  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards-public", scope], {
-    revalidate: 3600,
+  // Day-keyed + 48h TTL, matching top-deals.ts's identical key so one page warms
+  // the other. Was an hourly TTL with no day key — the widest PriceHistory read
+  // in the repo re-running ~hourly (see the note in top-deals.ts).
+  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards-public", scope, sydneyDayKey()], {
+    revalidate: 172800,
     tags: [CONTENT_TAG],
   })();
   const top = analysis.picks[0];
@@ -205,7 +210,8 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </div>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Cards ranked by a composite of <strong className="text-slate-200">demand and price-timing signals</strong> — high or
-          rising search interest that hasn&apos;t re-rated yet. Real data, transparent scoring, backtested. Not financial advice.
+          rising search interest that hasn&apos;t re-rated yet. Real data, transparent scoring, backtested. Not financial advice.{" "}
+          Looking for boxes and packs instead? <Link href="/tools/rising-sealed" className="text-brand-400 hover:underline">See Rising Sealed →</Link>
         </p>
       </div>
 
@@ -246,7 +252,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
                   breakdown — not just the top pick.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/register?next=/tools/rising" className="btn-primary text-sm">Create a free account</Link>}
+                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
                   <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
                 </div>
               </div>
