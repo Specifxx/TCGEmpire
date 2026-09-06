@@ -483,3 +483,50 @@ test("store health reports stores that returned NOTHING, not just stores with da
     "the new alert kind needs a KIND_LABEL or the Discord line renders undefined"
   );
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cardmarket must be MONITORED even though it must never be SCRAPED as a store.
+// ─────────────────────────────────────────────────────────────────────────────
+// Found 2026-09-06: the exact "no-listings" failure mode above (a source
+// silently going to zero rows) happened to Cardmarket for days with no alert,
+// because store-health.ts's registry was built ONLY from RETAILER_LIST, which
+// deliberately excludes Cardmarket (see lib/store-pages.ts's own note on why —
+// it must never get a scraped-store page or enter the generic Shopify/Woo scrape
+// loop). REFERENCE_SOURCES (lib/constants.ts) is the fix: a second, separate
+// registry folded into the same monitor without touching RETAILER_LIST itself.
+test("Cardmarket is folded into the store-health registry, without joining RETAILER_LIST", () => {
+  const src = read("src/lib/store-health.ts");
+  assert.match(src, /REFERENCE_SOURCES/, "store-health.ts must import and use REFERENCE_SOURCES");
+  assert.match(
+    src,
+    /for \(const r of REFERENCE_SOURCES\)/,
+    "REFERENCE_SOURCES must be folded into the expected-registry loop, same as RETAILER_LIST"
+  );
+
+  const retailers = read("src/lib/retailers.ts");
+  assert.doesNotMatch(
+    retailers,
+    /key:\s*"cardmarket/i,
+    "Cardmarket must stay OUT of retailers.ts's RETAILER_LIST — that registry drives the real-store scrape loop and per-store pages " +
+      "(prose mentioning Cardmarket, e.g. explaining why EU has few stores, is fine — only a REGISTRY ENTRY is the problem)"
+  );
+
+  const constants = read("src/lib/constants.ts");
+  assert.match(constants, /export const REFERENCE_SOURCES/, "REFERENCE_SOURCES must be defined in constants.ts");
+  assert.match(constants, /CARDMARKET_RETAILER/, "REFERENCE_SOURCES must include the UK Cardmarket key");
+  assert.match(constants, /CARDMARKET_EU_RETAILER/, "REFERENCE_SOURCES must include the EU Cardmarket key");
+});
+
+test("the public stores directory lists Cardmarket separately from the real-store grid/count", () => {
+  const src = read("src/app/stores/tracked/page.tsx");
+  assert.match(src, /REFERENCE_SOURCES/, "/stores/tracked must import REFERENCE_SOURCES");
+  assert.match(
+    src,
+    /Reference/i,
+    "the reference-sources section must be visibly labelled as distinct from the real-store grid"
+  );
+  // The real-store count (`total`) must stay computed from RETAILER_LIST alone —
+  // folding REFERENCE_SOURCES into it would silently reinflate the "N stores"
+  // claim the file's own comment (see /stores page) already fixed once before.
+  assert.match(src, /const total = RETAILER_LIST\.length/, "the tracked-store total must not include reference sources");
+});

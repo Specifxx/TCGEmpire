@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RETAILER_LIST } from "@/lib/retailers";
+import { REFERENCE_SOURCES } from "@/lib/constants";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { storeSlug } from "@/lib/store-pages";
@@ -43,6 +44,17 @@ export default function TrackedStoresPage() {
     stores: RETAILER_LIST.filter((r) => (r.country ?? "AU") === code).sort((a, b) => a.name.localeCompare(b.name)),
   })).filter((m) => m.stores.length > 0);
   const total = RETAILER_LIST.length;
+
+  // Reference/aggregate sources (Cardmarket) — grouped by display name so its
+  // UK (converted) and EU (native) rows read as one entry with two markets,
+  // not two identically-named cards. Deliberately kept OUT of `byMarket`/`total`
+  // above: those describe real, independently-scraped stores (see the note on
+  // RETAILER_LIST in lib/retailers.ts and lib/store-pages.ts), and a marketplace
+  // aggregate isn't one — see REFERENCE_SOURCES's own header in lib/constants.ts.
+  const referenceSources = [...new Map(REFERENCE_SOURCES.map((r) => [r.name, r])).values()].map((r) => ({
+    ...r,
+    markets: REFERENCE_SOURCES.filter((x) => x.name === r.name).map((x) => COUNTRIES[x.country as Country].label),
+  }));
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -99,6 +111,31 @@ export default function TrackedStoresPage() {
           </div>
         </section>
       ))}
+
+      {/* Reference/aggregate sources — visually and semantically distinct from the
+          real-store grid above: no "N stores" count, no per-store page link, and
+          explicit copy explaining it's a marketplace aggregate, not a single
+          retailer's listing. See the referenceSources note above. */}
+      {referenceSources.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold text-white">Reference &amp; marketplace sources</h2>
+          <p className="mb-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Beyond the {total} stores above, card pages also show a clearly-labelled reference price from
+            marketplace aggregates below where relevant. These are never counted as a store or ranked
+            in the price comparison — see our{" "}
+            <Link href="/methodology" className="text-brand-400 hover:underline">methodology</Link>.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {referenceSources.map((r) => (
+              <div key={r.name} className="card-surface flex flex-col gap-1 p-4">
+                <span className="font-semibold text-white">{r.name}</span>
+                <span className="text-xs text-slate-500">{r.description}</span>
+                <span className="mt-1 text-xs text-slate-500">Shown for: {r.markets.join(" & ")}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* FAQ — answers common buyer questions and enables FAQPage rich results */}
       <section className="card-surface divide-y divide-ink-800 overflow-hidden">
