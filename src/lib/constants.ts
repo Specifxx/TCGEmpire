@@ -116,6 +116,47 @@ export function isFallbackRetailer(retailer: string): boolean {
   return ALL_FALLBACK_RETAILERS.includes(retailer);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Reference/aggregate price sources, for MONITORING and DIRECTORY visibility only.
+// ─────────────────────────────────────────────────────────────────────────────
+// Deliberately NOT in lib/retailers.ts's RETAILER_LIST. That registry drives two
+// things a marketplace aggregate must never enter: the generic Shopify/WooCommerce
+// scrape loop in price-import.ts (which would try to fetch a real store's
+// products.json from Cardmarket's `base`, exactly the direct-scrape approach
+// lib/cardmarket.ts's header says this integration must NOT do — it reads only
+// the public data dump) and lib/store-pages.ts's STORE_PAGES (a store page with
+// "collections"/shipping-policy chrome for something that isn't a discrete shop).
+// See store-pages.ts's own note on why RETAILER_LIST must stay real-stores-only.
+//
+// Before this existed, that same real design decision produced an unintended
+// side effect: Cardmarket was invisible everywhere a human looks for "is this
+// working" — the admin store-health monitor and the public stores directory —
+// so the 2026-09-06 matching-bug regression (0 rows written for days) had no
+// dashboard signal at all. This list is the fix for THAT gap, read by
+// lib/store-health.ts (folded into its registry so a future zero-row regression
+// alerts like any other store) and app/stores/tracked/page.tsx (a clearly
+// labelled, separate section — never merged into the real-store count/grid).
+export interface ReferenceSource {
+  key: string;
+  name: string;
+  country: string; // the market this row is written for (RetailerPrice.country)
+  description: string;
+}
+export const REFERENCE_SOURCES: readonly ReferenceSource[] = [
+  {
+    key: CARDMARKET_RETAILER,
+    name: "Cardmarket",
+    country: "UK",
+    description: "Europe's largest card marketplace — lowest listed price, converted to GBP",
+  },
+  {
+    key: CARDMARKET_EU_RETAILER,
+    name: "Cardmarket",
+    country: "EU",
+    description: "Europe's largest card marketplace — lowest listed price, native EUR",
+  },
+];
+
 export type DomainKey =
   | "Fury"
   | "Calm"

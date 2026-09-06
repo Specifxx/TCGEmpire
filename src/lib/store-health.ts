@@ -15,6 +15,7 @@
 // the cron route that calls it.
 import { prisma } from "./db";
 import { RETAILER_LIST, retailerCountry } from "./retailers";
+import { REFERENCE_SOURCES } from "./constants";
 import { median } from "./stats";
 
 // Calendar day (date-only) in Australia/Sydney — same bucketing as
@@ -99,8 +100,16 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
   const empty = { rows: [], alerts: [] };
   try {
     const today = sydneyDay();
-    const nameByKey = new Map(RETAILER_LIST.map((r) => [r.key, r.name]));
-    const trackedKeys = RETAILER_LIST.map((r) => r.key);
+    // REFERENCE_SOURCES (Cardmarket) folded in alongside the real-store registry —
+    // see its own header comment in lib/constants.ts for why: a marketplace
+    // aggregate must never be scraped as a store or get a store page, but it can
+    // still go silently to zero rows (exactly what happened 2026-09-06), and this
+    // monitor is the one place that shape of failure should be visible.
+    const nameByKey = new Map([
+      ...RETAILER_LIST.map((r) => [r.key, r.name] as const),
+      ...REFERENCE_SOURCES.map((r) => [r.key, r.name] as const),
+    ]);
+    const trackedKeys = [...RETAILER_LIST.map((r) => r.key), ...REFERENCE_SOURCES.map((r) => r.key)];
     const key = (retailer: string, country: string) => `${retailer}|${country}`;
 
     const [counts, lastSeenRows, inStockRows, medianRows] = await Promise.all([
@@ -183,6 +192,9 @@ export async function checkStoreHealth(): Promise<{ rows: StoreHealthRow[]; aler
     const expected = new Map<string, { retailer: string; country: string }>();
     for (const r of RETAILER_LIST) {
       expected.set(key(r.key, retailerCountry(r.key)), { retailer: r.key, country: retailerCountry(r.key) });
+    }
+    for (const r of REFERENCE_SOURCES) {
+      expected.set(key(r.key, r.country), { retailer: r.key, country: r.country });
     }
     // A store can also legitimately return rows in a market the registry doesn't
     // name (eBay's per-market keys, a store that started shipping elsewhere).
@@ -312,6 +324,9 @@ const KIND_LABEL: Record<StoreHealthAlertKind, string> = {
 // (the display name, not the retailer key) since that's what a human scanning
 // the channel needs to act on.
 export function formatHealthAlerts(alerts: StoreHealthAlert[]): string[] {
-  const nameByKey = new Map(RETAILER_LIST.map((r) => [r.key, r.name]));
+  const nameByKey = new Map([
+    ...RETAILER_LIST.map((r) => [r.key, r.name] as const),
+    ...REFERENCE_SOURCES.map((r) => [r.key, r.name] as const),
+  ]);
   return alerts.map((a) => `**${nameByKey.get(a.retailer) ?? a.retailer}** (${a.country}) — ${KIND_LABEL[a.kind]}: ${a.detail}`);
 }
