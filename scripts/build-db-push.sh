@@ -40,19 +40,19 @@ set -uo pipefail
 # its own allowance had long since reset, and a 2026-09-05 probe-databases run
 # confirmed its old window's data was already carried forward (see db-chains.ts).
 CURRENT_OP="RM7"
-# Rotated again on 2026-09-06: RH7 exceeded its 5 GB monthly allowance after
-# only two days. UNLIKE every prior history rotation, this one did NOT move to
-# the next recycled name — RH8 through RH11 are not even set in GitHub Actions
-# any more (a 2026-09-06 probe-history run reported all four NOT SET) — so it
-# falls back to RH6, the project before RH7. RH6 predates the 2026-09-05
-# GLOBAL-history migration and held zero country="GLOBAL" rows, so this cutover
-# additionally ran the ADDITIVE `migrate-history` task to merge RH7's current
-# GLOBAL series into RH6 before this flip, rather than destructively
-# overwriting RH6's own older per-market archive. See the long note on
-# HISTORY_URL in src/lib/db-history.ts and on HISTORY_VARS in
-# src/lib/db-chains.ts for the full account. The chains are CURRENT-first, not
-# newest-first.
-CURRENT_HIST="RH6"
+# Rotated twice on 2026-09-06. RH7 exceeded its 5 GB monthly allowance after
+# only two days; with RH8-RH11 all unset in GitHub Actions at that moment, it
+# fell back to RH6 via the ADDITIVE `migrate-history` task (RH6 predates the
+# 2026-09-05 GLOBAL-history migration and held zero country="GLOBAL" rows on
+# its own, so this merged RH7's current GLOBAL series into it rather than
+# destructively overwriting RH6's older per-market archive). Hours later RH8
+# was re-added, and migrate-history-db-rh6-to-rh8 (a full pg_dump/restore,
+# row-count verified) moved history onto it — safe because that same additive
+# top-up had already folded RH8's own old rows into RH6, making RH6 a superset
+# of RH8's prior contents. See the long note on HISTORY_URL in
+# src/lib/db-history.ts and on HISTORY_VARS in src/lib/db-chains.ts for the
+# full account. The chains are CURRENT-first, not newest-first.
+CURRENT_HIST="RH8"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -95,16 +95,16 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${RH6:-}" ]; then
+if [ -n "${RH8:-}" ]; then
+  HIST="$RH8"; HIST_SOURCE="RH8"
+elif [ -n "${RH6:-}" ]; then
+  # Rollback: holds the same GLOBAL series as RH8 (folded in additively during
+  # the same day's earlier RH7 exhaustion), so it's a genuinely safe fallback.
   HIST="$RH6"; HIST_SOURCE="RH6"
-elif [ -n "${RH7:-}" ]; then
-  # Rollback: served 2026-09-04 to 2026-09-06, reachable at cutover time but
-  # already over its own transfer allowance (the reason for this rotation).
-  HIST="$RH7"; HIST_SOURCE="RH7"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. RH11, RH10, RH9, RH8 are not even set any
-  # more; HISTORY_DATABASE_URL_4/_3/_2/bare were all superseded earlier. RH5 is
+  # the push above already covered. RH7/RH11/RH10/RH9 are retired or unset;
+  # HISTORY_DATABASE_URL_4/_3/_2/bare were all superseded earlier. RH5 is
   # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi

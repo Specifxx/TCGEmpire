@@ -101,67 +101,63 @@ export const OPERATIONAL_VARS = ["RM7"] as const;
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   RH6                    — in service again since 2026-09-06. RH7 exceeded its
- *                            5 GB monthly transfer allowance after only two days
- *                            (in service since 2026-09-04), so history rotates
- *                            again — but this rotation is NOT the usual "next
- *                            recycled name" hop: RH8 through RH11, the obvious
- *                            next candidates, are NOT SET in GitHub Actions at
- *                            all (a 2026-09-06 probe-history run reported all
- *                            four as `NOT SET`, not merely unreachable — the
- *                            secrets/vars have been removed since their own
- *                            terms ended). Provisioning a fresh RH12 needs
- *                            owner action this codebase cannot take, so this
- *                            cutover falls back to RH6 — the immediately
- *                            preceding project, already known-safe (it served
- *                            2026-09-02..09-04) and confirmed reachable by that
- *                            same probe.
+ *   RH8                    — in service since 2026-09-06, hours after RH6 (see
+ *                            below) — RH8 had been entirely removed from Vercel
+ *                            and GitHub Actions since its own 2026-08-23..08-25
+ *                            term (a same-day probe-history run had reported it
+ *                            `NOT SET`, not merely unreachable), then was
+ *                            re-added, which is what makes this cutover possible
+ *                            at all.
  *
- *                            THE NON-OBVIOUS PART: 2026-09-05 shipped a SEPARATE
+ *                            RH6 WAS ONLY ITS PREDECESSOR FOR HOURS. Earlier the
+ *                            same day, RH7 (in service since 2026-09-04) exceeded
+ *                            its own 5 GB monthly transfer allowance, and with
+ *                            RH8-RH11 all unset at that moment, history fell back
+ *                            to RH6 — the immediately preceding project — via the
+ *                            ADDITIVE `migrate-history` task (skipDuplicates on
+ *                            [cardId, country, day]), which folded RH7's current
+ *                            country="GLOBAL" series (see below) into RH6
+ *                            without touching RH6's own older per-market rows.
+ *                            Once RH8 came back, migrate-history-db-rh6-to-rh8
+ *                            (.github/workflows/maintenance.yml) did a full
+ *                            pg_dump/restore of RH6 — by then already a superset
+ *                            of RH8's own prior term, since that same additive
+ *                            top-up had pulled RH8's old rows into RH6 too —
+ *                            over RH8, verified row-for-row.
+ *
+ *                            THE PART THAT MADE THE RH6 STEP NON-TRIVIAL, AND
+ *                            STILL MATTERS HERE: 2026-09-05 shipped a SEPARATE
  *                            migration (scripts/backfill-global-history.ts,
  *                            price-import.ts) collapsing every market's
- *                            PriceHistory rows into one country="GLOBAL" row
- *                            per card per day — historySource() in
- *                            price-history.ts now ALWAYS reads country=GLOBAL,
- *                            unconditionally. RH6 predates that migration
- *                            entirely (it was retired 2026-09-04, the day
- *                            before) and holds ZERO GLOBAL rows — only the old
- *                            per-market (AU/CA/EU/NZ/SG/UK/US) shape. Naively
- *                            flipping this chain to RH6 as-is would have made
- *                            every price-history chart and the RiftCompare
- *                            Index render EMPTY, site-wide, with no error —
- *                            exactly the "silently serving garbage" failure
- *                            shape this file exists to prevent.
- *
- *                            So this cutover did NOT dump/restore RH7 over RH6
- *                            (which would have destroyed RH6's own deeper
- *                            per-market archive — EU back to 2026-08-24, CA
- *                            back to 2026-08-10 — for no reason). It ran the
- *                            ADDITIVE `migrate-history` task (scripts/
- *                            migrate-history.ts, skipDuplicates on
- *                            [cardId, country, day]) with this chain already
- *                            pointed at RH6, which copied RH7's 79,381 GLOBAL
- *                            rows (2026-06-06..09-03, 1,420 cards matching the
- *                            live catalogue) into RH6 as pure additions, leaving
- *                            RH6's existing per-market rows untouched. RH6 now
- *                            holds the union: its own older per-market archive
- *                            PLUS the current GLOBAL series the app actually
- *                            reads.
- *   RH7                    — the rollback: served 2026-09-04 to 2026-09-06 and
- *                            holds the GLOBAL series through 2026-09-03 (see
- *                            above — reachable for reads at cutover time, but
- *                            already over its transfer allowance, which is the
- *                            entire reason for this rotation). Only ever
- *                            selected if RH6 is UNSET — a safety net for a
+ *                            PriceHistory rows into one country="GLOBAL" row per
+ *                            card per day — historySource() in price-history.ts
+ *                            now ALWAYS reads country=GLOBAL, unconditionally.
+ *                            RH8's OWN last term (2026-08-23..08-25) predates
+ *                            that migration and held zero GLOBAL rows on its
+ *                            own; the pg_dump/restore from RH6 is what actually
+ *                            carries the GLOBAL series onto RH8 here — RH8 was
+ *                            never populated with GLOBAL rows any other way.
+ *   RH6                    — the rollback: served 2026-09-02..09-04, then again
+ *                            2026-09-06 for a few hours as the RH7-exhaustion
+ *                            fallback (see above) — reachable and, as of that
+ *                            second stint, ALSO holds the GLOBAL series (folded
+ *                            in additively), so it remains a genuinely safe
+ *                            rollback rather than the pre-GLOBAL trap RH6 was
+ *                            the first time this comment described it. Only ever
+ *                            selected if RH8 is UNSET — a safety net for a
  *                            missing secret, not a health check, so a
- *                            near-exhausted-but-present RH6 never masks a
- *                            genuinely missing RH7 (resolveVar is precedence,
+ *                            near-exhausted-but-present RH8 never masks a
+ *                            genuinely missing RH6 (resolveVar is precedence,
  *                            never health; see OPERATIONAL_VARS above for the
  *                            outage that shape caused on the operational side).
  *   DATABASE_URL           — the terminal case, meaning "no separate history
  *                            project is configured; history shares the
  *                            operational database". db-history.ts's
  *                            historyIsSplit depends on this staying last.
+ *
+ * RH7 DROPS OUT OF THIS CUTOVER (it was RH6's own rollback for its few-hours
+ * stint, and a chain only needs one) — still reachable, still over its transfer
+ * allowance, available to migration tasks by explicit name if ever needed again.
  *
  * RH5 IS DELIBERATELY ABSENT, and not because it is orphaned. The 2026-08-23
  * probe found it holding User=85, CollectionCard=374, Order=4,
@@ -173,15 +169,18 @@ export const OPERATIONAL_VARS = ["RM7"] as const;
  * is also one of the account-recovery sources probe-databases exists to find, so
  * it should be left intact rather than reused.
  *
- * RH8 THROUGH RH11 ARE ABSENT FOR A DIFFERENT REASON THAN RH5: not excluded on
- * purpose, simply GONE from GitHub Actions (see the 2026-09-06 probe-history
- * finding above). If any of them is ever re-added as a secret/var, treat it as a
- * fresh candidate requiring the same live guard every recycled target gets — do
- * not assume the OLD RH8-RH11 findings (documented in earlier git history) still
- * hold. HISTORY_DATABASE_URL_4/_3, HISTORY_DATABASE_URL (bare) and _2 were
- * superseded earlier still.
+ * RH9 THROUGH RH11 STAY OUT OF THIS CHAIN for the same reason RH8 was absent
+ * hours earlier: a 2026-09-06 probe-history run found them REACHABLE again too
+ * (re-added alongside RH8, apparently), but nothing has asked to cut over onto
+ * any of them, and this file's own "ONLY LIVE PROJECTS BELONG IN A RUNTIME
+ * CHAIN" rule means being reachable is not enough on its own to earn a chain
+ * slot. If a future rotation targets one, treat it as a fresh candidate
+ * requiring the same live guard every recycled target gets — do not assume the
+ * OLD RH9-RH11 findings (documented in earlier git history) still hold.
+ * HISTORY_DATABASE_URL_4/_3, HISTORY_DATABASE_URL (bare) and _2 were superseded
+ * earlier still.
  */
-export const HISTORY_VARS = ["RH6", "RH7", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["RH8", "RH6", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {

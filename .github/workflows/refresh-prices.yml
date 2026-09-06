@@ -128,10 +128,10 @@ jobs:
           CARDMARKET_PRODUCTLIST_NONSINGLES_URL: ${{ vars.CARDMARKET_PRODUCTLIST_NONSINGLES_URL }}
           CARDMARKET_PRICEGUIDE_URL: ${{ vars.CARDMARKET_PRICEGUIDE_URL }}
           CARDMARKET_EUR_TO_GBP: ${{ vars.CARDMARKET_EUR_TO_GBP }}
-          # RH6 is the current history project (see src/lib/db-history.ts) — RH7 is
-          # its at-limit rollback, and everything older is a dead fallback kept only
-          # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH6 is
-          # missing here, db-history.ts falls through to RH7 (or, at the end of the
+          # RH8 is the current history project (see src/lib/db-history.ts) — RH6 is
+          # its rollback, and everything older is a dead fallback kept only
+          # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH8 is
+          # missing here, db-history.ts falls through to RH6 (or, at the end of the
           # chain, to the OPERATIONAL database), so keep this list in sync with
           # db-history.ts / db-chains.ts.
           RH11: ${{ secrets.RH11 || vars.RH11 }}

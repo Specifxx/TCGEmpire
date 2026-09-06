@@ -2429,7 +2429,7 @@ jobs:
           probe "HISTORY_DATABASE_URL_3 (rollback)" "${P_HISTORY_DATABASE_URL_3:-}" || true
           probe "HISTORY_DATABASE_URL_2" "${P_HISTORY_DATABASE_URL_2:-}" || true
           probe "HISTORY_DATABASE_URL"  "${P_HISTORY_DATABASE_URL:-}" || true
-          probe "RH6 (current)"        "${P_RH6:-}" || true
+          probe "RH6 (rollback)"       "${P_RH6:-}" || true
           probe "RH7 (retired)"        "${P_RH7:-}" || true
           probe "RH5"                  "${P_RH5:-}" || true
           echo ""
@@ -5184,8 +5184,9 @@ jobs:
           EBAY_FORCE: ${{ inputs.ebay_sg && '1' || '' }}
           EBAY_ONLY_MARKET: ${{ inputs.ebay_sg && 'SG' || '' }}
           # Route history/click WRITES to the current history project (db-history.ts).
-          # RH6 must lead: without it this step's PriceHistory rows land in an
+          # RH8 must lead: without it this step's PriceHistory rows land in an
           # exhausted project, or (chain exhausted) in the OPERATIONAL database.
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
@@ -5262,6 +5263,7 @@ jobs:
       - name: Audit price history (read-only)
         if: inputs.task == 'audit-history'
         env:
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
@@ -5274,6 +5276,7 @@ jobs:
       - name: Backfill existing PriceHistory into GLOBAL rows (phase 1 of 2 — populate)
         if: inputs.task == 'backfill-global-history'
         env:
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
         run: npx tsx scripts/backfill-global-history.ts
@@ -5281,6 +5284,7 @@ jobs:
       - name: Delete PriceHistory rows superseded by the GLOBAL backfill (phase 2 of 2 — cleanup)
         if: inputs.task == 'backfill-global-history-delete-old'
         env:
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
         run: npx tsx scripts/backfill-global-history.ts --delete-old
@@ -5323,6 +5327,7 @@ jobs:
       - name: Repair history card ids (re-key onto the live catalogue)
         if: inputs.task == 'repair-history-card-ids'
         env:
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
@@ -5462,6 +5467,7 @@ jobs:
       - name: Audit outbound clicks (read-only leaderboard)
         if: inputs.task == 'audit-clicks'
         env:
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}

@@ -57,8 +57,9 @@ jobs:
           # These were never set here, so that client fell through its entire
           # chain to DATABASE_URL — the OPERATIONAL database, whose PriceHistory
           # is deliberately empty since the RM3 cutover. The result was a promo
-          # that skipped every Friday with "no price history yet". RH6 is CURRENT;
-          # RH7 is its rollback.
+          # that skipped every Friday with "no price history yet". RH8 is CURRENT;
+          # RH6 is its rollback.
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
