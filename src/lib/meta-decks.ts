@@ -198,6 +198,21 @@ export async function resolveAllDecks(country: Country = DEFAULT_COUNTRY): Promi
   return META_DECKS.map((d) => resolveDeckFromMap(d, map));
 }
 
+// Same one-query batching as resolveAllDecks, over a caller-chosen SUBSET of
+// seeds rather than every META_DECKS entry — for a page that only needs a few
+// decks (a champion's own builds, say) but would otherwise reach for
+// `Promise.all(seeds.map(resolveDeck))`, firing one buildCardMap query per
+// deck instead of one for the whole subset. META_DECKS is small today (~10
+// entries), so that fan-out was never a real outage risk, but it is the same
+// per-deck-query shape this file already avoids everywhere else — no reason
+// for a new call site to reintroduce it.
+export async function resolveDecks(seeds: MetaDeckSeed[], country: Country = DEFAULT_COUNTRY): Promise<ResolvedDeck[]> {
+  if (seeds.length === 0) return [];
+  const names = seeds.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]);
+  const map = await buildCardMap(names, country);
+  return seeds.map((d) => resolveDeckFromMap(d, map));
+}
+
 export function getDeckSeed(slug: string): MetaDeckSeed | undefined {
   return META_DECKS.find((d) => d.slug === slug);
 }
