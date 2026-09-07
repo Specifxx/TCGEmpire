@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { breadcrumb, type Crumb } from "@/lib/jsonld";
+import { breadcrumb, ldJson, type Crumb } from "@/lib/jsonld";
 
 // Visible breadcrumb trail + its matching BreadcrumbList JSON-LD, emitted
 // together so the markup can never describe a hierarchy the page doesn't show.
@@ -14,7 +14,7 @@ import { breadcrumb, type Crumb } from "@/lib/jsonld";
 export function Breadcrumbs({ trail, className }: { trail: Crumb[]; className?: string }) {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb(trail)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(breadcrumb(trail)) }} />
       <nav className={`flex items-center gap-1.5 text-xs text-slate-500 ${className ?? "mb-3"}`} aria-label="Breadcrumb">
         <Link href="/" className="hover:text-slate-300">Home</Link>
         {trail.map((c, i) => (
