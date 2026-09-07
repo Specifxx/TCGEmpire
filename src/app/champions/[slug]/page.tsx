@@ -9,11 +9,10 @@ import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
 import { setByCode } from "@/lib/constants";
-import { META_DECKS, resolveDeck, type ResolvedDeck } from "@/lib/meta-decks";
+import { META_DECKS, resolveDecks, type ResolvedDeck } from "@/lib/meta-decks";
 import { DomainBadge } from "@/components/Badge";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumb } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
@@ -167,7 +166,7 @@ export default async function ChampionPage({ params }: { params: { slug: string 
     champ.prefixes.some((p) => d.legend.toLowerCase().startsWith(p.toLowerCase() + ","))
   );
   const decks: ResolvedDeck[] = dbReachable
-    ? await Promise.all(deckSeeds.map((d) => resolveDeck(d, country))).catch((e) => {
+    ? await resolveDecks(deckSeeds, country).catch((e) => {
         console.error(`champions/${champ.slug}: deck resolve failed:`, e);
         return deckSeeds.map(unpriced);
       })
@@ -224,10 +223,9 @@ export default async function ChampionPage({ params }: { params: { slug: string 
 
   return (
     <div className="flex flex-col gap-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb(trail), itemListLd]) }}
-      />
+      {/* Breadcrumbs below already emits its own matching BreadcrumbList — only
+          the champion's card ItemList belongs in this block. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
 
       <div>
         <Breadcrumbs trail={trail} />
