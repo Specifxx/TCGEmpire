@@ -17,6 +17,7 @@
     "status:check": "tsx scripts/status-check.ts",
     "adsense:verify": "tsx scripts/adsense-verify.ts",
     "mobile:check": "tsx scripts/mobile-check.ts",
+    "lighthouse:budget": "tsx scripts/lighthouse-budget.ts",
     "smoke": "tsx scripts/smoke-pages.ts",
     "audit:homepage": "node scripts/homepage-audit.mjs",
     "audit:homepage-analytics": "node scripts/homepage-audit-analytics.mjs",
