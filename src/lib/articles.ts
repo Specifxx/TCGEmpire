@@ -396,6 +396,232 @@ We are not going to run Radiance speculation. What we will do, on the day the re
 
 Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
   },
+  // ── Radiance leak: a fan photo of Riot's own PAX West demo reference material,
+  // not a Riot announcement. Deliberately category "blog" (news), NOT "guide" —
+  // guide/keyword pages on this site are reserved for wording verified against
+  // Riot's own Core Rules PDF (see the DATA-ACCURACY RULE at the top of
+  // lib/keywords.ts and docs/seo-keyword-map.md's "do not draft [a keyword page]
+  // without a verified source"). This is reported, sourced leak coverage instead —
+  // every claim is hedged and attributed, and it explicitly does NOT add Deploy,
+  // Showoff or Disarm to keywords.ts. Promote it to a keyword/guide page only once
+  // Riot (not a demo-table photo) confirms the wording.
+  {
+    slug: "riftbound-radiance-leaked-mechanics",
+    category: "blog",
+    title: "Riftbound Radiance Leak: Deploy, Showoff & Disarm Explained",
+    excerpt:
+      "A photo from Riot's own PAX West demo table reveals three new Riftbound: Radiance mechanics — Deploy, Showoff and Disarm — months before the set's 23 October 2026 release. Here's exactly what leaked.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 7,
+    tags: ["radiance", "news", "mechanics", "spoilers"],
+    hero: {
+      src: "/blog/riftbound-radiance-leaked-mechanics.png",
+      alt: "Riftbound Radiance leak — Deploy, Showoff and Disarm, three new mechanics shown at a PAX West demo table",
+    },
+    summary: [
+      "**Three unreleased Radiance mechanics leaked from Riot's own PAX West demo table** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy.",
+      "**Disarm is reportedly Assault's mirror image**: \"When this unit attacks, decrease the Might of an enemy unit here\" — shrinking an opponent's stat instead of boosting your own.",
+      "**Deploy is a Gear keyword with a built-in expiry**: it only grants its benefit at one battlefield, and is killed the moment your opponent takes that battlefield back.",
+      "**Showoff pays off for revealing a card** — its wording (\"reveal a card from hand or choose a friendly card that meets the listed criteria\") points to a modal, card-specific effect rather than one fixed bonus.",
+      "**None of this is Riot-confirmed.** [Radiance releases 23 October 2026](/blog/riftbound-radiance-what-we-know), and reference material shown at a convention demo can still change before then — in wording, in name, or by being cut outright.",
+    ],
+    faq: [
+      {
+        q: "What new mechanics leaked for Riftbound Radiance?",
+        a: "Three: Deploy, Showoff and Disarm. They appeared on a physical rules-reference card at Riot's own demo table at PAX West 2026, photographed and shared publicly by Riftbound content creator AskJoshy. The photo's own caption says Radiance has \"many new mechanics\" — implying these three aren't necessarily the whole list.",
+      },
+      {
+        q: "What does Deploy do in Riftbound?",
+        a: "As leaked: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's a Gear keyword tied to controlling one specific battlefield — you get the benefit only while you hold that battlefield, and lose the card outright the moment your opponent takes it.",
+      },
+      {
+        q: "What does Showoff do in Riftbound?",
+        a: "As leaked: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's a modal, reveal-based bonus — the exact payoff depends on each card's own printed criteria, none of which have been shown yet.",
+      },
+      {
+        q: "What does Disarm do in Riftbound?",
+        a: "As leaked: \"When this unit attacks, decrease the Might of an enemy unit here.\" It weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats.",
+      },
+      {
+        q: "Is Disarm the opposite of Assault?",
+        a: "That's how the leak itself frames it, and the rules text supports the comparison: Assault gives the attacker +X Might while it's attacking; Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks. One buffs your attacker, the other debuffs their defender.",
+      },
+      {
+        q: "Are Deploy, Showoff and Disarm officially confirmed by Riot?",
+        a: "No. This is a fan photo of physical reference material from a public convention demo, not a Riot announcement. Riftbound's last three new mechanics — Empower, Flow and Burn — were only added to our keyword reference pages once their wording could be verified against Riot's own Core Rules PDF; the same bar applies here, and none of these three have cleared it yet.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, with a confirmed 180 cards. See our full rundown of what's actually confirmed about Radiance.",
+      },
+      {
+        q: "Where did this Riftbound Radiance leak come from?",
+        a: "A photo of Riot's own physical rules-reference material, on display at their demo table at PAX West 2026, taken and shared publicly by Riftbound content creator AskJoshy.",
+      },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-what-we-know",
+      label: "See everything actually confirmed about Radiance →",
+      blurb: "Release date, card count and confirmed champions — kept separate from leaks and speculation, updated the moment Riot confirms more.",
+    },
+    body: `**Three unreleased Riftbound: Radiance mechanics have leaked from Riot's own demo table at PAX West** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy. This isn't a Riot announcement and it isn't a baseless rumour either: it's a photo of physical reference material Riot itself put in front of players at a public convention, months ahead of **[Radiance's confirmed 23 October 2026 release](/blog/riftbound-radiance-what-we-know)**. Here's exactly what the photo shows, what each keyword appears to do, and — just as importantly — what still isn't known.
+
+## Where this leak actually comes from
+
+Riftbound content creator **AskJoshy** posted a photo to Facebook of a physical rules-reference card from Riot's demo setup at PAX West 2026, captioned: *"There are many new mechanics in the Radiance set!"* The text in the photo is legible enough to quote directly, which puts this in a different category from the fabricated "leaked decklists" already circulating for Radiance that we've warned readers about elsewhere. It is still **not** an official Riot reveal, though, and reference material shown at a demo table is exactly the kind of thing that can be reworded, renamed, or cut entirely before a set goes to actual print. Everything below is **reported, not confirmed** — treat it accordingly.
+
+Worth noting: the photo's own caption says Radiance has "many new mechanics," and only three are legible in this particular shot. That phrasing on its own suggests this is a partial list, not the complete set of what's changing.
+
+## Deploy: gear with a built-in expiry date
+
+> "Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear."
+
+As leaked, **Deploy is a Gear keyword tied to one specific battlefield.** You don't get its benefit everywhere — only at the battlefield you deployed it to — and if your opponent takes that battlefield away from you, the card doesn't just stop working, it dies outright.
+
+That's a real design tension, not a minor drawback. **[Hunt](/keywords/hunt)** already rewards holding a battlefield with XP, and **[Ganking](/keywords/ganking)** already lets a unit reposition from one battlefield to another. A Deploy card raises the stakes on a fight you're already having: hold the battlefield and you get an ongoing benefit on top of whatever else is happening there; lose it and you're down a whole card, not just a bonus. If the leak holds up, Deploy decks will likely want ways to actually defend a battlefield once they've committed a Gear to it — which points toward the same defensive combat keywords (**[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Backline](/keywords/backline)**) covered in the **[combat keywords guide](/guides/riftbound-combat-keywords-explained)**.
+
+## Showoff: a payoff that depends on what you reveal
+
+> "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
+
+Showoff, as leaked, is a **modal, reveal-based effect** — you play the card, then either show a card from your hand or point at a friendly card already in play that fits some printed condition, and the effect scales with what you showed. That's meaningfully different from Riftbound's existing reveal mechanic, **[Vision](/keywords/vision)**, which looks at the top of your own deck rather than your hand or board. Showoff instead seems to reward deckbuilding around a specific type, domain, or stat line the card is checking for — but without a single confirmed Showoff card yet, its actual power level is impossible to judge. A card that wants you to reveal an Epic-rarity Unit is a completely different build-around than one checking for the biggest Might on your board, and the leak doesn't tell us which.
+
+## Disarm: reportedly Assault's mirror image
+
+> "When this unit attacks, decrease the Might of an enemy unit here."
+
+This is the mechanic AskJoshy's own caption calls out directly, framing it as **"the inverse of Assault."** That comparison holds up against the actual rules text: **[Assault](/keywords/assault)** gives the attacking unit **+X Might** for the duration of combat. Disarm, as leaked, instead takes Might **away from an enemy unit** when this unit attacks — a debuff aimed at the opponent's board rather than a buff to your own stats.
+
+The caption also suggests Disarm "can pair well with direct damage spells like Falling Star" — a real card already in the game: **[Falling Star](/browse?q=Falling%20Star)** is a Fury-domain Spell from the original Origins set. The logic checks out even without knowing Disarm's exact numbers: shrink a blocker's Might first, and a fixed amount of direct damage goes a lot further toward actually killing it. If Disarm decks end up leaning on that kind of stacked-damage plan, it would put them in the same lane as Fury's existing direct-damage tools rather than introducing a brand-new archetype from scratch.
+
+## Deploy, Showoff and Disarm at a glance
+
+| Mechanic | Reported card type | What it does | Closest existing keyword |
+| --- | --- | --- | --- |
+| **Deploy** | Gear | Grants a benefit only at one battlefield; dies if the opponent takes that battlefield | No direct equivalent — closer in spirit to Hunt/Ganking's battlefield-control tension |
+| **Showoff** | Unspecified | Reveal a hand card, or point at a qualifying friendly card, for a scaling effect | Vision (reveal-based value), but from hand/board instead of the top of your deck |
+| **Disarm** | Unit | Lowers an enemy unit's Might when this unit attacks | The mirror of Assault, which raises the attacker's *own* Might |
+
+## What's still unconfirmed
+
+- **Which actual cards carry these keywords**, and what their cost, domain or rarity is.
+- **The exact printed wording and bracket format** — Riftbound's confirmed keywords print an activation number in brackets (Assault [X], Empower [Cost]); we don't yet know if Deploy, Showoff or Disarm work the same way.
+- **Whether more mechanics exist beyond these three** — the leaked caption itself implies there are more.
+- **Whether the names or wording survive to release at all.** Preview-season terminology shifting before a final print run isn't unusual in this genre, and this is Radiance's first mid-cycle mechanic leak, so Riftbound itself hasn't set a precedent either way yet.
+
+We add a keyword to our own reference pages — the way **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** got added for Vendetta — only once we can verify the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet, which is exactly why this is a blog post about a leak rather than a keyword or guide page treating any of it as settled.
+
+## What to actually do with this before release
+
+Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and none of these three cards have been shown. If you want to track the set as real information lands, **[Radiance pre-order pricing](/radiance-preorders)** already compares sealed product across stores, and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
+  },
+  // ── Gradient sleeves. A genuine accessory-search topic with zero prior coverage
+  // on this site. Kept factual and specific to what's actually verifiable (card
+  // size, domain colours from lib/constants.ts DOMAINS, real deck composition from
+  // the deck-anatomy guide) rather than inventing brand or price claims we can't
+  // back up — same restraint as every other buying guide here.
+  {
+    slug: "gradient-sleeves-for-riftbound-cards",
+    category: "guide",
+    title: "Gradient Sleeves for Riftbound Cards: Complete Guide",
+    excerpt:
+      "What gradient sleeves are, why they fit Riftbound's card size with no special sizing needed, and how to pick a colour fade that actually matches your deck's domains.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 6,
+    tags: ["collecting", "storage", "buying-guide", "sleeves", "accessories"],
+    hero: {
+      src: "/blog/gradient-sleeves-for-riftbound-cards.png",
+      alt: "Gradient sleeves for Riftbound cards, shown across Riftbound's seven domain colours",
+    },
+    shop: [
+      { label: "Gradient card sleeves (100-count)", query: "gradient card sleeves 100 pack" },
+      { label: "Standard-size perfect-fit sleeves", query: "perfect fit card sleeves standard size" },
+      { label: "Riftbound deck boxes", query: "Riftbound deck box" },
+    ],
+    summary: [
+      "**Gradient sleeves are card sleeves with a smooth colour fade** — one colour blending into another — rather than a flat colour or printed artwork, and they're one of the most-searched sleeve styles across the wider TCG accessory market right now.",
+      "**Riftbound cards are standard trading-card size**, the same size Magic: The Gathering and Pokémon use — so any sleeve labelled \"standard size,\" gradient or otherwise, fits without a Riftbound-specific product.",
+      "**Riftbound's seven domains each have a fixed colour** (Fury red, Calm green, Mind blue, Body amber, Chaos violet, Order pale silver, Colorless grey), which makes a domain-matched gradient a genuinely functional choice, not just a decorative one.",
+      "**Double-sleeve anything you actually care about**: an inner \"perfect fit\" sleeve plus an outer gradient sleeve protects the card twice and keeps the gradient sleeve itself from taking the wear.",
+      "**Buy a 100-count pack, not exactly enough for one deck** — a full Riftbound kit (Legend, Champion, ~40-card main deck, 12 Runes, 3 Battlefields, up to a 10-card side deck) already runs to around 65-70 cards before you count spares.",
+    ],
+    faq: [
+      {
+        q: "What are gradient sleeves?",
+        a: "Card sleeves printed with a smooth colour fade — one colour blending into another across the sleeve — rather than a single flat colour or a printed illustration. They're a popular style across the wider trading card game accessory market, independent of any one game.",
+      },
+      {
+        q: "Do gradient sleeves fit Riftbound cards?",
+        a: "Yes. Riftbound is printed at the same standard trading-card size used by Magic: The Gathering, Pokémon and most other modern TCGs, so any sleeve sold as \"standard size\" fits — gradient sleeves included. There's no Riftbound-specific sleeve size to look out for.",
+      },
+      {
+        q: "Which gradient colours suit a Riftbound deck?",
+        a: "Match your deck's domain colours: Fury is red, Calm is green, Mind is blue, Body is amber/orange, Chaos is violet, Order is a pale silver-white and Colorless is neutral grey. Since most competitive Riftbound decks commit to one or two domains, a gradient blending those two colours signals what you're playing at a glance.",
+      },
+      {
+        q: "Should I double-sleeve Riftbound cards?",
+        a: "It's worth it for anything you'd be upset to lose — chase pulls, Signature prints, cards you plan to trade or sell later. An inner \"perfect fit\" sleeve holds the card snugly and takes the flex and shuffle wear; an outer, slightly looser sleeve (gradient or otherwise) goes over the top and takes the scuffing instead of the card or the inner sleeve's print.",
+      },
+      {
+        q: "Does sleeve opacity actually matter in Riftbound, or is it just presentation?",
+        a: "It matters mechanically, not just cosmetically. Riftbound's Hidden keyword lets some cards be played facedown at a battlefield before being revealed later — if your sleeves are thin or worn enough to show through, that's genuine hidden information leaking at the table, which most playgroups and any sanctioned event will treat as a real problem, not a style complaint.",
+      },
+      {
+        q: "How many sleeves do I need for one Riftbound deck?",
+        a: "More than the ~40-card main deck alone. A full kit is a Legend, a Champion, the ~40-card main deck, 12 Runes, 3 Battlefields and a side deck of up to 10 — around 65-70 cards before counting any spares for a card you eventually resleeve. A 100-count pack covers a full deck with room left over.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/how-a-riftbound-deck-is-built",
+      label: "See exactly what's in a Riftbound deck →",
+      blurb: "Legend, Champion, main deck, Runes, Battlefields and side deck — the full anatomy, so you know precisely how many cards you're sleeving.",
+    },
+    body: `**Gradient sleeves are card sleeves printed with a smooth colour fade — one colour blending into another — instead of a flat colour or a printed illustration.** They're one of the most-searched sleeve styles in the wider trading card game accessory market right now, and Riftbound's own colour-coded domain system makes them an unusually good fit for this specific game rather than just a generic aesthetic choice. Here's what they are, whether they actually fit Riftbound cards, and how to pick a fade that means something.
+
+## What actually makes a sleeve "gradient"
+
+Sleeve styles roughly split into four categories: **flat colour** (one solid colour, the simplest and cheapest option), **printed art** (a full illustration across the sleeve back), **holographic/foil** (a light-reactive finish rather than a colour choice), and **gradient** — a smooth transition between two or more colours across the sleeve, sometimes called an ombré finish. A gradient sits between flat and printed art: more visually distinct than a single colour, but without committing to specific artwork that only matches one game, set or character.
+
+## Do gradient sleeves fit Riftbound cards?
+
+Yes, without any special sizing. **Riftbound cards are printed at the same standard trading-card size used by Magic: The Gathering, Pokémon and most other modern physical TCGs.** Any sleeve sold as "standard size" — gradient, flat, printed or holographic — fits Riftbound cards. There's no Riftbound-specific sleeve dimension to hunt for, which also means you're shopping the entire standard-size sleeve market rather than a narrow, game-specific one.
+
+## Why gradient sleeves specifically suit Riftbound
+
+This is the part that's genuinely useful rather than just decorative: **Riftbound's seven domains each have a fixed, official colour**, and most competitive decks commit to just one or two of them. That gives a gradient sleeve an actual job to do — signalling your deck's domains at a glance — rather than being pure decoration.
+
+| Domain | Colour | A gradient pairing worth trying |
+| --- | --- | --- |
+| **Fury** | Red | Fury → Body (red fading to amber) for an aggressive two-domain deck |
+| **Calm** | Green | Calm → Mind (green fading to blue) |
+| **Mind** | Blue | Mind → Chaos (blue fading to violet) |
+| **Body** | Amber/orange | Body → Fury (amber fading to red) |
+| **Chaos** | Violet/purple | Chaos → Order (violet fading to pale silver) |
+| **Order** | Pale silver-white | Order → Colorless (silver fading to grey) for a clean, monochrome look |
+| **Colorless** | Neutral grey | Pairs with anything — Colorless already splashes into every domain combination |
+
+If your deck runs two domains — which is how most tournament lists are actually built, per our **[deck archetypes guide](/guides/riftbound-deck-archetypes-guide)** — a gradient blending those two domain colours is the single most useful sleeve choice you can make: an opponent (or you, mid-shuffle) can identify the deck's colours before a single card is revealed.
+
+## How many sleeves you actually need
+
+Don't buy exactly enough for the ~40-card main deck and stop there. A full Riftbound kit is bigger than that: a **Legend**, a **Champion**, the **~40-card main deck**, **12 Runes**, **3 Battlefields**, and a **side deck of up to 10** — the complete breakdown is in **[how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)**. Add that up and a single deck is already somewhere around **65-70 cards** before you count anything extra. A **100-count pack** covers a full deck with enough spares left over that resleeving a single damaged card later doesn't mean opening a second pack just for one sleeve.
+
+## Double-sleeving: the trick that protects the gradient itself
+
+A gradient finish is worth protecting in its own right, not just the card underneath it. The standard approach across the wider TCG hobby is **double-sleeving**: an inner "perfect fit" sleeve — sized just slightly larger than the bare card, so it holds snugly with minimal air — goes on first and takes the flex and shuffle wear directly. An outer sleeve, gradient or otherwise, goes over the top of that and takes the scuffing and edge-wear instead of either the card or the inner sleeve. It's the difference between a gradient finish that looks the same after fifty games and one that's visibly worn at the corners within a few sessions.
+
+## Opacity isn't just cosmetic in Riftbound
+
+One thing worth checking before you buy: **sleeve opacity matters mechanically in Riftbound, not just visually.** The **[Hidden](/keywords/hidden)** keyword lets certain cards be played facedown at a battlefield and revealed later — the entire point is that your opponent can't see what it is until you choose to play it. A thin, cheap, or worn-out sleeve that lets a card's identity show through under normal lighting isn't just an aesthetic downgrade — it's a genuine information leak at the table, which is the kind of thing a sanctioned event (or a reasonably strict playgroup) will actually call out. A gradient design doesn't make a sleeve any less opaque on its own, but it's worth confirming opacity in reviews before buying a specific brand, especially for anything you intend to play with rather than just display.
+
+[[shop]]
+
+## Picking a set without overthinking it
+
+If you only take one thing from this: **match your deck's one or two domain colours**, buy a **100-count pack** so you have real spares, and **double-sleeve** anything you'd actually be upset to lose — chase pulls, Signature prints, or cards you might trade or sell down the line. Everything else is preference. For the cards actually going inside those sleeves, **[browse live Riftbound prices across every store we track](/browse)**, or start with **[what's actually in a Riftbound deck](/guides/how-a-riftbound-deck-is-built)** if you're still assembling the list you're about to sleeve up.`,
+  },
   // ── Format legality. "Standard format" and "format legal" returned zero matches
   // across the whole corpus before this, despite being the question behind every
   // expensive-card purchase. Scoped carefully: Riot has published a ban list but
