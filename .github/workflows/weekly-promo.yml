@@ -45,20 +45,21 @@ jobs:
       - run: npx prisma generate
       - name: Generate and send promo pack
         env:
-          DATABASE_URL: ${{ secrets.RM6 || vars.RM6 }}
-          # RM6 is the only operational variable now (2026-09-03 cutover — see
+          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          # RM8 is the only operational variable now (2026-09-08 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM6 || vars.RM6) && 'RM6' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
           # The whole promo is built from price MOVERS, which come from
           # PriceHistory in the separate history project (src/lib/db-history.ts).
           # These were never set here, so that client fell through its entire
           # chain to DATABASE_URL — the OPERATIONAL database, whose PriceHistory
           # is deliberately empty since the RM3 cutover. The result was a promo
-          # that skipped every Friday with "no price history yet". RH7 is CURRENT;
+          # that skipped every Friday with "no price history yet". RH8 is CURRENT;
           # RH6 is its rollback.
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}

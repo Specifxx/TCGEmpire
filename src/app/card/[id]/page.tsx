@@ -140,11 +140,16 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // site's highest-volume, ~1,400 pages) was more than enough to explain it.
   const ident = `Riftbound ${card.setCode} ${card.collectorNumber}`;
   const tail = hasPrice ? "Card Text & Live Prices" : "Card Text, Stats & Printings";
+  // Every candidate keeps `ident` (which carries collectorNumber) — the ONLY
+  // field that disambiguates two distinct printings sharing the same
+  // displayName + setCode (e.g. an NN1 promo vs. a 042b/298 promo of the same
+  // card). A prior version's final fallback dropped it down to bare setCode,
+  // so two such printings could render byte-identical <title>s — a real
+  // duplicate-title collision Google flagged on two Calm Rune (Promo) pages.
   const titleCandidates = [
     `${displayName} — ${ident} | ${tail}`,
     `${displayName} — ${ident} | ${hasPrice ? "Live Prices" : "Card Text"}`,
     `${displayName} — ${ident}`,
-    `${displayName} — Riftbound ${card.setCode}`,
   ];
   const title =
     titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
@@ -1223,9 +1228,17 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               real estate — same compliance, honest placement. */}
           <section className="card-surface mt-6 p-5">
             <h2 className="font-bold text-white">Also available on eBay</h2>
+            {/* This line used to read "including used, graded and international
+                sellers", which stopped being true when graded moved to its own
+                tab: searchEbayLowest partitions slabs out BEFORE the price sort,
+                the outlier prune and the carousel capture, so nothing under
+                Listings is a graded copy. Describing the panel as mixing them
+                was the one place the site still implied a slab could be sitting
+                in the price comparison. */}
             <p className="mt-1 text-xs text-slate-500">
-              Live listings including used, graded and international sellers — a useful cross-check
-              on the store prices above, and often the only source for older printings.
+              Live raw listings, including used and international sellers — a useful cross-check on
+              the store prices above, and often the only source for older printings. Graded slabs
+              and live auctions each get their own tab, so neither distorts the raw price.
             </p>
             {/* Listings / Graded. The Graded tab appears only when this card
                 has slabs in the visitor's market, so an ordinary card still

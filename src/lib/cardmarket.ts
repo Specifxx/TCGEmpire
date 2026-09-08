@@ -146,15 +146,23 @@ import { poolOf, POOL_ORDER, type PoolCard } from "@/lib/box-ev";
 // Riftbound's Cardmarket game id — see the header for how these three URLs
 // were found and verified. All three are overridable (a wrong id, a moved
 // bucket path, or a local file for testing) without a code change.
+//
+// `|| `, NOT `??` — GitHub Actions sets an env var to the EMPTY STRING when
+// the repo variable behind it (${{ vars.X }}) doesn't exist, rather than
+// leaving it unset. `??` only falls through on null/undefined, so it doesn't
+// catch that — the very first live run after this shipped hit exactly this:
+// every CARDMARKET_*_URL resolved to "", readJson("") tried to open "" as a
+// local file, and Cardmarket wrote zero rows in production. `||` treats ""
+// the same as unset, which is what "optional override" is supposed to mean.
 const CARDMARKET_GAME_ID = 22;
 const PRODUCTLIST_SINGLES_URL =
-  process.env.CARDMARKET_PRODUCTLIST_URL ??
+  process.env.CARDMARKET_PRODUCTLIST_URL ||
   `https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_${CARDMARKET_GAME_ID}.json`;
 const PRODUCTLIST_NONSINGLES_URL =
-  process.env.CARDMARKET_PRODUCTLIST_NONSINGLES_URL ??
+  process.env.CARDMARKET_PRODUCTLIST_NONSINGLES_URL ||
   `https://downloads.s3.cardmarket.com/productCatalog/productList/products_nonsingles_${CARDMARKET_GAME_ID}.json`;
 const PRICEGUIDE_URL =
-  process.env.CARDMARKET_PRICEGUIDE_URL ??
+  process.env.CARDMARKET_PRICEGUIDE_URL ||
   `https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_${CARDMARKET_GAME_ID}.json`;
 
 // ---- feature flag -------------------------------------------------------------
@@ -175,8 +183,10 @@ export function isCardmarketRankingEnabled(): boolean {
 // EUR→GBP rate for the UK singles conversion. Like USD_TO_GBP in tcgplayer.ts
 // this is a hand-set reference rate (exact FX isn't critical for a
 // "from"/reference figure). Override with CARDMARKET_EUR_TO_GBP to refresh
-// without a deploy.
-export const EUR_TO_GBP = Number(process.env.CARDMARKET_EUR_TO_GBP ?? "0.86");
+// without a deploy. `||`, not `??` — see PRODUCTLIST_SINGLES_URL's comment
+// above: an empty-string env var (Actions' shape for an unset repo variable)
+// would otherwise make this Number("") === 0, silently zeroing every UK price.
+export const EUR_TO_GBP = Number(process.env.CARDMARKET_EUR_TO_GBP || "0.86");
 
 // ---- the wire schema, verified live 2026-09-04 (see header) -------------------
 export interface CardmarketProduct {
@@ -307,7 +317,7 @@ export type CardmarketMatch = {
  * singles RetailerPrice rows. See the file header for the matching rules.
  */
 export function buildCardmarketRows(
-  cards: { id: string; setCode: string; name: string; nameNormalized: string }[],
+  cards: { id: string; setCode: string; name: string }[],
   products: readonly CardmarketProduct[],
   prices: readonly CardmarketPriceEntry[],
 ): CardmarketMatch {
@@ -315,7 +325,22 @@ export function buildCardmarketRows(
   const ourCountByKey = new Map<string, number>();
   const ourIdByKey = new Map<string, string>();
   for (const c of cards) {
-    const nn = c.nameNormalized || normName(c.name);
+    // ALWAYS computed here, never read from Card.nameNormalized — that column
+    // is normalizeSearch()'s "ahrininetailedfox" (every import path writes it
+    // that way: see cards.ts/import-cards.ts/sync-cards.ts/etc.), a DIFFERENT
+    // and incompatible shape from this file's own normName() ("ahri nine
+    // tailed fox"), which is also what Cardmarket's product names are run
+    // through below. The two normalizers can never produce equal strings for
+    // the same name, so reading the stored column here made every single
+    // comparison fail silently: the first live production run matched ZERO of
+    // 1446 products to any set (0 expansions mapped, 0 rows written) despite
+    // the matching LOGIC being correct — found 2026-09-06 by replicating the
+    // real Cardmarket data locally and discovering `inferExpansionSetCodes`
+    // maps 8 of 12 real expansions with >99% confidence once BOTH sides use
+    // this same function. The unit tests never caught it because their
+    // `nameNormalized` fixtures were hand-typed in normName()'s space-
+    // separated shape, not the compact shape the real column actually holds.
+    const nn = normName(c.name);
     const namesSet = ourNamesBySet.get(c.setCode) ?? new Set<string>();
     namesSet.add(nn);
     ourNamesBySet.set(c.setCode, namesSet);
@@ -412,7 +437,6 @@ export interface CardmarketRankableCard extends PoolCard {
   id: string;
   setCode: string;
   name: string;
-  nameNormalized: string;
 }
 
 export type CardmarketRankedMatch = {
@@ -436,7 +460,7 @@ export function buildCardmarketRankedRows(
   const ourNamesBySet = new Map<string, Set<string>>();
   const ourGroups = new Map<string, CardmarketRankableCard[]>();
   for (const c of cards) {
-    const nn = c.nameNormalized || normName(c.name);
+    const nn = normName(c.name);
     const namesSet = ourNamesBySet.get(c.setCode) ?? new Set<string>();
     namesSet.add(nn);
     ourNamesBySet.set(c.setCode, namesSet);
@@ -529,7 +553,7 @@ export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; wri
   ]);
   const cards = await prisma.card.findMany({
     select: {
-      id: true, setCode: true, name: true, nameNormalized: true,
+      id: true, setCode: true, name: true,
       collectorNumber: true, rarity: true, variant: true, isOvernumbered: true, isPromo: true,
     },
   });
@@ -578,14 +602,14 @@ export type CardmarketSealedMatch = {
  * product) is excluded via SEALED_CATEGORIES before this ever sees them.
  */
 export function buildCardmarketSealedRows(
-  cardsForMapping: { id: string; setCode: string; name: string; nameNormalized: string }[],
+  cardsForMapping: { id: string; setCode: string; name: string }[],
   singleProducts: readonly CardmarketProduct[],
   sealedProducts: readonly CardmarketProduct[],
   prices: readonly CardmarketPriceEntry[],
 ): CardmarketSealedMatch {
   const ourNamesBySet = new Map<string, Set<string>>();
   for (const c of cardsForMapping) {
-    const nn = c.nameNormalized || normName(c.name);
+    const nn = normName(c.name);
     const set = ourNamesBySet.get(c.setCode) ?? new Set<string>();
     set.add(nn);
     ourNamesBySet.set(c.setCode, set);
@@ -635,7 +659,7 @@ export async function refreshCardmarketSealed(): Promise<{ skipped: boolean; wri
     readJson<{ products: CardmarketProduct[] }>(PRODUCTLIST_NONSINGLES_URL),
     readJson<{ priceGuides: CardmarketPriceEntry[] }>(PRICEGUIDE_URL),
   ]);
-  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, name: true, nameNormalized: true } });
+  const cards = await prisma.card.findMany({ select: { id: true, setCode: true, name: true } });
 
   const m = buildCardmarketSealedRows(cards, singles.products, nonsingles.products, priceGuide.priceGuides);
   console.log(`Cardmarket sealed: ${m.total} products, ${m.matched} matched.`);

@@ -2,12 +2,27 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import {
+  isPremium,
+  premiumCheckoutEnabled,
+  premiumTrialEnabled,
+  premiumAnnualEnabled,
+  getPremiumSubscriptionDetails,
+  PREMIUM_TRIAL_DAYS,
+} from "@/lib/premium";
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
 import { TierComparisonTable } from "@/components/TierComparisonTable";
-import { SITE_URL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT } from "@/lib/site";
+import {
+  SITE_URL,
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  PREMIUM_ANNUAL_AMOUNT,
+  PREMIUM_NEXT_PRICE_AMOUNT,
+  premiumPriceIncreaseAnnounced,
+  premiumLockInLine,
+} from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
@@ -86,16 +101,28 @@ const INCLUDED = [
 ];
 
 
+// "6 Sep 2026" — same convention admin/premium/page.tsx already uses for this
+// exact field, so a user's own account page and the admin's view of the same
+// account never disagree on how a date reads.
+const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+
 export default async function PremiumPage() {
   const user = await getCurrentUser();
   const already = isPremium(user);
   const checkoutLive = premiumCheckoutEnabled();
-  const dbUser = user ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true } }) : null;
+  const dbUser = user
+    ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true, stripeCustomerId: true } })
+    : null;
   const trialEligible = premiumTrialEnabled() && !!user && !already && !dbUser?.trialStartedAt;
-  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "9.99";
+  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "14.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
   const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
+  // Real Stripe read, only for someone who's actually Premium right now — see
+  // the function's own header for why this is a SEPARATE query from the
+  // annual-switch nudge's (that one deliberately excludes trialing subs; this
+  // one is a Premium user's own account and must show a trial truthfully too).
+  const subDetails = already && dbUser?.stripeCustomerId ? await getPremiumSubscriptionDetails(dbUser.stripeCustomerId) : null;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -136,7 +163,19 @@ export default async function PremiumPage() {
       {/* Pricing (upgrade view) — monthly + optional annual best-value plan */}
       {!already && (
         <>
-          <div className={`mx-auto mt-6 grid gap-4 ${annualLive ? "max-w-2xl sm:grid-cols-2" : "max-w-md"}`}>
+          {premiumPriceIncreaseAnnounced() && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
+              <p className="text-sm font-bold text-gold">
+                ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} now
+              </p>
+              <p className="mt-1 text-xs text-gold/80">
+                New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
+                effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
+                subscription stays active — no action needed later.
+              </p>
+            </div>
+          )}
+          <div className={`mx-auto ${premiumPriceIncreaseAnnounced() ? "mt-4" : "mt-6"} grid gap-4 ${annualLive ? "max-w-2xl sm:grid-cols-2" : "max-w-md"}`}>
             {/* Monthly */}
             <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700">
               <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
@@ -186,11 +225,50 @@ export default async function PremiumPage() {
               ))}
             </ul>
             <p className="mt-4 text-center text-[11px] text-slate-500">Cancel anytime · secure checkout by Stripe</p>
-            <p className="mt-1 text-center text-[11px] font-medium text-gold/80">
-              Subscribe now and your price is locked in for good — it never goes up while you stay subscribed, even as we add more tools.
-            </p>
+            <p className="mt-1 text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
           </div>
         </>
+      )}
+
+      {/* Your subscription — real account detail, not just "you're Premium".
+          Three honest states, never blurred into one another:
+            • admin access (bypasses billing entirely, isPremium()'s own rule)
+            • a real Stripe subscription (trial or paid, monthly or annual,
+              renewing or already set to lapse) — the live read above
+            • a comp grant with no Stripe subscription behind it at all
+              (feedback/referral reward) — states the date and nothing else,
+              since there is no plan/renewal to describe. */}
+      {already && user && (
+        <div className="mx-auto mt-6 max-w-md rounded-xl border border-ink-700 bg-ink-900 px-5 py-4 text-center">
+          <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Your subscription</div>
+          {user.isAdmin ? (
+            <p className="mt-2 text-sm text-slate-300">Admin access — every Premium feature, no subscription required.</p>
+          ) : subDetails ? (
+            <div className="mt-2 space-y-1 text-sm text-slate-300">
+              <p className="font-semibold text-white">
+                {subDetails.status === "trialing"
+                  ? "Free trial"
+                  : subDetails.interval === "year"
+                  ? "Annual plan"
+                  : "Monthly plan"}
+              </p>
+              <p>
+                {subDetails.status === "trialing" ? (
+                  <>
+                    Converts to {subDetails.interval === "year" ? annualCompact : compactPrice} on{" "}
+                    {fmtDate(subDetails.currentPeriodEnd)}
+                  </>
+                ) : subDetails.cancelAtPeriodEnd ? (
+                  <>Access ends {fmtDate(subDetails.currentPeriodEnd)} — won&apos;t renew</>
+                ) : (
+                  <>Renews {fmtDate(subDetails.currentPeriodEnd)}</>
+                )}
+              </p>
+            </div>
+          ) : user.premiumUntil ? (
+            <p className="mt-2 text-sm text-slate-300">Premium until {fmtDate(user.premiumUntil)}</p>
+          ) : null}
+        </div>
       )}
 
       {/* Member quick links */}

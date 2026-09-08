@@ -14,7 +14,7 @@ lasts longer than 10 seconds, **or** it fires a key event, **or** it has 2+ page
 (https://support.google.com/analytics/answer/12195621?hl=en)
 
 An outbound click to a retailer is **not a pageview** — the visitor leaves
-riftcompare.com entirely. So today, before `store_click` is marked as a GA4 key event
+riftcompare.com entirely. So today, before `buy_click` is marked as a GA4 key event
 (see §4), a visitor who lands on the homepage, searches, compares three stores' prices,
 and clicks through to the cheapest one in eight seconds is recorded as a **bounce** —
 even though that is the single most successful session this site can produce. The
@@ -25,10 +25,10 @@ quickly; GA4's default bounce definition scores speed at that job as failure.
 describe an identical population of sessions. But which one a team reports shapes what
 they optimize for: a team staring at "bounce rate" starts treating every fast exit as
 damage to be prevented, including the fast successful exits this site depends on.
-Reporting **engagement rate**, and reading it alongside `store_click` volume specifically,
+Reporting **engagement rate**, and reading it alongside `buy_click` volume specifically,
 keeps the team pointed at the real goal.
 
-Once `store_click` is marked a key event (§4), a search → store-click session becomes
+Once `buy_click` is marked a key event (§4), a search → store-click session becomes
 engaged regardless of its duration, and this problem mostly self-corrects. Until it is
 marked, do not draw conclusions from bounce/engagement rate at all — the number is
 measuring the wrong thing.
@@ -54,7 +54,8 @@ required. The Vercel Analytics `track()` call is untouched (still fires alongsid
 the click-volume dashboard keeps working exactly as before.
 
 GA4 event reference for building this metric (all added by this phase and the Hero &
-Search phase after it — see `src/lib/ga-events.ts` and its call sites for the
+Search phase after it — see `src/lib/analytics.ts` (the shared `trackEvent()` dispatcher)
+and its call sites, e.g. `src/components/OutboundLink.tsx` for `buy_click`, for the
 authoritative param list):
 
 | Event | Fires when | Key params |
@@ -63,7 +64,7 @@ authoritative param list):
 | `search_submitted` | Enter / "See all results" clicked, or a recent-search suggestion selected | `query`, `variant` |
 | `search_suggestion_selected` | A row in the search dropdown is selected (live-preview results, or a zero-state trending/recent suggestion) | `suggestion_rank` (1-based, across the whole visible list), `result_type` (`card` \| `sealed` \| `trending` \| `recent`), `query`, `card_id` (card/trending rows only), `variant` |
 | `search_no_results` | A debounced query (≥2 chars) returns zero cards and zero sealed matches | `query`, `variant` |
-| `store_click` | Any outbound retailer link (`OutboundLink`) is clicked, sitewide | `card_id`, `card_name`, `store`, `market`, `price`, `position_in_list`, `page_type` — all except `store`/`market` are optional and populated only where the calling component already has the data |
+| `buy_click` | Any outbound retailer link (`OutboundLink`) is clicked, sitewide | `retailer`, `country`, `kind`, `card_id`, `card_name`, `price`, `position_in_list`, `page_type`, `in_stock`, `variant`, `condition`, `surface` — all except `retailer`/`country`/`kind` are optional and populated only where the calling component already has the data |
 | `scroll_depth` | Scroll position crosses 25/50/75/90% of the page, once each per pageview | `percent_scrolled`, `page_path` |
 | `region_changed` | A visitor explicitly clicks a different market in any region control (hero toggle, navbar switcher, inline `RegionToggle`) — NOT the silent IP/account auto-detect on load | `from`, `to` |
 
@@ -86,7 +87,7 @@ neither population accurately.
   and this whole rebuild are mobile-first (70% of traffic per the Contentsquare number
   below), so device is the second-most-important split after landing page.
 - **Values**: `Sessions`, and `Session key event rate` (this is GA4's built-in
-  "engagement conferred by a key event" metric — it's what changes once `store_click` is
+  "engagement conferred by a key event" metric — it's what changes once `buy_click` is
   a key event, see §4).
 - Optional third dimension worth adding once the above is set up: `Session default
   channel group` (Direct / Organic Search / Referral / Social) — Discord referrals and
@@ -130,7 +131,7 @@ nothing to do with this homepage.
 
 ## 5. Before drawing any conclusion, do these two things
 
-1. **Mark `store_click` as a GA4 key event.** This is a manual step in the GA4 admin UI
+1. **Mark `buy_click` as a GA4 key event.** This is a manual step in the GA4 admin UI
    that cannot be done from code — see `DECISIONS.md`'s Phase 2 entry for the exact,
    step-by-step click path. Until this is done, engagement rate still undercounts the
    site's best sessions (§1), and "Session key event rate" in the Exploration above will

@@ -54,3 +54,24 @@ export function trackEvent(name: string, params?: Record<string, string | number
   if (!GA4_ONLY_EVENTS.has(name)) vercelTrack(name, cleaned);
   if (typeof window !== "undefined") window.gtag?.("event", name, cleaned);
 }
+
+// Fire-and-forget "someone clicked a Premium CTA" beacon, recorded server-side
+// to the PremiumClick table for the admin to see who's interested before they
+// convert (api/premium/click/route.ts). Was only ever called from inside
+// PremiumDialog's open() — every "Premium" link now navigates straight to
+// /premium instead of opening that dialog (2026-09-06), so each of those links
+// calls this directly to keep the same signal alive. `source` must be one of
+// api/premium/click's own SOURCES allow-list; an unrecognised value is coerced
+// server-side to "dialog" rather than rejected, but pass a real one anyway.
+export function firePremiumClickBeacon(source: "dialog" | "checkout" | "premium-page" | "button"): void {
+  try {
+    fetch("/api/premium/click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* never let the beacon break the click it's attached to */
+  }
+}

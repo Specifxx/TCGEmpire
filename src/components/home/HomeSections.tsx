@@ -98,12 +98,14 @@ export function HomeSections({
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
   const nextSet = nextUpcomingSet();
-  // The teaser row shows GUIDES, not blog posts — the evergreen, reference-
-  // shaped content a first-time visitor actually needs. Same data everywhere
-  // this renders, since it's the same in-memory list on every market.
-  const latestPosts = getArticles("guide").slice(0, 3);
+  // Two teaser rows: news/analysis/opinion from the blog, then the evergreen,
+  // reference-shaped guides underneath. Same data everywhere this renders,
+  // since it's the same in-memory list on every market.
+  const latestBlogPosts = getArticles("blog").slice(0, 3);
+  const latestGuides = getArticles("guide").slice(0, 3);
   const showNextSetCard = nextSet != null;
-  const showLatestPosts = latestPosts.length > 0;
+  const showLatestBlogPosts = latestBlogPosts.length > 0;
+  const showLatestGuides = latestGuides.length > 0;
 
   return (
     <>
@@ -279,13 +281,32 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* Latest from the blog — fresh internal links + fresh content near the
-          bottom of the page for crawl frequency and long-tail discovery.
-          Hides itself if there are no posts (shouldn't happen, but no fake
-          placeholders either way). */}
-      {showLatestPosts && (
+      {/* Latest from the blog, then guides right underneath — fresh internal
+          links + fresh content near the bottom of the page for crawl
+          frequency and long-tail discovery. Each hides itself independently
+          if its category has no posts (shouldn't happen, but no fake
+          placeholders either way), so one running dry never leaves a gap
+          where the other should be. */}
+      {showLatestBlogPosts && (
         <Reveal>
-          <LatestPosts posts={latestPosts} />
+          <LatestPosts
+            posts={latestBlogPosts}
+            heading="Latest from the blog"
+            subhead="News, analysis and opinion on Riftbound and the wider TCG market."
+            seeAllHref="/blog"
+            seeAllLabel="See all posts"
+          />
+        </Reveal>
+      )}
+      {showLatestGuides && (
+        <Reveal>
+          <LatestPosts
+            posts={latestGuides}
+            heading="Guides & explainers"
+            subhead="How Riftbound cards, sets and prices actually work."
+            seeAllHref="/guides"
+            seeAllLabel="See all guides"
+          />
         </Reveal>
       )}
 

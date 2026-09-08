@@ -5,6 +5,7 @@
 // check — no live Stripe call on page loads, and a lapsed sub just stops being
 // extended. Inert until STRIPE_PREMIUM_PRICE_ID is configured.
 import { unstable_cache } from "next/cache";
+import type Stripe from "stripe";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
@@ -130,6 +131,55 @@ export async function runPremiumTrialReminders(): Promise<number> {
 export const PREMIUM_ANNUAL_PRICE_ID = process.env.STRIPE_PREMIUM_ANNUAL_PRICE_ID ?? "";
 export function premiumAnnualEnabled(): boolean {
   return premiumCheckoutEnabled() && Boolean(PREMIUM_ANNUAL_PRICE_ID);
+}
+
+// ── Live subscription detail, for a Premium user looking at their OWN account ──
+export interface PremiumSubscriptionDetails {
+  status: Stripe.Subscription.Status;
+  interval: "month" | "year" | null;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: Date;
+}
+
+// Real, live Stripe read for the /premium page's "Your subscription" card —
+// deliberately a SEPARATE query from api/premium/subscription/route.ts's, not a
+// shared call: that route restricts to status:"active" on purpose (it drives the
+// annual-switch nudge, which must never fire for someone mid-trial who hasn't
+// paid yet), while a Premium user checking their own account is just as often
+// trialing as paying, and both deserve their real status here — narrowing to
+// "active" would make every trialist's subscription card come back empty.
+//
+// Returns null for anyone without a real Stripe subscription at all — an
+// admin-granted comp (feedback/referral reward, isAdmin) has a premiumUntil date
+// but no Stripe customer behind it, and the page falls back to stating just that
+// date rather than inventing a plan/renewal status that doesn't exist.
+export async function getPremiumSubscriptionDetails(stripeCustomerId: string | null | undefined): Promise<PremiumSubscriptionDetails | null> {
+  if (!stripeCustomerId || !stripeEnabled()) return null;
+  try {
+    const subs = await stripe().subscriptions.list({
+      customer: stripeCustomerId,
+      status: "all",
+      limit: 10,
+      expand: ["data.items.data.price"],
+    });
+    // Several subscriptions can exist for one customer over time (a cancelled
+    // one from before a resubscribe, say) — the live one, trialing or paying,
+    // is what the account page is about; fall back to the most recent of
+    // whatever's there rather than showing nothing.
+    const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing") ?? subs.data[0];
+    if (!sub) return null;
+    const price = sub.items.data[0]?.price;
+    const interval = price?.recurring?.interval;
+    return {
+      status: sub.status,
+      interval: interval === "month" || interval === "year" ? interval : null,
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      currentPeriodEnd: new Date(sub.current_period_end * 1000),
+    };
+  } catch (e) {
+    console.error("premium subscription detail read failed:", e);
+    return null;
+  }
 }
 
 // The portfolio tracker (value history, cost-basis P&L, benchmark, CSV export) is

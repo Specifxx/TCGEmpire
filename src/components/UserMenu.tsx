@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { PremiumNavLink } from "./PremiumNavLink";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { markSignupSource } from "@/lib/signup-source";
-import { usePremiumDialog } from "./PremiumDialog";
 
 // Auth routes we never want to "return to" after sign-in (would loop).
 const AUTH_PATHS = ["/login", "/verify"];
@@ -28,7 +28,6 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const [resent, setResent] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { premium } = useMe();
-  const { open: openPremium } = usePremiumDialog();
   const pathname = usePathname();
   // Carry the current page as ?next= so signing in returns the user here (not always
   // /profile). Skip auth pages to avoid a redirect loop.
@@ -157,12 +156,12 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             {premium ? (
               <MenuLink href="/dashboard" onClick={() => setOpen(false)}>◆ Premium dashboard</MenuLink>
             ) : (
-              <button
-                onClick={() => { setOpen(false); openPremium(); }}
+              <PremiumNavLink
+                onClick={() => setOpen(false)}
                 className="block w-full px-4 py-2.5 text-left text-sm font-bold text-gold hover:bg-ink-800"
               >
                 ✦ Get Premium
-              </button>
+              </PremiumNavLink>
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>

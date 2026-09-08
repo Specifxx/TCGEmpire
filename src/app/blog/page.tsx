@@ -4,6 +4,7 @@ import { getBlogPosts } from "@/lib/posts";
 import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
+import { authorJsonLd } from "@/lib/content/authors";
 
 // Curated from real traffic (30-day Top Pages), not a live/self-updating ranking —
 // the Vendetta card-gallery post alone outdrew every other blog post combined.
@@ -85,7 +86,11 @@ export default async function BlogPage() {
       url: `${SITE_URL}/blog/${a.slug}`,
       description: a.excerpt,
       datePublished: a.date,
-      author: { "@type": "Person", name: a.author },
+      // Real per-author type (Person or Organization) — a hardcoded "Person"
+      // here would mistype an Organization byline like "RiftCompare" itself,
+      // the same fabricated-credential mistake ArticleView.tsx and
+      // authors/[slug]/page.tsx already avoid via this same helper.
+      author: authorJsonLd(a.author),
     })),
   };
 

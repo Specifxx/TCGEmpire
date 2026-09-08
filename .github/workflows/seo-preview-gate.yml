@@ -29,6 +29,20 @@ name: SEO gate (Vercel deploy)
 # for a script whose exit code is 0 for "ran to completion" regardless of how
 # many rows it flagged. Its report is uploaded as a build artifact so a
 # reviewer can read it against the PR without needing to re-run it locally.
+#
+# LIGHTHOUSE BUDGET (2026-09): scripts/lighthouse-budget.ts, added because
+# nothing caught a Core Web Vitals regression between deploys — the site's
+# only prior Lighthouse audit was a one-off, hand-run pass (see DECISIONS.md's
+# Phase 7). Deliberately REPORT-ONLY for now (`continue-on-error`), same
+# category as content-quality.ts: this is the FIRST time it runs against real
+# GitHub-hosted runners rather than the sandbox it was built and tuned in, and
+# Lighthouse's own simulated-throttling numbers carry real run-to-run variance
+# on top of whatever CPU/network variance this specific runner pool has that
+# the sandbox didn't. Once it's been watched for a few real runs without
+# flapping on an unchanged homepage, promote it to a hard gate by dropping
+# `continue-on-error` — the script's own exit code already means "regressed
+# beyond budget" today, this is only about trusting the signal enough to block
+# a deploy on it.
 on:
   deployment_status:
 
@@ -107,3 +121,17 @@ jobs:
           name: content-quality-report
           path: content-quality-report.csv
           retention-days: 14
+
+      # Lighthouse needs a real Chrome to drive, not just a fetch — Playwright's
+      # is already the browser this repo installs elsewhere in CI (see e.g.
+      # maintenance.yml), so this reuses that rather than adding a new
+      # browser-install action just for one more script.
+      - name: Install Chromium for Lighthouse
+        run: npx playwright install --with-deps chromium
+
+      # Report-only for now — see header.
+      - name: Lighthouse performance budget
+        continue-on-error: true
+        run: |
+          export CHROME_PATH=$(node -e "console.log(require('playwright').chromium.executablePath())")
+          npx tsx scripts/lighthouse-budget.ts --url "${{ steps.preview.outputs.url }}"

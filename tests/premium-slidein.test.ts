@@ -47,10 +47,11 @@ test("frequency is capped hard across sessions, not just per session", () => {
   assert.match(code, /SNOOZE_AFTER_CLICK_MS/, "engaging the CTA must snooze it (not burn a permanent strike)");
 });
 
-test("the CTA opens the shared Premium dialog (so the existing click beacon fires)", () => {
+test("the CTA navigates straight to /premium, and still fires the click beacon itself (2026-09-06)", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /usePremiumDialog/, "must reuse the site-wide Premium dialog, not a bespoke checkout");
-  assert.match(code, /openPremium\(\)/, "clicking through must open that dialog");
+  assert.ok(!/usePremiumDialog/.test(code), "must no longer open the site-wide Premium dialog");
+  assert.match(code, /router\.push\(["']\/premium["']\)/, "clicking through must navigate straight to /premium");
+  assert.match(code, /firePremiumClickBeacon/, "must fire the same premium-interest beacon the dialog used to fire on open");
 });
 
 test("it emits a shown / click / dismissed event trio, routed to the right destinations", () => {

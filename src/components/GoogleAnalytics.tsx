@@ -1,5 +1,6 @@
 import Script from "next/script";
 import { GA_ENABLED, GA_MEASUREMENT_ID } from "@/lib/ga";
+import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from "@/lib/google-ads";
 
 // Google Analytics 4 (gtag.js).
 //
@@ -44,16 +45,27 @@ import { GA_ENABLED, GA_MEASUREMENT_ID } from "@/lib/ga";
 // reporting, either grant analytics_storage through the CMP, or swap
 // ConsentDefaults to the region-scoped variant already written out in its
 // comments (deny in the EEA/UK/CH, grant elsewhere).
+//
+// GOOGLE ADS (lib/google-ads.ts) PIGGYBACKS ON THIS SAME TAG rather than loading
+// a second copy of gtag.js: the library is bootstrapped once with GA's id (or
+// Ads' id if GA is ever off), and a paid conversion action just needs its own
+// `gtag('config', ...)` call on the dataLayer that already exists. Doing it this
+// way means a Google Ads conversion inherits the exact same Consent Mode v2 gate
+// GA4 has above — denied by default, granted only once ConsentDefaults + the CMP
+// say so — for free, instead of standing up a parallel, ungated tag.
 export function GoogleAnalytics() {
-  if (!GA_ENABLED) return null;
+  if (!GA_ENABLED && !GOOGLE_ADS_ENABLED) return null;
+  const bootstrapId = GA_MEASUREMENT_ID && GA_ENABLED ? GA_MEASUREMENT_ID : GOOGLE_ADS_ID;
   return (
     <>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${bootstrapId}`}
         strategy="afterInteractive"
       />
       <Script id="ga4-config" strategy="afterInteractive">
-        {`gtag('js', new Date());gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });`}
+        {`gtag('js', new Date());` +
+          (GA_ENABLED ? `gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });` : "") +
+          (GOOGLE_ADS_ENABLED ? `gtag('config', '${GOOGLE_ADS_ID}');` : "")}
       </Script>
     </>
   );

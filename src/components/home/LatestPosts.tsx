@@ -14,28 +14,42 @@ function formatPostDate(iso: string): string {
 // this is just its top slice — no new sort/fetch logic, and it costs no DB query
 // (ARTICLES is an in-memory list).
 //
-// It feeds on GUIDES rather than blog posts. Both are Articles and render
-// identically here, so the only thing that had to change is where each card
-// links: a guide lives at /guides/<slug> and a blog post at /blog/<slug>, and
-// the wrong prefix is a hard 404 because each route asserts the category (see
-// app/guides/[slug]/page.tsx). Hence articleHref() below derives the path from
-// the article itself instead of hardcoding one — mixing categories in this row,
-// or switching it back to the blog, then cannot produce a dead link.
+// Renders EITHER category — guides or blog posts — since both are Articles and
+// render identically here; only the heading/link copy and which slice of
+// getArticles() is passed in differ (see HomeSections.tsx, which mounts one of
+// each). The only per-item thing that has to stay dynamic either way is where
+// each card links: a guide lives at /guides/<slug> and a blog post at
+// /blog/<slug>, and the wrong prefix is a hard 404 because each route asserts
+// the category (see app/guides/[slug]/page.tsx) — hence articleHref() deriving
+// the path from the article itself instead of a prop, so this can never
+// mismatch its own posts.
 function articleHref(a: Article): string {
   return a.category === "guide" ? `/guides/${a.slug}` : `/blog/${a.slug}`;
 }
 
-export function LatestPosts({ posts }: { posts: Article[] }) {
+export function LatestPosts({
+  posts,
+  heading,
+  subhead,
+  seeAllHref,
+  seeAllLabel,
+}: {
+  posts: Article[];
+  heading: string;
+  subhead: string;
+  seeAllHref: string;
+  seeAllLabel: string;
+}) {
   if (posts.length === 0) return null;
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-extrabold text-white">Guides &amp; explainers</h2>
-          <p className="mt-0.5 text-xs text-slate-500">How Riftbound cards, sets and prices actually work.</p>
+          <h2 className="text-xl font-extrabold text-white">{heading}</h2>
+          <p className="mt-0.5 text-xs text-slate-500">{subhead}</p>
         </div>
-        <Link href="/guides" className="btn-ghost hidden text-xs sm:inline-flex">
-          See all guides →
+        <Link href={seeAllHref} className="btn-ghost hidden text-xs sm:inline-flex">
+          {seeAllLabel} →
         </Link>
       </div>
 

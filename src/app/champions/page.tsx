@@ -6,7 +6,7 @@ import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championForCardName } from "@/lib/champions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumb, faqPage } from "@/lib/jsonld";
+import { faqPage } from "@/lib/jsonld";
 import { AnswerBox } from "@/components/AnswerBox";
 import { HubFaq } from "@/components/HubFaq";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -102,11 +102,12 @@ export default async function ChampionsIndexPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Breadcrumbs below already emits its own matching BreadcrumbList — only
+          the CollectionPage and FAQPage nodes belong in this block. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
-            breadcrumb(trail),
             {
               "@context": "https://schema.org",
               "@type": "CollectionPage",

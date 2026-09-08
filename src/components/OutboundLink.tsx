@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { outboundRel } from "@/lib/affiliate";
 import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
+import { reportOutboundConversion } from "@/lib/google-ads";
 
 // An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
 // eBay retailer keys so click counts could be verified in our own DB — that
@@ -145,6 +146,11 @@ export function OutboundLink({
       surface,
       transport_type: "beacon",
     });
+    // Paid Google Ads conversion tracking (lib/google-ads.ts) — a no-op unless a
+    // conversion action is configured in env, and gated by the same Consent Mode
+    // v2 state GA4 already runs under (see GoogleAnalytics.tsx). Reports the same
+    // click as a conversion so paid Search campaigns can optimise toward it.
+    reportOutboundConversion();
     // Inside the native app, open retailer links in the system browser so the user
     // leaves our WebView (and can come back), instead of getting stuck on the
     // store's site. On the web this branch never runs — it's a normal link.

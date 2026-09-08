@@ -56,6 +56,10 @@ jobs:
             const byPage = await q(at,{startDate:start,endDate:end,dimensions:["page"],rowLimit:25000});
             if (byPage.error) throw new Error("searchAnalytics: "+JSON.stringify(byPage.error));
             const byQuery = await q(at,{startDate:start,endDate:end,dimensions:["query"],rowLimit:10});
+            // Wider query pull for the content-opportunity section below — the
+            // top-10 above answers "what already works"; this answers "what real
+            // demand exists that isn't converting", which needs a much longer tail.
+            const byQueryFull = await q(at,{startDate:start,endDate:end,dimensions:["query"],rowLimit:250});
             const pages = byPage.rows || [];
             const impr = pages.reduce((a,r)=>a+(r.impressions||0),0);
             const clicks = pages.reduce((a,r)=>a+(r.clicks||0),0);
@@ -99,6 +103,38 @@ jobs:
                 .sort((a, b) => a[1].impr - b[1].impr || a[1].clicks - b[1].clicks);
               out.push("", `**Every ${prefix} path with impressions (${rows.length}, lowest first):**`,
                 ...rows.map(([p, e]) => `- ${p} — ${e.impr} impr · ${e.clicks} clicks`));
+            }
+            // Content opportunities: real, already-existing demand (people are
+            // typing this into Google and Riftcompare shows up) that isn't
+            // converting well — either a weak ranking position, or a click-through
+            // well under the rough industry-average curve for that position band
+            // (commonly-cited organic CTR-by-position figures: roughly ~28% at
+            // #1, ~15% at #2, ~11% at #3, high single digits through #5, low
+            // single digits #6-10, near-zero past page 1 — see e.g. Advanced Web
+            // Ranking's/Backlinko's published CTR studies; these are APPROXIMATE
+            // industry averages, not an exact model, since real CTR varies a lot
+            // by query type). This is the site's own real search-demand data
+            // doing the job Reddit's "ask your last five customers what they
+            // searched" advice was reaching for — an actual, sourced signal
+            // instead of a guess. LEADS to investigate (a dedicated page, a
+            // title/meta rewrite, a content upgrade), not certainties.
+            const MIN_IMPR = 20;
+            const expectedCtr = (pos) => pos <= 1.5 ? 0.28 : pos <= 3 ? 0.15 : pos <= 5 ? 0.08 : pos <= 10 ? 0.03 : 0.01;
+            const opportunities = (byQueryFull.rows || [])
+              .filter(r => (r.impressions||0) >= MIN_IMPR)
+              .map(r => {
+                const pos = r.position || 0, ctr = r.ctr || 0;
+                const weak = pos > 10;
+                const underCtr = pos <= 10 && ctr < expectedCtr(pos) * 0.5;
+                return { query: r.keys[0], impressions: r.impressions, clicks: r.clicks, ctr, position: pos, weak, underCtr };
+              })
+              .filter(r => r.weak || r.underCtr)
+              .sort((a, b) => b.impressions - a.impressions)
+              .slice(0, 20);
+            if (opportunities.length) {
+              out.push("", `**Content opportunities (28d, min ${MIN_IMPR} impr) — real demand, weak conversion:**`,
+                ...opportunities.map(o => `- \`${o.query}\` — ${o.impressions} impr, pos ${o.position.toFixed(1)}, ${(o.ctr*100).toFixed(1)}% CTR` +
+                  (o.weak ? " (ranking page 2+)" : " (CTR well under typical for this position)")));
             }
             const txt = out.join("\n");
             console.log(txt);

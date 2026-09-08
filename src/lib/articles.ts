@@ -5979,7 +5979,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-08-26",
+    updated: "2026-09-06",
     readMins: 11,
     tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
@@ -5987,7 +5987,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare Premium is $9.99/mo or $79.99/yr** (works out to about $6.67/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
+      "**RiftCompare Premium is $14.99/mo or $119.99/yr** (works out to about $10/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
       "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
@@ -6001,7 +6001,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "$9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+        a: "$14.99/month, or $119.99/year if you pay annually (about $10/month, a 33% saving versus paying monthly — $179.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
@@ -6045,16 +6045,16 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $9.99/mo (or $79.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
+Short version: Premium is $14.99/mo (or $119.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
-![The RiftCompare Premium pricing card — $4.99/month, plus the full list of what's included](/blog/premium/00-pricing-cards.png)
+![The RiftCompare Premium pricing card, plus the full list of what's included](/blog/premium/00-pricing-cards.png)
 
 | Plan | Price | Works out to | Trial |
 | --- | --- | --- | --- |
-| Monthly | $9.99/month | $9.99/month | 14 days free |
-| Annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 14 days free |
+| Monthly | $14.99/month | $14.99/month | 14 days free |
+| Annual | $119.99/year | ≈ $10/month (**33% off**, vs $179.88/yr paying monthly) | 14 days free |
 
 Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch.
 
@@ -6147,6 +6147,439 @@ Being straightforward here, since the point of this post is accuracy over hype: 
 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,
+  },
+  {
+    slug: "riftbound-meta-shift-radiance-singapore",
+    category: "blog",
+    title: "Riftbound Meta Shift: Singapore, Radiance & What's Next",
+    excerpt:
+      "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final to Ornn. Singapore is deciding round two live, and Radiance's five confirmed champions show where Riot's marketing already went.",
+    author: "RiftCompare",
+    date: "2026-09-05",
+    readMins: 12,
+    tags: ["meta", "tournament", "regionals", "radiance", "predictions", "singapore"],
+    // Kennen is the post's throughline — the most-played legend at Barcelona and
+    // still the format's highest win rate — so the card itself is the thumbnail,
+    // the same treatment the Radiance post gives Seraphine. Local file rather
+    // than the CDN so next/image has a build-time manifest entry for it.
+    hero: {
+      src: "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
+      alt: "Kennen, Heart of the Tempest — the most-played legend at the Barcelona Regional Qualifier, and still the format's highest win rate after losing the final to Ornn",
+    },
+    summary: [
+      "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
+      "**Our own tracked tier list agrees with Barcelona rather than contradicting it**: Kennen's 58% win rate is the best in the format's top tier, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically.",
+      "**The Regional Qualifier: Singapore is running right now** (4–6 Sept) — Southeast Asia's biggest organised Riftbound event so far. Day 1's results aren't final as of writing, and this article doesn't invent ones that don't exist yet.",
+      "**Radiance releases 23 October 2026** with five confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
+      "Want the real, live-priced decklists behind all of this instead of the analysis? **[See today's meta decks](/decks).**",
+    ],
+    faq: [
+      {
+        q: "Did Ornn actually beat Kennen at a Riftbound Regional Qualifier?",
+        a: "Yes — at the Regional Qualifier: Barcelona (21–23 August 2026), the largest Regional Qualifier the game has run at over 2,200 players. Kennen was the most-played legend in the room, at 12.7% of the field, and still put three copies into the Top 8. Ornn — a legend that wasn't a Day 1 favourite — won the final anyway.",
+      },
+      {
+        q: "Is Kennen still a good deck after losing to Ornn at Barcelona?",
+        a: "By the numbers we track, yes — Kennen's 58% win rate is the best in the format's current top tier, ahead of every other Tier 1 or Tier 2 deck. One lost final doesn't erase that; it shows the deck has a real, beatable weak point once the field has a full Swiss to prepare specifically for it, which is a different claim than \"Kennen is bad.\"",
+      },
+      {
+        q: "What is the Regional Qualifier: Singapore, and has it finished?",
+        a: "A two-day, US$25,000 Riftbound tournament at Singapore EXPO, 4–6 September 2026 — the penultimate Regional Qualifier of the 2026 season, and the biggest organised Riftbound event Southeast Asia has hosted. As of this article, Day 1 Swiss rounds are still underway, so no final result exists yet to report.",
+      },
+      {
+        q: "Which Riftbound Radiance champions has Riot confirmed?",
+        a: "Five so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV and Ziggs. Four more are set to be revealed during Preview Season, 28 September through 9 October 2026, ahead of Radiance's 23 October street date.",
+      },
+      {
+        q: "Which Radiance champions is Riot actually promoting hardest?",
+        a: "Going by where the marketing has already landed rather than a guess: Seraphine and Evelynn headline the set's two-player Showdown Deck, and Jarvan IV and Ziggs are the champions on the booster box art — the two highest-visibility spots any Riftbound set has. That's a statement about promotional placement, not a prediction of which deck will actually be best.",
+      },
+    ],
+    embeds: [
+      {
+        title: "The cards behind the decks setting the pace",
+        note: "Pulled live from the same real tournament results the tier list above is built from — every card here is genuinely played in a top-tier list, not a hand-picked guess.",
+        metaStaples: { minDecks: 2 },
+        take: 12,
+      },
+    ],
+    browseCta: {
+      href: "/decks",
+      label: "See today's real, live-priced meta decks →",
+      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — updated as new results, including Singapore's, come in.",
+    },
+    body: `Riftbound's competitive calendar has never been this compressed. As of today, the **Regional Qualifier: Singapore** is in its first Swiss rounds at Singapore EXPO — the direct follow-up to the biggest field the format has ever drawn, and the result that came out of it. In three weeks, the **Regional Qualifier: Los Angeles** closes out the 2026 season. A week after that, Radiance's Preview Season starts spoiling Riot's fifth set. Seven weeks from today, Radiance actually ships. Four events, seven weeks, and each one moves the format in a different way. Here's what's confirmed, what already changed, and what we can honestly say about where this is headed — without inventing results that haven't happened yet.
+
+## The result that reset expectations
+
+The **Regional Qualifier: Barcelona** (21–23 August 2026) was the largest Regional Qualifier Riftbound has run — over 2,200 players, more than any Vendetta-season event before it. Going into the cut, **Kennen, Heart of the Tempest** was the format's clear presumptive best deck: the single most-played legend in the building, at 12.7% of the entire field, and it put three copies into the Top 8.
+
+It didn't win. **Ornn** — a legend nobody was building around going in — beat it in the final. That's worth being precise about, because it's easy to overstate. Ornn's win doesn't mean Kennen is bad; a deck can genuinely be the format's best and still drop one best-of series, and Kennen's own win rate (below) says it's still winning more often than almost anything else in the format. What it does prove is that the format has a real, beatable weak point once you reach single elimination against a room that has spent an entire Swiss preparing for one specific deck — and Ornn found it. Reports on the winning list describe a Gear-heavy shell — Guardian Angel, Sterak's Gage, equipment built to survive to the late game rather than race — which tracks with what [our own archetype breakdown](/guides/riftbound-deck-archetypes-guide) already says about the Gear tag: a Midrange deck built to out-value board stats rather than match them turn for turn. Beating an aggressive, disruption-heavy deck by simply refusing to die to it isn't a new idea in Riftbound. It's just not one Barcelona's field had built an answer for yet.
+
+## Where the meta actually sits
+
+Barcelona is one 2,200-player snapshot. The tier list we track pulls from ten real tournament results across the whole Vendetta season, and it agrees with Barcelona more than it contradicts it:
+
+- **Irelia, Blade Dancer** — Tier 1, 10% of the field, 52% win rate. Still the single most-played legend across the decks we price, [Calm/Chaos Tempo](/decks/archetype/tempo) built around Irelia snowballing the board, now splashing Akali's Vendetta package for a faster clock.
+- **Kennen, Heart of the Tempest** — Tier 2, 9% of the field, and this is the number that actually matters after Barcelona: the **highest win rate in the format's top tier, at 58%**. [Order/Chaos Aggro/Disruption](/decks/archetype/aggro), and the most expensive list in the meta to assemble.
+- **Master Yi, Wuju Bladesman** — Tier 2, 9%, 47% win rate. The cheapest genuine tier-2 shell, flooding cheap Body/Calm units and closing with combat tricks.
+- **Diana, Scorn of the Moon** — Tier 2, 5%, 42% win rate. Chaos/Mind spell tempo, and the deck that won the very first real Vendetta event.
+- Below that: **Viktor** posts the single best win rate on the *entire* list — 63%, at roughly a third of Kennen's price to build — with Ezreal close behind at 62%. Both are small samples, which is exactly why they sit at Tier 3 rather than above Kennen despite the raw number. But it's the same shape as Ornn's run at Barcelona: an undersized deck with an outsized win rate is precisely the kind of thing a Swiss field hasn't practiced against.
+
+Read the top two together and Barcelona makes complete sense. Kennen wins more than half of every match it plays — more than any deck in the format's top tier — which is exactly why every serious Day 2 competitor spent Swiss learning how to beat it specifically, and one of them did, in the round that actually mattered.
+
+[[embed:0]]
+
+## What Singapore is actually deciding, right now
+
+The **Regional Qualifier: Singapore** runs 4–6 September at Singapore EXPO — the [penultimate Regional Qualifier of the 2026 season](/blog/riftbound-2026-regional-qualifier-los-angeles), with Los Angeles closing it out three weeks later. It's also, by a clear margin, the biggest organised Riftbound event Southeast Asia has hosted: a US$25,000 prize pool, Top 64 finishers earning Regional Championship invitations without needing to travel internationally to earn them, and full broadcast coverage from 10am SGT on both days.
+
+As of writing, Day 1's eight Swiss rounds are still underway — the field that advances to Day 2 needs 18+ match points, then five more Swiss rounds cut to a single-elimination Top 8. The honest answer to "what happened in Singapore" is: nothing final yet, and we're not going to fill that gap with a guess. What we can say is what the event is actually testing. A second Kennen title says Barcelona was a one-off. A second surprise winner — Ornn again, or something else entirely — says the format's ceiling deck now has a target on it everywhere, not just in one city, on one weekend.
+
+There's a second story here that has nothing to do with which legend wins. Every Regional Qualifier before this one has meant travel for Southeast Asian players chasing a Regional Championship invitation — flying to whichever city Riot's calendar landed on, the same barrier plenty of regional TCG scenes deal with. A US$25,000 event at Singapore EXPO, with Top 64 finishers earning those invitations on home ground, is a genuinely different proposition: it's the reason organisers are already calling this the biggest organised Riftbound event Southeast Asia has hosted, independent of who actually wins it. Singapore and Los Angeles — the season's last two stops — both carry the same competitor reward: an exclusive **Jayce, Brilliant Inventor** promo print for top finishers, on top of the invitation itself. So the collecting angle and the competitive one are, for once, the same story: whoever takes Singapore's Top 8 walks away with both a Regional Championship invite and a card that won't exist outside this circuit.
+
+The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides/riftbound-flow-explained)**, **[Burn](/guides/riftbound-burn-explained)** and **[Empower](/guides/riftbound-empower-explained)** — the toolkit every Singapore decklist is built from, same as Barcelona's before it.
+
+## The bigger shift: Radiance, in seven weeks
+
+Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments, the second-largest set so far behind only Origins. Preview Season runs **28 September through 9 October**, with Pre-Rift events **16–22 October** immediately before street date. That preview window opens three days after Los Angeles closes out the Regional Qualifier season — the same week the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
+
+Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today: Ekko is a Champion Unit in the blue domain — Mind, in Riftbound's own domain key — with a card called *Ingenious* carrying an Empowered effect: discount a unit into play, and it dies at end of turn. That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
+
+Radiance isn't the only structural shift on the calendar, either — just the next one. [Legacy](/guides/riftbound-sets-in-order), Riot's Set 6, ships 29 January 2027 as the largest set announced so far and the first designed specifically for draft, changing pack composition itself: a common slot becomes a Legend-or-Battlefield slot. That's a bigger structural change than any single champion reveal, and it's one more reason "the meta" is worth thinking of as something that keeps moving on a schedule, not settling once and staying settled.
+
+## Which champions is Riot actually pushing?
+
+Riot hasn't published a marketing plan, and we're not going to pretend it has. But a set tips its hand in the same few places every time, and Radiance already has:
+
+1. **Seraphine and Evelynn** headline the two-player Showdown Deck — the single highest-visibility product every Riftbound set ships alongside its boosters, built to be bought and played the same day.
+2. **Jarvan IV and Ziggs** are the champions on the booster box art — the image on every physical pack sold at retail, seen by every buyer whether or not they follow the competitive scene at all.
+3. **Ekko** got the first single-card mechanical reveal, ahead of the other four confirmed champions and all four still-unrevealed ones.
+
+Put together, those five aren't a guess at who'll be good — they're simply where Radiance's marketing real estate has already gone, read off where their cards are placed rather than anything Riot has said outright. Whether any of them ends up being Radiance's best deck is a separate question, and it's the one thing actually worth refusing to predict: Kennen was the format's best deck by win rate at Barcelona and still lost the final. A champion getting the box art is a promotional fact, not a tier list.
+
+## What this actually means for buyers and deckbuilders
+
+We deliberately don't predict what individual cards will do — see [why Riftbound prices actually change](/guides/why-riftbound-card-prices-change) for the real mechanics behind that, instead of a guess dressed up as one. What's actually actionable right now:
+
+- **If you're building for the rest of the Vendetta season**, Kennen's win rate is still the best in the format's top tier — one lost final is a data point, not a pattern — and [the meta decks page](/decks) prices every real tournament list live, cheapest store first, in your own currency. Priced Viktor's budget shell is on the same page, for a fraction of Kennen's cost to assemble.
+- **If you're buying into Radiance**, the five confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
+- **If you just want to know what's shipping and when**, without a hard-coded countdown that goes stale the day it's wrong, [the release calendar](/release-dates) rolls itself forward automatically as each date passes — Radiance, Legacy and everything Riot has announced beyond it.
+
+We'll be watching Singapore's Top 8 the moment it's final, and updating the tier list the same way we did after Barcelona: from the actual decklists, not a guess at what they'll say.`,
+  },
+  {
+    slug: "riftbound-radiance-biggest-release-since-origins",
+    category: "blog",
+    title: "Why Radiance Will Be Riftbound's Biggest Release Since Origins",
+    excerpt:
+      "Radiance is the smallest main Riftbound set yet by base cards — and by some distance the most Showcase-dense. Why 23 October is still the game's biggest release since Origins: it completes K/DA and unlocks a Seraphine that already trades.",
+    author: "RiftCompare Markets Desk",
+    date: "2026-09-05",
+    readMins: 8,
+    tags: ["news", "set", "release", "prices"],
+    // Seraphine is the post's throughline — she is half the K/DA argument and the
+    // whole of the "already trading, not yet legal" one — so the card itself is the
+    // thumbnail. Local file rather than the CDN so next/image has a manifest entry.
+    hero: {
+      src: "/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
+      alt: "Seraphine, Not Alone — the T1 2025 Worlds Champion Collection card that becomes tournament-legal when Radiance releases",
+    },
+    summary: [
+      "**Radiance releases 23 October 2026.** Riot has confirmed **180 cards, 66 of them Showcase** — and unlike every earlier set, that headline number *includes* the Showcase treatments.",
+      "Like-for-like, that is a base run of about **114** — the smallest of any main Riftbound set. Radiance is not the biggest set since Origins, and it is not even bigger than [Vendetta](/sets/vendetta).",
+      "What it is: **the most chase-dense set Riftbound has printed.** Showcase cards are about **37%** of Radiance's card list, against 23% for Spirit Forged, 22% for Unleashed and 15% for Origins.",
+      "It also **completes K/DA**. Ahri and Kai'Sa came in Origins, Akali in Vendetta; Radiance brings Seraphine and Evelynn. Riot has **not** announced K/DA cards — that connection is our inference from the champion list.",
+      "If you plan to open rather than buy singles, run [box EV](/tools/box-ev) against the singles market once real prices exist.",
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "riftbound radiance booster box" },
+      { label: "Vendetta booster boxes", query: "riftbound vendetta booster box" },
+    ],
+    embeds: [
+      {
+        title: "The three K/DA champions already in Riftbound",
+        note: "Ahri and Kai'Sa debuted in Origins, Akali in Vendetta. Prices are live and move daily — click any card for its full price history.",
+        slugs: [
+          "ahri-nine-tailed-fox-ogn-303-298",
+          "kai-sa-daughter-of-the-void-ogn-299-298",
+          "akali-rogue-assassin-ven-189",
+          "ahri-nine-tailed-fox-ogn-255-298",
+          "kai-sa-daughter-of-the-void-ogn-247-298",
+          "akali-rogue-assassin-ven-139",
+        ],
+      },
+      {
+        title: "Seraphine, Not Alone — already trading, not yet legal",
+        note: "The T1 Worlds Champion Collection Seraphine. Radiance is what makes her legal for sanctioned play.",
+        slugs: ["seraphine-not-alone-t1s-005-005-promo"],
+      },
+    ],
+    browseCta: {
+      href: "/radiance-countdown",
+      label: "Radiance countdown & card list",
+      blurb: "Release date, confirmed champions and every Radiance card as reveals land.",
+    },
+    faq: [
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, per Riot's products-and-sets rundown. See our [2027 set roadmap](/blog/riftbound-2027-set-roadmap) for the full schedule through The Reckoning.",
+      },
+      {
+        q: "How many cards are in Radiance?",
+        a: "Riot has confirmed 180, of which 66 are Showcase treatments. Read that carefully: unlike Origins, Spirit Forged and Unleashed — whose headline figures are base cards with Showcase printings on top — Radiance's 180 already includes its Showcase cards. The implied base run is about 114.",
+      },
+      {
+        q: "Is Radiance bigger than Vendetta?",
+        a: "Only if you compare the two numbers without adjusting for what they count. Vendetta's 166 is a base run; Radiance's 180 is a base run plus 66 Showcase. On a like-for-like base-card basis Radiance is the smaller set.",
+      },
+      {
+        q: "Which champions debut in Radiance?",
+        a: "Five are named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more champion Legends still unrevealed, so nine is the expected total. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
+      },
+      {
+        q: "Will Radiance have K/DA cards?",
+        a: "Riot has not announced any. What is confirmed is that Seraphine and Evelynn debut in Radiance, which would put all five K/DA members — Ahri, Akali, Evelynn, Kai'Sa and Seraphine — in the game for the first time. The K/DA connection is our inference from the champion list, not a Riot announcement.",
+      },
+      {
+        q: "Can I play the T1 Seraphine card now?",
+        a: "No. Seraphine, Not Alone is from the [T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection) and is not legal for sanctioned play until Radiance releases on 23 October 2026.",
+      },
+      {
+        q: "Is Radiance a good set to buy sealed?",
+        a: "There is no honest answer before real prices exist. Once Radiance singles are trading, compare a box's cost against the sum of what is inside it using the [box EV calculator](/tools/box-ev) rather than buying on set hype.",
+      },
+    ],
+    body: `
+Riftbound's fifth set, **Radiance**, lands on **23 October 2026**. It will be the biggest release the game has had since Origins.
+
+It will not be the biggest set. It will, in fact, be the smallest main set Riftbound has printed — and that is worth getting out of the way in the first section rather than burying it.
+
+## First, the thing that is not true
+
+Riot has confirmed Radiance at **180 cards, 66 of them Showcase**. That number gets quoted next to the other sets' totals as though it were the same kind of measurement. It isn't.
+
+For Origins, Spirit Forged and Unleashed, the headline figure is the **base run**, and Showcase printings sit on top of it as additional alt-art versions of cards already in that numbering. Radiance's 180 **already includes** its 66 Showcase treatments. Comparing 180 against 166 is comparing a total against a subtotal.
+
+| Set | Base run | Showcase | Whole card list | Champion debuts |
+| --- | --- | --- | --- | --- |
+| [Origins](/sets/origins) | 298 | +54 | 352 | 12 |
+| [Spirit Forged](/sets/spiritforged) | 221 | +66 | 287 | 12 |
+| [Unleashed](/sets/unleashed) | 219 | +61 | 280 | 12 |
+| [Vendetta](/sets/vendetta) | 166 | not published | — | 9 |
+| **[Radiance](/sets/radiance)** | **~114** | **66** | **180** | **9 expected** |
+
+*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has five named so far with four more unrevealed. The 24-card Proving Grounds starter set is excluded.*
+
+So the honest position is that Radiance is the smallest main set to date on base cards, and that it is not bigger than Vendetta once both numbers are counted the same way. If "biggest" means "most cards", this post ends here.
+
+It doesn't, because that table contains the actual story — just not in the column people were looking at.
+
+## 1. It is the most chase-dense set Riftbound has printed
+
+Sixty-six Showcase cards is the same Showcase count as **Spirit Forged** — a set with roughly twice the base run. Put as a share of the whole card list:
+
+| Set | Showcase share of the card list |
+| --- | --- |
+| Origins | ~15% |
+| Unleashed | ~22% |
+| Spirit Forged | ~23% |
+| **Radiance** | **~37%** |
+
+More than a third of Radiance's card list is a Showcase treatment. Nothing else in Riftbound is close.
+
+That is the number that actually matters for a release. Sealed demand, box EV and the top end of the singles market are all driven by chase density rather than by how many commons a set contains — a small set stuffed with premium treatments is a bigger commercial event than a large set that isn't. It also cuts the other way for anyone opening: a higher Showcase share means the value in a box is concentrated in fewer, more expensive cards, which widens the spread between a good box and a bad one.
+
+## 2. It completes K/DA
+
+K/DA is Riot's virtual pop group, and the five members are Ahri, Akali, Evelynn, Kai'Sa and Seraphine.
+
+Three are already in Riftbound. **Ahri** and **Kai'Sa** debuted in Origins; **Akali** arrived in Vendetta. Radiance brings **Seraphine** and **Evelynn** — the last two.
+
+[[embed:0]]
+
+Those existing three are not marginal cards. Their base Rare printings trade for pocket change, but the Showcase versions sit in the hundreds and the signature Showcase printings in the thousands. Whatever the mechanism — champion popularity, art, or both — the market has already shown it will pay a substantial premium for a K/DA champion in a chase frame.
+
+Radiance is the set that completes the group for the first time. A collector who wants all five has had no way to finish, and from 23 October they will.
+
+**A necessary caveat.** Riot has not announced K/DA-themed cards, alternate arts or a K/DA subset in Radiance. What is confirmed is the champion list. The observation that this list completes K/DA is ours, drawn from the roster — not something Riot has said. If you are buying on the expectation of a K/DA treatment tier, you are buying on an inference, and you should size the position accordingly.
+
+## 3. Seraphine is already trading, and Radiance is her unlock
+
+This is the genuinely unusual one.
+
+A Seraphine card already exists and already has a price: **Seraphine, Not Alone**, from the [T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection). It is not legal for sanctioned play until Radiance releases.
+
+[[embed:1]]
+
+So the market is currently pricing a card that cannot be played, on a known unlock date. That is a rare, clean setup: most format-legality questions in trading card games are speculative, and this one has a date on it. Whatever premium legality is worth, it resolves on 23 October.
+
+It also means Radiance does not arrive cold. Seraphine has had months of price discovery before her set exists.
+
+## 4. It lands in the Q4 buying window
+
+Radiance releases on 23 October. Its first eight weeks of singles trading and sealed sales therefore fall inside the Northern-Hemisphere holiday buying period — the stretch when sealed product moves as gifts rather than only to players and openers.
+
+Vendetta, by contrast, released on 31 July, into the quietest part of the calendar.
+
+This is a statement about the date, not a claim about Riot's marketing plans. But the date alone changes who is buying: a set that is on shelves through November and December is bought by people who were never going to build a deck with it, and that is demand a July release does not get.
+
+## 5. It is the last set before the pool jumps
+
+Riot's roadmap has **Legacy** arriving on 29 January 2027 at around 346 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition. We covered the full schedule in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
+
+That makes Radiance the last release into a relatively small card pool, and the last before a set built for a different format arrives. Bigger sets historically push commons and uncommons cheaper while concentrating value at the top of the rarity ladder — which, for a set that is already 37% Showcase, is worth watching.
+
+Treat this as a structural observation about supply, not a prediction about any individual card. Card pools widen in every trading card game, and plenty of cards from small early sets end up worthless anyway.
+
+## What this means if you are buying
+
+- **If you want to play:** the champion debuts are the reason to care — five named, four still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs or Jarvan IV is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
+- **If you want to open sealed:** wait for real prices and run [box EV](/tools/box-ev) against the singles market. A 37% Showcase share makes the variance between boxes higher than in any previous set, which is exactly when buying singles beats opening.
+- **If you are tracking the K/DA thesis:** the three existing members are already priced. Set a [price alert](/alerts) on them rather than checking manually — if Radiance does ship a K/DA tier, the existing three are likely to move on the announcement, not on release day.
+- **If you are selling:** the window between reveal season and release is usually when interest in the *previous* set is weakest. [Movers](/movers) will show you whether that is happening to Vendetta.
+
+## What would make this call wrong
+
+Worth stating plainly, because a prediction with no failure condition is not a prediction.
+
+- **Chase density cuts both ways.** A high Showcase share is only bullish if the treatments are desirable. If Radiance's Showcase art is poorly received, a set that is more than a third Showcase has an unusually large share of its print run that nobody wants.
+- **The base run really is small.** About 114 base cards is the thinnest main set Riftbound has shipped. If the format-relevant cards among them are few, competitive demand will be weak regardless of the collector story.
+- **The K/DA inference may simply be wrong.** Riot may debut Seraphine and Evelynn as ordinary Legends with no thematic tie at all. The champion list is the only confirmed part.
+- **Preorder prices routinely sit above post-release singles.** That has been true for every Riftbound set so far, and buying the hype window is the most reliable way to lose money on a release that is otherwise doing well.
+- **Legacy is barely three months later.** A much larger, draft-focused set in January could pull collector money forward and cut Radiance's run short — the opposite of the scarcity argument above.
+
+## The short version
+
+Radiance is the smallest main set Riftbound has printed and the most chase-dense by a wide margin, arriving at an unusually good moment: it completes a five-member group the market already pays up for, it resolves the legality of a card that is already trading, and it sits in the gifting window.
+
+That combination is why it will be the biggest release since Origins. None of it is because the set is big — it is the opposite.
+
+Track it on the [Radiance countdown](/radiance-countdown), where every card appears as reveals land.
+`,
+  },
+  {
+    slug: "why-riftbound-could-become-a-top-two-tcg",
+    category: "blog",
+    title: "Why Riftbound Could Be a Top-Two Trading Card Game by 2028",
+    excerpt:
+      "Riot has turned one audience into a hit twice, with Valorant and TFT. The brand, audience and mechanics case for Riftbound reaching the TCG top two by 2028.",
+    author: "RiftCompare",
+    date: "2026-09-06",
+    readMins: 10,
+    tags: ["opinion", "market analysis", "league of legends", "esports", "riftbound", "trading card games"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
+    },
+    summary: [
+      "**Riot Games has already turned one audience into a second hit twice** — Teamfight Tactics and Valorant — in genres it had never shipped in before, and both grew into durable, top-tier products rather than fading after launch.",
+      "**League of Legends' player base (commonly cited around 120-135 million monthly)** is larger on its own than the total player counts reported for Magic: The Gathering or Pokémon TCG Pocket.",
+      "**Riftbound's early numbers — a reported 300%+ post-launch search surge and a 2025 TCGplayer top-ten finish — match the growth shape Valorant and TFT showed before they became durable**, rather than a typical hype-then-fade launch.",
+      "**The One Piece Card Game reached TCGplayer's top three by GMV in about four years** with no built-in audience anywhere close to League's — proof a new entrant can reach the top of this market without decades of history behind it.",
+      "**This is opinion, not a guarantee.** The biggest risks are that League's audience simply doesn't convert to a physical collectible at the same rate it converted to Valorant or TFT, or that a faster set cadence outpaces the game's own balance.",
+    ],
+    faq: [
+      {
+        q: "Is this a guarantee Riftbound will become a top-two trading card game?",
+        a: "No — this is an opinion piece built on Riot Games' track record and Riftbound's early numbers, not a certainty. See \"What would make this call wrong\" below for the specific ways it could fail to happen.",
+      },
+      {
+        q: "How many people play League of Legends?",
+        a: "Riot has reported figures as high as 152 million monthly active players at its 2022 peak, with more recent third-party estimates commonly in the 120-135 million range.",
+      },
+      {
+        q: "How fast did Valorant grow after launch?",
+        a: "Valorant's closed-beta reveal reportedly drew 1.7 million peak concurrent Twitch viewers, the game reportedly reached 3 million peak daily players within two months of its June 2020 launch, and third-party tracking (ActivePlayer.io) put its monthly active players at roughly 33 million in early 2026.",
+      },
+      {
+        q: "What makes Riftbound's mechanics 'easy to learn, hard to master'?",
+        a: "A Rune resource system similar to what other trading card games already use, layered with keywords like Hidden (playing a facedown card as a surprise), Action/Reaction (timing), and Vendetta's Empower/Flow/Burn package — simple building blocks that combine into real deckbuilding depth.",
+      },
+      {
+        q: "Has a new trading card game reached the top of the market before, without decades of history?",
+        a: "Yes — the One Piece Card Game launched in 2022 and, per TCGplayer's own reporting, reached the platform's top three games by GMV alongside Magic and Pokémon by the first quarter of 2026.",
+      },
+      {
+        q: "What could stop Riftbound from reaching top-two status?",
+        a: "The clearest risks are League's audience not converting to a physical collectible at the rate Valorant or TFT converted an existing gaming audience, a set cadence or power creep that outpaces the game's balance, and a rival publisher running the same brand-plus-game strategy first or better.",
+      },
+    ],
+    browseCta: {
+      href: "/sets",
+      label: "Browse every Riftbound set →",
+      blurb: "See every set released so far, and how the format has grown since Origins.",
+    },
+    body: `Riftbound launched in the West on 31 October 2025. It's one trading card game among dozens on shelves right now, made by a video game company that had never shipped a physical card product before its first set. Calling it a candidate for a top-two trading card game by 2028 — ahead of Yu-Gi-Oh!, Digimon and Disney Lorcana, competing directly with Magic: The Gathering and Pokémon for first and second place — is a big claim.
+
+This is an opinion piece, not a market report. We track prices, not predictions, and nothing below is guaranteed. But the case for taking this seriously is stronger than "it's a fun game with a popular license attached." It rests on three things: a publisher with an unusually good track record of turning one audience into a second hit, a starting audience larger than any new trading card game has ever launched with, and a ruleset that doesn't ask more of a new player than the genre already does. Here's the argument, with the numbers behind it.
+
+## Riot has done this before — twice
+
+League of Legends is Riot Games' first product, and by some distance its biggest: it has run for over fifteen years and, at its 2022 peak, reported around 152 million monthly active players, settling more recently into a range commonly cited around 120-135 million. That alone would make League one of the largest gaming audiences on the planet. What matters more for Riftbound is what Riot did with that audience twice already.
+
+The first swing was Teamfight Tactics, an auto-battler spun out of League's own in-client shop as a side mode in mid-2019. It wasn't an obviously safe move — auto-battlers were a genre with no proven blockbuster at the time. Riot shipped it as a standalone client anyway, and TFT reportedly cleared 33 million monthly active players within its first ten weeks. A mobile release the following March turned out to be the real growth driver, reportedly pushing the split toward roughly 60% mobile and 40% PC, and TFT has remained one of the more durable auto-battlers years after most of the genre's other entrants faded.
+
+The second swing was bigger: Valorant, a tactical shooter launched into a genre already dominated by Counter-Strike and, at the time, Overwatch. Riot's closed beta reveal alone reportedly drew 1.7 million peak concurrent Twitch viewers, and the game reportedly reached 3 million peak daily players within two months of its June 2020 launch. Unlike most shooters, which spike at launch and decay hard afterward, Valorant kept climbing for years — recent third-party tracking (ActivePlayer.io) puts its monthly active player base at roughly 33 million in early 2026, and it's now routinely described as one of the two biggest competitive shooters in the world alongside Counter-Strike.
+
+Two swings, two hits, in two genres Riot had never shipped in before. That's the track record Riftbound is riding on, and it's the reason "it's just a card game with a League skin on it" undersells what's being attempted here.
+
+## An audience no new trading card game has ever had
+
+Compare that installed base to the trading card games it would need to pass. Magic: The Gathering, in its fourth decade, is commonly estimated at somewhere between 40 and 50 million total players worldwide, though estimates vary by source and by definition of "player." Pokémon TCG's mobile spinoff, Pocket, reportedly reached somewhere between 26 and 33 million monthly active users in its own launch window. League of Legends alone — before counting anyone who plays Valorant or TFT, or the people who've never played a Riot game but watch League esports — is larger than either of those figures on its own.
+
+And the audience isn't just big, it's engaged in a way that translates unusually well to a collectible product. League's 2024 World Championship reportedly drew 6.94 million peak concurrent viewers, over 50 million total viewers, and more than 190 million hours watched — commonly cited as the most-watched esports event ever recorded. An audience that already shows up in those numbers to watch a storyline play out is an audience that has already demonstrated it will pay attention to a universe of champions, factions and lore for hundreds of hours a year. Turning a fraction of "people who watch Ahri and Jinx compete" into "people who collect Ahri and Jinx" is a much shorter walk than getting a stranger to care about a franchise from a standing start, which is the position every other new trading card game launches from.
+
+## Riftbound's early numbers already look like the pattern
+
+It's early — Riftbound has been on shelves in the West for less than a year at time of writing — but the first data points line up with the Valorant and TFT curves rather than with a typical new-TCG launch that fades after the initial hype window. Search interest reportedly rose more than 300% after release compared to the preorder period, an unusual shape: most licensed products peak at preorder and decline once the initial hype settles. TCGplayer reportedly logged more than 6,300 searches per hour for Riftbound product at its peak, and the game reportedly finished 2025 as a top-ten best-seller across TCGplayer's full catalog of more than 750 products — a strong result for a card game that had existed for barely two months of that year.
+
+None of that proves Riftbound becomes a top-two TCG. But it's the same early shape Valorant and TFT showed before they became durable, and it's a shape most new trading card games don't get to show at all — because most new trading card games don't have a global esport and a 150 million-plus player base to draw the initial spike from in the first place.
+
+It's also worth naming that a new entrant reaching the top of this market isn't unprecedented on its own. The One Piece Card Game launched in 2022 and, per TCGplayer's own reporting, was sitting alongside Magic and Pokémon among the top three games by sales on the platform by the first quarter of 2026 — a four-year climb built on licensed IP and a competitive scene, with none of the built-in audience Riftbound starts with. If a shonen anime license without an existing 150 million-player base can reach the top three in four years, a card game backed by League of Legends starting from a much larger base doesn't need a miracle to get there faster.
+
+## The game has to hold up its end, too — and it might
+
+None of the brand math matters if the game underneath it isn't good, and this is the part that's easiest to get wrong when a big license is attached. Riftbound's own game director, Dave Guskin, has described the design goal as "easy to learn and difficult to master," with social, multiplayer play prioritized over solitaire deckbuilding puzzles — the same design philosophy Riot has applied to League and Valorant, where a new player can be doing something meaningful in their first game while a veteran still has years of depth left to find.
+
+The mechanics back that framing up. Runes — the resource system that pays for your plays — work close enough to what Magic or Pokémon players already know that the on-ramp is short. Where Riftbound earns its "not too complicated, but deep" reputation is in a handful of well-designed keywords layered on top of that simple base:
+
+- **Hidden** lets you pay a cost to place a Spell, Unit or Gear facedown at a battlefield on your own turn. From the next turn on, it can be played for free at Reaction speed — a genuine mind game, since your opponent has to play around a card they can't see.
+- **Action** and **Reaction** define when something can be played at all, with Reaction cards playable on essentially anyone's turn — Riftbound's version of the "instant speed" concept that gives Magic much of its interactivity.
+- **Empower**, **Flow** and **Burn**, introduced in the Vendetta set, are built to combo with each other: Empower upgrades a card already in play for an extra cost, Flow lets you play cards straight out of your trash, and Burn sends cards to the trash — so a deck built around all three can deliberately burn its own cards for Flow fuel, or burn an opponent's resources to disrupt them.
+
+That's a real skill ceiling — reading a hidden card, sequencing an Empower/Flow/Burn engine, playing around Reaction speed — sitting on top of a resource system simple enough that a new player isn't lost on turn one. It's the same shape as League's own reputation: trivial to start, genuinely hard to master, which is exactly the reputation a game needs if it's going to hold an audience for years rather than a launch window.
+
+Here's a rough sketch of the field Riftbound is trying to break into, sized by publicly reported player figures rather than sales:
+
+| Game | Publisher's IP track record | Reported player base | Time to reach current scale |
+| --- | --- | --- | --- |
+| Magic: The Gathering | First major TCG, no prior franchise to draw on | ~40-50M total players | ~32 years |
+| Pokémon TCG | Backed by one of the largest media franchises ever | Tens of millions, plus 26-33M MAU on Pocket alone | ~30 years |
+| One Piece Card Game | Backed by a top anime license, no house-published game before it | Reached TCGplayer's top-3 by GMV | ~4 years |
+| Riftbound | Backed by League of Legends, plus two prior hits (TFT, Valorant) in unrelated genres | Early-stage, drawing from a 120M+ MAU base | Under 1 year so far |
+
+## What this means if you're buying or collecting
+
+- **If you're building a collection for the long term**, the brand argument above is a reason to treat Riftbound as more than a launch-window fad — but buy singles you actually want, not speculative sealed product, until there's a longer price history to lean on. [Compare live prices across every store we track](/market) before paying preorder premiums.
+- **If you're a League or Valorant player who's never touched a card game**, the on-ramp really is short. Runes work like the resource systems in other TCGs, and champions you already know — start with [Ahri's card page](/champions/ahri) if she's your main — are already in the game as Legends.
+- **If you want to understand the deckbuilding depth before buying in**, the [Hidden keyword](/keywords/hidden) and the [Action/Reaction timing system](/guides/riftbound-timing-keywords-explained) are the two mechanics worth learning first; between them they explain most of what makes a game between two decent players interesting.
+- **If you're tracking the newest set**, [Vendetta](/sets/vendetta) is where the Empower/Flow/Burn interactions above actually live, and it's the best current test of whether Riftbound's "simple but deep" design holds up in practice.
+
+## What would make this call wrong
+
+A prediction with no failure condition isn't a prediction, so here's what would break this thesis:
+
+- **League's audience simply doesn't convert.** Watching Ahri on stage at Worlds and wanting to own a piece of cardboard with her on it are different behaviors, and the conversion rate could turn out to be much lower than Valorant's or TFT's — those were still video games played on the same screen League is already played on, not a physical product that requires a trip to a store or a different kind of purchase entirely.
+- **The set cadence or power creep turns off the format.** Riftbound's roadmap already has a much larger set, Legacy, arriving in early 2027. If new sets outpace the game's ability to stay balanced, the "difficult to master" reputation curdles into "impossible to keep up with," which is a common way trading card games lose players rather than gain them.
+- **A stronger competitor launches with the same playbook.** Riot isn't the only company with a media franchise and an existing audience. If another publisher runs the same brand-plus-game strategy better or first, Riftbound's advantage shrinks fast.
+- **The market itself doesn't grow fast enough to fit two more winners.** Even a market projected to grow from roughly $15 billion in 2026 to over $24 billion by 2031 — per GMInsights, an approximately 10% annual growth rate — has to make room for Riftbound without simply taking share from Magic and Pokémon, which are not standing still themselves.
+
+## The short version
+
+Riot Games has turned one audience into a second hit twice — Teamfight Tactics and Valorant, in two genres it hadn't shipped in before — and both times the growth curve looked less like a typical launch spike and more like a durable climb. Riftbound is the same company running a similar playbook on an even larger built-in audience, against a genre where the current top players took decades to get where they are, and where a licensed newcomer with no such built-in audience — the One Piece Card Game — has already climbed into the top three within about four years.
+
+That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to be wrong about it for any of the reasons above. But it's a bet grounded in a track record Riot has already delivered on twice, not just optimism about a good license — and it's why we think this is one of the more interesting long-term stories in the entire trading card game market right now.`,
   },
   ...SEO_PACK_ARTICLES,
 ];

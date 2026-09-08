@@ -155,6 +155,28 @@ test("meta descriptions stay in the length Google will render", () => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// "all future ones should be over 1500 words as well as that's what Adsense
+// likes" — an explicit editorial policy, not a guess at one. Most of the
+// existing back catalogue predates it and sits well under 1500 (a thin post is
+// not itself a problem — AdSense cares about the SITE'S depth, not that every
+// single page hits one number), so this can't be a blanket floor without
+// rewriting dozens of already-published, already-indexed articles for no
+// reason. Instead it's dated: every article from POLICY_EFFECTIVE_DATE onward —
+// i.e. everything written after the policy was set — is held to it, and
+// everything before is grandfathered untouched. Bump the date only if the
+// editorial policy itself changes; do not touch it to make a new, thin article
+// pass this test — cut the article's scope or write more instead.
+const POLICY_EFFECTIVE_DATE = "2026-09-05";
+
+test("every article published under the 1500-word policy actually clears it", () => {
+  const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+  const short = ARTICLES.filter((a) => a.date >= POLICY_EFFECTIVE_DATE && wordCount(a.body) < 1500).map(
+    (a) => `${a.slug} (${wordCount(a.body)} words, ${a.date})`,
+  );
+  assert.deepEqual(short, [], `articles published under the 1500-word policy are under it:\n  ${short.join("\n  ")}`);
+});
+
 test("every article hero image exists on disk and has alt text", () => {
   for (const a of ARTICLES) {
     if (!a.hero) continue;

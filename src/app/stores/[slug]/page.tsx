@@ -8,7 +8,6 @@ import { formatMoney } from "@/lib/format";
 import { shippingPolicyUrl } from "@/lib/retailers";
 import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { breadcrumb } from "@/lib/jsonld";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
@@ -129,10 +128,9 @@ export default async function StorePage({ params }: { params: { slug: string } }
 
   return (
     <div className="flex flex-col gap-8">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb(trail), orgLd]) }}
-      />
+      {/* Breadcrumbs below already emits its own matching BreadcrumbList — only
+          the store's own Organization schema belongs in this block. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd) }} />
 
       <div>
         <Breadcrumbs trail={trail} />

@@ -5,7 +5,16 @@ import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
-import { PREMIUM_PRICE_LABEL, PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
+import {
+  PREMIUM_PRICE_LABEL,
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  PREMIUM_ANNUAL_AMOUNT,
+  PREMIUM_NEXT_PRICE_AMOUNT,
+  annualSavingPct,
+  premiumPriceIncreaseAnnounced,
+  premiumLockInLine,
+} from "@/lib/site";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
 // wherever they hit a wall — no navigating to /premium first. Any client component
@@ -144,6 +153,16 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             Unlock the pro screeners and go ad-free. The portfolio tracker and price comparison stay free.
           </p>
 
+          {/* Only for someone who could still act on it — already-Premium
+              visitors are grandfathered regardless, so the urgency has nothing
+              left to say to them. */}
+          {!premium && premiumPriceIncreaseAnnounced() && (
+            <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-center text-xs font-semibold text-gold">
+              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD}.
+            </div>
+          )}
+
           {/* The SAME rows /premium shows — see TierComparisonTable's header for
               why this is imported rather than restated. Capped in height with its
               own scroll so a 14-row table can never push the CTA below the fold
@@ -258,9 +277,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
           </div>
 
           {!premium && (
-            <p className="mt-3 text-center text-[11px] font-medium text-gold/80">
-              Subscribe now and lock in this price for good — it never rises while you stay subscribed.
-            </p>
+            <p className="mt-3 text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
           )}
           <p className="mt-3 text-center text-xs text-slate-600">
             <Link href="/premium" onClick={onClose} className="transition hover:text-slate-400 hover:underline">

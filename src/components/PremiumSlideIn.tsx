@@ -1,18 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/use-me";
-import { usePremiumDialog } from "./PremiumDialog";
-import { trackEvent } from "@/lib/analytics";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "@/lib/site";
+import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
+import {
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_PRICE_PERIOD,
+  PREMIUM_NEXT_PRICE_AMOUNT,
+  premiumPriceIncreaseAnnounced,
+  premiumLockInTail,
+} from "@/lib/site";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
-// at the funnel gap behind "the dialog converts well but few people open it".
-// The gated tools (Deal Finder, Value Finder, Bulk Pricer) already sell hard with
-// their own blur walls, but most logged-in free users never visit a tool page;
-// they browse prices. This puts one Premium moment in front of that browsing
-// majority, at a natural pause a few pages into a session.
+// at the funnel gap behind "most logged-in free users never see a Premium pitch
+// at all". The gated tools (Deal Finder, Value Finder, Bulk Pricer) already sell
+// hard with their own blur walls, but most logged-in free users never visit a
+// tool page; they browse prices. This puts one Premium moment in front of that
+// browsing majority, at a natural pause a few pages into a session. The CTA
+// used to open the site-wide upsell dialog; it now goes straight to /premium
+// (2026-09-06 — see accept()'s own comment), so this is purely a discovery
+// nudge, not a step toward a checkout flow that happens somewhere else.
 //
 // DELIBERATELY NOT A MODAL. It is a corner slide-in that never covers content,
 // never locks scroll, and yields to any real modal — it checks the shared
@@ -84,7 +92,7 @@ function readNum(store: Storage | undefined | null, key: string): number {
 
 export function PremiumSlideIn() {
   const { user, premium, premiumCheckout, trialEligible, trialDays, loaded } = useMe();
-  const { open: openPremium } = usePremiumDialog();
+  const router = useRouter();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
@@ -162,6 +170,7 @@ export function PremiumSlideIn() {
 
   const accept = useCallback(() => {
     trackEvent("premium_slidein_click", { trial_eligible: trialEligible });
+    firePremiumClickBeacon("button"); // used to fire inside the dialog's open() — see that helper's own header
     try {
       // Engaged, not rejected: a long snooze rather than a dismissal strike, so
       // not buying THIS time doesn't burn one of their two permanent no's.
@@ -170,8 +179,8 @@ export function PremiumSlideIn() {
       /* ignore */
     }
     hide();
-    openPremium(); // opens the shared dialog (which fires its own /api/premium/click beacon)
-  }, [hide, openPremium, trialEligible]);
+    router.push("/premium"); // straight to the page — no dialog in between (2026-09-06)
+  }, [hide, router, trialEligible]);
 
   // Esc closes it — non-trapping, because this is not a modal.
   useEffect(() => {
@@ -221,6 +230,16 @@ export function PremiumSlideIn() {
           <p className="text-xs leading-relaxed text-slate-400">
             You&apos;ve been comparing prices — Premium adds the pro tools and goes ad-free:
           </p>
+          {/* Same real, decided increase the dialog and /premium announce (see
+              lib/site.ts) — sized down for this card rather than the full
+              two-line banner, which would double the slide-in's height and cut
+              against its own "low-intrusion" design (see this file's header). */}
+          {premiumPriceIncreaseAnnounced() && (
+            <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
+              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              {PREMIUM_NEXT_PRICE_AMOUNT}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {PITCH_TOOLS.map((t) => (
               <span
@@ -248,8 +267,8 @@ export function PremiumSlideIn() {
           </div>
           {!trialEligible && PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-center text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} · locked in
-              for good, cancel anytime
+              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} ·{" "}
+              {premiumLockInTail()}
             </p>
           ) : null}
         </div>

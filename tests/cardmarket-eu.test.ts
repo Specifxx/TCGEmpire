@@ -38,6 +38,25 @@ test("the redisplay-licence confirmation stays documented, not silently assumed"
   assert.match(src, /use it however you see fit/i, "the actual confirmation wording must be quoted, not paraphrased away");
 });
 
+test("THE BUG: an empty-string override env var must not defeat the public-URL/rate defaults", () => {
+  // Found by actually running this in production (2026-09-04): GitHub Actions
+  // sets an env var to "" (not unset) when the ${{ vars.X }} behind it doesn't
+  // exist, so every CARDMARKET_*_URL resolved to "", readJson("") tried to
+  // open "" as a local file, and Cardmarket wrote zero rows on its first live
+  // run. `??` only falls through on null/undefined and does not catch "" — the
+  // fix is `||`, which does. Same failure mode hit CARDMARKET_EUR_TO_GBP:
+  // Number("") is 0, which would have silently zeroed every UK price once the
+  // URL bug was fixed. Pinned at the source level since these are module-load
+  // constants derived once from process.env, not something a runtime test can
+  // toggle after import.
+  const src = read("src/lib/cardmarket.ts");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_PRODUCTLIST_URL\s*\?\?/, "PRODUCTLIST_SINGLES_URL must use || , not ??");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_PRODUCTLIST_NONSINGLES_URL\s*\?\?/, "PRODUCTLIST_NONSINGLES_URL must use || , not ??");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_PRICEGUIDE_URL\s*\?\?/, "PRICEGUIDE_URL must use || , not ??");
+  assert.doesNotMatch(src, /process\.env\.CARDMARKET_EUR_TO_GBP\s*\?\?/, "EUR_TO_GBP must use || , not ??");
+  assert.match(src, /process\.env\.CARDMARKET_PRODUCTLIST_URL\s*\|\|/, "the working fallback pattern must actually be present");
+});
+
 test("it must never impersonate a browser to get past the block", () => {
   // The Cloudflare-guarded www.cardmarket.com is not what this module talks
   // to — see the header — but the discipline still applies: never disguise
@@ -70,10 +89,10 @@ const REAL_SINGLES: CardmarketProduct[] = [
 ];
 
 const OUR_CARDS = [
-  { id: "ogn-scorcher", setCode: "OGN", name: "Blazing Scorcher", nameNormalized: "blazing scorcher" },
-  { id: "ogn-buccaneer", setCode: "OGN", name: "Brazen Buccaneer", nameNormalized: "brazen buccaneer" },
-  { id: "ogn-r-fury-base", setCode: "OGN", name: "Fury Rune", nameNormalized: "fury rune" },
-  { id: "ogn-r-fury-alt", setCode: "OGN", name: "Fury Rune", nameNormalized: "fury rune" },
+  { id: "ogn-scorcher", setCode: "OGN", name: "Blazing Scorcher" },
+  { id: "ogn-buccaneer", setCode: "OGN", name: "Brazen Buccaneer" },
+  { id: "ogn-r-fury-base", setCode: "OGN", name: "Fury Rune" },
+  { id: "ogn-r-fury-alt", setCode: "OGN", name: "Fury Rune" },
 ];
 
 test("inferExpansionSetCodes maps a confident bucket and leaves a mixed/low-signal one unmapped", () => {
@@ -178,9 +197,9 @@ const APHELIOS_PRICES: CardmarketPriceEntry[] = [
   { idProduct: 867003, idCategory: 1655, low: 380, avg: 399.99, trend: 399.99 },
 ];
 const APHELIOS_CARDS: CardmarketRankableCard[] = [
-  { id: "sfd-aphelios-base", setCode: "SFD", name: "Aphelios, Exalted", nameNormalized: "aphelios exalted", collectorNumber: "045/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: false },
-  { id: "sfd-aphelios-over", setCode: "SFD", name: "Aphelios, Exalted", nameNormalized: "aphelios exalted", collectorNumber: "230/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: true },
-  { id: "sfd-aphelios-sig", setCode: "SFD", name: "Aphelios, Exalted", nameNormalized: "aphelios exalted", collectorNumber: "230*/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: false },
+  { id: "sfd-aphelios-base", setCode: "SFD", name: "Aphelios, Exalted", collectorNumber: "045/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: false },
+  { id: "sfd-aphelios-over", setCode: "SFD", name: "Aphelios, Exalted", collectorNumber: "230/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: true },
+  { id: "sfd-aphelios-sig", setCode: "SFD", name: "Aphelios, Exalted", collectorNumber: "230*/221", rarity: "Rare", variant: null, isPromo: false, isOvernumbered: false },
 ];
 
 test("REAL DATA: a genuine 3-print family is ranked, and the priciest slot lands on the rarest pool (Signature)", () => {
@@ -214,8 +233,8 @@ test("a family whose prices sit too close together is rejected — no confident 
     { idProduct: 2, idCategory: 1655, low: 15, avg: null, trend: null }, // only 1.5x — below RANK_MIN_STEP
   ];
   const closeCards: CardmarketRankableCard[] = [
-    { id: "close-base", setCode: "SFD", name: "Close Call Card", nameNormalized: "close call card", collectorNumber: "050/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
-    { id: "close-alt", setCode: "SFD", name: "Close Call Card", nameNormalized: "close call card", collectorNumber: "050a/221", rarity: "Showcase", variant: "a", isPromo: false, isOvernumbered: false },
+    { id: "close-base", setCode: "SFD", name: "Close Call Card", collectorNumber: "050/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
+    { id: "close-alt", setCode: "SFD", name: "Close Call Card", collectorNumber: "050a/221", rarity: "Showcase", variant: "a", isPromo: false, isOvernumbered: false },
   ];
   const m = buildCardmarketRankedRows(closeCards, closeProducts, closePrices);
   assert.equal(m.familiesConsidered, 1, "the sizes matched, so it was a candidate");
@@ -236,7 +255,7 @@ test("GATE 1: a family whose group sizes disagree between us and Cardmarket is n
     { idProduct: 2, idCategory: 1655, low: 100, avg: null, trend: null },
   ];
   const cards: CardmarketRankableCard[] = [
-    { id: "mismatched-only", setCode: "SFD", name: "Mismatched Card", nameNormalized: "mismatched card", collectorNumber: "060/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
+    { id: "mismatched-only", setCode: "SFD", name: "Mismatched Card", collectorNumber: "060/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
   ];
   const m = buildCardmarketRankedRows(cards, products, prices);
   assert.equal(m.familiesConsidered, 0, "a size mismatch never even becomes a candidate");
@@ -255,8 +274,8 @@ test("GATE 2: a promo among the candidates aborts the whole family rather than r
     { idProduct: 2, idCategory: 1655, low: 100, avg: null, trend: null },
   ];
   const cards: CardmarketRankableCard[] = [
-    { id: "promo-mixed-base", setCode: "SFD", name: "Promo Mixed Card", nameNormalized: "promo mixed card", collectorNumber: "070/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
-    { id: "promo-mixed-promo", setCode: "SFD", name: "Promo Mixed Card", nameNormalized: "promo mixed card", collectorNumber: "070/221", rarity: "Common", variant: null, isPromo: true, isOvernumbered: false },
+    { id: "promo-mixed-base", setCode: "SFD", name: "Promo Mixed Card", collectorNumber: "070/221", rarity: "Common", variant: null, isPromo: false, isOvernumbered: false },
+    { id: "promo-mixed-promo", setCode: "SFD", name: "Promo Mixed Card", collectorNumber: "070/221", rarity: "Common", variant: null, isPromo: true, isOvernumbered: false },
   ];
   const m = buildCardmarketRankedRows(cards, products, prices);
   assert.equal(m.familiesConsidered, 1, "sizes matched, so it reached the classification gate");
@@ -304,4 +323,31 @@ test("sealed: Cardmarket's 'RB Set' (bulk singles bundles) is never tracked as a
     { idProduct: 848215, idCategory: 1658, low: 5, avg: 5, trend: 5 },
   ]);
   assert.equal(m.rows.some((r) => r.title === "Origins: Common Set"), false, "an RB Set bundle is not a Riot-manufactured product");
+});
+
+// ── Regression: the real DB column shape, not a fixture that happens to agree ──
+// This is the exact bug class that shipped to production 2026-09-06: every real
+// import path (import-cards.ts, sync-cards.ts, etc.) writes Card.nameNormalized
+// via normalizeSearch() — compact, no separators ("blazingscorcher") — a
+// DIFFERENT shape from this file's own normName() ("blazing scorcher"). Every
+// fixture above only ever carried the normName() shape (or, after the fix, no
+// nameNormalized field at all), so a regression that started reading
+// `c.nameNormalized` again would pass every test above while failing in
+// production exactly as it did before. These fixtures carry the real, compact
+// shape on a field the builders must NEVER read, to prove that.
+const REAL_SHAPE_CARDS = [
+  { id: "ogn-scorcher", setCode: "OGN", name: "Blazing Scorcher", nameNormalized: "blazingscorcher" },
+  { id: "ogn-buccaneer", setCode: "OGN", name: "Brazen Buccaneer", nameNormalized: "brazenbuccaneer" },
+  { id: "ogn-r-fury-base", setCode: "OGN", name: "Fury Rune", nameNormalized: "furyrune" },
+  { id: "ogn-r-fury-alt", setCode: "OGN", name: "Fury Rune", nameNormalized: "furyrune" },
+];
+
+test("REGRESSION: matching works even when nameNormalized is in the real compact (normalizeSearch) shape", () => {
+  const prices: CardmarketPriceEntry[] = [
+    { idProduct: 845712, idCategory: 1655, low: 0.05, avg: 0.15, trend: 0.08 },
+  ];
+  const m = buildCardmarketRows(REAL_SHAPE_CARDS, REAL_SINGLES, prices);
+  const eu = m.rows.find((r) => r.retailer === CARDMARKET_EU_RETAILER && r.cardId === "ogn-scorcher");
+  assert.ok(eu, "must match by computing normName(name) fresh, never by reading a differently-shaped stored column");
+  assert.equal(m.expansionsMapped, 1, "the expansion must map even though the stray nameNormalized field is in the wrong shape");
 });

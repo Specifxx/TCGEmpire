@@ -31,46 +31,52 @@ set -uo pipefail
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
 #
-# CUT OVER TO RM6 ON 2026-09-03 (RM11 neared its 5 GB monthly transfer
-# allowance): this is no longer a rotation onto another fallback-chain member —
-# RM6 is the ONLY operational variable now (see the long note on
-# OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain shape itself, not
-# just the project, was the thing being replaced). RM6 is a RECYCLED project
-# (live once already, 2026-08-17..08-20), not a fresh one — its own allowance
-# had long since reset.
-CURRENT_OP="RM6"
-# Rotated again on 2026-09-04: RH6 neared its 5 GB monthly allowance after only
-# two days, and RH7 — a RECYCLED project, previously live 2026-08-04..08-16 and
-# orphaned since — took its place. Its own live migration guard confirmed User=0
-# immediately before truncating it (no separate probe-databases run preceded
-# this one, unlike the RH6 rotation before it). The chains are CURRENT-first,
-# not newest-first; see the long note on HISTORY_URL in src/lib/db-history.ts.
-CURRENT_HIST="RH7"
+# CUT OVER TO RM8 ON 2026-09-08 (RM7 neared its 5 GB monthly transfer
+# allowance after only about three days live): RM8 is the ONLY operational
+# variable now (see the long note on OPERATIONAL_VARS in src/lib/db-chains.ts
+# for why the chain stays a single name, not a fallback chain). RM8 is a
+# RECYCLED project (live once already, 2026-08-22..~08-23), not a fresh one —
+# its own allowance had long since reset, and a 2026-09-08 probe-databases run
+# confirmed its old window's data was already carried forward (see db-chains.ts).
+CURRENT_OP="RM8"
+# Rotated twice on 2026-09-06. RH7 exceeded its 5 GB monthly allowance after
+# only two days; with RH8-RH11 all unset in GitHub Actions at that moment, it
+# fell back to RH6 via the ADDITIVE `migrate-history` task (RH6 predates the
+# 2026-09-05 GLOBAL-history migration and held zero country="GLOBAL" rows on
+# its own, so this merged RH7's current GLOBAL series into it rather than
+# destructively overwriting RH6's older per-market archive). Hours later RH8
+# was re-added, and migrate-history-db-rh6-to-rh8 (a full pg_dump/restore,
+# row-count verified) moved history onto it — safe because that same additive
+# top-up had already folded RH8's own old rows into RH6, making RH6 a superset
+# of RH8's prior contents. See the long note on HISTORY_URL in
+# src/lib/db-history.ts and on HISTORY_VARS in src/lib/db-chains.ts for the
+# full account. The chains are CURRENT-first, not newest-first.
+CURRENT_HIST="RH8"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
 #
-# GATES ON RM6, not bare DATABASE_URL. The original check was
+# GATES ON RM8, not bare DATABASE_URL. The original check was
 # `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable, then widened as the chain grew
 # and narrowed back down here on 2026-08-23 when the chain was replaced by a
 # single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
 # why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM6:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM6) — skipping schema push."
+   || [ -z "${RM8:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM8) — skipping schema push."
   exit 0
 fi
 
-# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM6
+# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM8
 # must be copied into it or `prisma db push` would migrate whatever DATABASE_URL
-# happens to hold while the app (src/lib/db-chains.ts) reads RM6. A green deploy
+# happens to hold while the app (src/lib/db-chains.ts) reads RM8. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM6"
-SOURCE="RM6"
+export DATABASE_URL="$RM8"
+SOURCE="RM8"
 # Name the winner, never the value (it's a credential). There is only one
-# possible value now (the gate above already required RM6 to be set), but this
+# possible value now (the gate above already required RM8 to be set), but this
 # stays as the one line that answers "which database did this build actually
 # write to?" without anyone having to guess from a bare P1001 host.
 echo "[build-db-push] operational DB source for this build: $SOURCE"
@@ -88,16 +94,17 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${RH7:-}" ]; then
-  HIST="$RH7"; HIST_SOURCE="RH7"
+if [ -n "${RH8:-}" ]; then
+  HIST="$RH8"; HIST_SOURCE="RH8"
 elif [ -n "${RH6:-}" ]; then
-  # Rollback: served 2026-09-02 to 2026-09-04, reachable, near its allowance.
+  # Rollback: holds the same GLOBAL series as RH8 (folded in additively during
+  # the same day's earlier RH7 exhaustion), so it's a genuinely safe fallback.
   HIST="$RH6"; HIST_SOURCE="RH6"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. RH11, RH10, RH9, RH8, HISTORY_DATABASE_URL_4/
-  # _3/_2/bare were all superseded. RH5 is NOT a history project at all — it
-  # holds 85 User rows (see db-chains.ts).
+  # the push above already covered. RH7/RH11/RH10/RH9 are retired or unset;
+  # HISTORY_DATABASE_URL_4/_3/_2/bare were all superseded earlier. RH5 is
+  # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi
 

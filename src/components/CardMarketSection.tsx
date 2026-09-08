@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { OutboundLink } from "./OutboundLink";
 import { TcgMarketPrice } from "./TcgMarketPrice";
+import { CardmarketPrice } from "./CardmarketPrice";
 import { TcgplayerAd } from "./TcgplayerAd";
 import { EbayAd } from "./EbayAd";
 import { formatMoney, timeAgo } from "@/lib/format";
@@ -11,7 +12,7 @@ import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from 
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
-import { isFallbackRetailer, normaliseCondition, CONDITIONS } from "@/lib/constants";
+import { isFallbackRetailer, normaliseCondition, CONDITIONS, CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER } from "@/lib/constants";
 import { isPaidLink } from "@/lib/affiliate";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
@@ -312,6 +313,19 @@ export function CardPriceComparison({
     if (!src) return null;
     return { usdCents: std?.priceCents ?? null, usdCentsFoil: foil?.priceCents ?? null, href: src.buyHref };
   }, [rows, country]);
+  // Cardmarket reference price — same shape as the TCGplayer block above, but
+  // UK/EU only, and no currency conversion (the UK row is already GBP-converted
+  // and the EU row is already native EUR at write time — see lib/cardmarket.ts).
+  // Cardmarket is ALWAYS a fallback retailer (never natively shown in the table
+  // above), unlike TCGplayer, so there's no "already shown natively" suppression
+  // to check here.
+  const cardmarket = useMemo(() => {
+    const retailer = country === "UK" ? CARDMARKET_RETAILER : country === "EU" ? CARDMARKET_EU_RETAILER : null;
+    if (!retailer) return null;
+    const row = rows.find((r) => r.retailer === retailer && r.country === country);
+    if (!row) return null;
+    return { priceCents: row.priceCents, href: row.buyHref, isEu: country === "EU" };
+  }, [rows, country]);
   // Wall-clock-relative text ("updated 47m ago") is frozen in the ISR-cached HTML
   // and almost never matches the string recomputed at hydration — render it
   // client-only so it can't throw a hydration mismatch on every page view.
@@ -512,6 +526,17 @@ export function CardPriceComparison({
           buyable table so it still appears on cards with no local listings.
           disclosure=false: covered by the canonical disclosure above. */}
       {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
+
+      {/* Cardmarket reference price (UK/EU only) — see the `cardmarket` memo above.
+          Not an affiliate link, so no AffiliateDisclosure prop to suppress here. */}
+      {cardmarket && (
+        <CardmarketPrice
+          priceCents={cardmarket.priceCents}
+          currency={COUNTRIES[country].currency}
+          href={cardmarket.href}
+          isEu={cardmarket.isEu}
+        />
+      )}
 
       {/* eBay fallback — shown whenever this market has no live eBay row for the
           card, so a thin market is never a dead end. */}

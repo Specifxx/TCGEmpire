@@ -165,22 +165,24 @@ test("promo cards are excluded from byKey/bySetlessNum, the same way promo produ
   assert.ok(src.includes("isPromo: true"), "the cards query must select isPromo to be able to exclude promo cards");
   const loopAt = src.indexOf("for (const c of cards)");
   const byKeySetAt = src.indexOf("byKey.set(", loopAt);
-  const continueAt = src.indexOf("if (c.isPromo) continue;", loopAt);
-  assert.ok(loopAt >= 0 && byKeySetAt >= 0 && continueAt >= 0, "expected the cards loop, its byKey.set, and an isPromo skip");
-  assert.ok(continueAt < byKeySetAt, "the isPromo skip must run BEFORE byKey.set — after is worthless, the collision has already happened");
+  const ifPromoAt = src.indexOf("if (c.isPromo)", loopAt);
+  assert.ok(loopAt >= 0 && byKeySetAt >= 0 && ifPromoAt >= 0, "expected the cards loop, its byKey.set, and an isPromo branch");
+  assert.ok(ifPromoAt < byKeySetAt, "the isPromo branch must run BEFORE byKey.set — after is worthless, the collision has already happened");
+  const promoBranch = src.slice(ifPromoAt, byKeySetAt);
+  assert.match(promoBranch, /continue;/, "the isPromo branch must skip byKey/bySetlessNum, not fall through to it");
 });
 
-test("byExternal is still populated for a promo card BEFORE the isPromo skip", () => {
-  // The skip must land after byExternal.set(c.externalId, ...) — a promo card
+test("byExternal is still populated for a promo card BEFORE the isPromo branch skips it", () => {
+  // The branch must land after byExternal.set(c.externalId, ...) — a promo card
   // still needs to be reachable by its own externalId (either its own
   // "tcg-<productId>" link, or a PROMO_PRODUCT_OVERRIDES entry keyed to it);
   // skipping too early would silently make every promo card unpriceable.
   const src = readCode("src/lib/tcgplayer.ts");
   const loopAt = src.indexOf("for (const c of cards)");
   const byExternalSetAt = src.indexOf("byExternal.set(c.externalId", loopAt);
-  const continueAt = src.indexOf("if (c.isPromo) continue;", loopAt);
-  assert.ok(byExternalSetAt >= 0 && continueAt >= 0);
-  assert.ok(byExternalSetAt < continueAt, "byExternal must be populated before the isPromo skip, not after");
+  const ifPromoAt = src.indexOf("if (c.isPromo)", loopAt);
+  assert.ok(byExternalSetAt >= 0 && ifPromoAt >= 0);
+  assert.ok(byExternalSetAt < ifPromoAt, "byExternal must be populated before the isPromo branch, not after");
 });
 
 test("PROMO_PRODUCT_OVERRIDES seeds byExternal with the verified Teemo alt-art pin", () => {
@@ -218,4 +220,68 @@ test("PROMO_PRODUCT_OVERRIDES seeds byExternal with the verified Teemo alt-art p
   // "ordering matters" discipline as the incident above.
   const cardsLoopAt = src.indexOf("for (const c of cards)");
   assert.ok(cardsLoopAt >= 0 && cardsLoopAt < seedLoopAt, "the override-seeding loop must run after the cards loop, not before");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Immediate follow-up, same conversation: "no, we need tcgplayer prices even if
+// they have a risk of being wrong" — an explicit rejection of the fix above's
+// "no override → no price" tradeoff for the ~26 OTHER promo cards with no
+// verified PROMO_PRODUCT_OVERRIDES pin. Coverage now beats accuracy for promo
+// cards specifically: one with no price of its own clones whatever price its
+// base sibling (same setCode+collectorNumber) resolved to, rather than showing
+// nothing. Verified against a real Postgres locally with two scenarios: (1)
+// only the base product in the pull — the promo card gets the base card's
+// cloned price, and the base card keeps its own; (2) BOTH the base product and
+// the promo's own pinned product in the pull — the pin still wins, the clone
+// never overwrites a real match.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a promo card with no price of its own is recorded for the base-sibling fallback", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  const loopAt = src.indexOf("for (const c of cards)");
+  const ifPromoAt = src.indexOf("if (c.isPromo)", loopAt);
+  const byKeySetAt = src.indexOf("byKey.set(", loopAt);
+  assert.ok(loopAt >= 0 && ifPromoAt >= 0 && byKeySetAt >= 0);
+  const promoBranch = src.slice(ifPromoAt, byKeySetAt);
+  assert.match(promoBranch, /promoFallbackKeys\.push\(/, "the isPromo branch must record a fallback key for every promo card");
+});
+
+test("the fallback pass runs strictly after `best` is fully resolved, and before rows are built", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  const itemsLoopAt = src.indexOf("for (const p of items)");
+  const bestSetAt = src.indexOf("if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, p });");
+  const fallbackLoopAt = src.indexOf("for (const { cardId: promoId, key, setless } of promoFallbackKeys)");
+  const rowsAt = src.indexOf("const rows: Prisma.RetailerPriceCreateManyInput[] = [];");
+  assert.ok(itemsLoopAt >= 0 && bestSetAt >= 0 && fallbackLoopAt >= 0 && rowsAt >= 0);
+  assert.ok(itemsLoopAt < bestSetAt, "sanity: best.set must be inside the product-matching loop");
+  assert.ok(bestSetAt < fallbackLoopAt, "the fallback pass must run after the product-matching loop finishes resolving `best`, not interleaved with it");
+  assert.ok(fallbackLoopAt < rowsAt, "the fallback pass must run before rows are built from `best`");
+});
+
+test("the fallback never overwrites a promo card's own already-resolved price", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  const fallbackLoopAt = src.indexOf("for (const { cardId: promoId, key, setless } of promoFallbackKeys)");
+  assert.ok(fallbackLoopAt >= 0);
+  const body = src.slice(fallbackLoopAt, fallbackLoopAt + 700);
+  assert.match(
+    body,
+    /if \(best\.has\(promoSlot\)\) continue;/,
+    "a promo card with its own verified price (externalId link or PROMO_PRODUCT_OVERRIDES pin) must keep it, not have it replaced by a clone",
+  );
+});
+
+test("the fallback only READS byKey/bySetlessNum, and can never write a promo card into them", () => {
+  const src = readCode("src/lib/tcgplayer.ts");
+  const fallbackLoopAt = src.indexOf("for (const { cardId: promoId, key, setless } of promoFallbackKeys)");
+  assert.ok(fallbackLoopAt >= 0);
+  const body = src.slice(fallbackLoopAt, fallbackLoopAt + 700);
+  assert.match(
+    body,
+    /setless \? bySetlessNum\.get\(key\) : byKey\.get\(key\)/,
+    "must look up the base card's resolved price via the SAME keying its own base-sibling entry used",
+  );
+  assert.ok(
+    !/byKey\.set|bySetlessNum\.set/.test(body),
+    "the fallback pass must never write into byKey/bySetlessNum — that would reopen the exact base-card collision this file's earlier fix exists to prevent",
+  );
 });

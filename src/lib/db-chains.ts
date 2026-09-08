@@ -42,23 +42,39 @@
 /**
  * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM6 — the ONLY operational variable, in service since 2026-09-03. Unlike
- *        RM9/RM10/RM11 (each a freshly provisioned, genuinely empty project),
- *        this cutover deliberately RECYCLES RM6 — the account it was live on
- *        2026-08-17..08-20 before rotating to RM7 (see migrate-main-db-to-rm7's
- *        own note) — rather than provisioning a new RM12. Its own 5 GB monthly
- *        transfer allowance had long since reset, which is the whole point of
- *        reusing it. migrate-main-db-rm11-to-rm6 restored a row-count verified
- *        copy of RM11 (User 281, Card 1,429, RetailerPrice 90,721, and 32 other
- *        tables, every one matching exactly) over RM6's old snapshot — which
- *        held User=186 before the wipe: real data, but months stale against
- *        RM11's current state, and gone once the restore's `pg_restore --clean`
- *        dropped and recreated every table from the RM11 dump.
- *        Like RM11, RM10 and RM9 before it, RM6 is a SINGLE name, not a
- *        chain — a deliberate departure from the RM3 through RM8 era, when
- *        each was a FALLBACK CHAIN (CURRENT-first, falling through to older,
- *        often exhausted projects), and every real outage this database has
- *        had traced back to that shape, not to the database itself.
+ *   RM8 — the ONLY operational variable, in service since 2026-09-08. RM7
+ *        (live only since 2026-09-05) neared its own 5 GB monthly transfer
+ *        allowance after about three days — the same ~2 GB/day burn every
+ *        prior project has shown. This cutover RECYCLES RM8 — the account it
+ *        was live on 2026-08-22..~08-23, before RM9 replaced it once RM8's OWN
+ *        allowance ran out — rather than provisioning a new RM12.
+ *
+ *        UNLIKE AN UNCHECKED RECYCLE, RM8's old contents were verified fresh,
+ *        not assumed from the 2026-08-23-era precedent (this file's own rule:
+ *        a recycled target must be re-verified each time it comes back around,
+ *        never trusted from old findings). A 2026-09-08 probe-databases run
+ *        answered whether RM8's old data had ever been carried forward with
+ *        row counts, not a guess:
+ *          RM8 (died)  User=190  PriceAlert=30   CollectionCard=634
+ *          RM9         User=209  PriceAlert=40   CollectionCard=634
+ *          RM10        User=238  PriceAlert=114  CollectionCard=702
+ *          RM11        User=281  PriceAlert=131  CollectionCard=1029
+ *          RM6         User=298  PriceAlert=158  CollectionCard=1160
+ *          RM7 (live)  User=307  PriceAlert=158  CollectionCard=1163
+ *        Every metric climbs monotonically from RM8 through to RM7 — the
+ *        signature of data that was carried forward and grew normally, not an
+ *        orphaned last copy. So migrate-main-db-rm7-to-rm8 restored a
+ *        row-count verified copy of RM7 (User 308, Card 1,429, RetailerPrice
+ *        89,877, and 34 other tables, every one matching exactly) over it,
+ *        `pg_restore --clean` dropping and recreating every table from the RM7
+ *        dump.
+ *
+ *        Like RM7, RM6, RM11, RM10 and RM9 before it, RM8 is a SINGLE name,
+ *        not a chain — a deliberate departure from the RM3 through RM8 era
+ *        (its FIRST term), when each was a FALLBACK CHAIN (CURRENT-first,
+ *        falling through to older, often exhausted projects), and every real
+ *        outage this database has had traced back to that shape, not to the
+ *        database itself.
  *
  * ── WHY THIS IS ONE NAME NOW, NOT ANOTHER CHAIN ──────────────────────────────
  * resolveVar() below selects the first variable that is merely SET — precedence,
@@ -66,67 +82,85 @@
  * error, it silently demotes every read to a stale or empty fallback, and ~84
  * `.catch(() => [])` sites across src/ turn that into missing data rather than
  * an error page (see the 2026-08-22 outage this comment used to describe in
- * detail — RM7 exhausted its transfer allowance, the "rollback" RM8 turned out
- * to be reachable and completely empty because the migration that fills a
- * fallback had never been run, and the site showed no in-stock listings for
- * hours before anyone thought to suspect the database). A single name can still
- * fail, but it fails LOUDLY — P1001, not silence — which is the trade this
- * project now makes deliberately: no emergency fallback lever, but no more
+ * detail — RM7 exhausted its transfer allowance that time, the "rollback" RM8
+ * turned out to be reachable and completely empty because the migration that
+ * fills a fallback had never been run, and the site showed no in-stock listings
+ * for hours before anyone thought to suspect the database). A single name can
+ * still fail, but it fails LOUDLY — P1001, not silence — which is the trade
+ * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
- * RM3 through RM11 (bar RM6 itself) and DATABASE_URL_2 are retired and stay out
+ * RM3 through RM11 (bar RM8 itself) and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm11-to-rm6 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm7-to-rm8 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM6"] as const;
+export const OPERATIONAL_VARS = ["RM8"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   RH7                    — in service since 2026-09-04. RH6 lasted only two
- *                            days before nearing its own 5 GB monthly transfer
- *                            allowance, so history rotates again. Unlike RH8
- *                            through RH11 (each a freshly provisioned, genuinely
- *                            empty project), this cutover deliberately RECYCLES
- *                            RH7 — the account it retired from on 2026-08-16 and
- *                            had sat ORPHANED ever since (0% of its card ids
- *                            resolved against the live catalogue — a stale,
- *                            pre-rebuild Card table, not a health problem).
- *                            Unlike the RH6 rotation two days earlier, no
- *                            separate probe-databases run preceded this one:
- *                            migrate-history-db-rh6-to-rh7's own live guard was
- *                            the only check, and it printed `Target public.
- *                            "User" rows: 0` immediately before truncating —
- *                            RH7's pre-truncate contents (Card 1,431,
- *                            ClickEvent 0, PriceHistory 45,067) were exactly the
- *                            orphaned leftovers db-chains.ts already expected,
- *                            not a surprise. No drain-forward top-up was needed
- *                            first (unlike RH6's own cutover): those orphaned
- *                            rows are keyed to card ids from before a catalogue
- *                            rebuild, unusable regardless of where they sit, so
- *                            nothing of value would have been lost either way.
- *                            migrate-history-db-rh6-to-rh7 then restored a
- *                            row-count verified copy of RH6 (Card 1,434,
- *                            ClickEvent 698, PriceHistory 341,824 — every one
- *                            matching source exactly).
- *   RH6                    — the rollback: served 2026-09-02 to 2026-09-04 and
- *                            holds every row written in that window. Near its
- *                            5 GB transfer allowance, which is why this rotation
- *                            happened, but still reachable. Only ever selected if
- *                            RH7 is UNSET — a safety net for a missing secret, not
- *                            a health check, so a slow-but-present RH7 never
- *                            silently demotes to it (resolveVar is precedence,
+ *   RH8                    — in service since 2026-09-06, hours after RH6 (see
+ *                            below) — RH8 had been entirely removed from Vercel
+ *                            and GitHub Actions since its own 2026-08-23..08-25
+ *                            term (a same-day probe-history run had reported it
+ *                            `NOT SET`, not merely unreachable), then was
+ *                            re-added, which is what makes this cutover possible
+ *                            at all.
+ *
+ *                            RH6 WAS ONLY ITS PREDECESSOR FOR HOURS. Earlier the
+ *                            same day, RH7 (in service since 2026-09-04) exceeded
+ *                            its own 5 GB monthly transfer allowance, and with
+ *                            RH8-RH11 all unset at that moment, history fell back
+ *                            to RH6 — the immediately preceding project — via the
+ *                            ADDITIVE `migrate-history` task (skipDuplicates on
+ *                            [cardId, country, day]), which folded RH7's current
+ *                            country="GLOBAL" series (see below) into RH6
+ *                            without touching RH6's own older per-market rows.
+ *                            Once RH8 came back, migrate-history-db-rh6-to-rh8
+ *                            (.github/workflows/maintenance.yml) did a full
+ *                            pg_dump/restore of RH6 — by then already a superset
+ *                            of RH8's own prior term, since that same additive
+ *                            top-up had pulled RH8's old rows into RH6 too —
+ *                            over RH8, verified row-for-row.
+ *
+ *                            THE PART THAT MADE THE RH6 STEP NON-TRIVIAL, AND
+ *                            STILL MATTERS HERE: 2026-09-05 shipped a SEPARATE
+ *                            migration (scripts/backfill-global-history.ts,
+ *                            price-import.ts) collapsing every market's
+ *                            PriceHistory rows into one country="GLOBAL" row per
+ *                            card per day — historySource() in price-history.ts
+ *                            now ALWAYS reads country=GLOBAL, unconditionally.
+ *                            RH8's OWN last term (2026-08-23..08-25) predates
+ *                            that migration and held zero GLOBAL rows on its
+ *                            own; the pg_dump/restore from RH6 is what actually
+ *                            carries the GLOBAL series onto RH8 here — RH8 was
+ *                            never populated with GLOBAL rows any other way.
+ *   RH6                    — the rollback: served 2026-09-02..09-04, then again
+ *                            2026-09-06 for a few hours as the RH7-exhaustion
+ *                            fallback (see above) — reachable and, as of that
+ *                            second stint, ALSO holds the GLOBAL series (folded
+ *                            in additively), so it remains a genuinely safe
+ *                            rollback rather than the pre-GLOBAL trap RH6 was
+ *                            the first time this comment described it. Only ever
+ *                            selected if RH8 is UNSET — a safety net for a
+ *                            missing secret, not a health check, so a
+ *                            near-exhausted-but-present RH8 never masks a
+ *                            genuinely missing RH6 (resolveVar is precedence,
  *                            never health; see OPERATIONAL_VARS above for the
  *                            outage that shape caused on the operational side).
  *   DATABASE_URL           — the terminal case, meaning "no separate history
  *                            project is configured; history shares the
  *                            operational database". db-history.ts's
  *                            historyIsSplit depends on this staying last.
+ *
+ * RH7 DROPS OUT OF THIS CUTOVER (it was RH6's own rollback for its few-hours
+ * stint, and a chain only needs one) — still reachable, still over its transfer
+ * allowance, available to migration tasks by explicit name if ever needed again.
  *
  * RH5 IS DELIBERATELY ABSENT, and not because it is orphaned. The 2026-08-23
  * probe found it holding User=85, CollectionCard=374, Order=4,
@@ -138,11 +172,18 @@ export const OPERATIONAL_VARS = ["RM6"] as const;
  * is also one of the account-recovery sources probe-databases exists to find, so
  * it should be left intact rather than reused.
  *
- * RH11 drops out of this cutover (it was RH6's rollback the rotation before, and
- * a chain only needs one). RH10, RH9, RH8, HISTORY_DATABASE_URL_4/_3,
- * HISTORY_DATABASE_URL (bare) and _2 were superseded earlier.
+ * RH9 THROUGH RH11 STAY OUT OF THIS CHAIN for the same reason RH8 was absent
+ * hours earlier: a 2026-09-06 probe-history run found them REACHABLE again too
+ * (re-added alongside RH8, apparently), but nothing has asked to cut over onto
+ * any of them, and this file's own "ONLY LIVE PROJECTS BELONG IN A RUNTIME
+ * CHAIN" rule means being reachable is not enough on its own to earn a chain
+ * slot. If a future rotation targets one, treat it as a fresh candidate
+ * requiring the same live guard every recycled target gets — do not assume the
+ * OLD RH9-RH11 findings (documented in earlier git history) still hold.
+ * HISTORY_DATABASE_URL_4/_3, HISTORY_DATABASE_URL (bare) and _2 were superseded
+ * earlier still.
  */
-export const HISTORY_VARS = ["RH7", "RH6", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["RH8", "RH6", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {
