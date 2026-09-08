@@ -125,6 +125,27 @@
     ],
     "fingerprint": "1deb105805dc2947"
   },
+  "/blog/gradient-sleeves-for-riftbound-cards.png": {
+    "src": "/blog/gradient-sleeves-for-riftbound-cards.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 44122,
+    "webp": "/blog/gradient-sleeves-for-riftbound-cards.webp",
+    "webpBytes": 28078,
+    "avif": "/blog/gradient-sleeves-for-riftbound-cards.avif",
+    "avifBytes": 17333,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/gradient-sleeves-for-riftbound-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/gradient-sleeves-for-riftbound-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "093b3e8bf20ce340"
+  },
   "/blog/how-to-choose-a-riftbound-marketplace.png": {
     "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
     "width": 1200,
@@ -472,6 +493,27 @@
       }
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
+  },
+  "/blog/riftbound-radiance-leaked-mechanics.png": {
+    "src": "/blog/riftbound-radiance-leaked-mechanics.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43090,
+    "webp": "/blog/riftbound-radiance-leaked-mechanics.webp",
+    "webpBytes": 31996,
+    "avif": "/blog/riftbound-radiance-leaked-mechanics.avif",
+    "avifBytes": 19297,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-radiance-leaked-mechanics-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-radiance-leaked-mechanics-768w.webp"
+      }
+    ],
+    "fingerprint": "bc83d146b5c75ee3"
   },
   "/blog/riftbound-radiance-what-we-know.png": {
     "src": "/blog/riftbound-radiance-what-we-know.png",
