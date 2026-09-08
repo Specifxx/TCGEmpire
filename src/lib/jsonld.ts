@@ -82,9 +82,24 @@ export function faqPage(faqs: { q: string; a: string }[]) {
   };
 }
 
+/**
+ * Escapes `<` so a `</script>` (or any other tag) sequence inside interpolated
+ * data can never close the JSON-LD script block early and get parsed as HTML.
+ * Every current field feeding JSON-LD is DB/editorial-controlled, not raw user
+ * input, so this has never fired in practice — but `dangerouslySetInnerHTML`
+ * gives no other safety net, and a card/store name is exactly the kind of
+ * string that could contain `<` one day without anyone deciding it should be
+ * exempt from this. `<` is the standard escape for this (same one
+ * Next.js's own docs recommend for JSON-LD): valid inside a JSON string, and
+ * a browser's HTML parser never treats it as a real `<`.
+ */
+function scriptSafe(json: string): string {
+  return json.replace(/</g, "\\u003c");
+}
+
 /** Convenience: serialise one or more JSON-LD nodes for dangerouslySetInnerHTML,
  *  dropping nulls so `faqPage(...)` can be passed straight in. */
 export function ldJson(...nodes: (object | null | undefined)[]): string {
   const kept = nodes.filter(Boolean);
-  return JSON.stringify(kept.length === 1 ? kept[0] : kept);
+  return scriptSafe(JSON.stringify(kept.length === 1 ? kept[0] : kept));
 }
