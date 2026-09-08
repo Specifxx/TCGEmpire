@@ -147,13 +147,13 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM7 is the ONLY operational variable (cut over 2026-09-05, RM6 neared its
-      # limit after only about two days live — same single-name shape, no
+      # RM8 is the ONLY operational variable (cut over 2026-09-08, RM7 neared its
+      # limit after only about three days live — same single-name shape, no
       # fallback chain; see the header of OPERATIONAL_VARS in
       # src/lib/db-chains.ts for why the chain shape itself was retired, not
       # just rotated). That file is the source of truth here, and
-      # tests/db-chain.test.ts pins this value to it. RM7 is a RECYCLED project
-      # (live once already, 2026-08-20..~08-23), not a fresh one — a 2026-09-05
+      # tests/db-chain.test.ts pins this value to it. RM8 is a RECYCLED project
+      # (live once already, 2026-08-22..~08-23), not a fresh one — a 2026-09-08
       # probe-databases run confirmed its old window's data was already carried
       # forward before this rotation reused it (see db-chains.ts).
       #
@@ -166,12 +166,12 @@ jobs:
       # operate against a still-empty target. This is not hypothetical: on
       # 2026-08-22 RM8 was set but completely empty at cutover, and every
       # in-stock listing on the site vanished as a result.
-      DATABASE_URL: ${{ secrets.RM7 || vars.RM7 }}
+      DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM7 || vars.RM7) && 'RM7' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
