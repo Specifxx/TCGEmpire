@@ -366,3 +366,66 @@ export const PENDING_EU_STORES: PendingEuStoreCandidate[] = [
   { name: "Collect-it.de", base: "https://www.collect-it.de", country: "DE", platform: "unknown", evidence: "search", note: "Has an 'Einzelkarten' (singles) subcategory under Riftbound — never confirmed populated." },
   { name: "Mayener Fantasyland", base: "https://mayener-fantasyland.de", country: "DE", platform: "unknown", evidence: "search" },
 ];
+
+// ── The AU/US/UK/CA registry sweep's platform decision (2026-09-09) ──────────
+// scripts/sweep-registry.ts checked 2,227 untracked AU/US/UK/CA registry
+// domains and, alongside the 55 new Shopify stores it found, fingerprinted
+// every rejected non-Shopify store's platform. Combined across all four
+// markets, of the stores that clearly mention Riftbound: "other"
+// (unidentified) 231, squarespace 86, wix 81, magento 74, bigcommerce 13,
+// crystal-commerce 6 (excluded per standing policy — see PENDING_US_STORES'
+// header above), ecwid 2 (below any reasonable adapter threshold). Full
+// per-store platform verdicts: scratch/sweep-registry.json.
+//
+// DECISION: NO NEW ADAPTER THIS PASS. The two platforms large enough to
+// justify one were each live-tested on 3+ real stores from the sweep and
+// disqualified on hard evidence, not assumption — exactly the standard this
+// file already holds Crystal Commerce and CoolStuffInc to:
+//
+//   * SQUARESPACE (86 stores, the largest real candidate) — disqualified on
+//     PERMISSION, not feasibility. Squarespace's own PLATFORM-DEFAULT
+//     robots.txt (confirmed identical across four independently-checked
+//     stores: cardhalla.com, cardhousegaming.co, battleandbrew.com,
+//     3arrowsgames.com) explicitly disallows the one technique that would
+//     work — `Disallow: /*?format=json` and `/*&format=json` under the
+//     `User-agent: *` group, i.e. every crawler, not just AI bots. This is
+//     not a per-merchant customisation to work around; it is what
+//     Squarespace itself ships on every store using its default robots.txt.
+//     Same bar as Star City Games' explicit anti-scraping clause elsewhere
+//     in this file: an explicit prohibition is not "not clearly prohibited."
+//   * MAGENTO (74 stores) — disqualified on RELIABILITY, and the count
+//     itself is suspect. The sweep's detector (a loose `mage\.|/static/version`
+//     regex) has real false positives: afk.games rendered plain WordPress
+//     HTML, not Magento, on a direct fetch. Of the stores that plausibly are
+//     real Magento, none tested (619collectables.com, bastiongames.ca)
+//     exposed the platform's own public storefront GraphQL cleanly —
+//     405 "Method Not Allowed" on one, a redirect loop back to the same 405
+//     on the other, and beyondcomics.com served a bot-detection captcha
+//     page instead of a response at all. A generic adapter built on a count
+//     this contaminated and a live surface this inconsistent would be
+//     exactly the "platform adapter with zero verified implementations
+//     behind it" this file already warns against — guesswork, not progress.
+//   * BIGCOMMERCE (13 stores) — confirmed disqualified as suspected: its
+//     GraphQL Storefront API needs a per-store token embedded in each page
+//     render, not a generic endpoint (a guessed path returned the store's
+//     own 404 page on atlantishobby.com and beckettcastletcg.com). The only
+//     generic per-store signal is JSON-LD on individual PRODUCT pages, which
+//     fails the request-budget bar on its own (one request per product,
+//     against Shopify's one request per ~250-product page).
+//   * WIX (81 stores) — no disqualifying policy found (robots.txt is a
+//     normal `Allow: /`, unlike Squarespace's), but no generic public bulk
+//     product feed either: two stores checked (95gamecenter.com,
+//     agcollectibles.com) exposed neither an embedded Wix-commerce data
+//     blob nor a product/shop sitemap entry on a direct fetch. Wix's real
+//     storefront data lives behind a per-site, per-instance internal API,
+//     which would mean reverse-engineering bespoke per-store plumbing
+//     rather than writing one adapter — the opposite of what made the
+//     WooCommerce adapter (lib/woocommerce.ts) worth building.
+//
+// What would change this: a Squarespace merchant who explicitly grants
+// permission to read `?format=json` (the La Tienda Scum precedent for
+// PrestaShop, above) would unblock the largest bucket immediately, since
+// the technical read is already fully understood. Absent that, re-run
+// `npx tsx scripts/sweep-registry.ts` after fixing the Magento detector
+// (require an actual Magento marker — `Magento_Ui`, `requirejs-config`,
+// `Mage.Cookies` — not just a loose regex) before trusting that count again.

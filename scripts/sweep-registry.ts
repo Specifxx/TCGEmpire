@@ -271,7 +271,13 @@ async function detectPlatform(base: string): Promise<{ platform: Platform; final
   if (/bigcommerce|stencil-utils/i.test(lower)) return { platform: "bigcommerce", finalHost, riftboundMentioned };
   if (/wix\.com|wixstatic/i.test(lower)) return { platform: "wix", finalHost, riftboundMentioned };
   if (/squarespace/i.test(lower)) return { platform: "squarespace", finalHost, riftboundMentioned };
-  if (/mage\.|\/static\/version/i.test(body)) return { platform: "magento", finalHost, riftboundMentioned };
+  // Require an actual Magento-specific marker, not a bare "/static/version"
+  // path — that alone is a common generic cache-busting convention plenty of
+  // non-Magento sites also use, and matching on it alone produced real false
+  // positives (afk.games rendered plain WordPress HTML). Magento_Ui,
+  // requirejs-config and Mage.Cookies are the platform's own JS module/cookie
+  // names, not something another stack would coincidentally emit.
+  if (/Magento_Ui|requirejs-config|Mage\.Cookies|Magento_Theme/i.test(body)) return { platform: "magento", finalHost, riftboundMentioned };
   if (/prestashop/i.test(lower)) return { platform: "prestashop", finalHost, riftboundMentioned };
   if (/shopware/i.test(lower)) return { platform: "shopware", finalHost, riftboundMentioned };
   if (/ecwid/i.test(lower)) return { platform: "ecwid", finalHost, riftboundMentioned };
