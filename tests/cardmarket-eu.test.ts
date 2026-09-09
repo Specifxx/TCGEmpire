@@ -7,7 +7,9 @@ import {
   buildCardmarketRows,
   buildCardmarketRankedRows,
   buildCardmarketSealedRows,
+  dedupeRetailerPriceRows,
   inferExpansionSetCodes,
+  primaryFirst,
   isCardmarketEnabled,
   isCardmarketRankingEnabled,
   EUR_TO_GBP,
@@ -350,4 +352,135 @@ test("REGRESSION: matching works even when nameNormalized is in the real compact
   const eu = m.rows.find((r) => r.retailer === CARDMARKET_EU_RETAILER && r.cardId === "ogn-scorcher");
   assert.ok(eu, "must match by computing normName(name) fresh, never by reading a differently-shaped stored column");
   assert.equal(m.expansionsMapped, 1, "the expansion must map even though the stray nameNormalized field is in the wrong shape");
+});
+
+// ── One set, several expansions: the duplicate-key write failure ─────────────
+// THE REAL CASE (live data, 2026-09-09; see lib/cardmarket.ts's header "ONE
+// SET, SEVERAL EXPANSIONS"): Cardmarket carries "Lillia, Protector of Dreams"
+// as a two-print family in BOTH expansion 6491 (Unleashed's main bucket) and
+// expansion 6567 (a 33-product side bucket of Unleashed names), and both
+// families clear every ranking gate on their own. Once inferExpansionSetCodes
+// maps both buckets to UNL — which it does, and should — the ranked pass built
+// two rows per card per retailer, createMany hit the (cardId, retailer,
+// condition, isFoil) unique key with Prisma P2002, and the WHOLE run's rows
+// (1,780 of them in production) were thrown away after deleteMany had already
+// emptied the table. That is why the site showed no Cardmarket prices or
+// links at all despite the import log reporting hundreds of matches.
+//
+// The idProduct/idExpansion/price values below are the genuine ones observed;
+// the filler names give 6567 enough UNL overlap to map with confidence, the
+// same way it does against the real catalogue.
+const LILLIA_MAIN: CardmarketProduct[] = [
+  { idProduct: 884022, name: "Lillia, Protector of Dreams", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6491, idMetacard: 462224, dateAdded: "2026-04-17 14:14:20" },
+  { idProduct: 884023, name: "Lillia, Protector of Dreams", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6491, idMetacard: 462224, dateAdded: "2026-04-17 14:14:35" },
+];
+const LILLIA_SIDE: CardmarketProduct[] = [
+  { idProduct: 890062, name: "Lillia, Protector of Dreams", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6567, idMetacard: 462224, dateAdded: "2026-05-29 14:59:14" },
+  { idProduct: 890063, name: "Lillia, Protector of Dreams", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6567, idMetacard: 462224, dateAdded: "2026-05-29 15:24:05" },
+];
+const LILLIA_PRICES: CardmarketPriceEntry[] = [
+  { idProduct: 884022, idCategory: 1655, low: 0.45, avg: 0.9, trend: 1.11 },
+  { idProduct: 884023, idCategory: 1655, low: 2, avg: 3.5, trend: 4.82 },
+  { idProduct: 890062, idCategory: 1655, low: 1.9, avg: 2.5, trend: 3.02 },
+  { idProduct: 890063, idCategory: 1655, low: 50, avg: 50, trend: 49.97 },
+];
+// Filler: single-print names present in both buckets so each maps to UNL on
+// its own merits (the main bucket with more of them, so it is the primary).
+const fillerNames = ["Arena Kingpin", "Inferna", "Mischievous Marai", "Prepared Neophyte", "Scorchclaw", "Soul Sword"];
+const filler = (idExpansion: number, names: string[], idBase: number): CardmarketProduct[] =>
+  names.map((name, i) => ({ idProduct: idBase + i, name, idCategory: 1655, categoryName: "Riftbound Single", idExpansion, idMetacard: idBase + i, dateAdded: "2026-04-17" }));
+const UNL_TWO_BUCKETS: CardmarketProduct[] = [
+  ...LILLIA_MAIN, ...filler(6491, fillerNames, 700_000),
+  ...LILLIA_SIDE, ...filler(6567, fillerNames.slice(0, 3), 710_000),
+];
+const UNL_CARDS: CardmarketRankableCard[] = [
+  { id: "unl-lillia-base", setCode: "UNL", name: "Lillia, Protector of Dreams", collectorNumber: "104/298", rarity: "Epic", variant: null, isPromo: false, isOvernumbered: false },
+  { id: "unl-lillia-alt", setCode: "UNL", name: "Lillia, Protector of Dreams", collectorNumber: "104a/298", rarity: "Epic", variant: "a", isPromo: false, isOvernumbered: false },
+  ...fillerNames.map((name, i) => ({ id: `unl-filler-${i}`, setCode: "UNL", name, collectorNumber: `${200 + i}/298`, rarity: "Common", variant: null, isPromo: false, isOvernumbered: false })),
+];
+const uniqueKey = (r: { cardId: string; retailer: string; condition?: string | null; isFoil?: boolean | null }) =>
+  `${r.cardId}|${r.retailer}|${r.condition ?? ""}|${r.isFoil ? 1 : 0}`;
+
+test("THE WRITE FAILURE: two expansions mapped to one set must never yield two rows for the same card", () => {
+  // Precondition — this only means anything if both buckets really do map to UNL.
+  const ourNamesBySet = new Map<string, Set<string>>();
+  for (const c of UNL_CARDS) {
+    const s = ourNamesBySet.get(c.setCode) ?? new Set<string>();
+    s.add(c.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim());
+    ourNamesBySet.set(c.setCode, s);
+  }
+  const mapped = inferExpansionSetCodes(UNL_TWO_BUCKETS, ourNamesBySet).map((m) => `${m.idExpansion}:${m.setCode}`).sort();
+  assert.deepEqual(mapped, ["6491:UNL", "6567:UNL"], "both the main and the side bucket must map to UNL for this to be the real case");
+
+  const ranked = buildCardmarketRankedRows(UNL_CARDS, UNL_TWO_BUCKETS, LILLIA_PRICES);
+  const keys = ranked.rows.map(uniqueKey);
+  assert.equal(new Set(keys).size, keys.length, `ranked rows must be unique on the RetailerPrice key — got ${keys.join(", ")}`);
+  assert.equal(ranked.familiesRanked, 1, "one Lillia family ranked, the side bucket's copy skipped, not a second ranking");
+
+  // And it is the MAIN bucket's family that survives: the €0.45/€2.00 prints
+  // are the set's own; the €1.90/€50 pair in 6567 is a different product.
+  const baseEu = ranked.rows.find((r) => r.cardId === "unl-lillia-base" && r.retailer === CARDMARKET_EU_RETAILER);
+  const altEu = ranked.rows.find((r) => r.cardId === "unl-lillia-alt" && r.retailer === CARDMARKET_EU_RETAILER);
+  assert.equal(baseEu?.priceCents, 45, "base Lillia must carry the primary expansion's cheapest print (€0.45)");
+  assert.equal(altEu?.priceCents, 200, "alt Lillia must carry the primary expansion's pricier print (€2.00), not 6567's €50");
+  assert.match(baseEu!.url, /idProduct=884022$/, "the link must point at the primary expansion's product");
+
+  // The strict pass is covered by the same ordering: the filler names exist in
+  // both buckets, and each card must still get exactly one row per retailer,
+  // from the primary (6491) product.
+  const strict = buildCardmarketRows(UNL_CARDS, UNL_TWO_BUCKETS, [
+    ...LILLIA_PRICES,
+    ...fillerNames.map((_, i) => ({ idProduct: 700_000 + i, idCategory: 1655, low: 0.1, avg: null, trend: null })),
+    ...fillerNames.slice(0, 3).map((_, i) => ({ idProduct: 710_000 + i, idCategory: 1655, low: 0.01, avg: null, trend: null })),
+  ]);
+  const strictKeys = strict.rows.map(uniqueKey);
+  assert.equal(new Set(strictKeys).size, strictKeys.length, "strict rows must be unique on the RetailerPrice key too");
+  const kingpin = strict.rows.find((r) => r.cardId === "unl-filler-0" && r.retailer === CARDMARKET_EU_RETAILER);
+  assert.match(kingpin!.url, /idProduct=700000$/, "the primary expansion's product wins over the side bucket's cheaper copy");
+
+  // The two passes never overlap on a card, whichever order the products came in.
+  const combined = dedupeRetailerPriceRows([...strict.rows, ...ranked.rows]);
+  assert.equal(combined.dropped.length, 0, "strict + ranked output must already be disjoint by key");
+});
+
+test("primaryFirst puts each set's largest mapped expansion before its side buckets and leaves unmapped ones last", () => {
+  const products: CardmarketProduct[] = [
+    { idProduct: 3, name: "c", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 9999, idMetacard: 3, dateAdded: "2026-01-01" }, // unmapped
+    { idProduct: 1, name: "a", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6567, idMetacard: 1, dateAdded: "2026-01-01" }, // side
+    { idProduct: 2, name: "b", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6491, idMetacard: 2, dateAdded: "2026-01-01" }, // main
+    { idProduct: 4, name: "d", idCategory: 1655, categoryName: "Riftbound Single", idExpansion: 6491, idMetacard: 4, dateAdded: "2026-01-01" }, // main, later in file
+  ];
+  const mappings = [
+    { idExpansion: 6491, setCode: "UNL", confidence: 0.97, sampleSize: 238 },
+    { idExpansion: 6567, setCode: "UNL", confidence: 0.85, sampleSize: 33 },
+  ];
+  assert.deepEqual(primaryFirst(products, mappings).map((p) => p.idProduct), [2, 4, 1, 3]);
+  assert.deepEqual(products.map((p) => p.idProduct), [3, 1, 2, 4], "the input must not be mutated");
+});
+
+test("dedupeRetailerPriceRows keeps the first row per (cardId, retailer, condition, isFoil) and reports what it dropped", () => {
+  const row = (cardId: string, retailer: string, priceCents: number, isFoil = false) =>
+    ({ cardId, retailer, retailerName: "Cardmarket", title: "t", url: "u", condition: "NM", isFoil, inStock: true, priceCents, currency: "EUR", country: "EU" });
+  const { rows, dropped } = dedupeRetailerPriceRows([
+    row("a", CARDMARKET_EU_RETAILER, 100),
+    row("a", CARDMARKET_RETAILER, 86),
+    row("a", CARDMARKET_EU_RETAILER, 999), // duplicate key — dropped, first wins
+    row("a", CARDMARKET_EU_RETAILER, 50, true), // different isFoil — a different key, kept
+    row("b", CARDMARKET_EU_RETAILER, 1),
+  ]);
+  assert.deepEqual(rows.map((r) => [r.cardId, r.retailer, r.priceCents, r.isFoil]), [
+    ["a", CARDMARKET_EU_RETAILER, 100, false],
+    ["a", CARDMARKET_RETAILER, 86, false],
+    ["a", CARDMARKET_EU_RETAILER, 50, true],
+    ["b", CARDMARKET_EU_RETAILER, 1, false],
+  ]);
+  assert.equal(dropped.length, 1);
+  assert.equal(dropped[0].priceCents, 999);
+});
+
+test("the write path can never again lose a whole run to one duplicate: dedupe before, skipDuplicates on the insert", () => {
+  const src = read("src/lib/cardmarket.ts");
+  const refresh = src.slice(src.indexOf("export async function refreshCardmarketPrices"), src.indexOf("// ---- sealed: SealedListing"));
+  assert.match(refresh, /dedupeRetailerPriceRows\(\[\.\.\.m\.rows, \.\.\.rankedRows\]\)/, "strict + ranked rows must be deduped by unique key before the write");
+  assert.match(refresh, /retailerPrice\.createMany\(\{ data: allRows, skipDuplicates: true \}\)/, "the insert must skip a duplicate rather than throw after deleteMany has already emptied the table");
 });
