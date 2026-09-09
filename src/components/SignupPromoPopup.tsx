@@ -254,21 +254,24 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
           </div>
 
           {/* ALWAYS shown now (2026-09-06, explicit product instruction: "we
-              also need to show the prices for non logged in users"). Now
-              mirrors PremiumSlideIn's own "$0 today" framing (2026-09-09) —
-              the number a signed-out, trial-available visitor pays TODAY is
-              $0, and the real price follows in the same sentence rather than
-              being the only number shown while the trial itself goes
-              unmentioned. Not a contradiction of the CTA above it: the trial
-              disclosure ("Card required...") on the checkout path states the
-              same $0-then-real-price fact once someone actually signs up. */}
+              also need to show the prices for non logged in users"). Two
+              different framings by design, mirroring PremiumSlideIn.tsx's own
+              price block (see its header comment for the full reasoning):
+              • trialAvailable (every signed-out visitor, since a brand-new
+                account has never used a trial): bare "$0 today", the number
+                that's actually true right now (2026-09-09 — explicit product
+                decision to lead with that instead of the recurring price).
+                The real price is never more than a couple of clicks away —
+                sign up, land on /premium, and both that page and the
+                checkout page's own "Card required... then $X" disclosure
+                state it before any card is charged.
+              • !trialAvailable (trials off entirely): no $0 to claim, so this
+                branch still leads with the real recurring price + the
+                lock-in framing. */}
           {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-[11px] text-slate-500">
               {trialAvailable ? (
-                <>
-                  <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span> · then{" "}
-                  {premiumFromLine()} · cancel anytime
-                </>
+                <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
               ) : (
                 <>
                   <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}

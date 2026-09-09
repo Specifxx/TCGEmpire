@@ -168,4 +168,4 @@ export function premiumLockInTail(): string {
 // changes again, including a price-only change like this one: without a bump,
 // events from the $14.99 era and the reverted $9.99 era would share one tag
 // and the before/after comparison this constant exists for would be lost.
-export const PREMIUM_COPY_VERSION = "price-9.99-2026-09-09";
+export const PREMIUM_COPY_VERSION = "zero-only-slidein-2026-09-09";

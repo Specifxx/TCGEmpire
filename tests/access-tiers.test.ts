@@ -127,14 +127,25 @@ test("the popup's honesty guarantees survive the pitch change: no fake scarcity,
   // The price line now renders UNCONDITIONALLY (2026-09-06: "we also need to
   // show the prices for non logged in users" — it used to hide entirely
   // whenever a trial was configured, which is the default, so most signed-out
-  // visitors never saw a price at all). What still has to hold is that it
-  // never reads as a contradiction of the trial CTA sitting right above it.
-  // 2026-09-09: the trial branch itself changed from "$14.99/month after your
-  // free trial" to the same "$0 today, then from $X/mo" framing PremiumSlideIn
-  // already used — still never a bare price with no trial context attached.
+  // visitors never saw a price at all). 2026-09-09: simplified again to a bare
+  // "$0 today" for the trial-available branch — an explicit product decision
+  // to lead this low-intrusion nudge with the number that's true right now
+  // rather than the recurring price (which is still disclosed before any card
+  // is charged: /premium, the Premium dialog, and checkout's own "Card
+  // required... then $X" line). "Real" here means a real, true number for
+  // what happens today — not that every branch must also state the future
+  // price; the non-trial branch (which has no $0 to claim) still does.
   assert.ok(!/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src), "the price line must no longer be hidden while a trial is available");
   assert.match(src, /premiumZeroToday\(\)/, "the trial-available branch must lead with the shared $0-today helper");
-  assert.match(src, /premiumFromLine\(\)/, "must use the shared from-$X/mo framing, not a bare monthly price");
+  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
+  const trialBranchAt = src.indexOf("trialAvailable ? (", priceBlockAt);
+  const elseAt = src.indexOf(") : (", trialBranchAt);
+  assert.ok(priceBlockAt >= 0 && trialBranchAt >= 0 && elseAt >= 0, "expected the price block's trial/non-trial branches");
+  assert.ok(
+    !/premiumFromLine\(\)/.test(src.slice(trialBranchAt, elseAt)),
+    "trial-available branch must NOT also state the recurring price — bare $0 today, by design",
+  );
+  assert.match(src.slice(elseAt), /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
 });
 
 test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {

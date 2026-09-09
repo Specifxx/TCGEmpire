@@ -346,24 +346,28 @@ export function PremiumSlideIn() {
             ))}
           </div>
           {/* PROMOTED above the CTA row, 2026-09-09 (previously an 11px
-              footnote BELOW the button — the real price barely registered
-              next to a bold "Start free trial" button). ALWAYS shown
-              (mirrors the 2026-09-06 fix to SignupPromoPopup's own price
-              line, pinned by that same test file). Used to hide entirely
-              whenever a trial was available — which is nearly every
-              logged-in free visitor — so almost nobody who saw this card
-              ever saw a price. Stripe shows the real number at checkout
-              regardless; hiding it here only moved the surprise to the most
-              expensive place to lose someone. "$0 today, then from $X/mo"
-              states the honest number without contradicting the trial CTA
-              beneath it. */}
+              footnote BELOW the button). ALWAYS shown. Two different framings
+              by design, not an oversight:
+              • trialEligible (true for nearly every logged-in free visitor):
+                bare "$0 today", explicit product decision (2026-09-09) to
+                lead the teaser with the number that's actually true right
+                now rather than the recurring price. This is NOT the
+                price-hiding bug fixed on 2026-09-06/08 (that one hid the
+                price ENTIRELY behind !trialEligible, so most visitors never
+                saw a number at all) — a real, correct "$0 today" is always
+                shown here, and the recurring price is never more than one
+                click away: /premium (this card's own CTA destination), the
+                Premium dialog and the checkout page's own "Card required...
+                then $X" disclosure all state it before any card is charged.
+              • !trialEligible (already used a trial, or trials are off):
+                there is no $0 to claim, so this branch still leads with the
+                real recurring price + the lock-in framing — dropping it here
+                would leave the card with nothing but tool chips and a bare
+                "Unlock Premium" button. */}
           {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-center text-[11px] text-slate-500">
               {trialEligible ? (
-                <>
-                  <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span> · then{" "}
-                  {premiumFromLine()} · cancel anytime
-                </>
+                <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
               ) : (
                 <>
                   <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}

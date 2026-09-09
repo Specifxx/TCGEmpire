@@ -3733,3 +3733,49 @@ objects still configured are set to — a real discrepancy between the shown
 price and the checkout price, not just a cosmetic gap. This is a Stripe/
 Vercel dashboard action outside what this codebase (or this session, which
 has no Stripe or Vercel access) can perform or verify.
+
+## Stripe env vars confirmed repointed; corner nudges lead with a bare "$0 today" (2026-09-09)
+
+Owner confirmed the `STRIPE_PREMIUM_PRICE_ID`/`STRIPE_PREMIUM_ANNUAL_PRICE_ID`
+Vercel environment variables have been repointed at the $9.99/$79.99 Price
+objects, closing the gap the previous entry flagged (displayed vs. charged
+price). This repo has no way to verify that directly (no Stripe/Vercel access
+from this session) — taken on the owner's word, and worth a live checkout
+smoke-test to confirm Stripe's own confirmation page shows $9.99, not a
+stale amount.
+
+**Second, explicit instruction this same day**: drop the recurring price
+from "the slider" — the two corner slide-in nudges (`PremiumSlideIn.tsx` for
+signed-in free users, `SignupPromoPopup.tsx` for signed-out visitors) — and
+lead with a bare "$0 today" instead of "$0 today, then from $X/mo billed
+yearly, or $Y/month month-to-month". This is a deliberate reversal, on this
+one surface only, of part of the 2026-09-08 entry's own "always show a real
+price" design (see that entry above) — worth being explicit that it's a
+product trade-off, not a bug fix:
+- **What still holds**: the "$0 today" claim is true, not fabricated —
+  during the trial, day-one cost really is zero. No fake scarcity or
+  countdown was added alongside it (tests still pin this). The recurring
+  price is still disclosed, just not on this one low-intrusion touchpoint —
+  it's stated on `/premium` (both nudges' own click-through destination),
+  in the Premium dialog, and in the checkout page's own "Card required...
+  then $X" line, all of which render before Stripe ever takes a card.
+- **What changed from the 2026-09-08 reasoning**: that entry's argument for
+  always showing the price was "hiding it here only moved the surprise to
+  the most expensive place to lose someone [the card form]." That argument
+  still applies to the CHECKOUT-adjacent surfaces (dialog, `/premium`),
+  which is why neither was touched here — only the two ambient corner nudges,
+  which exist purely to get someone to click through, changed.
+- **Scope, explicitly**: the non-trial-eligible branch of both components
+  (a visitor who's already used a trial, or trials are off) still states the
+  real recurring price plus the lock-in framing — there is no "$0" to claim
+  for that visitor, so dropping the price there would leave the card with
+  nothing but tool chips and a bare button.
+
+`PREMIUM_COPY_VERSION` bumped again (`zero-only-slidein-2026-09-09`) so this
+framing change is its own splittable slice in GA4, distinct from the
+same-day price-value rollback above. `tests/premium-price-increase.test.ts`
+and `tests/access-tiers.test.ts` were rewritten to check each branch of the
+price block separately (trial branch must NOT call `premiumFromLine()`;
+non-trial branch must still call it) rather than just checking the helper
+appears somewhere in a fixed-size slice, which the old assertions did not
+actually distinguish.

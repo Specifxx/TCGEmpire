@@ -278,13 +278,17 @@ test("the premium-interest beacon still fires from every retired dialog entry po
   assert.match(slideIn.slice(acceptAt, acceptAt + 500), /firePremiumClickBeacon/, "PremiumSlideIn's CTA must fire the beacon before navigating");
 });
 
-test("SignupPromoPopup always shows a price, even while a free trial is available", () => {
+test("SignupPromoPopup always shows a price; the trial-available branch is a bare $0 today (2026-09-09)", () => {
   // "we also need to show the prices for non logged in users" (2026-09-06) —
   // the price used to disappear entirely whenever a trial was configured
   // (which is the default), so a signed-out visitor almost never saw one.
-  // 2026-09-09: the trial-available branch itself was rewritten from a bare
-  // "$14.99/month after your free trial" to the same "$0 today, then from
-  // $X/mo" framing PremiumSlideIn already used — see that file's own test.
+  // Fixed then to always show SOME number. 2026-09-09: the trial-available
+  // branch was simplified further, from "$0 today, then from $X/mo" down to
+  // a bare "$0 today" — an explicit product decision to lead this low-
+  // intrusion nudge with the number that's true right now, not the recurring
+  // price. The recurring price is still disclosed before any card is
+  // charged: on /premium (this card's own destination), in the Premium
+  // dialog, and in the checkout page's own "Card required... then $X" line.
   const src = read("src/components/SignupPromoPopup.tsx");
   const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
   assert.ok(priceBlockAt >= 0, "expected an unconditional price block (not gated on !trialAvailable)");
@@ -293,18 +297,27 @@ test("SignupPromoPopup always shows a price, even while a free trial is availabl
     "the price block must no longer be hidden while a trial is available",
   );
   const block = src.slice(priceBlockAt, priceBlockAt + 600);
-  assert.match(block, /premiumZeroToday\(\)/, "trial-available branch must use the shared $0-today helper");
-  assert.match(block, /premiumFromLine\(\)/, "must use the shared from-$X/mo framing, not a bare monthly price");
-  assert.match(block, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
+  const trialBranchAt = block.indexOf("trialAvailable ? (");
+  assert.ok(trialBranchAt >= 0, "expected a trialAvailable branch");
+  const elseAt = block.indexOf(") : (", trialBranchAt);
+  assert.ok(elseAt >= 0, "expected the non-trial else branch");
+  const trialBranch = block.slice(trialBranchAt, elseAt);
+  const nonTrialBranch = block.slice(elseAt);
+  assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-available branch must use the shared $0-today helper");
+  assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-available branch must NOT also state the recurring price — bare $0 today, by design");
+  assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
+  assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
 });
 
-test("PremiumSlideIn always shows a price too, framed as '$0 today' during a trial", () => {
+test("PremiumSlideIn always shows a price too; the trial-eligible branch is a bare $0 today (2026-09-09)", () => {
   // The slide-in had the SAME bug SignupPromoPopup was fixed for on 2026-09-06
   // (a price hidden whenever trialEligible — true for nearly every logged-in
   // free visitor) but was missed in that pass. Hiding the price never stopped
   // Stripe from charging it at checkout; it just moved the surprise to the
-  // most expensive place to lose someone. Fixed 2026-09-08 as part of the
-  // pricing/conversion pass — see DECISIONS.md.
+  // most expensive place to lose someone. Fixed 2026-09-08 (always show SOME
+  // number) then simplified further 2026-09-09 (bare "$0 today", no recurring
+  // price stated in this branch) — see PremiumSlideIn's own header comment on
+  // the price block and DECISIONS.md for the full reasoning either way.
   const src = read("src/components/PremiumSlideIn.tsx");
   assert.ok(
     !/\{!trialEligible && PREMIUM_PRICE_AMOUNT/.test(src),
@@ -313,7 +326,14 @@ test("PremiumSlideIn always shows a price too, framed as '$0 today' during a tri
   const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
   assert.ok(priceBlockAt >= 0, "expected an unconditional price block");
   const block = src.slice(priceBlockAt, priceBlockAt + 600);
-  assert.match(block, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
-  assert.match(block, /premiumFromLine\(\)/, "must use the shared from-$X/mo framing, not a bare monthly price");
-  assert.match(block, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
+  const trialBranchAt = block.indexOf("trialEligible ? (");
+  assert.ok(trialBranchAt >= 0, "expected a trialEligible branch");
+  const elseAt = block.indexOf(") : (", trialBranchAt);
+  assert.ok(elseAt >= 0, "expected the non-trial else branch");
+  const trialBranch = block.slice(trialBranchAt, elseAt);
+  const nonTrialBranch = block.slice(elseAt);
+  assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
+  assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-eligible branch must NOT also state the recurring price — bare $0 today, by design");
+  assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
+  assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
 });
