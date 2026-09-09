@@ -3624,3 +3624,61 @@ above the $9.99/$10 level that was already working) if that rate falls below
 ~40% for two consecutive weeks — never straight back to $9.99 without first
 trying the smaller step down. An annual price around $99 ("$8.25/mo") is the
 next experiment worth trying — a Stripe Price change only, no code.
+
+## Premium framing: "$0 today" leads everywhere (2026-09-09)
+
+Owner's numbers, two days after the 6 Sep raise to $14.99: ~5 subscribers
+while at $4.99, ~4 at $9.99 (the fastest-converting price), too few yet at
+$14.99 to read anything into. Per the 2026-09-08 entry's own three-week hold
+rule, **$14.99 stays**. What changed is the *framing*, not the number: with
+the 14-day card-gated trial, the amount a free visitor actually pays today is
+$0 — the previous pass (above) introduced that wording but only landed it in
+two places, both as a small footnote.
+
+**Where $14.99 was still the first thing a visitor saw, and what changed:**
+- The signed-out corner card (`SignupPromoPopup.tsx`) — the largest-audience
+  surface of the five — said "$14.99/month after your free trial". Rewritten
+  to the same "$0 today · then from $10.00/mo billed yearly, or $14.99/month"
+  framing the signed-in card already used, via the shared `premiumZeroToday()`/
+  `premiumFromLine()` helpers.
+- Both `/premium` pricing cards led with a big `$14.99` and a tiny "Starts
+  with a 14-day free trial" line — and only computed trial eligibility for a
+  *signed-in* user, so a signed-out visitor (who has, by construction, never
+  started a trial) got no trial framing there at all. Added `trialAvailable`
+  alongside the existing `trialEligible`, and a new shared `TrialPriceBlock`
+  component (`src/components/TrialPriceBlock.tsx`) that renders "$0 due
+  today, then $X after your 14-day trial" as the actual headline on both
+  cards when a trial is available. `PremiumCta`'s signed-out state now offers
+  "Start your 14-day free trial · Create a free account →" instead of a bare
+  "Sign in first →" when a trial is available.
+- The signed-in corner card (`PremiumSlideIn.tsx`) already had the "$0 today"
+  line, but it rendered as an 11px caption *below* the CTA button. Moved
+  above the button, between the tool chips and the CTA row, and its lead
+  number restyled to read as a price rather than a footnote.
+- The gated-tool-wall button (`PremiumButton.tsx`) said "Upgrade now ·
+  $14.99/mo" even for a trial-eligible visitor. Now reads "Start free trial ·
+  $0 today" for anyone still eligible.
+- The Premium dialog had a real bug: its own `ZERO_DUE_TODAY` constant
+  already read "$0 today", rendered directly next to a second, separately
+  hand-typed "due today" label — the dialog was literally saying "$0 today
+  due today". Fixed by having the dialog render the new shared
+  `TrialPriceBlock` instead of its own inline markup, the same component
+  `/premium`'s two cards now use.
+
+**Every "$0" still sits in the same block as the real recurring price and,
+on the signed-out CTA, a "card is required" disclosure** — none of this
+drops the honest number the way the pre-2026-09-08 hiding did; it only moves
+$0 from buried to first.
+
+**Measurement.** Added `PREMIUM_COPY_VERSION` (`lib/site.ts`) — a single
+string constant threaded into `premium_slidein_shown`/`_click`,
+`signup_promo_shown` and both `premium_checkout_started` call sites — so this
+pass's funnel numbers can be split from whatever came before it in GA4
+instead of being averaged together. Bump the string, no other code change,
+the next time this framing changes again.
+
+**What to read in a week.** `premium_slidein_click` and `signup_promo_shown`
+→ `sign_up` → `premium_checkout_started`, filtered by `copy`, against the
+week before this shipped. Trial starts on `/admin/subscriptions` is still the
+number that matters most — a raw click-through lift that doesn't show up
+there didn't move anything real.

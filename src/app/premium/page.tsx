@@ -13,6 +13,7 @@ import {
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
+import { TrialPriceBlock } from "@/components/TrialPriceBlock";
 import { TierComparisonTable } from "@/components/TierComparisonTable";
 import {
   SITE_URL,
@@ -162,6 +163,14 @@ export default async function PremiumPage() {
     ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true, stripeCustomerId: true } })
     : null;
   const trialEligible = premiumTrialEnabled() && !!user && !already && !dbUser?.trialStartedAt;
+  // A brand-new account has, by definition, never started a trial before — so
+  // unlike trialEligible (which requires a signed-in user to check their own
+  // trialStartedAt), a signed-out visitor is trial-available on the strength
+  // of premiumTrialEnabled() alone (same reasoning SignupPromoPopup.tsx's own
+  // trialAvailable documents). Used to decide the pricing-card headline and
+  // the signed-out CTA copy; trialEligible still gates the actual checkout
+  // flow once someone is signed in.
+  const trialAvailable = premiumTrialEnabled() && !already && (!user || !dbUser?.trialStartedAt);
   const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "14.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
@@ -255,15 +264,26 @@ export default async function PremiumPage() {
             {/* Monthly */}
             <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700">
               <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Monthly</div>
-                <div className="mt-2 flex items-baseline justify-center gap-1">
-                  <span className="num text-4xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
-                  <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
-                </div>
-                {trialEligible && <p className="mt-1 text-xs font-semibold text-gold">Starts with a {PREMIUM_TRIAL_DAYS}-day free trial</p>}
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">Monthly</div>
+                {trialAvailable ? (
+                  <TrialPriceBlock plan="monthly" trialDays={PREMIUM_TRIAL_DAYS} />
+                ) : (
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="num text-4xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
+                    <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-1 items-end px-6 py-5">
-                <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} trialEligible={trialEligible} priceLabel={compactPrice} trialDays={PREMIUM_TRIAL_DAYS} plan="monthly" />
+                <PremiumCta
+                  checkoutLive={checkoutLive}
+                  signedIn={!!user}
+                  trialEligible={trialEligible}
+                  trialAvailable={trialAvailable}
+                  priceLabel={compactPrice}
+                  trialDays={PREMIUM_TRIAL_DAYS}
+                  plan="monthly"
+                />
               </div>
             </div>
 
@@ -273,14 +293,14 @@ export default async function PremiumPage() {
                 <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink-950">Best value</span>
                 <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
                   <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-gold">Annual</div>
-                  <AnnualPriceBlock />
-                  {trialEligible && <p className="mt-2 text-xs font-semibold text-gold">Starts with a {PREMIUM_TRIAL_DAYS}-day free trial</p>}
+                  {trialAvailable ? <TrialPriceBlock plan="annual" trialDays={PREMIUM_TRIAL_DAYS} /> : <AnnualPriceBlock />}
                 </div>
                 <div className="flex flex-1 items-end px-6 py-5">
                   <PremiumCta
                     checkoutLive={checkoutLive}
                     signedIn={!!user}
                     trialEligible={trialEligible}
+                    trialAvailable={trialAvailable}
                     trialDays={PREMIUM_TRIAL_DAYS}
                     priceLabel={annualCompact}
                     plan="annual"
@@ -436,7 +456,7 @@ export default async function PremiumPage() {
         alerts and your portfolio free with an account.{" "}
         {already ? (
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
-        ) : trialEligible ? (
+        ) : trialAvailable ? (
           <>The free trial needs a card and converts to {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first. </>
         ) : (
           <>Cancel anytime — your benefits run to the end of the paid period. </>

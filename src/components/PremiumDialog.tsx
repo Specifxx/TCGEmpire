@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
+import { TrialPriceBlock } from "./TrialPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
 import {
   PREMIUM_PRICE_LABEL,
@@ -12,10 +13,10 @@ import {
   PREMIUM_PRICE_PERIOD,
   PREMIUM_ANNUAL_AMOUNT,
   PREMIUM_NEXT_PRICE_AMOUNT,
+  PREMIUM_COPY_VERSION,
   annualSavingPct,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
-  premiumZeroToday,
   premiumEffectiveMonthly,
 } from "@/lib/site";
 
@@ -31,10 +32,6 @@ export function usePremiumDialog() {
 
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
-
-// "$0 today" — shared with the slide-in/popup/premium-page framing (lib/site.ts)
-// so this can't drift from theirs the way the tool list once did.
-const ZERO_DUE_TODAY = premiumZeroToday();
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,7 +90,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
     setError(null);
     // Fired BEFORE the fetch — dual-destination (see PremiumCta.tsx's own
     // comment on why this event isn't in GA4_ONLY_EVENTS).
-    trackEvent("premium_checkout_started", { plan: selected, trial_eligible: trialEligible, source: "dialog" });
+    trackEvent("premium_checkout_started", { plan: selected, trial_eligible: trialEligible, source: "dialog", copy: PREMIUM_COPY_VERSION });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -228,20 +225,8 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                     not in fine print further down: "$0" alone would be a lie by
                     omission, and a card IS required to start. */}
                 {trialEligible ? (
-                  <div className="mb-3 text-center">
-                    <div className="flex items-baseline justify-center gap-1.5">
-                      <span className="num text-4xl font-extrabold text-white">{ZERO_DUE_TODAY}</span>
-                      <span className="text-sm text-slate-400">due today</span>
-                    </div>
-                    <p className="mt-1.5 text-xs text-slate-400">
-                      then{" "}
-                      <span className="font-semibold text-slate-200">
-                        {activePlan === "annual"
-                          ? `${PREMIUM_ANNUAL_AMOUNT}/yr`
-                          : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`}
-                      </span>{" "}
-                      after your {trialDays}-day free trial
-                    </p>
+                  <div className="mb-3">
+                    <TrialPriceBlock plan={activePlan} trialDays={trialDays} />
                   </div>
                 ) : activePlan === "annual" ? (
                   <div className="mb-3">

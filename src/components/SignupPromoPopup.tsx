@@ -10,8 +10,11 @@ import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
   PREMIUM_NEXT_PRICE_AMOUNT,
+  PREMIUM_COPY_VERSION,
   premiumPriceIncreaseAnnounced,
   premiumLockInTail,
+  premiumZeroToday,
+  premiumFromLine,
 } from "@/lib/site";
 
 // Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
@@ -152,7 +155,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     // the animation settling in, not a deliberate wait — it's a couple of
     // frames, not a timer.
     requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
-    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT });
+    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION });
   }, [loaded, user, shown, pathname]);
 
   // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
@@ -251,16 +254,26 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
           </div>
 
           {/* ALWAYS shown now (2026-09-06, explicit product instruction: "we
-              also need to show the prices for non logged in users"). Used to
-              hide entirely while a trial was available, on the theory that a
-              price next to a free-trial CTA would read as a contradiction —
-              worded around that here instead of dropping the price: "after
-              your free trial" makes clear the number isn't charged today, so
-              it sits next to the trial CTA without contradicting it. */}
+              also need to show the prices for non logged in users"). Now
+              mirrors PremiumSlideIn's own "$0 today" framing (2026-09-09) —
+              the number a signed-out, trial-available visitor pays TODAY is
+              $0, and the real price follows in the same sentence rather than
+              being the only number shown while the trial itself goes
+              unmentioned. Not a contradiction of the CTA above it: the trial
+              disclosure ("Card required...") on the checkout path states the
+              same $0-then-real-price fact once someone actually signs up. */}
           {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD}
-              {trialAvailable ? " after your free trial" : ""} · {premiumLockInTail()}
+              {trialAvailable ? (
+                <>
+                  <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span> · then{" "}
+                  {premiumFromLine()} · cancel anytime
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}
+                </>
+              )}
             </p>
           ) : null}
         </div>

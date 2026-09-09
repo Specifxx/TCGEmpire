@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { PREMIUM_COPY_VERSION } from "@/lib/site";
 
 // Gold (not green) — the professional "premium" accent used across the Premium UI.
 const GOLD_BTN =
@@ -15,6 +16,7 @@ export function PremiumCta({
   checkoutLive,
   signedIn,
   trialEligible = false,
+  trialAvailable = false,
   priceLabel = "",
   trialDays = 0,
   plan = "monthly",
@@ -23,6 +25,10 @@ export function PremiumCta({
   checkoutLive: boolean;
   signedIn: boolean;
   trialEligible?: boolean;
+  // Signed-out visitors have, by definition, never started a trial — see
+  // /premium's own trialAvailable for why this is a separate flag from
+  // trialEligible (which needs a signed-in user to check their history).
+  trialAvailable?: boolean;
   priceLabel?: string;
   trialDays?: number;
   plan?: "monthly" | "annual";
@@ -38,7 +44,7 @@ export function PremiumCta({
     // Fired BEFORE the fetch — a low-volume conversion-funnel step, so it goes
     // to both GA4 and Vercel (not added to GA4_ONLY_EVENTS), unlike the
     // high-volume impression events elsewhere in the Premium funnel.
-    trackEvent("premium_checkout_started", { plan, trial_eligible: trialEligible, source: "premium-page" });
+    trackEvent("premium_checkout_started", { plan, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -59,6 +65,17 @@ export function PremiumCta({
   }
 
   if (!signedIn) {
+    if (trialAvailable && trialDays > 0) {
+      return (
+        <div>
+          <p className="text-sm font-semibold text-white">Start your {trialDays}-day free trial</p>
+          <Link href="/login?next=/premium" className="btn-primary mt-3 text-sm">Create a free account →</Link>
+          <p className="mt-2 text-[11px] leading-snug text-slate-400">
+            Free to sign up, no card needed · a card is required to start the trial, nothing is charged for {dayPhrase}.
+          </p>
+        </div>
+      );
+    }
     return (
       <div>
         <p className="text-sm font-semibold text-white">Ready when you are</p>

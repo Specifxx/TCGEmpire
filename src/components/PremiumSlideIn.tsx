@@ -9,6 +9,7 @@ import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
   PREMIUM_NEXT_PRICE_AMOUNT,
+  PREMIUM_COPY_VERSION,
   premiumPriceIncreaseAnnounced,
   premiumLockInTail,
   premiumZeroToday,
@@ -200,6 +201,7 @@ export function PremiumSlideIn() {
         path: pathname ?? "/",
         trial_eligible: trialEligible,
         context: contextPitch?.tool ?? undefined,
+        copy: PREMIUM_COPY_VERSION,
       });
     }, DWELL_MS);
 
@@ -245,7 +247,11 @@ export function PremiumSlideIn() {
   }, [hide]);
 
   const accept = useCallback(() => {
-    trackEvent("premium_slidein_click", { trial_eligible: trialEligible, context: contextPitch?.tool ?? undefined });
+    trackEvent("premium_slidein_click", {
+      trial_eligible: trialEligible,
+      context: contextPitch?.tool ?? undefined,
+      copy: PREMIUM_COPY_VERSION,
+    });
     firePremiumClickBeacon("button"); // used to fire inside the dialog's open() — see that helper's own header
     try {
       // Engaged, not rejected: a long snooze rather than a dismissal strike, so
@@ -339,6 +345,32 @@ export function PremiumSlideIn() {
               </span>
             ))}
           </div>
+          {/* PROMOTED above the CTA row, 2026-09-09 (previously an 11px
+              footnote BELOW the button — the real price barely registered
+              next to a bold "Start free trial" button). ALWAYS shown
+              (mirrors the 2026-09-06 fix to SignupPromoPopup's own price
+              line, pinned by that same test file). Used to hide entirely
+              whenever a trial was available — which is nearly every
+              logged-in free visitor — so almost nobody who saw this card
+              ever saw a price. Stripe shows the real number at checkout
+              regardless; hiding it here only moved the surprise to the most
+              expensive place to lose someone. "$0 today, then from $X/mo"
+              states the honest number without contradicting the trial CTA
+              beneath it. */}
+          {PREMIUM_PRICE_AMOUNT ? (
+            <p className="mt-2 text-center text-[11px] text-slate-500">
+              {trialEligible ? (
+                <>
+                  <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span> · then{" "}
+                  {premiumFromLine()} · cancel anytime
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}
+                </>
+              )}
+            </p>
+          ) : null}
           <div className="mt-3 flex items-center gap-2">
             <button
               onClick={accept}
@@ -353,28 +385,6 @@ export function PremiumSlideIn() {
               Not now
             </button>
           </div>
-          {/* ALWAYS shown now (mirrors the 2026-09-06 fix to SignupPromoPopup's
-              own price line, pinned by that same test file). Used to hide
-              entirely whenever a trial was available — which is nearly every
-              logged-in free visitor — so almost nobody who saw this card ever
-              saw a price. Stripe shows the real number at checkout regardless;
-              hiding it here only moved the surprise to the most expensive
-              place to lose someone. "$0 today, then from $X/mo" states the
-              honest number without contradicting the trial CTA above it. */}
-          {PREMIUM_PRICE_AMOUNT ? (
-            <p className="mt-2 text-center text-[11px] text-slate-500">
-              {trialEligible ? (
-                <>
-                  <span className="font-bold text-white">{premiumZeroToday()}</span> · then {premiumFromLine()} ·{" "}
-                  cancel anytime
-                </>
-              ) : (
-                <>
-                  <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}
-                </>
-              )}
-            </p>
-          ) : null}
         </div>
       </div>
     </div>

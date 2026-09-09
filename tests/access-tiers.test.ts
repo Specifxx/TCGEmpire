@@ -129,8 +129,12 @@ test("the popup's honesty guarantees survive the pitch change: no fake scarcity,
   // whenever a trial was configured, which is the default, so most signed-out
   // visitors never saw a price at all). What still has to hold is that it
   // never reads as a contradiction of the trial CTA sitting right above it.
+  // 2026-09-09: the trial branch itself changed from "$14.99/month after your
+  // free trial" to the same "$0 today, then from $X/mo" framing PremiumSlideIn
+  // already used — still never a bare price with no trial context attached.
   assert.ok(!/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src), "the price line must no longer be hidden while a trial is available");
-  assert.match(src, /trialAvailable \? " after your free trial" : ""/, "the price must be worded so it doesn't contradict an available trial");
+  assert.match(src, /premiumZeroToday\(\)/, "the trial-available branch must lead with the shared $0-today helper");
+  assert.match(src, /premiumFromLine\(\)/, "must use the shared from-$X/mo framing, not a bare monthly price");
 });
 
 test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {

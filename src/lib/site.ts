@@ -94,6 +94,14 @@ export function premiumZeroToday(): string {
   return `${premiumCurrencySymbol()}0 today`;
 }
 
+// Bare "$0" (no "today" suffix) for a HEADLINE number — e.g. TrialPriceBlock's
+// big price figure, styled the same way PREMIUM_PRICE_AMOUNT itself is
+// rendered elsewhere ("due today" sits next to it as its own smaller label).
+// premiumZeroToday() stays the inline-caption form ("$0 today, then …").
+export function premiumZeroAmount(): string {
+  return `${premiumCurrencySymbol()}0`;
+}
+
 // ── Announced price increase ────────────────────────────────────────────────
 // The previously-announced increase (from $9.99/mo to $19.99/mo, "real, decided,
 // not yet scheduled to an exact date") landed on 2026-09-06 — except the actual
@@ -143,3 +151,10 @@ export function premiumLockInTail(): string {
     ? `locked in before it rises to ${PREMIUM_NEXT_PRICE_AMOUNT} — cancel anytime`
     : `locked in for good, cancel anytime`;
 }
+
+// Tags the Premium funnel events (slide-in/popup shown, checkout started) with
+// which price-framing pass they were rendered under, so GA4 can split
+// before/after instead of averaging two different pitches into one number.
+// Bump this string — no other code changes required — whenever the framing on
+// any of these surfaces changes again.
+export const PREMIUM_COPY_VERSION = "zero-today-2026-09-09";
