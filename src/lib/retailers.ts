@@ -1436,15 +1436,18 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // Previously tracked under this same key, then dropped from RETAILERS at some
   // point before this file's current history begins (see the stale-reference
   // note on STORES_WITH_POLICY below, which is what flagged that this key used
-  // to exist). Re-verified fresh 2026-09-05: real CAD Shopify store (region
-  // selector resolves to Canada), live riftbound-tcg-singles-all collection
-  // with real in-stock collector-numbered singles — re-added on that evidence,
-  // not on the strength of the old entry.
+  // to exist). Re-verified independently TWICE since: fresh 2026-09-05 (real
+  // CAD Shopify store, live riftbound-tcg-singles-all collection with real
+  // in-stock collector-numbered singles) and again by scripts/sweep-registry.ts
+  // on 2026-09-09 (1,070 in-stock CAD singles, proven currency, a second
+  // collection handle). Whatever caused the original removal clearly no longer
+  // holds; re-verify with scripts/sweep-registry.ts --only kanzengames.com
+  // before trusting old assumptions about this store.
   kanzengames: {
     key: "kanzengames",
-    name: "KanZenGames",
+    name: "KanZenGames Sports & Collectibles",
     base: "https://kanzengames.com",
-    collections: ["riftbound-tcg-singles-all"],
+    collections: ["riftbound-tcg-singles-all", "riftbound-tcg-origins"],
     shippingFlatCents: 299,
     freeOverCents: 7500,
     shippingNote: "est. C$2.99 · free over C$75",
@@ -1567,22 +1570,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   }, // registry sweep 2026-09-09: 1531 in-stock singles, cur=CAD
-  // A re-add, not a fresh find — this key was previously tracked, then dropped
-  // (see the STORES_WITH_POLICY cleanup note below for the "removed from here"
-  // context). This sweep proved 1,070 real in-stock CAD singles live, so
-  // whatever caused the earlier removal no longer holds; re-verify with
-  // scripts/sweep-registry.ts --only kanzengames.com before trusting old
-  // assumptions about this store.
-  kanzengames: {
-    key: "kanzengames",
-    name: "KanZenGames Sports & Collectibles",
-    base: "https://kanzengames.com",
-    collections: ["riftbound-tcg-singles-all", "riftbound-tcg-origins"],
-    shippingFlatCents: 299,
-    freeOverCents: 7500,
-    shippingNote: "est. C$2.99 · free over C$75",
-    country: "CA",
-  }, // registry sweep 2026-09-09: 1070 in-stock singles, cur=CAD
   eclipsegames: {
     key: "eclipsegames",
     name: "Eclipse Games",
