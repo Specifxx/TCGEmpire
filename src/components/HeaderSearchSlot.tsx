@@ -40,10 +40,14 @@ import { useEffect, useState, type ReactNode } from "react";
 // display:none via Tailwind's `hidden` class, never an unmount: the field
 // stays in the DOM at all times (crawlers, and any assistive tech that reads
 // the DOM ahead of a scroll event, can still find it) — only its visual
-// presentation is gated on scroll position. Reuses the same >8px threshold
-// NavbarShell already uses for its own frosted-background transition, so the
-// header search reappearing reads as part of the same "you've scrolled"
-// moment rather than a second, independently-timed effect.
+// presentation is gated on whether the hero (with its own search box) is
+// still in view. NavbarShell's independent >8px scrollY check drives the
+// header's OWN frosted-background transition and fires much earlier than
+// this — the two were briefly on the same threshold, but that made this
+// component reveal the header's search copy while the hero's own (far
+// taller) search box was still fully on screen, the exact duplicate the
+// scroll-gate exists to prevent. See the effect below for why this now
+// tracks the hero's actual visibility instead.
 export function HeaderSearchSlot({ children, mobile = false }: { children: ReactNode; mobile?: boolean }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
@@ -56,20 +60,30 @@ export function HeaderSearchSlot({ children, mobile = false }: { children: React
       setScrolled(true);
       return;
     }
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      setScrolled(window.scrollY > 8);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
+    // Same marker + technique as FeedbackWidget's own "don't compete with the
+    // hero search" check (see that file): an IntersectionObserver on
+    // CinematicHero's #rc-hero, NOT a scrollY threshold (the previous
+    // approach here). A scrollY threshold goes stale across a viewport
+    // RESIZE: a foldable phone unfolding mid-session reflows the whole page
+    // (the hero's own height/copy both change at the `lg` breakpoint), which
+    // can move the hero out of view without window.scrollY changing at all.
+    // Left unfixed, that left `scrolled` false (as if the hero were still
+    // in view) right as the wide layout kicked in — hiding the mobile row
+    // (its `lg:hidden` parent) *and* the desktop row (`scrolled` still
+    // false, so no `lg:block` override) at once: the header search box had
+    // no visible copy anywhere on screen. IntersectionObserver has no such
+    // gap — it re-fires on any layout change that moves the hero relative
+    // to the viewport, a resize included, not only on scroll.
+    const hero = document.getElementById("rc-hero");
+    if (!hero || typeof IntersectionObserver === "undefined") {
+      // No hero to watch (shouldn't happen on "/") or no observer support:
+      // fail toward a VISIBLE header search rather than a silently hidden one.
+      setScrolled(true);
+      return;
+    }
+    const io = new IntersectionObserver((entries) => setScrolled(!(entries[0]?.isIntersecting ?? false)));
+    io.observe(hero);
+    return () => io.disconnect();
   }, [isHome]);
 
   // mobile: always "block", ignoring `scrolled` entirely — see the doc

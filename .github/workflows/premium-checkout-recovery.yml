@@ -1,0 +1,40 @@
+name: Premium checkout recovery
+
+# Emails accounts that started Stripe checkout for Premium but never completed it —
+# the single highest-intent audience on the site (see src/lib/premium.ts's
+# runCheckoutRecovery). Runs daily via GH Actions rather than Vercel Cron, same
+# reason premium-trial-reminders.yml does: this project's Vercel cron slots are
+# already spoken for. Offset an hour from that workflow's run so the two never
+# compete for the same window.
+#
+# SETUP (one-time): reuses the CRON_SECRET repository secret premium-trial-reminders.yml
+# already requires — nothing new to provision.
+
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch: {} # manual "Run workflow" button
+
+concurrency:
+  group: premium-checkout-recovery
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Send due checkout-recovery emails
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::No CRON_SECRET secret set — cannot call the cron endpoint."
+            exit 1
+          fi
+          code=$(curl -s -o response.json -w "%{http_code}" --max-time 90 \
+            "$SITE_URL/api/cron/premium-checkout-recovery" -H "Authorization: Bearer $CRON_SECRET")
+          echo "premium-checkout-recovery -> HTTP ${code}"
+          cat response.json || true
+          [ "$code" = "200" ]

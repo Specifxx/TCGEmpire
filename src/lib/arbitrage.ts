@@ -203,6 +203,11 @@ export interface EbayDeal {
 export interface EbayDealPage {
   items: EbayDeal[];
   total: number;
+  // Sum of EVERY qualifying deal's savingCents — not just the page slice. Powers
+  // the Premium "$X in savings on the board" proof line (see top-deals.ts /
+  // api/premium/proof); computed once over the already-built `rows` before
+  // pagination slices it, so this costs nothing extra.
+  savingsTotalCents: number;
   page: number;
   pageSize: number;
   pageCount: number;
@@ -216,7 +221,7 @@ export async function getEbayCheapest(country: Country, sort: DealSort, page = 1
     const sources = getArbSources(country);
     const ebayKeys = sources.filter((s) => s.isEbay).map((s) => s.key);
     const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
-    if (!ebayKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
+    if (!ebayKeys.length) return { items: [], total: 0, savingsTotalCents: 0, page, pageSize, pageCount: 1 };
 
     const [ebayMin, storeMin] = await Promise.all([minByCard(country, ebayKeys), minByCard(country, storeKeys)]);
 
@@ -235,10 +240,11 @@ export async function getEbayCheapest(country: Country, sort: DealSort, page = 1
     rows.sort((a, b) => (sort === "pct" ? b.pct - a.pct || b.saving - a.saving : b.saving - a.saving || b.pct - a.pct));
 
     const total = rows.length;
+    const savingsTotalCents = rows.reduce((sum, r) => sum + r.saving, 0);
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
     const p = Math.min(Math.max(1, page), pageCount);
     const slice = rows.slice((p - 1) * pageSize, p * pageSize);
-    if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
+    if (!slice.length) return { items: [], total, savingsTotalCents, page: p, pageSize, pageCount };
 
     const ids = slice.map((r) => r.cardId);
     const [cards, ebayListings, storeListings] = await Promise.all([
@@ -277,9 +283,9 @@ export async function getEbayCheapest(country: Country, sort: DealSort, page = 1
       })
       .filter((x): x is EbayDeal => x !== null);
 
-    return { items, total, page: p, pageSize, pageCount };
+    return { items, total, savingsTotalCents, page: p, pageSize, pageCount };
   } catch {
-    return { items: [], total: 0, page, pageSize, pageCount: 1 };
+    return { items: [], total: 0, savingsTotalCents: 0, page, pageSize, pageCount: 1 };
   }
 }
 

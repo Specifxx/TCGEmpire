@@ -448,6 +448,52 @@ export async function sendTrialEndingEmail(to: string, chargeDate: Date, amountL
   return sendEmail(to, `Your RiftCompare Premium trial ends ${dateLabel}`, emailShell("Your free trial is ending soon", inner, trialReminderFooter()));
 }
 
+// ─── Premium checkout-recovery (one-time) ────────────────────────────────────
+
+// Sent ONCE, roughly a day after someone opens Stripe checkout for Premium but
+// never completes it (see runCheckoutRecovery in lib/premium.ts) — the single
+// highest-intent audience on the site, so this is worth a nudge no scheduled
+// email covers. NOT an unsubscribe-bearing marketing send: it's tied to one
+// action the recipient themselves took, same category as the trial-ending
+// notice above, and the copy itself states it will not repeat — so no footer
+// opt-out link is offered (mirrors trialReminderFooter's shape exactly).
+//
+// The tool list mirrors PremiumSlideIn.tsx's PITCH_TOOLS labels — kept as a
+// separate plain-string list (that file is a client component; an email
+// template has no business importing React component modules) but pinned
+// against drifting from it by tests/premium-conversion.test.ts.
+const CHECKOUT_RECOVERY_TOOLS = ["Bulk Pricer", "Best Basket", "Value Finder", "Rising Cards", "Demand Finder", "Deal Finder"];
+
+function checkoutRecoveryFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this once because you started RiftCompare Premium checkout. We won't send it again.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, fromLine: string): Promise<boolean> {
+  const toolList = CHECKOUT_RECOVERY_TOOLS.map(
+    (t) => `<li style="margin:4px 0">${t}</li>`
+  ).join("");
+  const trialLine =
+    trialDays > 0
+      ? `Your ${trialDays}-day free trial is still available — $0 today, then ${fromLine}.`
+      : `Premium is ${fromLine}.`;
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine}
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up Premium</a></td></tr>`;
+  return sendEmail(
+    to,
+    "Your RiftCompare Premium free trial is still waiting",
+    emailShell("Still want Premium?", inner, checkoutRecoveryFooter())
+  );
+}
+
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
 export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {
