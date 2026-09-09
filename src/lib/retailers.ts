@@ -241,6 +241,110 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. $10 standard · free over $150",
   },
 
+  // ---- Registry sweep (2026-09-09, scripts/sweep-registry.ts) — the AU market's
+  // stores had never been checked against the official Riftbound retailer
+  // registry (api.riftbound.uvsgames.com/api/v2/game-stores/), only found by
+  // ad-hoc web search. 119 untracked registry domains probed, 10 cleared
+  // MIN_SINGLES_FOR_STORE (see lib/woocommerce.ts) with a proven AUD price.
+  // One registry hit, plentyofgames.com.au, was excluded as a duplicate: it
+  // serves the exact same catalog (identical Shopify product IDs) as the
+  // already-tracked "plenty" entry's plenty-of-games-au.myshopify.com domain —
+  // same merchant, two domains, so adding it would double-count one store's
+  // stock. General Games Chirnside Park (generalgames.com.au) is NOT the same
+  // store as the "General Games' product feed reports out-of-stock" quirk
+  // noted above manamarket — that note is misattributed to a different store;
+  // this one's feed proved 868 real in-stock singles live on this sweep.
+  turnordergames: {
+    key: "turnordergames",
+    name: "Turn Order Games",
+    base: "https://turnordergames.com.au",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 1242 in-stock singles, cur=AUD
+  thegamesdistrict: {
+    key: "thegamesdistrict",
+    name: "The Games District",
+    base: "https://thegamesdistrict.com",
+    collections: ["all-riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 1211 in-stock singles, cur=AUD
+  generalgames: {
+    key: "generalgames",
+    name: "General Games Chirnside Park",
+    base: "https://generalgames.com.au",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 868 in-stock singles, cur=AUD
+  trollaustraliamelb: {
+    key: "trollaustraliamelb",
+    name: "Troll Aus Melbourne",
+    base: "https://trollaustraliamelb.com.au",
+    collections: ["riftbound-origins", "riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 758 in-stock singles, cur=AUD
+  shuffleandcutgames: {
+    key: "shuffleandcutgames",
+    name: "Shuffle n Cut Melbourne",
+    base: "https://shuffleandcutgames.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 757 in-stock singles, cur=AUD
+  inngames: {
+    key: "inngames",
+    name: "Inn Games",
+    base: "https://inngames.com.au",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 647 in-stock singles, cur=AUD
+  obsessiongaming: {
+    key: "obsessiongaming",
+    name: "Obsession Gaming",
+    base: "https://obsessiongaming.com.au",
+    collections: ["riftbound-singles", "riftbound-leauge-of-legends-starter-decks"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 494 in-stock singles, cur=AUD
+  hobbycollectorsaustralia: {
+    key: "hobbycollectorsaustralia",
+    name: "Hobby Collectors Australia",
+    base: "https://hobbycollectorsaustralia.com.au",
+    collections: ["riftbound-league-of-legends-tcg", "riftbound-league-of-legends-tcg-origins"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 51 in-stock singles, cur=AUD
+  reefsidegames: {
+    key: "reefsidegames",
+    name: "Reefside Games",
+    base: "https://reefsidegames.com.au",
+    collections: ["riftbound", "riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 14 in-stock singles, cur=AUD
+  acecollectibles: {
+    key: "acecollectibles",
+    name: "Ace Collectibles",
+    base: "https://acecollectibles.com.au",
+    collections: ["riftbound-singles", "riftbound"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. $2.00 · free over $50",
+  }, // registry sweep 2026-09-09: 11 in-stock singles, cur=AUD
+
   // ---- United States stores (country: "US"; prices in USD; uses eBay US) --------
   // The US market is much deeper — these carry thousands of in-stock singles between
   // them. Collections are mostly auto-discovered; an explicit singles handle is given
@@ -656,6 +760,12 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "US",
   },
   // ---- Researched and rejected (US) — do NOT re-add without new evidence -------
+  // Registry sweep (2026-09-09): 1,600 untracked US registry domains probed
+  // beyond this hand-built list; 1,568 rejected (thin/no-stock/robots/wrong
+  // platform/unreachable) or already tracked under another domain. Full
+  // per-store verdicts in scratch/sweep-registry.json; re-run
+  // scripts/sweep-registry.ts --markets US before re-researching any of them by hand.
+  //
   // Consolidated here (instead of scattered per-batch) so this is one place to
   // check before re-researching any of these. From the 2026-07 US batch:
   //   - empiretradings.com          — Ottawa, Canada (not US).
@@ -714,6 +824,149 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   //     implementations behind it would be pure guesswork risking wrong
   //     prices on a real comparison site, not genuine progress.
   // See the session summary for the full account of what's blocked and why.
+
+  // ---- Registry sweep (2026-09-09, scripts/sweep-registry.ts) — the US market's
+  // stores had never been checked against the official Riftbound retailer
+  // registry (api.riftbound.uvsgames.com/api/v2/game-stores/), only found by
+  // ad-hoc web-search batches. 1,600 untracked registry domains probed, 13
+  // cleared MIN_SINGLES_FOR_STORE (see lib/woocommerce.ts) with a proven USD
+  // price. Six further registry hits resolved (via redirect) to a myshopify.com
+  // domain already tracked under a different custom domain — correctly excluded
+  // as the same store, not re-added. grognardgames.com (225 singles) was excluded
+  // for serving a non-USD currency to a US shopper. Rejected non-Shopify stores
+  // that clearly stock Riftbound, by platform: "other" 178, squarespace 78,
+  // magento 57, wix 57, bigcommerce 11, crystal-commerce 5, ecwid 2 — see
+  // scratch/sweep-registry.log for the full histogram.
+  blackvaultgaming: {
+    key: "blackvaultgaming",
+    name: "Black Vault Gaming",
+    base: "https://blackvaultgaming.com",
+    collections: ["riftbound-league-of-legends-trading-card-game-singles", "riftbound-organized-play-promotional-cards"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 874 in-stock singles, cur=USD
+  wolfdentcg: {
+    key: "wolfdentcg",
+    name: "Wolf Den Gaming",
+    base: "https://wolfdentcg.com",
+    collections: ["riftbound-singles", "riftbound-vendetta"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 618 in-stock singles, cur=USD
+  gamecraftgamestore: {
+    key: "gamecraftgamestore",
+    name: "GameCraft",
+    base: "https://gamecraftgamestore.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 434 in-stock singles, cur=USD
+  gachaboba: {
+    key: "gachaboba",
+    name: "Gacha Boba",
+    base: "https://gachaboba.com",
+    collections: ["riftbound", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 393 in-stock singles, cur=USD
+  atomilicollectables: {
+    key: "atomilicollectables",
+    name: "ATOMILI COLLECTABLES",
+    base: "https://atomilicollectables.com",
+    collections: ["riftbound", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 325 in-stock singles, cur=USD
+  tothetable: {
+    key: "tothetable",
+    name: "To The Table Board Game Cafe",
+    base: "https://tothetable.game",
+    collections: ["riftbound-single", "riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 226 in-stock singles, cur=USD
+  nexustabletopgames: {
+    key: "nexustabletopgames",
+    name: "Nexus Tabletop Games",
+    base: "https://nexustabletopgames.com",
+    collections: ["riftbound-league-of-legends-trading-card-game-single", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 181 in-stock singles, cur=USD
+  fabricatorsforge: {
+    key: "fabricatorsforge",
+    name: "Fabricator's Forge",
+    base: "https://shop.fabricatorsforge.com",
+    collections: ["riftbound-singles", "riftbound-events"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 159 in-stock singles, cur=USD
+  mainephasehobbies: {
+    key: "mainephasehobbies",
+    name: "Maine Phase Hobbies & Games",
+    base: "https://mainephasehobbies.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 140 in-stock singles, cur=USD
+  lapinetabletopgaming: {
+    key: "lapinetabletopgaming",
+    name: "La Pine Tabletop Gaming",
+    base: "https://lapinetabletopgaming.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 110 in-stock singles, cur=USD
+  troveofcollectibles: {
+    key: "troveofcollectibles",
+    name: "Trove of Collectibles",
+    base: "https://troveofcollectibles.com",
+    collections: ["riftbound-league-of-legends", "riftbound-legends"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 108 in-stock singles, cur=USD
+  zamliytcg: {
+    key: "zamliytcg",
+    name: "Zamliy TCG",
+    base: "https://zamliytcg.com",
+    collections: ["riftbound-singles", "riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 58 in-stock singles, cur=USD
+  impactgamingcenter: {
+    key: "impactgamingcenter",
+    name: "Impact Gaming Center",
+    base: "https://impactgamingcenter.gg",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 250,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free over US$50",
+    country: "US",
+  }, // registry sweep 2026-09-09: 44 in-stock singles, cur=USD
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
   // Riftbound singles are still thin on UK Shopify shops — the biggest UK chains (Magic
@@ -1037,6 +1290,13 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "UK",
   },
   // ---- UK leads checked and NOT added ----------------------------------------
+  // Registry sweep (2026-09-09): 159 untracked UK registry domains probed —
+  // ZERO cleared MIN_SINGLES_FOR_STORE. UK Riftbound retail is genuinely thin
+  // outside this hand-built list, not under-searched; the biggest UK chains
+  // (Magic Madhouse, Chaos Cards, Wayland, Element Games) remain non-Shopify.
+  // Rejected non-Shopify stores that mention Riftbound, by platform: "other" 17,
+  // wix 14, squarespace 6 — see scratch/sweep-registry.json for every verdict.
+  //
   // All probed live this session; each is a real UK store, none is a bad lead —
   // they simply fail the "does the importer get real singles out of it?" test.
   // Re-check when they restock; this list is here so nobody re-researches them.
@@ -1702,7 +1962,344 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$175",
     country: "CA",
   },
+
+  // ---- Registry sweep (2026-09-09, scripts/sweep-registry.ts) — the CA market's
+  // stores had never been checked against the official Riftbound retailer
+  // registry (api.riftbound.uvsgames.com/api/v2/game-stores/), only found by
+  // ad-hoc web-search batches. 248 untracked registry domains probed, 32
+  // cleared MIN_SINGLES_FOR_STORE (see lib/woocommerce.ts) with a proven CAD
+  // price — the single biggest gain of this sweep, several with catalogues in
+  // the 500-1500+ singles range that outrank every store already tracked here.
+  tapsgames: {
+    key: "tapsgames",
+    name: "Taps Games",
+    base: "https://tapsgames.com",
+    collections: ["riftbound-singles", "riftbound-origins"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 1531 in-stock singles, cur=CAD
+  // A re-add, not a fresh find — this key was previously tracked, then dropped
+  // (see the STORES_WITH_POLICY cleanup note below for the "removed from here"
+  // context). This sweep proved 1,070 real in-stock CAD singles live, so
+  // whatever caused the earlier removal no longer holds; re-verify with
+  // scripts/sweep-registry.ts --only kanzengames.com before trusting old
+  // assumptions about this store.
+  kanzengames: {
+    key: "kanzengames",
+    name: "KanZenGames Sports & Collectibles",
+    base: "https://kanzengames.com",
+    collections: ["riftbound-tcg-singles-all", "riftbound-tcg-origins"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 1070 in-stock singles, cur=CAD
+  eclipsegames: {
+    key: "eclipsegames",
+    name: "Eclipse Games",
+    base: "https://eclipsegames.ca",
+    collections: ["high-end-riftbound", "rfitbound-events"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 863 in-stock singles, cur=CAD
+  laboutiquemythique: {
+    key: "laboutiquemythique",
+    name: "La Boutique Mythique | Lévis",
+    base: "https://laboutiquemythique.com",
+    collections: ["league-of-legends-riftbound-tcg", "riftbound-origins"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 837 in-stock singles, cur=CAD
+  mechagames: {
+    key: "mechagames",
+    name: "Mecha Games",
+    base: "https://mechagames.ca",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 820 in-stock singles, cur=CAD
+  fusiongamingonline: {
+    key: "fusiongamingonline",
+    name: "Fusion Gaming",
+    base: "https://fusiongamingonline.com",
+    collections: ["riftbound-champion-decks", "riftbound-origins"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 810 in-stock singles, cur=CAD
+  boutiquelapioche: {
+    key: "boutiquelapioche",
+    name: "La Pioche",
+    base: "https://boutiquelapioche.com",
+    collections: ["riftbound-origins-cartes-a-lunite", "riftbound-cartes-a-lunite"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 723 in-stock singles, cur=CAD
+  game3: {
+    key: "game3",
+    name: "Game 3 TCG & Hobby",
+    base: "https://game3.ca",
+    collections: ["league-of-legends-riftbound-singles-in-stock", "riftbound-spiritforged-all-products"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 680 in-stock singles, cur=CAD
+  wanderingadventures: {
+    key: "wanderingadventures",
+    name: "Wandering Adventures",
+    base: "https://wanderingadventures.ca",
+    collections: ["riftbound-tcg", "riftbound-tcg-1"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 622 in-stock singles, cur=CAD
+  gametime: {
+    key: "gametime",
+    name: "GameTime/TempsDuJeu",
+    base: "https://game-time.ca",
+    collections: ["riftbound-origins", "riftbound-spirited-forge"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 612 in-stock singles, cur=CAD
+  northernwartable: {
+    key: "northernwartable",
+    name: "Northern War Table",
+    base: "https://northernwartable.com",
+    collections: ["riftbound-singles-test", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 598 in-stock singles, cur=CAD
+  itsgametime: {
+    key: "itsgametime",
+    name: "Game Time Collectibles",
+    base: "https://itsgametime.ca",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 588 in-stock singles, cur=CAD
+  merchantsinventory: {
+    key: "merchantsinventory",
+    name: "Merchant's Shop",
+    base: "https://merchantsinventory.ca",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 574 in-stock singles, cur=CAD
+  battlegroundgames: {
+    key: "battlegroundgames",
+    name: "Battleground Games",
+    base: "https://battlegroundgames.ca",
+    collections: ["riftbound-single", "riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 552 in-stock singles, cur=CAD
+  everythinggames: {
+    key: "everythinggames",
+    name: "Everything Games",
+    base: "https://everythinggames.ca",
+    collections: ["riftbound-league-of-legends", "riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 550 in-stock singles, cur=CAD
+  vulcancollectibles: {
+    key: "vulcancollectibles",
+    name: "Vulcan Collectibles",
+    base: "https://vulcancollectibles.com",
+    collections: ["riftbound-singles", "riftbound-singles-main"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 465 in-stock singles, cur=CAD
+  boutiquelechevalier: {
+    key: "boutiquelechevalier",
+    name: "Le Chevalier",
+    base: "https://boutiquelechevalier.com",
+    collections: ["riftbound-lol-tcg", "riftbound-unleashed"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 450 in-stock singles, cur=CAD
+  freshbrewed: {
+    key: "freshbrewed",
+    name: "Fresh Brewed Games Ltd.",
+    base: "https://freshbrewed.games",
+    collections: ["riftbound", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 407 in-stock singles, cur=CAD
+  legendarycollectables: {
+    key: "legendarycollectables",
+    name: "Legendary Collectables",
+    base: "https://legendarycollectables.com",
+    collections: ["riftbound-origins-singles", "riftbound-unleashed-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 396 in-stock singles, cur=CAD
+  carddynasty: {
+    key: "carddynasty",
+    name: "Card Dynasty",
+    base: "https://carddynasty.ca",
+    collections: ["riftbound-league-of-legends", "riftbound-league-of-legends-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 376 in-stock singles, cur=CAD
+  royaltycardsandcollectibles: {
+    key: "royaltycardsandcollectibles",
+    name: "Royalty Cards and Collectibles",
+    base: "https://royaltycardsandcollectibles.com",
+    collections: ["riftbound", "riftbound-origins-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 368 in-stock singles, cur=CAD
+  cartessportivesrivesud: {
+    key: "cartessportivesrivesud",
+    name: "Cartes Sportives Rive Sud",
+    base: "https://cartessportivesrivesud.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 306 in-stock singles, cur=CAD
+  boutiqueartefact: {
+    key: "boutiqueartefact",
+    name: "Boutique L'Artefact",
+    base: "https://boutiqueartefact.com",
+    collections: ["riftbound-seal", "alpha-0-001-riftbound-seal"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 303 in-stock singles, cur=CAD
+  blackrosehobbies: {
+    key: "blackrosehobbies",
+    name: "Black Rose Hobbies",
+    base: "https://blackrosehobbies.com",
+    collections: ["riftbound-singles", "riftbound-graded"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 263 in-stock singles, cur=CAD
+  madmerchantgames: {
+    key: "madmerchantgames",
+    name: "Mad Merchant Cards and Games Limited",
+    base: "https://madmerchantgames.com",
+    collections: ["riftbound", "riftbound-events"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 247 in-stock singles, cur=CAD
+  hpwcards: {
+    key: "hpwcards",
+    name: "HPW CARDS INC.",
+    base: "https://hpwcards.com",
+    collections: ["riftbound-origins", "riftbound-spiritforged"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 161 in-stock singles, cur=CAD
+  lotuspetalgaming: {
+    key: "lotuspetalgaming",
+    name: "Lotus Petal Gaming",
+    base: "https://lotuspetalgaming.com",
+    collections: ["riftbound-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 154 in-stock singles, cur=CAD
+  "6ixtcgsmarkham": {
+    key: "6ixtcgsmarkham",
+    name: "The6ixtcgsMarkham",
+    base: "https://6ixtcgsmarkham.ca",
+    collections: ["riftbound", "riftbound-copy"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 56 in-stock singles, cur=CAD
+  hobbysag: {
+    key: "hobbysag",
+    name: "Hobby Saguenay",
+    base: "https://hobbysag.com",
+    collections: ["riftbound", "riftbound-singles"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 41 in-stock singles, cur=CAD
+  eacollectibles: {
+    key: "eacollectibles",
+    name: "EA Collectibles",
+    base: "https://eacollectibles.com",
+    collections: ["riftbound", "riftbound-cards-canada"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 37 in-stock singles, cur=CAD
+  silvergoblin: {
+    key: "silvergoblin",
+    name: "Gobelin d'Argent - Silver Goblin",
+    base: "https://silvergoblin.cards",
+    collections: ["all-riftbound-tcg-singles", "riftbound-single"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 21 in-stock singles, cur=CAD
+  heavenscollectibles: {
+    key: "heavenscollectibles",
+    name: "Heaven's Collectibles & TCG",
+    base: "https://heavenscollectibles.ca",
+    collections: ["riftbound-singles", "riftbound-events"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  }, // registry sweep 2026-09-09: 12 in-stock singles, cur=CAD
   // ---- Canadian leads checked and NOT added ----------------------------------
+  // Registry sweep (2026-09-09): 248 untracked CA registry domains probed beyond
+  // this hand-built list; 216 rejected or already tracked under another domain.
+  // Full per-store verdicts in scratch/sweep-registry.json.
   //   - screenfreegames.com (BC/Alberta) — confirmed Canadian in the US batch, but
   //     no live Riftbound collection could be confirmed this pass. Not added
   //     rather than added-on-a-guess; re-check and add if they stock it.
@@ -1978,6 +2575,22 @@ const STORES_WITH_POLICY = new Set([
   "manamarketeu", "universetcg", "lichcards", "trinketmage",
   "elduelista", "gsgameon", "battlebearsb", "timetwister",
   "nordiclegends",
+  // Registry sweep (2026-09-09, scripts/sweep-registry.ts) — every AU/US/CA
+  // registry-sweep store below whose /policies/shipping-policy page actually
+  // resolved, confirmed on the same live probe that measured its singles count.
+  // AU
+  "trollaustraliamelb", "inngames", "obsessiongaming", "hobbycollectorsaustralia",
+  "reefsidegames", "acecollectibles",
+  // US
+  "blackvaultgaming", "wolfdentcg", "gachaboba", "nexustabletopgames",
+  "fabricatorsforge", "lapinetabletopgaming", "troveofcollectibles", "impactgamingcenter",
+  // CA
+  "tapsgames", "kanzengames", "eclipsegames", "laboutiquemythique", "mechagames",
+  "fusiongamingonline", "boutiquelapioche", "game3", "wanderingadventures", "gametime",
+  "northernwartable", "itsgametime", "merchantsinventory", "everythinggames",
+  "vulcancollectibles", "boutiquelechevalier", "legendarycollectables", "carddynasty",
+  "cartessportivesrivesud", "boutiqueartefact", "blackrosehobbies", "hpwcards",
+  "6ixtcgsmarkham", "eacollectibles", "silvergoblin", "heavenscollectibles",
 ]);
 
 // The store's shipping-policy page URL, or null if it doesn't have one / isn't a store.
