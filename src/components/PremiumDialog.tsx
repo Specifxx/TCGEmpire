@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
+import { trackEvent } from "@/lib/analytics";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
 import {
@@ -14,6 +15,8 @@ import {
   annualSavingPct,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
+  premiumZeroToday,
+  premiumEffectiveMonthly,
 } from "@/lib/site";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
@@ -29,10 +32,9 @@ export function usePremiumDialog() {
 const GOLD_BTN =
   "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
 
-// "$9.99" → "$0". Derived rather than hardcoded so a re-denominated
-// PREMIUM_PRICE_AMOUNT (£, €, A$…) carries its symbol through instead of this
-// silently claiming dollars. Falls back to "$" if the amount is bare digits.
-const ZERO_DUE_TODAY = `${PREMIUM_PRICE_AMOUNT.replace(/[\d.,]+.*$/, "") || "$"}0`;
+// "$0 today" — shared with the slide-in/popup/premium-page framing (lib/site.ts)
+// so this can't drift from theirs the way the tool list once did.
+const ZERO_DUE_TODAY = premiumZeroToday();
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,9 +69,11 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   // Monthly is the default even when annual is offered. Annual is the better
   // value and says so on its own toggle (−33%), but defaulting to it puts the
-  // larger number ($79.99) in front of someone who has not decided to pay anything
-  // yet. Monthly is the lower-commitment first step; annual is one tap away for
-  // anyone who wants it.
+  // larger number (PREMIUM_ANNUAL_AMOUNT) in front of someone who has not decided
+  // to pay anything yet. Monthly is the lower-commitment first step; annual is
+  // one tap away for anyone who wants it — and the monthly price block now
+  // carries its own one-line pointer to the annual rate (see below), so that
+  // tap is never more than a click away from the number that sells it.
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
   const activePlan = premiumAnnual ? plan : "monthly";
 
@@ -87,6 +91,9 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   async function checkout(selected: "monthly" | "annual") {
     setBusy(true);
     setError(null);
+    // Fired BEFORE the fetch — dual-destination (see PremiumCta.tsx's own
+    // comment on why this event isn't in GA4_ONLY_EVENTS).
+    trackEvent("premium_checkout_started", { plan: selected, trial_eligible: trialEligible, source: "dialog" });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
@@ -241,9 +248,22 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                     <AnnualPriceBlock size="sm" />
                   </div>
                 ) : (
-                  <div className="mb-3 flex items-baseline justify-center gap-1">
-                    <span className="num text-3xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
-                    <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
+                  <div className="mb-3 text-center">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="num text-3xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
+                      <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
+                    </div>
+                    {/* One tap from the smaller monthly number to the one that
+                        actually sells Premium — the effective annual rate. Only
+                        rendered when there's an annual plan to switch to. */}
+                    {premiumAnnual && premiumEffectiveMonthly() && (
+                      <button
+                        onClick={() => setPlan("annual")}
+                        className="mt-1 text-[11px] font-semibold text-brand-400 transition hover:underline"
+                      >
+                        or from {premiumEffectiveMonthly()}/mo billed yearly →
+                      </button>
+                    )}
                   </div>
                 )}
 

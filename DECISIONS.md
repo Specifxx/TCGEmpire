@@ -3561,3 +3561,66 @@ is removed from the sitemap — a redirecting URL there is a soft error in Searc
 Console — and this sitemap line is now set-agnostic, so it stays put through
 every future launch. `tests/release-calendar.test.ts` fails the build if a set
 name or a date literal reappears in the page, the metadata or the smoke check.
+
+## Premium pricing & conversion (2026-09-08)
+
+**The report.** Owner: ~5 subscribers at $4.99, ~4 at $9.99, none yet at $14.99
+(raised 6 Sep, two days old at the time of this pass). Suspected culprit: the
+Premium corner slide-in, and whether hiding its price would help.
+
+**The price was not the problem — read the actual git history first.**
+$9.99 (31 Aug – 6 Sep, 6 days) outproduced $4.99 (18–31 Aug, 13 days) on both
+subscribers/day (~0.67 vs ~0.38) and revenue/day (~$6.70 vs ~$1.90). Zero
+subscribers over two days at $14.99 is not a signal — at the $9.99 rate,
+P(zero in 2 days) ≈ 27%. **Decision: hold $14.99.** Most of what counted as a
+"subscriber" is also a 14-day trial start (since `2b8adb4`) that hasn't
+converted yet — the number that actually matters is trial→paid on
+`/admin/subscriptions`, not raw signups.
+
+**Hiding the price was already the status quo, and it wasn't working.**
+`PremiumSlideIn.tsx` hid its price line whenever `trialEligible` was true —
+true for nearly every logged-in free visitor. Stripe still shows $14.99 at
+checkout regardless, so hiding it here only moved the surprise to the most
+expensive place to lose someone: the card form. **Decision: always show a
+price**, framed as "$0 today" during the trial, "from $10.00/mo billed
+yearly, or $14.99 month-to-month" otherwise — the same framing now shared by
+`site.ts`'s `premiumZeroToday()`/`premiumFromLine()` across the slide-in, the
+dialog and `/premium`, so a future price change updates every surface from
+one place (mirrors `premiumLockInLine()`'s own existing pattern).
+
+**What actually shipped, beyond the price line:**
+- The slide-in's flat "unlock N tools" pitch became contextual by route (a
+  deck page sells Best Basket, a card page sells Value Finder, a movers/market
+  page sells Rising Cards) — every named tool is pinned to a real
+  `PITCH_TOOLS`/`TIER_COMPARISON` entry so this can't drift the way the old
+  hand-written sentence once did.
+- A live proof line ("N deals worth $X right now") on the slide-in and a
+  proof strip on `/premium`, both read from the same 1h-cached `getCachedTopDeals`
+  the homepage already warms — real numbers, not a manufactured urgency claim,
+  and each tile hides itself when its own number is zero.
+- `/premium` had no FAQ despite carrying the checkout decision. Added one,
+  rendered visibly and as `FAQPage` JSON-LD, every answer derived from the
+  same `site.ts`/`premium.ts` constants the rest of the page uses.
+- A one-time "your free trial is still waiting" recovery email
+  (`runCheckoutRecovery` in `lib/premium.ts`) for the single highest-intent,
+  still-unconverted signal on the site: `PremiumClick{source:"checkout"}` rows
+  20–72h old with no resulting subscription. Sent once per account
+  (`User.checkoutRecoverySentAt`, stamped unconditionally like
+  `trialReminderSentAt`), no unsubscribe link (transactional, tied to an
+  action the recipient themselves took), via a new daily
+  `premium-checkout-recovery.yml` GitHub Actions cron (Vercel's cron slots are
+  already spoken for) hitting a new fail-closed `/api/cron/premium-checkout-recovery`.
+- `premium_checkout_started` fires from both checkout entry points
+  (`PremiumCta`, `PremiumDialog`) before the fetch — the funnel step between
+  "clicked a Premium CTA" (`premium_click`) and "subscribed" that had no event
+  at all.
+
+**Decision rule for what happens next.** Hold $14.99 for three weeks. Read
+weekly: trial starts/week, trial→paid % (`/admin/subscriptions`),
+`premium_slidein_click` rate, checkout-started → subscribed (`/admin/premium`).
+If trial starts/week stay at or above ~60% of the $9.99-era rate, the price
+increase is net positive on revenue — keep it. Only drop to $12.99 (still
+above the $9.99/$10 level that was already working) if that rate falls below
+~40% for two consecutive weeks — never straight back to $9.99 without first
+trying the smaller step down. An annual price around $99 ("$8.25/mo") is the
+next experiment worth trying — a Stripe Price change only, no code.

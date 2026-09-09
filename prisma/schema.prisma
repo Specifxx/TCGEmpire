@@ -45,6 +45,11 @@ model User {
   // in lib/premium.ts) — set once the reminder is sent so a daily cron re-run never
   // double-emails the same trialist. Mirrors Order.shipReminderAt's convention.
   trialReminderSentAt DateTime?
+  // Dedupe stamp for the one-time "your free trial is still waiting" recovery
+  // email (see runCheckoutRecovery in lib/premium.ts) — set once so a daily
+  // cron re-run never double-emails the same abandoned checkout. Same
+  // additive/nullable shape as trialReminderSentAt/signupSource above.
+  checkoutRecoverySentAt DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)

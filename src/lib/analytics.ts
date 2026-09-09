@@ -63,7 +63,7 @@ export function trackEvent(name: string, params?: Record<string, string | number
 // calls this directly to keep the same signal alive. `source` must be one of
 // api/premium/click's own SOURCES allow-list; an unrecognised value is coerced
 // server-side to "dialog" rather than rejected, but pass a real one anyway.
-export function firePremiumClickBeacon(source: "dialog" | "checkout" | "premium-page" | "button"): void {
+export function firePremiumClickBeacon(source: "dialog" | "checkout" | "premium-page" | "button" | "recovery"): void {
   try {
     fetch("/api/premium/click", {
       method: "POST",

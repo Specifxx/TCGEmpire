@@ -284,3 +284,23 @@ test("SignupPromoPopup always shows a price, even while a free trial is availabl
   assert.match(block, /trialAvailable \? " after your free trial" : ""/, "must say 'after your free trial' rather than contradict the trial CTA");
   assert.match(block, /premiumLockInTail\(\)/, "must still use the shared lock-in helper");
 });
+
+test("PremiumSlideIn always shows a price too, framed as '$0 today' during a trial", () => {
+  // The slide-in had the SAME bug SignupPromoPopup was fixed for on 2026-09-06
+  // (a price hidden whenever trialEligible — true for nearly every logged-in
+  // free visitor) but was missed in that pass. Hiding the price never stopped
+  // Stripe from charging it at checkout; it just moved the surprise to the
+  // most expensive place to lose someone. Fixed 2026-09-08 as part of the
+  // pricing/conversion pass — see DECISIONS.md.
+  const src = read("src/components/PremiumSlideIn.tsx");
+  assert.ok(
+    !/\{!trialEligible && PREMIUM_PRICE_AMOUNT/.test(src),
+    "the price block must not be gated on !trialEligible — that was the exact bug",
+  );
+  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
+  assert.ok(priceBlockAt >= 0, "expected an unconditional price block");
+  const block = src.slice(priceBlockAt, priceBlockAt + 600);
+  assert.match(block, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
+  assert.match(block, /premiumFromLine\(\)/, "must use the shared from-$X/mo framing, not a bare monthly price");
+  assert.match(block, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
+});

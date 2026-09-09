@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/use-me";
+import { useCountry } from "./CountryProvider";
 import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
 import {
   PREMIUM_PRICE_AMOUNT,
@@ -10,7 +11,11 @@ import {
   PREMIUM_NEXT_PRICE_AMOUNT,
   premiumPriceIncreaseAnnounced,
   premiumLockInTail,
+  premiumZeroToday,
+  premiumFromLine,
 } from "@/lib/site";
+import { formatMoneyCompact } from "@/lib/format";
+import { currencyOf } from "@/lib/country";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "most logged-in free users never see a Premium pitch
@@ -82,6 +87,43 @@ export const PITCH_TOOLS: { emoji: string; label: string }[] = [
   { emoji: "💱", label: "Deal Finder" },
 ];
 
+// A contextual heading/line, keyed by the CURRENT page, instead of the one
+// generic pitch every route got before. Each entry names the ONE Premium tool
+// most relevant to where the visitor already is — a deck page sells Best
+// Basket, a card page sells Value Finder — rather than the flat "unlock N
+// tools" line that's true everywhere and therefore compelling nowhere.
+// First matching prefix wins; no match falls back to the original generic copy.
+//
+// Every `tool` here MUST be a real PITCH_TOOLS label (tests/premium-slidein.test.ts
+// pins this) — the same discipline PITCH_TOOLS's own header comment already
+// holds itself to, so this can't silently drift the way the old hand-written
+// sentence did.
+const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: string }[] = [
+  {
+    prefixes: ["/deck"],
+    tool: "Best Basket",
+    heading: "Best Basket finds the cheapest way to buy this whole deck",
+    line: "Paste this decklist in and get the store split with the lowest landed cost, postage included.",
+  },
+  {
+    prefixes: ["/card/"],
+    tool: "Value Finder",
+    heading: "Value Finder shows what's trading below average right now",
+    line: "Every card currently priced below its own 30-day average, ranked by discount.",
+  },
+  {
+    prefixes: ["/movers", "/market"],
+    tool: "Rising Cards",
+    heading: "Rising Cards shows what's about to move, not what already did",
+    line: "Ranked by demand and price-timing signals, backtested. Free shows only the top pick.",
+  },
+];
+
+function contextPitchFor(pathname: string | null) {
+  if (!pathname) return null;
+  return CONTEXT_PITCH.find((c) => c.prefixes.some((p) => pathname.startsWith(p))) ?? null;
+}
+
 function readNum(store: Storage | undefined | null, key: string): number {
   try {
     return Number(store?.getItem(key) ?? "0") || 0;
@@ -92,11 +134,19 @@ function readNum(store: Storage | undefined | null, key: string): number {
 
 export function PremiumSlideIn() {
   const { user, premium, premiumCheckout, trialEligible, trialDays, loaded } = useMe();
+  const { country } = useCountry();
   const router = useRouter();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
   const lastCountedPath = useRef<string | null>(null);
+  const contextPitch = contextPitchFor(pathname);
+  // Live "N deals worth $X right now" proof line. Fetched from the shared,
+  // already-cached homepage feed (see api/premium/proof) — ONLY once `shown`
+  // flips true, never on mount, so a visitor who never triggers the slide-in
+  // never causes this request at all.
+  const [proof, setProof] = useState<{ deals: number; savingsCents: number } | null>(null);
+  const proofFetched = useRef(false);
 
   // Count route views once per pathname, on its own key so this component never
   // depends on the signup popup's counter existing.
@@ -146,11 +196,37 @@ export function PremiumSlideIn() {
       setShown(true);
       // Next paint → play the transition from the off-screen start state.
       requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
-      trackEvent("premium_slidein_shown", { path: pathname ?? "/", trial_eligible: trialEligible });
+      trackEvent("premium_slidein_shown", {
+        path: pathname ?? "/",
+        trial_eligible: trialEligible,
+        context: contextPitch?.tool ?? undefined,
+      });
     }, DWELL_MS);
 
     return () => clearTimeout(t);
-  }, [eligible, shown, pathname, trialEligible]);
+  }, [eligible, shown, pathname, trialEligible, contextPitch]);
+
+  // Fetch the live proof numbers only once the card has actually appeared —
+  // never speculatively on mount, since most visitors never trigger it at all.
+  useEffect(() => {
+    if (!shown || proofFetched.current) return;
+    proofFetched.current = true;
+    let cancelled = false;
+    fetch(`/api/premium/proof?country=${country}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d) return;
+        if (typeof d.deals === "number" && typeof d.savingsCents === "number") {
+          setProof({ deals: d.deals, savingsCents: d.savingsCents });
+        }
+      })
+      .catch(() => {
+        /* best-effort — no proof line is a fine fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shown, country]);
 
   const hide = useCallback(() => {
     setEntered(false);
@@ -169,7 +245,7 @@ export function PremiumSlideIn() {
   }, [hide]);
 
   const accept = useCallback(() => {
-    trackEvent("premium_slidein_click", { trial_eligible: trialEligible });
+    trackEvent("premium_slidein_click", { trial_eligible: trialEligible, context: contextPitch?.tool ?? undefined });
     firePremiumClickBeacon("button"); // used to fire inside the dialog's open() — see that helper's own header
     try {
       // Engaged, not rejected: a long snooze rather than a dismissal strike, so
@@ -180,7 +256,7 @@ export function PremiumSlideIn() {
     }
     hide();
     router.push("/premium"); // straight to the page — no dialog in between (2026-09-06)
-  }, [hide, router, trialEligible]);
+  }, [hide, router, trialEligible, contextPitch]);
 
   // Esc closes it — non-trapping, because this is not a modal.
   useEffect(() => {
@@ -194,7 +270,9 @@ export function PremiumSlideIn() {
 
   if (!shown) return null;
 
-  const heading = trialEligible ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`;
+  const heading =
+    contextPitch?.heading ?? (trialEligible ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`);
+  const bodyLine = contextPitch?.line ?? "You've been comparing prices — Premium adds the pro tools and goes ad-free:";
   const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
 
   return (
@@ -217,19 +295,29 @@ export function PremiumSlideIn() {
           <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
             Premium
           </span>
-          <span className="text-xs font-semibold text-slate-200">{heading}</span>
+          <span className="min-w-0 flex-1 text-xs font-semibold leading-snug text-slate-200">{heading}</span>
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            className="ml-auto -mr-1 shrink-0 self-start rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
           >
             ✕
           </button>
         </div>
         <div className="px-4 py-3">
-          <p className="text-xs leading-relaxed text-slate-400">
-            You&apos;ve been comparing prices — Premium adds the pro tools and goes ad-free:
-          </p>
+          <p className="text-xs leading-relaxed text-slate-400">{bodyLine}</p>
+          {/* Live proof — real numbers, not a made-up urgency line. Renders
+              nothing until the fetch resolves (or if there's too little to
+              make a real case, or it fails), so this can only ever make the
+              pitch stronger, never weaker or slower to appear. */}
+          {proof && proof.deals >= 5 && (
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+              <span className="font-bold text-white">
+                {proof.deals} deals worth {formatMoneyCompact(proof.savingsCents, currencyOf(country))}
+              </span>{" "}
+              live on Deal Finder right now.
+            </p>
+          )}
           {/* Same real, decided increase the dialog and /premium announce (see
               lib/site.ts) — sized down for this card rather than the full
               two-line banner, which would double the slide-in's height and cut
@@ -265,10 +353,26 @@ export function PremiumSlideIn() {
               Not now
             </button>
           </div>
-          {!trialEligible && PREMIUM_PRICE_AMOUNT ? (
+          {/* ALWAYS shown now (mirrors the 2026-09-06 fix to SignupPromoPopup's
+              own price line, pinned by that same test file). Used to hide
+              entirely whenever a trial was available — which is nearly every
+              logged-in free visitor — so almost nobody who saw this card ever
+              saw a price. Stripe shows the real number at checkout regardless;
+              hiding it here only moved the surprise to the most expensive
+              place to lose someone. "$0 today, then from $X/mo" states the
+              honest number without contradicting the trial CTA above it. */}
+          {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-center text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD} ·{" "}
-              {premiumLockInTail()}
+              {trialEligible ? (
+                <>
+                  <span className="font-bold text-white">{premiumZeroToday()}</span> · then {premiumFromLine()} ·{" "}
+                  cancel anytime
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}
+                </>
+              )}
             </p>
           ) : null}
         </div>

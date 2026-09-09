@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 // Gold (not green) — the professional "premium" accent used across the Premium UI.
 const GOLD_BTN =
@@ -34,6 +35,10 @@ export function PremiumCta({
   async function subscribe() {
     setBusy(true);
     setError(null);
+    // Fired BEFORE the fetch — a low-volume conversion-funnel step, so it goes
+    // to both GA4 and Vercel (not added to GA4_ONLY_EVENTS), unlike the
+    // high-volume impression events elsewhere in the Premium funnel.
+    trackEvent("premium_checkout_started", { plan, trial_eligible: trialEligible, source: "premium-page" });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",

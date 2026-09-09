@@ -1,16 +1,21 @@
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_ANNUAL_AMOUNT, PREMIUM_ANNUAL_PERIOD, annualSavingPct } from "@/lib/site";
+import {
+  PREMIUM_PRICE_AMOUNT,
+  PREMIUM_ANNUAL_AMOUNT,
+  PREMIUM_ANNUAL_PERIOD,
+  annualSavingPct,
+  premiumMoneyNum,
+  premiumEffectiveMonthly,
+} from "@/lib/site";
 
 // The annual price, styled to make the saving pop: the "if you paid monthly" yearly
 // total struck through, the annual price big, and a glowing green SAVE badge +
 // per-month equivalent. Presentational only (no hooks), so it's usable in both the
 // server /premium page and the client Premium dialog. Market-terminal theme.
-const num = (s: string) => Number(s.replace(/[^0-9.]/g, "")) || 0;
 
 export function AnnualPriceBlock({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const monthly = num(PREMIUM_PRICE_AMOUNT);
-  const annual = num(PREMIUM_ANNUAL_AMOUNT);
+  const monthly = premiumMoneyNum(PREMIUM_PRICE_AMOUNT);
   const fullYear = monthly ? `$${(monthly * 12).toFixed(2)}` : "";
-  const perMonth = annual ? `$${(annual / 12).toFixed(2)}` : "";
+  const perMonth = premiumEffectiveMonthly();
   const save = annualSavingPct();
   const big = size === "lg" ? "text-4xl" : "text-3xl";
 

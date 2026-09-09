@@ -40,14 +40,58 @@ export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${P
 export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$119.99";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
+// Shared numeric parse for a display price string ("$14.99" -> 14.99). Lifted
+// out of annualSavingPct/AnnualPriceBlock's own local copies so every "do the
+// math on the display price" call site (this file, AnnualPriceBlock,
+// PremiumDialog's $0-due-today derivation) reads the same parsing rule instead
+// of three near-identical regexes drifting independently.
+export function premiumMoneyNum(s: string): number {
+  return Number(s.replace(/[^0-9.]/g, "")) || 0;
+}
+
+// The bare currency symbol/prefix off PREMIUM_PRICE_AMOUNT ("$14.99" -> "$"),
+// for building a "$0 due today" string that carries whatever symbol the real
+// price uses (a re-denominated £/€ amount) rather than assuming dollars.
+// Falls back to "$" if the amount is bare digits.
+export function premiumCurrencySymbol(): string {
+  return PREMIUM_PRICE_AMOUNT.replace(/[\d.,]+.*$/, "") || "$";
+}
+
 // Percent saved on annual vs paying monthly for a year (rounded). Parses the numeric
 // part of each amount; falls back to 0 if either can't be read.
 export function annualSavingPct(): number {
-  const num = (s: string) => Number(s.replace(/[^0-9.]/g, ""));
-  const monthly = num(PREMIUM_PRICE_AMOUNT);
-  const annual = num(PREMIUM_ANNUAL_AMOUNT);
+  const monthly = premiumMoneyNum(PREMIUM_PRICE_AMOUNT);
+  const annual = premiumMoneyNum(PREMIUM_ANNUAL_AMOUNT);
   if (!monthly || !annual) return 0;
   return Math.max(0, Math.round((1 - annual / (monthly * 12)) * 100));
+}
+
+// The annual price's per-month equivalent ("$119.99" -> "$10.00"), for the
+// "from $10/mo billed yearly" framing used across the slide-in, dialog and
+// /premium page. "" when there's no annual price configured, so callers can
+// cleanly fall back to the monthly-only framing.
+export function premiumEffectiveMonthly(): string {
+  const annual = premiumMoneyNum(PREMIUM_ANNUAL_AMOUNT);
+  if (!annual) return "";
+  return `${premiumCurrencySymbol()}${(annual / 12).toFixed(2)}`;
+}
+
+// The lead price framing used across the slide-in, dialog and /premium page —
+// "from $10.00/mo billed yearly, or $14.99 month-to-month" when an annual plan
+// exists, otherwise just the monthly price. Centralised so the effective-annual
+// number can't drift between surfaces the way the tool list once did (see
+// PITCH_TOOLS's own header comment for that history repeating itself).
+export function premiumFromLine(): string {
+  const effective = premiumEffectiveMonthly();
+  if (!effective) return `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
+  return `from ${effective}/mo billed yearly, or ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} month-to-month`;
+}
+
+// "$0 today" — the trial-eligible lead-in, symbol derived from the real price
+// rather than hardcoded so a re-denominated PREMIUM_PRICE_AMOUNT carries its
+// own currency through.
+export function premiumZeroToday(): string {
+  return `${premiumCurrencySymbol()}0 today`;
 }
 
 // ── Announced price increase ────────────────────────────────────────────────

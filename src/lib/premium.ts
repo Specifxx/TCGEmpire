@@ -14,9 +14,9 @@ import { sydneyWeekKey, historySource } from "./price-history";
 import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
-import { sendTrialEndingEmail } from "./email";
+import { sendTrialEndingEmail, sendCheckoutRecoveryEmail } from "./email";
 import { formatMoney } from "./format";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD } from "./site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine } from "./site";
 
 // The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
@@ -122,6 +122,66 @@ export async function runPremiumTrialReminders(): Promise<number> {
       /* best-effort — one failed lookup must not block the rest of the batch */
     }
     await prisma.user.update({ where: { id: u.id }, data: { trialReminderSentAt: new Date() } }).catch(() => {});
+  }
+  return sent;
+}
+
+// The highest-intent, still-unconverted signal on the site: someone who opened
+// Stripe checkout for Premium (recorded server-side the moment checkout starts
+// — see api/premium/checkout's PremiumClick write) but never came back with a
+// paid or trialing subscription. Runs as a daily cron (see
+// api/cron/premium-checkout-recovery), same idempotent-stamp shape as
+// runPremiumTrialReminders above: the stamp is written unconditionally after
+// each attempt, outside the try, with .catch — a lost email must never retry
+// forever.
+//
+// WINDOWED 20h-72h after the click: the lower bound avoids nagging someone
+// still mid-checkout (a card can take a few minutes, or they may have simply
+// tabbed away and come back); the upper bound means a click older than 3 days
+// is treated as cold rather than "still waiting". Capped at 200/run for the
+// same reason the maintenance workflow's other batch jobs cap themselves.
+export async function runCheckoutRecovery(): Promise<number> {
+  const now = Date.now();
+  const windowStart = new Date(now - 72 * 3600_000);
+  const windowEnd = new Date(now - 20 * 3600_000);
+
+  // groupBy, NOT findMany({ distinct: [...] }) — Prisma's `distinct` dedupes in
+  // the CLIENT (every matching row still comes back over the wire), where a
+  // real GROUP BY pushes the dedup into Postgres. See
+  // tests/prisma-client-side-distinct.test.ts for the incident this rule
+  // exists to prevent.
+  const clicks = await prisma.premiumClick.groupBy({
+    by: ["userId"],
+    where: { source: "checkout", userId: { not: null }, createdAt: { gte: windowStart, lte: windowEnd } },
+  });
+  const userIds = clicks.map((c) => c.userId).filter((id): id is string => id != null);
+  if (!userIds.length) return 0;
+
+  const candidates = await prisma.user.findMany({
+    where: {
+      id: { in: userIds },
+      checkoutRecoverySentAt: null,
+      isAdmin: false,
+      // Never nag someone who's already Premium right now — the checkout they
+      // abandoned may have been superseded by a later, successful one.
+      OR: [{ premiumUntil: null }, { premiumUntil: { lt: new Date() } }],
+    },
+    select: { id: true, email: true, trialStartedAt: true },
+    take: 200,
+  });
+  if (!candidates.length) return 0;
+
+  let sent = 0;
+  for (const u of candidates) {
+    try {
+      // Only offer the trial framing if this account genuinely hasn't used one
+      // yet — otherwise state the plain price, never a trial that no longer applies.
+      const trialDays = premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0;
+      if (await sendCheckoutRecoveryEmail(u.email, trialDays, premiumFromLine())) sent++;
+    } catch {
+      /* best-effort — one failed send must not block the rest of the batch */
+    }
+    await prisma.user.update({ where: { id: u.id }, data: { checkoutRecoverySentAt: new Date() } }).catch(() => {});
   }
   return sent;
 }

@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const SOURCES = new Set(["dialog", "checkout", "premium-page", "button"]);
+const SOURCES = new Set(["dialog", "checkout", "premium-page", "button", "recovery"]);
 
 // Premium-interest beacon: records that someone clicked a Premium CTA (opened the
 // upsell dialog, etc.) so the admin can see who's interested before they convert.

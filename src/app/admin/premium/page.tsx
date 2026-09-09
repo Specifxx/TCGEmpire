@@ -35,24 +35,29 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
   const d7 = new Date(now.getTime() - 7 * 86400_000);
   const d30 = new Date(now.getTime() - 30 * 86400_000);
 
-  let totals = { all: 0, e7: 0, e30: 0, checkout: 0 };
+  let totals = { all: 0, e7: 0, e30: 0, checkout: 0, recovery30: 0 };
   let users: Agg[] = [];
   let anon = 0;
   let converted = 0;
   let error = false;
   try {
-    const [all, e7, e30, checkout, recent] = await Promise.all([
+    const [all, e7, e30, checkout, recovery30, recent] = await Promise.all([
       prisma.premiumClick.count(),
       prisma.premiumClick.count({ where: { createdAt: { gte: d7 } } }),
       prisma.premiumClick.count({ where: { createdAt: { gte: d30 } } }),
       prisma.premiumClick.count({ where: { source: "checkout" } }),
+      // Abandoned-checkout recovery emails actually sent (see
+      // runCheckoutRecovery in lib/premium.ts) — a separate, smaller number
+      // from "Started checkout" above: this counts the follow-up, not the
+      // original signal.
+      prisma.user.count({ where: { checkoutRecoverySentAt: { gte: d30 } } }),
       prisma.premiumClick.findMany({
         orderBy: { createdAt: "desc" },
         take: SAMPLE,
         select: { userId: true, source: true, createdAt: true },
       }),
     ]);
-    totals = { all, e7, e30, checkout };
+    totals = { all, e7, e30, checkout, recovery30 };
     anon = recent.filter((r) => !r.userId).length;
 
     // Aggregate signed-in clicks per user.
@@ -103,10 +108,11 @@ export default async function PremiumInterestAdminPage({ searchParams }: { searc
         independent of, actually subscribing.
       </p>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="Clicks · all time" value={num(totals.all)} />
         <Stat label="Clicks · 30d" value={num(totals.e30)} sub={`${num(totals.e7)} in 7d`} />
         <Stat label="Started checkout" value={num(totals.checkout)} />
+        <Stat label="Recovery emails · 30d" value={num(totals.recovery30)} sub="abandoned checkout" />
         <Stat label="Interested → Premium" value={num(converted)} sub="of recent signed-in" />
       </div>
 
