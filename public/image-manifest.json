@@ -452,6 +452,48 @@
     ],
     "fingerprint": "027bfb2831227774"
   },
+  "/blog/riftbound-deploy-explained.png": {
+    "src": "/blog/riftbound-deploy-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 34122,
+    "webp": "/blog/riftbound-deploy-explained.webp",
+    "webpBytes": 27298,
+    "avif": "/blog/riftbound-deploy-explained.avif",
+    "avifBytes": 18321,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-deploy-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-deploy-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "12f8e929d1011570"
+  },
+  "/blog/riftbound-disarm-explained.png": {
+    "src": "/blog/riftbound-disarm-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49468,
+    "webp": "/blog/riftbound-disarm-explained.webp",
+    "webpBytes": 35378,
+    "avif": "/blog/riftbound-disarm-explained.avif",
+    "avifBytes": 21731,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-disarm-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-disarm-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "b9555974ad00e827"
+  },
   "/blog/riftbound-format-legality-rotation.png": {
     "src": "/blog/riftbound-format-legality-rotation.png",
     "width": 1200,
@@ -535,6 +577,27 @@
       }
     ],
     "fingerprint": "8758e0f892e05396"
+  },
+  "/blog/riftbound-showoff-explained.png": {
+    "src": "/blog/riftbound-showoff-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49547,
+    "webp": "/blog/riftbound-showoff-explained.webp",
+    "webpBytes": 34178,
+    "avif": "/blog/riftbound-showoff-explained.avif",
+    "avifBytes": 23731,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-showoff-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-showoff-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "ba93427cb648774d"
   },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",

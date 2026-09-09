@@ -257,6 +257,43 @@ const HEROES: Hero[] = [
       ],
     },
   },
+  // Per-mechanic Radiance-leak guides. Same "leak status" checklist on all three —
+  // deliberately identical across the family, the way the crossover-onboarding
+  // guides below reuse one checklist shape — so the thumbnail itself signals
+  // "unconfirmed" alongside the article copy, not just inside it.
+  {
+    slug: "riftbound-deploy-explained",
+    kicker: "Guide · Radiance leak",
+    title: "Riftbound Deploy Explained",
+    chips: ["Gear keyword", "Battlefield-bound", "Not yet confirmed"],
+    motif: {
+      kind: "checklist",
+      label: "Leak status",
+      items: ["Leaked at PAX West", "Not Riot-confirmed", "Radiance · 23 Oct 2026"],
+    },
+  },
+  {
+    slug: "riftbound-showoff-explained",
+    kicker: "Guide · Radiance leak",
+    title: "Riftbound Showoff Explained",
+    chips: ["Modal reveal effect", "Hand or board", "Not yet confirmed"],
+    motif: {
+      kind: "checklist",
+      label: "Leak status",
+      items: ["Leaked at PAX West", "Not Riot-confirmed", "Radiance · 23 Oct 2026"],
+    },
+  },
+  {
+    slug: "riftbound-disarm-explained",
+    kicker: "Guide · Radiance leak",
+    title: "Riftbound Disarm Explained",
+    chips: ["Mirrors Assault", "Shrinks enemy Might", "Not yet confirmed"],
+    motif: {
+      kind: "checklist",
+      label: "Leak status",
+      items: ["Leaked at PAX West", "Not Riot-confirmed", "Radiance · 23 Oct 2026"],
+    },
+  },
   {
     slug: "gradient-sleeves-for-riftbound-cards",
     kicker: "Guide · Accessories",

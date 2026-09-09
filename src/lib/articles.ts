@@ -397,14 +397,17 @@ We are not going to run Radiance speculation. What we will do, on the day the re
 Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
   },
   // ── Radiance leak: a fan photo of Riot's own PAX West demo reference material,
-  // not a Riot announcement. Deliberately category "blog" (news), NOT "guide" —
-  // guide/keyword pages on this site are reserved for wording verified against
-  // Riot's own Core Rules PDF (see the DATA-ACCURACY RULE at the top of
-  // lib/keywords.ts and docs/seo-keyword-map.md's "do not draft [a keyword page]
-  // without a verified source"). This is reported, sourced leak coverage instead —
-  // every claim is hedged and attributed, and it explicitly does NOT add Deploy,
-  // Showoff or Disarm to keywords.ts. Promote it to a keyword/guide page only once
-  // Riot (not a demo-table photo) confirms the wording.
+  // not a Riot announcement. Deliberately category "blog" (news) — this roundup
+  // and the three per-mechanic guides below it (riftbound-deploy-explained,
+  // riftbound-showoff-explained, riftbound-disarm-explained) are reported, sourced
+  // leak coverage, hedged and attributed throughout. They deliberately do NOT add
+  // Deploy, Showoff or Disarm to keywords.ts — that file's DATA-ACCURACY RULE (see
+  // its header) and docs/seo-keyword-map.md's "do not draft [a keyword page]
+  // without a verified source" require wording verified against Riot's own Core
+  // Rules PDF, which doesn't exist yet for an unreleased set. `keywords.ts`
+  // entries are also technically unverifiable right now: `rulesContain` depends on
+  // a real catalogued card row, and none of these three have one. Promote any of
+  // this to keywords.ts only once Riot (not a demo-table photo) confirms it.
   {
     slug: "riftbound-radiance-leaked-mechanics",
     category: "blog",
@@ -510,11 +513,207 @@ The caption also suggests Disarm "can pair well with direct damage spells like F
 - **Whether more mechanics exist beyond these three** — the leaked caption itself implies there are more.
 - **Whether the names or wording survive to release at all.** Preview-season terminology shifting before a final print run isn't unusual in this genre, and this is Radiance's first mid-cycle mechanic leak, so Riftbound itself hasn't set a precedent either way yet.
 
-We add a keyword to our own reference pages — the way **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** got added for Vendetta — only once we can verify the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet, which is exactly why this is a blog post about a leak rather than a keyword or guide page treating any of it as settled.
+We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet.
 
 ## What to actually do with this before release
 
 Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and none of these three cards have been shown. If you want to track the set as real information lands, **[Radiance pre-order pricing](/radiance-preorders)** already compares sealed product across stores, and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
+  },
+  // ── Per-mechanic deep dives for the Radiance leak above, targeting "riftbound
+  // deploy" / "riftbound showoff" / "riftbound disarm" query intent the same way
+  // riftbound-empower-explained etc. target "riftbound empower" (see
+  // docs/seo-keyword-map.md's mechanic-intent query table). Category "guide" for
+  // the same reason those three are guides — but UNLIKE them, every section here
+  // stays hedged ("as leaked", "reportedly") because none of this is verified.
+  // Deliberately NOT added to keywords.ts — see the comment on the leak roundup
+  // above for why that file's bar can't be cleared for an unreleased set.
+  {
+    slug: "riftbound-deploy-explained",
+    category: "guide",
+    title: "Riftbound Deploy Explained: The Leaked Radiance Mechanic",
+    excerpt:
+      "What Riftbound's leaked Deploy keyword reportedly does, how it's meant to work, and why Riot hasn't confirmed it yet — everything currently known about Radiance's Gear mechanic.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 5,
+    tags: ["radiance", "mechanics", "deploy", "leak", "spoilers", "guide"],
+    hero: {
+      src: "/blog/riftbound-deploy-explained.png",
+      alt: "Riftbound Deploy — a leaked Radiance Gear keyword, not yet confirmed by Riot",
+    },
+    summary: [
+      "**Deploy is a leaked Gear keyword from Riftbound: Radiance**, reportedly tied to holding one specific battlefield rather than being attached to a unit.",
+      "**Lose the battlefield, lose the card**: the leaked wording says an opponent taking that battlefield kills the Gear outright, not just switches it off.",
+      "**It's the opposite risk profile from [Equip](/keywords/equip)**, which stays functional on its unit regardless of what's happening on the board.",
+      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+    ],
+    faq: [
+      { q: "What is Deploy in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's reportedly a Gear keyword tied to controlling one specific battlefield, not yet confirmed by Riot." },
+      { q: "How does the Deploy mechanic work?", a: "As leaked: you play the Gear to a battlefield rather than to a unit or your base. While you hold that battlefield, it grants a benefit (the leak doesn't say what kind). If an opponent takes the battlefield, the Gear is killed outright." },
+      { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "Per the leaked wording, the Gear is killed — not deactivated or returned to hand, but removed from the game the way any killed permanent would be." },
+      { q: "How is Deploy different from Equip?", a: "Equip attaches a Gear card to a unit, and it stays functional regardless of board state. Deploy, as leaked, attaches to a battlefield instead of a unit, and is destroyed if you lose control of that battlefield — a much higher-risk trade for whatever benefit it grants." },
+      { q: "Is Deploy confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "How is Deploy different from Showoff and Disarm?", a: "Deploy is a Gear keyword about holding a battlefield; Showoff is a modal reveal effect triggered on play; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly, unlike Vendetta's Empower/Flow/Burn." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-leaked-mechanics",
+      label: "See the full Radiance mechanics leak →",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+    },
+    body: `**Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
+
+> "Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear."
+
+## How Deploy reportedly works
+
+1. **Play the Gear to a battlefield**, not to your base or a unit — Deploy appears to be a location-bound Gear keyword rather than a unit attachment.
+2. **It grants a benefit while you hold that battlefield.** The leaked text doesn't specify what kind of benefit — a stat boost, an ongoing effect, or something else entirely could all fit "grant benefits."
+3. **Lose the battlefield, lose the card.** If an opponent takes control of the battlefield the Gear is deployed to, the card is killed outright — not just deactivated.
+
+That third step is the part worth sitting with. Most of Riftbound's existing Gear interacts with a unit via **[Equip](/keywords/equip)**, which stays attached and functional regardless of what's happening on the board around it. Deploy, as leaked, ties the card's *survival* to board state — a meaningfully riskier trade for whatever benefit it grants.
+
+## Deploy vs Equip: gear tied to a place, not a unit
+
+**[Equip](/keywords/equip)** attaches a Gear card to a *unit* you control, and it stays there — the card cares about the unit, not the battlefield the unit happens to be standing on. Deploy, as leaked, reverses that: the Gear cares about the *battlefield*, not any specific unit, and it's vulnerable to something Equip never has to worry about — losing that one location. If the leak holds up, Deploy and Equip will likely coexist as two different flavours of "gear investment" rather than one replacing the other: Equip for a stable, unit-bound bonus, Deploy for a higher-risk, higher-reward battlefield commitment.
+
+## Building around Deploy, if the leak holds up
+
+Riftbound already has two keywords built around battlefield control that a Deploy card would naturally want to pair with:
+
+- **[Hunt](/keywords/hunt)** grants XP for conquering or holding a battlefield — exactly the state a Deploy card needs to survive, so a Hunt unit defending the same battlefield as a Deploy Gear turns one board position into two payoffs at once.
+- **[Ganking](/keywords/ganking)** lets a unit move directly from one battlefield to another — useful for reinforcing a battlefield that's about to fall out of your control before the Deploy Gear on it gets killed.
+
+None of this is a confirmed archetype — it's a reasonable read of how Deploy would interact with mechanics that already exist, clearly labelled as such.
+
+## How Deploy compares to Showoff and Disarm
+
+Deploy is one of three mechanics in the same leak. **[Showoff](/guides/riftbound-showoff-explained)** is a modal reveal effect triggered as you play a card; **[Disarm](/guides/riftbound-disarm-explained)** weakens an enemy unit's Might when the Disarm unit attacks. The three don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
+
+## Is Deploy officially confirmed?
+
+No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Deploy to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**.`,
+  },
+  {
+    slug: "riftbound-showoff-explained",
+    category: "guide",
+    title: "Riftbound Showoff Explained: The Leaked Radiance Mechanic",
+    excerpt:
+      "What Riftbound's leaked Showoff keyword reportedly does, how the reveal-based effect is meant to work, and why it isn't Riot-confirmed yet — everything currently known.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 5,
+    tags: ["radiance", "mechanics", "showoff", "leak", "spoilers", "guide"],
+    hero: {
+      src: "/blog/riftbound-showoff-explained.png",
+      alt: "Riftbound Showoff — a leaked Radiance reveal mechanic, not yet confirmed by Riot",
+    },
+    summary: [
+      "**Showoff is a leaked, modal reveal effect from Riftbound: Radiance** — reveal a card from hand, or point at a qualifying friendly card, and the payoff scales with what you showed.",
+      "**It's different from [Vision](/keywords/vision)**, Riftbound's existing reveal mechanic: Vision looks at the top of your own deck, while Showoff reportedly checks your hand or board instead.",
+      "**The exact printed criteria are unknown.** No confirmed Showoff card exists yet, so its real power level can't be judged from the leak alone.",
+      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+    ],
+    faq: [
+      { q: "What is Showoff in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's reportedly a modal reveal effect, not yet confirmed by Riot." },
+      { q: "How does the Showoff mechanic work?", a: "As leaked: when you play a Showoff card, you may either reveal a card from your hand or point at a friendly card already in play that meets whatever criteria is printed on the Showoff card. The effect then changes depending on what you showed." },
+      { q: "What does 'meets the listed criteria' mean for Showoff?", a: "It isn't specified in the leak — likely a card type, domain, rarity or stat threshold printed on each individual Showoff card, similar to modal reveal effects in other card games. No confirmed Showoff card exists yet to check." },
+      { q: "How is Showoff different from Vision?", a: "Vision triggers a Predict, looking at the top card of your own Main Deck. Showoff, as leaked, instead looks at a card you already have — in hand or already in play — rather than the top of your deck." },
+      { q: "Is Showoff confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "How is Showoff different from Deploy and Disarm?", a: "Showoff is a modal reveal effect triggered on play; Deploy is a Gear keyword tied to holding a battlefield; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-leaked-mechanics",
+      label: "See the full Radiance mechanics leak →",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+    },
+    body: `**Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
+
+> "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
+
+## How Showoff reportedly works
+
+1. **Play the card.** Showoff triggers as part of playing it, not later.
+2. **Choose one of two options**: reveal a card from your hand, or point at a friendly card already in play — either way, the chosen card has to meet whatever criteria is printed on the Showoff card itself.
+3. **The effect changes based on what you showed.** This is a modal, scaling bonus rather than one fixed outcome — the leak's own wording ("the card's effect will change") rules out a flat, single-mode effect.
+
+## Showoff vs Vision: two different kinds of "look and get value"
+
+**[Vision](/keywords/vision)** resolves by triggering a Predict — looking at the top card of your own Main Deck and choosing whether to keep it or recycle it. That's a card-selection tool: it helps you dodge a card you don't want to draw next. Showoff, as leaked, reads differently — you're pointing at a card you *already have*, in hand or in play, not drawing information from the top of your deck. Where Vision smooths your next draw, Showoff seems to reward what you've already assembled.
+
+## What "meets the listed criteria" probably means
+
+Since no confirmed Showoff card exists yet, the exact printed criteria are unknown. The most likely candidates, based on how modal reveal effects work in other card games, are a card type, a domain, a rarity, or a stat threshold (like Might). This matters more than it might sound: a card that wants you to reveal an Epic-rarity Unit is a completely different build-around than one checking for the biggest Might on your board, and until an actual Showoff card is shown, its real power level simply can't be judged.
+
+## Building around Showoff, if the leak holds up
+
+Modal reveal effects generally reward a deck that can reliably meet the checked criteria on demand — a mono-domain-heavy build, a curve stacked toward one card type, or a board that reliably has a big Might stat to point at. Which of those actually applies to Showoff depends entirely on the criteria Riot ends up printing, so treat any specific deckbuilding advice here as provisional until a real card lands.
+
+## How Showoff compares to Deploy and Disarm
+
+Showoff is one of three mechanics in the same leak. **[Deploy](/guides/riftbound-deploy-explained)** is a Gear keyword tied to holding a battlefield; **[Disarm](/guides/riftbound-disarm-explained)** weakens an enemy unit's Might when the Disarm unit attacks. The three don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
+
+## Is Showoff officially confirmed?
+
+No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Showoff to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**.`,
+  },
+  {
+    slug: "riftbound-disarm-explained",
+    category: "guide",
+    title: "Riftbound Disarm Explained: The Leaked Radiance Mechanic",
+    excerpt:
+      "What Riftbound's leaked Disarm keyword reportedly does, how it compares to the existing Assault keyword, and why it isn't Riot-confirmed yet.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 5,
+    tags: ["radiance", "mechanics", "disarm", "leak", "spoilers", "guide"],
+    hero: {
+      src: "/blog/riftbound-disarm-explained.png",
+      alt: "Riftbound Disarm — a leaked Radiance combat mechanic, not yet confirmed by Riot",
+    },
+    summary: [
+      "**Disarm is a leaked combat mechanic from Riftbound: Radiance**, reportedly weakening an enemy unit's Might when the Disarm unit attacks.",
+      "**It's the reported mirror image of [Assault](/keywords/assault)**: Assault gives the attacker +X Might; Disarm instead lowers an enemy unit's Might — a debuff aimed outward rather than a self-buff.",
+      "**It reportedly pairs with direct-damage spells** like Falling Star — shrink a blocker's Might first, and a fixed amount of damage goes further toward lethal.",
+      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+    ],
+    faq: [
+      { q: "What is Disarm in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"When this unit attacks, decrease the Might of an enemy unit here.\" It reportedly weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats." },
+      { q: "How does the Disarm mechanic work?", a: "As leaked: when a unit with Disarm attacks, it decreases the Might of an enemy unit present at that battlefield. It reads as a repeatable, built-in unit ability rather than a one-time removal spell." },
+      { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
+      { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
+      { q: "Is Disarm confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "How is Disarm different from Deploy and Showoff?", a: "Disarm weakens an enemy unit's Might on attack; Deploy is a Gear keyword tied to holding a battlefield; Showoff is a modal reveal effect triggered on play. All three reportedly leaked together but don't appear designed to combo directly." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-leaked-mechanics",
+      label: "See the full Radiance mechanics leak →",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+    },
+    body: `**Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
+
+> "When this unit attacks, decrease the Might of an enemy unit here."
+
+## How Disarm reportedly works
+
+1. **Trigger condition: the Disarm unit attacks.** The effect is tied to attacking, not to being played or to any other timing.
+2. **Effect: it lowers an enemy unit's Might** present at that battlefield.
+3. **It reads as a repeatable, built-in unit ability**, not a one-time removal spell — the leaked wording describes something the unit does every time it attacks, not a single-use effect.
+
+## Disarm vs Assault: the same combat moment, opposite target
+
+This is the comparison the leak's own source draws directly, and the rules text backs it up. **[Assault](/keywords/assault)** gives the *attacking* unit **+X Might** for the duration of combat — a self-buff that only applies while that unit is on offense. Disarm, as leaked, instead takes Might **away from an enemy unit** when this unit attacks — a debuff aimed at the opponent's board rather than a boost to your own stats. Same trigger window (attacking), opposite target and opposite direction.
+
+## Pairing Disarm with direct damage
+
+The leak's caption suggests Disarm "can pair well with direct damage spells like Falling Star" — a real card already in the game: **[Falling Star](/browse?q=Falling%20Star)** is a Fury-domain Spell from the original Origins set. The logic holds up even without knowing Disarm's exact numbers: shrink a blocker's Might first, and a fixed amount of direct damage goes a lot further toward actually killing it. If Disarm decks end up leaning on that kind of stacked-damage plan, it would put them in the same lane as Fury's existing direct-damage tools rather than introducing a brand-new archetype from scratch.
+
+## How Disarm compares to Deploy and Showoff
+
+Disarm is one of three mechanics in the same leak. **[Deploy](/guides/riftbound-deploy-explained)** is a Gear keyword tied to holding a battlefield; **[Showoff](/guides/riftbound-showoff-explained)** is a modal reveal effect triggered on play. The three don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
+
+## Is Disarm officially confirmed?
+
+No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Disarm to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**.`,
   },
   // ── Gradient sleeves. A genuine accessory-search topic with zero prior coverage
   // on this site. Kept factual and specific to what's actually verifiable (card
