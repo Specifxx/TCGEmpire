@@ -33,18 +33,20 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 //     exact failure mode /vendetta-countdown and /radiance-countdown both died
 //     from (see tests/release-calendar.test.ts's own header for that history).
 //
-// The originally-announced increase (from $9.99 to $19.99) landed 2026-09-06,
-// except the real decided cutover price came in at $14.99, not $19.99 — see
-// site.ts's own header for that. With no further increase currently decided,
-// the two amounts are pinned EQUAL, which is what proves the banner actually
-// retired rather than just changed its number.
+// The originally-announced increase (from $9.99 to $19.99) landed 2026-09-06
+// at a real decided cutover price of $14.99, not $19.99 — see site.ts's own
+// header for that. That raise was itself rolled back to $9.99/mo on 2026-09-09
+// (see DECISIONS.md) before its own three-week hold period ran its course.
+// With no further increase currently decided, the two amounts are pinned
+// EQUAL, which is what proves the banner actually retired rather than just
+// changed its number.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("today's decided price increase is what the site actually announces", () => {
-  // Pins the real business decision (current $14.99, no announced future
+test("today's decided price is what the site actually announces, with no increase pending", () => {
+  // Pins the real business decision (current $9.99, no announced future
   // increase) so a careless edit changes it loudly rather than silently.
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$14.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$14.99");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$9.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$9.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
@@ -169,16 +171,19 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FOUND live while landing this exact increase: the editorial article about
-// Premium's pricing (riftcompare-premium-explained) had its own hand-typed
-// $9.99/$79.99/33%/$119.88 figures — none of them wired to lib/site.ts at all,
-// so bumping PREMIUM_PRICE_AMOUNT changed every LIVE surface (the page, the
-// dialog, both nudges) and silently left this one article quoting the retired
-// price and a stale savings percentage. Markdown prose can't import a
-// constant, so the fix here is this test: it re-derives every number the
-// article states from the SAME constants the rest of the site reads, the same
-// principle tests/deck-archetypes-article.test.ts and
-// tests/best-cards-article.test.ts already apply to their own numeric claims.
+// FOUND live while landing the original $9.99→$14.99 increase: the editorial
+// article about Premium's pricing (riftcompare-premium-explained) had its own
+// hand-typed dollar/percentage figures — none of them wired to lib/site.ts at
+// all, so bumping PREMIUM_PRICE_AMOUNT changed every LIVE surface (the page,
+// the dialog, both nudges) and silently left this one article quoting a stale
+// price and savings percentage. Markdown prose can't import a constant, so the
+// fix here is this test: it re-derives every number the article states from
+// the SAME constants the rest of the site reads, the same principle
+// tests/deck-archetypes-article.test.ts and tests/best-cards-article.test.ts
+// already apply to their own numeric claims. Caught the same class of bug
+// again on the 2026-09-09 rollback to $9.99 — the article's hand-typed prose
+// had to be edited by hand right alongside the constants, exactly as this
+// test's own existence predicts it always will.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("the Premium-explained article states the price the site actually charges, not a stale one", () => {
@@ -206,8 +211,12 @@ test("the Premium-explained article states the price the site actually charges, 
 
   // Belt-and-braces: a price this test doesn't happen to check for (a third
   // plan, a regional variant) could still go stale silently — so also assert
-  // the RETIRED price is gone outright, not just that the current one is present.
-  assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
+  // the RETIRED prices are gone outright, not just that the current ones are
+  // present. $14.99/$119.99 are retired as of the 2026-09-09 rollback to
+  // $9.99/$79.99 (see DECISIONS.md) — the inverse of this same check when
+  // $9.99 was itself the retired price, right after the original raise.
+  assert.ok(!haystack.includes("$14.99"), "article must not still quote the retired $14.99 price anywhere");
+  assert.ok(!haystack.includes("$119.99"), "article must not still quote the retired $119.99 annual price anywhere");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -16,7 +16,8 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The 2026-09-08 Premium pricing/conversion pass. See DECISIONS.md for the
-// full account: the price ($14.99) was held on the evidence, the price
+// full account: the price ($14.99, since rolled back to $9.99 on 2026-09-09 —
+// see that later entry) was held on the evidence at the time, the price
 // framing changed from "hidden" to "$0 today, then from $X/mo", live proof
 // numbers were added, /premium got an FAQ, and a one-time abandoned-checkout
 // recovery email was added.
@@ -25,10 +26,10 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 test("premiumEffectiveMonthly() derives the annual per-month rate from the real configured price", () => {
   const expected = `${premiumCurrencySymbol()}${(Number(PREMIUM_ANNUAL_AMOUNT.replace(/[^0-9.]/g, "")) / 12).toFixed(2)}`;
   assert.equal(premiumEffectiveMonthly(), expected);
-  // Sanity: with the real, currently-configured $119.99 annual price this is
-  // $10.00 — the number the "from $10/mo" framing everywhere is built on.
-  if (PREMIUM_ANNUAL_AMOUNT === "$119.99") {
-    assert.equal(premiumEffectiveMonthly(), "$10.00");
+  // Sanity: with the real, currently-configured $79.99 annual price this is
+  // $6.67 — the number the "from $6.67/mo" framing everywhere is built on.
+  if (PREMIUM_ANNUAL_AMOUNT === "$79.99") {
+    assert.equal(premiumEffectiveMonthly(), "$6.67");
   }
 });
 

@@ -3682,3 +3682,54 @@ the next time this framing changes again.
 week before this shipped. Trial starts on `/admin/subscriptions` is still the
 number that matters most — a raw click-through lift that doesn't show up
 there didn't move anything real.
+
+## Premium price reverted to $9.99/$79.99 (2026-09-09)
+
+Owner instruction: bring Premium back to $9.99/mo and $79.99/yr. This
+reverses the 2026-09-06 raise to $14.99/$119.99 before the three-week hold
+period the 2026-09-08 entry (above) set for it — that entry's own evidence
+was thin (two days of data, ~27% chance of seeing zero subscribers at the
+$9.99-era rate by chance alone), and this is the owner acting on it directly
+rather than a fresh data-driven finding from this pass. Recorded here as a
+decision, not re-litigated.
+
+**What changed:** `PREMIUM_PRICE_AMOUNT` → `$9.99`, `PREMIUM_ANNUAL_AMOUNT` →
+`$79.99`, `PREMIUM_NEXT_PRICE_AMOUNT` → `$9.99` (kept equal to
+`PREMIUM_PRICE_AMOUNT` so `premiumPriceIncreaseAnnounced()` stays false — no
+increase is currently announced). The derived annual-saving percentage comes
+out to the same 33% at these numbers, by coincidence of the ratio; the
+effective monthly rate changes from $10.00 to $6.67. Every live surface
+(`/premium`, the Premium dialog, both corner nudges, the gated-tool button)
+reads these constants or the helpers built on them, so all of them update
+from this one change — see the 2026-09-09 "$0 today" entry above for why
+that's true. The `riftcompare-premium-explained` blog article's hand-typed
+prose (five sentences/table cells) was edited by hand to match, since
+Markdown prose can't import a constant — `tests/premium-price-increase.test.ts`
+catches drift here structurally, and caught the same class of gap during the
+original raise.
+
+**`PREMIUM_COPY_VERSION` was bumped** (`lib/site.ts`) so the Premium funnel
+events (slide-in/popup shown, checkout started) split this price level from
+the $14.99-era events in GA4, the same reasoning that constant was added for
+in the first place — a price change is exactly the kind of "before/after"
+split it exists to support, not only a wording change.
+
+**What did NOT change, and needs a manual step before this is fully live:**
+this commit only changes the DISPLAYED price (`PREMIUM_PRICE_AMOUNT`/
+`PREMIUM_ANNUAL_AMOUNT`, both `NEXT_PUBLIC_*`-overridable, read at build/
+render time). The amount Stripe actually charges at checkout is controlled
+by `STRIPE_PREMIUM_PRICE_ID`/`STRIPE_PREMIUM_ANNUAL_PRICE_ID` — Vercel
+environment variables pointing to Stripe Price objects, not present anywhere
+in this repository (confirmed: absent from `.env.example`'s real values,
+`.env.production`, and `vercel.json` — only documented as commented-out
+examples). Per this file's 2026-09-06 raise, those two env vars were
+repointed at NEW Price objects rather than editing the original $9.99/$79.99
+ones in place (Stripe Prices are immutable) — so the original Price objects
+very likely still exist in the Stripe dashboard, unreferenced since the
+raise, and repointing the two env vars back to them is probably all that's
+needed rather than creating new ones. Until that repoint happens, the site
+will DISPLAY $9.99/$79.99 but CHARGE whatever the $14.99/$119.99-era Price
+objects still configured are set to — a real discrepancy between the shown
+price and the checkout price, not just a cosmetic gap. This is a Stripe/
+Vercel dashboard action outside what this codebase (or this session, which
+has no Stripe or Vercel access) can perform or verify.

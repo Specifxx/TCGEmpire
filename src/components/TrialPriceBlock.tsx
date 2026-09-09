@@ -10,7 +10,7 @@ import {
 
 // The shared "$0 due today" headline for a trial-eligible visitor — used
 // wherever a pricing card or the Premium dialog currently leads with the
-// full recurring price ($14.99) instead of what a trial-eligible visitor
+// full recurring price ($9.99) instead of what a trial-eligible visitor
 // actually pays right now (nothing). Presentational only (no hooks), so it's
 // usable in both the server /premium page and the client Premium dialog,
 // exactly like AnnualPriceBlock.

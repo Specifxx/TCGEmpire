@@ -171,7 +171,7 @@ export default async function PremiumPage() {
   // the signed-out CTA copy; trialEligible still gates the actual checkout
   // flow once someone is signed in.
   const trialAvailable = premiumTrialEnabled() && !already && (!user || !dbUser?.trialStartedAt);
-  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "14.99";
+  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "9.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
   const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
