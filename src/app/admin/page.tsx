@@ -21,6 +21,12 @@ const TOOLS: Tool[] = [
     desc: "Every registered user — when they signed up, sign-in method, premium & verification status.",
   },
   {
+    href: "/admin/active",
+    title: "Active users",
+    icon: "🟢",
+    desc: "Who's using the site right now — active-now/DAU/WAU/MAU and a live last-seen list.",
+  },
+  {
     href: "/admin/premium",
     title: "Premium interest",
     icon: "💎",

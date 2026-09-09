@@ -3,6 +3,7 @@ import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./db";
+import { shouldTouchLastSeen } from "./activity";
 
 const SESSION_COOKIE = "tcge_session";
 
@@ -123,6 +124,15 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
     if (!userId) return null;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return null;
+    // Passive activity stamp for /admin/active (DAU/WAU/MAU + who's active
+    // now). AWAITED, not fire-and-forget: a detached promise started inside a
+    // Server Component render has no guaranteed lifetime once the serverless
+    // function freezes after the response ships, so a throttled await that is
+    // a no-op almost every request is the reliable trade — never a background
+    // write that can silently never land. Never allowed to break sign-in.
+    if (shouldTouchLastSeen(user.lastSeenAt)) {
+      await prisma.user.update({ where: { id: userId }, data: { lastSeenAt: new Date() } }).catch(() => {});
+    }
     return {
       id: user.id,
       email: user.email,

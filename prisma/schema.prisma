@@ -61,6 +61,14 @@ model User {
   signupSource        String?
   createdAt           DateTime  @default(now())
 
+  // Passive "last seen" stamp — touched (throttled, see ACTIVITY_TOUCH_INTERVAL_MS
+  // in lib/auth.ts) whenever getCurrentUser() resolves a valid session, so it
+  // reflects real authenticated activity rather than a login timestamp. Null =
+  // never touched: either this column predates the account's last visit, or the
+  // account has never returned since. Powers /admin/active (DAU/WAU/MAU + a
+  // live "who's active now" list) — nullable + no default so this stays additive.
+  lastSeenAt          DateTime?
+
   // The market (AU/NZ/US/UK/SG/CA) this account browses/prices in, remembered
   // across devices and sign-ins. Null until the account's first resolved
   // country (cookie or geo-detected) is backfilled, or the user explicitly
@@ -117,6 +125,7 @@ model User {
   @@index([googleId])
   @@index([discordId])
   @@index([stripeCustomerId])
+  @@index([lastSeenAt])
 }
 
 // Anti-abuse ledger for the Premium free trial. Stripe assigns every card a stable
