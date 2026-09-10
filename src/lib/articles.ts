@@ -5624,6 +5624,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
       "Origins through Vendetta, in release order, with the real card count for each — plus Radiance's confirmed date and where to check what's beyond it.",
     author: "RiftCompare",
     date: "2026-08-13",
+    updated: "2026-09-10",
     readMins: 5,
     tags: ["sets", "guide", "origins", "vendetta", "radiance"],
     hero: {
@@ -5688,7 +5689,7 @@ At 24 cards, Proving Grounds is by far the smallest Riftbound release to date �
 
 ## Spirit Forged and Unleashed
 
-The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
+The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from. Both now have the same rarity, domain and card-type breakdown we wrote for Origins: [what's in the Spirit Forged set](/guides/whats-in-the-riftbound-spirit-forged-set) and [what's in the Unleashed set](/guides/whats-in-the-riftbound-unleashed-set).
 
 Unleashed is the one worth a closer look if you're buying rather than just cataloguing — two of the four most expensive cards in the game come out of it. Browse the whole set card-by-card, with live prices, on the [Unleashed set page](/sets/unleashed).
 
@@ -5714,6 +5715,7 @@ Every set gets its own page on RiftCompare the moment its cards are catalogued, 
       "298 base cards, 54 Showcase alternates, and exactly how they split across rarity, domain and card type — the real numbers from Riftbound's first and biggest set.",
     author: "RiftCompare",
     date: "2026-08-13",
+    updated: "2026-09-10",
     readMins: 6,
     tags: ["sets", "guide", "origins", "rarity", "collecting"],
     hero: {
@@ -5803,7 +5805,357 @@ Numbers are useful for planning a collection goal, but the fastest way to see wh
 
 [Browse the Origins set](/sets/origins) · [Origins card gallery](/sets/origins/gallery)
 
-If you're building toward a specific rarity or domain, the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) covers what separates a Showcase alternate from the base printing it comes from — worth reading before you go chasing one.`,
+If you're building toward a specific rarity or domain, the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) covers what separates a Showcase alternate from the base printing it comes from — worth reading before you go chasing one.
+
+We've written the same breakdown for the two sets that followed — [what's in Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) and [what's in Unleashed](/guides/whats-in-the-riftbound-unleashed-set) — so you can compare all three side by side.`,
+  },
+  {
+    slug: "whats-in-the-riftbound-spirit-forged-set",
+    category: "guide",
+    title: "What's in the Riftbound Spirit Forged Set?",
+    excerpt:
+      "221 base cards, 66 Showcase-tier printings and 12 Legends — exactly how Spirit Forged splits by rarity, domain and card type, counted from our own catalogue rather than estimated.",
+    author: "RiftCompare",
+    date: "2026-09-10",
+    readMins: 8,
+    tags: ["sets", "guide", "spirit forged", "spiritforged", "sfd", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/sfd-240-221-566fd852914c74f8.png",
+      alt: "Rumble, Mechanized Menace — a Showcase-rarity Legend from the Riftbound Spirit Forged set",
+    },
+    summary: [
+      "**221 base cards**, numbered 001/221 through 221/221 with no gaps — Riftbound's second full expansion, 77 cards smaller than Origins.",
+      "**Rarity splits 60 Common / 63 Uncommon / 60 Rare / 38 Epic** across the base set, plus 66 Showcase-tier printings on top, 12 of which are Signature versions.",
+      "**Units are 107 of the 221**, followed by Spells (45), Gear (42), Battlefields (15) and Legends (12) — Gear is a far bigger share here than it was in Origins.",
+      "**Calm is the largest domain at 40 cards**, Fury next at 38; Chaos and Order sit lowest of the six at 30 each, and Colorless adds 15. All twelve Legends are Fury, Calm, Mind or Body.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in the Riftbound Spirit Forged set?",
+        a: "221 base cards, numbered 001/221 through 221/221. On top of those, the set has 66 Showcase-tier printings (54 distinct cards, 12 of which also come as Signature versions), bringing the main print run to 287 printings. The set page on RiftCompare lists more than that because it also tracks promo and event printings.",
+      },
+      {
+        q: "What is the rarity breakdown of Spirit Forged?",
+        a: "60 Common, 63 Uncommon, 60 Rare and 38 Epic across the 221 base cards. Uncommon is the single biggest tier — unlike Origins, where Common led.",
+      },
+      {
+        q: "How many Legends are in Spirit Forged?",
+        a: "12, all printed at Rare: four Fury (Rumble, Lucian, Draven, Rek'Sai), four Calm (Ornn, Jax, Irelia, Azir), two Mind (Ezreal, Renata Glasc) and two Body (Sivir, Fiora). There are no Chaos or Order Legends in the set.",
+      },
+      {
+        q: "Which domain has the most cards in Spirit Forged?",
+        a: "Calm, with 40 of the 221 base cards. Fury has 38, Mind and Body 34 each, Chaos and Order 30 each, and Colorless 15.",
+      },
+      {
+        q: "Are there Signature cards in Spirit Forged?",
+        a: "Yes — 12. Unusually, they are not the Legends: the Signature versions are of the twelve over-numbered Showcase Units (223 to 239), such as Vayne, Hunter and Yasuo, Windrider, which carry the artist's signature on the art and a star in the collector number.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/spiritforged",
+      label: "Browse every Spirit Forged card →",
+      blurb: "All 221 base cards and every Showcase printing, with live prices across every store we track.",
+    },
+    body: `Spirit Forged (set code SFD) is Riftbound's second full expansion — the set that followed [Origins](/guides/whats-in-the-riftbound-origins-set) and, in most players' collections, the one that still supplies a good share of the Gear and cheap interaction their decks run. Here is exactly what's in it: not an estimate or a copied-around figure, but the real counts from our own catalogue, broken down the way a set list actually gets used — by rarity, by card type, by domain, and by what the premium printings on top of the base set actually are.
+
+## The headline number: 221 base cards
+
+Spirit Forged's collector numbers run from 001/221 to 221/221 with no gaps — a clean, complete base set of 221 cards. That is 77 fewer than Origins' 298 — the 24-card Proving Grounds aside, Spirit Forged is the first Riftbound set to come in smaller than the launch set — and it set the size that the next set, [Unleashed](/guides/whats-in-the-riftbound-unleashed-set), stayed close to at 219.
+
+On top of the base 221 there are **66 Showcase-tier printings**. They break down into three groups, and it's worth knowing the difference before you buy:
+
+- **24 Showcase versions of base-set cards** that keep their original collector number — every one of them a Unit. These are the premium treatment of a card that already exists in the base 221 (Draven, Vanquisher at 020/221 is a base-set Rare and also exists as a Showcase at the same number, for example).
+- **18 over-numbered Showcase cards** at 222/221 through 239/221 — twelve Units and six Gear cards. The six Gear are the "Seal of…" cycle (Seal of Rage, Seal of Focus, Seal of Insight, Seal of Strength, Seal of Discord and Seal of Unity), all of them Origins cards reprinted in a Showcase frame. The twelve Units mix more Origins reprints — Vayne, Hunter; Yasuo, Windrider; Darius, Executioner; Karma, Channeler and others — with Showcase versions of Spirit Forged's own Aphelios, Exalted, Bard, Mercurial, Yone, Blademaster and Soraka, Wanderer. All of them sit above the base total in the numbering, which is what "over-numbered" means.
+- **12 Showcase Legends** at 240/221 through 251/221 — one for each of the set's twelve Legends.
+
+All twelve of the over-numbered Showcase Units (223 through 239, skipping the Seals) also come as **Signature** printings, which carry the artist's signature on the art and a star after the collector number (223★/221 and so on). Counting those, the Showcase tier is 66 printings of 54 distinct cards, and the full main print run comes to **287 printings**. You'll see a higher total on our [Spirit Forged set page](/sets/spiritforged) because the catalogue also tracks promo and event printings, which sit outside the numbered run entirely.
+
+If any of those printing terms are new to you — Showcase, Signature, over-numbered — the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) explains what each one is and which tend to hold value.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 60 |
+| Uncommon | 63 |
+| Rare | 60 |
+| Epic | 38 |
+| **Base total** | **221** |
+| Showcase-tier printings (incl. 12 Signature) | 66 |
+
+The shape is different from Origins, and the difference tells you something about how the set was built. In Origins, Common was the largest tier at 88 and Uncommon and Rare tied at 84. In Spirit Forged, **Uncommon is the biggest tier at 63**, with Common and Rare tied at 60 — the set is more evenly spread across its first three rarities than the launch set was, and Rares are almost as numerous as Commons. Practically, that means a "Rare" Spirit Forged card is not especially rare relative to the rest of its set, and the real scarcity in the set lives at Epic (38 cards, 17% of the base set) and in the Showcase tier above it.
+
+Every one of the 38 Epics is a Unit, Spell or Gear — none of the Battlefields or Legends print at Epic. By type, that is 15 Epic Units, 12 Epic Spells and 11 Epic Gear. By domain, Calm leads with 10 Epics, Fury has 8, Mind and Body 6 each, and Chaos and Order 4 each.
+
+## Card type breakdown
+
+| Type | Cards |
+| --- | --- |
+| Unit | 107 |
+| Spell | 45 |
+| Gear | 42 |
+| Battlefield | 15 |
+| Legend | 12 |
+
+Units are just under half the set at 107. The number that stands out is **Gear: 42 cards, nearly as many as Spells at 45**. Origins printed 30 Gear against 84 Spells — a 1-to-2.8 ratio — while Spirit Forged is almost 1-to-1. If your deck runs a lot of equipment, this is the set where most of it comes from.
+
+Two other things the type split shows: there are **no Runes** in Spirit Forged at all (Origins had 6), and every one of the 15 Battlefields is an Uncommon, so a complete Battlefield set from this expansion is cheap to put together.
+
+Here is how the two dimensions cross:
+
+| Type | Common | Uncommon | Rare | Epic |
+| --- | --- | --- | --- | --- |
+| Unit | 39 | 22 | 31 | 15 |
+| Spell | 14 | 14 | 5 | 12 |
+| Gear | 7 | 12 | 12 | 11 |
+| Battlefield | — | 15 | — | — |
+| Legend | — | — | 12 | — |
+
+Note the Spell row: only 5 Rare Spells but 12 Epic ones. Spirit Forged's Spells skew to the extremes — either cheap, common interaction or a headline Epic.
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Calm | 40 |
+| Fury | 38 |
+| Mind | 34 |
+| Body | 34 |
+| Chaos | 30 |
+| Order | 30 |
+| Colorless | 15 |
+
+The six domains are deliberately paired — Calm and Fury at the top, Mind and Body in the middle, Chaos and Order at the bottom — with Colorless (usable in any deck) adding 15. Compared with Origins, where Fury and Calm tied at 49 and Colorless had 28, Spirit Forged gives every domain fewer cards but keeps the same ordering, with Calm edging ahead of Fury by two. If you're building toward a single domain, expect roughly 30 to 40 on-domain cards from this set, plus the 15 Colorless.
+
+## The twelve Legends
+
+Every Legend in Spirit Forged is a Rare, and there are exactly twelve — the same count as Origins. What is different is the domain spread: **four Fury, four Calm, two Mind, two Body, and none at all for Chaos or Order**. If you play a Chaos or Order Legend, your champion comes from another set.
+
+| # | Legend | Domain |
+| --- | --- | --- |
+| 181 | [Rumble, Mechanized Menace](/card/rumble-mechanized-menace-sfd-181-221) | Fury |
+| 183 | [Lucian, Purifier](/card/lucian-purifier-sfd-183-221) | Fury |
+| 185 | [Draven, Glorious Executioner](/card/draven-glorious-executioner-sfd-185-221) | Fury |
+| 187 | [Rek'Sai, Void Burrower](/card/rek-sai-void-burrower-sfd-187-221) | Fury |
+| 189 | [Ornn, Fire Below the Mountain](/card/ornn-fire-below-the-mountain-sfd-189-221) | Calm |
+| 193 | [Jax, Grandmaster at Arms](/card/jax-grandmaster-at-arms-sfd-193-221) | Calm |
+| 195 | [Irelia, Blade Dancer](/card/irelia-blade-dancer-sfd-195-221) | Calm |
+| 197 | [Azir, Emperor of the Sands](/card/azir-emperor-of-the-sands-sfd-197-221) | Calm |
+| 199 | [Ezreal, Prodigal Explorer](/card/ezreal-prodigal-explorer-sfd-199-221) | Mind |
+| 201 | [Renata Glasc, Chem-Baroness](/card/renata-glasc-chem-baroness-sfd-201-221) | Mind |
+| 203 | [Sivir, Battle Mistress](/card/sivir-battle-mistress-sfd-203-221) | Body |
+| 205 | [Fiora, Grand Duelist](/card/fiora-grand-duelist-sfd-205-221) | Body |
+
+Each of these twelve also has a Showcase printing at 240 to 251 — Rumble at 240, Lucian at 241, and so on in the same order. Every champion here has a hub page that gathers all of their printings across every set with live prices — [Rumble](/champions/rumble), [Lucian](/champions/lucian), [Draven](/champions/draven), [Rek'Sai](/champions/rek-sai), [Ornn](/champions/ornn), [Jax](/champions/jax), [Irelia](/champions/irelia), [Azir](/champions/azir), [Ezreal](/champions/ezreal), [Renata Glasc](/champions/renata-glasc), [Sivir](/champions/sivir) and [Fiora](/champions/fiora) — which is the fastest way to see how a Legend's base, Showcase and any promo printings are priced against each other.
+
+The same twelve champions also get most of the in-numbered Showcase treatment: of the 24 base-set Units with a Showcase version, all 24 are champion Units — two apiece for the set's Legends (Draven, Vanquisher and Draven, Audacious; Ornn, Blacksmith and Ornn, Forge God; Irelia, Fervent and Irelia, Graceful, and so on).
+
+## The cost curve
+
+Because our catalogue stores each card's printed energy cost, we can also show what the set's curve actually looks like. Across the 194 base-set Units, Spells and Gear (Legends and Battlefields don't have a cost):
+
+| Energy cost | Cards |
+| --- | --- |
+| 0–1 | 19 |
+| 2 | 51 |
+| 3 | 47 |
+| 4 | 34 |
+| 5 | 19 |
+| 6 | 12 |
+| 7 | 8 |
+| 8+ | 4 |
+
+**36% of the set's costed cards cost 2 or less**, the single most common cost is 2, and the average across the set is about 3.4 energy. The expensive end is thin: three cards at 8 energy and one at 10 — Needlessly Large Yordle, a Calm Rare Unit — and that's it. Among Units specifically, the most common might value is 3 (29 Units), then 4 (28); the top of the range is Trove Golem, an Order Rare at 9 might.
+
+## What this means if you're collecting or buying
+
+A few practical takeaways from the numbers:
+
+- **A complete base set is 221 cards**, and 183 of them are Common, Uncommon or Rare. Given how evenly those three tiers are printed, the bulk of a Spirit Forged set is inexpensive to finish with singles — the cost is concentrated in the 38 Epics and the Showcase tier. Drop your want list into the [bulk pricer](/bulk-pricer) and it will total the whole thing at the cheapest live price per card.
+- **The Showcase tier is really three different things**, and they price very differently: a Showcase of a base-set card, an over-numbered Showcase reprint from Origins, and a Signature. Check which one you're looking at — the collector number tells you — before comparing two listings. The [Signature printings](/cards/printing/signature) and [over-numbered printings](/cards/printing/overnumbered) pages list every one across all sets.
+- **Gear is the set's signature contribution.** With 42 Gear cards, Spirit Forged has more equipment than any other single dimension of the set would suggest, and it's the set to check first when a deck's Gear slots need filling — the [Gear card list](/cards/type/gear) covers every set, sortable by price.
+- **Prices move when new sets land.** Radiance is the next set to release, and set launches are exactly when an older set's staples get re-evaluated. The [price movers page](/movers) shows what's shifting day to day, and a [price alert](/alerts) on a card you're watching tells you the moment it moves.
+
+## See the actual cards
+
+Counts are useful for planning a collection goal, but the fastest way to see what's actually printed is to browse the set itself: every Spirit Forged card, its live price across every store we track in your market, and its full rules text.
+
+[Browse the Spirit Forged set](/sets/spiritforged) · [Spirit Forged card gallery](/sets/spiritforged/gallery)
+
+For the sets on either side of it, we've written the same breakdown for [Origins](/guides/whats-in-the-riftbound-origins-set) and [Unleashed](/guides/whats-in-the-riftbound-unleashed-set), and [every Riftbound set in order](/guides/riftbound-sets-in-order) has the full release sequence, including what's coming next.`,
+  },
+  {
+    slug: "whats-in-the-riftbound-unleashed-set",
+    category: "guide",
+    title: "What's in the Riftbound Unleashed Set?",
+    excerpt:
+      "219 base cards, 61 Showcase-tier printings and 12 Legends — the real rarity, domain and card-type breakdown of Riftbound's Unleashed set, counted from our own catalogue.",
+    author: "RiftCompare",
+    date: "2026-09-10",
+    readMins: 8,
+    tags: ["sets", "guide", "unleashed", "unl", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/unl-226-219-83304d9a6f157642.png",
+      alt: "Jhin, Virtuoso — a Showcase-rarity Legend from the Riftbound Unleashed set",
+    },
+    summary: [
+      "**219 base cards**, numbered 001/219 through 219/219 with no gaps — two fewer than Spirit Forged and the smallest full set before Vendetta.",
+      "**Rarity splits 60 Common / 63 Uncommon / 60 Rare / 36 Epic** across the base set, plus 61 Showcase-tier printings on top, 12 of which are Signature Legends.",
+      "**Units are 119 of the 219** — more than half — followed by Spells (54), Gear (19), Battlefields (15) and Legends (12).",
+      "**Fury and Calm tie for the largest domain at 38 cards each**; Chaos and Order sit at 30 each, Colorless adds 15, and again no Legend is Chaos or Order.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in the Riftbound Unleashed set?",
+        a: "219 base cards, numbered 001/219 through 219/219. On top of those there are 61 Showcase-tier printings (49 distinct cards, 12 of which are Signature versions of the Legends), for a main print run of 280 printings. The RiftCompare set page lists more because it also tracks promo and event printings.",
+      },
+      {
+        q: "What is the rarity breakdown of Unleashed?",
+        a: "60 Common, 63 Uncommon, 60 Rare and 36 Epic across the 219 base cards — almost identical to Spirit Forged, which has the same 60/63/60 split with two more Epics.",
+      },
+      {
+        q: "How many Legends are in Unleashed?",
+        a: "12, all Rare: four Fury (Jhin, Rengar, Pyke, Vi), four Calm (Lillia, Master Yi, Vex, Ivern), two Mind (Diana, LeBlanc) and two Body (Kha'Zix, Poppy). Each has a Showcase printing and a Signature printing above the base numbering.",
+      },
+      {
+        q: "Which domain has the most cards in Unleashed?",
+        a: "Fury and Calm are tied at 38 of the 219 base cards each. Mind and Body have 34 each, Chaos and Order 30 each, and Colorless 15.",
+      },
+      {
+        q: "What are the Poro cards in Unleashed?",
+        a: "Six over-numbered Showcase Units at 220/219 through 225/219 — Pouty Poro, Lonely Poro, Plundering Poro, Veteran Poro, Mystic Poro and Daring Poro. None is a base-set Unleashed card: three are Origins Poros and three are Spirit Forged Poros, reprinted in a Showcase frame inside Unleashed's numbering.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/unleashed",
+      label: "Browse every Unleashed card →",
+      blurb: "All 219 base cards and every Showcase printing, with live prices across every store we track.",
+    },
+    body: `Unleashed (set code UNL) is Riftbound's third full expansion, the one between [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) and Vendetta. It is also the set that, at the time of writing, supplies more of the game's most expensive cards than its size would suggest, which makes knowing exactly what's in it more useful than for most sets. What follows is the real breakdown from our own catalogue — by rarity, card type and domain, plus a full accounting of the Showcase and Signature printings above the base set — rather than a figure copied from somewhere else.
+
+## The headline number: 219 base cards
+
+Unleashed's collector numbers run from 001/219 to 219/219 with no gaps: a complete base set of 219 cards. That's two fewer than Spirit Forged's 221, and well under the 298 of [Origins](/guides/whats-in-the-riftbound-origins-set). Riot's sets settled at this size for two releases before Vendetta dropped to 166.
+
+Above the base 219 there are **61 Showcase-tier printings**, and, as with Spirit Forged, they're three different kinds of card:
+
+- **30 Showcase versions of base-set cards** that keep their original collector number. All 30 are Units, and every one is a champion or a jungle monster you'll recognise — Jhin, Murderous Artist (022), Vi, Hotheaded (030), Elder Dragon (118), Baron Nashor (147), Rift Herald (179) and so on.
+- **7 over-numbered Showcase Units** at 220/219 through 225/219 and 238/219. The first six are the Poro cycle — Pouty Poro, Lonely Poro, Plundering Poro, Veteran Poro, Mystic Poro and Daring Poro — and none of them is a base-set Unleashed card: three are Origins Poros and three are Spirit Forged Poros, given a Showcase frame and slotted into this set's numbering. The seventh, at 238, is a second Showcase printing of Baron Nashor, which already has one at its base number 147.
+- **12 Showcase Legends** at 226/219 through 237/219, one per Legend, each of which also comes as a **Signature** printing with the artist's signature on the art and a star in the collector number.
+
+That's 61 printings of 49 distinct cards, and a full main print run of **280 printings**. Our [Unleashed set page](/sets/unleashed) counts higher because it also tracks promo and event printings, which sit outside the numbered run.
+
+The important difference from Spirit Forged: there, the twelve Signatures were over-numbered Showcase Units. In Unleashed, **the Signatures are the Legends**. If you're chasing a signed card from this set, it's a champion card, and the [Signature printings page](/cards/printing/signature) lists all of them with live prices.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 60 |
+| Uncommon | 63 |
+| Rare | 60 |
+| Epic | 36 |
+| **Base total** | **219** |
+| Showcase-tier printings (incl. 12 Signature) | 61 |
+
+The split is almost a copy of Spirit Forged's — the same 60 Common, 63 Uncommon and 60 Rare, with 36 Epics instead of 38 — so if you know one set's shape you know the other's. Uncommon is again the largest tier, and Rare is printed in exactly the same numbers as Common, which is the main reason a Rare from either set is rarely a difficult pickup on its own.
+
+Where Unleashed differs is what its Epics are. **23 of the 36 Epics are Units** (Spirit Forged had 15), with 10 Epic Spells and only 3 Epic Gear. By domain, Fury and Calm have 8 Epics each, Mind and Body 6, and Chaos and Order 4 — the same ordering as the set overall.
+
+## Card type breakdown
+
+| Type | Cards |
+| --- | --- |
+| Unit | 119 |
+| Spell | 54 |
+| Gear | 19 |
+| Battlefield | 15 |
+| Legend | 12 |
+
+This is the most Unit-heavy set of the three: **119 of 219 cards, or 54%, are Units**, against 48% in Origins and 48% in Spirit Forged. The trade-off is Gear, which falls to 19 cards from Spirit Forged's 42 — less than half. If a deck wants equipment it looks to Spirit Forged; if it wants bodies, it looks here.
+
+As in Spirit Forged there are no Runes, and the 15 Battlefields are all Uncommon.
+
+| Type | Common | Uncommon | Rare | Epic |
+| --- | --- | --- | --- | --- |
+| Unit | 39 | 23 | 34 | 23 |
+| Spell | 18 | 17 | 9 | 10 |
+| Gear | 3 | 8 | 5 | 3 |
+| Battlefield | — | 15 | — | — |
+| Legend | — | — | 12 | — |
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Fury | 38 |
+| Calm | 38 |
+| Mind | 34 |
+| Body | 34 |
+| Chaos | 30 |
+| Order | 30 |
+| Colorless | 15 |
+
+Perfectly paired: Fury and Calm at 38, Mind and Body at 34, Chaos and Order at 30, plus 15 Colorless. It's the same tiering as Spirit Forged with two cards moved from Calm to Fury, and the same as Origins in ordering if not in size. A single-domain build gets 30 to 38 on-domain cards from Unleashed plus the 15 Colorless.
+
+## The twelve Legends
+
+All twelve Unleashed Legends are Rare, and the domain spread repeats Spirit Forged's exactly — **four Fury, four Calm, two Mind, two Body, and no Chaos or Order Legend**. Between the two sets that's 24 Legends and not one for Chaos or Order; those domains' champions come from Origins and Vendetta.
+
+| # | Legend | Domain |
+| --- | --- | --- |
+| 181 | [Jhin, Virtuoso](/card/jhin-virtuoso-unl-181-219) | Fury |
+| 183 | [Rengar, Pridestalker](/card/rengar-pridestalker-unl-183-219) | Fury |
+| 185 | [Pyke, Bloodharbor Ripper](/card/pyke-bloodharbor-ripper-unl-185-219) | Fury |
+| 187 | [Vi, Piltover Enforcer](/card/vi-piltover-enforcer-unl-187-219) | Fury |
+| 189 | [Lillia, Bashful Bloom](/card/lillia-bashful-bloom-unl-189-219) | Calm |
+| 191 | [Master Yi, Wuju Master](/card/master-yi-wuju-master-unl-191-219) | Calm |
+| 193 | [Vex, Gloomist](/card/vex-gloomist-unl-193-219) | Calm |
+| 195 | [Ivern, Green Father](/card/ivern-green-father-unl-195-219) | Calm |
+| 197 | [Diana, Scorn of the Moon](/card/diana-scorn-of-the-moon-unl-197-219) | Mind |
+| 199 | [LeBlanc, Deceiver](/card/leblanc-deceiver-unl-199-219) | Mind |
+| 201 | [Kha'Zix, Voidreaver](/card/kha-zix-voidreaver-unl-201-219) | Body |
+| 203 | [Poppy, Keeper of the Hammer](/card/poppy-keeper-of-the-hammer-unl-203-219) | Body |
+
+Each Legend's Showcase printing sits at 226 to 237 in the same order (Jhin at 226, Rengar at 227, through Poppy at 237), and each of those twelve numbers also exists as a Signature. Every champion has a hub page collecting all of their printings across every set with live prices — [Jhin](/champions/jhin), [Rengar](/champions/rengar), [Pyke](/champions/pyke), [Vi](/champions/vi), [Lillia](/champions/lillia), [Master Yi](/champions/master-yi), [Vex](/champions/vex), [Ivern](/champions/ivern), [Diana](/champions/diana), [LeBlanc](/champions/leblanc), [Kha'Zix](/champions/kha-zix) and [Poppy](/champions/poppy).
+
+The in-numbered Showcase Units follow the same champions: two apiece for the Legends (Jhin, Murderous Artist and Jhin, Meticulous Killer; Vi, Hotheaded and Vi, Peacekeeper; Poppy, Paragon and Poppy, Defender of the Meek, and so on), plus the six jungle monsters — Red Brambleback, Blue Sentinel, Vilemaw, Elder Dragon, Baron Nashor and Rift Herald.
+
+## The cost curve
+
+Our catalogue stores each card's printed energy cost, so here is the set's real curve across the 192 base-set Units, Spells and Gear (Legends and Battlefields have no cost):
+
+| Energy cost | Cards |
+| --- | --- |
+| 1 | 12 |
+| 2 | 49 |
+| 3 | 43 |
+| 4 | 31 |
+| 5 | 27 |
+| 6 | 15 |
+| 7 | 5 |
+| 8–10 | 8 |
+| 12 | 2 |
+
+Unleashed runs noticeably heavier than Spirit Forged. **32% of costed cards are at 2 or less** (Spirit Forged: 36%), the average cost is about 3.7 energy against 3.4, and the top end is where the set really separates itself: two 12-energy cards — Elder Dragon and Master Yi, Unstoppable, both Epic — plus two at 10 (Baron Nashor and Atakhan). Spirit Forged's most expensive card costs 10. Among Units, 3 might is the most common value (27 Units), but the ceiling is 12 might, reached by both Baron Nashor and Master Yi, Unstoppable; the biggest Unit in Spirit Forged tops out at 9.
+
+That top end is a big part of why Unleashed shows up in the [most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) list more than its 219-card size would predict.
+
+## What this means if you're collecting or buying
+
+- **A complete base set is 219 cards, 183 of them Common, Uncommon or Rare.** Those three tiers are printed evenly, so finishing them with singles is cheap; the cost of a full set is concentrated in the 36 Epics and the Showcase tier. The [bulk pricer](/bulk-pricer) will total a whole want list at the cheapest live price per card.
+- **Know which Showcase you're buying.** A Showcase of a base card, an over-numbered Poro reprint and a Signature Legend are three different products with very different prices, and only the collector number distinguishes them on a listing. The [rarity and printings guide](/guides/understanding-riftbound-card-rarity) walks through each.
+- **The Signatures are champion cards here.** Twelve signed Legends, one per champion, at 226★ through 237★ — if you're going to chase one, the champion hubs above show every printing of that champion side by side so you can see what the signed version costs relative to the base and Showcase.
+- **Unleashed is Unit-heavy and top-heavy.** If you're buying for a deck rather than a binder, this is the set for big bodies and Epic Units; if you need Gear, look at Spirit Forged first. The [Unit card list](/cards/type/unit) and the [Epic card list](/cards/rarity/epic) both cover every set, sortable by price.
+- **Watch the launch windows.** A new set moves an old one's prices in both directions, and Radiance is next. The [price movers page](/movers) shows what's shifting each day, and a [price alert](/alerts) on any card tells you when it does.
+
+## See the actual cards
+
+The numbers are the plan; the set page is the cards. Every Unleashed card, its live price across every store we track in your market, and its full rules text:
+
+[Browse the Unleashed set](/sets/unleashed) · [Unleashed card gallery](/sets/unleashed/gallery)
+
+We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origins-set) and [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set), and [every Riftbound set in order](/guides/riftbound-sets-in-order) has the full release sequence, including what's coming next.`,
   },
   {
     slug: "riftbound-card-condition-guide",

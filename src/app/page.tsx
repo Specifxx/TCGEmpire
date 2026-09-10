@@ -99,7 +99,21 @@ export const metadata: Metadata = {
   // covers "wherever you are". It only makes the crawled render name the one
   // market it has always actually rendered as, in the one field carrying the
   // most ranking weight.
-  title: { absolute: "Riftbound Prices (US) — Compare Every Store | RiftCompare" },
+  //
+  // "Card" ADDED 2026-09-10. A live SERP check for "riftbound card prices" —
+  // the head term, and the phrasing every competing tracker uses — had this
+  // page at #10, the only page-one result whose <title> did not contain the
+  // words "card prices" (TCGFish, riftbound.gg, Collectr, PriceCharting,
+  // riftDecks, Magical Meta, TCGIndex, TCGplayer and Riftbound Stats all do).
+  // The four region-home titles (lib/seo.ts regionHomeMetadata) already read
+  // "Compare Riftbound Card Prices Across Every … Store"; root was the odd one
+  // out. The exact phrase "Riftbound prices" that the 2026-08-20 audit
+  // front-loaded is kept verbatim in the H1 (CinematicHero), the description
+  // and the JSON-LD name below, so that query keeps its on-page match — the
+  // title now covers the higher-volume variant instead of both fields
+  // repeating the same one. 62 chars total, inside Bing's 65-char warning
+  // threshold (see card/[id]/page.tsx for why that number).
+  title: { absolute: "Riftbound Card Prices (US) — Compare Every Store | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral
   // in substance — every market is still named, just reordered (see the areaServed
   // fix in layout.tsx for the same AU-first leftover, same reasoning: COUNTRY_LIST
@@ -118,7 +132,7 @@ export const metadata: Metadata = {
   // Discord/Slack) showed a different, less specific tagline than the actual
   // <title> — found by the same audit.
   openGraph: pageOpenGraph({
-    title: "Riftbound Prices (US) — Compare Every Store",
+    title: "Riftbound Card Prices (US) — Compare Every Store",
     description: "Riftbound card prices compared live across every store we track — find the cheapest place to buy.",
     url: "/",
   }),
