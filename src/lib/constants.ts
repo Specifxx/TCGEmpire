@@ -234,7 +234,25 @@ export type CardType = (typeof CARD_TYPES)[number];
 // views, no price — so it sorts LAST, exactly when its price is most wanted. The
 // quota cannot cover every market × every card daily, so the tail is what gets
 // dropped.
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean; releasedOn?: string }
+export interface SetInfo {
+  code: string;
+  name: string;
+  slug: string;
+  comingSoon?: boolean;
+  sealedAvailable?: boolean;
+  totalCards?: number;
+  recentlyReleased?: boolean;
+  releasedOn?: string;
+  /**
+   * TRUE when `code` is OUR guess, not a code Riot has published.
+   *
+   * The code still has to be something — it is the join key for every card, price
+   * and sealed row — but a guess must not be SHOWN to a reader as though it were
+   * official, which is what /sets/<slug>'s code badge was doing for Radiance.
+   * Set it alongside the guess, delete it when the real code is confirmed.
+   */
+  codeProvisional?: boolean;
+}
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
@@ -253,7 +271,7 @@ export const SETS: SetInfo[] = [
   // three-letter set code; this is our guess. Changing it later is a one-line edit
   // here PLUS a Card.setCode backfill if any cards have been imported under it —
   // check before importing the official gallery.
-  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23" },
+  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23", codeProvisional: true },
 ];
 
 // How long after release a set keeps first claim on the eBay quota. Two months:

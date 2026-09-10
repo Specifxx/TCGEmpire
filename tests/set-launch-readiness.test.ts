@@ -198,6 +198,24 @@ test("an upcoming set's pages route to the things that are actually buyable", ()
   assert.match(cal, /isPreorderSetCode\(code, now\)/, "preordersHrefForSet must be date-gated, not permanent");
 });
 
+test("a guessed set code is never shown to a reader as the official one", () => {
+  // The code is the join key for every card, price and sealed row, so it always
+  // has a value — but /sets/<slug> rendered it in a badge, which stated our own
+  // placeholder ("RAD") as Riot's published set code on the page that ranks for
+  // the set's name. Same reason the /blog/…-what-we-know table stopped printing
+  // "Set code: RAD" as a fact.
+  const setPage = code("src/app/sets/[set]/page.tsx");
+  assert.match(setPage, /!set\.codeProvisional/, "the set-code badge must be gated on the code being confirmed");
+  const articles = read("src/lib/articles.ts");
+  for (const s of SETS.filter((x) => x.codeProvisional)) {
+    assert.doesNotMatch(
+      articles,
+      new RegExp(`\\*\\*Set code\\*\\* \\| ${s.code}`),
+      `an article states the provisional code ${s.code} as this set's set code`,
+    );
+  }
+});
+
 test("the runbook exists and matches the workflow it documents", () => {
   const doc = read("docs/SET-LAUNCH-RUNBOOK.md");
   // Every operational name the runbook tells a human to type must be real —
