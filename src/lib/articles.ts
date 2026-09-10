@@ -5633,6 +5633,174 @@ We checked the closest comparable we could find — **Ambessa, Matriarch of War*
 
 We'd rather show you the real numbers and our actual reasoning than tell you what to do with them. If you want to track it, [set a price alert](/alerts) rather than committing based on any one article — ours included.`,
   },
+  {
+    slug: "astral-heron-riftbound-price-rising-how-to-play",
+    category: "blog",
+    title: "Astral Heron: Why Its Price Is Rising and How to Play It",
+    excerpt:
+      "Astral Heron (VEN 044/166) went from a US$4 Epic to a US$34 one in five weeks. What the card does, why Calm decks want it, and how to build around it.",
+    author: "RiftCompare",
+    date: "2026-09-10",
+    readMins: 9,
+    tags: ["astral heron", "vendetta", "epic", "calm", "chase cards", "price analysis", "deck building"],
+    hero: {
+      src: "/blog/astral-heron-ven044.jpg",
+      alt: "Astral Heron (VEN 044/166) — the Calm-domain Epic Unit from Riftbound: Vendetta, a great heron in flight against a night sky",
+    },
+    summary: [
+      "**Astral Heron (VEN 044/166)** is a 7-energy, 7-might Calm Epic Unit from Vendetta. While it sits at a battlefield, the first card you play each turn makes your **next card cost 2 energy and 2 runes less** — every single turn.",
+      "**The price rise is real and measurable.** RiftCompare's own US price history has the cheapest in-stock copy at **US$4.26 on 2 August**, US$11.00 on 22 August, US$30.79 on 3 September and **US$34.00 on 10 September** — an eight-fold climb in five weeks.",
+      "**Our read on why**: it's an Epic (roughly one per four packs by community pull-rate estimates), it's a repeatable discount engine rather than a one-shot effect, and it slots into the same Calm shell that already wants Nasus, Steel Paws and Frostcoat Mother's big Empower costs paid down.",
+      "**How to play it**: land it early on a battlefield you can hold, lead every turn with your cheapest card, then spend the discount on the expensive thing. Protect it with Twilight Shroud or reposition it with Resonating Strike — the whole engine switches off the moment it leaves the battlefield.",
+    ],
+    faq: [
+      {
+        q: "What does Astral Heron do in Riftbound?",
+        a: "Astral Heron is a Calm-domain Epic Unit from Vendetta (044/166) costing 7 energy with 7 might. Its rules text reads: \"When you play your first card each turn, if I'm at a battlefield, your next card costs 2 and 2 Runes less.\" In practice, every turn it sits at a battlefield the second card you play that turn is discounted by 2 energy and 2 runes.",
+      },
+      {
+        q: "Why is Astral Heron's price going up?",
+        a: "RiftCompare's US price history shows the cheapest in-stock copy climbing from US$4.26 on 2 August 2026 to US$34.00 on 10 September 2026. Our read is a combination of Epic scarcity (community pull-rate estimates put Epics at roughly one per four packs), the fact that its discount repeats every turn rather than firing once, and its fit in the Calm decks that run expensive Empower units — but that reasoning is our opinion, and the numbers are the only part we can guarantee.",
+      },
+      {
+        q: "Is Astral Heron worth buying?",
+        a: "That depends entirely on whether you're playing Calm. If you are, one copy is a genuine engine and the live prices on this page will tell you the cheapest store in your market right now. If you aren't, an Epic that has already moved eight-fold is not something we'd recommend buying on momentum — Riftbound simply doesn't have enough price history for confident predictions, and we say so on every valuation piece we publish.",
+      },
+      {
+        q: "How do you use Astral Heron in a deck?",
+        a: "Get it onto a battlefield you can defend, then sequence every turn as cheap card first, expensive card second. The discount only applies while Astral Heron is at a battlefield, so protection (Twilight Shroud), repositioning (Resonating Strike) and a clear plan for the 7-energy turn it comes down on all matter more than they would for a normal 7-drop.",
+      },
+      {
+        q: "What rarity is Astral Heron?",
+        a: "Epic. In Riftbound's rarity ladder Epic sits above Rare and below the Showcase, Overnumbered and Signature chase printings — scarce enough that a playable Epic often prices above a Rare that sees more play, which is a large part of what's happening here.",
+      },
+    ],
+    embeds: [
+      {
+        title: "Astral Heron — live prices",
+        note: "The lowest in-stock listing in your market, updated as stores reprice. Click through for every store we track.",
+        slugs: ["astral-heron-ven-044"],
+      },
+      {
+        title: "The Calm cards it works with",
+        note: "The Empower payoffs, the protection and the repositioning spells discussed above — all real Vendetta cards, all at live prices.",
+        slugs: [
+          "nasus-ascended-ven-046",
+          "steel-paws-ven-043",
+          "frostcoat-mother-ven-032",
+          "helm-of-suppression-ven-045",
+          "twilight-shroud-ven-031",
+          "resonating-strike-ven-034",
+          "sandstone-chimera-ven-036",
+          "shen-scourge-of-shadows-ven-042",
+        ],
+      },
+    ],
+    browseCta: {
+      href: "/card/astral-heron-ven-044",
+      label: "See live Astral Heron prices →",
+      blurb: "Every store we track across six markets, updated as the price moves.",
+    },
+    body: `A quick disclosure before anything else: **the prices in this article are real and come from RiftCompare's own tracking, but the reasons we give for them are our opinion.** Riftbound is a young game with a short price history, and nobody — us included — can tell you with certainty where a card goes next. What we can do is show you exactly what has happened to one card, explain what it does well enough that you can judge for yourself, and keep the price section live so this page never quietly goes stale.
+
+The card is **Astral Heron**, and over the last five weeks it has gone from a forgettable-looking Epic to one of the more talked-about non-Legend cards in [Vendetta](/sets/vendetta).
+
+[[embed:0]]
+
+## The card
+
+**Astral Heron (VEN 044/166)** is a Calm-domain **Epic Unit** costing **7 energy** with **7 might**. It's a Mount Targon card — a great heron in flight, with the flavour line *"With its flight, the night falls."* — and its rules text is a single sentence:
+
+> *When you play your first card each turn, if I'm at a battlefield, your next card costs 2 and 2 Runes less.*
+
+Read it slowly, because every clause matters and it's easy to underrate on a first pass:
+
+- **"When you play your first card each turn"** — the trigger is the first card, of any kind. Unit, spell, gear, it doesn't matter. You don't have to do anything special to turn it on.
+- **"if I'm at a battlefield"** — this is the condition, and it's the whole catch. Astral Heron does nothing from your base. It has to be standing on a battlefield, which means it has to survive there.
+- **"your next card costs 2 and 2 Runes less"** — the payoff is a discount of **two energy and two runes** on the *second* card you play that turn. Not the first. The first card is the key; the second card is the door.
+
+The reason the card reads as modest at a glance is that a one-time "your next card costs less" effect is fine but unremarkable. The thing people missed — and, in our view, the thing the market has now noticed — is the words **each turn**. This isn't a one-shot. As long as Astral Heron is at a battlefield, it triggers again on your next turn, and the one after that, and the one after that. Over a game that lasts five or six more turns after it lands, that's ten-plus energy and ten-plus runes of value from a single unit that also happens to be a 7-might body holding a battlefield.
+
+## The real numbers
+
+Here is what RiftCompare's price history for the cheapest in-stock US copy actually shows, date by date:
+
+| Date | Cheapest US listing |
+| --- | --- |
+| 24 July 2026 (pre-release) | US$30.00 |
+| 2 August 2026 | US$4.26 |
+| 5 August 2026 | US$6.00 |
+| 22 August 2026 | US$11.00 |
+| 24 August 2026 | US$14.60 |
+| 3 September 2026 | US$30.79 |
+| 10 September 2026 | US$34.00 |
+
+A few honest notes on how to read that. The 24 July figure is a single pre-release listing before any real supply existed, so it isn't a meaningful "starting price" — the story genuinely starts on 2 August, three days after Vendetta released on 31 July, when boxes were being cracked in volume and Epics were flooding onto the market at whatever people would pay. **US$4.26** was the floor.
+
+From there the climb has been steady rather than a single spike: roughly doubling by the third week of August, doubling again by the start of September, and still grinding up in the week since. As of 10 September the cheapest in-stock copy across the markets we track sits at **US$34.00**, **A$51.82**, **£30.13**, **S$54.69**, **C$46.58** and **€41.64** — and TCGplayer's own market-price figure for the card is higher still, at a little over US$42, which tells you the cheapest listing is being bought out faster than it's being replaced.
+
+Those numbers will be out of date the moment you read this, which is exactly why the price widget at the top of this article is live rather than typed. **Trust the widget, not the table.**
+
+## Why we think the price is rising
+
+This is the opinion section. We'll give you the reasoning in order of how confident we are in it.
+
+**1. It's an Epic, and Epics are genuinely scarce.** Riftbound's rarity ladder runs Common, Uncommon, Rare, Epic, and then the chase printings above that. Community pull-rate estimates — the same figures our [box EV calculator](/tools/box-ev) uses — put Epics at roughly **one per four packs**. That's not Signature-card scarcity, but it means a 24-pack box yields something like six Epics spread across every Epic in the set. Any single Epic that a lot of people suddenly want the same week has nowhere near enough copies coming out of fresh product to meet that demand, and the price does what prices do. This is the one point we'd describe as close to a fact rather than an opinion.
+
+**2. The effect is repeatable, and repeatable effects get re-rated.** Early-set pricing tends to reward cards that do something dramatic once — a big removal spell, a game-ending Legend. Cards that quietly generate value every turn are routinely underpriced in the first fortnight and then re-rated once players have enough games under their belt to notice they keep winning the ones where the engine sticks. We think Astral Heron is a textbook example. A four-dollar price for a card that discounts every turn of the game was, in hindsight, the market pricing the *first* trigger and ignoring the rest.
+
+**3. It fits the Calm shell that already wanted it.** Calm in Vendetta is full of expensive things to do. **Nasus, Ascended** wants 8 to Empower and scores a point every time he conquers once he is. **Steel Paws** Empowers for 7 and becomes a 7-might-larger unit. **Frostcoat Mother**'s Empower 12 comes down by one for each rune you control but is still enormous. **Helm of Suppression** Empowers for 4 and a Calm rune. Every one of those is a card you'd love to pay less for — and Astral Heron's discount is on *the next card you play*, so leading with a cheap unit or a Twilight Shroud and then dropping the payoff for two energy and two runes less is exactly the pattern the deck already wants to follow. A card that makes the strongest cards in its domain cheaper, every turn, was never going to stay at four dollars once people started building the deck properly.
+
+**4. The card is good enough to be a target, which is its own kind of endorsement.** Once opponents start spending removal on your seven-drop bird rather than on your champion, you know the engine is being respected. We've seen this pattern with other repeatable-value units in the game's short history and it usually coincides with the price moving.
+
+What we are **not** saying is that the price will keep rising. Riftbound simply doesn't have the history for that kind of call, and an Epic that has already moved eight-fold has clearly had most of its early re-rating. If you're a Calm player, the case for owning one is about the card, not the chart.
+
+## How to play Astral Heron
+
+Understanding the discount is the easy part. Getting value out of it is about three things: getting it down, keeping it at a battlefield, and sequencing your turns to use the trigger every time.
+
+### Landing it
+
+Seven energy is a lot, and there's no getting around the fact that the turn you play Astral Heron is a turn you mostly aren't doing anything else. Plan for it. In Calm, the cleanest approach is to spend the early turns developing runes and cheap bodies, then commit the Heron on a turn where your opponent has just tapped out or just lost their own threat. Playing it into an open board where it gets removed before it ever triggers is the single most common way to lose with the card, and it's entirely avoidable.
+
+Remember, too, that the Heron has to be **at a battlefield**, not in your base, to do anything. If you can play it directly to a battlefield you control, do; if the rules of the moment mean it starts in base, you're looking at another turn before the engine turns on — which is where **Resonating Strike** earns its place. That hidden reaction — playable on your turn or in a showdown — moves a unit you control to a battlefield you control, and hiding it for a rune early so you can slide a freshly-played Heron onto a battlefield for free later is one of the best plays the deck has.
+
+### Keeping it there
+
+Every good opponent will try to remove or push the Heron off its battlefield, because they can read the card too. Calm gives you tools:
+
+- **Twilight Shroud** gives a friendly unit +1 might and makes it unchoosable by enemy spells and abilities this turn — and it has Flow 2, so you can play it again from your trash later. Holding one up for the turn after you commit the Heron is often the difference between a game-winning engine and a wasted seven energy.
+- **Sanction** can Empower a unit in response, which won't save the Heron by itself but does let you protect the Empowered payoff you just discounted.
+- **Shen, Scourge of Shadows** draws you a card when he holds with exactly one other friendly unit at his location — and a Heron plus Shen on one battlefield is a two-card combination that draws you into more discounted plays every turn it survives.
+
+A 7-might body is also simply large. Against decks that want to fight for battlefields rather than remove things, Astral Heron often just wins the combat, which is a perfectly good way to keep it where it needs to be.
+
+### Sequencing every turn
+
+This is where the games are actually won. The trigger is *your first card each turn*, and the discount is on *the next card*. So the correct habit, every single turn the Heron is at a battlefield, is:
+
+1. **Play your cheapest card first.** A one-energy unit, a cheap spell, anything. It doesn't need to be good on its own; its job is to be the key.
+2. **Play the expensive card second.** Nasus. Steel Paws. A big spell. Whatever costs the most that turn — that's the card that gets two energy and two runes knocked off.
+3. **Don't lead with the payoff.** The most common misplay is slamming the big card first because it's exciting, which wastes the discount on whatever mediocre card you play afterwards.
+
+The rune part of the discount deserves a special mention, because runes are usually the tighter constraint in Calm. Two runes less on an Empower cost effectively moves an 8-cost Empower to 6, which can be the difference between Empowering Nasus this turn or next — and a Nasus that's Empowered one turn earlier is a point you score one turn earlier.
+
+### Cards that get better with it
+
+Beyond the Empower payoffs already mentioned, a few Vendetta Calm cards interact with the Heron in ways worth knowing about. **Sandstone Chimera** sitting at a battlefield restricts everyone to channelling one rune at the start of their Channel Phase — brutal for your opponent, and much less painful for you when your own most expensive play is already two runes cheaper. **Akali, Silent** can't be chosen by enemy spells outside combat and gains might on moving to a battlefield, making her a natural second body to park beside the Heron. And the Overnumbered and alternate-art printings of the Calm champions — **Riven, Shattered**, **Irelia, Fervent** and Shen — are all the same rules text in a shinier frame, so nothing here requires the expensive version to work.
+
+[[embed:1]]
+
+## Which printing to buy
+
+There's only one printing of Astral Heron in Vendetta — 044/166, Epic, no alternate-art or Overnumbered version at the time of writing — so there's no "cheap version" to fall back on and no risk of buying the wrong one. What *does* vary enormously is the store. Because this card is being bought out from the bottom of the listings, the spread between the cheapest and the most expensive in-stock copy in a single market is often wider than the card's entire price a month ago. That's the whole reason [RiftCompare](/) exists: [check every store in your market](/card/astral-heron-ven-044) before paying whatever the first shop you opened is asking.
+
+If you want to be told when it moves rather than checking by hand, [set a price alert](/alerts) on it. That works in both directions — it'll tell you if it comes back down, too.
+
+## Make your own call
+
+We've tried to keep the two halves of this article clearly separate: the price history is real and the live prices are live; the reasons we've given for the rise are our reading of the card and the format, nothing more. If you play Calm, we think Astral Heron is a genuine engine worth owning at the price it's at. If you don't, we'd rather you looked at the chart, looked at the rules text, and made your own decision — and that's exactly what the numbers on this page are here for.`,
+  },
   // The 2026 SEO content pack — the five briefed articles plus the four
   // AI-visibility target pages and the variant glossary. Kept in their own file
   // so the batch stays reviewable; spread here so every existing surface (the

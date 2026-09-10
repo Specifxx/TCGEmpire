@@ -1,4 +1,16 @@
 {
+  "/blog/astral-heron-ven044.jpg": {
+    "src": "/blog/astral-heron-ven044.jpg",
+    "width": 716,
+    "height": 1000,
+    "bytes": 109282,
+    "webp": "/blog/astral-heron-ven044.webp",
+    "webpBytes": 89350,
+    "avif": "/blog/astral-heron-ven044.avif",
+    "avifBytes": 66657,
+    "variants": [],
+    "fingerprint": "32538c2d00758054"
+  },
   "/blog/best-basket-cheapest-riftbound-deck.png": {
     "src": "/blog/best-basket-cheapest-riftbound-deck.png",
     "width": 1200,
