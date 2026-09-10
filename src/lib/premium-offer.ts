@@ -25,7 +25,7 @@
 // on. `via: "resend"` is available for a small audience or if Brevo is down.
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db";
-import { isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail } from "./email";
+import { getLastEmailError, isBrevoEnabled, isEmailEnabled, sendPremiumOfferEmail } from "./email";
 import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, premiumTrialEnabled } from "./premium";
 import { SITE_URL } from "./site";
 
@@ -50,6 +50,12 @@ export interface PremiumOfferResult {
   sent?: number;
   failed?: number;
   remaining?: number; // still pending after this run (batch cap hit)
+  // WHY sends failed — the first few distinct reasons (provider + HTTP status
+  // + response body, or "opt-out row could not be written"). Never includes a
+  // recipient address: this lands in a workflow log. Added after a first live
+  // run reported failed:90 with nothing to say which of the two things that can
+  // fail per recipient actually did.
+  errors?: string[];
 }
 
 // Brevo's free tier caps at 300 sends/day; Resend's at 100/day. The batch
@@ -176,6 +182,10 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<Prem
   const batch = pendingRows.slice(0, limit);
   let sent = 0;
   let failed = 0;
+  const errors = new Set<string>();
+  const noteError = (reason: string) => {
+    if (errors.size < 5) errors.add(reason);
+  };
   for (const r of batch) {
     // Mint (or reuse) the announcement opt-out token BEFORE sending, so the
     // unsubscribe link is live the moment the email lands. optedOutAt stays
@@ -183,7 +193,10 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<Prem
     const key = r.email.trim().toLowerCase();
     const row = await prisma.announcementOptOut
       .upsert({ where: { email: key }, create: { email: key, token: randomUUID() }, update: {} })
-      .catch(() => null);
+      .catch((e: unknown) => {
+        noteError(`opt-out row could not be written: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`.slice(0, 300));
+        return null;
+      });
     if (!row) {
       failed++;
       continue;
@@ -206,11 +219,12 @@ export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<Prem
       await prisma.user.update({ where: { id: r.id }, data: { premiumOfferSentAt: new Date() } }).catch(() => {});
     } else {
       failed++;
+      noteError(getLastEmailError() ?? "the mail provider returned false with no recorded reason");
     }
     if (batch.length > 1) await new Promise((r2) => setTimeout(r2, THROTTLE_MS));
   }
 
-  return { ...base, sent, failed, remaining: pendingRows.length - sent };
+  return { ...base, sent, failed, remaining: pendingRows.length - sent, ...(errors.size ? { errors: [...errors] } : {}) };
 }
 
 // ── Admin console support ────────────────────────────────────────────────────

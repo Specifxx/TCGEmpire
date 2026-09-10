@@ -36,6 +36,7 @@ interface RunResult {
   sent?: number;
   failed?: number;
   remaining?: number;
+  errors?: string[];
 }
 
 const FILTERS: { id: Filter; label: string }[] = [
@@ -257,6 +258,13 @@ export function PremiumOfferConsole({
             ) : (
               <>✗ {result.error ?? "failed"}</>
             )}
+            {result.errors?.length ? (
+              <ul className="mt-2 list-disc pl-4 text-rose-300">
+                {result.errors.map((e) => (
+                  <li key={e}>{e}</li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         )}
 

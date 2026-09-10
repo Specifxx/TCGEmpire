@@ -6,6 +6,21 @@ export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
 }
 
+// The most recent reason a send failed (provider + HTTP status + response
+// body, or the thrown error), for batch callers that count failures and want
+// to say WHY in their summary. Every failure path below writes it; a
+// successful send clears it. Deliberately a plain module variable, not part of
+// sendEmail's return type, so the dozens of existing boolean callers are
+// untouched.
+let lastEmailError: string | null = null;
+export function getLastEmailError(): string | null {
+  return lastEmailError;
+}
+async function noteProviderFailure(provider: string, res: Response): Promise<void> {
+  const body = await res.text().catch(() => "");
+  lastEmailError = `${provider} ${res.status}: ${body.slice(0, 300)}`;
+}
+
 // Send a transactional email via Resend's REST API. Requires RESEND_API_KEY (and
 // ideally a verified sender in EMAIL_FROM) to actually deliver; otherwise it
 // no-ops and logs, so the rest of the app keeps working without email configured.
@@ -13,6 +28,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email] RESEND_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
+    lastEmailError = "Resend: RESEND_API_KEY not set";
     return false;
   }
   // Send from the verified riftcompare.com domain by default so Resend allows
@@ -26,10 +42,14 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to, subject, html }),
     });
-    if (!res.ok) console.warn(`[email] Resend returned ${res.status} for "${subject}".`);
+    if (!res.ok) {
+      console.warn(`[email] Resend returned ${res.status} for "${subject}".`);
+      await noteProviderFailure("Resend", res);
+    } else lastEmailError = null;
     return res.ok;
   } catch (e) {
     console.warn("[email] send failed:", e);
+    lastEmailError = `Resend: ${e instanceof Error ? e.message : String(e)}`;
     return false;
   }
 }
@@ -57,6 +77,7 @@ export async function sendEmailBrevo(to: string, subject: string, html: string):
   const key = process.env.BREVO_API_KEY;
   if (!key) {
     console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
+    lastEmailError = "Brevo: BREVO_API_KEY not set";
     return false;
   }
   const sender = parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`);
@@ -66,10 +87,14 @@ export async function sendEmailBrevo(to: string, subject: string, html: string):
       headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html }),
     });
-    if (!res.ok) console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
+    if (!res.ok) {
+      console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
+      await noteProviderFailure("Brevo", res);
+    } else lastEmailError = null;
     return res.ok;
   } catch (e) {
     console.warn("[email] Brevo send failed:", e);
+    lastEmailError = `Brevo: ${e instanceof Error ? e.message : String(e)}`;
     return false;
   }
 }
