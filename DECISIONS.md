@@ -3891,3 +3891,96 @@ the richest vault wins. Decisions worth writing down:
 - **Additive schema.** `GameRoom` has no relations, so the deploy-time
   `prisma db push` adds one table and touches nothing else. Rows are purged
   after 6h by the next room creation, so there is no cron.
+
+---
+
+## Premium made visual: a graphic pitch, Premium on phones, one green CTA (2026-09-10)
+
+Owner brief, four parts, all shipped together. Two of them knowingly reverse an
+earlier decision recorded in this file — flagged below rather than left to be
+rediscovered as drift.
+
+**1. The corner nudges' pitch is a graphic, not text.** Both nudges led with a
+sentence plus a six-chip tool row. Owner: *"right now it's all just text... it
+should be one clear image that is advertising why RiftCompare Premium is
+benefiting my life."* New `src/components/PremiumEdgeGraphic.tsx` — inline SVG,
+no hooks, no props, no fetch — renders two bars: a full-length gold one labelled
+"YOU / every deal, ranked" against a stub labelled "EVERYONE ELSE / top pick
+only". Both nudges render it; `SignupPromoPopup` keeps its Google/Discord
+buttons, ✕ and "Maybe later" exactly as they were, and `PremiumSlideIn` keeps
+its contextual per-route heading (a deck page still sells Best Basket by name,
+which is more specific than any graphic).
+
+Inline SVG rather than an image file because `scripts/check-images.ts` scans
+`public/` for raster against a 150KB budget and every raster here ships as a
+png+webp+avif+narrow-rendition set plus an `image-manifest.json` entry; there
+are zero `.svg` files in `public/`. Inline costs no request, no manifest churn,
+and no binary in the diff.
+
+**The bars deliberately carry no numbers.** They are an illustration, not a
+measurement, and this repo fails builds over invented figures. So rather than
+an unsourceable "you save N%" comparison, the two bars are labelled with a real
+difference already published on `/premium`: the free tier shows only the top
+pick, Premium shows the full ranked list ("Free shows only the top pick" appears
+verbatim in three FEATURES entries). The competitive framing lands and every
+word is literally true. `tests/premium-edge-graphic.test.ts` pins the absence of
+percentages and currency figures in the graphic's text nodes.
+
+**2. Premium is reachable on a phone.** At 375px the header was logo, Database,
+flag, avatar, hamburger — the desktop "✦ Premium" link is gated `xl:block`, so
+Premium was only findable inside the hamburger overlay. Added a gold
+"✦ Premium" immediately after Database in the left cluster, same `lg:hidden`
+band and same shape, via the existing `PremiumNavLink` so the premium-interest
+beacon still fires. `CinematicNavMenu`'s in-overlay spotlight banner stays; the
+header link is additive.
+
+**REVERSAL #1 — the shimmer.** `globals.css` carries tombstones for
+`.brand-shimmer` and `.cta-shine`: a gold text shimmer and a CTA shine sweep
+were both stripped out for the flat terminal look. A shimmer is back, on exactly
+one element, because the brief was explicit both ways — *"make it so that it,
+like, glows or shimmers and stands out... it's like gold, and it shimmers"*
+alongside an equally explicit refusal to shine the whole site. Keyframes live in
+`tailwind.config.ts` and the gradient plumbing in `globals.css`, never both (a
+duplicated `float` keyframe once silently shadowed the config copy — see that
+tombstone). It carries `motion-reduce:animate-none` like the marquee in
+`MarketPulse.tsx`, sits above the blanket reduced-motion block, and the
+`background-clip:text` is `@supports`-guarded so the label can never render as
+invisible text. A test pins that exactly one element carries it.
+
+**3. The tagline.** "Power tools for buyers & sellers" → **"Get an unfair edge
+buying and selling"**, across the `/premium` h1 and metadata title, the Premium
+dialog heading, and both nudges' non-trial heading fallback.
+
+**4. `/premium` leads with one big green button.** Owner: *"the big text should
+just be start your 14-day free trial... it should just be a big green button...
+the tiny text, that's where you list your price."* `PremiumCta`'s signed-out
+branch previously had a heading, a small link, and fine print all saying
+overlapping things; it is now a full-width `btn-primary` carrying the ask, with
+the price and the card-required disclosure in the line beneath it.
+`TrialPriceBlock` gained a `compact` size so `$0 due today` no longer out-shouts
+the button — but its "then $X after your N-day trial" line is untouched, because
+pairing the $0 with the real price in one block is load-bearing policy from the
+2026-09-09 entry above.
+
+**REVERSAL #2 — green, not gold, on that one button.** `PremiumCta.tsx` said
+"Gold (not green) — the professional Premium accent", and the dialog's header
+says it is "deliberately not the green bubble look". Gold remains the Premium
+IDENTITY everywhere — badges, the "Best value" ribbon, the new nav link, the
+dialog's own buttons, the tool-wall button. But green is this site's single
+primary-ACTION accent, so it reads as "go". `PremiumCta` renders only on
+`/premium`, so the split is exactly one page deep, and the stale comment was
+rewritten rather than left contradicting the code.
+
+**Also:** `PREMIUM_COPY_VERSION` → `edge-graphic-2026-09-10` and the popup's
+`PROMO_VARIANT` → `premium_graphic`, so the text-pitch and graphic-pitch eras
+stay separable in GA4 instead of averaging together. And a real latent bug
+fixed in passing: the "Save N%" badge used `text-brand-300`, which `brand`
+never defined (only 400/500/600), so the badge text had been falling back to
+inherited colour — now `text-brand-400`.
+
+**Verified beyond the test suite.** This is a visual change tests cannot judge,
+so the header, the popup card and the `/premium` CTA card were rendered in
+headless Chromium at their real widths and inspected: the 375px header fits
+without wrapping, the shimmering label renders visibly (not as transparent
+text), and the graphic is legible inside the 384px card while making the card
+shorter than the chip row it replaced.

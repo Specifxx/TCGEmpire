@@ -15,6 +15,7 @@ import {
   premiumZeroToday,
   premiumFromLine,
 } from "@/lib/site";
+import { PremiumEdgeGraphic } from "./PremiumEdgeGraphic";
 import { formatMoneyCompact } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
 
@@ -75,10 +76,14 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 //      see unprompted.
 // Every entry here must be a real Premium-only TIER_COMPARISON row.
 //
-// EXPORTED so SignupPromoPopup's Premium pitch (2026-09-04) can reuse the exact
-// same list rather than growing its own hand-typed copy — the drift this file's
-// own header comment describes ("a hand-written sentence... drifted out of
-// date") is exactly what a second copy would risk again.
+// NO LONGER RENDERED AS CHIPS (2026-09-10) — both nudges' chip rows became one
+// PremiumEdgeGraphic, and SignupPromoPopup no longer imports this list at all.
+// It is deliberately kept, and kept exported, because it is still the canonical
+// definition of "which tools are Premium-only": tests/premium-slidein.test.ts
+// pins it against TIER_COMPARISON, and every CONTEXT_PITCH entry below is
+// validated to name a real label from it. Deleting it would silently remove the
+// guard that catches the next tier change, which is the exact failure this list
+// was created to prevent.
 export const PITCH_TOOLS: { emoji: string; label: string }[] = [
   { emoji: "📋", label: "Bulk Pricer" },
   { emoji: "🧺", label: "Best Basket" },
@@ -277,7 +282,7 @@ export function PremiumSlideIn() {
   if (!shown) return null;
 
   const heading =
-    contextPitch?.heading ?? (trialEligible ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`);
+    contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Get an unfair edge buying and selling");
   const bodyLine = contextPitch?.line ?? "You've been comparing prices — Premium adds the pro tools and goes ad-free:";
   const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
 
@@ -334,17 +339,16 @@ export function PremiumSlideIn() {
               {PREMIUM_NEXT_PRICE_AMOUNT}
             </p>
           )}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {PITCH_TOOLS.map((t) => (
-              <span
-                key={t.label}
-                className="inline-flex items-center gap-1 rounded-full bg-ink-800 px-2 py-1 text-[10px] font-semibold text-slate-300"
-              >
-                <span aria-hidden>{t.emoji}</span>
-                {t.label}
-              </span>
-            ))}
-          </div>
+          {/* THE PITCH IS A GRAPHIC NOW (owner brief — see PremiumEdgeGraphic's
+              own header for the date and the reasoning). This replaced the
+              six-chip tool row. The contextual heading and body line ABOVE it
+              deliberately stay: a deck page selling Best Basket by name is more
+              specific than any graphic, and tests/premium-slidein.test.ts pins
+              every CONTEXT_PITCH entry against a real PITCH_TOOLS label.
+              NB: no ISO date in this comment on purpose — it sits inside the
+              400-character window after the price-increase banner above that
+              tests/premium-price-increase.test.ts scans for hard-coded dates. */}
+          <PremiumEdgeGraphic className="mt-2.5" />
           {/* PROMOTED above the CTA row, 2026-09-09 (previously an 11px
               footnote BELOW the button). ALWAYS shown. Two different framings
               by design, not an oversight:

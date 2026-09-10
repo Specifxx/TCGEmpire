@@ -28,7 +28,7 @@ export function AnnualPriceBlock({ size = "lg" }: { size?: "lg" | "sm" }) {
       </div>
       <div className="mt-2 flex items-center justify-center gap-2">
         {save > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-brand-500/15 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-brand-300 ring-1 ring-brand-500/40 shadow-[0_0_14px_rgba(52,209,126,0.28)]">
+          <span className="inline-flex items-center gap-1 rounded-md bg-brand-500/15 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-brand-400 ring-1 ring-brand-500/40 shadow-[0_0_14px_rgba(52,209,126,0.28)]">
             <span aria-hidden>▼</span> Save {save}%
           </span>
         )}

@@ -26,9 +26,15 @@ export function TrialPriceBlock({
 }: {
   plan: "monthly" | "annual";
   trialDays: number;
-  size?: "lg" | "sm";
+  // "compact" (2026-09-10) exists so /premium's cards can put the CTA button
+  // first: the owner's brief was that the biggest thing on the card should be
+  // "start your 14-day free trial", not the price. At text-4xl this block was
+  // out-shouting the button. The block itself is unchanged otherwise — the
+  // "then $X after your N-day trial" line stays exactly where it is, for the
+  // reason in this file's header.
+  size?: "lg" | "sm" | "compact";
 }) {
-  const big = size === "lg" ? "text-4xl" : "text-3xl";
+  const big = size === "lg" ? "text-4xl" : size === "sm" ? "text-3xl" : "text-2xl";
   const dayPhrase = `${trialDays}-day`;
   const perMonth = premiumEffectiveMonthly();
   const save = annualSavingPct();
@@ -48,7 +54,7 @@ export function TrialPriceBlock({
         after your {dayPhrase} free trial
       </p>
       {plan === "annual" && save > 0 && (
-        <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-brand-500/15 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-brand-300 ring-1 ring-brand-500/40 shadow-[0_0_14px_rgba(52,209,126,0.28)]">
+        <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-brand-500/15 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-brand-400 ring-1 ring-brand-500/40 shadow-[0_0_14px_rgba(52,209,126,0.28)]">
           <span aria-hidden>▼</span> Save {save}%
         </span>
       )}

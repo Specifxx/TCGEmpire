@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
-import { PITCH_TOOLS } from "./PremiumSlideIn";
+import { PremiumEdgeGraphic } from "./PremiumEdgeGraphic";
 import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
@@ -108,13 +108,19 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // itself changed from a free-account comparison to Premium, 2026-09-04). Each
 // name records which axis changed; this one changes CONTENT, not chrome or
 // timing, so it gets a genuinely new name rather than another suffix.
+// → "premium_graphic" (2026-09-10): the pitch stopped being text at all. The
+// sentence and the six-chip tool row became one PremiumEdgeGraphic; the
+// heading's non-trial fallback became the new tagline. Same axis as the last
+// rename (CONTENT), so again a new name rather than a suffix — without it the
+// text-pitch and graphic-pitch impressions would average together in GA4 and
+// neither could be read.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_pitch";
+const PROMO_VARIANT = "premium_graphic";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded, trialDays } = useMe();
@@ -194,7 +200,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
 
   if (!shown) return null;
 
-  const heading = trialAvailable ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`;
+  const heading = trialAvailable ? "Try Premium free" : "Get an unfair edge buying and selling";
 
   return (
     // Bottom-LEFT, same corner and z-tier as PremiumSlideIn (z-[70], under every
@@ -224,7 +230,16 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         </div>
 
         <div className="px-4 pb-1 pt-3">
-          <p className="text-xs leading-relaxed text-slate-400">RiftCompare Premium adds the pro tools and goes ad-free:</p>
+          {/* THE PITCH IS A GRAPHIC NOW (2026-09-10, owner brief: "right now
+              it's all just text... it should be one clear image"). This
+              replaced a sentence plus a six-chip tool row — see
+              PremiumEdgeGraphic's own header for why it's inline SVG and why
+              its bars deliberately carry no numbers. The card gets SHORTER as
+              a result, which matters here: this popup's own history includes a
+              production incident where a too-tall card put its close button
+              off-screen on a short phone (see tests/signup-slidein.test.ts). */}
+          <PremiumEdgeGraphic />
+          <p className="mt-2 text-xs font-semibold leading-relaxed text-gold">Get an unfair edge buying and selling</p>
 
           {/* Same real, decided increase the dialog, /premium and PremiumSlideIn
               announce (see lib/site.ts) — same compact treatment PremiumSlideIn
@@ -237,37 +252,25 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             </p>
           )}
 
-          {/* Same chip row as PremiumSlideIn, same shared PITCH_TOOLS — see that
-              file's own header comment for why this is a hand-maintained list
-              pinned against TIER_COMPARISON by tests/premium-slidein.test.ts,
-              rather than a second one drifting here independently. */}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {PITCH_TOOLS.map((t) => (
-              <span
-                key={t.label}
-                className="inline-flex items-center gap-1 rounded-full bg-ink-800 px-2 py-1 text-[10px] font-semibold text-slate-300"
-              >
-                <span aria-hidden>{t.emoji}</span>
-                {t.label}
-              </span>
-            ))}
-          </div>
-
-          {/* ALWAYS shown now (2026-09-06, explicit product instruction: "we
-              also need to show the prices for non logged in users"). Two
-              different framings by design, mirroring PremiumSlideIn.tsx's own
-              price block (see its header comment for the full reasoning):
+          {/* ALWAYS shown now (explicit product instruction: "we also need to
+              show the prices for non logged in users"). Two different framings
+              by design, mirroring PremiumSlideIn.tsx's own price block — see
+              its header comment for the full reasoning and the dates:
               • trialAvailable (every signed-out visitor, since a brand-new
                 account has never used a trial): bare "$0 today", the number
-                that's actually true right now (2026-09-09 — explicit product
-                decision to lead with that instead of the recurring price).
-                The real price is never more than a couple of clicks away —
-                sign up, land on /premium, and both that page and the
-                checkout page's own "Card required... then $X" disclosure
-                state it before any card is charged.
+                that's actually true right now, an explicit product decision
+                to lead with that instead of the recurring price. The real
+                price is never more than a couple of clicks away — sign up,
+                land on /premium, and both that page and the checkout page's
+                own "Card required... then $X" disclosure state it before any
+                card is charged.
               • !trialAvailable (trials off entirely): no $0 to claim, so this
                 branch still leads with the real recurring price + the
-                lock-in framing. */}
+                lock-in framing.
+              NB: no ISO dates in this comment on purpose — removing the chip
+              row above pulled it inside the 400-character window after the
+              price-increase banner that tests/premium-price-increase.test.ts
+              scans for hard-coded dates. */}
           {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-[11px] text-slate-500">
               {trialAvailable ? (
