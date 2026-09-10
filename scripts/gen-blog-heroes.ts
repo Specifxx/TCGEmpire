@@ -239,6 +239,82 @@ const HEROES: Hero[] = [
     title: "Best Basket: Cheapest Way to Buy a Deck",
     chips: ["Free with account", "Shipping included", "vs. naive total"],
   },
+  {
+    slug: "riftbound-radiance-leaked-mechanics",
+    kicker: "News · Leak",
+    title: "Radiance Leak: 3 New Mechanics",
+    chips: ["PAX West demo", "Not yet confirmed", "Releases 23 Oct"],
+    // Three named tiles for the three leaked keywords — colours are purely
+    // presentational (none of these are domain-specific in the leak itself),
+    // matching the deck-archetypes hero's use of grid-for-a-named-set pattern.
+    motif: {
+      kind: "grid",
+      label: "Leaked keywords",
+      items: [
+        { text: "Deploy", color: "#f5a524" },
+        { text: "Showoff", color: "#a855f7" },
+        { text: "Disarm", color: "#e5484d" },
+      ],
+    },
+  },
+  // Per-mechanic Radiance-leak guides. Same "leak status" checklist on all three —
+  // deliberately identical across the family, the way the crossover-onboarding
+  // guides below reuse one checklist shape — so the thumbnail itself signals
+  // "unconfirmed" alongside the article copy, not just inside it.
+  {
+    slug: "riftbound-deploy-explained",
+    kicker: "Guide · Radiance leak",
+    title: "Riftbound Deploy Explained",
+    chips: ["Gear keyword", "Battlefield-bound", "Not yet confirmed"],
+    motif: {
+      kind: "checklist",
+      label: "Leak status",
+      items: ["Leaked at PAX West", "Not Riot-confirmed", "Radiance · 23 Oct 2026"],
+    },
+  },
+  {
+    slug: "riftbound-showoff-explained",
+    kicker: "Guide · Radiance leak",
+    title: "Riftbound Showoff Explained",
+    chips: ["Modal reveal effect", "Hand or board", "Not yet confirmed"],
+    motif: {
+      kind: "checklist",
+      label: "Leak status",
+      items: ["Leaked at PAX West", "Not Riot-confirmed", "Radiance · 23 Oct 2026"],
+    },
+  },
+  {
+    slug: "riftbound-disarm-explained",
+    kicker: "Guide · Radiance leak",
+    title: "Riftbound Disarm Explained",
+    chips: ["Mirrors Assault", "Shrinks enemy Might", "Not yet confirmed"],
+    motif: {
+      kind: "checklist",
+      label: "Leak status",
+      items: ["Leaked at PAX West", "Not Riot-confirmed", "Radiance · 23 Oct 2026"],
+    },
+  },
+  {
+    slug: "gradient-sleeves-for-riftbound-cards",
+    kicker: "Guide · Accessories",
+    title: "Gradient Sleeves for Riftbound",
+    chips: ["Standard size fits", "7 domain colours", "Double-sleeve tip"],
+    // Real domain colours from lib/constants.ts DOMAINS, not invented ones — the
+    // article's whole pitch is matching a gradient to your deck's actual domains.
+    motif: {
+      kind: "grid",
+      label: "Domain colours",
+      items: [
+        { text: "Fury", color: "#e5484d" },
+        { text: "Calm", color: "#30a46c" },
+        { text: "Mind", color: "#3b82f6" },
+        { text: "Body", color: "#f5a524" },
+        { text: "Chaos", color: "#a855f7" },
+        { text: "Order", color: "#cbd5e1" },
+        { text: "Colorless", color: "#8b8f9a" },
+      ],
+    },
+  },
   // The three crossover-onboarding guides below reference another game's NAME
   // in plain text only — no logos, mascots, card frames or artwork from any of
   // them. That is the same nominative-fair-use reference the article's own

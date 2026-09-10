@@ -3561,3 +3561,532 @@ is removed from the sitemap — a redirecting URL there is a soft error in Searc
 Console — and this sitemap line is now set-agnostic, so it stays put through
 every future launch. `tests/release-calendar.test.ts` fails the build if a set
 name or a date literal reappears in the page, the metadata or the smoke check.
+
+## Premium pricing & conversion (2026-09-08)
+
+**The report.** Owner: ~5 subscribers at $4.99, ~4 at $9.99, none yet at $14.99
+(raised 6 Sep, two days old at the time of this pass). Suspected culprit: the
+Premium corner slide-in, and whether hiding its price would help.
+
+**The price was not the problem — read the actual git history first.**
+$9.99 (31 Aug – 6 Sep, 6 days) outproduced $4.99 (18–31 Aug, 13 days) on both
+subscribers/day (~0.67 vs ~0.38) and revenue/day (~$6.70 vs ~$1.90). Zero
+subscribers over two days at $14.99 is not a signal — at the $9.99 rate,
+P(zero in 2 days) ≈ 27%. **Decision: hold $14.99.** Most of what counted as a
+"subscriber" is also a 14-day trial start (since `2b8adb4`) that hasn't
+converted yet — the number that actually matters is trial→paid on
+`/admin/subscriptions`, not raw signups.
+
+**Hiding the price was already the status quo, and it wasn't working.**
+`PremiumSlideIn.tsx` hid its price line whenever `trialEligible` was true —
+true for nearly every logged-in free visitor. Stripe still shows $14.99 at
+checkout regardless, so hiding it here only moved the surprise to the most
+expensive place to lose someone: the card form. **Decision: always show a
+price**, framed as "$0 today" during the trial, "from $10.00/mo billed
+yearly, or $14.99 month-to-month" otherwise — the same framing now shared by
+`site.ts`'s `premiumZeroToday()`/`premiumFromLine()` across the slide-in, the
+dialog and `/premium`, so a future price change updates every surface from
+one place (mirrors `premiumLockInLine()`'s own existing pattern).
+
+**What actually shipped, beyond the price line:**
+- The slide-in's flat "unlock N tools" pitch became contextual by route (a
+  deck page sells Best Basket, a card page sells Value Finder, a movers/market
+  page sells Rising Cards) — every named tool is pinned to a real
+  `PITCH_TOOLS`/`TIER_COMPARISON` entry so this can't drift the way the old
+  hand-written sentence once did.
+- A live proof line ("N deals worth $X right now") on the slide-in and a
+  proof strip on `/premium`, both read from the same 1h-cached `getCachedTopDeals`
+  the homepage already warms — real numbers, not a manufactured urgency claim,
+  and each tile hides itself when its own number is zero.
+- `/premium` had no FAQ despite carrying the checkout decision. Added one,
+  rendered visibly and as `FAQPage` JSON-LD, every answer derived from the
+  same `site.ts`/`premium.ts` constants the rest of the page uses.
+- A one-time "your free trial is still waiting" recovery email
+  (`runCheckoutRecovery` in `lib/premium.ts`) for the single highest-intent,
+  still-unconverted signal on the site: `PremiumClick{source:"checkout"}` rows
+  20–72h old with no resulting subscription. Sent once per account
+  (`User.checkoutRecoverySentAt`, stamped unconditionally like
+  `trialReminderSentAt`), no unsubscribe link (transactional, tied to an
+  action the recipient themselves took), via a new daily
+  `premium-checkout-recovery.yml` GitHub Actions cron (Vercel's cron slots are
+  already spoken for) hitting a new fail-closed `/api/cron/premium-checkout-recovery`.
+- `premium_checkout_started` fires from both checkout entry points
+  (`PremiumCta`, `PremiumDialog`) before the fetch — the funnel step between
+  "clicked a Premium CTA" (`premium_click`) and "subscribed" that had no event
+  at all.
+
+**Decision rule for what happens next.** Hold $14.99 for three weeks. Read
+weekly: trial starts/week, trial→paid % (`/admin/subscriptions`),
+`premium_slidein_click` rate, checkout-started → subscribed (`/admin/premium`).
+If trial starts/week stay at or above ~60% of the $9.99-era rate, the price
+increase is net positive on revenue — keep it. Only drop to $12.99 (still
+above the $9.99/$10 level that was already working) if that rate falls below
+~40% for two consecutive weeks — never straight back to $9.99 without first
+trying the smaller step down. An annual price around $99 ("$8.25/mo") is the
+next experiment worth trying — a Stripe Price change only, no code.
+
+## Premium framing: "$0 today" leads everywhere (2026-09-09)
+
+Owner's numbers, two days after the 6 Sep raise to $14.99: ~5 subscribers
+while at $4.99, ~4 at $9.99 (the fastest-converting price), too few yet at
+$14.99 to read anything into. Per the 2026-09-08 entry's own three-week hold
+rule, **$14.99 stays**. What changed is the *framing*, not the number: with
+the 14-day card-gated trial, the amount a free visitor actually pays today is
+$0 — the previous pass (above) introduced that wording but only landed it in
+two places, both as a small footnote.
+
+**Where $14.99 was still the first thing a visitor saw, and what changed:**
+- The signed-out corner card (`SignupPromoPopup.tsx`) — the largest-audience
+  surface of the five — said "$14.99/month after your free trial". Rewritten
+  to the same "$0 today · then from $10.00/mo billed yearly, or $14.99/month"
+  framing the signed-in card already used, via the shared `premiumZeroToday()`/
+  `premiumFromLine()` helpers.
+- Both `/premium` pricing cards led with a big `$14.99` and a tiny "Starts
+  with a 14-day free trial" line — and only computed trial eligibility for a
+  *signed-in* user, so a signed-out visitor (who has, by construction, never
+  started a trial) got no trial framing there at all. Added `trialAvailable`
+  alongside the existing `trialEligible`, and a new shared `TrialPriceBlock`
+  component (`src/components/TrialPriceBlock.tsx`) that renders "$0 due
+  today, then $X after your 14-day trial" as the actual headline on both
+  cards when a trial is available. `PremiumCta`'s signed-out state now offers
+  "Start your 14-day free trial · Create a free account →" instead of a bare
+  "Sign in first →" when a trial is available.
+- The signed-in corner card (`PremiumSlideIn.tsx`) already had the "$0 today"
+  line, but it rendered as an 11px caption *below* the CTA button. Moved
+  above the button, between the tool chips and the CTA row, and its lead
+  number restyled to read as a price rather than a footnote.
+- The gated-tool-wall button (`PremiumButton.tsx`) said "Upgrade now ·
+  $14.99/mo" even for a trial-eligible visitor. Now reads "Start free trial ·
+  $0 today" for anyone still eligible.
+- The Premium dialog had a real bug: its own `ZERO_DUE_TODAY` constant
+  already read "$0 today", rendered directly next to a second, separately
+  hand-typed "due today" label — the dialog was literally saying "$0 today
+  due today". Fixed by having the dialog render the new shared
+  `TrialPriceBlock` instead of its own inline markup, the same component
+  `/premium`'s two cards now use.
+
+**Every "$0" still sits in the same block as the real recurring price and,
+on the signed-out CTA, a "card is required" disclosure** — none of this
+drops the honest number the way the pre-2026-09-08 hiding did; it only moves
+$0 from buried to first.
+
+**Measurement.** Added `PREMIUM_COPY_VERSION` (`lib/site.ts`) — a single
+string constant threaded into `premium_slidein_shown`/`_click`,
+`signup_promo_shown` and both `premium_checkout_started` call sites — so this
+pass's funnel numbers can be split from whatever came before it in GA4
+instead of being averaged together. Bump the string, no other code change,
+the next time this framing changes again.
+
+**What to read in a week.** `premium_slidein_click` and `signup_promo_shown`
+→ `sign_up` → `premium_checkout_started`, filtered by `copy`, against the
+week before this shipped. Trial starts on `/admin/subscriptions` is still the
+number that matters most — a raw click-through lift that doesn't show up
+there didn't move anything real.
+
+## Premium price reverted to $9.99/$79.99 (2026-09-09)
+
+Owner instruction: bring Premium back to $9.99/mo and $79.99/yr. This
+reverses the 2026-09-06 raise to $14.99/$119.99 before the three-week hold
+period the 2026-09-08 entry (above) set for it — that entry's own evidence
+was thin (two days of data, ~27% chance of seeing zero subscribers at the
+$9.99-era rate by chance alone), and this is the owner acting on it directly
+rather than a fresh data-driven finding from this pass. Recorded here as a
+decision, not re-litigated.
+
+**What changed:** `PREMIUM_PRICE_AMOUNT` → `$9.99`, `PREMIUM_ANNUAL_AMOUNT` →
+`$79.99`, `PREMIUM_NEXT_PRICE_AMOUNT` → `$9.99` (kept equal to
+`PREMIUM_PRICE_AMOUNT` so `premiumPriceIncreaseAnnounced()` stays false — no
+increase is currently announced). The derived annual-saving percentage comes
+out to the same 33% at these numbers, by coincidence of the ratio; the
+effective monthly rate changes from $10.00 to $6.67. Every live surface
+(`/premium`, the Premium dialog, both corner nudges, the gated-tool button)
+reads these constants or the helpers built on them, so all of them update
+from this one change — see the 2026-09-09 "$0 today" entry above for why
+that's true. The `riftcompare-premium-explained` blog article's hand-typed
+prose (five sentences/table cells) was edited by hand to match, since
+Markdown prose can't import a constant — `tests/premium-price-increase.test.ts`
+catches drift here structurally, and caught the same class of gap during the
+original raise.
+
+**`PREMIUM_COPY_VERSION` was bumped** (`lib/site.ts`) so the Premium funnel
+events (slide-in/popup shown, checkout started) split this price level from
+the $14.99-era events in GA4, the same reasoning that constant was added for
+in the first place — a price change is exactly the kind of "before/after"
+split it exists to support, not only a wording change.
+
+**What did NOT change, and needs a manual step before this is fully live:**
+this commit only changes the DISPLAYED price (`PREMIUM_PRICE_AMOUNT`/
+`PREMIUM_ANNUAL_AMOUNT`, both `NEXT_PUBLIC_*`-overridable, read at build/
+render time). The amount Stripe actually charges at checkout is controlled
+by `STRIPE_PREMIUM_PRICE_ID`/`STRIPE_PREMIUM_ANNUAL_PRICE_ID` — Vercel
+environment variables pointing to Stripe Price objects, not present anywhere
+in this repository (confirmed: absent from `.env.example`'s real values,
+`.env.production`, and `vercel.json` — only documented as commented-out
+examples). Per this file's 2026-09-06 raise, those two env vars were
+repointed at NEW Price objects rather than editing the original $9.99/$79.99
+ones in place (Stripe Prices are immutable) — so the original Price objects
+very likely still exist in the Stripe dashboard, unreferenced since the
+raise, and repointing the two env vars back to them is probably all that's
+needed rather than creating new ones. Until that repoint happens, the site
+will DISPLAY $9.99/$79.99 but CHARGE whatever the $14.99/$119.99-era Price
+objects still configured are set to — a real discrepancy between the shown
+price and the checkout price, not just a cosmetic gap. This is a Stripe/
+Vercel dashboard action outside what this codebase (or this session, which
+has no Stripe or Vercel access) can perform or verify.
+
+## Stripe env vars confirmed repointed; corner nudges lead with a bare "$0 today" (2026-09-09)
+
+Owner confirmed the `STRIPE_PREMIUM_PRICE_ID`/`STRIPE_PREMIUM_ANNUAL_PRICE_ID`
+Vercel environment variables have been repointed at the $9.99/$79.99 Price
+objects, closing the gap the previous entry flagged (displayed vs. charged
+price). This repo has no way to verify that directly (no Stripe/Vercel access
+from this session) — taken on the owner's word, and worth a live checkout
+smoke-test to confirm Stripe's own confirmation page shows $9.99, not a
+stale amount.
+
+**Second, explicit instruction this same day**: drop the recurring price
+from "the slider" — the two corner slide-in nudges (`PremiumSlideIn.tsx` for
+signed-in free users, `SignupPromoPopup.tsx` for signed-out visitors) — and
+lead with a bare "$0 today" instead of "$0 today, then from $X/mo billed
+yearly, or $Y/month month-to-month". This is a deliberate reversal, on this
+one surface only, of part of the 2026-09-08 entry's own "always show a real
+price" design (see that entry above) — worth being explicit that it's a
+product trade-off, not a bug fix:
+- **What still holds**: the "$0 today" claim is true, not fabricated —
+  during the trial, day-one cost really is zero. No fake scarcity or
+  countdown was added alongside it (tests still pin this). The recurring
+  price is still disclosed, just not on this one low-intrusion touchpoint —
+  it's stated on `/premium` (both nudges' own click-through destination),
+  in the Premium dialog, and in the checkout page's own "Card required...
+  then $X" line, all of which render before Stripe ever takes a card.
+- **What changed from the 2026-09-08 reasoning**: that entry's argument for
+  always showing the price was "hiding it here only moved the surprise to
+  the most expensive place to lose someone [the card form]." That argument
+  still applies to the CHECKOUT-adjacent surfaces (dialog, `/premium`),
+  which is why neither was touched here — only the two ambient corner nudges,
+  which exist purely to get someone to click through, changed.
+- **Scope, explicitly**: the non-trial-eligible branch of both components
+  (a visitor who's already used a trial, or trials are off) still states the
+  real recurring price plus the lock-in framing — there is no "$0" to claim
+  for that visitor, so dropping the price there would leave the card with
+  nothing but tool chips and a bare button.
+
+`PREMIUM_COPY_VERSION` bumped again (`zero-only-slidein-2026-09-09`) so this
+framing change is its own splittable slice in GA4, distinct from the
+same-day price-value rollback above. `tests/premium-price-increase.test.ts`
+and `tests/access-tiers.test.ts` were rewritten to check each branch of the
+price block separately (trial branch must NOT call `premiumFromLine()`;
+non-trial branch must still call it) rather than just checking the helper
+appears somewhere in a fixed-size slice, which the old assertions did not
+actually distinguish.
+
+## Premium offer email to every free-tier account (2026-09-10)
+
+Owner's ask: email every existing non-Premium user about Premium, with an
+offer — subscribe now and the trial is extended to a full month — which the
+owner will apply **by hand** after each subscription lands.
+
+**What was built** (`src/lib/premium-offer.ts`, `sendPremiumOfferEmail` in
+`lib/email.ts`, `/api/cron/premium-offer`, `.github/workflows/premium-offer-email.yml`,
+`scripts/send-premium-offer.ts`, `tests/premium-offer.test.ts`): the same
+shape as the release-day blast — lib on Vercel where the mail keys live, a
+dispatch-only workflow that defaults to dry-run, batched and resumable, with
+the announcement opt-out table supplying the one-click unsubscribe.
+
+**Decisions worth recording:**
+- **Per-campaign idempotency stamp** (`User.premiumOfferSentAt`, additive)
+  rather than the release-day blast's "an `AnnouncementOptOut` row exists"
+  marker. That marker means "got the release-day email"; reusing it would
+  have silently skipped everyone that campaign reached.
+- **Two wordings, because two things are true.** An account that has never
+  trialed gets "$0 today, then …, and we'll extend your 14-day trial to 30".
+  An account that already used its one trial is charged on day one by
+  Stripe, so it gets "we'll add a free month on top" and never "$0 today".
+  Same economic offer, honestly described for each case.
+- **The mechanism is stated in the email** — "we add the extra days by hand
+  within a day or two" — because nothing in the code grants anything, and
+  a reader who expects checkout to hand them 30 days would be misled.
+  `tests/premium-offer.test.ts` pins that the lib never touches
+  `premiumUntil`, `grantPremium*` or Stripe.
+- **A real deadline is required** (`?until=YYYY-MM-DD`, future) and the
+  send refuses without one. That is what makes "subscribe now" a true
+  sentence rather than manufactured urgency; the existing no-countdown /
+  no-"spots left" rule from the 2026-09-08 pass is pinned here too.
+- **Brevo by default**, Resend on request — same reasoning as the
+  registered-account digest: a blast to every account must not consume the
+  Resend quota that verification, password reset and price alerts depend on.
+  Default batch of 90 sits under Resend's 100/day cap in case `via=resend`
+  is chosen; re-run daily until `remaining` reads 0.
+- **Attribution**: the CTA lands on `/premium?src=offer`, and `"offer"` was
+  added to the premium-click source allow-list, so `/admin/premium` shows who
+  arrived from this email and whether they converted — which is also the
+  owner's worklist for the manual grants (`/api/admin/grant-premium`, days =
+  30 minus whatever trial Stripe already gave).
+
+**Not verified here**: no database or mail key in this sandbox, so the
+audience count is unknown and no email was sent. The dry run
+(`workflow_dispatch` with the box ticked) reports it before anything goes out.
+
+**Addendum, same day — admin console.** Owner asked for buttons on the site
+to run the send, choose recipients and apply the grants. Added
+`/admin/premium-offer` (+ `/api/admin/premium-offer`, `PremiumOfferConsole`):
+a filterable, checkbox-selectable audience table (not yet emailed / emailed /
+opened the offer / Premium now / opted out), deadline + provider controls,
+preview, send (batched, resumable), "send me a test" (both wordings, no
+stamp), and per-row grant buttons that call the existing audited
+`/api/admin/grant-premium` with the right top-up (30 minus Stripe's trial
+days, or 30). Selection can only NARROW the audience — a ticked account that
+is Premium, an admin or opted out is still skipped — and a re-send to an
+already-emailed account is only possible by naming it, never as a bulk
+action. The cron route + workflow remain as the CI path; both call the same
+lib. First real dry run was dispatched from the workflow with deadline
+2026-09-30 — see the session summary for the count it reported.
+
+**Addendum, same day — first live run, and why Brevo failed.** Dry run:
+315 accounts, 52 Premium/admin, 0 opted out, 263 eligible. The first live
+batch via Brevo came back sent 0 / failed 90 (nothing stamped, so nothing
+lost). A one-email bisect via Resend delivered, which cleared the database
+side; a second Brevo attempt, after adding failure reasons to the run
+report, returned Brevo's own answer: `401 unrecognised IP address
+3.235.121.214 … add it under authorised IPs`. Brevo's "Authorised IPs"
+security setting is switched on in the account, and Vercel's function IPs
+change per invocation, so EVERY Brevo send from the site is refused — which
+means the daily registered-account digest (lib/user-digest.ts, Brevo-only)
+has been failing silently for as long as that setting has been on; its
+summary counts `failed` but nothing alerts on it. Fix is one setting on
+Brevo's side (Security → Authorised IPs → turn the restriction off), not
+code. Until then the campaign can go via Resend at 90/day, at the cost of
+the transactional quota; one email has gone out that way, 262 remain.
+
+---
+
+## Sealed Bid — multiplayer blind auction — 2026-09-10
+
+The arcade's first multiplayer game (`/games/sealed-bid`): 2–6 players, real
+cards, live prices hidden, one sealed bid a round, ties shatter the card, and
+the richest vault wins. Decisions worth writing down:
+
+- **No websockets — clients poll, the server is the referee.** The site is
+  serverless on Vercel with no realtime layer, so the game was designed around
+  simultaneous *sealed* decisions rather than turn-by-turn interaction: every
+  client polls one row (`GameRoom`, a single JSON document) every ~1.5s, and any
+  request — a bid or an idle poll — first runs the pure `advance(state, now)`
+  referee so a stalled room catches up with the clock deterministically. Round
+  resolution is stamped at the deadline, not at whoever happened to poll.
+- **Pure engine, one document, optimistic concurrency.** All rules live in
+  `src/lib/sealed-bid-engine.ts` (no DB, no clock of its own; pinned by
+  `tests/sealed-bid.test.ts`). `src/lib/sealed-bid.ts` does read → transform →
+  `updateMany WHERE version = read` and retries a lost race. Six concurrent bids
+  were exercised end-to-end against a local Postgres and all landed.
+- **Prices are the hidden information, and the server enforces it.** `viewFor`
+  strips `priceCents`/`shards` from the current round unless that player used
+  their one Appraise on that card. Bearer tokens (`SbPlayer.token`) never leave
+  the server; the public id is a separate 8-hex `pid`.
+- **All rounds are dealt at start.** One card per price tier per round (chase
+  ≥ $8, mid $1.50–$7.99, budget), shuffled within the hand. Dealing up front is
+  what keeps every later transition synchronous and pure.
+- **Score is server-computed and pushed to the leaderboard.** Unlike every
+  other arcade board, `sealed-bid` scores are never posted by the client —
+  `afterCommit` submits signed-in players' totals when a room hits `over`.
+- **Additive schema.** `GameRoom` has no relations, so the deploy-time
+  `prisma db push` adds one table and touches nothing else. Rows are purged
+  after 6h by the next room creation, so there is no cron.
+
+---
+
+## Premium made visual: a graphic pitch, Premium on phones, one green CTA (2026-09-10)
+
+Owner brief, four parts, all shipped together. Two of them knowingly reverse an
+earlier decision recorded in this file — flagged below rather than left to be
+rediscovered as drift.
+
+**1. The corner nudges' pitch is a graphic, not text.** Both nudges led with a
+sentence plus a six-chip tool row. Owner: *"right now it's all just text... it
+should be one clear image that is advertising why RiftCompare Premium is
+benefiting my life."* New `src/components/PremiumEdgeGraphic.tsx` — inline SVG,
+no hooks, no props, no fetch — renders two bars: a full-length gold one labelled
+"YOU / every deal, ranked" against a stub labelled "EVERYONE ELSE / top pick
+only". Both nudges render it; `SignupPromoPopup` keeps its Google/Discord
+buttons, ✕ and "Maybe later" exactly as they were, and `PremiumSlideIn` keeps
+its contextual per-route heading (a deck page still sells Best Basket by name,
+which is more specific than any graphic).
+
+Inline SVG rather than an image file because `scripts/check-images.ts` scans
+`public/` for raster against a 150KB budget and every raster here ships as a
+png+webp+avif+narrow-rendition set plus an `image-manifest.json` entry; there
+are zero `.svg` files in `public/`. Inline costs no request, no manifest churn,
+and no binary in the diff.
+
+**The bars deliberately carry no numbers.** They are an illustration, not a
+measurement, and this repo fails builds over invented figures. So rather than
+an unsourceable "you save N%" comparison, the two bars are labelled with a real
+difference already published on `/premium`: the free tier shows only the top
+pick, Premium shows the full ranked list ("Free shows only the top pick" appears
+verbatim in three FEATURES entries). The competitive framing lands and every
+word is literally true. `tests/premium-edge-graphic.test.ts` pins the absence of
+percentages and currency figures in the graphic's text nodes.
+
+**2. Premium is reachable on a phone.** At 375px the header was logo, Database,
+flag, avatar, hamburger — the desktop "✦ Premium" link is gated `xl:block`, so
+Premium was only findable inside the hamburger overlay. Added a gold
+"✦ Premium" immediately after Database in the left cluster, same `lg:hidden`
+band and same shape, via the existing `PremiumNavLink` so the premium-interest
+beacon still fires. `CinematicNavMenu`'s in-overlay spotlight banner stays; the
+header link is additive.
+
+**REVERSAL #1 — the shimmer.** `globals.css` carries tombstones for
+`.brand-shimmer` and `.cta-shine`: a gold text shimmer and a CTA shine sweep
+were both stripped out for the flat terminal look. A shimmer is back, on exactly
+one element, because the brief was explicit both ways — *"make it so that it,
+like, glows or shimmers and stands out... it's like gold, and it shimmers"*
+alongside an equally explicit refusal to shine the whole site. Keyframes live in
+`tailwind.config.ts` and the gradient plumbing in `globals.css`, never both (a
+duplicated `float` keyframe once silently shadowed the config copy — see that
+tombstone). It carries `motion-reduce:animate-none` like the marquee in
+`MarketPulse.tsx`, sits above the blanket reduced-motion block, and the
+`background-clip:text` is `@supports`-guarded so the label can never render as
+invisible text. A test pins that exactly one element carries it.
+
+**3. The tagline.** "Power tools for buyers & sellers" → **"Get an unfair edge
+buying and selling"**, across the `/premium` h1 and metadata title, the Premium
+dialog heading, and both nudges' non-trial heading fallback.
+
+**4. `/premium` leads with one big green button.** Owner: *"the big text should
+just be start your 14-day free trial... it should just be a big green button...
+the tiny text, that's where you list your price."* `PremiumCta`'s signed-out
+branch previously had a heading, a small link, and fine print all saying
+overlapping things; it is now a full-width `btn-primary` carrying the ask, with
+the price and the card-required disclosure in the line beneath it.
+`TrialPriceBlock` gained a `compact` size so `$0 due today` no longer out-shouts
+the button — but its "then $X after your N-day trial" line is untouched, because
+pairing the $0 with the real price in one block is load-bearing policy from the
+2026-09-09 entry above.
+
+**REVERSAL #2 — green, not gold, on that one button.** `PremiumCta.tsx` said
+"Gold (not green) — the professional Premium accent", and the dialog's header
+says it is "deliberately not the green bubble look". Gold remains the Premium
+IDENTITY everywhere — badges, the "Best value" ribbon, the new nav link, the
+dialog's own buttons, the tool-wall button. But green is this site's single
+primary-ACTION accent, so it reads as "go". `PremiumCta` renders only on
+`/premium`, so the split is exactly one page deep, and the stale comment was
+rewritten rather than left contradicting the code.
+
+**Also:** `PREMIUM_COPY_VERSION` → `edge-graphic-2026-09-10` and the popup's
+`PROMO_VARIANT` → `premium_graphic`, so the text-pitch and graphic-pitch eras
+stay separable in GA4 instead of averaging together. And a real latent bug
+fixed in passing: the "Save N%" badge used `text-brand-300`, which `brand`
+never defined (only 400/500/600), so the badge text had been falling back to
+inherited colour — now `text-brand-400`.
+
+**Verified beyond the test suite.** This is a visual change tests cannot judge,
+so the header, the popup card and the `/premium` CTA card were rendered in
+headless Chromium at their real widths and inspected: the 375px header fits
+without wrapping, the shimmering label renders visibly (not as transparent
+text), and the graphic is legible inside the 384px card while making the card
+shorter than the chip row it replaced.
+
+---
+
+## The Premium pitch becomes the owner's own comp (2026-09-10, same day, second pass)
+
+The two-bar SVG from the entry above lasted hours. The owner sent a finished
+comp — character art behind a dark scrim, the wordmark and a gold PREMIUM
+badge, "GET AN / UNFAIR EDGE / FOR BUYING AND SELLING", four icon rows, price,
+then the sign-in buttons — with the instruction "use this for the slide
+instead, obviously the google and discord are real buttons". New
+`src/components/PremiumPitchPanel.tsx` replaces `PremiumEdgeGraphic.tsx`,
+which is deleted.
+
+**Rebuilt as markup, not shipped as the picture.** Dropping the comp in as one
+flat image was the obvious shortcut and it fails on a number that is easy to
+check: the comp is 1145px wide and this card renders at 384px, so every baked
+word would land at about a third of its designed size — the body copy at
+roughly 5px. Real text also scales, survives a screen reader, can be
+translated, and lets the price keep coming from `premiumZeroToday()` instead of
+being frozen into a picture on export day. Only the artwork is a raster:
+`public/premium/premium-pitch.webp`, 26KB, cropped from the comp starting to
+the right of x=662 because everything left of that had the comp's own UI text
+baked over it.
+
+**Two of the comp's four feature rows were reworded, deliberately.** It sold
+"Advanced filters — find the exact cards, sets and rarities you want" and "See
+the best prices across stores instantly". Both are the FREE tier:
+`TIER_COMPARISON` has "Compare prices across every store + eBay" and "Full card
+database, search & browse" as ticks in the anonymous column. Advertising those
+as Premium is the one thing this repo consistently refuses to do, so the rows
+keep the comp's shape, icons and rhythm while naming things actually behind the
+paywall — the full Deal Finder list, the pro screeners, Rising Cards and Demand
+Finder, and supporting the site. Each maps to a real `TIER_COMPARISON` row and
+`tests/premium-pitch-panel.test.ts` pins that the two retired phrases never
+come back.
+
+**The art is anchored right, not stretched behind everything.** At the comp's
+width the character and the copy sit side by side; at 384px they collide, and a
+scrim dark enough to keep the headline legible reduced her face to a smudge
+(observed, not theorised — it took three renders to get right). Confining the
+art to the right 64% with its left edge fading into the card gives the copy
+clean ink and keeps the character a character. A soft text-shadow on the panel
+copy covers the small overlap that remains.
+
+**The short-phone rule this card exists under still holds.** Its own history
+includes a production incident where a too-tall card put the close button
+off-screen. So: rows three and four stand down below 700px of viewport height,
+and the card caps itself at `100dvh - 6.5rem` and scrolls. Measured in headless
+Chromium at 375x667 — card is 499px tall, fully on screen, with the ✕, both
+sign-in buttons and "Maybe later" all reachable without scrolling.
+
+**The signed-in twin shares the panel with `showFeatures={false}`.** It already
+carries a per-route contextual pitch naming one specific tool (a deck page
+sells Best Basket, a card page sells Value Finder), which beats a generic
+four-row list and is pinned by `tests/premium-slidein.test.ts`. Running both
+would make it exactly the tall card it was designed not to be.
+
+---
+
+## The signup popup returns every 3 pages (2026-09-10)
+
+Owner brief: "the slider should show up again every 3 pages a user visits if
+they're not logged in". Until now a dismissal silenced `SignupPromoPopup` for
+the whole browser session — one impression per visitor, per tab, forever.
+
+**Mechanism.** The one-way `rc_signup_promo_seen` boolean is replaced by two
+counters in `sessionStorage`: `rc_signup_promo_views` (distinct pages this
+signed-out visitor has seen, counted once per route via a `lastCountedPath`
+ref, the same shape `PremiumSlideIn` already uses) and
+`rc_signup_promo_dismissed_at` (what that count was when they last closed it).
+The arming effect shows the popup unless a dismissal is stamped AND fewer than
+`PAGES_BETWEEN_SHOWS` pages have passed since. Verified by replaying the real
+arming logic against a fake store: shown on page 1, dismissed, quiet on 2 and
+3, back on 4, dismissed, quiet on 5 and 6, back on 7.
+
+**The first show is still ungated, and that distinction is load-bearing.** This
+file spent three iterations getting rid of a first-show gate — a 5s timer, then
+a pageview threshold, then buy_click-aware timing — because each measurably cost
+the site. The new counting only decides when the popup RETURNS; a visitor who
+has never dismissed it still sees it on their first eligible page with nothing
+in the way. `tests/signup-funnel.test.ts` keeps banning the old constant names
+(`PROMO_DELAY_MS`, `MIN_PAGEVIEWS`, `PV_KEY`) and now also asserts the new gate
+is reachable only once `dismissedAt !== null`, so a future pass can't quietly
+turn the cadence back into an entry gate.
+
+**Flagged, not hidden: there is no lifetime cap.** `PremiumSlideIn` stops for
+good after two dismissals, on the reasoning that a firm no is a no. This popup
+now has no such ceiling — a visitor who dismisses it on every third page will
+keep seeing it all session. That is what was asked for and it is a defensible
+bet on a signed-out audience that has not converted, but this file's own
+history records an earlier pushier version at a 78% dismiss rate with bounce up
+and pages/visitor down. `signup_promo_dismissed` and pages/visitor are the two
+numbers to watch; a cap is the first thing to add if either moves.
+
+**Measurement.** `PROMO_VARIANT` → `premium_graphic_repeat`, because frequency
+is exactly the axis that changes shown counts and dismiss rates, and without a
+new name the once-per-session era and the repeating era would average into each
+other. The impression event also carries `repeat`, separating a first show from
+a re-show inside the new variant, so "does the second showing convert or just
+annoy" is answerable directly rather than by inference.
+
+**Test that changed its mind.** `tests/access-tiers.test.ts` asserted "a
+dismissed promo stays dismissed for the rest of the session". That is now the
+opposite of the product decision, so it was rewritten to pin what still has to
+hold: a dismissal must buy a real, page-counted quiet stretch rather than being
+a no-op, and pages must be counted once per route rather than once per render.

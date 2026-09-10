@@ -33,18 +33,20 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 //     exact failure mode /vendetta-countdown and /radiance-countdown both died
 //     from (see tests/release-calendar.test.ts's own header for that history).
 //
-// The originally-announced increase (from $9.99 to $19.99) landed 2026-09-06,
-// except the real decided cutover price came in at $14.99, not $19.99 — see
-// site.ts's own header for that. With no further increase currently decided,
-// the two amounts are pinned EQUAL, which is what proves the banner actually
-// retired rather than just changed its number.
+// The originally-announced increase (from $9.99 to $19.99) landed 2026-09-06
+// at a real decided cutover price of $14.99, not $19.99 — see site.ts's own
+// header for that. That raise was itself rolled back to $9.99/mo on 2026-09-09
+// (see DECISIONS.md) before its own three-week hold period ran its course.
+// With no further increase currently decided, the two amounts are pinned
+// EQUAL, which is what proves the banner actually retired rather than just
+// changed its number.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("today's decided price increase is what the site actually announces", () => {
-  // Pins the real business decision (current $14.99, no announced future
+test("today's decided price is what the site actually announces, with no increase pending", () => {
+  // Pins the real business decision (current $9.99, no announced future
   // increase) so a careless edit changes it loudly rather than silently.
-  assert.equal(PREMIUM_PRICE_AMOUNT, "$14.99");
-  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$14.99");
+  assert.equal(PREMIUM_PRICE_AMOUNT, "$9.99");
+  assert.equal(PREMIUM_NEXT_PRICE_AMOUNT, "$9.99");
   assert.equal(premiumPriceIncreaseAnnounced(), false);
 });
 
@@ -169,16 +171,19 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FOUND live while landing this exact increase: the editorial article about
-// Premium's pricing (riftcompare-premium-explained) had its own hand-typed
-// $9.99/$79.99/33%/$119.88 figures — none of them wired to lib/site.ts at all,
-// so bumping PREMIUM_PRICE_AMOUNT changed every LIVE surface (the page, the
-// dialog, both nudges) and silently left this one article quoting the retired
-// price and a stale savings percentage. Markdown prose can't import a
-// constant, so the fix here is this test: it re-derives every number the
-// article states from the SAME constants the rest of the site reads, the same
-// principle tests/deck-archetypes-article.test.ts and
-// tests/best-cards-article.test.ts already apply to their own numeric claims.
+// FOUND live while landing the original $9.99→$14.99 increase: the editorial
+// article about Premium's pricing (riftcompare-premium-explained) had its own
+// hand-typed dollar/percentage figures — none of them wired to lib/site.ts at
+// all, so bumping PREMIUM_PRICE_AMOUNT changed every LIVE surface (the page,
+// the dialog, both nudges) and silently left this one article quoting a stale
+// price and savings percentage. Markdown prose can't import a constant, so the
+// fix here is this test: it re-derives every number the article states from
+// the SAME constants the rest of the site reads, the same principle
+// tests/deck-archetypes-article.test.ts and tests/best-cards-article.test.ts
+// already apply to their own numeric claims. Caught the same class of bug
+// again on the 2026-09-09 rollback to $9.99 — the article's hand-typed prose
+// had to be edited by hand right alongside the constants, exactly as this
+// test's own existence predicts it always will.
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("the Premium-explained article states the price the site actually charges, not a stale one", () => {
@@ -206,8 +211,12 @@ test("the Premium-explained article states the price the site actually charges, 
 
   // Belt-and-braces: a price this test doesn't happen to check for (a third
   // plan, a regional variant) could still go stale silently — so also assert
-  // the RETIRED price is gone outright, not just that the current one is present.
-  assert.ok(!haystack.includes("$9.99"), "article must not still quote the retired $9.99 price anywhere");
+  // the RETIRED prices are gone outright, not just that the current ones are
+  // present. $14.99/$119.99 are retired as of the 2026-09-09 rollback to
+  // $9.99/$79.99 (see DECISIONS.md) — the inverse of this same check when
+  // $9.99 was itself the retired price, right after the original raise.
+  assert.ok(!haystack.includes("$14.99"), "article must not still quote the retired $14.99 price anywhere");
+  assert.ok(!haystack.includes("$119.99"), "article must not still quote the retired $119.99 annual price anywhere");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -269,10 +278,17 @@ test("the premium-interest beacon still fires from every retired dialog entry po
   assert.match(slideIn.slice(acceptAt, acceptAt + 500), /firePremiumClickBeacon/, "PremiumSlideIn's CTA must fire the beacon before navigating");
 });
 
-test("SignupPromoPopup always shows a price, even while a free trial is available", () => {
+test("SignupPromoPopup always shows a price; the trial-available branch is a bare $0 today (2026-09-09)", () => {
   // "we also need to show the prices for non logged in users" (2026-09-06) —
   // the price used to disappear entirely whenever a trial was configured
   // (which is the default), so a signed-out visitor almost never saw one.
+  // Fixed then to always show SOME number. 2026-09-09: the trial-available
+  // branch was simplified further, from "$0 today, then from $X/mo" down to
+  // a bare "$0 today" — an explicit product decision to lead this low-
+  // intrusion nudge with the number that's true right now, not the recurring
+  // price. The recurring price is still disclosed before any card is
+  // charged: on /premium (this card's own destination), in the Premium
+  // dialog, and in the checkout page's own "Card required... then $X" line.
   const src = read("src/components/SignupPromoPopup.tsx");
   const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
   assert.ok(priceBlockAt >= 0, "expected an unconditional price block (not gated on !trialAvailable)");
@@ -280,7 +296,44 @@ test("SignupPromoPopup always shows a price, even while a free trial is availabl
     !/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src),
     "the price block must no longer be hidden while a trial is available",
   );
-  const block = src.slice(priceBlockAt, priceBlockAt + 400);
-  assert.match(block, /trialAvailable \? " after your free trial" : ""/, "must say 'after your free trial' rather than contradict the trial CTA");
-  assert.match(block, /premiumLockInTail\(\)/, "must still use the shared lock-in helper");
+  const block = src.slice(priceBlockAt, priceBlockAt + 600);
+  const trialBranchAt = block.indexOf("trialAvailable ? (");
+  assert.ok(trialBranchAt >= 0, "expected a trialAvailable branch");
+  const elseAt = block.indexOf(") : (", trialBranchAt);
+  assert.ok(elseAt >= 0, "expected the non-trial else branch");
+  const trialBranch = block.slice(trialBranchAt, elseAt);
+  const nonTrialBranch = block.slice(elseAt);
+  assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-available branch must use the shared $0-today helper");
+  assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-available branch must NOT also state the recurring price — bare $0 today, by design");
+  assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
+  assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
+});
+
+test("PremiumSlideIn always shows a price too; the trial-eligible branch is a bare $0 today (2026-09-09)", () => {
+  // The slide-in had the SAME bug SignupPromoPopup was fixed for on 2026-09-06
+  // (a price hidden whenever trialEligible — true for nearly every logged-in
+  // free visitor) but was missed in that pass. Hiding the price never stopped
+  // Stripe from charging it at checkout; it just moved the surprise to the
+  // most expensive place to lose someone. Fixed 2026-09-08 (always show SOME
+  // number) then simplified further 2026-09-09 (bare "$0 today", no recurring
+  // price stated in this branch) — see PremiumSlideIn's own header comment on
+  // the price block and DECISIONS.md for the full reasoning either way.
+  const src = read("src/components/PremiumSlideIn.tsx");
+  assert.ok(
+    !/\{!trialEligible && PREMIUM_PRICE_AMOUNT/.test(src),
+    "the price block must not be gated on !trialEligible — that was the exact bug",
+  );
+  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
+  assert.ok(priceBlockAt >= 0, "expected an unconditional price block");
+  const block = src.slice(priceBlockAt, priceBlockAt + 600);
+  const trialBranchAt = block.indexOf("trialEligible ? (");
+  assert.ok(trialBranchAt >= 0, "expected a trialEligible branch");
+  const elseAt = block.indexOf(") : (", trialBranchAt);
+  assert.ok(elseAt >= 0, "expected the non-trial else branch");
+  const trialBranch = block.slice(trialBranchAt, elseAt);
+  const nonTrialBranch = block.slice(elseAt);
+  assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
+  assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-eligible branch must NOT also state the recurring price — bare $0 today, by design");
+  assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
+  assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
 });

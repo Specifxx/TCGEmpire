@@ -396,6 +396,523 @@ We are not going to run Radiance speculation. What we will do, on the day the re
 
 Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
   },
+  // ── Radiance leak: a fan photo of Riot's own PAX West demo reference material,
+  // not a Riot announcement. Deliberately category "blog" (news) — this roundup
+  // and the three per-mechanic guides below it (riftbound-deploy-explained,
+  // riftbound-showoff-explained, riftbound-disarm-explained) are reported, sourced
+  // leak coverage, hedged and attributed throughout. They deliberately do NOT add
+  // Deploy, Showoff or Disarm to keywords.ts — that file's DATA-ACCURACY RULE (see
+  // its header) and docs/seo-keyword-map.md's "do not draft [a keyword page]
+  // without a verified source" require wording verified against Riot's own Core
+  // Rules PDF, which doesn't exist yet for an unreleased set. `keywords.ts`
+  // entries are also technically unverifiable right now: `rulesContain` depends on
+  // a real catalogued card row, and none of these three have one. Promote any of
+  // this to keywords.ts only once Riot (not a demo-table photo) confirms it.
+  {
+    slug: "riftbound-radiance-leaked-mechanics",
+    category: "blog",
+    title: "Riftbound Radiance Leak: Deploy, Showoff & Disarm Explained",
+    excerpt:
+      "A photo from Riot's own PAX West demo table reveals three new Riftbound: Radiance mechanics — Deploy, Showoff and Disarm — months before the set's 23 October 2026 release. Here's exactly what leaked.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 7,
+    tags: ["radiance", "news", "mechanics", "spoilers"],
+    hero: {
+      src: "/blog/riftbound-radiance-leaked-mechanics.png",
+      alt: "Riftbound Radiance leak — Deploy, Showoff and Disarm, three new mechanics shown at a PAX West demo table",
+    },
+    summary: [
+      "**Three unreleased Radiance mechanics leaked from Riot's own PAX West demo table** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy.",
+      "**Disarm is reportedly Assault's mirror image**: \"When this unit attacks, decrease the Might of an enemy unit here\" — shrinking an opponent's stat instead of boosting your own.",
+      "**Deploy is a Gear keyword with a built-in expiry**: it only grants its benefit at one battlefield, and is killed the moment your opponent takes that battlefield back.",
+      "**Showoff pays off for revealing a card** — its wording (\"reveal a card from hand or choose a friendly card that meets the listed criteria\") points to a modal, card-specific effect rather than one fixed bonus.",
+      "**None of this is Riot-confirmed.** [Radiance releases 23 October 2026](/blog/riftbound-radiance-what-we-know), and reference material shown at a convention demo can still change before then — in wording, in name, or by being cut outright.",
+    ],
+    faq: [
+      {
+        q: "What new mechanics leaked for Riftbound Radiance?",
+        a: "Three: Deploy, Showoff and Disarm. They appeared on a physical rules-reference card at Riot's own demo table at PAX West 2026, photographed and shared publicly by Riftbound content creator AskJoshy. The photo's own caption says Radiance has \"many new mechanics\" — implying these three aren't necessarily the whole list.",
+      },
+      {
+        q: "What does Deploy do in Riftbound?",
+        a: "As leaked: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's a Gear keyword tied to controlling one specific battlefield — you get the benefit only while you hold that battlefield, and lose the card outright the moment your opponent takes it.",
+      },
+      {
+        q: "What does Showoff do in Riftbound?",
+        a: "As leaked: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's a modal, reveal-based bonus — the exact payoff depends on each card's own printed criteria, none of which have been shown yet.",
+      },
+      {
+        q: "What does Disarm do in Riftbound?",
+        a: "As leaked: \"When this unit attacks, decrease the Might of an enemy unit here.\" It weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats.",
+      },
+      {
+        q: "Is Disarm the opposite of Assault?",
+        a: "That's how the leak itself frames it, and the rules text supports the comparison: Assault gives the attacker +X Might while it's attacking; Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks. One buffs your attacker, the other debuffs their defender.",
+      },
+      {
+        q: "Are Deploy, Showoff and Disarm officially confirmed by Riot?",
+        a: "No. This is a fan photo of physical reference material from a public convention demo, not a Riot announcement. Riftbound's last three new mechanics — Empower, Flow and Burn — were only added to our keyword reference pages once their wording could be verified against Riot's own Core Rules PDF; the same bar applies here, and none of these three have cleared it yet.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, with a confirmed 180 cards. See our full rundown of what's actually confirmed about Radiance.",
+      },
+      {
+        q: "Where did this Riftbound Radiance leak come from?",
+        a: "A photo of Riot's own physical rules-reference material, on display at their demo table at PAX West 2026, taken and shared publicly by Riftbound content creator AskJoshy.",
+      },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-what-we-know",
+      label: "See everything actually confirmed about Radiance →",
+      blurb: "Release date, card count and confirmed champions — kept separate from leaks and speculation, updated the moment Riot confirms more.",
+    },
+    body: `**Three unreleased Riftbound: Radiance mechanics have leaked from Riot's own demo table at PAX West** — Deploy, Showoff and Disarm — photographed and shared publicly by Riftbound content creator AskJoshy. This isn't a Riot announcement and it isn't a baseless rumour either: it's a photo of physical reference material Riot itself put in front of players at a public convention, months ahead of **[Radiance's confirmed 23 October 2026 release](/blog/riftbound-radiance-what-we-know)**. Here's exactly what the photo shows, what each keyword appears to do, and — just as importantly — what still isn't known.
+
+## Where this leak actually comes from
+
+Riftbound content creator **AskJoshy** posted a photo to Facebook of a physical rules-reference card from Riot's demo setup at PAX West 2026, captioned: *"There are many new mechanics in the Radiance set!"* The text in the photo is legible enough to quote directly, which puts this in a different category from the fabricated "leaked decklists" already circulating for Radiance that we've warned readers about elsewhere. It is still **not** an official Riot reveal, though, and reference material shown at a demo table is exactly the kind of thing that can be reworded, renamed, or cut entirely before a set goes to actual print. Everything below is **reported, not confirmed** — treat it accordingly.
+
+Worth noting: the photo's own caption says Radiance has "many new mechanics," and only three are legible in this particular shot. That phrasing on its own suggests this is a partial list, not the complete set of what's changing.
+
+Convention demo tables are a fairly consistent, if unofficial, source of leaks across the wider TCG industry — physical reference material sits in front of hundreds of attendees for hours at a stretch, and photographing text a publisher itself printed and put on public display is a different category of information from an anonymous "leaked decklist" screenshot. That doesn't make the wording final, though. A demo build exists specifically so playtesters and curious attendees can try mechanics ahead of a full release, and it's common across this genre for a keyword's exact phrasing — or even its name — to shift between a convention showing and the card that eventually ships. Treat everything below as a strong signal of intent, not a locked specification.
+
+## Deploy: gear with a built-in expiry date
+
+> "Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear."
+
+As leaked, **Deploy is a Gear keyword tied to one specific battlefield.** You don't get its benefit everywhere — only at the battlefield you deployed it to — and if your opponent takes that battlefield away from you, the card doesn't just stop working, it dies outright.
+
+That's a real design tension, not a minor drawback. **[Hunt](/keywords/hunt)** already rewards holding a battlefield with XP, and **[Ganking](/keywords/ganking)** already lets a unit reposition from one battlefield to another. A Deploy card raises the stakes on a fight you're already having: hold the battlefield and you get an ongoing benefit on top of whatever else is happening there; lose it and you're down a whole card, not just a bonus. If the leak holds up, Deploy decks will likely want ways to actually defend a battlefield once they've committed a Gear to it — which points toward the same defensive combat keywords (**[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Backline](/keywords/backline)**) covered in the **[combat keywords guide](/guides/riftbound-combat-keywords-explained)**.
+
+## Showoff: a payoff that depends on what you reveal
+
+> "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
+
+Showoff, as leaked, is a **modal, reveal-based effect** — you play the card, then either show a card from your hand or point at a friendly card already in play that fits some printed condition, and the effect scales with what you showed. That's meaningfully different from Riftbound's existing reveal mechanic, **[Vision](/keywords/vision)**, which looks at the top of your own deck rather than your hand or board. Showoff instead seems to reward deckbuilding around a specific type, domain, or stat line the card is checking for — but without a single confirmed Showoff card yet, its actual power level is impossible to judge. A card that wants you to reveal an Epic-rarity Unit is a completely different build-around than one checking for the biggest Might on your board, and the leak doesn't tell us which.
+
+## Disarm: reportedly Assault's mirror image
+
+> "When this unit attacks, decrease the Might of an enemy unit here."
+
+This is the mechanic AskJoshy's own caption calls out directly, framing it as **"the inverse of Assault."** That comparison holds up against the actual rules text: **[Assault](/keywords/assault)** gives the attacking unit **+X Might** for the duration of combat. Disarm, as leaked, instead takes Might **away from an enemy unit** when this unit attacks — a debuff aimed at the opponent's board rather than a buff to your own stats.
+
+The caption also suggests Disarm "can pair well with direct damage spells like Falling Star" — a real card already in the game: **[Falling Star](/browse?q=Falling%20Star)** is a Fury-domain Spell from the original Origins set. The logic checks out even without knowing Disarm's exact numbers: shrink a blocker's Might first, and a fixed amount of direct damage goes a lot further toward actually killing it. If Disarm decks end up leaning on that kind of stacked-damage plan, it would put them in the same lane as Fury's existing direct-damage tools rather than introducing a brand-new archetype from scratch.
+
+## Deploy, Showoff and Disarm at a glance
+
+| Mechanic | Reported card type | What it does | Closest existing keyword |
+| --- | --- | --- | --- |
+| **Deploy** | Gear | Grants a benefit only at one battlefield; dies if the opponent takes that battlefield | No direct equivalent — closer in spirit to Hunt/Ganking's battlefield-control tension |
+| **Showoff** | Unspecified | Reveal a hand card, or point at a qualifying friendly card, for a scaling effect | Vision (reveal-based value), but from hand/board instead of the top of your deck |
+| **Disarm** | Unit | Lowers an enemy unit's Might when this unit attacks | The mirror of Assault, which raises the attacker's *own* Might |
+
+## What's still unconfirmed
+
+- **Which actual cards carry these keywords**, and what their cost, domain or rarity is. A keyword is only as useful as the cards printed with it, and right now there isn't a single confirmed card for any of the three to point to.
+- **The exact printed wording and bracket format.** Riftbound's confirmed keywords print an activation number in brackets where relevant — Assault [X], Empower [Cost] — and we don't yet know if Deploy, Showoff or Disarm follow that same convention or work differently.
+- **Whether more mechanics exist beyond these three.** The leaked caption itself says Radiance has "many new mechanics," which reads as an admission that this photo only captured part of a longer list.
+- **Whether the names or wording survive to release at all.** Preview-season terminology shifting before a final print run isn't unusual in this genre, and this is Radiance's first mid-cycle mechanic leak, so Riftbound itself hasn't set a precedent either way yet.
+
+We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet.
+
+## How to read a leak like this responsibly
+
+A leak like this is worth tracking, but it's worth reading carefully rather than taking at face value — a few habits are useful here specifically:
+
+- **Check the source, not just the claim.** A photo of Riot's own printed material at their own demo table carries more weight than a screenshotted "leaked decklist" from an anonymous account — exactly the distinction that separates this leak from the fabricated Radiance decklists we've flagged elsewhere on this site.
+- **Watch for hedging language in the coverage itself**, including ours. Every mention of Deploy, Showoff or Disarm on this page uses "reportedly" or "as leaked" on purpose: none of it is locked until Riot says so directly, through an official channel.
+- **Don't build a purchase decision around an unconfirmed mechanic.** None of the three has a printed card attached to it yet, which means there's nothing to actually buy — the moment there is, that's what **[Radiance pre-order pricing](/radiance-preorders)** exists to track.
+
+This is the same bar we hold every unreleased-set claim to, and it's why none of these three keywords live on our verified **[keyword glossary](/keywords)** yet.
+
+## What to actually do with this before release
+
+Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and none of these three cards have been shown. If you want to track the set as real information lands, **[Radiance pre-order pricing](/radiance-preorders)** already compares sealed product across stores, and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
+  },
+  // ── Per-mechanic deep dives for the Radiance leak above, targeting "riftbound
+  // deploy" / "riftbound showoff" / "riftbound disarm" query intent the same way
+  // riftbound-empower-explained etc. target "riftbound empower" (see
+  // docs/seo-keyword-map.md's mechanic-intent query table). Category "guide" for
+  // the same reason those three are guides — but UNLIKE them, every section here
+  // stays hedged ("as leaked", "reportedly") because none of this is verified.
+  // Deliberately NOT added to keywords.ts — see the comment on the leak roundup
+  // above for why that file's bar can't be cleared for an unreleased set.
+  {
+    slug: "riftbound-deploy-explained",
+    category: "guide",
+    title: "Riftbound Deploy Explained: The Leaked Radiance Mechanic",
+    excerpt:
+      "What Riftbound's leaked Deploy keyword reportedly does, how it's meant to work, and why Riot hasn't confirmed it yet — everything currently known about Radiance's Gear mechanic.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 5,
+    tags: ["radiance", "mechanics", "deploy", "leak", "spoilers", "guide"],
+    hero: {
+      src: "/blog/riftbound-deploy-explained.png",
+      alt: "Riftbound Deploy — a leaked Radiance Gear keyword, not yet confirmed by Riot",
+    },
+    summary: [
+      "**Deploy is a leaked Gear keyword from Riftbound: Radiance**, reportedly tied to holding one specific battlefield rather than being attached to a unit.",
+      "**Lose the battlefield, lose the card**: the leaked wording says an opponent taking that battlefield kills the Gear outright, not just switches it off.",
+      "**It's the opposite risk profile from [Equip](/keywords/equip)**, which stays functional on its unit regardless of what's happening on the board.",
+      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+    ],
+    faq: [
+      { q: "What is Deploy in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear.\" It's reportedly a Gear keyword tied to controlling one specific battlefield, not yet confirmed by Riot." },
+      { q: "How does the Deploy mechanic work?", a: "As leaked: you play the Gear to a battlefield rather than to a unit or your base. While you hold that battlefield, it grants a benefit (the leak doesn't say what kind). If an opponent takes the battlefield, the Gear is killed outright." },
+      { q: "What happens if I lose the battlefield a Deploy gear is on?", a: "Per the leaked wording, the Gear is killed — not deactivated or returned to hand, but removed from the game the way any killed permanent would be." },
+      { q: "How is Deploy different from Equip?", a: "Equip attaches a Gear card to a unit, and it stays functional regardless of board state. Deploy, as leaked, attaches to a battlefield instead of a unit, and is destroyed if you lose control of that battlefield — a much higher-risk trade for whatever benefit it grants." },
+      { q: "Is Deploy confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "How is Deploy different from Showoff and Disarm?", a: "Deploy is a Gear keyword about holding a battlefield; Showoff is a modal reveal effect triggered on play; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly, unlike Vendetta's Empower/Flow/Burn." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-leaked-mechanics",
+      label: "See the full Radiance mechanics leak →",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+    },
+    body: `**Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
+
+> "Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear."
+
+## How Deploy reportedly works
+
+1. **Play the Gear to a battlefield**, not to your base or a unit — Deploy appears to be a location-bound Gear keyword rather than a unit attachment.
+2. **It grants a benefit while you hold that battlefield.** The leaked text doesn't specify what kind of benefit — a stat boost, an ongoing effect, or something else entirely could all fit "grant benefits."
+3. **Lose the battlefield, lose the card.** If an opponent takes control of the battlefield the Gear is deployed to, the card is killed outright — not just deactivated.
+
+That third step is the part worth sitting with. Most of Riftbound's existing Gear interacts with a unit via **[Equip](/keywords/equip)**, which stays attached and functional regardless of what's happening on the board around it. Deploy, as leaked, ties the card's *survival* to board state — a meaningfully riskier trade for whatever benefit it grants.
+
+## What kind of benefit might Deploy actually grant?
+
+The leaked wording — "it will grant benefits while there" — is left deliberately vague, and it's worth being honest about how little that actually tells us. Riftbound's existing Gear generally does one of a few things once attached: raise a stat, grant a keyword the unit wouldn't otherwise have, or provide a one-time or repeatable triggered effect. Nothing in the Deploy leak rules any of those out, and nothing points specifically toward one over the others either. What the wording does confirm is that whatever the benefit is, it's tied to the *location* rather than to a unit standing on it — a structural detail, not a power-level one. Until an actual Deploy card surfaces with real stats and real wording, "some kind of ongoing bonus, size and shape unknown" is the most honest read available.
+
+## A hypothetical turn, to make the risk concrete
+
+Picture a simplified sequence, purely to illustrate the mechanic rather than to describe any real card: you play a Deploy Gear to a battlefield you currently control, and for as long as you hold it, the Gear does something useful. Your opponent then commits units to contest that same battlefield — under Riftbound's existing rules, battlefields change hands through combat, the same fight **[Hunt](/keywords/hunt)** already rewards winning. If your opponent takes the battlefield, the Deploy Gear doesn't just go quiet; per the leaked wording it's killed outright, and you're down a whole card with nothing to show for it. That's the entire risk profile in one sequence: Deploy asks you to defend a piece of ground you've already invested a card into, with a real card-disadvantage penalty if you can't hold it.
+
+## Deploy vs Equip: gear tied to a place, not a unit
+
+**[Equip](/keywords/equip)** attaches a Gear card to a *unit* you control, and it stays there — the card cares about the unit, not the battlefield the unit happens to be standing on. Deploy, as leaked, reverses that: the Gear cares about the *battlefield*, not any specific unit, and it's vulnerable to something Equip never has to worry about — losing that one location. If the leak holds up, Deploy and Equip will likely coexist as two different flavours of "gear investment" rather than one replacing the other: Equip for a stable, unit-bound bonus, Deploy for a higher-risk, higher-reward battlefield commitment.
+
+## How Deploy interacts with Riftbound's three-battlefield structure
+
+A Riftbound game is played across **[three Battlefields](/guides/how-a-riftbound-deck-is-built)**, and control of each one shifts over the course of a match rather than being settled once at the start. That structure changes what "commit a Deploy Gear to a battlefield" actually means in practice: you're not choosing a location in a vacuum, you're choosing which of three ongoing fights to stake a whole card's worth of risk on. A battlefield you're already winning is a much safer target for a Deploy Gear than one that's actively contested, since the risk of losing the card outright tracks directly with how likely you are to lose that specific fight. If the leak holds up, reading the board's three battlefields correctly before committing a Deploy Gear will likely matter as much as anything printed on the card itself.
+
+## Building around Deploy, if the leak holds up
+
+Riftbound already has two keywords built around battlefield control that a Deploy card would naturally want to pair with:
+
+- **[Hunt](/keywords/hunt)** grants XP for conquering or holding a battlefield — exactly the state a Deploy card needs to survive, so a Hunt unit defending the same battlefield as a Deploy Gear turns one board position into two payoffs at once.
+- **[Ganking](/keywords/ganking)** lets a unit move directly from one battlefield to another — useful for reinforcing a battlefield that's about to fall out of your control before the Deploy Gear on it gets killed.
+
+None of this is a confirmed archetype — it's a reasonable read of how Deploy would interact with mechanics that already exist, clearly labelled as such. That defensive angle likely matters more for Deploy than it does for a typical Gear card, precisely because Deploy's downside — losing the whole card outright — is so much steeper than an ordinary Gear's downside of simply sitting unused for a turn. A deck built around Deploy will probably want to treat "defend this specific battlefield" as a real strategic priority, closer to how a control deck protects a key removal spell than how an aggro deck plays out a stat stick and moves on. None of that changes if Deploy's actual benefit turns out to be small — a modest bonus tied to a battlefield you can't reliably hold is still a worse trade than the same bonus attached to a unit that survives regardless of who's winning the board. It also means Deploy is unlikely to be a card you play reflexively the moment it's drawn; reading the board first, then deciding whether any battlefield is safe enough to justify the risk, is closer to how the leaked wording suggests this card wants to be played.
+
+## Why a single keyword leaks before a full spoiler season
+
+Full-set spoiler seasons — every card in a set revealed on a schedule — are how Riftbound has confirmed mechanics for each of its previous releases. A leak like this one sits ahead of that process entirely: it's a photograph of internal-facing reference material rather than a scheduled reveal, which is why real, quotable wording can surface months before a set goes through its own proper preview cycle. That gap between "photographed once at a convention" and "spoiled on schedule with card art and Core Rules-verified wording" is exactly the gap this page is being careful to flag throughout.
+
+## What would actually confirm Deploy
+
+Three things would move Deploy from "leaked" to "confirmed" in our own coverage: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season card reveal — showing the keyword; a physical or digital card image with Deploy printed on it in final form; or wording that can be checked against an updated Core Rules PDF, the same bar **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. Any one of those would be enough. A second demo-table photo, even from a different convention, would not — it would still be the same category of unofficial sighting this article is already treating carefully.
+
+## How Deploy compares to Showoff and Disarm
+
+Deploy is one of three mechanics in the same leak. **[Showoff](/guides/riftbound-showoff-explained)** is a modal reveal effect triggered as you play a card; **[Disarm](/guides/riftbound-disarm-explained)** weakens an enemy unit's Might when the Disarm unit attacks. Unlike Deploy's battlefield-control angle, neither of the other two cares about board position at all, which is part of why the three don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
+
+## Is Deploy officially confirmed?
+
+No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Deploy to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**. There's also nothing to buy yet: no confirmed Deploy card exists, so the only thing actually trackable today is **[Radiance's sealed pre-order pricing](/radiance-preorders)**, which the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** links out to and which we'll keep updating independently of whatever any individual card in the set turns out to do.`,
+  },
+  {
+    slug: "riftbound-showoff-explained",
+    category: "guide",
+    title: "Riftbound Showoff Explained: The Leaked Radiance Mechanic",
+    excerpt:
+      "What Riftbound's leaked Showoff keyword reportedly does, how the reveal-based effect is meant to work, and why it isn't Riot-confirmed yet — everything currently known.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 5,
+    tags: ["radiance", "mechanics", "showoff", "leak", "spoilers", "guide"],
+    hero: {
+      src: "/blog/riftbound-showoff-explained.png",
+      alt: "Riftbound Showoff — a leaked Radiance reveal mechanic, not yet confirmed by Riot",
+    },
+    summary: [
+      "**Showoff is a leaked, modal reveal effect from Riftbound: Radiance** — reveal a card from hand, or point at a qualifying friendly card, and the payoff scales with what you showed.",
+      "**It's different from [Vision](/keywords/vision)**, Riftbound's existing reveal mechanic: Vision looks at the top of your own deck, while Showoff reportedly checks your hand or board instead.",
+      "**The exact printed criteria are unknown.** No confirmed Showoff card exists yet, so its real power level can't be judged from the leak alone.",
+      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+    ],
+    faq: [
+      { q: "What is Showoff in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off.\" It's reportedly a modal reveal effect, not yet confirmed by Riot." },
+      { q: "How does the Showoff mechanic work?", a: "As leaked: when you play a Showoff card, you may either reveal a card from your hand or point at a friendly card already in play that meets whatever criteria is printed on the Showoff card. The effect then changes depending on what you showed." },
+      { q: "What does 'meets the listed criteria' mean for Showoff?", a: "It isn't specified in the leak — likely a card type, domain, rarity or stat threshold printed on each individual Showoff card, similar to modal reveal effects in other card games. No confirmed Showoff card exists yet to check." },
+      { q: "How is Showoff different from Vision?", a: "Vision triggers a Predict, looking at the top card of your own Main Deck. Showoff, as leaked, instead looks at a card you already have — in hand or already in play — rather than the top of your deck." },
+      { q: "Is Showoff confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "How is Showoff different from Deploy and Disarm?", a: "Showoff is a modal reveal effect triggered on play; Deploy is a Gear keyword tied to holding a battlefield; Disarm weakens an enemy unit's Might on attack. All three reportedly leaked together but don't appear designed to combo directly." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-leaked-mechanics",
+      label: "See the full Radiance mechanics leak →",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+    },
+    body: `**Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
+
+> "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
+
+## How Showoff reportedly works
+
+1. **Play the card.** Showoff triggers as part of playing it, not later.
+2. **Choose one of two options**: reveal a card from your hand, or point at a friendly card already in play — either way, the chosen card has to meet whatever criteria is printed on the Showoff card itself.
+3. **The effect changes based on what you showed.** This is a modal, scaling bonus rather than one fixed outcome — the leak's own wording ("the card's effect will change") rules out a flat, single-mode effect.
+
+## Showoff vs Vision: two different kinds of "look and get value"
+
+**[Vision](/keywords/vision)** resolves by triggering a Predict — looking at the top card of your own Main Deck and choosing whether to keep it or recycle it. That's a card-selection tool: it helps you dodge a card you don't want to draw next. Showoff, as leaked, reads differently — you're pointing at a card you *already have*, in hand or in play, not drawing information from the top of your deck. Where Vision smooths your next draw, Showoff seems to reward what you've already assembled. It's also worth noting the two aren't mutually exclusive on the same card: nothing about the leaked wording rules out a future card that uses both a Predict and a Showoff-style reveal, since they're checking entirely different zones for entirely different reasons.
+
+## What "meets the listed criteria" probably means
+
+Since no confirmed Showoff card exists yet, the exact printed criteria are unknown. The most likely candidates, based on how modal reveal effects work in other card games, are a card type, a domain, a rarity, or a stat threshold like Might. This matters more than it might sound: a card that wants you to reveal an Epic-rarity Unit is a completely different build-around than one checking for the biggest Might on your board, and until an actual Showoff card is shown, its real power level simply can't be judged. It's also possible different Showoff cards check for different criteria entirely — the leaked wording describes a template ("meets the listed criteria"), not a single fixed condition every Showoff card shares, the same way Riftbound's existing keywords with bracketed numbers (Assault [X], Empower [Cost]) vary their exact value from card to card while keeping the same underlying mechanic.
+
+## Two paths through the same effect: revealing vs. pointing
+
+The leaked wording gives you a genuine choice, not just one method of triggering Showoff: reveal a card from your hand, or point at a friendly card already on the board that meets the criteria. Those are meaningfully different resources to draw from. Revealing from hand works even on an otherwise empty board, but costs you information — your opponent now knows a card you're holding. Pointing at a card already in play costs nothing extra in information (it's already visible), but only works if you actually have a qualifying card out already. A deck that curves out unit after unit will likely lean on the board option more often; a deck holding up reactive cards in hand will likely lean on the reveal option instead — assuming, again, that this wording survives to an actual printed card.
+
+## Building around Showoff, if the leak holds up
+
+Modal reveal effects generally reward a deck that can reliably meet the checked criteria on demand — a mono-domain-heavy build, a curve stacked toward one card type, or a board that reliably has a big Might stat to point at. Which of those actually applies to Showoff depends entirely on the criteria Riot ends up printing, so treat any specific deckbuilding advice here as provisional until a real card lands. What's less speculative is the general shape of the incentive: any Showoff card rewards consistency in whatever it's checking for, the same way every existing criteria-based effect in this genre does, so a deck built around a narrower, more focused gameplan will generally get more mileage from a Showoff card than a deck spread thin across many card types and domains.
+
+## A hypothetical Showoff turn, to make the choice concrete
+
+Picture a simplified sequence, purely to illustrate the mechanic rather than to describe any real card: you play a Showoff card with a Unit-type criterion. You have no qualifying Unit in play yet, but you're holding one in hand — so you reveal it from hand instead, triggering the effect at the cost of showing your opponent a card you haven't committed to the board. The next game, the same card comes up with a qualifying Unit already in play, so you point at that instead, keeping your hand a mystery. Same card, same criterion, two different resources spent to trigger it — that flexibility is the actual value Showoff's "reveal or choose" wording is reportedly offering, independent of whatever the specific payoff turns out to be.
+
+## Why a modal trigger is different from a fixed one
+
+Riftbound already has plenty of triggered abilities that fire the same way every time — Assault always gives +X Might, for example. Showoff's leaked wording is structurally different: it offers a choice of *how* to trigger before the effect even resolves. That's a smaller design space to get wrong than it might look — a badly-tuned fixed effect is either too strong or too weak for the whole card pool, while a modal one lets Riot balance around "the average of two paths" rather than a single number. It also means a Showoff card's real-world power level could vary more by matchup and by deck than a typical Riftbound keyword does, since which path is actually available to you changes turn to turn — a hand full of qualifying cards makes Showoff close to free value, while an empty hand and an empty board turns it into a card that simply doesn't do anything extra that turn.
+
+## Showoff and the risk of doing nothing
+
+The leaked wording says "you *may* reveal" — meaning Showoff, as leaked, is optional rather than mandatory. That's a meaningful design detail on its own: a card that forced a reveal every time would punish a bad hand or an empty board outright, while an optional trigger just declines to do the extra thing and moves on. If that reading holds, the actual downside case for Showoff isn't "this backfires," it's simply "this does nothing extra this turn" — a much softer failure state than most conditional effects in this genre carry, and one that makes Showoff a safer include even in a deck that can't always meet its own criteria.
+
+## How Showoff compares to Deploy and Disarm
+
+Showoff is one of three mechanics in the same leak. **[Deploy](/guides/riftbound-deploy-explained)** is a Gear keyword tied to holding a battlefield; **[Disarm](/guides/riftbound-disarm-explained)** weakens an enemy unit's Might when the Disarm unit attacks. Of the three, Showoff is the only one that triggers purely off what you already have rather than off board position or combat, which is part of why the three don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
+
+## What would actually confirm Showoff
+
+The same three things that would confirm any of these leaked mechanics apply here: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season reveal — showing the keyword; a real card image with Showoff printed on it in final form; or wording checked against an updated Core Rules PDF, the bar **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. A second demo-table sighting alone would not clear that bar — it would still be the same category of unofficial photo this page is already treating carefully.
+
+## Is Showoff officially confirmed?
+
+No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Showoff to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**. There's also nothing to buy yet: no confirmed Showoff card exists, so the only thing genuinely trackable today is **[Radiance's sealed pre-order pricing](/radiance-preorders)**, updated independently of whatever any individual card in the set turns out to do.`,
+  },
+  {
+    slug: "riftbound-disarm-explained",
+    category: "guide",
+    title: "Riftbound Disarm Explained: The Leaked Radiance Mechanic",
+    excerpt:
+      "What Riftbound's leaked Disarm keyword reportedly does, how it compares to the existing Assault keyword, and why it isn't Riot-confirmed yet.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 5,
+    tags: ["radiance", "mechanics", "disarm", "leak", "spoilers", "guide"],
+    hero: {
+      src: "/blog/riftbound-disarm-explained.png",
+      alt: "Riftbound Disarm — a leaked Radiance combat mechanic, not yet confirmed by Riot",
+    },
+    summary: [
+      "**Disarm is a leaked combat mechanic from Riftbound: Radiance**, reportedly weakening an enemy unit's Might when the Disarm unit attacks.",
+      "**It's the reported mirror image of [Assault](/keywords/assault)**: Assault gives the attacker +X Might; Disarm instead lowers an enemy unit's Might — a debuff aimed outward rather than a self-buff.",
+      "**It reportedly pairs with direct-damage spells** like Falling Star — shrink a blocker's Might first, and a fixed amount of damage goes further toward lethal.",
+      "**Not officially confirmed.** This is sourced to a photo of Riot's own PAX West demo material, not a Riot announcement — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source.",
+    ],
+    faq: [
+      { q: "What is Disarm in Riftbound?", a: "As leaked from a Riot demo at PAX West: \"When this unit attacks, decrease the Might of an enemy unit here.\" It reportedly weakens an enemy unit's Might as part of attacking, rather than boosting the attacker's own stats." },
+      { q: "How does the Disarm mechanic work?", a: "As leaked: when a unit with Disarm attacks, it decreases the Might of an enemy unit present at that battlefield. It reads as a repeatable, built-in unit ability rather than a one-time removal spell." },
+      { q: "Is Disarm the opposite of Assault?", a: "That's how the leak's own source frames it, and the wording supports the comparison: Assault gives the attacker +X Might while attacking — a self-buff. Disarm, as leaked, instead lowers an enemy unit's Might when this unit attacks — a debuff aimed at the opponent's board." },
+      { q: "Does Disarm work with direct damage spells?", a: "The leak's own source suggests pairing Disarm with direct-damage spells like Falling Star — a real Fury-domain Spell from the Origins set. Shrinking a blocker's Might first would make a fixed amount of direct damage go further toward actually killing it, though Disarm's exact numbers aren't known yet." },
+      { q: "Is Disarm confirmed by Riot?", a: "No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West 2026, not an official Riot announcement or Core Rules update." },
+      { q: "How is Disarm different from Deploy and Showoff?", a: "Disarm weakens an enemy unit's Might on attack; Deploy is a Gear keyword tied to holding a battlefield; Showoff is a modal reveal effect triggered on play. All three reportedly leaked together but don't appear designed to combo directly." },
+    ],
+    browseCta: {
+      href: "/blog/riftbound-radiance-leaked-mechanics",
+      label: "See the full Radiance mechanics leak →",
+      blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
+    },
+    body: `**Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
+
+> "When this unit attacks, decrease the Might of an enemy unit here."
+
+## How Disarm reportedly works
+
+1. **Trigger condition: the Disarm unit attacks.** The effect is tied to attacking, not to being played or to any other timing.
+2. **Effect: it lowers an enemy unit's Might** present at that battlefield.
+3. **It reads as a repeatable, built-in unit ability**, not a one-time removal spell — the leaked wording describes something the unit does every time it attacks, not a single-use effect.
+
+## Disarm vs Assault: the same combat moment, opposite target
+
+This is the comparison the leak's own source draws directly, and the rules text backs it up. **[Assault](/keywords/assault)** gives the *attacking* unit **+X Might** for the duration of combat — a self-buff that only applies while that unit is on offense. Disarm, as leaked, instead takes Might **away from an enemy unit** when this unit attacks — a debuff aimed at the opponent's board rather than a boost to your own stats. Same trigger window (attacking), opposite target and opposite direction. That symmetry is worth sitting with for a moment: Riftbound already has a keyword that raises the attacker's own Might, so a mirrored keyword that lowers the *defender's* Might instead is a fairly natural design slot to fill, rather than an entirely novel idea grafted on from nowhere.
+
+## What "an enemy unit here" likely means
+
+The leaked wording says "decrease the Might of an enemy unit here" rather than naming a specific enemy unit, which matters for how Disarm would actually resolve. "Here" almost certainly refers to the same battlefield the Disarm unit is attacking at, mirroring how battlefield-scoped effects already work elsewhere in Riftbound — an effect that reaches across the whole board rather than the local battlefield would typically be worded to say so explicitly. If that reading holds, Disarm only ever has a target when an enemy unit is actually present at that specific battlefield: attacking into an empty battlefield, or one where every enemy unit has already been cleared, would presumably leave Disarm with nothing to weaken. That's a meaningful constraint on when the keyword is live at all, not just how strong it is when it triggers.
+
+## Pairing Disarm with direct damage
+
+The leak's caption suggests Disarm "can pair well with direct damage spells like Falling Star" — a real card already in the game: **[Falling Star](/browse?q=Falling%20Star)** is a Fury-domain Spell from the original Origins set. The logic holds up even without knowing Disarm's exact numbers: shrink a blocker's Might first, and a fixed amount of direct damage goes a lot further toward actually killing it. If Disarm decks end up leaning on that kind of stacked-damage plan, it would put them in the same lane as Fury's existing direct-damage tools rather than introducing a brand-new archetype from scratch. The sequencing would matter too — Disarm only triggers when its own unit attacks, so a deck built around this pairing would likely want its direct-damage spells available to cast in the same combat step, after the Might reduction has already landed, rather than before.
+
+## A hypothetical combat, to make the interaction concrete
+
+Picture a simplified example, purely to illustrate the mechanic rather than to describe any real card: your Disarm unit attacks into a battlefield defended by an enemy unit that would otherwise survive a direct-damage spell at full Might. Disarm triggers off the attack and lowers that defender's Might first. Now a spell that wouldn't have finished the job on its own is enough to do it, because the target's effective toughness dropped before the damage was ever cast. None of this requires Disarm's exact numbers to be known — the shape of the interaction (soften first, finish second) holds regardless of what those numbers turn out to be.
+
+## Disarm as a blocker deterrent, not just a finisher
+
+Beyond the direct-damage pairing, Disarm's more everyday use case is likely simpler: a weakened blocker just trades worse. If an enemy unit's Might drops before combat damage is dealt, a favourable trade a defender could normally survive stops being favourable, and an unfavourable trade for the attacker can turn even. That reframes Disarm less as a combo piece that needs a specific direct-damage spell in hand to matter, and more as a keyword that quietly improves every combat the Disarm unit is involved in, whether or not a follow-up spell ever gets cast. If the leak holds up, that's probably the more common way Disarm actually gets used at the table — the Falling Star-style finish is the flashy version, not the baseline one. A deck that just wants to attack profitably every turn, without needing a specific spell drawn or held back, would likely value Disarm for this reason alone, independent of whether the direct-damage synergy ever comes up in a given game.
+
+## Why Disarm's timing (on attack, not on play) matters
+
+Disarm reportedly triggers when its unit *attacks*, not when it's played or at the start of combat generally. That timing detail affects when a defending player can actually react. A defender who's watching for combat tricks has already seen the Disarm unit declared as an attacker before the Might reduction happens, which gives them a window — however small — to respond with an instant-speed effect of their own before the debuff lands, if Riftbound's timing rules allow it for whatever effect they're holding. That's a meaningfully different tempo from an effect that resolves the moment a card hits the board, where there's no such warning at all, and it's a distinction worth tracking once real cards and real interaction windows are confirmed.
+
+## What Disarm doesn't do, as leaked
+
+It's worth being precise about the boundaries of the leaked wording, since it's easy to over-read a short quote. Disarm, as leaked, decreases Might — it doesn't say anything about dealing damage, removing keywords, or preventing the target from blocking or attacking. That means a heavily-buffed enemy unit could plausibly survive a Disarm trigger with Might to spare, and a unit with zero relevant Might already (an X/0 or similar) simply doesn't get any weaker in a way that matters. Reading a debuff keyword as "the opposite of a buff keyword" is a reasonable starting point, but Assault's own leaked-then-confirmed wording only ever raised a number — nothing about the Disarm leak suggests it does anything beyond the mirror image of that, and treating it as more (an outright removal effect, say) would be reading further into a two-sentence quote than the quote itself supports. That distinction matters for evaluating the card once it actually prints: a Might-reduction keyword and a true removal keyword occupy very different power levels, and conflating the two now would set up an unfair comparison against whatever Disarm's real numbers turn out to be.
+
+## How Disarm compares to Deploy and Showoff
+
+Disarm is one of three mechanics in the same leak. **[Deploy](/guides/riftbound-deploy-explained)** is a Gear keyword tied to holding a battlefield; **[Showoff](/guides/riftbound-showoff-explained)** is a modal reveal effect triggered on play. Of the three, Disarm is the only one that triggers off combat specifically, which is part of why they don't appear designed to combo directly with each other the way Vendetta's Empower, Flow and Burn were — see the **[full leak roundup](/blog/riftbound-radiance-leaked-mechanics)** for the source photo and all three side by side.
+
+## What would actually confirm Disarm
+
+The same bar applies here as to the other two leaked mechanics: an official Riot channel — a dev blog, a verified social post, or a proper spoiler-season reveal — showing the keyword; a real card image with Disarm printed on it in final form; or wording checked against an updated Core Rules PDF, the standard **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** eventually cleared for Vendetta. A second demo-table sighting, even from a different event, would not clear that bar on its own — it would still be the same category of unofficial photo this page is already treating carefully throughout.
+
+## Is Disarm officially confirmed?
+
+No. This is reported from a fan photo of Riot's own physical demo reference material at PAX West, not a Riot announcement. We'll only add Disarm to our verified keyword glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** were added for Vendetta — once its wording can be checked against Riot's own Core Rules PDF or an official card image. Until then, treat everything on this page as **reported, not settled**. There's also nothing to buy yet: no confirmed Disarm card exists, so the only thing genuinely trackable today is **[Radiance's sealed pre-order pricing](/radiance-preorders)**, updated independently of whatever any individual card in the set turns out to do.`,
+  },
+  // ── Gradient sleeves. A genuine accessory-search topic with zero prior coverage
+  // on this site. Kept factual and specific to what's actually verifiable (card
+  // size, domain colours from lib/constants.ts DOMAINS, real deck composition from
+  // the deck-anatomy guide) rather than inventing brand or price claims we can't
+  // back up — same restraint as every other buying guide here.
+  {
+    slug: "gradient-sleeves-for-riftbound-cards",
+    category: "guide",
+    title: "Gradient Sleeves for Riftbound Cards: Complete Guide",
+    excerpt:
+      "What gradient sleeves are, why they fit Riftbound's card size with no special sizing needed, and how to pick a colour fade that actually matches your deck's domains.",
+    author: "RiftCompare",
+    date: "2026-09-08",
+    readMins: 6,
+    tags: ["collecting", "storage", "buying-guide", "sleeves", "accessories"],
+    hero: {
+      src: "/blog/gradient-sleeves-for-riftbound-cards.png",
+      alt: "Gradient sleeves for Riftbound cards, shown across Riftbound's seven domain colours",
+    },
+    shop: [
+      { label: "Gradient card sleeves (100-count)", query: "gradient card sleeves 100 pack" },
+      { label: "Standard-size perfect-fit sleeves", query: "perfect fit card sleeves standard size" },
+      { label: "Riftbound deck boxes", query: "Riftbound deck box" },
+    ],
+    summary: [
+      "**Gradient sleeves are card sleeves with a smooth colour fade** — one colour blending into another — rather than a flat colour or printed artwork, and they're one of the most-searched sleeve styles across the wider TCG accessory market right now.",
+      "**Riftbound cards are standard trading-card size**, the same size Magic: The Gathering and Pokémon use — so any sleeve labelled \"standard size,\" gradient or otherwise, fits without a Riftbound-specific product.",
+      "**Riftbound's seven domains each have a fixed colour** (Fury red, Calm green, Mind blue, Body amber, Chaos violet, Order pale silver, Colorless grey), which makes a domain-matched gradient a genuinely functional choice, not just a decorative one.",
+      "**Double-sleeve anything you actually care about**: an inner \"perfect fit\" sleeve plus an outer gradient sleeve protects the card twice and keeps the gradient sleeve itself from taking the wear.",
+      "**Buy a 100-count pack, not exactly enough for one deck** — a full Riftbound kit (Legend, Champion, ~40-card main deck, 12 Runes, 3 Battlefields, up to a 10-card side deck) already runs to around 65-70 cards before you count spares.",
+    ],
+    faq: [
+      {
+        q: "What are gradient sleeves?",
+        a: "Card sleeves printed with a smooth colour fade — one colour blending into another across the sleeve — rather than a single flat colour or a printed illustration. They're a popular style across the wider trading card game accessory market, independent of any one game.",
+      },
+      {
+        q: "Do gradient sleeves fit Riftbound cards?",
+        a: "Yes. Riftbound is printed at the same standard trading-card size used by Magic: The Gathering, Pokémon and most other modern TCGs, so any sleeve sold as \"standard size\" fits — gradient sleeves included. There's no Riftbound-specific sleeve size to look out for.",
+      },
+      {
+        q: "Which gradient colours suit a Riftbound deck?",
+        a: "Match your deck's domain colours: Fury is red, Calm is green, Mind is blue, Body is amber/orange, Chaos is violet, Order is a pale silver-white and Colorless is neutral grey. Since most competitive Riftbound decks commit to one or two domains, a gradient blending those two colours signals what you're playing at a glance.",
+      },
+      {
+        q: "Should I double-sleeve Riftbound cards?",
+        a: "It's worth it for anything you'd be upset to lose — chase pulls, Signature prints, cards you plan to trade or sell later. An inner \"perfect fit\" sleeve holds the card snugly and takes the flex and shuffle wear; an outer, slightly looser sleeve (gradient or otherwise) goes over the top and takes the scuffing instead of the card or the inner sleeve's print.",
+      },
+      {
+        q: "Does sleeve opacity actually matter in Riftbound, or is it just presentation?",
+        a: "It matters mechanically, not just cosmetically. Riftbound's Hidden keyword lets some cards be played facedown at a battlefield before being revealed later — if your sleeves are thin or worn enough to show through, that's genuine hidden information leaking at the table, which most playgroups and any sanctioned event will treat as a real problem, not a style complaint.",
+      },
+      {
+        q: "How many sleeves do I need for one Riftbound deck?",
+        a: "More than the ~40-card main deck alone. A full kit is a Legend, a Champion, the ~40-card main deck, 12 Runes, 3 Battlefields and a side deck of up to 10 — around 65-70 cards before counting any spares for a card you eventually resleeve. A 100-count pack covers a full deck with room left over.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/how-a-riftbound-deck-is-built",
+      label: "See exactly what's in a Riftbound deck →",
+      blurb: "Legend, Champion, main deck, Runes, Battlefields and side deck — the full anatomy, so you know precisely how many cards you're sleeving.",
+    },
+    body: `**Gradient sleeves are card sleeves printed with a smooth colour fade — one colour blending into another — instead of a flat colour or a printed illustration.** They're one of the most-searched sleeve styles in the wider trading card game accessory market right now, and Riftbound's own colour-coded domain system makes them an unusually good fit for this specific game rather than just a generic aesthetic choice. Here's what they are, whether they actually fit Riftbound cards, and how to pick a fade that means something.
+
+## What actually makes a sleeve "gradient"
+
+Sleeve styles roughly split into four categories: **flat colour** (one solid colour, the simplest and cheapest option), **printed art** (a full illustration across the sleeve back), **holographic/foil** (a light-reactive finish rather than a colour choice), and **gradient** — a smooth transition between two or more colours across the sleeve, sometimes called an ombré finish. A gradient sits between flat and printed art: more visually distinct than a single colour, but without committing to specific artwork that only matches one game, set or character.
+
+## Do gradient sleeves fit Riftbound cards?
+
+Yes, without any special sizing. **Riftbound cards are printed at the same standard trading-card size used by Magic: The Gathering, Pokémon and most other modern physical TCGs.** Any sleeve sold as "standard size" — gradient, flat, printed or holographic — fits Riftbound cards. There's no Riftbound-specific sleeve dimension to hunt for, which also means you're shopping the entire standard-size sleeve market rather than a narrow, game-specific one.
+
+## Why gradient sleeves specifically suit Riftbound
+
+This is the part that's genuinely useful rather than just decorative: **Riftbound's seven domains each have a fixed, official colour**, and most competitive decks commit to just one or two of them. That gives a gradient sleeve an actual job to do — signalling your deck's domains at a glance — rather than being pure decoration.
+
+| Domain | Colour | A gradient pairing worth trying |
+| --- | --- | --- |
+| **Fury** | Red | Fury → Body (red fading to amber) for an aggressive two-domain deck |
+| **Calm** | Green | Calm → Mind (green fading to blue) |
+| **Mind** | Blue | Mind → Chaos (blue fading to violet) |
+| **Body** | Amber/orange | Body → Fury (amber fading to red) |
+| **Chaos** | Violet/purple | Chaos → Order (violet fading to pale silver) |
+| **Order** | Pale silver-white | Order → Colorless (silver fading to grey) for a clean, monochrome look |
+| **Colorless** | Neutral grey | Pairs with anything — Colorless already splashes into every domain combination |
+
+If your deck runs two domains — which is how most tournament lists are actually built, per our **[deck archetypes guide](/guides/riftbound-deck-archetypes-guide)** — a gradient blending those two domain colours is the single most useful sleeve choice you can make: an opponent (or you, mid-shuffle) can identify the deck's colours before a single card is revealed.
+
+## One-domain vs. two-domain decks
+
+Not every Riftbound deck runs two domains — a focused single-domain build is a real, competitively viable choice, and it actually simplifies the sleeve decision: a one-domain deck doesn't need a gradient at all to signal its colours, since a single flat colour already does that job just as clearly. Where a gradient earns its keep specifically is a genuine two-domain build, where one flat colour can only ever represent half of what the deck is actually doing. If you haven't settled on your deck's domains yet, it's worth finishing the list before buying sleeves rather than after — picking a fade first and building around it later is the most common way collectors end up with a set of sleeves that doesn't match anything they're actually playing.
+
+## Matte vs. glossy: how finish changes a gradient's look
+
+A gradient sleeve's finish changes how the colour fade actually reads at the table, independent of brand or price. **Glossy sleeves** reflect light more directly, which can make a bold two-colour gradient look more saturated and eye-catching under bright lighting — the trade-off is that a glossy finish also shows fingerprints and light scuffing more visibly over a long session. **Matte sleeves** diffuse light instead of reflecting it, which mutes the gradient slightly but resists fingerprints and glare, and tends to feel less slick in hand — some players find a matte finish easier to riffle-shuffle cleanly, since it doesn't slide against itself as readily as glossy stock does. Neither finish changes a sleeve's actual size or opacity; it's purely a texture and feel decision, so pick based on how you actually handle your deck rather than assuming one is objectively better.
+
+## Sleeve thickness and deck-box fit
+
+Sleeve thickness is usually listed in microns, and it matters more for a double-sleeved deck than a single-sleeved one. A thin inner "perfect fit" sleeve should add minimal bulk — that's the entire point of using one against the bare card. The outer gradient sleeve is where thickness becomes a genuine feel decision: a heavier, more rigid outer sleeve resists bending and holds its shape better in a deck box, but a stack of 65-70 double-sleeved cards in a thicker outer sleeve also sits noticeably taller than the same stack single-sleeved. If you're buying a deck box at the same time as sleeves, checking its stated capacity against double-sleeved thickness — not just raw card count — avoids ending up with a deck that doesn't actually close the lid.
+
+## How many sleeves you actually need
+
+Don't buy exactly enough for the ~40-card main deck and stop there. A full Riftbound kit is bigger than that: a **Legend**, a **Champion**, the **~40-card main deck**, **12 Runes**, **3 Battlefields**, and a **side deck of up to 10** — the complete breakdown is in **[how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)**. Add that up and a single deck is already somewhere around **65-70 cards** before you count anything extra. A **100-count pack** covers a full deck with enough spares left over that resleeving a single damaged card later doesn't mean opening a second pack just for one sleeve.
+
+## Double-sleeving: the trick that protects the gradient itself
+
+A gradient finish is worth protecting in its own right, not just the card underneath it. The standard approach across the wider TCG hobby is **double-sleeving**: an inner "perfect fit" sleeve — sized just slightly larger than the bare card, so it holds snugly with minimal air — goes on first and takes the flex and shuffle wear directly. An outer sleeve, gradient or otherwise, goes over the top of that and takes the scuffing and edge-wear instead of either the card or the inner sleeve. It's the difference between a gradient finish that looks the same after fifty games and one that's visibly worn at the corners within a few sessions.
+
+## Storing sleeved cards long-term
+
+Sleeves protect a card from handling wear, but storage conditions matter just as much for anything you're keeping long-term. Heat and humidity are the two things worth actually avoiding — a card left in a hot car or a damp basement can warp or develop print damage that no sleeve, gradient or otherwise, will prevent, since a sleeve is a barrier against scuffing and fingerprints, not against the card stock's own response to temperature and moisture. A deck box kept somewhere at normal room temperature is enough for most collections; there's no need for anything more specialised unless you're storing genuinely high-value chase pulls, in which case a rigid card saver behind the sleeve — rather than instead of it — is the more common extra step, since it adds structural protection against bending that a sleeve alone doesn't provide.
+
+## Opacity isn't just cosmetic in Riftbound
+
+One thing worth checking before you buy: **sleeve opacity matters mechanically in Riftbound, not just visually.** The **[Hidden](/keywords/hidden)** keyword lets certain cards be played facedown at a battlefield and revealed later — the entire point is that your opponent can't see what it is until you choose to play it. A thin, cheap, or worn-out sleeve that lets a card's identity show through under normal lighting isn't just an aesthetic downgrade — it's a genuine information leak at the table, which is the kind of thing a sanctioned event (or a reasonably strict playgroup) will actually call out. A gradient design doesn't make a sleeve any less opaque on its own, but it's worth confirming opacity in reviews before buying a specific brand, especially for anything you intend to play with rather than just display.
+
+[[shop]]
+
+## Picking a set without overthinking it
+
+If you only take one thing from this: **match your deck's one or two domain colours**, buy a **100-count pack** so you have real spares, and **double-sleeve** anything you'd actually be upset to lose — chase pulls, Signature prints, or cards you might trade or sell down the line. Everything else is preference. For the cards actually going inside those sleeves, **[browse live Riftbound prices across every store we track](/browse)**, or start with **[what's actually in a Riftbound deck](/guides/how-a-riftbound-deck-is-built)** if you're still assembling the list you're about to sleeve up.`,
+  },
   // ── Format legality. "Standard format" and "format legal" returned zero matches
   // across the whole corpus before this, despite being the question behind every
   // expensive-card purchase. Scoped carefully: Riot has published a ban list but
@@ -3621,7 +4138,7 @@ Riftbound officially arrived in Southeast Asia this month, and Singapore's card 
 ## What you get in Singapore
 
 - **Live SGD prices for every Riftbound card** — the full database, every set from Origins to the upcoming [Vendetta](/sets/vendetta), each card showing the cheapest live price in Singapore dollars.
-- **11 Singapore stores tracked** — Hideout, Action Point Games, 1Collectibles TCG, Flagship Games, SC Collection, Mana Pro, OneMtg, Card Arena, Dueller's Point, Caesar Cards and Zoomies Gaming (see the full [stores we track](/stores/tracked) list). Stores without a webstore yet are listed and start showing prices the moment they sell online.
+- **11 Singapore stores tracked** — Hideout, Action Point Games, The TCG Alchemists, GOAT TCG, Team Card Game, TCG Club House, Apex Player's Guild, TEFUDA, Chonky Collectibles, 4elements and Brints Collectibles (see the full [stores we track](/stores/tracked) list).
 - **eBay Singapore** — every card is also checked against [ebay.com.sg] listings, so marketplace deals show up right next to local store prices.
 - **TCGplayer reference pricing** — for cards no local store has in stock yet, we show TCGplayer's market price converted to SGD as an honest reference (clearly a reference, never pretending to be a local listing).
 - **Everything else RiftCompare does** — [price history charts](/movers) on every card, the [sealed products comparison](/sealed), the [deck pricer](/deck) that prices a whole 40-card list in one click, and [price-drop alerts](/browse).
@@ -3658,11 +4175,11 @@ Happy hunting — and pay less for the cards you want. Start at the **[card data
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
-    body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 19 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
+    body: `Looking to **buy Riftbound cards in Australia** without overpaying? The same single can differ by 30–50% between Australian stores once postage is counted — and with 17 local stores selling Riftbound singles, nobody has time to check them all. That's the whole point of RiftCompare.
 
 ## Why Australians use RiftCompare
 
-- **Every AU store in one search.** We track live AUD prices at Cherry Collectables, Ozzie Collectables, The Final Boss Collectables, Plenty of Games, The Adventurers Guild, Mana Market, Steel City Games, Cardbot, Good Games (and Good Games Adelaide), Vault Games, Mint Collectables, The Card Hub Australia, PokéBox, Spellroo Gaming, Spindown, 88 Games Arena, Elemental Arcade and Fluke & Box — plus **eBay Australia** ([full list](/stores/tracked)).
+- **Every AU store in one search.** We track live AUD prices at Cherry Collectables, Ozzie Collectables, The Final Boss Collectables, Plenty of Games, The Adventurers Guild, Mana Market, Cardbot, Good Games Adelaide, Mint Collectables, The Card Hub Australia, PokéBox, Spellroo Gaming, Spindown, 88 Games Arena, Elemental Arcade, Fluke & Box and Troll Australia — plus **eBay Australia** ([full list](/stores/tracked)).
 - **Ranked by what you actually pay.** Australia is where postage decides the deal: a $1.50 card with $3.95 tracked shipping isn't cheap. Every comparison ranks stores by **total delivered cost**, with each store's free-shipping threshold factored in automatically.
 - **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
 - **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple postage charges.
@@ -3702,7 +4219,7 @@ Buying from overseas, or curious about other markets? See **[the US](/blog/buy-r
 
 ## Why US players use RiftCompare
 
-- **TCGplayer, eBay AND independent stores in one comparison.** We track live USD prices at 33 US stores — The Mythic Store, Danireon Cards & Games, Gear Gaming, Misty Mountain Games, Hobbiesville, NP Collectibles, The CG Realm, Bards & Cards, PunkOuter Games, GG Legends, The Booster Box, Cardboard and Die, Cape Fear Collectibles, Mystery MTG, OneStopTCG and more ([full list](/stores/tracked)) — alongside **TCGplayer's market price** and **eBay** listings, side by side.
+- **TCGplayer, eBay AND independent stores in one comparison.** We track live USD prices at 26 US stores — The Mythic Store, Danireon Cards & Games, Gear Gaming, Misty Mountain Games, Hobbiesville, NP Collectibles, The CG Realm, Bards & Cards, PunkOuter Games, GG Legends, Cardboard and Die, Cape Fear Collectibles, Mystery MTG, OneStopTCG and more ([full list](/stores/tracked)) — alongside **TCGplayer's market price** and **eBay** listings, side by side.
 - **The independents frequently beat TCGplayer.** Market price is an average, not a floor — our comparison regularly surfaces indie-store listings well under it on the exact same card.
 - **Prices refresh daily**, with [price history](/movers) on every card so you can tell a real dip from a spike, plus [price movers](/movers) to catch cards climbing early.
 - **Whole-deck pricing.** The [deck pricer](/deck) prices a complete list across every store at once and finds the cheapest combination of orders.
@@ -3742,7 +4259,7 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the UK]
 
 ## Why UK players use RiftCompare
 
-- **14 UK stores plus eBay UK, one search.** We track live GBP prices at Total Cards, Axion Now, Card Goblin, Thistle Tavern, Spellbound Games, Forbidden Planet, Zatu Games, Boards & Swords, Goblin Gaming, The Card Vault, Gathering Games, Harlequins Games, Travelling Man and Monster Card Corner ([full list](/stores/tracked)) — with **eBay UK** listings right alongside.
+- **23 UK stores plus eBay UK, one search.** We track live GBP prices at Total Cards, Axion Now, Card Goblin, Thistle Tavern, Spellbound Games, Forbidden Planet, Zatu Games, Boards & Swords, Goblin Gaming, Monster Card Corner, Yard's Games, Red Sun Collectables and more ([full list](/stores/tracked)) — with **eBay UK** listings right alongside.
 - **Everything in pounds.** Prices display in GBP, ranked by **total delivered cost** including each store's postage and free-shipping threshold. When no UK shop stocks a card, we show TCGplayer's market price converted to GBP as an honest reference — clearly marked, never pretending to be a local listing.
 - **Daily updates + [price history](/movers)** on every card, so you can see the trend before you commit.
 - **Whole-deck pricing.** The [deck pricer](/deck) works out the cheapest way to buy an entire list across every UK store, consolidating postage.
@@ -3778,11 +4295,11 @@ Shopping from **[Australia](/blog/buy-riftbound-cards-australia)** or **[the US]
       { label: "Riftbound singles on eBay", query: "Riftbound singles" },
       { label: "Vendetta booster boxes", query: "Riftbound Vendetta booster box" },
     ],
-    body: `Looking to buy Riftbound cards in Canada? With 20 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
+    body: `Looking to buy Riftbound cards in Canada? With 19 Canadian stores now selling Riftbound singles — and prices that can swing 30-50% between them once shipping is counted — checking them all by hand isn't realistic. That's what RiftCompare does for you.
 
 ## Why Canadians use RiftCompare
 
-- **20 Canadian stores in one search.** We track live CAD prices at The Trading Card Shop, Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Black Knight Games, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games and Hobbiesville ([full list](/stores/tracked)).
+- **19 Canadian stores in one search.** We track live CAD prices at Face to Face Games, 401 Games, GT Games, Invasion Inc, Obsidian Games, Enter the Battlefield, Bento Gaming, Jack's On Queen, Banana Games & Hobby, Always Games, Derpy Cards, Empire Trading, Toy Snowman, Esper Cards & Games, Red Riot Games, Level Up Games, Danireon Cards & Games, Hobbiesville and KanZenGames ([full list](/stores/tracked)).
 - **Ranked by what you actually pay.** Every comparison ranks stores by total delivered cost, with each store's free-shipping threshold factored in automatically.
 - **Prices refresh daily** — and [price history charts](/movers) on every card show whether you're buying a spike or a dip.
 - **Whole-deck pricing.** The [deck pricer](/deck) takes a full 40-card list and works out the cheapest way to buy it across every store, consolidating orders to dodge multiple shipping charges.
@@ -5107,6 +5624,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
       "Origins through Vendetta, in release order, with the real card count for each — plus Radiance's confirmed date and where to check what's beyond it.",
     author: "RiftCompare",
     date: "2026-08-13",
+    updated: "2026-09-10",
     readMins: 5,
     tags: ["sets", "guide", "origins", "vendetta", "radiance"],
     hero: {
@@ -5171,7 +5689,7 @@ At 24 cards, Proving Grounds is by far the smallest Riftbound release to date �
 
 ## Spirit Forged and Unleashed
 
-The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from.
+The next two sets, Spirit Forged (SFD) and Unleashed (UNL), are similarly sized to each other: 221 and 219 base cards respectively, each with its own run of Showcase alternate printings (66 for Spirit Forged, 61 for Unleashed) on top. Between them they're the sets most current decks outside the newest formats are still built from. Both now have the same rarity, domain and card-type breakdown we wrote for Origins: [what's in the Spirit Forged set](/guides/whats-in-the-riftbound-spirit-forged-set) and [what's in the Unleashed set](/guides/whats-in-the-riftbound-unleashed-set).
 
 Unleashed is the one worth a closer look if you're buying rather than just cataloguing — two of the four most expensive cards in the game come out of it. Browse the whole set card-by-card, with live prices, on the [Unleashed set page](/sets/unleashed).
 
@@ -5197,6 +5715,7 @@ Every set gets its own page on RiftCompare the moment its cards are catalogued, 
       "298 base cards, 54 Showcase alternates, and exactly how they split across rarity, domain and card type — the real numbers from Riftbound's first and biggest set.",
     author: "RiftCompare",
     date: "2026-08-13",
+    updated: "2026-09-10",
     readMins: 6,
     tags: ["sets", "guide", "origins", "rarity", "collecting"],
     hero: {
@@ -5286,7 +5805,357 @@ Numbers are useful for planning a collection goal, but the fastest way to see wh
 
 [Browse the Origins set](/sets/origins) · [Origins card gallery](/sets/origins/gallery)
 
-If you're building toward a specific rarity or domain, the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) covers what separates a Showcase alternate from the base printing it comes from — worth reading before you go chasing one.`,
+If you're building toward a specific rarity or domain, the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) covers what separates a Showcase alternate from the base printing it comes from — worth reading before you go chasing one.
+
+We've written the same breakdown for the two sets that followed — [what's in Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) and [what's in Unleashed](/guides/whats-in-the-riftbound-unleashed-set) — so you can compare all three side by side.`,
+  },
+  {
+    slug: "whats-in-the-riftbound-spirit-forged-set",
+    category: "guide",
+    title: "What's in the Riftbound Spirit Forged Set?",
+    excerpt:
+      "221 base cards, 66 Showcase-tier printings and 12 Legends — exactly how Spirit Forged splits by rarity, domain and card type, counted from our own catalogue rather than estimated.",
+    author: "RiftCompare",
+    date: "2026-09-10",
+    readMins: 8,
+    tags: ["sets", "guide", "spirit forged", "spiritforged", "sfd", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/sfd-240-221-566fd852914c74f8.png",
+      alt: "Rumble, Mechanized Menace — a Showcase-rarity Legend from the Riftbound Spirit Forged set",
+    },
+    summary: [
+      "**221 base cards**, numbered 001/221 through 221/221 with no gaps — Riftbound's second full expansion, 77 cards smaller than Origins.",
+      "**Rarity splits 60 Common / 63 Uncommon / 60 Rare / 38 Epic** across the base set, plus 66 Showcase-tier printings on top, 12 of which are Signature versions.",
+      "**Units are 107 of the 221**, followed by Spells (45), Gear (42), Battlefields (15) and Legends (12) — Gear is a far bigger share here than it was in Origins.",
+      "**Calm is the largest domain at 40 cards**, Fury next at 38; Chaos and Order sit lowest of the six at 30 each, and Colorless adds 15. All twelve Legends are Fury, Calm, Mind or Body.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in the Riftbound Spirit Forged set?",
+        a: "221 base cards, numbered 001/221 through 221/221. On top of those, the set has 66 Showcase-tier printings (54 distinct cards, 12 of which also come as Signature versions), bringing the main print run to 287 printings. The set page on RiftCompare lists more than that because it also tracks promo and event printings.",
+      },
+      {
+        q: "What is the rarity breakdown of Spirit Forged?",
+        a: "60 Common, 63 Uncommon, 60 Rare and 38 Epic across the 221 base cards. Uncommon is the single biggest tier — unlike Origins, where Common led.",
+      },
+      {
+        q: "How many Legends are in Spirit Forged?",
+        a: "12, all printed at Rare: four Fury (Rumble, Lucian, Draven, Rek'Sai), four Calm (Ornn, Jax, Irelia, Azir), two Mind (Ezreal, Renata Glasc) and two Body (Sivir, Fiora). There are no Chaos or Order Legends in the set.",
+      },
+      {
+        q: "Which domain has the most cards in Spirit Forged?",
+        a: "Calm, with 40 of the 221 base cards. Fury has 38, Mind and Body 34 each, Chaos and Order 30 each, and Colorless 15.",
+      },
+      {
+        q: "Are there Signature cards in Spirit Forged?",
+        a: "Yes — 12. Unusually, they are not the Legends: the Signature versions are of the twelve over-numbered Showcase Units (223 to 239), such as Vayne, Hunter and Yasuo, Windrider, which carry the artist's signature on the art and a star in the collector number.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/spiritforged",
+      label: "Browse every Spirit Forged card →",
+      blurb: "All 221 base cards and every Showcase printing, with live prices across every store we track.",
+    },
+    body: `Spirit Forged (set code SFD) is Riftbound's second full expansion — the set that followed [Origins](/guides/whats-in-the-riftbound-origins-set) and, in most players' collections, the one that still supplies a good share of the Gear and cheap interaction their decks run. Here is exactly what's in it: not an estimate or a copied-around figure, but the real counts from our own catalogue, broken down the way a set list actually gets used — by rarity, by card type, by domain, and by what the premium printings on top of the base set actually are.
+
+## The headline number: 221 base cards
+
+Spirit Forged's collector numbers run from 001/221 to 221/221 with no gaps — a clean, complete base set of 221 cards. That is 77 fewer than Origins' 298 — the 24-card Proving Grounds aside, Spirit Forged is the first Riftbound set to come in smaller than the launch set — and it set the size that the next set, [Unleashed](/guides/whats-in-the-riftbound-unleashed-set), stayed close to at 219.
+
+On top of the base 221 there are **66 Showcase-tier printings**. They break down into three groups, and it's worth knowing the difference before you buy:
+
+- **24 Showcase versions of base-set cards** that keep their original collector number — every one of them a Unit. These are the premium treatment of a card that already exists in the base 221 (Draven, Vanquisher at 020/221 is a base-set Rare and also exists as a Showcase at the same number, for example).
+- **18 over-numbered Showcase cards** at 222/221 through 239/221 — twelve Units and six Gear cards. The six Gear are the "Seal of…" cycle (Seal of Rage, Seal of Focus, Seal of Insight, Seal of Strength, Seal of Discord and Seal of Unity), all of them Origins cards reprinted in a Showcase frame. The twelve Units mix more Origins reprints — Vayne, Hunter; Yasuo, Windrider; Darius, Executioner; Karma, Channeler and others — with Showcase versions of Spirit Forged's own Aphelios, Exalted, Bard, Mercurial, Yone, Blademaster and Soraka, Wanderer. All of them sit above the base total in the numbering, which is what "over-numbered" means.
+- **12 Showcase Legends** at 240/221 through 251/221 — one for each of the set's twelve Legends.
+
+All twelve of the over-numbered Showcase Units (223 through 239, skipping the Seals) also come as **Signature** printings, which carry the artist's signature on the art and a star after the collector number (223★/221 and so on). Counting those, the Showcase tier is 66 printings of 54 distinct cards, and the full main print run comes to **287 printings**. You'll see a higher total on our [Spirit Forged set page](/sets/spiritforged) because the catalogue also tracks promo and event printings, which sit outside the numbered run entirely.
+
+If any of those printing terms are new to you — Showcase, Signature, over-numbered — the [rarity and printings guide](/guides/understanding-riftbound-card-rarity) explains what each one is and which tend to hold value.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 60 |
+| Uncommon | 63 |
+| Rare | 60 |
+| Epic | 38 |
+| **Base total** | **221** |
+| Showcase-tier printings (incl. 12 Signature) | 66 |
+
+The shape is different from Origins, and the difference tells you something about how the set was built. In Origins, Common was the largest tier at 88 and Uncommon and Rare tied at 84. In Spirit Forged, **Uncommon is the biggest tier at 63**, with Common and Rare tied at 60 — the set is more evenly spread across its first three rarities than the launch set was, and Rares are almost as numerous as Commons. Practically, that means a "Rare" Spirit Forged card is not especially rare relative to the rest of its set, and the real scarcity in the set lives at Epic (38 cards, 17% of the base set) and in the Showcase tier above it.
+
+Every one of the 38 Epics is a Unit, Spell or Gear — none of the Battlefields or Legends print at Epic. By type, that is 15 Epic Units, 12 Epic Spells and 11 Epic Gear. By domain, Calm leads with 10 Epics, Fury has 8, Mind and Body 6 each, and Chaos and Order 4 each.
+
+## Card type breakdown
+
+| Type | Cards |
+| --- | --- |
+| Unit | 107 |
+| Spell | 45 |
+| Gear | 42 |
+| Battlefield | 15 |
+| Legend | 12 |
+
+Units are just under half the set at 107. The number that stands out is **Gear: 42 cards, nearly as many as Spells at 45**. Origins printed 30 Gear against 84 Spells — a 1-to-2.8 ratio — while Spirit Forged is almost 1-to-1. If your deck runs a lot of equipment, this is the set where most of it comes from.
+
+Two other things the type split shows: there are **no Runes** in Spirit Forged at all (Origins had 6), and every one of the 15 Battlefields is an Uncommon, so a complete Battlefield set from this expansion is cheap to put together.
+
+Here is how the two dimensions cross:
+
+| Type | Common | Uncommon | Rare | Epic |
+| --- | --- | --- | --- | --- |
+| Unit | 39 | 22 | 31 | 15 |
+| Spell | 14 | 14 | 5 | 12 |
+| Gear | 7 | 12 | 12 | 11 |
+| Battlefield | — | 15 | — | — |
+| Legend | — | — | 12 | — |
+
+Note the Spell row: only 5 Rare Spells but 12 Epic ones. Spirit Forged's Spells skew to the extremes — either cheap, common interaction or a headline Epic.
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Calm | 40 |
+| Fury | 38 |
+| Mind | 34 |
+| Body | 34 |
+| Chaos | 30 |
+| Order | 30 |
+| Colorless | 15 |
+
+The six domains are deliberately paired — Calm and Fury at the top, Mind and Body in the middle, Chaos and Order at the bottom — with Colorless (usable in any deck) adding 15. Compared with Origins, where Fury and Calm tied at 49 and Colorless had 28, Spirit Forged gives every domain fewer cards but keeps the same ordering, with Calm edging ahead of Fury by two. If you're building toward a single domain, expect roughly 30 to 40 on-domain cards from this set, plus the 15 Colorless.
+
+## The twelve Legends
+
+Every Legend in Spirit Forged is a Rare, and there are exactly twelve — the same count as Origins. What is different is the domain spread: **four Fury, four Calm, two Mind, two Body, and none at all for Chaos or Order**. If you play a Chaos or Order Legend, your champion comes from another set.
+
+| # | Legend | Domain |
+| --- | --- | --- |
+| 181 | [Rumble, Mechanized Menace](/card/rumble-mechanized-menace-sfd-181-221) | Fury |
+| 183 | [Lucian, Purifier](/card/lucian-purifier-sfd-183-221) | Fury |
+| 185 | [Draven, Glorious Executioner](/card/draven-glorious-executioner-sfd-185-221) | Fury |
+| 187 | [Rek'Sai, Void Burrower](/card/rek-sai-void-burrower-sfd-187-221) | Fury |
+| 189 | [Ornn, Fire Below the Mountain](/card/ornn-fire-below-the-mountain-sfd-189-221) | Calm |
+| 193 | [Jax, Grandmaster at Arms](/card/jax-grandmaster-at-arms-sfd-193-221) | Calm |
+| 195 | [Irelia, Blade Dancer](/card/irelia-blade-dancer-sfd-195-221) | Calm |
+| 197 | [Azir, Emperor of the Sands](/card/azir-emperor-of-the-sands-sfd-197-221) | Calm |
+| 199 | [Ezreal, Prodigal Explorer](/card/ezreal-prodigal-explorer-sfd-199-221) | Mind |
+| 201 | [Renata Glasc, Chem-Baroness](/card/renata-glasc-chem-baroness-sfd-201-221) | Mind |
+| 203 | [Sivir, Battle Mistress](/card/sivir-battle-mistress-sfd-203-221) | Body |
+| 205 | [Fiora, Grand Duelist](/card/fiora-grand-duelist-sfd-205-221) | Body |
+
+Each of these twelve also has a Showcase printing at 240 to 251 — Rumble at 240, Lucian at 241, and so on in the same order. Every champion here has a hub page that gathers all of their printings across every set with live prices — [Rumble](/champions/rumble), [Lucian](/champions/lucian), [Draven](/champions/draven), [Rek'Sai](/champions/rek-sai), [Ornn](/champions/ornn), [Jax](/champions/jax), [Irelia](/champions/irelia), [Azir](/champions/azir), [Ezreal](/champions/ezreal), [Renata Glasc](/champions/renata-glasc), [Sivir](/champions/sivir) and [Fiora](/champions/fiora) — which is the fastest way to see how a Legend's base, Showcase and any promo printings are priced against each other.
+
+The same twelve champions also get most of the in-numbered Showcase treatment: of the 24 base-set Units with a Showcase version, all 24 are champion Units — two apiece for the set's Legends (Draven, Vanquisher and Draven, Audacious; Ornn, Blacksmith and Ornn, Forge God; Irelia, Fervent and Irelia, Graceful, and so on).
+
+## The cost curve
+
+Because our catalogue stores each card's printed energy cost, we can also show what the set's curve actually looks like. Across the 194 base-set Units, Spells and Gear (Legends and Battlefields don't have a cost):
+
+| Energy cost | Cards |
+| --- | --- |
+| 0–1 | 19 |
+| 2 | 51 |
+| 3 | 47 |
+| 4 | 34 |
+| 5 | 19 |
+| 6 | 12 |
+| 7 | 8 |
+| 8+ | 4 |
+
+**36% of the set's costed cards cost 2 or less**, the single most common cost is 2, and the average across the set is about 3.4 energy. The expensive end is thin: three cards at 8 energy and one at 10 — Needlessly Large Yordle, a Calm Rare Unit — and that's it. Among Units specifically, the most common might value is 3 (29 Units), then 4 (28); the top of the range is Trove Golem, an Order Rare at 9 might.
+
+## What this means if you're collecting or buying
+
+A few practical takeaways from the numbers:
+
+- **A complete base set is 221 cards**, and 183 of them are Common, Uncommon or Rare. Given how evenly those three tiers are printed, the bulk of a Spirit Forged set is inexpensive to finish with singles — the cost is concentrated in the 38 Epics and the Showcase tier. Drop your want list into the [bulk pricer](/bulk-pricer) and it will total the whole thing at the cheapest live price per card.
+- **The Showcase tier is really three different things**, and they price very differently: a Showcase of a base-set card, an over-numbered Showcase reprint from Origins, and a Signature. Check which one you're looking at — the collector number tells you — before comparing two listings. The [Signature printings](/cards/printing/signature) and [over-numbered printings](/cards/printing/overnumbered) pages list every one across all sets.
+- **Gear is the set's signature contribution.** With 42 Gear cards, Spirit Forged has more equipment than any other single dimension of the set would suggest, and it's the set to check first when a deck's Gear slots need filling — the [Gear card list](/cards/type/gear) covers every set, sortable by price.
+- **Prices move when new sets land.** Radiance is the next set to release, and set launches are exactly when an older set's staples get re-evaluated. The [price movers page](/movers) shows what's shifting day to day, and a [price alert](/alerts) on a card you're watching tells you the moment it moves.
+
+## See the actual cards
+
+Counts are useful for planning a collection goal, but the fastest way to see what's actually printed is to browse the set itself: every Spirit Forged card, its live price across every store we track in your market, and its full rules text.
+
+[Browse the Spirit Forged set](/sets/spiritforged) · [Spirit Forged card gallery](/sets/spiritforged/gallery)
+
+For the sets on either side of it, we've written the same breakdown for [Origins](/guides/whats-in-the-riftbound-origins-set) and [Unleashed](/guides/whats-in-the-riftbound-unleashed-set), and [every Riftbound set in order](/guides/riftbound-sets-in-order) has the full release sequence, including what's coming next.`,
+  },
+  {
+    slug: "whats-in-the-riftbound-unleashed-set",
+    category: "guide",
+    title: "What's in the Riftbound Unleashed Set?",
+    excerpt:
+      "219 base cards, 61 Showcase-tier printings and 12 Legends — the real rarity, domain and card-type breakdown of Riftbound's Unleashed set, counted from our own catalogue.",
+    author: "RiftCompare",
+    date: "2026-09-10",
+    readMins: 8,
+    tags: ["sets", "guide", "unleashed", "unl", "rarity", "collecting"],
+    hero: {
+      src: "https://cdn.riftscribe.gg/cards/originals/unl-226-219-83304d9a6f157642.png",
+      alt: "Jhin, Virtuoso — a Showcase-rarity Legend from the Riftbound Unleashed set",
+    },
+    summary: [
+      "**219 base cards**, numbered 001/219 through 219/219 with no gaps — two fewer than Spirit Forged and the smallest full set before Vendetta.",
+      "**Rarity splits 60 Common / 63 Uncommon / 60 Rare / 36 Epic** across the base set, plus 61 Showcase-tier printings on top, 12 of which are Signature Legends.",
+      "**Units are 119 of the 219** — more than half — followed by Spells (54), Gear (19), Battlefields (15) and Legends (12).",
+      "**Fury and Calm tie for the largest domain at 38 cards each**; Chaos and Order sit at 30 each, Colorless adds 15, and again no Legend is Chaos or Order.",
+    ],
+    faq: [
+      {
+        q: "How many cards are in the Riftbound Unleashed set?",
+        a: "219 base cards, numbered 001/219 through 219/219. On top of those there are 61 Showcase-tier printings (49 distinct cards, 12 of which are Signature versions of the Legends), for a main print run of 280 printings. The RiftCompare set page lists more because it also tracks promo and event printings.",
+      },
+      {
+        q: "What is the rarity breakdown of Unleashed?",
+        a: "60 Common, 63 Uncommon, 60 Rare and 36 Epic across the 219 base cards — almost identical to Spirit Forged, which has the same 60/63/60 split with two more Epics.",
+      },
+      {
+        q: "How many Legends are in Unleashed?",
+        a: "12, all Rare: four Fury (Jhin, Rengar, Pyke, Vi), four Calm (Lillia, Master Yi, Vex, Ivern), two Mind (Diana, LeBlanc) and two Body (Kha'Zix, Poppy). Each has a Showcase printing and a Signature printing above the base numbering.",
+      },
+      {
+        q: "Which domain has the most cards in Unleashed?",
+        a: "Fury and Calm are tied at 38 of the 219 base cards each. Mind and Body have 34 each, Chaos and Order 30 each, and Colorless 15.",
+      },
+      {
+        q: "What are the Poro cards in Unleashed?",
+        a: "Six over-numbered Showcase Units at 220/219 through 225/219 — Pouty Poro, Lonely Poro, Plundering Poro, Veteran Poro, Mystic Poro and Daring Poro. None is a base-set Unleashed card: three are Origins Poros and three are Spirit Forged Poros, reprinted in a Showcase frame inside Unleashed's numbering.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/unleashed",
+      label: "Browse every Unleashed card →",
+      blurb: "All 219 base cards and every Showcase printing, with live prices across every store we track.",
+    },
+    body: `Unleashed (set code UNL) is Riftbound's third full expansion, the one between [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set) and Vendetta. It is also the set that, at the time of writing, supplies more of the game's most expensive cards than its size would suggest, which makes knowing exactly what's in it more useful than for most sets. What follows is the real breakdown from our own catalogue — by rarity, card type and domain, plus a full accounting of the Showcase and Signature printings above the base set — rather than a figure copied from somewhere else.
+
+## The headline number: 219 base cards
+
+Unleashed's collector numbers run from 001/219 to 219/219 with no gaps: a complete base set of 219 cards. That's two fewer than Spirit Forged's 221, and well under the 298 of [Origins](/guides/whats-in-the-riftbound-origins-set). Riot's sets settled at this size for two releases before Vendetta dropped to 166.
+
+Above the base 219 there are **61 Showcase-tier printings**, and, as with Spirit Forged, they're three different kinds of card:
+
+- **30 Showcase versions of base-set cards** that keep their original collector number. All 30 are Units, and every one is a champion or a jungle monster you'll recognise — Jhin, Murderous Artist (022), Vi, Hotheaded (030), Elder Dragon (118), Baron Nashor (147), Rift Herald (179) and so on.
+- **7 over-numbered Showcase Units** at 220/219 through 225/219 and 238/219. The first six are the Poro cycle — Pouty Poro, Lonely Poro, Plundering Poro, Veteran Poro, Mystic Poro and Daring Poro — and none of them is a base-set Unleashed card: three are Origins Poros and three are Spirit Forged Poros, given a Showcase frame and slotted into this set's numbering. The seventh, at 238, is a second Showcase printing of Baron Nashor, which already has one at its base number 147.
+- **12 Showcase Legends** at 226/219 through 237/219, one per Legend, each of which also comes as a **Signature** printing with the artist's signature on the art and a star in the collector number.
+
+That's 61 printings of 49 distinct cards, and a full main print run of **280 printings**. Our [Unleashed set page](/sets/unleashed) counts higher because it also tracks promo and event printings, which sit outside the numbered run.
+
+The important difference from Spirit Forged: there, the twelve Signatures were over-numbered Showcase Units. In Unleashed, **the Signatures are the Legends**. If you're chasing a signed card from this set, it's a champion card, and the [Signature printings page](/cards/printing/signature) lists all of them with live prices.
+
+## Rarity breakdown
+
+| Rarity | Cards |
+| --- | --- |
+| Common | 60 |
+| Uncommon | 63 |
+| Rare | 60 |
+| Epic | 36 |
+| **Base total** | **219** |
+| Showcase-tier printings (incl. 12 Signature) | 61 |
+
+The split is almost a copy of Spirit Forged's — the same 60 Common, 63 Uncommon and 60 Rare, with 36 Epics instead of 38 — so if you know one set's shape you know the other's. Uncommon is again the largest tier, and Rare is printed in exactly the same numbers as Common, which is the main reason a Rare from either set is rarely a difficult pickup on its own.
+
+Where Unleashed differs is what its Epics are. **23 of the 36 Epics are Units** (Spirit Forged had 15), with 10 Epic Spells and only 3 Epic Gear. By domain, Fury and Calm have 8 Epics each, Mind and Body 6, and Chaos and Order 4 — the same ordering as the set overall.
+
+## Card type breakdown
+
+| Type | Cards |
+| --- | --- |
+| Unit | 119 |
+| Spell | 54 |
+| Gear | 19 |
+| Battlefield | 15 |
+| Legend | 12 |
+
+This is the most Unit-heavy set of the three: **119 of 219 cards, or 54%, are Units**, against 48% in Origins and 48% in Spirit Forged. The trade-off is Gear, which falls to 19 cards from Spirit Forged's 42 — less than half. If a deck wants equipment it looks to Spirit Forged; if it wants bodies, it looks here.
+
+As in Spirit Forged there are no Runes, and the 15 Battlefields are all Uncommon.
+
+| Type | Common | Uncommon | Rare | Epic |
+| --- | --- | --- | --- | --- |
+| Unit | 39 | 23 | 34 | 23 |
+| Spell | 18 | 17 | 9 | 10 |
+| Gear | 3 | 8 | 5 | 3 |
+| Battlefield | — | 15 | — | — |
+| Legend | — | — | 12 | — |
+
+## Domain breakdown
+
+| Domain | Cards |
+| --- | --- |
+| Fury | 38 |
+| Calm | 38 |
+| Mind | 34 |
+| Body | 34 |
+| Chaos | 30 |
+| Order | 30 |
+| Colorless | 15 |
+
+Perfectly paired: Fury and Calm at 38, Mind and Body at 34, Chaos and Order at 30, plus 15 Colorless. It's the same tiering as Spirit Forged with two cards moved from Calm to Fury, and the same as Origins in ordering if not in size. A single-domain build gets 30 to 38 on-domain cards from Unleashed plus the 15 Colorless.
+
+## The twelve Legends
+
+All twelve Unleashed Legends are Rare, and the domain spread repeats Spirit Forged's exactly — **four Fury, four Calm, two Mind, two Body, and no Chaos or Order Legend**. Between the two sets that's 24 Legends and not one for Chaos or Order; those domains' champions come from Origins and Vendetta.
+
+| # | Legend | Domain |
+| --- | --- | --- |
+| 181 | [Jhin, Virtuoso](/card/jhin-virtuoso-unl-181-219) | Fury |
+| 183 | [Rengar, Pridestalker](/card/rengar-pridestalker-unl-183-219) | Fury |
+| 185 | [Pyke, Bloodharbor Ripper](/card/pyke-bloodharbor-ripper-unl-185-219) | Fury |
+| 187 | [Vi, Piltover Enforcer](/card/vi-piltover-enforcer-unl-187-219) | Fury |
+| 189 | [Lillia, Bashful Bloom](/card/lillia-bashful-bloom-unl-189-219) | Calm |
+| 191 | [Master Yi, Wuju Master](/card/master-yi-wuju-master-unl-191-219) | Calm |
+| 193 | [Vex, Gloomist](/card/vex-gloomist-unl-193-219) | Calm |
+| 195 | [Ivern, Green Father](/card/ivern-green-father-unl-195-219) | Calm |
+| 197 | [Diana, Scorn of the Moon](/card/diana-scorn-of-the-moon-unl-197-219) | Mind |
+| 199 | [LeBlanc, Deceiver](/card/leblanc-deceiver-unl-199-219) | Mind |
+| 201 | [Kha'Zix, Voidreaver](/card/kha-zix-voidreaver-unl-201-219) | Body |
+| 203 | [Poppy, Keeper of the Hammer](/card/poppy-keeper-of-the-hammer-unl-203-219) | Body |
+
+Each Legend's Showcase printing sits at 226 to 237 in the same order (Jhin at 226, Rengar at 227, through Poppy at 237), and each of those twelve numbers also exists as a Signature. Every champion has a hub page collecting all of their printings across every set with live prices — [Jhin](/champions/jhin), [Rengar](/champions/rengar), [Pyke](/champions/pyke), [Vi](/champions/vi), [Lillia](/champions/lillia), [Master Yi](/champions/master-yi), [Vex](/champions/vex), [Ivern](/champions/ivern), [Diana](/champions/diana), [LeBlanc](/champions/leblanc), [Kha'Zix](/champions/kha-zix) and [Poppy](/champions/poppy).
+
+The in-numbered Showcase Units follow the same champions: two apiece for the Legends (Jhin, Murderous Artist and Jhin, Meticulous Killer; Vi, Hotheaded and Vi, Peacekeeper; Poppy, Paragon and Poppy, Defender of the Meek, and so on), plus the six jungle monsters — Red Brambleback, Blue Sentinel, Vilemaw, Elder Dragon, Baron Nashor and Rift Herald.
+
+## The cost curve
+
+Our catalogue stores each card's printed energy cost, so here is the set's real curve across the 192 base-set Units, Spells and Gear (Legends and Battlefields have no cost):
+
+| Energy cost | Cards |
+| --- | --- |
+| 1 | 12 |
+| 2 | 49 |
+| 3 | 43 |
+| 4 | 31 |
+| 5 | 27 |
+| 6 | 15 |
+| 7 | 5 |
+| 8–10 | 8 |
+| 12 | 2 |
+
+Unleashed runs noticeably heavier than Spirit Forged. **32% of costed cards are at 2 or less** (Spirit Forged: 36%), the average cost is about 3.7 energy against 3.4, and the top end is where the set really separates itself: two 12-energy cards — Elder Dragon and Master Yi, Unstoppable, both Epic — plus two at 10 (Baron Nashor and Atakhan). Spirit Forged's most expensive card costs 10. Among Units, 3 might is the most common value (27 Units), but the ceiling is 12 might, reached by both Baron Nashor and Master Yi, Unstoppable; the biggest Unit in Spirit Forged tops out at 9.
+
+That top end is a big part of why Unleashed shows up in the [most expensive Riftbound cards](/blog/most-expensive-riftbound-cards) list more than its 219-card size would predict.
+
+## What this means if you're collecting or buying
+
+- **A complete base set is 219 cards, 183 of them Common, Uncommon or Rare.** Those three tiers are printed evenly, so finishing them with singles is cheap; the cost of a full set is concentrated in the 36 Epics and the Showcase tier. The [bulk pricer](/bulk-pricer) will total a whole want list at the cheapest live price per card.
+- **Know which Showcase you're buying.** A Showcase of a base card, an over-numbered Poro reprint and a Signature Legend are three different products with very different prices, and only the collector number distinguishes them on a listing. The [rarity and printings guide](/guides/understanding-riftbound-card-rarity) walks through each.
+- **The Signatures are champion cards here.** Twelve signed Legends, one per champion, at 226★ through 237★ — if you're going to chase one, the champion hubs above show every printing of that champion side by side so you can see what the signed version costs relative to the base and Showcase.
+- **Unleashed is Unit-heavy and top-heavy.** If you're buying for a deck rather than a binder, this is the set for big bodies and Epic Units; if you need Gear, look at Spirit Forged first. The [Unit card list](/cards/type/unit) and the [Epic card list](/cards/rarity/epic) both cover every set, sortable by price.
+- **Watch the launch windows.** A new set moves an old one's prices in both directions, and Radiance is next. The [price movers page](/movers) shows what's shifting each day, and a [price alert](/alerts) on any card tells you when it does.
+
+## See the actual cards
+
+The numbers are the plan; the set page is the cards. Every Unleashed card, its live price across every store we track in your market, and its full rules text:
+
+[Browse the Unleashed set](/sets/unleashed) · [Unleashed card gallery](/sets/unleashed/gallery)
+
+We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origins-set) and [Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set), and [every Riftbound set in order](/guides/riftbound-sets-in-order) has the full release sequence, including what's coming next.`,
   },
   {
     slug: "riftbound-card-condition-guide",
@@ -6155,7 +7024,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare Premium is $14.99/mo or $119.99/yr** (works out to about $10/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
+      "**RiftCompare Premium is $9.99/mo or $79.99/yr** (works out to about $6.67/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
       "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
@@ -6169,7 +7038,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "$14.99/month, or $119.99/year if you pay annually (about $10/month, a 33% saving versus paying monthly — $179.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+        a: "$9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
@@ -6213,7 +7082,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $14.99/mo (or $119.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
+Short version: Premium is $9.99/mo (or $79.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
 
 ## How much does RiftCompare Premium cost?
 
@@ -6221,8 +7090,8 @@ Short version: Premium is $14.99/mo (or $119.99/yr), and it unlocks five tools y
 
 | Plan | Price | Works out to | Trial |
 | --- | --- | --- | --- |
-| Monthly | $14.99/month | $14.99/month | 14 days free |
-| Annual | $119.99/year | ≈ $10/month (**33% off**, vs $179.88/yr paying monthly) | 14 days free |
+| Monthly | $9.99/month | $9.99/month | 14 days free |
+| Annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 14 days free |
 
 Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch.
 

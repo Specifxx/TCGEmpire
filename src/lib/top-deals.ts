@@ -83,6 +83,13 @@ export type TopDeals = {
   // every visitor almost every day (there are usually well over 4). The
   // homepage teaser reads this field instead — see TodaysTopDeals.tsx.
   savingsVsMarketTotal: number;
+  // Sum of savingCents across EVERY qualifying deal (getEbayCheapest's own
+  // savingsTotalCents), not just this feed's perType-capped slice. Powers the
+  // Premium "$X in savings on the board" proof line on /premium and the
+  // slide-in (see api/premium/proof/route.ts). `?? 0` at every read site — a
+  // TopDeals object served from the 1h unstable_cache from before this field
+  // existed won't have it for up to an hour after deploy.
+  savingsVsMarketCents: number;
   priceDrops: Deal[]; // free
   cheapestSealed: Deal[]; // free
   risingCards: Deal[]; // PREMIUM
@@ -96,7 +103,7 @@ const sub = (c: { setCode: string; collectorNumber: string }) => `${c.setCode} �
 
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
   const [savings, priceDrops, cheapestSealed, rising] = await Promise.all([
-    (async (): Promise<{ deals: Deal[]; total: number }> => {
+    (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
       try {
         // "pct", not "saving" (raw dollar amount) — sorting this homepage
         // feed by absolute savings let a four-figure chase card's modest
@@ -109,7 +116,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         // left to interleave. Sorting by percentage upstream fixes that at
         // the source: /tools/deal-finder (the "All opportunities" link this
         // column points to) still defaults to its own sort, unaffected.
-        const { items, total } = await getEbayCheapest(country, "pct", 1, perType);
+        const { items, total, savingsTotalCents } = await getEbayCheapest(country, "pct", 1, perType);
         const deals = items.map((it) => ({
           dealType: "savings-vs-market" as const,
           title: it.card.name,
@@ -125,9 +132,9 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           note: `vs ${it.storeName}`,
           card: it.card,
         }));
-        return { deals, total };
+        return { deals, total, savingsTotalCents };
       } catch {
-        return { deals: [], total: 0 };
+        return { deals: [], total: 0, savingsTotalCents: 0 };
       }
     })(),
     (async (): Promise<Deal[]> => {
@@ -250,6 +257,7 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   return {
     savingsVsMarket: savings.deals,
     savingsVsMarketTotal: savings.total,
+    savingsVsMarketCents: savings.savingsTotalCents,
     priceDrops,
     cheapestSealed,
     risingCards: rising.deals,

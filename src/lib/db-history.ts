@@ -25,25 +25,21 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// RH8 is the CURRENT history project — cut over 2026-09-06, hours after RH6
-// (below) took the same slot: RH8 had been entirely removed from Vercel and
-// GitHub Actions since its own 2026-08-23..08-25 term, then was re-added, and
-// migrate-history-db-rh6-to-rh8 (.github/workflows/maintenance.yml) moved
-// history back onto it — a full pg_dump/restore of RH6, row-count verified,
-// TRUNCATE-then-restore over whatever RH8 held from its prior term.
+// RH9 is the CURRENT history project — cut over 2026-09-09, once RH8 (below)
+// neared its own 5 GB monthly transfer allowance after about three days live.
+// RH9 is a RECYCLED name: its own prior term ran 2026-08-25..08-28, before
+// RH10 replaced it. migrate-history-db-rh8-to-rh9
+// (.github/workflows/maintenance.yml) moved history onto it — a full
+// pg_dump/restore of RH8, row-count verified (Card=1,434, ClickEvent=698,
+// PriceHistory=421,178, every count matching exactly), TRUNCATE-then-restore
+// over the real (if outdated) numbers RH9 held from its own prior term
+// (Card=1,434, ClickEvent=698, PriceHistory=336,656 — not zeroes, confirming
+// it really was a recycled project and not a freshly re-added empty one).
 //
-// RH6's OWN STINT IN THIS SLOT WAS HOURS LONG. Earlier the same day, RH7
-// (serving since 2026-09-04) exceeded its 5 GB monthly network-transfer
-// allowance after only two days, and with RH8-RH11 all unset at that moment,
-// history fell back to RH6 — the immediately preceding project (its own most
-// recent term ran 2026-09-02..09-04, taking over from RH11) — via the
-// ADDITIVE `migrate-history` task, not a destructive dump/restore: RH6 predates
-// the 2026-09-05 GLOBAL-history migration (see below) and held zero
-// country="GLOBAL" rows on its own, so migrate-history folded RH7's current
-// GLOBAL series into RH6 without touching RH6's older per-market rows. That
-// same additive run also pulled RH8's own old rows into RH6, which is exactly
-// what made the RH6 -> RH8 pg_dump/restore safe a few hours later: RH6 was
-// already carrying a strict superset of everything RH8 held.
+// RH8's OWN STINT IN THIS SLOT RAN 2026-09-06..09-09. It was cut over from
+// RH6 hours after an earlier RH7-exhaustion fallback that same day — see git
+// history for the long account of that cutover, which is what first carried
+// the GLOBAL-history series (below) onto RH8.
 //
 // (RH11 replaced RH10, which served from 2026-08-28; RH10 replaced RH9, which
 // served from 2026-08-25; RH9 replaced RH8's FIRST term, which served from
@@ -55,20 +51,20 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Read the head as "in service
 // today", never as a timeline — several rotations went BACKWARDS onto recycled
-// names (_2, _3, _4 are among the oldest in the list, and RH6/RH7/RH8 have all
-// now cycled through more than once) because Neon's caps are per project per
-// month, so a long-retired project has a fully reset allowance.
+// names (_2, _3, _4 are among the oldest in the list, and RH6/RH7/RH8/RH9 have
+// all now cycled through more than once) because Neon's caps are per project
+// per month, so a long-retired project has a fully reset allowance.
 //
-// THE GLOBAL-HISTORY MIGRATION, AND WHY IT STILL MATTERS FOR RH8 SPECIFICALLY:
+// THE GLOBAL-HISTORY MIGRATION, AND WHY IT STILL MATTERS FOR RH9 SPECIFICALLY:
 // 2026-09-05 shipped a separate migration (scripts/backfill-global-history.ts,
 // price-import.ts) collapsing every market's PriceHistory rows into one
 // country="GLOBAL" row per card per day — historySource() in price-history.ts
-// now ALWAYS reads country=GLOBAL, unconditionally. RH8's own last term
-// (2026-08-23..08-25) predates that migration and never held a single GLOBAL
-// row on its own; the pg_dump/restore FROM RH6 is what actually carries the
-// GLOBAL series onto RH8 here. Recycling RH8 straight from its own old contents
-// (skipping the RH6 detour) would have hit the exact same "site-wide empty
-// chart" trap RH6 itself needed rescuing from — see the long note on
+// now ALWAYS reads country=GLOBAL, unconditionally. RH9's own prior term
+// (2026-08-25..08-28) predates that migration and never held a single GLOBAL
+// row on its own; the pg_dump/restore FROM RH8 is what actually carries the
+// GLOBAL series onto RH9 here. Recycling RH9 straight from its own old contents
+// would have hit the exact same "site-wide empty chart" trap RH6 itself needed
+// rescuing from during the RH7-exhaustion fallback — see the long note on
 // HISTORY_VARS in src/lib/db-chains.ts for the full account.
 //
 // A recycled name carries a trap: the older vars are also migration SOURCES in
@@ -77,7 +73,7 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // matching. Verify any pg_dump-based step pins its SOURCE explicitly, never a
 // fallback chain that could resolve back to the target itself.
 //
-// FIFTEEN PROJECT-TERMS IN JUST OVER FIVE WEEKS IS A READ-PATTERN PROBLEM, NOT
+// SIXTEEN PROJECT-TERMS IN UNDER SIX WEEKS IS A READ-PATTERN PROBLEM, NOT
 // A CAPACITY ONE — and this rotation is another data point, not a new one. A
 // recycled project still buys only a couple of days at the current burn rate
 // if the read pattern hasn't actually improved, so treat the next exhaustion as
@@ -91,7 +87,7 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // next offender, and measuring it (scripts/audit-egress.ts) beats a sixteenth
 // project.
 //
-// RH6 is kept as the rollback fallback and every older var below it is a
+// RH8 is kept as the rollback fallback and every older var below it is a
 // read-only fallback/migration source; treat them as dead, never the primary
 // target.
 //
@@ -117,13 +113,12 @@ export const HISTORY_URL_SOURCE =
     ? "DATABASE_URL (no history project set — history shares the operational DB)"
     : resolveVar(HISTORY_VARS)!;
 
-if (HISTORY_URL_SOURCE !== "RH8") {
+if (HISTORY_URL_SOURCE !== "RH9") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH8 — the current ` +
-      `history project is missing from this environment. RH6 is the rollback (holds the ` +
-      `same GLOBAL series, folded in additively during the same day's earlier RH7 ` +
-      `exhaustion); RH7/RH5/_2/_3/_4 are spent or retired. Expect P1001 or writes landing ` +
-      `in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not RH9 — the current ` +
+      `history project is missing from this environment. RH8 is the rollback (holds the ` +
+      `same GLOBAL series via a row-count-verified pg_dump/restore); RH7/RH6/RH5/_2/_3/_4 ` +
+      `are spent or retired. Expect P1001 or writes landing in the wrong place.`
   );
 }
 

@@ -4,7 +4,10 @@ import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const SOURCES = new Set(["dialog", "checkout", "premium-page", "button"]);
+// "recovery" = arrived via the abandoned-checkout email; "offer" = arrived via
+// the one-off Premium offer email (lib/premium-offer.ts). Both let /admin/premium
+// show which email brought someone back before they convert.
+const SOURCES = new Set(["dialog", "checkout", "premium-page", "button", "recovery", "offer"]);
 
 // Premium-interest beacon: records that someone clicked a Premium CTA (opened the
 // upsell dialog, etc.) so the admin can see who's interested before they convert.

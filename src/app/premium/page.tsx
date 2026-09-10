@@ -13,6 +13,7 @@ import {
 import { PremiumCta } from "@/components/PremiumCta";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { AnnualPriceBlock } from "@/components/AnnualPriceBlock";
+import { TrialPriceBlock } from "@/components/TrialPriceBlock";
 import { TierComparisonTable } from "@/components/TierComparisonTable";
 import {
   SITE_URL,
@@ -22,14 +23,23 @@ import {
   PREMIUM_NEXT_PRICE_AMOUNT,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
+  premiumFromLine,
+  premiumZeroToday,
 } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { getCountry } from "@/lib/get-country";
+import { getCachedTopDeals } from "@/lib/top-deals";
+import { getUndervalued } from "@/lib/screener";
+import { formatMoneyCompact } from "@/lib/format";
+import { currencyOf } from "@/lib/country";
+import { faqPage, ldJson } from "@/lib/jsonld";
+import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "RiftCompare Premium — power tools for buyers & sellers",
+  title: "RiftCompare Premium — get an unfair edge buying and selling",
   description: "RiftCompare Premium: the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Demand Finder, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),
 };
@@ -106,6 +116,45 @@ const INCLUDED = [
 // account never disagree on how a date reads.
 const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
+// Objection-handling FAQ — this page had none, despite carrying the checkout
+// decision every other tool/blog FAQ on the site defers to. Every answer is
+// built from the SAME site.ts/premium.ts constants the rest of this page uses
+// (PREMIUM_TRIAL_DAYS, premiumLockInLine, the real price strings) rather than
+// a second hand-typed copy of them, so a price or trial-length change can't
+// leave this FAQ quietly wrong the way PITCH_TOOLS's own header comment warns
+// a duplicated list eventually does. Rendered visibly AND as FAQPage JSON-LD —
+// Google only honours the schema when the same Q&A is on the page too.
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "What's free vs what needs Premium?",
+    a: "Price comparison, the deck builder, trade calculator, box EV and a free account's alerts, watchlist and portfolio are free for everyone. Premium adds the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Rising Sealed, Demand Finder, the full Deal Finder list and an ad-free site.",
+  },
+  {
+    q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
+    a: `Start the trial and every Premium tool unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} (or the annual rate, if you chose that plan) unless you cancel first.`,
+  },
+  {
+    q: "What happens when the trial ends?",
+    a: `If you haven't cancelled, the card on file is charged and your subscription continues automatically at whichever plan you chose — ${premiumFromLine()}. You'll get an email reminder before it converts.`,
+  },
+  {
+    q: "How do I cancel?",
+    a: "From this page, use \"Manage subscription\" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for (or, during a trial, until it ends).",
+  },
+  {
+    q: "Does my price ever go up?",
+    a: premiumLockInLine(),
+  },
+  {
+    q: "Monthly or annual — what's the difference?",
+    a: `Same tools either way. Monthly is ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} with no commitment; annual is ${PREMIUM_ANNUAL_AMOUNT}/yr, billed once a year, which works out cheaper per month. Switch from monthly to annual anytime from your account.`,
+  },
+  {
+    q: "Is Premium worth it?",
+    a: "Deal Finder and Value Finder alone routinely surface savings worth more than a month's subscription — see the live numbers above. If you buy or sell more than the occasional single card, the pro tools tend to pay for themselves.",
+  },
+];
+
 export default async function PremiumPage() {
   const user = await getCurrentUser();
   const already = isPremium(user);
@@ -114,7 +163,15 @@ export default async function PremiumPage() {
     ? await prisma.user.findUnique({ where: { id: user.id }, select: { trialStartedAt: true, stripeCustomerId: true } })
     : null;
   const trialEligible = premiumTrialEnabled() && !!user && !already && !dbUser?.trialStartedAt;
-  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "14.99";
+  // A brand-new account has, by definition, never started a trial before — so
+  // unlike trialEligible (which requires a signed-in user to check their own
+  // trialStartedAt), a signed-out visitor is trial-available on the strength
+  // of premiumTrialEnabled() alone (same reasoning SignupPromoPopup.tsx's own
+  // trialAvailable documents). Used to decide the pricing-card headline and
+  // the signed-out CTA copy; trialEligible still gates the actual checkout
+  // flow once someone is signed in.
+  const trialAvailable = premiumTrialEnabled() && !already && (!user || !dbUser?.trialStartedAt);
+  const priceNumeric = PREMIUM_PRICE_AMOUNT.replace(/[^0-9.]/g, "") || "9.99";
   const compactPrice = `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD === "month" ? "mo" : PREMIUM_PRICE_PERIOD}`;
   const annualLive = premiumAnnualEnabled();
   const annualCompact = `${PREMIUM_ANNUAL_AMOUNT}/yr`;
@@ -124,26 +181,52 @@ export default async function PremiumPage() {
   // one is a Premium user's own account and must show a trial truthfully too).
   const subDetails = already && dbUser?.stripeCustomerId ? await getPremiumSubscriptionDetails(dbUser.stripeCustomerId) : null;
 
+  // Live value-proof numbers for the strip below the pricing cards — the SAME
+  // 1h-cached feed the homepage already reads (getCachedTopDeals) plus the
+  // Value Finder screener's own 48h-cached scan, so this page costs nothing
+  // extra beyond what's already warm. allSettled: either source failing must
+  // never take the whole page down over a nice-to-have proof strip.
+  const country = getCountry();
+  const [dealsResult, undervaluedResult] = await Promise.allSettled([
+    getCachedTopDeals(country),
+    getUndervalued(country, 100),
+  ]);
+  const dealsData = dealsResult.status === "fulfilled" ? dealsResult.value : null;
+  const undervaluedCount = undervaluedResult.status === "fulfilled" ? undervaluedResult.value.length : 0;
+  const proofTiles = [
+    dealsData && dealsData.savingsVsMarketTotal > 0
+      ? { value: String(dealsData.savingsVsMarketTotal), label: "eBay deals live right now" }
+      : null,
+    dealsData && (dealsData.savingsVsMarketCents ?? 0) > 0
+      ? { value: formatMoneyCompact(dealsData.savingsVsMarketCents ?? 0, currencyOf(country)), label: "in savings on the board" }
+      : null,
+    undervaluedCount > 0 ? { value: String(undervaluedCount), label: "cards below their 30-day average" } : null,
+  ].filter((t): t is { value: string; label: string } => t !== null);
+
   return (
     <div className="mx-auto max-w-4xl">
+      <PremiumRecoveryBeacon />
       <Breadcrumbs trail={[{ name: "Premium", href: "/premium" }]} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: "RiftCompare Premium",
-            description: "The Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Demand Finder, the full Deal Finder list and an ad-free RiftCompare.",
-            brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
-            offers: {
-              "@type": "Offer",
-              price: priceNumeric,
-              priceCurrency: "USD",
-              url: `${SITE_URL}/premium`,
-              availability: "https://schema.org/InStock",
+          __html: ldJson(
+            {
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: "RiftCompare Premium",
+              description: "The Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Demand Finder, the full Deal Finder list and an ad-free RiftCompare.",
+              brand: { "@type": "Organization", name: "RiftCompare", url: SITE_URL },
+              offers: {
+                "@type": "Offer",
+                price: priceNumeric,
+                priceCurrency: "USD",
+                url: `${SITE_URL}/premium`,
+                availability: "https://schema.org/InStock",
+              },
             },
-          }),
+            faqPage(FAQ)
+          ),
         }}
       />
 
@@ -151,12 +234,14 @@ export default async function PremiumPage() {
       <div className="text-center">
         <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
         <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-          {already ? "You're Premium" : "Power tools for buyers & sellers"}
+          {already ? "You're Premium" : "Get an unfair edge buying and selling"}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : "Price comparison is free for everyone, and a free account adds alerts and your portfolio. Premium adds the Bulk Pricer, Best Basket, the pro screeners and an ad-free site — cancel anytime."}
+            : premiumTrialEnabled()
+            ? `Try every Premium tool free for ${PREMIUM_TRIAL_DAYS} days — ${premiumZeroToday()}, then ${premiumFromLine()}. Cancel anytime.`
+            : `Price comparison is free for everyone, and a free account adds alerts and your portfolio. Premium adds the Bulk Pricer, Best Basket, the pro screeners and an ad-free site — ${premiumFromLine()}, cancel anytime.`}
         </p>
       </div>
 
@@ -179,15 +264,26 @@ export default async function PremiumPage() {
             {/* Monthly */}
             <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700">
               <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
-                <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Monthly</div>
-                <div className="mt-2 flex items-baseline justify-center gap-1">
-                  <span className="num text-4xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
-                  <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
-                </div>
-                {trialEligible && <p className="mt-1 text-xs font-semibold text-gold">Starts with a {PREMIUM_TRIAL_DAYS}-day free trial</p>}
+                <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">Monthly</div>
+                {trialAvailable ? (
+                  <TrialPriceBlock plan="monthly" trialDays={PREMIUM_TRIAL_DAYS} size="compact" />
+                ) : (
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="num text-4xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
+                    <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-1 items-end px-6 py-5">
-                <PremiumCta checkoutLive={checkoutLive} signedIn={!!user} trialEligible={trialEligible} priceLabel={compactPrice} trialDays={PREMIUM_TRIAL_DAYS} plan="monthly" />
+                <PremiumCta
+                  checkoutLive={checkoutLive}
+                  signedIn={!!user}
+                  trialEligible={trialEligible}
+                  trialAvailable={trialAvailable}
+                  priceLabel={compactPrice}
+                  trialDays={PREMIUM_TRIAL_DAYS}
+                  plan="monthly"
+                />
               </div>
             </div>
 
@@ -197,14 +293,14 @@ export default async function PremiumPage() {
                 <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink-950">Best value</span>
                 <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
                   <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-gold">Annual</div>
-                  <AnnualPriceBlock />
-                  {trialEligible && <p className="mt-2 text-xs font-semibold text-gold">Starts with a {PREMIUM_TRIAL_DAYS}-day free trial</p>}
+                  {trialAvailable ? <TrialPriceBlock plan="annual" trialDays={PREMIUM_TRIAL_DAYS} size="compact" /> : <AnnualPriceBlock />}
                 </div>
                 <div className="flex flex-1 items-end px-6 py-5">
                   <PremiumCta
                     checkoutLive={checkoutLive}
                     signedIn={!!user}
                     trialEligible={trialEligible}
+                    trialAvailable={trialAvailable}
                     trialDays={PREMIUM_TRIAL_DAYS}
                     priceLabel={annualCompact}
                     plan="annual"
@@ -214,6 +310,25 @@ export default async function PremiumPage() {
               </div>
             )}
           </div>
+
+          {/* Live proof strip — real numbers pulled from the same tools Premium
+              sells, not a marketing claim about them. Each tile hides itself
+              if its own number is zero, and the whole strip hides if every
+              tile does — a proof strip with nothing to prove is worse than no
+              strip at all. */}
+          {proofTiles.length > 0 && (
+            <div className="mx-auto mt-6 max-w-2xl">
+              <div className={`grid gap-3 ${proofTiles.length === 1 ? "max-w-xs mx-auto" : proofTiles.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+                {proofTiles.map((t) => (
+                  <div key={t.label} className="card-surface rounded-xl border border-ink-700 px-4 py-3 text-center">
+                    <div className="num text-2xl font-extrabold text-brand-300">{t.value}</div>
+                    <div className="mt-0.5 text-[11px] text-slate-400">{t.label}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-center text-[11px] text-slate-500">One saved order covers a month of Premium.</p>
+            </div>
+          )}
 
           {/* Shared included list + notes */}
           <div className="mx-auto mt-5 max-w-2xl">
@@ -308,6 +423,22 @@ export default async function PremiumPage() {
         )}
       </div>
 
+      {/* FAQ — objection handling this page had none of, despite carrying the
+          checkout decision. Rendered visibly (not just as JSON-LD above) so
+          Google honours the FAQPage markup and so it actually answers a
+          reader's question rather than only feeding a rich result. */}
+      <div className="mt-10">
+        <h2 className="mb-3 text-center text-lg font-extrabold text-white">Frequently asked questions</h2>
+        <div className="mx-auto max-w-2xl space-y-3">
+          {FAQ.map((f) => (
+            <details key={f.q} className="card-surface rounded-xl border border-ink-700 p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-white">{f.q}</summary>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+
       {/* Feature detail cards */}
       <div className="mt-10 grid gap-3 sm:grid-cols-2">
         {FEATURES.map((f) => (
@@ -325,7 +456,7 @@ export default async function PremiumPage() {
         alerts and your portfolio free with an account.{" "}
         {already ? (
           <>Update your card or cancel anytime via &ldquo;Manage subscription&rdquo; above. </>
-        ) : trialEligible ? (
+        ) : trialAvailable ? (
           <>The free trial needs a card and converts to {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first. </>
         ) : (
           <>Cancel anytime — your benefits run to the end of the paid period. </>

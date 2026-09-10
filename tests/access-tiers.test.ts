@@ -85,19 +85,23 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /if \(!loaded \|\| user \|\| shown\) return/, "still only shown to signed-out visitors");
 });
 
-test("the popup's Premium pitch names only real Premium-only tools, reused from PremiumSlideIn", () => {
+test("the popup's Premium pitch never grows its own hand-typed tool list or comparison table", () => {
   // 2026-09-04: the popup flipped from a free-account comparison to a Premium
   // pitch (explicit product instruction — see the component's own header
   // comment for the full reasoning and why this is NOT the removed signup
-  // comp). It must not grow its own hand-typed tool list — PremiumSlideIn's
-  // PITCH_TOOLS is already pinned against TIER_COMPARISON by
-  // tests/premium-slidein.test.ts, and a second copy here would be exactly the
-  // "same claim written twice, updated once" drift TierComparisonTable's own
-  // header comment warns about.
+  // comp). It listed tools as a chip row, reusing PremiumSlideIn's PITCH_TOOLS
+  // so a second hand-typed copy couldn't drift out of date.
+  //
+  // 2026-09-10: the popup stopped naming tools at all — the chip row became a
+  // designed PremiumPitchPanel, so the import went with it. The anti-duplication
+  // guarantee is what still matters and is what this now pins: if a future
+  // pass reintroduces a tool list here, it must import the shared one rather
+  // than hand-type a second copy, which is the "same claim written twice,
+  // updated once" drift TierComparisonTable's own header comment warns about.
   const src = read(POPUP);
-  assert.match(src, /import \{ PITCH_TOOLS \} from "\.\/PremiumSlideIn"/, "must reuse the shared tool list, not a local copy");
   assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
   assert.ok(!/const COMPARISON/.test(src), "the old free-account COMPARISON table must be gone");
+  assert.match(src, /<PremiumPitchPanel/, "the pitch is the designed panel now — see PremiumPitchPanel's own header");
 });
 
 test("the popup is a Premium pitch, but grants nothing automatically", () => {
@@ -127,10 +131,25 @@ test("the popup's honesty guarantees survive the pitch change: no fake scarcity,
   // The price line now renders UNCONDITIONALLY (2026-09-06: "we also need to
   // show the prices for non logged in users" — it used to hide entirely
   // whenever a trial was configured, which is the default, so most signed-out
-  // visitors never saw a price at all). What still has to hold is that it
-  // never reads as a contradiction of the trial CTA sitting right above it.
+  // visitors never saw a price at all). 2026-09-09: simplified again to a bare
+  // "$0 today" for the trial-available branch — an explicit product decision
+  // to lead this low-intrusion nudge with the number that's true right now
+  // rather than the recurring price (which is still disclosed before any card
+  // is charged: /premium, the Premium dialog, and checkout's own "Card
+  // required... then $X" line). "Real" here means a real, true number for
+  // what happens today — not that every branch must also state the future
+  // price; the non-trial branch (which has no $0 to claim) still does.
   assert.ok(!/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src), "the price line must no longer be hidden while a trial is available");
-  assert.match(src, /trialAvailable \? " after your free trial" : ""/, "the price must be worded so it doesn't contradict an available trial");
+  assert.match(src, /premiumZeroToday\(\)/, "the trial-available branch must lead with the shared $0-today helper");
+  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
+  const trialBranchAt = src.indexOf("trialAvailable ? (", priceBlockAt);
+  const elseAt = src.indexOf(") : (", trialBranchAt);
+  assert.ok(priceBlockAt >= 0 && trialBranchAt >= 0 && elseAt >= 0, "expected the price block's trial/non-trial branches");
+  assert.ok(
+    !/premiumFromLine\(\)/.test(src.slice(trialBranchAt, elseAt)),
+    "trial-available branch must NOT also state the recurring price — bare $0 today, by design",
+  );
+  assert.match(src.slice(elseAt), /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
 });
 
 test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {
@@ -145,14 +164,34 @@ test("the promo has no artificial delay — shows the instant it's eligible (202
   assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not gate showing itself behind a setTimeout");
 });
 
-test("a dismissed promo stays dismissed for the rest of the session", () => {
-  // Re-showing a dialog someone just closed is its own contribution to a 78%
-  // dismiss rate. dismiss() must WRITE the flag and the arming effect must READ
-  // it before re-arming on the next route.
+test("a dismissed promo goes quiet for a set number of pages, then comes back", () => {
+  // WAS "stays dismissed for the rest of the session", on the reasoning that
+  // re-showing a dialog someone just closed is its own contribution to a 78%
+  // dismiss rate. Changed by explicit owner brief (2026-09-10): "the slider
+  // should show up again every 3 pages a user visits if they're not logged in".
+  //
+  // What must still hold is that a dismissal BUYS SOMETHING: it cannot be a
+  // no-op, and the quiet stretch has to be measured in real pages, not reset by
+  // the next route change.
   const src = read(POPUP);
-  assert.match(src, /sessionStorage\.setItem\(SEEN_KEY, "1"\)/, "dismiss must persist the flag");
-  assert.match(src, /seen = sessionStorage\.getItem\(SEEN_KEY\) === "1"/, "the arming effect must read the flag back");
-  assert.match(src, /if \(seen\) return;/, "a seen promo must not re-arm on the next pageview");
+  assert.match(src, /const PAGES_BETWEEN_SHOWS = \d+/, "the cadence must be a named constant, not a magic number");
+  assert.match(
+    src,
+    /sessionStorage\.setItem\(DISMISSED_AT_KEY, String\(readCount\(VIEWS_KEY\)\)\)/,
+    "dismiss must stamp WHERE the visitor was, so the quiet stretch is measured from there",
+  );
+  assert.match(
+    src,
+    /views - dismissedAt < PAGES_BETWEEN_SHOWS\) return;/,
+    "the arming effect must stay away until that many further pages have been seen",
+  );
+  assert.match(
+    src,
+    /sessionStorage\.setItem\(VIEWS_KEY, String\(readCount\(VIEWS_KEY\) \+ 1\)\)/,
+    "pages must actually be counted, or the gap above can never close",
+  );
+  // Counted once per distinct route — otherwise a re-render would inflate it.
+  assert.match(src, /lastCountedPath\.current === pathname/, "each page must count once, not once per render");
 });
 
 test("the promo never fires for a signed-in visitor", () => {

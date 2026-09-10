@@ -33,7 +33,7 @@ explicit link up/down to the primary).
 | Query pattern | Primary URL | Secondary |
 |---|---|---|
 | `riftbound <set name>`, `riftbound <set name> prices` | `/sets/<slug>` | — |
-| `riftbound <set> card list` | `/guides/riftbound-<set>-card-list` (exists for Vendetta only today — `riftbound-vendetta-card-list`) — **backlog item 10**: build the same template for Origins/Origins: Proving Grounds/Spiritforged/Unleashed | `every-riftbound-<set>-card-revealed` blog gallery post (Vendetta only today) — the two are DIFFERENT angles (checklist guide vs. embedded live gallery), keep both when both exist |
+| `riftbound <set> card list` | `/guides/riftbound-<set>-card-list` (exists for Vendetta only today — `riftbound-vendetta-card-list`). For the older sets the owner is the `whats-in-the-riftbound-<set>-set` breakdown guide instead: Origins, Spirit Forged and Unleashed all exist (backlog item 10, closed 2026-09-10); Proving Grounds is covered inside `riftbound-sets-in-order` | `every-riftbound-<set>-card-revealed` blog gallery post (Vendetta only today) — the two are DIFFERENT angles (checklist guide vs. embedded live gallery), keep both when both exist |
 | `riftbound card list` (no set named) | `/guides/riftbound-card-list` (all-sets hub — **not yet built, backlog item 12**) | — |
 | `riftbound roadmap` | `/blog/riftbound-2027-set-roadmap` (exists — corrects the slug this file previously guessed at) | — |
 | `riftbound sets in order`, `riftbound set list`, `how many riftbound sets` | `/guides/riftbound-sets-in-order` (added 2026-08-13) | Deliberately does not restate Legacy/The Reckoning/Set 8/9 facts — links out to the roadmap post for those instead, so the two can't drift apart |

@@ -111,6 +111,19 @@ const config: Config = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        // A sheen travelling across gold text. Drives ONLY the `.premium-shimmer`
+        // utility in globals.css, which supplies the gradient and the
+        // background-clip:text plumbing this animates the position of.
+        //
+        // DEFINED HERE AND NOWHERE ELSE, on purpose. globals.css once carried its
+        // own copy of a `float` keyframe that silently shadowed this config's
+        // version (it declares rules after @tailwind utilities), leaving one class
+        // name with two different motions — see the tombstone near the bottom of
+        // globals.css. The utility class lives there, the motion lives here.
+        "premium-shimmer": {
+          "0%": { backgroundPosition: "180% 50%" },
+          "100%": { backgroundPosition: "-80% 50%" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
@@ -118,6 +131,10 @@ const config: Config = {
         blob: "blob 16s ease-in-out infinite",
         "glow-pulse": "glow-pulse 3.4s ease-in-out infinite",
         marquee: "marquee 42s linear infinite",
+        // Slow enough to read as a sheen rather than a blink. Every consumer must
+        // also carry motion-reduce:animate-none, matching the marquee in
+        // MarketPulse.tsx — the app's only other infinite animation.
+        "premium-shimmer": "premium-shimmer 5s linear infinite",
       },
     },
   },

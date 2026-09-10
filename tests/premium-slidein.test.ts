@@ -116,3 +116,43 @@ test("it is mounted inside the Premium dialog provider", () => {
   const providerCloseAt = layout.indexOf("</PremiumDialogProvider>");
   assert.ok(providerAt >= 0 && slideInAt > providerAt && slideInAt < providerCloseAt, "must sit inside <PremiumDialogProvider>");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Contextual pitch (2026-09-08 pricing/conversion pass) — a route-specific
+// heading/line instead of one flat "unlock N tools" pitch everywhere.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("every CONTEXT_PITCH names a real PITCH_TOOLS tool, so it can't drift the way the old hand-written sentence did", () => {
+  const src = read(SRC);
+  const listMatch = src.match(/const PITCH_TOOLS[^=]*=\s*\[([\s\S]*?)\n\];/);
+  assert.ok(listMatch, "expected PITCH_TOOLS");
+  const labels = [...listMatch![1].matchAll(/label: "([^"]+)"/g)].map((m) => m[1]);
+
+  const ctxMatch = src.match(/const CONTEXT_PITCH:[^=]*=\s*\[([\s\S]*?)\n\];/);
+  assert.ok(ctxMatch, "expected a CONTEXT_PITCH array declaration");
+  const tools = [...ctxMatch![1].matchAll(/tool: "([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(tools.length >= 1, "expected at least one contextual pitch entry");
+  for (const tool of tools) {
+    assert.ok(labels.includes(tool), `CONTEXT_PITCH names "${tool}", which isn't a PITCH_TOOLS label`);
+  }
+
+  // The heading text itself must actually mention the tool it claims to be
+  // about — the whole point of a contextual pitch is that the visible copy
+  // names the real thing being sold, not just an internal tag.
+  const headings = [...ctxMatch![1].matchAll(/heading: "([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(headings.length, tools.length, "every CONTEXT_PITCH entry must have both a tool and a heading");
+  for (let i = 0; i < tools.length; i++) {
+    assert.ok(headings[i].includes(tools[i]), `heading "${headings[i]}" doesn't mention its own tool "${tools[i]}"`);
+  }
+});
+
+test("the live proof line is fetched only after the card actually appears, never on mount", () => {
+  const code = codeOnly(read(SRC));
+  // The proof-fetch effect must be gated on `shown` (its own dependency array
+  // includes it) — a fetch that could fire unconditionally on mount would run
+  // for every eligible visitor whether or not the slide-in ever appears.
+  const effectAt = code.indexOf("api/premium/proof");
+  assert.ok(effectAt >= 0, "expected a fetch to api/premium/proof");
+  const before = code.slice(Math.max(0, effectAt - 400), effectAt);
+  assert.match(before, /if \(!shown \|\| proofFetched\.current\) return;/, "the proof fetch must bail out until `shown` is true");
+});

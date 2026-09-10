@@ -137,6 +137,27 @@
     ],
     "fingerprint": "1deb105805dc2947"
   },
+  "/blog/gradient-sleeves-for-riftbound-cards.png": {
+    "src": "/blog/gradient-sleeves-for-riftbound-cards.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 44122,
+    "webp": "/blog/gradient-sleeves-for-riftbound-cards.webp",
+    "webpBytes": 28078,
+    "avif": "/blog/gradient-sleeves-for-riftbound-cards.avif",
+    "avifBytes": 17333,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/gradient-sleeves-for-riftbound-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/gradient-sleeves-for-riftbound-cards-768w.webp"
+      }
+    ],
+    "fingerprint": "093b3e8bf20ce340"
+  },
   "/blog/how-to-choose-a-riftbound-marketplace.png": {
     "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
     "width": 1200,
@@ -443,6 +464,48 @@
     ],
     "fingerprint": "027bfb2831227774"
   },
+  "/blog/riftbound-deploy-explained.png": {
+    "src": "/blog/riftbound-deploy-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 34122,
+    "webp": "/blog/riftbound-deploy-explained.webp",
+    "webpBytes": 27298,
+    "avif": "/blog/riftbound-deploy-explained.avif",
+    "avifBytes": 18321,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-deploy-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-deploy-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "12f8e929d1011570"
+  },
+  "/blog/riftbound-disarm-explained.png": {
+    "src": "/blog/riftbound-disarm-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49468,
+    "webp": "/blog/riftbound-disarm-explained.webp",
+    "webpBytes": 35378,
+    "avif": "/blog/riftbound-disarm-explained.avif",
+    "avifBytes": 21731,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-disarm-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-disarm-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "b9555974ad00e827"
+  },
   "/blog/riftbound-format-legality-rotation.png": {
     "src": "/blog/riftbound-format-legality-rotation.png",
     "width": 1200,
@@ -485,6 +548,27 @@
     ],
     "fingerprint": "9ff9bbe81cbe5b70"
   },
+  "/blog/riftbound-radiance-leaked-mechanics.png": {
+    "src": "/blog/riftbound-radiance-leaked-mechanics.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 43090,
+    "webp": "/blog/riftbound-radiance-leaked-mechanics.webp",
+    "webpBytes": 31996,
+    "avif": "/blog/riftbound-radiance-leaked-mechanics.avif",
+    "avifBytes": 19297,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-radiance-leaked-mechanics-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-radiance-leaked-mechanics-768w.webp"
+      }
+    ],
+    "fingerprint": "bc83d146b5c75ee3"
+  },
   "/blog/riftbound-radiance-what-we-know.png": {
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,
@@ -505,6 +589,27 @@
       }
     ],
     "fingerprint": "8758e0f892e05396"
+  },
+  "/blog/riftbound-showoff-explained.png": {
+    "src": "/blog/riftbound-showoff-explained.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 49547,
+    "webp": "/blog/riftbound-showoff-explained.webp",
+    "webpBytes": 34178,
+    "avif": "/blog/riftbound-showoff-explained.avif",
+    "avifBytes": 23731,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-showoff-explained-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-showoff-explained-768w.webp"
+      }
+    ],
+    "fingerprint": "ba93427cb648774d"
   },
   "/blog/riftbound-variant-glossary.png": {
     "src": "/blog/riftbound-variant-glossary.png",

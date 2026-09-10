@@ -1,9 +1,24 @@
-import { SITE_NAME, SITE_URL } from "./site";
+import { SITE_NAME, SITE_URL, premiumFromLine } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
+}
+
+// The most recent reason a send failed (provider + HTTP status + response
+// body, or the thrown error), for batch callers that count failures and want
+// to say WHY in their summary. Every failure path below writes it; a
+// successful send clears it. Deliberately a plain module variable, not part of
+// sendEmail's return type, so the dozens of existing boolean callers are
+// untouched.
+let lastEmailError: string | null = null;
+export function getLastEmailError(): string | null {
+  return lastEmailError;
+}
+async function noteProviderFailure(provider: string, res: Response): Promise<void> {
+  const body = await res.text().catch(() => "");
+  lastEmailError = `${provider} ${res.status}: ${body.slice(0, 300)}`;
 }
 
 // Send a transactional email via Resend's REST API. Requires RESEND_API_KEY (and
@@ -13,6 +28,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email] RESEND_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
+    lastEmailError = "Resend: RESEND_API_KEY not set";
     return false;
   }
   // Send from the verified riftcompare.com domain by default so Resend allows
@@ -26,10 +42,14 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to, subject, html }),
     });
-    if (!res.ok) console.warn(`[email] Resend returned ${res.status} for "${subject}".`);
+    if (!res.ok) {
+      console.warn(`[email] Resend returned ${res.status} for "${subject}".`);
+      await noteProviderFailure("Resend", res);
+    } else lastEmailError = null;
     return res.ok;
   } catch (e) {
     console.warn("[email] send failed:", e);
+    lastEmailError = `Resend: ${e instanceof Error ? e.message : String(e)}`;
     return false;
   }
 }
@@ -57,6 +77,7 @@ export async function sendEmailBrevo(to: string, subject: string, html: string):
   const key = process.env.BREVO_API_KEY;
   if (!key) {
     console.warn(`[email] BREVO_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
+    lastEmailError = "Brevo: BREVO_API_KEY not set";
     return false;
   }
   const sender = parseFrom(process.env.EMAIL_FROM ?? `${SITE_NAME} <noreply@riftcompare.com>`);
@@ -66,10 +87,14 @@ export async function sendEmailBrevo(to: string, subject: string, html: string):
       headers: { "api-key": key, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html }),
     });
-    if (!res.ok) console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
+    if (!res.ok) {
+      console.warn(`[email] Brevo returned ${res.status} for "${subject}".`);
+      await noteProviderFailure("Brevo", res);
+    } else lastEmailError = null;
     return res.ok;
   } catch (e) {
     console.warn("[email] Brevo send failed:", e);
+    lastEmailError = `Brevo: ${e instanceof Error ? e.message : String(e)}`;
     return false;
   }
 }
@@ -446,6 +471,128 @@ export async function sendTrialEndingEmail(to: string, chargeDate: Date, amountL
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
   return sendEmail(to, `Your RiftCompare Premium trial ends ${dateLabel}`, emailShell("Your free trial is ending soon", inner, trialReminderFooter()));
+}
+
+// ─── Premium checkout-recovery (one-time) ────────────────────────────────────
+
+// Sent ONCE, roughly a day after someone opens Stripe checkout for Premium but
+// never completes it (see runCheckoutRecovery in lib/premium.ts) — the single
+// highest-intent audience on the site, so this is worth a nudge no scheduled
+// email covers. NOT an unsubscribe-bearing marketing send: it's tied to one
+// action the recipient themselves took, same category as the trial-ending
+// notice above, and the copy itself states it will not repeat — so no footer
+// opt-out link is offered (mirrors trialReminderFooter's shape exactly).
+//
+// The tool list mirrors PremiumSlideIn.tsx's PITCH_TOOLS labels — kept as a
+// separate plain-string list (that file is a client component; an email
+// template has no business importing React component modules) but pinned
+// against drifting from it by tests/premium-conversion.test.ts.
+const CHECKOUT_RECOVERY_TOOLS = ["Bulk Pricer", "Best Basket", "Value Finder", "Rising Cards", "Demand Finder", "Deal Finder"];
+
+function checkoutRecoveryFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this once because you started RiftCompare Premium checkout. We won't send it again.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, fromLine: string): Promise<boolean> {
+  const toolList = CHECKOUT_RECOVERY_TOOLS.map(
+    (t) => `<li style="margin:4px 0">${t}</li>`
+  ).join("");
+  const trialLine =
+    trialDays > 0
+      ? `Your ${trialDays}-day free trial is still available — $0 today, then ${fromLine}.`
+      : `Premium is ${fromLine}.`;
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine}
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up Premium</a></td></tr>`;
+  return sendEmail(
+    to,
+    "Your RiftCompare Premium free trial is still waiting",
+    emailShell("Still want Premium?", inner, checkoutRecoveryFooter())
+  );
+}
+
+// ─── One-off Premium offer to free-tier accounts ──────────────────────────────
+// See lib/premium-offer.ts for the audience, idempotency and the offer itself.
+//
+// HONESTY RULES THIS TEMPLATE HOLDS ITSELF TO, because the site's own tests pin
+// them elsewhere (tests/premium-zero-today.test.ts): a real deadline date, never
+// a countdown or "only N left"; the price is premiumFromLine(), never a typed
+// number; and the mechanism is stated plainly — the extra days are added BY HAND
+// after the subscription lands, so the email must never imply checkout itself
+// grants a month. Two wordings, because two things are true:
+//   • trialDays > 0  — Stripe will run its normal trial; the owner then extends
+//     it to `offerDays` in total. "$0 today" is true here.
+//   • trialDays = 0  — this account already used its one trial, so checkout
+//     charges immediately; the owner adds a free month ON TOP. "$0 today" would
+//     be false here, so it isn't said.
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export interface PremiumOfferEmailOpts {
+  displayName: string;
+  trialDays: number; // 0 = trial already used
+  offerDays: number; // what the trial is extended to, in total
+  offerEnds: string; // human-readable deadline, e.g. "30 September 2026"
+  unsubUrl: string;
+  via?: "brevo" | "resend";
+}
+
+export function premiumOfferSubject(opts: Pick<PremiumOfferEmailOpts, "trialDays">): string {
+  return opts.trialDays > 0
+    ? "A full month of RiftCompare Premium, on us"
+    : "A free month of RiftCompare Premium, on us";
+}
+
+export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts, fromLine: string): { subject: string; heading: string; html: string } {
+  // A display name that is really just an email address reads oddly after
+  // "Hi" — fall back to a plain greeting rather than "Hi bill.j@…".
+  const name = opts.displayName.includes("@") ? "" : escapeHtml(opts.displayName.trim().split(/\s+/)[0] ?? "");
+  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const ctaUrl = `${SITE_URL}/premium?src=offer&utm_source=email&utm_medium=email&utm_campaign=premium-offer`;
+  const toolList = CHECKOUT_RECOVERY_TOOLS.map((t) => `<li style="margin:4px 0">${t}</li>`).join("");
+  const ends = escapeHtml(opts.offerEnds);
+
+  const offerBlock =
+    opts.trialDays > 0
+      ? `Premium normally starts with a ${opts.trialDays}-day free trial. <strong style="color:#fff">Start yours before ${ends} and we'll extend it to a full ${opts.offerDays} days.</strong> It's $0 today, then ${fromLine} — and you can cancel any time during the trial and pay nothing.`
+      : `You've already used a free trial, so Premium bills from day one. <strong style="color:#fff">Subscribe before ${ends} and we'll add a free month on top</strong> — ${opts.offerDays} extra days on your subscription, at no charge. Premium is ${fromLine}, and you can cancel any time.`;
+
+  const heading = opts.trialDays > 0 ? "Try Premium for a full month, free" : "A free month of Premium, on us";
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      ${greeting}
+    </td></tr>
+    <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Thanks for using RiftCompare. Price comparison, alerts and your portfolio stay free — but if you buy, sell or
+      track Riftbound seriously, Premium is the set of tools we built for exactly that:
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}<li style="margin:4px 0">No ads on any page</li></ul>
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      ${offerBlock}
+    </td></tr>
+    <tr><td style="padding:4px 32px 12px;font-size:13px;line-height:1.6;color:#9aa4b2">
+      How it works: there's nothing to enter at checkout. Once your subscription is in, we add the extra days to your
+      account by hand — usually within a day or two — and email you when it's done.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${ctaUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${opts.trialDays > 0 ? "Start my free month" : "Claim my free month"}</a></td></tr>`;
+
+  return { subject: premiumOfferSubject(opts), heading, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl)) };
+}
+
+export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailOpts): Promise<boolean> {
+  const { subject, html } = buildPremiumOfferEmail(opts, premiumFromLine());
+  return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
 }
 
 // Sent once on first signup so subscribers hear from us immediately (and get the

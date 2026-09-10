@@ -1,25 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
-import { PITCH_TOOLS } from "./PremiumSlideIn";
+import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
   PREMIUM_NEXT_PRICE_AMOUNT,
+  PREMIUM_COPY_VERSION,
   premiumPriceIncreaseAnnounced,
   premiumLockInTail,
+  premiumZeroToday,
+  premiumFromLine,
 } from "@/lib/site";
 
-// Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
-// suppresses it for the rest of that session/tab, but it comes back on the next
-// visit once the tab/browser is closed and reopened. Signing up suppresses it for
-// good, same as before, simply because a signed-in visitor never re-enters this
-// effect at all (see the `user` check below). Fires on every route, including the
-// homepage.
+// Shows on the first eligible page, then RETURNS every PAGES_BETWEEN_SHOWS
+// pages after each dismissal, for as long as the visitor stays signed out
+// (sessionStorage, not localStorage, so a new tab starts the count over).
+// Signing up suppresses it for good, simply because a signed-in visitor never
+// re-enters the arming effect at all (see the `user` check below). Fires on
+// every route, including the homepage.
 //
 // THIS IS NOW A PREMIUM PITCH, NOT A FREE-ACCOUNT MOMENT (2026-09-04, explicit
 // product instruction: "change the sign up pop up ... to a get premium pop up").
@@ -50,7 +53,33 @@ import {
 // is still real — it's what /login's own AuthForm sells (see its PERKS list)
 // and what a visitor gets regardless of whether they ever pay for Premium. This
 // popup just isn't the surface that leads with it any more.
-const SEEN_KEY = "rc_signup_promo_seen";
+
+// sessionStorage. Two numbers, not a boolean: how many distinct pages this
+// signed-out visitor has seen, and what that count was when they last dismissed
+// the popup. The gap between them is what decides whether it comes back.
+const VIEWS_KEY = "rc_signup_promo_views";
+const DISMISSED_AT_KEY = "rc_signup_promo_dismissed_at";
+
+// IT COMES BACK (owner brief, 2026-09-10: "the slider should show up again
+// every 3 pages a user visits if they're not logged in"). Until now a dismissal
+// silenced it for the whole browser session.
+//
+// This deliberately reopens a risk this file's own history documents: an
+// earlier, pushier version of this popup measured a 78% dismiss rate with
+// bounce up and pages/visitor down. A re-show every few pages is a smaller ask
+// than that version was, and the visitor still controls it — but note there is
+// NO lifetime cap here, unlike PremiumSlideIn, which stops for good after two
+// dismissals. If signup_promo_dismissed climbs or pages/visitor falls after
+// this ships, a cap is the first thing to add.
+const PAGES_BETWEEN_SHOWS = 3;
+
+function readCount(key: string): number {
+  try {
+    return Number(sessionStorage.getItem(key) ?? "0") || 0;
+  } catch {
+    return 0;
+  }
+}
 
 // A CORNER SLIDE-IN, NOT A MODAL (2026-09-01). This used to be a full-screen
 // dialog — backdrop, scroll-locked, focus-trapped, centred card. That shape had
@@ -105,19 +134,33 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // itself changed from a free-account comparison to Premium, 2026-09-04). Each
 // name records which axis changed; this one changes CONTENT, not chrome or
 // timing, so it gets a genuinely new name rather than another suffix.
+// → "premium_graphic_repeat" (2026-09-10, same day): the popup stopped being
+// once-per-session and now returns every few pages after a dismissal. That is
+// the TIMING axis, the same one "comparison_instant" once recorded — and it
+// changes the shown count and the dismiss rate directly, so without a new name
+// the before and after would average into each other and neither could be read.
+// The impression also carries `repeat` now, separating a first show from a
+// re-show within this same variant.
+// → "premium_graphic" (2026-09-10): the pitch stopped being text at all. The
+// sentence and the six-chip tool row became the designed PremiumPitchPanel; the
+// heading's non-trial fallback became the new tagline. Same axis as the last
+// rename (CONTENT), so again a new name rather than a suffix — without it the
+// text-pitch and graphic-pitch impressions would average together in GA4 and
+// neither could be read.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_pitch";
+const PROMO_VARIANT = "premium_graphic_repeat";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded, trialDays } = useMe();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
+  const lastCountedPath = useRef<string | null>(null);
 
   // A brand-new account has, by definition, never started a trial before — so
   // unlike PremiumSlideIn's `trialEligible` (which useMe() only computes for a
@@ -128,21 +171,45 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // api/me/route.ts's unconditional `trialDays: PREMIUM_TRIAL_DAYS`.
   const trialAvailable = trialDays > 0;
 
+  // Count the pages a SIGNED-OUT visitor sees, once per distinct route. Declared
+  // before the arming effect on purpose: React runs effects in order, so this
+  // page is already counted by the time the effect below reads the total.
+  // Gated on `loaded` as well as `user` so the very first route still counts
+  // once /api/me resolves — lastCountedPath is only claimed after that.
+  useEffect(() => {
+    if (!loaded || user) return;
+    if (!pathname || lastCountedPath.current === pathname) return;
+    lastCountedPath.current = pathname;
+    try {
+      sessionStorage.setItem(VIEWS_KEY, String(readCount(VIEWS_KEY) + 1));
+    } catch {
+      /* private mode — the promo then just behaves as never-dismissed */
+    }
+  }, [pathname, loaded, user]);
+
   useEffect(() => {
     if (!loaded || user || shown) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
-    let seen = false;
+
+    // Never dismissed this session → show at the first opportunity, with no
+    // gate of any kind, exactly as before. Dismissed → stay away until they
+    // have moved on PAGES_BETWEEN_SHOWS further pages, then come back.
+    let views = 0;
+    let dismissedAt: number | null = null;
     try {
-      seen = sessionStorage.getItem(SEEN_KEY) === "1";
+      views = readCount(VIEWS_KEY);
+      const raw = sessionStorage.getItem(DISMISSED_AT_KEY);
+      dismissedAt = raw === null ? null : Number(raw) || 0;
     } catch {
-      /* private mode — worst case it can show again next page load */
+      /* private mode — treat as never dismissed, same as the old behaviour */
     }
-    if (seen) return;
+    if (dismissedAt !== null && views - dismissedAt < PAGES_BETWEEN_SHOWS) return;
+
     // Never slide in on top of a real modal. FeedbackWidget sets this flag
     // while its panel is open; sliding a signup pitch in over a visitor who is
     // mid-sentence writing us feedback would lose the feedback entirely.
-    // Deliberately does NOT mark SEEN_KEY when it skips, so that visitor still
-    // gets the promo on the next page rather than silently losing it forever.
+    // Deliberately does NOT touch the counters when it skips, so that visitor
+    // still gets the promo on the next page rather than losing this turn.
     if (document.body.dataset.rcDialog === "1") return;
 
     setShown(true);
@@ -152,7 +219,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     // the animation settling in, not a deliberate wait — it's a couple of
     // frames, not a timer.
     requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
-    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT });
+    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
   }, [loaded, user, shown, pathname]);
 
   // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
@@ -165,14 +232,14 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   const dismiss = useCallback(() => {
     hide();
     trackEvent("signup_promo_dismissed", { variant: PROMO_VARIANT });
-    // PERSISTS THE DISMISSAL for the rest of the browser session. The arming
-    // effect above reads SEEN_KEY before it re-arms, so a dismissed promo does
-    // not come back on the next pageview — only on a genuinely new session
-    // (tab/browser closed and reopened). Written synchronously here, not on a
-    // later effect, so a dismiss immediately followed by a navigation still
-    // sticks.
+    // STAMPS WHERE THEY WERE when they dismissed it, rather than a one-way
+    // "seen" flag. The arming effect re-shows once they are
+    // PAGES_BETWEEN_SHOWS pages past this mark, so each dismissal buys the
+    // visitor the same quiet stretch rather than silence for the whole
+    // session. Written synchronously here, not in a later effect, so a dismiss
+    // immediately followed by a navigation still counts from the right page.
     try {
-      sessionStorage.setItem(SEEN_KEY, "1");
+      sessionStorage.setItem(DISMISSED_AT_KEY, String(readCount(VIEWS_KEY)));
     } catch {
       /* private mode */
     }
@@ -191,7 +258,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
 
   if (!shown) return null;
 
-  const heading = trialAvailable ? "Try Premium free" : `Unlock ${PITCH_TOOLS.length} power tools`;
+  const heading = trialAvailable ? "Try Premium free" : "Get an unfair edge buying and selling";
 
   return (
     // Bottom-LEFT, same corner and z-tier as PremiumSlideIn (z-[70], under every
@@ -205,23 +272,37 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
-      <div className="relative overflow-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
-        <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
-          <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-            Premium
-          </span>
-          <span className="text-xs font-semibold text-slate-200">{heading}</span>
-          <button
-            onClick={dismiss}
-            aria-label="Dismiss"
-            className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-          >
-            ✕
-          </button>
-        </div>
+      {/* max-h + scroll is the belt to the braces of the short-viewport rules
+          inside the panel. This card can never be taller than the screen, so
+          the ✕ and the sign-in buttons are always reachable — the exact failure
+          that made the old full-screen version a production incident (see
+          tests/signup-slidein.test.ts's header). */}
+      <div className="relative max-h-[calc(100dvh-6.5rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+        {/* Dismiss sits over the artwork now that there is no header strip. */}
+        <button
+          onClick={dismiss}
+          aria-label="Dismiss"
+          className="absolute right-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-slate-300 transition hover:bg-ink-950/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+        >
+          ✕
+        </button>
 
-        <div className="px-4 pb-1 pt-3">
-          <p className="text-xs leading-relaxed text-slate-400">RiftCompare Premium adds the pro tools and goes ad-free:</p>
+        {/* THE PITCH IS THE OWNER'S OWN COMP NOW (owner brief: "use this for
+            the slide"). Rebuilt as real markup rather than shipped as the flat
+            image it arrived as — see PremiumPitchPanel's header for why, and
+            for why two of the comp's four feature rows had to be reworded. The
+            gold badge is passed down because this file's own source is what
+            tests/signup-slidein.test.ts reads for its classes. */}
+        <PremiumPitchPanel
+          badge={
+            <span className="inline-block rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+              Premium
+            </span>
+          }
+        />
+
+        <div className="px-4 pb-1 pt-2">
+          <p className="text-xs font-semibold text-slate-200">{heading}</p>
 
           {/* Same real, decided increase the dialog, /premium and PremiumSlideIn
               announce (see lib/site.ts) — same compact treatment PremiumSlideIn
@@ -234,33 +315,34 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             </p>
           )}
 
-          {/* Same chip row as PremiumSlideIn, same shared PITCH_TOOLS — see that
-              file's own header comment for why this is a hand-maintained list
-              pinned against TIER_COMPARISON by tests/premium-slidein.test.ts,
-              rather than a second one drifting here independently. */}
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {PITCH_TOOLS.map((t) => (
-              <span
-                key={t.label}
-                className="inline-flex items-center gap-1 rounded-full bg-ink-800 px-2 py-1 text-[10px] font-semibold text-slate-300"
-              >
-                <span aria-hidden>{t.emoji}</span>
-                {t.label}
-              </span>
-            ))}
-          </div>
-
-          {/* ALWAYS shown now (2026-09-06, explicit product instruction: "we
-              also need to show the prices for non logged in users"). Used to
-              hide entirely while a trial was available, on the theory that a
-              price next to a free-trial CTA would read as a contradiction —
-              worded around that here instead of dropping the price: "after
-              your free trial" makes clear the number isn't charged today, so
-              it sits next to the trial CTA without contradicting it. */}
+          {/* ALWAYS shown now (explicit product instruction: "we also need to
+              show the prices for non logged in users"). Two different framings
+              by design, mirroring PremiumSlideIn.tsx's own price block — see
+              its header comment for the full reasoning and the dates:
+              • trialAvailable (every signed-out visitor, since a brand-new
+                account has never used a trial): bare "$0 today", the number
+                that's actually true right now, an explicit product decision
+                to lead with that instead of the recurring price. The real
+                price is never more than a couple of clicks away — sign up,
+                land on /premium, and both that page and the checkout page's
+                own "Card required... then $X" disclosure state it before any
+                card is charged.
+              • !trialAvailable (trials off entirely): no $0 to claim, so this
+                branch still leads with the real recurring price + the
+                lock-in framing.
+              NB: no ISO dates in this comment on purpose — removing the chip
+              row above pulled it inside the 400-character window after the
+              price-increase banner that tests/premium-price-increase.test.ts
+              scans for hard-coded dates. */}
           {PREMIUM_PRICE_AMOUNT ? (
-            <p className="mt-2 text-[11px] text-slate-500">
-              <span className="font-bold text-white">{PREMIUM_PRICE_AMOUNT}</span>/{PREMIUM_PRICE_PERIOD}
-              {trialAvailable ? " after your free trial" : ""} · {premiumLockInTail()}
+            <p className="text-[11px] text-slate-500">
+              {trialAvailable ? (
+                <span className="text-xl font-extrabold uppercase italic tracking-tight text-gold">{premiumZeroToday()}</span>
+              ) : (
+                <>
+                  <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}
+                </>
+              )}
             </p>
           ) : null}
         </div>

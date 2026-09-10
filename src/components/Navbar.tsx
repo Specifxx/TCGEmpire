@@ -35,6 +35,19 @@ export function Navbar() {
           <Link href="/browse" className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
             Database
           </Link>
+          {/* Premium, on phones, sitting next to Database (2026-09-10, owner
+              brief). The desktop "✦ Premium" link further down is gated xl:block,
+              so before this a phone visitor could only reach Premium through the
+              hamburger overlay — see CinematicNavMenu's spotlight banner, which
+              stays as the in-menu answer. Same lg:hidden band and same shape as
+              Database above so the two read as one pair, but gold and shimmering
+              because the brief is specifically that this one should stand out.
+              The shimmer lives on the inner span, NOT this link: .premium-shimmer
+              uses background-clip:text, which would clip the hover background to
+              the glyphs if both sat on the same element. */}
+          <PremiumNavLink className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-gold hover:bg-ink-800 lg:hidden">
+            <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">✦ Premium</span>
+          </PremiumNavLink>
         </div>
 
         {/* Search — inline on desktop; on smaller screens it gets its own full-width row below.

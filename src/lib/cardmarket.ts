@@ -113,6 +113,45 @@
 // the strict, ambiguity-free matching above untouched.
 //
 // ─────────────────────────────────────────────────────────────────────────────
+// ONE SET, SEVERAL EXPANSIONS: THE DUPLICATE-KEY FAILURE (found 2026-09-09).
+// ─────────────────────────────────────────────────────────────────────────────
+// Cardmarket does not keep one expansion per Riot set. Alongside each main
+// bucket it runs small side buckets — promo / event / "Proving Grounds"-style
+// prints that share the main set's card NAMES — and inferExpansionSetCodes()
+// correctly maps those side buckets onto the SAME setCode as the main one
+// (their names are the main set's names; that is the whole point of the
+// inference). Live data, 2026-09-09: expansion 6491 (Unleashed, 299 products)
+// and expansion 6567 (33 products, first added 2026-05-29) BOTH carry
+// "Lillia, Protector of Dreams" as a two-print family — 884022/884023 at
+// €0.45/€2.00 in 6491, 890062/890063 at €1.90/€50.00 in 6567 — and both
+// families clear every ranking gate on their own. The ranked pass then built
+// TWO sets of rows for the same two Lillia cards, and the strict pass's
+// per-card `seen` guard did not cover this pass, so `createMany` hit the
+// (cardId, retailer, condition, isFoil) unique constraint (Prisma P2002) and
+// threw — which discarded EVERY Cardmarket row for the run, not just the
+// duplicate. Because the `deleteMany` had already run, and because the
+// try/catch in price-import.ts is (correctly) per-source, production carried
+// zero Cardmarket prices or links while the import log said "687 matched
+// (1372 rows) … 93 ranked (408 rows)" one line above the error. The 2026-09-06
+// fix had made matching work; this is what stopped the write.
+//
+// Fix, in three layers, each one sufficient on its own:
+//   1. PRIMARY EXPANSION WINS. Both singles builders now walk the products with
+//      each set's LARGEST mapped expansion first (primaryFirst()). A card's
+//      canonical print lives in the main bucket; a side bucket's same-named
+//      print is a different product (the €50 Lillia above is not the €2 one),
+//      so when both offer a row for the same card the main bucket's is the one
+//      to keep. The strict pass already deduped per card (first wins) but
+//      relied on file order to make "first" mean "main" — now that's explicit.
+//   2. The ranked pass gets the same per-card guard: a family whose cards were
+//      already priced (by a larger expansion) is skipped whole.
+//   3. dedupeRetailerPriceRows() runs over the COMBINED strict+ranked output
+//      before the write, logging anything it drops, and createMany uses
+//      skipDuplicates so a future overlap can never again throw away a whole
+//      run — a duplicate is a data-quality warning, not a reason to show
+//      visitors nothing.
+//
+// ─────────────────────────────────────────────────────────────────────────────
 // HOW IT'S SURFACED.
 // ─────────────────────────────────────────────────────────────────────────────
 // Singles: writes one `cardmarket` (UK, EUR→GBP converted) and one
@@ -274,6 +313,51 @@ export function inferExpansionSetCodes(
   return mappings;
 }
 
+/**
+ * Order products so each set's PRIMARY expansion (the mapped bucket with the
+ * most distinct names) comes before its side buckets, and unmapped buckets
+ * come last. Stable, so within one expansion the file order is untouched.
+ * Both singles builders dedupe per card on a first-wins basis, so this is
+ * what makes "first" mean "the main set print" — see the header ("ONE SET,
+ * SEVERAL EXPANSIONS").
+ */
+export function primaryFirst(
+  products: readonly CardmarketProduct[],
+  mappings: readonly ExpansionMapping[],
+): CardmarketProduct[] {
+  const rank = new Map<number, number>();
+  for (const m of mappings) rank.set(m.idExpansion, m.sampleSize);
+  return products
+    .map((p, i) => ({ p, i, r: rank.get(p.idExpansion) ?? -1 }))
+    .sort((a, b) => b.r - a.r || a.i - b.i)
+    .map((x) => x.p);
+}
+
+/** The RetailerPrice unique key — (cardId, retailer, condition, isFoil) in schema.prisma. */
+function retailerPriceKey(r: Prisma.RetailerPriceCreateManyInput): string {
+  return `${r.cardId}|${r.retailer}|${r.condition ?? ""}|${r.isFoil ? 1 : 0}`;
+}
+
+/**
+ * Drop any row whose unique key an earlier row already carries (first wins —
+ * callers order rows primary-expansion-first, strict pass before ranked).
+ * Pure, so the write path can be tested without a database. See header.
+ */
+export function dedupeRetailerPriceRows(
+  rows: readonly Prisma.RetailerPriceCreateManyInput[],
+): { rows: Prisma.RetailerPriceCreateManyInput[]; dropped: Prisma.RetailerPriceCreateManyInput[] } {
+  const seen = new Set<string>();
+  const kept: Prisma.RetailerPriceCreateManyInput[] = [];
+  const dropped: Prisma.RetailerPriceCreateManyInput[] = [];
+  for (const r of rows) {
+    const k = retailerPriceKey(r);
+    if (seen.has(k)) { dropped.push(r); continue; }
+    seen.add(k);
+    kept.push(r);
+  }
+  return { rows: kept, dropped };
+}
+
 // ---- fetching -------------------------------------------------------------
 // Plain, unauthenticated `fetch` — no browser impersonation, no headers meant
 // to defeat a block. These URLs are a public CDN, not the Cloudflare-guarded
@@ -349,12 +433,14 @@ export function buildCardmarketRows(
     ourIdByKey.set(key, c.id);
   }
 
-  const expansionSetCode = new Map(
-    inferExpansionSetCodes(products, ourNamesBySet).map((m) => [m.idExpansion, m.setCode]),
-  );
+  const mappings = inferExpansionSetCodes(products, ourNamesBySet);
+  const expansionSetCode = new Map(mappings.map((m) => [m.idExpansion, m.setCode]));
+  // Main bucket before side buckets, so the per-card `seen` guard below keeps
+  // the canonical print when two expansions map to one set — see header.
+  const ordered = primaryFirst(products, mappings);
 
   const cmCountByKey = new Map<string, number>();
-  for (const p of products) {
+  for (const p of ordered) {
     if (p.idCategory !== SINGLE_CATEGORY) continue;
     const key = `${p.idExpansion}|${normName(p.name)}`;
     cmCountByKey.set(key, (cmCountByKey.get(key) ?? 0) + 1);
@@ -372,7 +458,7 @@ export function buildCardmarketRows(
   let skippedNoPrice = 0;
   let totalSingleProducts = 0;
 
-  for (const p of products) {
+  for (const p of ordered) {
     if (p.idCategory !== SINGLE_CATEGORY) continue;
     totalSingleProducts++;
 
@@ -399,9 +485,11 @@ export function buildCardmarketRows(
 
     const cardId = ourIdByKey.get(ourKey)!;
     matched++;
-    const dedupe = `${cardId}|false`;
-    if (seen.has(dedupe)) continue; // one row per card (unique key)
-    seen.add(dedupe);
+    // One row per card per retailer (the unique key). Because `ordered` puts
+    // the primary expansion first, a side bucket's same-named print never
+    // displaces the main set's — see header ("ONE SET, SEVERAL EXPANSIONS").
+    if (seen.has(cardId)) continue;
+    seen.add(cardId);
     const url = cardmarketProductUrl(p.idProduct);
     const base = {
       cardId,
@@ -470,12 +558,15 @@ export function buildCardmarketRankedRows(
     ourGroups.set(key, g);
   }
 
-  const expansionSetCode = new Map(
-    inferExpansionSetCodes(products, ourNamesBySet).map((m) => [m.idExpansion, m.setCode]),
-  );
+  const mappings = inferExpansionSetCodes(products, ourNamesBySet);
+  const expansionSetCode = new Map(mappings.map((m) => [m.idExpansion, m.setCode]));
 
+  // Map insertion order = iteration order below, so walking the primary
+  // expansion's products first means its families are ranked first and a
+  // side bucket's same-named family is the one `seenCards` rejects. Header:
+  // "ONE SET, SEVERAL EXPANSIONS" — the real Lillia case.
   const cmGroups = new Map<string, CardmarketProduct[]>();
-  for (const p of products) {
+  for (const p of primaryFirst(products, mappings)) {
     if (p.idCategory !== SINGLE_CATEGORY) continue;
     const key = `${p.idExpansion}|${normName(p.name)}`;
     const g = cmGroups.get(key) ?? [];
@@ -487,6 +578,7 @@ export function buildCardmarketRankedRows(
   for (const pr of prices) priceByProduct.set(pr.idProduct, pr);
 
   const rows: Prisma.RetailerPriceCreateManyInput[] = [];
+  const seenCards = new Set<string>();
   let familiesConsidered = 0;
   let familiesRanked = 0;
 
@@ -500,6 +592,9 @@ export function buildCardmarketRankedRows(
     const ourCandidates = ourGroups.get(`${setCode}|${nn}`);
     // GATE 1: group sizes must match exactly.
     if (!ourCandidates || ourCandidates.length !== cmProducts.length) continue;
+    // Already priced from a larger expansion mapped to the same set — the same
+    // cards would get a second row each and break the unique key. Skip whole.
+    if (ourCandidates.some((c) => seenCards.has(c.id))) continue;
     familiesConsidered++;
 
     // GATE 2: every candidate must classify to a real pool.
@@ -523,6 +618,7 @@ export function buildCardmarketRankedRows(
     familiesRanked++;
     for (let i = 0; i < ranked.length; i++) {
       const cardId = ranked[i].card.id;
+      seenCards.add(cardId);
       const lowEur = priced[i].low!;
       const product = priced[i].product;
       const base = {
@@ -575,14 +671,28 @@ export async function refreshCardmarketPrices(): Promise<{ skipped: boolean; wri
     console.log(`Cardmarket ranked (chase prints): ${ranked.familiesConsidered} ambiguous families sized-matched, ${ranked.familiesRanked} ranked (${ranked.rows.length} rows).`);
   }
 
-  const allRows = [...m.rows, ...rankedRows];
+  // Strict rows first, then ranked: a unique-key clash between the two can't
+  // happen by construction (a print family is never single-print on one side
+  // and multi-print on the other), but the guard is cheap and the failure
+  // mode — one P2002 discarding the whole run — is exactly what kept this
+  // source dark. See header ("ONE SET, SEVERAL EXPANSIONS").
+  const { rows: allRows, dropped } = dedupeRetailerPriceRows([...m.rows, ...rankedRows]);
+  if (dropped.length) {
+    console.warn(
+      `Cardmarket singles: dropped ${dropped.length} duplicate row(s) before write — ` +
+        `sample: ${dropped.slice(0, 5).map((r) => `${r.cardId}/${r.retailer}`).join(", ")}`,
+    );
+  }
   if (allRows.length === 0) {
     console.warn("Cardmarket singles: 0 rows built — keeping existing rows.");
     return { skipped: false, written: 0, reason: "0 rows built" };
   }
 
   await prisma.retailerPrice.deleteMany({ where: { retailer: { in: [CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER] } } });
-  await prisma.retailerPrice.createMany({ data: allRows });
+  // skipDuplicates: last line of defence. The rows are already unique by
+  // key; this only guarantees a future overlap degrades to a skipped row
+  // instead of a thrown write that leaves the table empty after deleteMany.
+  await prisma.retailerPrice.createMany({ data: allRows, skipDuplicates: true });
   return { skipped: false, written: allRows.length };
 }
 
