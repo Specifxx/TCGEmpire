@@ -57,6 +57,7 @@ on:
           - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
+          - audit-inbox      # read-only dump of the four /admin/messages queues (contact messages, store suggestions, feedback, wrong-price/card reports). Emails reduced to their domain and IPs never printed — job logs are collaborator-visible and these are the tables where the public typed their own address. ALL=1 via the `apply` input shows every row rather than only open ones.
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
           - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
@@ -5898,6 +5899,21 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Audit the inbox (read-only dump of every unactioned form submission)
+        # /admin/messages is otherwise the ONLY way to read these four queues, and
+        # it needs an admin session or ADMIN_TOKEN against a live deployment — so
+        # the queue could only be worked from a browser, and acting on it (adding a
+        # suggested store to retailers.ts, correcting a card page) meant
+        # transcribing it by hand. Read-only; writes nothing.
+        #
+        # `apply` doubles as the "show me everything" flag here rather than adding
+        # a whole input for one task: unticked (default) prints only open items,
+        # ticked prints every row whatever its status.
+        if: inputs.task == 'audit-inbox'
+        env:
+          ALL: ${{ inputs.apply && '1' || '' }}
+        run: npx tsx scripts/audit-inbox.ts
 
       - name: Audit store health (read-only — which tracked stores have zero listings)
         if: inputs.task == 'audit-store-health'
