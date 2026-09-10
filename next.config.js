@@ -200,6 +200,16 @@ const nextConfig = {
         destination: "/deck",
         permanent: true,
       },
+      // The arcade's shooter was replaced by Card Rain, a falling-card catcher,
+      // a week after it shipped — a different game, so it got a route that
+      // actually describes it rather than a "Space Invaders" URL serving
+      // something else. 301 rather than 404 so the week of indexing and any
+      // shared links land on the game that replaced it.
+      {
+        source: "/games/space-invaders",
+        destination: "/games/card-rain",
+        permanent: true,
+      },
       // The daily-market-wrap archive, the auto-generated market reports and the
       // RiftCompare Index have all been retired. 301 any surviving inbound/indexed
       // /market/wrap links to the price movers page — the closest live surface —

@@ -134,7 +134,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/games/pairs", label: "Pairs", emoji: "🧠", keywords: ["pairs", "memory", "matching"], hideInFooter: true },
       { href: "/games/twenty48", label: "Riftbound 2048", emoji: "🔢", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
       { href: "/games/zoomed", label: "Zoomed In", emoji: "🔍", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
-      { href: "/games/space-invaders", label: "Space Invaders", emoji: "👾", keywords: ["space invaders", "shooter", "arcade"], hideInFooter: true },
+      { href: "/games/card-rain", label: "Card Rain", emoji: "🌧️", keywords: ["card rain", "catch", "falling cards", "arcade"], hideInFooter: true },
       { href: "/games", label: "All Games", emoji: "🎮", keywords: ["games", "play", "fun", "quiz", "minigames"] },
     ],
   },
