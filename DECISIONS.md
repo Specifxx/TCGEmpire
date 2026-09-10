@@ -3826,3 +3826,18 @@ the announcement opt-out table supplying the one-click unsubscribe.
 **Not verified here**: no database or mail key in this sandbox, so the
 audience count is unknown and no email was sent. The dry run
 (`workflow_dispatch` with the box ticked) reports it before anything goes out.
+
+**Addendum, same day — admin console.** Owner asked for buttons on the site
+to run the send, choose recipients and apply the grants. Added
+`/admin/premium-offer` (+ `/api/admin/premium-offer`, `PremiumOfferConsole`):
+a filterable, checkbox-selectable audience table (not yet emailed / emailed /
+opened the offer / Premium now / opted out), deadline + provider controls,
+preview, send (batched, resumable), "send me a test" (both wordings, no
+stamp), and per-row grant buttons that call the existing audited
+`/api/admin/grant-premium` with the right top-up (30 minus Stripe's trial
+days, or 30). Selection can only NARROW the audience — a ticked account that
+is Premium, an admin or opted out is still skipped — and a re-send to an
+already-emailed account is only possible by naming it, never as a bulk
+action. The cron route + workflow remain as the CI path; both call the same
+lib. First real dry run was dispatched from the workflow with deadline
+2026-09-30 — see the session summary for the count it reported.

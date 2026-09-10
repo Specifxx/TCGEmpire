@@ -27,6 +27,12 @@ const TOOLS: Tool[] = [
     desc: "Who clicked a Premium CTA or started checkout — interest ahead of conversion.",
   },
   {
+    href: "/admin/premium-offer",
+    title: "Premium offer email",
+    icon: "🎁",
+    desc: "Send the 'full month of Premium' email — pick who, preview, send in batches — and grant the extra days once they subscribe.",
+  },
+  {
     href: "/admin/subscriptions",
     title: "Subscription metrics",
     icon: "📊",

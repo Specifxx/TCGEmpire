@@ -73,15 +73,29 @@ export function formatOfferEnds(d: Date): string {
   return d.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
-export async function runPremiumOfferBlast(opts: {
+export interface PremiumOfferOpts {
   offerEnds: string;
   dryRun: boolean;
   limit?: number;
   via?: PremiumOfferProvider;
-}): Promise<PremiumOfferResult> {
+  // Restrict the send to these account ids (the admin console's checkbox
+  // selection). The exclusions above STILL apply — a hand-picked account that
+  // is Premium, an admin, a seed persona or opted out is skipped, never
+  // force-sent — so "choose who to send to" can narrow the audience but not
+  // widen it past what the offer is honest for.
+  userIds?: string[];
+  // Email an account again even though it is already stamped. Only honoured
+  // together with `userIds`, so a re-send is always a deliberate, named choice
+  // and can never turn into a second blast to everyone.
+  resend?: boolean;
+}
+
+export async function runPremiumOfferBlast(opts: PremiumOfferOpts): Promise<PremiumOfferResult> {
   const { dryRun } = opts;
   const via: PremiumOfferProvider = opts.via === "resend" ? "resend" : "brevo";
   const limit = opts.limit && opts.limit > 0 ? opts.limit : DEFAULT_BATCH;
+  const only = opts.userIds?.length ? new Set(opts.userIds) : null;
+  const resend = !!opts.resend && only != null;
 
   const ends = parseOfferEnds(opts.offerEnds);
   if (!ends) return { ok: false, dryRun, via, error: `offerEnds must be a YYYY-MM-DD date, got "${opts.offerEnds}"` };
@@ -117,6 +131,7 @@ export async function runPremiumOfferBlast(opts: {
   for (const u of rows) {
     const key = u.email.trim().toLowerCase();
     if (!key) continue;
+    if (only && !only.has(u.id)) continue;
     if (u.isAdmin || (u.premiumUntil && u.premiumUntil > now)) {
       premium++;
       continue;
@@ -142,7 +157,7 @@ export async function runPremiumOfferBlast(opts: {
   }
 
   const audience = [...byEmail.values()];
-  const pendingRows = audience.filter((r) => !r.alreadySent);
+  const pendingRows = audience.filter((r) => resend || !r.alreadySent);
   const base = {
     ok: true,
     dryRun,
@@ -196,4 +211,90 @@ export async function runPremiumOfferBlast(opts: {
   }
 
   return { ...base, sent, failed, remaining: pendingRows.length - sent };
+}
+
+// ── Admin console support ────────────────────────────────────────────────────
+
+export type PremiumOfferStatus = "pending" | "sent" | "premium" | "optedOut";
+
+export interface PremiumOfferAudienceRow {
+  id: string;
+  email: string;
+  displayName: string;
+  createdAt: Date;
+  trialAvailable: boolean;
+  premiumUntil: Date | null;
+  offerSentAt: Date | null;
+  // The account opened /premium from the offer email (PremiumClick source
+  // "offer") — the "came back" signal ahead of converting.
+  clickedOfferAt: Date | null;
+  status: PremiumOfferStatus;
+}
+
+// Everything /admin/premium-offer needs to render its table, computed with the
+// SAME exclusions runPremiumOfferBlast applies, so what the console shows as
+// "pending" is exactly who a send would reach.
+export async function listPremiumOfferAudience(opts?: { take?: number }): Promise<PremiumOfferAudienceRow[]> {
+  const take = opts?.take && opts.take > 0 ? opts.take : 1000;
+  const now = new Date();
+  const [users, optedOut, clicks] = await Promise.all([
+    prisma.user.findMany({
+      where: { AND: [NOT_SEED_WHERE, { isAdmin: false }] },
+      orderBy: { createdAt: "desc" },
+      take,
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
+        trialStartedAt: true,
+        premiumUntil: true,
+        premiumOfferSentAt: true,
+      },
+    }),
+    prisma.announcementOptOut
+      .findMany({ where: { optedOutAt: { not: null } }, select: { email: true } })
+      .catch(() => [] as { email: string }[]),
+    prisma.premiumClick
+      .findMany({ where: { source: "offer", userId: { not: null } }, select: { userId: true, createdAt: true } })
+      .catch(() => [] as { userId: string | null; createdAt: Date }[]),
+  ]);
+  const optedOutEmails = new Set(optedOut.map((o) => o.email.trim().toLowerCase()));
+  const lastClick = new Map<string, Date>();
+  for (const c of clicks) {
+    if (!c.userId) continue;
+    const prev = lastClick.get(c.userId);
+    if (!prev || c.createdAt > prev) lastClick.set(c.userId, c.createdAt);
+  }
+  return users.map((u) => {
+    const isPremiumNow = !!u.premiumUntil && u.premiumUntil > now;
+    const optedOutNow = optedOutEmails.has(u.email.trim().toLowerCase());
+    const status: PremiumOfferStatus = optedOutNow ? "optedOut" : isPremiumNow ? "premium" : u.premiumOfferSentAt ? "sent" : "pending";
+    return {
+      id: u.id,
+      email: u.email,
+      displayName: u.displayName,
+      createdAt: u.createdAt,
+      trialAvailable: premiumTrialEnabled() && !u.trialStartedAt,
+      premiumUntil: u.premiumUntil,
+      offerSentAt: u.premiumOfferSentAt,
+      clickedOfferAt: lastClick.get(u.id) ?? null,
+      status,
+    };
+  });
+}
+
+// A single test copy to the admin's own inbox: both wordings, no stamp, no
+// opt-out row, no audience check — so the copy can be proofread in a real mail
+// client before anyone else sees it.
+export async function sendPremiumOfferTest(to: string, offerEnds: string, via: PremiumOfferProvider = "brevo"): Promise<{ ok: boolean; error?: string }> {
+  const ends = parseOfferEnds(offerEnds);
+  if (!ends) return { ok: false, error: `offerEnds must be a YYYY-MM-DD date, got "${offerEnds}"` };
+  const configured = via === "brevo" ? isBrevoEnabled() : isEmailEnabled();
+  if (!configured) return { ok: false, error: `${via === "brevo" ? "BREVO_API_KEY" : "RESEND_API_KEY"} is not set` };
+  const unsubUrl = `${SITE_URL}/announcements/unsubscribe?token=test`;
+  const common = { displayName: "Test Recipient", offerDays: PREMIUM_OFFER_DAYS, offerEnds: formatOfferEnds(ends), unsubUrl, via };
+  const a = await sendPremiumOfferEmail(to, { ...common, trialDays: PREMIUM_TRIAL_DAYS }).catch(() => false);
+  const b = await sendPremiumOfferEmail(to, { ...common, trialDays: 0 }).catch(() => false);
+  return a && b ? { ok: true } : { ok: false, error: "the mail provider rejected one or both test emails" };
 }

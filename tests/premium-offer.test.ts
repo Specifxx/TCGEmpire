@@ -156,3 +156,63 @@ test("the offer never mutates Premium itself — the grant is the owner's manual
   assert.doesNotMatch(src, /data: \{[^}]*premiumUntil/, "must never write premiumUntil");
   assert.doesNotMatch(src, /from "\.\/stripe"|stripe\(\)/, "must never touch Stripe");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The admin console (/admin/premium-offer): choose who, preview, send, test,
+// and grant the promised days from the same row.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a hand-picked selection can narrow the audience but never widen it, and re-send needs a named selection", () => {
+  const src = read("src/lib/premium-offer.ts");
+  const fnAt = src.indexOf("export async function runPremiumOfferBlast");
+  const body = src.slice(fnAt, fnAt + 6000);
+  assert.match(body, /const resend = !!opts\.resend && only != null;/, "resend must be inert without userIds — never a second blast to everyone");
+  const filterAt = body.indexOf("if (only && !only.has(u.id)) continue;");
+  const premiumAt = body.indexOf("if (u.isAdmin || (u.premiumUntil && u.premiumUntil > now))");
+  assert.ok(filterAt > 0 && premiumAt > filterAt, "the Premium/admin exclusion must still run on selected accounts");
+  assert.match(body, /if \(byEmail\.delete\(o\.email\.trim\(\)\.toLowerCase\(\)\)\) suppressed\+\+;/, "opt-outs must be removed even when selected");
+});
+
+test("the admin route uses the same dual gate as the other admin mutations and only knows three actions", () => {
+  const src = read("src/app/api/admin/premium-offer/route.ts");
+  assert.match(src, /const keyOk = !!token && body\?\.key === token;/);
+  assert.match(src, /if \(!\(keyOk \|\| me\?\.isAdmin\)\)/, "must require an admin session or the ADMIN_TOKEN");
+  assert.match(src, /status: 404/, "must not reveal the route exists to non-admins");
+  assert.match(src, /dryRun: action === "preview"/, "only the explicit send action may deliver");
+  assert.match(src, /action must be preview, send or test/);
+  assert.match(src, /Math\.min\(limitRaw, 300\)/, "a hand-typed limit must stay under a day's provider cap");
+});
+
+test("the admin page is gated like the other admin pages and lists the audience with the lib's own exclusions", () => {
+  const page = read("src/app/admin/premium-offer/page.tsx");
+  assert.match(page, /if \(!\(keyOk \|\| me\?\.isAdmin\)\) notFound\(\);/);
+  assert.match(page, /robots: \{ index: false, follow: false \}/);
+  assert.match(page, /listPremiumOfferAudience\(\)/);
+  const lib = read("src/lib/premium-offer.ts");
+  const listAt = lib.indexOf("export async function listPremiumOfferAudience");
+  const listBody = lib.slice(listAt, listAt + 3000);
+  assert.match(listBody, /AND: \[NOT_SEED_WHERE, \{ isAdmin: false \}\]/, "the table must hide seed personas and admins, same as the send");
+  assert.match(listBody, /source: "offer"/, "must surface who opened the offer email");
+  const index = read("src/app/admin/page.tsx");
+  assert.match(index, /href: "\/admin\/premium-offer"/, "must be reachable from the admin home");
+});
+
+test("the console confirms before sending, passes the selection through, and grants via the existing admin route", () => {
+  const src = read("src/components/admin/PremiumOfferConsole.tsx");
+  assert.match(src, /window\.confirm\(/, "a real send must be confirmed");
+  assert.match(src, /action: "send", userIds: ids, resend/);
+  assert.match(src, /action: "preview"/);
+  assert.match(src, /action: "test"/);
+  assert.match(src, /fetch\("\/api\/admin\/grant-premium"/, "grants must go through the audited grant route, not a new writer of premiumUntil");
+  assert.match(src, /offerDays - trialDays/, "the suggested grant must top a Stripe trial up to the promised total, not double-count it");
+  assert.match(src, /already been emailed and will receive it again/, "re-sending to an emailed account must be called out");
+});
+
+test("the test send stamps nothing and mints no opt-out row", () => {
+  const src = read("src/lib/premium-offer.ts");
+  const at = src.indexOf("export async function sendPremiumOfferTest");
+  const body = src.slice(at, at + 1500);
+  assert.doesNotMatch(body, /prisma\./, "a proofreading copy must not touch the database");
+  assert.match(body, /trialDays: PREMIUM_TRIAL_DAYS/);
+  assert.match(body, /trialDays: 0/, "both wordings, so both get proofread");
+});
