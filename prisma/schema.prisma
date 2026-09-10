@@ -194,6 +194,25 @@ model GameScore {
   @@index([game, score])
 }
 
+// A live multiplayer room for Sealed Bid (/games/sealed-bid). The entire game —
+// players, dealt cards, sealed bids, results, standings — is ONE JSON document
+// (`state`, shape: SbState in src/lib/sealed-bid-engine.ts) and every change
+// goes through an optimistic-concurrency write on `version` (see
+// src/lib/sealed-bid.ts). One row per game keeps the polling read (every
+// client, every ~1.5s) a single primary-key lookup, and it stays additive: no
+// relations, so `prisma db push` on deploy adds the table and touches nothing
+// else. Rows are purged after ROOM_TTL_MS by the next room creation.
+model GameRoom {
+  code      String   @id
+  game      String   @default("sealed-bid")
+  state     Json
+  version   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
 // One-time tokens for email verification and password reset (purpose-tagged).
 model AuthToken {
   id        String   @id @default(cuid())

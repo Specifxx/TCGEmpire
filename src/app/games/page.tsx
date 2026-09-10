@@ -63,6 +63,18 @@ const GAMES = [
     featured: true,
   },
   {
+    // The one MULTIPLAYER game on the shelf, and the only one where the price
+    // knowledge the rest of the arcade teaches is played AGAINST other people —
+    // so it gets the third wide tile, right under the two daily habits.
+    href: "/games/sealed-bid",
+    emoji: "🔨",
+    name: "Sealed Bid",
+    tag: "NEW · Multiplayer 2–6",
+    desc: "The blind auction where nobody sees the price. Real cards, live prices hidden, one sealed bid a round — outguess your friends and build the richest vault.",
+    accent: "from-amber-500/25 to-ink-850",
+    featured: true,
+  },
+  {
     href: "/games/higher-lower",
     emoji: "⚖️",
     name: "Higher or Lower",

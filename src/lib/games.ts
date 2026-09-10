@@ -20,6 +20,11 @@ export const GAMES: Record<string, GameMeta> = {
   twenty48: { label: "Riftbound 2048", dir: "desc", min: 0, max: 1_000_000, unit: "pts" },
   "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
   "space-invaders": { label: "Space Invaders", dir: "desc", min: 0, max: 100_000, unit: "pts" },
+  // Multiplayer. Unlike every board above, this score is computed SERVER-side at
+  // the end of a room (lib/sealed-bid.ts → submitScore), never posted by the
+  // client. The cap is generous: 1,000 Shards + a full vault of chase cards +
+  // every bonus is still well under it.
+  "sealed-bid": { label: "Sealed Bid", dir: "desc", min: 0, max: 50_000, unit: "pts" },
 };
 
 export function isGameKey(k: string): k is keyof typeof GAMES {

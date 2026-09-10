@@ -3857,3 +3857,37 @@ summary counts `failed` but nothing alerts on it. Fix is one setting on
 Brevo's side (Security → Authorised IPs → turn the restriction off), not
 code. Until then the campaign can go via Resend at 90/day, at the cost of
 the transactional quota; one email has gone out that way, 262 remain.
+
+---
+
+## Sealed Bid — multiplayer blind auction — 2026-09-10
+
+The arcade's first multiplayer game (`/games/sealed-bid`): 2–6 players, real
+cards, live prices hidden, one sealed bid a round, ties shatter the card, and
+the richest vault wins. Decisions worth writing down:
+
+- **No websockets — clients poll, the server is the referee.** The site is
+  serverless on Vercel with no realtime layer, so the game was designed around
+  simultaneous *sealed* decisions rather than turn-by-turn interaction: every
+  client polls one row (`GameRoom`, a single JSON document) every ~1.5s, and any
+  request — a bid or an idle poll — first runs the pure `advance(state, now)`
+  referee so a stalled room catches up with the clock deterministically. Round
+  resolution is stamped at the deadline, not at whoever happened to poll.
+- **Pure engine, one document, optimistic concurrency.** All rules live in
+  `src/lib/sealed-bid-engine.ts` (no DB, no clock of its own; pinned by
+  `tests/sealed-bid.test.ts`). `src/lib/sealed-bid.ts` does read → transform →
+  `updateMany WHERE version = read` and retries a lost race. Six concurrent bids
+  were exercised end-to-end against a local Postgres and all landed.
+- **Prices are the hidden information, and the server enforces it.** `viewFor`
+  strips `priceCents`/`shards` from the current round unless that player used
+  their one Appraise on that card. Bearer tokens (`SbPlayer.token`) never leave
+  the server; the public id is a separate 8-hex `pid`.
+- **All rounds are dealt at start.** One card per price tier per round (chase
+  ≥ $8, mid $1.50–$7.99, budget), shuffled within the hand. Dealing up front is
+  what keeps every later transition synchronous and pure.
+- **Score is server-computed and pushed to the leaderboard.** Unlike every
+  other arcade board, `sealed-bid` scores are never posted by the client —
+  `afterCommit` submits signed-in players' totals when a room hits `over`.
+- **Additive schema.** `GameRoom` has no relations, so the deploy-time
+  `prisma db push` adds one table and touches nothing else. Rows are purged
+  after 6h by the next room creation, so there is no cron.
