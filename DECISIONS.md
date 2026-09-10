@@ -4040,3 +4040,53 @@ carries a per-route contextual pitch naming one specific tool (a deck page
 sells Best Basket, a card page sells Value Finder), which beats a generic
 four-row list and is pinned by `tests/premium-slidein.test.ts`. Running both
 would make it exactly the tall card it was designed not to be.
+
+---
+
+## The signup popup returns every 3 pages (2026-09-10)
+
+Owner brief: "the slider should show up again every 3 pages a user visits if
+they're not logged in". Until now a dismissal silenced `SignupPromoPopup` for
+the whole browser session — one impression per visitor, per tab, forever.
+
+**Mechanism.** The one-way `rc_signup_promo_seen` boolean is replaced by two
+counters in `sessionStorage`: `rc_signup_promo_views` (distinct pages this
+signed-out visitor has seen, counted once per route via a `lastCountedPath`
+ref, the same shape `PremiumSlideIn` already uses) and
+`rc_signup_promo_dismissed_at` (what that count was when they last closed it).
+The arming effect shows the popup unless a dismissal is stamped AND fewer than
+`PAGES_BETWEEN_SHOWS` pages have passed since. Verified by replaying the real
+arming logic against a fake store: shown on page 1, dismissed, quiet on 2 and
+3, back on 4, dismissed, quiet on 5 and 6, back on 7.
+
+**The first show is still ungated, and that distinction is load-bearing.** This
+file spent three iterations getting rid of a first-show gate — a 5s timer, then
+a pageview threshold, then buy_click-aware timing — because each measurably cost
+the site. The new counting only decides when the popup RETURNS; a visitor who
+has never dismissed it still sees it on their first eligible page with nothing
+in the way. `tests/signup-funnel.test.ts` keeps banning the old constant names
+(`PROMO_DELAY_MS`, `MIN_PAGEVIEWS`, `PV_KEY`) and now also asserts the new gate
+is reachable only once `dismissedAt !== null`, so a future pass can't quietly
+turn the cadence back into an entry gate.
+
+**Flagged, not hidden: there is no lifetime cap.** `PremiumSlideIn` stops for
+good after two dismissals, on the reasoning that a firm no is a no. This popup
+now has no such ceiling — a visitor who dismisses it on every third page will
+keep seeing it all session. That is what was asked for and it is a defensible
+bet on a signed-out audience that has not converted, but this file's own
+history records an earlier pushier version at a 78% dismiss rate with bounce up
+and pages/visitor down. `signup_promo_dismissed` and pages/visitor are the two
+numbers to watch; a cap is the first thing to add if either moves.
+
+**Measurement.** `PROMO_VARIANT` → `premium_graphic_repeat`, because frequency
+is exactly the axis that changes shown counts and dismiss rates, and without a
+new name the once-per-session era and the repeating era would average into each
+other. The impression event also carries `repeat`, separating a first show from
+a re-show inside the new variant, so "does the second showing convert or just
+annoy" is answerable directly rather than by inference.
+
+**Test that changed its mind.** `tests/access-tiers.test.ts` asserted "a
+dismissed promo stays dismissed for the rest of the session". That is now the
+opposite of the product decision, so it was rewritten to pin what still has to
+hold: a dismissal must buy a real, page-counted quiet stretch rather than being
+a no-op, and pages must be counted once per route rather than once per render.

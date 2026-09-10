@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
@@ -17,12 +17,12 @@ import {
   premiumFromLine,
 } from "@/lib/site";
 
-// Shown once per BROWSER SESSION (sessionStorage, not localStorage) — dismissing
-// suppresses it for the rest of that session/tab, but it comes back on the next
-// visit once the tab/browser is closed and reopened. Signing up suppresses it for
-// good, same as before, simply because a signed-in visitor never re-enters this
-// effect at all (see the `user` check below). Fires on every route, including the
-// homepage.
+// Shows on the first eligible page, then RETURNS every PAGES_BETWEEN_SHOWS
+// pages after each dismissal, for as long as the visitor stays signed out
+// (sessionStorage, not localStorage, so a new tab starts the count over).
+// Signing up suppresses it for good, simply because a signed-in visitor never
+// re-enters the arming effect at all (see the `user` check below). Fires on
+// every route, including the homepage.
 //
 // THIS IS NOW A PREMIUM PITCH, NOT A FREE-ACCOUNT MOMENT (2026-09-04, explicit
 // product instruction: "change the sign up pop up ... to a get premium pop up").
@@ -53,7 +53,33 @@ import {
 // is still real — it's what /login's own AuthForm sells (see its PERKS list)
 // and what a visitor gets regardless of whether they ever pay for Premium. This
 // popup just isn't the surface that leads with it any more.
-const SEEN_KEY = "rc_signup_promo_seen";
+
+// sessionStorage. Two numbers, not a boolean: how many distinct pages this
+// signed-out visitor has seen, and what that count was when they last dismissed
+// the popup. The gap between them is what decides whether it comes back.
+const VIEWS_KEY = "rc_signup_promo_views";
+const DISMISSED_AT_KEY = "rc_signup_promo_dismissed_at";
+
+// IT COMES BACK (owner brief, 2026-09-10: "the slider should show up again
+// every 3 pages a user visits if they're not logged in"). Until now a dismissal
+// silenced it for the whole browser session.
+//
+// This deliberately reopens a risk this file's own history documents: an
+// earlier, pushier version of this popup measured a 78% dismiss rate with
+// bounce up and pages/visitor down. A re-show every few pages is a smaller ask
+// than that version was, and the visitor still controls it — but note there is
+// NO lifetime cap here, unlike PremiumSlideIn, which stops for good after two
+// dismissals. If signup_promo_dismissed climbs or pages/visitor falls after
+// this ships, a cap is the first thing to add.
+const PAGES_BETWEEN_SHOWS = 3;
+
+function readCount(key: string): number {
+  try {
+    return Number(sessionStorage.getItem(key) ?? "0") || 0;
+  } catch {
+    return 0;
+  }
+}
 
 // A CORNER SLIDE-IN, NOT A MODAL (2026-09-01). This used to be a full-screen
 // dialog — backdrop, scroll-locked, focus-trapped, centred card. That shape had
@@ -108,6 +134,13 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // itself changed from a free-account comparison to Premium, 2026-09-04). Each
 // name records which axis changed; this one changes CONTENT, not chrome or
 // timing, so it gets a genuinely new name rather than another suffix.
+// → "premium_graphic_repeat" (2026-09-10, same day): the popup stopped being
+// once-per-session and now returns every few pages after a dismissal. That is
+// the TIMING axis, the same one "comparison_instant" once recorded — and it
+// changes the shown count and the dismiss rate directly, so without a new name
+// the before and after would average into each other and neither could be read.
+// The impression also carries `repeat` now, separating a first show from a
+// re-show within this same variant.
 // → "premium_graphic" (2026-09-10): the pitch stopped being text at all. The
 // sentence and the six-chip tool row became the designed PremiumPitchPanel; the
 // heading's non-trial fallback became the new tagline. Same axis as the last
@@ -120,13 +153,14 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_graphic";
+const PROMO_VARIANT = "premium_graphic_repeat";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded, trialDays } = useMe();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
+  const lastCountedPath = useRef<string | null>(null);
 
   // A brand-new account has, by definition, never started a trial before — so
   // unlike PremiumSlideIn's `trialEligible` (which useMe() only computes for a
@@ -137,21 +171,45 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // api/me/route.ts's unconditional `trialDays: PREMIUM_TRIAL_DAYS`.
   const trialAvailable = trialDays > 0;
 
+  // Count the pages a SIGNED-OUT visitor sees, once per distinct route. Declared
+  // before the arming effect on purpose: React runs effects in order, so this
+  // page is already counted by the time the effect below reads the total.
+  // Gated on `loaded` as well as `user` so the very first route still counts
+  // once /api/me resolves — lastCountedPath is only claimed after that.
+  useEffect(() => {
+    if (!loaded || user) return;
+    if (!pathname || lastCountedPath.current === pathname) return;
+    lastCountedPath.current = pathname;
+    try {
+      sessionStorage.setItem(VIEWS_KEY, String(readCount(VIEWS_KEY) + 1));
+    } catch {
+      /* private mode — the promo then just behaves as never-dismissed */
+    }
+  }, [pathname, loaded, user]);
+
   useEffect(() => {
     if (!loaded || user || shown) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
-    let seen = false;
+
+    // Never dismissed this session → show at the first opportunity, with no
+    // gate of any kind, exactly as before. Dismissed → stay away until they
+    // have moved on PAGES_BETWEEN_SHOWS further pages, then come back.
+    let views = 0;
+    let dismissedAt: number | null = null;
     try {
-      seen = sessionStorage.getItem(SEEN_KEY) === "1";
+      views = readCount(VIEWS_KEY);
+      const raw = sessionStorage.getItem(DISMISSED_AT_KEY);
+      dismissedAt = raw === null ? null : Number(raw) || 0;
     } catch {
-      /* private mode — worst case it can show again next page load */
+      /* private mode — treat as never dismissed, same as the old behaviour */
     }
-    if (seen) return;
+    if (dismissedAt !== null && views - dismissedAt < PAGES_BETWEEN_SHOWS) return;
+
     // Never slide in on top of a real modal. FeedbackWidget sets this flag
     // while its panel is open; sliding a signup pitch in over a visitor who is
     // mid-sentence writing us feedback would lose the feedback entirely.
-    // Deliberately does NOT mark SEEN_KEY when it skips, so that visitor still
-    // gets the promo on the next page rather than silently losing it forever.
+    // Deliberately does NOT touch the counters when it skips, so that visitor
+    // still gets the promo on the next page rather than losing this turn.
     if (document.body.dataset.rcDialog === "1") return;
 
     setShown(true);
@@ -161,7 +219,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     // the animation settling in, not a deliberate wait — it's a couple of
     // frames, not a timer.
     requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
-    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION });
+    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
   }, [loaded, user, shown, pathname]);
 
   // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
@@ -174,14 +232,14 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   const dismiss = useCallback(() => {
     hide();
     trackEvent("signup_promo_dismissed", { variant: PROMO_VARIANT });
-    // PERSISTS THE DISMISSAL for the rest of the browser session. The arming
-    // effect above reads SEEN_KEY before it re-arms, so a dismissed promo does
-    // not come back on the next pageview — only on a genuinely new session
-    // (tab/browser closed and reopened). Written synchronously here, not on a
-    // later effect, so a dismiss immediately followed by a navigation still
-    // sticks.
+    // STAMPS WHERE THEY WERE when they dismissed it, rather than a one-way
+    // "seen" flag. The arming effect re-shows once they are
+    // PAGES_BETWEEN_SHOWS pages past this mark, so each dismissal buys the
+    // visitor the same quiet stretch rather than silence for the whole
+    // session. Written synchronously here, not in a later effect, so a dismiss
+    // immediately followed by a navigation still counts from the right page.
     try {
-      sessionStorage.setItem(SEEN_KEY, "1");
+      sessionStorage.setItem(DISMISSED_AT_KEY, String(readCount(VIEWS_KEY)));
     } catch {
       /* private mode */
     }
