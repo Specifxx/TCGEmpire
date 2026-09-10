@@ -223,7 +223,18 @@ export function SealedBid() {
       lsSet(LS_NAME, nm);
       setName(nm);
       const clean = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      const r = await api<{ token: string; pid: string; view: SbView }>(`${BASE}/${clean}`, null, { action: "join", name: nm });
+      // Send the identity we already hold for this room (or our current one —
+      // a rematch room carries the host over under the same token). The server
+      // hands the SAME player back instead of seating a duplicate.
+      let hint: string | null = null;
+      try {
+        const raw = ls(roomKey(clean));
+        if (raw) hint = (JSON.parse(raw) as { token?: string }).token ?? null;
+      } catch {
+        /* corrupt */
+      }
+      hint = hint ?? session?.token ?? null;
+      const r = await api<{ token: string; pid: string; view: SbView }>(`${BASE}/${clean}`, hint, { action: "join", name: nm });
       enter({ code: clean, token: r.token, pid: r.pid });
       applyPoll({ view: r.view, share: null });
     } catch (e) {

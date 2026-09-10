@@ -13,6 +13,7 @@ import {
   shareText,
   start,
   viewFor,
+  type SbIdentity,
 } from "@/lib/sealed-bid-engine";
 import { createRoom, dealRounds, mutateRoom, newIdentity, normalizeCode, pollRoom } from "@/lib/sealed-bid";
 
@@ -66,18 +67,32 @@ export async function POST(req: Request, { params }: { params: { code: string } 
   try {
     const code = normalizeCode(params.code);
     const body = (await req.json().catch(() => ({}))) as Partial<Action>;
-    let token = tokenOf(req);
+    const token = tokenOf(req);
 
     if (body.action === "join") {
       const user = await getCurrentUser();
-      const name = cleanName((body as { name?: unknown }).name ?? user?.displayName);
-      const id = newIdentity(name, user?.id ?? null);
-      const { after } = await mutateRoom(code, (s, now) => join(s, id, now));
-      const me = after.players.find((p) => p.pid === id.pid);
-      if (!me) throw new SbError("Couldn't join that room.", 409);
-      token = id.token;
+      const rawName = (body as { name?: unknown }).name ?? user?.displayName;
+      // IDEMPOTENT for a player who is already in this room. The client sends
+      // whatever identity it holds (a stored token for this code, or its current
+      // session's token — the host's token is reused in a rematch room, see
+      // createRoom in the "rematch" action). Without this, "Go to rematch room"
+      // minted a SECOND identity for the host: the real host sat in the lobby as
+      // a ghost who never bid, and the copy had no power to start the game.
+      const ref: { id?: SbIdentity } = {};
+      const { after } = await mutateRoom(code, (s, now) => {
+        const mine = token ? s.players.find((p) => p.token === token) : undefined;
+        if (mine) {
+          ref.id = { token: mine.token, pid: mine.pid, name: mine.name, userId: mine.userId };
+          return s;
+        }
+        ref.id = newIdentity(cleanName(rawName), user?.id ?? null);
+        return join(s, ref.id, now);
+      });
+      const id = ref.id;
+      const me = id ? after.players.find((p) => p.pid === id.pid) : undefined;
+      if (!id || !me) throw new SbError("Couldn't join that room.", 409);
       return NextResponse.json(
-        { token: id.token, pid: id.pid, view: viewFor(after, token, Date.now()) },
+        { token: id.token, pid: id.pid, view: viewFor(after, id.token, Date.now()) },
         { headers: NO_STORE }
       );
     }
