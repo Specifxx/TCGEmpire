@@ -3841,3 +3841,19 @@ already-emailed account is only possible by naming it, never as a bulk
 action. The cron route + workflow remain as the CI path; both call the same
 lib. First real dry run was dispatched from the workflow with deadline
 2026-09-30 — see the session summary for the count it reported.
+
+**Addendum, same day — first live run, and why Brevo failed.** Dry run:
+315 accounts, 52 Premium/admin, 0 opted out, 263 eligible. The first live
+batch via Brevo came back sent 0 / failed 90 (nothing stamped, so nothing
+lost). A one-email bisect via Resend delivered, which cleared the database
+side; a second Brevo attempt, after adding failure reasons to the run
+report, returned Brevo's own answer: `401 unrecognised IP address
+3.235.121.214 … add it under authorised IPs`. Brevo's "Authorised IPs"
+security setting is switched on in the account, and Vercel's function IPs
+change per invocation, so EVERY Brevo send from the site is refused — which
+means the daily registered-account digest (lib/user-digest.ts, Brevo-only)
+has been failing silently for as long as that setting has been on; its
+summary counts `failed` but nothing alerts on it. Fix is one setting on
+Brevo's side (Security → Authorised IPs → turn the restriction off), not
+code. Until then the campaign can go via Resend at 90/day, at the cost of
+the transactional quota; one email has gone out that way, 262 remain.
