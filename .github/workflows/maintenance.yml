@@ -19,6 +19,7 @@ on:
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
           - fetch-promos     # scrape riftbound.gg's official card-page sitemap for promo printings (incl. R-numbered promo runes) + apply additively (no dry-run — both scripts are additive/idempotent by design)
           - tcg-printings    # create printings TCGplayer lists that we lack (Showcase/alt-art variants + the R-numbered rune cycle)
+          - fix-promo-variants # REPAIR for cards tcg-printings already created wrongly: a TCGplayer PROMO product that was filed as an in-set alt-art "Showcase" because this script's own promo-set regex was narrower than lib/tcgplayer.ts's (reported via the wrong-card form — /card/warwick-hunter-ogn-159a-298 showed a US$63.81 promo price on a page claiming to be a pack-pulled Showcase). Flags isPromo and restores the base printing's rarity. Report-only unless `apply` is ticked. NEVER moves a slug — those URLs are live and indexed, and a move needs a next.config.js redirect in the same commit.
           - fix-cloned-art   # scrape real official art for cloned promo/rune printings; clear wrong borrowed art to a placeholder where none exists
           - set-pipeline     # scrape playriftbound.com's official gallery for ONE set and import its reveals (set_slug input; defaults to the next announced-but-unreleased set — Radiance today). Replaced 'vendetta-pipeline', which could only ever do VEN.
           - probe-sg         # read-only Singapore store scan (no DB writes)
@@ -108,7 +109,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "audit-premium-vs-stripe only: actually WRITE the repairs (default: report only)"
+        description: "audit-premium-vs-stripe / fix-promo-variants: actually WRITE the repairs (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -5554,6 +5555,26 @@ jobs:
       - name: Add missing TCGplayer printings (variants + rune cycle)
         if: inputs.task == 'tcg-printings'
         run: npx tsx scripts/add-tcg-printings.ts ${{ inputs.dry_run && '--dry' || '' }}
+
+      # The clean-up half of the fix above. add-tcg-printings.ts used to carry its
+      # OWN /organized play/i in place of lib/tcgplayer.ts's canonical
+      # /organized\s*play|promotional\s*cards?/i, and TCGplayer files promos under
+      # two set names — only one of which says "Organized Play". So every product in
+      # "Riftbound Promotional Cards" took the in-set VARIANT branch and was created
+      # as a pack-pulled Showcase card carrying that promo's externalId; the pricing
+      # layer then matched it straight back by externalId (which bypasses the promo
+      # check on purpose, an explicit link being authoritative) and put the promo's
+      # price on a page presenting itself as something else entirely. The source is
+      # fixed and pinned by tests/tcgplayer.test.ts; this repairs the rows it wrote.
+      #
+      # `apply` gates the write (the polarity rule: ticking is what produces a
+      # value). --reslug is deliberately NOT exposed — correcting isPromo changes
+      # what cardSlug() produces, and moving a live indexed URL needs a matching
+      # next.config.js redirect, which is a commit, not a workflow run. The script
+      # prints the slug each row WOULD move to either way.
+      - name: Repair promo products filed as in-set variants
+        if: inputs.task == 'fix-promo-variants'
+        run: npx tsx scripts/fix-promo-as-variant.ts ${{ inputs.apply && '--apply' || '' }}
 
       # Cloned promo/rune printings (add-tcg-printings.ts, add-promos.ts) had no
       # independent image source and borrowed a donor card's art — sometimes a

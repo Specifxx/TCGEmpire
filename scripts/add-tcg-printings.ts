@@ -8,7 +8,7 @@
  * Usage: npx tsx scripts/add-tcg-printings.ts [--dry]
  */
 import { PrismaClient } from "@prisma/client";
-import { fetchTcgplayerProducts, numKey, setFromTotal, setCodeFromSetName } from "../src/lib/tcgplayer";
+import { fetchTcgplayerProducts, numKey, setFromTotal, setCodeFromSetName, isPromoProduct } from "../src/lib/tcgplayer";
 import { cardSlug } from "../src/lib/card-url";
 
 const prisma = new PrismaClient();
@@ -124,7 +124,28 @@ async function main() {
   // isPromo=false for every in-set variant, so these six were created with the
   // right name/art/number but silently weren't flagged as promos at all — no
   // PROMO badge, no "-promo" slug, invisible to the isPromo=true browse filter.
-  const OP_SET_NAME = /organized play/i;
+  //
+  // IMPORTED, NOT A PRIVATE COPY — and this file has been bitten by exactly that
+  // before (see the note above main() about the local setFromTotal that never
+  // learned VEN). The local regex here was /organized play/i, while
+  // lib/tcgplayer.ts's isPromoProduct has always been
+  // /organized\s*play|promotional\s*cards?/i. TCGplayer files promos under TWO
+  // set names, and only one of them says "Organized Play":
+  //
+  //   REPORTED 2026-09-09 via the wrong-card form — riftcompare.com/card/
+  //   warwick-hunter-ogn-159a-298 showed US$63.81 and linked to TCGplayer
+  //   product 678049, which lives in "Riftbound Promotional Cards". The local
+  //   regex missed that set name, so isOpPromo was false, the product took
+  //   path 1's VARIANT branch, and a PROMO printing was created as a
+  //   pack-pulled "OGN 159a/298 Showcase" card. The pricing layer then matched
+  //   it straight back by its own externalId ("tcg-678049") — which bypasses
+  //   isPromoProduct entirely, because an externalId link is meant to be
+  //   authoritative — so the promo's price landed on a page presenting itself
+  //   as an in-set Showcase.
+  //
+  // The two layers disagreeing about what "a promo product" means is the whole
+  // bug, so there is now one definition and both read it.
+  const isOpPromoProduct = isPromoProduct;
   for (const p of products) {
     const numStr = p.customAttributes?.number;
     const externalId = `tcg-${p.productId}`;
@@ -135,7 +156,7 @@ async function main() {
       const [num, total] = numStr.split("/");
       const sc = setFromTotal(total);
       if (sc) {
-        const isOpPromo = OP_SET_NAME.test(p.setName ?? "");
+        const isOpPromo = isOpPromoProduct(p);
         const haveKey = isOpPromo ? `${sc}|${numKey(num)}|promo` : `${sc}|${numKey(num)}`;
         if (have.has(haveKey)) continue; // already have it
         const base = baseBy.get(`${sc}|${num.replace(/[a-z*]/gi, "")}/${total}`);
