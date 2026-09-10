@@ -4090,3 +4090,111 @@ dismissed promo stays dismissed for the rest of the session". That is now the
 opposite of the product decision, so it was rewritten to pin what still has to
 hold: a dismissal must buy a real, page-counted quiet stretch rather than being
 a no-op, and pages must be counted once per route rather than once per render.
+
+## Radiance launch readiness (2026-09-10)
+
+Radiance releases 23 Oct 2026 — 43 days out, with Preview Season starting
+28 Sep and Pre-Rift events 16–22 Oct. The brief was "everything we had for
+Vendetta that led up to the release, and better."
+
+**What was already better.** Every Vendetta surface that named a set in code
+has since been rebuilt to name none, and all of those roll forward on the
+clock with no edit: `/release-dates` (which replaced both
+`/vendetta-countdown` and `/radiance-countdown`), the embeddable countdown,
+the homepage "N days to go" line, the pre-order routing, the eBay quota
+window. Radiance also has something Vendetta never did — `/radiance-preorders`,
+a real pre-order comparison, live since 15 Aug.
+
+**What was quietly broken.** Everything keyed on the SET rather than the date
+was still hardcoded to VEN, and every one of those fails silently:
+
+- `lib/price-import.ts` had no `radiance` branch in `SET_FROM_TITLE`, none in
+  `STOP`, and no Radiance denominator in `setFromTotal`. Its last resort is
+  `confidentSetCode ?? "OGN"` — so a store listing reading "Some Card -
+  042/114" would have been matched to an **Origins** card and had its price
+  written onto it. `lib/tcgplayer.ts`'s twin switch had the same hole (and
+  `isSetlessNumber()` is built on it, so every Radiance number read as
+  "setless"); `lib/ebay.ts` could not set-confirm a bare number;
+  `lib/woocommerce.ts` did not recognise a Radiance single as a single.
+- `lib/ebay.ts` had no title keyword and no floor for `"Vault"` or
+  `"Showdown Decks"` — Radiance's two headline SKUs. A missing keyword is not
+  inert: the filter is `!kw || kw.test(...)`, so those searches would have run
+  with **no title filter at all**.
+- `scripts/sync-cards.ts` kept a private five-set name table (Radiance cards
+  would have stored `setName: "RAD"`) and its ADOPTION query matched the
+  literal prefix `"ven-official-"`, so pre-release Radiance rows could never
+  be adopted — they would have become duplicate card pages the day RiftScribe
+  catalogued the same cards.
+- The spoiler-season pipeline was two VEN-hardcoded scripts, so Radiance's
+  reveal window needed a fork of a 360-line Playwright scraper, under the one
+  deadline where being first is worth the most.
+
+**Decisions taken.**
+
+*Both Radiance denominators (114 and 180) are claimed.* Riot published "180
+cards, 66 of them Showcase" and no card has been seen. Vendetta's 166 was its
+base run with Showcase numbered above it, which would make Radiance's printed
+denominator 114; Riot's own phrasing would make it 180. Neither collides with
+another set, so claiming both costs nothing and covering neither is a silent
+misroute to Origins. Prune the wrong one when a real card lands.
+
+*Astral Radiance is guarded in every new branch.* Pokémon's set of that name
+reaches the same functions, and a bare `/radiance/` would have let a Pokémon
+listing confirm a Riftbound card's set.
+
+*The set code is a gate, not a guess to be discovered later.* `"RAD"` is our
+placeholder; Riot has not published the real code. `scripts/fetch-set-official.ts`
+now refuses to write a scrape file when the official gallery reports no cards
+under our code but does report another, prints the code the gallery actually
+uses, and exits non-zero. Importing under the wrong code needs a
+`Card.setCode` backfill plus an edit to every mapper keyed on it, so refusing
+is the cheap end of that mistake. The importer has the mirror guard: it
+refuses a scrape file stamped with a different set than it was asked for.
+
+*The pipeline is parameterised, not forked.* `fetch-vendetta-official.ts` and
+`import-vendetta.ts` became `fetch-set-official.ts` and `import-set-cards.ts`,
+taking `SET=<slug|code>` (default: the next announced-but-unreleased set);
+`maintenance.yml`'s `vendetta-pipeline` became `set-pipeline` with a
+`set_slug` input.
+
+*Release-day defaults derive from the data.* Both the cron route and the local
+script defaulted to the literal `"vendetta"`, which had been wrong for six
+weeks; they now read `newestReleasedSet()`. The workflow input defaults to
+blank and lets the route decide. `dry_run` stays the real guard.
+
+*Fewer content pages than Vendetta had, deliberately.* Of ~24 Vendetta
+pre-release articles, 13 were 301'd within eight weeks — seven in one
+consolidation commit that names an AdSense low-value-content rejection as its
+cause, the rest on Search Console evidence (two flagship posts had 4 and 19
+impressions in 28 days). The survivors all carry live data. So Radiance gets
+**no new article**: the launch schedule was added to the existing pillar
+post, and the "should I pre-order" intent was answered ON
+`/radiance-preorders` rather than in a post beside it that would cannibalise
+it. `docs/seo-keyword-map.md` now carries the Radiance ownership rows and that
+rule as guidance for the set after.
+
+*Three factual corrections while in there.* The pillar article called Radiance
+"the second-largest Riftbound set so far, behind only Origins" — Spirit Forged
+(221) and Unleashed (219) are both larger, and the 180 is inclusive of
+Showcase while those are not, so the page now states the comparison problem
+instead of picking the flattering side. It also printed "Set code: RAD" as
+fact; that is our guess, and it now says Riot has not published one. And two
+article links pointed at `/radiance-countdown` — a 301 to `/release-dates` —
+while promising "every Radiance card as reveals land", which that page cannot
+deliver; they point at `/sets/radiance`, which can.
+
+**Pinned by** `tests/set-launch-readiness.test.ts` (10 tests). Every check
+iterates `SETS` rather than naming a set, so the set after Radiance is covered
+by adding its row and nothing else. **Documented by**
+`docs/SET-LAUNCH-RUNBOOK.md`, which is the thing that did not exist for
+Vendetta.
+
+**Unrelated, found by accident.** This checkout gained its full git history
+today, and `scripts/adsense-guard.ts`'s policy-date check skips itself on a
+shallow clone. Both CI and Vercel check out shallow, so that check has been
+silently inert everywhere it runs. With history it reported five real
+problems: `/privacy`, `/terms` and `/editorial-policy` all declared "last
+updated" dates earlier than material edits (in `/terms`' case, earlier than
+the commit that removed the peer-to-peer Marketplace from it), and
+`/marketplace/terms` and `/returns` were still listed as policy pages though
+both routes were deleted on 2026-08-26. Fixed in its own commit.

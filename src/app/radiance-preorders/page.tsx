@@ -263,8 +263,56 @@ export default async function RadiancePreordersPage() {
         </div>
       )}
 
+      {/* WHEN to pre-order, not just what it costs. The prices above answer
+          "which store is cheapest today"; this answers the question a buyer
+          actually arrives with, and it is the half no comparison page carries.
+          Every claim here is a mechanism or a dated fact from Riot's own
+          schedule — no price prediction, and deliberately no "buy now" nudge on
+          a page that earns affiliate commission when you do. */}
+      {stillUpcoming && (
+        <section className="card-surface mt-8 p-6">
+          <h2 className="text-xl font-extrabold text-white">When to pre-order Radiance — and when to wait</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Two dates change these prices before release day. <strong className="text-slate-200">Preview Season runs
+            28 September to 9 October 2026</strong>, when the cards are revealed a handful at a time; a store that
+            priced its boxes before anyone knew what was in the set often re-prices once the chase cards are known.
+            Then <strong className="text-slate-200">Pre-Rift events run 16–22 October</strong>, a week ahead of the
+            23 October street date, which is when the first singles start changing hands and when sealed stock is at
+            its tightest.
+          </p>
+          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-slate-400">
+            <li>
+              <strong className="text-slate-200">Want to open product?</strong> Pre-ordering is reasonable, because
+              allocation — not price — is what runs out. The spread between the cheapest and dearest tracked store
+              above is the whole argument for comparing first: it is the same box either way, since nobody has opened
+              one.
+            </li>
+            <li>
+              <strong className="text-slate-200">Want specific cards?</strong> Waiting is usually cheaper. Singles are
+              at their most volatile during Pre-Rift week — supply is a handful of event boxes against everyone who
+              wants to build immediately — and they typically settle a few weeks after release once supply catches up.
+              Vendetta&apos;s singles started trading several days ahead of its official street date for exactly this
+              reason.
+            </li>
+            <li>
+              <strong className="text-slate-200">Not sure it is worth opening at all?</strong> That is an arithmetic
+              question, and it needs real singles prices to answer, which do not exist for an unreleased set. The{" "}
+              <Link href="/tools/box-ev" className="text-brand-300 underline-offset-2 hover:underline">box EV
+              calculator</Link> answers it for every set that has released, and will cover Radiance from 23 October.
+            </li>
+          </ul>
+          <p className="mt-4 text-sm leading-relaxed text-slate-400">
+            We do not forecast prices here and we will not tell you the number is going up. What this page can tell
+            you is what every tracked store is charging right now, in your currency, refreshed daily — and{" "}
+            <Link href="/alerts" className="text-brand-300 underline-offset-2 hover:underline">a price alert</Link>{" "}
+            will email you if one of them drops.
+          </p>
+        </section>
+      )}
+
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
         <Link href="/release-dates" className="btn-ghost">Riftbound release dates</Link>
+        <Link href="/blog/riftbound-radiance-what-we-know" className="btn-ghost">What&apos;s confirmed about Radiance</Link>
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>
         <Link href="/tools/box-ev" className="btn-ghost">Is a box worth opening?</Link>
       </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runReleaseDayBlast, type ReleaseDayAudience } from "@/lib/release-day";
+import { newestReleasedSet } from "@/lib/constants";
 
 // Release-day email blast, run ON VERCEL so it has RESEND_API_KEY — the same
 // environment the weekly digest (/api/cron/newsletter), verification and
@@ -28,7 +29,15 @@ async function handle(req: Request) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const p = new URL(req.url).searchParams;
-  const setSlug = p.get("set") ?? "vendetta";
+  // DEFAULT = the most recently released set, not a literal. This read "vendetta"
+  // for six weeks after Vendetta stopped being the set anyone would blast about,
+  // and a stale default on a route that emails every subscriber is the wrong kind
+  // of stale — the guard that saves you is `dry` defaulting to a dry run, not the
+  // slug. newestReleasedSet() is date-driven off lib/constants.ts, so it is
+  // Vendetta today and Radiance from 23 Oct 2026 with no edit here.
+  // `||` not `??`: the workflow passes `set=` (empty) when its input is left blank,
+  // and an empty string is not nullish.
+  const setSlug = p.get("set") || newestReleasedSet()?.slug || "";
   // Opt-IN to sending. Anything other than an explicit "0" stays a dry run.
   const dryRun = p.get("dry") !== "0";
   const limitRaw = Number(p.get("limit"));

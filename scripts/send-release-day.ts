@@ -18,6 +18,7 @@
  */
 import { prisma } from "../src/lib/db";
 import { runReleaseDayBlast } from "../src/lib/release-day";
+import { newestReleasedSet } from "../src/lib/constants";
 
 async function main() {
   if (process.env.RELEASE_DAY_SEND !== "1") {
@@ -25,7 +26,9 @@ async function main() {
     return;
   }
   const res = await runReleaseDayBlast({
-    setSlug: process.env.SET_SLUG ?? "vendetta",
+    // Same rule as /api/cron/release-day-email: default to the most recently
+    // released set rather than a literal that goes stale the day it matters.
+    setSlug: process.env.SET_SLUG || newestReleasedSet()?.slug || "",
     dryRun: process.env.DRY_RUN === "1",
     limit: Number(process.env.LIMIT) || undefined,
   });

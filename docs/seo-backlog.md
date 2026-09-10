@@ -115,7 +115,7 @@ reasons already listed above.
 | #3 Rules hub | ✅ `/guides/riftbound-rules-explained` | Backlog item #8 ("doable, deferred"). Pure internal-linking hub over already-verified guides; adds **zero** new rules claims, and says so on the page. The `lib/keywords.ts` DATA-ACCURACY RULE still blocks the deeper per-mechanic FAQ the report asks for. |
 | #1 Vendetta card list w/ live prices | already existed | `/guides/riftbound-vendetta-card-list` + `/sets/vendetta`. Retrofitted with FAQ schema this pass. |
 | #2 Chase/pull-rate hub | 🚫 still blocked | Chase side exists. **Pull rates do not** — publishing rates needs either Riot's official odds or a real aggregated dataset. Community box-opening numbers are not a citable source. |
-| #6 Radiance (Set 5) hub | 🚫 still blocked | Same as backlog #11: no confirmed set facts. "riftbound radiance" being the #2 autocomplete does not authorise inventing a release date or card list. |
+| #6 Radiance (Set 5) hub | ✅ shipped, split three ways (2026-09-10) | No longer blocked: Riot published the date (23 Oct 2026), the count (180, 66 Showcase) and five champion Legends on 4 Aug 2026. Deliberately NOT one hub page — `/sets/radiance` owns the card list and is already generic, `/release-dates` owns the countdown (and names no set, so it cannot rot the way `/vendetta-countdown` and `/radiance-countdown` both did), and `/radiance-preorders` owns the only Radiance thing that is buyable today. The card list itself still cannot be published: no card has been revealed, and Preview Season does not start until 28 Sep. |
 | #7 Regional buying guides | already existed | AU/NZ/US/UK/SG/CA all live. |
 
 ### Two SEO defects found and fixed while doing this

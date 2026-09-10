@@ -58,7 +58,7 @@ const SET_FROM_TITLE: [RegExp, string][] = [
 
 // Set/condition/qualifier tokens to strip when isolating the card name.
 const STOP =
-  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|radiance|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
+  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vendetta|vengeance|origins|radiance|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
   // Riftbound collector numbers come in two shapes, and BOTH have to normalise

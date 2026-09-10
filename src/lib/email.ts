@@ -320,7 +320,7 @@ export async function sendReleaseDayEmail(
   if (stats.cardCount != null && stats.cardCount > 0)
     // "printings", not "cards": the live count includes alt-arts, Signatures,
     // Overnumbers and promos, so it is legitimately HIGHER than the set's headline
-    // card count (Vendetta: 235 printings vs a 166-card set). Labelling it "cards"
+    // card count (e.g. Vendetta: 235 printings vs a 166-card set). Labelling it "cards"
     // would misstate the set's size to anyone who knows the number.
     tiles.push({ value: stats.cardCount.toLocaleString(), label: "printings live" });
   if (stats.storeCount != null && stats.storeCount > 0)
@@ -367,7 +367,12 @@ export async function sendReleaseDayEmail(
     ? card(
         "#f2c94c",
         "Sealed is priced too",
-        `Booster boxes, packs and Proving Grounds kits — ranked by total delivered cost, with an at-RRP flag so you can see instantly whether a box is a fair price or a scalp.`,
+        // Deliberately names no SKU. This read "Booster boxes, packs and Proving
+        // Grounds kits", which was true of the set it was written for and is not
+        // true of the next one — Radiance leads with a Vault and Showdown Decks,
+        // and Proving Grounds is a 2025 product. Nothing else in this template
+        // hardcodes a fact about a specific set; this was the exception.
+        `Every sealed product we can find for the set — ranked by total delivered cost, with an at-RRP flag so you can see instantly whether a box is a fair price or a scalp.`,
         { href: sealedUrl, label: `Compare ${setName} sealed` }
       )
     : "";

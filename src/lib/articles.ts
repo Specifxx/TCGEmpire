@@ -291,7 +291,7 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
     },
     summary: [
       "**Radiance releases 23 October 2026** — the fifth Riftbound set, and the next one you will actually be able to buy.",
-      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments — the second-largest Riftbound set so far, behind only Origins.",
+      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments, so the base run is around 114 and the headline number is not comparable to older sets'.",
       "**Five new champion Legends are confirmed, with four more still unrevealed**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
       "**The card list has not been revealed.** Anyone showing you Radiance decklists today is guessing — we will publish the gallery the day it is real.",
       "**One Radiance card already exists in print**: Seraphine, Not Alone shipped inside the T1 Signature Edition months early, which is why it is not tournament-legal yet.",
@@ -347,14 +347,28 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
 | **Release date** | 23 October 2026 |
 | **Card count** | 180 (66 Showcase), confirmed |
 | **New champion Legends** | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV (+4 unrevealed) |
-| **Set code** | RAD |
+| **Set code** | Not published by Riot |
 | **Card list revealed?** | **No** |
+
+## The Radiance launch schedule
+
+Riot has published dates for the whole run-up, not just street date. Three of them matter if you are buying:
+
+| Date | What happens |
+| --- | --- |
+| **28 September – 9 October 2026** | **Preview Season.** Cards are revealed, a handful a day. This is when the set stops being four confirmed facts and becomes a card list. |
+| **16 – 22 October 2026** | **Pre-Rift events.** Local stores run sealed events with the set a week before street date, which is also when the first singles start changing hands. |
+| **23 October 2026** | **Street date.** Sealed product and singles go on general sale. |
+
+Two practical notes on that calendar. First, **Pre-Rift week is when a new set's singles are at their most volatile** — supply is a handful of event boxes and demand is everyone who wants to build immediately, so early prices are almost never the prices a card settles at. Vendetta's singles started trading several days ahead of its official 31 July street date for exactly this reason. Second, **pre-order prices move during Preview Season**, not at release: once the chase cards are known, stores that priced a box before the reveals adjust. Our **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through both windows, and the countdown itself lives on **[Riftbound release dates](/release-dates)**, which also offers an add-to-calendar file.
 
 ## Where Radiance sits in the release order
 
 Riftbound has shipped five sets so far — Origins (298 cards), Origins: Proving Grounds (24), Spirit Forged (221), Unleashed (219) and Vendetta (166). Radiance is the sixth release and the fifth mainline set.
 
-Radiance reverses a shrink. The previous set was the smallest mainline release to date, and Radiance lands at a confirmed **180 cards** — second only to Origins among everything shipped so far. That matters more than it sounds. **A bigger set spreads the print run across more cards**, which generally means each individual chase card is scarcer relative to demand — the same dynamic that keeps Origins' top cards expensive despite Origins being the largest set of all. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
+Radiance lands at a confirmed **180 cards**, and that number needs one qualification before it means anything: Riot's 180 is **inclusive of the set's 66 Showcase treatments**, while the counts above — 298, 221, 219, 166 — are base runs, with each of those sets' Showcase printings numbered *on top*. Compare like with like and Radiance's base run is roughly **114 cards**, which would make it the smallest mainline Riftbound set rather than the second-largest. Compare total printings instead and 180 sits between Vendetta and Unleashed. We flag this rather than pick the flattering reading, because the two framings point at opposite conclusions about scarcity and we do not yet know which one the printed collector numbers will settle on.
+
+What is not ambiguous is the **Showcase density**: 66 of 180 is roughly 37%, the highest share of any Riftbound set so far. A high Showcase share concentrates a box's value in fewer, rarer slots, which is the dynamic that keeps Origins' top cards expensive. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
 
 ## The five champions
 
@@ -7279,7 +7293,7 @@ The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides
 
 ## The bigger shift: Radiance, in seven weeks
 
-Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments, the second-largest set so far behind only Origins. Preview Season runs **28 September through 9 October**, with Pre-Rift events **16–22 October** immediately before street date. That preview window opens three days after Los Angeles closes out the Regional Qualifier season — the same week the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
+Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments (a ~37% Showcase share, the highest of any set so far). Preview Season runs **28 September through 9 October**, with Pre-Rift events **16–22 October** immediately before street date. That preview window opens three days after Los Angeles closes out the Regional Qualifier season — the same week the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
 
 Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today: Ekko is a Champion Unit in the blue domain — Mind, in Riftbound's own domain key — with a card called *Ingenious* carrying an Empowered effect: discount a unit into play, and it dies at end of turn. That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
 
@@ -7314,7 +7328,9 @@ We'll be watching Singapore's Top 8 the moment it's final, and updating the tier
     author: "RiftCompare Markets Desk",
     date: "2026-09-05",
     readMins: 8,
-    tags: ["news", "set", "release", "prices"],
+    // "radiance" belongs here: every other post in this cluster carries it, and the
+    // tag pages are how a reader who lands on one Radiance piece finds the rest.
+    tags: ["radiance", "news", "set", "release", "prices"],
     // Seraphine is the post's throughline — she is half the K/DA argument and the
     // whole of the "already trading, not yet legal" one — so the card itself is the
     // thumbnail. Local file rather than the CDN so next/image has a manifest entry.

@@ -131,11 +131,51 @@ const CHECKS: Check[] = [
     minText: 900,
   },
 
+  // ── The upcoming set's launch surfaces ───────────────────────────────────
+  // None of these were smoke-checked before, which is a gap with a deadline on
+  // it: they are the pages that carry a set launch, and the window where they
+  // matter is the one window where nobody is watching them.
+  //
+  // Assertions are deliberately thin and set-agnostic where they can be. The
+  // pre-order page IS named for its set (it is the one route that is), so it may
+  // name Radiance — but it must never claim InStock for a product nobody has
+  // shipped, which is the single thing that would make it a lie, so that is what
+  // is asserted rather than any particular price or store.
+  {
+    path: "/radiance-preorders",
+    label: "Radiance pre-order comparison",
+    optional: true,
+    must: ["Pre-order", "schema.org/PreOrder", '"@type":"FAQPage"'],
+    mustNot: ["schema.org/InStock"],
+    minText: 600,
+  },
+  {
+    path: "/sets/radiance",
+    label: "upcoming set hub",
+    optional: true,
+    // Renders long before any card exists, and that empty state is the whole
+    // point of checking it: it must still be a real page with real exits, not a
+    // blank grid.
+    must: ["Radiance", "Get ready for Radiance"],
+    minText: 300,
+  },
+  {
+    path: "/embed/release-countdown",
+    label: "embeddable release countdown",
+    optional: true,
+    // Chrome-free route handler, so no layout text — just the widget's own body.
+    must: ["data-target=", "RiftCompare"],
+    minText: 40,
+  },
+
   // ── Retired URLs ─────────────────────────────────────────────────────────
   // /vendetta-countdown carried the "riftbound vendetta release date" query and
   // ~35 internal links, so it must 301 rather than 404 — a silent drop to 404
   // would throw that away and look identical to a working deploy.
   { path: "/vendetta-countdown", label: "retired Vendetta countdown → set page", retired: { to: "/sets/vendetta" } },
+  // Its Radiance-era successor, retired for the same reason and 301'd to the
+  // set-agnostic page that replaced BOTH of them.
+  { path: "/radiance-countdown", label: "retired Radiance countdown → release dates", retired: { to: "/release-dates" } },
   // The widget feature is gone outright; nothing links here and it has no
   // equivalent page, so 404 is the correct answer, not a redirect to something
   // unrelated.
