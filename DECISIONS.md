@@ -4280,3 +4280,111 @@ has served cleanly for a while. Then measure — RH9 lasting a day instead of
 the usual two to three suggests the read pattern is getting worse, not
 holding steady, so a repeat exhaustion in days should prompt
 `scripts/audit-egress.ts` against RH10 rather than an eighteenth rotation.
+
+## Working the inbox: four queues, four different answers (2026-09-10)
+
+`/admin/messages` had four unactioned queues and no way to read them outside
+a browser, so `scripts/audit-inbox.ts` was written first (read-only, emails
+reduced to their domain because job logs are collaborator-visible). What it
+surfaced is recorded here because three of the four items turned out to be
+the *visible end* of a pipeline defect, not a support request.
+
+**Three suggested stores added, one deliberately refused.** Alt F4, Card
+Brawlers and Boutique Hobby Expert are live in `retailers.ts`. imaginaire.com
+is not: Cloudflare returns 403 to every request including a full browser UA,
+so there is no feed to scrape and listing it would only produce a permanently
+empty store page. Its suggestion row is stamped `rejected` with that reason
+rather than `added` — the queue's status is only worth having if it is true.
+
+Two traps worth keeping. Card Brawlers' robots.txt *appears* to say
+`Disallow: /`, but that directive is inside its `User-agent: Nutch` group
+only; a naive grep flagged the store as un-scrapable and the app's own
+`robotsAllows()` settled it. And Boutique Hobby Expert's obvious
+`riftbound-singles` handle EXISTS and is EMPTY — its ~986 real products live
+under three other handles, none reachable from page 1 of a 388-collection
+`collections.json`. A scan that does not paginate concludes the store sells
+no Riftbound at all.
+
+**The wrong card page was two copies of one rule drifting apart.** A reader
+reported `/card/warwick-hunter-ogn-159a-298` presenting as a pack-pulled
+Showcase while linking to a US$63.81 TCGplayer product in "Riftbound
+Promotional Cards". `lib/tcgplayer.ts`'s `isPromoProduct()` has always been
+`/organized\s*play|promotional\s*cards?/i`; `add-tcg-printings.ts` carried
+its own narrower `/organized play/i`. TCGplayer files promos under two set
+names and only one says "Organized Play", so those products took the in-set
+VARIANT branch and were *created* as fake Showcase cards carrying the promo's
+externalId — which the pricing layer then honours, because an explicit link
+is meant to be authoritative. Every guard worked; they disagreed about what a
+promo product is. That file had already been bitten by exactly this once (a
+private `setFromTotal` that never learned VEN), so the rule is now **pinned,
+not merely fixed**: one definition, imported, and a test that fails if any
+layer defines a second promo-set regex. Nine already-written rows were
+repaired by `scripts/fix-promo-as-variant.ts`.
+
+**Slugs were left alone on purpose.** Flagging `isPromo` changes what
+`cardSlug()` produces, and those URLs are live and indexed. Moving one needs
+a `next.config.js` redirect in the same commit, so `--reslug` is a separate
+flag and is deliberately not exposed through the workflow. Correct data with
+a stable URL first; the URL change is its own decision.
+
+**"Random listings throwing off card prices" were another game's cards.**
+Hobby Collectors Australia shelves every single it sells, across every game,
+in one collection: `all-singles-one-piece-pokemon-riftbound`. The handle says
+"riftbound", so `discoverRiftboundCollections` took it — 676 Pokémon and One
+Piece singles and, verified live, zero Riftbound ones. Then `resolveCardId`
+turned them into Riftbound prices: 461 of those titles carry an `NNN/NNN`
+number, `setFromTotal` declined the foreign denominator, `confidentSetCode`
+came back null, and `setCode` fell through to its `"OGN"` default — so the
+number-only path matched on the **numerator alone**. "Armarouge 015/091
+Scarlet and Violet Paldean Fates" at A$1.00 became Captain Farron, OGN
+015/298, and being far below any real price it won "cheapest" — the card's
+headline, its history point, and its value in every portfolio holding it.
+
+The decision worth recording: **a denominator that belongs to no Riftbound
+set is evidence, not a missing signal.** A real Riftbound single always
+prints its own set's total, so a stated foreign total now leaves the listing
+unmatched. Narrow on purpose — it blocks the NUMBER paths only, because a
+name match is independent evidence (no Pokémon card is called "Captain
+Farron"), and an explicit set code or set-name hint still overrides, so a
+mistyped denominator or a set whose total we have not learned yet is
+unaffected. A false positive costs one unmatched listing; the default cost a
+wrong price on a real card's page. The `"OGN"` fallback's own comment had
+already predicted this for a Radiance denominator — it just never occurred to
+anyone that the listing might not be Riftbound at all.
+
+**Portfolio P&L: a row can now say whether its price is per copy or total.**
+
+  > "Added $770 paid to Akali ON - pulled one, paid for the other… Same issue
+  >  with Arise where I paid 20 each for two and 25 for the third"
+
+`CollectionCard` is unique per (user, card, condition, foil), so every copy
+shares one cost figure — and that figure could only mean "per copy". $770
+against two copies read as $770 *each* ($1,540 invested); 20/20/25 across
+three had no single per-copy number to type at all.
+
+**Rejected: a lot model.** Per-lot acquisition rows would be tax-lot
+accounting, and nothing on this site needs one. A row-level total *is* the
+average cost basis, which is exactly what an unrealised P&L is computed from,
+and it makes both reported cases expressible and correct.
+
+**Rejected: redefining the existing column.** Changing `costBasisCents` to
+mean "total" would have silently rewritten every user's recorded P&L. The
+flag is additive with a default, so pre-existing rows keep their meaning.
+
+The arithmetic lives in one module (`lib/collection-cost.ts`) because the
+quantity multiply is the step that goes wrong and it was written out by hand
+in three places — the same shape as the promo-regex drift found the same day.
+A test now fails if any call site multiplies again. Three places had quietly
+dropped money: adding copies to a total-mode row replaced the outlay instead
+of adding to it, a quantity change left a total fixed, and merging two rows
+kept the survivor's cost while absorbing the other's copies as if free. Where
+either side has no cost recorded there is no honest sum, so nothing is
+invented.
+
+**Closing the queue is `close-inbox-items`, not a sweep.** "Mark everything
+done" is one query and it is the wrong one — it would stamp done on
+submissions nobody read, and tell a suggester their store was added when it
+was refused. Every row is named by id with the status it earned, and a row
+whose status has moved since is skipped rather than overwritten. Feedback
+goes to `HIDDEN`, not `APPROVED`: `APPROVED` publishes the text as a public
+review and neither submitter ticked the consent box.
