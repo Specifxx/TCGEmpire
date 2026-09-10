@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { GAMES, isGameKey } from "../src/lib/games";
 import { NAV_GROUPS } from "../src/components/nav-groups";
@@ -96,6 +96,31 @@ test("dropping a card costs a life, and only a card", () => {
   assert.match(missBlock, /it\.kind === "card"/, "the life cost must be gated on the item being a card");
   assert.match(missBlock, /lifeLost/, "a dropped card must cost a life");
   assert.match(missBlock, /comboNow = 0/, "a drop must break the combo");
+});
+
+test("every game page shows exactly ONE breadcrumb trail — the one with the JSON-LD", () => {
+  // All eight game pages render <Breadcrumbs> (which emits the BreadcrumbList
+  // that scripts/adsense-guard.ts budgets for). GameShell used to ALSO render
+  // its own "🎮 Games / <title>" nav, so every one of them displayed two trails
+  // stacked on top of each other — confirmed in a browser on /games/card-rain,
+  // costing ~25px directly above the playfield on the phones least able to
+  // spare it. The shell's copy was the redundant one and is gone.
+  // Comments stripped: the prop's own docs explain what was removed and why,
+  // and a doc comment describing the old markup is not the old markup.
+  const shell = read("src/components/games/shared.tsx")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+  assert.doesNotMatch(shell, /aria-label="Breadcrumb"/, "GameShell must not render a second breadcrumb trail");
+  assert.doesNotMatch(shell, /🎮 Games/, "…nor the visible link that trail was made of");
+
+  // …which only works because the PAGE carries the real one, every time.
+  const pages = readdirSync(join(ROOT, "src/app/games"), { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => `src/app/games/${e.name}/page.tsx`);
+  assert.ok(pages.length >= 8, `expected the full arcade, found ${pages.length} game pages`);
+  for (const p of pages) {
+    assert.match(read(p), /<Breadcrumbs\s/, `${p} has no breadcrumb trail at all now`);
+  }
 });
 
 test("the page describes the game it actually ships, and carries its own how-to-play", () => {
