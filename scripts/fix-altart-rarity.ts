@@ -44,7 +44,7 @@ async function main() {
   //   VEN   Showcase:18    Rare:1  Showcase:8     Rare:24  Epic:7   ← outlier
   //
   // VEN's overnumbered/signature prints came from the official gallery
-  // (import-vendetta.ts), which labels a re-print by the rarity of the card it
+  // (import-set-cards.ts), which labels a re-print by the rarity of the card it
   // re-prints, so they were stored faithfully — and then landed in the base
   // tiers. Every other set's chase prints were already Showcase.
   //

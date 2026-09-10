@@ -3987,6 +3987,410 @@ shorter than the chip row it replaced.
 
 ---
 
+## The Premium pitch becomes the owner's own comp (2026-09-10, same day, second pass)
+
+The two-bar SVG from the entry above lasted hours. The owner sent a finished
+comp — character art behind a dark scrim, the wordmark and a gold PREMIUM
+badge, "GET AN / UNFAIR EDGE / FOR BUYING AND SELLING", four icon rows, price,
+then the sign-in buttons — with the instruction "use this for the slide
+instead, obviously the google and discord are real buttons". New
+`src/components/PremiumPitchPanel.tsx` replaces `PremiumEdgeGraphic.tsx`,
+which is deleted.
+
+**Rebuilt as markup, not shipped as the picture.** Dropping the comp in as one
+flat image was the obvious shortcut and it fails on a number that is easy to
+check: the comp is 1145px wide and this card renders at 384px, so every baked
+word would land at about a third of its designed size — the body copy at
+roughly 5px. Real text also scales, survives a screen reader, can be
+translated, and lets the price keep coming from `premiumZeroToday()` instead of
+being frozen into a picture on export day. Only the artwork is a raster:
+`public/premium/premium-pitch.webp`, 26KB, cropped from the comp starting to
+the right of x=662 because everything left of that had the comp's own UI text
+baked over it.
+
+**Two of the comp's four feature rows were reworded, deliberately.** It sold
+"Advanced filters — find the exact cards, sets and rarities you want" and "See
+the best prices across stores instantly". Both are the FREE tier:
+`TIER_COMPARISON` has "Compare prices across every store + eBay" and "Full card
+database, search & browse" as ticks in the anonymous column. Advertising those
+as Premium is the one thing this repo consistently refuses to do, so the rows
+keep the comp's shape, icons and rhythm while naming things actually behind the
+paywall — the full Deal Finder list, the pro screeners, Rising Cards and Demand
+Finder, and supporting the site. Each maps to a real `TIER_COMPARISON` row and
+`tests/premium-pitch-panel.test.ts` pins that the two retired phrases never
+come back.
+
+**The art is anchored right, not stretched behind everything.** At the comp's
+width the character and the copy sit side by side; at 384px they collide, and a
+scrim dark enough to keep the headline legible reduced her face to a smudge
+(observed, not theorised — it took three renders to get right). Confining the
+art to the right 64% with its left edge fading into the card gives the copy
+clean ink and keeps the character a character. A soft text-shadow on the panel
+copy covers the small overlap that remains.
+
+**The short-phone rule this card exists under still holds.** Its own history
+includes a production incident where a too-tall card put the close button
+off-screen. So: rows three and four stand down below 700px of viewport height,
+and the card caps itself at `100dvh - 6.5rem` and scrolls. Measured in headless
+Chromium at 375x667 — card is 499px tall, fully on screen, with the ✕, both
+sign-in buttons and "Maybe later" all reachable without scrolling.
+
+**The signed-in twin shares the panel with `showFeatures={false}`.** It already
+carries a per-route contextual pitch naming one specific tool (a deck page
+sells Best Basket, a card page sells Value Finder), which beats a generic
+four-row list and is pinned by `tests/premium-slidein.test.ts`. Running both
+would make it exactly the tall card it was designed not to be.
+
+---
+
+## The signup popup returns every 3 pages (2026-09-10)
+
+Owner brief: "the slider should show up again every 3 pages a user visits if
+they're not logged in". Until now a dismissal silenced `SignupPromoPopup` for
+the whole browser session — one impression per visitor, per tab, forever.
+
+**Mechanism.** The one-way `rc_signup_promo_seen` boolean is replaced by two
+counters in `sessionStorage`: `rc_signup_promo_views` (distinct pages this
+signed-out visitor has seen, counted once per route via a `lastCountedPath`
+ref, the same shape `PremiumSlideIn` already uses) and
+`rc_signup_promo_dismissed_at` (what that count was when they last closed it).
+The arming effect shows the popup unless a dismissal is stamped AND fewer than
+`PAGES_BETWEEN_SHOWS` pages have passed since. Verified by replaying the real
+arming logic against a fake store: shown on page 1, dismissed, quiet on 2 and
+3, back on 4, dismissed, quiet on 5 and 6, back on 7.
+
+**The first show is still ungated, and that distinction is load-bearing.** This
+file spent three iterations getting rid of a first-show gate — a 5s timer, then
+a pageview threshold, then buy_click-aware timing — because each measurably cost
+the site. The new counting only decides when the popup RETURNS; a visitor who
+has never dismissed it still sees it on their first eligible page with nothing
+in the way. `tests/signup-funnel.test.ts` keeps banning the old constant names
+(`PROMO_DELAY_MS`, `MIN_PAGEVIEWS`, `PV_KEY`) and now also asserts the new gate
+is reachable only once `dismissedAt !== null`, so a future pass can't quietly
+turn the cadence back into an entry gate.
+
+**Flagged, not hidden: there is no lifetime cap.** `PremiumSlideIn` stops for
+good after two dismissals, on the reasoning that a firm no is a no. This popup
+now has no such ceiling — a visitor who dismisses it on every third page will
+keep seeing it all session. That is what was asked for and it is a defensible
+bet on a signed-out audience that has not converted, but this file's own
+history records an earlier pushier version at a 78% dismiss rate with bounce up
+and pages/visitor down. `signup_promo_dismissed` and pages/visitor are the two
+numbers to watch; a cap is the first thing to add if either moves.
+
+**Measurement.** `PROMO_VARIANT` → `premium_graphic_repeat`, because frequency
+is exactly the axis that changes shown counts and dismiss rates, and without a
+new name the once-per-session era and the repeating era would average into each
+other. The impression event also carries `repeat`, separating a first show from
+a re-show inside the new variant, so "does the second showing convert or just
+annoy" is answerable directly rather than by inference.
+
+**Test that changed its mind.** `tests/access-tiers.test.ts` asserted "a
+dismissed promo stays dismissed for the rest of the session". That is now the
+opposite of the product decision, so it was rewritten to pin what still has to
+hold: a dismissal must buy a real, page-counted quiet stretch rather than being
+a no-op, and pages must be counted once per route rather than once per render.
+
+## Radiance launch readiness (2026-09-10)
+
+Radiance releases 23 Oct 2026 — 43 days out, with Preview Season starting
+28 Sep and Pre-Rift events 16–22 Oct. The brief was "everything we had for
+Vendetta that led up to the release, and better."
+
+**What was already better.** Every Vendetta surface that named a set in code
+has since been rebuilt to name none, and all of those roll forward on the
+clock with no edit: `/release-dates` (which replaced both
+`/vendetta-countdown` and `/radiance-countdown`), the embeddable countdown,
+the homepage "N days to go" line, the pre-order routing, the eBay quota
+window. Radiance also has something Vendetta never did — `/radiance-preorders`,
+a real pre-order comparison, live since 15 Aug.
+
+**What was quietly broken.** Everything keyed on the SET rather than the date
+was still hardcoded to VEN, and every one of those fails silently:
+
+- `lib/price-import.ts` had no `radiance` branch in `SET_FROM_TITLE`, none in
+  `STOP`, and no Radiance denominator in `setFromTotal`. Its last resort is
+  `confidentSetCode ?? "OGN"` — so a store listing reading "Some Card -
+  042/114" would have been matched to an **Origins** card and had its price
+  written onto it. `lib/tcgplayer.ts`'s twin switch had the same hole (and
+  `isSetlessNumber()` is built on it, so every Radiance number read as
+  "setless"); `lib/ebay.ts` could not set-confirm a bare number;
+  `lib/woocommerce.ts` did not recognise a Radiance single as a single.
+- `lib/ebay.ts` had no title keyword and no floor for `"Vault"` or
+  `"Showdown Decks"` — Radiance's two headline SKUs. A missing keyword is not
+  inert: the filter is `!kw || kw.test(...)`, so those searches would have run
+  with **no title filter at all**.
+- `scripts/sync-cards.ts` kept a private five-set name table (Radiance cards
+  would have stored `setName: "RAD"`) and its ADOPTION query matched the
+  literal prefix `"ven-official-"`, so pre-release Radiance rows could never
+  be adopted — they would have become duplicate card pages the day RiftScribe
+  catalogued the same cards.
+- The spoiler-season pipeline was two VEN-hardcoded scripts, so Radiance's
+  reveal window needed a fork of a 360-line Playwright scraper, under the one
+  deadline where being first is worth the most.
+
+**Decisions taken.**
+
+*Both Radiance denominators (114 and 180) are claimed.* Riot published "180
+cards, 66 of them Showcase" and no card has been seen. Vendetta's 166 was its
+base run with Showcase numbered above it, which would make Radiance's printed
+denominator 114; Riot's own phrasing would make it 180. Neither collides with
+another set, so claiming both costs nothing and covering neither is a silent
+misroute to Origins. Prune the wrong one when a real card lands.
+
+*Astral Radiance is guarded in every new branch.* Pokémon's set of that name
+reaches the same functions, and a bare `/radiance/` would have let a Pokémon
+listing confirm a Riftbound card's set.
+
+*The set code is a gate, not a guess to be discovered later.* `"RAD"` is our
+placeholder; Riot has not published the real code. `scripts/fetch-set-official.ts`
+now refuses to write a scrape file when the official gallery reports no cards
+under our code but does report another, prints the code the gallery actually
+uses, and exits non-zero. Importing under the wrong code needs a
+`Card.setCode` backfill plus an edit to every mapper keyed on it, so refusing
+is the cheap end of that mistake. The importer has the mirror guard: it
+refuses a scrape file stamped with a different set than it was asked for.
+
+*The pipeline is parameterised, not forked.* `fetch-vendetta-official.ts` and
+`import-vendetta.ts` became `fetch-set-official.ts` and `import-set-cards.ts`,
+taking `SET=<slug|code>` (default: the next announced-but-unreleased set);
+`maintenance.yml`'s `vendetta-pipeline` became `set-pipeline` with a
+`set_slug` input.
+
+*Release-day defaults derive from the data.* Both the cron route and the local
+script defaulted to the literal `"vendetta"`, which had been wrong for six
+weeks; they now read `newestReleasedSet()`. The workflow input defaults to
+blank and lets the route decide. `dry_run` stays the real guard.
+
+*Fewer content pages than Vendetta had, deliberately.* Of ~24 Vendetta
+pre-release articles, 13 were 301'd within eight weeks — seven in one
+consolidation commit that names an AdSense low-value-content rejection as its
+cause, the rest on Search Console evidence (two flagship posts had 4 and 19
+impressions in 28 days). The survivors all carry live data. So Radiance gets
+**no new article**: the launch schedule was added to the existing pillar
+post, and the "should I pre-order" intent was answered ON
+`/radiance-preorders` rather than in a post beside it that would cannibalise
+it. `docs/seo-keyword-map.md` now carries the Radiance ownership rows and that
+rule as guidance for the set after.
+
+*Three factual corrections while in there.* The pillar article called Radiance
+"the second-largest Riftbound set so far, behind only Origins" — Spirit Forged
+(221) and Unleashed (219) are both larger, and the 180 is inclusive of
+Showcase while those are not, so the page now states the comparison problem
+instead of picking the flattering side. It also printed "Set code: RAD" as
+fact; that is our guess, and it now says Riot has not published one. And two
+article links pointed at `/radiance-countdown` — a 301 to `/release-dates` —
+while promising "every Radiance card as reveals land", which that page cannot
+deliver; they point at `/sets/radiance`, which can.
+
+**Pinned by** `tests/set-launch-readiness.test.ts` (10 tests). Every check
+iterates `SETS` rather than naming a set, so the set after Radiance is covered
+by adding its row and nothing else. **Documented by**
+`docs/SET-LAUNCH-RUNBOOK.md`, which is the thing that did not exist for
+Vendetta.
+
+**Unrelated, found by accident.** This checkout gained its full git history
+today, and `scripts/adsense-guard.ts`'s policy-date check skips itself on a
+shallow clone. Both CI and Vercel check out shallow, so that check has been
+silently inert everywhere it runs. With history it reported five real
+problems: `/privacy`, `/terms` and `/editorial-policy` all declared "last
+updated" dates earlier than material edits (in `/terms`' case, earlier than
+the commit that removed the peer-to-peer Marketplace from it), and
+`/marketplace/terms` and `/returns` were still listed as policy pages though
+both routes were deleted on 2026-08-26. Fixed in its own commit.
+
+## History database rotation: RH9 → RH10 (2026-09-10)
+
+RH9 (current since 2026-09-09) reached its 5 GB monthly transfer allowance
+after roughly a **day** live — the fastest exhaustion of any project in this
+rotation history (every prior one bought two to three days). History moves
+onto RH10.
+
+**RH10 is a recycled name**: its own prior term ran 2026-08-25..08-28,
+before RH11 replaced it. Per this repo's own rule, a recycled target is
+re-verified live on every return, never trusted from that old term.
+`migrate-history-db-rh9-to-rh10` (new `maintenance.yml` task, modelled
+exactly on the RH8→RH9 template) ran via `workflow_dispatch` against `main`
+and reported:
+
+```
+Target (RH10) BEFORE:  Card=1434  ClickEvent=698  PriceHistory=336656
+public."Card":         source=1434    target=1434    ✓
+public."ClickEvent":   source=698     target=698     ✓
+public."PriceHistory": source=422589  target=422589  ✓
+All tables match — RH10 now holds a full copy of the history data.
+```
+
+The 336,656-row PriceHistory count RH10 held before this run is real,
+outdated data from its own 08-25..08-28 term — the signature of a genuinely
+recycled project — and predates the 2026-09-05 GLOBAL-history migration
+entirely, so it held zero GLOBAL rows on its own. The pg_dump/restore from
+RH9 is what actually carries the current GLOBAL series onto RH10; nothing
+from RH10's own old term survives, and nothing needed to.
+
+`migrate-history-db-rh8-to-rh9` is marked LEGACY, matching every prior
+rotation's convention.
+
+**Runtime chain flipped** (`HISTORY_VARS` in `src/lib/db-chains.ts`,
+mirrored in `src/lib/db-history.ts`'s `HISTORY_URL_SOURCE` check and
+`scripts/build-db-push.sh`'s `CURRENT_HIST`/elif chain): `RH10, RH9,
+DATABASE_URL`. RH8 drops out of the chain (was RH9's own rollback for its
+09-09..09-10 stint); still reachable, available to migration tasks by
+explicit name. `tests/db-chain.test.ts` (6 tests) confirms the app chain,
+the build-script chain and the "you fell back to a dead project" warnings
+all agree.
+
+**Two other workflows updated to match** — `db-audit.yml` and
+`weekly-promo.yml` both pass a broad fallback list of history vars into
+their `env:` blocks (`RH9, RH8, RH7, RH6, RH5, HISTORY_DATABASE_URL*`) so
+their PriceHistory reads don't fall through to the empty operational
+database; neither had RH10 in that list at all, so both would have quietly
+kept reading RH9 — correct today, increasingly stale as new writes land
+only in RH10. Added RH10 ahead of RH9 in both. `refresh-prices.yml` already
+had RH10 wired into its env vars; only its comment was stale.
+
+**A real pre-existing bug, found in the same sweep, unrelated to this
+rotation's timing:** `maintenance.yml`'s `db-push` task — the one that
+pushes schema changes to the history project directly, for cases where an
+ordinary deploy's schema push doesn't reach it — resolves its target via an
+explicit `||` fallback chain, and that chain's comment still said "RH11 is
+the CURRENT project (2026-08-30)" and led with `RH11 || RH10 || RH9 || RH8
+|| ...`. It was never updated through the RH6→RH7→RH8→RH9 rotations that
+followed — exactly the drift `src/lib/db-chains.ts`'s own header exists to
+warn about, on the one chain that file's "everything imports from here now"
+fix couldn't reach (a raw `${{ }}` expression, not TypeScript). RH11 is a
+live, reachable secret (confirmed by the 2026-09-06 probe-history run
+noted in `db-chains.ts`), so any `db-push` run since 08-30 would have
+pushed schema at a project the app has not read in six weeks, silently.
+Reordered to `RH10 || RH9 || RH8 || RH11 || ...` to match current
+precedence, with a note explaining the find.
+
+**Not touched**: `scripts/repair-history-card-ids.ts`'s own `HISTORY_VARS`
+default (used only as a `--db=` fallback when that flag is omitted) still
+starts at `HISTORY_DATABASE_URL_4` and has predated RH8 entirely since it
+was written — `tests/db-chain.test.ts` only pins the *operational* chain
+against hand-rolled copies, and no prior rotation touched this file either.
+Left as-is to match precedent; flagging here in case a future rotation
+wants to fix it properly rather than leave it stale indefinitely.
+
+**Owner action still required, as with every prior rotation** (this repo
+has no Vercel API access): confirm `RH10` is set in Vercel for Production,
+Preview **and** Development, and leave `RH9` set as the rollback until RH10
+has served cleanly for a while. Then measure — RH9 lasting a day instead of
+the usual two to three suggests the read pattern is getting worse, not
+holding steady, so a repeat exhaustion in days should prompt
+`scripts/audit-egress.ts` against RH10 rather than an eighteenth rotation.
+
+## Working the inbox: four queues, four different answers (2026-09-10)
+
+`/admin/messages` had four unactioned queues and no way to read them outside
+a browser, so `scripts/audit-inbox.ts` was written first (read-only, emails
+reduced to their domain because job logs are collaborator-visible). What it
+surfaced is recorded here because three of the four items turned out to be
+the *visible end* of a pipeline defect, not a support request.
+
+**Three suggested stores added, one deliberately refused.** Alt F4, Card
+Brawlers and Boutique Hobby Expert are live in `retailers.ts`. imaginaire.com
+is not: Cloudflare returns 403 to every request including a full browser UA,
+so there is no feed to scrape and listing it would only produce a permanently
+empty store page. Its suggestion row is stamped `rejected` with that reason
+rather than `added` — the queue's status is only worth having if it is true.
+
+Two traps worth keeping. Card Brawlers' robots.txt *appears* to say
+`Disallow: /`, but that directive is inside its `User-agent: Nutch` group
+only; a naive grep flagged the store as un-scrapable and the app's own
+`robotsAllows()` settled it. And Boutique Hobby Expert's obvious
+`riftbound-singles` handle EXISTS and is EMPTY — its ~986 real products live
+under three other handles, none reachable from page 1 of a 388-collection
+`collections.json`. A scan that does not paginate concludes the store sells
+no Riftbound at all.
+
+**The wrong card page was two copies of one rule drifting apart.** A reader
+reported `/card/warwick-hunter-ogn-159a-298` presenting as a pack-pulled
+Showcase while linking to a US$63.81 TCGplayer product in "Riftbound
+Promotional Cards". `lib/tcgplayer.ts`'s `isPromoProduct()` has always been
+`/organized\s*play|promotional\s*cards?/i`; `add-tcg-printings.ts` carried
+its own narrower `/organized play/i`. TCGplayer files promos under two set
+names and only one says "Organized Play", so those products took the in-set
+VARIANT branch and were *created* as fake Showcase cards carrying the promo's
+externalId — which the pricing layer then honours, because an explicit link
+is meant to be authoritative. Every guard worked; they disagreed about what a
+promo product is. That file had already been bitten by exactly this once (a
+private `setFromTotal` that never learned VEN), so the rule is now **pinned,
+not merely fixed**: one definition, imported, and a test that fails if any
+layer defines a second promo-set regex. Nine already-written rows were
+repaired by `scripts/fix-promo-as-variant.ts`.
+
+**Slugs were left alone on purpose.** Flagging `isPromo` changes what
+`cardSlug()` produces, and those URLs are live and indexed. Moving one needs
+a `next.config.js` redirect in the same commit, so `--reslug` is a separate
+flag and is deliberately not exposed through the workflow. Correct data with
+a stable URL first; the URL change is its own decision.
+
+**"Random listings throwing off card prices" were another game's cards.**
+Hobby Collectors Australia shelves every single it sells, across every game,
+in one collection: `all-singles-one-piece-pokemon-riftbound`. The handle says
+"riftbound", so `discoverRiftboundCollections` took it — 676 Pokémon and One
+Piece singles and, verified live, zero Riftbound ones. Then `resolveCardId`
+turned them into Riftbound prices: 461 of those titles carry an `NNN/NNN`
+number, `setFromTotal` declined the foreign denominator, `confidentSetCode`
+came back null, and `setCode` fell through to its `"OGN"` default — so the
+number-only path matched on the **numerator alone**. "Armarouge 015/091
+Scarlet and Violet Paldean Fates" at A$1.00 became Captain Farron, OGN
+015/298, and being far below any real price it won "cheapest" — the card's
+headline, its history point, and its value in every portfolio holding it.
+
+The decision worth recording: **a denominator that belongs to no Riftbound
+set is evidence, not a missing signal.** A real Riftbound single always
+prints its own set's total, so a stated foreign total now leaves the listing
+unmatched. Narrow on purpose — it blocks the NUMBER paths only, because a
+name match is independent evidence (no Pokémon card is called "Captain
+Farron"), and an explicit set code or set-name hint still overrides, so a
+mistyped denominator or a set whose total we have not learned yet is
+unaffected. A false positive costs one unmatched listing; the default cost a
+wrong price on a real card's page. The `"OGN"` fallback's own comment had
+already predicted this for a Radiance denominator — it just never occurred to
+anyone that the listing might not be Riftbound at all.
+
+**Portfolio P&L: a row can now say whether its price is per copy or total.**
+
+  > "Added $770 paid to Akali ON - pulled one, paid for the other… Same issue
+  >  with Arise where I paid 20 each for two and 25 for the third"
+
+`CollectionCard` is unique per (user, card, condition, foil), so every copy
+shares one cost figure — and that figure could only mean "per copy". $770
+against two copies read as $770 *each* ($1,540 invested); 20/20/25 across
+three had no single per-copy number to type at all.
+
+**Rejected: a lot model.** Per-lot acquisition rows would be tax-lot
+accounting, and nothing on this site needs one. A row-level total *is* the
+average cost basis, which is exactly what an unrealised P&L is computed from,
+and it makes both reported cases expressible and correct.
+
+**Rejected: redefining the existing column.** Changing `costBasisCents` to
+mean "total" would have silently rewritten every user's recorded P&L. The
+flag is additive with a default, so pre-existing rows keep their meaning.
+
+The arithmetic lives in one module (`lib/collection-cost.ts`) because the
+quantity multiply is the step that goes wrong and it was written out by hand
+in three places — the same shape as the promo-regex drift found the same day.
+A test now fails if any call site multiplies again. Three places had quietly
+dropped money: adding copies to a total-mode row replaced the outlay instead
+of adding to it, a quantity change left a total fixed, and merging two rows
+kept the survivor's cost while absorbing the other's copies as if free. Where
+either side has no cost recorded there is no honest sum, so nothing is
+invented.
+
+**Closing the queue is `close-inbox-items`, not a sweep.** "Mark everything
+done" is one query and it is the wrong one — it would stamp done on
+submissions nobody read, and tell a suggester their store was added when it
+was refused. Every row is named by id with the status it earned, and a row
+whose status has moved since is skipped rather than overwritten. Feedback
+goes to `HIDDEN`, not `APPROVED`: `APPROVED` publishes the text as a public
+review and neither submitter ticked the consent box.
+
+---
+
 ## Collapsible desktop rail — 2026-09-10
 
 The persistent desktop navigation rail (SideNav) was all-or-nothing: the full

@@ -36,6 +36,9 @@ explicit link up/down to the primary).
 | `riftbound <set> card list` | `/guides/riftbound-<set>-card-list` (exists for Vendetta only today — `riftbound-vendetta-card-list`). For the older sets the owner is the `whats-in-the-riftbound-<set>-set` breakdown guide instead: Origins, Spirit Forged and Unleashed all exist (backlog item 10, closed 2026-09-10); Proving Grounds is covered inside `riftbound-sets-in-order` | `every-riftbound-<set>-card-revealed` blog gallery post (Vendetta only today) — the two are DIFFERENT angles (checklist guide vs. embedded live gallery), keep both when both exist |
 | `riftbound card list` (no set named) | `/guides/riftbound-card-list` (all-sets hub — **not yet built, backlog item 12**) | — |
 | `riftbound roadmap` | `/blog/riftbound-2027-set-roadmap` (exists — corrects the slug this file previously guessed at) | — |
+| `riftbound radiance`, `riftbound radiance cards`, `radiance card list` | `/sets/radiance` — the set hub. Generic template, so it fills in with real cards through Preview Season (28 Sep – 9 Oct 2026) and gets live prices on release day with no new page | `/blog/riftbound-radiance-what-we-know` for the confirmed-facts write-up. Do **not** build `/guides/riftbound-radiance-card-list` until cards actually exist — a checklist guide with nothing to check is the thin page AdSense rejected the Vendetta cluster for |
+| `riftbound radiance release date`, `when does radiance come out`, `radiance countdown` | `/release-dates` — names no set in code, leads with whatever is next, and carries the countdown, the Event JSON-LD and an .ics | **Never rebuild a `/<set>-countdown` page.** It has been built and retired twice (`/vendetta-countdown`, `/radiance-countdown`, both now 301s); `lib/release-calendar.ts`'s header is the post-mortem |
+| `riftbound radiance preorder`, `radiance booster box price`, `radiance vault` | `/radiance-preorders` — the only route on the site named for a set, deliberately: pre-order comparison is a real product with a real end date, and the page retires itself on 23 Oct 2026 via `isPreorderSetCode()` | Nothing. Do not write a "should you pre-order Radiance" post next to it — that intent is answered ON the page (the "When to pre-order" section), for exactly the cannibalisation reason this file exists |
 | `riftbound sets in order`, `riftbound set list`, `how many riftbound sets` | `/guides/riftbound-sets-in-order` (added 2026-08-13) | Deliberately does not restate Legacy/The Reckoning/Set 8/9 facts — links out to the roadmap post for those instead, so the two can't drift apart |
 | `riftbound origins card list`, `what's in the origins set`, `origins riftbound cards` | `/guides/whats-in-the-riftbound-origins-set` (added 2026-08-13) | Real rarity/domain/type breakdown computed from the catalogue, not estimated. Secondary: `/sets/origins` for the live browsable list |
 | `riftbound card condition`, `nm lp mp hp riftbound`, `riftbound card grading` | `/guides/riftbound-card-condition-guide` (added 2026-08-13) | Distinct from `/guides/how-to-store-and-protect-riftbound-cards` (storage, not grading) — cross-linked both ways |
@@ -141,3 +144,13 @@ cannibalization problem.
    **whose visible H1/title/meta-description already targets that phrase** —
    if two pages both do, that's the cannibalization signal to fix, not ship a
    third page next to them.
+5. **For a new SET specifically, publish fewer pages than feels natural.** Of
+   ~24 Vendetta pre-release articles, 13 were 301'd away within eight weeks —
+   first as a batch (`7997e00`, consolidating seven posts that restated the same
+   launch facts in different words, written up as the cause of an AdSense
+   low-value-content rejection), then on Search Console evidence (`4aab61f`:
+   two of the flagship posts had 4 and 19 impressions in 28 days). The ones that
+   survived all have **live data in them** — an embedded gallery, real decklists,
+   `ebayPicks` — rather than a restatement of an announcement. A set's
+   announcement facts belong on ONE page; everything else should be something
+   only this site can compute.

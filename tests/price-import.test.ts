@@ -1,7 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { buildCardIndex, resolveCardId, type CardLite } from "../src/lib/price-import";
+import { buildCardIndex, resolveCardId, OTHER_TCG_HANDLE, type CardLite } from "../src/lib/price-import";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Store title → card resolution, and the rune bug in particular.
@@ -148,4 +150,94 @@ test("an ordinary English listing is unaffected by the language check", () => {
   // code, so the check must never fire on them.
   assert.equal(resolve("Existential Dread - 134/219"), "unl-134");
   assert.equal(resolve("Kennen, Heart of the Tempest (197*/166) Signature"), "ven-197s");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported 2026-09-10 through the portfolio feedback form: "random listings from
+// 'Hobby Collectors Australia' are completely throwing off some card prices in
+// portfolio (Thousand-Tailed Watcher, Seal of Focus etc)".
+//
+// Two defects, stacked. Hobby Collectors files every single it sells, across
+// every game, in ONE collection — `all-singles-one-piece-pokemon-riftbound`.
+// The handle says "riftbound", so discoverRiftboundCollections took it: 676
+// Pokémon and One Piece singles, and (verified live) zero Riftbound ones. Its
+// actual Riftbound collections hold only sealed product and accessories, and its
+// own `riftbound-league-of-legends-singles` handle is empty.
+//
+// Then resolveCardId turned those foreign singles into Riftbound prices. 461 of
+// the 676 titles carry an "NNN/NNN" collector number. parseNumber() read one,
+// setFromTotal() declined the foreign denominator, confidentSetCode came back
+// null — and `setCode` fell through to its "OGN" default, so the number-only
+// path matched on the NUMERATOR ALONE. Live example, confirmed on the card page:
+//
+//   "Armarouge 015/091 Scarlet and Violet Paldean Fates Reverse Holo"  A$1.00
+//     → Captain Farron, Riftbound OGN 015/298
+//
+// A$1.00 then beat every real listing, so it became the card's headline price,
+// its history point, and its value in every portfolio holding it.
+//
+// The denominator was never a missing signal to default away — it is positive
+// evidence. A real Riftbound single always prints its own set's total.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a foreign game's collector number never resolves to a Riftbound card", () => {
+  // The exact live title that mispriced Captain Farron.
+  assert.equal(
+    resolve("Armarouge 015/091 Scarlet and Violet Paldean Fates Reverse Holo / Holo Rare"),
+    null,
+  );
+  // The same shape across the other games this store shelves together. Each
+  // numerator deliberately matches a card in CARDS above, so only the
+  // denominator can be doing the rejecting.
+  assert.equal(resolve("Charizard ex 134/165 Pokemon 151 Double Rare"), null);
+  assert.equal(resolve("Monkey D. Luffy OP01-042 042/121 One Piece Romance Dawn"), null);
+  assert.equal(resolve("Some Card 197/200 Another Game"), null);
+});
+
+test("an unknown denominator does not block a NAME match", () => {
+  // The guard is aimed at the number paths only. A name is independent evidence
+  // — no Pokémon card is called "Existential Dread" — so a Riftbound listing
+  // whose denominator is mistyped or belongs to a set we have not learned yet
+  // still resolves, provided its number agrees with the card we hold.
+  assert.equal(resolve("Existential Dread - Unleashed (134/219)"), "unl-134");
+  // …and a name whose number DISAGREES stays unmatched, as it already did.
+  assert.equal(resolve("Existential Dread - Unleashed (999/219)"), null);
+});
+
+test("an explicit Riftbound set signal overrides an unrecognised denominator", () => {
+  // A genuine listing that states its set — by code or by name — is trusted even
+  // if its "/total" is wrong, so a new set's cards are never silently dropped
+  // just because setFromTotal() has not learned the denominator yet.
+  assert.equal(resolve("Ionian Ambush OGN - 134/999"), "ogn-134");
+  assert.equal(resolve("Ionian Ambush - Origins - 134/999"), "ogn-134");
+});
+
+test("every real Riftbound denominator still resolves by number alone", () => {
+  // The number-only path is load-bearing for stores whose titles bury the name
+  // in punctuation — the guard must not cost it anything.
+  assert.equal(resolve("[Foil] 134/298 - Riftbound single"), "ogn-134");
+  assert.equal(resolve("134/219"), "unl-134");
+});
+
+test("discovery rejects a mixed-game collection handle even when it says riftbound", () => {
+  // discoverRiftboundCollections itself is module-private and does live HTTP, so
+  // the regex is tested directly and its wiring is pinned by reading the source.
+  const src = readFileSync(join(process.cwd(), "src/lib/price-import.ts"), "utf8");
+  const re = OTHER_TCG_HANDLE;
+  // The handle that actually caused this.
+  assert.ok(re.test("all-singles-one-piece-pokemon-riftbound"));
+  assert.ok(re.test("riftbound-and-pokemon-singles"));
+  // A genuine Riftbound-only handle must sail through.
+  for (const h of ["riftbound-singles", "riftbound-single", "riftbound-league-of-legends-singles", "riftbound-origins"]) {
+    assert.equal(re.test(h), false, `${h} must still be discovered`);
+  }
+  // And it must be wired into the discovery filter, not merely declared.
+  const discoverAt = src.indexOf("async function discoverRiftboundCollections");
+  const fetchAt = src.indexOf("async function fetchCollection");
+  assert.ok(discoverAt >= 0 && fetchAt > discoverAt);
+  assert.match(
+    src.slice(discoverAt, fetchAt),
+    /!OTHER_TCG_HANDLE\.test\(h\)/,
+    "discoverRiftboundCollections must reject mixed-game handles",
+  );
 });

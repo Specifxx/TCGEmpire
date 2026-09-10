@@ -337,12 +337,16 @@ section("1d. Policy date drift");
 // material. The real case was +195/-8; plumbing a date through an import is ~4.
 const MATERIAL_CHURN_LINES = 25;
 
+// /marketplace/terms and /returns were listed here until 2026-09-10. Both routes
+// were deleted with the peer-to-peer Marketplace (2026-08-26) and neither file
+// exists any more, so both were reported as "has no entry in static-page-dates.ts"
+// — a failure with no possible fix, since you cannot date a page that isn't
+// served. Nobody saw it because the whole block skips on a shallow clone and both
+// CI and Vercel check out shallow; it only surfaced on a full local history.
 const POLICY_PAGES: [route: string, file: string][] = [
   ["/privacy", "src/app/privacy/page.tsx"],
   ["/terms", "src/app/terms/page.tsx"],
-  ["/marketplace/terms", "src/app/marketplace/terms/page.tsx"],
   ["/editorial-policy", "src/app/editorial-policy/page.tsx"],
-  ["/returns", "src/app/returns/page.tsx"],
 ];
 
 // Every page must read its date from the shared table — a reintroduced

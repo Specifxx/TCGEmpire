@@ -1,6 +1,6 @@
 /**
  * Scrape the OFFICIAL Riftbound card gallery (playriftbound.com) for every card's
- * real image, across EVERY set — no set filter is clicked. fetch-vendetta-official.ts
+ * real image, across EVERY set — no set filter is clicked. fetch-set-official.ts
  * already proved the gallery's __NEXT_DATA__ embeds full card objects (id, name,
  * cardImage.url, ...) that can be walked straight out of the page without pagination;
  * this just skips that script's "Vendetta" filter click so every set's cards show up
@@ -64,7 +64,7 @@ async function main() {
     await page.waitForTimeout(300);
   }
 
-  // Same __NEXT_DATA__ shape fetch-vendetta-official.ts relies on:
+  // Same __NEXT_DATA__ shape fetch-set-official.ts relies on:
   //   { id: "ven-021-166" | "sfd-r04a" | ..., name, cardImage: { url, accessibilityText } }
   // No `set` check here (that script's setId === "VEN" gate is exactly what we're
   // dropping) — every set's cards fall out of the same walk.

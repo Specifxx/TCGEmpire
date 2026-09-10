@@ -132,6 +132,66 @@ test("CinematicHero's full-bleed breakout compensates for --sidenav-w, not a bar
   assert.match(nearby, /className="w-full pl-\[var\(--sidenav-w\)\]"/);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TEXT-ONLY + COLLAPSIBLE (2026-09-10) — reported directly: the per-link
+// emoji made the one nav surface that's on screen permanently read as
+// AI-generated decoration, and rendering all ~9 groups flat and always-open
+// meant scrolling past Games and Guides to reach Your Collection on every
+// page. This is the one NAV_GROUPS renderer that drops the emoji (the
+// dropdown/footer/launcher renderers are untouched — a link.emoji shown for a
+// moment reads differently than one sitting on screen at all times) and the
+// one that lets a visitor collapse a group and has it stay collapsed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("SideNav renders no per-link emoji, unlike the launcher/mobile-nav renderers", () => {
+  const src = read("src/components/SideNav.tsx");
+  assert.doesNotMatch(src, /link\.emoji/, "SideNav must not read link.emoji — text only, by design");
+  // Untouched by this change, so still emoji: the ⌘K launcher and the phone
+  // Explore overlay, both surfaces that are open for a moment rather than
+  // sitting on screen permanently. (FooterNav was already text-only before
+  // this change — it never rendered link.emoji at all — so it isn't a
+  // counter-example either way and isn't asserted on here.)
+  for (const renderer of ["CommandLauncher.tsx", "CinematicNavMenu.tsx"]) {
+    assert.match(read(`src/components/${renderer}`), /link\.emoji|l\.emoji/, `${renderer} should still render emoji — only SideNav drops them`);
+  }
+});
+
+test("SideNav's groups are collapsible and remember a visitor's choice", () => {
+  const src = read("src/components/SideNav.tsx");
+  assert.match(src, /"use client"/);
+  // A real disclosure control per group, not a static heading.
+  assert.match(src, /aria-expanded=\{open\}/);
+  assert.match(src, /onClick=\{\(\) => toggleGroup\(group\.title\)\}/);
+  // Persisted, so a collapsed group stays collapsed across a reload — and
+  // ONLY deviations are stored, so a group added to NAV_GROUPS tomorrow
+  // starts open for every existing visitor rather than defaulting to
+  // whatever an empty/missing key would imply.
+  assert.match(src, /localStorage\.(get|set)Item\(STORAGE_KEY/);
+  assert.match(src, /localStorage\.setItem\(STORAGE_KEY, JSON\.stringify\(\[\.\.\.next\]\)\)/);
+});
+
+test("SideNav forces the active page's group open even if it was previously collapsed", () => {
+  const src = read("src/components/SideNav.tsx");
+  // Computed from the SAME isActiveLink check used to highlight the link, so
+  // the two can't drift (one flagging a page active while the other leaves
+  // its group collapsed would hide the very page a visitor is on).
+  assert.match(src, /activeGroupTitle/);
+  assert.match(src, /g\.links\.some\(\(l\) => isActiveLink\(pathname, l\)\)/);
+  assert.match(src, /if \(!hydrated \|\| !activeGroupTitle \|\| !collapsed\.has\(activeGroupTitle\)\) return;/);
+});
+
+test("SideNav's collapse state starts empty (every group open) so SSR and first client paint agree", () => {
+  // localStorage isn't available during SSR. Seeding `collapsed` from it
+  // synchronously would make the server's render and the client's first
+  // render disagree — a hydration mismatch. Real state loads in an effect,
+  // strictly after mount, same shape as TradeCalculator's own localStorage
+  // restore.
+  const src = read("src/components/SideNav.tsx");
+  assert.match(src, /useState<Set<string>>\(\(\) => new Set\(\)\)/);
+  const effectsAfter = src.slice(src.indexOf("useState<Set<string>>"));
+  assert.match(effectsAfter, /useEffect\(\(\) => \{[\s\S]*?localStorage\.getItem\(STORAGE_KEY\)/);
+});
+
 // ── Two modes: the resolver, the boot script, and the layout wiring ──────────
 import vm from "node:vm";
 import {
@@ -207,7 +267,7 @@ test("SideNav toggles + persists the choice and reapplies the route default on n
   const src = read("src/components/SideNav.tsx");
   assert.match(src, /setAttribute\("data-sidenav", mode\)/);
   assert.match(src, /document\.cookie = `\$\{SIDENAV_COOKIE\}=\$\{next\}; path=\/; max-age=\$\{SIDENAV_COOKIE_MAX_AGE\}; SameSite=Lax`/);
-  assert.match(src, /resolveSidenavMode\(readSidenavCookie\(document\.cookie\), pathname\)/);
+  assert.match(src, /resolveSidenavMode\(readSidenavCookie\(document\.cookie\), pathname \?\? "\/"\)/);
   // The keyboard shortcut must never fire while the visitor is typing.
   assert.match(src, /isTypingTarget\(e\.target\)/);
   // Flyouts are keyboard-reachable: focus opens, Escape closes, state exposed.

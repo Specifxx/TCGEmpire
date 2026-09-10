@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -8,7 +8,7 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The 2026-09-10 "make it visual" pass. Owner brief, four parts:
-//   1. both corner nudges' text pitch → one PremiumEdgeGraphic
+//   1. both corner nudges' text pitch → the owner's designed PremiumPitchPanel
 //   2. a gold, shimmering "✦ Premium" next to Database in the PHONE header
 //   3. the tagline → "Get an unfair edge buying and selling"
 //   4. /premium's CTA → one big green button, price demoted to the small print
@@ -16,46 +16,58 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // retired shimmer, and gold-for-Premium on the /premium CTA specifically).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GRAPHIC = "src/components/PremiumEdgeGraphic.tsx";
+const PANEL = "src/components/PremiumPitchPanel.tsx";
 
-test("the graphic is presentational only — no hooks, no client boundary, no data fetch", () => {
-  const src = read(GRAPHIC);
+test("the panel is presentational only — no hooks, no client boundary, no data fetch", () => {
+  const src = read(PANEL);
   assert.ok(!/^"use client";/m.test(src), "must not be a client component — it renders from the server /premium tree too");
   assert.ok(!/\buseState\b|\buseEffect\b|\buseMe\b|\buseCountry\b/.test(src), "must not use any hook");
   assert.ok(!/fetch\(/.test(src), "must not fetch — it is a static illustration, not a live figure");
 });
 
-test("the graphic is accessible: a real role and a label that describes the claim", () => {
-  const src = read(GRAPHIC);
-  assert.match(src, /role="img"/, "an SVG conveying meaning needs role=img");
-  const label = /aria-label="([^"]+)"/.exec(src);
-  assert.ok(label && label[1].trim().length > 20, "expected a descriptive aria-label, not a stub");
+test("every feature row names a real Premium-only entitlement, not a free one", () => {
+  // The owner's comp advertised "Advanced filters — find the exact cards, sets
+  // and rarities you want" and "See the best prices across stores instantly".
+  // Both are the FREE tier in TIER_COMPARISON, so both were reworded. This
+  // pins that the rows keep naming things that are actually behind the paywall.
+  // Comments stripped first: the component's header deliberately QUOTES the
+  // comp's original wording to record what was changed and why, so the raw
+  // source legitimately contains both retired phrases.
+  const src = read(PANEL);
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  assert.ok(!/rarities you want/i.test(code), "browse/search filtering is free — must not be sold as Premium");
+  assert.ok(
+    !/best prices across stores/i.test(code),
+    "cross-store price comparison is free for everyone — must not be sold as Premium",
+  );
+  for (const claim of ["Deal Finder", "Value Finder", "Bulk Pricer", "Best Basket", "Rising Cards", "Demand Finder"]) {
+    assert.ok(code.includes(claim), `expected the rows to name the real Premium tool ${claim}`);
+  }
+
+  // No invented figures in the COPY. Scoped to the FEATURES rows rather than
+  // the whole file, since Tailwind opacity and object-position values are
+  // legitimately full of percentages.
+  const rows = src.slice(src.indexOf("const FEATURES"), src.indexOf("export function PremiumPitchPanel"));
+  const copy = (rows.match(/(?:title|body): "([^"]+)"/g) ?? []).join(" ");
+  assert.ok(copy.length > 40, "expected to find the feature copy");
+  assert.ok(!/\d+\s*%/.test(copy), "no invented percentage in the feature copy");
+  assert.ok(!/[$£€]\s*\d/.test(copy), "no invented price in the feature copy");
+  assert.ok(!/only \d+ (left|spots|seats)/i.test(code), "no fake scarcity");
+  assert.ok(!/expires? in/i.test(code), "no countdown pressure");
 });
 
-test("the graphic states a real product difference and invents no numbers", () => {
-  // The bars are an illustration, not a measurement. This repo fails builds
-  // over invented figures, so the graphic is labelled with a difference that
-  // is already published on /premium ("Free shows only the top pick" appears
-  // verbatim in three FEATURES entries) rather than a made-up comparison.
-  const src = read(GRAPHIC);
-  assert.match(src, /every deal, ranked/, "the Premium bar must state the real entitlement");
-  assert.match(src, /top pick only/, "the free bar must state the real free-tier limit");
-
-  // No percentage, no currency amount, no "N deals" count rendered as text —
-  // any of those would turn the illustration into a data claim.
-  const textNodes = src.match(/>\s*[^<>{}\n]+\s*</g) ?? [];
-  for (const node of textNodes) {
-    assert.ok(!/\d+\s*%/.test(node), `graphic must not render a percentage: ${node.trim()}`);
-    assert.ok(!/[$£€]\s*\d/.test(node), `graphic must not render a currency figure: ${node.trim()}`);
-  }
-  assert.ok(!/only \d+ (left|spots|seats)/i.test(src), "no fake scarcity");
-  assert.ok(!/expires? in/i.test(src), "no countdown pressure");
+test("the artwork is decorative, budgeted, and carries the alt attribute the build guard requires", () => {
+  const src = read(PANEL);
+  assert.match(src, /alt=""/, "the art restates nothing — empty alt is correct, and check-images requires the attribute");
+  assert.match(src, /premium-pitch\.webp/, "expected the cropped comp artwork");
+  const bytes = statSync(join(ROOT, "public/premium/premium-pitch.webp")).size;
+  assert.ok(bytes < 150 * 1024, `artwork must stay inside the 150KB budget, is ${Math.round(bytes / 1024)}KB`);
 });
 
 test("both corner nudges render the graphic instead of a tool-chip row", () => {
   for (const file of ["src/components/SignupPromoPopup.tsx", "src/components/PremiumSlideIn.tsx"]) {
     const src = read(file);
-    assert.match(src, /<PremiumEdgeGraphic/, `${file} must render the shared graphic`);
+    assert.match(src, /<PremiumPitchPanel/, `${file} must render the shared designed panel`);
     assert.ok(
       !/PITCH_TOOLS\.map\(/.test(src),
       `${file} must no longer render the tool chip row the graphic replaced`,

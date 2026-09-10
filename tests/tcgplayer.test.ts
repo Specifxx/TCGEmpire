@@ -285,3 +285,93 @@ test("the fallback only READS byKey/bySetlessNum, and can never write a promo ca
     "the fallback pass must never write into byKey/bySetlessNum — that would reopen the exact base-card collision this file's earlier fix exists to prevent",
   );
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reported 2026-09-09 via the wrong-card form: riftcompare.com/card/
+// warwick-hunter-ogn-159a-298 presented itself as "Warwick, Hunter (Showcase) —
+// Riftbound OGN 159a/298" (a pack-pulled alt-art) while linking to TCGplayer
+// product 678049 at US$63.81 — which is in "Riftbound Promotional Cards", a
+// different physical printing entirely.
+//
+// The cause was DRIFT between two copies of one rule. lib/tcgplayer.ts's
+// isPromoProduct() has always been /organized\s*play|promotional\s*cards?/i;
+// scripts/add-tcg-printings.ts carried its own narrower /organized play/i. Both
+// promo set names hit the shared one, only the "Organized Play" one hit the
+// local one — so a "Riftbound Promotional Cards" product fell through to the
+// in-set VARIANT branch and was CREATED as a fake Showcase card carrying that
+// product's externalId. The pricing layer then matched it straight back by
+// externalId, which deliberately bypasses isPromoProduct() because an explicit
+// link is meant to be authoritative. Every guard above worked; they just
+// disagreed about what a promo product is.
+//
+// This file already had the same failure once (a private setFromTotal that never
+// learned VEN), so the rule is pinned rather than merely fixed: there is ONE
+// definition and every layer imports it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("isPromoProduct also flags the OTHER set name TCGplayer files promos under", () => {
+  // "Riftbound Promotional Cards" never says "Organized Play". Missing it is the
+  // exact reported bug.
+  assert.ok(isPromoProduct(mkProduct("Riftbound Promotional Cards")));
+  assert.ok(isPromoProduct(mkProduct("Promotional Cards")));
+  assert.ok(isPromoProduct(mkProduct("Riftbound Promotional Card")));
+  assert.ok(isPromoProduct(mkProduct("riftbound  promotional cards")));
+});
+
+test("add-tcg-printings imports the shared promo rule instead of defining its own", () => {
+  const src = readCode("scripts/add-tcg-printings.ts");
+  assert.match(
+    src,
+    /import\s*\{[^}]*\bisPromoProduct\b[^}]*\}\s*from\s*"\.\.\/src\/lib\/tcgplayer"/,
+    "add-tcg-printings must import isPromoProduct from lib/tcgplayer, not carry its own copy",
+  );
+  // A local regex over setName is precisely how the two copies drifted apart.
+  assert.ok(
+    !/\/[^/\n]*organized[^/\n]*\/i/i.test(src),
+    "add-tcg-printings must not define its own promo-set regex — that private copy is what drifted",
+  );
+  // The branch that decides VARIANT vs PROMO must read the shared rule.
+  const promoAt = src.indexOf("const isOpPromo = ");
+  assert.ok(promoAt >= 0, "expected the in-set branch's promo decision");
+  assert.match(
+    src.slice(promoAt, promoAt + 120),
+    /isPromoProduct|isOpPromoProduct/,
+    "the VARIANT-vs-PROMO decision must come from the shared isPromoProduct",
+  );
+});
+
+test("no other layer keeps a private promo-set regex either", () => {
+  // One definition, imported everywhere. If a new caller needs the concept it
+  // imports isPromoProduct; a second regex is the bug, not a shortcut.
+  for (const file of ["src/lib/price-import.ts", "src/lib/ebay.ts", "scripts/add-tcg-printings.ts"]) {
+    const src = readCode(file);
+    assert.ok(
+      !/\/[^/\n]*organized\\?s\*?\s?play[^/\n]*\/i/i.test(src),
+      `${file} must not define its own organized-play/promo-set regex — import isPromoProduct instead`,
+    );
+  }
+});
+
+test("the repair script for cards already written by the drifted rule exists and is dry-run by default", () => {
+  // Fixing the source stops NEW bad rows; it does nothing for the ones already
+  // in the catalogue (Warwick among them). Those need a deliberate pass.
+  const src = readCode("scripts/fix-promo-as-variant.ts");
+  assert.match(src, /isPromoProduct/, "the repair must select rows using the same shared rule");
+  assert.match(
+    src,
+    /externalId:\s*\{\s*startsWith:\s*"tcg-"\s*\}/,
+    "only cards CREATED by a TCGplayer product (externalId tcg-<id>) are in scope",
+  );
+  assert.match(src, /isPromo:\s*false/, "a card already flagged isPromo needs no repair");
+  assert.match(src, /const APPLY = process\.argv\.includes\("--apply"\)/, "must be dry-run unless --apply is passed");
+  // The slug is a live indexed URL; moving it is a separate, deliberate call.
+  assert.match(src, /const RESLUG = process\.argv\.includes\("--reslug"\)/);
+  const applyAt = src.indexOf("if (APPLY)");
+  const slugWriteAt = src.indexOf("slug: wouldSlug");
+  assert.ok(applyAt >= 0 && slugWriteAt > applyAt, "the slug write must be inside the APPLY branch");
+  assert.match(
+    src.slice(applyAt),
+    /RESLUG && wouldSlug !== c\.slug \? \{ slug: wouldSlug \}/,
+    "--apply alone must NOT move a live slug; that needs --reslug as well",
+  );
+});

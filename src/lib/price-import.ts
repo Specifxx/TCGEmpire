@@ -47,12 +47,18 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
   [/vendetta|vengeance|\bVEN\b/i, "VEN"],
+  // Radiance, ahead of Origins for the same reason the sealed importer orders it
+  // that way. The `(?<!astral\s)` is not decoration: Pokémon's "Astral Radiance"
+  // is a real set whose singles turn up in the same shop collections, and typing
+  // one as Riftbound Radiance would put a Pokémon price on a Riftbound card.
+  // lib/sealed-import.ts's FOREIGN_RADIANCE guards the sealed half of this.
+  [/(?<!astral\s)\bradiance\b|\bRAD\b/i, "RAD"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 
 // Set/condition/qualifier tokens to strip when isolating the card name.
 const STOP =
-  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
+  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vendetta|vengeance|origins|radiance|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
   // Riftbound collector numbers come in two shapes, and BOTH have to normalise
@@ -193,6 +199,18 @@ async function fetchText(url: string): Promise<string | null> {
 // Collection handles that are clearly NOT singles (sealed, accessories, etc.).
 const NON_SINGLE = /sealed|booster|box|bundle|preorder|pre-order|accessor|playmat|sleeve|merch|deck-?box|gift|case|tin|blister|collection-box/i;
 
+// A collection handle that names ANOTHER trading-card game is a mixed-game shelf,
+// not a Riftbound one — even when it also says "riftbound".
+//
+// Hobby Collectors Australia files every single it sells, across every game, in
+// `/collections/all-singles-one-piece-pokemon-riftbound`. The handle contains
+// "riftbound", so discovery took it: 676 Pokémon and One Piece singles, and not
+// one Riftbound card. See the foreignTotal note in resolveCardId for what those
+// titles then did to real card prices. A Riftbound-only collection never needs to
+// name a rival game in its handle, so this costs nothing and shuts the door.
+export const OTHER_TCG_HANDLE =
+  /pokemon|one-?piece|magic-the-gathering|\bmtg\b|yu-?gi-?oh|flesh-?and-?blood|digimon|lorcana|gundam|dragon-?ball|weiss|star-?wars|sorcery|vanguard|metazoo/i;
+
 // Auto-discover a store's Riftbound singles collections from its Shopify sitemap,
 // so we only need the store's domain (handles vary wildly between stores). This is
 // how an aggregator like Google captures every store without hard-coding URLs.
@@ -213,8 +231,13 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
     for (const m of xml.matchAll(/\/collections\/([^<\/?#"]+)/g)) {
       const h = m[1];
       // Require "riftbound" (not just "rift" — avoids Pokémon "Paradox Rift"),
-      // and skip sealed/accessory collections and image URLs.
-      if (/riftbound/i.test(h) && !NON_SINGLE.test(h) && !/\.(jpe?g|png|gif|webp|svg)$/i.test(h)) {
+      // and skip sealed/accessory collections, mixed-game shelves and image URLs.
+      if (
+        /riftbound/i.test(h) &&
+        !NON_SINGLE.test(h) &&
+        !OTHER_TCG_HANDLE.test(h) &&
+        !/\.(jpe?g|png|gif|webp|svg)$/i.test(h)
+      ) {
         handles.add(h);
       }
     }
@@ -412,7 +435,7 @@ export function orderCardsForEbay<T extends { setCode: string }>(
 // the buy path does not.
 //
 // EFFECTIVE rarity, not the stored column — this is the trap. A Signature or
-// overnumbered print of a Common is stored as "Common" (import-vendetta stores
+// overnumbered print of a Common is stored as "Common" (import-set-cards stores
 // the rarity of the card it re-prints; only alt-arts were ever reclassified —
 // see chasePrintRarity's note). Filtering the raw column would therefore skip
 // exactly the chase prints most worth searching. chasePrintRarity resolves
@@ -1314,6 +1337,18 @@ function setFromTotal(total?: string): string | null {
     case 219: return "UNL";
     case 24: return "OGS";
     case 166: return "VEN";
+    // RADIANCE, BOTH CANDIDATE DENOMINATORS — deliberately, because Riot has
+    // published a card COUNT (180, of which 66 are Showcase) but no card has been
+    // seen yet, so we do not know which number is printed on the cards. Vendetta's
+    // 166 was its BASE run with Showcase printings numbered above it, which would
+    // make Radiance's denominator 114; Riot's own "180 cards" phrasing would make
+    // it 180. Neither number collides with any other set's total, so claiming both
+    // costs nothing and either guess being wrong on its own is a silent misroute:
+    // without a match here a bare "042/114" listing falls through to the "OGN"
+    // default at the bottom of resolveCardId and prices an ORIGINS card.
+    // Prune the wrong one the moment a real Radiance card is in the catalogue.
+    case 114:
+    case 180: return "RAD";
     default: return null;
   }
 }
@@ -1342,6 +1377,41 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
     num?.setCode ?? setFromTotal(num?.total) ?? SET_FROM_TITLE.find(([re]) => re.test(t))?.[1] ?? null;
   const setCode = confidentSetCode ?? "OGN";
 
+  // A "/total" THAT BELONGS TO NO RIFTBOUND SET IS EVIDENCE THE LISTING IS
+  // ANOTHER GAME'S CARD — not a missing signal to paper over with a default.
+  //
+  // Reported 2026-09-10 via the portfolio feedback form: "random listings from
+  // 'Hobby Collectors Australia' are completely throwing off some card prices".
+  // That store's mixed-game singles collection is named
+  // `all-singles-one-piece-pokemon-riftbound` — which the /riftbound/i handle
+  // filter in discoverRiftboundCollections happily accepted — and it holds 676
+  // Pokémon and One Piece singles and ZERO Riftbound ones. 461 of those titles
+  // carry an "NNN/NNN" collector number, so parseNumber() read one, setFromTotal
+  // declined the foreign denominator, confidentSetCode came back null, and
+  // `setCode` fell through to the "OGN" default. The number-only path then
+  // matched purely on the numerator: "Armarouge 015/091 Scarlet and Violet
+  // Paldean Fates" was priced as Captain Farron (OGN 015/298) at A$1.00 — and
+  // since that is far below any real price it won "cheapest", cratering the
+  // card's headline price, its history, and every portfolio holding it.
+  //
+  // A real Riftbound single always prints its set's own total (298, 221, 219,
+  // 166, 24, RAD's). So when the title states a total and it is NOT one of ours,
+  // and nothing else in the title names a Riftbound set, the listing is not our
+  // card and no amount of numerator agreement makes it one.
+  //
+  // NARROW ON PURPOSE. This only blocks the NUMBER paths; a NAME match is
+  // independent evidence and keeps working (no Pokémon card is called "Captain
+  // Farron"), and an explicit set code or set-name hint still overrides — so a
+  // genuine Riftbound listing that mistypes its denominator, or a set whose
+  // total we have not learned yet, is unaffected. The cost of a false positive
+  // here is one unmatched listing; the cost of the default was a wrong price on
+  // a real card's page.
+  const foreignTotal =
+    !!num?.total &&
+    setFromTotal(num.total) == null &&
+    !(num.setCode && SET_CODES.has(num.setCode)) &&
+    !SET_FROM_TITLE.some(([re]) => re.test(t));
+
   // Promo listing → resolve against the PROMO pool only (a promo shares the base
   // card's number, so a promo-marked listing must never price the base card).
   if (PROMO_HINT.test(t)) {
@@ -1349,6 +1419,9 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
     const byNameHit = promoByName.get(promoName);
     if (byNameHit) return byNameHit;
     if (num) {
+      // Same rule as below: a foreign denominator means this is not our card.
+      // promoByName above is a NAME match and is left alone.
+      if (foreignTotal) return null;
       const bySet = promoByNum.get(`${setCode}|${num.key}`);
       if (bySet) return bySet;
       // THE ANY-SET FALLBACK NEEDS A SET-UNIQUE NUMBER. It reaches across every
@@ -1452,6 +1525,9 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
   // is written WITHOUT the star (e.g. "225/221 (Signature)") won't wrongly grab the
   // plain overnumbered sibling — it stays unmatched instead.
   if (num) {
+    // The path the Pokémon listings came in through — matching on the numerator
+    // alone with `setCode` standing in as "OGN". See foreignTotal above.
+    if (foreignTotal) return null;
     const setHit = byNum.get(`${setCode}|${num.key}`) ?? [];
     const anyHit = byNumAny.get(num.key) ?? [];
     const hits = setHit.length ? setHit : anyHit;

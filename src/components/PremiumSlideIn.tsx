@@ -15,7 +15,7 @@ import {
   premiumZeroToday,
   premiumFromLine,
 } from "@/lib/site";
-import { PremiumEdgeGraphic } from "./PremiumEdgeGraphic";
+import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { formatMoneyCompact } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
 
@@ -76,8 +76,9 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 //      see unprompted.
 // Every entry here must be a real Premium-only TIER_COMPARISON row.
 //
-// NO LONGER RENDERED AS CHIPS (2026-09-10) — both nudges' chip rows became one
-// PremiumEdgeGraphic, and SignupPromoPopup no longer imports this list at all.
+// NO LONGER RENDERED AS CHIPS (2026-09-10) — both nudges' chip rows gave way
+// to the designed PremiumPitchPanel, which carries its own four-row feature
+// list written against TIER_COMPARISON directly.
 // It is deliberately kept, and kept exported, because it is still the canonical
 // definition of "which tools are Premium-only": tests/premium-slidein.test.ts
 // pins it against TIER_COMPARISON, and every CONTEXT_PITCH entry below is
@@ -339,16 +340,19 @@ export function PremiumSlideIn() {
               {PREMIUM_NEXT_PRICE_AMOUNT}
             </p>
           )}
-          {/* THE PITCH IS A GRAPHIC NOW (owner brief — see PremiumEdgeGraphic's
-              own header for the date and the reasoning). This replaced the
-              six-chip tool row. The contextual heading and body line ABOVE it
-              deliberately stay: a deck page selling Best Basket by name is more
-              specific than any graphic, and tests/premium-slidein.test.ts pins
-              every CONTEXT_PITCH entry against a real PITCH_TOOLS label.
+          {/* Same designed panel the signed-out popup leads with, so the two
+              nudges read as one offer — but with showFeatures off. This card
+              already carries a per-route contextual pitch naming ONE specific
+              tool above (a deck page sells Best Basket, a card page sells Value
+              Finder), which beats a generic four-row list and is pinned by
+              tests/premium-slidein.test.ts; running both would just make the
+              card tall enough to be the thing it was designed not to be.
               NB: no ISO date in this comment on purpose — it sits inside the
               400-character window after the price-increase banner above that
               tests/premium-price-increase.test.ts scans for hard-coded dates. */}
-          <PremiumEdgeGraphic className="mt-2.5" />
+          <div className="-mx-4 mt-2.5 overflow-hidden">
+            <PremiumPitchPanel showFeatures={false} />
+          </div>
           {/* PROMOTED above the CTA row, 2026-09-09 (previously an 11px
               footnote BELOW the button). ALWAYS shown. Two different framings
               by design, not an oversight:

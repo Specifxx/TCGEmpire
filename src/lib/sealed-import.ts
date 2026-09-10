@@ -41,8 +41,13 @@ const SET_NAMES: Record<string, string> = {
 // files them under a shared/mismatched collection — e.g. Gundam "… [Starter Deck 06:
 // Clan Unity]" matches "starter deck" — so we require an explicit Riftbound/League
 // marker (set name, "Riftbound", "League of Legends", Proving Grounds, Nexus Night).
+// "radiance" is NOT in this alternation on purpose — Pokémon's Astral Radiance
+// would then satisfy the Riftbound hint on its own. Radiance products reach the
+// gate through the "riftbound" / "league of legends" branch (every real storefront
+// title carries one), and FOREIGN_RADIANCE below drops the Pokémon ones outright.
+// RAD is in the code alternation because a bare set code is unambiguous.
 const RIFTBOUND_HINT =
-  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\bvendetta\b|\b(?:OGN|OGS|SFD|UNL|VEN)\b/i;
+  /riftbound|league\s*of\s*legends|proving\s*grounds|nexus\s*night|spirit\s*forged|spiritforged|\borigins\b|\bunleashed\b|\bvendetta\b|\b(?:OGN|OGS|SFD|UNL|VEN|RAD)\b/i;
 
 // The Riftbound × T1 2025 Worlds Champion Collection — Riot's first single-team
 // collaboration, sold ONLY through a Riot Merch Store drawing (English Signature
@@ -117,7 +122,7 @@ const SEALED_TITLE =
 // through otherwise. Condition codes (NM/LP/…) and a set name in parentheses
 // (e.g. "(Origins: Proving Grounds)") are tell-tale signs of a single card.
 const SEALED_EXCLUDE =
-  /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|proving\s*grounds)\b[^)]*\)/i;
+  /\bsingle\b|playmat|deck\s*box|binder|toploader|top\s*loader|dice|counter|\btoken\b|card\s*\d|\/\d{2,3}\b|chinese|japanese|korean|simplified|traditional|\bbulk\s+(?:lot|cards|commons?|singles?)\b|\bopened\b|live\s*break|\bticket\b|protector|acrylic|magnetic|\bempty\b|box\s*only|storage|\bstand\b|\bholder\b|divider|topper|\binsert\b|\b(?:nm|lp|mp|hp|dmg)\b|near\s*mint|lightly\s*played|moderately\s*played|heavily\s*played|\([^)]*\b(?:origins|spirit\s*forged|spiritforged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
 
 async function fetchText(url: string): Promise<string | null> {
   try {

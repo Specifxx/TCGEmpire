@@ -63,7 +63,7 @@ export async function pingAfterPriceRefresh(): Promise<number> {
 // After a CARD IMPORT (new set reveals, promo printings, a catalogue sync).
 //
 // This is the launch-week lever. New cards do NOT arrive via the price importer —
-// they arrive via maintenance.yml's cards-sync / vendetta-pipeline tasks, which
+// they arrive via maintenance.yml's cards-sync / set-pipeline tasks, which
 // previously pinged nothing and revalidated nothing, so a freshly imported card
 // sat out of /sitemaps/cards.xml until the next price refresh happened to purge
 // it (up to ~9h, or the full 24h ISR TTL if that revalidate call failed). During

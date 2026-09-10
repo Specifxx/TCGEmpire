@@ -119,7 +119,7 @@ export function wooPriceString(p: WooProduct): string {
  * resolveCardId (it cannot check the number against the real catalogue), so it
  * over-counts slightly; a bar set on an over-count is the safe direction.
  */
-const SINGLE_NUMBER = /\d+[a-z*]*\s*\/\s*\d+|\b(OGN|OGS|SFD|UNL|VEN)\s*-\s*\d+|\bR\d{1,3}[a-z]?\b/i;
+const SINGLE_NUMBER = /\d+[a-z*]*\s*\/\s*\d+|\b(OGN|OGS|SFD|UNL|VEN|RAD)\s*-\s*\d+|\bR\d{1,3}[a-z]?\b/i;
 // Kept in step with MULTI_CARD in price-import.ts — a bundle is not a single.
 const MULTI = /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|complete set|full set|bulk)\b/i;
 

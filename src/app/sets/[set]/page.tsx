@@ -27,6 +27,27 @@ import { priceField, COUNTRIES } from "@/lib/country";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
+import { preordersHrefForSet } from "@/lib/release-calendar";
+
+// Per-set pre-release reading, shown on a set page that has no cards yet. Keyed by
+// slug and DATA, not JSX, so adding the next set is one array — the previous shape
+// was six <li> hardcoded inline behind `set.slug === "vendetta"`, which is why it
+// was still there six weeks after Vendetta shipped.
+//
+// Only routes that exist and are about THIS set belong here; tests/content-links
+// resolves every one of them. Radiance's list deliberately leads with the two
+// pages that can be acted on today — what is confirmed, and what the pre-orders
+// cost — rather than with the mechanic leaks, which are interesting but unbuyable.
+const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
+  radiance: [
+    { href: "/blog/riftbound-radiance-what-we-know", label: "Release date & what's confirmed" },
+    { href: "/radiance-preorders", label: "Pre-order prices, every store" },
+    { href: "/release-dates", label: "Countdown & release calendar" },
+    { href: "/blog/riftbound-radiance-biggest-release-since-origins", label: "Why this release matters" },
+    { href: "/blog/riftbound-radiance-leaked-mechanics", label: "Leaked mechanics, hedged" },
+    { href: "/guides/riftbound-pre-rift-rules-explained", label: "Pre-Rift event rules" },
+  ],
+};
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -270,6 +291,14 @@ export default async function SetPage({
   // before release day. Distinguishing this from "still mid-spoiler-season" (see
   // set.totalCards in lib/constants.ts) keeps the copy below honest either way.
   const fullyRevealed = !!set.totalCards && totalInSet >= set.totalCards;
+  // Pre-order comparison page for THIS set, while it is still upcoming. Read from
+  // the release calendar rather than hardcoded, so this template never names a
+  // set and the link retires itself on release day (see preordersHrefForSet).
+  // Without it /sets/radiance — the page every "riftbound radiance" search lands
+  // on through spoiler season — had no route at all to the only Radiance thing
+  // that is actually buyable today.
+  const preordersHref = preordersHrefForSet(set.code);
+  const preReleaseLinks = set.comingSoon ? PRE_RELEASE_LINKS[set.slug] ?? [] : [];
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -310,9 +339,17 @@ export default async function SetPage({
             <span className="text-slate-300">{set.name}</span>
           </nav>
 
-          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-1.5 font-display text-lg font-bold tracking-wide text-brand-300">
-            {set.code}
-          </div>
+          {/* The code badge, but only for a code Riot has actually published.
+              Radiance's "RAD" is our own placeholder (see codeProvisional in
+              lib/constants.ts) — showing it in a badge presented a guess as the
+              official set code, on the page that ranks for the set's name. The
+              code still exists internally as the join key; it is just not stated
+              as fact until it is one. */}
+          {!set.codeProvisional && (
+            <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-1.5 font-display text-lg font-bold tracking-wide text-brand-300">
+              {set.code}
+            </div>
+          )}
 
           {/* Mirrors the title's list-first framing (see generateMetadata) — an
               H1 that disagrees with the title is its own intent mismatch. */}
@@ -330,6 +367,9 @@ export default async function SetPage({
                   : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
                 {set.sealedAvailable && (
                   <> {set.name} sealed products (booster boxes &amp; packs) are available now — <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="text-brand-300 underline-offset-2 hover:underline">compare them on the sealed page</Link>.</>
+                )}
+                {preordersHref && (
+                  <> Sealed {set.name} product is already on pre-order — <Link href={preordersHref} className="text-brand-300 underline-offset-2 hover:underline">compare every store&apos;s pre-order price</Link>.</>
                 )}
               </>
             ) : (
@@ -404,25 +444,31 @@ export default async function SetPage({
               {set.sealedAvailable && (
                 <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="btn-primary">Browse {set.name} sealed →</Link>
               )}
-              <Link href="/browse" className={set.sealedAvailable ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
+              {preordersHref && (
+                <Link href={preordersHref} className={set.sealedAvailable ? "btn-ghost" : "btn-primary"}>
+                  Compare {set.name} pre-orders →
+                </Link>
+              )}
+              <Link href="/release-dates" className="btn-ghost">When does it release?</Link>
+              <Link href="/browse" className={set.sealedAvailable || preordersHref ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
             </div>
 
-            {/* Vendetta explainer content — gives the topical set page real links into
-                the guides while the singles list is still empty (helps them get found). */}
-            {set.slug === "vendetta" && (
+            {/* Pre-release explainer links — gives the topical set page real routes
+                into the cluster while the singles list is still empty (which is
+                also when it gets the most "when does <set> come out" traffic it
+                will ever get, and has the least to show for it). Was a
+                `set.slug === "vendetta"` block with six links hardcoded inline;
+                Vendetta released six weeks ago and the block has been dead markup
+                on a page nobody hits since. See PRE_RELEASE_LINKS above. */}
+            {preReleaseLinks.length > 0 && (
               <div className="mx-auto mt-6 max-w-lg border-t border-ink-800 pt-5 text-left">
-                <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for Vendetta</p>
+                <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Get ready for {set.name}</p>
                 <ul className="grid gap-1.5 text-sm sm:grid-cols-2">
-                  {/* The "everything you need to know" and "new mechanics roundup"
-                      posts were retired in the Aug 2026 low-performer prune (see
-                      next.config.js redirects) — these link their surviving
-                      equivalents instead. */}
-                  <li><Link href="/blog/riftbound-vendetta-nexus-night-promo-cards" className="text-brand-400 hover:underline">Nexus Night promo cards →</Link></li>
-                  <li><Link href="/guides/riftbound-empower-explained" className="text-brand-400 hover:underline">Empower mechanic explained →</Link></li>
-                  <li><Link href="/guides/riftbound-flow-explained" className="text-brand-400 hover:underline">Flow mechanic explained →</Link></li>
-                  <li><Link href="/blog/riftbound-vendetta-unit-gear-decrees" className="text-brand-400 hover:underline">New card types: Unit-Gear &amp; Decrees →</Link></li>
-                  <li><Link href="/guides/building-for-riftbound-vendetta" className="text-brand-400 hover:underline">Deckbuilding guide &amp; synergies →</Link></li>
-                  <li><Link href="/guides/best-riftbound-vendetta-decks" className="text-brand-400 hover:underline">Best Vendetta decks &amp; archetypes →</Link></li>
+                  {preReleaseLinks.map((l) => (
+                    <li key={l.href}>
+                      <Link href={l.href} className="text-brand-400 hover:underline">{l.label} →</Link>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}

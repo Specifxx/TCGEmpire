@@ -1,7 +1,7 @@
 name: Maintenance
 
 # On-demand maintenance tasks against the production database — dispatchable so
-# routine data operations (schema push, card syncs, the Vendetta spoiler pipeline)
+# routine data operations (schema push, card syncs, the per-set spoiler pipeline)
 # can run without a local dev environment. Each task maps to a scripts/*.ts entry;
 # they are all ADDITIVE/idempotent (see each script's header).
 
@@ -19,8 +19,9 @@ on:
           - cards-manual     # apply prisma/manual-cards.json (promos/backstop)
           - fetch-promos     # scrape riftbound.gg's official card-page sitemap for promo printings (incl. R-numbered promo runes) + apply additively (no dry-run — both scripts are additive/idempotent by design)
           - tcg-printings    # create printings TCGplayer lists that we lack (Showcase/alt-art variants + the R-numbered rune cycle)
+          - fix-promo-variants # REPAIR for cards tcg-printings already created wrongly: a TCGplayer PROMO product that was filed as an in-set alt-art "Showcase" because this script's own promo-set regex was narrower than lib/tcgplayer.ts's (reported via the wrong-card form — /card/warwick-hunter-ogn-159a-298 showed a US$63.81 promo price on a page claiming to be a pack-pulled Showcase). Flags isPromo and restores the base printing's rarity. Report-only unless `apply` is ticked. NEVER moves a slug — those URLs are live and indexed, and a move needs a next.config.js redirect in the same commit.
           - fix-cloned-art   # scrape real official art for cloned promo/rune printings; clear wrong borrowed art to a placeholder where none exists
-          - vendetta-pipeline # scrape official gallery + import VEN reveals
+          - set-pipeline     # scrape playriftbound.com's official gallery for ONE set and import its reveals (set_slug input; defaults to the next announced-but-unreleased set — Radiance today). Replaced 'vendetta-pipeline', which could only ever do VEN.
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
@@ -41,7 +42,8 @@ on:
           - migrate-history-db-to-rh6 # LEGACY (RH11 → RH6 cutover, 2026-09-02, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-rh6-to-rh7 on 2026-09-04 (RH6 nearing its 5 GB monthly transfer allowance).
           - migrate-history-db-rh6-to-rh7 # LEGACY (RH6 → RH7 cutover, 2026-09-04, kept for reference): full pg_dump/restore of the live RH6 project into RH7 + row-count verification. Superseded by the additive `migrate-history` task on 2026-09-06 (RH7 exceeded its 5 GB monthly transfer allowance, and RH8-RH11 were not set in Actions at all at that point, so that rotation fell back to RH6 rather than the usual next recycled name).
           - migrate-history-db-rh6-to-rh8 # LEGACY (RH6 → RH8 cutover, 2026-09-06, kept for reference): full pg_dump/restore of the live RH6 project into RH8 + row-count verification. Superseded by migrate-history-db-rh8-to-rh9 on 2026-09-09 (RH8 nearing its 5 GB monthly transfer allowance).
-          - migrate-history-db-rh8-to-rh9 # CURRENT history cutover (2026-09-09): full pg_dump/restore of the live RH8 project into RH9 + row-count verification. RH9 is a RECYCLED name (its own prior term ran 2026-08-25..08-28, superseded by RH10) — per src/lib/db-chains.ts's own rule, a recycled target must be re-verified live on every return, never trusted from that old term. RUN THIS BEFORE deploying the RH9-first chain.
+          - migrate-history-db-rh8-to-rh9 # LEGACY (RH8 → RH9 cutover, 2026-09-09, kept for reference): full pg_dump/restore of the live RH8 project into RH9 + row-count verification. Superseded by migrate-history-db-rh9-to-rh10 on 2026-09-10 (RH9 nearing its 5 GB monthly transfer allowance).
+          - migrate-history-db-rh9-to-rh10 # CURRENT history cutover (2026-09-10): full pg_dump/restore of the live RH9 project into RH10 + row-count verification. RH10 is a RECYCLED name (its own prior term ran 2026-08-25..08-28, superseded by RH11) — per src/lib/db-chains.ts's own rule, a recycled target must be re-verified live on every return, never trusted from that old term. RUN THIS BEFORE deploying the RH10-first chain.
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
@@ -56,6 +58,8 @@ on:
           - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
+          - audit-inbox      # read-only dump of the four /admin/messages queues (contact messages, store suggestions, feedback, wrong-price/card reports). Emails reduced to their domain and IPs never printed — job logs are collaborator-visible and these are the tables where the public typed their own address. ALL=1 via the `apply` input shows every row rather than only open ones.
+          - close-inbox-items # THE WRITE half of audit-inbox: sets the status each worked item actually earned (added / rejected / FIXED / HIDDEN), row by named row. Never a blanket "mark all done" — a suggestion that could NOT be added is stamped rejected with the reason, not added. Refuses any row whose status has moved since. Report-only unless `apply` is ticked.
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
           - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
@@ -95,6 +99,10 @@ on:
         description: "import-prices only: also force an eBay SINGAPORE refresh (~1k calls)"
         type: boolean
         default: false
+      set_slug:
+        description: "set-pipeline only: which set to scrape + import, by slug or code (e.g. radiance / RAD). Leave empty for the next announced-but-unreleased set."
+        type: string
+        required: false
       source:
         description: "restore-accounts-into-rm5 only: which database to copy accounts/marketplace FROM (run probe-databases first)"
         type: choice
@@ -102,7 +110,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "audit-premium-vs-stripe only: actually WRITE the repairs (default: report only)"
+        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -190,13 +198,21 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # RH11 is the CURRENT project (2026-08-30, after RH10 reached its 5 GB Neon
-          # network-transfer allowance — see db-history.ts, which explains why this
-          # chain is CURRENT-first rather than newest-first). RH10 is the rollback;
-          # everything below it is dead. This is a schema-push TARGET chain, so it
-          # mirrors the app's precedence exactly — pushing a new column into any
-          # project other than the one the app reads is how a green deploy 500s.
-          HISTORY_DB: ${{ secrets.RH11 || vars.RH11 || secrets.RH10 || vars.RH10 || secrets.RH9 || vars.RH9 || secrets.RH8 || vars.RH8 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
+          # RH10 is the CURRENT project (2026-09-10, after RH9 reached its 5 GB Neon
+          # network-transfer allowance after barely a day live — see db-history.ts,
+          # which explains why this chain is CURRENT-first rather than newest-first).
+          # RH9 is the rollback; everything below it is dead. This is a schema-push
+          # TARGET chain, so it mirrors the app's precedence exactly — pushing a new
+          # column into any project other than the one the app reads is how a green
+          # deploy 500s.
+          #
+          # FOUND STALE 2026-09-10: this chain had led with RH11 || RH10 since
+          # 2026-08-30 and was never updated through the RH6/RH7/RH8/RH9 rotations
+          # that followed — exactly the drift src/lib/db-chains.ts's own header
+          # warns about. RH11 is a live, reachable secret (confirmed by a
+          # 2026-09-06 probe-history run), so `db-push` had been silently pushing
+          # schema at a project the app has not read since 2026-08-30.
+          HISTORY_DB: ${{ secrets.RH10 || vars.RH10 || secrets.RH9 || vars.RH9 || secrets.RH8 || vars.RH8 || secrets.RH11 || vars.RH11 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
@@ -1301,6 +1317,155 @@ jobs:
           echo "  3. Leave RH6 set as the rollback; remove it only once RH7 has been"
           echo "     serving cleanly for a while."
           echo "  4. THEN MEASURE. If RH7 drains in days too, run audit-egress against"
+          echo "     it and fix the query it names rather than rotating again."
+
+      - name: Migrate the HISTORY database (RH9 → RH10) via pg_dump/pg_restore
+        # THE TWELFTH HISTORY ROTATION. RH9 is at its 5 GB monthly transfer
+        # allowance (the same ~2 GB/day burn every prior project has shown), so
+        # history rotates onto RH10.
+        #
+        # THE TARGET IS RH10, A RECYCLED NAME — its own prior term ran
+        # 2026-08-25..08-28 (superseded by RH11), predating the 2026-09-05
+        # GLOBAL-history migration entirely. Per src/lib/db-chains.ts's own rule
+        # ("do not assume the OLD RH9-RH11 findings still hold"), this step does
+        # NOT trust that old term — the User-row guard below re-checks live, and
+        # the pg_dump/restore FROM RH9 (which already carries the correct,
+        # current GLOBAL series) fully overwrites whatever RH10 held from
+        # before. Nothing from RH10's own old term is preserved, and nothing
+        # needs to be: RH9 is the live, current, GLOBAL-series-complete source
+        # of truth.
+        if: inputs.task == 'migrate-history-db-rh9-to-rh10'
+        env:
+          # SOURCE is pinned to the ONE variable holding the live data (RH9), not
+          # a fallback chain — same trap documented on every earlier rotation step.
+          SOURCE_HISTORY_URL: ${{ secrets.RH9 || vars.RH9 }}
+          TARGET_HISTORY_URL: ${{ secrets.RH10 || vars.RH10 }}
+          # Only for the "did RH10 accidentally get set to the operational database?"
+          # guard below, before anything destructive runs. Must track the CURRENT
+          # operational project (RM8 as of 2026-09-08) — comparing against a
+          # retired one would let a genuine misconfiguration through unnoticed.
+          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_HISTORY_URL" ]; then
+            echo "::error::RH10 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name RH10)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_HISTORY_URL" ]; then
+            echo "::error::RH9 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_HISTORY_URL" = "$TARGET_HISTORY_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — RH10 must be a different Neon project than RH9. Aborting before doing anything."
+            exit 1
+          fi
+          if [ -n "${OPERATIONAL_URL:-}" ] && [ "$TARGET_HISTORY_URL" = "$OPERATIONAL_URL" ]; then
+            echo "::error::RH10 resolves to the OPERATIONAL database. This step TRUNCATES its target — aborting rather than wiping production data."
+            exit 1
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_HISTORY_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          # ── IS THIS ACTUALLY A HISTORY PROJECT? ──────────────────────────
+          # CHECKED FIRST, BEFORE THE SCHEMA PUSH, AND THAT ORDER IS THE POINT.
+          # A history project holds no accounts, so rows in "User" mean this
+          # variable points at an operational database and nothing below may run.
+          # A MISSING table is itself proof the target is not operational, and
+          # `|| echo 0` handles it.
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to touch it. Every real history project in the rotation reports User=0; run the probe-databases task and pick one that does."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          # SCHEMA PUSH OVER THE DIRECT ENDPOINT, NOT THE POOLER.
+          # `prisma db push` introspects the target first, and over Neon's
+          # PgBouncer that introspection comes back EMPTY on a stale/empty
+          # database — the push then fails with P1014 ("the underlying table for
+          # model Card does not exist") immediately after a verified restore. The
+          # direct host is the pooled host minus "-pooler".
+          DIRECT_TARGET_URL="${TARGET_HISTORY_URL/-pooler/}"
+          echo "== Bringing the target's schema up to date =="
+          DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss
+
+          echo "== What the target (RH10) holds BEFORE this run — a recycled project, so expect real (if outdated) numbers, not zeroes =="
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            echo "  $T: $(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null || echo '(absent)')"
+          done
+
+          # DUMP BEFORE TRUNCATE, always — if the source refuses reads (it is at
+          # its cap), we must not have already destroyed the target's contents.
+          echo "== Dumping Card + ClickEvent + PriceHistory from RH9 =="
+          if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -f history.dump; then
+            echo "::error::Could not read RH9. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts rebuild from the next price import onward). Nothing was written to RH10."
+            exit 1
+          fi
+          echo "Dump size: $(du -h history.dump | cut -f1)"
+
+          echo "== Clearing the target's history tables for a clean re-sync (RH10's own old rows go with it — see this step's own header on why that's safe) =="
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+
+          # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
+          # rows must land first or every COPY fails the FK. The dump file is
+          # LOCAL, so this second pass costs zero source transfer.
+          echo "== Restoring Card (the FK parent) =="
+          pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
+          echo "== Restoring ClickEvent + PriceHistory =="
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+
+          echo "== Verifying row counts (source vs target) =="
+          # COUNT(*) transfers one integer per table rather than re-reading data.
+          set +e
+          MISMATCH=0
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            SRC=$(psql "$SOURCE_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch — do NOT deploy the RH10-first chain yet. Re-run this task, or inspect the pg_restore output above."
+            exit 1
+          fi
+          echo "All tables match — RH10 now holds a full copy of the history data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything the"
+          echo "     price importer wrote to RH9 in the meantime is included."
+          echo "  2. db-chains.ts, scripts/build-db-push.sh and the workflow chains"
+          echo "     put RH10 FIRST, so a deploy moves history reads/writes onto it."
+          echo "     Confirm RH10 is set in Vercel for Production, Preview AND Development."
+          echo "  3. Leave RH9 set as the rollback; remove it only once RH10 has been"
+          echo "     serving cleanly for a while."
+          echo "  4. THEN MEASURE. If RH10 drains in days too, run audit-egress against"
           echo "     it and fix the query it names rather than rotating again."
 
       - name: Migrate the HISTORY database (RH8 → RH9) via pg_dump/pg_restore
@@ -5392,6 +5557,26 @@ jobs:
         if: inputs.task == 'tcg-printings'
         run: npx tsx scripts/add-tcg-printings.ts ${{ inputs.dry_run && '--dry' || '' }}
 
+      # The clean-up half of the fix above. add-tcg-printings.ts used to carry its
+      # OWN /organized play/i in place of lib/tcgplayer.ts's canonical
+      # /organized\s*play|promotional\s*cards?/i, and TCGplayer files promos under
+      # two set names — only one of which says "Organized Play". So every product in
+      # "Riftbound Promotional Cards" took the in-set VARIANT branch and was created
+      # as a pack-pulled Showcase card carrying that promo's externalId; the pricing
+      # layer then matched it straight back by externalId (which bypasses the promo
+      # check on purpose, an explicit link being authoritative) and put the promo's
+      # price on a page presenting itself as something else entirely. The source is
+      # fixed and pinned by tests/tcgplayer.test.ts; this repairs the rows it wrote.
+      #
+      # `apply` gates the write (the polarity rule: ticking is what produces a
+      # value). --reslug is deliberately NOT exposed — correcting isPromo changes
+      # what cardSlug() produces, and moving a live indexed URL needs a matching
+      # next.config.js redirect, which is a commit, not a workflow run. The script
+      # prints the slug each row WOULD move to either way.
+      - name: Repair promo products filed as in-set variants
+        if: inputs.task == 'fix-promo-variants'
+        run: npx tsx scripts/fix-promo-as-variant.ts ${{ inputs.apply && '--apply' || '' }}
+
       # Cloned promo/rune printings (add-tcg-printings.ts, add-promos.ts) had no
       # independent image source and borrowed a donor card's art — sometimes a
       # different set's version of the same rune, i.e. the wrong specific artwork.
@@ -5737,6 +5922,31 @@ jobs:
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
 
+      - name: Audit the inbox (read-only dump of every unactioned form submission)
+        # /admin/messages is otherwise the ONLY way to read these four queues, and
+        # it needs an admin session or ADMIN_TOKEN against a live deployment — so
+        # the queue could only be worked from a browser, and acting on it (adding a
+        # suggested store to retailers.ts, correcting a card page) meant
+        # transcribing it by hand. Read-only; writes nothing.
+        #
+        # `apply` doubles as the "show me everything" flag here rather than adding
+        # a whole input for one task: unticked (default) prints only open items,
+        # ticked prints every row whatever its status.
+        if: inputs.task == 'audit-inbox'
+        env:
+          ALL: ${{ inputs.apply && '1' || '' }}
+        run: npx tsx scripts/audit-inbox.ts
+
+      # The write half of audit-inbox. Every row it touches is named by id in the
+      # script with the status it earned, because "mark everything done" is the
+      # one query that must never run here: it would stamp done on submissions
+      # nobody read, and tell someone their suggested store was added when it
+      # could not be (imaginaire.com sits behind a Cloudflare 403 — there is no
+      # feed to scrape, so it is rejected with that reason, not added).
+      - name: Close the inbox items that were actually worked
+        if: inputs.task == 'close-inbox-items'
+        run: npx tsx scripts/close-inbox-items.ts ${{ inputs.apply && '--apply' || '' }}
+
       - name: Audit store health (read-only — which tracked stores have zero listings)
         if: inputs.task == 'audit-store-health'
         run: npx tsx scripts/audit-store-health.ts
@@ -5892,22 +6102,40 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/diagnose-billing.ts
 
-      - name: Vendetta pipeline (official gallery → import)
-        if: inputs.task == 'vendetta-pipeline'
+      # SPOILER-SEASON PIPELINE. Reads the official card gallery for ONE set and
+      # imports whatever is revealed so far — additive and idempotent, so it is
+      # meant to be re-run every few days from the first reveal to release day.
+      #
+      # SET is passed to BOTH halves from the same input. That is the guard, not a
+      # convenience: the scraper stamps its output with the set it captured and the
+      # importer refuses a file stamped with any other set, so there is no way to
+      # scrape one set and write it under another's code.
+      #
+      # An empty set_slug means "the next announced-but-unreleased set", which is
+      # what a spoiler-season run almost always wants and is why this task needs no
+      # edit at all when Radiance ships and Legacy becomes next.
+      - name: Set pipeline (official gallery → import)
+        if: inputs.task == 'set-pipeline'
+        env:
+          SET: ${{ inputs.set_slug }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
         run: |
           npm i --no-save playwright
           npx playwright install --with-deps chromium
-          DUMP=1 npx tsx scripts/fetch-vendetta-official.ts
-          npx tsx scripts/import-vendetta.ts
+          DUMP=1 npx tsx scripts/fetch-set-official.ts
+          npx tsx scripts/import-set-cards.ts
 
       # The scraped card list + raw JSON dump, for inspection / parser hardening.
+      # Globbed because the filenames are per-set now (prisma/radiance-cards.json).
       - uses: actions/upload-artifact@v4
-        if: inputs.task == 'vendetta-pipeline' && always()
+        if: inputs.task == 'set-pipeline' && always()
         with:
-          name: vendetta-scrape
+          name: set-scrape
           path: |
-            prisma/vendetta-cards.json
-            scratch/vendetta-dump.json
+            prisma/*-cards.json
+            !prisma/riftbound-cards.json
+            !prisma/manual-cards.json
+            scratch/*-dump.json
           if-no-files-found: ignore
 
       # ── Make new cards DISCOVERABLE immediately ────────────────────────────────
@@ -5929,7 +6157,7 @@ jobs:
         if: >-
           always() &&
           !inputs.dry_run &&
-          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","vendetta-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed"]'), inputs.task)
+          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","set-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed"]'), inputs.task)
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"

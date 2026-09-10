@@ -200,7 +200,7 @@ export type CardType = (typeof CARD_TYPES)[number];
 // Riftbound sets. `comingSoon` = the set isn't officially ON SALE yet (singles
 // aren't buyable in stores) — this keeps it out of the sitemap's fresh-content
 // signal, movers, box-EV, pack-sim etc. It does NOT mean the set has no Card
-// rows: the official-gallery pipeline (scripts/import-vendetta.ts) imports real,
+// rows: the official-gallery pipeline (scripts/import-set-cards.ts) imports real,
 // unpriced Card rows through spoiler season, well before release day — see
 // /sets/<slug>'s own comingSoon-but-revealed branch. `sealedAvailable` = sealed
 // products (booster boxes/packs) are already buyable and listed on /sealed even
@@ -234,7 +234,25 @@ export type CardType = (typeof CARD_TYPES)[number];
 // views, no price — so it sorts LAST, exactly when its price is most wanted. The
 // quota cannot cover every market × every card daily, so the tail is what gets
 // dropped.
-export interface SetInfo { code: string; name: string; slug: string; comingSoon?: boolean; sealedAvailable?: boolean; totalCards?: number; recentlyReleased?: boolean; releasedOn?: string }
+export interface SetInfo {
+  code: string;
+  name: string;
+  slug: string;
+  comingSoon?: boolean;
+  sealedAvailable?: boolean;
+  totalCards?: number;
+  recentlyReleased?: boolean;
+  releasedOn?: string;
+  /**
+   * TRUE when `code` is OUR guess, not a code Riot has published.
+   *
+   * The code still has to be something — it is the join key for every card, price
+   * and sealed row — but a guess must not be SHOWN to a reader as though it were
+   * official, which is what /sets/<slug>'s code badge was doing for Radiance.
+   * Set it alongside the guess, delete it when the real code is confirmed.
+   */
+  codeProvisional?: boolean;
+}
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
   { code: "OGS", name: "Origins: Proving Grounds", slug: "proving-grounds" },
@@ -253,7 +271,7 @@ export const SETS: SetInfo[] = [
   // three-letter set code; this is our guess. Changing it later is a one-line edit
   // here PLUS a Card.setCode backfill if any cards have been imported under it —
   // check before importing the official gallery.
-  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23" },
+  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23", codeProvisional: true },
 ];
 
 // How long after release a set keeps first claim on the eBay quota. Two months:
@@ -474,7 +492,7 @@ export function rarityInfo(key: string): RarityInfo {
 // Vendetta chase cards — Ambessa 196/166, Swain 173/166, Draven 172/166, Leona
 // 184/166. The filter was correct; the DATA said those cards were Rare. The
 // official Vendetta gallery labels an overnumbered print by the rarity of the
-// card it re-prints, so `import-vendetta.ts` faithfully stored "Rare", and they
+// card it re-prints, so `import-set-cards.ts` faithfully stored "Rare", and they
 // sorted to the top of the Rare filter because they are the most expensive
 // things in it.
 //

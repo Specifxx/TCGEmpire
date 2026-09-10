@@ -8,7 +8,7 @@ import { setByCode } from "@/lib/constants";
 // just imported.
 //
 // WHY THIS EXISTS. New cards do not arrive via the price importer — they arrive via
-// maintenance.yml's cards-sync / vendetta-pipeline / fetch-promos / tcg-printings
+// maintenance.yml's cards-sync / set-pipeline / fetch-promos / tcg-printings
 // tasks. Those tasks wrote to the DB and then did nothing else: no revalidation, no
 // ping. So a freshly imported card sat OUT of /sitemaps/cards.xml until the next
 // price refresh happened to purge it — up to ~9h, or the full 24h ISR TTL if that

@@ -93,10 +93,10 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
   // The literal moves with each real content change so GA4 can separate the
   // eras — "premium_pitch" (text pitch) → "premium_graphic" (2026-09-10, the
-  // pitch became a PremiumEdgeGraphic). See the component's own naming-history
+  // pitch became the designed PremiumPitchPanel). See the component's own naming-history
   // comment; what this pins is that it stays a NAMED CONSTANT, not that it
   // holds any particular value forever.
-  assert.match(src, /const PROMO_VARIANT = "premium_graphic"/, "the variant must be a named constant, not inlined at each call");
+  assert.match(src, /const PROMO_VARIANT = "premium_graphic_repeat"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });
@@ -272,14 +272,27 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the popup shows instantly — no delay, no pageview gate (2026-09-01, explicit product decision)", () => {
+test("the FIRST show is still instant — no delay, no pageview gate (2026-09-01, explicit product decision)", () => {
   // Reverses the earlier delay/engagement-gate history this file used to pin:
   // 5s timer → relaxed pageview gate → buy_click-aware 3-case timing → and now
   // no timer at all. Each step was a real, deliberate product decision, not
   // drift — this test pins the CURRENT one.
+  //
+  // 2026-09-10: the popup now COUNTS pages, but only to decide when to come
+  // back after a dismissal — a visitor who has never dismissed it still sees it
+  // on their first eligible page with nothing in the way. That is a different
+  // mechanism from the retired first-show gate, which is why the old constant
+  // names stay banned below while the new cadence is allowed.
   const src = read("src/components/SignupPromoPopup.tsx");
   assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not delay showing itself behind a setTimeout");
   assert.doesNotMatch(src, /PROMO_DELAY_MS|MIN_PAGEVIEWS|PV_KEY/, "the old delay/pageview-gate machinery must be fully gone, not just unused");
+  // The re-arm gate must be reachable ONLY when a dismissal has been stamped —
+  // a never-dismissed visitor must not be held back by any page count.
+  assert.match(
+    src,
+    /dismissedAt !== null && views - dismissedAt < PAGES_BETWEEN_SHOWS/,
+    "the page-count gate must be conditional on having been dismissed first",
+  );
   // The hard-won dismissibility contract must survive this change untouched.
   assert.match(src, /SKIP_PATHS/);
   assert.match(src, /document\.body\.dataset\.rcDialog/);

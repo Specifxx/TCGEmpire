@@ -14,7 +14,7 @@
  * The card MAPPING below is kept identical to prisma/seed.ts so slugs/numbers match.
  */
 import { PrismaClient } from "@prisma/client";
-import { isOvernumbered } from "../src/lib/constants";
+import { isOvernumbered, SETS } from "../src/lib/constants";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
@@ -39,9 +39,13 @@ interface RsCard {
   image_blur_data_url: string;
 }
 
-const SET_NAMES: Record<string, string> = {
-  OGN: "Origins", OGS: "Origins: Proving Grounds", SFD: "Spirit Forged", UNL: "Unleashed", VEN: "Vendetta",
-};
+// DERIVED, not a private copy. This used to be a literal table listing five sets,
+// and the failure mode is silent: a set missing from it does not error, it just
+// stores setName === the raw set code ("RAD") on every card of that set, which is
+// what then renders on the card page, in the sitemap and in the release-day email.
+// lib/constants.ts is already the single source of truth for set identity, and it
+// gains the next set months before its cards exist, so read it.
+const SET_NAMES: Record<string, string> = Object.fromEntries(SETS.map((s) => [s.code, s.name]));
 const CHAMP_OVERRIDES: Record<string, string> = {
   kaisa: "Kai'Sa", velkoz: "Vel'Koz", chogath: "Cho'Gath", khazix: "Kha'Zix",
   reksai: "Rek'Sai", belveth: "Bel'Veth", ksante: "K'Sante", leblanc: "LeBlanc",
@@ -136,7 +140,13 @@ async function main() {
           setCode: data.setCode,
           nameNormalized: data.nameNormalized,
           isPromo: false,
-          OR: [{ externalId: { startsWith: "ven-official-" } }, { externalId: { startsWith: "manual-" } }],
+          // "-official-" not "ven-official-": the official-gallery importer stamps
+          // "<set>-official-<id>", so a literal VEN prefix here meant the NEXT set's
+          // pre-release rows could never be adopted — they would be left behind as
+          // duplicate card pages the moment RiftScribe catalogued the same cards.
+          // Safe to widen: the query is already pinned to this exact setCode,
+          // nameNormalized and variant.
+          OR: [{ externalId: { contains: "-official-" } }, { externalId: { startsWith: "manual-" } }],
         },
         select: { id: true, slug: true, variant: true },
       });

@@ -55,7 +55,7 @@ async function main() {
 
   const setCodes = SETS.map((s) => s.code).filter((code) => cards.some((c) => c.setCode === code));
   // Any rarity string actually present, so a value outside RARITIES (e.g. the
-  // "TBC" placeholder import-vendetta.ts writes when the gallery omitted it)
+  // "TBC" placeholder import-set-cards.ts writes when the gallery omitted it)
   // shows up rather than being silently bucketed away.
   const seenRarities = [...new Set(cards.map((c) => c.rarity))].sort(
     (a, b) => (RARITY_KEYS.indexOf(a) + 99) % 99 - ((RARITY_KEYS.indexOf(b) + 99) % 99),

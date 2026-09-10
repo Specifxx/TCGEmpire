@@ -93,7 +93,7 @@ test("the popup's Premium pitch never grows its own hand-typed tool list or comp
   // so a second hand-typed copy couldn't drift out of date.
   //
   // 2026-09-10: the popup stopped naming tools at all — the chip row became a
-  // PremiumEdgeGraphic, so the import went with it. The anti-duplication
+  // designed PremiumPitchPanel, so the import went with it. The anti-duplication
   // guarantee is what still matters and is what this now pins: if a future
   // pass reintroduces a tool list here, it must import the shared one rather
   // than hand-type a second copy, which is the "same claim written twice,
@@ -101,7 +101,7 @@ test("the popup's Premium pitch never grows its own hand-typed tool list or comp
   const src = read(POPUP);
   assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
   assert.ok(!/const COMPARISON/.test(src), "the old free-account COMPARISON table must be gone");
-  assert.match(src, /<PremiumEdgeGraphic/, "the pitch is a graphic now — see PremiumEdgeGraphic's own header");
+  assert.match(src, /<PremiumPitchPanel/, "the pitch is the designed panel now — see PremiumPitchPanel's own header");
 });
 
 test("the popup is a Premium pitch, but grants nothing automatically", () => {
@@ -164,14 +164,34 @@ test("the promo has no artificial delay — shows the instant it's eligible (202
   assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not gate showing itself behind a setTimeout");
 });
 
-test("a dismissed promo stays dismissed for the rest of the session", () => {
-  // Re-showing a dialog someone just closed is its own contribution to a 78%
-  // dismiss rate. dismiss() must WRITE the flag and the arming effect must READ
-  // it before re-arming on the next route.
+test("a dismissed promo goes quiet for a set number of pages, then comes back", () => {
+  // WAS "stays dismissed for the rest of the session", on the reasoning that
+  // re-showing a dialog someone just closed is its own contribution to a 78%
+  // dismiss rate. Changed by explicit owner brief (2026-09-10): "the slider
+  // should show up again every 3 pages a user visits if they're not logged in".
+  //
+  // What must still hold is that a dismissal BUYS SOMETHING: it cannot be a
+  // no-op, and the quiet stretch has to be measured in real pages, not reset by
+  // the next route change.
   const src = read(POPUP);
-  assert.match(src, /sessionStorage\.setItem\(SEEN_KEY, "1"\)/, "dismiss must persist the flag");
-  assert.match(src, /seen = sessionStorage\.getItem\(SEEN_KEY\) === "1"/, "the arming effect must read the flag back");
-  assert.match(src, /if \(seen\) return;/, "a seen promo must not re-arm on the next pageview");
+  assert.match(src, /const PAGES_BETWEEN_SHOWS = \d+/, "the cadence must be a named constant, not a magic number");
+  assert.match(
+    src,
+    /sessionStorage\.setItem\(DISMISSED_AT_KEY, String\(readCount\(VIEWS_KEY\)\)\)/,
+    "dismiss must stamp WHERE the visitor was, so the quiet stretch is measured from there",
+  );
+  assert.match(
+    src,
+    /views - dismissedAt < PAGES_BETWEEN_SHOWS\) return;/,
+    "the arming effect must stay away until that many further pages have been seen",
+  );
+  assert.match(
+    src,
+    /sessionStorage\.setItem\(VIEWS_KEY, String\(readCount\(VIEWS_KEY\) \+ 1\)\)/,
+    "pages must actually be counted, or the gap above can never close",
+  );
+  // Counted once per distinct route — otherwise a re-render would inflate it.
+  assert.match(src, /lastCountedPath\.current === pathname/, "each page must count once, not once per render");
 });
 
 test("the promo never fires for a signed-in visitor", () => {

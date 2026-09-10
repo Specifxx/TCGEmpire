@@ -55,7 +55,7 @@ export interface KeywordEntry {
   // cards and ZERO cards in every other set. Origins/Unleashed/Spiritforged
   // were imported by the general RiftScribe sync, which doesn't carry rules
   // text through; Vendetta alone went through a dedicated gallery scraper
-  // (import-vendetta.ts) that does. So "VEN" here means "the only set where
+  // (import-set-cards.ts) that does. So "VEN" here means "the only set where
   // this predicate can currently match anything", not "Vendetta-exclusive
   // mechanic" — see each entry's own prose for what's actually true about
   // where the keyword is printed. Revisit this once description text is
