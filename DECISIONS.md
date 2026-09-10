@@ -4198,3 +4198,85 @@ updated" dates earlier than material edits (in `/terms`' case, earlier than
 the commit that removed the peer-to-peer Marketplace from it), and
 `/marketplace/terms` and `/returns` were still listed as policy pages though
 both routes were deleted on 2026-08-26. Fixed in its own commit.
+
+## History database rotation: RH9 → RH10 (2026-09-10)
+
+RH9 (current since 2026-09-09) reached its 5 GB monthly transfer allowance
+after roughly a **day** live — the fastest exhaustion of any project in this
+rotation history (every prior one bought two to three days). History moves
+onto RH10.
+
+**RH10 is a recycled name**: its own prior term ran 2026-08-25..08-28,
+before RH11 replaced it. Per this repo's own rule, a recycled target is
+re-verified live on every return, never trusted from that old term.
+`migrate-history-db-rh9-to-rh10` (new `maintenance.yml` task, modelled
+exactly on the RH8→RH9 template) ran via `workflow_dispatch` against `main`
+and reported:
+
+```
+Target (RH10) BEFORE:  Card=1434  ClickEvent=698  PriceHistory=336656
+public."Card":         source=1434    target=1434    ✓
+public."ClickEvent":   source=698     target=698     ✓
+public."PriceHistory": source=422589  target=422589  ✓
+All tables match — RH10 now holds a full copy of the history data.
+```
+
+The 336,656-row PriceHistory count RH10 held before this run is real,
+outdated data from its own 08-25..08-28 term — the signature of a genuinely
+recycled project — and predates the 2026-09-05 GLOBAL-history migration
+entirely, so it held zero GLOBAL rows on its own. The pg_dump/restore from
+RH9 is what actually carries the current GLOBAL series onto RH10; nothing
+from RH10's own old term survives, and nothing needed to.
+
+`migrate-history-db-rh8-to-rh9` is marked LEGACY, matching every prior
+rotation's convention.
+
+**Runtime chain flipped** (`HISTORY_VARS` in `src/lib/db-chains.ts`,
+mirrored in `src/lib/db-history.ts`'s `HISTORY_URL_SOURCE` check and
+`scripts/build-db-push.sh`'s `CURRENT_HIST`/elif chain): `RH10, RH9,
+DATABASE_URL`. RH8 drops out of the chain (was RH9's own rollback for its
+09-09..09-10 stint); still reachable, available to migration tasks by
+explicit name. `tests/db-chain.test.ts` (6 tests) confirms the app chain,
+the build-script chain and the "you fell back to a dead project" warnings
+all agree.
+
+**Two other workflows updated to match** — `db-audit.yml` and
+`weekly-promo.yml` both pass a broad fallback list of history vars into
+their `env:` blocks (`RH9, RH8, RH7, RH6, RH5, HISTORY_DATABASE_URL*`) so
+their PriceHistory reads don't fall through to the empty operational
+database; neither had RH10 in that list at all, so both would have quietly
+kept reading RH9 — correct today, increasingly stale as new writes land
+only in RH10. Added RH10 ahead of RH9 in both. `refresh-prices.yml` already
+had RH10 wired into its env vars; only its comment was stale.
+
+**A real pre-existing bug, found in the same sweep, unrelated to this
+rotation's timing:** `maintenance.yml`'s `db-push` task — the one that
+pushes schema changes to the history project directly, for cases where an
+ordinary deploy's schema push doesn't reach it — resolves its target via an
+explicit `||` fallback chain, and that chain's comment still said "RH11 is
+the CURRENT project (2026-08-30)" and led with `RH11 || RH10 || RH9 || RH8
+|| ...`. It was never updated through the RH6→RH7→RH8→RH9 rotations that
+followed — exactly the drift `src/lib/db-chains.ts`'s own header exists to
+warn about, on the one chain that file's "everything imports from here now"
+fix couldn't reach (a raw `${{ }}` expression, not TypeScript). RH11 is a
+live, reachable secret (confirmed by the 2026-09-06 probe-history run
+noted in `db-chains.ts`), so any `db-push` run since 08-30 would have
+pushed schema at a project the app has not read in six weeks, silently.
+Reordered to `RH10 || RH9 || RH8 || RH11 || ...` to match current
+precedence, with a note explaining the find.
+
+**Not touched**: `scripts/repair-history-card-ids.ts`'s own `HISTORY_VARS`
+default (used only as a `--db=` fallback when that flag is omitted) still
+starts at `HISTORY_DATABASE_URL_4` and has predated RH8 entirely since it
+was written — `tests/db-chain.test.ts` only pins the *operational* chain
+against hand-rolled copies, and no prior rotation touched this file either.
+Left as-is to match precedent; flagging here in case a future rotation
+wants to fix it properly rather than leave it stale indefinitely.
+
+**Owner action still required, as with every prior rotation** (this repo
+has no Vercel API access): confirm `RH10` is set in Vercel for Production,
+Preview **and** Development, and leave `RH9` set as the rollback until RH10
+has served cleanly for a while. Then measure — RH9 lasting a day instead of
+the usual two to three suggests the read pattern is getting worse, not
+holding steady, so a repeat exhaustion in days should prompt
+`scripts/audit-egress.ts` against RH10 rather than an eighteenth rotation.

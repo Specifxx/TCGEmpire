@@ -195,13 +195,21 @@ jobs:
           # The click/price-history tables can live in a SECOND Neon project
           # (src/lib/db-history.ts). Ordinary pushes never reach it, so new columns
           # (e.g. ClickEvent.path) 500 the admin clicks page until pushed here too.
-          # RH11 is the CURRENT project (2026-08-30, after RH10 reached its 5 GB Neon
-          # network-transfer allowance — see db-history.ts, which explains why this
-          # chain is CURRENT-first rather than newest-first). RH10 is the rollback;
-          # everything below it is dead. This is a schema-push TARGET chain, so it
-          # mirrors the app's precedence exactly — pushing a new column into any
-          # project other than the one the app reads is how a green deploy 500s.
-          HISTORY_DB: ${{ secrets.RH11 || vars.RH11 || secrets.RH10 || vars.RH10 || secrets.RH9 || vars.RH9 || secrets.RH8 || vars.RH8 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
+          # RH10 is the CURRENT project (2026-09-10, after RH9 reached its 5 GB Neon
+          # network-transfer allowance after barely a day live — see db-history.ts,
+          # which explains why this chain is CURRENT-first rather than newest-first).
+          # RH9 is the rollback; everything below it is dead. This is a schema-push
+          # TARGET chain, so it mirrors the app's precedence exactly — pushing a new
+          # column into any project other than the one the app reads is how a green
+          # deploy 500s.
+          #
+          # FOUND STALE 2026-09-10: this chain had led with RH11 || RH10 since
+          # 2026-08-30 and was never updated through the RH6/RH7/RH8/RH9 rotations
+          # that followed — exactly the drift src/lib/db-chains.ts's own header
+          # warns about. RH11 is a live, reachable secret (confirmed by a
+          # 2026-09-06 probe-history run), so `db-push` had been silently pushing
+          # schema at a project the app has not read since 2026-08-30.
+          HISTORY_DB: ${{ secrets.RH10 || vars.RH10 || secrets.RH9 || vars.RH9 || secrets.RH8 || vars.RH8 || secrets.RH11 || vars.RH11 || secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 || secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 || secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 || secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL || secrets.RH7 || vars.RH7 || secrets.RH6 || vars.RH6 }}
         run: |
           # --accept-data-loss: some schema changes are intentionally destructive
           # (e.g. dropping a removed feature's tables/columns) — prisma db push
