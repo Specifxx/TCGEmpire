@@ -50,6 +50,14 @@ model User {
   // cron re-run never double-emails the same abandoned checkout. Same
   // additive/nullable shape as trialReminderSentAt/signupSource above.
   checkoutRecoverySentAt DateTime?
+  // Dedupe stamp for the one-off "a full month of Premium, on us" offer email to
+  // free-tier accounts (see runPremiumOfferBlast in lib/premium-offer.ts) — set
+  // on a successful send so the batched, resumable blast never double-emails an
+  // account. Per-CAMPAIGN on purpose: the announcement opt-out table's "row
+  // exists" marker already means "got the release-day blast", so reusing it
+  // would have skipped everyone that campaign reached. Same additive/nullable
+  // shape as the two stamps above.
+  premiumOfferSentAt  DateTime?
   // Set once when the early-adopter "first 100 users get Premium" comp is granted,
   // so the grant is idempotent (never re-granted / re-extended on re-runs).
   earlyPremiumGranted Boolean   @default(false)
@@ -444,7 +452,7 @@ model Feedback {
 model PremiumClick {
   id        String   @id @default(cuid())
   userId    String? // null = not signed in
-  source    String   @default("dialog") // dialog | checkout | premium-page | button
+  source    String   @default("dialog") // dialog | checkout | premium-page | button | recovery | offer
   createdAt DateTime @default(now())
 
   @@index([createdAt])

@@ -1,4 +1,4 @@
-import { SITE_NAME, SITE_URL } from "./site";
+import { SITE_NAME, SITE_URL, premiumFromLine } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 
@@ -492,6 +492,82 @@ export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, f
     "Your RiftCompare Premium free trial is still waiting",
     emailShell("Still want Premium?", inner, checkoutRecoveryFooter())
   );
+}
+
+// ─── One-off Premium offer to free-tier accounts ──────────────────────────────
+// See lib/premium-offer.ts for the audience, idempotency and the offer itself.
+//
+// HONESTY RULES THIS TEMPLATE HOLDS ITSELF TO, because the site's own tests pin
+// them elsewhere (tests/premium-zero-today.test.ts): a real deadline date, never
+// a countdown or "only N left"; the price is premiumFromLine(), never a typed
+// number; and the mechanism is stated plainly — the extra days are added BY HAND
+// after the subscription lands, so the email must never imply checkout itself
+// grants a month. Two wordings, because two things are true:
+//   • trialDays > 0  — Stripe will run its normal trial; the owner then extends
+//     it to `offerDays` in total. "$0 today" is true here.
+//   • trialDays = 0  — this account already used its one trial, so checkout
+//     charges immediately; the owner adds a free month ON TOP. "$0 today" would
+//     be false here, so it isn't said.
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export interface PremiumOfferEmailOpts {
+  displayName: string;
+  trialDays: number; // 0 = trial already used
+  offerDays: number; // what the trial is extended to, in total
+  offerEnds: string; // human-readable deadline, e.g. "30 September 2026"
+  unsubUrl: string;
+  via?: "brevo" | "resend";
+}
+
+export function premiumOfferSubject(opts: Pick<PremiumOfferEmailOpts, "trialDays">): string {
+  return opts.trialDays > 0
+    ? "A full month of RiftCompare Premium, on us"
+    : "A free month of RiftCompare Premium, on us";
+}
+
+export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts, fromLine: string): { subject: string; heading: string; html: string } {
+  // A display name that is really just an email address reads oddly after
+  // "Hi" — fall back to a plain greeting rather than "Hi bill.j@…".
+  const name = opts.displayName.includes("@") ? "" : escapeHtml(opts.displayName.trim().split(/\s+/)[0] ?? "");
+  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const ctaUrl = `${SITE_URL}/premium?src=offer&utm_source=email&utm_medium=email&utm_campaign=premium-offer`;
+  const toolList = CHECKOUT_RECOVERY_TOOLS.map((t) => `<li style="margin:4px 0">${t}</li>`).join("");
+  const ends = escapeHtml(opts.offerEnds);
+
+  const offerBlock =
+    opts.trialDays > 0
+      ? `Premium normally starts with a ${opts.trialDays}-day free trial. <strong style="color:#fff">Start yours before ${ends} and we'll extend it to a full ${opts.offerDays} days.</strong> It's $0 today, then ${fromLine} — and you can cancel any time during the trial and pay nothing.`
+      : `You've already used a free trial, so Premium bills from day one. <strong style="color:#fff">Subscribe before ${ends} and we'll add a free month on top</strong> — ${opts.offerDays} extra days on your subscription, at no charge. Premium is ${fromLine}, and you can cancel any time.`;
+
+  const heading = opts.trialDays > 0 ? "Try Premium for a full month, free" : "A free month of Premium, on us";
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      ${greeting}
+    </td></tr>
+    <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Thanks for using RiftCompare. Price comparison, alerts and your portfolio stay free — but if you buy, sell or
+      track Riftbound seriously, Premium is the set of tools we built for exactly that:
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}<li style="margin:4px 0">No ads on any page</li></ul>
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      ${offerBlock}
+    </td></tr>
+    <tr><td style="padding:4px 32px 12px;font-size:13px;line-height:1.6;color:#9aa4b2">
+      How it works: there's nothing to enter at checkout. Once your subscription is in, we add the extra days to your
+      account by hand — usually within a day or two — and email you when it's done.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${ctaUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${opts.trialDays > 0 ? "Start my free month" : "Claim my free month"}</a></td></tr>`;
+
+  return { subject: premiumOfferSubject(opts), heading, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl)) };
+}
+
+export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailOpts): Promise<boolean> {
+  const { subject, html } = buildPremiumOfferEmail(opts, premiumFromLine());
+  return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
 }
 
 // Sent once on first signup so subscribers hear from us immediately (and get the

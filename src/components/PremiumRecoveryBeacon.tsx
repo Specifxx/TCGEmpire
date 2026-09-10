@@ -23,9 +23,15 @@ function PremiumRecoveryBeaconInner() {
   const fired = useRef(false);
 
   useEffect(() => {
-    if (searchParams?.get("src") !== "recovery" || fired.current) return;
+    // Two email campaigns land here with their own ?src= so the admin can tell
+    // them apart: the abandoned-checkout recovery email and the one-off Premium
+    // offer email (lib/premium-offer.ts). Anything else is not ours to count.
+    const src = searchParams?.get("src");
+    if (fired.current) return;
+    if (src === "recovery") firePremiumClickBeacon("recovery");
+    else if (src === "offer") firePremiumClickBeacon("offer");
+    else return;
     fired.current = true;
-    firePremiumClickBeacon("recovery");
     const rest = new URLSearchParams(searchParams.toString());
     rest.delete("src");
     const qs = rest.toString();

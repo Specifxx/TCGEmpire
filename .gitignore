@@ -39,3 +39,6 @@ next-env.d.ts
 /public/logo-preview.html
 /public/preview-mark.png
 /public/preview-wordmark.png
+
+# Local previews written by scripts/send-premium-offer.ts (PREVIEW=1)
+artifacts/premium-offer-*.html

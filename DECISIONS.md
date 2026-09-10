@@ -3779,3 +3779,50 @@ price block separately (trial branch must NOT call `premiumFromLine()`;
 non-trial branch must still call it) rather than just checking the helper
 appears somewhere in a fixed-size slice, which the old assertions did not
 actually distinguish.
+
+## Premium offer email to every free-tier account (2026-09-10)
+
+Owner's ask: email every existing non-Premium user about Premium, with an
+offer — subscribe now and the trial is extended to a full month — which the
+owner will apply **by hand** after each subscription lands.
+
+**What was built** (`src/lib/premium-offer.ts`, `sendPremiumOfferEmail` in
+`lib/email.ts`, `/api/cron/premium-offer`, `.github/workflows/premium-offer-email.yml`,
+`scripts/send-premium-offer.ts`, `tests/premium-offer.test.ts`): the same
+shape as the release-day blast — lib on Vercel where the mail keys live, a
+dispatch-only workflow that defaults to dry-run, batched and resumable, with
+the announcement opt-out table supplying the one-click unsubscribe.
+
+**Decisions worth recording:**
+- **Per-campaign idempotency stamp** (`User.premiumOfferSentAt`, additive)
+  rather than the release-day blast's "an `AnnouncementOptOut` row exists"
+  marker. That marker means "got the release-day email"; reusing it would
+  have silently skipped everyone that campaign reached.
+- **Two wordings, because two things are true.** An account that has never
+  trialed gets "$0 today, then …, and we'll extend your 14-day trial to 30".
+  An account that already used its one trial is charged on day one by
+  Stripe, so it gets "we'll add a free month on top" and never "$0 today".
+  Same economic offer, honestly described for each case.
+- **The mechanism is stated in the email** — "we add the extra days by hand
+  within a day or two" — because nothing in the code grants anything, and
+  a reader who expects checkout to hand them 30 days would be misled.
+  `tests/premium-offer.test.ts` pins that the lib never touches
+  `premiumUntil`, `grantPremium*` or Stripe.
+- **A real deadline is required** (`?until=YYYY-MM-DD`, future) and the
+  send refuses without one. That is what makes "subscribe now" a true
+  sentence rather than manufactured urgency; the existing no-countdown /
+  no-"spots left" rule from the 2026-09-08 pass is pinned here too.
+- **Brevo by default**, Resend on request — same reasoning as the
+  registered-account digest: a blast to every account must not consume the
+  Resend quota that verification, password reset and price alerts depend on.
+  Default batch of 90 sits under Resend's 100/day cap in case `via=resend`
+  is chosen; re-run daily until `remaining` reads 0.
+- **Attribution**: the CTA lands on `/premium?src=offer`, and `"offer"` was
+  added to the premium-click source allow-list, so `/admin/premium` shows who
+  arrived from this email and whether they converted — which is also the
+  owner's worklist for the manual grants (`/api/admin/grant-premium`, days =
+  30 minus whatever trial Stripe already gave).
+
+**Not verified here**: no database or mail key in this sandbox, so the
+audience count is unknown and no email was sent. The dry run
+(`workflow_dispatch` with the box ticked) reports it before anything goes out.

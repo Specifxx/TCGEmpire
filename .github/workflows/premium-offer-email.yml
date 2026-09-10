@@ -1,0 +1,85 @@
+name: Premium offer email
+
+# Triggers the one-off "a full month of Premium, on us" email to every free-tier
+# account: subscribe before a stated date and the owner extends the trial to 30
+# days by hand. See src/lib/premium-offer.ts for the audience and wording.
+#
+# THE SEND HAPPENS ON VERCEL, NOT HERE. The mail keys (BREVO_API_KEY /
+# RESEND_API_KEY) are Vercel environment variables; a GitHub runner has the
+# database but not the keys, so this job only authenticates a call to
+# /api/cron/premium-offer with CRON_SECRET — the same split
+# release-day-email.yml uses.
+#
+# SAFETY: manual dispatch only (no schedule), dry_run defaults to TRUE, and a
+# real future deadline is required, so the Run-workflow button cannot blast by
+# accident. The endpoint is idempotent per account (stamped on success), so
+# re-running RESUMES rather than double-sending — which is also how you work
+# through an audience larger than one run's batch: run it again each day until
+# `remaining` is 0.
+#
+# AFTER IT SENDS: watch /admin/premium — anyone arriving from the email shows
+# source "offer" — and grant the extra days to each new subscriber via the
+# admin grant-premium tool (/api/admin/grant-premium, days = 30 minus the
+# trial days Stripe already gave them, or 30 for an account with no trial).
+#
+# SETUP: CRON_SECRET as an Actions secret (already used by refresh-prices.yml).
+
+on:
+  workflow_dispatch:
+    inputs:
+      offer_ends:
+        description: "Offer deadline, YYYY-MM-DD (must be in the future) — the email says 'subscribe before this date'"
+        type: string
+        required: true
+      dry_run:
+        description: "Dry run — report the audience, send NOTHING (untick to actually send)"
+        type: boolean
+        default: true
+      via:
+        description: "Mail provider (Brevo protects the Resend quota transactional email depends on)"
+        type: choice
+        required: true
+        default: "brevo"
+        options:
+          - brevo
+          - resend
+      limit:
+        description: "Max emails this run (blank = default batch, under the provider's daily cap; re-run to continue)"
+        type: string
+        required: false
+        default: ""
+
+concurrency:
+  # Never let two blasts overlap — that is how people get double-emailed.
+  group: premium-offer-email
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Trigger Premium offer email on Vercel
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+          OFFER_ENDS: ${{ inputs.offer_ends }}
+          # dry=1 unless the box was explicitly unticked.
+          DRY: ${{ inputs.dry_run && '1' || '0' }}
+          VIA: ${{ inputs.via }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::No CRON_SECRET secret set — cannot authenticate the trigger."
+            exit 1
+          fi
+          url="$SITE_URL/api/cron/premium-offer?until=$OFFER_ENDS&dry=$DRY&via=$VIA"
+          [ -n "$LIMIT" ] && url="$url&limit=$LIMIT"
+          echo "POST $url"
+          code=$(curl -sS --max-time 290 -o response.json -w "%{http_code}" -X POST \
+            "$url" -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat response.json
+          echo
+          # Fail the job on a non-200 so a silent no-send is visible in the UI.
+          [ "$code" = "200" ] || { echo "::error::Offer endpoint returned $code"; exit 1; }
