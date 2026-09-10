@@ -111,7 +111,14 @@ test("the heading and badge match PremiumSlideIn's Premium colouring, not the ol
   assert.match(code, /border-gold\/50/, "the card border must be gold, matching PremiumSlideIn");
   assert.match(code, /border-gold\/40[^"]*text-gold/s, "the badge must be gold-styled");
   assert.match(code, />\s*Premium\s*</, "the badge text must say Premium");
-  assert.match(code, /trialAvailable \? "Try Premium free" : `Unlock \$\{PITCH_TOOLS\.length\} power tools`/, "heading logic must mirror PremiumSlideIn's own");
+  // 2026-09-10: the non-trial fallback stopped being a tool count and became
+  // the site's new Premium tagline, in lockstep with PremiumSlideIn's own
+  // heading — the chip row those tools were counted for is now a graphic.
+  assert.match(
+    code,
+    /trialAvailable \? "Try Premium free" : "Get an unfair edge buying and selling"/,
+    "heading logic must mirror PremiumSlideIn's own",
+  );
 });
 
 test("shows instantly — the buy_click-aware timing system was removed after this file was first written (2026-09-01)", () => {

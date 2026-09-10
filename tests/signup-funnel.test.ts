@@ -91,7 +91,12 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
-  assert.match(src, /const PROMO_VARIANT = "premium_pitch"/, "the variant must be a named constant, not inlined at each call");
+  // The literal moves with each real content change so GA4 can separate the
+  // eras — "premium_pitch" (text pitch) → "premium_graphic" (2026-09-10, the
+  // pitch became a PremiumEdgeGraphic). See the component's own naming-history
+  // comment; what this pins is that it stays a NAMED CONSTANT, not that it
+  // holds any particular value forever.
+  assert.match(src, /const PROMO_VARIANT = "premium_graphic"/, "the variant must be a named constant, not inlined at each call");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });

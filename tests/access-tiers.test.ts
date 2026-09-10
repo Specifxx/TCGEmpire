@@ -85,19 +85,23 @@ test("the signup popup still appears on its own, with no promo gate", () => {
   assert.match(src, /if \(!loaded \|\| user \|\| shown\) return/, "still only shown to signed-out visitors");
 });
 
-test("the popup's Premium pitch names only real Premium-only tools, reused from PremiumSlideIn", () => {
+test("the popup's Premium pitch never grows its own hand-typed tool list or comparison table", () => {
   // 2026-09-04: the popup flipped from a free-account comparison to a Premium
   // pitch (explicit product instruction — see the component's own header
   // comment for the full reasoning and why this is NOT the removed signup
-  // comp). It must not grow its own hand-typed tool list — PremiumSlideIn's
-  // PITCH_TOOLS is already pinned against TIER_COMPARISON by
-  // tests/premium-slidein.test.ts, and a second copy here would be exactly the
-  // "same claim written twice, updated once" drift TierComparisonTable's own
-  // header comment warns about.
+  // comp). It listed tools as a chip row, reusing PremiumSlideIn's PITCH_TOOLS
+  // so a second hand-typed copy couldn't drift out of date.
+  //
+  // 2026-09-10: the popup stopped naming tools at all — the chip row became a
+  // PremiumEdgeGraphic, so the import went with it. The anti-duplication
+  // guarantee is what still matters and is what this now pins: if a future
+  // pass reintroduces a tool list here, it must import the shared one rather
+  // than hand-type a second copy, which is the "same claim written twice,
+  // updated once" drift TierComparisonTable's own header comment warns about.
   const src = read(POPUP);
-  assert.match(src, /import \{ PITCH_TOOLS \} from "\.\/PremiumSlideIn"/, "must reuse the shared tool list, not a local copy");
   assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
   assert.ok(!/const COMPARISON/.test(src), "the old free-account COMPARISON table must be gone");
+  assert.match(src, /<PremiumEdgeGraphic/, "the pitch is a graphic now — see PremiumEdgeGraphic's own header");
 });
 
 test("the popup is a Premium pitch, but grants nothing automatically", () => {

@@ -152,7 +152,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="px-5 py-5">
-          <h2 className="text-lg font-extrabold text-white">Power tools for buyers &amp; flippers</h2>
+          <h2 className="text-lg font-extrabold text-white">Get an unfair edge buying and selling</h2>
           <p className="mt-1 text-sm text-slate-400">
             Unlock the pro screeners and go ad-free. The portfolio tracker and price comparison stay free.
           </p>

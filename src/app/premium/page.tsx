@@ -39,7 +39,7 @@ import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "RiftCompare Premium — power tools for buyers & sellers",
+  title: "RiftCompare Premium — get an unfair edge buying and selling",
   description: "RiftCompare Premium: the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Demand Finder, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),
 };
@@ -234,7 +234,7 @@ export default async function PremiumPage() {
       <div className="text-center">
         <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
         <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-          {already ? "You're Premium" : "Power tools for buyers & sellers"}
+          {already ? "You're Premium" : "Get an unfair edge buying and selling"}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
@@ -266,7 +266,7 @@ export default async function PremiumPage() {
               <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
                 <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">Monthly</div>
                 {trialAvailable ? (
-                  <TrialPriceBlock plan="monthly" trialDays={PREMIUM_TRIAL_DAYS} />
+                  <TrialPriceBlock plan="monthly" trialDays={PREMIUM_TRIAL_DAYS} size="compact" />
                 ) : (
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="num text-4xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
@@ -293,7 +293,7 @@ export default async function PremiumPage() {
                 <span className="absolute right-0 top-0 rounded-bl-lg bg-gold px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink-950">Best value</span>
                 <div className="border-b border-ink-800 bg-ink-900 px-6 py-6 text-center">
                   <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-gold">Annual</div>
-                  {trialAvailable ? <TrialPriceBlock plan="annual" trialDays={PREMIUM_TRIAL_DAYS} /> : <AnnualPriceBlock />}
+                  {trialAvailable ? <TrialPriceBlock plan="annual" trialDays={PREMIUM_TRIAL_DAYS} size="compact" /> : <AnnualPriceBlock />}
                 </div>
                 <div className="flex flex-1 items-end px-6 py-5">
                   <PremiumCta
