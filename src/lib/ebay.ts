@@ -278,6 +278,11 @@ const PROMO_HINT = /\bpromo\b|promotional|pre-?release|gg\s*ez|organi[sz]ed\s*pl
 // the full "/total" (e.g. "SFD (141)").
 const SET_NAMES: Record<string, string> = {
   OGN: "origins", OGS: "proving\\s*grounds", SFD: "spirit\\s*forged", UNL: "unleashed", VEN: "vendetta",
+  // "(?<!astral\\s)" for the same reason lib/price-import.ts carries it: Pokémon's
+  // "Astral Radiance" is a real set and eBay is full of it, so a bare /radiance/
+  // here would let an Astral Radiance listing CONFIRM a Riftbound card's set and
+  // price it. Riftbound Radiance is never called "Astral Radiance".
+  RAD: "(?<!astral\\s)radiance",
 };
 
 function delivered(it: any): number {
@@ -883,6 +888,16 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Promo Pack": /nexus\s*night|promo\s*pack/i,
   "Starter Set": /starter|two[-\s]?player/i,
   Tin: /\btin\b/i,
+  // Two product types classifySealed() has returned for a while with NO keyword
+  // here, which is not a harmless omission: the filter below is `!kw || kw.test(…)`,
+  // so a type missing from this table is searched with NO title filter at all and
+  // takes eBay's cheapest result for a bare "Riftbound <name>" query — exactly the
+  // accessory/part-lot noise the table exists to reject. Both are Radiance's
+  // headline SKUs ("Radiance Vault", "Showdown Deck - Radiance Evelynn vs
+  // Seraphine"), so this would have bitten on launch week.
+  Vault: /\bvault\b/i,
+  "Showdown Decks": /showdown\s*decks?/i,
+  "Showdown Decks Display": /showdown\s*decks?/i,
 };
 // Accessories and non-product listings that share a sealed product's keywords — a
 // "booster box PROTECTOR", "acrylic display CASE", "EMPTY box", a single art/code
@@ -936,6 +951,15 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   "Promo Pack": 200,
   "Sleeved Booster": 200,
   "Booster Pack": 300,
+  // Radiance's own SKUs. No Riot RRP has been published for either, so these are
+  // deliberately LOW absolute floors whose only job is to reject the obviously-
+  // not-the-product listing (an empty Vault box, a single card pulled from one).
+  // The real floor is the larger of this and half the trusted store/TCGplayer
+  // reference, and pre-order stores already give us that reference — see
+  // sealedFloorCents() below and trustedRef in lib/sealed-import.ts.
+  Vault: 2000,
+  "Showdown Decks": 800,
+  "Showdown Decks Display": 4000,
 };
 
 // The minimum price an eBay sealed listing must clear to be trusted: the larger of the

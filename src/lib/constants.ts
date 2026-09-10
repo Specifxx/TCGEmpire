@@ -200,7 +200,7 @@ export type CardType = (typeof CARD_TYPES)[number];
 // Riftbound sets. `comingSoon` = the set isn't officially ON SALE yet (singles
 // aren't buyable in stores) — this keeps it out of the sitemap's fresh-content
 // signal, movers, box-EV, pack-sim etc. It does NOT mean the set has no Card
-// rows: the official-gallery pipeline (scripts/import-vendetta.ts) imports real,
+// rows: the official-gallery pipeline (scripts/import-set-cards.ts) imports real,
 // unpriced Card rows through spoiler season, well before release day — see
 // /sets/<slug>'s own comingSoon-but-revealed branch. `sealedAvailable` = sealed
 // products (booster boxes/packs) are already buyable and listed on /sealed even
@@ -474,7 +474,7 @@ export function rarityInfo(key: string): RarityInfo {
 // Vendetta chase cards — Ambessa 196/166, Swain 173/166, Draven 172/166, Leona
 // 184/166. The filter was correct; the DATA said those cards were Rare. The
 // official Vendetta gallery labels an overnumbered print by the rarity of the
-// card it re-prints, so `import-vendetta.ts` faithfully stored "Rare", and they
+// card it re-prints, so `import-set-cards.ts` faithfully stored "Rare", and they
 // sorted to the top of the Rare filter because they are the most expensive
 // things in it.
 //

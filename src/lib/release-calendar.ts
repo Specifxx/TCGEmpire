@@ -1,4 +1,4 @@
-import { SETS } from "./constants";
+import { SETS, isPreorderSetCode } from "./constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THE RIFTBOUND RELEASE CALENDAR — every release Riot has announced, in order.
@@ -278,4 +278,22 @@ export function releaseHref(entry: ReleaseEntry): string | null {
 export function cardCountLabel(entry: ReleaseEntry): string | null {
   if (entry.cards == null) return null;
   return `${entry.approxCards ? "~" : ""}${entry.cards} cards`;
+}
+
+/**
+ * The pre-order comparison page for a set code, while that set is still
+ * upcoming — or null once it has shipped (or if it never had one).
+ *
+ * Exists so pages that are otherwise set-agnostic (/sets/<slug>, which renders
+ * every set from one template) can offer the pre-order comparison WITHOUT
+ * hardcoding "/radiance-preorders". The calendar row already carries the href;
+ * this just guards it on the same date rule the rest of the pre-order plumbing
+ * uses, so the link disappears by itself on release day exactly like
+ * getPreorderGroups() empties itself.
+ */
+export function preordersHrefForSet(code: string | undefined, now: Date = new Date()): string | null {
+  if (!code) return null;
+  const entry = RELEASES.find((r) => r.code === code);
+  if (!entry?.preordersHref) return null;
+  return isPreorderSetCode(code, now) ? entry.preordersHref : null;
 }

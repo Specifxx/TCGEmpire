@@ -7353,9 +7353,9 @@ We'll be watching Singapore's Top 8 the moment it's final, and updating the tier
       },
     ],
     browseCta: {
-      href: "/radiance-countdown",
-      label: "Radiance countdown & card list",
-      blurb: "Release date, confirmed champions and every Radiance card as reveals land.",
+      href: "/sets/radiance",
+      label: "Radiance card list & prices",
+      blurb: "Every Radiance card as reveals land, with live store prices from release day.",
     },
     faq: [
       {
@@ -7492,7 +7492,7 @@ Radiance is the smallest main set Riftbound has printed and the most chase-dense
 
 That combination is why it will be the biggest release since Origins. None of it is because the set is big — it is the opposite.
 
-Track it on the [Radiance countdown](/radiance-countdown), where every card appears as reveals land.
+Track it on the [Radiance set page](/sets/radiance), where every card appears as reveals land and live store prices arrive on release day — and on [Riftbound release dates](/release-dates) for the countdown itself.
 `,
   },
   {

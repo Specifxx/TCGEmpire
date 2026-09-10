@@ -47,12 +47,18 @@ const SET_FROM_TITLE: [RegExp, string][] = [
   [/spirit\s*forged|\bSFD\b/i, "SFD"],
   [/unleashed|\bUNL\b/i, "UNL"],
   [/vendetta|vengeance|\bVEN\b/i, "VEN"],
+  // Radiance, ahead of Origins for the same reason the sealed importer orders it
+  // that way. The `(?<!astral\s)` is not decoration: Pokémon's "Astral Radiance"
+  // is a real set whose singles turn up in the same shop collections, and typing
+  // one as Riftbound Radiance would put a Pokémon price on a Riftbound card.
+  // lib/sealed-import.ts's FOREIGN_RADIANCE guards the sealed half of this.
+  [/(?<!astral\s)\bradiance\b|\bRAD\b/i, "RAD"],
   [/origins|\bOGN\b/i, "OGN"],
 ];
 
 // Set/condition/qualifier tokens to strip when isolating the card name.
 const STOP =
-  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
+  /\b(riftbound|proving\s*grounds|spirit\s*forged|unleashed|vengeance|origins|radiance|showcase|signature|overnumbered|alternate\s*art|alt\s*art|foil|holo(foil)?|near mint|lightly played|moderately played|heavily played|damaged|main set|the game|tcg|single)\b/gi;
 
 function numKey(seg: string): string {
   // Riftbound collector numbers come in two shapes, and BOTH have to normalise
@@ -412,7 +418,7 @@ export function orderCardsForEbay<T extends { setCode: string }>(
 // the buy path does not.
 //
 // EFFECTIVE rarity, not the stored column — this is the trap. A Signature or
-// overnumbered print of a Common is stored as "Common" (import-vendetta stores
+// overnumbered print of a Common is stored as "Common" (import-set-cards stores
 // the rarity of the card it re-prints; only alt-arts were ever reclassified —
 // see chasePrintRarity's note). Filtering the raw column would therefore skip
 // exactly the chase prints most worth searching. chasePrintRarity resolves
@@ -1314,6 +1320,18 @@ function setFromTotal(total?: string): string | null {
     case 219: return "UNL";
     case 24: return "OGS";
     case 166: return "VEN";
+    // RADIANCE, BOTH CANDIDATE DENOMINATORS — deliberately, because Riot has
+    // published a card COUNT (180, of which 66 are Showcase) but no card has been
+    // seen yet, so we do not know which number is printed on the cards. Vendetta's
+    // 166 was its BASE run with Showcase printings numbered above it, which would
+    // make Radiance's denominator 114; Riot's own "180 cards" phrasing would make
+    // it 180. Neither number collides with any other set's total, so claiming both
+    // costs nothing and either guess being wrong on its own is a silent misroute:
+    // without a match here a bare "042/114" listing falls through to the "OGN"
+    // default at the bottom of resolveCardId and prices an ORIGINS card.
+    // Prune the wrong one the moment a real Radiance card is in the catalogue.
+    case 114:
+    case 180: return "RAD";
     default: return null;
   }
 }

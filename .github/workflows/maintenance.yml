@@ -1,7 +1,7 @@
 name: Maintenance
 
 # On-demand maintenance tasks against the production database — dispatchable so
-# routine data operations (schema push, card syncs, the Vendetta spoiler pipeline)
+# routine data operations (schema push, card syncs, the per-set spoiler pipeline)
 # can run without a local dev environment. Each task maps to a scripts/*.ts entry;
 # they are all ADDITIVE/idempotent (see each script's header).
 
@@ -20,7 +20,7 @@ on:
           - fetch-promos     # scrape riftbound.gg's official card-page sitemap for promo printings (incl. R-numbered promo runes) + apply additively (no dry-run — both scripts are additive/idempotent by design)
           - tcg-printings    # create printings TCGplayer lists that we lack (Showcase/alt-art variants + the R-numbered rune cycle)
           - fix-cloned-art   # scrape real official art for cloned promo/rune printings; clear wrong borrowed art to a placeholder where none exists
-          - vendetta-pipeline # scrape official gallery + import VEN reveals
+          - set-pipeline     # scrape playriftbound.com's official gallery for ONE set and import its reveals (set_slug input; defaults to the next announced-but-unreleased set — Radiance today). Replaced 'vendetta-pipeline', which could only ever do VEN.
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
@@ -95,6 +95,10 @@ on:
         description: "import-prices only: also force an eBay SINGAPORE refresh (~1k calls)"
         type: boolean
         default: false
+      set_slug:
+        description: "set-pipeline only: which set to scrape + import, by slug or code (e.g. radiance / RAD). Leave empty for the next announced-but-unreleased set."
+        type: string
+        required: false
       source:
         description: "restore-accounts-into-rm5 only: which database to copy accounts/marketplace FROM (run probe-databases first)"
         type: choice
@@ -5892,22 +5896,40 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/diagnose-billing.ts
 
-      - name: Vendetta pipeline (official gallery → import)
-        if: inputs.task == 'vendetta-pipeline'
+      # SPOILER-SEASON PIPELINE. Reads the official card gallery for ONE set and
+      # imports whatever is revealed so far — additive and idempotent, so it is
+      # meant to be re-run every few days from the first reveal to release day.
+      #
+      # SET is passed to BOTH halves from the same input. That is the guard, not a
+      # convenience: the scraper stamps its output with the set it captured and the
+      # importer refuses a file stamped with any other set, so there is no way to
+      # scrape one set and write it under another's code.
+      #
+      # An empty set_slug means "the next announced-but-unreleased set", which is
+      # what a spoiler-season run almost always wants and is why this task needs no
+      # edit at all when Radiance ships and Legacy becomes next.
+      - name: Set pipeline (official gallery → import)
+        if: inputs.task == 'set-pipeline'
+        env:
+          SET: ${{ inputs.set_slug }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
         run: |
           npm i --no-save playwright
           npx playwright install --with-deps chromium
-          DUMP=1 npx tsx scripts/fetch-vendetta-official.ts
-          npx tsx scripts/import-vendetta.ts
+          DUMP=1 npx tsx scripts/fetch-set-official.ts
+          npx tsx scripts/import-set-cards.ts
 
       # The scraped card list + raw JSON dump, for inspection / parser hardening.
+      # Globbed because the filenames are per-set now (prisma/radiance-cards.json).
       - uses: actions/upload-artifact@v4
-        if: inputs.task == 'vendetta-pipeline' && always()
+        if: inputs.task == 'set-pipeline' && always()
         with:
-          name: vendetta-scrape
+          name: set-scrape
           path: |
-            prisma/vendetta-cards.json
-            scratch/vendetta-dump.json
+            prisma/*-cards.json
+            !prisma/riftbound-cards.json
+            !prisma/manual-cards.json
+            scratch/*-dump.json
           if-no-files-found: ignore
 
       # ── Make new cards DISCOVERABLE immediately ────────────────────────────────
@@ -5929,7 +5951,7 @@ jobs:
         if: >-
           always() &&
           !inputs.dry_run &&
-          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","vendetta-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed"]'), inputs.task)
+          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","set-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed"]'), inputs.task)
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"

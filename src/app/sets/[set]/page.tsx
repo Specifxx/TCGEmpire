@@ -27,6 +27,7 @@ import { priceField, COUNTRIES } from "@/lib/country";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
+import { preordersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 
@@ -270,6 +271,13 @@ export default async function SetPage({
   // before release day. Distinguishing this from "still mid-spoiler-season" (see
   // set.totalCards in lib/constants.ts) keeps the copy below honest either way.
   const fullyRevealed = !!set.totalCards && totalInSet >= set.totalCards;
+  // Pre-order comparison page for THIS set, while it is still upcoming. Read from
+  // the release calendar rather than hardcoded, so this template never names a
+  // set and the link retires itself on release day (see preordersHrefForSet).
+  // Without it /sets/radiance — the page every "riftbound radiance" search lands
+  // on through spoiler season — had no route at all to the only Radiance thing
+  // that is actually buyable today.
+  const preordersHref = preordersHrefForSet(set.code);
 
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -330,6 +338,9 @@ export default async function SetPage({
                   : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
                 {set.sealedAvailable && (
                   <> {set.name} sealed products (booster boxes &amp; packs) are available now — <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="text-brand-300 underline-offset-2 hover:underline">compare them on the sealed page</Link>.</>
+                )}
+                {preordersHref && (
+                  <> Sealed {set.name} product is already on pre-order — <Link href={preordersHref} className="text-brand-300 underline-offset-2 hover:underline">compare every store&apos;s pre-order price</Link>.</>
                 )}
               </>
             ) : (
@@ -404,7 +415,13 @@ export default async function SetPage({
               {set.sealedAvailable && (
                 <Link href={`/sealed?q=${set.name.toLowerCase()}`} className="btn-primary">Browse {set.name} sealed →</Link>
               )}
-              <Link href="/browse" className={set.sealedAvailable ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
+              {preordersHref && (
+                <Link href={preordersHref} className={set.sealedAvailable ? "btn-ghost" : "btn-primary"}>
+                  Compare {set.name} pre-orders →
+                </Link>
+              )}
+              <Link href="/release-dates" className="btn-ghost">When does it release?</Link>
+              <Link href="/browse" className={set.sealedAvailable || preordersHref ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
             </div>
 
             {/* Vendetta explainer content — gives the topical set page real links into

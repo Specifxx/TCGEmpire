@@ -1,23 +1,68 @@
 /**
- * Scrape the OFFICIAL Riftbound card gallery (playriftbound.com) for Vendetta cards
- * and save them to prisma/vendetta-cards.json for scripts/import-vendetta.ts.
+ * Scrape the OFFICIAL Riftbound card gallery (playriftbound.com) for ONE set's
+ * cards and save them to prisma/<slug>-cards.json for scripts/import-set-cards.ts.
+ *
+ * PARAMETERISED BY SET, and that is the whole point of this file's name. It was
+ * scripts/fetch-vendetta-official.ts, with "Vendetta"/"VEN"/"ven-" hardcoded at
+ * five separate points, so the next set's spoiler season needed a fork of a
+ * 360-line Playwright scraper rather than one input. Spoiler season is the window
+ * where being first with a card list is worth the most traffic a set ever
+ * generates, so "fork it under deadline" was the wrong shape.
+ *
+ *   SET=radiance npx tsx scripts/fetch-set-official.ts   # slug or code, either works
+ *   npx tsx scripts/fetch-set-official.ts                # defaults to the next
+ *                                                        # announced-but-unreleased
+ *                                                        # set, else the newest one
  *
  * Designed for CI (see .github/workflows/maintenance.yml). How it reads the gallery:
  *  - Card images are official Riot CDN assets; each <img alt> is structured as
  *    "Riftbound {Type}: {Name}. {rules text}" → type + name parsed from there.
  *  - Domain and rarity aren't in the alt text, so we derive them from the gallery's
- *    OWN filters: with the Vendetta set filter on, click each domain/rarity filter in
- *    turn and record which cards remain visible. Official filters = accurate data.
+ *    OWN filters: with the set filter on, click each domain/rarity filter in turn
+ *    and record which cards remain visible. Official filters = accurate data.
  *  - "Coming Soon" placeholders are skipped.
  *
+ * SET-CODE GATE. lib/constants.ts carries a GUESSED three-letter code for a set
+ * Riot has named but not coded (today: "RAD" for Radiance). The gallery's own
+ * __NEXT_DATA__ carries the real one. If they disagree this script REFUSES to
+ * write a file, prints the code the gallery actually reports, and exits non-zero —
+ * because importing under a wrong code is not a cosmetic mistake: it needs a
+ * Card.setCode backfill afterwards, and every price mapper keyed on the code
+ * (lib/price-import.ts, lib/ebay.ts, lib/sealed-import.ts) silently misses until
+ * it is done.
+ *
  * DUMP=1 additionally prints captured JSON responses + DOM samples to the log and
- * writes scratch/vendetta-dump.json (for parser hardening from CI logs).
+ * writes scratch/<slug>-dump.json (for parser hardening from CI logs).
  */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { SETS, nextUpcomingSet, newestReleasedSet, type SetInfo } from "../src/lib/constants";
 
+// Which set to scrape. Accepts a slug ("radiance") or a code ("RAD"); defaults to
+// whatever is next up, which is the set a spoiler-season run almost always means.
+function resolveSet(): SetInfo {
+  const raw = (process.env.SET ?? "").trim();
+  if (raw) {
+    const hit = SETS.find((s) => s.slug.toLowerCase() === raw.toLowerCase() || s.code.toLowerCase() === raw.toLowerCase());
+    if (!hit) {
+      console.error(`Unknown set "${raw}". Known: ${SETS.map((s) => `${s.code}/${s.slug}`).join(", ")}`);
+      process.exit(1);
+    }
+    return hit;
+  }
+  const fallback = nextUpcomingSet() ?? newestReleasedSet();
+  if (!fallback) {
+    console.error("No set to scrape: SET is unset and lib/constants.ts has no upcoming or released set.");
+    process.exit(1);
+  }
+  return fallback;
+}
+
+const SET = resolveSet();
+const SET_CODE = SET.code.toUpperCase();
+const ID_PREFIX = SET_CODE.toLowerCase(); // gallery card ids are "<code>-021-166"
 const GALLERY = process.env.GALLERY_URL ?? "https://playriftbound.com/en-us/card-gallery/";
-const OUT = join(process.cwd(), "prisma", "vendetta-cards.json");
+const OUT = join(process.cwd(), "prisma", `${SET.slug}-cards.json`);
 const DUMP = process.env.DUMP === "1";
 
 type Scraped = {
@@ -37,7 +82,7 @@ type Scraped = {
   // champion they belong to (e.g. "Shen") carried separately in the card's own
   // "tags" field, not in `name` or the alt text — confirmed against the raw
   // __NEXT_DATA__ (a Legend's tags array is exactly [ChampionName]). Consumed by
-  // scripts/import-vendetta.ts to build the full "Champion, Epithet" name.
+  // scripts/import-set-cards.ts to build the full "Champion, Epithet" name.
   champion?: string;
 };
 
@@ -175,9 +220,13 @@ async function main() {
     );
   }
 
-  // Set filter: Vendetta.
-  const venClicked = await clickFilter("Vendetta");
-  console.log(venClicked ? "Set filter: Vendetta ON" : "WARN: could not click a Vendetta filter — capturing everything; importer guards handle bleed.");
+  // Set filter: whichever set we were asked for.
+  const setClicked = await clickFilter(SET.name);
+  console.log(
+    setClicked
+      ? `Set filter: ${SET.name} ON`
+      : `WARN: could not click a ${SET.name} filter — capturing everything; the setId check below and the importer's guards handle bleed.`,
+  );
 
   // The domain/rarity filters live behind a "Show Filters" toggle — open it, then log
   // what became clickable (drives the next hardening round if labels differ).
@@ -204,7 +253,7 @@ async function main() {
   });
   console.log("CARD-ANCESTRY:\n" + ancestry);
 
-  // Baseline: every Vendetta card (unfiltered by domain/rarity).
+  // Baseline: every card of this set (unfiltered by domain/rarity).
   const base = await snapshot();
   console.log(`Baseline snapshot: ${base.length} card images`);
 
@@ -213,8 +262,8 @@ async function main() {
   //     set: { value: { id: "VEN" } }, rarity: { value: { label: "Epic" } },
   //     domain: { values: [{ label: "Fury" }] }, cardType: { type: [{ label: "Unit" }] },
   //     cardImage: { url, accessibilityText }, ... }
-  // Extract every VEN card straight from it — authoritative names, numbers, domains,
-  // rarities, types, full-res official images and rules text.
+  // Extract every card of THIS set straight from it — authoritative names, numbers,
+  // domains, rarities, types, full-res official images and rules text.
   type JsonCard = {
     cardId: string;
     name: string;
@@ -231,6 +280,9 @@ async function main() {
   };
   const jsonCards: JsonCard[] = [];
   const seenIds = new Set<string>();
+  // Every set id the gallery reported, so a code mismatch can be REPORTED rather
+  // than silently producing zero cards. See the SET-CODE GATE note at the top.
+  const seenSetIds = new Set<string>();
   const walk = (node: unknown): void => {
     if (Array.isArray(node)) {
       for (const x of node) walk(x);
@@ -240,7 +292,8 @@ async function main() {
     const o = node as Record<string, any>;
     const id = typeof o.id === "string" ? o.id.toLowerCase() : "";
     const setId = o?.set?.value?.id;
-    if (/^ven-/.test(id) && typeof o.name === "string" && o.cardImage && setId === "VEN") {
+    if (typeof setId === "string" && setId) seenSetIds.add(setId.toUpperCase());
+    if (id && typeof o.name === "string" && o.cardImage && String(setId ?? "").toUpperCase() === SET_CODE) {
       if (!seenIds.has(id)) {
         seenIds.add(id);
         // Stats live under varying keys but always as { label: "Energy"|"Might"|"Power", value: { id: number } }.
@@ -258,8 +311,8 @@ async function main() {
         jsonCards.push({
           cardId: id,
           name: String(o.name),
-          code: typeof o.publicCode === "string" ? o.publicCode.replace(/^VEN-/i, "") : undefined,
-          number: id.match(/^ven-([a-z]?\d+[a-z]?|r\d+[a-z]?)/i)?.[1],
+          code: typeof o.publicCode === "string" ? o.publicCode.replace(new RegExp(`^${SET_CODE}-`, "i"), "") : undefined,
+          number: id.match(new RegExp(`^${ID_PREFIX}-([a-z]?\\d+[a-z]?|r\\d+[a-z]?)`, "i"))?.[1],
           domain: o?.domain?.values?.[0]?.label,
           rarity: o?.rarity?.value?.label,
           type: o?.cardType?.type?.[0]?.label,
@@ -289,12 +342,13 @@ async function main() {
       /* not parseable */
     }
   }
-  console.log(`__NEXT_DATA__ extraction: ${jsonCards.length} official VEN cards`);
+  console.log(`__NEXT_DATA__ extraction: ${jsonCards.length} official ${SET_CODE} cards`);
   if (jsonCards.length) console.log("SAMPLE:", JSON.stringify(jsonCards[0]));
+  console.log(`Set ids seen in the gallery data: ${[...seenSetIds].sort().join(", ") || "(none)"}`);
 
   if (DUMP) {
     mkdirSync(join(process.cwd(), "scratch"), { recursive: true });
-    writeFileSync(join(process.cwd(), "scratch", "vendetta-dump.json"), JSON.stringify(jsonBodies, null, 1));
+    writeFileSync(join(process.cwd(), "scratch", `${SET.slug}-dump.json`), JSON.stringify(jsonBodies, null, 1));
     for (const r of jsonBodies) {
       const s = JSON.stringify(r.body);
       if (s.length < 300) continue;
@@ -304,6 +358,27 @@ async function main() {
 
   await browser.close();
 
+  // ── SET-CODE GATE ──────────────────────────────────────────────────────────
+  // We found no card under our configured code, but the gallery DID hand us cards
+  // under some other code(s). For a set whose code we guessed (lib/constants.ts
+  // says "RAD" is a placeholder) that is the expected way to learn the real one —
+  // so say it plainly and stop, rather than writing an empty file that the
+  // importer would then dutifully import as "0 created" and look like a scrape
+  // failure. Refusing here is the cheap end of this mistake; the expensive end is
+  // a Card.setCode backfill after cards are live.
+  if (jsonCards.length === 0 && seenSetIds.size > 0) {
+    const others = [...seenSetIds].filter((x) => x !== SET_CODE).sort();
+    if (others.length) {
+      console.error(
+        `SET CODE MISMATCH: lib/constants.ts calls ${SET.name} "${SET_CODE}", but the official gallery ` +
+          `reports no ${SET_CODE} cards at all. Codes it did report: ${others.join(", ")}.\n` +
+          `If one of those is ${SET.name}, update SETS in src/lib/constants.ts (and the RAD/${SET_CODE} ` +
+          `branches in lib/price-import.ts, lib/ebay.ts and lib/sealed-import.ts) BEFORE importing.`,
+      );
+      process.exit(2);
+    }
+  }
+
   // Prefer the authoritative __NEXT_DATA__ extraction; fall back to alt parsing
   // only if the embedded data ever disappears.
   let cards: Scraped[];
@@ -311,7 +386,7 @@ async function main() {
     cards = jsonCards.map((c) => ({
       name: c.name,
       imageUrl: c.imageUrl ?? "",
-      set: "VEN",
+      set: SET_CODE,
       cardId: c.cardId,
       number: c.number,
       code: c.code,
@@ -335,9 +410,9 @@ async function main() {
       cards.push({
         name: parsed.name,
         imageUrl: src,
-        set: "VEN",
+        set: SET_CODE,
         cardId: cardId || undefined,
-        number: cardId ? cardId.replace(/^ven-/i, "") : undefined,
+        number: cardId ? cardId.replace(new RegExp(`^${ID_PREFIX}-`, "i"), "") : undefined,
         type: parsed.type,
         rules: parsed.rules.slice(0, 500),
       });
@@ -347,7 +422,7 @@ async function main() {
   writeFileSync(OUT, JSON.stringify(cards, null, 1));
   const withDomain = cards.filter((c) => c.domain).length;
   const withRarity = cards.filter((c) => c.rarity).length;
-  console.log(`Saved ${cards.length} cards (${withDomain} with domain, ${withRarity} with rarity) to prisma/vendetta-cards.json`);
+  console.log(`Saved ${cards.length} ${SET_CODE} cards (${withDomain} with domain, ${withRarity} with rarity) to prisma/${SET.slug}-cards.json`);
 
   // Compact census — one line per card, sorted by collector number — so a CI log is
   // enough to see the full revealed set (chase-tier classification, spoiler tracking)

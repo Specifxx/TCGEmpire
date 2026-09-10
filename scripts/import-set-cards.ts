@@ -1,8 +1,16 @@
 /**
- * Import Vendetta cards scraped from the OFFICIAL gallery (prisma/vendetta-cards.json,
- * produced by scripts/fetch-vendetta-official.ts) into the Card table. ADDITIVE and
- * idempotent — never wipes, never touches other sets' cards. Safe to re-run through
- * spoiler season; new reveals are added, existing rows refreshed.
+ * Import ONE set's cards, scraped from the OFFICIAL gallery
+ * (prisma/<slug>-cards.json, produced by scripts/fetch-set-official.ts), into the
+ * Card table. ADDITIVE and idempotent — never wipes, never touches other sets'
+ * cards. Safe to re-run through spoiler season; new reveals are added, existing
+ * rows refreshed.
+ *
+ * PARAMETERISED BY SET (it was scripts/import-vendetta.ts, with VEN hardcoded at
+ * five points — see the note at the top of scripts/fetch-set-official.ts). Pass
+ * the SAME set the scraper ran with:
+ *
+ *   SET=radiance DRY_RUN=1 npx tsx scripts/import-set-cards.ts   # preview
+ *   SET=radiance npx tsx scripts/import-set-cards.ts             # apply
  *
  * Accuracy rules:
  *  - name/type/rules come from the gallery's own alt text; domain from the gallery's
@@ -18,17 +26,40 @@
  *    guard) and reported — better to miss a reprint than mislabel a set.
  *  - Rows missing name/image/type/domain are skipped and reported.
  *
- * Usage:  DRY_RUN=1 npx tsx scripts/import-vendetta.ts   # preview
- *         npx tsx scripts/import-vendetta.ts             # apply
+ * SET defaults to the next announced-but-unreleased set, else the newest one.
  */
 import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { normalizeSearch } from "../src/lib/format";
-import { chasePrintRarity, isOvernumbered } from "../src/lib/constants";
+import { chasePrintRarity, isOvernumbered, SETS, nextUpcomingSet, newestReleasedSet, type SetInfo } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 const DRY = process.env.DRY_RUN === "1";
+
+// Same resolution rule as the scraper, so `SET=radiance` drives both halves of the
+// pipeline and there is no way to scrape one set and import it as another.
+function resolveSet(): SetInfo {
+  const raw = (process.env.SET ?? "").trim();
+  if (raw) {
+    const hit = SETS.find((s) => s.slug.toLowerCase() === raw.toLowerCase() || s.code.toLowerCase() === raw.toLowerCase());
+    if (!hit) {
+      console.error(`Unknown set "${raw}". Known: ${SETS.map((s) => `${s.code}/${s.slug}`).join(", ")}`);
+      process.exit(1);
+    }
+    return hit;
+  }
+  const fallback = nextUpcomingSet() ?? newestReleasedSet();
+  if (!fallback) {
+    console.error("No set to import: SET is unset and lib/constants.ts has no upcoming or released set.");
+    process.exit(1);
+  }
+  return fallback;
+}
+
+const SET = resolveSet();
+const SET_CODE = SET.code.toUpperCase();
+const ID_PREFIX = SET_CODE.toLowerCase();
 
 type Scraped = {
   name: string;
@@ -47,7 +78,7 @@ type Scraped = {
 };
 
 // Legend cards are named by their epithet alone in the source data ("Eye of
-// Twilight"), with the champion carried separately (see fetch-vendetta-official.ts).
+// Twilight"), with the champion carried separately (see fetch-set-official.ts).
 // Prefix it to match every other champion card's "Champion, Title" naming on the
 // site (e.g. "Renekton, Rage Fueled") — "Legend" itself is already shown as its
 // own type badge, so it doesn't need to be repeated in the name text.
@@ -73,10 +104,23 @@ async function uniqueSlug(base: string, externalId: string): Promise<string> {
 async function main() {
   let rows: Scraped[];
   try {
-    rows = JSON.parse(readFileSync(join(process.cwd(), "prisma", "vendetta-cards.json"), "utf8"));
+    rows = JSON.parse(readFileSync(join(process.cwd(), "prisma", `${SET.slug}-cards.json`), "utf8"));
   } catch (e) {
-    console.error("Could not read prisma/vendetta-cards.json — run scripts/fetch-vendetta-official.ts first.", (e as Error).message);
+    console.error(
+      `Could not read prisma/${SET.slug}-cards.json — run SET=${SET.slug} npx tsx scripts/fetch-set-official.ts first.`,
+      (e as Error).message,
+    );
     return;
+  }
+  // A scrape file is stamped with the set it came from. Refusing a mismatch is the
+  // one guard that makes "SET=" on both halves safe: importing radiance-cards.json
+  // as VEN would write every Radiance card under Vendetta's code, and no later run
+  // would notice.
+  const stamped = new Set(rows.map((r) => (r.set ?? "").toUpperCase()).filter(Boolean));
+  const foreign = [...stamped].filter((c) => c !== SET_CODE);
+  if (foreign.length) {
+    console.error(`Refusing to import: prisma/${SET.slug}-cards.json contains ${foreign.join(", ")} cards, not ${SET_CODE}.`);
+    process.exit(2);
   }
 
   let created = 0, updated = 0;
@@ -102,11 +146,11 @@ async function main() {
     }
 
     // Reprint / filter-bleed guard — ONLY for rows without an official gallery id.
-    // Cards extracted from __NEXT_DATA__ carry set.value.id === "VEN", so a familiar
-    // name there is a genuine Vendetta reprint and gets imported with its VEN number.
+    // Cards extracted from __NEXT_DATA__ carry set.value.id === this set's code, so
+    // a familiar name there is a genuine reprint and is imported with its own number.
     if (!r.cardId) {
       const sameName = await prisma.card.findFirst({
-        where: { name, setCode: { not: "VEN" } },
+        where: { name, setCode: { not: SET_CODE } },
         select: { setCode: true },
       });
       if (sameName) {
@@ -130,9 +174,12 @@ async function main() {
       nameCount.set(name, nth);
       variant = nth > 1 ? String.fromCharCode(95 + nth) : null; // 2nd → "a", 3rd → "b"
     }
+    // "<code>-official-…" — the prefix scripts/sync-cards.ts matches on "-official-"
+    // when it ADOPTS these provisional rows in place, so the URL survives the day
+    // RiftScribe catalogues the card properly.
     const externalId = officialId
-      ? `ven-official-${officialId}`
-      : `ven-official-${slugify(name)}${variant ? `-${variant}` : ""}`;
+      ? `${ID_PREFIX}-official-${officialId}`
+      : `${ID_PREFIX}-official-${slugify(name)}${variant ? `-${variant}` : ""}`;
     // Prefer the official collector code ("021/166"); fall back to the id segment.
     const collectorNumber = (r.code ?? "").trim() ? (r.code as string).trim().toUpperCase() : numberSeg ? numberSeg.toUpperCase() : "TBA";
 
@@ -155,8 +202,8 @@ async function main() {
     const data = {
       name,
       nameNormalized: normalizeSearch(name),
-      setCode: "VEN",
-      setName: "Vendetta",
+      setCode: SET_CODE,
+      setName: SET.name,
       collectorNumber,
       domain,
       type,
@@ -180,8 +227,8 @@ async function main() {
       if (!DRY) await prisma.card.update({ where: { id: existing.id }, data });
       updated++;
     } else {
-      const slug = await uniqueSlug(`${slugify(name)}-ven${numberSeg ? `-${slugify(numberSeg)}` : variant ? `-${variant}` : ""}`, externalId);
-      console.log(`${DRY ? "(dry) " : ""}NEW  ${name}${variant ? ` (alt ${variant})` : ""} [VEN] ${domain}/${type}/${rarity} -> /card/${slug}`);
+      const slug = await uniqueSlug(`${slugify(name)}-${ID_PREFIX}${numberSeg ? `-${slugify(numberSeg)}` : variant ? `-${variant}` : ""}`, externalId);
+      console.log(`${DRY ? "(dry) " : ""}NEW  ${name}${variant ? ` (alt ${variant})` : ""} [${SET_CODE}] ${domain}/${type}/${rarity} -> /card/${slug}`);
       if (!DRY) {
         await prisma.card.create({
           data: { ...data, externalId, slug, marketPriceCents: 0, artSeed: Math.floor(Math.random() * 1_000_000) },
@@ -191,7 +238,7 @@ async function main() {
     }
   }
 
-  console.log(`\nVendetta import: ${created} created, ${updated} refreshed, ${skipped.length} skipped${DRY ? " (dry run)" : ""}.`);
+  console.log(`\n${SET.name} import: ${created} created, ${updated} refreshed, ${skipped.length} skipped${DRY ? " (dry run)" : ""}.`);
   if (skipped.length) {
     console.log("Skipped:");
     for (const s of skipped.slice(0, 40)) console.log(`  - ${s}`);
