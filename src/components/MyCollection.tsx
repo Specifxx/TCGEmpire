@@ -32,6 +32,7 @@ type Item = {
   isFoil: boolean;
   quantity: number;
   costBasisCents: number | null;
+  costBasisIsTotal: boolean;
   note: string | null;
   card: CollCard;
 };
@@ -206,8 +207,14 @@ export function MyCollection() {
                       <span className="min-w-8 px-2 text-center text-sm font-semibold text-white">{it.quantity}</span>
                       <button onClick={() => patch(it.id, { quantity: Math.min(999, it.quantity + 1) })} disabled={busy === it.id} className="px-2 py-1 text-sm text-slate-300 hover:bg-ink-800" aria-label="Increase quantity">+</button>
                     </div>
-                    {/* Price paid per unit — powers the Premium profit/loss view on /portfolio. */}
-                    <CostInput cents={it.costBasisCents} disabled={busy === it.id} onSave={(cents) => patch(it.id, { costBasisCents: cents })} />
+                    {/* Price paid — powers the Premium profit/loss view on /portfolio. */}
+                    <CostInput
+                      cents={it.costBasisCents}
+                      isTotal={it.costBasisIsTotal}
+                      quantity={it.quantity}
+                      disabled={busy === it.id}
+                      onSave={(cents, isTotal) => patch(it.id, { costBasisCents: cents, costBasisIsTotal: isTotal })}
+                    />
                     <button onClick={() => remove(it.id)} disabled={busy === it.id} className="ml-auto text-xs text-slate-500 hover:text-red-400">Remove</button>
                   </div>
                 </div>
@@ -391,22 +398,65 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
 
 // Inline "paid $" editor for a holding's cost basis. Commits on blur/Enter; an
 // empty value clears the cost basis. Stored in cents, edited in dollars.
-function CostInput({ cents, disabled, onSave }: { cents: number | null; disabled: boolean; onSave: (cents: number | null) => void }) {
+// What the owner paid for this row — the input behind /portfolio's profit &
+// loss. The each/total switch is the whole point of it.
+//
+// It used to be per-copy only, and a row covers every copy of one card in one
+// condition, so several copies had to share one price. Reported 2026-09-10:
+// "Added $770 paid to Akali ON - pulled one, paid for the other… Same issue
+// with Arise where I paid 20 each for two and 25 for the third." Typing 770
+// against two copies meant $1,540 invested, and 20/20/25 had no single per-copy
+// number to type at all. "total" makes both sayable; see lib/collection-cost.ts
+// for what the stored figure then means.
+function CostInput({
+  cents, isTotal, quantity, disabled, onSave,
+}: {
+  cents: number | null;
+  isTotal: boolean;
+  quantity: number;
+  disabled: boolean;
+  onSave: (cents: number | null, isTotal: boolean) => void;
+}) {
   const [val, setVal] = useState(cents != null ? (cents / 100).toString() : "");
+  const [total, setTotal] = useState(isTotal);
   useEffect(() => setVal(cents != null ? (cents / 100).toString() : ""), [cents]);
+  useEffect(() => setTotal(isTotal), [isTotal]);
 
-  function commit() {
+  function commit(nextTotal = total) {
     const t = val.trim();
     if (t === "") {
-      if (cents != null) onSave(null);
+      if (cents != null) onSave(null, nextTotal);
       return;
     }
     const n = Math.round(parseFloat(t) * 100);
-    if (Number.isFinite(n) && n >= 0 && n !== cents) onSave(n);
+    if (!Number.isFinite(n) || n < 0) return;
+    if (n === cents && nextTotal === isTotal) return;
+    onSave(n, nextTotal);
   }
 
+  // Flipping the switch changes what the SAME number means, so save immediately
+  // rather than waiting for a blur the user has no reason to produce.
+  function toggle() {
+    const next = !total;
+    setTotal(next);
+    if (val.trim() === "") { onSave(null, next); return; }
+    const n = Math.round(parseFloat(val) * 100);
+    if (Number.isFinite(n) && n >= 0) onSave(n, next);
+  }
+
+  // Only worth showing once it disambiguates something — with one copy "each"
+  // and "total" are the same number.
+  const perCopy = total && cents != null && quantity > 1 ? cents / quantity / 100 : null;
+
   return (
-    <label className="flex items-center gap-1 rounded-md border border-ink-700 bg-ink-900 px-1.5 py-1 text-xs text-slate-500" title="What you paid per card — used for your portfolio profit/loss">
+    <label
+      className="flex items-center gap-1 rounded-md border border-ink-700 bg-ink-900 px-1.5 py-1 text-xs text-slate-500"
+      title={
+        total
+          ? "What you paid for ALL copies in this row — used for your portfolio profit/loss"
+          : "What you paid for ONE copy — used for your portfolio profit/loss"
+      }
+    >
       paid
       <input
         type="number"
@@ -415,15 +465,27 @@ function CostInput({ cents, disabled, onSave }: { cents: number | null; disabled
         inputMode="decimal"
         value={val}
         onChange={(e) => setVal(e.target.value)}
-        onBlur={commit}
+        onBlur={() => commit()}
         onKeyDown={(e) => {
           if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}
         disabled={disabled}
         placeholder="—"
-        aria-label="Price paid per unit"
+        aria-label={total ? "Total price paid for this row" : "Price paid per copy"}
         className="w-14 bg-transparent text-right text-white outline-none placeholder:text-slate-600"
       />
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={disabled}
+        aria-label={`Price entered is ${total ? "the total for all copies" : "per copy"} — click to switch`}
+        className="rounded px-1 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 hover:bg-ink-800 hover:text-slate-200"
+      >
+        {total ? "total" : "each"}
+      </button>
+      {perCopy != null && (
+        <span className="text-[10px] text-slate-600">≈{perCopy.toFixed(2)}/ea</span>
+      )}
     </label>
   );
 }

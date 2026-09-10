@@ -293,7 +293,17 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 200,
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
-  }, // registry sweep 2026-09-09: 51 in-stock singles, cur=AUD
+    // NO RIFTBOUND SINGLES (verified live 2026-09-10). Both handles above hold
+    // sealed product and accessories only, and the store's own
+    // `riftbound-league-of-legends-singles` collection exists but is EMPTY. The
+    // "51 in-stock singles" this line used to claim was the bug reported through
+    // the portfolio feedback form, not stock: the store shelves every game's
+    // singles in `all-singles-one-piece-pokemon-riftbound`, whose handle says
+    // "riftbound", so discovery pulled in 676 Pokémon/One Piece cards and
+    // resolveCardId's OGN default matched them to Riftbound cards by collector
+    // NUMERATOR alone. See OTHER_TCG_HANDLE and foreignTotal in price-import.ts.
+    // Kept in the list for its sealed stock and in case the singles shelf fills.
+  }, // registry sweep 2026-09-09: sealed only, cur=AUD
   reefsidegames: {
     key: "reefsidegames",
     name: "Reefside Games",
