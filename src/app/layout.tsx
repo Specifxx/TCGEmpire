@@ -5,6 +5,7 @@ import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
+import { SIDENAV_BOOT_SCRIPT } from "@/lib/sidenav-shared";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -241,7 +242,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Neutral lang="en": one cookie-switched URL serves all three English markets
   // (AU/US/UK), so a single market tag like en-AU would mislabel the others.
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
+      // The sidenav boot script below stamps data-sidenav on this element
+      // before React hydrates; React must not report that as a mismatch.
+      suppressHydrationWarning
+    >
       <head>
         {/* Google Consent Mode v2 defaults — MUST be the first thing that runs, so
             the ad/measurement tags below never fire against an unset state. */}
@@ -279,6 +286,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
+        {/* Desktop rail mode (expanded / collapsed) — decided BEFORE first paint
+            from the visitor's cookie or the route's default, so the page never
+            reflows. This layout can't read cookies() itself (see the caching
+            note above RootLayout), which is exactly why it's an inline script.
+            Generated in src/lib/sidenav-shared.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: SIDENAV_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight

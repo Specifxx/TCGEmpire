@@ -3984,3 +3984,39 @@ headless Chromium at their real widths and inspected: the 375px header fits
 without wrapping, the shimmering label renders visibly (not as transparent
 text), and the graphic is legible inside the 384px card while making the card
 shorter than the chip row it replaced.
+
+---
+
+## Collapsible desktop rail — 2026-09-10
+
+The persistent desktop navigation rail (SideNav) was all-or-nothing: the full
+17rem list on every page from 1280px up, nothing below. On `/browse` that
+stacked a third column beside the filter panel and cost a card column; on a
+game page it sat beside the playfield doing nothing; an 1100px laptop got no
+rail at all. It now has two modes.
+
+- **Expanded (17rem) and collapsed (4rem icon rail with a flyout per group).**
+  1024–1279px is always the icon rail. 1280px+ is expanded unless collapsed.
+  Collapsed comes from the visitor's own toggle (the `sidenav` cookie, one
+  year) or, failing that, the route: icon mode on pages with their own left
+  column or a playfield (`SIDENAV_COLLAPSED_PREFIXES` in
+  `src/lib/sidenav-shared.ts`), full rail on the homepage and hubs. A saved
+  choice beats the route default everywhere.
+- **Decided before first paint by an inline script, not the server.** The
+  root layout must never read cookies()/headers() (it would opt every route
+  out of static caching), so `SIDENAV_BOOT_SCRIPT` — generated from the same
+  prefix list as the TypeScript resolver, and run in a sandbox by
+  `tests/sidenav.test.ts` to prove they agree — stamps `data-sidenav` on
+  `<html>` in `<head>`. `<html>` carries `suppressHydrationWarning` for it.
+- **CSS owns the mode.** `--sidenav-w` is 0 / 4rem / 17rem off the attribute
+  and the breakpoints; both content blocks are always in the DOM and
+  `.sidenav-expanded` / `.sidenav-collapsed` switch display. Nothing about
+  the mode has to hydrate, so there is no flash and no layout jump. Every
+  consumer of `--sidenav-w` (main, footer ad zone, footer, CinematicHero's
+  breakout) picked the change up unchanged.
+- **Icons per group** (`NavGroup.icon`) are the only signal at 4rem, so the
+  test requires one per NAV_GROUPS entry and that they are distinct. The
+  flyout opens on hover, click or keyboard focus; Escape closes it; `[`
+  toggles the rail unless the visitor is typing.
+- Not done: hover-to-expand (fragile on trackpads/touch) and a header toggle
+  (the rail's own chevron is enough; revisit if analytics say otherwise).
