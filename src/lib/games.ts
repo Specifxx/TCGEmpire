@@ -19,7 +19,12 @@ export const GAMES: Record<string, GameMeta> = {
   pairs: { label: "Pairs", dir: "asc", min: 8, max: 400, unit: "moves" },
   twenty48: { label: "Riftbound 2048", dir: "desc", min: 0, max: 1_000_000, unit: "pts" },
   "card-smash": { label: "Card Smash", dir: "desc", min: 0, max: 100_000, unit: "pts" },
-  "space-invaders": { label: "Space Invaders", dir: "desc", min: 0, max: 100_000, unit: "pts" },
+  // Replaced the short-lived "space-invaders" shooter (2026-09-03 → 2026-09-10)
+  // with a falling-card catcher. A NEW key, deliberately: the two games score
+  // nothing alike, so carrying the old board over would rank shooter scores
+  // against catcher scores. The old rows stay in GameScore, orphaned and
+  // invisible — no lookup can reach a key that isn't in this table.
+  "card-rain": { label: "Card Rain", dir: "desc", min: 0, max: 100_000, unit: "pts" },
   // Multiplayer. Unlike every board above, this score is computed SERVER-side at
   // the end of a room (lib/sealed-bid.ts → submitScore), never posted by the
   // client. The cap is generous: 1,000 Shards + a full vault of chase cards +

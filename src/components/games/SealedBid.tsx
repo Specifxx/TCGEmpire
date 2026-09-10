@@ -304,11 +304,8 @@ export function SealedBid() {
 function Shell({ code, round, children }: { code?: string; round?: string; children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-3xl">
-      <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-        <Link href="/games" className="hover:text-slate-300">🎮 Games</Link>
-        <span>/</span>
-        <span className="text-slate-300">Sealed Bid</span>
-      </nav>
+      {/* No breadcrumb here: the page renders <Breadcrumbs> (with the
+          BreadcrumbList JSON-LD), same as every other arcade game. */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">

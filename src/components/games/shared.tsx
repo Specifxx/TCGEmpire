@@ -78,15 +78,22 @@ export function GameShell({
   tagline,
   bestLabel,
   /**
-   * Render the shell's own breadcrumb + <h1> + tagline. Default true, which is
-   * every game.
+   * Render the shell's own <h1> + tagline. Default true, which is every game.
    *
    * The pack simulator sets it false because its PAGE owns that chrome: it is
    * the one game with real editorial around the toy (pack structure, pull rates,
-   * FAQ), so the page needs an <h1> carrying the search query and a breadcrumb
-   * with three levels. Leaving this on gave that page two <h1>s and two
-   * breadcrumb navs — a crawler reading "🎁 Pack Opening Simulator" as a second
-   * top-level heading, competing with the one that actually says "Riftbound".
+   * FAQ), so the page needs an <h1> carrying the search query. Leaving this on
+   * gave that page two <h1>s — a crawler reading "🎁 Pack Opening Simulator" as
+   * a second top-level heading, competing with the one that actually says
+   * "Riftbound".
+   *
+   * THE BREADCRUMB IS NOT PART OF THIS ANY MORE. GameShell used to render its
+   * own "🎮 Games / <title>" nav here, but every game PAGE also renders
+   * <Breadcrumbs> — so all eight showed two visible trails stacked on each
+   * other, and only the page's one carried the BreadcrumbList JSON-LD that
+   * scripts/adsense-guard.ts budgets for. The shell's copy was the redundant
+   * one, so it's gone; tests/card-rain.test.ts pins that every game page still
+   * renders the real one.
    */
   chrome = true,
   children,
@@ -102,11 +109,6 @@ export function GameShell({
     <div className="mx-auto max-w-2xl">
       {chrome ? (
         <>
-          <nav className="mb-3 flex items-center gap-1.5 text-xs text-slate-500" aria-label="Breadcrumb">
-            <Link href="/games" className="hover:text-slate-300">🎮 Games</Link>
-            <span>/</span>
-            <span className="text-slate-300">{title}</span>
-          </nav>
           <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
             <div>
               <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
