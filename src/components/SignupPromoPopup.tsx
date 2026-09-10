@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
-import { PremiumEdgeGraphic } from "./PremiumEdgeGraphic";
+import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
@@ -109,7 +109,7 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // name records which axis changed; this one changes CONTENT, not chrome or
 // timing, so it gets a genuinely new name rather than another suffix.
 // → "premium_graphic" (2026-09-10): the pitch stopped being text at all. The
-// sentence and the six-chip tool row became one PremiumEdgeGraphic; the
+// sentence and the six-chip tool row became the designed PremiumPitchPanel; the
 // heading's non-trial fallback became the new tagline. Same axis as the last
 // rename (CONTENT), so again a new name rather than a suffix — without it the
 // text-pitch and graphic-pitch impressions would average together in GA4 and
@@ -214,32 +214,37 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
-      <div className="relative overflow-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
-        <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
-          <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-            Premium
-          </span>
-          <span className="text-xs font-semibold text-slate-200">{heading}</span>
-          <button
-            onClick={dismiss}
-            aria-label="Dismiss"
-            className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
-          >
-            ✕
-          </button>
-        </div>
+      {/* max-h + scroll is the belt to the braces of the short-viewport rules
+          inside the panel. This card can never be taller than the screen, so
+          the ✕ and the sign-in buttons are always reachable — the exact failure
+          that made the old full-screen version a production incident (see
+          tests/signup-slidein.test.ts's header). */}
+      <div className="relative max-h-[calc(100dvh-6.5rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+        {/* Dismiss sits over the artwork now that there is no header strip. */}
+        <button
+          onClick={dismiss}
+          aria-label="Dismiss"
+          className="absolute right-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-slate-300 transition hover:bg-ink-950/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+        >
+          ✕
+        </button>
 
-        <div className="px-4 pb-1 pt-3">
-          {/* THE PITCH IS A GRAPHIC NOW (2026-09-10, owner brief: "right now
-              it's all just text... it should be one clear image"). This
-              replaced a sentence plus a six-chip tool row — see
-              PremiumEdgeGraphic's own header for why it's inline SVG and why
-              its bars deliberately carry no numbers. The card gets SHORTER as
-              a result, which matters here: this popup's own history includes a
-              production incident where a too-tall card put its close button
-              off-screen on a short phone (see tests/signup-slidein.test.ts). */}
-          <PremiumEdgeGraphic />
-          <p className="mt-2 text-xs font-semibold leading-relaxed text-gold">Get an unfair edge buying and selling</p>
+        {/* THE PITCH IS THE OWNER'S OWN COMP NOW (owner brief: "use this for
+            the slide"). Rebuilt as real markup rather than shipped as the flat
+            image it arrived as — see PremiumPitchPanel's header for why, and
+            for why two of the comp's four feature rows had to be reworded. The
+            gold badge is passed down because this file's own source is what
+            tests/signup-slidein.test.ts reads for its classes. */}
+        <PremiumPitchPanel
+          badge={
+            <span className="inline-block rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+              Premium
+            </span>
+          }
+        />
+
+        <div className="px-4 pb-1 pt-2">
+          <p className="text-xs font-semibold text-slate-200">{heading}</p>
 
           {/* Same real, decided increase the dialog, /premium and PremiumSlideIn
               announce (see lib/site.ts) — same compact treatment PremiumSlideIn
@@ -272,9 +277,9 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
               price-increase banner that tests/premium-price-increase.test.ts
               scans for hard-coded dates. */}
           {PREMIUM_PRICE_AMOUNT ? (
-            <p className="mt-2 text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500">
               {trialAvailable ? (
-                <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
+                <span className="text-xl font-extrabold uppercase italic tracking-tight text-gold">{premiumZeroToday()}</span>
               ) : (
                 <>
                   <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}

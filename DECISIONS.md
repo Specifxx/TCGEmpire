@@ -3984,3 +3984,59 @@ headless Chromium at their real widths and inspected: the 375px header fits
 without wrapping, the shimmering label renders visibly (not as transparent
 text), and the graphic is legible inside the 384px card while making the card
 shorter than the chip row it replaced.
+
+---
+
+## The Premium pitch becomes the owner's own comp (2026-09-10, same day, second pass)
+
+The two-bar SVG from the entry above lasted hours. The owner sent a finished
+comp — character art behind a dark scrim, the wordmark and a gold PREMIUM
+badge, "GET AN / UNFAIR EDGE / FOR BUYING AND SELLING", four icon rows, price,
+then the sign-in buttons — with the instruction "use this for the slide
+instead, obviously the google and discord are real buttons". New
+`src/components/PremiumPitchPanel.tsx` replaces `PremiumEdgeGraphic.tsx`,
+which is deleted.
+
+**Rebuilt as markup, not shipped as the picture.** Dropping the comp in as one
+flat image was the obvious shortcut and it fails on a number that is easy to
+check: the comp is 1145px wide and this card renders at 384px, so every baked
+word would land at about a third of its designed size — the body copy at
+roughly 5px. Real text also scales, survives a screen reader, can be
+translated, and lets the price keep coming from `premiumZeroToday()` instead of
+being frozen into a picture on export day. Only the artwork is a raster:
+`public/premium/premium-pitch.webp`, 26KB, cropped from the comp starting to
+the right of x=662 because everything left of that had the comp's own UI text
+baked over it.
+
+**Two of the comp's four feature rows were reworded, deliberately.** It sold
+"Advanced filters — find the exact cards, sets and rarities you want" and "See
+the best prices across stores instantly". Both are the FREE tier:
+`TIER_COMPARISON` has "Compare prices across every store + eBay" and "Full card
+database, search & browse" as ticks in the anonymous column. Advertising those
+as Premium is the one thing this repo consistently refuses to do, so the rows
+keep the comp's shape, icons and rhythm while naming things actually behind the
+paywall — the full Deal Finder list, the pro screeners, Rising Cards and Demand
+Finder, and supporting the site. Each maps to a real `TIER_COMPARISON` row and
+`tests/premium-pitch-panel.test.ts` pins that the two retired phrases never
+come back.
+
+**The art is anchored right, not stretched behind everything.** At the comp's
+width the character and the copy sit side by side; at 384px they collide, and a
+scrim dark enough to keep the headline legible reduced her face to a smudge
+(observed, not theorised — it took three renders to get right). Confining the
+art to the right 64% with its left edge fading into the card gives the copy
+clean ink and keeps the character a character. A soft text-shadow on the panel
+copy covers the small overlap that remains.
+
+**The short-phone rule this card exists under still holds.** Its own history
+includes a production incident where a too-tall card put the close button
+off-screen. So: rows three and four stand down below 700px of viewport height,
+and the card caps itself at `100dvh - 6.5rem` and scrolls. Measured in headless
+Chromium at 375x667 — card is 499px tall, fully on screen, with the ✕, both
+sign-in buttons and "Maybe later" all reachable without scrolling.
+
+**The signed-in twin shares the panel with `showFeatures={false}`.** It already
+carries a per-route contextual pitch naming one specific tool (a deck page
+sells Best Basket, a card page sells Value Finder), which beats a generic
+four-row list and is pinned by `tests/premium-slidein.test.ts`. Running both
+would make it exactly the tall card it was designed not to be.

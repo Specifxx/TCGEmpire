@@ -93,7 +93,7 @@ test("the popup's Premium pitch never grows its own hand-typed tool list or comp
   // so a second hand-typed copy couldn't drift out of date.
   //
   // 2026-09-10: the popup stopped naming tools at all — the chip row became a
-  // PremiumEdgeGraphic, so the import went with it. The anti-duplication
+  // designed PremiumPitchPanel, so the import went with it. The anti-duplication
   // guarantee is what still matters and is what this now pins: if a future
   // pass reintroduces a tool list here, it must import the shared one rather
   // than hand-type a second copy, which is the "same claim written twice,
@@ -101,7 +101,7 @@ test("the popup's Premium pitch never grows its own hand-typed tool list or comp
   const src = read(POPUP);
   assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
   assert.ok(!/const COMPARISON/.test(src), "the old free-account COMPARISON table must be gone");
-  assert.match(src, /<PremiumEdgeGraphic/, "the pitch is a graphic now — see PremiumEdgeGraphic's own header");
+  assert.match(src, /<PremiumPitchPanel/, "the pitch is the designed panel now — see PremiumPitchPanel's own header");
 });
 
 test("the popup is a Premium pitch, but grants nothing automatically", () => {
