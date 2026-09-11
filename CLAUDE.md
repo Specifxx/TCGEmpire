@@ -3,17 +3,22 @@
 ## Deploys are gated — do not add `[deploy]` to commit messages
 
 Production does **not** build on every push. `vercel.json`'s `ignoreCommand`
-(`scripts/vercel-ignore-build.sh`) skips any commit whose message lacks the
-literal marker `[deploy]`, and `.github/workflows/production-deploy.yml` lands
-one such commit a day at 08:00 UTC. Every unnecessary build prerenders ~770
-database-backed pages and clears the ISR page cache; at 10–30 pushes a day that
-alone exhausted a Neon transfer allowance every three days (DECISIONS.md,
-"Network transfer: the deploy cadence was the burn", 2026-09-11).
+(`scripts/vercel-ignore-build.sh`) skips any commit whose SUBJECT LINE lacks
+the literal marker `[deploy]`, and `.github/workflows/production-deploy.yml`
+lands one such commit a day at 08:00 UTC. The subject only: a body that
+mentions the marker in prose must not deploy, and once did.
+
+Every unnecessary build prerenders ~770 database-backed pages, clears the ISR
+page cache and orphans much of the Data Cache (an `unstable_cache` key
+contains the callback's minified source). At 10–30 pushes a day that alone
+exhausted a Neon transfer allowance every three days — see DECISIONS.md,
+"Network transfer: the deploy cadence was the burn", 2026-09-11.
 
 So, for automated sessions:
 
-- **Never** put `[deploy]` (any casing) in a commit or merge message on your
+- **Never** put `[deploy]` (any casing) in a commit or merge SUBJECT on your
   own initiative. Ordinary work waits for the daily release; that is the point.
+  Explaining the gate in a commit BODY is fine and does not deploy.
 - Add it **only** when the user explicitly asks for an immediate release, and
   say so in the summary.
 - Do not add `generateStaticParams` prewarming back to database-backed dynamic
