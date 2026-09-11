@@ -52,6 +52,8 @@ export default async function AccountsAdminPage({
     premiumTier: string;
     premiumTierFloor: string | null;
     trialStartedAt: Date | null;
+    lastActiveAt: Date | null;
+    activeDays: number;
     lastLoginAt: Date | null;
     createdAt: Date;
   }[] = [];
@@ -99,7 +101,12 @@ export default async function AccountsAdminPage({
             : filter === "verified"
               ? { emailVerified: { not: null } }
               : filter === "active"
-                ? { lastLoginAt: { gte: d7 } }
+                // ACTIVE means "used the site", not "authenticated". Sessions are
+                // long-lived JWTs, so lastLoginAt could be months stale for a
+                // daily visitor — see lib/activity.ts. lastLoginAt is kept in the
+                // OR purely so accounts that predate activity tracking and have
+                // not been back since still count.
+                ? { OR: [{ lastActiveAt: { gte: d7 } }, { lastActiveAt: null, lastLoginAt: { gte: d7 } }] }
                 : {};
     const where = { AND: [notSeed, search, quick] };
     const [list, all, verified, premium, plus, active7, new7, new30, recent30, anonEmails] = await Promise.all([
@@ -110,14 +117,19 @@ export default async function AccountsAdminPage({
         select: {
           id: true, email: true, displayName: true, emailVerified: true, passwordHash: true,
           googleId: true, discordId: true, isAdmin: true,
-          premiumUntil: true, premiumTier: true, premiumTierFloor: true, trialStartedAt: true, lastLoginAt: true, createdAt: true,
+          premiumUntil: true, premiumTier: true, premiumTierFloor: true, trialStartedAt: true,
+          lastActiveAt: true, activeDays: true, lastLoginAt: true, createdAt: true,
         },
       }),
       prisma.user.count({ where: notSeed }),
       prisma.user.count({ where: { AND: [notSeed, { emailVerified: { not: null } }] } }),
       prisma.user.count({ where: { AND: [notSeed, effPremium] } }),
       prisma.user.count({ where: { AND: [notSeed, effPlus] } }),
-      prisma.user.count({ where: { AND: [notSeed, { lastLoginAt: { gte: d7 } }] } }),
+      prisma.user.count({
+        where: {
+          AND: [notSeed, { OR: [{ lastActiveAt: { gte: d7 } }, { lastActiveAt: null, lastLoginAt: { gte: d7 } }] }],
+        },
+      }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d7 } }] } }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d30 } }] } }),
       // Raw createdAt+signupSource for the last 30 days — bucketed by UTC day in
@@ -170,7 +182,8 @@ export default async function AccountsAdminPage({
     name: u.displayName,
     email: u.email,
     registered: fmt(u.createdAt),
-    lastLogin: fmt(u.lastLoginAt),
+    lastActive: fmt(u.lastActiveAt ?? u.lastLoginAt),
+    activeDays: u.activeDays,
     verified: !!u.emailVerified,
     plan: !(u.premiumUntil && u.premiumUntil > now)
       ? "none"
@@ -198,7 +211,7 @@ export default async function AccountsAdminPage({
         <Stat label="Email-verified" value={num(totals.verified)} />
         <Stat label="Plus (active)" value={num(totals.plus)} />
         <Stat label="Premium (active)" value={num(totals.premium)} />
-        <Stat label="Signed in · 7d" value={num(totals.active7)} sub="last login within a week" />
+        <Stat label="Active · 7d" value={num(totals.active7)} sub="used the site within a week" />
         <Stat
           label="Watching, no account"
           value={num(unclaimedAlertEmails)}
@@ -338,7 +351,7 @@ export default async function AccountsAdminPage({
                 <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-3 py-2 font-medium">User</th>
                   <th className="px-3 py-2 font-medium">Registered</th>
-                  <th className="px-3 py-2 font-medium">Last login</th>
+                  <th className="px-3 py-2 font-medium">Last active</th>
                   <th className="px-3 py-2 font-medium">Verified</th>
                   <th className="px-3 py-2 font-medium">Sign-in</th>
                   <th className="px-3 py-2 font-medium">Plan</th>
@@ -367,15 +380,26 @@ export default async function AccountsAdminPage({
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-300">{fmt(u.createdAt)}</td>
                       <td className="whitespace-nowrap px-3 py-2">
-                        {u.lastLoginAt ? (
-                          <span className={u.lastLoginAt >= d7 ? "text-slate-200" : "text-slate-500"}>
-                            {fmt(u.lastLoginAt)}
+                        {u.lastActiveAt ? (
+                          <span className={u.lastActiveAt >= d7 ? "text-slate-200" : "text-slate-500"}>
+                            {fmt(u.lastActiveAt)}
+                            {u.activeDays > 0 ? (
+                              <span className="ml-1.5 text-xs text-slate-600">{u.activeDays}d</span>
+                            ) : null}
+                          </span>
+                        ) : u.lastLoginAt ? (
+                          // Activity tracking starts at its deploy, so an account
+                          // that hasn't been back since reads its last LOGIN
+                          // instead — a genuine lower bound on when it was last
+                          // used, marked so it isn't mistaken for the real thing.
+                          <span
+                            className="text-slate-600"
+                            title="No activity recorded yet — showing last sign-in, which is a lower bound"
+                          >
+                            {fmt(u.lastLoginAt)} <span className="text-xs">(login)</span>
                           </span>
                         ) : (
-                          // Only stamped from the OAuth callback onward, so every
-                          // account that hasn't signed in since that shipped reads
-                          // "—" rather than "never".
-                          <span className="text-slate-600" title="Not recorded — no sign-in since login tracking started">—</span>
+                          <span className="text-slate-600" title="Never recorded — no sign-in or visit since tracking started">—</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">

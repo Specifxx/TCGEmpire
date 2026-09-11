@@ -6,7 +6,8 @@ export type ExportUser = {
   name: string;
   email: string;
   registered: string;
-  lastLogin: string;
+  lastActive: string;
+  activeDays: number;
   verified: boolean;
   // The active tier, or "none" — a bare premium yes/no can't tell a $4.99
   // member from a $9.99 one, which is the whole point of exporting it.
@@ -27,9 +28,9 @@ export function AccountsExport({ users }: { users: ExportUser[] }) {
 
   const downloadCsv = () => {
     const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
-    const header = "name,email,registered,last_login,verified,plan";
+    const header = "name,email,registered,last_active,active_days,verified,plan";
     const lines = users.map((u) =>
-      [u.name, u.email, u.registered, u.lastLogin, u.verified ? "yes" : "no", u.plan].map(esc).join(","),
+      [u.name, u.email, u.registered, u.lastActive, String(u.activeDays), u.verified ? "yes" : "no", u.plan].map(esc).join(","),
     );
     const blob = new Blob([[header, ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);

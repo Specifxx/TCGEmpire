@@ -15,11 +15,20 @@ export const metadata: Metadata = {
 
 const TOP_N = 25;
 
-// "Loyal" here means demonstrated commitment we can actually measure —
-// collection size and sustained Premium membership — NOT visit frequency,
-// since the app has no login/session recency tracking anywhere (no
-// lastSeenAt-style field on User). If that's wanted later it needs a new
-// column + a stamp on session read, which doesn't exist today.
+// "Loyal" here means demonstrated commitment we can actually measure. It used
+// to mean collection size and Premium tenure ONLY, because the app had no
+// session-recency tracking at all — this comment used to end "that needs a new
+// column + a stamp on session read, which doesn't exist today".
+//
+// It does now. User.activeDays counts DISTINCT DAYS the account has used the
+// site (lib/activity.ts, stamped from getCurrentUser), which is the signal that
+// actually answers "who are our most active users" — a question neither a
+// one-off big collection nor a card charged once a month can answer. Showing up
+// on 40 separate days is a choice made 40 times.
+//
+// activeDays STARTS AT ZERO FOR EVERYONE on the deploy that adds it. It counts
+// from then on, so this list is thin at first and grows into meaning; the
+// section says so rather than looking broken.
 export default async function LoyaltyAdminPage({ searchParams }: { searchParams: { key?: string } }) {
   const token = process.env.ADMIN_TOKEN;
   const keyOk = !!token && searchParams.key === token;
@@ -31,13 +40,15 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
 
   type Collector = { userId: string; displayName: string; email: string; cards: number; since: Date };
   type PremiumMember = { userId: string; displayName: string; email: string; memberSince: Date; premiumUntil: Date };
+  type ActiveUser = { userId: string; displayName: string; email: string; activeDays: number; lastActiveAt: Date };
 
   let collectors: Collector[] = [];
   let premiumMembers: PremiumMember[] = [];
+  let mostActive: ActiveUser[] = [];
   let error = false;
 
   try {
-    const [collectorAgg, premiumRows] = await Promise.all([
+    const [collectorAgg, premiumRows, activeRows] = await Promise.all([
       prisma.collectionCard.groupBy({
         by: ["userId"],
         _count: { _all: true },
@@ -50,6 +61,16 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
         orderBy: { createdAt: "asc" },
         take: TOP_N,
         select: { id: true, displayName: true, email: true, createdAt: true, premiumUntil: true },
+      }),
+      // Most active — ranked by DISTINCT DAYS USED, tie-broken by who was here
+      // most recently. `activeDays: { gt: 0 }` rather than taking the top N
+      // outright: before anyone has been counted every row ties on zero and the
+      // list would be an arbitrary 25 accounts presented as the most engaged.
+      prisma.user.findMany({
+        where: { AND: [NOT_SEED_WHERE, { activeDays: { gt: 0 } }] },
+        orderBy: [{ activeDays: "desc" }, { lastActiveAt: "desc" }],
+        take: TOP_N,
+        select: { id: true, displayName: true, email: true, activeDays: true, lastActiveAt: true },
       }),
     ]);
 
@@ -67,6 +88,14 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
         return { userId: c.userId, displayName: u.displayName, email: u.email, cards: c._count._all, since: c._min.createdAt! };
       })
       .filter((x): x is Collector => x != null);
+
+    mostActive = activeRows.map((u) => ({
+      userId: u.id,
+      displayName: u.displayName,
+      email: u.email,
+      activeDays: u.activeDays,
+      lastActiveAt: u.lastActiveAt!,
+    }));
 
     premiumMembers = premiumRows.map((u) => ({
       userId: u.id,
@@ -90,6 +119,7 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
     else categoriesByUser.set(userId, { displayName, email, tags: [label] });
   };
   collectors.forEach((c) => tag(c.userId, c.displayName, c.email, "Collector"));
+  mostActive.forEach((a) => tag(a.userId, a.displayName, a.email, "Active"));
   premiumMembers.forEach((p) => tag(p.userId, p.displayName, p.email, "Premium"));
   const multiSignal = [...categoriesByUser.values()].filter((u) => u.tags.length >= 2).sort((a, b) => b.tags.length - a.tags.length);
 
@@ -105,9 +135,9 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
       </nav>
       <h1 className="text-2xl font-bold text-white">🏆 Loyal users</h1>
       <p className="mt-1 max-w-2xl text-sm text-slate-400">
-        The users showing the most real, measurable commitment — collection size and sustained Premium membership.
-        There&apos;s no login/visit-frequency tracking in the app today, so this is built entirely from collection and
-        account data, not &ldquo;how often they show up.&rdquo;
+        The users showing the most real, measurable commitment — how many separate days they show up, how much
+        they track, and how long they&apos;ve paid. Days used is the strongest of the three: a big collection can be
+        one afternoon and a subscription can renew unattended, but forty active days is a choice made forty times.
       </p>
 
       {error ? (
@@ -147,6 +177,51 @@ export default async function LoyaltyAdminPage({ searchParams }: { searchParams:
               </div>
             </section>
           )}
+
+          {/* FIRST, because it is the strongest of the three signals: a large
+              collection can be one afternoon's import and a subscription can
+              renew unattended, but days-used is a choice repeated. */}
+          <section className="mt-8">
+            <div className="mb-2 flex items-baseline justify-between">
+              <h2 className="text-lg font-semibold text-white">Most active</h2>
+              <span className="text-xs text-slate-500">days used · top {TOP_N}</span>
+            </div>
+            {mostActive.length === 0 ? (
+              <Empty>
+                No activity counted yet. Days used are counted from the deploy that added activity tracking
+                onward — this fills in as people visit, rather than being backdated from data that was never
+                recorded.
+              </Empty>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-3 py-2 font-medium">#</th>
+                      <th className="px-3 py-2 font-medium">User</th>
+                      <th className="px-3 py-2 text-right font-medium">Days used</th>
+                      <th className="px-3 py-2 text-right font-medium">Last active</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mostActive.map((a, i) => (
+                      <tr key={a.userId} className="border-b border-ink-800 last:border-0 hover:bg-ink-800/60">
+                        <td className="px-3 py-2 text-slate-500">{i + 1}</td>
+                        <td className="px-3 py-2">
+                          <div className="font-medium text-white">{a.displayName}</div>
+                          <div className="text-xs text-slate-500">{a.email}</div>
+                        </td>
+                        <td className="px-3 py-2 text-right font-semibold tabular-nums text-brand-300">{a.activeDays}</td>
+                        <td className="px-3 py-2 text-right text-xs text-slate-500">
+                          {daysSince(a.lastActiveAt) === 0 ? "today" : `${daysSince(a.lastActiveAt)}d ago`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
 
           <section className="mt-8">
             <div className="mb-2 flex items-baseline justify-between">

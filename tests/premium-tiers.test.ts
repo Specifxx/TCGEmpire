@@ -375,9 +375,14 @@ test("the admin accounts page separates Plus from Premium and only ever counts a
   assert.match(src, /premiumTierFloor: null/, "the effective-tier query must account for an unset floor");
   assert.match(src, /label="Plus \(active\)"/, "Plus must get its own stat, not be folded into a single paid number");
   assert.match(src, /label="Premium \(active\)"/);
-  // Last login, the other thing the page gained.
-  assert.match(src, /lastLoginAt: true/, "the row select must carry lastLoginAt");
-  assert.match(src, /Last login/, "the table must show it");
+  // "When was this account last seen", the other thing the page gained. That
+  // was Last LOGIN until 2026-09-11 and is now Last ACTIVE — sessions are
+  // long-lived JWTs, so a login date could be months stale for a daily
+  // visitor (see lib/activity.ts). lastLoginAt stays in the select purely as
+  // the fallback for accounts that predate activity tracking.
+  assert.match(src, /lastActiveAt: true/, "the row select must carry lastActiveAt");
+  assert.match(src, /lastLoginAt: true/, "and lastLoginAt, still needed as the pre-tracking fallback");
+  assert.match(src, /Last active/, "the table must show it");
 });
 
 test("last login is stamped on sign-in without being able to fail the sign-in", () => {
