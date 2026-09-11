@@ -26,12 +26,23 @@
 # days with the most commits (20 and 30).
 #
 # ── THE RULE ─────────────────────────────────────────────────────────────────
-# A PRODUCTION build happens only when the commit message carries the literal
-# marker  [deploy]  (case-insensitive). Everything else is skipped and simply
-# waits for the next scheduled release — .github/workflows/production-deploy.yml
-# lands ONE such commit a day, and its "Run workflow" button lands one
-# immediately. A human who needs a deploy right now puts [deploy] in their own
-# commit message.
+# A PRODUCTION build happens only when the commit's SUBJECT LINE — the first
+# line, nothing else — carries the literal marker  [deploy]  (case-insensitive).
+# Everything else is skipped and simply waits for the next scheduled release —
+# .github/workflows/production-deploy.yml lands ONE such commit a day, and its
+# "Run workflow" button lands one immediately. A human who needs a deploy right
+# now puts [deploy] in their own commit SUBJECT.
+#
+# SUBJECT ONLY, AND THIS IS NOT A DETAIL. The first version searched the whole
+# message and deployed on 2026-09-11 08:29 for a merge commit whose subject had
+# no marker at all — its body read "(no [deploy] marker on purpose)", and a
+# literal-string search cannot tell a marker from prose ABOUT the marker. This
+# repo writes long explanatory commit messages, and the deploy gate is now one
+# of the things they explain, so that collision is a certainty rather than a
+# fluke. The subject line is where both intended uses already put it (the
+# scheduled release commit, and a human's "hotfix X [deploy]"), and it is the
+# one line nobody writes prose in. Verified against all three real cases at the
+# time of the fix; tests/deploy-cadence.test.ts pins the body case.
 #
 # PREVIEW AND DEVELOPMENT BUILDS ARE NOT GATED. A preview exists because a
 # human pushed a non-automation branch and may open its URL, and
@@ -75,12 +86,16 @@ if [ -z "$msg" ]; then
   exit 1
 fi
 
+# The SUBJECT is the first line — see "SUBJECT ONLY" above. head -n 1 on the
+# whole message, so a body that discusses the marker cannot trigger a build.
+subject="$(printf '%s\n' "$msg" | head -n 1)"
+
 # grep -F: the marker is a literal, not a pattern. -i: [Deploy] / [DEPLOY] count.
-if printf '%s' "$msg" | grep -qiF -- "$MARKER"; then
-  echo "[vercel-ignore-build] '$MARKER' found in the commit message (via $source) — building."
+if printf '%s' "$subject" | grep -qiF -- "$MARKER"; then
+  echo "[vercel-ignore-build] '$MARKER' found in the commit SUBJECT (via $source) — building."
   exit 1
 fi
 
-echo "[vercel-ignore-build] VERCEL_ENV=${env:-unset (treated as production)}: no '$MARKER' in the commit message (via $source) — skipping this build."
+echo "[vercel-ignore-build] VERCEL_ENV=${env:-unset (treated as production)}: no '$MARKER' in the commit SUBJECT (via $source) — skipping this build."
 echo "[vercel-ignore-build] production deploys once a day from .github/workflows/production-deploy.yml; put $MARKER in a commit message (or press Run workflow there) to deploy now."
 exit 0

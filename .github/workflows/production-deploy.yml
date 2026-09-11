@@ -81,8 +81,12 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          head_msg="$(git log -1 --format=%B)"
-          if [ "$EVENT" = "schedule" ] && printf '%s' "$head_msg" | grep -qiF -- '[deploy]'; then
+          # SUBJECT line only (%s, not %B), matching the gate — a commit whose
+          # BODY merely discusses the marker is not a release, and treating it
+          # as one would silently skip a day's deploy. See the "SUBJECT ONLY"
+          # note in scripts/vercel-ignore-build.sh.
+          head_subject="$(git log -1 --format=%s)"
+          if [ "$EVENT" = "schedule" ] && printf '%s' "$head_subject" | grep -qiF -- '[deploy]'; then
             echo "Newest commit on main is already a [deploy] release — nothing new since the last build. Skipping."
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else

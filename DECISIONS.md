@@ -5167,16 +5167,85 @@ nesting above. That reconciles the two findings into one mechanism:
   next hit (the documented part).
 - Those re-renders call the cached loaders, and every loader nested inside
   another cache recomputes on each of them instead of once.
-- `unstable_cache` keys include the callback's SOURCE TEXT
-  (`cb.toString()`), so a build that changes a chunk's minified identifiers
-  rotates the keys of every entry in that chunk and forces a first-time
-  compute per key per market. Unverified from here, but it would explain why
-  a deploy looked like a cache wipe even for entries the Data Cache should
-  have kept. (The user's manual release at ~05:57 changed only an admin page
-  and the 05:59 sample stayed quiet, which is consistent: unchanged chunk,
-  unchanged keys.)
+- `unstable_cache` keys include the callback's SOURCE TEXT. Verified in the
+  pinned 14.2.x, `unstable-cache.js` line 50:
+
+  ```js
+  const fixedKey = `${cb.toString()}-${Array.isArray(keyParts) && keyParts.join(",")}`;
+  ```
+
+  In a production build `cb.toString()` is MINIFIED source, so a build that
+  shifts a chunk's identifiers rotates the key of every entry in that chunk
+  and forces a first-time compute per key per market. The practical
+  consequence contradicts the headline in the Next.js caching docs ("the Data
+  Cache persists across deployments"): that holds for `fetch`, which keys on
+  the URL, and not for `unstable_cache`, whose key is the code. So a deploy
+  clears the Full Route Cache *and* orphans much of the Data Cache, and the
+  two together are the post-deploy storm. Nothing in 14.2 avoids it — naming
+  the callback does not help, since the body still minifies differently — so
+  the lever is deploy FREQUENCY, which is what the gate controls. (Consistent
+  with observation: the 05:57 manual release changed only an admin page, and
+  the 05:59 sample stayed quiet.)
 
 At 10–30 deploys a day the site lived permanently inside that warm-up. At one
 deploy a day it is a once-a-day event; with the nesting removed it is a
 once-a-day event that costs one compute per loader per market. Both halves
 of the fix were needed; neither alone would have held.
+
+## The gate deployed on a commit that said it wasn't deploying — 2026-09-11 (same day, follow-up)
+
+At 08:29 UTC Vercel built `5b02ca5`, the merge of the nested-cache fix, even
+though that merge deliberately carried no release marker. The gate was not
+broken. Its body read:
+
+> Ships at the next scheduled release (no `[deploy]` marker on purpose).
+
+`grep -qiF '[deploy]'` over the whole message matched the prose. A
+literal-string search cannot tell a marker from a sentence about the marker,
+and this repo writes long explanatory commit messages that now routinely
+discuss the deploy gate — so this was a certainty, not a fluke. Worth being
+blunt about: the failure was in the message, and the message was written by
+the same session that wrote the gate.
+
+**Fix: the SUBJECT LINE only**, in both places that read the marker —
+`scripts/vercel-ignore-build.sh` (`head -n 1`) and the release workflow's
+"has anything landed since the last release?" check (`git log -1 --format=%s`,
+was `%B`). The subject is where both intended uses already put it (the
+scheduled release commit; a human's `hotfix X [deploy]`) and it is the one
+line nobody writes prose in. Replayed against all three real commits:
+
+| commit | subject carries marker | decision |
+| --- | --- | --- |
+| `c0ce64d` merge of the gate PR | yes | build ✓ intended |
+| `538e228` manual release | yes | build ✓ intended |
+| `5b02ca5` merge of the cache PR | no (body only) | skip ✓ the accident |
+
+The workflow's `%B` read had the same latent bug pointing the other way: the
+release commit's own body contains "Pushes without `[deploy]` in their
+message are skipped", so any commit discussing the gate would have read as
+"already released" and silently skipped a day's deploy.
+
+`tests/deploy-cadence.test.ts` pins both halves, using the real 08:29 message
+as the body-only case.
+
+**Net effect of the accident: benign, and useful.** It put the nested-cache
+fix live three hours early, which was the preferable outcome anyway given the
+burn rate — and the egress audit triggered at 08:27 therefore measures a
+post-deploy window *with* the fix, directly comparable to the 05:09–05:49
+post-deploy windows measured without it. That comparison is the real
+before/after, and is better controlled than the quiet-period sample that was
+planned.
+
+### The 08:00 UTC scheduled release did not fire
+
+`production-deploy.yml` has exactly one run: the manual 05:34 dispatch. The
+configuration checks out — `cron: "0 8 * * *"`, on `main` (confirmed the
+default branch), and the file parses, which the manual run proves. GitHub
+delays scheduled events under load and a newly added schedule can take a
+cycle or more to register; the workflow first existed on `main` at 05:08,
+less than three hours before. Nothing to change yet. Tomorrow's 08:00 is the
+real test; if it misses again, the fallback is a `schedule` on an existing,
+already-registered workflow, or an external ping to a deploy hook.
+
+Note the skip-check would have done the right thing had it fired: main's HEAD
+at 08:00 was `e507f1a`, ordinary work, so it would have released.
