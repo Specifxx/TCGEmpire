@@ -19,7 +19,6 @@ interface ReconcileResult {
 export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
   const [email, setEmail] = useState("");
   const [days, setDays] = useState("365");
-  const [tier, setTier] = useState<"plus" | "premium">("premium");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -46,7 +45,7 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
     }
   }
 
-  async function grant() {
+  async function grant(tier: "plus" | "premium") {
     setBusy(true);
     setResult(null);
     try {
@@ -97,18 +96,21 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
           disabled={busy}
         />
         <span className="text-xs text-slate-500">days</span>
-        <select
-          value={tier}
-          onChange={(e) => setTier(e.target.value === "plus" ? "plus" : "premium")}
-          className="input w-28"
-          aria-label="tier"
-          disabled={busy}
+        <button
+          type="button"
+          onClick={() => grant("premium")}
+          disabled={busy || !email || !Number(days)}
+          className="btn-primary text-sm"
         >
-          <option value="premium">Premium</option>
-          <option value="plus">Plus</option>
-        </select>
-        <button type="button" onClick={grant} disabled={busy || !email || !Number(days)} className="btn-primary text-sm">
-          {busy ? "Granting…" : "Grant"}
+          {busy ? "Granting…" : "Grant Premium"}
+        </button>
+        <button
+          type="button"
+          onClick={() => grant("plus")}
+          disabled={busy || !email || !Number(days)}
+          className="btn-ghost text-sm"
+        >
+          {busy ? "Granting…" : "Grant Plus"}
         </button>
       </div>
       {result && <p className={`mt-2 text-xs ${result.startsWith("✓") ? "text-brand-400" : "text-rose-400"}`}>{result}</p>}
