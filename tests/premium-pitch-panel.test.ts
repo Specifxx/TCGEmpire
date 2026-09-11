@@ -158,9 +158,13 @@ test("/premium's CTA is one big green button, with the price in the line beneath
   assert.match(src, /w-full/, "the button must be full-bleed so it dominates the card");
 
   // The signed-out branch still carries every disclosure it is required to.
+  // The button's own WORDING changed 2026-09-11 (see PremiumCta's own header
+  // and DECISIONS.md): it names the tier now ("Get Plus"/"Get Premium"),
+  // not the trial — but every required disclosure still has to survive that
+  // restructure in the small print underneath.
   const signedOutAt = src.indexOf("if (!signedIn)");
   const signedOutBlock = src.slice(signedOutAt, src.indexOf("if (!checkoutLive)"));
-  assert.match(signedOutBlock, /Start your \{trialDays\}-day free trial/, "the button itself must carry the headline ask");
+  assert.match(signedOutBlock, /Get \{TIER_NAMES\[tier\]\}/, "the button itself must name the tier being sold");
   assert.match(signedOutBlock, /card is required/i, "the card-required disclosure must survive the restructure");
   assert.match(signedOutBlock, /priceLabel/, "the price must appear in the small print under the button");
 
@@ -169,7 +173,13 @@ test("/premium's CTA is one big green button, with the price in the line beneath
   assert.match(read("src/components/PremiumButton.tsx"), /bg-gold/, "the tool-wall button keeps the gold Premium button");
 });
 
-test("TrialPriceBlock gained a compact size so the button outranks the price, and kept its honesty contract", () => {
+test("TrialPriceBlock kept its compact size and its honesty contract — still used by the dialog's trial flow", () => {
+  // /premium itself stopped using TrialPriceBlock on 2026-09-11 (see
+  // DECISIONS.md and PremiumPricingCards.tsx's own header): its "$0" headline
+  // was the exact framing "maybe the $0 was a bad idea" retired, in favour of
+  // a real-price-led card copying mtgstocks.com/go-premium's layout. The
+  // component itself, and its honesty contract, still stand — PremiumDialog's
+  // own trial-eligible price block still renders it.
   const src = read("src/components/TrialPriceBlock.tsx");
   assert.match(src, /"lg" \| "sm" \| "compact"/, "expected the compact size option");
   // The "$0 ... then $X after your N-day trial" pairing is load-bearing policy
@@ -177,9 +187,11 @@ test("TrialPriceBlock gained a compact size so the button outranks the price, an
   assert.match(src, /premiumZeroAmount\(\)/, "must still render the shared bare-$0 helper");
   assert.match(src, /after your \{dayPhrase\} free trial/, "the real price and when it starts must stay in the same block as the $0");
 
+  const dialog = read("src/components/PremiumDialog.tsx");
+  assert.match(dialog, /<TrialPriceBlock plan=\{activePlan\}/, "the dialog's trial-eligible branch must still render the shared block");
+
   const page = read("src/app/premium/page.tsx");
-  assert.match(page, /<TrialPriceBlock plan="monthly"[^/]*size="compact"/, "the monthly card must use the compact size");
-  assert.match(page, /<TrialPriceBlock plan="annual"[^/]*size="compact"/, "the annual card must use the compact size");
+  assert.ok(!/<TrialPriceBlock/.test(page), "/premium no longer leads with the $0-headline block");
 });
 
 test("the 'Save N%' badge uses a brand shade that actually exists", () => {

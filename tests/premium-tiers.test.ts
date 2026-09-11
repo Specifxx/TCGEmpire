@@ -225,6 +225,7 @@ test("Plus's display prices and helpers are real and match the decided figures",
 test("no new fake scarcity or invented numbers on any of the new tier surfaces", () => {
   for (const file of [
     "src/app/premium/page.tsx",
+    "src/components/PremiumPricingCards.tsx",
     "src/components/UpgradeTierButton.tsx",
     "src/app/api/premium/upgrade/route.ts",
     "src/app/api/premium/checkout/route.ts",
@@ -236,7 +237,10 @@ test("no new fake scarcity or invented numbers on any of the new tier surfaces",
 });
 
 test("the tier toggle in the dialog and on /premium defaults to monthly, not annual", () => {
-  for (const file of ["src/components/PremiumDialog.tsx", "src/app/premium/page.tsx"]) {
+  // The /premium billing-cycle toggle moved into its own client component
+  // (PremiumPricingCards.tsx) on 2026-09-11 — /premium itself is a server
+  // component and the toggle needs real state.
+  for (const file of ["src/components/PremiumDialog.tsx", "src/components/PremiumPricingCards.tsx"]) {
     const src = read(file);
     assert.match(src, /useState<"monthly" \| "annual">\("monthly"\)|plan\?\s*=\s*"monthly"|plan="monthly"/, `${file} must default to the monthly plan`);
   }

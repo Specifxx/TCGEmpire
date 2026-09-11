@@ -4519,3 +4519,88 @@ code was written:
   Vercel — every UI surface above renders exactly as it did before this
   change while they're unset (`premiumPlusEnabled()` gates all of it), so
   this shipped and deployed before Plus is actually purchasable.
+
+## /premium rebuilt to match mtgstocks.com/go-premium's layout — 2026-09-11
+
+Owner: "I actually hate how the premium page looks... look at how this page
+[mtgstocks.com/go-premium] does it and copy their formatting and pillars —
+obviously not the LGS one yet." Also: "Maybe the $0 was a bad idea."
+
+**The reference page, fetched and rendered headless (Cloudflare blocked the
+proxy's Chromium fingerprint directly; the server-rendered HTML came through
+fine via curl and was rendered from a local file with an absolute `<base
+href>` so its own assets resolved).** Its pillars, top to bottom: hero → one
+billing-cycle toggle (Annual "Save 15%" / Monthly "Cancel anytime") above ALL
+the pricing cards, not a separate card per plan → tier cards (Free/Common,
+then each paid tier, the recommended one highlighted and ribboned) → a
+testimonials section → a repeat "Ready to upgrade?" CTA band → a feature
+comparison table with tinted columns → a "What's included" icon-card grid.
+"Not the LGS one yet" — their fourth, game-store tier — read as "build the
+same 3-tier shape (Free/Plus/Premium), not add a fourth tier now."
+
+**What copied over, restyled in RiftCompare's own dark ink+gold+green system
+rather than mtgstocks' light theme** (the ask was the layout and structure,
+not literally reskinning the site):
+- New `PremiumPricingCards.tsx` — a client component (the toggle needs real
+  state; `/premium` itself is a server component) holding ONE billing-cycle
+  toggle and three cards (Free, Plus when configured, Premium — highlighted,
+  ribboned "Recommended", not "Most popular": that's a real subscriber-mix
+  claim this site doesn't track cleanly yet, so it stays an editorial call
+  rather than an invented data point). Replaces the old design's four
+  separate monthly/annual card pairs.
+- **A tier whose own annual price isn't configured silently falls back to
+  monthly DISPLAY when the toggle is on annual**, matching exactly what
+  `priceIdFor()` already falls back the CHARGE to — display and charge can
+  never disagree, which is exactly the kind of claim this repo's honesty
+  tests exist to catch.
+- `TierComparisonTable` gained a `tinted` prop (a faint per-column wash,
+  Plus/slate, Premium/gold) — cosmetic only, `/premium`-only, off by default
+  so the dialog's compact table is unchanged. Drive-by fix alongside it:
+  `text-brand-300` (two more instances, the tier-table header and the proof
+  strip numbers) isn't a defined Tailwind shade — same bug already fixed in
+  TrialPriceBlock/AnnualPriceBlock a few commits back, missed here.
+- The testimonials pillar has NO honest equivalent to copy: RiftCompare has
+  no verified customer quotes, and this repo's own rule against invented
+  numbers rules out writing some just to fill the slot. Kept the position and
+  the section SHAPE (a card grid between the pricing cards and the repeat
+  CTA) but filled it with the real proof-tile numbers the page already had
+  (live deal counts, savings, undervalued-card counts) under an explicit
+  "Real numbers, not a pitch" heading, rather than fabricating testimonials
+  or silently dropping the pillar.
+- Added a "Ready to upgrade?" repeat CTA band (scrolls back to the real,
+  interactive pricing cards — a plain `<a href>` can't itself open Stripe
+  checkout, that needs `PremiumCta`'s client-side POST, so this is a working
+  jump-back rather than a second dead button).
+
+**"Maybe the $0 was a bad idea."** The pricing cards no longer lead with
+`TrialPriceBlock`'s `$0` headline (added 2026-09-09, reasoned about at length
+in that day's two entries above). The headline number is now always the real
+recurring price — or its per-month equivalent under annual billing, via the
+existing `premiumEffectiveMonthly()` helper — with "Billed as $X/year" as a
+secondary caption, same as mtgstocks' own cards. The CTA button changed to
+match: "Get Plus"/"Get Premium" instead of "Start your N-day free trial".
+**The trial itself is still real and still disclosed** — the small print
+under the button still states the card requirement, the real price, and when
+it converts (required under card-network rules for a card-gated trial); only
+the HEADLINE claim moved from the trial to the tier. `TrialPriceBlock` itself
+is untouched and still live — `PremiumDialog`'s own trial-eligible price
+block still uses it. This is scoped to `/premium` only: the corner nudges
+(`PremiumSlideIn`, `SignupPromoPopup`) and the sitewide `PremiumDialog` keep
+their own "$0 today" framing, which was a separate, data-referenced decision
+in its own right (2026-09-09) — reverting those too would be a second,
+distinct call the owner hasn't made yet.
+
+**Verified against a real render, not just the source.** Stood up a local
+Postgres, ran the full app with dummy Stripe price ids, and screenshotted
+`/premium` at desktop and 375px — signed out, Plus dark and Plus live, both
+billing-cycle states. Confirmed: the toggle swaps every card's price
+together; a tier missing its own annual price falls back to monthly cleanly;
+the proof section hides itself with no real data to show (as designed); the
+comparison table's `overflow-x-auto` wrapper genuinely contains its own
+horizontal scroll rather than leaking to the page (checked against a false
+positive from a bounding-rect scan, which flags any element inside a
+legitimately-scrolling container as "overflowing" whether or not it is). A
+`document.documentElement.scrollWidth` overflow at 375px turned out to be a
+**pre-existing, site-wide issue** in the header nav (reproduces on `/` and
+`/tools` too, unrelated to anything touched here) — left alone, out of scope
+for a pricing-page redesign, and not something this pass introduced.
