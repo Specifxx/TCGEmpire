@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { getPriceMovers } from "@/lib/price-history";
 import { getCountry } from "@/lib/get-country";
@@ -139,9 +138,11 @@ export default async function GamesPage() {
   // the homepage uses, so this costs nothing extra.
   const country = getCountry();
   const info = COUNTRIES[country];
-  const deals = (
-    await unstable_cache(() => getPriceMovers(country, 6), ["price-movers", country], { revalidate: 600 })()
-  ).value.slice(0, 6);
+  // getPriceMovers caches itself (week-keyed, shared across every page that
+  // reads it). It used to be wrapped in a second unstable_cache here, which in
+  // Next.js 14.2 DISABLES the inner one — so this dynamic page re-ran the
+  // whole-market history read every ten minutes per market instead of never.
+  const deals = (await getPriceMovers(country, 6)).value.slice(0, 6);
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",

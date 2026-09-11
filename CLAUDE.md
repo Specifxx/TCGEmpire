@@ -19,6 +19,11 @@ So, for automated sessions:
 - Do not add `generateStaticParams` prewarming back to database-backed dynamic
   routes, and do not lower a page's `export const revalidate` — see the egress
   rules at the top of `src/lib/db.ts` before adding any query.
+- Never wrap a loader that already caches itself (`getPriceMovers`,
+  `getUndervalued`, `getCachedRisingCards`, `getSealedGroups`, `getMarketIndex`,
+  the arbitrage loaders…) in another `unstable_cache`, and never call one from
+  inside an `unstable_cache` callback: Next.js bypasses the inner cache there and
+  the loader recomputes on every outer miss (`tests/nested-cache.test.ts`).
 
 ## Databases
 

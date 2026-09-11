@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
-import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
-import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { sydneyDayKey } from "@/lib/price-history";
+import { getCachedRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
@@ -170,13 +167,9 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // full Premium view, refreshed on the daily import via CONTENT_TAG. A free visitor
   // triggers the same cached computation an admin/premium visitor would; only the
   // SLICE shown differs, so there's no extra query cost for gating.
-  // Day-keyed + 48h TTL, matching top-deals.ts's identical key so one page warms
-  // the other. Was an hourly TTL with no day key — the widest PriceHistory read
-  // in the repo re-running ~hourly (see the note in top-deals.ts).
-  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards-public", scope, sydneyDayKey()], {
-    revalidate: 172800,
-    tags: [CONTENT_TAG],
-  })();
+  // The ONE day-keyed cache for this scan lives in rise-predictor.ts, shared
+  // with the homepage deals feed and /admin/rising so any of them warms the rest.
+  const analysis = await getCachedRisingCards(scope);
   const top = analysis.picks[0];
 
   return (

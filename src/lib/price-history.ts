@@ -9,6 +9,7 @@
 // USD/GLOBAL, not the caller's own market — nothing below is AU-only despite
 // this file's history.
 import { unstable_cache } from "next/cache";
+import { staticGenerationAsyncStorage } from "next/dist/client/components/static-generation-async-storage.external";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { cardTileSelect, withStoreCounts } from "./cards";
@@ -54,12 +55,64 @@ const HISTORY_CACHE_TTL = 8 * 86400;
 // rather than caching. There, caching buys nothing anyway (a one-shot process never
 // reuses it), so fall back to calling the function directly instead of failing the
 // whole script. Any OTHER unstable_cache error still throws as normal.
+//
+// ── NEVER NEST THIS INSIDE ANOTHER unstable_cache CALLBACK ──────────────────
+// Next.js 14.2 runs an unstable_cache callback under a store with
+// `fetchCache: "force-no-store"` and `isUnstableCacheCallback: true`, and the
+// cache READ is gated on `store.fetchCache !== "force-no-store"` (see
+// node_modules/next/dist/server/web/spec-extension/unstable-cache.js, the
+// "when we are nested inside of other unstable_cache's we should bypass cache"
+// branch). So a self-cached loader called from inside another cached callback
+// RECOMPUTES on every outer miss — its own key, TTL and tag are ignored — and
+// the outer entry's freshness becomes the inner read's real cadence.
+//
+// That is how the first egress audit of the history project (2026-09-11) found
+// its whole-market reads running 86 and 36 times in twenty minutes with no
+// build and no import in the window: getPriceMovers, getRisingCards,
+// getUndervalued and the arbitrage row pulls were all being invoked from inside
+// getCachedTopDeals' hour-long entry, and /games and /tools/value-finder had
+// wrapped already-cached loaders in a second unstable_cache of their own.
+//
+// Two defences below, both cheap:
+//   1. A nested call is detected from the store and logged as
+//      [egress-guard:nested-cache], so the Vercel function logs name the caller
+//      the moment someone reintroduces the pattern (tests/nested-cache.test.ts
+//      pins the known sites statically as well).
+//   2. Every real compute is logged as [egress-guard:cache-miss] with its key
+//      and duration, so "which loader is actually running, and how often" is a
+//      log search rather than a theory.
 export async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { revalidate: number; tags: string[] }): Promise<T> {
+  const label = keys.join(",");
+  if (isNestedInUnstableCache()) {
+    console.warn(
+      `[egress-guard:nested-cache] ${label} was called inside another unstable_cache callback — ` +
+        `Next.js bypasses the inner cache there, so this loader recomputes on every outer miss. ` +
+        `Hoist the call out of the outer cache (see the note on cachedOrDirect in lib/price-history.ts).`,
+    );
+  }
+  const compute = async () => {
+    const started = Date.now();
+    const result = await fn();
+    console.log(`[egress-guard:cache-miss] ${label} computed in ${Date.now() - started} ms`);
+    return result;
+  };
   try {
-    return await unstable_cache(fn, keys, opts)();
+    return await unstable_cache(compute, keys, opts)();
   } catch (e) {
     if (e instanceof Error && e.message.includes("incrementalCache missing")) return fn();
     throw e;
+  }
+}
+
+// Reads the flag Next sets on the render store while an unstable_cache callback
+// is executing. Internal module, but it is the very one unstable_cache itself
+// imports, and this repo pins next to a 14.2.x range; if the import ever breaks
+// the guard degrades to "never nested" rather than failing the render.
+function isNestedInUnstableCache(): boolean {
+  try {
+    return staticGenerationAsyncStorage.getStore()?.isUnstableCacheCallback === true;
+  } catch {
+    return false;
   }
 }
 
