@@ -5153,3 +5153,30 @@ the next lever if the weekly audit says it needs pulling.
   not done without an explicit go-ahead.
 - **Re-measure.** `egress-audit.yml` runs Sunday 03:00 UTC; a manual run the
   day after this lands is the real check.
+
+### A second sample, and what it adds
+
+A 5-minute history-project sample at 05:59–06:04 UTC — fifty minutes after
+the 05:10 deploy, with only organic traffic — showed **zero** whole-market
+reads: 32 per-card `COUNT(DISTINCT day)` calls (card-page renders) and
+nothing else. So the 86 + 36 reads in the 05:29–05:49 window were not a
+steady rate; they were the tail of a post-deploy warm-up, amplified by the
+nesting above. That reconciles the two findings into one mechanism:
+
+- A deploy clears the Full Route Cache, so every ISR page re-renders on its
+  next hit (the documented part).
+- Those re-renders call the cached loaders, and every loader nested inside
+  another cache recomputes on each of them instead of once.
+- `unstable_cache` keys include the callback's SOURCE TEXT
+  (`cb.toString()`), so a build that changes a chunk's minified identifiers
+  rotates the keys of every entry in that chunk and forces a first-time
+  compute per key per market. Unverified from here, but it would explain why
+  a deploy looked like a cache wipe even for entries the Data Cache should
+  have kept. (The user's manual release at ~05:57 changed only an admin page
+  and the 05:59 sample stayed quiet, which is consistent: unchanged chunk,
+  unchanged keys.)
+
+At 10–30 deploys a day the site lived permanently inside that warm-up. At one
+deploy a day it is a once-a-day event; with the nesting removed it is a
+once-a-day event that costs one compute per loader per market. Both halves
+of the fix were needed; neither alone would have held.
