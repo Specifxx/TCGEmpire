@@ -5249,3 +5249,70 @@ already-registered workflow, or an external ping to a deploy hook.
 
 Note the skip-check would have done the right thing had it fired: main's HEAD
 at 08:00 was `e507f1a`, ordinary work, so it would have released.
+
+## Measured: the history project went from 8.7 GB/day to nothing — 2026-09-11 (same day, follow-up)
+
+The nested-cache fix deployed at 08:29 (accidentally — see the entry above),
+and the audit that had been triggered two minutes earlier therefore sampled a
+POST-DEPLOY window with the fix live. That is the same shape of window as the
+two measured before it, so the comparison is like-for-like rather than a quiet
+period flattering the result.
+
+### History project (RH10) — the fix, measured
+
+| | before, 05:29–05:49 | after, 08:47–09:07 |
+| --- | --- | --- |
+| whole-market read (`country = GLOBAL AND day >=`) | 86 calls @ 12,610 rows | **1 call** |
+| per-card-set read (`cardId IN (…) AND day >=`) | 36 calls @ 21,563 rows | **0 calls** |
+| `PriceHistory` sequential scans | 30 scans, 4,225,890 rows | **0** |
+| scan churn | 42.20 GB/day | 0.10 GB/day |
+| **extrapolated client egress** | **8.72 GB/day** | **0.00 GB/day** |
+
+What is left on the history project is exactly what should be there: 40
+per-card chart reads at 54 rows each (`getPriceHistory`, one per card page)
+and 84 single-row `COUNT(DISTINCT day)` calls (the card price-state check).
+The extrapolation went from "a fresh project lasts ~0.6 days" to "~8,630
+days". The 5 GB monthly allowance is no longer the binding constraint on the
+history project; nothing else needs doing there.
+
+### Operational project (RM9) — not measurable in this window, and why
+
+The same run reported 7.07 GB/day for RM9, *higher* than the 5.62 GB/day
+measured before the fix. That number is not a rate, and the script's own
+warning names the reason. Inside the window:
+
+```
+calls 170 · rows 118,634   DELETE FROM "RetailerPrice" WHERE "retailer" = $1
+calls   1 · rows  88,145   SELECT … FROM "RetailerPrice" WHERE …
+Card: 2,275 sequential scans
+```
+
+That is a full price import — delete-then-insert per retailer, plus the
+catalogue read. **The merge of the nested-cache PR triggered it**:
+`refresh-prices.yml` has a `push` trigger filtered on
+`src/lib/sealed-import.ts` among other paths, and that PR touched that file
+for caching reasons alone. The run went 08:26:58 → 09:15:28, spanning both
+audit windows. Extrapolating a 49-minute twice-daily job across a day is
+precisely the arithmetic the script warns against.
+
+So the operational side is still unmeasured after the fix. A clean window
+needs no import, no build and no post-import revalidation wave in it.
+
+**Worth deciding separately** (not changed here, because it trades freshness
+for egress and that is the owner's call): that `push` path filter cannot tell
+a pricing change from a caching change, and a full import is not cheap. The
+import already runs twice a day on schedule, so the trigger only buys "sooner
+after a price-logic change". Either narrowing the paths or dropping the push
+trigger would remove an unbounded number of full imports a day.
+
+### Where the two projects now stand
+
+- **History (RH10)**: solved and measured. Two independent samples agree — the
+  quiet 5-minute sample at 05:59 and this post-deploy one both show
+  essentially zero whole-market reads.
+- **Operational (RM9)**: both structural fixes are live (one build a day, no
+  nested caches, shared-cached arbitrage aggregates and sealed groups), but
+  the resulting rate has not been measured in a clean window. That
+  measurement is the remaining open item, ahead of any further change.
+- The `PriceHistory` row cleanup stays untouched and unneeded for now: at
+  0.00 GB/day on the history project there is nothing for it to buy.
