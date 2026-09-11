@@ -66,7 +66,7 @@ const TOOLS: Tool[] = [
     href: "/admin/loyalty",
     title: "Loyal users",
     icon: "🏆",
-    desc: "Biggest collections and longest-tenured Premium members.",
+    desc: "Most active by days used, biggest collections, longest-tenured Premium members.",
   },
   {
     href: "/admin/store-health",

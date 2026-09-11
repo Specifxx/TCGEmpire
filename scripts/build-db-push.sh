@@ -119,21 +119,24 @@ else
   echo "[build-db-push] no history-database variable set — history tables share the operational DB, nothing extra to push."
 fi
 
-# DELIBERATE CHANGE from the original inline script: these three ran chained with
-# `&&` before (one failure skipped the rest). They're three unrelated maintenance
-# tasks, not a dependent pipeline, and none of them can affect whether `next build`
-# runs either way (see the trailing `exit 0` below) — so each now runs independently,
-# which is strictly more robust than letting an early one's failure silently skip
-# the other two.
-tsx scripts/marketplace-seed.ts || true
+# DELIBERATE CHANGE from the original inline script: the maintenance scripts here
+# used to run chained with `&&` (one failure skipped the rest). They're unrelated
+# maintenance tasks, not a dependent pipeline, and none of them can affect whether
+# `next build` runs either way (see the trailing `exit 0` below) — so each runs
+# independently, which is strictly more robust than letting an early one's
+# failure silently skip the others.
+#
+# marketplace-seed.ts and grant-early-premium.ts used to run here too. Both files
+# were deleted long ago and the `|| true` swallowed the resulting "cannot find
+# module" on every deploy — removed 2026-09-11 (see DECISIONS.md, "Network
+# transfer: the deploy cadence was the burn").
 tsx scripts/fix-altart-rarity.ts || true
-tsx scripts/grant-early-premium.ts || true
 
 # IndexNow: submit every blog/guide URL on every deploy, not just once a day.
 # See the script's own header for why this exists — a real content change
 # (a new or edited post) used to wait on the next scheduled batch (up to 24h)
 # before anything told Bing/Yandex/Seznam/Naver it existed. `|| true` for the
-# same reason as the three scripts above: best-effort, never blocks the build.
+# same reason as the script above: best-effort, never blocks the build.
 # No-ops outside production (pingIndexNow's own isProduction() gate).
 tsx scripts/indexnow-ping-deploy.ts || true
 
@@ -150,7 +153,7 @@ tsx scripts/indexnow-ping-deploy.ts || true
 # T1 printings shipped in the repo, were referenced by two published articles and
 # 404'd in production for that reason alone.
 #
-# Safe to run every deploy, for the same reasons as the three scripts above:
+# Safe to run every deploy, for the same reasons as the scripts above:
 # it UPSERTS by externalId (never wipes, never touches a card not listed), skips
 # any entry with a FILL_ME placeholder, and is idempotent — a second run reports
 # UPDATEs and changes nothing. `|| true` because a catalogue backstop must never

@@ -56,20 +56,27 @@ import { guidesForCard } from "@/lib/content/related-guides";
 // full per-request render on every one of ~1,200 card URLs.
 export const revalidate = 86400;
 
-// Prewarm the most-searched cards at build so their first crawl hits the cache;
-// the long tail renders on demand and is then cached by `revalidate`. The build
-// sandbox has no DATABASE_URL, so degrade to on-demand-only rather than failing.
-export async function generateStaticParams() {
-  try {
-    const cards = await prisma.card.findMany({
-      orderBy: [{ searchCount: "desc" }, { viewCount: "desc" }],
-      take: 200,
-      select: { slug: true, id: true },
-    });
-    return cards.map((c) => ({ id: c.slug ?? c.id }));
-  } catch {
-    return [];
-  }
+// NOTHING IS PRERENDERED AT BUILD — every card renders on its first request and
+// is then cached by `revalidate` (dynamicParams is on by default, so an empty
+// list here means "on demand", not "404").
+//
+// This used to prewarm the 200 most-searched cards at build so their first
+// crawl hit the cache. That was ~200 full card renders — the widest read on the
+// site, all retailer rows for the card plus six tile queries plus its history —
+// against BOTH Neon projects, on EVERY deploy, and main was receiving 10–30
+// pushes a day. The renders never appeared in Vercel's function metrics, which
+// is how the deploy cadence stayed invisible while eleven projects were
+// exhausted at ~2 GB/day (see scripts/vercel-ignore-build.sh's header and
+// DECISIONS.md, 2026-09-11). The cost was also pointless: a new deployment
+// clears the Full Route Cache anyway, so the prewarmed pages were being thrown
+// away and re-rendered on their next hit regardless.
+//
+// The trade: the first visitor to each card after a deploy waits for one
+// render instead of getting a cached page. Deploys now happen once a day
+// (.github/workflows/production-deploy.yml), so that is ≤1 cold render per
+// card per day — the same cost the page's own 24h TTL already implied.
+export function generateStaticParams(): { id: string }[] {
+  return [];
 }
 
 // Accept either the slug ("vayne-hunter-sfd-223-221") or the legacy cuid.

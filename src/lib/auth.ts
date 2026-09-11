@@ -3,6 +3,7 @@ import { cache } from "react";
 import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./db";
+import { touchActivity } from "./activity";
 
 const SESSION_COOKIE = "tcge_session";
 
@@ -127,6 +128,11 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
     if (!userId) return null;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return null;
+    // "They are here right now." Free to decide (the row is already loaded) and
+    // throttled to at most one write per ACTIVITY_STAMP_INTERVAL_MS per user,
+    // because this function runs on essentially every authenticated render.
+    // Deliberately NOT awaited — bookkeeping must not add latency to a page.
+    touchActivity(user);
     return {
       id: user.id,
       email: user.email,

@@ -68,3 +68,28 @@ Stop pushing the same commit to two refs — land work on `main` through a PR fr
 a non-`claude/*` branch, and the Preview build, its preview URL and the
 pre-merge SEO gate all come back, at the cost of the second build this document
 exists to remove.
+
+## Part 2 — one build a day, not one per push (2026-09-11)
+
+The rule above stopped the *second* build of each commit. This stops the
+first, most of the time.
+
+Every production build prerenders ~770 database-backed pages against both Neon
+projects and, per Next.js's own docs, clears the Full Route Cache — so every
+ISR page re-renders from the database on its next hit. At 10–30 pushes to
+`main` a day, that was the ~2 GB/day Neon transfer burn that had exhausted
+eleven projects in a row; the app's own request traffic measures ~0.12 GB/day.
+
+`vercel.json` now carries `"ignoreCommand": "bash scripts/vercel-ignore-build.sh"`.
+For a production build the script exits 0 (skip) unless the commit message
+contains `[deploy]`, and fails open (builds) if it cannot read the message at
+all. Preview and development builds are not gated, so a human branch's preview
+URL and the SEO gate's `deployment_status` event survive; an unknown
+`VERCEL_ENV` is treated as production.
+`.github/workflows/production-deploy.yml` supplies the marker once a day with
+an empty commit, and on demand from its *Run workflow* button. Full account in
+`DECISIONS.md` ("Network transfer: the deploy cadence was the burn").
+
+**What this gives up:** an immediate deploy on merge. A hotfix needs
+`[deploy]` in its message or a press of the button; everything else waits for
+the 08:00 UTC release. Pinned by `tests/deploy-cadence.test.ts`.

@@ -91,6 +91,25 @@ model User {
   // Null for accounts that predate the instrumentation or arrived with no
   // cookie (e.g. typed /login directly). Nullable + no default = additive push.
   signupSource        String?
+
+  // ── Activity (NOT login) ──────────────────────────────────────────────────
+  // lastLoginAt above answers "when did they last AUTHENTICATE", which is a
+  // much rarer event than using the site: sessions are long-lived JWTs, so a
+  // daily visitor can go months between logins and read as dormant. These two
+  // answer "when did they last USE it" and "how many distinct days have they
+  // used it", which is what the admin dashboard and the loyalty lists actually
+  // want. Stamped by lib/activity.ts from getCurrentUser, throttled so a
+  // browsing session is at most one write per ACTIVITY_STAMP_INTERVAL_MS
+  // rather than one per page view.
+  //
+  // Both are additive: lastActiveAt nullable with no default, activeDays
+  // defaulting to 0, so the deploy's `prisma db push` applies them and no
+  // existing row changes meaning. They start empty — every account reads as
+  // "never active" until its next visit, which is why the admin surfaces fall
+  // back to lastLoginAt and say so rather than showing a blank.
+  lastActiveAt        DateTime?
+  activeDays          Int       @default(0)
+
   createdAt           DateTime  @default(now())
 
   // The market (AU/NZ/US/UK/SG/CA) this account browses/prices in, remembered
