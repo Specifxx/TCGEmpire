@@ -5249,3 +5249,139 @@ already-registered workflow, or an external ping to a deploy hook.
 
 Note the skip-check would have done the right thing had it fired: main's HEAD
 at 08:00 was `e507f1a`, ordinary work, so it would have released.
+
+## Measured: the history project went from 8.7 GB/day to nothing — 2026-09-11 (same day, follow-up)
+
+The nested-cache fix deployed at 08:29 (accidentally — see the entry above),
+and the audit that had been triggered two minutes earlier therefore sampled a
+POST-DEPLOY window with the fix live. That is the same shape of window as the
+two measured before it, so the comparison is like-for-like rather than a quiet
+period flattering the result.
+
+### History project (RH10) — the fix, measured
+
+| | before, 05:29–05:49 | after, 08:47–09:07 |
+| --- | --- | --- |
+| whole-market read (`country = GLOBAL AND day >=`) | 86 calls @ 12,610 rows | **1 call** |
+| per-card-set read (`cardId IN (…) AND day >=`) | 36 calls @ 21,563 rows | **0 calls** |
+| `PriceHistory` sequential scans | 30 scans, 4,225,890 rows | **0** |
+| scan churn | 42.20 GB/day | 0.10 GB/day |
+| **extrapolated client egress** | **8.72 GB/day** | **0.00 GB/day** |
+
+What is left on the history project is exactly what should be there: 40
+per-card chart reads at 54 rows each (`getPriceHistory`, one per card page)
+and 84 single-row `COUNT(DISTINCT day)` calls (the card price-state check).
+The extrapolation went from "a fresh project lasts ~0.6 days" to "~8,630
+days". The 5 GB monthly allowance is no longer the binding constraint on the
+history project; nothing else needs doing there.
+
+### Operational project (RM9) — not measurable in this window, and why
+
+The same run reported 7.07 GB/day for RM9, *higher* than the 5.62 GB/day
+measured before the fix. That number is not a rate, and the script's own
+warning names the reason. Inside the window:
+
+```
+calls 170 · rows 118,634   DELETE FROM "RetailerPrice" WHERE "retailer" = $1
+calls   1 · rows  88,145   SELECT … FROM "RetailerPrice" WHERE …
+Card: 2,275 sequential scans
+```
+
+That is a full price import — delete-then-insert per retailer, plus the
+catalogue read. **The merge of the nested-cache PR triggered it**:
+`refresh-prices.yml` has a `push` trigger filtered on
+`src/lib/sealed-import.ts` among other paths, and that PR touched that file
+for caching reasons alone. The run went 08:26:58 → 09:15:28, spanning both
+audit windows. Extrapolating a 49-minute twice-daily job across a day is
+precisely the arithmetic the script warns against.
+
+So the operational side is still unmeasured after the fix. A clean window
+needs no import, no build and no post-import revalidation wave in it.
+
+**Worth deciding separately** (not changed here, because it trades freshness
+for egress and that is the owner's call): that `push` path filter cannot tell
+a pricing change from a caching change, and a full import is not cheap. The
+import already runs twice a day on schedule, so the trigger only buys "sooner
+after a price-logic change". Either narrowing the paths or dropping the push
+trigger would remove an unbounded number of full imports a day.
+
+### Where the two projects now stand
+
+- **History (RH10)**: solved and measured. Two independent samples agree — the
+  quiet 5-minute sample at 05:59 and this post-deploy one both show
+  essentially zero whole-market reads.
+- **Operational (RM9)**: both structural fixes are live (one build a day, no
+  nested caches, shared-cached arbitrage aggregates and sealed groups), but
+  the resulting rate has not been measured in a clean window. That
+  measurement is the remaining open item, ahead of any further change.
+- The `PriceHistory` row cleanup stays untouched and unneeded for now: at
+  0.00 GB/day on the history project there is nothing for it to buy.
+
+## The operational baseline, and why the extrapolation overstates it — 2026-09-11 (same day, follow-up)
+
+A 20-minute operational-only sample at 09:51–10:11, with nothing else running
+and no deploy since 08:29, reported **0.84 GB/day** — against 5.62 GB/day
+measured post-deploy before the nested-cache fix.
+
+**That 0.84 is still an overestimate, and the reason is arithmetic rather than
+opinion.** The window's top shape is the card page's own listing read:
+
+```
+calls 194 · rows 20,773 · 107.1/call   SELECT … FROM "RetailerPrice" WHERE "cardId" = …
+```
+
+194 card-page renders in twenty minutes annualises to ~14,000 a day. There are
+only ~1,400 card URLs, and each renders at most once per cache purge. Card
+pages are purged three times a day: `revalidateContent()` includes
+`["/card/[id]", "page"]`, and `refresh-prices.yml` POSTs `/api/revalidate` at
+the end of each of its two daily imports, plus the one daily deploy. So the
+real ceiling is ~4,200 card renders a day, not 14,000 — the window sat 36
+minutes inside the re-render wave from the 09:15 import, which is exactly the
+contamination the script warns about, in its third distinct form today.
+
+Bounded properly: ~4,200 renders × ~107 rows × 359 B ≈ **160 MB/day** for that
+shape, against the 438 MB/day the extrapolation charged it. Applying the same
+correction across the window puts the operational project at roughly
+**0.3 GB/day, i.e. ~9 GB/month** — better than 2 GB/day by nearly an order of
+magnitude, and still about twice the 5 GB allowance.
+
+### So the operational side needs one more lever, and it is a product call
+
+The card page is now the single dominant cost, at ~38 KB of listing rows per
+render. Two things drive that, and neither is a bug:
+
+1. **It reads every market's rows and both in- and out-of-stock listings.**
+   That is deliberate — the client market switcher needs all markets, and
+   `OutOfStockDisclosure` renders the out-of-stock list with a distinct-store
+   count. Trimming either changes what the page shows.
+2. **It is purged three times a day.** The page's own `revalidate` is 86400,
+   so without the purges it would render once per URL per day. The purges
+   exist so fresh prices appear immediately after an import.
+
+The cheapest change that does not alter a single pixel is to purge card pages
+less often — once a day rather than on both imports — which would cut card
+renders by roughly a third. The cost is that afternoon price changes wait for
+the evening wave rather than appearing within minutes.
+
+**Not decided here.** Both remaining levers (this, and the `refresh-prices.yml`
+push trigger noted in the entry above) trade freshness for transfer, and that
+is the owner's call, not a defect to fix quietly.
+
+### Where the two projects now stand, measured
+
+| | before | now | allowance |
+| --- | --- | --- | --- |
+| history (RH10) | 8.72 GB/day | **0.00 GB/day** | comfortably inside |
+| operational (RM9) | ~2 GB/day observed; 5.62 GB/day post-deploy | ~0.3 GB/day bounded | ~9 GB/month, about 2× over |
+
+The history project is finished. The operational project is roughly 7× better
+and needs one freshness decision to land inside the allowance. A genuinely
+quiet window — several hours after an import, with no purge wave in it — is
+the measurement that would confirm the 0.3 figure rather than infer it.
+
+### The 08:00 scheduled release never fired
+
+Confirmed by filtering the workflow's runs to `event=schedule`: zero runs. Its
+only run remains the 05:34 manual dispatch. The configuration is sound, so
+this is either GitHub's usual cron delay or a newly registered schedule not
+yet picked up. Tomorrow's 08:00 is the test.
