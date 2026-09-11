@@ -5013,8 +5013,17 @@ entry here.
   on (it is by default); the gate reads `git log` if it is not, so this is
   belt-and-braces, not a prerequisite.
 
-**Unrelated, seen in passing, not fixed:** `scripts/build-db-push.sh` still
-invokes `scripts/marketplace-seed.ts` and `scripts/grant-early-premium.ts`
-on every deploy; neither file exists any more and the `|| true` swallows the
-error, so each build prints two module-not-found lines. Harmless; worth two
-deleted lines the next time that script is open.
+**Also in this change (same day, follow-up):**
+
+- `scripts/build-db-push.sh` invoked `scripts/marketplace-seed.ts` and
+  `scripts/grant-early-premium.ts` on every deploy; neither file exists any
+  more and the `|| true` swallowed the module-not-found on every build. Both
+  lines removed.
+- A root `CLAUDE.md` now carries the one rule automated sessions must know
+  here: never add `[deploy]` to a commit or merge message unless the user
+  asks for an immediate release. Without that rule the gate would be undone
+  by the first session that "helpfully" deployed its own work.
+- The branch was merged to `main` with `[deploy]` in the merge commit, so the
+  card-prerender change shipped on merge rather than at the next 08:00 UTC
+  release, and a baseline `egress-audit.yml` run was triggered immediately —
+  the first measurement of the history project ever taken.
