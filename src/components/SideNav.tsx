@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
 import {
   SIDENAV_COOKIE,
@@ -313,11 +314,19 @@ export function SideNav() {
                 title={group.title}
                 onClick={() => setOpenGroup(isOpen ? null : group.title)}
                 onFocus={() => setOpenGroup(group.title)}
-                className={`grid h-11 w-full place-items-center rounded-lg text-xl leading-none transition-colors ${
-                  groupActive ? "bg-brand-500/15" : isOpen ? "bg-ink-800" : "hover:bg-ink-800"
+                className={`grid h-11 w-full place-items-center rounded-lg transition-colors ${
+                  groupActive
+                    ? "bg-brand-500/15 text-brand-300"
+                    : isOpen
+                      ? "bg-ink-800 text-white"
+                      : "text-slate-400 hover:bg-ink-800 hover:text-white"
                 }`}
               >
-                <span aria-hidden="true">{group.icon}</span>
+                {/* The icon takes currentColor, so the active/hover states above
+                    actually reach it — the emoji this replaced could not be
+                    tinted at all, leaving the active group's only cue its
+                    background tint. */}
+                {group.icon ? <NavIcon name={group.icon} className="h-5 w-5" /> : null}
               </button>
               {isOpen && (
                 <div

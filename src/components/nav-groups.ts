@@ -4,6 +4,8 @@ import { DISCORD_URL } from "@/lib/site";
 // (CommandLauncher.tsx), the persistent desktop rail (SideNav.tsx), the footer
 // site-map (FOOTER_GROUPS below) and /llms.txt — edit a link here once and all
 // four follow.
+import type { NavIconName } from "./NavIcon";
+
 export interface NavGroupLink {
   href: string;
   label: string;
@@ -48,12 +50,16 @@ export interface NavGroupLink {
 export interface NavGroup {
   title: string;
   /**
-   * One emoji standing for the whole group — what the desktop rail shows in
-   * its collapsed (icon) mode, with the group's links in a flyout. Required
-   * for NAV_GROUPS (SideNav renders every group as an icon there); the footer
-   * groups don't collapse, so it's optional on the type.
+   * Which icon the desktop rail shows for this group in its collapsed mode,
+   * with the group's links in a flyout. A KEY, not the art: the drawings live
+   * in NavIcon.tsx so this stays a plain data module (imported by both server
+   * and client components) and so re-drawing an icon touches no nav data.
+   *
+   * Was an emoji until 2026-09-11 — see NavIcon.tsx for why that changed.
+   * Required in practice for NAV_GROUPS, since SideNav renders every group as
+   * an icon; optional on the type because the footer groups never collapse.
    */
-  icon?: string;
+  icon?: NavIconName;
   links: NavGroupLink[];
 }
 
@@ -61,7 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // Core price/data pages — the heart of the site.
     title: "Prices",
-    icon: "💹",
+    icon: "prices",
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"], popular: true },
       { href: "/sealed", label: "Sealed Products", emoji: "📦", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"], popular: true },
@@ -84,7 +90,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // pages we very much have — so they live here and llms.txt reads them from
     // this one list instead of keeping its own copy.
     title: "Browse the database",
-    icon: "🗂️",
+    icon: "browse",
     links: [
       { href: "/sets", label: "Sets & card lists", emoji: "🗂️", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
       { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
@@ -101,7 +107,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",
-    icon: "💎",
+    icon: "deals",
     links: [
       { href: "/tools/deal-finder", label: "Deal Finder", emoji: "💱", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"], popular: true },
       { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎", keywords: ["value", "best value", "worth", "undervalued"] },
@@ -118,7 +124,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // The signed-in user's own stuff + the upgrade.
     title: "Your collection",
-    icon: "🎒",
+    icon: "collection",
     links: [
       { href: "/portfolio", label: "My Portfolio", emoji: "💼", keywords: ["collection", "my cards", "holdings", "portfolio", "what is mine worth"] },
       { href: "/watching", label: "My Watchlist", emoji: "🔔", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
@@ -128,7 +134,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: "Decks",
-    icon: "🃏",
+    icon: "decks",
     links: [
       { href: "/decks", label: "Meta Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"], popular: true },
       { href: "/deck", label: "Deck Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost"] },
@@ -137,7 +143,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: "Games",
-    icon: "🎮",
+    icon: "games",
     links: [
       { href: "/riftle", label: "Riftle (daily)", emoji: "🃏", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
       { href: "/games/pack-sim", label: "Pack Simulator", emoji: "🎁", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
@@ -158,7 +164,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // reader) landing on a programmatic price page needs a one-click path to
     // something a person wrote, or the whole site reads as a data feed.
     title: "Guides & News",
-    icon: "📰",
+    icon: "news",
     links: [
       { href: "/guides", label: "Guides", emoji: "📖", keywords: ["guides", "how to", "tutorials", "explainers"] },
       { href: "/blog", label: "News & analysis", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
@@ -181,7 +187,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // to do with comparing a price. Rather than move it a third time, it gets a
     // group whose whole definition is "doesn't fit the others".
     title: "Miscellaneous",
-    icon: "📅",
+    icon: "calendar",
     links: [
       // Deliberately NOT named after a set. Its two predecessors were
       // (/vendetta-countdown, then /radiance-countdown) and both went stale on a
@@ -194,7 +200,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: "Help",
-    icon: "🆘",
+    icon: "help",
     links: [
       { href: "/support", label: "Support", emoji: "🆘", keywords: ["support", "help", "faq", "problem", "issue", "something is broken"] },
       { href: "/contact", label: "Contact & feedback", emoji: "✉️", keywords: ["contact", "email", "get in touch", "reach us"] },
