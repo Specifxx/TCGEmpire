@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
@@ -48,8 +47,10 @@ export async function GET(req: Request) {
       select: { ...cardTileSelect(country), nameNormalized: true },
     }),
     // Sealed groups load + group the whole sealed table — far too heavy to redo on
-    // every keystroke. Cache per market; sealed prices only change on the import.
-    unstable_cache(() => getSealedGroups(country), ["sealed-groups", country], { revalidate: 600 })(),
+    // every keystroke. getSealedGroups caches itself (per-instance memo plus the
+    // shared data cache); wrapping it in another unstable_cache here disabled
+    // the shared layer, because Next.js bypasses a cache nested in a cache.
+    getSealedGroups(country),
   ]);
 
   // Prefix matches beat substring matches regardless of price; within each group

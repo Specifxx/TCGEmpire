@@ -2,7 +2,8 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { priceField, pickPrice, currencyOf, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
-import { historySource, GLOBAL_HISTORY_COUNTRY, type PricePoint } from "./price-history";
+import { historySource, GLOBAL_HISTORY_COUNTRY, cachedOrDirect, sydneyDayKey, type PricePoint } from "./price-history";
+import { CONTENT_TAG } from "./revalidate-content";
 import { usdCentsToCountry } from "./fx";
 import { cardDisplayName } from "./card-name";
 import { getDemandVelocity, demandSnapshotDays } from "./demand-snapshot";
@@ -213,6 +214,26 @@ export async function getRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
     console.error(`[rise-predictor] getRisingCards(${scope}) failed — serving an empty analysis:`, err);
     return emptyAnalysis(scope);
   }
+}
+
+// THE ONE cached entry point for the scan above — /tools/rising, /admin/rising
+// and the homepage deals feed all read this, so a visit to any of them warms
+// the others. Day-keyed with a 48h TTL: freshness is import-driven (CONTENT_TAG
+// is purged after every price import), the TTL is only the fallback.
+//
+// It used to be three separate unstable_cache wrappers at the call sites, two
+// of them under different keys for the same scan, and one of them NESTED inside
+// getCachedTopDeals' own cache — which, in Next.js 14.2, disables the inner
+// cache entirely (see the note on cachedOrDirect in lib/price-history.ts). The
+// first egress audit of the history project found this scan — 400 cards × the
+// whole GLOBAL series, plus the DemandSnapshot window — running 37 times in
+// twenty minutes. Nothing may wrap getRisingCards in a cache anywhere else;
+// tests/nested-cache.test.ts enforces that.
+export function getCachedRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
+  return cachedOrDirect(() => getRisingCards(scope), ["rising-cards-public", scope, sydneyDayKey()], {
+    revalidate: 172800,
+    tags: [CONTENT_TAG],
+  });
 }
 
 async function computeRisingCards(scope: RiseScope): Promise<RiseAnalysis> {

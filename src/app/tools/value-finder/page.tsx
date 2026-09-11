@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { CardQuickLink } from "@/components/CardQuickLink";
-import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
@@ -66,12 +64,10 @@ export default async function ValueFinderPage() {
   // is force-dynamic + public) so anonymous/crawler hits don't each re-run the full
   // ~400-card undervalued scan just to reveal one row.
   const picks = premium ? await getUndervalued(country) : [];
-  const teaser = premium
-    ? undefined
-    : (await unstable_cache(() => getUndervalued(country, 1), ["vf-teaser-v1", country], {
-        revalidate: 3600,
-        tags: [CONTENT_TAG],
-      })())[0];
+  // getUndervalued caches itself (day-keyed, shared). The teaser used to wrap it
+  // in a second unstable_cache, which in Next.js 14.2 disables the inner one —
+  // so every free visitor's request could re-run the screener's history read.
+  const teaser = premium ? undefined : (await getUndervalued(country, 1))[0];
 
   return (
     <div className="mx-auto max-w-3xl">

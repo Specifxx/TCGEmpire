@@ -55,6 +55,18 @@ import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 //      its page.tsx. If freshness genuinely needs a shorter window than the
 //      page, fetch it CLIENT-side instead — that is the only way the TTL cannot
 //      propagate to the segment.
+//   6. NEVER call a self-cached loader from inside another unstable_cache
+//      callback. Next.js 14.2 runs the callback under fetchCache:
+//      "force-no-store" and skips the cache READ for anything nested in it
+//      (node_modules/next/dist/server/web/spec-extension/unstable-cache.js),
+//      so the inner loader's own key, TTL and tag are ignored and it recomputes
+//      on every outer miss. Found by the first egress audit of the history
+//      project on 2026-09-11: whole-market PriceHistory reads 86 and 36 times in
+//      twenty minutes with no build or import in the window, all from loaders
+//      nested inside getCachedTopDeals, /games and /tools/value-finder. Call
+//      the loader directly — it caches itself. cachedOrDirect (lib/price-history.ts)
+//      logs [egress-guard:nested-cache] when it happens anyway, and
+//      tests/nested-cache.test.ts pins the known shapes.
 //
 // The egress guard below makes violations VISIBLE: any single query returning
 // a ~1 MB+ payload logs loudly to the Vercel function logs instead of silently
