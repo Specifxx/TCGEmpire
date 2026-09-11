@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { useMe } from "@/lib/use-me";
+import { TIER_NAMES } from "@/lib/site";
 
 // The referral program's first-ever UI. The server side has been complete for
 // a while — ReferralCapture writes the ?ref= cookie on any landing, and
@@ -17,6 +19,11 @@ import { trackEvent } from "@/lib/analytics";
 // (REFERRAL_PREMIUM_DAYS=0) — this client half only handles the copy button.
 export function ReferralLinkCard({ url, days }: { url: string; days: number }) {
   const [copied, setCopied] = useState(false);
+  // applyReferral extends the referrer's existing plan at its own tier rather
+  // than upgrading it, so this has to name the tier they're actually on — a
+  // Plus member earning "days of Premium" would never get the pro tools.
+  const { tier } = useMe();
+  const rewardName = TIER_NAMES[tier ?? "premium"];
 
   async function copy() {
     try {
@@ -35,7 +42,7 @@ export function ReferralLinkCard({ url, days }: { url: string; days: number }) {
       <p className="mt-1 text-sm text-slate-400">
         Share your link — you get{" "}
         <span className="font-semibold text-gold">
-          {days === 1 ? "1 day" : `${days} days`} of Premium
+          {days === 1 ? "1 day" : `${days} days`} of {rewardName}
         </span>{" "}
         for every friend who creates a free account.
       </p>

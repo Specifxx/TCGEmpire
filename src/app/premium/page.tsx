@@ -15,7 +15,7 @@ import {
 } from "@/lib/premium";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
-import { UpgradeTierButton } from "@/components/UpgradeTierButton";
+import { SubscriptionActions } from "@/components/SubscriptionActions";
 import { TierComparisonTable } from "@/components/TierComparisonTable";
 import {
   SITE_URL,
@@ -412,28 +412,43 @@ export default async function PremiumPage() {
                   <>Renews {fmtDate(subDetails.currentPeriodEnd)}</>
                 )}
               </p>
-              {subDetails.tier === "plus" && plusLive && (
-                <div className="mt-3">
-                  <UpgradeTierButton />
-                </div>
-              )}
+              <SubscriptionActions
+                tier={subDetails.tier}
+                interval={subDetails.interval}
+                plusLive={plusLive}
+                annualAvailable={subDetails.tier === "plus" ? plusAnnualLive : annualLive}
+                canManageBilling={checkoutLive}
+              />
             </div>
           ) : user.premiumUntil ? (
-            <p className="mt-2 text-sm text-slate-300">Premium until {fmtDate(user.premiumUntil)}</p>
+            // A comp grant — no Stripe subscription behind it, so there is no
+            // plan or renewal to describe, only the date it runs to. It DOES
+            // have a tier though (grantPremiumDays stamps one), and saying
+            // "Premium" at a Plus comp was simply wrong.
+            <p className="mt-2 text-sm text-slate-300">
+              {TIER_NAMES[currentTier ?? "premium"]} until {fmtDate(user.premiumUntil)}
+            </p>
           ) : null}
         </div>
       )}
 
-      {/* Member quick links */}
+      {/* Member quick links — only what this member can actually open. The four
+          pro tools are dropped for a Plus member rather than left to bounce them
+          into an upsell wall from their own membership page; the upgrade path is
+          the SubscriptionActions card above, which states the price. */}
       {already && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm">
           <Link href="/dashboard" className="btn-primary">◆ Your dashboard</Link>
-          <Link href="/bulk-pricer" className="btn-ghost">Bulk Pricer</Link>
-          <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
-          <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
+          {currentTier !== "plus" && (
+            <>
+              <Link href="/bulk-pricer" className="btn-ghost">Bulk Pricer</Link>
+              <Link href="/tools/best-basket" className="btn-ghost">Best Basket</Link>
+              <Link href="/tools/value-finder" className="btn-ghost">Value Finder</Link>
+              <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>
+            </>
+          )}
           <Link href="/tools/rising" className="btn-ghost">Rising Cards</Link>
           <Link href="/tools/rising-sealed" className="btn-ghost">Rising Sealed</Link>
-          <Link href="/tools/demand" className="btn-ghost">Demand Finder</Link>
           <Link href="/tools/deal-finder" className="btn-ghost">Deal Finder</Link>
           <Link href="/tools/condition-calculator" className="btn-ghost">Condition Calculator</Link>
           <Link href="/portfolio" className="btn-ghost">Portfolio</Link>
@@ -480,7 +495,12 @@ export default async function PremiumPage() {
                 )}
               </div>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-400">{f.body}</p>
-              {already && f.href && <Link href={f.href} className="btn-ghost mt-3 self-start text-sm">{f.cta} →</Link>}
+              {/* The "open it" link only appears for a member who can actually
+                  open it — a Plus member's own membership page must not hand
+                  them a button into a Premium upsell wall. */}
+              {already && f.href && (currentTier !== "plus" || f.tier === "plus") && (
+                <Link href={f.href} className="btn-ghost mt-3 self-start text-sm">{f.cta} →</Link>
+              )}
             </div>
           ))}
         </div>

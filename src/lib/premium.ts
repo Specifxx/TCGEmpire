@@ -152,7 +152,10 @@ export async function runPremiumTrialReminders(): Promise<number> {
           price?.unit_amount != null
             ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}`
             : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
-        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel)) sent++;
+        // Same price object the amount comes from, so the plan name and the
+        // figure next to it can never disagree.
+        const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium";
+        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel, planName)) sent++;
       }
       // No active trialing subscription (already converted, cancelled, or a lookup
       // race) — nothing to warn about, but still stamp below so this account is

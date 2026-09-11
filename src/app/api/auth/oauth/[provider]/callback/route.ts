@@ -106,6 +106,12 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // Adopt any price watches this address created before it had an account —
   // fire-and-forget: a failure here must never block signing in.
   void claimAlertsForUser(user.id, user.email).catch(() => {});
+  // "Last seen" for the admin accounts view. Deliberately OUTSIDE the try that
+  // wraps createSession above: this is reporting, not auth, and must never be
+  // the reason a sign-in fails. Stamped here rather than inside
+  // upsertOAuthUser because this is the one point every branch of it
+  // (already-linked, linked-by-email, brand-new) converges on.
+  void prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
   if (isNew) {
     // First-ever sign-in: credit any referrer. NO PREMIUM IS GRANTED HERE — the
     // automatic signup-time Premium preview was removed on 2026-08-23 (see the

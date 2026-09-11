@@ -226,7 +226,7 @@ test("no new fake scarcity or invented numbers on any of the new tier surfaces",
   for (const file of [
     "src/app/premium/page.tsx",
     "src/components/PremiumPricingCards.tsx",
-    "src/components/UpgradeTierButton.tsx",
+    "src/components/SubscriptionActions.tsx",
     "src/app/api/premium/upgrade/route.ts",
     "src/app/api/premium/checkout/route.ts",
   ]) {
@@ -268,4 +268,122 @@ test("grantPremiumDays and grantPremiumMonths accept an optional tier, defaultin
   // rely on positionally (userId, days) with no forced third argument.
   assert.equal(typeof grantPremiumDays, "function");
   assert.equal(grantPremiumDays.length <= 3, true, "must accept at most (userId, days, tier)");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tier guardrails (2026-09-11, same day): the member-facing half of the split.
+// A Plus member must never be told they're Premium, never be handed a tool
+// they can't open, and must be able to move between tiers from inside the app.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("the dashboard's tool list tags each tool with the tier that can actually open it", () => {
+  // Every "premium" entry here must be a page that gates on the premium
+  // minimum, and every "plus" entry one that doesn't — otherwise the dashboard
+  // either dangles a tool that bounces a Plus member to /premium, or hides one
+  // they've paid for. This is the same invariant TIER_COMPARISON carries, read
+  // from the other end.
+  const src = read("src/app/dashboard/page.tsx");
+  const toolsAt = src.indexOf("const TOOLS");
+  assert.ok(toolsAt >= 0);
+  const tools = src.slice(toolsAt, src.indexOf("];", toolsAt));
+
+  const expected: Record<string, "plus" | "premium"> = {
+    "Bulk Pricer": "premium",
+    "Best Basket": "premium",
+    "Value Finder": "premium",
+    "Demand Finder": "premium",
+    "Rising Cards": "plus",
+    "Rising Sealed": "plus",
+    "Deal Finder": "plus",
+    "Condition Calculator": "plus",
+  };
+  for (const [title, tier] of Object.entries(expected)) {
+    const line = tools.split("\n").find((l) => l.includes(`title: "${title}"`));
+    assert.ok(line, `expected a dashboard entry for ${title}`);
+    assert.match(line!, new RegExp(`tier:\\s*"${tier}"`), `${title} must be tagged ${tier} on the dashboard`);
+  }
+
+  // …and the filter that uses those tags must be tier-driven, not a blanket
+  // "show everything to anyone who paid".
+  assert.match(src, /TOOLS\.filter\(/, "the dashboard must filter its tools by tier");
+  assert.match(src, /premiumTierOf\(user\)/, "the dashboard must read the member's real tier");
+});
+
+test("the dashboard never calls a Plus member Premium", () => {
+  const src = read("src/app/dashboard/page.tsx");
+  // Everything that names the viewer's own plan must interpolate the tier.
+  assert.match(src, /Your \{tierName\} tools/, "the tools heading must name the member's real tier");
+  assert.match(src, /Your \{tierName\} hub/, "the subheading must name the member's real tier");
+  assert.match(src, /you&apos;re \{tierName\}/, "the ad-free footer must name the member's real tier");
+  // The Premium-only tools are shown to Plus as locked, not as links.
+  assert.match(src, /lockedTools/, "Premium-only tools must be rendered separately for Plus, not hidden or linked");
+});
+
+test("the downgrade route credits rather than charges, and mirrors the upgrade route's tier guard", () => {
+  const src = read("src/app/api/premium/downgrade/route.ts");
+  // The money direction is the whole difference between this route and the
+  // upgrade one: a downgrade must never take a payment.
+  assert.match(src, /proration_behavior:\s*"create_prorations"/, "a downgrade must credit the unused period, not invoice for it");
+  // (the comment names always_invoice to contrast with the upgrade route, so
+  // match the actual argument, not the bare word)
+  assert.doesNotMatch(src, /proration_behavior:\s*"always_invoice"/, "a downgrade must never charge the customer immediately");
+  assert.match(src, /tierFromPriceId\(price\.id\) === "plus"/, "must be idempotent on tier, not on interval — the interval doesn't change here");
+  assert.match(src, /premiumPlusEnabled\(\)/, "must 503 when there's no Plus price configured to move to");
+  assert.match(src, /priceIdFor\("plus",\s*interval\)/, "must keep the customer's existing billing interval");
+});
+
+test("the subscription actions card states the money consequence of every button it offers", () => {
+  const src = read("src/components/SubscriptionActions.tsx");
+  // Each of the three actions posts to its own route, and each is only offered
+  // when it's actually possible for this member.
+  assert.match(src, /"\/api\/premium\/upgrade"/);
+  assert.match(src, /"\/api\/premium\/downgrade"/);
+  assert.match(src, /"\/api\/premium\/switch-to-annual"/);
+  assert.match(src, /canUpgrade = plusLive && tier === "plus"/, "only a Plus member can upgrade");
+  assert.match(src, /canDowngrade = plusLive && tier === "premium"/, "only a Premium member can move down");
+  assert.match(src, /canGoAnnual = annualAvailable && interval === "month"/, "annual is only offered to a monthly subscriber");
+  // The three consequence lines must match what the routes actually do — the
+  // upgrade invoices now, the downgrade credits forward.
+  assert.match(src, /Billed the difference/, "the upgrade button must say it charges now");
+  assert.match(src, /credited against your next invoice/, "the downgrade button must say it credits rather than refunds");
+});
+
+test("the admin revoke route clears the entitlement and nothing else", () => {
+  const src = read("src/app/api/admin/revoke-premium/route.ts");
+  assert.match(src, /keyOk \|\| me\?\.isAdmin/, "must carry the same dual gate as every other admin mutation");
+  assert.match(src, /data:\s*\{\s*premiumUntil:\s*null,\s*earlyPremiumGranted:\s*false\s*\}/, "must clear the entitlement");
+  // The three deliberate non-actions. Each would be a bigger change than the
+  // one being asked for, and each is reported back instead.
+  assert.doesNotMatch(src, /isAdmin:\s*false/, "must never silently strip admin rights");
+  assert.doesNotMatch(src, /trialStartedAt:\s*null/, "must never hand back a used free trial");
+  assert.doesNotMatch(src, /subscriptions\.(cancel|update|del)/, "must never touch the Stripe subscription");
+  assert.match(src, /stillAdmin/, "must report that an admin still reads as premium");
+  assert.match(src, /hasStripeCustomer/, "must report a live Stripe customer whose next webhook re-grants");
+  assert.match(src, /console\.log\(/, "an entitlement change by hand must be traceable in the logs");
+});
+
+test("the admin accounts page separates Plus from Premium and only ever counts an ACTIVE entitlement as either", () => {
+  const src = read("src/app/admin/accounts/page.tsx");
+  // premiumTier is a plain column defaulting to "premium", so counting it
+  // without an active premiumUntil would report every free account as Premium.
+  assert.match(src, /const active = \{ premiumUntil: \{ gt: now \} \}/, "tier filters must be anchored to a live entitlement");
+  assert.match(src, /active,\s*\{ NOT: \{ premiumTier: "plus" \} \}/, "the Premium count must be active AND not-plus");
+  assert.match(src, /active,\s*\{ premiumTier: "plus" \}/, "the Plus count must be active AND plus");
+  assert.match(src, /label="Plus \(active\)"/, "Plus must get its own stat, not be folded into a single paid number");
+  assert.match(src, /label="Premium \(active\)"/);
+  // Last login, the other thing the page gained.
+  assert.match(src, /lastLoginAt: true/, "the row select must carry lastLoginAt");
+  assert.match(src, /Last login/, "the table must show it");
+});
+
+test("last login is stamped on sign-in without being able to fail the sign-in", () => {
+  // The site is OAuth-only, so the callback is the single place a login
+  // happens. The write is fire-and-forget on purpose: a failed bookkeeping
+  // update must never cost someone their session.
+  const src = read("src/app/api/auth/oauth/[provider]/callback/route.ts");
+  assert.match(
+    src,
+    /void prisma\.user\.update\(\{[\s\S]{0,140}lastLoginAt: new Date\(\)[\s\S]{0,60}\)\.catch\(\(\) => \{\}\)/,
+    "must stamp lastLoginAt without awaiting or throwing",
+  );
 });

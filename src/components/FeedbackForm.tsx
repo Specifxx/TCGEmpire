@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMe } from "@/lib/use-me";
+import { TIER_NAMES } from "@/lib/site";
 import { ShareRow } from "./ShareRow";
 
 type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; granted?: boolean };
@@ -17,7 +18,9 @@ type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; grante
 // but it is now an INCENTIVE shown alongside a working form, not a gate in front
 // of one.
 export function FeedbackForm({ days }: { days: number }) {
-  const { user, premium, loaded } = useMe();
+  const { user, premium, loaded, tier } = useMe();
+  // The reward extends an existing plan at its own tier — see /feedback's hero.
+  const rewardName = TIER_NAMES[tier ?? "premium"];
   const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
   const [rating, setRating] = useState(0);
   const [message, setMessage] = useState("");
@@ -72,11 +75,11 @@ export function FeedbackForm({ days }: { days: number }) {
         <h2 className="mt-3 text-lg font-bold text-brand-200">Thank you — this genuinely helps.</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
           {state.granted
-            ? `Your ${dayLabel} of Premium is now active. Enjoy the pro tools!`
+            ? `Your ${dayLabel} of ${rewardName} is now active.${tier === "plus" ? "" : " Enjoy the pro tools!"}`
             : premium
-            ? "You're already Premium — but your feedback still means a lot."
+            ? `You're already ${rewardName} — but your feedback still means a lot.`
             : user
-            ? "Your feedback is in. (The Premium reward is one per account.)"
+            ? `Your feedback is in. (The ${rewardName} reward is one per account.)`
             : "Your feedback is in — we read every one."}
         </p>
 

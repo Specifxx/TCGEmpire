@@ -3,22 +3,42 @@
 import Link from "next/link";
 import { usePremium } from "@/components/PremiumProvider";
 import { PremiumButton } from "@/components/PremiumButton";
+import { useMe } from "@/lib/use-me";
+import { TIER_NAMES, tierMonthlyAmount, PREMIUM_PRICE_PERIOD } from "@/lib/site";
 
 // Client island for the (static, ISR) /movers page: turns its habitual price-checkers
 // into the mouth of the Premium funnel. Non-members see a teaser + upgrade; members
 // see quick links to the pro tools. Kept client-side so /movers stays fully cacheable.
 export function MoversToolsCta() {
   const premium = usePremium();
+  const { tier } = useMe();
 
   if (premium) {
+    // Value Finder is Premium-only, so a Plus member gets Deal Finder (theirs)
+    // as the primary link and the Value Finder as an upgrade line rather than a
+    // button that walks them into a wall.
+    const isPlus = tier === "plus";
     return (
       <section className="card-surface p-5">
         <h2 className="text-lg font-bold text-white">Your deal tools</h2>
-        <p className="mt-1 text-sm text-slate-400">You&apos;re Premium — the full screeners are unlocked.</p>
+        <p className="mt-1 text-sm text-slate-400">
+          You&apos;re {TIER_NAMES[tier ?? "premium"]} — the full {isPlus ? "Deal Finder is" : "screeners are"} unlocked.
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link href="/tools/value-finder" className="btn-primary text-sm">Value Finder →</Link>
-          <Link href="/tools/deal-finder" className="btn-ghost text-sm">Deal Finder →</Link>
+          <Link href="/tools/deal-finder" className={`${isPlus ? "btn-primary" : "btn-ghost"} text-sm`}>
+            Deal Finder →
+          </Link>
+          {!isPlus && <Link href="/tools/value-finder" className="btn-primary text-sm">Value Finder →</Link>}
         </div>
+        {isPlus && (
+          <p className="mt-2 text-xs text-slate-500">
+            The Value Finder is on Premium —{" "}
+            <Link href="/premium#top-pricing" className="font-semibold text-gold hover:underline">
+              upgrade for {tierMonthlyAmount("premium")}/{PREMIUM_PRICE_PERIOD}
+            </Link>
+            .
+          </p>
+        )}
       </section>
     );
   }

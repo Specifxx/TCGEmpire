@@ -68,6 +68,42 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
     }
   }
 
+  // Revoke is deliberately noisier than grant: it's the only destructive
+  // control on this page, so it confirms first, and it reports back the two
+  // things that make a revoke look like it did nothing — an admin account
+  // (isPremium() is true for admins regardless) and a still-live Stripe
+  // subscription (whose next webhook re-grants).
+  async function revoke() {
+    if (!window.confirm(`Remove premium from ${email}? They drop to the free tier immediately.`)) return;
+    setBusy(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/revoke-premium", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, ...(adminKey ? { key: adminKey } : {}) }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setResult(`✗ ${data?.error ?? `failed (${res.status})`}`);
+      } else {
+        const caveats = [
+          data.stillAdmin ? "still an admin, so still reads as Premium" : null,
+          data.hasStripeCustomer ? "has a Stripe customer — cancel there too if the subscription is live" : null,
+        ].filter(Boolean);
+        setResult(
+          `✓ ${data.email} revoked (was ${data.wasTier}${data.was ? ` until ${new Date(data.was).toLocaleDateString()}` : ", no end date"})` +
+            (caveats.length ? ` — ${caveats.join("; ")}` : ""),
+        );
+        setEmail("");
+      }
+    } catch {
+      setResult("✗ network error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="card-surface p-4">
       <h2 className="text-sm font-extrabold text-white">Premium &amp; billing repair</h2>
@@ -112,7 +148,19 @@ export function GrantPremiumForm({ adminKey }: { adminKey?: string }) {
         >
           {busy ? "Granting…" : "Grant Plus"}
         </button>
+        <button
+          type="button"
+          onClick={revoke}
+          disabled={busy || !email}
+          className="rounded-lg border border-rose-500/40 px-3 py-2 text-sm font-semibold text-rose-300 transition-colors hover:border-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
+        >
+          Revoke
+        </button>
       </div>
+      <p className="mt-2 text-xs text-slate-500">
+        Revoke clears the entitlement only. It never cancels a Stripe subscription, never drops admin rights, and
+        never hands back a used free trial.
+      </p>
       {result && <p className={`mt-2 text-xs ${result.startsWith("✓") ? "text-brand-400" : "text-rose-400"}`}>{result}</p>}
 
       {/* The self-heal button. Runs the same sweep as the daily cron, so a

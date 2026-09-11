@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPortfolio, isPremium, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
+import { getPortfolio, isPremium, premiumTierOf, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
@@ -128,7 +128,15 @@ export default async function PortfolioPage() {
             Your collection valued at the live {info.adjective} lowest prices, condition-adjusted.
           </p>
         </div>
-        {premium && <span className="chip bg-gold/15 text-xs font-bold text-gold">★ PREMIUM</span>}
+        {premium && (
+          <span
+            className={`chip text-xs font-bold ${
+              premiumTierOf(user) === "plus" ? "bg-slate-500/15 text-slate-200" : "bg-gold/15 text-gold"
+            }`}
+          >
+            ★ {premiumTierOf(user) === "plus" ? "PLUS" : "PREMIUM"}
+          </span>
+        )}
       </div>
 
       {portfolio.holdings.length > 0 && (

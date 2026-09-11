@@ -45,6 +45,11 @@ model User {
   // Meaningless while premiumUntil is null or in the past.
   premiumTier         String    @default("premium")
   stripeCustomerId    String?
+  // Most recent successful sign-in (stamped by the OAuth callback, the only
+  // place a session is ever created). Null for accounts that haven't signed in
+  // since this field was added — nullable + no default keeps the push additive,
+  // same shape as trialReminderSentAt/signupSource below.
+  lastLoginAt         DateTime?
   // Set the first time this account starts a free trial → one trial per account
   // (a returning user just subscribes, no second trial).
   trialStartedAt      DateTime?

@@ -4636,3 +4636,135 @@ and exactly what the dialog's own standing comment on defaulting to monthly
 already explains. Making the dialog's annual view lead with the effective
 monthly rate too — so it could safely default to annual on the same logic —
 is a real follow-up, just a separate change from this one.
+
+---
+
+## Plus is a real tier everywhere, not just at checkout — 2026-09-11 (same day, follow-up)
+
+Owner, in four parts: the admin dashboard needs revoke / more stats / last
+login; Plus must be separate from Premium when looking at accounts; the
+member's own `/premium` card says "Premium" to a Plus account and offers no way
+to change plan; and "the dashboard for plus accounts should only have the plus
+tools — do a site wide audit and fix all the guardrails for plus."
+
+The two-tier split shipped the *billing* correctly (tier resolved from the live
+Stripe price, grandfathering, gates on the four pro tools). What it did not do
+is teach the ~40 places that render the word "Premium" that there are now two
+answers. This entry is that sweep, plus the admin tools to run it.
+
+### The rule this settles
+
+**A surface that describes the VIEWER's own plan must read the viewer's tier.
+A surface that pitches the product to a non-member keeps saying "Premium".**
+Both halves matter: making the marketing tier-aware would be a price cut in
+copy, and leaving the member-facing half hard-coded tells a $4.99 customer they
+bought the $9.99 plan. Grep-able rule: any "Premium" inside a branch only
+reachable when `premium === true` is a bug.
+
+A second rule falls out of it: **never hand a member a link they'll bounce off.**
+A Plus member clicking "Value Finder" from their own dashboard, membership page
+or the movers CTA lands on an upsell wall — the worst place to discover a tier
+boundary. Those links are now either removed for Plus, or rendered as an
+explicitly locked card with the upgrade price stated.
+
+### Member-facing
+
+- **`/dashboard`** — `TOOLS` gained a `tier` field per tool, and the page reads
+  `premiumTierOf(user)`. Plus sees "Your Plus tools" (Rising Cards, Rising
+  Sealed, Deal Finder, Condition Calculator) and a *separate, non-clickable*
+  "Premium tools" block with a 🔒 badge and one upgrade link. The chip, the
+  hub subtitle and the ad-free footer all name the real tier. A test pins each
+  tool's `tier` against the gate on its own page, so the two can't drift.
+- **`/premium`** — the comp-grant line and the hero say the member's tier;
+  the pro-tool quick links and the "What's included" open-it buttons disappear
+  for Plus; `SubscriptionActions` (below) replaces the old upgrade-only button.
+- **`MoversToolsCta`** — the members' branch led with Value Finder, which Plus
+  can't open. Deal Finder is now the primary for Plus, with the Value Finder
+  named as an upgrade line carrying the Premium price.
+- **`TodaysTopDeals`** (homepage) — both gated columns are Deal Finder and
+  Rising Cards, i.e. *Plus* features. The gold chip now reads "Plus" whenever
+  Plus is configured, matching `/tools`' `LIST_BADGE`. Badging them "Premium"
+  over-quoted the price to every visitor and told existing Plus members their
+  own unlocked columns weren't theirs.
+- **`UserMenu`, `portfolio`, `AnnualSwitchNudge`'s aria-label** — tier named.
+- **`PremiumDialog`** — the "You're on Plus, here's the upgrade" branch now
+  keys on `tier === "plus"` ALONE, not on `premiumPlus` too. `premiumPlus`
+  means *Plus is currently sellable*; if those price ids are ever unset or
+  rotated, existing Plus accounts don't stop existing, and the old condition
+  would have dropped them into "✓ You're Premium" while they were still locked
+  out of the four tools — precisely the dead end that branch exists to avoid.
+
+### Rewards that EXTEND rather than upgrade
+
+`grantPremiumDays` only writes the tier when it's *creating* access (a comp
+must not flip a paying Plus member to Premium and back on renewal). The
+consequence nobody had followed through: feedback and referral rewards extend
+an active Plus member **at Plus**. So `/feedback`'s hero, the feedback result
+copy and `ReferralLinkCard` now say "N days of Plus" to a Plus member. Promising
+Premium and delivering Plus days is the kind of small lie that turns into a
+support ticket.
+
+Same class of bug, higher stakes: **`sendTrialEndingEmail` named "Premium" in
+the subject, body and footer of a billing email that could be for a Plus
+trial** — while quoting the real (Plus) amount beside it. It now takes a
+`planName`, resolved by `runPremiumTrialReminders` from the same live `price`
+object the amount comes from, so the plan and the figure can never disagree.
+
+### Changing plan from inside the app
+
+The original plan said **no in-app downgrade** — "cancel and resubscribe, or
+use the portal". Reversed, on the owner's ask. `SubscriptionActions` replaces
+`UpgradeTierButton` and offers whichever of three moves actually applies:
+
+| action | route | proration | why |
+|---|---|---|---|
+| Plus → Premium | `/api/premium/upgrade` | `always_invoice` | money is OWED; billing it now is what unlocks the tools now |
+| Premium → Plus | `/api/premium/downgrade` | `create_prorations` | money is OWED TO THEM; credit the next invoice, never charge or refund cash |
+| monthly → annual | `/api/premium/switch-to-annual` | `always_invoice` | buying a year now |
+
+Each button states its own money consequence *before* it's pressed, because
+"what happens to the rest of the period I already paid for" is the question a
+plan-change button has to answer, and the three answers genuinely differ. The
+displayed sentence and the route's `proration_behavior` are pinned together by
+a test — changing one without the other makes the card lie.
+
+The downgrade takes effect **now** (credited), not at period end. Deferring
+would need a multi-phase subscription schedule; that's a bigger change, and the
+UI states which of the two happens rather than leaving it ambiguous.
+
+### Admin
+
+- **Revoke** — `/api/admin/revoke-premium`, the in-app half of
+  `scripts/revoke-premium.ts`, same dual gate as every other admin mutation.
+  Clears `premiumUntil` and nothing else. It deliberately does **not** touch
+  `isAdmin` (an admin still reads as Premium — reported back rather than
+  silently stripped), `trialStartedAt` (that would hand out a second free
+  trial) or the Stripe subscription (whose next webhook re-grants — also
+  reported back). The button confirms first and surfaces both caveats, because
+  a revoke that appears to do nothing is worse than one that refuses.
+- **`premiumTier` is NOT cleared on revoke.** It only means anything while
+  `premiumUntil` is in the future, and the next grant sets it fresh.
+- **Plus vs Premium counted separately** on the accounts page — different
+  revenue per head, so a rise in one against a fall in the other is exactly the
+  thing a single "paid" total would hide. Both counts, and the new Plus/Premium
+  quick filters, are anchored to an ACTIVE `premiumUntil`: `premiumTier` is a
+  plain column defaulting to `"premium"`, so counting it alone would report
+  every free account as a Premium subscriber.
+- **`User.lastLoginAt`** (new, nullable) — stamped fire-and-forget from the
+  OAuth callback, the site's only login path. Nullable and unbackfilled on
+  purpose: an account that hasn't signed in since this shipped reads "—", not
+  a fabricated date. Drives a "Last login" column, a "Signed in · 7d" stat and
+  a quick filter. The write is `void … .catch(() => {})` — failed bookkeeping
+  must never cost someone their session.
+- The CSV export's `premium` yes/no became a `plan` column (`plus`/`premium`/
+  `none`) and gained `last_login`.
+
+### Verified against a real render, not just source
+
+Local Postgres + dev server with both tiers' price ids set, and minted session
+cookies for a Plus, a Premium and an admin account: Plus's dashboard shows four
+tools plus four locked ones; Premium's shows all eight and no locked block;
+the accounts page's Plus filter returns exactly the Plus account; revoke
+returns `wasTier: "plus"` and the filter then returns nothing; `/feedback`
+renders "7 days of Plus"; `/premium`'s quick links drop the four pro tools for
+Plus.

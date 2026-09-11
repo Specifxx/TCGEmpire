@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { FeedbackForm } from "@/components/FeedbackForm";
-import { FEEDBACK_PREMIUM_DAYS, feedbackPremiumActive } from "@/lib/premium";
-import { SITE_URL } from "@/lib/site";
+import { getCurrentUser } from "@/lib/auth";
+import { FEEDBACK_PREMIUM_DAYS, feedbackPremiumActive, premiumTierOf } from "@/lib/premium";
+import { SITE_URL, TIER_NAMES } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -23,22 +24,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FeedbackPage() {
+export default async function FeedbackPage() {
   const days = feedbackPremiumActive() ? FEEDBACK_PREMIUM_DAYS : 0;
   const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
+  // The reward EXTENDS an existing subscription at its own tier rather than
+  // upgrading it (grantPremiumDays only sets the tier when it's creating
+  // access), so promising a Plus member "days of Premium" would be promising
+  // them the four pro tools this grant will not hand over. Non-members get the
+  // grant's own default tier, which is Premium.
+  const rewardName = TIER_NAMES[premiumTierOf(await getCurrentUser()) ?? "premium"];
 
   return (
     <div className="mx-auto max-w-xl">
       <div className="mb-5 text-center">
         {days > 0 && (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-gold">
-            ✦ {dayLabel} Premium — on us
+            ✦ {dayLabel} {rewardName} — on us
           </span>
         )}
         <h1 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">Help shape RiftCompare</h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-400">
           We&apos;re building the best way to buy Riftbound singles, and your input genuinely steers what we build next.
-          {days > 0 && <> As a thank-you, your first feedback unlocks <strong className="text-gold">{dayLabel} of Premium</strong> — free.</>}
+          {days > 0 && <> As a thank-you, your first feedback unlocks <strong className="text-gold">{dayLabel} of {rewardName}</strong> — free.</>}
         </p>
       </div>
 
