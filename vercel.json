@@ -6,6 +6,7 @@
       "claude/**": false
     }
   },
+  "ignoreCommand": "bash scripts/vercel-ignore-build.sh",
   "crons": [
     {
       "path": "/api/cron/price-alerts",

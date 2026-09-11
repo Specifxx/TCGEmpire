@@ -4867,3 +4867,174 @@ means the *next* time a price is reused for a different tier, the same
 reclassification happens to whoever is sitting on it. The floor is the remedy
 that exists for it; the cheaper habit is to never reuse a Price object across
 tiers in the first place.
+
+## Network transfer: the deploy cadence was the burn — 2026-09-11
+
+Eleven Neon projects in a row — RM3 through RM11 on the operational side,
+RH5 through RH11 and four `HISTORY_DATABASE_URL*` names on the history side —
+were exhausted at roughly 2 GB/day against a 5 GB monthly allowance, each
+lasting two to three days, the history project RH9 lasting one. Every note
+written during those rotations says the same thing ("a rotation buys an
+allowance, not a fix") and every investigation looked in the same place: a
+request handler pulling an unbounded dataset. `src/lib/db.ts` carries five
+egress rules and an egress guard for that shape. `tests/segment-ttl-inversion`,
+`history-egress` and `arbitrage-egress` pin it. `scripts/audit-egress.ts` was
+written to find it.
+
+It isn't there. Two facts this repo already recorded, never put side by side:
+
+1. **The app's steady-state traffic was measured at ~0.12 GB/day** on
+   2026-08-22/23 by `audit-egress.ts` in delta mode (the number is in
+   `maintenance.yml`'s RH8 rotation note). That is 2.4% of the allowance per
+   day — a project serving only the app would last about six weeks.
+2. **`main` receives 10–30 commits a day** (`git log`: 10, 20, 24, 3, 10, 20,
+   30, 17 on the last eight days), and each push is a Vercel production build.
+
+What a build does to the databases:
+
+- `next build` prerenders ~770 database-backed pages against **both** Neon
+  projects: 200 card pages via `generateStaticParams` (the widest read on the
+  site — every retailer row for the card in every market, six tile queries,
+  its price history, its price state), plus decks, sets, galleries, stores,
+  keywords, champions, facets, feeds, sitemaps and the six regional homepages.
+  None of this appears in Vercel's function-invocation metrics.
+- Per the Next.js caching docs, verbatim: *"Unlike the Data Cache, which
+  persists across deployments, the Full Route Cache is cleared on new
+  deployments."* So every ISR page — all ~1,400 card pages, the decks, the
+  sets — re-rendered from the database on its next hit after **every**
+  deploy. `export const revalidate = 86400` never got to run for 86,400
+  seconds; the effective TTL was "time until the next push", about an hour
+  on a busy day. Vercel Observability's own figure of ~3.5K ISR writes over
+  982 unique paths in one day (recorded in the card page's set-median
+  comment) is that churn: with a working 24h TTL and two import-time
+  revalidations, the ceiling is ~3 renders per path per day and the typical
+  figure far lower.
+
+The dates line up. The burn started in the second week of August, when
+autonomous sessions began pushing many commits a day. RH9 — history — died in
+a single day across 2026-09-09/10, the two days with the most commits (20 and
+30). And the audit script's own header records the moment the answer was in
+hand and put down: a 15-minute sample on 2026-08-22 that opened two minutes
+after a push read 820 calls of the card page's set-median query, was
+extrapolated to 79,000 renders a day, and was then correctly identified as
+"a build, not a day of traffic" — and so excluded, with a rule added to never
+sample during a deploy again. Sound advice for measuring the app; a blindfold
+for measuring the burn, because the deploys *were* the burn.
+
+Why the request-handler theory was so sticky: it had been right once. The
+EbayCardPanel segment-TTL inversion (2026-08-14) was real and did regenerate
+card pages 288× a day. Fixing it "did not change the rate" — the note says so
+— and the conclusion drawn was that the inversion had been *a* cause among
+several unfound ones, rather than that the remaining rate had a different
+shape entirely.
+
+### What changed
+
+1. **Production builds are gated** — `vercel.json` `ignoreCommand` runs
+   `scripts/vercel-ignore-build.sh`, which skips any push whose commit message
+   lacks the literal marker `[deploy]` (case-insensitive; read from
+   `VERCEL_GIT_COMMIT_MESSAGE`, falling back to `git log -1`; **fails open**
+   and builds if neither is readable, because "never deploys" is a worse
+   failure than the status quo). Preview and development builds are not
+   gated: a human's non-`claude/*` branch keeps its preview URL and
+   `seo-preview-gate.yml` keeps its `deployment_status` event, and previews
+   were never the burn (`claude/*` previews are already disabled in
+   `vercel.json`). An unknown `VERCEL_ENV` is treated as production, because
+   gating a preview by mistake costs a URL and not gating production by
+   mistake recreates the burn.
+2. **One scheduled release a day** — `.github/workflows/production-deploy.yml`
+   lands an empty `release: scheduled production deploy [deploy]` commit on
+   `main` at 08:00 UTC, after the 07:00 price import and its revalidation, and
+   skips if nothing has landed since the last release. Its "Run workflow"
+   button releases immediately; so does `[deploy]` in any human commit
+   message. An empty commit rather than a deploy hook because the Ignored
+   Build Step reads HEAD's message either way — the marker has to be on the
+   commit Vercel sees.
+3. **Card pages are no longer prerendered at build** — `generateStaticParams`
+   in `src/app/card/[id]/page.tsx` returns `[]`. The 200-card prewarm cost 200
+   full renders per deploy and bought nothing, since the same deploy cleared
+   the cache those renders filled. The route is still ISR (dynamicParams is
+   on): first visit renders, `revalidate` caches for a day.
+4. **The history project can finally be measured** — `scripts/audit-egress.ts`
+   gained `--db=history`; until now it only knew the operational client, so
+   the project rotating fastest was the one never audited. A new
+   `.github/workflows/egress-audit.yml` samples both projects weekly (Sunday
+   03:00 UTC, a window with no import, cron or scheduled deploy) and on
+   demand, writing both reports into the job summary. Its own reads are
+   cheap without being incomplete: both snapshots hold counters for every
+   statement shape (keyed by `queryid`, ~40 bytes a row) so the delta cannot
+   miss a newly hot query, and statement text is fetched afterwards for only
+   the top 60 shapes the report ranks. A first draft used `ORDER BY rows
+   DESC LIMIT 1000` on the snapshot itself; Codex's review pointed out that
+   ranks by the all-time counter and would hide exactly the young, hot shape
+   a burn audit exists to find.
+
+Pinned by `tests/deploy-cadence.test.ts` (7 tests): the gate is wired, skips
+an ordinary push, builds on the marker, fails open, the release workflow
+supplies the marker, card pages prerender nothing, the history audit exists.
+
+### What deliberately did not change
+
+- **No query was touched.** The egress rules in `db.ts` are still right —
+  they describe the second-order cost, the cost per render — and every
+  bounded `select`/`take` in the codebase still earns its keep. They just
+  were not the multiplier.
+- **`revalidateContent()` still purges card pages after each import.** Two
+  full re-render waves a day are the product requirement (fresh prices), and
+  they were never the problem; thirty waves a day were.
+- **The 5-minute keep-warm** stays. It costs compute hours, not transfer
+  (`SELECT 1` plus one page of tiles), and cold starts were a real complaint.
+- **RM9 and RH10 stay** as the operational and history projects. This change
+  is what makes the next rotation unnecessary rather than what makes it
+  possible.
+
+### Expected effect
+
+Rough arithmetic, to be replaced by the weekly audit's numbers:
+
+| | before | after |
+| --- | --- | --- |
+| production builds/day | 10–30 | 1 (plus any `[deploy]` by hand) |
+| card renders at build, per day | 2,000–6,000 | 0 |
+| ISR cache clears/day | 10–30 | 1 |
+| measured steady-state app traffic | ~0.12 GB/day | unchanged |
+
+If the ~1.9 GB/day gap between the measured app traffic and the observed
+burn is the deploy cadence, the two projects should each settle well under
+0.3 GB/day — roughly a 45-day allowance instead of a three-day one — with a
+daily build costing on the order of 50–100 MB. **The first weekly audit
+after this lands is the check**; if either project is still burning more
+than ~0.3 GB/day, the report names the query shape and that becomes the next
+entry here.
+
+### Owner actions
+
+- **Merging this** stops the per-push builds immediately (Vercel reads the
+  gate from the pushed commit). The code in it — the card prerender change —
+  ships on the next release: put `[deploy]` in the merge commit message to
+  release now, or wait for 08:00 UTC. The "Run workflow" button on
+  `production-deploy.yml` only appears once the file is on `main`.
+- **Branch protection**: if `main` ever blocks pushes from `GITHUB_TOKEN`, the
+  release job fails on its push step (visibly) and production simply stays on
+  its last release until someone commits with `[deploy]`. Nothing degrades
+  silently.
+- **Automation sessions should not add `[deploy]`** to their commits by
+  default. That is the whole point.
+- **Vercel's "Automatically expose System Environment Variables"** should be
+  on (it is by default); the gate reads `git log` if it is not, so this is
+  belt-and-braces, not a prerequisite.
+
+**Also in this change (same day, follow-up):**
+
+- `scripts/build-db-push.sh` invoked `scripts/marketplace-seed.ts` and
+  `scripts/grant-early-premium.ts` on every deploy; neither file exists any
+  more and the `|| true` swallowed the module-not-found on every build. Both
+  lines removed.
+- A root `CLAUDE.md` now carries the one rule automated sessions must know
+  here: never add `[deploy]` to a commit or merge message unless the user
+  asks for an immediate release. Without that rule the gate would be undone
+  by the first session that "helpfully" deployed its own work.
+- The branch was merged to `main` with `[deploy]` in the merge commit, so the
+  card-prerender change shipped on merge rather than at the next 08:00 UTC
+  release, and a baseline `egress-audit.yml` run was triggered immediately —
+  the first measurement of the history project ever taken.

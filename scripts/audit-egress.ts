@@ -75,15 +75,52 @@
  * window, before believing a delta. The cron schedule matters too — see
  * .github/workflows for refresh-prices (07:00, 19:00 UTC) and the rest.
  *
- * Usage:
- *   npx tsx scripts/audit-egress.ts              # cumulative
- *   npx tsx scripts/audit-egress.ts --sample=10  # 10-minute delta (a real rate)
+ * ── 2026-09-11: THE ANSWER, AND WHY THIS SCRIPT COULD NOT SEE IT ────────────
+ * The 2026-08-22/23 delta samples put the app's steady-state traffic at
+ * ~0.12 GB/day (recorded in maintenance.yml's RH8 rotation note). Against an
+ * observed ~2 GB/day, that leaves ~1.9 GB/day unexplained — and it was exactly
+ * the traffic the rule above says to exclude. main was receiving 10–30 commits
+ * a day; each one was a Vercel production build that prerenders ~770
+ * database-backed pages against BOTH projects and, per Next.js's own docs,
+ * clears the Full Route Cache — so every ISR page then re-rendered from the
+ * database on its next hit. "Do not sample while a deploy is in flight" was
+ * sound advice for measuring the app and a blindfold for measuring the burn.
+ * The fix (vercel.json ignoreCommand + .github/workflows/production-deploy.yml)
+ * batches production builds to one a day; see DECISIONS.md for the account.
  *
- * Run in CI via .github/workflows/maintenance.yml (task: audit-egress).
+ * Note for future readers of a delta: a build inside the window is no longer a
+ * contamination to discard — at one build a day it IS a steady-state cost, and
+ * a window that catches it is telling you what that build costs.
+ *
+ * ── WHICH DATABASE ──────────────────────────────────────────────────────────
+ * `--db=history` audits the HISTORY project (PriceHistory/ClickEvent — the one
+ * that has rotated even faster than the operational one, RH9 lasting a single
+ * day). Until this flag existed the history side had NEVER been measured, only
+ * hypothesised at; every rotation note said "measure next time". Default is
+ * the operational project.
+ *
+ * Usage:
+ *   npx tsx scripts/audit-egress.ts                           # cumulative, operational
+ *   npx tsx scripts/audit-egress.ts --sample=10               # 10-minute delta (a real rate)
+ *   npx tsx scripts/audit-egress.ts --db=history --sample=20  # the history project
+ *
+ * Run in CI via .github/workflows/egress-audit.yml (weekly, both projects, plus
+ * a "Run workflow" button) or maintenance.yml (task: audit-egress, operational).
  */
+import { Prisma } from "@prisma/client";
 import { prisma, OPERATIONAL_URL_SOURCE } from "../src/lib/db";
+import { dbHistory, HISTORY_URL_SOURCE, historyIsSplit } from "../src/lib/db-history";
 
 const MONTHLY_ALLOWANCE_GB = 5;
+
+// --db=history switches every read below to the history project's client. The
+// two clients are the same extended PrismaClient shape (src/lib/db.ts and
+// db-history.ts build them identically), so one binding serves both.
+const AUDIT_HISTORY = process.argv.some((a) => a === "--db=history");
+const db = (AUDIT_HISTORY ? dbHistory : prisma) as typeof prisma;
+const DB_LABEL = AUDIT_HISTORY
+  ? `history (${HISTORY_URL_SOURCE})${historyIsSplit ? "" : " — NOT split: this is the operational database"}`
+  : `operational (${OPERATIONAL_URL_SOURCE})`;
 
 // --sample=N runs the delta mode described in the header. 0 = cumulative.
 const SAMPLE_MINUTES = (() => {
@@ -115,7 +152,7 @@ function section(title: string) {
 async function wakeDb(tries = 6, delayMs = 10_000): Promise<void> {
   for (let i = 1; i <= tries; i++) {
     try {
-      await prisma.$queryRaw`SELECT 1`;
+      await db.$queryRaw`SELECT 1`;
       return;
     } catch (e) {
       if (i === tries) throw e;
@@ -146,8 +183,11 @@ type TableStat = {
   total_bytes: bigint;
 };
 
+// Counters only — no statement text. Keyed by pg_stat_statements' own queryid
+// (stable for a shape across snapshots, unlike a text prefix), and summed over
+// the (userid, dbid, toplevel) rows that can share one queryid.
 type StatementStat = {
-  query: string;
+  queryid: bigint;
   calls: bigint;
   rows: bigint;
   total_exec_time: number;
@@ -156,13 +196,13 @@ type StatementStat = {
 type Snapshot = {
   at: number;
   tables: Map<string, TableStat>;
-  statements: Map<string, StatementStat>;
+  statements: Map<string, StatementStat>; // key: String(queryid)
   db: DbStat | undefined;
 };
 
 // Column count per table, for the projection-width correction in costOf().
 async function readColumnCounts(): Promise<{ table_name: string; n: bigint }[]> {
-  return prisma.$queryRaw`
+  return db.$queryRaw`
     SELECT table_name, COUNT(*) AS n
     FROM information_schema.columns
     WHERE table_schema = 'public'
@@ -171,7 +211,7 @@ async function readColumnCounts(): Promise<{ table_name: string; n: bigint }[]> 
 }
 
 async function readTables(): Promise<TableStat[]> {
-  return prisma.$queryRaw<TableStat[]>`
+  return db.$queryRaw<TableStat[]>`
     SELECT relname,
            n_live_tup,
            seq_scan,
@@ -193,16 +233,51 @@ function isPlatformNoise(q: string): boolean {
   return /pg_stat_activity|neon_perf_counters|pg_settings|pg_database|pg_stat_replication|pg_catalog\.|information_schema/i.test(q);
 }
 
+// COUNTERS FOR EVERY SHAPE, TEXT FOR NONE. This script now runs on a schedule,
+// and an audit that pulled every shape's full statement text twice per run
+// (pg_stat_statements can hold thousands; Prisma's IN(...) arities multiply
+// them; each text runs to a couple of KB) would be a measurable slice of the
+// very allowance it audits. But the cheap thing and the complete thing are the
+// same thing: (queryid, calls, rows, time) is ~40 bytes a row, so BOTH snapshots
+// can hold every shape, and a delta is computed over all of them. Only after
+// the ranking is known does readStatementText() fetch text — for the handful
+// of shapes that will actually be printed.
+//
+// Why not just `ORDER BY rows DESC LIMIT n` here: that cutoff would rank by the
+// ALL-TIME counter, so a newly hot shape whose cumulative total still sits
+// below n historical heavy-hitters would be missing from both snapshots and
+// invisible to the delta — precisely the shape a burn audit exists to find.
 async function readStatements(): Promise<StatementStat[]> {
-  return prisma.$queryRaw<StatementStat[]>`
-    SELECT query, calls, rows, total_exec_time
+  // SUM(bigint) is numeric in Postgres and would come back as a Decimal; the
+  // casts keep the arithmetic below in BigInt/number as declared.
+  return db.$queryRaw<StatementStat[]>`
+    SELECT queryid,
+           SUM(calls)::bigint            AS calls,
+           SUM(rows)::bigint             AS rows,
+           SUM(total_exec_time)::float8  AS total_exec_time
     FROM pg_stat_statements
+    WHERE queryid IS NOT NULL
+    GROUP BY queryid
   `;
+}
+
+// Statement text for the shapes that made the report, capped at 1,500 chars —
+// enough to keep a wide Prisma projection list intact for costOf()'s column
+// count (~25 chars per column) while bounding the read.
+async function readStatementText(ids: bigint[]): Promise<Map<string, string>> {
+  if (!ids.length) return new Map();
+  const rows = await db.$queryRaw<{ queryid: bigint; query: string }[]>`
+    SELECT queryid, max(left(query, 1500)) AS query
+    FROM pg_stat_statements
+    WHERE queryid::text IN (${Prisma.join(ids.map(String))})
+    GROUP BY queryid
+  `;
+  return new Map(rows.map((r) => [String(r.queryid), r.query]));
 }
 
 async function snapshot(): Promise<Snapshot> {
   const [dbRows, tables, statements] = await Promise.all([
-    prisma.$queryRaw<DbStat[]>`
+    db.$queryRaw<DbStat[]>`
       SELECT datname, xact_commit, tup_returned, tup_fetched, blks_read, blks_hit, stats_reset
       FROM pg_stat_database WHERE datname = current_database()
     `,
@@ -213,14 +288,14 @@ async function snapshot(): Promise<Snapshot> {
     at: Date.now(),
     db: dbRows[0],
     tables: new Map(tables.map((t) => [t.relname, t])),
-    statements: new Map(statements.map((s) => [s.query, s])),
+    statements: new Map(statements.map((s) => [String(s.queryid), s])),
   };
 }
 
 async function main() {
   await wakeDb();
 
-  console.log(`Operational database: ${OPERATIONAL_URL_SOURCE}`);
+  console.log(`Database under audit: ${DB_LABEL}`);
   console.log(`Wall clock: ${new Date().toISOString()}`);
 
   // Creating the extension is what makes the NEXT run useful on a fresh project;
@@ -228,7 +303,7 @@ async function main() {
   // step needed.
   let pgssError = "";
   try {
-    await prisma.$executeRawUnsafe("CREATE EXTENSION IF NOT EXISTS pg_stat_statements");
+    await db.$executeRawUnsafe("CREATE EXTENSION IF NOT EXISTS pg_stat_statements");
   } catch (e) {
     pgssError = e instanceof Error ? e.message.split("\n")[0] : String(e);
   }
@@ -271,7 +346,7 @@ async function main() {
       };
     });
     statements = [...second.statements.values()].map((st) => {
-      const a = first.statements.get(st.query);
+      const a = first.statements.get(String(st.queryid));
       return {
         ...st,
         calls: st.calls - (a?.calls ?? 0n),
@@ -325,13 +400,13 @@ async function main() {
   const rate = (bytes: number) => (windowDays > 0 ? mb(perDay(bytes)) : "-");
 
   // ── Database-wide ─────────────────────────────────────────────────────────
-  const db = first.db;
+  const dbStat = first.db;
   section("Database-wide (pg_stat_database, cumulative)");
-  if (db) {
-    console.log(`  transactions committed : ${num(db.xact_commit)}`);
-    console.log(`  tuples returned by scans: ${num(db.tup_returned)}`);
-    console.log(`  tuples fetched          : ${num(db.tup_fetched)}`);
-    const hitRate = Number(db.blks_hit) / Math.max(1, Number(db.blks_hit) + Number(db.blks_read));
+  if (dbStat) {
+    console.log(`  transactions committed : ${num(dbStat.xact_commit)}`);
+    console.log(`  tuples returned by scans: ${num(dbStat.tup_returned)}`);
+    console.log(`  tuples fetched          : ${num(dbStat.tup_fetched)}`);
+    const hitRate = Number(dbStat.blks_hit) / Math.max(1, Number(dbStat.blks_hit) + Number(dbStat.blks_read));
     console.log(`  buffer cache hit rate   : ${(hitRate * 100).toFixed(1)}%`);
     console.log("  NOTE: tuples returned is scan WORK, not client egress — see the header.");
   }
@@ -409,8 +484,22 @@ async function main() {
     return 0;
   };
 
-  const app = statements.filter((st) => Number(st.calls) > 0 && !isPlatformNoise(st.query));
-  const noise = statements.filter((st) => Number(st.calls) > 0 && isPlatformNoise(st.query));
+  // Rank EVERY active shape by rows over the window, then fetch text for the
+  // top slice only. 60 rather than 20 because platform noise is recognised by
+  // its text and can occupy top slots; what is left after filtering is what
+  // gets printed (up to 20).
+  const TEXT_FOR = 60;
+  const active = statements.filter((st) => Number(st.calls) > 0).sort((a, b) => Number(b.rows) - Number(a.rows));
+  const top = active.slice(0, TEXT_FOR);
+  const texts = await readStatementText(top.map((st) => st.queryid)).catch(() => new Map<string, string>());
+  const ranked = top.map((st) => ({
+    ...st,
+    query:
+      texts.get(String(st.queryid)) ??
+      "(statement text unavailable — evicted from pg_stat_statements between the snapshot and this lookup)",
+  }));
+  const app = ranked.filter((st) => !isPlatformNoise(st.query));
+  const noise = ranked.filter((st) => isPlatformNoise(st.query));
 
   section(`Application statements by rows returned (${windowLabel})`);
   if (!app.length) {
@@ -419,7 +508,7 @@ async function main() {
     console.log("    The CREATE EXTENSION above is what makes the next run useful; on a");
     console.log("    fresh project it needs a traffic window before the view fills.");
   } else {
-    app.sort((a, b) => Number(b.rows) - Number(a.rows));
+    console.log(`  (${num(active.length)} shapes moved in this window; text fetched for the top ${Math.min(TEXT_FOR, active.length)}.)`);
     let egressTotal = 0;
     for (const st of app.slice(0, 20)) {
       const q = st.query.replace(/\s+/g, " ").trim();
@@ -462,7 +551,7 @@ async function main() {
     if (noise.length) {
       const noiseRows = noise.reduce((n, st) => n + Number(st.rows), 0);
       const noiseCalls = noise.reduce((n, st) => n + Number(st.calls), 0);
-      console.log(`\n  (Excluded as platform noise: ${noise.length} shapes, ${num(noiseCalls)} calls, ` +
+      console.log(`\n  (Excluded as platform noise among the top ${TEXT_FOR}: ${noise.length} shapes, ${num(noiseCalls)} calls, ` +
         `${num(noiseRows)} rows — Neon's own monitoring of pg_stat_activity/neon_perf_counters. ` +
         `Not the application's traffic and not ours to change, but counted here rather than dropped silently.)`);
     }
@@ -480,4 +569,4 @@ main()
     console.error(e);
     process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => db.$disconnect());
