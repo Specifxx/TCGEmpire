@@ -54,8 +54,14 @@ export function PremiumPricingCards({
   trialAvailable: boolean;
   trialDays: number;
 }) {
-  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
   const anyAnnualLive = annualLive || (plusLive && plusAnnualLive);
+  // Annual by default (2026-09-11, owner: "so the prices look cheaper at
+  // initial glance") — this only works because the headline number under
+  // annual billing is the EFFECTIVE MONTHLY rate (premiumEffectiveMonthly()
+  // in PaidTierCard below), not the once-a-year lump sum. A tier with no
+  // annual price of its own still falls back to monthly display regardless
+  // of this default — see PaidTierCard's own effectiveCycle guard.
+  const [cycle, setCycle] = useState<"monthly" | "annual">(anyAnnualLive ? "annual" : "monthly");
   const premiumSave = annualSavingPct("premium");
   const plusSave = annualSavingPct("plus");
   // The badge shows whichever live tier's saving is real — they're both ~33%

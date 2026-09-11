@@ -4604,3 +4604,35 @@ legitimately-scrolling container as "overflowing" whether or not it is). A
 **pre-existing, site-wide issue** in the header nav (reproduces on `/` and
 `/tools` too, unrelated to anything touched here) — left alone, out of scope
 for a pricing-page redesign, and not something this pass introduced.
+
+## /premium defaults to annual billing — 2026-09-11 (same day, follow-up)
+
+Owner: "we should default to annual billing so the prices look cheaper at
+initial glance."
+
+This only works honestly because of how the previous entry built the annual
+view: the headline number under annual billing is the EFFECTIVE MONTHLY rate
+(`premiumEffectiveMonthly()` — $3.33 for Plus, $6.67 for Premium), not the
+once-a-year lump sum, with "Billed as $X/year" as the small-print caption.
+Defaulting to annual therefore shows a genuinely SMALLER first number than
+monthly does, which is exactly the ask — it isn't a trick, the number itself
+is real and is what the account is actually billed per month under that plan.
+
+`PremiumPricingCards.tsx`'s toggle now initialises to `"annual"` whenever
+annual billing is actually configured for either live tier (`anyAnnualLive`),
+`"monthly"` otherwise — never defaults to a cycle that isn't purchasable. A
+tier missing its OWN annual price (Plus configured, Premium's annual not, or
+vice versa) still falls back to a real monthly card for that tier specifically,
+regardless of the page-level default — the same `effectiveCycle` guard the
+previous entry added, unchanged.
+
+**`PremiumDialog.tsx`'s own toggle stays on monthly, deliberately not matched
+to this.** Its non-trial annual view (`AnnualPriceBlock`) shows the full
+once-a-year total as its headline — $79.99, not $6.67 — because that block is
+also used standalone elsewhere (the dialog's "Save N%" strikethrough
+framing). Defaulting the dialog to annual would show a BIGGER first number to
+someone who hasn't decided to pay anything yet, the opposite of today's ask
+and exactly what the dialog's own standing comment on defaulting to monthly
+already explains. Making the dialog's annual view lead with the effective
+monthly rate too — so it could safely default to annual on the same logic —
+is a real follow-up, just a separate change from this one.

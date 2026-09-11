@@ -236,14 +236,30 @@ test("no new fake scarcity or invented numbers on any of the new tier surfaces",
   }
 });
 
-test("the tier toggle in the dialog and on /premium defaults to monthly, not annual", () => {
-  // The /premium billing-cycle toggle moved into its own client component
-  // (PremiumPricingCards.tsx) on 2026-09-11 — /premium itself is a server
-  // component and the toggle needs real state.
-  for (const file of ["src/components/PremiumDialog.tsx", "src/components/PremiumPricingCards.tsx"]) {
-    const src = read(file);
-    assert.match(src, /useState<"monthly" \| "annual">\("monthly"\)|plan\?\s*=\s*"monthly"|plan="monthly"/, `${file} must default to the monthly plan`);
-  }
+test("the dialog's tier toggle still defaults to monthly — the smaller of its two headline numbers", () => {
+  // Unchanged: the dialog's non-trial annual view (AnnualPriceBlock) shows
+  // the once-a-year LUMP SUM as its headline, not a per-month rate, so
+  // defaulting it to annual would show a BIGGER number to someone who hasn't
+  // decided to pay anything yet — exactly what defaulting to monthly here
+  // was written to avoid (see the dialog's own comment on `plan`).
+  const src = read("src/components/PremiumDialog.tsx");
+  assert.match(src, /useState<"monthly" \| "annual">\("monthly"\)/, "the dialog must default to the monthly plan");
+});
+
+test("/premium's billing-cycle toggle defaults to annual, when annual is actually live", () => {
+  // 2026-09-11, owner: "default to annual billing so the prices look cheaper
+  // at initial glance" — this only works honestly because /premium's annual
+  // headline is the EFFECTIVE MONTHLY rate (premiumEffectiveMonthly()), a
+  // SMALLER number than the monthly-plan price, not the dialog's once-a-year
+  // lump sum. A tier missing its own annual price still displays monthly
+  // regardless of this default (PaidTierCard's own effectiveCycle guard).
+  const src = read("src/components/PremiumPricingCards.tsx");
+  assert.match(
+    src,
+    /useState<"monthly" \| "annual">\(anyAnnualLive \? "annual" : "monthly"\)/,
+    "must default to annual whenever annual billing is actually configured",
+  );
+  assert.match(src, /effectiveCycle/, "a tier without its own annual price must still fall back to monthly display");
 });
 
 test("grantPremiumDays and grantPremiumMonths accept an optional tier, defaulting to premium", () => {
