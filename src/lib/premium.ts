@@ -348,8 +348,33 @@ export function hasAccount(user: { id: string } | null | undefined): boolean {
 // account entitled at all" — so every existing call site (all 17 server gates
 // bar the four pro tools, all six ad components) is unchanged by the tiering
 // split. Only the four pro-tool gates pass `isPremium(user, "premium")`.
+// The shape every entitlement read needs. premiumTierFloor is optional so a
+// caller with a narrower select still type-checks — safe because the floor can
+// only ever RAISE a tier, so omitting it can never hand out access that wasn't
+// bought. The four pro-tool gates all receive SessionUser, which carries it.
+export type EntitlementUser = {
+  premiumUntil: Date | null;
+  isAdmin?: boolean;
+  premiumTier?: string | null;
+  premiumTierFloor?: string | null;
+};
+
+// max(billing tier, hand-set floor). See premiumTierFloor in schema.prisma:
+// billing keeps writing the true tier, and this is where a promise that
+// outranks it gets applied — once, at read time, so there is no second copy of
+// the truth to drift or to re-pin after a renewal.
+export function effectiveTier(user: EntitlementUser): PremiumTier {
+  const billed = normalizeTier(user.premiumTier);
+  // Only an explicit "plus"/"premium" string is a floor; null/garbage is none.
+  // normalizeTier can't do this job — it maps anything unrecognized to
+  // "premium", which would turn an empty column into a free upgrade for all.
+  const floor = user.premiumTierFloor === "plus" || user.premiumTierFloor === "premium" ? user.premiumTierFloor : null;
+  if (!floor) return billed;
+  return TIER_RANK[floor] > TIER_RANK[billed] ? floor : billed;
+}
+
 export function isPremium(
-  user: { premiumUntil: Date | null; isAdmin?: boolean; premiumTier?: string | null } | null | undefined,
+  user: EntitlementUser | null | undefined,
   min: PremiumTier = "plus",
 ): boolean {
   if (!user) return false;
@@ -359,7 +384,7 @@ export function isPremium(
   if (user.isAdmin) return true;
   const active = !!user.premiumUntil && user.premiumUntil.getTime() > Date.now();
   if (!active) return false;
-  return TIER_RANK[normalizeTier(user.premiumTier)] >= TIER_RANK[min];
+  return TIER_RANK[effectiveTier(user)] >= TIER_RANK[min];
 }
 
 // The tier a user is actually on right now, or null if they aren't entitled at
@@ -367,12 +392,12 @@ export function isPremium(
 // mirrors isPremium's own admin short-circuit. Used by /api/me and the
 // account-detail card, which both need to NAME the tier, not just a boolean.
 export function premiumTierOf(
-  user: { premiumUntil: Date | null; isAdmin?: boolean; premiumTier?: string | null } | null | undefined,
+  user: EntitlementUser | null | undefined,
 ): PremiumTier | null {
   if (!user) return null;
   if (user.isAdmin) return "premium";
   const active = !!user.premiumUntil && user.premiumUntil.getTime() > Date.now();
-  return active ? normalizeTier(user.premiumTier) : null;
+  return active ? effectiveTier(user) : null;
 }
 
 export async function getPremiumUntil(userId: string): Promise<Date | null> {

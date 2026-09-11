@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
 import { GrantPremiumForm } from "@/components/admin/GrantPremiumForm";
+import { TierFloorForm } from "@/components/admin/TierFloorForm";
 import { NOT_SEED_WHERE } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +50,7 @@ export default async function AccountsAdminPage({
     isAdmin: boolean;
     premiumUntil: Date | null;
     premiumTier: string;
+    premiumTierFloor: string | null;
     trialStartedAt: Date | null;
     lastLoginAt: Date | null;
     createdAt: Date;
@@ -78,13 +80,22 @@ export default async function AccountsAdminPage({
     // "premium". Active-entitlement-first is what makes the Plus/Premium split
     // here mean the same thing isPremium() means everywhere else.
     const active = { premiumUntil: { gt: now } };
+    // EFFECTIVE tier, not the raw column: an account billed Plus but pinned to
+    // Premium (a grandfathered $4.99 subscriber) has Premium access, so it must
+    // count and filter as Premium here — otherwise this page disagrees with
+    // what that person actually sees on the site. Mirrors effectiveTier().
+    const billedPlus = { premiumTier: "plus" };
+    const notRaised = { OR: [{ premiumTierFloor: null }, { premiumTierFloor: "plus" }] };
+    const isEffPlus = { AND: [billedPlus, notRaised] };
+    const effPlus = { AND: [active, isEffPlus] };
+    const effPremium = { AND: [active, { NOT: isEffPlus }] };
     const quick =
       filter === "paid"
         ? active
         : filter === "plus"
-          ? { ...active, premiumTier: "plus" }
+          ? effPlus
           : filter === "premium"
-            ? { ...active, NOT: { premiumTier: "plus" } }
+            ? effPremium
             : filter === "verified"
               ? { emailVerified: { not: null } }
               : filter === "active"
@@ -99,13 +110,13 @@ export default async function AccountsAdminPage({
         select: {
           id: true, email: true, displayName: true, emailVerified: true, passwordHash: true,
           googleId: true, discordId: true, isAdmin: true,
-          premiumUntil: true, premiumTier: true, trialStartedAt: true, lastLoginAt: true, createdAt: true,
+          premiumUntil: true, premiumTier: true, premiumTierFloor: true, trialStartedAt: true, lastLoginAt: true, createdAt: true,
         },
       }),
       prisma.user.count({ where: notSeed }),
       prisma.user.count({ where: { AND: [notSeed, { emailVerified: { not: null } }] } }),
-      prisma.user.count({ where: { AND: [notSeed, active, { NOT: { premiumTier: "plus" } }] } }),
-      prisma.user.count({ where: { AND: [notSeed, active, { premiumTier: "plus" }] } }),
+      prisma.user.count({ where: { AND: [notSeed, effPremium] } }),
+      prisma.user.count({ where: { AND: [notSeed, effPlus] } }),
       prisma.user.count({ where: { AND: [notSeed, { lastLoginAt: { gte: d7 } }] } }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d7 } }] } }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d30 } }] } }),
@@ -161,7 +172,11 @@ export default async function AccountsAdminPage({
     registered: fmt(u.createdAt),
     lastLogin: fmt(u.lastLoginAt),
     verified: !!u.emailVerified,
-    plan: !(u.premiumUntil && u.premiumUntil > now) ? "none" : u.premiumTier === "plus" ? "plus" : "premium",
+    plan: !(u.premiumUntil && u.premiumUntil > now)
+      ? "none"
+      : u.premiumTier === "plus" && u.premiumTierFloor !== "premium"
+        ? "plus"
+        : "premium",
   }));
 
   return (
@@ -237,8 +252,9 @@ export default async function AccountsAdminPage({
       {/* Manual premium grant — the remediation lever for a stranded paying
           account (see /api/admin/grant-premium). Passes the ?key= through when
           the page was opened by key link rather than an admin session. */}
-      <div className="mt-5">
+      <div className="mt-5 space-y-4">
         <GrantPremiumForm adminKey={keyOk && !me?.isAdmin ? token : undefined} />
+        <TierFloorForm adminKey={keyOk && !me?.isAdmin ? token : undefined} />
       </div>
 
       {/* Export */}
@@ -337,7 +353,12 @@ export default async function AccountsAdminPage({
                     u.passwordHash ? "Password" : null,
                   ].filter(Boolean) as string[];
                   const premiumActive = u.premiumUntil && u.premiumUntil > now;
-                  const isPlus = u.premiumTier === "plus";
+                  // What the account can actually DO — the floor can raise it
+                  // above what its Stripe price says. The billing tier is still
+                  // surfaced below, since an admin looking at a grandfathered
+                  // account needs to see both halves, not a merged answer.
+                  const effective = u.premiumTierFloor === "premium" ? "premium" : u.premiumTier;
+                  const isPlus = effective === "plus";
                   return (
                     <tr key={u.id} className="border-b border-ink-800 last:border-0 align-top hover:bg-ink-800/50">
                       <td className="px-3 py-2">
@@ -375,12 +396,22 @@ export default async function AccountsAdminPage({
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">
                         {premiumActive ? (
-                          <span
-                            className={`chip ${isPlus ? "bg-slate-500/20 text-slate-200" : "bg-gold/20 text-gold"}`}
-                            title={`${isPlus ? "Plus" : "Premium"} until ${fmt(u.premiumUntil)}`}
-                          >
-                            {isPlus ? "Plus" : "Premium"} · {fmt(u.premiumUntil)}
-                          </span>
+                          <>
+                            <span
+                              className={`chip ${isPlus ? "bg-slate-500/20 text-slate-200" : "bg-gold/20 text-gold"}`}
+                              title={`${isPlus ? "Plus" : "Premium"} until ${fmt(u.premiumUntil)}`}
+                            >
+                              {isPlus ? "Plus" : "Premium"} · {fmt(u.premiumUntil)}
+                            </span>
+                            {u.premiumTierFloor && (
+                              <span
+                                className="chip ml-1 bg-brand-500/15 text-brand-400"
+                                title={`Grandfathered: billing says ${u.premiumTier}, floor pins this account to ${u.premiumTierFloor}`}
+                              >
+                                pinned · billed {u.premiumTier}
+                              </span>
+                            )}
+                          </>
                         ) : u.premiumUntil ? (
                           <span className="chip bg-ink-800 text-slate-500">lapsed {fmt(u.premiumUntil)}</span>
                         ) : u.trialStartedAt ? (

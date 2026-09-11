@@ -4768,3 +4768,102 @@ the accounts page's Plus filter returns exactly the Plus account; revoke
 returns `wasTier: "plus"` and the filter then returns nothing; `/feedback`
 renders "7 days of Plus"; `/premium`'s quick links drop the four pro tools for
 Plus.
+
+---
+
+## Grandfathering the August $4.99 subscribers: a tier FLOOR — 2026-09-11 (same day, follow-up)
+
+Owner, looking at the accounts page's new Plus filter: "these people, except
+for bill yang, should be premium as long as they are on the $4.99 plan as part
+of our promise to keep the price the same initially."
+
+### What went wrong
+
+The two-tier plan carried an explicit warning: *create NEW Stripe Prices for
+Plus; do not reuse the August $4.99 Price ID*, because tier is resolved from
+the live price id and repointing `STRIPE_PLUS_PRICE_ID` at the old price would
+silently reclassify every August subscriber as Plus. That is what happened —
+seven accounts, six of them real August subscribers, showed up as Plus on the
+first look at the new admin filter.
+
+The reclassification is not itself a billing error: those accounts genuinely
+sit on the Price object that `STRIPE_PLUS_PRICE_ID` now names, so every layer
+did exactly what it was told. The error is that the promise made to them — the
+price holds — was made when $4.99 bought *everything*, before a reduced tier
+existed to be dropped into.
+
+### Why the price can no longer answer the question
+
+Once the August price became the Plus price, two different cohorts share one
+price id: the grandfathered subscribers, and genuine new Plus customers buying
+today at the same $4.99. No rule derived from the price alone can separate
+them, because on the price they are identical. **The difference is a fact about
+the customer, so it is stored on the customer** — `User.premiumTierFloor`.
+
+The alternative was to create a new Stripe Price for Plus and let the old id
+fall back to the unknown→premium grandfather rule. Rejected: it only works
+until someone reuses a price again, it needs Stripe surgery to be correct, and
+it still can't express "this specific person was promised more than they pay".
+
+### A floor, not an override — the design decision that matters
+
+`effectiveTier(user) = max(premiumTier, premiumTierFloor)`, applied at READ
+time in `isPremium`/`premiumTierOf`. Nothing in the Stripe pipeline knows the
+floor exists; billing keeps writing the true tier to `premiumTier` underneath.
+Three consequences, each one a bug avoided:
+
+- **Renewals, plan changes, the nightly reconcile and the audit script can
+  re-stamp the billing tier as often as they like.** A pin never has to be
+  re-applied, and no webhook can quietly undo a promise. A freeze — a flag that
+  made billing skip the tier write — would have needed changes in four files
+  and would have been one missed code path away from failing silently.
+- **A floor can only raise.** An account that genuinely upgrades past its floor
+  keeps the higher tier; no floor can strand anyone below what they pay for.
+- **A floor raises an entitlement, it never grants one.** A lapsed account with
+  a floor is still entitled to nothing — `premiumUntil` is unchanged and is
+  still the only thing that says "paid".
+
+A junk or empty floor value is deliberately NOT passed through
+`normalizeTier()`, which maps anything unrecognized to `"premium"` — doing that
+would turn an empty column into a free upgrade for every account on the site.
+Only the literal strings `"plus"` and `"premium"` are floors. There is a test
+for exactly this.
+
+`isPremium`'s argument type takes `premiumTierFloor` as optional so narrow
+selects still compile. That's safe in one direction only — a caller that omits
+the field ignores the floor, which can under-grant but never over-grant — and
+the four pro-tool gates all read `SessionUser`, which now carries it. Pinned by
+a test, because "the gate silently can't see the floor" is the one way this
+design fails.
+
+### Surfaces
+
+- `/api/admin/tier-floor` (dual-gated, logged) takes **many emails at once** —
+  grandfathering is inherently a cohort, and doing it one account at a time
+  invites missing one. Reports back per account, including "no active
+  entitlement — the floor does nothing until this account is subscribed again".
+- Admin accounts page: a "Grandfathered tier (floor)" panel, and a pinned
+  account renders BOTH halves — `Premium · <date>` plus `pinned · billed plus`.
+  An admin looking at a grandfathered subscriber needs to see the promise and
+  what Stripe is really charging, not a merged answer that hides the gap.
+- The Plus/Premium stats and quick filters query the EFFECTIVE tier, so this
+  page can't disagree with what the member sees on the site.
+- `/premium` names the effective tier on the subscription card, and suppresses
+  the upgrade/downgrade buttons for a pinned account: an "upgrade" to something
+  they already have, or a downgrade the floor would silently undo, are both
+  real money moving for no change in access.
+
+### Bill Yang is deliberately left on Plus
+
+Per the owner — the only one of the seven who isn't an August subscriber (a
+year-long Plus grant, i.e. a test account). Worth recording because "the Plus
+filter had seven rows and six were fixed" otherwise looks like a missed row.
+
+### Still true, and worth not forgetting
+
+`STRIPE_PLUS_PRICE_ID` still points at the August Price object. That is now
+fine — new Plus buyers get Plus, grandfathered accounts are pinned — but it
+means the *next* time a price is reused for a different tier, the same
+reclassification happens to whoever is sitting on it. The floor is the remedy
+that exists for it; the cheaper habit is to never reuse a Price object across
+tiers in the first place.

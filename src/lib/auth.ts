@@ -57,6 +57,7 @@ export interface SessionUser {
   // Which paid tier premiumUntil buys ("plus" | "premium") — see isPremium()'s
   // `min` argument in lib/premium.ts.
   premiumTier: string;
+  premiumTierFloor: string | null;
   // When this account first started a free trial (null = never → trial-eligible).
   trialStartedAt: Date | null;
   // The market (AU/US/UK/SG/CA) this account browses/prices in — see the
@@ -136,6 +137,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       isAdmin: user.isAdmin || isAdminEmail(user.email),
       premiumUntil: user.premiumUntil,
       premiumTier: user.premiumTier,
+      premiumTierFloor: user.premiumTierFloor,
       trialStartedAt: user.trialStartedAt,
       preferredCountry: user.preferredCountry,
     };

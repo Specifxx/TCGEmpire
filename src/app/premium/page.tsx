@@ -392,8 +392,12 @@ export default async function PremiumPage() {
             <p className="mt-2 text-sm text-slate-300">Admin access — every Premium feature, no subscription required.</p>
           ) : subDetails ? (
             <div className="mt-2 space-y-1 text-sm text-slate-300">
+              {/* The tier NAMED here is the effective one (currentTier), which a
+                  hand-set floor can raise above what the subscription's price
+                  says — a grandfathered $4.99 account really is on Premium, and
+                  its own membership card is the last place that should argue. */}
               <p className="font-semibold text-white">
-                {TIER_NAMES[subDetails.tier]} ·{" "}
+                {TIER_NAMES[currentTier ?? subDetails.tier]} ·{" "}
                 {subDetails.status === "trialing"
                   ? "Free trial"
                   : subDetails.interval === "year"
@@ -412,10 +416,15 @@ export default async function PremiumPage() {
                   <>Renews {fmtDate(subDetails.currentPeriodEnd)}</>
                 )}
               </p>
+              {/* Also the EFFECTIVE tier, so a grandfathered account is never
+                  offered an "upgrade" to something it already has — and a
+                  floored account is never offered a downgrade that its floor
+                  would silently undo. Both would be real money changing hands
+                  for no change in access. */}
               <SubscriptionActions
-                tier={subDetails.tier}
+                tier={currentTier ?? subDetails.tier}
                 interval={subDetails.interval}
-                plusLive={plusLive}
+                plusLive={plusLive && !user.premiumTierFloor}
                 annualAvailable={subDetails.tier === "plus" ? plusAnnualLive : annualLive}
                 canManageBilling={checkoutLive}
               />

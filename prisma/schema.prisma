@@ -44,6 +44,18 @@ model User {
   // lib/premium.ts) — last-write-wins, unlike premiumUntil which is extend-only.
   // Meaningless while premiumUntil is null or in the past.
   premiumTier         String    @default("premium")
+  // A FLOOR on the tier above, never a freeze: the effective tier is
+  // max(premiumTier, premiumTierFloor). Set by hand for accounts we've promised
+  // more than their price now buys — the August $4.99 subscribers, whose Price
+  // object later became the Plus price, so billing legitimately resolves them
+  // to "plus" while the promise says Premium.
+  //
+  // A floor rather than an overwrite because billing keeps writing the TRUE
+  // tier to premiumTier: nothing has to be re-pinned after a renewal, a plan
+  // change or a reconcile, and an account that upgrades past its floor is never
+  // dragged back down to it. Null for everyone else. Only meaningful while
+  // premiumUntil is in the future — it raises a tier, it never grants one.
+  premiumTierFloor    String?
   stripeCustomerId    String?
   // Most recent successful sign-in (stamped by the OAuth callback, the only
   // place a session is ever created). Null for accounts that haven't signed in

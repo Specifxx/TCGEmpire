@@ -8,6 +8,7 @@ import {
   normalizeTier,
   tierFromPriceId,
   priceIdFor,
+  effectiveTier,
   grantPremiumDays,
 } from "../src/lib/premium";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
@@ -367,8 +368,11 @@ test("the admin accounts page separates Plus from Premium and only ever counts a
   // premiumTier is a plain column defaulting to "premium", so counting it
   // without an active premiumUntil would report every free account as Premium.
   assert.match(src, /const active = \{ premiumUntil: \{ gt: now \} \}/, "tier filters must be anchored to a live entitlement");
-  assert.match(src, /active,\s*\{ NOT: \{ premiumTier: "plus" \} \}/, "the Premium count must be active AND not-plus");
-  assert.match(src, /active,\s*\{ premiumTier: "plus" \}/, "the Plus count must be active AND plus");
+  // …and on the EFFECTIVE tier, so a grandfathered account billed Plus but
+  // pinned to Premium counts as Premium here, the same as it reads on the site.
+  assert.match(src, /const effPlus = \{ AND: \[active, isEffPlus\] \}/, "the Plus count must be active AND effectively plus");
+  assert.match(src, /const effPremium = \{ AND: \[active, \{ NOT: isEffPlus \}\] \}/, "the Premium count must be active AND not effectively plus");
+  assert.match(src, /premiumTierFloor: null/, "the effective-tier query must account for an unset floor");
   assert.match(src, /label="Plus \(active\)"/, "Plus must get its own stat, not be folded into a single paid number");
   assert.match(src, /label="Premium \(active\)"/);
   // Last login, the other thing the page gained.
@@ -386,4 +390,84 @@ test("last login is stamped on sign-in without being able to fail the sign-in", 
     /void prisma\.user\.update\(\{[\s\S]{0,140}lastLoginAt: new Date\(\)[\s\S]{0,60}\)\.catch\(\(\) => \{\}\)/,
     "must stamp lastLoginAt without awaiting or throwing",
   );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Grandfathering (2026-09-11): the August $4.99 subscribers were promised
+// their price would hold. That Price object later became the PLUS price, so
+// billing legitimately resolves them to Plus while the promise says Premium —
+// and they now share a price id with genuine new Plus customers, so nothing
+// derived from the price alone can separate the two cohorts. The difference
+// is a fact about the customer, so it lives on the customer.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a tier floor raises the effective tier without touching what billing wrote", () => {
+  const future = new Date(Date.now() + 86_400_000);
+
+  // The grandfathered case: billed Plus, promised Premium.
+  const grandfathered = { premiumUntil: future, premiumTier: "plus", premiumTierFloor: "premium" };
+  assert.equal(effectiveTier(grandfathered), "premium");
+  assert.equal(premiumTierOf(grandfathered), "premium");
+  assert.equal(isPremium(grandfathered, "premium"), true, "a grandfathered account must pass a pro-tool gate");
+
+  // A floor NEVER lowers anyone — that's the whole point of it being a floor.
+  // A Premium subscriber with a stale "plus" floor keeps Premium.
+  const premiumWithLowFloor = { premiumUntil: future, premiumTier: "premium", premiumTierFloor: "plus" };
+  assert.equal(effectiveTier(premiumWithLowFloor), "premium");
+  assert.equal(isPremium(premiumWithLowFloor, "premium"), true);
+
+  // No floor, or a junk value, changes nothing. A junk floor must NOT be run
+  // through normalizeTier, which maps anything unrecognized to "premium" — an
+  // empty or malformed column would then be a free upgrade for everyone.
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus" }), "plus");
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: null }), "plus");
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "" }), "plus");
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "PREMIUM" }), "plus");
+  assert.equal(effectiveTier({ premiumUntil: future, premiumTier: "plus", premiumTierFloor: "nonsense" }), "plus");
+
+  // A floor raises a tier; it never GRANTS one. A lapsed account with a floor
+  // is still not entitled to anything.
+  const lapsed = { premiumUntil: new Date(Date.now() - 86_400_000), premiumTier: "plus", premiumTierFloor: "premium" };
+  assert.equal(isPremium(lapsed), false);
+  assert.equal(premiumTierOf(lapsed), null);
+});
+
+test("the floor is applied at read time, so billing can keep re-stamping the real tier", () => {
+  // The design claim worth pinning: nothing in the Stripe pipeline knows about
+  // the floor. If a webhook or the reconcile ever started writing
+  // premiumTierFloor, a renewal could silently undo a promise — and a floor
+  // that had to be re-applied after every plan change would be a freeze with
+  // extra steps.
+  for (const f of [
+    "src/app/api/marketplace/stripe/webhook/route.ts",
+    "src/lib/stripe-reconcile.ts",
+    "src/app/api/premium/upgrade/route.ts",
+    "src/app/api/premium/downgrade/route.ts",
+  ]) {
+    assert.doesNotMatch(read(f), /premiumTierFloor/, `${f} must not read or write the floor — billing writes premiumTier only`);
+  }
+  // Exactly one route may set it, and it's an admin one behind the dual gate.
+  const route = read("src/app/api/admin/tier-floor/route.ts");
+  assert.match(route, /keyOk \|\| me\?\.isAdmin/, "setting a floor must be admin-gated");
+  assert.match(route, /floor !== "plus" && floor !== "premium"/, "must reject a floor that isn't a real tier");
+  assert.match(route, /console\.log\(/, "an entitlement change by hand must be traceable in the logs");
+});
+
+test("the session user carries the floor, so the four pro-tool gates actually see it", () => {
+  // isPremium takes premiumTierFloor as OPTIONAL so narrow selects still
+  // compile — which means a gate whose user object lacks the field silently
+  // ignores the floor. All four pro gates read SessionUser, so SessionUser is
+  // the one shape that must carry it.
+  const auth = read("src/lib/auth.ts");
+  assert.match(auth, /premiumTierFloor: string \| null;/, "SessionUser must declare the floor");
+  assert.match(auth, /premiumTierFloor: user\.premiumTierFloor,/, "…and actually populate it");
+});
+
+test("schema and admin surface describe the floor as a floor, not an override", () => {
+  assert.match(read("prisma/schema.prisma"), /premiumTierFloor\s+String\?/);
+  // The admin page must show BOTH halves for a pinned account: an admin
+  // looking at a grandfathered subscriber needs to see the promise AND what
+  // Stripe is really billing, not a merged answer that hides the discrepancy.
+  const page = read("src/app/admin/accounts/page.tsx");
+  assert.match(page, /pinned · billed \{u\.premiumTier\}/, "a pinned account must show its real billing tier too");
 });
