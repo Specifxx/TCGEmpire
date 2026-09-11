@@ -6,6 +6,9 @@ import {
   annualSavingPct,
   premiumZeroAmount,
   premiumEffectiveMonthly,
+  tierMonthlyAmount,
+  tierAnnualAmount,
+  type PremiumTierKey,
 } from "@/lib/site";
 
 // The shared "$0 due today" headline for a trial-eligible visitor — used
@@ -23,6 +26,7 @@ export function TrialPriceBlock({
   plan,
   trialDays,
   size = "lg",
+  tier = "premium",
 }: {
   plan: "monthly" | "annual";
   trialDays: number;
@@ -33,11 +37,18 @@ export function TrialPriceBlock({
   // "then $X after your N-day trial" line stays exactly where it is, for the
   // reason in this file's header.
   size?: "lg" | "sm" | "compact";
+  // Which tier is being sold — defaults to "premium" (the only tier before
+  // Plus existed), so the Premium branch below still reads the flat
+  // PREMIUM_PRICE_AMOUNT/PREMIUM_ANNUAL_AMOUNT constants and the zero-arg
+  // helpers directly, unchanged.
+  tier?: PremiumTierKey;
 }) {
   const big = size === "lg" ? "text-4xl" : size === "sm" ? "text-3xl" : "text-2xl";
   const dayPhrase = `${trialDays}-day`;
-  const perMonth = premiumEffectiveMonthly();
-  const save = annualSavingPct();
+  const perMonth = tier === "plus" ? premiumEffectiveMonthly("plus") : premiumEffectiveMonthly();
+  const save = tier === "plus" ? annualSavingPct("plus") : annualSavingPct();
+  const monthlyAmount = tier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT;
+  const annualAmount = tier === "plus" ? tierAnnualAmount("plus") : PREMIUM_ANNUAL_AMOUNT;
 
   return (
     <div className="text-center">
@@ -48,7 +59,7 @@ export function TrialPriceBlock({
       <p className="mt-1.5 text-xs text-slate-400">
         then{" "}
         <span className="font-semibold text-slate-200">
-          {plan === "annual" ? `${PREMIUM_ANNUAL_AMOUNT}/${PREMIUM_ANNUAL_PERIOD}` : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`}
+          {plan === "annual" ? `${annualAmount}/${PREMIUM_ANNUAL_PERIOD}` : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`}
         </span>{" "}
         {plan === "annual" && perMonth && <span className="text-slate-400">(≈ {perMonth}/mo) </span>}
         after your {dayPhrase} free trial

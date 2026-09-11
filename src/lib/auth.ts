@@ -54,6 +54,9 @@ export interface SessionUser {
   isAdmin: boolean;
   // End of the current paid Premium period (drives the ad-free site etc.).
   premiumUntil: Date | null;
+  // Which paid tier premiumUntil buys ("plus" | "premium") — see isPremium()'s
+  // `min` argument in lib/premium.ts.
+  premiumTier: string;
   // When this account first started a free trial (null = never → trial-eligible).
   trialStartedAt: Date | null;
   // The market (AU/US/UK/SG/CA) this account browses/prices in — see the
@@ -132,6 +135,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
       balanceCents: user.balanceCents,
       isAdmin: user.isAdmin || isAdminEmail(user.email),
       premiumUntil: user.premiumUntil,
+      premiumTier: user.premiumTier,
       trialStartedAt: user.trialStartedAt,
       preferredCountry: user.preferredCountry,
     };

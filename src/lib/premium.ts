@@ -63,6 +63,44 @@ export function premiumCheckoutEnabled(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY && PREMIUM_PRICE_ID);
 }
 
+// ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
+// Same "inert until the price id is set" pattern as the annual price below.
+// Plus is ad-free plus the full lists (Deal Finder, Rising Cards, Rising
+// Sealed); Premium is Plus plus the four pro tools (Value Finder, Bulk Pricer,
+// Best Basket, Demand Finder). See the access-tier note further down.
+export type PremiumTier = "plus" | "premium";
+const TIER_RANK: Record<PremiumTier, number> = { plus: 1, premium: 2 };
+export function normalizeTier(v: unknown): PremiumTier {
+  return v === "plus" ? "plus" : "premium";
+}
+export const PLUS_PRICE_ID = process.env.STRIPE_PLUS_PRICE_ID ?? "";
+export const PLUS_ANNUAL_PRICE_ID = process.env.STRIPE_PLUS_ANNUAL_PRICE_ID ?? "";
+export function premiumPlusEnabled(): boolean {
+  return premiumCheckoutEnabled() && Boolean(PLUS_PRICE_ID);
+}
+export function plusAnnualEnabled(): boolean {
+  return premiumPlusEnabled() && Boolean(PLUS_ANNUAL_PRICE_ID);
+}
+// The price id for a given tier/interval — falls back to the tier's monthly
+// price if the annual one isn't configured, same fallback checkout already
+// does for Premium. Called after the caller has already confirmed the tier is
+// enabled; an unconfigured tier returns "" (checkout's own gate stops it there).
+export function priceIdFor(tier: PremiumTier, plan: "monthly" | "annual"): string {
+  if (tier === "plus") {
+    return plan === "annual" && PLUS_ANNUAL_PRICE_ID ? PLUS_ANNUAL_PRICE_ID : PLUS_PRICE_ID;
+  }
+  return plan === "annual" && PREMIUM_ANNUAL_PRICE_ID ? PREMIUM_ANNUAL_PRICE_ID : PREMIUM_PRICE_ID;
+}
+// Resolve a live Stripe price id back to a tier. Unknown/retired price ids —
+// including a price that used to be a standalone offer and was retired —
+// resolve to "premium", the grandfathered default, rather than silently
+// downgrading someone. Only a price id that IS a currently configured Plus
+// price counts as Plus.
+export function tierFromPriceId(priceId: string | null | undefined): PremiumTier {
+  if (priceId && (priceId === PLUS_PRICE_ID || priceId === PLUS_ANNUAL_PRICE_ID)) return "plus";
+  return "premium";
+}
+
 // Free-trial length (days) for a first-time subscriber. Defaults to 14 — set
 // PREMIUM_TRIAL_DAYS=0 in the environment to switch it back off (immediate charge,
 // no trial). Card-gated: a card is still required up front (payment_method_collection
@@ -200,6 +238,7 @@ export interface PremiumSubscriptionDetails {
   interval: "month" | "year" | null;
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: Date;
+  tier: PremiumTier;
 }
 
 // Real, live Stripe read for the /premium page's "Your subscription" card —
@@ -229,13 +268,14 @@ export async function getPremiumSubscriptionDetails(stripeCustomerId: string | n
     // whatever's there rather than showing nothing.
     const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing") ?? subs.data[0];
     if (!sub) return null;
-    const price = sub.items.data[0]?.price;
+    const price = sub.items.data[0]?.price as Stripe.Price | undefined;
     const interval = price?.recurring?.interval;
     return {
       status: sub.status,
       interval: interval === "month" || interval === "year" ? interval : null,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
       currentPeriodEnd: new Date(sub.current_period_end * 1000),
+      tier: tierFromPriceId(price?.id),
     };
   } catch (e) {
     console.error("premium subscription detail read failed:", e);
@@ -250,16 +290,27 @@ export async function getPremiumSubscriptionDetails(stripeCustomerId: string | n
 export const PORTFOLIO_FREE = true;
 
 // ── Access tiers ──────────────────────────────────────────────────────────────
-// The site has THREE tiers, and every gate is one of these two checks:
+// The site has FOUR tiers (2026-09-11, Premium went two-tier), and every gate
+// is one of three checks:
 //
 //   1. SIGNED OUT — the whole public site: search, browse, card/set/store pages,
 //      the deck builder, trade calculator, box EV, sealed prices, the index and
 //      movers. No wall anywhere.
 //   2. ACCOUNT (free, `hasAccount`) — the above PLUS watchlists, price alerts,
 //      and the portfolio.
-//   3. PREMIUM (paid, `isPremium`) — the above plus Value Finder, Rising Cards,
-//      the full Deal Finder list, the Bulk Pricer, the Best Basket optimiser, and
-//      no ads.
+//   3. PLUS (paid, `isPremium(user)` — the default `min` of "plus") — the above
+//      plus no ads and the FULL LISTS: Deal Finder, Rising Cards, Rising Sealed
+//      (free/account only ever see the top pick).
+//   4. PREMIUM (paid, `isPremium(user, "premium")`) — everything in Plus, plus
+//      the four pro tools: Value Finder, Bulk Pricer, Best Basket, Demand
+//      Finder.
+//
+// `isPremium`'s `min` argument is the only thing that changed on any existing
+// gate: a plain `isPremium(user)` still means "any paid tier", exactly as it
+// did as a single-tier boolean, so every list gate and every ad component
+// needed no edit at all. Only the four pro-tool gates pass "premium" as the
+// second argument. `premiumTierOf(user)` returns the actual tier name (or
+// null) for surfaces that need to SAY which one, rather than just gate on it.
 //
 // Best Basket moved BACK to tier 3, reversing the tier-2 experiment described in
 // an earlier version of this comment (giving it away free to grow signups). It
@@ -290,12 +341,35 @@ export function hasAccount(user: { id: string } | null | undefined): boolean {
   return !!user;
 }
 
-export function isPremium(user: { premiumUntil: Date | null; isAdmin?: boolean } | null | undefined): boolean {
+// `min` defaults to "plus" — the historical, single-tier meaning of "is this
+// account entitled at all" — so every existing call site (all 17 server gates
+// bar the four pro tools, all six ad components) is unchanged by the tiering
+// split. Only the four pro-tool gates pass `isPremium(user, "premium")`.
+export function isPremium(
+  user: { premiumUntil: Date | null; isAdmin?: boolean; premiumTier?: string | null } | null | undefined,
+  min: PremiumTier = "plus",
+): boolean {
   if (!user) return false;
-  // Admins always count as Premium — the team can use every paid feature without
-  // holding a subscription. Otherwise it's an active paid period.
+  // Admins always count as Premium (top tier) — the team can use every paid
+  // feature without holding a subscription. Otherwise it's an active paid
+  // period AT OR ABOVE the requested tier.
   if (user.isAdmin) return true;
-  return !!user.premiumUntil && user.premiumUntil.getTime() > Date.now();
+  const active = !!user.premiumUntil && user.premiumUntil.getTime() > Date.now();
+  if (!active) return false;
+  return TIER_RANK[normalizeTier(user.premiumTier)] >= TIER_RANK[min];
+}
+
+// The tier a user is actually on right now, or null if they aren't entitled at
+// all. Admins read as "premium" (the top tier) even with no subscription —
+// mirrors isPremium's own admin short-circuit. Used by /api/me and the
+// account-detail card, which both need to NAME the tier, not just a boolean.
+export function premiumTierOf(
+  user: { premiumUntil: Date | null; isAdmin?: boolean; premiumTier?: string | null } | null | undefined,
+): PremiumTier | null {
+  if (!user) return null;
+  if (user.isAdmin) return "premium";
+  const active = !!user.premiumUntil && user.premiumUntil.getTime() > Date.now();
+  return active ? normalizeTier(user.premiumTier) : null;
 }
 
 export async function getPremiumUntil(userId: string): Promise<Date | null> {
@@ -358,27 +432,43 @@ function addDays(base: Date, days: number): Date {
 // Extend a user's Premium by `months`, STACKING onto any current future period (so a
 // reward always adds time; it never shortens an existing/paid subscription). Returns
 // the new premiumUntil.
-export async function grantPremiumMonths(userId: string, months: number): Promise<Date | null> {
+//
+// `tier` defaults to "premium" (every comp path predates tiering and should keep
+// granting full access). The tier is written ONLY when this grant is creating
+// access from nothing (no active premiumUntil) — an extension of an existing
+// paid period must never change what tier that period already is, or a 7-day
+// feedback comp could flip a paying Plus subscriber to Premium and then flip
+// back on their next renewal.
+export async function grantPremiumMonths(userId: string, months: number, tier: PremiumTier = "premium"): Promise<Date | null> {
   if (months <= 0) return null;
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
   if (!u) return null;
   const now = new Date();
-  const base = u.premiumUntil && u.premiumUntil > now ? u.premiumUntil : now;
+  const hadActive = !!u.premiumUntil && u.premiumUntil > now;
+  const base = hadActive ? u.premiumUntil! : now;
   const until = addMonths(base, months);
-  await prisma.user.update({ where: { id: userId }, data: { premiumUntil: until } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { premiumUntil: until, ...(hadActive ? {} : { premiumTier: tier }) },
+  });
   return until;
 }
 
 // Same as grantPremiumMonths, but day-granular, for any comp whose natural unit is
-// days rather than calendar months (support goodwill, a short campaign).
-export async function grantPremiumDays(userId: string, days: number): Promise<Date | null> {
+// days rather than calendar months (support goodwill, a short campaign). See
+// grantPremiumMonths for why `tier` only applies when there's no active period.
+export async function grantPremiumDays(userId: string, days: number, tier: PremiumTier = "premium"): Promise<Date | null> {
   if (days <= 0) return null;
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
   if (!u) return null;
   const now = new Date();
-  const base = u.premiumUntil && u.premiumUntil > now ? u.premiumUntil : now;
+  const hadActive = !!u.premiumUntil && u.premiumUntil > now;
+  const base = hadActive ? u.premiumUntil! : now;
   const until = addDays(base, days);
-  await prisma.user.update({ where: { id: userId }, data: { premiumUntil: until } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { premiumUntil: until, ...(hadActive ? {} : { premiumTier: tier }) },
+  });
   return until;
 }
 

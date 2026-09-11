@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { grantPremiumDays } from "@/lib/premium";
+import { grantPremiumDays, normalizeTier } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,9 @@ export async function POST(req: Request) {
 
   const email = typeof body?.email === "string" ? body.email.trim() : "";
   const days = Math.floor(Number(body?.days));
+  // Optional — defaults to "premium" (every grant before Plus existed granted
+  // full access), and normalizeTier() rejects anything but "plus" as premium.
+  const tier = normalizeTier(body?.tier);
   if (!email) return NextResponse.json({ error: "Missing email" }, { status: 400 });
   if (!Number.isFinite(days) || days < 1 || days > MAX_DAYS) {
     return NextResponse.json({ error: `days must be 1–${MAX_DAYS}` }, { status: 400 });
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
   });
   if (!user) return NextResponse.json({ error: "No account with that email" }, { status: 404 });
 
-  const until = await grantPremiumDays(user.id, days);
+  const until = await grantPremiumDays(user.id, days, tier);
   if (!until) return NextResponse.json({ error: "Grant failed" }, { status: 500 });
 
   // An entitlement change by hand must be traceable in the function logs.

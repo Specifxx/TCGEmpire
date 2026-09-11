@@ -101,7 +101,7 @@ export default async function BulkPricerPage({ searchParams }: { searchParams: {
   // and hub copy above it still render for everyone, so the page stays indexable
   // and a shared ?list= link still unfurls its "this list is worth $X" OG card.
   const user = await getCurrentUser();
-  const premium = isPremium(user);
+  const premium = isPremium(user, "premium");
   return (
     <div>
       <Breadcrumbs trail={[{ name: "Bulk Price Checker", href: "/bulk-pricer" }]} />

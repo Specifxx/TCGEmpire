@@ -5,6 +5,9 @@ import {
   annualSavingPct,
   premiumMoneyNum,
   premiumEffectiveMonthly,
+  tierMonthlyAmount,
+  tierAnnualAmount,
+  type PremiumTierKey,
 } from "@/lib/site";
 
 // The annual price, styled to make the saving pop: the "if you paid monthly" yearly
@@ -12,18 +15,20 @@ import {
 // per-month equivalent. Presentational only (no hooks), so it's usable in both the
 // server /premium page and the client Premium dialog. Market-terminal theme.
 
-export function AnnualPriceBlock({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const monthly = premiumMoneyNum(PREMIUM_PRICE_AMOUNT);
+export function AnnualPriceBlock({ size = "lg", tier = "premium" }: { size?: "lg" | "sm"; tier?: PremiumTierKey }) {
+  const monthlyAmount = tier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT;
+  const annualAmount = tier === "plus" ? tierAnnualAmount("plus") : PREMIUM_ANNUAL_AMOUNT;
+  const monthly = premiumMoneyNum(monthlyAmount);
   const fullYear = monthly ? `$${(monthly * 12).toFixed(2)}` : "";
-  const perMonth = premiumEffectiveMonthly();
-  const save = annualSavingPct();
+  const perMonth = tier === "plus" ? premiumEffectiveMonthly("plus") : premiumEffectiveMonthly();
+  const save = tier === "plus" ? annualSavingPct("plus") : annualSavingPct();
   const big = size === "lg" ? "text-4xl" : "text-3xl";
 
   return (
     <div>
       <div className="flex items-baseline justify-center gap-2">
         {fullYear && <span className="text-base text-slate-600 line-through">{fullYear}</span>}
-        <span className={`num ${big} font-extrabold text-white`}>{PREMIUM_ANNUAL_AMOUNT}</span>
+        <span className={`num ${big} font-extrabold text-white`}>{annualAmount}</span>
         <span className="text-sm text-slate-400">/{PREMIUM_ANNUAL_PERIOD}</span>
       </div>
       <div className="mt-2 flex items-center justify-center gap-2">

@@ -42,13 +42,17 @@
  *   SKIP_STRIPE=1  set the date only; do not touch Stripe (offline/no key).
  */
 import { prisma } from "../src/lib/db";
-import { isPremium } from "../src/lib/premium";
+import { isPremium, normalizeTier } from "../src/lib/premium";
 import { stripe, stripeEnabled } from "../src/lib/stripe";
 
 const EMAIL = (process.env.TARGET_EMAIL ?? "").trim().toLowerCase();
 const UNTIL_RAW = (process.env.PREMIUM_UNTIL ?? "").trim();
 const DRY = process.env.DRY_RUN === "1";
 const SKIP_STRIPE = process.env.SKIP_STRIPE === "1";
+// Which tier to restore — defaults to "premium" (every incident this script
+// predates the tier split, and restoring what someone actually had is safest
+// as the top tier unless told otherwise). TIER=plus for a Plus subscriber.
+const TIER = normalizeTier(process.env.TIER);
 
 const SELECT = {
   id: true,
@@ -125,10 +129,10 @@ async function main() {
     );
   }
   show("BEFORE", user);
-  console.log(`\nPlanned premiumUntil: ${until.toISOString()}`);
+  console.log(`\nPlanned premiumUntil: ${until.toISOString()} (tier: ${TIER})`);
 
   if (!DRY) {
-    await prisma.user.update({ where: { id: user.id }, data: { premiumUntil: until } });
+    await prisma.user.update({ where: { id: user.id }, data: { premiumUntil: until, premiumTier: TIER } });
     const after = await prisma.user.findUnique({ where: { id: user.id }, select: SELECT });
     if (after) show("AFTER", after);
   } else {

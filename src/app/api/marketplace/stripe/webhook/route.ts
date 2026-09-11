@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe, stripeEnabled, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
-import { PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { PREMIUM_TRIAL_DAYS, tierFromPriceId, normalizeTier, type PremiumTier } from "@/lib/premium";
 import {
   customerIdOf,
   entitledUntilFromSubscription,
   extendedPremiumUntil,
+  priceIdFromSubscription,
   subscriptionIdFromInvoice,
   userIdFromSubscription,
 } from "@/lib/stripe-entitlement";
@@ -155,7 +156,10 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
     // reachable again. This is the ONLY path that may grant without confirmed
     // entitlement, and only because entitlement couldn't be checked at all.
     const grace = new Date(Date.now() + (isTrial ? PREMIUM_TRIAL_DAYS : 32) * 86400_000);
-    await stampPremium(userId, grace, customerId, `checkout ${session.id} (grace — subscription unreadable)`);
+    // No subscription object to read a price off — this is the one path that
+    // must trust checkout's own session.metadata.tier stamp.
+    const graceTier = normalizeTier(session.metadata?.tier);
+    await stampPremium(userId, grace, customerId, `checkout ${session.id} (grace — subscription unreadable)`, graceTier);
     if (isTrial) {
       await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
     }
@@ -197,7 +201,12 @@ async function premiumStarted(session: Stripe.Checkout.Session) {
     return;
   }
 
-  await stampPremium(userId, until, customerId, `checkout ${session.id}`);
+  // Price first (the live source of truth, and what a switch would change) —
+  // tierFromPriceId already resolves an unrecognized/absent price id to the
+  // grandfathered "premium" default, so no separate metadata fallback is
+  // needed here (unlike the grace path above, which has no subscription at all).
+  const tier = tierFromPriceId(priceIdFromSubscription(sub));
+  await stampPremium(userId, until, customerId, `checkout ${session.id}`, tier);
   if (isTrial) {
     await prisma.user.update({ where: { id: userId }, data: { trialStartedAt: new Date() } }).catch(() => {});
   }
@@ -223,7 +232,17 @@ async function premiumSubscriptionChanged(sub: unknown, eventId: string) {
   await stampFromSubscription(sub, eventId, null);
 }
 
-/** Resolve the user a subscription belongs to and extend their entitlement. */
+/** Resolve the user a subscription belongs to and extend their entitlement.
+ *
+ * This one function is the tier insertion point for every path EXCEPT the
+ * first stamp (premiumStarted, above) and the grace fallback: it's reached by
+ * invoice.paid/payment_succeeded (renewals) AND customer.subscription.created/
+ * updated — which fires on a trial converting to paid AND on a plan/tier
+ * switch, whether that switch came from this app's own upgrade route or a
+ * customer using the Stripe portal. Reading the price off the live
+ * subscription (rather than trusting stale checkout-time metadata) is what
+ * makes a tier switch self-correcting here with no extra code at the switch
+ * site itself. */
 async function stampFromSubscription(sub: unknown, eventId: string, fallbackCustomerId: string | null) {
   const until = entitledUntilFromSubscription(sub);
   if (!until) return; // canceled/incomplete — earns nothing new, keeps paid time
@@ -241,24 +260,34 @@ async function stampFromSubscription(sub: unknown, eventId: string, fallbackCust
     console.error(`stripe webhook ${eventId}: entitled subscription has no resolvable user (customer ${customerId ?? "?"})`);
     return;
   }
-  await stampPremium(userId, until, customerId, `event ${eventId}`);
+  const tier = tierFromPriceId(priceIdFromSubscription(sub));
+  await stampPremium(userId, until, customerId, `event ${eventId}`, tier);
 }
 
-/** Extend-only write of premiumUntil (+ backfill of the customer link). */
-async function stampPremium(userId: string, until: Date, customerId: string | null, source: string) {
-  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true, stripeCustomerId: true } });
+/** Extend-only write of premiumUntil (+ backfill of the customer link), PLUS a
+ * last-write-wins write of premiumTier whenever the live tier disagrees with
+ * what's stored. The tier write is DELIBERATELY NOT conditioned on `next` —
+ * a same-period upgrade/downgrade (tier changes, current_period_end doesn't)
+ * would make `next` null, and the old early-return here would silently drop
+ * the tier change entirely. premiumUntil stays extend-only; premiumTier does
+ * not, because it describes what the CURRENT period is, not how much of it
+ * remains. */
+async function stampPremium(userId: string, until: Date, customerId: string | null, source: string, tier: PremiumTier) {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true, stripeCustomerId: true, premiumTier: true } });
   if (!u) {
     console.error(`stripe webhook: ${source} names unknown user ${userId}`);
     return;
   }
   const next = extendedPremiumUntil(u.premiumUntil, until);
   const linkCustomer = customerId && !u.stripeCustomerId;
-  if (!next && !linkCustomer) return; // nothing to change — idempotent overlap
+  const tierChange = normalizeTier(u.premiumTier) !== tier;
+  if (!next && !linkCustomer && !tierChange) return; // nothing to change — idempotent overlap
   await prisma.user.update({
     where: { id: userId },
     data: {
       ...(next ? { premiumUntil: next } : {}),
       ...(linkCustomer ? { stripeCustomerId: customerId } : {}),
+      ...(tierChange ? { premiumTier: tier } : {}),
     },
   });
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMe, invalidateMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
-import { PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
+import { TIER_NAMES, tierAnnualAmount, annualSavingPct, type PremiumTierKey } from "@/lib/site";
 import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
 
 // RETENTION LEVER: nudge a monthly Premium subscriber onto the annual plan.
@@ -39,6 +39,7 @@ export function AnnualSwitchNudge() {
   const { premium, loaded } = useMe();
   const [phase, setPhase] = useState<"hidden" | "offer" | "working" | "done" | "error">("hidden");
   const [entered, setEntered] = useState(false);
+  const [tier, setTier] = useState<PremiumTierKey>("premium");
   const checked = useRef(false); // one subscription fetch per mount, max
 
   const hide = useCallback(() => {
@@ -74,7 +75,7 @@ export function AnnualSwitchNudge() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled || !d) return;
-        // Monthly, annual is configured, and they've stuck around a bit.
+        // Monthly, annual is configured (for THEIR tier), and they've stuck around a bit.
         if (d.interval !== "month" || !d.annualAvailable || (d.monthsActive ?? 0) < MIN_MONTHS) return;
         timer = setTimeout(() => {
           if (typeof document !== "undefined" && document.body.dataset.rcDialog === "1") return;
@@ -83,6 +84,7 @@ export function AnnualSwitchNudge() {
           } catch {
             /* ignore */
           }
+          setTier(d.tier === "plus" ? "plus" : "premium");
           setPhase("offer");
           requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
           trackEvent("annual_switch_shown", { months_active: d.monthsActive ?? 0 });
@@ -143,7 +145,9 @@ export function AnnualSwitchNudge() {
 
   if (phase === "hidden") return null;
 
-  const savePct = annualSavingPct();
+  const savePct = annualSavingPct(tier);
+  const annualAmount = tierAnnualAmount(tier);
+  const tierName = TIER_NAMES[tier];
 
   return (
     <div
@@ -156,7 +160,7 @@ export function AnnualSwitchNudge() {
       <div className="relative overflow-hidden rounded-xl border border-gold/40 bg-ink-900 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
           <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-            Premium
+            {tierName}
           </span>
           <span className="text-xs font-semibold text-slate-200">
             {phase === "done" ? "You're on annual 🎉" : "Save on your subscription"}
@@ -174,7 +178,7 @@ export function AnnualSwitchNudge() {
         <div className="px-4 py-3">
           {phase === "done" ? (
             <p className="text-xs leading-relaxed text-slate-300">
-              Switched — you&apos;re on the annual plan now, at {PREMIUM_ANNUAL_AMOUNT}/yr. Thanks for sticking with
+              Switched — you&apos;re on the annual plan now, at {annualAmount}/yr. Thanks for sticking with
               RiftCompare.
             </p>
           ) : phase === "error" ? (
@@ -199,7 +203,7 @@ export function AnnualSwitchNudge() {
               <p className="text-xs leading-relaxed text-slate-400">
                 You&apos;re on the monthly plan. Switch to <span className="font-semibold text-slate-200">annual</span> and
                 {savePct > 0 ? <> save <span className="font-semibold text-gold">{savePct}%</span> — </> : " pay "}
-                <span className="font-semibold text-slate-200">{PREMIUM_ANNUAL_AMOUNT}/yr</span>. You&apos;re billed for the
+                <span className="font-semibold text-slate-200">{annualAmount}/yr</span>. You&apos;re billed for the
                 year now, with credit for the rest of this month.
               </p>
               <div className="mt-3 flex items-center gap-2">

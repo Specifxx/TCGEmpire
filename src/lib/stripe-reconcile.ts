@@ -3,11 +3,13 @@ import { prisma } from "./db";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendEmail, emailShell } from "./email";
 import { SUPPORT_EMAIL, SITE_URL } from "./site";
+import { tierFromPriceId, normalizeTier } from "./premium";
 import {
   customerIdOf,
   entitledUntilFromSubscription,
   ENTITLED_STATUSES,
   extendedPremiumUntil,
+  priceIdFromSubscription,
   userIdFromSubscription,
 } from "./stripe-entitlement";
 
@@ -68,8 +70,8 @@ export interface ReconcileSummary {
   error?: string;
 }
 
-type UserRow = { id: string; email: string; premiumUntil: Date | null; stripeCustomerId: string | null };
-const USER_SELECT = { id: true, email: true, premiumUntil: true, stripeCustomerId: true } as const;
+type UserRow = { id: string; email: string; premiumUntil: Date | null; stripeCustomerId: string | null; premiumTier: string };
+const USER_SELECT = { id: true, email: true, premiumUntil: true, stripeCustomerId: true, premiumTier: true } as const;
 
 /**
  * Sweep every entitled Stripe subscription and extend the matching account.
@@ -134,10 +136,22 @@ export async function runStripeReconcile({ notify = true }: { notify?: boolean }
 
         const next = extendedPremiumUntil(user.premiumUntil, until);
         const link = customerId && !user.stripeCustomerId;
-        if (!next && !link) continue;
+        // Same rule as the webhook's stampPremium: resolve the tier from the
+        // live price and write it whenever it disagrees with what's stored,
+        // NOT only when `next` is non-null — otherwise a same-period tier
+        // switch (Plus → Premium mid-cycle) would never get picked up here.
+        // Without this, the reconcile would silently grant full Premium
+        // access to every Plus subscriber the moment it ran.
+        const tier = tierFromPriceId(priceIdFromSubscription(sub));
+        const tierChange = normalizeTier(user.premiumTier) !== tier;
+        if (!next && !link && !tierChange) continue;
         await prisma.user.update({
           where: { id: user.id },
-          data: { ...(next ? { premiumUntil: next } : {}), ...(link ? { stripeCustomerId: customerId } : {}) },
+          data: {
+            ...(next ? { premiumUntil: next } : {}),
+            ...(link ? { stripeCustomerId: customerId } : {}),
+            ...(tierChange ? { premiumTier: tier } : {}),
+          },
         });
         if (next) {
           console.log(`stripe-reconcile: extended ${user.email} to ${next.toISOString()} (sub ${sub.id})`);

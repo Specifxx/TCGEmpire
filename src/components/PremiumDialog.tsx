@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
-import { useMe } from "@/lib/use-me";
+import { useMe, invalidateMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
 import { TrialPriceBlock } from "./TrialPriceBlock";
@@ -11,13 +11,16 @@ import {
   PREMIUM_PRICE_LABEL,
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_PRICE_PERIOD,
-  PREMIUM_ANNUAL_AMOUNT,
   PREMIUM_NEXT_PRICE_AMOUNT,
   PREMIUM_COPY_VERSION,
+  TIER_NAMES,
   annualSavingPct,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
   premiumEffectiveMonthly,
+  tierMonthlyAmount,
+  tierAnnualAmount,
+  type PremiumTierKey,
 } from "@/lib/site";
 
 // A site-wide Premium upsell dialog so users can subscribe / start the trial from
@@ -60,8 +63,12 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
 }
 
 function PremiumDialog({ onClose }: { onClose: () => void }) {
-  const { user, premium, premiumCheckout, trialEligible, trialDays, premiumAnnual, loaded } = useMe();
-  const savePct = annualSavingPct();
+  const { user, premium, tier, premiumCheckout, premiumPlus, trialEligible, trialDays, premiumAnnual, plusAnnual, loaded } = useMe();
+  // Which tier is being SOLD — only meaningful while shopping (below). Defaults
+  // to "premium" so every render before Plus existed, and every render with
+  // Plus unconfigured, behaves exactly as before.
+  const [sellTier, setSellTier] = useState<PremiumTierKey>("premium");
+  const savePct = annualSavingPct(sellTier);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Monthly is the default even when annual is offered. Annual is the better
@@ -72,7 +79,8 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   // carries its own one-line pointer to the annual rate (see below), so that
   // tap is never more than a click away from the number that sells it.
   const [plan, setPlan] = useState<"monthly" | "annual">("monthly");
-  const activePlan = premiumAnnual ? plan : "monthly";
+  const annualForSellTier = sellTier === "plus" ? plusAnnual : premiumAnnual;
+  const activePlan = annualForSellTier ? plan : "monthly";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -90,12 +98,12 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
     setError(null);
     // Fired BEFORE the fetch — dual-destination (see PremiumCta.tsx's own
     // comment on why this event isn't in GA4_ONLY_EVENTS).
-    trackEvent("premium_checkout_started", { plan: selected, trial_eligible: trialEligible, source: "dialog", copy: PREMIUM_COPY_VERSION });
+    trackEvent("premium_checkout_started", { plan: selected, tier: sellTier, trial_eligible: trialEligible, source: "dialog", copy: PREMIUM_COPY_VERSION });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: selected }),
+        body: JSON.stringify({ plan: selected, tier: sellTier }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -104,6 +112,29 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
         return;
       }
       window.location.href = d.url;
+    } catch {
+      setError("Network error — try again");
+      setBusy(false);
+    }
+  }
+
+  // Plus → Premium, in-app, same interval — for a Plus subscriber who hits
+  // this dialog from a pro-tool wall. See api/premium/upgrade/route.ts.
+  async function upgradeTier() {
+    setBusy(true);
+    setError(null);
+    trackEvent("premium_tier_upgrade_started", { source: "dialog", copy: PREMIUM_COPY_VERSION });
+    try {
+      const res = await fetch("/api/premium/upgrade", { method: "POST" });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(d.error ?? "Couldn't upgrade — try again");
+        setBusy(false);
+        return;
+      }
+      invalidateMe();
+      trackEvent("premium_tier_upgrade_success", { source: "dialog" });
+      onClose();
     } catch {
       setError("Network error — try again");
       setBusy(false);
@@ -172,7 +203,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               own scroll so a 14-row table can never push the CTA below the fold
               on a short screen. */}
           <div className="mt-4 max-h-[45vh] overflow-y-auto rounded-lg border border-ink-800">
-            <TierComparisonTable compact />
+            <TierComparisonTable compact showPlus={premiumPlus} />
           </div>
           <p className="mt-2 text-center text-[11px] text-slate-500">
             Scroll the table for the full list · every row is a real entitlement
@@ -181,6 +212,20 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
           <div className="mt-5">
             {!loaded ? (
               <div className="h-11 animate-pulse rounded-lg bg-ink-800" />
+            ) : premium && tier === "plus" && premiumPlus ? (
+              // A Plus subscriber hitting a Premium-only gate — this IS a real
+              // upgrade opportunity, not the "you already have it" dead end the
+              // plain `premium` branch below would show.
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Upgrade to Premium for the four pro tools — Value Finder, Bulk Pricer, Best Basket and Demand Finder.
+                </p>
+                <button onClick={upgradeTier} disabled={busy} className={`${GOLD_BTN} mt-3`}>
+                  {busy ? "Upgrading…" : `Upgrade to Premium — ${PREMIUM_PRICE_LABEL} →`}
+                </button>
+                {error && <p role="alert" className="mt-2 text-center text-xs text-rose-400">{error}</p>}
+              </div>
             ) : premium ? (
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re Premium</p>
@@ -197,8 +242,30 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               </div>
             ) : (
               <>
-                {/* Plan toggle (only when annual is configured) */}
-                {premiumAnnual && (
+                {/* Tier toggle (only when Plus is actually configured) —
+                    which tier is being SOLD, independent of the monthly/annual
+                    plan toggle below. */}
+                {premiumPlus && (
+                  <div className="mb-2 flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-950/50 p-1">
+                    <button
+                      onClick={() => setSellTier("plus")}
+                      aria-pressed={sellTier === "plus"}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${sellTier === "plus" ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"}`}
+                    >
+                      Plus
+                    </button>
+                    <button
+                      onClick={() => setSellTier("premium")}
+                      aria-pressed={sellTier === "premium"}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${sellTier === "premium" ? "bg-ink-800 text-white" : "text-slate-400 hover:text-white"}`}
+                    >
+                      Premium
+                    </button>
+                  </div>
+                )}
+
+                {/* Plan toggle (only when annual is configured for the selected tier) */}
+                {annualForSellTier && (
                   <div className="mb-3 flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-950/50 p-1">
                     <button
                       onClick={() => setPlan("monthly")}
@@ -226,27 +293,27 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                     omission, and a card IS required to start. */}
                 {trialEligible ? (
                   <div className="mb-3">
-                    <TrialPriceBlock plan={activePlan} trialDays={trialDays} />
+                    <TrialPriceBlock plan={activePlan} trialDays={trialDays} tier={sellTier} />
                   </div>
                 ) : activePlan === "annual" ? (
                   <div className="mb-3">
-                    <AnnualPriceBlock size="sm" />
+                    <AnnualPriceBlock size="sm" tier={sellTier} />
                   </div>
                 ) : (
                   <div className="mb-3 text-center">
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="num text-3xl font-extrabold text-white">{PREMIUM_PRICE_AMOUNT}</span>
+                      <span className="num text-3xl font-extrabold text-white">{sellTier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT}</span>
                       <span className="text-sm text-slate-400">/{PREMIUM_PRICE_PERIOD}</span>
                     </div>
                     {/* One tap from the smaller monthly number to the one that
                         actually sells Premium — the effective annual rate. Only
                         rendered when there's an annual plan to switch to. */}
-                    {premiumAnnual && premiumEffectiveMonthly() && (
+                    {annualForSellTier && premiumEffectiveMonthly(sellTier) && (
                       <button
                         onClick={() => setPlan("annual")}
                         className="mt-1 text-[11px] font-semibold text-brand-400 transition hover:underline"
                       >
-                        or from {premiumEffectiveMonthly()}/mo billed yearly →
+                        or from {premiumEffectiveMonthly(sellTier)}/mo billed yearly →
                       </button>
                     )}
                   </div>
@@ -258,12 +325,17 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
                     : trialEligible
                     ? `Start ${trialDays}-day free trial →`
                     : activePlan === "annual"
-                    ? `Get annual — ${PREMIUM_ANNUAL_AMOUNT}/yr →`
-                    : "Upgrade to Premium →"}
+                    ? `Get annual — ${tierAnnualAmount(sellTier)}/yr →`
+                    : `Upgrade to ${TIER_NAMES[sellTier]} →`}
                 </button>
                 <p className="mt-2 text-center text-[11px] leading-snug text-slate-500">
                   {(() => {
-                    const priceAfter = activePlan === "annual" ? `${PREMIUM_ANNUAL_AMOUNT}/yr` : PREMIUM_PRICE_LABEL || "billed monthly";
+                    const priceAfter =
+                      activePlan === "annual"
+                        ? `${tierAnnualAmount(sellTier)}/yr`
+                        : sellTier === "plus"
+                        ? `${tierMonthlyAmount("plus")}/${PREMIUM_PRICE_PERIOD}`
+                        : PREMIUM_PRICE_LABEL || "billed monthly";
                     // On the trial path the price block above already states the
                     // amount and when it starts, so repeating it here just makes
                     // the same sentence twice. What is left to say is the part

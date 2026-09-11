@@ -136,6 +136,33 @@ export function customerIdOf(obj: unknown): string | null {
 }
 
 /**
+ * The Stripe Price id of a subscription's first (only) line item — present on
+ * every subscription object regardless of whether items.data[].price was
+ * expanded (unexpanded, price comes back as the id string itself). This is the
+ * primary source for resolving WHICH TIER a subscription is on, since it
+ * reflects the live price even after a portal- or API-driven plan switch,
+ * unlike subscription.metadata (which is only ever set at checkout time).
+ */
+export function priceIdFromSubscription(sub: unknown): string | null {
+  const items = rec(rec(sub)?.items);
+  const data = Array.isArray(items?.data) ? (items!.data as unknown[]) : [];
+  const first = rec(data[0]);
+  return idOf(first?.price);
+}
+
+/** The tier stamped into subscription metadata at checkout, if present — a
+ * fallback for the grace path (checkout/route.ts sets it on subscription_data
+ * so it's visible here too), used only when there's no live subscription to
+ * read a price off of. Prefer priceIdFromSubscription + tierFromPriceId
+ * whenever a subscription object is in hand — the price reflects switches;
+ * this metadata field does not. */
+export function tierFromSubscriptionMeta(sub: unknown): string | null {
+  const meta = rec(rec(sub)?.metadata);
+  const v = meta?.tier;
+  return typeof v === "string" && v ? v : null;
+}
+
+/**
  * EXTEND-ONLY stamping decision: the new premiumUntil to write, or null for
  * "leave it alone". Entitlement from Stripe may only ever grow a user's
  * premiumUntil — never shrink it. This is what lets subscription renewals

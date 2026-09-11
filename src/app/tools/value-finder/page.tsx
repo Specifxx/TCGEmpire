@@ -57,7 +57,7 @@ const VF_FAQS = [
 
 export default async function ValueFinderPage() {
   const user = await getCurrentUser();
-  const premium = isPremium(user);
+  const premium = isPremium(user, "premium");
   const country = getCountry();
   const info = COUNTRIES[country];
   // Members get the full screen; non-members get ONLY the single best pick (the full

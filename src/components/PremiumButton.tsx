@@ -15,11 +15,19 @@ const GOLD =
 
 export function PremiumButton({ children, className }: { children?: React.ReactNode; className?: string }) {
   const { open } = usePremiumDialog();
-  const { trialEligible, trialDays } = useMe();
+  const { premium, tier, trialEligible, trialDays } = useMe();
+  // A Plus subscriber hitting a Premium-only gate is already paying — the
+  // pitch is an upgrade, not a first subscription, and it names the real
+  // recurring price rather than a trial (they've already had theirs).
+  const isPlusUpgrade = premium && tier === "plus";
   return (
     <button type="button" onClick={open} className={className ?? GOLD}>
       {children ?? (
-        trialEligible && trialDays > 0 ? (
+        isPlusUpgrade ? (
+          <>
+            Upgrade to Premium{PREMIUM_PRICE_LABEL ? <span className="font-semibold opacity-80"> · {PREMIUM_PRICE_LABEL}</span> : null}
+          </>
+        ) : trialEligible && trialDays > 0 ? (
           <>
             Start free trial<span className="font-semibold opacity-80"> · {premiumZeroToday()}</span>
           </>

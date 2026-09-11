@@ -14,13 +14,27 @@ export interface Me {
   // profile data, and nothing that renders the account chrome should read it.
   analyticsId: string | null;
   premium: boolean;
+  tier: "plus" | "premium" | null; // which paid tier, or null if not entitled
   premiumCheckout: boolean; // Stripe premium checkout is configured
+  premiumPlus: boolean; // the cheaper Plus tier is configured (Stripe Plus price set)
   trialEligible: boolean; // signed in, not premium, trial on + never trialed
   trialDays: number; // configured free-trial length (0 = trial off)
   premiumAnnual: boolean; // annual plan is configured (Stripe annual price set)
+  plusAnnual: boolean; // Plus's own annual plan is configured
 }
 
-const EMPTY_ME: Me = { user: null, analyticsId: null, premium: false, premiumCheckout: false, trialEligible: false, trialDays: 0, premiumAnnual: false };
+const EMPTY_ME: Me = {
+  user: null,
+  analyticsId: null,
+  premium: false,
+  tier: null,
+  premiumCheckout: false,
+  premiumPlus: false,
+  trialEligible: false,
+  trialDays: 0,
+  premiumAnnual: false,
+  plusAnnual: false,
+};
 
 let mePromise: Promise<Me> | null = null;
 
@@ -32,10 +46,13 @@ function fetchMe(): Promise<Me> {
         user: d.user ?? null,
         analyticsId: typeof d.analyticsId === "string" ? d.analyticsId : null,
         premium: !!d.premium,
+        tier: d.tier === "plus" || d.tier === "premium" ? d.tier : null,
         premiumCheckout: !!d.premiumCheckout,
+        premiumPlus: !!d.premiumPlus,
         trialEligible: !!d.trialEligible,
         trialDays: Number(d.trialDays) || 0,
         premiumAnnual: !!d.premiumAnnual,
+        plusAnnual: !!d.plusAnnual,
       }))
       .catch(() => EMPTY_ME);
   }
