@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
-import { CONTENT_TAG } from "@/lib/revalidate-content";
-import { sydneyDayKey } from "@/lib/price-history";
-import { getRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
+import { getCachedRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
 
 export const dynamic = "force-dynamic";
@@ -92,12 +89,10 @@ export default async function AdminRisingPage({
   const scope: RiseScope = raw === "AU" || raw === "US" || raw === "UK" ? (raw as RiseScope) : "GLOBAL";
   const isGlobal = scope === "GLOBAL";
 
-  // Cache the heavy scan (400 cards × price history) per scope; refreshed on the
-  // daily import via CONTENT_TAG so repeated admin loads don't re-hit Neon.
-  const analysis = await unstable_cache(() => getRisingCards(scope), ["rising-cards", scope, sydneyDayKey()], {
-    revalidate: 172800,
-    tags: [CONTENT_TAG],
-  })();
+  // The heavy scan (400 cards × price history) is cached once per scope per day
+  // in rise-predictor.ts — the same entry /tools/rising and the homepage read,
+  // so an admin load never triggers a second copy of the scan under its own key.
+  const analysis = await getCachedRisingCards(scope);
 
   const bt = analysis.backtest;
 

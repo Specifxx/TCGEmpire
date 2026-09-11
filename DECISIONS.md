@@ -5038,3 +5038,214 @@ entry here.
   card-prerender change shipped on merge rather than at the next 08:00 UTC
   release, and a baseline `egress-audit.yml` run was triggered immediately —
   the first measurement of the history project ever taken.
+
+## The first egress audit found the second burn: nested caches — 2026-09-11 (same day, follow-up)
+
+The deploy-cadence fix above shipped at 05:08 UTC, and the first run of the
+new `egress-audit.yml` was triggered on the same minute — the first
+measurement of the history project ever taken. Its two twenty-minute samples
+said something the deploy theory did not predict.
+
+**Operational project (RM9), 05:09–05:29 UTC**, the window right after the
+deploy's cache clear: 1,117 full card-page reads (every retailer row for a
+card, 99 rows a call) — the post-deploy re-render wave, exactly as expected,
+and self-limiting now that there is one deploy a day. But alongside it, with
+no build in the window: `DemandSnapshot` read 37 times at 8,400 rows a call,
+`SealedListing` and `SealedGroupFirstSeen` each pulled whole 38 times, and
+the arbitrage groupBys a dozen times. Extrapolated: ~5.6 GB/day.
+
+**History project (RH10), 05:29–05:49 UTC**, no build and no import
+anywhere near it: the whole-market `PriceHistory` read (`country = GLOBAL
+AND day >= cutoff`, the movers / recently-updated / bulk-summary shape) ran
+**86 times** at 12,610 rows a call, and the `cardId IN (…)` shape (rising
+cards, screener baselines, market index) ran **36 times** at 21,563 rows a
+call. Extrapolated: **8.7 GB/day** — which is precisely RH9 dying in a day.
+Every one of those loaders is wrapped in a week- or day-keyed
+`unstable_cache`. They should have run a handful of times a week.
+
+### Why the caches were not caching
+
+Read, not guessed — `node_modules/next/dist/server/web/spec-extension/unstable-cache.js`
+in the pinned 14.2.x:
+
+- A cache READ only happens when `store.fetchCache !== "force-no-store"`
+  (the "when we are nested inside of other unstable_cache's we should bypass
+  cache similar to fetches" branch).
+- Every `unstable_cache` callback runs under a store with exactly that flag
+  set (`fetchCache: "force-no-store", isUnstableCacheCallback: true`).
+
+So **a self-cached loader called from inside another `unstable_cache`
+callback never reads its own cache** — it recomputes on every outer miss,
+and the outer entry's cadence becomes the inner read's real cadence. Worse,
+`unstable_cache` serves a stale outer entry immediately and recomputes it in
+the background on *every* request that arrives while it is stale, so a
+force-dynamic page reading a stale outer entry re-ran the whole inner stack
+per request. (Checked and ruled out along the way: `force-dynamic` itself
+does NOT set `fetchCache` — `create-component-tree.js` and the app-route
+module only set `forceDynamic` — so dynamic pages and route handlers do read
+the data cache. Nesting is the whole mechanism.)
+
+Where this codebase nested:
+
+| outer cache | inner self-cached loaders it silently disabled |
+| --- | --- |
+| `getCachedTopDeals` (1h, per market; read by `/`, five region homes, `/premium`, `api/premium/proof`) | `getPriceMovers`, `getRisingCards` (wrapped again inside), `getEbayCheapest`'s row pulls |
+| `/games` (10-min wrapper) | `getPriceMovers` |
+| `/tools/value-finder` (1h teaser wrapper) | `getUndervalued` |
+| `getUndervalued` (daily) | `getBaselines` (weekly history read) |
+| `/api/search` (10-min wrapper) | `getSealedGroups` |
+| `/admin/rising` and `/tools/rising` | separate wrappers under two different keys for the same 400-card scan |
+
+The repo's own egress rule #2 ("anything big goes through a cache") was
+followed everywhere. The rule had no clause about nesting, because nobody
+knew nesting mattered.
+
+### What changed
+
+1. **`cachedOrDirect` (lib/price-history.ts) now detects nesting** from
+   Next's `isUnstableCacheCallback` store flag and logs
+   `[egress-guard:nested-cache]`, and **logs every real compute** as
+   `[egress-guard:cache-miss] <key> computed in <ms>` — so "which loader is
+   running, how often" is a Vercel log search from now on, not a theory.
+2. **Every nested site above is un-nested.** `getCachedTopDeals` no longer
+   has an outer cache at all (its four sources each cache themselves, and the
+   assembly is cheap); `getCachedRisingCards` in rise-predictor.ts is the one
+   shared day-keyed entry for the scan, used by top-deals, `/tools/rising`
+   and `/admin/rising`; `/games`, `/tools/value-finder` and `/api/search` call
+   the self-cached loaders directly; `getUndervalued` reads its baselines
+   outside its daily entry and passes them in.
+3. **The arbitrage groupBys are shared-cached** (`arb-min-by-card`,
+   `arb-min-by-card-retailer`): ~1,400-row aggregates that ran on every
+   `getEbayCheapest`/`getArbitrage` call, including every request to the
+   force-dynamic `/premium` and `/tools/deal-finder`.
+4. **Sealed groups get a second, shared layer.** The per-instance memo was
+   the only cache, and 38 cold lambdas in twenty minutes each re-pulled the
+   whole sealed table through it. The computed groups (~100 KB per market)
+   now also sit in the data cache; the memo stays as the fast path, and if a
+   market ever outgrows the entry limit the behaviour degrades to exactly
+   today's, never worse.
+5. **Egress rule #6** in `src/lib/db.ts` and a line in `CLAUDE.md`, pinned by
+   `tests/nested-cache.test.ts` (six tests: no self-cached loader is wrapped
+   again anywhere in `src/`, top-deals has no outer cache, the rising scan has
+   one entry point, the runtime guard exists, the aggregates and sealed
+   groups are cached).
+
+### What this should do to the numbers
+
+History project: the whole-market reads drop from ~120 per twenty minutes to
+their designed cadence — movers and recently-updated once per market per
+week, rising once per scope per day, baselines once per market per week, the
+market index once per market per week. Rough arithmetic: from ~8.7 GB/day to
+tens of MB/day. Operational project: the demand window and sealed pulls stop
+scaling with request volume and cold starts. The card-page re-render wave
+after a deploy remains the largest single operational item (≈100 KB per
+render, ≤3 waves a day: the deploy plus the two import-time purges) and is
+the next lever if the weekly audit says it needs pulling.
+
+### Still open
+
+- **The old per-country PriceHistory rows.** The table holds 422,589 rows;
+  the app reads only `country = GLOBAL`. The other ~80% (AU/US/UK/SG rows
+  from before the 2026-09-05 GLOBAL migration) cost nothing on the wire but
+  everything on every sequential scan and index. Deleting them, and
+  collapsing GLOBAL's daily-era rows to the weekly cadence the app already
+  assumes, would cut every remaining history read several-fold. Destructive;
+  not done without an explicit go-ahead.
+- **Re-measure.** `egress-audit.yml` runs Sunday 03:00 UTC; a manual run the
+  day after this lands is the real check.
+
+### A second sample, and what it adds
+
+A 5-minute history-project sample at 05:59–06:04 UTC — fifty minutes after
+the 05:10 deploy, with only organic traffic — showed **zero** whole-market
+reads: 32 per-card `COUNT(DISTINCT day)` calls (card-page renders) and
+nothing else. So the 86 + 36 reads in the 05:29–05:49 window were not a
+steady rate; they were the tail of a post-deploy warm-up, amplified by the
+nesting above. That reconciles the two findings into one mechanism:
+
+- A deploy clears the Full Route Cache, so every ISR page re-renders on its
+  next hit (the documented part).
+- Those re-renders call the cached loaders, and every loader nested inside
+  another cache recomputes on each of them instead of once.
+- `unstable_cache` keys include the callback's SOURCE TEXT. Verified in the
+  pinned 14.2.x, `unstable-cache.js` line 50:
+
+  ```js
+  const fixedKey = `${cb.toString()}-${Array.isArray(keyParts) && keyParts.join(",")}`;
+  ```
+
+  In a production build `cb.toString()` is MINIFIED source, so a build that
+  shifts a chunk's identifiers rotates the key of every entry in that chunk
+  and forces a first-time compute per key per market. The practical
+  consequence contradicts the headline in the Next.js caching docs ("the Data
+  Cache persists across deployments"): that holds for `fetch`, which keys on
+  the URL, and not for `unstable_cache`, whose key is the code. So a deploy
+  clears the Full Route Cache *and* orphans much of the Data Cache, and the
+  two together are the post-deploy storm. Nothing in 14.2 avoids it — naming
+  the callback does not help, since the body still minifies differently — so
+  the lever is deploy FREQUENCY, which is what the gate controls. (Consistent
+  with observation: the 05:57 manual release changed only an admin page, and
+  the 05:59 sample stayed quiet.)
+
+At 10–30 deploys a day the site lived permanently inside that warm-up. At one
+deploy a day it is a once-a-day event; with the nesting removed it is a
+once-a-day event that costs one compute per loader per market. Both halves
+of the fix were needed; neither alone would have held.
+
+## The gate deployed on a commit that said it wasn't deploying — 2026-09-11 (same day, follow-up)
+
+At 08:29 UTC Vercel built `5b02ca5`, the merge of the nested-cache fix, even
+though that merge deliberately carried no release marker. The gate was not
+broken. Its body read:
+
+> Ships at the next scheduled release (no `[deploy]` marker on purpose).
+
+`grep -qiF '[deploy]'` over the whole message matched the prose. A
+literal-string search cannot tell a marker from a sentence about the marker,
+and this repo writes long explanatory commit messages that now routinely
+discuss the deploy gate — so this was a certainty, not a fluke. Worth being
+blunt about: the failure was in the message, and the message was written by
+the same session that wrote the gate.
+
+**Fix: the SUBJECT LINE only**, in both places that read the marker —
+`scripts/vercel-ignore-build.sh` (`head -n 1`) and the release workflow's
+"has anything landed since the last release?" check (`git log -1 --format=%s`,
+was `%B`). The subject is where both intended uses already put it (the
+scheduled release commit; a human's `hotfix X [deploy]`) and it is the one
+line nobody writes prose in. Replayed against all three real commits:
+
+| commit | subject carries marker | decision |
+| --- | --- | --- |
+| `c0ce64d` merge of the gate PR | yes | build ✓ intended |
+| `538e228` manual release | yes | build ✓ intended |
+| `5b02ca5` merge of the cache PR | no (body only) | skip ✓ the accident |
+
+The workflow's `%B` read had the same latent bug pointing the other way: the
+release commit's own body contains "Pushes without `[deploy]` in their
+message are skipped", so any commit discussing the gate would have read as
+"already released" and silently skipped a day's deploy.
+
+`tests/deploy-cadence.test.ts` pins both halves, using the real 08:29 message
+as the body-only case.
+
+**Net effect of the accident: benign, and useful.** It put the nested-cache
+fix live three hours early, which was the preferable outcome anyway given the
+burn rate — and the egress audit triggered at 08:27 therefore measures a
+post-deploy window *with* the fix, directly comparable to the 05:09–05:49
+post-deploy windows measured without it. That comparison is the real
+before/after, and is better controlled than the quiet-period sample that was
+planned.
+
+### The 08:00 UTC scheduled release did not fire
+
+`production-deploy.yml` has exactly one run: the manual 05:34 dispatch. The
+configuration checks out — `cron: "0 8 * * *"`, on `main` (confirmed the
+default branch), and the file parses, which the manual run proves. GitHub
+delays scheduled events under load and a newly added schedule can take a
+cycle or more to register; the workflow first existed on `main` at 05:08,
+less than three hours before. Nothing to change yet. Tomorrow's 08:00 is the
+real test; if it misses again, the fallback is a `schedule` on an existing,
+already-registered workflow, or an external ping to a deploy hook.
+
+Note the skip-check would have done the right thing had it fired: main's HEAD
+at 08:00 was `e507f1a`, ordinary work, so it would have released.

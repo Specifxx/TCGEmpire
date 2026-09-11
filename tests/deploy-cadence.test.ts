@@ -72,11 +72,42 @@ test("PREVIEW and DEVELOPMENT builds are never gated (exit 1, builds)", () => {
   }
 });
 
-test("the gate BUILDS a production push whose message carries the marker, case-insensitively (exit 1)", () => {
-  for (const msg of [`release: scheduled production deploy ${MARKER}`, "hotfix [Deploy] the checkout", "[DEPLOY]"]) {
+test("the gate BUILDS a production push whose SUBJECT carries the marker, case-insensitively (exit 1)", () => {
+  for (const msg of [
+    `release: scheduled production deploy ${MARKER}`,
+    "hotfix [Deploy] the checkout",
+    "[DEPLOY]",
+    `ship it ${MARKER}\n\nA body, which is ignored either way.`,
+  ]) {
     const r = runGate(msg, "production");
     assert.equal(r.status, 1, `expected exit 1 (build) for ${JSON.stringify(msg)}, got ${r.status}:\n${r.out}`);
   }
+});
+
+test("a marker in the BODY does not deploy — prose about the gate is not the gate (exit 0)", () => {
+  // This is not hypothetical. On 2026-09-11 08:29 a merge commit deployed
+  // because its body read "(no [deploy] marker on purpose)" while its subject
+  // had no marker at all. A literal-string search over the whole message
+  // cannot tell a marker from a sentence about the marker, and this repo's
+  // commit messages now routinely discuss the deploy gate.
+  const real = [
+    "Merge PR #106: un-nest every cached loader",
+    "",
+    "Ships at the next scheduled release (no [deploy] marker on purpose).",
+  ].join("\n");
+  const r = runGate(real, "production");
+  assert.equal(r.status, 0, `a body-only mention must NOT build, got ${r.status}:\n${r.out}`);
+  assert.match(r.out, /SUBJECT/, "the log line should say it looked at the subject, so the next reader knows the rule");
+});
+
+test("the scheduled release's own skip-check reads the SUBJECT too", () => {
+  // It reads HEAD to answer "is main already at a release commit?". On %B, the
+  // release commit's own body ("Pushes without [deploy] in their message are
+  // skipped…") and any commit discussing the gate both match — the second
+  // would silently skip a day's deploy.
+  const wf = read(WORKFLOW);
+  assert.match(wf, /git log -1 --format=%s/, "the skip-check must read the subject (%s), not the whole message (%B)");
+  assert.doesNotMatch(wf, /git log -1 --format=%B/, "a %B read would match prose about the marker");
 });
 
 test("the gate FAILS OPEN when the commit message is unreadable (exit 1, builds)", () => {
