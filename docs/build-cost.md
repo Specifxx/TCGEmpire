@@ -81,8 +81,11 @@ ISR page re-renders from the database on its next hit. At 10–30 pushes to
 eleven projects in a row; the app's own request traffic measures ~0.12 GB/day.
 
 `vercel.json` now carries `"ignoreCommand": "bash scripts/vercel-ignore-build.sh"`.
-The script exits 0 (skip) unless the commit message contains `[deploy]`, and
-fails open (builds) if it cannot read the message at all.
+For a production build the script exits 0 (skip) unless the commit message
+contains `[deploy]`, and fails open (builds) if it cannot read the message at
+all. Preview and development builds are not gated, so a human branch's preview
+URL and the SEO gate's `deployment_status` event survive; an unknown
+`VERCEL_ENV` is treated as production.
 `.github/workflows/production-deploy.yml` supplies the marker once a day with
 an empty commit, and on demand from its *Run workflow* button. Full account in
 `DECISIONS.md` ("Network transfer: the deploy cadence was the burn").

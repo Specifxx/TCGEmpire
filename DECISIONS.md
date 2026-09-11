@@ -4935,7 +4935,13 @@ shape entirely.
    lacks the literal marker `[deploy]` (case-insensitive; read from
    `VERCEL_GIT_COMMIT_MESSAGE`, falling back to `git log -1`; **fails open**
    and builds if neither is readable, because "never deploys" is a worse
-   failure than the status quo).
+   failure than the status quo). Preview and development builds are not
+   gated: a human's non-`claude/*` branch keeps its preview URL and
+   `seo-preview-gate.yml` keeps its `deployment_status` event, and previews
+   were never the burn (`claude/*` previews are already disabled in
+   `vercel.json`). An unknown `VERCEL_ENV` is treated as production, because
+   gating a preview by mistake costs a URL and not gating production by
+   mistake recreates the burn.
 2. **One scheduled release a day** — `.github/workflows/production-deploy.yml`
    lands an empty `release: scheduled production deploy [deploy]` commit on
    `main` at 08:00 UTC, after the 07:00 price import and its revalidation, and
@@ -4955,8 +4961,13 @@ shape entirely.
    `.github/workflows/egress-audit.yml` samples both projects weekly (Sunday
    03:00 UTC, a window with no import, cron or scheduled deploy) and on
    demand, writing both reports into the job summary. Its own reads are
-   bounded (top 1,000 statement shapes, text capped) so the audit is not a
-   measurable slice of what it audits.
+   cheap without being incomplete: both snapshots hold counters for every
+   statement shape (keyed by `queryid`, ~40 bytes a row) so the delta cannot
+   miss a newly hot query, and statement text is fetched afterwards for only
+   the top 60 shapes the report ranks. A first draft used `ORDER BY rows
+   DESC LIMIT 1000` on the snapshot itself; Codex's review pointed out that
+   ranks by the all-time counter and would hide exactly the young, hot shape
+   a burn audit exists to find.
 
 Pinned by `tests/deploy-cadence.test.ts` (7 tests): the gate is wired, skips
 an ordinary push, builds on the marker, fails open, the release workflow

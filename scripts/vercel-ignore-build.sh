@@ -26,19 +26,38 @@
 # days with the most commits (20 and 30).
 #
 # ── THE RULE ─────────────────────────────────────────────────────────────────
-# Build only when the commit message carries the literal marker  [deploy]
-# (case-insensitive). Everything else is skipped and simply waits for the next
-# scheduled release — .github/workflows/production-deploy.yml lands ONE such
-# commit a day, and its "Run workflow" button lands one immediately. A human
-# who needs a deploy right now puts [deploy] in their own commit message.
+# A PRODUCTION build happens only when the commit message carries the literal
+# marker  [deploy]  (case-insensitive). Everything else is skipped and simply
+# waits for the next scheduled release — .github/workflows/production-deploy.yml
+# lands ONE such commit a day, and its "Run workflow" button lands one
+# immediately. A human who needs a deploy right now puts [deploy] in their own
+# commit message.
 #
-# FAILS OPEN. If the commit message cannot be determined at all (the system
-# env var is off AND the checkout has no git history), the script BUILDS and
-# says why: "never deploys" is a far worse failure than "deploys too often",
-# which is merely the status quo this file replaces.
+# PREVIEW AND DEVELOPMENT BUILDS ARE NOT GATED. A preview exists because a
+# human pushed a non-automation branch and may open its URL, and
+# .github/workflows/seo-preview-gate.yml consumes its deployment_status event
+# (docs/build-cost.md). The automation-driven preview cost was removed
+# separately — vercel.json disables previews for claude/* branches — so the
+# marker has nothing to add there and would only take the preview URL away.
+#
+# WHEN THE ENVIRONMENT IS UNKNOWN (VERCEL_ENV unset), the push is treated as
+# production and gated. The asymmetry is deliberate: gating a preview by
+# mistake costs a preview URL; not gating production by mistake recreates the
+# burn this file exists to stop.
+#
+# FAILS OPEN on the message. If the commit message cannot be determined at all
+# (the system env var is off AND the checkout has no git history), the script
+# BUILDS and says why: "never deploys" is a far worse failure than "deploys
+# too often", which is merely the status quo this file replaces.
 set -u
 
 MARKER='[deploy]'
+
+env="${VERCEL_ENV:-}"
+if [ "$env" = "preview" ] || [ "$env" = "development" ]; then
+  echo "[vercel-ignore-build] VERCEL_ENV=$env — preview/development builds are not gated; building."
+  exit 1
+fi
 
 msg="${VERCEL_GIT_COMMIT_MESSAGE:-}"
 source="VERCEL_GIT_COMMIT_MESSAGE"
@@ -62,6 +81,6 @@ if printf '%s' "$msg" | grep -qiF -- "$MARKER"; then
   exit 1
 fi
 
-echo "[vercel-ignore-build] no '$MARKER' in the commit message (via $source) — skipping this build."
+echo "[vercel-ignore-build] VERCEL_ENV=${env:-unset (treated as production)}: no '$MARKER' in the commit message (via $source) — skipping this build."
 echo "[vercel-ignore-build] production deploys once a day from .github/workflows/production-deploy.yml; put $MARKER in a commit message (or press Run workflow there) to deploy now."
 exit 0

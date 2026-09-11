@@ -25,13 +25,17 @@ const MARKER = "[deploy]";
 
 const vercel = JSON.parse(read("vercel.json")) as { ignoreCommand?: string };
 
-function runGate(message: string | undefined, cwd = tmpdir()): { status: number | null; out: string } {
+function runGate(
+  message: string | undefined,
+  vercelEnv: string | undefined = "production",
+  cwd = tmpdir(),
+): { status: number | null; out: string } {
   // tmpdir: no git history, so ONLY the env var can supply the message. An
   // empty string is what the script treats as "unset" (its `${VAR:-}` default),
   // which also guards against the runner's own environment leaking a value in.
   const r = spawnSync("bash", [join(ROOT, GATE)], {
     cwd,
-    env: { ...process.env, VERCEL_GIT_COMMIT_MESSAGE: message ?? "" },
+    env: { ...process.env, VERCEL_GIT_COMMIT_MESSAGE: message ?? "", VERCEL_ENV: vercelEnv ?? "" },
     encoding: "utf8",
   });
   return { status: r.status, out: `${r.stdout}${r.stderr}` };
@@ -45,14 +49,32 @@ test("vercel.json runs the build gate on every push", () => {
   );
 });
 
-test("the gate SKIPS an ordinary push (exit 0)", () => {
-  const r = runGate("Fix the thing\n\nLonger body.");
+test("the gate SKIPS an ordinary production push (exit 0)", () => {
+  const r = runGate("Fix the thing\n\nLonger body.", "production");
   assert.equal(r.status, 0, `expected exit 0 (skip), got ${r.status}:\n${r.out}`);
 });
 
-test("the gate BUILDS a push whose message carries the marker, case-insensitively (exit 1)", () => {
+test("an UNKNOWN environment is treated as production and gated (exit 0)", () => {
+  // VERCEL_ENV unset (system env vars off). Gating a preview by mistake costs
+  // a preview URL; not gating production by mistake recreates the burn.
+  const r = runGate("Fix the thing", undefined);
+  assert.equal(r.status, 0, `expected exit 0 (skip), got ${r.status}:\n${r.out}`);
+});
+
+test("PREVIEW and DEVELOPMENT builds are never gated (exit 1, builds)", () => {
+  // A human's non-claude/* branch still gets its preview URL, and
+  // seo-preview-gate.yml still gets its deployment_status event
+  // (docs/build-cost.md). claude/* previews are disabled in vercel.json.
+  for (const env of ["preview", "development"]) {
+    const r = runGate("Fix the thing", env);
+    assert.equal(r.status, 1, `expected exit 1 (build) for VERCEL_ENV=${env}, got ${r.status}:\n${r.out}`);
+    assert.match(r.out, /not gated/);
+  }
+});
+
+test("the gate BUILDS a production push whose message carries the marker, case-insensitively (exit 1)", () => {
   for (const msg of [`release: scheduled production deploy ${MARKER}`, "hotfix [Deploy] the checkout", "[DEPLOY]"]) {
-    const r = runGate(msg);
+    const r = runGate(msg, "production");
     assert.equal(r.status, 1, `expected exit 1 (build) for ${JSON.stringify(msg)}, got ${r.status}:\n${r.out}`);
   }
 });
@@ -61,7 +83,7 @@ test("the gate FAILS OPEN when the commit message is unreadable (exit 1, builds)
   // No VERCEL_GIT_COMMIT_MESSAGE and a cwd with no git history. "Never
   // deploys" is a worse failure than "deploys too often" — the latter is only
   // the status quo this gate replaces.
-  const r = runGate(undefined);
+  const r = runGate(undefined, "production");
   assert.equal(r.status, 1, `expected exit 1 (fail open), got ${r.status}:\n${r.out}`);
   assert.match(r.out, /fail open/i);
 });
@@ -94,6 +116,13 @@ test("the egress audit can now measure the history project too", () => {
   const src = read("scripts/audit-egress.ts");
   assert.match(src, /--db=history/, "the --db=history flag is what lets the history project be audited");
   assert.match(src, /from "\.\.\/src\/lib\/db-history"/, "it must use the real history client, not a hand-rolled URL");
+  // The snapshot that feeds the delta must hold EVERY shape's counters: a
+  // `LIMIT` there ranks by the all-time counter and hides a newly hot query
+  // that has not yet climbed past the historical heavy-hitters.
+  const counters = /async function readStatements\(\)[\s\S]*?`;\s*\n\}/.exec(src)?.[0] ?? "";
+  assert.ok(counters, "readStatements() not found");
+  assert.doesNotMatch(counters, /\bLIMIT\b/i, "readStatements() must not LIMIT the snapshot — deltas need every shape");
+  assert.doesNotMatch(counters, /\bquery\b/, "readStatements() must not pull statement text — that is readStatementText()'s job, for the top slice only");
   const wf = read(".github/workflows/egress-audit.yml");
   assert.match(wf, /--db=history/, "the scheduled audit must cover the history project");
   assert.match(wf, /RH10: \$\{\{ secrets\.RH10/, "and must pass the current history variable into the job");

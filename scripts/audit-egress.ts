@@ -107,6 +107,7 @@
  * Run in CI via .github/workflows/egress-audit.yml (weekly, both projects, plus
  * a "Run workflow" button) or maintenance.yml (task: audit-egress, operational).
  */
+import { Prisma } from "@prisma/client";
 import { prisma, OPERATIONAL_URL_SOURCE } from "../src/lib/db";
 import { dbHistory, HISTORY_URL_SOURCE, historyIsSplit } from "../src/lib/db-history";
 
@@ -182,8 +183,11 @@ type TableStat = {
   total_bytes: bigint;
 };
 
+// Counters only — no statement text. Keyed by pg_stat_statements' own queryid
+// (stable for a shape across snapshots, unlike a text prefix), and summed over
+// the (userid, dbid, toplevel) rows that can share one queryid.
 type StatementStat = {
-  query: string;
+  queryid: bigint;
   calls: bigint;
   rows: bigint;
   total_exec_time: number;
@@ -192,7 +196,7 @@ type StatementStat = {
 type Snapshot = {
   at: number;
   tables: Map<string, TableStat>;
-  statements: Map<string, StatementStat>;
+  statements: Map<string, StatementStat>; // key: String(queryid)
   db: DbStat | undefined;
 };
 
@@ -229,22 +233,46 @@ function isPlatformNoise(q: string): boolean {
   return /pg_stat_activity|neon_perf_counters|pg_settings|pg_database|pg_stat_replication|pg_catalog\.|information_schema/i.test(q);
 }
 
-// Bounded on purpose: this script now runs on a schedule, and an audit that
-// itself pulls every statement shape's full text (pg_stat_statements can hold
-// thousands, Prisma's IN(...) arities multiply them, and each text runs to a
-// couple of KB) would be a measurable slice of the very allowance it audits.
-// 1,000 shapes by rows returned, text capped at 1,500 chars: the 20 that get
-// reported are always inside that, and a shape outside it in the FIRST snapshot
-// but inside the second reads as a positive delta — an overstatement, never a
-// hidden burn. 1,500 chars keeps a wide Prisma projection list intact for
-// costOf()'s column count (~25 chars per column).
+// COUNTERS FOR EVERY SHAPE, TEXT FOR NONE. This script now runs on a schedule,
+// and an audit that pulled every shape's full statement text twice per run
+// (pg_stat_statements can hold thousands; Prisma's IN(...) arities multiply
+// them; each text runs to a couple of KB) would be a measurable slice of the
+// very allowance it audits. But the cheap thing and the complete thing are the
+// same thing: (queryid, calls, rows, time) is ~40 bytes a row, so BOTH snapshots
+// can hold every shape, and a delta is computed over all of them. Only after
+// the ranking is known does readStatementText() fetch text — for the handful
+// of shapes that will actually be printed.
+//
+// Why not just `ORDER BY rows DESC LIMIT n` here: that cutoff would rank by the
+// ALL-TIME counter, so a newly hot shape whose cumulative total still sits
+// below n historical heavy-hitters would be missing from both snapshots and
+// invisible to the delta — precisely the shape a burn audit exists to find.
 async function readStatements(): Promise<StatementStat[]> {
+  // SUM(bigint) is numeric in Postgres and would come back as a Decimal; the
+  // casts keep the arithmetic below in BigInt/number as declared.
   return db.$queryRaw<StatementStat[]>`
-    SELECT left(query, 1500) AS query, calls, rows, total_exec_time
+    SELECT queryid,
+           SUM(calls)::bigint            AS calls,
+           SUM(rows)::bigint             AS rows,
+           SUM(total_exec_time)::float8  AS total_exec_time
     FROM pg_stat_statements
-    ORDER BY rows DESC
-    LIMIT 1000
+    WHERE queryid IS NOT NULL
+    GROUP BY queryid
   `;
+}
+
+// Statement text for the shapes that made the report, capped at 1,500 chars —
+// enough to keep a wide Prisma projection list intact for costOf()'s column
+// count (~25 chars per column) while bounding the read.
+async function readStatementText(ids: bigint[]): Promise<Map<string, string>> {
+  if (!ids.length) return new Map();
+  const rows = await db.$queryRaw<{ queryid: bigint; query: string }[]>`
+    SELECT queryid, max(left(query, 1500)) AS query
+    FROM pg_stat_statements
+    WHERE queryid::text IN (${Prisma.join(ids.map(String))})
+    GROUP BY queryid
+  `;
+  return new Map(rows.map((r) => [String(r.queryid), r.query]));
 }
 
 async function snapshot(): Promise<Snapshot> {
@@ -260,7 +288,7 @@ async function snapshot(): Promise<Snapshot> {
     at: Date.now(),
     db: dbRows[0],
     tables: new Map(tables.map((t) => [t.relname, t])),
-    statements: new Map(statements.map((s) => [s.query, s])),
+    statements: new Map(statements.map((s) => [String(s.queryid), s])),
   };
 }
 
@@ -318,7 +346,7 @@ async function main() {
       };
     });
     statements = [...second.statements.values()].map((st) => {
-      const a = first.statements.get(st.query);
+      const a = first.statements.get(String(st.queryid));
       return {
         ...st,
         calls: st.calls - (a?.calls ?? 0n),
@@ -456,8 +484,22 @@ async function main() {
     return 0;
   };
 
-  const app = statements.filter((st) => Number(st.calls) > 0 && !isPlatformNoise(st.query));
-  const noise = statements.filter((st) => Number(st.calls) > 0 && isPlatformNoise(st.query));
+  // Rank EVERY active shape by rows over the window, then fetch text for the
+  // top slice only. 60 rather than 20 because platform noise is recognised by
+  // its text and can occupy top slots; what is left after filtering is what
+  // gets printed (up to 20).
+  const TEXT_FOR = 60;
+  const active = statements.filter((st) => Number(st.calls) > 0).sort((a, b) => Number(b.rows) - Number(a.rows));
+  const top = active.slice(0, TEXT_FOR);
+  const texts = await readStatementText(top.map((st) => st.queryid)).catch(() => new Map<string, string>());
+  const ranked = top.map((st) => ({
+    ...st,
+    query:
+      texts.get(String(st.queryid)) ??
+      "(statement text unavailable — evicted from pg_stat_statements between the snapshot and this lookup)",
+  }));
+  const app = ranked.filter((st) => !isPlatformNoise(st.query));
+  const noise = ranked.filter((st) => isPlatformNoise(st.query));
 
   section(`Application statements by rows returned (${windowLabel})`);
   if (!app.length) {
@@ -466,7 +508,7 @@ async function main() {
     console.log("    The CREATE EXTENSION above is what makes the next run useful; on a");
     console.log("    fresh project it needs a traffic window before the view fills.");
   } else {
-    app.sort((a, b) => Number(b.rows) - Number(a.rows));
+    console.log(`  (${num(active.length)} shapes moved in this window; text fetched for the top ${Math.min(TEXT_FOR, active.length)}.)`);
     let egressTotal = 0;
     for (const st of app.slice(0, 20)) {
       const q = st.query.replace(/\s+/g, " ").trim();
@@ -509,7 +551,7 @@ async function main() {
     if (noise.length) {
       const noiseRows = noise.reduce((n, st) => n + Number(st.rows), 0);
       const noiseCalls = noise.reduce((n, st) => n + Number(st.calls), 0);
-      console.log(`\n  (Excluded as platform noise: ${noise.length} shapes, ${num(noiseCalls)} calls, ` +
+      console.log(`\n  (Excluded as platform noise among the top ${TEXT_FOR}: ${noise.length} shapes, ${num(noiseCalls)} calls, ` +
         `${num(noiseRows)} rows — Neon's own monitoring of pg_stat_activity/neon_perf_counters. ` +
         `Not the application's traffic and not ours to change, but counted here rather than dropped silently.)`);
     }

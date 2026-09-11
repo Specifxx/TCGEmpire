@@ -17,7 +17,8 @@ name: Egress audit (Neon transfer)
 # moved) against each project in turn, and puts both reports in the job
 # summary. READ-ONLY apart from `CREATE EXTENSION IF NOT EXISTS
 # pg_stat_statements`, which is idempotent. The audit's own reads are bounded
-# (top 1,000 statement shapes, text capped) — a few MB per run.
+# (counters for every statement shape, text only for the top 60 it reports) —
+# well under a megabyte per run.
 #
 # WHEN. Sunday 03:00 UTC (13:00 Sydney): no import, cron or scheduled deploy
 # runs in that window (refresh-prices 07:00/19:00, production-deploy 08:00,
