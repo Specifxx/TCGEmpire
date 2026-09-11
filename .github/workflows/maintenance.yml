@@ -158,13 +158,13 @@ jobs:
       group: ${{ inputs.task == 'import-prices' && 'refresh-prices' || format('maintenance-{0}', github.run_id) }}
       cancel-in-progress: false
     env:
-      # RM8 is the ONLY operational variable (cut over 2026-09-08, RM7 neared its
+      # RM9 is the ONLY operational variable (cut over 2026-09-11, RM8 neared its
       # limit after only about three days live — same single-name shape, no
       # fallback chain; see the header of OPERATIONAL_VARS in
       # src/lib/db-chains.ts for why the chain shape itself was retired, not
       # just rotated). That file is the source of truth here, and
-      # tests/db-chain.test.ts pins this value to it. RM8 is a RECYCLED project
-      # (live once already, 2026-08-22..~08-23), not a fresh one — a 2026-09-08
+      # tests/db-chain.test.ts pins this value to it. RM9 is a RECYCLED project
+      # (live once already, 2026-08-23..~08-26), not a fresh one — a 2026-09-11
       # probe-databases run confirmed its old window's data was already carried
       # forward before this rotation reused it (see db-chains.ts).
       #
@@ -172,24 +172,19 @@ jobs:
       # its own SOURCE (the OLD project it reads FROM) and TARGET, and aborts if
       # the two resolve to the same database.
       #
-      # ORDERING: run migrate-main-db-rm8-to-rm9 BEFORE any other task here once
-      # RM9 is set as the operational variable — otherwise something like
-      # import-prices would happily operate against a still-empty target. This
-      # is not hypothetical: on 2026-08-22 RM8 was set but completely empty at
-      # cutover, and every in-stock listing on the site vanished as a result.
-      # NOTE (2026-09-11): this default is DELIBERATELY still RM8, not RM9, even
-      # though migrate-main-db-rm8-to-rm9 exists below — flipping it here BEFORE
-      # that migration has actually run and been verified would point every
-      # scheduled task (refresh-prices.yml runs twice daily) at RM9 while it
-      # still holds only its stale 2026-08-23..08-26 snapshot. Flip this only in
-      # the SAME commit that flips src/lib/db-chains.ts's OPERATIONAL_VARS, and
-      # only after the migration task above has verified RM9's row counts match.
-      DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+      # ORDERING: run migrate-main-db-rm8-to-rm9 BEFORE any other task here if
+      # RM9 was just set — otherwise something like import-prices would happily
+      # operate against a still-empty target. This is not hypothetical: on
+      # 2026-08-22 RM8 was set but completely empty at cutover, and every
+      # in-stock listing on the site vanished as a result. migrate-main-db-rm8-
+      # to-rm9 was run twice (once for the bulk copy, once immediately before
+      # this flip) and verified all 38 tables matching before this shipped.
+      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
       # There is only one value now, but this stays for the same reason it did
       # under the old chain: lib/db.ts cannot work this out inside Actions
       # itself (everything collapses into one DATABASE_URL before the job
       # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-      DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
+      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
       DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
     steps:
       - uses: actions/checkout@v4
@@ -264,11 +259,9 @@ jobs:
           # database is set") without it — this step's env block never carried it,
           # so the task has been failing before it could copy a single row. Found
           # 2026-09-02 running the top-up ahead of the RH11 → RH6 cutover. Must be
-          # kept in lockstep with OPERATIONAL_VARS's head (RM8 as of 2026-09-08 —
-          # see the note on the job-level DATABASE_URL default above for why
-          # this is not yet RM9) — this env var's NAME, not just its value, is
-          # what the script looks up.
-          RM8: ${{ secrets.RM8 || vars.RM8 }}
+          # kept in lockstep with OPERATIONAL_VARS's head (RM9 as of 2026-09-11) —
+          # this env var's NAME, not just its value, is what the script looks up.
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -1203,11 +1196,9 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH7 || vars.RH7 }}
           # Only for the "did RH7 accidentally get set to the operational database?"
           # guard below, before anything destructive runs. Must track the CURRENT
-          # operational project (RM8 as of 2026-09-08 — see the note on the
-          # job-level DATABASE_URL default for why this is not yet RM9) —
-          # comparing against a retired one would let a genuine
-          # misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 }}
+          # operational project (RM9 as of 2026-09-11) — comparing against a
+          # retired one would let a genuine misconfiguration through unnoticed.
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1354,9 +1345,9 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH10 || vars.RH10 }}
           # Only for the "did RH10 accidentally get set to the operational database?"
           # guard below, before anything destructive runs. Must track the CURRENT
-          # operational project (RM8 as of 2026-09-08) — comparing against a
+          # operational project (RM9 as of 2026-09-11) — comparing against a
           # retired one would let a genuine misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 }}
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1503,11 +1494,9 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH9 || vars.RH9 }}
           # Only for the "did RH9 accidentally get set to the operational database?"
           # guard below, before anything destructive runs. Must track the CURRENT
-          # operational project (RM8 as of 2026-09-08 — see the note on the
-          # job-level DATABASE_URL default for why this is not yet RM9) —
-          # comparing against a retired one would let a genuine
-          # misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 }}
+          # operational project (RM9 as of 2026-09-11) — comparing against a
+          # retired one would let a genuine misconfiguration through unnoticed.
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -1657,11 +1646,9 @@ jobs:
           TARGET_HISTORY_URL: ${{ secrets.RH8 || vars.RH8 }}
           # Only for the "did RH8 accidentally get set to the operational database?"
           # guard below, before anything destructive runs. Must track the CURRENT
-          # operational project (RM8 as of 2026-09-08 — see the note on the
-          # job-level DATABASE_URL default for why this is not yet RM9) —
-          # comparing against a retired one would let a genuine
-          # misconfiguration through unnoticed.
-          OPERATIONAL_URL: ${{ secrets.RM8 || vars.RM8 }}
+          # operational project (RM9 as of 2026-09-11) — comparing against a
+          # retired one would let a genuine misconfiguration through unnoticed.
+          OPERATIONAL_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
 
@@ -2751,12 +2738,12 @@ jobs:
 
           echo ""
           echo "===== OPERATIONAL ROTATION (current first) ====="
-          probe "RM8 (current)"        "${P_RM8:-}" || true
+          probe "RM9 (current)"        "${P_RM9:-}" || true
+          probe "RM8 (retired)"        "${P_RM8:-}" || true
           probe "RM7 (retired)"        "${P_RM7:-}" || true
           probe "RM6 (retired)"        "${P_RM6:-}" || true
           probe "RM11 (retired)"       "${P_RM11:-}" || true
           probe "RM10 (retired)"       "${P_RM10:-}" || true
-          probe "RM9 (retired)"        "${P_RM9:-}" || true
           probe "DATABASE_URL_2"       "${P_DATABASE_URL_2:-}" || true
           probe "DATABASE_URL"         "${P_DATABASE_URL:-}" || true
           probe "RM5"                  "${P_RM5:-}" || true
@@ -5490,12 +5477,11 @@ jobs:
         # so the generated client may not even load.
         if: inputs.task == 'fix-orphan-users'
         env:
-          # Must track the CURRENT operational project (RM8 as of 2026-09-08 —
-          # see the note on the job-level DATABASE_URL default for why this is
-          # not yet RM9) — unlike a Node script, this raw-SQL step can't import
-          # OPERATIONAL_VARS, so a stale pin here runs a real repair against the
-          # wrong (retired) database instead of failing loudly.
-          TARGET_DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          # Must track the CURRENT operational project (RM9 as of 2026-09-11) —
+          # unlike a Node script, this raw-SQL step can't import OPERATIONAL_VARS,
+          # so a stale pin here runs a real repair against the wrong (retired)
+          # database instead of failing loudly.
+          TARGET_DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           set -uo pipefail
           if [ -z "$TARGET_DATABASE_URL" ]; then
@@ -5799,12 +5785,12 @@ jobs:
       - name: Audit rarity across sets (read-only census)
         if: inputs.task == 'audit-rarity'
         env:
-          DATABASE_URL: ${{ secrets.RM8 || vars.RM8 }}
+          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
           # There is only one value now, but this stays for the same reason it did
           # under the old chain: lib/db.ts cannot work this out inside Actions
           # itself (everything collapses into one DATABASE_URL before the job
           # starts), so the winning name is exported explicitly. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM8 || vars.RM8) && 'RM8' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
         run: npx tsx scripts/audit-rarity.ts
 
       - name: Audit VEN cards (read-only census)
@@ -5905,10 +5891,8 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
-          # src/lib/db-chains.ts directly, which is now just ["RM8"] (see the
-          # note on the job-level DATABASE_URL default for why this is not yet
-          # RM9).
-          RM8: ${{ secrets.RM8 || vars.RM8 }}
+          # src/lib/db-chains.ts directly, which is now just ["RM9"].
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other
@@ -5927,10 +5911,8 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
-          # src/lib/db-chains.ts directly, which is now just ["RM8"] (see the
-          # note on the job-level DATABASE_URL default for why this is not yet
-          # RM9).
-          RM8: ${{ secrets.RM8 || vars.RM8 }}
+          # src/lib/db-chains.ts directly, which is now just ["RM9"].
+          RM9: ${{ secrets.RM9 || vars.RM9 }}
         run: |
           ARGS=""
           if [ -n "${{ inputs.source }}" ] && [ "${{ inputs.source }}" != "RM4" ]; then
