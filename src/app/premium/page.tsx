@@ -32,11 +32,6 @@ import {
 } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { getCountry } from "@/lib/get-country";
-import { getCachedTopDeals } from "@/lib/top-deals";
-import { getUndervalued } from "@/lib/screener";
-import { formatMoneyCompact } from "@/lib/format";
-import { currencyOf } from "@/lib/country";
 import { faqPage, ldJson } from "@/lib/jsonld";
 import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 
@@ -203,28 +198,6 @@ export default async function PremiumPage() {
   const subDetails = already && dbUser?.stripeCustomerId ? await getPremiumSubscriptionDetails(dbUser.stripeCustomerId) : null;
   const currentTier = premiumTierOf(user);
 
-  // Live value-proof numbers for the strip below the pricing cards — the SAME
-  // 1h-cached feed the homepage already reads (getCachedTopDeals) plus the
-  // Value Finder screener's own 48h-cached scan, so this page costs nothing
-  // extra beyond what's already warm. allSettled: either source failing must
-  // never take the whole page down over a nice-to-have proof strip.
-  const country = getCountry();
-  const [dealsResult, undervaluedResult] = await Promise.allSettled([
-    getCachedTopDeals(country),
-    getUndervalued(country, 100),
-  ]);
-  const dealsData = dealsResult.status === "fulfilled" ? dealsResult.value : null;
-  const undervaluedCount = undervaluedResult.status === "fulfilled" ? undervaluedResult.value.length : 0;
-  const proofTiles = [
-    dealsData && dealsData.savingsVsMarketTotal > 0
-      ? { value: String(dealsData.savingsVsMarketTotal), label: "eBay deals live right now" }
-      : null,
-    dealsData && (dealsData.savingsVsMarketCents ?? 0) > 0
-      ? { value: formatMoneyCompact(dealsData.savingsVsMarketCents ?? 0, currencyOf(country)), label: "in savings on the board" }
-      : null,
-    undervaluedCount > 0 ? { value: String(undervaluedCount), label: "cards below their 30-day average" } : null,
-  ].filter((t): t is { value: string; label: string } => t !== null);
-
   return (
     <div className="mx-auto max-w-4xl">
       <PremiumRecoveryBeacon />
@@ -325,55 +298,6 @@ export default async function PremiumPage() {
             Cancel anytime · secure checkout by Stripe
           </p>
           <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
-
-          {/* Real numbers, not a pitch. Live figures from the same tools
-              Premium sells — a deliberate stand-in for a testimonials section:
-              RiftCompare doesn't have verified customer quotes to show, and
-              this repo's own rule against invented numbers rules out writing
-              some. Same tile set as before, just reframed as its own section
-              in the mtgstocks layout's slot for social proof. Each tile hides
-              itself at zero, and the whole section hides if every tile does. */}
-          {proofTiles.length > 0 && (
-            <div className="mx-auto mt-10 max-w-2xl">
-              <h2 className="text-center text-lg font-extrabold text-white">Real numbers, not a pitch</h2>
-              <p className="mt-1 text-center text-xs text-slate-500">
-                Live figures from the same tools Premium unlocks — nothing here is a projection.
-              </p>
-              <div className={`mt-4 grid gap-3 ${proofTiles.length === 1 ? "max-w-xs mx-auto" : proofTiles.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
-                {proofTiles.map((t) => (
-                  <div key={t.label} className="card-surface rounded-xl border border-ink-700 px-4 py-3 text-center">
-                    <div className="num text-2xl font-extrabold text-brand-400">{t.value}</div>
-                    <div className="mt-0.5 text-[11px] text-slate-400">{t.label}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-2 text-center text-[11px] text-slate-500">One saved order covers a month of Premium.</p>
-            </div>
-          )}
-
-          {/* Repeat CTA band. */}
-          <div className="mx-auto mt-10 max-w-lg border-t border-ink-800 pt-8 text-center">
-            <h2 className="text-lg font-extrabold text-white">Ready to upgrade?</h2>
-            <p className="mt-1 text-xs text-slate-500">Pick the plan that works for you — switch or cancel anytime.</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              {checkoutLive ? (
-                <>
-                  {plusLive && (
-                    <a href="#top-pricing" className="btn-ghost text-sm">
-                      Get Plus →
-                    </a>
-                  )}
-                  <a href="#top-pricing" className="btn-primary text-sm">
-                    Get Premium →
-                  </a>
-                </>
-              ) : (
-                <Link href="/contact" className="btn-ghost text-sm">
-                  Join the waitlist →
-                </Link>
-              )}
-            </div>
-          </div>
         </>
       )}
 
