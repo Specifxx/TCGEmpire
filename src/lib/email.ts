@@ -448,9 +448,26 @@ function accountDigestFooter(unsubUrl: string): string {
 }
 
 // Same content shape as sendNewsletterDigestEmail (built by lib/user-digest.ts
-// reusing lib/newsletter.ts's buildDigest), sent via Brevo instead of Resend.
-export async function sendUserDigestEmail(to: string, subject: string, heading: string, inner: string, unsubUrl: string): Promise<boolean> {
-  return sendEmailBrevo(to, subject, emailShell(heading, inner, accountDigestFooter(unsubUrl)));
+// reusing lib/newsletter.ts's buildDigest). BREVO BY DEFAULT (this audience is
+// too large for Resend's 100/day quota, which transactional email depends on)
+// — but `via: "resend"` exists as an escape hatch, same pattern as
+// sendPremiumOfferEmail. THIS IS NOT HYPOTHETICAL: Brevo's "Authorised IPs"
+// account setting silently refused every send from this route for an unknown
+// stretch (see DECISIONS.md, 2026-09-10 — "the daily registered-account digest
+// has been failing silently ... its summary counts `failed` but nothing
+// alerts on it"), and the fix was a Brevo dashboard setting, not code. `via`
+// lets a run continue reaching accounts through Resend while that setting (or
+// any future Brevo outage) is unresolved.
+export async function sendUserDigestEmail(
+  to: string,
+  subject: string,
+  heading: string,
+  inner: string,
+  unsubUrl: string,
+  via: "brevo" | "resend" = "brevo"
+): Promise<boolean> {
+  const html = emailShell(heading, inner, accountDigestFooter(unsubUrl));
+  return via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
 }
 
 // ─── Premium free-trial reminder ─────────────────────────────────────────────
