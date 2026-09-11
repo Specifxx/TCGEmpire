@@ -23,21 +23,39 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // --sidenav-w custom property SideNav reserves space with everywhere else.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("--sidenav-w is 0 by default and only switches on at Tailwind's xl breakpoint (1280px)", () => {
+test("--sidenav-w: 0 below lg, the 4rem icon rail from 1024px, the 17rem list from 1280px unless collapsed", () => {
   const css = read("src/app/globals.css");
-  assert.match(css, /--sidenav-w:\s*0px;/, "must default to 0 so every consumer no-ops below xl");
-  const media = /@media \(min-width:\s*1280px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*([^;]+);/.exec(css);
-  assert.ok(media, "expected an @media (min-width: 1280px) override for --sidenav-w");
+  assert.match(css, /--sidenav-w:\s*0px;/, "must default to 0 so every consumer no-ops below lg");
+  assert.match(
+    css,
+    /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;/,
+    "1024–1279px is always the icon rail"
+  );
+  // The full list is gated on the SAME attribute the boot script stamps and
+  // SideNav toggles — never a bare :root, or "collapsed" could not exist.
+  assert.match(
+    css,
+    /@media \(min-width:\s*1280px\)\s*\{\s*:root:not\(\[data-sidenav="collapsed"\]\)\s*\{\s*--sidenav-w:\s*17rem;/,
+    "1280px+ expands unless data-sidenav=collapsed"
+  );
+  // …and the two content blocks switch on exactly that attribute + breakpoint.
+  assert.match(css, /\.sidenav-expanded\s*\{\s*display:\s*none;/);
+  assert.match(css, /:root:not\(\[data-sidenav="collapsed"\]\) \.sidenav-expanded\s*\{\s*display:\s*block;/);
+  assert.match(css, /:root:not\(\[data-sidenav="collapsed"\]\) \.sidenav-collapsed\s*\{\s*display:\s*none;/);
 });
 
-test("SideNav renders the same NAV_GROUPS index the ⌘K launcher searches, hidden below xl", () => {
+test("SideNav renders the same NAV_GROUPS index the ⌘K launcher searches, hidden below lg", () => {
   const src = read("src/components/SideNav.tsx");
   assert.match(src, /"use client"/);
   assert.match(src, /import \{ NAV_GROUPS \} from "\.\/nav-groups"/);
   assert.match(src, /NAV_GROUPS\.map/);
-  // Tailwind's xl breakpoint (1280px) — must match globals.css's media query
-  // exactly, or the panel either overlaps un-padded content or leaves a gap.
-  assert.match(src, /hidden .*xl:flex/);
+  // Tailwind's lg breakpoint (1024px) — the width at which --sidenav-w first
+  // becomes non-zero in globals.css. The two must agree, or the panel either
+  // overlaps un-padded content or leaves a gap.
+  assert.match(src, /aria-label="Site navigation"\s*\n\s*className="fixed left-0 [^"]*hidden [^"]*lg:flex/);
+  // Both modes are always rendered; CSS picks one (see the globals.css test).
+  assert.match(src, /className="sidenav-expanded /);
+  assert.match(src, /className="sidenav-collapsed /);
   // Fixed, not a layout participant — see the file's own doc comment for why
   // (CinematicHero's full-bleed breakout depends on <main> staying centred on
   // the true viewport; a flex/grid sidebar would break that).
@@ -112,4 +130,147 @@ test("CinematicHero's full-bleed breakout compensates for --sidenav-w, not a bar
   // OWN CONTENT (shrink-to-fit) and sits at the row's flex-start, not the
   // full row width `container-app`'s own `mx-auto` needs to center within.
   assert.match(nearby, /className="w-full pl-\[var\(--sidenav-w\)\]"/);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEXT-ONLY + COLLAPSIBLE (2026-09-10) — reported directly: the per-link
+// emoji made the one nav surface that's on screen permanently read as
+// AI-generated decoration, and rendering all ~9 groups flat and always-open
+// meant scrolling past Games and Guides to reach Your Collection on every
+// page. This is the one NAV_GROUPS renderer that drops the emoji (the
+// dropdown/footer/launcher renderers are untouched — a link.emoji shown for a
+// moment reads differently than one sitting on screen at all times) and the
+// one that lets a visitor collapse a group and has it stay collapsed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("SideNav renders no per-link emoji, unlike the launcher/mobile-nav renderers", () => {
+  const src = read("src/components/SideNav.tsx");
+  assert.doesNotMatch(src, /link\.emoji/, "SideNav must not read link.emoji — text only, by design");
+  // Untouched by this change, so still emoji: the ⌘K launcher and the phone
+  // Explore overlay, both surfaces that are open for a moment rather than
+  // sitting on screen permanently. (FooterNav was already text-only before
+  // this change — it never rendered link.emoji at all — so it isn't a
+  // counter-example either way and isn't asserted on here.)
+  for (const renderer of ["CommandLauncher.tsx", "CinematicNavMenu.tsx"]) {
+    assert.match(read(`src/components/${renderer}`), /link\.emoji|l\.emoji/, `${renderer} should still render emoji — only SideNav drops them`);
+  }
+});
+
+test("SideNav's groups are collapsible and remember a visitor's choice", () => {
+  const src = read("src/components/SideNav.tsx");
+  assert.match(src, /"use client"/);
+  // A real disclosure control per group, not a static heading.
+  assert.match(src, /aria-expanded=\{open\}/);
+  assert.match(src, /onClick=\{\(\) => toggleGroup\(group\.title\)\}/);
+  // Persisted, so a collapsed group stays collapsed across a reload — and
+  // ONLY deviations are stored, so a group added to NAV_GROUPS tomorrow
+  // starts open for every existing visitor rather than defaulting to
+  // whatever an empty/missing key would imply.
+  assert.match(src, /localStorage\.(get|set)Item\(STORAGE_KEY/);
+  assert.match(src, /localStorage\.setItem\(STORAGE_KEY, JSON\.stringify\(\[\.\.\.next\]\)\)/);
+});
+
+test("SideNav forces the active page's group open even if it was previously collapsed", () => {
+  const src = read("src/components/SideNav.tsx");
+  // Computed from the SAME isActiveLink check used to highlight the link, so
+  // the two can't drift (one flagging a page active while the other leaves
+  // its group collapsed would hide the very page a visitor is on).
+  assert.match(src, /activeGroupTitle/);
+  assert.match(src, /g\.links\.some\(\(l\) => isActiveLink\(pathname, l\)\)/);
+  assert.match(src, /if \(!hydrated \|\| !activeGroupTitle \|\| !collapsed\.has\(activeGroupTitle\)\) return;/);
+});
+
+test("SideNav's collapse state starts empty (every group open) so SSR and first client paint agree", () => {
+  // localStorage isn't available during SSR. Seeding `collapsed` from it
+  // synchronously would make the server's render and the client's first
+  // render disagree — a hydration mismatch. Real state loads in an effect,
+  // strictly after mount, same shape as TradeCalculator's own localStorage
+  // restore.
+  const src = read("src/components/SideNav.tsx");
+  assert.match(src, /useState<Set<string>>\(\(\) => new Set\(\)\)/);
+  const effectsAfter = src.slice(src.indexOf("useState<Set<string>>"));
+  assert.match(effectsAfter, /useEffect\(\(\) => \{[\s\S]*?localStorage\.getItem\(STORAGE_KEY\)/);
+});
+
+// ── Two modes: the resolver, the boot script, and the layout wiring ──────────
+import vm from "node:vm";
+import {
+  SIDENAV_BOOT_SCRIPT,
+  SIDENAV_COLLAPSED_PREFIXES,
+  readSidenavCookie,
+  resolveSidenavMode,
+  sidenavDefaultFor,
+} from "../src/lib/sidenav-shared";
+import { NAV_GROUPS } from "../src/components/nav-groups";
+
+test("route defaults: icon rail on pages with their own column or a playfield, full rail on hubs", () => {
+  for (const p of ["/", "/tools", "/movers", "/market", "/guides", "/blog/some-post", "/champions", "/cardsmith"]) {
+    assert.equal(sidenavDefaultFor(p), "expanded", p);
+  }
+  for (const p of ["/browse", "/browse/", "/card/vayne-abc", "/cards", "/sealed/booster-box", "/decks", "/deck/x", "/games", "/games/sealed-bid", "/riftle", "/gallery", "/portfolio", "/trade", "/bulk-pricer"]) {
+    assert.equal(sidenavDefaultFor(p), "collapsed", p);
+  }
+  // "/card" must not swallow unrelated routes that merely start with it.
+  assert.equal(sidenavDefaultFor("/cardboard"), "expanded");
+});
+
+test("the visitor's saved choice wins over the route default; garbage falls through", () => {
+  assert.equal(resolveSidenavMode("expanded", "/browse"), "expanded");
+  assert.equal(resolveSidenavMode("collapsed", "/"), "collapsed");
+  assert.equal(resolveSidenavMode("sideways", "/browse"), "collapsed");
+  assert.equal(resolveSidenavMode(null, "/"), "expanded");
+  assert.equal(readSidenavCookie("country=US; sidenav=collapsed; x=1"), "collapsed");
+  assert.equal(readSidenavCookie("sidenav=expanded"), "expanded");
+  assert.equal(readSidenavCookie("notsidenav=collapsed"), null);
+});
+
+test("the inline boot script agrees with the TypeScript resolver on every route and cookie", () => {
+  // Run the exact string the layout inlines, in a sandbox with a fake DOM.
+  const run = (pathname: string, cookie: string) => {
+    let stamped: string | null = null;
+    const ctx = vm.createContext({
+      location: { pathname },
+      document: { cookie, documentElement: { setAttribute: (_k: string, v: string) => (stamped = v) } },
+    });
+    vm.runInContext(SIDENAV_BOOT_SCRIPT, ctx);
+    return stamped;
+  };
+  const cases: [string, string][] = [
+    ["/", ""], ["/browse", ""], ["/card/x", ""], ["/cardboard", ""], ["/games/sealed-bid", ""],
+    ["/", "sidenav=collapsed"], ["/browse", "sidenav=expanded"], ["/browse", "a=1; sidenav=expanded; b=2"], ["/browse", "sidenav=bogus"],
+  ];
+  for (const [p, c] of cases) {
+    assert.equal(run(p, c), resolveSidenavMode(readSidenavCookie(c), p), `${p} with cookie "${c}"`);
+  }
+  // It must survive a hostile environment rather than throw before paint.
+  assert.doesNotThrow(() => vm.runInContext(SIDENAV_BOOT_SCRIPT, vm.createContext({})));
+  for (const prefix of SIDENAV_COLLAPSED_PREFIXES) assert.ok(SIDENAV_BOOT_SCRIPT.includes(JSON.stringify(prefix)), prefix);
+});
+
+test("the layout inlines the boot script in <head> and suppresses the resulting <html> hydration warning", () => {
+  const layout = read("src/app/layout.tsx");
+  assert.match(layout, /import \{ SIDENAV_BOOT_SCRIPT \} from "@\/lib\/sidenav-shared"/);
+  const head = layout.slice(layout.indexOf("<head>"), layout.indexOf("</head>"));
+  assert.match(head, /<script dangerouslySetInnerHTML=\{\{ __html: SIDENAV_BOOT_SCRIPT \}\} \/>/, "the script must run before <body> paints");
+  const html = layout.slice(layout.indexOf("<html"), layout.indexOf(">", layout.indexOf("<html")));
+  assert.match(html, /suppressHydrationWarning/);
+  // The caching rule still holds: nothing here reads cookies()/headers().
+  assert.doesNotMatch(layout, /from "next\/headers"/);
+});
+
+test("every NAV_GROUPS entry has an icon — the collapsed rail shows nothing else for it", () => {
+  for (const g of NAV_GROUPS) assert.ok(g.icon && g.icon.length > 0, `${g.title} needs an icon`);
+  assert.equal(new Set(NAV_GROUPS.map((g) => g.icon)).size, NAV_GROUPS.length, "icons must be distinct — they are the only signal at 4rem");
+});
+
+test("SideNav toggles + persists the choice and reapplies the route default on navigation", () => {
+  const src = read("src/components/SideNav.tsx");
+  assert.match(src, /setAttribute\("data-sidenav", mode\)/);
+  assert.match(src, /document\.cookie = `\$\{SIDENAV_COOKIE\}=\$\{next\}; path=\/; max-age=\$\{SIDENAV_COOKIE_MAX_AGE\}; SameSite=Lax`/);
+  assert.match(src, /resolveSidenavMode\(readSidenavCookie\(document\.cookie\), pathname \?\? "\/"\)/);
+  // The keyboard shortcut must never fire while the visitor is typing.
+  assert.match(src, /isTypingTarget\(e\.target\)/);
+  // Flyouts are keyboard-reachable: focus opens, Escape closes, state exposed.
+  assert.match(src, /onFocus=\{\(\) => setOpenGroup\(group\.title\)\}/);
+  assert.match(src, /aria-expanded=\{isOpen\}/);
 });

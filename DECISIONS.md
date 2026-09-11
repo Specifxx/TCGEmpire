@@ -4198,3 +4198,229 @@ updated" dates earlier than material edits (in `/terms`' case, earlier than
 the commit that removed the peer-to-peer Marketplace from it), and
 `/marketplace/terms` and `/returns` were still listed as policy pages though
 both routes were deleted on 2026-08-26. Fixed in its own commit.
+
+## History database rotation: RH9 → RH10 (2026-09-10)
+
+RH9 (current since 2026-09-09) reached its 5 GB monthly transfer allowance
+after roughly a **day** live — the fastest exhaustion of any project in this
+rotation history (every prior one bought two to three days). History moves
+onto RH10.
+
+**RH10 is a recycled name**: its own prior term ran 2026-08-25..08-28,
+before RH11 replaced it. Per this repo's own rule, a recycled target is
+re-verified live on every return, never trusted from that old term.
+`migrate-history-db-rh9-to-rh10` (new `maintenance.yml` task, modelled
+exactly on the RH8→RH9 template) ran via `workflow_dispatch` against `main`
+and reported:
+
+```
+Target (RH10) BEFORE:  Card=1434  ClickEvent=698  PriceHistory=336656
+public."Card":         source=1434    target=1434    ✓
+public."ClickEvent":   source=698     target=698     ✓
+public."PriceHistory": source=422589  target=422589  ✓
+All tables match — RH10 now holds a full copy of the history data.
+```
+
+The 336,656-row PriceHistory count RH10 held before this run is real,
+outdated data from its own 08-25..08-28 term — the signature of a genuinely
+recycled project — and predates the 2026-09-05 GLOBAL-history migration
+entirely, so it held zero GLOBAL rows on its own. The pg_dump/restore from
+RH9 is what actually carries the current GLOBAL series onto RH10; nothing
+from RH10's own old term survives, and nothing needed to.
+
+`migrate-history-db-rh8-to-rh9` is marked LEGACY, matching every prior
+rotation's convention.
+
+**Runtime chain flipped** (`HISTORY_VARS` in `src/lib/db-chains.ts`,
+mirrored in `src/lib/db-history.ts`'s `HISTORY_URL_SOURCE` check and
+`scripts/build-db-push.sh`'s `CURRENT_HIST`/elif chain): `RH10, RH9,
+DATABASE_URL`. RH8 drops out of the chain (was RH9's own rollback for its
+09-09..09-10 stint); still reachable, available to migration tasks by
+explicit name. `tests/db-chain.test.ts` (6 tests) confirms the app chain,
+the build-script chain and the "you fell back to a dead project" warnings
+all agree.
+
+**Two other workflows updated to match** — `db-audit.yml` and
+`weekly-promo.yml` both pass a broad fallback list of history vars into
+their `env:` blocks (`RH9, RH8, RH7, RH6, RH5, HISTORY_DATABASE_URL*`) so
+their PriceHistory reads don't fall through to the empty operational
+database; neither had RH10 in that list at all, so both would have quietly
+kept reading RH9 — correct today, increasingly stale as new writes land
+only in RH10. Added RH10 ahead of RH9 in both. `refresh-prices.yml` already
+had RH10 wired into its env vars; only its comment was stale.
+
+**A real pre-existing bug, found in the same sweep, unrelated to this
+rotation's timing:** `maintenance.yml`'s `db-push` task — the one that
+pushes schema changes to the history project directly, for cases where an
+ordinary deploy's schema push doesn't reach it — resolves its target via an
+explicit `||` fallback chain, and that chain's comment still said "RH11 is
+the CURRENT project (2026-08-30)" and led with `RH11 || RH10 || RH9 || RH8
+|| ...`. It was never updated through the RH6→RH7→RH8→RH9 rotations that
+followed — exactly the drift `src/lib/db-chains.ts`'s own header exists to
+warn about, on the one chain that file's "everything imports from here now"
+fix couldn't reach (a raw `${{ }}` expression, not TypeScript). RH11 is a
+live, reachable secret (confirmed by the 2026-09-06 probe-history run
+noted in `db-chains.ts`), so any `db-push` run since 08-30 would have
+pushed schema at a project the app has not read in six weeks, silently.
+Reordered to `RH10 || RH9 || RH8 || RH11 || ...` to match current
+precedence, with a note explaining the find.
+
+**Not touched**: `scripts/repair-history-card-ids.ts`'s own `HISTORY_VARS`
+default (used only as a `--db=` fallback when that flag is omitted) still
+starts at `HISTORY_DATABASE_URL_4` and has predated RH8 entirely since it
+was written — `tests/db-chain.test.ts` only pins the *operational* chain
+against hand-rolled copies, and no prior rotation touched this file either.
+Left as-is to match precedent; flagging here in case a future rotation
+wants to fix it properly rather than leave it stale indefinitely.
+
+**Owner action still required, as with every prior rotation** (this repo
+has no Vercel API access): confirm `RH10` is set in Vercel for Production,
+Preview **and** Development, and leave `RH9` set as the rollback until RH10
+has served cleanly for a while. Then measure — RH9 lasting a day instead of
+the usual two to three suggests the read pattern is getting worse, not
+holding steady, so a repeat exhaustion in days should prompt
+`scripts/audit-egress.ts` against RH10 rather than an eighteenth rotation.
+
+## Working the inbox: four queues, four different answers (2026-09-10)
+
+`/admin/messages` had four unactioned queues and no way to read them outside
+a browser, so `scripts/audit-inbox.ts` was written first (read-only, emails
+reduced to their domain because job logs are collaborator-visible). What it
+surfaced is recorded here because three of the four items turned out to be
+the *visible end* of a pipeline defect, not a support request.
+
+**Three suggested stores added, one deliberately refused.** Alt F4, Card
+Brawlers and Boutique Hobby Expert are live in `retailers.ts`. imaginaire.com
+is not: Cloudflare returns 403 to every request including a full browser UA,
+so there is no feed to scrape and listing it would only produce a permanently
+empty store page. Its suggestion row is stamped `rejected` with that reason
+rather than `added` — the queue's status is only worth having if it is true.
+
+Two traps worth keeping. Card Brawlers' robots.txt *appears* to say
+`Disallow: /`, but that directive is inside its `User-agent: Nutch` group
+only; a naive grep flagged the store as un-scrapable and the app's own
+`robotsAllows()` settled it. And Boutique Hobby Expert's obvious
+`riftbound-singles` handle EXISTS and is EMPTY — its ~986 real products live
+under three other handles, none reachable from page 1 of a 388-collection
+`collections.json`. A scan that does not paginate concludes the store sells
+no Riftbound at all.
+
+**The wrong card page was two copies of one rule drifting apart.** A reader
+reported `/card/warwick-hunter-ogn-159a-298` presenting as a pack-pulled
+Showcase while linking to a US$63.81 TCGplayer product in "Riftbound
+Promotional Cards". `lib/tcgplayer.ts`'s `isPromoProduct()` has always been
+`/organized\s*play|promotional\s*cards?/i`; `add-tcg-printings.ts` carried
+its own narrower `/organized play/i`. TCGplayer files promos under two set
+names and only one says "Organized Play", so those products took the in-set
+VARIANT branch and were *created* as fake Showcase cards carrying the promo's
+externalId — which the pricing layer then honours, because an explicit link
+is meant to be authoritative. Every guard worked; they disagreed about what a
+promo product is. That file had already been bitten by exactly this once (a
+private `setFromTotal` that never learned VEN), so the rule is now **pinned,
+not merely fixed**: one definition, imported, and a test that fails if any
+layer defines a second promo-set regex. Nine already-written rows were
+repaired by `scripts/fix-promo-as-variant.ts`.
+
+**Slugs were left alone on purpose.** Flagging `isPromo` changes what
+`cardSlug()` produces, and those URLs are live and indexed. Moving one needs
+a `next.config.js` redirect in the same commit, so `--reslug` is a separate
+flag and is deliberately not exposed through the workflow. Correct data with
+a stable URL first; the URL change is its own decision.
+
+**"Random listings throwing off card prices" were another game's cards.**
+Hobby Collectors Australia shelves every single it sells, across every game,
+in one collection: `all-singles-one-piece-pokemon-riftbound`. The handle says
+"riftbound", so `discoverRiftboundCollections` took it — 676 Pokémon and One
+Piece singles and, verified live, zero Riftbound ones. Then `resolveCardId`
+turned them into Riftbound prices: 461 of those titles carry an `NNN/NNN`
+number, `setFromTotal` declined the foreign denominator, `confidentSetCode`
+came back null, and `setCode` fell through to its `"OGN"` default — so the
+number-only path matched on the **numerator alone**. "Armarouge 015/091
+Scarlet and Violet Paldean Fates" at A$1.00 became Captain Farron, OGN
+015/298, and being far below any real price it won "cheapest" — the card's
+headline, its history point, and its value in every portfolio holding it.
+
+The decision worth recording: **a denominator that belongs to no Riftbound
+set is evidence, not a missing signal.** A real Riftbound single always
+prints its own set's total, so a stated foreign total now leaves the listing
+unmatched. Narrow on purpose — it blocks the NUMBER paths only, because a
+name match is independent evidence (no Pokémon card is called "Captain
+Farron"), and an explicit set code or set-name hint still overrides, so a
+mistyped denominator or a set whose total we have not learned yet is
+unaffected. A false positive costs one unmatched listing; the default cost a
+wrong price on a real card's page. The `"OGN"` fallback's own comment had
+already predicted this for a Radiance denominator — it just never occurred to
+anyone that the listing might not be Riftbound at all.
+
+**Portfolio P&L: a row can now say whether its price is per copy or total.**
+
+  > "Added $770 paid to Akali ON - pulled one, paid for the other… Same issue
+  >  with Arise where I paid 20 each for two and 25 for the third"
+
+`CollectionCard` is unique per (user, card, condition, foil), so every copy
+shares one cost figure — and that figure could only mean "per copy". $770
+against two copies read as $770 *each* ($1,540 invested); 20/20/25 across
+three had no single per-copy number to type at all.
+
+**Rejected: a lot model.** Per-lot acquisition rows would be tax-lot
+accounting, and nothing on this site needs one. A row-level total *is* the
+average cost basis, which is exactly what an unrealised P&L is computed from,
+and it makes both reported cases expressible and correct.
+
+**Rejected: redefining the existing column.** Changing `costBasisCents` to
+mean "total" would have silently rewritten every user's recorded P&L. The
+flag is additive with a default, so pre-existing rows keep their meaning.
+
+The arithmetic lives in one module (`lib/collection-cost.ts`) because the
+quantity multiply is the step that goes wrong and it was written out by hand
+in three places — the same shape as the promo-regex drift found the same day.
+A test now fails if any call site multiplies again. Three places had quietly
+dropped money: adding copies to a total-mode row replaced the outlay instead
+of adding to it, a quantity change left a total fixed, and merging two rows
+kept the survivor's cost while absorbing the other's copies as if free. Where
+either side has no cost recorded there is no honest sum, so nothing is
+invented.
+
+**Closing the queue is `close-inbox-items`, not a sweep.** "Mark everything
+done" is one query and it is the wrong one — it would stamp done on
+submissions nobody read, and tell a suggester their store was added when it
+was refused. Every row is named by id with the status it earned, and a row
+whose status has moved since is skipped rather than overwritten. Feedback
+goes to `HIDDEN`, not `APPROVED`: `APPROVED` publishes the text as a public
+review and neither submitter ticked the consent box.
+
+---
+
+## Collapsible desktop rail — 2026-09-10
+
+The persistent desktop navigation rail (SideNav) was all-or-nothing: the full
+17rem list on every page from 1280px up, nothing below. On `/browse` that
+stacked a third column beside the filter panel and cost a card column; on a
+game page it sat beside the playfield doing nothing; an 1100px laptop got no
+rail at all. It now has two modes.
+
+- **Expanded (17rem) and collapsed (4rem icon rail with a flyout per group).**
+  1024–1279px is always the icon rail. 1280px+ is expanded unless collapsed.
+  Collapsed comes from the visitor's own toggle (the `sidenav` cookie, one
+  year) or, failing that, the route: icon mode on pages with their own left
+  column or a playfield (`SIDENAV_COLLAPSED_PREFIXES` in
+  `src/lib/sidenav-shared.ts`), full rail on the homepage and hubs. A saved
+  choice beats the route default everywhere.
+- **Decided before first paint by an inline script, not the server.** The
+  root layout must never read cookies()/headers() (it would opt every route
+  out of static caching), so `SIDENAV_BOOT_SCRIPT` — generated from the same
+  prefix list as the TypeScript resolver, and run in a sandbox by
+  `tests/sidenav.test.ts` to prove they agree — stamps `data-sidenav` on
+  `<html>` in `<head>`. `<html>` carries `suppressHydrationWarning` for it.
+- **CSS owns the mode.** `--sidenav-w` is 0 / 4rem / 17rem off the attribute
+  and the breakpoints; both content blocks are always in the DOM and
+  `.sidenav-expanded` / `.sidenav-collapsed` switch display. Nothing about
+  the mode has to hydrate, so there is no flash and no layout jump. Every
+  consumer of `--sidenav-w` (main, footer ad zone, footer, CinematicHero's
+  breakout) picked the change up unchanged.
+- **Icons per group** (`NavGroup.icon`) are the only signal at 4rem, so the
+  test requires one per NAV_GROUPS entry and that they are distinct. The
+  flyout opens on hover, click or keyboard focus; Escape closes it; `[`
+  toggles the rail unless the visitor is typing.
+- Not done: hover-to-expand (fragile on trackpads/touch) and a header toggle
+  (the rail's own chevron is enough; revisit if analytics say otherwise).

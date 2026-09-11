@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { CONDITION_KEYS } from "@/lib/constants";
+import { investedCents } from "@/lib/collection-cost";
 
 export const dynamic = "force-dynamic";
 
@@ -37,8 +38,11 @@ const schema = z.object({
   condition: z.enum(CONDITION_KEYS as [string, ...string[]]).default("NM"),
   isFoil: z.boolean().default(false),
   quantity: z.number().int().min(1).max(999).default(1),
-  // What the owner paid per unit (cents). Optional — powers the Premium P&L view.
+  // What the owner paid (cents). Optional — powers the Premium P&L view.
   costBasisCents: z.number().int().min(0).max(100_000_000).optional().nullable(),
+  // Whether costBasisCents is per copy (false/absent) or this add's whole
+  // outlay (true). See lib/collection-cost.ts.
+  costBasisIsTotal: z.boolean().optional(),
   note: z.string().trim().max(120).optional().nullable(),
 });
 
@@ -56,10 +60,38 @@ export async function POST(req: Request) {
     const card = await prisma.card.findUnique({ where: { id: d.cardId }, select: { id: true } });
     if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
 
+    // ADDING COPIES TO A ROW THAT RECORDS A TOTAL HAS TO ADD THE MONEY TOO.
+    // `costBasisCents: d.costBasisCents` would REPLACE the row's whole outlay
+    // with this add's, so buying a third copy for $25 would erase the $40 paid
+    // for the first two. Read the row first and sum instead — but only on the
+    // rare path where a total is actually in play, so the ordinary "add to my
+    // cards" click still costs exactly one query.
+    const wantsTotal = d.costBasisIsTotal === true && d.costBasisCents != null;
+    const existing = wantsTotal
+      ? await prisma.collectionCard.findUnique({
+          where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
+          select: { quantity: true, costBasisCents: true, costBasisIsTotal: true },
+        })
+      : null;
+    const priorPaid = existing ? investedCents(existing) : null;
+
     const item = await prisma.collectionCard.upsert({
       where: { userId_cardId_condition_isFoil: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil } },
-      create: { userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil, quantity: d.quantity, note: d.note ?? null, costBasisCents: d.costBasisCents ?? null },
-      update: { quantity: { increment: d.quantity }, ...(d.note ? { note: d.note } : {}), ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}) },
+      create: {
+        userId: user.id, cardId: d.cardId, condition: d.condition, isFoil: d.isFoil,
+        quantity: d.quantity, note: d.note ?? null,
+        costBasisCents: d.costBasisCents ?? null, costBasisIsTotal: d.costBasisIsTotal ?? false,
+      },
+      update: {
+        quantity: { increment: d.quantity },
+        ...(d.note ? { note: d.note } : {}),
+        ...(wantsTotal
+          ? { costBasisCents: (priorPaid ?? 0) + d.costBasisCents!, costBasisIsTotal: true }
+          : {
+              ...(d.costBasisCents !== undefined ? { costBasisCents: d.costBasisCents } : {}),
+              ...(d.costBasisIsTotal !== undefined ? { costBasisIsTotal: d.costBasisIsTotal } : {}),
+            }),
+      },
     });
     return NextResponse.json({ ok: true, item });
   } catch {

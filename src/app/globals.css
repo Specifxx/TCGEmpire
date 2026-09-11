@@ -16,9 +16,36 @@
   --sidenav-w: 0px;
 }
 
-@media (min-width: 1280px) {
+/* 1024–1279px: the rail is ALWAYS its icon form (4rem) — there isn't room for
+   the full 17rem list without narrowing every page. */
+@media (min-width: 1024px) {
   :root {
+    --sidenav-w: 4rem;
+  }
+}
+
+/* 1280px+: the full list, unless collapsed. `data-sidenav` is stamped on <html>
+   before first paint by the inline script the root layout emits from
+   src/lib/sidenav-shared.ts (the visitor's cookie, else the route's default),
+   and flipped by SideNav's toggle. */
+@media (min-width: 1280px) {
+  :root:not([data-sidenav="collapsed"]) {
     --sidenav-w: 17rem;
+  }
+}
+
+/* Which of SideNav's two blocks is visible. Both are always in the DOM so the
+   mode needs no JS state to hydrate — CSS decides off the same attribute +
+   breakpoints as --sidenav-w above, and the two can't disagree. */
+.sidenav-expanded {
+  display: none;
+}
+@media (min-width: 1280px) {
+  :root:not([data-sidenav="collapsed"]) .sidenav-expanded {
+    display: block;
+  }
+  :root:not([data-sidenav="collapsed"]) .sidenav-collapsed {
+    display: none;
   }
 }
 

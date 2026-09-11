@@ -1154,9 +1154,27 @@ model CollectionCard {
   condition      String   @default("NM") // NM, LP, MP, HP, DMG
   isFoil         Boolean  @default(false)
   quantity       Int      @default(1)
-  // What the owner paid PER UNIT (market currency, cents). Optional — powers the
-  // Premium cost-basis / profit-and-loss view. null = unknown (no P&L for that row).
+  // What the owner paid (market currency, cents). Optional — powers the Premium
+  // cost-basis / profit-and-loss view. null = unknown (no P&L for that row).
+  //
+  // READ IT WITH costBasisIsTotal, NEVER ALONE. By default this is the price of
+  // ONE copy and the row's outlay is costBasisCents × quantity. When
+  // costBasisIsTotal is true it is instead the WHOLE row's outlay and quantity
+  // must not be applied again. lib/collection-cost.ts owns that arithmetic; no
+  // caller should multiply by hand.
+  //
+  // WHY THE FLAG EXISTS. A row is unique per (card, condition, foil), so several
+  // copies of one card share ONE cost figure — and copies are rarely acquired at
+  // one price. Reported 2026-09-10 through the feedback form: "Added $770 paid to
+  // Akali ON — pulled one, paid for the other… Same issue with Arise where I paid
+  // 20 each for two and 25 for the third." Per-unit-only makes both unrecordable:
+  // the first doubles to $1,540, the second cannot express a mixed price at all.
+  // A total is the average cost basis, which is what an unrealised P&L needs.
   costBasisCents Int?
+  // false (default) = costBasisCents is per copy; true = it is the row's total.
+  // Additive with a default so every existing row keeps its per-unit meaning and
+  // nobody's recorded P&L silently changes underneath them.
+  costBasisIsTotal Boolean @default(false)
   note           String? // optional free-text (e.g. "graded PSA 9", "for trade")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

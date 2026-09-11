@@ -10,6 +10,7 @@ import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
+import { investedCents, unitCostCents } from "./collection-cost";
 import { sydneyWeekKey, historySource } from "./price-history";
 import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
@@ -408,7 +409,8 @@ export interface Holding {
   unitCents: number | null; // current lowest market price × condition multiplier
   valueCents: number; // unit × quantity (0 when unpriced)
   d7pct: number | null; // the card's own 7-day price move
-  costBasisCents: number | null; // what the owner paid per unit (null = unknown)
+  costBasisCents: number | null; // per-copy cost (averaged when the row stores a total); null = unknown
+  investedCents: number | null; // what the owner actually paid for this row; null = unknown
   plCents: number | null; // unrealised profit/loss for this row (null without cost+price)
   plPct: number | null;
 }
@@ -490,10 +492,13 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
       const market = pickPrice(r.card, country);
       const unit = market != null ? Math.round(market * condMult(r.condition)) : null;
       const valueCents = (unit ?? 0) * r.quantity;
-      const cost = r.costBasisCents ?? null;
-      const investedRow = cost != null ? cost * r.quantity : null;
+      // NEVER `cost * quantity` BY HAND. A row's recorded figure is per-copy or
+      // the whole row's outlay depending on costBasisIsTotal — see
+      // lib/collection-cost.ts, and the feedback that made the flag exist.
+      const investedRow = investedCents(r);
+      const cost = unitCostCents(r);
       // P&L only when we know both what they paid AND the current value.
-      const plCents = cost != null && unit != null ? valueCents - cost * r.quantity : null;
+      const plCents = investedRow != null && unit != null ? valueCents - investedRow : null;
       const plPct = plCents != null && investedRow != null && investedRow > 0 ? Math.round((plCents / investedRow) * 1000) / 10 : null;
       return {
         card: r.card as unknown as CardTileData,
@@ -510,6 +515,7 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
         valueCents,
         d7pct: d7ByCard.get(r.cardId) ?? null,
         costBasisCents: cost,
+        investedCents: investedRow,
         plCents,
         plPct,
       };
@@ -517,19 +523,23 @@ export async function getPortfolio(userId: string, country: Country, windowDays 
     .sort((a, b) => b.valueCents - a.valueCents);
 
   // Aggregate P&L over holdings that have both a cost and a current price.
-  const costed = holdings.filter((h) => h.costBasisCents != null && h.unitCents != null);
-  const anyCost = holdings.some((h) => h.costBasisCents != null);
+  const costed = holdings.filter((h) => h.investedCents != null && h.unitCents != null);
+  const anyCost = holdings.some((h) => h.investedCents != null);
   const pnl: PnL | null = anyCost
     ? (() => {
-        const investedCents = costed.reduce((s, h) => s + (h.costBasisCents ?? 0) * h.quantity, 0);
+        // Each holding already carries what was PAID for it, flag applied. The
+        // old `costBasisCents * quantity` here was the second place that
+        // multiply was written out, and a row recording a total would have been
+        // counted quantity times over.
+        const invested = costed.reduce((s, h) => s + (h.investedCents ?? 0), 0);
         const valueCents = costed.reduce((s, h) => s + h.valueCents, 0);
-        const plCents = valueCents - investedCents;
+        const plCents = valueCents - invested;
         return {
-          investedCents,
+          investedCents: invested,
           valueCents,
           plCents,
-          plPct: investedCents > 0 ? Math.round((plCents / investedCents) * 1000) / 10 : null,
-          costedRows: holdings.filter((h) => h.costBasisCents != null).length,
+          plPct: invested > 0 ? Math.round((plCents / invested) * 1000) / 10 : null,
+          costedRows: holdings.filter((h) => h.investedCents != null).length,
         };
       })()
     : null;

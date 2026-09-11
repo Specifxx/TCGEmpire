@@ -47,6 +47,13 @@ export interface NavGroupLink {
 
 export interface NavGroup {
   title: string;
+  /**
+   * One emoji standing for the whole group — what the desktop rail shows in
+   * its collapsed (icon) mode, with the group's links in a flyout. Required
+   * for NAV_GROUPS (SideNav renders every group as an icon there); the footer
+   * groups don't collapse, so it's optional on the type.
+   */
+  icon?: string;
   links: NavGroupLink[];
 }
 
@@ -54,6 +61,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // Core price/data pages — the heart of the site.
     title: "Prices",
+    icon: "💹",
     links: [
       { href: "/browse", label: "Card Database", emoji: "🗃️", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"], popular: true },
       { href: "/sealed", label: "Sealed Products", emoji: "📦", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"], popular: true },
@@ -76,6 +84,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // pages we very much have — so they live here and llms.txt reads them from
     // this one list instead of keeping its own copy.
     title: "Browse the database",
+    icon: "🗂️",
     links: [
       { href: "/sets", label: "Sets & card lists", emoji: "🗂️", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
       { href: "/champions", label: "Champions", emoji: "🦸", keywords: ["champions", "by champion", "legends"] },
@@ -92,6 +101,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",
+    icon: "💎",
     links: [
       { href: "/tools/deal-finder", label: "Deal Finder", emoji: "💱", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"], popular: true },
       { href: "/tools/value-finder", label: "Value Finder", emoji: "🔎", keywords: ["value", "best value", "worth", "undervalued"] },
@@ -108,6 +118,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     // The signed-in user's own stuff + the upgrade.
     title: "Your collection",
+    icon: "🎒",
     links: [
       { href: "/portfolio", label: "My Portfolio", emoji: "💼", keywords: ["collection", "my cards", "holdings", "portfolio", "what is mine worth"] },
       { href: "/watching", label: "My Watchlist", emoji: "🔔", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
@@ -117,6 +128,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: "Decks",
+    icon: "🃏",
     links: [
       { href: "/decks", label: "Meta Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"], popular: true },
       { href: "/deck", label: "Deck Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost"] },
@@ -125,6 +137,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: "Games",
+    icon: "🎮",
     links: [
       { href: "/riftle", label: "Riftle (daily)", emoji: "🃏", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
       { href: "/games/pack-sim", label: "Pack Simulator", emoji: "🎁", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
@@ -145,6 +158,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // reader) landing on a programmatic price page needs a one-click path to
     // something a person wrote, or the whole site reads as a data feed.
     title: "Guides & News",
+    icon: "📰",
     links: [
       { href: "/guides", label: "Guides", emoji: "📖", keywords: ["guides", "how to", "tutorials", "explainers"] },
       { href: "/blog", label: "News & analysis", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
@@ -167,6 +181,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // to do with comparing a price. Rather than move it a third time, it gets a
     // group whose whole definition is "doesn't fit the others".
     title: "Miscellaneous",
+    icon: "📅",
     links: [
       // Deliberately NOT named after a set. Its two predecessors were
       // (/vendetta-countdown, then /radiance-countdown) and both went stale on a
@@ -179,6 +194,7 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     title: "Help",
+    icon: "🆘",
     links: [
       { href: "/support", label: "Support", emoji: "🆘", keywords: ["support", "help", "faq", "problem", "issue", "something is broken"] },
       { href: "/contact", label: "Contact & feedback", emoji: "✉️", keywords: ["contact", "email", "get in touch", "reach us"] },

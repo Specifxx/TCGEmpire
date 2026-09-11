@@ -293,7 +293,17 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingFlatCents: 200,
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
-  }, // registry sweep 2026-09-09: 51 in-stock singles, cur=AUD
+    // NO RIFTBOUND SINGLES (verified live 2026-09-10). Both handles above hold
+    // sealed product and accessories only, and the store's own
+    // `riftbound-league-of-legends-singles` collection exists but is EMPTY. The
+    // "51 in-stock singles" this line used to claim was the bug reported through
+    // the portfolio feedback form, not stock: the store shelves every game's
+    // singles in `all-singles-one-piece-pokemon-riftbound`, whose handle says
+    // "riftbound", so discovery pulled in 676 Pokémon/One Piece cards and
+    // resolveCardId's OGN default matched them to Riftbound cards by collector
+    // NUMERATOR alone. See OTHER_TCG_HANDLE and foreignTotal in price-import.ts.
+    // Kept in the list for its sealed stock and in case the singles shelf fills.
+  }, // registry sweep 2026-09-09: sealed only, cur=AUD
   reefsidegames: {
     key: "reefsidegames",
     name: "Reefside Games",
@@ -1519,6 +1529,72 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. C$2.99 · free over C$75",
     country: "CA",
   },
+  // ---- Added 2026-09-10 from the /stores/suggest queue -------------------------
+  // Three of four reader-suggested Canadian stores. UNLIKE the CA block above,
+  // these WERE fetched directly (this session had live egress), so every figure
+  // here is observed rather than best-known: the collection handles below were
+  // read from each store's own paginated /collections.json, the product counts
+  // from /collections/<handle>/products.json?country=CA, and each path was run
+  // through lib/scrape-http.ts's own robotsAllows() rather than a human reading
+  // of robots.txt — cardbrawlers' file carries a `Disallow: /`, but only inside
+  // its `User-agent: Nutch` group, which a naive grep reads as a sitewide block.
+  //
+  // The fourth suggestion, imaginaire.com, is NOT here: it sits behind Cloudflare
+  // and answers 403 to every request including a browser UA, so the importer
+  // would fetch nothing and the store would get a /stores/tracked page that never
+  // shows a price — the exact trap lib/pending-platforms.ts's header describes.
+  altf4: {
+    key: "altf4",
+    name: "Alt F4",
+    // Confirmed Canadian business: 103-7715 Avenue Papineau, Montréal, Québec.
+    base: "https://altf4online.com",
+    // Observed: 911 singles, 28 sealed.
+    collections: ["riftbound-singles", "riftbound-sealed"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    // Real /policies/shipping-policy page (in STORES_WITH_POLICY), but it names
+    // no threshold, so the numbers above stay the market placeholder.
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
+  cardbrawlers: {
+    key: "cardbrawlers",
+    name: "Card Brawlers",
+    // CAD-default storefront publishing Canadian free-shipping thresholds. No
+    // physical address is published anywhere on the site — flagged here rather
+    // than guessed, same as the Knight and Day entry above.
+    base: "https://cardbrawlers.com",
+    // Observed: 1,982 singles in the main collection (the per-set collections —
+    // Origins 554, Spiritforged 427, Unleashed 434, Vendetta 343 — are subsets of
+    // it), plus 222 organized-play/promo printings that sit OUTSIDE it.
+    collections: ["league-of-legends-riftbound-tcg-singles", "riftbound-tcg-organized-play-promotional-cards"],
+    shippingFlatCents: 299,
+    // CONFIRMED, not a placeholder: "Free standard shipping for singles over 50$"
+    // published in the storefront's own header. This is the singles threshold,
+    // which is what this field means (sealed is free over C$165 — a different
+    // number this file has nowhere to put, and not what a card shopper hits).
+    freeOverCents: 5000,
+    shippingNote: "free over C$50 (singles)",
+    country: "CA",
+  },
+  hobbyexpert: {
+    key: "hobbyexpert",
+    name: "Boutique Hobby Expert",
+    // Confirmed Canadian business: 8500 boul. Henri-Bourassa, Quebec City, QC.
+    base: "https://hobbyexpert.ca",
+    // NOT "riftbound-singles" — that collection exists on this store and is EMPTY
+    // (0 products), so the obvious handle is the one wrong answer here. The real
+    // stock is split across three: Origins 401, Spiritforged 313 (whose handle is
+    // still the copy-of-Origins slug it was created from), promos 272.
+    collections: ["riftbound-origins", "riftbound-origins-copy", "riftbound-promo-cards"],
+    shippingFlatCents: 299,
+    freeOverCents: 7500,
+    // Deliberately NOT in STORES_WITH_POLICY: /policies/shipping-policy returns
+    // 200 but its body is empty, so linking there would send a shopper to a blank
+    // page instead of a rate.
+    shippingNote: "est. C$2.99 · free over C$75",
+    country: "CA",
+  },
   // ---- Canadian stores that ALSO serve the US market --------------------------
   // Danireon (Ottawa, ON) and Hobbiesville (Toronto + Ottawa, ON) are Canadian
   // businesses that were already tracked as US stores — they run Shopify Markets
@@ -2172,6 +2248,12 @@ const STORES_WITH_POLICY = new Set([
   "manamarketeu", "universetcg", "lichcards", "trinketmage",
   "elduelista", "gsgameon", "battlebearsb", "battlebearkl", "timetwister",
   "nordiclegends",
+  // CA — two of the three stores added from the suggestion queue on 2026-09-10.
+  // Boutique Hobby Expert is deliberately absent: its /policies/shipping-policy
+  // returns 200 but with an EMPTY body, which is the one case a 200 does not
+  // prove — linking there would send a shopper to a blank page rather than a
+  // rate, which is worse than showing the estimate.
+  "altf4", "cardbrawlers",
   // Registry sweep (2026-09-09, scripts/sweep-registry.ts) — every AU/US/CA
   // registry-sweep store below whose /policies/shipping-policy page actually
   // resolved, confirmed on the same live probe that measured its singles count.

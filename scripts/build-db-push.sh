@@ -39,16 +39,16 @@ set -uo pipefail
 # its own allowance had long since reset, and a 2026-09-08 probe-databases run
 # confirmed its old window's data was already carried forward (see db-chains.ts).
 CURRENT_OP="RM8"
-# CUT OVER TO RH9 ON 2026-09-09 (RH8 neared its 5 GB monthly transfer
-# allowance after about three days live — the same burn every prior history
-# project has shown). RH9 is a RECYCLED project (its own prior term ran
-# 2026-08-25..08-28, before RH10 replaced it), not a fresh one —
-# migrate-history-db-rh8-to-rh9 (a full pg_dump/restore, row-count verified:
-# Card=1,434, ClickEvent=698, PriceHistory=421,178) moved history onto it.
+# CUT OVER TO RH10 ON 2026-09-10 (RH9 reached its 5 GB monthly transfer
+# allowance after about a DAY live — the fastest exhaustion of this whole
+# rotation history). RH10 is a RECYCLED project (its own prior term ran
+# 2026-08-25..08-28, before RH11 replaced it), not a fresh one —
+# migrate-history-db-rh9-to-rh10 (a full pg_dump/restore, row-count verified:
+# Card=1,434, ClickEvent=698, PriceHistory=422,589) moved history onto it.
 # See the long note on HISTORY_URL in src/lib/db-history.ts and on
 # HISTORY_VARS in src/lib/db-chains.ts for the full account. The chains are
 # CURRENT-first, not newest-first.
-CURRENT_HIST="RH9"
+CURRENT_HIST="RH10"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -91,15 +91,15 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${RH9:-}" ]; then
+if [ -n "${RH10:-}" ]; then
+  HIST="$RH10"; HIST_SOURCE="RH10"
+elif [ -n "${RH9:-}" ]; then
+  # Rollback: holds the same GLOBAL series as RH10 (via the row-count-verified
+  # pg_dump/restore that cut RH10 over), so it's a genuinely safe fallback.
   HIST="$RH9"; HIST_SOURCE="RH9"
-elif [ -n "${RH8:-}" ]; then
-  # Rollback: holds the same GLOBAL series as RH9 (via the row-count-verified
-  # pg_dump/restore that cut RH9 over), so it's a genuinely safe fallback.
-  HIST="$RH8"; HIST_SOURCE="RH8"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. RH7/RH6/RH11/RH10 are retired or unset;
+  # the push above already covered. RH8/RH7/RH6/RH11 are retired or unset;
   # HISTORY_DATABASE_URL_4/_3/_2/bare were all superseded earlier. RH5 is
   # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
