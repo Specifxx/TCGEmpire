@@ -24,12 +24,16 @@
   }
 }
 
-/* 1280px+: the full list, unless collapsed. `data-sidenav` is stamped on <html>
-   before first paint by the inline script the root layout emits from
-   src/lib/sidenav-shared.ts (the visitor's cookie, else the route's default),
-   and flipped by SideNav's toggle. */
+/* 1280px+: the icon rail by default; the full list only once the visitor has
+   explicitly expanded it. `data-sidenav` is stamped on <html> before first
+   paint by the inline script the root layout emits from
+   src/lib/sidenav-shared.ts (the visitor's cookie, else collapsed), and
+   flipped by SideNav's toggle. A POSITIVE `[data-sidenav="expanded"]` match,
+   not a `:not([...="collapsed"])` one — so if the script never runs at all
+   (blocked, CSP), the fallback is still collapsed, the same as the JS
+   default, rather than silently reverting to the old expanded-by-default. */
 @media (min-width: 1280px) {
-  :root:not([data-sidenav="collapsed"]) {
+  :root[data-sidenav="expanded"] {
     --sidenav-w: 17rem;
   }
 }
@@ -41,10 +45,10 @@
   display: none;
 }
 @media (min-width: 1280px) {
-  :root:not([data-sidenav="collapsed"]) .sidenav-expanded {
+  :root[data-sidenav="expanded"] .sidenav-expanded {
     display: block;
   }
-  :root:not([data-sidenav="collapsed"]) .sidenav-collapsed {
+  :root[data-sidenav="expanded"] .sidenav-collapsed {
     display: none;
   }
 }

@@ -23,7 +23,7 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // --sidenav-w custom property SideNav reserves space with everywhere else.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("--sidenav-w: 0 below lg, the 4rem icon rail from 1024px, the 17rem list from 1280px unless collapsed", () => {
+test("--sidenav-w: 0 below lg, the 4rem icon rail from 1024px, the 17rem list from 1280px ONLY once explicitly expanded", () => {
   const css = read("src/app/globals.css");
   assert.match(css, /--sidenav-w:\s*0px;/, "must default to 0 so every consumer no-ops below lg");
   assert.match(
@@ -31,17 +31,21 @@ test("--sidenav-w: 0 below lg, the 4rem icon rail from 1024px, the 17rem list fr
     /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;/,
     "1024–1279px is always the icon rail"
   );
-  // The full list is gated on the SAME attribute the boot script stamps and
-  // SideNav toggles — never a bare :root, or "collapsed" could not exist.
+  // The full list is gated on a POSITIVE match for the SAME attribute the
+  // boot script stamps and SideNav toggles — never a bare :root, and never a
+  // :not([...="collapsed"]) either, since that would make the icon rail's
+  // absence (script blocked, CSP) silently fall back to the OLD
+  // expanded-by-default rather than the current collapsed-by-default.
   assert.match(
     css,
-    /@media \(min-width:\s*1280px\)\s*\{\s*:root:not\(\[data-sidenav="collapsed"\]\)\s*\{\s*--sidenav-w:\s*17rem;/,
-    "1280px+ expands unless data-sidenav=collapsed"
+    /@media \(min-width:\s*1280px\)\s*\{\s*:root\[data-sidenav="expanded"\]\s*\{\s*--sidenav-w:\s*17rem;/,
+    "1280px+ only expands when data-sidenav=expanded — collapsed is the fallback, not the exception"
   );
+  assert.doesNotMatch(css, /:not\(\[data-sidenav="collapsed"\]\)/, "must not revert to the negative-match form");
   // …and the two content blocks switch on exactly that attribute + breakpoint.
   assert.match(css, /\.sidenav-expanded\s*\{\s*display:\s*none;/);
-  assert.match(css, /:root:not\(\[data-sidenav="collapsed"\]\) \.sidenav-expanded\s*\{\s*display:\s*block;/);
-  assert.match(css, /:root:not\(\[data-sidenav="collapsed"\]\) \.sidenav-collapsed\s*\{\s*display:\s*none;/);
+  assert.match(css, /:root\[data-sidenav="expanded"\] \.sidenav-expanded\s*\{\s*display:\s*block;/);
+  assert.match(css, /:root\[data-sidenav="expanded"\] \.sidenav-collapsed\s*\{\s*display:\s*none;/);
 });
 
 test("SideNav renders the same NAV_GROUPS index the ⌘K launcher searches, hidden below lg", () => {
@@ -192,59 +196,45 @@ test("SideNav's collapse state starts empty (every group open) so SSR and first 
   assert.match(effectsAfter, /useEffect\(\(\) => \{[\s\S]*?localStorage\.getItem\(STORAGE_KEY\)/);
 });
 
-// ── Two modes: the resolver, the boot script, and the layout wiring ──────────
+// ── One mode default: the resolver, the boot script, and the layout wiring ──
+// 2026-09-11: the per-route default (icon rail on pages with their own column
+// or a playfield, full rail on hubs) was replaced by a single site-wide
+// default — the icon rail everywhere, expanding only once the visitor asks.
 import vm from "node:vm";
-import {
-  SIDENAV_BOOT_SCRIPT,
-  SIDENAV_COLLAPSED_PREFIXES,
-  readSidenavCookie,
-  resolveSidenavMode,
-  sidenavDefaultFor,
-} from "../src/lib/sidenav-shared";
+import { SIDENAV_BOOT_SCRIPT, readSidenavCookie, resolveSidenavMode } from "../src/lib/sidenav-shared";
 import { NAV_GROUPS } from "../src/components/nav-groups";
 
-test("route defaults: icon rail on pages with their own column or a playfield, full rail on hubs", () => {
-  for (const p of ["/", "/tools", "/movers", "/market", "/guides", "/blog/some-post", "/champions", "/cardsmith"]) {
-    assert.equal(sidenavDefaultFor(p), "expanded", p);
-  }
-  for (const p of ["/browse", "/browse/", "/card/vayne-abc", "/cards", "/sealed/booster-box", "/decks", "/deck/x", "/games", "/games/sealed-bid", "/riftle", "/gallery", "/portfolio", "/trade", "/bulk-pricer"]) {
-    assert.equal(sidenavDefaultFor(p), "collapsed", p);
-  }
-  // "/card" must not swallow unrelated routes that merely start with it.
-  assert.equal(sidenavDefaultFor("/cardboard"), "expanded");
-});
-
-test("the visitor's saved choice wins over the route default; garbage falls through", () => {
-  assert.equal(resolveSidenavMode("expanded", "/browse"), "expanded");
-  assert.equal(resolveSidenavMode("collapsed", "/"), "collapsed");
-  assert.equal(resolveSidenavMode("sideways", "/browse"), "collapsed");
-  assert.equal(resolveSidenavMode(null, "/"), "expanded");
+test("the rail defaults to collapsed everywhere; the visitor's saved choice always wins; garbage falls through to collapsed", () => {
+  assert.equal(resolveSidenavMode(undefined), "collapsed", "no cookie at all — the true default");
+  assert.equal(resolveSidenavMode(null), "collapsed");
+  assert.equal(resolveSidenavMode("expanded"), "expanded", "an explicit choice to expand must stick");
+  assert.equal(resolveSidenavMode("collapsed"), "collapsed");
+  assert.equal(resolveSidenavMode("sideways"), "collapsed", "an unrecognised value must not accidentally expand the rail");
   assert.equal(readSidenavCookie("country=US; sidenav=collapsed; x=1"), "collapsed");
   assert.equal(readSidenavCookie("sidenav=expanded"), "expanded");
   assert.equal(readSidenavCookie("notsidenav=collapsed"), null);
 });
 
-test("the inline boot script agrees with the TypeScript resolver on every route and cookie", () => {
+test("the inline boot script agrees with the TypeScript resolver for every cookie, and defaults to collapsed with no cookie at all", () => {
   // Run the exact string the layout inlines, in a sandbox with a fake DOM.
-  const run = (pathname: string, cookie: string) => {
+  const run = (cookie: string) => {
     let stamped: string | null = null;
     const ctx = vm.createContext({
-      location: { pathname },
       document: { cookie, documentElement: { setAttribute: (_k: string, v: string) => (stamped = v) } },
     });
     vm.runInContext(SIDENAV_BOOT_SCRIPT, ctx);
     return stamped;
   };
-  const cases: [string, string][] = [
-    ["/", ""], ["/browse", ""], ["/card/x", ""], ["/cardboard", ""], ["/games/sealed-bid", ""],
-    ["/", "sidenav=collapsed"], ["/browse", "sidenav=expanded"], ["/browse", "a=1; sidenav=expanded; b=2"], ["/browse", "sidenav=bogus"],
-  ];
-  for (const [p, c] of cases) {
-    assert.equal(run(p, c), resolveSidenavMode(readSidenavCookie(c), p), `${p} with cookie "${c}"`);
+  const cookies = ["", "sidenav=collapsed", "sidenav=expanded", "a=1; sidenav=expanded; b=2", "sidenav=bogus"];
+  for (const c of cookies) {
+    assert.equal(run(c), resolveSidenavMode(readSidenavCookie(c)), `cookie "${c}"`);
   }
+  assert.equal(run(""), "collapsed", "the boot script's own fallback, with nothing to read, must be collapsed");
   // It must survive a hostile environment rather than throw before paint.
   assert.doesNotThrow(() => vm.runInContext(SIDENAV_BOOT_SCRIPT, vm.createContext({})));
-  for (const prefix of SIDENAV_COLLAPSED_PREFIXES) assert.ok(SIDENAV_BOOT_SCRIPT.includes(JSON.stringify(prefix)), prefix);
+  // No per-route logic left to generate the script from — it no longer reads
+  // location at all.
+  assert.doesNotMatch(SIDENAV_BOOT_SCRIPT, /location/);
 });
 
 test("the layout inlines the boot script in <head> and suppresses the resulting <html> hydration warning", () => {
@@ -263,11 +253,11 @@ test("every NAV_GROUPS entry has an icon — the collapsed rail shows nothing el
   assert.equal(new Set(NAV_GROUPS.map((g) => g.icon)).size, NAV_GROUPS.length, "icons must be distinct — they are the only signal at 4rem");
 });
 
-test("SideNav toggles + persists the choice and reapplies the route default on navigation", () => {
+test("SideNav toggles + persists the choice and re-syncs on navigation", () => {
   const src = read("src/components/SideNav.tsx");
   assert.match(src, /setAttribute\("data-sidenav", mode\)/);
   assert.match(src, /document\.cookie = `\$\{SIDENAV_COOKIE\}=\$\{next\}; path=\/; max-age=\$\{SIDENAV_COOKIE_MAX_AGE\}; SameSite=Lax`/);
-  assert.match(src, /resolveSidenavMode\(readSidenavCookie\(document\.cookie\), pathname \?\? "\/"\)/);
+  assert.match(src, /resolveSidenavMode\(readSidenavCookie\(document\.cookie\)\)/);
   // The keyboard shortcut must never fire while the visitor is typing.
   assert.match(src, /isTypingTarget\(e\.target\)/);
   // Flyouts are keyboard-reachable: focus opens, Escape closes, state exposed.

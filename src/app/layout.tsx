@@ -287,7 +287,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
         {/* Desktop rail mode (expanded / collapsed) — decided BEFORE first paint
-            from the visitor's cookie or the route's default, so the page never
+            from the visitor's cookie, else collapsed, so the page never
             reflows. This layout can't read cookies() itself (see the caching
             note above RootLayout), which is exactly why it's an inline script.
             Generated in src/lib/sidenav-shared.ts. */}

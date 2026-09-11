@@ -5249,3 +5249,51 @@ already-registered workflow, or an external ping to a deploy hook.
 
 Note the skip-check would have done the right thing had it fired: main's HEAD
 at 08:00 was `e507f1a`, ordinary work, so it would have released.
+
+## The desktop nav rail now defaults to collapsed, everywhere — 2026-09-11 (same day, follow-up)
+
+Owner: "make the default navigation side bar collapsed."
+
+Before this, the rail's default mode was per-route: the icon rail (4rem) on
+pages that already carry their own left column or a playfield (browse, card,
+sealed, decks, games, portfolio, trade, bulk pricer), the full list (17rem)
+everywhere else, including the homepage — on the theory that a first-time
+visitor should see the site's breadth immediately. That per-route table is
+gone. The rail now defaults to the icon form on every route, and only expands
+once a visitor explicitly asks (the chevron, or `[`), remembered afterwards in
+the existing `sidenav` cookie exactly as before.
+
+**Simplified rather than just flipped a boolean.** `SIDENAV_COLLAPSED_PREFIXES`
+and `sidenavDefaultFor()` (`lib/sidenav-shared.ts`) existed only to compute the
+now-nonexistent per-route default — with every route landing on the same
+answer, the prefix table had nothing left to distinguish, so it was deleted
+rather than kept as a dead abstraction. `resolveSidenavMode` dropped its
+`pathname` parameter for the same reason: `saved ?? "collapsed"` needs no
+route to consult. `SIDENAV_BOOT_SCRIPT` shrank to match — no more
+`location.pathname` read, no more inlined prefix array.
+
+**The CSS's OWN fallback was flipped too, not just the JS default.** The
+1280px+ media query used to key off `:root:not([data-sidenav="collapsed"])` —
+i.e. expanded is what happens when the attribute is anything else, INCLUDING
+absent. That made "expanded" the true fallback if the inline boot script ever
+failed to run at all (blocked script, restrictive CSP) — collapsed would only
+have been the JS-computed common case, not the honest default. Rewritten to a
+positive `:root[data-sidenav="expanded"]` match, so collapsed is what happens
+whether the attribute says "collapsed", says nothing, or the stylesheet never
+saw JS run at all. Same flip on the `.sidenav-expanded`/`.sidenav-collapsed`
+display-toggle rules.
+
+**What didn't change:** the CSS breakpoint contract (1024–1279px is always the
+icon rail regardless of mode; nothing below 1280px has a mode to toggle), the
+toggle control, the `[` keyboard shortcut, the per-group disclosures inside
+the expanded list, and the cookie mechanism itself (`sidenav`, 1-year max-age,
+visitor's choice always wins). `tests/sidenav.test.ts` was rewritten for the
+new single-default contract rather than patched — the two per-route tests
+collapsed into one route-independent test, and the CSS/boot-script tests now
+assert the positive-match form and reject a reversion to the old negative one.
+
+Verified against a real local render: a fresh context with no cookie loads
+`/` (previously the strongest case FOR expanded — a "hub" page) with
+`data-sidenav="collapsed"` and the icon rail visible; toggling to expanded and
+reloading keeps `data-sidenav="expanded"`, confirming the visitor's own choice
+still overrides the new default exactly as it overrode the old one.
