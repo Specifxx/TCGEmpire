@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
+import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
 import { AuthForm } from "./AuthForm";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import {
@@ -100,25 +101,25 @@ function readCount(key: string): number {
 // exit transition — are UNCHANGED from every version before this one. Only the
 // PITCH (this file's whole body, below) and the CTA's destination changed.
 
-// NO DELAY, NO BUY-CLICK-AWARE TIMING (2026-09-01, explicit product decision).
+// A FIVE-SECOND DELAY (2026-09-11, explicit owner instruction: every slider on
+// the site shows five seconds after the page opens rather than instantly). The
+// value is NUDGE_DELAY_MS, shared with PremiumSlideIn and AnnualSwitchNudge so
+// the three corner nudges can never drift to three different answers again —
+// see lib/nudge-timing.ts, which also carries the full history.
 //
-// This used to be timed around buy_click — a 30s base delay, held off longer on
-// a page with an un-clicked buy link, shown fast right after one WAS clicked —
-// specifically so it could never cover the affiliate buy button. That system is
-// gone on purpose: it shows the instant a signed-out visitor is eligible, on
-// any page, with no wait and no buy-link awareness.
+// READ THAT HISTORY BEFORE CHANGING THIS AGAIN. The timing here has been
+// through four states: a 5s timer → a relaxed pageview gate → buy_click-aware
+// 3-case timing → no timer at all (2026-09-01) → this. The FIRST of those, a
+// bare 5s delay, is the one that measurably cost the site: bounce rose,
+// pages/visitor fell, buy_click fell, and 78% of visitors dismissed it
+// outright. That is precisely what this change reinstates, so it is a
+// deliberate re-test of a known-failed value rather than a fresh idea. It was
+// asked for explicitly; the honest thing is to ship it AND say plainly what to
+// watch — signup_promo_shown/_dismissed, sign_up, buy_click, pages/visitor.
 //
-// KNOWN, ACCEPTED TRADE-OFF, not an oversight: the whole reason the old system
-// existed was that a bare delay (an earlier 5s version) measurably cost the
-// site — bounce rose, pages/visitor fell, buy_click fell, and 78% of visitors
-// dismissed it outright. Going instant reopens exactly that risk, including
-// landing on top of a card page's buy button. If pages/visitor or buy_click
-// drop again after this ships, that history is the first thing to revisit —
-// but the instruction behind this version was explicit and repeated, so this
-// is not a "someone forgot" gap the way the pre-timing version once was. The
-// same trade-off now applies to a Premium pitch rather than a free-account one,
-// which is a strictly bigger ask of a visitor who has seen nothing else yet —
-// worth watching signup_promo_dismissed and sign_up for after this ships.
+// One thing the delay buys back for free: the rcDialog check now runs when the
+// timer FIRES, not when the effect arms, so a modal opened during those five
+// seconds suppresses the popup instead of being covered by it.
 //
 // /premium is also skipped — no point pitching "sign up to reach Premium" to a
 // visitor already standing on the page that sells it (same reasoning
@@ -141,6 +142,11 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // the before and after would average into each other and neither could be read.
 // The impression also carries `repeat` now, separating a first show from a
 // re-show within this same variant.
+// → "premium_graphic_5s" (2026-09-11): the popup waits NUDGE_DELAY_MS before
+// showing instead of appearing instantly. TIMING axis again, the same one
+// "comparison_instant" and "premium_graphic_repeat" each recorded — and since
+// the last time this site ran a 5s delay the dismiss rate was 78%, separating
+// these impressions in GA4 is the entire point of the rename.
 // → "premium_graphic" (2026-09-10): the pitch stopped being text at all. The
 // sentence and the six-chip tool row became the designed PremiumPitchPanel; the
 // heading's non-trial fallback became the new tagline. Same axis as the last
@@ -153,7 +159,7 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_graphic_repeat";
+const PROMO_VARIANT = "premium_graphic_5s";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded, trialDays } = useMe();
@@ -210,16 +216,26 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     // mid-sentence writing us feedback would lose the feedback entirely.
     // Deliberately does NOT touch the counters when it skips, so that visitor
     // still gets the promo on the next page rather than losing this turn.
-    if (document.body.dataset.rcDialog === "1") return;
+    const t = setTimeout(() => {
+      // Checked HERE rather than when the effect armed: a modal can open during
+      // the five seconds, and sliding in over it is the thing this guard exists
+      // to prevent. Skipping does not touch the counters, so the visitor still
+      // gets the promo on the next page rather than losing this turn.
+      if (document.body.dataset.rcDialog === "1") return;
 
-    setShown(true);
-    // Next paint → play the transition from the off-screen start state, same
-    // double-rAF as PremiumSlideIn (one frame isn't reliably enough for the
-    // browser to have committed the initial off-screen styles first). This is
-    // the animation settling in, not a deliberate wait — it's a couple of
-    // frames, not a timer.
-    requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
-    trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
+      setShown(true);
+      // Next paint → play the transition from the off-screen start state, same
+      // double-rAF as PremiumSlideIn (one frame isn't reliably enough for the
+      // browser to have committed the initial off-screen styles first). This is
+      // the animation settling in, not the deliberate wait — that's the timer
+      // above.
+      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
+      trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
+    }, NUDGE_DELAY_MS);
+
+    // Navigating away mid-wait must cancel it, or the popup lands on a page the
+    // visitor has already left — including one in SKIP_PATHS.
+    return () => clearTimeout(t);
   }, [loaded, user, shown, pathname]);
 
   // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
