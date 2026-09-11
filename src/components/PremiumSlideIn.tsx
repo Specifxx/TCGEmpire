@@ -16,6 +16,7 @@ import {
   premiumFromLine,
 } from "@/lib/site";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
+import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
 import { formatMoneyCompact } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
 
@@ -36,6 +37,8 @@ import { currencyOf } from "@/lib/country";
 // signed-OUT only (see SignupPromoPopup), so the two audiences never overlap.
 //
 // FREQUENCY IS CAPPED HARD, because a repeat nag just trains dismissal:
+//   • it waits NUDGE_DELAY_MS after the page opens (5s, shared by every corner
+//     nudge — see lib/nudge-timing.ts), rather than popping on render
 //   • once per browser session (sessionStorage), so navigating doesn't re-pop it
 //   • a 7-day snooze after a dismiss; a 14-day snooze after they engage the CTA
 //   • NEVER AGAIN after two dismissals (localStorage) — a firm no is permanent
@@ -50,9 +53,6 @@ const PV_KEY = "rc_prem_slidein_pv"; // sessionStorage: this component's own per
 
 // "after they visit 2 pages in one session" — engaged, not a first-impression pop.
 const MIN_PAGEVIEWS = 2;
-// Let them settle on the qualifying page before it slides in (a natural pause,
-// not the instant the page renders).
-const DWELL_MS = 12_000;
 // A second dismissal means never again — two firm no's is a no.
 const MAX_DISMISSALS = 2;
 const SNOOZE_AFTER_DISMISS_MS = 7 * 864e5; // 7 days
@@ -209,7 +209,7 @@ export function PremiumSlideIn() {
         context: contextPitch?.tool ?? undefined,
         copy: PREMIUM_COPY_VERSION,
       });
-    }, DWELL_MS);
+    }, NUDGE_DELAY_MS);
 
     return () => clearTimeout(t);
   }, [eligible, shown, pathname, trialEligible, contextPitch]);

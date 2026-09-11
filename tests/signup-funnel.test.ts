@@ -91,12 +91,20 @@ test("the signup popup reports shown and dismissed — its conversion rate is me
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*path: pathname/);
   assert.match(src, /trackEvent\("signup_promo_shown", \{[^}]*variant: PROMO_VARIANT/);
   assert.match(src, /trackEvent\("signup_promo_dismissed", \{ variant: PROMO_VARIANT \}\)/);
-  // The literal moves with each real content change so GA4 can separate the
-  // eras — "premium_pitch" (text pitch) → "premium_graphic" (2026-09-10, the
-  // pitch became the designed PremiumPitchPanel). See the component's own naming-history
-  // comment; what this pins is that it stays a NAMED CONSTANT, not that it
-  // holds any particular value forever.
-  assert.match(src, /const PROMO_VARIANT = "premium_graphic_repeat"/, "the variant must be a named constant, not inlined at each call");
+  // The literal moves with each real content or timing change so GA4 can
+  // separate the eras — "premium_pitch" (text pitch) → "premium_graphic"
+  // (2026-09-10, the pitch became the designed PremiumPitchPanel) →
+  // "premium_graphic_5s" (2026-09-11, instant show became a 5s delay). See the
+  // component's own naming-history comment.
+  //
+  // MATCHED LOOSELY ON PURPOSE. This assertion used to pin the exact literal,
+  // which contradicted the comment directly above it and turned every
+  // legitimate rename into a test failure — the rename is the DESIRED
+  // behaviour here, since without it two eras average together in GA4 and
+  // neither can be read. What actually needs pinning is that the variant stays
+  // a single named constant rather than being inlined at each call site.
+  assert.match(src, /const PROMO_VARIANT = "[a-z0-9_]+";/, "the variant must be a named constant, not inlined at each call");
+  assert.doesNotMatch(src, /variant: "[a-z]/, "no call site may inline a variant literal");
   // The embedded AuthForm attributes its provider clicks to the popup.
   assert.match(src, /source="popup"/);
 });
@@ -272,20 +280,34 @@ test("the card page CTA no longer undercuts the account pitch", () => {
   assert.match(src, /watchlist syncs everywhere/);
 });
 
-test("the FIRST show is still instant — no delay, no pageview gate (2026-09-01, explicit product decision)", () => {
-  // Reverses the earlier delay/engagement-gate history this file used to pin:
-  // 5s timer → relaxed pageview gate → buy_click-aware 3-case timing → and now
-  // no timer at all. Each step was a real, deliberate product decision, not
-  // drift — this test pins the CURRENT one.
+test("the first show waits the shared 5s nudge delay — not instant, not its own number (2026-09-11)", () => {
+  // The timing history this file pins, in order: 5s timer → relaxed pageview
+  // gate → buy_click-aware 3-case timing → no timer at all (2026-09-01) → the
+  // shared 5s delay. Each step was a real product decision, not drift.
   //
-  // 2026-09-10: the popup now COUNTS pages, but only to decide when to come
+  // THE FIRST OF THOSE IS THIS ONE. A bare 5s delay measurably cost the site
+  // last time — bounce rose, pages/visitor fell, buy_click fell, 78% dismissed
+  // — which is why lib/nudge-timing.ts carries that evidence and why the
+  // PROMO_VARIANT was renamed, so GA4 can separate this from the instant era
+  // rather than averaging the two together.
+  //
+  // 2026-09-10: the popup also COUNTS pages, but only to decide when to come
   // back after a dismissal — a visitor who has never dismissed it still sees it
-  // on their first eligible page with nothing in the way. That is a different
-  // mechanism from the retired first-show gate, which is why the old constant
-  // names stay banned below while the new cadence is allowed.
+  // on their first eligible page. That is a different mechanism from the
+  // retired first-show gate, which is why those constant names stay banned
+  // below while the new cadence is allowed.
   const src = read("src/components/SignupPromoPopup.tsx");
-  assert.doesNotMatch(src, /setTimeout\(\(\) => \{[\s\S]{0,50}setShown\(true\)/, "must not delay showing itself behind a setTimeout");
-  assert.doesNotMatch(src, /PROMO_DELAY_MS|MIN_PAGEVIEWS|PV_KEY/, "the old delay/pageview-gate machinery must be fully gone, not just unused");
+  assert.match(src, /NUDGE_DELAY_MS/, "must read the shared nudge delay");
+  assert.doesNotMatch(
+    src,
+    /const\s+(PROMO_)?DELAY_MS\s*=/,
+    "the delay must come from lib/nudge-timing.ts, not a second copy of the number here",
+  );
+  // The wait must actually gate the show, not sit unused.
+  assert.match(src, /\}, NUDGE_DELAY_MS\)/, "the delay must wrap the show, not merely be imported");
+  // Navigating away mid-wait must cancel it, or it lands on a page already left.
+  assert.match(src, /return \(\) => clearTimeout\(t\)/, "the pending show must be cancelled on unmount/route change");
+  assert.doesNotMatch(src, /PROMO_DELAY_MS|MIN_PAGEVIEWS|PV_KEY/, "the old delay/pageview-gate machinery must stay gone, not come back");
   // The re-arm gate must be reachable ONLY when a dismissal has been stamped —
   // a never-dismissed visitor must not be held back by any page count.
   assert.match(

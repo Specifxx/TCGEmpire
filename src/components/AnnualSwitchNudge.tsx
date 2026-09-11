@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMe, invalidateMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { PREMIUM_ANNUAL_AMOUNT, annualSavingPct } from "@/lib/site";
+import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
 
 // RETENTION LEVER: nudge a monthly Premium subscriber onto the annual plan.
 // Annual up-front is the single biggest churn win on a small-ticket consumer sub
@@ -23,7 +24,6 @@ const DISMISS_COUNT = "rc_annual_nudge_dismisses";
 const SNOOZE_UNTIL = "rc_annual_nudge_until";
 
 const MIN_MONTHS = 2; // let a monthly sub prove it's sticking before pitching a year up front
-const DWELL_MS = 8_000;
 const MAX_DISMISSALS = 2;
 const SNOOZE_AFTER_DISMISS_MS = 30 * 864e5; // 30 days — this is a save-money offer, not a hard sell
 
@@ -86,7 +86,7 @@ export function AnnualSwitchNudge() {
           setPhase("offer");
           requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
           trackEvent("annual_switch_shown", { months_active: d.monthsActive ?? 0 });
-        }, DWELL_MS);
+        }, NUDGE_DELAY_MS);
       })
       .catch(() => {});
 
