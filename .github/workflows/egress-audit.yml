@@ -1,0 +1,119 @@
+name: Egress audit (Neon transfer)
+
+# Measures where the Neon "data transfer" allowance is going, on BOTH projects,
+# on a schedule — so the next claim about the burn is a number, not a theory.
+#
+# WHY. Eleven Neon projects were exhausted in a row at ~2 GB/day and the cause
+# was diagnosed only on 2026-09-11 (DECISIONS.md: "Network transfer: the deploy
+# cadence was the burn"): 10–30 production builds a day, each prerendering
+# ~770 database-backed pages and clearing the ISR page cache. The operational
+# project had been measured exactly once (2026-08-22/23, ~0.12 GB/day of app
+# traffic); the history project — the one rotating FASTEST — had never been
+# measured at all: scripts/audit-egress.ts only knew about the operational
+# client until `--db=history` was added the same day.
+#
+# WHAT IT DOES. Runs scripts/audit-egress.ts in DELTA mode (two snapshots of
+# pg_stat_statements / pg_stat_user_tables N minutes apart, reporting only what
+# moved) against each project in turn, and puts both reports in the job
+# summary. READ-ONLY apart from `CREATE EXTENSION IF NOT EXISTS
+# pg_stat_statements`, which is idempotent. The audit's own reads are bounded
+# (top 1,000 statement shapes, text capped) — a few MB per run.
+#
+# WHEN. Sunday 03:00 UTC (13:00 Sydney): no import, cron or scheduled deploy
+# runs in that window (refresh-prices 07:00/19:00, production-deploy 08:00,
+# store-health 08:00/20:00, the Vercel crons 07:15/09:00/18:30/22:00). A
+# `[deploy]` commit pushed by hand during the sample would land a build inside
+# it — the report says so if the numbers look like one (see the script header),
+# and at one build a day that is now a real steady-state cost worth seeing.
+# Weekly rather than daily because the audit itself costs transfer; press
+# "Run workflow" for an ad-hoc reading (e.g. the day after a change).
+#
+# ENV. The same variable names every other DB workflow here uses. RM9 is the
+# only operational variable (src/lib/db-chains.ts); RH10 is the current history
+# project with RH9 as its rollback. DB_SOURCE_NAME exists because Actions
+# collapses the chain into one DATABASE_URL before the job starts, so the app's
+# own "which variable won" diagnostic would otherwise always say DATABASE_URL.
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      sample_minutes:
+        description: "Delta window in minutes (0 = cumulative counters instead)"
+        type: number
+        default: 20
+      which:
+        description: "Which project(s) to audit"
+        type: choice
+        default: both
+        options: [both, operational, history]
+
+concurrency:
+  group: egress-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    # Two sequential samples of up to ~20 minutes each, plus setup.
+    timeout-minutes: 55
+    env:
+      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
+      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+      RH10: ${{ secrets.RH10 || vars.RH10 }}
+      RH9: ${{ secrets.RH9 || vars.RH9 }}
+      # Empty on a scheduled run (no inputs); the steps default it to 20 in the
+      # shell rather than here, because a GitHub expression treats 0 as falsy
+      # and `0 || 20` would silently turn a requested cumulative run into a
+      # 20-minute sample.
+      SAMPLE: ${{ inputs.sample_minutes }}
+      WHICH: ${{ inputs.which || 'both' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+
+      - name: Audit the OPERATIONAL project
+        if: env.WHICH != 'history'
+        run: |
+          set -o pipefail
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::RM9 is not set for Actions — nothing to audit."
+            exit 1
+          fi
+          SAMPLE="${SAMPLE:-20}"
+          ARGS=""
+          if [ "${SAMPLE}" != "0" ]; then ARGS="--sample=${SAMPLE}"; fi
+          echo "npx tsx scripts/audit-egress.ts $ARGS"
+          npx tsx scripts/audit-egress.ts $ARGS | tee operational.txt
+          {
+            echo "## Operational project (RM9)"
+            echo '```'
+            cat operational.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Audit the HISTORY project
+        if: env.WHICH != 'operational'
+        run: |
+          set -o pipefail
+          if [ -z "${RH10:-}" ] && [ -z "${RH9:-}" ]; then
+            echo "::error::Neither RH10 nor RH9 is set for Actions — the history audit would silently run against the operational database instead."
+            exit 1
+          fi
+          SAMPLE="${SAMPLE:-20}"
+          ARGS="--db=history"
+          if [ "${SAMPLE}" != "0" ]; then ARGS="$ARGS --sample=${SAMPLE}"; fi
+          echo "npx tsx scripts/audit-egress.ts $ARGS"
+          npx tsx scripts/audit-egress.ts $ARGS | tee history.txt
+          {
+            echo "## History project (RH10)"
+            echo '```'
+            cat history.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

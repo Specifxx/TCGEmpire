@@ -91,3 +91,15 @@ scripts/
 - Seller ratings & reviews, dispute handling
 - Real Riftbound card database import (set releases)
 ```
+
+## Deploying
+
+Production is **not** built on every push. `vercel.json`'s `ignoreCommand`
+(`scripts/vercel-ignore-build.sh`) skips any commit whose message lacks the
+marker `[deploy]`; the **Production deploy** workflow lands one such commit on
+`main` every day at 08:00 UTC, after the morning price import. To release now,
+either press *Run workflow* on that workflow or put `[deploy]` in your commit
+message. Why: every Vercel build prerenders ~770 database-backed pages and
+clears the ISR page cache, and at 10–30 pushes a day that alone was exhausting
+a Neon transfer allowance every three days — see `DECISIONS.md`
+("Network transfer: the deploy cadence was the burn", 2026-09-11).
