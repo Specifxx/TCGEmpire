@@ -18,13 +18,17 @@ const NUDGE = "src/components/AnnualSwitchNudge.tsx";
 
 test("the switch endpoint charges once, upfront, and never double-bills an annual sub", () => {
   const code = codeOnly(read(SWITCH));
-  assert.match(code, /premiumAnnualEnabled\(\)/, "must refuse when annual billing isn't configured");
-  assert.match(code, /PREMIUM_ANNUAL_PRICE_ID/, "must switch onto the annual price");
+  assert.match(code, /premiumAnnualEnabled\(\)/, "must refuse when Premium annual billing isn't configured");
+  assert.match(code, /plusAnnualEnabled\(\)/, "must also know about Plus's own annual billing");
+  assert.match(code, /priceIdFor\(tier,\s*"annual"\)/, "must switch onto the target tier's annual price");
   assert.match(code, /getCurrentUser\(\)/, "must be authenticated");
   // Immediate, prorated charge — the whole point is annual up front.
   assert.match(code, /always_invoice/, "must bill the annual now (with proration), not defer it");
-  // Idempotency guard: an already-annual sub must short-circuit, never re-charge.
-  assert.match(code, /interval === "year"/, "must detect an already-annual subscription");
+  // Idempotency guard is PRICE-based, not interval-based: an interval-only
+  // check would let a same-interval tier switch (Plus monthly → Premium
+  // monthly) slip past it undetected. An already-annual sub on the same
+  // tier must still short-circuit, never re-charge.
+  assert.match(code, /price\.id === targetPriceId/, "must detect an already-annual subscription by price id, not interval");
   assert.match(code, /already:\s*true/, "already-annual must return without updating");
 });
 

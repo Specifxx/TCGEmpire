@@ -4424,3 +4424,98 @@ rail at all. It now has two modes.
   toggles the rail unless the visitor is typing.
 - Not done: hover-to-expand (fragile on trackpads/touch) and a header toggle
   (the rail's own chevron is enough; revisit if analytics say otherwise).
+
+## Premium goes two-tier: Plus ($4.99) and Premium ($9.99) — 2026-09-11
+
+Owner: split Premium into two paid tiers instead of one — "$4.99 and $9.99
+options." Three product decisions taken in planning:
+
+- **Split = "see everything vs do everything."** Plus ($4.99/mo, $39.99/yr,
+  same ~33% annual saving as Premium) is ad-free plus the FULL LISTS — Deal
+  Finder, Rising Cards, Rising Sealed (free/account still see only the top
+  pick). Premium ($9.99/mo, unchanged) is Plus plus the four pro tools —
+  Value Finder, Bulk Pricer, Best Basket, Demand Finder.
+- **Names: Plus / Premium.** Every existing subscriber and comp grant is
+  grandfathered at "premium" — nobody already paying was downgraded by this
+  change.
+- **Both tiers get annual and the 14-day card-gated trial**, still one trial
+  per account/card across both tiers, not per tier — `TrialRedemption`'s
+  `cardFingerprint` unique constraint is untouched.
+
+**Worth flagging against the 2026-09-08 entry above: a bare $4.99 already ran
+once (18–31 Aug) and lost to $9.99 on subscribers/day (~0.38 vs ~0.67) and
+revenue/day.** That was ONE price replacing the other; this is a genuinely
+different bet — a cheap on-ramp sitting ALONGSIDE the existing $9.99 anchor,
+not instead of it. The two aren't directly comparable, but it's the one prior
+data point this repo has on $4.99 and it belongs in the record.
+
+**The system had exactly one entitlement bit — `isPremium()`, one boolean off
+one date (`User.premiumUntil`) — and nothing anywhere (not the webhook, not
+the nightly reconcile, not the account page) ever inspected WHICH Stripe
+price a subscription was on.** Three findings shaped the design before any
+code was written:
+1. Session metadata does not propagate to the subscription object, so a tier
+   stamped only in `checkout.sessions.create`'s `metadata` is invisible to
+   every renewal and to the reconcile cron — it has to be stamped on
+   `subscription_data.metadata` too.
+2. The webhook's extend-only write (`if (!next && !linkCustomer) return;`)
+   would have silently swallowed a same-period tier CHANGE (an upgrade that
+   doesn't move `current_period_end`, so `next` is null) — the early return
+   had to grow a third condition, and the tier write had to stop being
+   conditioned on `next`.
+3. The nightly reconcile and `audit-premium-vs-stripe.ts` list every entitled
+   subscription and grant `premiumUntil` with no price check at all — left
+   alone, either sweep would have silently upgraded every Plus subscriber to
+   full Premium the moment it next ran.
+
+**What shipped:**
+- `User.premiumTier String @default("premium")` — additive, grandfathers
+  every existing row. `isPremium(user, min?)` gained an optional second
+  argument (default `"plus"`, i.e. "any paid tier") — every one of the 17
+  existing server gates and 6 ad components needed ZERO changes; only the
+  four pro-tool gates (Value Finder, Bulk Pricer, Best Basket, Demand Finder
+  — page + the Best Basket API's 403) now pass `isPremium(user, "premium")`.
+  `premiumTierOf(user)` names the real tier for surfaces that have to SAY
+  which one rather than just gate on it.
+- `tierFromPriceId(priceId)` is the one place a Stripe price id becomes a
+  tier — an unrecognized or retired price id (including a Plus price that
+  gets discontinued later) resolves to `"premium"`, the grandfathered
+  default, never to a silent downgrade. **New Stripe Prices were created for
+  Plus — the August $4.99 experiment's price, if it still exists in Stripe,
+  was deliberately NOT reused**, so an old subscriber still on it stays
+  read as Premium rather than being quietly moved to Plus.
+- Checkout stamps `tier` on both `metadata` and `subscription_data.metadata`.
+  The webhook resolves tier from the live subscription's price wherever one
+  is available (`stampFromSubscription`, which covers renewals, trial→paid,
+  AND `customer.subscription.updated` — so a portal- or API-driven tier
+  switch self-corrects with no extra code at the switch site) and falls back
+  to the checkout-time metadata stamp only on the one path with no
+  subscription object to read at all (the "subscription unreadable" grace
+  branch). The reconcile and the audit script both learned the same
+  price→tier resolution.
+- A new `switch-to-annual` guard is price-id-based, not interval-based — an
+  interval-only check would let a same-interval tier switch (Plus monthly →
+  Premium monthly) slip past undetected. A new `/api/premium/upgrade` route
+  (Plus → Premium, same interval, `always_invoice`) is the mirror image,
+  gated on `tierFromPriceId`. No in-app downgrade route exists — Premium →
+  Plus is a cancel-and-resubscribe, or the Stripe billing portal if that gets
+  configured to allow it; either way the webhook already records whatever
+  tier results.
+- Comp grants (`grantPremiumDays/Months`) take an optional `tier` (default
+  `"premium"`) and write it ONLY when the grant is creating access from
+  nothing — extending an already-active period never touches the stored
+  tier, so a feedback/referral comp landing on a paying Plus subscriber can't
+  flip them to Premium and back on their next renewal.
+- `TierComparisonTable` gained a `plus` column and a `showPlus` prop (dark by
+  default); `/premium` renders one or two tier card groups depending on
+  `premiumPlusEnabled()`, with a new "Your subscription" upgrade button for a
+  live Plus subscriber; the Premium dialog gained a Plus/Premium toggle and a
+  "you're on Plus — upgrade" panel for the same case; the tools index badges
+  the three full-list tools "Plus" once Plus is configured, "Premium"
+  otherwise; the Premium-explained article and its hand-typed tier table both
+  got a Plus row/column.
+- **Dark by default.** `STRIPE_PLUS_PRICE_ID` / `STRIPE_PLUS_ANNUAL_PRICE_ID`
+  are unset until the owner creates the Stripe Prices and sets them in
+  Vercel — every UI surface above renders exactly as it did before this
+  change while they're unset (`premiumPlusEnabled()` gates all of it), so
+  this shipped and deployed before Plus is actually purchasable.

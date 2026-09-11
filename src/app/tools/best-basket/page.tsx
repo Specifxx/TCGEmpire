@@ -63,7 +63,7 @@ function decodeList(b64: string): string {
 export default async function BestBasketPage({ searchParams }: { searchParams: { list?: string } }) {
   const user = await getCurrentUser();
   // PREMIUM tier (see lib/premium.ts) — moved back from ACCOUNT.
-  const premium = isPremium(user);
+  const premium = isPremium(user, "premium");
   const country = getCountry();
   const info = COUNTRIES[country];
   // A deck page can hand off its own list via ?list= (see decks/[slug]/page.tsx's

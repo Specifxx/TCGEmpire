@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumCheckoutEnabled, premiumTrialEnabled, PREMIUM_PRICE_ID, PREMIUM_TRIAL_DAYS, PREMIUM_ANNUAL_PRICE_ID } from "@/lib/premium";
+import { premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, type PremiumTier } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +17,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Premium checkout isn't configured yet" }, { status: 503 });
   }
 
-  // Which plan — annual (yearly price) or monthly. Annual requires its own Stripe
-  // price to be configured; if requested but unset, fall back to monthly cleanly.
+  // Which tier — Plus (cheaper, requires its own Stripe price to be configured)
+  // or Premium (the default, and the only option while Plus is unconfigured).
+  // Which plan — annual (yearly price) or monthly; priceIdFor() falls back to
+  // monthly cleanly if annual is requested but unset for that tier.
   const body = await req.json().catch(() => null);
-  const annual = body?.plan === "annual" && !!PREMIUM_ANNUAL_PRICE_ID;
-  const priceId = annual ? PREMIUM_ANNUAL_PRICE_ID : PREMIUM_PRICE_ID;
+  const tier: PremiumTier = body?.tier === "plus" && premiumPlusEnabled() ? "plus" : "premium";
+  const plan: "monthly" | "annual" = body?.plan === "annual" ? "annual" : "monthly";
+  const priceId = priceIdFor(tier, plan);
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
@@ -45,9 +48,12 @@ export async function POST(req: Request) {
         ? { customer: dbUser.stripeCustomerId }
         : { customer_email: dbUser?.email }),
       client_reference_id: user.id,
-      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0" },
+      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", tier },
       subscription_data: {
-        metadata: { userId: user.id },
+        // Stamped here too (not just on the session) because session metadata
+        // does NOT propagate to the subscription object — renewals and the
+        // reconcile cron only ever see subscription_data.metadata.
+        metadata: { userId: user.id, tier },
         // PREMIUM_TRIAL_DAYS free trial for first-timers, same length on both plans
         // (annual just converts to the yearly price after it ends). A card is still
         // required up front (payment_method_collection below), so the trial

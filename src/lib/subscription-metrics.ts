@@ -11,6 +11,7 @@
 
 import type Stripe from "stripe";
 import { stripe } from "./stripe";
+import { tierFromPriceId } from "./premium";
 
 // A Stripe subscription flattened to just what the metrics need — the shape the
 // pure function below operates on, so a test can build rows by hand.
@@ -23,6 +24,11 @@ export interface SubRow {
   canceledAtMs: number | null;
   endedAtMs: number | null;
   trialEndMs: number | null;
+  // Optional — the Stripe price id, for the Plus/Premium tier split below.
+  // Undefined resolves to "premium" via tierFromPriceId, same as everywhere
+  // else in the codebase, so callers that predate Plus (and every existing
+  // test row) need no change.
+  priceId?: string | null;
 }
 
 const DAY = 86_400_000;
@@ -40,6 +46,7 @@ export function toSubRow(sub: Stripe.Subscription): SubRow {
     canceledAtMs: sub.canceled_at ? sub.canceled_at * 1000 : null,
     endedAtMs: sub.ended_at ? sub.ended_at * 1000 : null,
     trialEndMs: sub.trial_end ? sub.trial_end * 1000 : null,
+    priceId: price?.id ?? null,
   };
 }
 
@@ -93,6 +100,12 @@ export interface SubscriptionMetrics {
   arpuCents: number;
   monthlyActive: number;
   annualActive: number;
+  // Tier mix among active subs, resolved from each row's price id (see
+  // tierFromPriceId in lib/premium.ts — unrecognized/absent price ids count
+  // as "premium", the grandfathered default). All-Premium accounts (Plus
+  // unconfigured) simply have plusActive === 0.
+  plusActive: number;
+  premiumActive: number;
   ltvCents: number | null; // ARPU / churn — estimate; null when churn is 0/unknown
   trialsStarted: number;
   trialsConverted: number;
@@ -146,6 +159,16 @@ export function computeSubscriptionMetrics(rows: SubRow[], nowMs: number, cohort
   const churnDenom = head.active + churned30;
   const churnRatePct = churnDenom > 0 ? (churned30 / churnDenom) * 100 : null;
 
+  // Tier mix — across ALL active subs regardless of currency, unlike the
+  // money figures above which are dominant-currency-only: a count doesn't
+  // need a common unit to be summed.
+  let plusActive = 0;
+  let premiumActive = 0;
+  for (const r of active) {
+    if (tierFromPriceId(r.priceId) === "plus") plusActive += 1;
+    else premiumActive += 1;
+  }
+
   const arpuCents = head.active > 0 ? Math.round(head.mrrCents / head.active) : 0;
   const ltvCents = churnRatePct && churnRatePct > 0 ? Math.round(arpuCents / (churnRatePct / 100)) : null;
 
@@ -187,6 +210,8 @@ export function computeSubscriptionMetrics(rows: SubRow[], nowMs: number, cohort
     arpuCents,
     monthlyActive: head.monthlyActive,
     annualActive: head.annualActive,
+    plusActive,
+    premiumActive,
     ltvCents,
     trialsStarted,
     trialsConverted,

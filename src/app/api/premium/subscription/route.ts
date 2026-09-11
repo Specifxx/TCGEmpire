@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe, stripeEnabled } from "@/lib/stripe";
-import { premiumAnnualEnabled } from "@/lib/premium";
+import { premiumAnnualEnabled, plusAnnualEnabled, tierFromPriceId } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +16,13 @@ export const dynamic = "force-dynamic";
 // is deliberately not treated as active here.
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ interval: null }, { headers: { "Cache-Control": "no-store" } });
+  if (!user) return NextResponse.json({ interval: null, tier: null }, { headers: { "Cache-Control": "no-store" } });
 
-  if (!stripeEnabled()) return NextResponse.json({ interval: null }, { headers: { "Cache-Control": "no-store" } });
+  if (!stripeEnabled()) return NextResponse.json({ interval: null, tier: null }, { headers: { "Cache-Control": "no-store" } });
 
   const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { stripeCustomerId: true } });
   if (!dbUser?.stripeCustomerId) {
-    return NextResponse.json({ interval: null }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ interval: null, tier: null }, { headers: { "Cache-Control": "no-store" } });
   }
 
   try {
@@ -33,18 +33,19 @@ export async function GET() {
       expand: ["data.items.data.price"],
     });
     const sub = subs.data[0];
-    if (!sub) return NextResponse.json({ interval: null }, { headers: { "Cache-Control": "no-store" } });
+    if (!sub) return NextResponse.json({ interval: null, tier: null }, { headers: { "Cache-Control": "no-store" } });
 
     const price = sub.items.data[0]?.price as Stripe.Price | undefined;
     const interval = price?.recurring?.interval ?? null; // "month" | "year"
+    const tier = tierFromPriceId(price?.id);
     const monthsActive = Math.floor((Date.now() - sub.created * 1000) / (30 * 86_400_000));
 
     return NextResponse.json(
-      { interval, monthsActive, annualAvailable: premiumAnnualEnabled() },
+      { interval, tier, monthsActive, annualAvailable: tier === "plus" ? plusAnnualEnabled() : premiumAnnualEnabled() },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
     console.error("premium subscription read failed:", e);
-    return NextResponse.json({ interval: null }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ interval: null, tier: null }, { headers: { "Cache-Control": "no-store" } });
   }
 }

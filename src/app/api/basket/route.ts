@@ -33,7 +33,7 @@ interface PickedLine {
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
-  if (!isPremium(user)) return NextResponse.json({ error: "Premium required" }, { status: 403 });
+  if (!isPremium(user, "premium")) return NextResponse.json({ error: "Premium required" }, { status: 403 });
 
   const country = getCountry();
   const body = await req.json().catch(() => null);

@@ -47,6 +47,35 @@ export const PREMIUM_PRICE_LABEL = process.env.NEXT_PUBLIC_PREMIUM_PRICE || `${P
 export const PREMIUM_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_AMOUNT || "$79.99";
 export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERIOD || "year";
 
+// ── Plus: the second, cheaper paid tier (2026-09-11) ────────────────────────
+// Display only, same rule as the Premium constants above — the real charge
+// comes from STRIPE_PLUS_PRICE_ID / STRIPE_PLUS_ANNUAL_PRICE_ID (Vercel-only
+// secrets). Every existing flat PREMIUM_* export above is kept byte-for-byte
+// (dozens of consumers and several tests read them directly) and doubles as
+// the "premium" tier's amount for the helpers below — PLUS_* is additive.
+export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$4.99";
+export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$39.99";
+
+export type PremiumTierKey = "plus" | "premium";
+export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Premium" };
+
+function monthlyAmountFor(tier: PremiumTierKey): string {
+  return tier === "plus" ? PLUS_PRICE_AMOUNT : PREMIUM_PRICE_AMOUNT;
+}
+function annualAmountFor(tier: PremiumTierKey): string {
+  return tier === "plus" ? PLUS_ANNUAL_AMOUNT : PREMIUM_ANNUAL_AMOUNT;
+}
+// The monthly/annual display amount for a given tier — "premium" (the
+// default) returns exactly PREMIUM_PRICE_AMOUNT/PREMIUM_ANNUAL_AMOUNT, so
+// every existing call site that never mentions a tier keeps reading the same
+// number it always has.
+export function tierMonthlyAmount(tier: PremiumTierKey = "premium"): string {
+  return monthlyAmountFor(tier);
+}
+export function tierAnnualAmount(tier: PremiumTierKey = "premium"): string {
+  return annualAmountFor(tier);
+}
+
 // Shared numeric parse for a display price string ("$9.99" -> 9.99). Lifted
 // out of annualSavingPct/AnnualPriceBlock's own local copies so every "do the
 // math on the display price" call site (this file, AnnualPriceBlock,
@@ -65,10 +94,12 @@ export function premiumCurrencySymbol(): string {
 }
 
 // Percent saved on annual vs paying monthly for a year (rounded). Parses the numeric
-// part of each amount; falls back to 0 if either can't be read.
-export function annualSavingPct(): number {
-  const monthly = premiumMoneyNum(PREMIUM_PRICE_AMOUNT);
-  const annual = premiumMoneyNum(PREMIUM_ANNUAL_AMOUNT);
+// part of each amount; falls back to 0 if either can't be read. `tier` defaults to
+// "premium" so a zero-arg call reads exactly PREMIUM_PRICE_AMOUNT/PREMIUM_ANNUAL_AMOUNT,
+// same as before Plus existed.
+export function annualSavingPct(tier: PremiumTierKey = "premium"): number {
+  const monthly = premiumMoneyNum(monthlyAmountFor(tier));
+  const annual = premiumMoneyNum(annualAmountFor(tier));
   if (!monthly || !annual) return 0;
   return Math.max(0, Math.round((1 - annual / (monthly * 12)) * 100));
 }
@@ -77,8 +108,8 @@ export function annualSavingPct(): number {
 // "from $6.67/mo billed yearly" framing used across the slide-in, dialog and
 // /premium page. "" when there's no annual price configured, so callers can
 // cleanly fall back to the monthly-only framing.
-export function premiumEffectiveMonthly(): string {
-  const annual = premiumMoneyNum(PREMIUM_ANNUAL_AMOUNT);
+export function premiumEffectiveMonthly(tier: PremiumTierKey = "premium"): string {
+  const annual = premiumMoneyNum(annualAmountFor(tier));
   if (!annual) return "";
   return `${premiumCurrencySymbol()}${(annual / 12).toFixed(2)}`;
 }
@@ -88,10 +119,11 @@ export function premiumEffectiveMonthly(): string {
 // exists, otherwise just the monthly price. Centralised so the effective-annual
 // number can't drift between surfaces the way the tool list once did (see
 // PITCH_TOOLS's own header comment for that history repeating itself).
-export function premiumFromLine(): string {
-  const effective = premiumEffectiveMonthly();
-  if (!effective) return `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
-  return `from ${effective}/mo billed yearly, or ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} month-to-month`;
+export function premiumFromLine(tier: PremiumTierKey = "premium"): string {
+  const effective = premiumEffectiveMonthly(tier);
+  const monthly = monthlyAmountFor(tier);
+  if (!effective) return `${monthly}/${PREMIUM_PRICE_PERIOD}`;
+  return `from ${effective}/mo billed yearly, or ${monthly}/${PREMIUM_PRICE_PERIOD} month-to-month`;
 }
 
 // "$0 today" — the trial-eligible lead-in, symbol derived from the real price
@@ -168,4 +200,4 @@ export function premiumLockInTail(): string {
 // changes again, including a price-only change like this one: without a bump,
 // events from the $14.99 era and the reverted $9.99 era would share one tag
 // and the before/after comparison this constant exists for would be lost.
-export const PREMIUM_COPY_VERSION = "edge-graphic-2026-09-10";
+export const PREMIUM_COPY_VERSION = "tiers-2026-09-11";

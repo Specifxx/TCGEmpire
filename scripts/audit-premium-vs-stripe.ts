@@ -35,11 +35,12 @@
 import type Stripe from "stripe";
 import { prisma } from "../src/lib/db";
 import { stripe, stripeEnabled } from "../src/lib/stripe";
-import { ENTITLED_STATUSES } from "../src/lib/stripe-entitlement";
+import { tierFromPriceId, normalizeTier } from "../src/lib/premium";
+import { ENTITLED_STATUSES, priceIdFromSubscription } from "../src/lib/stripe-entitlement";
 
 const FIX = process.env.FIX === "1";
 
-type Problem = "no-account" | "premium-short" | "renewal-unlinked";
+type Problem = "no-account" | "premium-short" | "renewal-unlinked" | "tier-mismatch";
 
 async function main() {
   if (!stripeEnabled()) {
@@ -82,7 +83,7 @@ async function main() {
 
     const user = await prisma.user.findFirst({
       where: { email },
-      select: { id: true, premiumUntil: true, stripeCustomerId: true },
+      select: { id: true, premiumUntil: true, stripeCustomerId: true, premiumTier: true },
     });
     if (!user) {
       problems.push({
@@ -109,6 +110,25 @@ async function main() {
       if (FIX) {
         await prisma.user.update({ where: { id: user.id }, data: { premiumUntil: periodEnd } });
         console.log(`  FIXED ${label}: premiumUntil → ${periodEnd.toISOString()}`);
+      }
+    }
+
+    // (2b) does the DB record the tier they're actually paying for? Resolved
+    // from the live price id — an unrecognized/retired price grandfathers to
+    // "premium", same rule as the webhook and the nightly reconcile.
+    const liveTier = tierFromPriceId(priceIdFromSubscription(sub));
+    const storedTier = normalizeTier(user.premiumTier);
+    if (liveTier !== storedTier) {
+      issue = true;
+      problems.push({
+        email: label,
+        sub: sub.id,
+        kind: "tier-mismatch",
+        detail: `premiumTier=${storedTier} but the live price resolves to ${liveTier}`,
+      });
+      if (FIX) {
+        await prisma.user.update({ where: { id: user.id }, data: { premiumTier: liveTier } });
+        console.log(`  FIXED ${label}: premiumTier → ${liveTier}`);
       }
     }
 

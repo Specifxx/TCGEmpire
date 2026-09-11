@@ -7030,7 +7030,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-06",
+    updated: "2026-09-11",
     readMins: 11,
     tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
@@ -7038,8 +7038,8 @@ We built the price tracking, the price history, and the alerts specifically beca
       alt: "The RiftCompare logo beside a gold Premium badge, on a dark green-and-blue gradient background",
     },
     summary: [
-      "**RiftCompare Premium is $9.99/mo or $79.99/yr** (works out to about $6.67/mo, a 33% saving) — with a 14-day free trial and cancel-anytime billing through Stripe.",
-      "**It unlocks 5 tools outright**: the Bulk Pricer, Best Basket, Value Finder screener, Rising Cards (full list), and the full Deal Finder (full list, 4 views). The Condition Impact Calculator is free with any account, no Premium needed.",
+      "**RiftCompare now has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 14-day free trial and cancel-anytime billing through Stripe.",
+      "**Plus unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed — and an ad-free site. **Premium adds the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -7052,23 +7052,23 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "$9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). Both plans start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+        a: "Premium is $9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). There's also a cheaper Plus tier at $4.99/month (or $39.99/year) with the full lists and an ad-free site — see below for the split. Both tiers start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
-        a: "Five tools you can't otherwise use at all — the Bulk Pricer, Best Basket, Value Finder screener, the full Rising Cards list, and the full Deal Finder (all four views) — plus a completely ad-free site. The Condition Impact Calculator isn't in that list — it's free with any account.",
+        a: "Four tools you can't otherwise use at all — the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder — plus everything Plus already includes: the full Rising Cards, Rising Sealed and Deal Finder lists, and a completely ad-free site. The Condition Impact Calculator isn't in that list — it's free with any account.",
       },
       {
         q: "Is price comparison free without Premium?",
-        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Premium is exclusively about the pro tools listed above and an ad-free site.",
+        a: "Yes, entirely. Searching, browsing every card, comparing live prices across every store and eBay, the deck builder, trade calculator, box EV calculator, the RiftCompare Index and price movers are all free with no account at all. Plus and Premium are exclusively about the list tools and pro screeners covered above, and an ad-free site.",
       },
       {
-        q: "What's the difference between a free account and Premium?",
-        a: "A free account (no card, just an email) adds price alerts and your portfolio tracker (value history, cost-basis P&L, CSV export) on top of the fully-free tier. Premium is the paid step above that — it's the only tier with the Bulk Pricer, Best Basket, Value Finder, the full Rising Cards and Deal Finder lists, and an ad-free site.",
+        q: "What's the difference between a free account, Plus and Premium?",
+        a: "A free account (no card, just an email) adds price alerts and your portfolio tracker (value history, cost-basis P&L, CSV export) on top of the fully-free tier. Plus adds the full Rising Cards, Rising Sealed and Deal Finder lists and an ad-free site. Premium is the tier above that — it adds the Bulk Pricer, Best Basket, Value Finder and Demand Finder on top of everything Plus includes.",
       },
       {
         q: "Is there a free trial?",
-        a: "Yes — 14 days, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 14 days unless you cancel before then.",
+        a: "Yes — 14 days, on both tiers, on both the monthly and annual plan. It needs a card up front and converts automatically to the plan's normal price after 14 days unless you cancel before then.",
       },
       {
         q: "Can I get RiftCompare Premium for free?",
@@ -7096,42 +7096,46 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     body: `RiftCompare's price comparison — search, browse, live prices across every store and eBay, the deck builder, the trade calculator, box EV, the Index and daily movers — has always been free, and stays free. This post is about the other thing: **what you actually get if you pay for RiftCompare Premium**, screenshot by screenshot, with nothing rounded up or left vague.
 
-Short version: Premium is $9.99/mo (or $79.99/yr), and it unlocks five tools you can't use at all otherwise and removes every ad on the site. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
+Short version: RiftCompare now has two paid tiers. Plus is $4.99/mo (or $39.99/yr) and unlocks the full Deal Finder, Rising Cards and Rising Sealed lists plus an ad-free site. Premium is $9.99/mo (or $79.99/yr) and adds four more tools on top — the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. (The Condition Impact Calculator used to be on that list too — it's free now.) Here's the full breakdown.
 
-## How much does RiftCompare Premium cost?
+## How much does RiftCompare Plus / Premium cost?
 
 ![The RiftCompare Premium pricing card, plus the full list of what's included](/blog/premium/00-pricing-cards.png)
 
 | Plan | Price | Works out to | Trial |
 | --- | --- | --- | --- |
-| Monthly | $9.99/month | $9.99/month | 14 days free |
-| Annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 14 days free |
+| Plus, monthly | $4.99/month | $4.99/month | 14 days free |
+| Plus, annual | $39.99/year | ≈ $3.33/month (**33% off**, vs $59.88/yr paying monthly) | 14 days free |
+| Premium, monthly | $9.99/month | $9.99/month | 14 days free |
+| Premium, annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 14 days free |
 
-Both plans run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added to Premium since launch.
+Both tiers run through Stripe, need a card up front for the trial, and auto-convert to the paid price after 14 days unless you cancel first. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added since launch. You can upgrade from Plus to Premium at any time, prorated, from the /premium page.
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 
-## What's free, what needs a free account, and what needs Premium
+## What's free, what needs a free account, and what needs Plus or Premium
 
 Everything below is real, current, and reflects exactly what each tier gets — not a marketing simplification.
 
-| Feature | No account | Free account | Premium |
-| --- | --- | --- | --- |
-| Compare prices across every store + eBay | ✓ | ✓ | ✓ |
-| Full card database, search & browse | ✓ | ✓ | ✓ |
-| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
-| RiftCompare Index & daily movers | ✓ | ✓ | ✓ |
-| Condition Impact Calculator | ✓ | ✓ | ✓ |
-| Price alerts | — | ✓ | ✓ |
-| Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ |
-| Deal Finder | Top pick | Top pick | Full list |
-| Rising Cards | Top pick | Top pick | Full list |
-| Value Finder screener | — | — | ✓ |
-| Bulk Pricer | — | — | ✓ |
-| Best Basket — cheapest store split, postage included | — | — | ✓ |
-| Ad-free experience | — | — | ✓ |
+| Feature | No account | Free account | Plus | Premium |
+| --- | --- | --- | --- | --- |
+| Compare prices across every store + eBay | ✓ | ✓ | ✓ | ✓ |
+| Full card database, search & browse | ✓ | ✓ | ✓ | ✓ |
+| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ | ✓ |
+| RiftCompare Index & daily movers | ✓ | ✓ | ✓ | ✓ |
+| Condition Impact Calculator | ✓ | ✓ | ✓ | ✓ |
+| Price alerts | — | ✓ | ✓ | ✓ |
+| Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ | ✓ |
+| Deal Finder | Top pick | Top pick | Full list | Full list |
+| Rising Cards | Top pick | Top pick | Full list | Full list |
+| Rising Sealed | Top pick | Top pick | Full list | Full list |
+| Value Finder screener | — | — | — | ✓ |
+| Bulk Pricer | — | — | — | ✓ |
+| Best Basket — cheapest store split, postage included | — | — | — | ✓ |
+| Demand Finder | — | — | — | ✓ |
+| Ad-free experience | — | — | ✓ | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Premium is entirely the pro tools and an ad-free site on top of that.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Plus adds the full lists and an ad-free site; Premium adds the pro screeners on top of everything Plus includes.
 
 ## The 5 tools you only get with Premium
 

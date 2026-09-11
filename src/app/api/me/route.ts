@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { analyticsUserId } from "@/lib/ga-user-id";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
 // premium ad-hiding).
@@ -32,11 +32,18 @@ export async function GET() {
       // signed out, which is what clears the id on the client.
       analyticsId: user ? analyticsUserId(user.id) : null,
       premium: isPremium(user),
+      // Which paid tier ("plus" | "premium"), or null if not entitled at all —
+      // for surfaces that need to NAME the tier rather than just gate on it.
+      tier: premiumTierOf(user),
       // Premium upsell state for the client (the one-click Premium dialog).
       premiumCheckout: premiumCheckoutEnabled(),
+      // Whether the cheaper Plus tier is configured at all (dark until its
+      // Stripe price ids are set) — sibling of premiumAnnual below.
+      premiumPlus: premiumPlusEnabled(),
       trialEligible: !!user && !isPremium(user) && premiumTrialEnabled() && !user.trialStartedAt,
       trialDays: PREMIUM_TRIAL_DAYS,
       premiumAnnual: premiumAnnualEnabled(),
+      plusAnnual: plusAnnualEnabled(),
     },
     { headers: { "Cache-Control": "no-store" } }
   );

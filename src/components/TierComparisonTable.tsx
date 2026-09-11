@@ -28,24 +28,29 @@ export type TierRow = {
   feature: string;
   anon: boolean | string;
   account: boolean | string;
+  // Plus (2026-09-11): the cheaper tier. "See everything vs do everything" —
+  // Plus matches Premium on ad-free + the full lists (Deal Finder, Rising
+  // Cards); the four pro tools stay Premium-only. Every row where plus !==
+  // premium is exactly the pitch for upgrading from Plus to Premium.
+  plus: boolean | string;
   premium: boolean | string;
 };
 
 export const TIER_COMPARISON: TierRow[] = [
-  { feature: "Compare prices across every store + eBay", anon: true, account: true, premium: true },
-  { feature: "Full card database, search & browse", anon: true, account: true, premium: true },
-  { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, premium: true },
-  { feature: "RiftCompare Index & daily price movers", anon: true, account: true, premium: true },
-  { feature: "Condition Impact Calculator", anon: true, account: true, premium: true },
-  { feature: "Price alerts", anon: false, account: true, premium: true },
-  { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, premium: true },
-  { feature: "Deal Finder", anon: "Top pick", account: "Top pick", premium: "Full list" },
-  { feature: "Rising Cards", anon: "Top pick", account: "Top pick", premium: "Full list" },
-  { feature: "Value Finder screener", anon: false, account: false, premium: true },
-  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, premium: true },
-  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, premium: true },
-  { feature: "Demand Finder — most searched & viewed cards", anon: false, account: false, premium: true },
-  { feature: "Ad-free experience", anon: false, account: false, premium: true },
+  { feature: "Compare prices across every store + eBay", anon: true, account: true, plus: true, premium: true },
+  { feature: "Full card database, search & browse", anon: true, account: true, plus: true, premium: true },
+  { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, plus: true, premium: true },
+  { feature: "RiftCompare Index & daily price movers", anon: true, account: true, plus: true, premium: true },
+  { feature: "Condition Impact Calculator", anon: true, account: true, plus: true, premium: true },
+  { feature: "Price alerts", anon: false, account: true, plus: true, premium: true },
+  { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, plus: true, premium: true },
+  { feature: "Deal Finder", anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list" },
+  { feature: "Rising Cards", anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list" },
+  { feature: "Value Finder screener", anon: false, account: false, plus: false, premium: true },
+  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, plus: false, premium: true },
+  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, plus: false, premium: true },
+  { feature: "Demand Finder — most searched & viewed cards", anon: false, account: false, plus: false, premium: true },
+  { feature: "Ad-free experience", anon: false, account: false, plus: true, premium: true },
 ];
 
 export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: boolean }) {
@@ -95,19 +100,27 @@ export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
  * switches the popup-specific presentation above (fewer rows, no anon column,
  * red ✗ instead of an em dash). The underlying TIER_COMPARISON rows — and what
  * /premium renders from them — are untouched either way.
+ *
+ * `showPlus` renders the Plus column between Free account and Premium — pass
+ * it only once Plus is actually configured (premiumPlusEnabled()) so a dark
+ * Plus tier never appears as a real, choosable column.
  */
-export function TierComparisonTable({ compact = false }: { compact?: boolean }) {
+export function TierComparisonTable({ compact = false, showPlus = false }: { compact?: boolean; showPlus?: boolean }) {
   const cell = compact ? "px-2 py-1.5" : "px-3 py-2.5";
   const rows = compact
     ? TIER_COMPARISON.filter((r) => !DIALOG_OMIT_FEATURES.has(r.feature)).map((r) =>
-        DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, account: false, premium: true } : r
+        DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, account: false, plus: true, premium: true } : r
       )
     : TIER_COMPARISON;
   return (
     // min-w forces the tier columns to stay readable; the wrapper scrolls
     // horizontally rather than letting them crush together on a phone.
     <div className="overflow-x-auto">
-      <table className={`w-full border-collapse ${compact ? "min-w-[380px] text-xs" : "min-w-[560px] text-sm"}`}>
+      <table
+        className={`w-full border-collapse ${
+          compact ? (showPlus ? "min-w-[440px]" : "min-w-[380px]") + " text-xs" : (showPlus ? "min-w-[680px]" : "min-w-[560px]") + " text-sm"
+        }`}
+      >
         <thead>
           <tr className="border-b border-ink-700 text-left">
             <th scope="col" className={`${cell} font-semibold text-slate-400`}>Feature</th>
@@ -119,6 +132,11 @@ export function TierComparisonTable({ compact = false }: { compact?: boolean }) 
             <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-brand-300`}>
               Free account
             </th>
+            {showPlus && (
+              <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-slate-200`}>
+                Plus
+              </th>
+            )}
             <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-gold`}>
               Premium
             </th>
@@ -130,6 +148,7 @@ export function TierComparisonTable({ compact = false }: { compact?: boolean }) 
               <th scope="row" className={`${cell} text-left font-normal text-slate-200`}>{r.feature}</th>
               {!compact && <td className={`${cell} text-center`}><TierCell v={r.anon} /></td>}
               <td className={`${cell} text-center`}><TierCell v={r.account} dialog={compact} /></td>
+              {showPlus && <td className={`${cell} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
               <td className={`${cell} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
             </tr>
           ))}

@@ -282,7 +282,7 @@ test("grantPremiumDays is a real, generic helper the signup grant can reuse", ()
   // Confirms the new mechanism didn't need its own bespoke grant function —
   // it reuses the same day-granular helper feedback/referral-style comps use.
   const src = read(PREMIUM_LIB);
-  assert.match(src, /export async function grantPremiumDays\(userId: string, days: number\)/);
+  assert.match(src, /export async function grantPremiumDays\(userId: string, days: number/);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -325,7 +325,7 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
 
   // Rows that are neither a flat yes nor a flat no stay strings — rounding
   // "Top pick" up to a tick would overstate the free tier.
-  assert.match(shared, /anon: "Top pick", account: "Top pick", premium: "Full list"/);
+  assert.match(shared, /anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list"/);
 });
 
 test("every dialog-only row override names a row that actually exists", async () => {

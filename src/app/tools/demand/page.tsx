@@ -86,7 +86,7 @@ function DemandRow({ p, rank, metric, country, currency }: { p: DemandPick; rank
 
 export default async function DemandFinderPage({ searchParams }: { searchParams: { view?: string; range?: string } }) {
   const user = await getCurrentUser();
-  const premium = isPremium(user) || ADSENSE_REVIEW_MODE;
+  const premium = isPremium(user, "premium") || ADSENSE_REVIEW_MODE;
   const country = getCountry();
   const info = COUNTRIES[country];
 

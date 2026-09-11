@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { premiumPlusEnabled } from "@/lib/premium";
 import { SITE_URL } from "@/lib/site";
+
+// The badge on the three "full list" tools (Deal Finder, Rising Cards, Rising
+// Sealed) — they move to the cheaper Plus tier once it's configured; dark
+// (Plus unconfigured), they read exactly as they did before the split.
+const LIST_BADGE = premiumPlusEnabled() ? "Plus" : "Premium";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
@@ -36,7 +42,10 @@ const FAQS = [
     // DESCRIBES the tiers rather than gating anything, so it was being reported as
     // a paywalled indexable page on the strength of its own FAQ copy. Reworded
     // rather than removing the marker, which still needs to catch a real paywall.
-    a: "Most of them; a few ask you to be signed in or to be Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder, value finder and rising (cards and sealed) screeners show their single best result free, with the complete list included in Premium — the bulk pricer, Best Basket and Demand Finder are also part of Premium.",
+    a:
+      LIST_BADGE === "Plus"
+        ? "Most of them; a few ask you to be signed in, on Plus, or on Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder and rising (cards and sealed) screeners show their single best result free, with the complete list included in Plus — the value finder, bulk pricer, Best Basket and Demand Finder need Premium."
+        : "Most of them; a few ask you to be signed in or to be Premium. The box EV calculator, deck builder, trade calculator and sealed prices need no account at all. The Deal Finder, value finder and rising (cards and sealed) screeners show their single best result free, with the complete list included in Premium — the bulk pricer, Best Basket and Demand Finder are also part of Premium.",
   },
   {
     q: "What does the Deal Finder do?",
@@ -44,7 +53,10 @@ const FAQS = [
   },
   {
     q: "Do I need an account to use RiftCompare tools?",
-    a: "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds watchlists, price alerts and portfolio tracking. The list tools — the bulk pricer, Best Basket and Demand Finder — are part of Premium.",
+    a:
+      LIST_BADGE === "Plus"
+        ? "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds watchlists, price alerts and portfolio tracking. The full Deal Finder, Rising Cards and Rising Sealed lists are part of Plus; the value finder, bulk pricer, Best Basket and Demand Finder need Premium."
+        : "Not for most of them. Browsing, comparing prices and running the calculators need no account. A free account adds watchlists, price alerts and portfolio tracking. The pro tools — the value finder, bulk pricer, Best Basket and Demand Finder, plus the full Deal Finder, Rising Cards and Rising Sealed lists — are part of Premium.",
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
@@ -84,7 +96,7 @@ const GROUPS: ToolGroup[] = [
         emoji: "🚀",
         title: "Rising cards",
         desc: "Cards ranked by demand and price-timing signals — high or rising interest that hasn't re-rated yet.",
-        badge: "Premium",
+        badge: LIST_BADGE,
       },
       {
         href: "/tools/demand",
@@ -98,7 +110,7 @@ const GROUPS: ToolGroup[] = [
         emoji: "💱",
         title: "Deal Finder",
         desc: "Spot cards that are cheaper in one place than another — including another market entirely — and cards worth more if you resell them.",
-        badge: "Premium",
+        badge: LIST_BADGE,
       },
       {
         href: "/tools/best-basket",
@@ -142,7 +154,7 @@ const GROUPS: ToolGroup[] = [
         emoji: "🚀",
         title: "Rising sealed",
         desc: "Sealed products ranked by price-timing and supply signals — sitting near their own low, thin in-stock, not already spiking.",
-        badge: "Premium",
+        badge: LIST_BADGE,
       },
     ],
   },
@@ -236,9 +248,11 @@ export default function ToolsHubPage() {
                         className={`chip text-[10px] font-semibold ${
                           t.badge === "Premium"
                             ? "bg-gold/20 text-gold"
-                            : t.badge === "Account"
-                              ? "bg-ink-700 text-slate-300"
-                              : "bg-brand-500/15 text-brand-300"
+                            : t.badge === "Plus"
+                              ? "bg-slate-500/20 text-slate-300"
+                              : t.badge === "Account"
+                                ? "bg-ink-700 text-slate-300"
+                                : "bg-brand-500/15 text-brand-300"
                         }`}
                         title={t.badge === "Account" ? "Free — needs a RiftCompare account" : undefined}
                       >

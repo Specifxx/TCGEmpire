@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
-import { PREMIUM_COPY_VERSION } from "@/lib/site";
+import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 
 // GREEN, NOT GOLD, AND BIG — on this page only (2026-09-10, owner brief: "it
 // should just be a big green button that says start your 14-day free trial...
@@ -37,6 +37,7 @@ export function PremiumCta({
   priceLabel = "",
   trialDays = 0,
   plan = "monthly",
+  tier = "premium",
   ctaLabel,
 }: {
   checkoutLive: boolean;
@@ -49,6 +50,9 @@ export function PremiumCta({
   priceLabel?: string;
   trialDays?: number;
   plan?: "monthly" | "annual";
+  // Which tier this card is selling — defaults to "premium" so every caller
+  // predating the tier split (there was only one tier) is unchanged.
+  tier?: PremiumTierKey;
   ctaLabel?: string;
 }) {
   const dayPhrase = `${trialDays} day${trialDays === 1 ? "" : "s"}`;
@@ -61,12 +65,12 @@ export function PremiumCta({
     // Fired BEFORE the fetch — a low-volume conversion-funnel step, so it goes
     // to both GA4 and Vercel (not added to GA4_ONLY_EVENTS), unlike the
     // high-volume impression events elsewhere in the Premium funnel.
-    trackEvent("premium_checkout_started", { plan, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION });
+    trackEvent("premium_checkout_started", { plan, tier, trial_eligible: trialEligible, source: "premium-page", copy: PREMIUM_COPY_VERSION });
     try {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, tier }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -117,7 +121,7 @@ export function PremiumCta({
   return (
     <div className="w-full">
       <button onClick={subscribe} disabled={busy} className={CTA_BTN}>
-        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible ? `Start your ${trialDays}-day free trial\u00a0→` : "Upgrade to Premium →")}
+        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible ? `Start your ${trialDays}-day free trial\u00a0→` : `Upgrade to ${TIER_NAMES[tier]} →`)}
       </button>
       {trialEligible && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):

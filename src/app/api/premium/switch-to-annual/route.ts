@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumAnnualEnabled, PREMIUM_ANNUAL_PRICE_ID } from "@/lib/premium";
+import { premiumAnnualEnabled, plusAnnualEnabled, tierFromPriceId, priceIdFor } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,11 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });
-  if (!premiumAnnualEnabled()) {
+  // Which tier's annual price to check for isn't known until the live
+  // subscription is read below (Plus and Premium each need their own annual
+  // price configured) — the general "is Premium checkout even live" gate
+  // stays here; the per-tier annual gate moves after the subscription read.
+  if (!premiumAnnualEnabled() && !plusAnnualEnabled()) {
     return NextResponse.json({ error: "Annual billing isn't configured" }, { status: 503 });
   }
 
@@ -40,14 +44,26 @@ export async function POST() {
 
     const item = sub.items.data[0];
     const price = item?.price as Stripe.Price | undefined;
-    if (price?.recurring?.interval === "year") {
-      // Already annual — nothing to do, and definitely don't double-charge.
+    if (!item || !price) return NextResponse.json({ error: "Subscription has no line item to update" }, { status: 400 });
+
+    const tier = tierFromPriceId(price.id);
+    const annualEnabled = tier === "plus" ? plusAnnualEnabled() : premiumAnnualEnabled();
+    if (!annualEnabled) {
+      return NextResponse.json({ error: "Annual billing isn't configured for this plan" }, { status: 503 });
+    }
+    const targetPriceId = priceIdFor(tier, "annual");
+
+    // Idempotency guard is on the PRICE, not the interval — an interval-only
+    // check would let a Plus-monthly → Premium-monthly upgrade slip through
+    // (same interval, different tier) and double-charge nothing while also
+    // never actually switching them to annual.
+    if (price.id === targetPriceId) {
+      // Already annual on this tier — nothing to do, and definitely don't double-charge.
       return NextResponse.json({ ok: true, already: true });
     }
-    if (!item) return NextResponse.json({ error: "Subscription has no line item to update" }, { status: 400 });
 
     await stripe().subscriptions.update(sub.id, {
-      items: [{ id: item.id, price: PREMIUM_ANNUAL_PRICE_ID }],
+      items: [{ id: item.id, price: targetPriceId }],
       // Bill the annual now (crediting the unused part of the current month) and
       // start the yearly term today, rather than deferring the charge.
       proration_behavior: "always_invoice",

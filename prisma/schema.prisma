@@ -37,6 +37,13 @@ model User {
   // a lapsed/cancelled sub simply stops extending). stripeCustomerId links renewal
   // invoices back to the account.
   premiumUntil        DateTime?
+  // Which paid tier premiumUntil buys: "plus" (ad-free + full lists) or "premium"
+  // (everything). Defaults to "premium" so every existing subscriber and comp is
+  // grandfathered at full access. Written by the Stripe webhook and the nightly
+  // reconcile from the live subscription's price id (see tierFromPriceId in
+  // lib/premium.ts) — last-write-wins, unlike premiumUntil which is extend-only.
+  // Meaningless while premiumUntil is null or in the past.
+  premiumTier         String    @default("premium")
   stripeCustomerId    String?
   // Set the first time this account starts a free trial → one trial per account
   // (a returning user just subscribes, no second trial).

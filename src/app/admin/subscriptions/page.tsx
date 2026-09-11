@@ -106,6 +106,20 @@ export default async function SubscriptionMetricsPage({ searchParams }: { search
                 Annual is {metrics.active > 0 ? Math.round((metrics.annualActive / metrics.active) * 100) : 0}% of active subs.
                 Lifting this is the cheapest churn win — see the in-app annual-switch nudge.
               </p>
+              {/* Tier mix — plusActive is 0 while Plus is unconfigured, so this
+                  row is silent (both bars would be pointless with nothing to
+                  compare) until there's an actual mix to show. */}
+              {metrics.plusActive > 0 && (
+                <>
+                  <div className="mt-4 flex items-end gap-4 border-t border-ink-800 pt-4">
+                    <MixBar label="Plus" n={metrics.plusActive} total={metrics.active} />
+                    <MixBar label="Premium" n={metrics.premiumActive} total={metrics.active} gold />
+                  </div>
+                  <p className="mt-3 text-xs text-slate-500">
+                    Premium is {metrics.active > 0 ? Math.round((metrics.premiumActive / metrics.active) * 100) : 0}% of active subs.
+                  </p>
+                </>
+              )}
             </div>
             <div className="rounded-xl border border-ink-700 bg-ink-850 p-4">
               <h2 className="text-sm font-semibold text-white">Trial → paid</h2>

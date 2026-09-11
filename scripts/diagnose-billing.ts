@@ -12,8 +12,8 @@
  */
 import { prisma } from "../src/lib/db";
 import { stripe, stripeEnabled } from "../src/lib/stripe";
-import { entitledUntilFromSubscription, periodEndFromSubscription } from "../src/lib/stripe-entitlement";
-import { isPremium } from "../src/lib/premium";
+import { entitledUntilFromSubscription, periodEndFromSubscription, priceIdFromSubscription } from "../src/lib/stripe-entitlement";
+import { isPremium, tierFromPriceId } from "../src/lib/premium";
 
 const EMAIL = (process.env.TARGET_EMAIL ?? "").trim().toLowerCase();
 
@@ -33,6 +33,7 @@ async function main() {
       id: true,
       email: true,
       premiumUntil: true,
+      premiumTier: true,
       isAdmin: true,
       trialStartedAt: true,
       trialReminderSentAt: true,
@@ -47,6 +48,7 @@ async function main() {
 
   console.log(`Account: ${user.email} (${user.id}), created ${user.createdAt.toISOString()}`);
   console.log(`  premiumUntil      : ${user.premiumUntil ? user.premiumUntil.toISOString() : "null"}`);
+  console.log(`  premiumTier       : ${user.premiumTier}`);
   console.log(`  → isPremium() now : ${isPremium(user)}`);
   console.log(`  isAdmin           : ${user.isAdmin}`);
   console.log(`  trialStartedAt    : ${user.trialStartedAt ? user.trialStartedAt.toISOString() : "null"}`);
@@ -63,8 +65,10 @@ async function main() {
   for (const sub of subs.data) {
     const entitled = entitledUntilFromSubscription(sub);
     const periodEnd = periodEndFromSubscription(sub);
+    const priceId = priceIdFromSubscription(sub);
     console.log(`\n  Subscription ${sub.id}`);
     console.log(`    status              : ${sub.status}`);
+    console.log(`    price / tier        : ${priceId ?? "?"} → ${tierFromPriceId(priceId)}`);
     console.log(`    current_period_end  : ${periodEnd ? periodEnd.toISOString() : "n/a"}`);
     console.log(`    entitles access?    : ${entitled ? `YES, through ${entitled.toISOString()}` : "NO"}`);
     console.log(`    cancel_at_period_end: ${sub.cancel_at_period_end}`);
