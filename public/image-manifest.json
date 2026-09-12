@@ -548,6 +548,18 @@
     ],
     "fingerprint": "0a4a0f468b199bcb"
   },
+  "/blog/riftbound-legacy-key-art.jpg": {
+    "src": "/blog/riftbound-legacy-key-art.jpg",
+    "width": 1478,
+    "height": 832,
+    "bytes": 115882,
+    "webp": null,
+    "webpBytes": null,
+    "avif": "/blog/riftbound-legacy-key-art.avif",
+    "avifBytes": 91878,
+    "variants": [],
+    "fingerprint": "60a7d2a69dceb5a6"
+  },
   "/blog/riftbound-legacy-pack-changes-and-card-templating.png": {
     "src": "/blog/riftbound-legacy-pack-changes-and-card-templating.png",
     "width": 1200,

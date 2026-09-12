@@ -7899,6 +7899,246 @@ Riot Games has turned one audience into a second hit twice — Teamfight Tactics
 
 That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to be wrong about it for any of the reasons above. But it's a bet grounded in a track record Riot has already delivered on twice, not just optimism about a good license — and it's why we think this is one of the more interesting long-term stories in the entire trading card game market right now.`,
   },
+  {
+    slug: "riftbound-legacy-spoilers-set-6",
+    category: "blog",
+    title: "Riftbound Legacy Spoilers: Set 6's 346 Cards, 12 Legends and the Pack Change",
+    excerpt:
+      "Legacy lands 29 January 2027 with 346 cards, 93 Showcase, a regional-identity theme and the first pack-composition change Riftbound has made. Our read on the size claim, the draft pivot, and how big the game will be by then.",
+    author: "RiftCompare Markets Desk",
+    date: "2026-09-12",
+    readMins: 14,
+    tags: ["legacy", "news", "set", "spoilers", "release", "draft"],
+    // Riot's own Legacy key art from the 2027 product announcement, re-hosted
+    // locally so next/image has a manifest entry and the thumbnail survives a
+    // CDN path rotation on Riot's side.
+    hero: {
+      src: "/blog/riftbound-legacy-key-art.jpg",
+      alt: "Riftbound: Legacy official key art — four champions in stained-glass regional panels around the Legacy logo",
+    },
+    summary: [
+      "**Legacy releases 29 January 2027** — 346 cards, 93 of them Showcase, three-letter code **LGC**. Pre-Rift runs 22–28 January; the first previews land at Convergence Fest in Las Vegas, 11–13 December 2026.",
+      "**It is not Riftbound's biggest set.** Counted the same way, Origins' card list is 352 against Legacy's 346 — and on base cards it is 298 against roughly 253. Legacy is the biggest set *since* Origins, which is a different sentence.",
+      "**The pack change is the real story.** One Common slot becomes a Legend-or-Battlefield slot at roughly 50/50, so Legacy packs hold **6 Commons instead of 7** — the first time Riftbound has altered what a booster contains.",
+      "**Seven of the eight named Legends already exist in Riftbound** as ordinary units. Vladimir is the only one genuinely new to the game.",
+      "**Our estimate — clearly labelled as ours** — is that Legacy launches into a player base meaningfully larger than Vendetta's, on the back of a first Worlds cycle and a draft format. Riot publishes no player numbers, so nobody can tell you a real one.",
+    ],
+    shop: [
+      { label: "Radiance booster boxes", query: "riftbound radiance booster box" },
+      { label: "Vendetta booster boxes", query: "riftbound vendetta booster box" },
+    ],
+    embeds: [
+      {
+        title: "Seven of Legacy's eight named Legends already have Riftbound cards",
+        note: "These are their existing printings — not the Legacy Legends, which have not been revealed. Prices are live and move daily.",
+        slugs: [
+          "ashe-focused-unl-169-219",
+          "garen-rugged-ogs-007-024",
+          "heimerdinger-inventor-ogn-111-298",
+          "illaoi-prophet-of-the-great-kraken-ven-109",
+          "karma-channeler-ogn-235-298",
+          "tryndamere-barbarian-ogn-034-298",
+          "lux-illuminated-ogs-006-024",
+        ],
+      },
+    ],
+    browseCta: {
+      href: "/release-dates",
+      label: "Every Riftbound release date →",
+      blurb: "Legacy, The Reckoning and the countdown to each, kept current as Riot confirms dates.",
+    },
+    faq: [
+      {
+        q: "When does Riftbound Legacy release?",
+        a: "29 January 2027 worldwide, per Riot's own products-and-sets announcement. Pre-Rift events run 22–28 January 2027, and the first preview beat begins at Convergence Fest in Las Vegas, which Riot's official event site and roadmap both date 11–13 December 2026.",
+      },
+      {
+        q: "How many cards are in Riftbound Legacy?",
+        a: "346, of which 93 are Showcase treatments. Riot writes that figure the same way it wrote Radiance's — the total already includes the Showcase cards — which implies a base run of roughly 253.",
+      },
+      {
+        q: "Is Legacy the biggest Riftbound set ever?",
+        a: "No, though several outlets have reported it that way. Compared like-for-like, Origins' whole card list is 352 against Legacy's 346, and Origins' base run is 298 against Legacy's implied 253. Legacy is the biggest set since Origins.",
+      },
+      {
+        q: "Which champions are in Riftbound Legacy?",
+        a: "Riot has named Ashe, Garen, Heimerdinger, Illaoi, Karma, Tryndamere and Vladimir as new Legends, plus \"four more friends\" still unannounced. Lux also appears as one of the four Champion Decks alongside Tryndamere, Ashe and Garen.",
+      },
+      {
+        q: "What is changing about Riftbound booster packs in Legacy?",
+        a: "One Common card slot is being replaced by a slot that is either a Legend or a Battlefield, at roughly 50/50 frequency. That means Legacy boosters — and every set after it — contain 6 Commons instead of 7. Showcase Legends and Battlefields are unaffected and still appear in the Overnumber slots.",
+      },
+      {
+        q: "Is Legacy designed for draft?",
+        a: "Yes. Riot describes Legacy as the first Riftbound set built for drafting, with cross-champion colour synergies, lower-rarity \"signpost\" cards that telegraph limited archetypes, and updated store Rune Kits that include a new Minion unit players can take to fill out a draft deck.",
+      },
+      {
+        q: "What is Proving Grounds 2nd Edition?",
+        a: "A refreshed boxed starter releasing 19 February 2027 at US$40, with four Champion decks (Heimerdinger, Karma, Vladimir and Illaoi), four oversized Battlefields, four playmats, four chibi score trackers and a rulebook. Riot says every card in it is obtainable from booster packs.",
+      },
+    ],
+    body: `A disclosure before anything else: **the facts below are Riot's, the opinions are ours.** Every date, card count and product detail in this piece comes from Riot's own 2027 products announcement or its Legacy set page. The reads on what those facts mean — how big the set really is, what the pack change does to opening value, how many people will be playing by January — are our analysis, and we have separated them so you can throw ours out and keep theirs.
+
+Riftbound's sixth set, **Legacy**, releases on **29 January 2027**. It is a genuinely significant release: 346 cards, a regional-identity theme, the game's first draft-focused design, and the first change Riftbound has ever made to what a booster pack contains.
+
+It is also being widely described as the biggest Riftbound set ever, and that part does not survive a careful look.
+
+## First, the size claim
+
+Riot's announcement gives Legacy as **346 cards (93 Showcase)**, three-letter code **LGC**. That got picked up across the hobby press as "the game's largest set to date."
+
+The problem is the same one we ran into writing about [Radiance](/blog/riftbound-radiance-biggest-release-since-origins): Riot has not counted every set the same way. For Origins, Spirit Forged and Unleashed, the headline number is the **base run**, with Showcase printings sitting on top as extra alt-art versions of cards already in that numbering. For Radiance and Legacy, the headline number is the **whole card list**, Showcase included.
+
+Line them up on the same basis:
+
+| Set | Base run | Showcase | Whole card list |
+| --- | --- | --- | --- |
+| [Origins](/sets/origins) | 298 | +54 | **352** |
+| [Spirit Forged](/sets/spiritforged) | 221 | +66 | 287 |
+| [Unleashed](/sets/unleashed) | 219 | +61 | 280 |
+| [Vendetta](/sets/vendetta) | 166 | not published | — |
+| [Radiance](/sets/radiance) | ~114 | 66 | 180 |
+| **Legacy** | **~253** | **93** | **346** |
+| The Reckoning | ~197 | 67 | 264 |
+
+*Legacy's and Radiance's base runs are arithmetic, not Riot figures — the published total minus the published Showcase count. The Proving Grounds starter sets are excluded. Our card database tracks more printings per set than these numbers show, because it also counts promos and every variant printing; these are set-list figures, which is what set announcements are comparing.*
+
+So: **Origins is still the bigger set, on either measure.** 352 against 346 on the whole list, 298 against roughly 253 on base cards. The honest description of Legacy is that it is the biggest set *since* Origins — comfortably, and by more than 50% over Vendetta — and the biggest of the three 2027 sets announced so far.
+
+That is not a criticism. It is a meaningful jump in pool size at a moment when the format has been running on small sets, and it arrives with a 93-card Showcase run that is the largest Riftbound has printed in absolute terms. But "biggest ever" is a headline the numbers do not support, and a reader deciding how much sealed product to buy deserves the real figure.
+
+## The Legends, and the thing nobody has noticed about them
+
+Riot named seven new Legends for Legacy — **Ashe, Garen, Heimerdinger, Illaoi, Karma, Tryndamere and Vladimir** — and promised "four more friends." Lux appears separately as one of the four **Champion Decks** (alongside Tryndamere, Ashe and Garen), which puts her in the set too. Call it twelve champion Legends when the list is complete, matching Origins, Spirit Forged and Unleashed rather than Vendetta's and Radiance's nine.
+
+Here is the part worth pausing on. We checked all eight named champions against our own card database, and **seven of them already have Riftbound cards.** Ashe is in Unleashed. Heimerdinger, Karma and Tryndamere are in Origins. Garen and Lux are in the Origins Proving Grounds starter. Illaoi is in Vendetta.
+
+[[embed:0]]
+
+Only **Vladimir** has never appeared in Riftbound in any form.
+
+That tells you something about what Legacy is doing. This is not a set introducing twelve strangers — it is a set going back and giving Legend cards to champions the game has already been using as ordinary units for a year. Which fits the stated theme exactly: Legacy is about **regional identity**, and you cannot represent Demacia without Garen and Lux, or Freljord without Ashe and Tryndamere, or Bilgewater without Illaoi.
+
+The six regions Riot named — **Demacia, Noxus, Ionia, Piltover/Zaun, Freljord and Bilgewater** — map onto League's most established factions, not its obscure corners. Riot's framing is that the moment you reveal your Legend, you are declaring which region you represent, and the mechanics carry that through.
+
+**Our read:** this is the most conservative champion list Riftbound has shipped, and that is a deliberate choice for a set built to teach a format. Every one of these champions is a League household name with an existing Riftbound footprint. If you were designing the set you wanted new players to draft at their first prerelease, you would pick exactly these.
+
+## The pack change is the actual headline
+
+Buried under the card count is the first change Riftbound has made to booster composition since launch, and it matters more than the set size.
+
+Starting with Legacy, **one Common slot becomes a slot that is either a Legend or a Battlefield, at roughly 50/50 frequency.** Legacy packs — and every set after it — contain **6 Commons instead of 7**.
+
+Riot's stated reasoning is worth quoting fairly: Legends are required to play, so opening your first Akali is fantastic, but opening your third or fourth is a dead slot in an exciting position. They could not remove Legends from packs entirely without breaking limited play, so they moved them into a slot where finding one is never a disappointment. Showcase Legends and Battlefields are unaffected — those still come out of the Overnumber slots.
+
+**Our read, and this is opinion:** this is a quiet but real change to what a booster box is worth, and it cuts in two directions at once.
+
+It raises the floor. A slot that reliably produces a Legend or a Battlefield is a slot that reliably produces something playable, which makes a box better for someone building a collection from scratch and much better for draft.
+
+It probably lowers the ceiling on Commons as a category, because there is simply one fewer of them per pack across the whole print run — and it concentrates a little more of a box's contents into cards that every drafter needs but few players need a fourth of.
+
+What it does to box expected value depends entirely on where Legacy's Legends and Battlefields price once singles trade, and nobody knows that yet. When they do, run the numbers rather than guessing: our [box EV calculator](/tools/box-ev) compares a box's cost against the live singles market, and Legacy will be the first set where the pack maths is genuinely different from the set before it.
+
+## Draft, and why Riot is finally committing to it
+
+Riftbound has had draft rules since shortly after Origins. Legacy is the first set **designed** for them.
+
+Riot named three concrete things. **Cross-champion colour synergies** — mechanics that reward combining champions who overlap in a colour, which is what makes draft picks interesting rather than obvious. **Signpost cards** at low rarity, which telegraph a set's limited archetypes to players opening packs; this is standard practice in mature card games and its absence is one reason earlier Riftbound sets drafted awkwardly. And **updated store Rune Kits** that now include a new **Minion** unit, which players can take freely — like Runes — to fill out a draft deck when the packs do not cooperate.
+
+**Our read:** the Minion in the Rune Kit is the detail that shows this is serious. It is not a marketing line; it is a logistical change to what stores physically receive, which means it went through production planning. Riot is solving the specific failure mode where a drafter ends up with an unplayable deck because the packs did not give them enough bodies — a genuinely off-putting first experience for exactly the audience draft is supposed to attract.
+
+Draft also happens to be the single best format for the problem Riftbound has in front of it. A game with an expanding card pool and a growing player base needs an entry point that does not require owning a constructed deck. If Legacy's draft is good, it becomes the default way a new player plays their first competitive match — and that is worth more to the game's long-term size than any individual card in the set.
+
+## Templating: small changes, large signal
+
+Legacy brings three visual and wording changes to cards:
+
+- A **grey backer** behind words in rules text that are legal targets, so you can see at a glance what "kill a unit at a battlefield" is actually targeting without consulting the core rules.
+- A **new arrow symbol** separating a triggered ability's condition from its effect — everything left of the arrow is the trigger, everything right is what happens.
+- **Word cleanup**: token creation becomes "Create" rather than "Play", and "When you play me" becomes **"When I enter."**
+
+**Our read:** these are the changes of a game settling into its second phase. Riot's own framing — that every TCG goes through a refinement pass after launch, from what designers imagined to what the game actually needs — is an unusually candid thing to put in a product announcement, and it reads as accurate. "Play" carrying four distinct meanings was a real wart. Fixing it in a 346-card set, rather than a small one, means the new templating arrives with enough cards to become the norm immediately instead of being a minority dialect for a year.
+
+For anyone tracking Riftbound rules, our [keywords glossary](/keywords) covers the current terms; expect it to change shape around Legacy.
+
+## The League Classic crossover
+
+Riot has confirmed Legacy features **card art inspired by League Classic** and said nothing else.
+
+**Our read, explicitly speculative:** "League Classic" most plausibly means the original splash-art era — the pre-rework look of champions like Ashe, Garen and Tryndamere, all of whom happen to be on Legacy's Legend list. That would be a nostalgia treatment aimed squarely at players who have been with League for a decade, and it would sit naturally alongside a set about regional identity and heritage.
+
+If that is what it is, it is a chase-card mechanism, and chase mechanisms drive the top of the singles market far more than card counts do. But Riot has published one sentence, we are extrapolating from a champion list, and you should treat this paragraph accordingly. We will update the piece when the previews land rather than leaving a guess standing as though it were reporting.
+
+## The road to 29 January
+
+Legacy does not arrive cold. The four months before it are the densest stretch of organized play Riftbound has ever run, and they culminate in the game's first World Championship cycle:
+
+| When | What |
+| --- | --- |
+| 25–27 September 2026 | **RQ Los Angeles** — the *final* Regional Qualifier of 2026, US$25,000, and where Radiance previews begin |
+| 16–22 October 2026 | Radiance **Pre-Rift** events |
+| 23 October 2026 | **Radiance releases** — 180 cards, including a new Ultimate Rare |
+| 6–8 November 2026 | **European Regional Championship**, Messe Stuttgart — US$50,000 |
+| 11–13 December 2026 | **Convergence Fest**, Las Vegas — plus the **North American Regional Championship**, US$50,000 |
+| 13 December 2026 | **First Legacy preview beat**, at the fest |
+| January 2027 | Further Legacy previews — dates not yet published |
+| 22–28 January 2027 | Legacy **Pre-Rift** events |
+| **29 January 2027** | **Legacy releases** |
+| 19 February 2027 | **Proving Grounds 2nd Edition** — US$40, four Champion decks |
+| 30 April 2027 | **The Reckoning** — set 7, 264 cards |
+
+*A note on the December dates, because the sources genuinely disagree. Riot's Legacy announcement says the preview beat is "part of Convergence Fest, December 13-15." Riot's own roadmap, its Regional Championship page and the official Convergence Fest site all date the festival **11–13 December**. The most sensible reading — and the one Star City Games took — is that the fest runs 11–13 and the Legacy preview beat *starts* on the 13th and continues past it. We have gone with Riot's roadmap over Riot's set announcement.*
+
+Three things stand out. First, Legacy's preview season opens at a **live event** rather than a web post, which is a bet that the community is now large enough for a convention to work as a reveal stage. Second, the two Regional Championships each carry a **US$50,000** pool and send their **Top 8 to Riftbound's first World Championship**, confirmed for 2027 with no date or venue announced yet — so the run-up to Legacy is also the run-up to the biggest competitive moment the game has had. Third, **Proving Grounds 2nd Edition lands three weeks after Legacy**, not alongside it: a refreshed US$40 on-ramp arriving right as lapsed players hear about a draft-friendly set is a sequencing choice, not an accident.
+
+Riot has also teased that The Reckoning is "quite aligned" thematically with Legacy, with more at next year's first State of the Game. Worth filing away: whatever regional identity means mechanically in Legacy, it likely has a second act in April. We keep the full schedule on [release dates](/release-dates) and wrote up the whole 2027 slate in the [2027 set roadmap](/blog/riftbound-2027-set-roadmap).
+
+## How many players will there be by then?
+
+The honest answer first: **Riot has never published a Riftbound player number.** No registered-player count, no monthly actives, no unit sales, no print runs for any main set. Riot Games is privately held and does not break out TCG revenue. Anyone quoting you a player figure — including us — is working from proxies, and we would rather say that than dress an estimate up as a fact.
+
+We went looking specifically, and there is a lot of confidently-repeated nonsense in this area. The "thousands of stores across 85 countries" line circulating on aggregator blogs traces back to an uncited e-commerce post. A "34,000 events, 318,000 seats" figure that turns up in search summaries appears in no document we could locate at all. Neither belongs in an article.
+
+Here is what is actually observable:
+
+- **Regional Qualifier attendance is now in the low thousands per event.** RQ Barcelona in August 2026 drew somewhere between **2,224 and 2,397 players** depending on whether you take the Liquipedia or zero.gg count — and we could not reconcile those two, so we are giving you the range rather than picking the flattering end. [RQ Singapore](/blog/riftbound-meta-shift-radiance-singapore) in early September posted **2,054** players in its final standings. For a game that did not exist two years ago, a single regional pulling two thousand paying entrants is a real signal.
+- **Riftbound has held TCGplayer's #5 slot for Q1 2026 and #6 for Q2**, measured by gross merchandise value across singles and sealed. That puts it just behind the One Piece Card Game, which took roughly four years to climb into the top three.
+- **Supply has been the constraint, not demand.** Riot and distributor UVS Games have publicly described the launch response as overwhelming, with stores reporting shortages; Proving Grounds sold out broadly enough to need a confirmed reprint.
+- **The 2027 competitive structure is being rebuilt to be wider, not just taller.** Regional Qualifiers become "Riftbound Regionals" at roughly three to four per set. Regional Championships become "Riftbound Continentals" — four a year, one per set — and critically, **Day 1 of a Continental becomes an open qualifier** for players who have not already qualified. A new monthly "Nexus Cup" sits at store level alongside weekly Nexus Nights.
+
+**Our estimate, and it is an estimate:** we expect Legacy to launch into a competitive player base meaningfully larger than Vendetta's — our working assumption is roughly half again as large at the organized-play level, with a genuine possibility of double. In observable terms, that would look like the first 2027 Regionals clearing **3,000 entrants**, against the ~2,000–2,400 the late-2026 qualifiers are posting.
+
+We would rather be judged on the mechanism than the multiple, so here is the mechanism, and it is two things arriving at once.
+
+**Draft lowers the cost of a first game.** A player who has never bought a constructed deck can sit down at a Legacy draft with three packs and compete. Every mature card game leans on this; Riftbound has had the rules for it since Origins but never a set built for it. If Legacy's limited format is good, January 2027 is when Riftbound stops being a game you buy into and starts being one you can walk into.
+
+**The open Day 1 at Continentals removes the other barrier.** Under the 2026 structure you needed a Top 64 at a qualifier to reach a Championship. Under the 2027 structure you can show up. Those two changes point the same direction, and they land within weeks of each other.
+
+Where we would push back on our own optimism: none of this is evidence that the *casual* player base grows at the same rate. Tournament attendance measures the committed end, and it is the only end anybody publishes numbers for. A game can have a booming competitive scene and a flat kitchen-table one, and from the outside we genuinely cannot tell the difference. We have written separately about the longer-run [top-two-TCG case](/blog/why-riftbound-could-become-a-top-two-tcg) — that piece is opinion too, and should be read as such.
+
+## What this means if you are buying
+
+- **If you play:** do nothing until previews. Legacy is four and a half months out and the entire card list is unrevealed. The only actionable thing today is that seven of eight named Legends already have cards you can look at.
+- **If you buy sealed:** the pack change makes Legacy the first Riftbound set where box maths differs from the set before it. Wait for real singles prices, then run [box EV](/tools/box-ev). Preorder pricing has sat above post-release singles for every Riftbound set so far.
+- **If you speculate on champions:** the existing printings of Legacy's named champions are the obvious watch list, and the obvious trap. A Legend card for a champion does not reliably lift that champion's older, unrelated cards. Set a [price alert](/alerts) and watch what actually happens at Convergence Fest rather than buying the announcement.
+- **If you are selling:** the window between one set's reveal season and the next set's release is historically when interest in the *current* set is weakest. [Movers](/movers) will show you whether that is happening to Radiance in January.
+
+## What would make this call wrong
+
+- **The size correction could be the wrong thing to focus on.** If Legacy's 253-ish base cards are dense with format-defining playables, pool size in the abstract will not matter and we will have spent a section on bookkeeping.
+- **The pack change could be worse than it looks.** Six Commons instead of seven means slightly less raw material for draft decks, and if the Legend/Battlefield slot skews toward Battlefields nobody wants, the "reliably playable" argument weakens.
+- **Draft might not land.** Designing for draft and succeeding at it are different things, and a set's limited format can be flat for reasons that are invisible until thousands of games have been played.
+- **Our player-growth read assumes the Regional Championship cycle goes well.** A first championship season that runs badly — logistics, judging, a broken metagame — is a story that spreads faster than a good one.
+- **"League Classic" might be nothing.** One sentence is one sentence. If the crossover turns out to be a handful of alternate arts rather than a treatment tier, the chase-card argument evaporates.
+
+## The short version
+
+Legacy is not Riftbound's biggest set — Origins still is, on both measures — but it is the biggest since, and the numbers are not what makes it interesting anyway.
+
+What makes it interesting is that it is the first Riftbound set to change what a booster pack contains, the first designed for the format that grows player bases fastest, and the first to go back and give Legend cards to champions the game has been quietly using for a year. It arrives at the end of the densest four months of organized play the game has had, three weeks before a refreshed US$40 starter box.
+
+We will update this page as previews land from Convergence Fest onward. Until then, watch [release dates](/release-dates) for the countdown and [movers](/movers) for what the market does to Radiance on the way.`,
+  },
   ...SEO_PACK_ARTICLES,
   {
     slug: "riftbound-gift-of-the-rift-bundle",
