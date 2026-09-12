@@ -5559,3 +5559,55 @@ The site gained a light/dark toggle. Every component hard-codes dark classes
   is already full. The two stay in sync via one window event.
 - Things deliberately left dark: OG images, the embeds, the print stylesheet,
   and the Google sign-in button (white by Google's rules, now `bg-[#ffffff]`).
+
+---
+
+## Three posts from a keyword brief, and the eleven ideas we declined — 2026-09-12
+
+A keyword brief proposed roughly a dozen content targets. Nine of them were
+already owned by a page with the query in its own H1, and shipping next to
+those is precisely the shape that cost this site an AdSense low-value-content
+rejection (see `docs/SET-LAUNCH-RUNBOOK.md` §6). So the pass audited first and
+wrote second, and published three.
+
+**Declined, with the owner that already exists**: Radiance/Legacy news
+(`/blog/riftbound-radiance-what-we-know`, refreshed two days earlier, plus the
+Legacy spoilers post); region-modified price queries (six per-market posts plus
+the 4,800-word `/guides/where-to-buy-riftbound-cards`); set checklists
+(`whats-in-the-riftbound-<set>-set` ×3 + the Vendetta list); card-name price
+long-tails (`/card/<slug>`); deck-cost queries (three guides — Best Basket,
+budget decks, cheapest way to start); the pack simulator (`/games/pack-sim`);
+Riftle (`/riftle`, which already carries "Riftbound Wordle" as an
+`alternateName`); the price index (`/market` + its methodology guide); and
+"riftbound tier list" (`/decks`, whose H1 is literally *Riftbound Meta Tier
+List & Top Decks*). Also declined: `riftbound card prices` and its variants —
+the keyword map's own "price-modifier long-tails" section rules those out as a
+page's primary target on near-zero volume.
+
+**Published**, each owning an intent nothing on the site owned:
+
+- `/guides/riftbound-card-size-sleeves-deck-boxes` — closes the editorial half
+  of backlog item 14. Two facts here are computed from our own data rather than
+  asserted: **56 of 950 catalogued cards are landscape** (all Battlefields,
+  from `orientation`), and **every one of the ten tracked tournament decks is
+  65 cards** as 40 main + 12 runes + 3 battlefields + 10 sideboard — which is
+  why the advice is "buy 65 sleeves, not 40". The existing gradient-sleeves
+  guide keeps the narrower aesthetic query and is linked as the colour step.
+  Playmats are a SECTION, not the separate page item 14 scoped: the whole
+  honest answer is "standard size, buy what you like".
+- `/blog/are-riftbound-cards-cheaper-in-another-country` — the *should I leave
+  my market* decision, deliberately distinct from where-to-buy's *which stores
+  in my market*. **No invented price gaps**: no production database here, so it
+  teaches delivered-cost arithmetic (FX spread, de minimis thresholds, the
+  courier's fixed handling fee) and points at the live comparison rather than
+  claiming market X is N% cheaper this week — a number with a one-week shelf
+  life.
+- `/guides/how-much-is-your-riftbound-collection-worth` — a repo-wide search
+  for "collection worth" returned **zero** hits across articles and routes,
+  despite `/portfolio` and `/bulk-pricer` existing to answer exactly that. The
+  guide separates market / cash / replacement value, which is where most
+  valuation disappointment comes from.
+
+All three carry `faq` (so FAQPage JSON-LD and the visible Q&A come from one
+source), `summary` answer boxes, generated heroes, and ownership rows in
+`docs/seo-keyword-map.md` — added *before* publishing, per that file's own rule 3.

@@ -376,6 +376,39 @@ const HEROES: Hero[] = [
       items: ["Domains ≈ colors", "Runes ≈ manabase", "Constructed formats", "Singles market"],
     },
   },
+  // ── Accessories, import economics and collection valuation (12 Sep 2026).
+  {
+    slug: "riftbound-card-size-sleeves-deck-boxes",
+    kicker: "Guide \u00B7 Accessories",
+    title: "Riftbound Card Size & Sleeves",
+    chips: ["Standard size", "65 sleeves a deck", "56 landscape cards"],
+    // The deck arithmetic IS the article's most useful fact, and it is a list of
+    // parts that sum to one number — which is exactly what checklist draws.
+    motif: {
+      kind: "checklist",
+      label: "One deck",
+      items: ["40 main deck", "12 runes", "3 battlefields", "10 sideboard", "= 65 sleeves"],
+    },
+  },
+  {
+    slug: "are-riftbound-cards-cheaper-in-another-country",
+    kicker: "Analysis \u00B7 Prices",
+    title: "Cheaper In Another Country?",
+    chips: ["6 markets", "6 currencies", "Delivered cost"],
+    // Bars (the default price-comparison motif) is honest here: the post IS a
+    // price comparison, just across markets rather than across stores.
+  },
+  {
+    slug: "how-much-is-your-riftbound-collection-worth",
+    kicker: "Guide \u00B7 Collection",
+    title: "What's Your Collection Worth?",
+    chips: ["Market vs cash", "Condition", "Bulk pricing"],
+    motif: {
+      kind: "checklist",
+      label: "Three values",
+      items: ["Market value", "Cash value", "Replacement value"],
+    },
+  }
 ];
 
 const esc = (s: string) =>

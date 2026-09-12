@@ -1,4 +1,25 @@
 {
+  "/blog/are-riftbound-cards-cheaper-in-another-country.png": {
+    "src": "/blog/are-riftbound-cards-cheaper-in-another-country.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48066,
+    "webp": "/blog/are-riftbound-cards-cheaper-in-another-country.webp",
+    "webpBytes": 24842,
+    "avif": "/blog/are-riftbound-cards-cheaper-in-another-country.avif",
+    "avifBytes": 15862,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/are-riftbound-cards-cheaper-in-another-country-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/are-riftbound-cards-cheaper-in-another-country-768w.webp"
+      }
+    ],
+    "fingerprint": "4b56a0c621fb0fc8"
+  },
   "/blog/astral-heron-ven044.jpg": {
     "src": "/blog/astral-heron-ven044.jpg",
     "width": 716,
@@ -157,6 +178,27 @@
       }
     ],
     "fingerprint": "093b3e8bf20ce340"
+  },
+  "/blog/how-much-is-your-riftbound-collection-worth.png": {
+    "src": "/blog/how-much-is-your-riftbound-collection-worth.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 35516,
+    "webp": "/blog/how-much-is-your-riftbound-collection-worth.webp",
+    "webpBytes": 25646,
+    "avif": "/blog/how-much-is-your-riftbound-collection-worth.avif",
+    "avifBytes": 16455,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/how-much-is-your-riftbound-collection-worth-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/how-much-is-your-riftbound-collection-worth-768w.webp"
+      }
+    ],
+    "fingerprint": "8899c192faf02fe8"
   },
   "/blog/how-to-choose-a-riftbound-marketplace.png": {
     "src": "/blog/how-to-choose-a-riftbound-marketplace.png",
@@ -421,6 +463,27 @@
       }
     ],
     "fingerprint": "1fd35b894ea71e1b"
+  },
+  "/blog/riftbound-card-size-sleeves-deck-boxes.png": {
+    "src": "/blog/riftbound-card-size-sleeves-deck-boxes.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 48295,
+    "webp": "/blog/riftbound-card-size-sleeves-deck-boxes.webp",
+    "webpBytes": 33688,
+    "avif": "/blog/riftbound-card-size-sleeves-deck-boxes.avif",
+    "avifBytes": 17780,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-card-size-sleeves-deck-boxes-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-card-size-sleeves-deck-boxes-768w.webp"
+      }
+    ],
+    "fingerprint": "e62486405e226746"
   },
   "/blog/riftbound-card-values.png": {
     "src": "/blog/riftbound-card-values.png",

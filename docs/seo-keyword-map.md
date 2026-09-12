@@ -82,6 +82,28 @@ explicit link up/down to the primary).
 | `riftbound reddit`, `riftbound discord`, `riftbound gallery` | `/learn/riftbound-community-hubs` (**not built**, backlog item 16) | — |
 | `uvs riftbound`, `lorcana`, `mtg commander` (comparison) | `/learn/riftbound-vs-universus-lorcana-mtg` (**not built**, backlog item 16) | — |
 
+## Accessories intent
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `riftbound card size`, `what size are riftbound cards`, `riftbound card sleeve size`, `what size sleeves for riftbound` | `/guides/riftbound-card-size-sleeves-deck-boxes` (added 2026-09-12 — closes backlog item 14's sleeves/deck-box half) | — |
+| `best sleeves for riftbound`, `riftbound deck box`, `riftbound storage box`, `riftbound binder` | `/guides/riftbound-card-size-sleeves-deck-boxes` — the accessory hub: sizing, the 65-sleeve deck arithmetic from the tracked tournament lists, deck-box capacity, binder page maths | `/guides/gradient-sleeves-for-riftbound-cards` keeps the narrower **aesthetic** query (`gradient sleeves riftbound`) and is linked as the colour-selection step; `/guides/how-to-store-and-protect-riftbound-cards` (450 words, long-term storage + humidity) links UP to the hub rather than competing |
+| `riftbound playmat`, `riftbound playmat size` | `/guides/riftbound-card-size-sleeves-deck-boxes` (playmat section) — deliberately NOT a separate `/guides/riftbound-playmats` page as backlog item 14 originally scoped: the whole answer is "standard size, buy what you like", which is a section, not a page | — |
+
+## Cross-market / import intent
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `are riftbound cards cheaper in <country>`, `cheapest country to buy riftbound cards`, `import riftbound cards`, `riftbound cards uk vs us price` | `/blog/are-riftbound-cards-cheaper-in-another-country` (added 2026-09-12) — the **should I leave my market** decision: delivered cost, de minimis thresholds, FX spread, and when importing genuinely pays | `/guides/where-to-buy-riftbound-cards` answers the different question **which stores in MY market** (4,800 words, six per-market sections) and stays primary for `where to buy riftbound`. The two link to each other explicitly; neither targets the other's phrase in its title or H1 |
+| `buy riftbound cards <market>` | unchanged — the six per-market posts in the Regional buying intent table above | The import post links out to all six rather than restating any of them |
+
+## Collection valuation intent
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `how much is my riftbound collection worth`, `riftbound collection value`, `value my riftbound cards`, `riftbound collection appraisal` | `/blog`-adjacent guide `/guides/how-much-is-your-riftbound-collection-worth` (added 2026-09-12). **Nothing owned this intent before** — a repo-wide search for "collection worth" returned zero hits across articles and routes, despite `/portfolio` and `/bulk-pricer` both existing to answer it | `/bulk-pricer` and `/portfolio` are the TOOLS the guide sends you to — tool intent, not question intent, so no cannibalisation. `/guides/most-valuable-riftbound-cards` stays primary for `most valuable riftbound cards` (which cards), a different question from `what is mine worth` (how much) |
+| `how to sell riftbound cards` | unchanged — `/blog/how-to-sell-riftbound-cards` | The valuation guide stops at the number and hands off to the selling post for the channels |
+
 ## Price-modifier long-tails — deliberately NOT primary-targeted
 
 Per the trend data's own finding: `riftbound singles`, `riftbound card prices`,

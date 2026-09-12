@@ -8296,6 +8296,572 @@ We will update this post as the price is confirmed and as the first real sales d
       blurb: "Booster boxes, bundles and gift sets across every store we track, with shipping included in the total.",
     },
   },
+  // ── Accessories: the sleeve/deck-box/binder cluster (backlog item 14, which
+  // flagged playmats/sleeves/deck boxes as a real trend signal and "buildable
+  // without new infra, deferred on time"). Category "guide": evergreen reference,
+  // not news — it should never enter the 2-day news-sitemap window.
+  //
+  // PRIMARY for "riftbound card sleeve size" / "best sleeves for riftbound" /
+  // "riftbound deck box". The existing gradient-sleeves guide stays the primary
+  // for the narrower "gradient sleeves riftbound" aesthetic query and is linked
+  // as the colour-selection step; how-to-store-and-protect (450 words, storage
+  // and grading-adjacent) links up to this one rather than competing.
+  //
+  // The two facts here nobody else has are computed from our own catalogue and
+  // the tracked tournament lists, not asserted: 56 of the 950 catalogued cards
+  // are landscape Battlefields (prisma/riftbound-cards.json's `orientation`),
+  // and every one of the ten decks in prisma/meta-decks.json totals 65 cards as
+  // 40 main + 12 runes + 3 battlefields + 10 sideboard.
+  {
+    slug: "riftbound-card-size-sleeves-deck-boxes",
+    category: "guide",
+    title: "What Size Are Riftbound Cards? Sleeves, Boxes & Binders",
+    excerpt:
+      "Riftbound cards are standard trading-card size, so any standard sleeve fits. But a real tournament deck needs 65 sleeves rather than 40, and 56 cards in the game are landscape. The complete accessory guide.",
+    author: "RiftCompare",
+    date: "2026-09-12",
+    readMins: 11,
+    tags: ["sleeves", "accessories", "deck box", "binder", "playmat", "storage", "guide"],
+    hero: {
+      src: "/blog/riftbound-card-size-sleeves-deck-boxes.png",
+      alt: "Riftbound card size and accessories — standard-size sleeves, deck boxes and binders, plus the landscape Battlefield exception",
+    },
+    summary: [
+      "**Riftbound cards are standard trading-card size** — the same as Magic, Pokemon and most modern TCGs. Any sleeve sold as *standard size* fits. There is no Riftbound-specific dimension to hunt for.",
+      "**Buy 65 sleeves per deck, not 40.** Every one of the ten tournament lists we track is 40 main-deck cards plus 12 runes, 3 battlefields and a 10-card sideboard.",
+      "**56 cards in the game are landscape**, and they are all Battlefields. They take the same sleeve, turned sideways — which changes nothing about sleeving and quite a lot about binders and playmats.",
+      "**Deck-box capacity is about thickness, not card count.** A 100-card box will not hold 65 double-sleeved cards.",
+      "**Sleeve the deck you play; protect the cards that are worth protecting.** Those are two different jobs with two different products.",
+    ],
+    faq: [
+      {
+        q: "What size sleeves do Riftbound cards need?",
+        a: "Standard size, usually sold as 66 x 91 mm or 2.5 x 3.5 inches and often labelled for Magic: The Gathering or Pokemon. Riftbound is printed at the standard trading-card size, so there is no game-specific sleeve to find and you are shopping the whole standard-size market rather than a narrow one.",
+      },
+      {
+        q: "Are Riftbound cards the same size as Magic and Pokemon cards?",
+        a: "Yes. That is why a Riftbound deck can share sleeves, deck boxes, binders and playmats with any other standard-size TCG, and why sleeve prices for Riftbound track the general sleeve market rather than carrying a Riftbound premium.",
+      },
+      {
+        q: "How many sleeves do I need for one Riftbound deck?",
+        a: "65 if you want the whole thing sleeved. Every deck in our tracked tournament list is 40 main-deck cards (the champion Legend plus 39 units, spells and gear), 12 runes, 3 battlefields and a 10-card sideboard. A 100-count pack covers one deck with 35 spare; two packs cover two decks properly.",
+      },
+      {
+        q: "Do Battlefield cards need different sleeves?",
+        a: "No. Battlefields are printed in landscape rather than portrait, but at the same dimensions, so a standard sleeve fits — you just insert the card sideways. It matters for binders and playmat layout, not for sleeve shopping.",
+      },
+      {
+        q: "What size deck box should I buy for Riftbound?",
+        a: "Look at stated capacity for sleeved cards, not raw card count, and add headroom. A 65-card deck single-sleeved sits comfortably in a box rated around 100 cards; the same deck double-sleeved needs roughly a 150-count box. Boxes quoting capacity for unsleeved cards will not close on a sleeved deck.",
+      },
+      {
+        q: "How big a binder do I need for a full Riftbound set?",
+        a: "For a 9-pocket binder, divide the set size by nine and add pages for alternate printings. Origins at 298 base cards needs 34 pages one-sided, or 17 sheets used both sides. Sets vary — see our set-by-set breakdowns for the exact counts before buying.",
+      },
+    ],
+    browseCta: {
+      href: "/guides/how-to-store-and-protect-riftbound-cards",
+      label: "Storing cards long term",
+      blurb: "Top-loaders, one-touches and humidity — what to do with the cards that are too valuable to play.",
+    },
+    shop: [
+      { label: "Standard-size card sleeves", query: "trading card sleeves standard size matte" },
+      { label: "Deck boxes", query: "tcg deck box 100 double sleeved" },
+      { label: "9-pocket binders", query: "9 pocket trading card binder side loading" },
+    ],
+    body: `Sleeves are the cheapest insurance in the hobby and the easiest thing to get slightly wrong. This guide answers the sizing question first, because that is what most people actually came for, then covers the three purchases that follow it — sleeves, a deck box and a binder — with the numbers that come from this game specifically rather than from trading cards in general.
+
+## The short answer on card size
+
+**Riftbound cards are printed at the standard trading-card size.** That is the same size used by Magic: The Gathering, Pokemon, One Piece, Lorcana and essentially every modern physical TCG: nominally 63 x 88 mm for the card itself, with sleeves for that size sold as 66 x 91 mm to leave a working tolerance.
+
+The practical consequence is the useful part. **You are not shopping a Riftbound-specific accessory market.** Any sleeve, deck box, binder, top-loader or playmat sold for standard-size cards works, which means you get the whole market's pricing, colour range and availability rather than a narrow game-branded subset at a game-branded price. If a product page says "standard size" or lists Magic or Pokemon compatibility, it fits.
+
+That single fact makes almost every other accessory decision cheaper, and it is worth knowing before you pay a premium for anything with "Riftbound" printed on the packaging.
+
+## The exception nobody mentions: 56 cards are sideways
+
+Here is the detail that general sleeve advice will not tell you, because it is specific to this game.
+
+Of the **950 cards in our catalogue, 56 are printed in landscape**. Every single one of them is a **Battlefield**. The other 894 — units, spells, gear, runes and champion Legends — are portrait, the orientation you expect.
+
+Battlefields are the same dimensions as everything else, so **they take the same standard sleeve; you just insert them turned ninety degrees**. Nothing about sleeve shopping changes. What does change:
+
+- **Binder pages.** A landscape card in a portrait 9-pocket page sits with white space above and below, and reads as a gap in an otherwise tidy page. Collectors who care about how a binder looks tend to give Battlefields their own page rather than scattering them through the set in collector-number order.
+- **Playmat layout.** Battlefields are contested during play and sit in the middle of the table rather than in your own rows. If you are choosing a playmat, the zone that matters is the shared middle, not the width of your hand.
+- **Top-loaders.** A rigid top-loader is portrait. A landscape Battlefield goes in sideways and does not fill it, which looks wrong and lets the card shift. For a Battlefield worth protecting, a **one-touch magnetic holder** is the better call — those are square enough to present either orientation properly.
+
+It is a small thing, but it is the kind of small thing you only discover after buying the wrong binder.
+
+## How many sleeves a Riftbound deck actually needs
+
+This is where most people under-buy, because the instinct from other games is to count the main deck and stop.
+
+We track ten real tournament decklists. **Every one of them totals 65 cards**, and the composition is remarkably consistent:
+
+| Part of the deck | Cards | Notes |
+| --- | --- | --- |
+| **Main deck** | **40** | The champion Legend plus 39 units, spells and gear |
+| **Runes** | **12** | A separate deck, and yes, they get sleeved too |
+| **Battlefields** | **3** | The landscape ones |
+| **Sideboard** | **10** | Carried to every event |
+| **Total** | **65** | |
+
+So the honest number is **65 sleeves per deck**, not 40. The runes catch people out most: they are a physically separate deck that gets shuffled and handled every single game, which makes them *more* exposed to wear than a main-deck card you might draw once a match, not less.
+
+Practically, **a 100-count pack of sleeves covers one deck with 35 spare** — which is about right, because you will replace split sleeves over a season. If you are building two decks, buy two packs rather than trying to stretch one; mixing sleeve batches part-way through a deck creates a visible difference that a judge is entitled to take seriously.
+
+If you want to see what a full deck costs to assemble before you spend anything on sleeves for it, **[Best Basket](/tools/best-basket)** takes a decklist and works out the cheapest store split once postage is counted, and **[the meta decks page](/decks)** carries the lists themselves with live build costs.
+
+## Choosing sleeves: the four things that actually matter
+
+Ignore the marketing and there are four real variables.
+
+**Opacity.** The back of the sleeve must be completely opaque. A sleeve that lets even a faint shadow of the card through is a marked deck in any tournament, whether or not you intended it. This is the one specification where you should not economise, and it is the usual failure of very cheap bulk sleeves.
+
+**Finish.** Matte shuffles better and photographs without glare; gloss looks sharper on the shelf and slides more. For a deck that gets shuffled every game, **matte is the default choice** for almost everyone. Gloss makes more sense for a binder or a display piece.
+
+**Thickness.** Measured in microns. Thicker resists bending and holds shape in a box; thinner keeps the deck slim enough to shuffle comfortably. For a single-sleeved deck, mid-range is fine. Thickness becomes a real decision only when double-sleeving, which is the next section.
+
+**Consistency of the batch.** Sleeves from the same production run should be identical. Cheap sleeves vary enough between packs that a mixed deck can be distinguishable card-to-card — the same marked-deck problem as an opacity failure, arrived at differently.
+
+Once those are settled, colour is a free choice, and Riftbound gives it an actual job: each domain has a fixed official colour, so sleeves can signal what you are playing. Our **[gradient sleeves guide](/guides/gradient-sleeves-for-riftbound-cards)** covers pairing a fade to a one- or two-domain deck, which is the genuinely Riftbound-specific part of the colour decision.
+
+## Double-sleeving: worth it, but not for every deck
+
+Double-sleeving means a thin inner sleeve on the card, usually inserted upside down so the card is fully enclosed, then the outer sleeve you actually shuffle. It gives you near-complete protection from spills and edge wear.
+
+It is worth it when **the cards in the deck are individually expensive** — a chase-rarity Legend or a Showcase print you would not casually replace. It is not worth it for a budget build, where the sleeving costs a meaningful fraction of the deck's value and the shuffle feel gets worse for nothing.
+
+The trade-off is real: a double-sleeved 65-card deck is **noticeably thicker and stiffer** than the same deck single-sleeved, which changes both how it shuffles and what box it fits in. Which brings us to the purchase people most often get wrong.
+
+## Deck boxes: the capacity number is not the card count
+
+A deck box quoting "holds 100 cards" is usually quoting **unsleeved** cards. That is close to useless as a guide, because nobody carries unsleeved cards.
+
+The rough conversion:
+
+- **65 cards, single-sleeved** — comfortable in a box rated around **100**.
+- **65 cards, double-sleeved** — needs roughly a **150-count** box.
+- **A deck plus its runes and battlefields as separate stacks** — many players prefer a box with an internal divider or a second compartment, so the 12 runes are not shuffled into the main deck by accident between games.
+
+Add headroom in both cases. A box you have to force closed puts constant pressure on the sleeves at the top of the stack and will split them along the seam within a season.
+
+## Binders: size it from the set, not from a guess
+
+For long-term storage of cards you are not playing, a binder is the right answer, and the size follows from arithmetic rather than taste.
+
+A standard **9-pocket page holds 9 cards per side, 18 per sheet**. So:
+
+- **Origins**, at 298 base cards, needs **34 pages one-sided** — 17 sheets if you fill both sides.
+- Smaller sets scale down proportionally. Our set breakdowns carry exact base counts: **[Origins](/guides/whats-in-the-riftbound-origins-set)**, **[Spirit Forged](/guides/whats-in-the-riftbound-spirit-forged-set)** and **[Unleashed](/guides/whats-in-the-riftbound-unleashed-set)**, plus **[every set in release order](/guides/riftbound-sets-in-order)**.
+
+Then add pages. **Alternate arts, Showcase treatments, promos and signature prints are not in the base numbering**, and they are the cards you most want in a binder. Budget roughly 25 to 35 percent more pages than the base count implies, or you will be rebuilding the binder the first time you complete a chase row. If completing a set is the goal, **[how to complete a Riftbound set](/guides/riftbound-set-checklist-how-to-complete-a-set)** covers the order to do it in.
+
+Two binder specifications matter beyond size. **Side-loading pockets** rather than top-loading, so cards cannot slide out when the binder is carried or stored flat. And a **strap or zip closure** rather than a ring binder — rings dent cards at the spine, and a full ring binder does not close flat, which is how corners get crushed.
+
+## Playmats, and what you can skip
+
+A playmat is genuinely useful for play: it stops cards sliding on a table, gives you a clean surface to pick up from, and reduces edge wear when you slide a card off the table edge. Standard TCG playmat sizing works, since the card size is standard. Buy one you like the look of.
+
+What you can skip, at least at first:
+
+- **Game-branded accessories at a premium.** The size is standard; the premium buys you artwork, not fit.
+- **Top-loaders for bulk.** They are for individual valuable singles, not for storing quantity. A binder or a storage box does that job better and cheaper.
+- **Rigid cases for anything you actually play.** A card in a one-touch is a card you are not playing.
+
+## What a new player actually needs on day one
+
+If you have just bought your first deck and want the short version, this is the whole list:
+
+1. **One 100-count pack of matte, fully opaque, standard-size sleeves.** Covers the 65-card deck with spares.
+2. **One deck box rated around 100 sleeved cards**, ideally with a divider so the runes stay separate.
+3. **Nothing else.**
+
+A playmat is a nice-to-have that improves play and protects card edges, and it can wait until you know you are staying. A binder is for a collection, not a deck, and you do not have a collection yet. Top-loaders are for individual cards worth more than your deck, and you will know when you own one.
+
+The total is small, and it is the highest return-on-cost purchase in the hobby: an unsleeved deck played weekly picks up visible edge wear within a month, and a card that drops from near-mint to lightly played has lost a real slice of its value for the sake of a purchase you could have made for the price of two booster packs.
+
+## One rule-level reason to take sleeves seriously
+
+Worth stating plainly because it catches people at their first event: **sleeves are part of your deck's legality, not just its protection.**
+
+Two requirements do the work. Every sleeve in a deck must be **identical** — same product, ideally the same batch. And the backs must be **opaque and unmarked**, with no scratches, scuffs or bends that would let any card be identified from the back.
+
+A deck with three replacement sleeves from a different pack, or a handful of sleeves that have picked up distinguishing scuffs over a season, is a marked deck as far as a judge is concerned, regardless of intent. That is why the advice above is to buy a 100-count pack for a 65-card deck rather than exactly enough: mid-season replacements come from the same pack, and the deck stays uniform.
+
+It is also the strongest practical argument for matte over gloss for a deck you actually play. Gloss shows scuffing more readily, and scuffing is the thing that turns a legal deck into a marked one.
+
+## Protect what is worth protecting
+
+The last point is the one that saves the most money, and it is a sorting problem rather than a shopping one.
+
+**Most of a Riftbound collection is not worth protecting individually.** Commons and uncommons are worth pennies and belong in a bulk storage box. The value sits in a small number of cards — Showcase treatments, signature prints, chase rarities — and those are the ones that justify a one-touch, a top-loader, or a slot in a binder page rather than a box.
+
+To find which of yours are which, **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** shows where the top of the market sits, and **[the bulk pricer](/bulk-pricer)** will value a list of cards at once so you can sort by what they are actually worth rather than by what feels rare. For anything you are considering grading, **[condition](/guides/riftbound-card-condition-guide)** matters more than protection after the fact — a card that is already lightly played will not grade well no matter how well you store it from today.
+
+[[shop]]
+
+Then store the rest properly and stop thinking about it: **[how to store and protect Riftbound cards](/guides/how-to-store-and-protect-riftbound-cards)** covers the longer-term questions — humidity, sunlight, and what actually degrades a card sitting in a box for a year.`,
+  },
+  // ── Cross-market import economics. PRIMARY for "are riftbound cards cheaper
+  // in <country>", "cheapest country to buy riftbound cards", "import riftbound
+  // cards". Deliberately NOT competing with /guides/where-to-buy-riftbound-cards
+  // (4,800 words, the six-market umbrella): that page answers "which stores in
+  // MY market", this one answers "should I leave my market at all", which is a
+  // different decision with a different answer per reader. Both link to each
+  // other explicitly, and the keyword map carries the Primary/Secondary row.
+  //
+  // NO INVENTED PRICE GAPS. We track six markets in six currencies, but this
+  // sandbox has no production database, so the post teaches the arithmetic and
+  // points at the live comparison rather than asserting that market X is N%
+  // cheaper this week — a number that would be wrong by the time it published.
+  {
+    slug: "are-riftbound-cards-cheaper-in-another-country",
+    category: "blog",
+    title: "Are Riftbound Cards Cheaper in Another Country?",
+    excerpt:
+      "Sometimes — but the currency gap is rarely the reason, and shipping plus import tax undoes most of it. How to work out whether importing Riftbound singles or sealed actually saves you money, using live prices in six markets.",
+    author: "RiftCompare Markets Desk",
+    date: "2026-09-12",
+    readMins: 10,
+    tags: ["prices", "import", "regions", "buying", "market analysis"],
+    hero: {
+      src: "/blog/are-riftbound-cards-cheaper-in-another-country.png",
+      alt: "Comparing Riftbound card prices across six markets — US, Australia, UK, Singapore, Canada and the EU",
+    },
+    summary: [
+      "**Often yes on the sticker price, usually no once it lands.** Shipping and import tax undo most cross-market gaps on anything under roughly a hundred units of your own currency.",
+      "**The exchange rate is the least interesting cause.** Real gaps come from store density, release timing and which market a product was allocated to — not from the currency itself.",
+      "**Importing is worth it in three specific cases**: high-value singles, sealed product your market never got, and a market where nobody stocks the card at all.",
+      "**The number that matters is delivered cost**, in your own currency, with tax — never the shelf price. Every comparison below is built on that.",
+      "**You can check it in under a minute** with the region switcher, rather than reasoning about it in the abstract.",
+    ],
+    faq: [
+      {
+        q: "Are Riftbound cards cheaper in the US than the UK?",
+        a: "On the shelf price, frequently — the US has the deepest store coverage and the most competition, which usually shows up as a lower listed price. Delivered into the UK, that advantage is often gone: international postage plus UK import VAT and the handling fee the courier charges to collect it typically add more than the gap on anything but a high-value single. Compare the delivered numbers on our [UK buying guide](/blog/buy-riftbound-cards-uk) and [US buying guide](/blog/buy-riftbound-cards-us) rather than the shelf prices.",
+      },
+      {
+        q: "Which country is cheapest for Riftbound cards?",
+        a: "There is no single answer that holds for every card or for long. Market prices move independently — a card can be cheapest in the US this week and cheapest in the EU next week after a local tournament result. Rather than memorise a ranking, use the market switcher on any card page to see all tracked markets in their own currency at the moment you are buying.",
+      },
+      {
+        q: "Do I pay import tax on Riftbound cards?",
+        a: "It depends on your country's de minimis threshold — the value below which small parcels are exempt — and that threshold varies widely between the markets we track. Above it you can expect sales tax or VAT on the declared value plus, usually, a fixed handling fee from the courier for collecting it. That fixed fee is what makes importing low-value singles uneconomic: it does not shrink just because the parcel is small.",
+      },
+      {
+        q: "Is it worth importing Riftbound sealed product?",
+        a: "Only when your own market genuinely does not have it, or the gap is large enough to survive the shipping cost of a heavy item. Booster boxes are dense and expensive to post internationally, and they are the product most likely to be allocated to every market anyway. Sealed exclusives that never got a local release are the real case for importing.",
+      },
+      {
+        q: "Does buying in a cheaper currency actually save money?",
+        a: "Not by itself. A card priced lower in another currency is only cheaper if the converted total, after your bank's conversion spread and any card fee, beats your local delivered price. Banks and payment processors typically take a margin on conversion, which is a real cost that never appears on the listing.",
+      },
+      {
+        q: "How does RiftCompare price cards in six markets?",
+        a: "Each market is priced in its own currency from stores that actually ship there, rather than converting one market's prices into six. That is the whole point: a converted price tells you what a card costs somewhere else, not what you would pay. See [where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards) for the per-market store coverage.",
+      },
+    ],
+    browseCta: {
+      href: "/browse",
+      label: "Compare prices in your market",
+      blurb: "Every tracked store, in your own currency — switch markets from the header to see the same card priced elsewhere.",
+    },
+    body: `It is one of the most reasonable questions in the hobby: the same card seems to cost less somewhere else, so why not buy it there? Sometimes that is exactly right. More often the gap you can see is smaller than the costs you cannot, and the honest answer depends on three numbers rather than one.
+
+This post is the arithmetic. It does not tell you that market X is cheapest today, because that is a claim with a shelf life of about a week — what it does is show you how to work it out for the card you are actually buying, in the market you are actually in.
+
+## Why the same card has six different prices
+
+We track six markets — the United States, Australia, the United Kingdom, Singapore, Canada and the EU — and each one is priced **in its own currency, from stores that genuinely ship there**. That design decision matters for this question, because the alternative approach, taking one market's prices and converting them, would make every market look identical apart from the exchange rate. Real markets are not like that.
+
+Four things create genuine differences:
+
+**Store density and competition.** A market with more competing retailers prices more aggressively. This is the single biggest driver, and it is why the US shelf price is frequently the lowest of the six — not because American cards are different, but because more shops are chasing the same customer.
+
+**Release and allocation timing.** Product does not land everywhere at once, and a market waiting on stock prices differently from a market that is already deep in supply. In the weeks around a set launch this effect swamps everything else — see **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** for the mechanism.
+
+**Local demand.** A regional tournament result moves prices in that region first. A card that just won an event in Europe gets bid up in the EU market before the US market notices.
+
+**Currency movement.** Real, but the least interesting of the four. It shifts all prices in a market together and slowly, whereas the other three move individual cards sharply.
+
+The upshot: **price gaps between markets are normal, constant, and not evidence that anyone is overcharging.** They are what independent markets look like.
+
+## The three costs that decide whether importing pays
+
+The shelf price is the number you can see. Three more decide whether the trade works.
+
+**Shipping.** International postage on a single card is rarely proportional to the card's value — it is close to a fixed cost, and a tracked service, which you want for anything valuable, costs meaningfully more than an untracked envelope. This is why importing scales: the same postage cost that ruins a ten-unit purchase is trivial on a three-hundred-unit one.
+
+**Import tax and the handling fee.** Every market has a **de minimis threshold** — a declared value below which small parcels come through untaxed — and those thresholds differ enormously between the six markets we track. Above the threshold you pay your local sales tax or VAT on the declared value, and, in most cases, **a fixed handling fee the courier charges for collecting it on the government's behalf**. That fixed fee is the killer. It does not shrink with the parcel, so it hits a small import hardest in percentage terms.
+
+**The conversion spread.** Paying in another currency means your bank or card converts it, and almost every provider takes a margin on that conversion, sometimes plus a foreign-transaction fee. It is a genuine cost that appears nowhere on the listing and is easy to forget entirely.
+
+Put together, a rough rule that holds up well: **on a single card under roughly a hundred units of your own currency, importing almost never wins.** The fixed costs are simply too large a share.
+
+## The one calculation worth doing
+
+Before any import, compute **delivered cost in your own currency** for both options, and compare only those two numbers:
+
+- **Local:** card price, plus local postage, plus any tax already included in the listed price.
+- **Imported:** card price converted at *your* rate, plus international postage, plus your conversion spread, plus tax and handling if the declared value clears your threshold.
+
+Both numbers are what leaves your account. Everything else is noise. If the imported total is not meaningfully lower — and "meaningfully" should cover the extra fortnight of transit and the weaker position you are in if something goes wrong — the local purchase is the better trade even when the sticker price says otherwise.
+
+This is exactly the calculation our per-market guides are built around, which is why each one is written for buyers *in* that market rather than as a price table for tourists: **[Australia](/blog/buy-riftbound-cards-australia)**, **[the United States](/blog/buy-riftbound-cards-us)**, **[the United Kingdom](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)**, **[Canada](/blog/buy-riftbound-cards-canada)** and **[the EU](/blog/buy-riftbound-cards-europe)**.
+
+## When importing genuinely pays
+
+Four cases, and they are narrower than people expect.
+
+**1. High-value singles.** Once a card costs several hundred units of your currency, fixed shipping and handling fees become a small percentage, and a real percentage gap between markets survives them. This is the case that works most reliably — and it is also the case where you should care most about the seller's condition standards, covered below.
+
+**2. Product your market never received.** Collector boxes, event-exclusive bundles and regional promos are not allocated everywhere. If nobody local has it, the comparison is not "cheaper", it is "available", and importing is the only option at any price. Both of the exclusives we have covered — **[the T1 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)** and **[the Secret Garden bundle](/blog/riftbound-secret-garden-bundle)** — are that shape.
+
+**3. Nobody local stocks the card at all.** Thin markets have real gaps in coverage, especially for older sets and alternate printings. A card with zero local listings has an infinite local price; anything beats it.
+
+**4. One consolidated order, not several.** If you are importing anyway, adding cards to the same parcel spreads the fixed costs. The mistake is making three separate small imports rather than one considered one — you pay the fixed cost three times. If you are buying a whole deck, **[Best Basket](/tools/best-basket)** already works out the cheapest store split with postage counted, which is the same logic applied inside one market.
+
+## When it does not pay, and people do it anyway
+
+**Chasing a small percentage on a cheap card.** The most common mistake. A gap of a few units on a twenty-unit card is erased by postage before you have finished reading the listing.
+
+**Assuming a strong currency means cheap cards.** It means your money converts further, which the seller's local market has usually already priced in. Currency strength and card cheapness are different things.
+
+**Forgetting the threshold is on the declared value including shipping** in many jurisdictions, which pushes more parcels over the line than buyers expect.
+
+**Ignoring the return path.** A card that arrives damaged, or is not the condition advertised, is a much harder problem across a border. Return postage on a low-value card frequently exceeds the card's worth, which in practice means you absorb the loss.
+
+## Sealed is a different question from singles
+
+Everything above is written with singles in mind. Sealed product changes two of the three costs, and both changes push against importing.
+
+**Weight and volume.** A booster box is heavy and bulky in a way a card is not. International postage on a box is a substantial fraction of the box's own price, and it does not enjoy the same "fixed cost, spread it over a valuable item" logic that makes importing expensive singles work — the shipping cost scales with the thing you are shipping.
+
+**Declared value.** A box will clear almost every de minimis threshold on its own, so you should assume tax and handling apply rather than hoping they do not.
+
+Against that, sealed has one genuine import case that singles rarely do: **allocation.** Riot ships different products to different markets, and a collector bundle that never had a local release is not expensive locally, it is absent. That is the case worth importing for, and it is worth acting on early — regional exclusives get harder to source as time passes, not easier.
+
+If you are weighing a box at all, the prior question is whether to open it: **[our box EV guide](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles)** compares a box's cost against the live value of its contents, and **[the box EV calculator](/tools/box-ev)** does it for the current market. The answer usually favours buying the specific cards you want as singles, which brings you back to the calculation above.
+
+## The six markets, briefly
+
+For orientation, since the answer to "cheaper where" depends on knowing what the options are. Each of these is priced independently in its own currency, from stores that ship there:
+
+| Market | Currency | Where to start |
+| --- | --- | --- |
+| United States | USD | **[Buying in the US](/blog/buy-riftbound-cards-us)** |
+| Australia | AUD | **[Buying in Australia](/blog/buy-riftbound-cards-australia)** |
+| United Kingdom | GBP | **[Buying in the UK](/blog/buy-riftbound-cards-uk)** |
+| Singapore | SGD | **[Buying in Singapore](/blog/riftbound-price-comparison-singapore)** |
+| Canada | CAD | **[Buying in Canada](/blog/buy-riftbound-cards-canada)** |
+| Europe (EU) | EUR | **[Buying in the EU](/blog/buy-riftbound-cards-europe)** |
+
+Two honest caveats about that table. **Store coverage differs between markets**, and a market with fewer tracked stores has a thinner comparison, not necessarily higher prices. And **coverage is not the same as availability** — a card listed in a market is a card a store there has, which is exactly why a thin local market is the strongest reason to look abroad.
+
+## The risk that is not about money
+
+Condition grading is not perfectly standardised between markets and sellers, and a card described as lightly played by one seller can be a different card entirely from another. Buying at distance removes your ability to inspect before committing, and raises the cost of being wrong.
+
+Two things reduce that risk. Buy from sellers with a real returns policy and a track record, and know exactly what the grades mean before you commit — our **[card condition guide](/guides/riftbound-card-condition-guide)** covers what separates near-mint from lightly played in practice, which is the boundary most disputes sit on. For anything expensive enough to justify importing in the first place, a **[graded copy](/guides/riftbound-psa-bgs-grading-guide)** removes the condition question entirely, at a price.
+
+## How to check it in under a minute
+
+Rather than reasoning about this in the abstract:
+
+1. Open the card's page and note the delivered price in your own market.
+2. Switch markets from the header. The same card reprices in that market's currency, from stores that ship there.
+3. Add postage, conversion spread and — if the total clears your threshold — tax and handling to the imported figure.
+4. Compare the two totals. Not the shelf prices.
+
+If you are doing this regularly, **[price alerts](/alerts)** will watch a card and tell you when it drops in your own market, which is usually a better use of attention than monitoring six markets by hand. And **[the movers page](/movers)** shows what has actually changed recently, which is where genuine cross-market gaps tend to open up in the first place.
+
+## What we would actually do
+
+For most purchases, in most markets: **buy locally, and spend the effort on comparing local stores rather than on comparing countries.** The spread between the cheapest and dearest store *within* your own market is frequently wider than the spread between markets, and capturing it costs you nothing in postage, tax, transit time or returns risk.
+
+Import when the card is expensive enough that percentages beat fixed costs, or when your market simply does not have the thing. Those two cases are real and worth acting on. The rest of the time the cheaper foreign price is a mirage that resolves at customs.`,
+  },
+  // ── Collection valuation. PRIMARY for "how much is my riftbound collection
+  // worth" / "riftbound collection value" / "value my riftbound cards" — an
+  // intent NOTHING on the site owned before this (grep for "collection worth"
+  // returned zero hits across articles and routes), despite /portfolio and
+  // /bulk-pricer both existing to answer it. Category "guide": evergreen.
+  //
+  // Deliberately a VALUATION guide, not a price-checker page: the keyword map's
+  // "price-modifier long-tails" section rules out targeting "riftbound card
+  // prices" and friends as a page's primary keyword, and this does not — it
+  // targets the question a person with a shoebox of cards actually types.
+  {
+    slug: "how-much-is-your-riftbound-collection-worth",
+    category: "guide",
+    title: "How Much Is Your Riftbound Collection Worth?",
+    excerpt:
+      "Your collection has three different values, and only one of them is the number you would actually receive. How to value Riftbound cards properly — bulk pricing, condition, market choice and the traps that inflate the total.",
+    author: "RiftCompare",
+    date: "2026-09-12",
+    readMins: 10,
+    tags: ["collection", "valuation", "selling", "portfolio", "prices", "guide"],
+    hero: {
+      src: "/blog/how-much-is-your-riftbound-collection-worth.png",
+      alt: "Valuing a Riftbound card collection — market value, cash value and the condition and market adjustments between them",
+    },
+    summary: [
+      "**Your collection has three values, not one**: market value (what copies list for), cash value (what you would actually be paid), and replacement value (what it would cost to rebuild). They can differ by more than half.",
+      "**Most of the count is worth almost nothing.** In any TCG collection the value concentrates in a small handful of cards — price those properly and bulk the rest rather than the reverse.",
+      "**Condition is a multiplier, not a footnote.** The same card at played condition can be worth a fraction of its near-mint listing.",
+      "**Which market you sell in changes the number**, because the six markets we track price independently in their own currencies.",
+      "**Price the whole thing at once** with the bulk pricer instead of looking cards up one at a time — that is where valuations go wrong and where hours disappear.",
+    ],
+    faq: [
+      {
+        q: "How do I find out how much my Riftbound collection is worth?",
+        a: "Paste your card list into [the bulk pricer](/bulk-pricer) and it values every card at once against live store prices in your market. That gives you market value. To get to what you would actually receive, apply the condition and sale-channel adjustments described in this guide — typically a substantial discount to the listed total.",
+      },
+      {
+        q: "Is my collection worth what the listed prices add up to?",
+        a: "No, and this is the single most common valuation error. Listed prices are what sellers are asking for near-mint copies, one at a time, with fees and postage still to come out. A collection sold as a lot, in mixed condition, realises considerably less. Treat the listed total as a ceiling rather than an estimate.",
+      },
+      {
+        q: "Does card condition really change the value that much?",
+        a: "Yes. Condition is the largest single adjustment for most collections, because cards that were played rather than stored are rarely near-mint and the discount steepens as condition drops. Our [condition guide](/guides/riftbound-card-condition-guide) covers how the grades are actually assessed; the [condition calculator](/tools/condition-calculator) applies the adjustment to a price.",
+      },
+      {
+        q: "Are my commons and uncommons worth anything?",
+        a: "In aggregate, very little. Value in a Riftbound collection concentrates in chase rarities, Showcase treatments, signature prints and a small number of format staples. Bulk commons have a real but small per-card value and are usually sold by the hundred rather than individually — spending an evening pricing them one at a time is the classic way to waste more time than the cards are worth.",
+      },
+      {
+        q: "Should I value my collection in my own currency?",
+        a: "Yes, and specifically in the market you would actually sell in. We price six markets independently rather than converting one market's figures, so switching markets genuinely reprices a collection rather than just applying an exchange rate. Selling locally is almost always simpler than selling across a border.",
+      },
+      {
+        q: "How often should I re-value a collection?",
+        a: "For a collection you hold rather than trade, a few times a year is plenty — with one exception. Prices move most around a set release, when new cards change what decks want. Around a launch, watching [price movers](/movers) tells you more than re-running a full valuation.",
+      },
+    ],
+    browseCta: {
+      href: "/bulk-pricer",
+      label: "Value your collection now",
+      blurb: "Paste a card list and price the whole thing at once against live store prices in your market.",
+    },
+    body: `Someone hands you a box of Riftbound cards, or you finally look at the one under your own desk, and the question is immediate: what is this actually worth?
+
+The honest answer starts with an awkward clarification. **A collection does not have one value.** It has at least three, they can differ by more than half, and most disappointment in this hobby comes from quoting one and receiving another.
+
+## Three numbers, not one
+
+**Market value** is what copies of your cards are currently listed for, in near-mint condition, sold individually. It is the biggest of the three numbers and the easiest to compute, which is why it is the one people quote.
+
+**Cash value** is what you would actually receive if you sold the collection. It is market value minus condition, minus selling fees, minus postage, minus the discount a buyer expects for taking the whole thing at once rather than cherry-picking. For most collections it is **substantially** below market value, and it is the only number that matters if you are selling.
+
+**Replacement value** is what it would cost you to buy the collection again today. It sits above market value, because you would be paying retail on every card, including the ones you originally opened from packs. This is the number that matters for insurance, and the one most collections are underinsured against.
+
+Which number you want depends entirely on why you are asking. The rest of this guide gets you to market value accurately, then shows you the adjustments down to cash value.
+
+## Step 1: price the whole thing at once
+
+The instinct is to look up cards individually. Do not do this. A thousand-card collection at thirty seconds a card is eight hours, and the result is less accurate than the alternative because prices will have moved by the time you finish.
+
+**[The bulk pricer](/bulk-pricer)** takes a list of card names and values every one against live store prices in your market in a single pass. Build the list once — from a spreadsheet, a collection app export, or just by typing — and you have a defensible market-value total in minutes rather than an evening.
+
+Two practical notes on building the list. **Set codes and collector numbers matter** for any card that exists in multiple printings, because an alternate art and its base print are different cards at very different prices. And **quantities matter**: four copies of a staple is a real position, not a rounding error.
+
+If you want the valuation to persist rather than be a one-off, **[the portfolio](/portfolio)** tracks a collection over time with cost basis, so you can see what it is worth now against what you paid.
+
+## Step 2: accept that most of the count is worth nothing
+
+This is the step people resist, and it is the one that saves the most time.
+
+In any mature trading card game, collection value follows a steep curve: **a small number of cards carry almost all of the value, and the long tail carries almost none.** Riftbound is no different. Commons and uncommons have a real per-card value, but it is small enough that they are sold by the hundred rather than individually, and an afternoon spent pricing them precisely will not change your total in any meaningful way.
+
+So split the collection in two:
+
+- **The head.** Chase rarities, Showcase treatments, signature and over-numbered prints, and the handful of format staples that competitive decks actually run. Price these carefully, individually, in the right printing.
+- **The tail.** Everything else. Price it as bulk, by the hundred, and move on.
+
+To find your head quickly, **[the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards)** shows where the top of the market currently sits, and **[understanding card rarity](/guides/understanding-riftbound-card-rarity)** explains which treatments sit above which — the distinction between a Showcase print and a signature print is worth knowing before you price either.
+
+## Step 3: condition, the multiplier everyone skips
+
+Listed prices are for near-mint cards. **Your cards are probably not all near-mint**, particularly if they were played rather than stored, and this is the single largest adjustment for most collections.
+
+The discount is not linear — it steepens as condition drops, and it steepens faster on expensive cards, because the buyers for those are collectors who care most about condition. A played copy of a staple still sells; a played copy of a high-end chase card sells to a much smaller audience at a much larger discount.
+
+Two resources here. **[The condition guide](/guides/riftbound-card-condition-guide)** covers how grades are actually assessed, including the near-mint to lightly-played boundary that most disputes sit on. **[The condition calculator](/tools/condition-calculator)** applies a condition adjustment to a price, which is faster than estimating it.
+
+Be honest at this step. Valuing a played collection at near-mint prices does not make it worth more; it just guarantees the first real offer feels like an insult.
+
+## Step 4: the market you sell in changes the number
+
+We price six markets — the US, Australia, the UK, Singapore, Canada and the EU — **independently, each in its own currency, from stores that actually ship there.** This is not a currency conversion applied to one set of prices; the markets genuinely differ, because store density, local demand and release timing differ.
+
+For valuation, that means **switching markets genuinely reprices your collection**, and the right market to value in is the one you would actually sell in. For nearly everyone that is their own, because selling across a border adds postage, customs paperwork and a much harder returns conversation — the full version of that trade-off is in **[are Riftbound cards cheaper in another country](/blog/are-riftbound-cards-cheaper-in-another-country)**.
+
+## Step 5: sealed is a different calculation
+
+If your collection includes sealed product, do not value it as the sum of the cards inside.
+
+Sealed boxes trade on their own market, and the relationship between a box's price and the value of its contents moves in both directions over a set's life. **[The box EV calculator](/tools/box-ev)** computes what a box's contents are actually worth against live singles prices, which is the right comparison — and **[our box EV guide](/guides/riftbound-booster-box-ev-worth-ripping-or-buying-singles)** explains why the answer usually favours buying singles for specific cards and opening for the experience.
+
+For valuation specifically: **an unopened box is worth its sealed market price**, which you can check against live listings on **[the sealed page](/sealed)**. Opening it converts a known value into a distribution of outcomes, most of which are worse than the box price.
+
+## Step 6: graded cards are valued separately
+
+A slabbed card is a different asset from the same card raw. The grade is a large part of the value, the market for slabs is thinner, and prices for graded copies do not track raw prices closely.
+
+Value graded cards individually against graded sales, not against raw listings. Our **[grading guide](/guides/riftbound-psa-bgs-grading-guide)** covers when grading is worth the fee in the first place — a decision that is mostly about the card's value and condition ceiling rather than about how much you like it.
+
+## From market value to cash value
+
+You now have a defensible market-value total. The adjustments down to what you would actually receive:
+
+| Adjustment | Typical effect |
+| --- | --- |
+| **Condition** | The largest single factor for a played collection |
+| **Selling fees** | Marketplace and payment fees come off every sale |
+| **Postage** | Paid per sale, and it does not scale down for cheap cards |
+| **Lot discount** | A buyer taking everything expects a discount for the convenience |
+| **Time** | Selling individually realises more and takes far longer |
+
+The last row is the real trade. **Selling card-by-card gets closest to market value and costs you weeks of listing, packing and correspondence. Selling the lot is one conversation at a meaningfully lower number.** Neither is wrong; they are different products. Our guide to **[how to sell Riftbound cards](/blog/how-to-sell-riftbound-cards)** covers the channels and what each realistically returns, and **[the selling fee calculator](/tools/selling-fees)** does the fee arithmetic.
+
+## A worked example: the shoebox
+
+Abstract advice is easy to agree with and hard to apply, so here is the shape of a typical result. The proportions below are illustrative rather than a measurement of your collection — but they are the shape almost every casual collection turns out to have, and knowing that in advance saves a lot of disappointment.
+
+Take a box of roughly 1,200 cards accumulated from opening packs over a year.
+
+**By count**, the overwhelming majority are commons and uncommons. **By value**, they are close to irrelevant — a rounding error against a handful of cards at the top. That asymmetry is the single most important fact about the box, and it dictates the order of work: find the top twenty or thirty cards, price those with care, and treat the remaining 1,150 as one bulk line.
+
+**The head is smaller than it feels.** Pack-opened collections skew toward whatever was being sold at the time, which means multiple copies of the same mid-value cards rather than a spread of chase cards. Four copies of a card worth a little is worth a little; the number of genuinely valuable cards in a year of casual opening is usually in the single digits.
+
+**Condition then removes a further slice.** Cards that lived in a box rather than sleeves have handled edges, and cards that were played have more. Applying an honest condition discount to the head — the part that actually carries the value — is where the number moves most.
+
+**Then the sale channel removes another.** Fees, postage and the lot discount, per the table below.
+
+The end result is routinely **a fraction of the naive listed-price total**, and that is not a sign anything has gone wrong. It is what the curve predicts. The collections that beat this shape are the ones that were *targeted* — someone bought specific chase cards deliberately — rather than accumulated.
+
+## Four traps that inflate a valuation
+
+**Pricing the wrong printing.** The most common single error. An alternate art, a promo and a base print share a name and not a price.
+
+**Using the highest listing you can find.** One optimistic seller is not the market. The cheapest available price is a far better estimate of what a card is worth than the dearest, because that is what a buyer would actually pay.
+
+**Counting cards you would never sell.** A collection you have no intention of breaking up has a market value, but quoting it as though it were cash is how people talk themselves into believing they own something they do not.
+
+**Valuing at a spike.** Prices move sharply around tournaments and set releases, and a valuation taken at a peak is not a valuation, it is a snapshot of an unusual day. **[Why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** covers what actually drives the movement.
+
+## What to do with the number
+
+If you are **insuring**, use replacement value, keep the card list, and re-run it annually.
+
+If you are **selling**, work to cash value, decide between lot and individual sales before you list anything, and start with the head of the collection — those cards carry the value and sell fastest to buyers who are actively looking.
+
+If you are **holding**, put the list in **[the portfolio](/portfolio)** with what you paid, set **[price alerts](/alerts)** on the cards you would sell at the right number, and stop checking. Watching a collection daily is the fastest way to make a bad decision about it.
+
+And if the honest answer turns out to be "less than I hoped" — that is the normal result, it is what the curve in Step 2 predicts, and knowing it accurately is worth considerably more than a comfortable guess.`,
+  },
 ];
 
 // PUBLISHED articles only. Every public surface goes through here — the indexes,
