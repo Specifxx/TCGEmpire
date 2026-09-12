@@ -119,28 +119,24 @@ export function Navbar() {
           <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Sealed
           </Link>
-          {/* Decks — the hub for the metagame surface: 10 real tournament lists,
-              each priced live, plus the archetype/domain landing pages under
-              /decks/archetype/* and /decks/domain/*. It was reachable only from
-              the ⌘K launcher, the mega-menu and the footer, which put the whole
-              deck surface two clicks from every price page and left the nine new
-              landing pages depending on one hub nothing in the header linked.
+          {/* Deck builder — the free "paste a list, price every card" tool. This
+              slot held "Decks" (/decks, the meta-deck hub) until 2026-09-12; that
+              surface was ten hand-typed lists presented as the metagame and was
+              removed outright, with /decks/* redirecting to the builder
+              (DECISIONS.md, "Meta decks: removed"). The builder keeps the slot
+              because it is something every visitor can act on immediately, which
+              is the bar for a header link — and it keeps /deck one click from
+              every price page rather than launcher/footer-only.
+
               Sits after Sealed rather than before it: Sealed is the deliberate
-              high-AOV slot next to the database (see above), and this is the
-              next-strongest commercial intent after it.
+              high-AOV slot next to the database (see above).
 
               Trade Calculator used to occupy this slot and was removed on
               purpose; it is still in the launcher, mega-menu and footer via the
               same "Decks" group in nav-groups.ts, so /trade keeps its internal
-              links and does not become an orphan.
-
-              md:block, alongside Sealed and Blog — see the breakpoint note at the
-              top of this nav. It shipped at lg:block first, only because the row
-              was overflowing at the time and this link must not make a live bug
-              worse; now that the row fits, it belongs with the other navigation
-              links. */}
-          <Link href="/decks" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
-            Decks
+              links and does not become an orphan. */}
+          <Link href="/deck" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
+            Deck builder
           </Link>
           {/* Best Basket USED TO sit here (a header link, added when the tool was
               free with any account — see its own git history for why). Removed

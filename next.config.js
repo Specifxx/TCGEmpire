@@ -133,15 +133,20 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Confirmed 404 in Search Console: an incomplete/truncated deck slug (the
-      // real deck is "master-yi-wuju-bladesman" in prisma/meta-decks.json). A 301
-      // tells Google the old URL is permanently gone rather than leaving a dead
-      // page indexed.
-      {
-        source: "/decks/master-yi-wuju",
-        destination: "/decks/master-yi-wuju-bladesman",
-        permanent: true,
-      },
+      // META DECKS REMOVED (2026-09-12 — DECISIONS.md, "Meta decks: removed").
+      // /decks, the ten /decks/<slug> pages and the /decks/archetype/* and
+      // /decks/domain/* hubs were built on one hand-typed file that nothing
+      // could keep true, so the whole surface is gone. Every URL under it 301s
+      // to the deck BUILDER: it is the page that now owns the "riftbound
+      // deck(s)" intent (docs/seo-keyword-map.md), and a visitor who arrives
+      // wanting a priced decklist can paste one and get exactly that. Both
+      // forms are listed so the bare hub URL cannot depend on how `:path*`
+      // treats zero segments. These two entries also absorb every older
+      // /decks/* redirect that used to live in this file (a truncated
+      // master-yi slug, three rotated-out legends) — a redirect chain ending
+      // at a redirect would have been the worst of both.
+      { source: "/decks", destination: "/deck", permanent: true },
+      { source: "/decks/:path*", destination: "/deck", permanent: true },
       // Retired the /card-value lander — the card database is the real value
       // checker. 301 so any indexed/inbound links flow to /browse instead of 404ing.
       {
@@ -283,7 +288,9 @@ const nextConfig = {
       // verified individually before deletion; every internal link into them was
       // found and repointed rather than left to ride the redirect.
       { source: "/blog/welcome-to-riftcompareau", destination: "/about", permanent: true },
-      { source: "/blog/unleashed-meta-snapshot-june-2026", destination: "/decks", permanent: true },
+      // Was → /decks until the meta decks were removed (2026-09-12); the archetype
+      // guide is the evergreen answer to what that snapshot used to ask.
+      { source: "/blog/unleashed-meta-snapshot-june-2026", destination: "/guides/riftbound-deck-archetypes-guide", permanent: true },
       { source: "/blog/should-you-buy-riftbound-origins-before-vendetta", destination: "/guides/why-riftbound-card-prices-change", permanent: true },
       { source: "/blog/riftbound-vendetta-is-here-early-release", destination: "/sets/vendetta", permanent: true },
       { source: "/blog/how-to-start-buying-riftbound-vendetta-decks", destination: "/guides/best-riftbound-vendetta-decks", permanent: true },
@@ -370,11 +377,6 @@ const nextConfig = {
       // answers the same query (it leads with Radiance's date until Radiance
       // ships), so the equity moves rather than being dropped.
       { source: "/radiance-countdown", destination: "/release-dates", permanent: true },
-      // ROTATED-OUT META DECKS. /decks tracks the live metagame, so a legend that
-      // drops out of the tier list loses its deck page. These three were Tier 1-2
-      // in the Unleashed era and fell out of the Vendetta tier list; their URLs
-      // were indexed and internally linked, so they 301 to the deck index rather
-      // than 404. Add a line here whenever a slug leaves prisma/meta-decks.json.
       // RETIRED PASSWORD AUTH. Sign-in is Google/Discord only; /register, /forgot
       // and /reset no longer exist. They were linked from the navbar, a dozen
       // in-page CTAs and previously-sent emails, so they 301 to /login — which is
@@ -382,9 +384,6 @@ const nextConfig = {
       { source: "/register", destination: "/login", permanent: true },
       { source: "/forgot", destination: "/login", permanent: true },
       { source: "/reset", destination: "/login", permanent: true },
-      { source: "/decks/leblanc-deceiver", destination: "/decks", permanent: true },
-      { source: "/decks/fiora-grand-duelist", destination: "/decks", permanent: true },
-      { source: "/decks/vex-gloomist", destination: "/decks", permanent: true },
       // AI-AGENT ".md" CONVENTION. llms.txt and llms-full.txt tell agents that a
       // card page's markdown version is reachable by appending ".md" to its URL —
       // but /card/<slug> is a real page route, not a markdown one, so

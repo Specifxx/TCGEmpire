@@ -162,13 +162,6 @@ const GROUPS: ToolGroup[] = [
     label: "Decks & trading",
     tools: [
       {
-        href: "/decks",
-        emoji: "🏆",
-        title: "Meta decks + deck cart",
-        desc: "Browse the current meta decks — each one prices the cheapest cart to build it across stores.",
-        badge: "New",
-      },
-      {
         href: "/deck",
         emoji: "🛠️",
         title: "Deck builder",

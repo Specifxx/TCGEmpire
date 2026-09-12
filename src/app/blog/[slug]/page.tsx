@@ -47,8 +47,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const description = clampText(a.excerpt, DESCRIPTION_MAX);
   return {
     // " — RiftCompare", not " — RiftCompare Blog": matches the suffix every
-    // other indexed page on the site uses (the root layout's title template,
-    // and TITLE_SUFFIX in lib/deck-groups.ts). The extra " Blog" cost every
+    // other indexed page on the site uses (the root layout's title template).
+    // The extra " Blog" cost every
     // rendered <title> 5 more characters for a distinction the URL (/blog/…)
     // and the page's own content already make — on a site where article
     // titles are already long, that was enough on its own to push a lot of

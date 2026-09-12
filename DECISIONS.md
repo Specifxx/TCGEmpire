@@ -5559,3 +5559,86 @@ The site gained a light/dark toggle. Every component hard-codes dark classes
   is already full. The two stay in sync via one window event.
 - Things deliberately left dark: OG images, the embeds, the print stylesheet,
   and the Google sign-in button (white by Google's rules, now `bg-[#ffffff]`).
+
+---
+
+## Meta decks removed: the dataset was hand-copied, stale and unlicensed — 2026-09-12
+
+Owner's call: delete the "meta decks" feature outright rather than keep patching it.
+
+**What it was.** `prisma/meta-decks.json` — 10 decklists with tier, meta-share,
+win-rate and Top-8 figures — drove `/decks`, `/decks/[slug]`, the nine
+`/decks/archetype/*` and six `/decks/domain/*` landing pages, the "Played in
+these decks" / "Often played with" rails and a FAQ on every card page, the
+champion pages' deck shelf, a `metaStaples` gallery in six articles, two
+child sitemaps, a header link and a nav entry.
+
+**Why it went.** The file was typed by hand from riftdecks.com/riftools.app
+and last reconciled on 2026-08-04 (`_metaUpdated`). Two legends did not resolve
+to a card, 43 of 192 card names existed in no bundled corpus, so deck pages
+printed partial totals as "Build cost" — a checkable falsehood on indexed
+pages. There is no legitimate replacement feed: riftdecks.com's own
+`robots.txt` bans "any other similar sites building a competing service" by
+name (this is one) plus every AI agent (`Disallow: /` for `anthropic-ai`,
+`ClaudeBot`, `GPTBot`, etc.), and sits behind an active Cloudflare challenge
+that 403s a plain fetch regardless. Piltover Archive's Terms of Service
+prohibit "using automated systems … to scrape the Service" and license only
+"personal, non-commercial use" — its `robots.txt` allows a crawl, its contract
+does not, and the contract governs. Rift Atlas and RiftMana are the same
+shape or worse. Riftools.app and TopDeck.gg are the two sources that are
+actually fetchable without circumvention, but neither solves this: Riftools'
+`/api/decks` has placements and events but no card lists at all, and
+TopDeck.gg's documented API — the one source with real decklists and
+standings — needs a free API key (sign-in) this site does not hold, plus a
+mandatory visible credit. Copying by hand again would recreate the same rot
+on the same schedule; nothing found in this pass changes that.
+
+**What stayed** (user input, not fabricated data): `/deck` (`DeckBuilder`,
+`/api/deck/price`, `lib/deck.ts`'s `parseDeckList` — also used by
+`/api/basket`, `/api/collection/import` and the bulk pricer), Best Basket,
+the bulk pricer, and the educational `learn/DeckAnatomy` diagram. The "Decks"
+nav group survives with Deck Builder and Trade Calculator, so `/deck` keeps
+its footer/launcher links and nothing becomes an orphan
+(`tests/internal-linking.test.ts`).
+
+**Redirects, not 404s.** `/decks` and `/decks/:path*` 301 to `/deck` — the
+page that now owns the "riftbound deck(s)" intent
+(`docs/seo-keyword-map.md`). The earlier `/decks/*` redirect rows (a
+truncated `master-yi-wuju` slug, three rotated-out legends) were deleted
+rather than left to chain into the new ones, and the June-2026 meta-snapshot
+redirect was retargeted at the (now evergreen) archetypes guide for the same
+reason. `sitemaps/decks.xml` and `sitemaps/deck-groups.xml` no longer
+exist — **remove both child sitemaps in Search Console**, or they will start
+reporting errors.
+
+**Articles.** Every count, tier and exemplar that was derived from the JSON
+came out of the prose. `best-riftbound-cards` now ranks by the one demand
+signal this site actually measures — `Card.searchCount`/`viewCount` via
+`getPopularCards()`, the same query the homepage's popular carousel runs —
+through a new `popular` embed mode on `ArticleEmbed` (`metaStaples` is gone).
+`riftbound-deck-archetypes-guide` is rewritten as an evergreen "what each
+archetype is and how to recognise one" explainer with no counts, tiers or
+`/decks/archetype/*` links. The Singapore meta-shift post keeps every fact
+Barcelona and Singapore themselves established and drops only the
+tier-list/win-rate numbers that came from the removed file. Three converter
+guides (Pokémon/One Piece/MTG → Riftbound) switched their staples gallery to
+the same `popular` mode. Tests that re-derived the old numbers were deleted
+with the data; `tests/decks-removed.test.ts` now guards that nothing under
+`src/` links to `/decks`, that no article asks for the retired gallery mode,
+that the redirect exists with no chain, and that `/deck` stays in the nav.
+
+**The seam for a rebuild.** Everything hangs off three unchanged interfaces:
+`ArticleEmbed` (a future "played in N lists" gallery is one more branch in
+`ArticleView.resolveEmbed`), `lib/content/card-narrative.ts`'s `decks` input
+(the card page now passes `[]`), and `parseDeckList`. The deleted routes,
+libs and JSON-LD builders are recoverable from git at this commit. Rebuild
+only from a source we may legitimately use — TopDeck.gg's API with a key, or
+Piltover Archive with written permission — never a hand copy again. The GA4
+`deck_view` event stops firing; `deck_create` is unaffected.
+
+**Aside, not acted on here:** riftscribe.gg now 404s on every path (including
+`/api/cards`), so `scripts/fetch-cards.ts`'s catalogue refresh is broken;
+`api.riftcodex.com` is a live, unauthenticated, OpenAPI-documented card API
+that looks like the right replacement. Flagged for a separate pass — it does
+not block this removal, since the bundled card corpora and the live database
+are unaffected.

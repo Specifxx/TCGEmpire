@@ -13,8 +13,6 @@
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { SITE_URL } from "./site";
-import { META_DECKS, META_UPDATED } from "./meta-decks";
-import { deckGroupPath, indexableDeckGroups } from "./deck-groups";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
@@ -49,13 +47,6 @@ export const SECTIONS = [
   "facets",
   "champions",
   "stores",
-  "decks",
-  // The programmatic archetype/domain deck landing pages get their own child
-  // rather than joining "decks". They are a NEW template with an unproven index
-  // rate, and per-template coverage reporting is the entire reason this sitemap
-  // is split (see the file header) — folding them into decks would hide whether
-  // they index at the rate the individual deck pages do.
-  "deck-groups",
   "content",
 ] as const;
 export type SectionId = (typeof SECTIONS)[number];
@@ -104,7 +95,6 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/sets`, changeFrequency: "weekly", priority: 0.8, lastModified: day },
-    { url: `${SITE_URL}/decks`, changeFrequency: "weekly", priority: 0.8, lastModified: decksModified(day) },
     { url: `${SITE_URL}/deck`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/deck") },
     { url: `${SITE_URL}/bulk-pricer`, changeFrequency: "weekly", priority: 0.6, lastModified: staticPageDate("/bulk-pricer") },
     { url: `${SITE_URL}/trade`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/trade") },
@@ -471,76 +461,6 @@ async function stores(): Promise<SitemapEntry[]> {
   }));
 }
 
-// A deck page changes when EITHER its prices refresh or the metagame list itself
-// is re-cut, so its honest lastmod is whichever happened later. Using priceDay
-// alone under-reported a day the tier list moved but prices didn't; using the meta
-// date alone under-reports the daily repricing. This is the same stamp the page
-// renders as dateModified, so the sitemap and the markup can't drift apart.
-function decksModified(day: Date | undefined): Date | undefined {
-  const meta = META_UPDATED ? new Date(`${META_UPDATED}T00:00:00Z`) : undefined;
-  if (meta && Number.isNaN(meta.getTime())) return day;
-  if (!day) return meta;
-  if (!meta) return day;
-  return meta > day ? meta : day;
-}
-
-async function decks(): Promise<SitemapEntry[]> {
-  const day = await priceDay();
-  // PER-DECK freshness — same fix as cards()/sets()/champions()/stores() above,
-  // combined with decksModified()'s existing "or the tier list itself moved"
-  // rule rather than replacing it: a deck page's honest lastmod is still the
-  // LATER of (its own cards' prices, the metagame re-cut date), just computed
-  // per deck instead of every one of the ~10 decks sharing the whole
-  // catalogue's single most-recent price day.
-  //
-  // Only ~10 decks (prisma/meta-decks.json), so resolving each one's card names
-  // to real Card rows and querying its own price freshness is one query per
-  // deck (matching champions()'s own per-item query count) rather than needing
-  // a batched groupBy the way cards() does at 1,400+ rows.
-  const allNames = [...new Set(META_DECKS.flatMap((d) => [d.legend, ...d.cards.map((c) => c.name)]))];
-  const cardIdsByName = await prisma.card
-    .findMany({ where: { nameNormalized: { in: allNames.map(normalizeSearch) } }, select: { id: true, nameNormalized: true } })
-    .then((rows) => {
-      const map = new Map<string, string[]>();
-      for (const r of rows) map.set(r.nameNormalized, [...(map.get(r.nameNormalized) ?? []), r.id]);
-      return map;
-    })
-    .catch(() => new Map<string, string[]>());
-  const lastSeenByDeck = await Promise.all(
-    META_DECKS.map((d) => {
-      const ids = [d.legend, ...d.cards.map((c) => c.name)].flatMap((n) => cardIdsByName.get(normalizeSearch(n)) ?? []);
-      if (ids.length === 0) return Promise.resolve(null);
-      return prisma.retailerPrice
-        .aggregate({ where: { cardId: { in: ids } }, _max: { lastSeen: true } })
-        .then((r) => r._max.lastSeen)
-        .catch(() => null);
-    })
-  );
-  return META_DECKS.map((d, i) => ({
-    url: `${SITE_URL}/decks/${d.slug}`,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-    lastModified: decksModified(lastSeenByDeck[i] ?? day),
-  }));
-}
-
-async function deckGroups(): Promise<SitemapEntry[]> {
-  const day = decksModified(await priceDay());
-  // indexableDeckGroups() is the SAME predicate the pages' robots tag reads
-  // (lib/deck-groups.ts), so a group can never be submitted here while telling
-  // Google not to index it — the contradiction that fills Search Console's
-  // "Submitted URL marked 'noindex'" bucket. Groups below the threshold, and
-  // groups with no real deck at all, are simply absent.
-  return indexableDeckGroups().map((g) => ({
-    url: `${SITE_URL}${deckGroupPath(g)}`,
-    changeFrequency: "weekly" as const,
-    // Just under an individual deck page: these are the hub, the decklist is the
-    // destination.
-    priority: 0.65,
-    lastModified: day,
-  }));
-}
-
 async function content(): Promise<SitemapEntry[]> {
   // Real publish OR last-substantive-edit date. `updated` exists on ~30 articles;
   // reading it means a genuinely-refreshed guide no longer looks as stale as one
@@ -563,9 +483,7 @@ async function content(): Promise<SitemapEntry[]> {
 }
 
 const BUILDERS: Record<SectionId, () => Promise<SitemapEntry[]>> = {
-  core, cards, sets, domains, keywords, facets, champions, stores, decks,
-  "deck-groups": deckGroups,
-  content,
+  core, cards, sets, domains, keywords, facets, champions, stores, content,
 };
 
 /**
