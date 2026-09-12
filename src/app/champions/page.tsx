@@ -179,8 +179,8 @@ export default async function ChampionsIndexPage() {
         <h2 className="text-xl font-extrabold text-white">Looking for a deck to build?</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Each champion page lists every printing with a live price, so you can see the cheapest way to pick them up.
-          For full decklists priced end-to-end, see{" "}
-          <Link href="/decks" className="text-brand-400 hover:underline">meta decks</Link>, or browse{" "}
+          To price a full decklist end-to-end, paste it into the{" "}
+          <Link href="/deck" className="text-brand-400 hover:underline">deck builder</Link>, or browse{" "}
           <Link href="/cards" className="text-brand-400 hover:underline">by type, rarity and printing</Link>.
         </p>
       </section>

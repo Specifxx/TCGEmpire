@@ -52,8 +52,8 @@ export default async function MoversPage() {
   const info = COUNTRIES[country];
 
   // Deeper list than the homepage teaser. getPriceMovers caches ITSELF — one
-  // week-keyed entry per market, shared with the homepage, /games, /decks and
-  // the digests — so it is called directly here.
+  // week-keyed entry per market, shared with the homepage, /games and the
+  // digests — so it is called directly here.
   //
   // It used to be wrapped in a second unstable_cache on this page. Two things
   // were wrong with that, one known and one not:

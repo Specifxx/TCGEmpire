@@ -227,10 +227,11 @@ const HEROES: Hero[] = [
     slug: "riftbound-deck-archetypes-guide",
     kicker: "Guide · Deckbuilding",
     title: "Riftbound Deck Archetypes",
-    // "9 real archetypes" IS the thumbnail's claim, so the grid below has to
-    // show exactly 9 — see the article's own self-checking test for why that
-    // number is read from the data rather than typed twice.
-    chips: ["9 real archetypes", "From live tournament decks", "Which to build first"],
+    // "9 named archetypes" IS the thumbnail's claim, so the grid below has to
+    // show exactly 9. The middle chip used to read "From live tournament
+    // decks"; the guide stopped deriving anything from decklists on 2026-09-12
+    // (DECISIONS.md, "Meta decks: removed") and is an evergreen explainer now.
+    chips: ["9 named archetypes", "Aggro · Tempo · Midrange", "Which to build first"],
     motif: {
       kind: "grid",
       label: "Archetypes",

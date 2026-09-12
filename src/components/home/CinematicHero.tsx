@@ -269,8 +269,9 @@ export function CinematicHero({
             escape hatch for "I don't want to search, just show me
             everything" rather than a second call to action.
 
-            /decks and /learn are not orphaned by this cut: /decks is a
-            top-level Navbar link (md:block, see Navbar.tsx) and /learn has a
+            Neither destination was orphaned by this cut: the deck hub was a
+            top-level Navbar link (until the meta decks were removed on
+            2026-09-12 — the builder, /deck, holds that slot now) and /learn has a
             real, server-rendered footer link via NAV_GROUPS → FOOTER_GROUPS →
             FooterNav.tsx (confirmed by reading that chain — FooterNav is a
             plain server component, no client-only gating), which did not

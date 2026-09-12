@@ -5,7 +5,7 @@ import { RouteLoading } from "@/components/RouteLoading";
 // A loading.tsx wraps its whole segment subtree in a Suspense boundary, which
 // makes Next stream the response: the shell flushes with a committed HTTP 200
 // before the page component runs. A notFound() thrown after that can only swap
-// the UI, not the status — so every unknown /card/…, /sets/…, /decks/… URL
+// the UI, not the status — so every unknown /card/…, /sets/… URL
 // returned "200 OK" with the 404 page rendered inside it. Google treats
 // HTTP-200 error pages as a quality problem and will happily crawl an unlimited
 // supply of them.

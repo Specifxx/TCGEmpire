@@ -248,7 +248,7 @@ if (undeclared.size) {
 // before the page component runs. A notFound() thrown after that can only swap
 // the UI, never the status.
 //
-// With one at the app root, EVERY unknown /card/…, /sets/…, /decks/… URL
+// With one at the app root, EVERY unknown /card/…, /sets/… URL
 // returned "200 OK" with the 404 page rendered inside it — an unlimited supply
 // of crawlable soft-404s, which Google treats as a site-quality problem.
 // Measured, not assumed: moving notFound() into generateMetadata does NOT help

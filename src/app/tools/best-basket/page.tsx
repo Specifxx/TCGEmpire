@@ -66,9 +66,10 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
   const premium = isPremium(user, "premium");
   const country = getCountry();
   const info = COUNTRIES[country];
-  // A deck page can hand off its own list via ?list= (see decks/[slug]/page.tsx's
-  // bestBasketHref) — decoded here rather than left to the client so a signed-in
-  // visitor's basket runs immediately with no extra round trip.
+  // The deck builder (/deck) hands off its list via ?list= — decoded here
+  // rather than left to the client so a signed-in visitor's basket runs
+  // immediately with no extra round trip. (The meta-deck pages used the same
+  // handoff until they were removed on 2026-09-12.)
   const initialList = searchParams.list ? decodeList(searchParams.list) : undefined;
 
   return (
@@ -134,8 +135,11 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
                 href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}
                 // nofollow, same reason as every other dynamic ?next= target (see
                 // components/UserMenu.tsx) — with a list= present this mints one more
-                // unique, crawler-inert /login?next=... URL per deck on top of the
-                // /tools/best-basket?list=... one DeckView.tsx already nofollows.
+                // unique, crawler-inert /login?next=... URL per pasted decklist. No
+                // internal link currently hands a ?list= into this page (the meta-deck
+                // pages did, until they were removed on 2026-09-12 — DECISIONS.md,
+                // "Meta decks: removed"); the route still accepts one, so a shared or
+                // bookmarked URL keeps working, and this guard stays regardless.
                 rel="nofollow"
                 className="btn-primary text-sm"
               >

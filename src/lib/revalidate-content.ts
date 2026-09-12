@@ -93,8 +93,7 @@ export function revalidateContent(): string[] {
   // fallback with everything else.
   for (const feed of ["/feed.xml", "/feed.json", "/news-sitemap.xml"]) revalidatePath(feed);
 
-  // The cookie/searchParams-DYNAMIC price pages (/market, /decks, /decks/[slug],
-  // /decks/archetype/[slug], /decks/domain/[slug], /tools/box-ev) render
+  // The cookie/searchParams-DYNAMIC price pages (/market, /tools/box-ev) render
   // per-request, so revalidatePath can't purge
   // them — but each wraps its heavy DB read in unstable_cache tagged CONTENT_TAG
   // (as does the homepage's cached data). Clearing the tag makes them all refetch on

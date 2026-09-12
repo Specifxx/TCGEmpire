@@ -46,7 +46,8 @@ function enrichLegendName(nameSlug: string | undefined, epithet: string): string
   // ("master-yi-wuju-bladesman"), so the endsWith() branch misses and the
   // split("-")[0] fallback takes only the FIRST token of a multi-token champion
   // name — turning "Master Yi" into "Master". That corrupted value is already
-  // baked into prod data and into prisma/meta-decks.json's legend field, and it
+  // baked into prod data (and was in prisma/meta-decks.json's legend field until
+  // the meta decks were removed on 2026-09-12), and it
   // would mint a bogus /champions/master page. Single-token champions (Annie,
   // Lux, Garen) happened to survive the bug by luck; Master Yi was the only
   // casualty, which is exactly the signature of a first-token-only fallback.

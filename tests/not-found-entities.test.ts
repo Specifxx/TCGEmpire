@@ -9,7 +9,7 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // ─────────────────────────────────────────────────────────────────────────────
 // A real 404 status (not a 200 rendering "not found" copy, and not a soft-404)
 // for every major entity route is checked piecemeal across many feature-specific
-// test files (deck-groups.test.ts, region-pages.test.ts, etc.) but has no single
+// test files (region-pages.test.ts, etc.) but has no single
 // place asserting the whole set at once — this is that place. Each assertion
 // below pins the SAME source-level guard confirmed live in each route file: a
 // Next.js `notFound()` call, thrown when the requested slug/id doesn't resolve
@@ -30,9 +30,6 @@ const ENTITY_ROUTES: [name: string, file: string, guard: RegExp][] = [
   ["champion", "src/app/champions/[slug]/page.tsx", /if\s*\(\s*!champ\s*\)\s*notFound\(\)/],
   ["domain", "src/app/domains/[slug]/page.tsx", /if\s*\(\s*!domain\s*\)\s*notFound\(\)/],
   ["keyword", "src/app/keywords/[slug]/page.tsx", /if\s*\(\s*!kw\s*\)\s*notFound\(\)/],
-  ["deck", "src/app/decks/[slug]/page.tsx", /if\s*\(\s*!seed\s*\)\s*notFound\(\)/],
-  ["deck archetype group", "src/app/decks/archetype/[slug]/page.tsx", /if\s*\(\s*!group\s*\|\|\s*seedsInGroup\(group\)\.length\s*===\s*0\s*\)\s*notFound\(\)/],
-  ["deck domain group", "src/app/decks/domain/[slug]/page.tsx", /if\s*\(\s*!group\s*\|\|\s*seedsInGroup\(group\)\.length\s*===\s*0\s*\)\s*notFound\(\)/],
   ["card type facet", "src/app/cards/type/[type]/page.tsx", /if\s*\(\s*!facet\s*\)\s*notFound\(\)/],
   ["card rarity facet", "src/app/cards/rarity/[rarity]/page.tsx", /if\s*\(\s*!facet\s*\)\s*notFound\(\)/],
   ["card printing facet", "src/app/cards/printing/[printing]/page.tsx", /if\s*\(\s*!facet\s*\)\s*notFound\(\)/],

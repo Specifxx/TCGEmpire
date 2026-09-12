@@ -73,11 +73,6 @@ test("pack_sim_open fires once per mount; pack_sim_pack_opened fires once a real
   assert.match(openPackBody, /if \(!d\.cards\?\.length\) throw new Error\(\);[\s\S]*trackEvent\("pack_sim_pack_opened", \{ set_id: setCode \}\)/);
 });
 
-test("deck_view fires when a meta deck's page renders, with its slug and archetype", () => {
-  const src = read("src/components/DeckView.tsx");
-  assert.match(src, /trackEvent\("deck_view", \{ deck_id: deck\.slug, archetype: deck\.archetype \}\)/);
-});
-
 test("deck_create fires only on a real user click, not the auto-price-from-shared-link or the market-change re-price", () => {
   const src = read("src/components/DeckBuilder.tsx");
   assert.match(src, /if \(isUserAction\) trackEvent\("deck_create"/);

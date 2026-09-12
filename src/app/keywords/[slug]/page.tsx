@@ -17,16 +17,6 @@ export async function generateStaticParams() {
   return KEYWORDS.map((k) => ({ slug: k.slug }));
 }
 
-// Which of the three Vendetta archetype blueprints on /decks builds around this
-// keyword — matches decks/page.tsx's "Vendetta spotlight" section exactly (same
-// three archetypes, same domain pairings), so this never claims a deck exists
-// that isn't actually shown there.
-const ARCHETYPE_BY_KEYWORD: Record<string, { name: string; domains: string }> = {
-  empower: { name: "Empower Midrange", domains: "Mind + Body" },
-  flow: { name: "Flow Value", domains: "Fury + Calm" },
-  burn: { name: "Burn / Disruption", domains: "Chaos + Order" },
-};
-
 // This page and its matching /guides/<guideSlug> both target the same mechanic —
 // they used to also target the same QUERY ("riftbound X explained"), which is
 // keyword cannibalisation: two of our own pages competing for one ranking. The
@@ -77,7 +67,6 @@ export default async function KeywordPage({ params }: { params: { slug: string }
     select: cardTileSelect(DEFAULT_COUNTRY),
   });
 
-  const archetype = ARCHETYPE_BY_KEYWORD[kw.slug];
   const related = kw.relatedKeywords.map((s) => keywordBySlug(s)).filter((k): k is NonNullable<typeof k> => !!k);
   const guideTitle = getArticle(kw.guideSlug)?.title ?? `Riftbound ${kw.name} Explained`;
 
@@ -160,16 +149,6 @@ export default async function KeywordPage({ params }: { params: { slug: string }
               and its live price across stores.
             </p>
           </div>
-        </section>
-      )}
-
-      {archetype && (
-        <section className="card-surface p-5">
-          <h2 className="text-base font-extrabold text-white">Decks that use {kw.name}</h2>
-          <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-slate-400">
-            The <strong className="text-white">{archetype.name}</strong> archetype ({archetype.domains}) is
-            built around {kw.name} — see the shell on <Link href="/decks" className="text-brand-400 hover:underline">/decks</Link>.
-          </p>
         </section>
       )}
 

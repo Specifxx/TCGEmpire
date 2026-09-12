@@ -9,8 +9,6 @@ import { COUNTRIES, DEFAULT_COUNTRY, priceField } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { CHAMPIONS, championBySlug, championCardWhere } from "@/lib/champions";
 import { setByCode } from "@/lib/constants";
-import { META_DECKS, resolveDecks, type ResolvedDeck } from "@/lib/meta-decks";
-import { DomainBadge } from "@/components/Badge";
 import { EbayBuyCta } from "@/components/EbayBuyCta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { SITE_URL } from "@/lib/site";
@@ -18,7 +16,6 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { CHAMPION_THIN_THRESHOLD } from "@/lib/champions";
-import { DECK_GROUPS, deckGroupPath, deckInGroup } from "@/lib/deck-groups";
 
 // riftdecks.com's /legends/<champion> pages rank #1 for champion queries with
 // build price and win rate in the snippet; ours 404'd entirely. This is the
@@ -151,35 +148,6 @@ export default async function ChampionPage({ params }: { params: { slug: string 
   for (const c of cards) domainCounts.set(c.domain, (domainCounts.get(c.domain) ?? 0) + 1);
   const domainsByCount = Array.from(domainCounts.entries()).sort((a, b) => b[1] - a[1]);
 
-  // Meta decks whose legend is this champion. Matched through the same alias
-  // list as everything else, so the "Master Yi"/"Yi"/"Master" split resolves.
-  // Resolved (not just filtered) so the page can show the SAME real build cost
-  // and tournament attribution as /decks, rather than a bare name + archetype.
-  // Same DB-outage fence as the card query above: a failure here degrades to
-  // the un-costed seed data (still real name/tier/domains/source) rather than
-  // crashing an otherwise-fine page.
-  const unpriced = (d: (typeof META_DECKS)[number]): ResolvedDeck => ({
-    ...d, legendCard: null, legendPriceCents: null, items: [],
-    totalCards: 0, totalCents: 0, priceableCards: 0, pricedCards: 0, sideboardCards: 0, sideboardCents: 0, imageUrl: null,
-  });
-  const deckSeeds = META_DECKS.filter((d) =>
-    champ.prefixes.some((p) => d.legend.toLowerCase().startsWith(p.toLowerCase() + ","))
-  );
-  const decks: ResolvedDeck[] = dbReachable
-    ? await resolveDecks(deckSeeds, country).catch((e) => {
-        console.error(`champions/${champ.slug}: deck resolve failed:`, e);
-        return deckSeeds.map(unpriced);
-      })
-    : deckSeeds.map(unpriced);
-
-  // The archetype/domain shelves this champion's real lists belong to. Static
-  // seed data (no DB), so these links survive a pricing outage — and they are
-  // the internal path from an 87-page champion surface into the new programmatic
-  // deck surface, which is the link both sides need to be discovered quickly.
-  const championGroups = deckSeeds.length
-    ? DECK_GROUPS.filter((g) => deckSeeds.some((d) => deckInGroup(d, g)))
-    : [];
-
   // Editorial intro built from this champion's OWN live pool — count, price
   // range, where the value sits, which cards matter, and what that means for
   // someone buying. The audit sampled champion hubs at a median of 164 unique
@@ -289,58 +257,6 @@ export default async function ChampionPage({ params }: { params: { slug: string 
           ))}
         </div>
       </section>
-
-      {decks.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-xl font-extrabold text-white">Decks built around {champ.name}</h2>
-          <p className="mb-4 max-w-3xl text-xs text-slate-500">
-            Real tournament results, not house-made lists — each links to its source event and its live, priced
-            buy list.
-            {championGroups.length > 0 && (
-              <>
-                {" "}
-                {champ.name}&apos;s lists sit in the{" "}
-                {championGroups.map((g, i) => (
-                  <span key={`${g.axis}-${g.slug}`}>
-                    {i > 0 && (i === championGroups.length - 1 ? " and " : ", ")}
-                    <Link href={deckGroupPath(g)} className="text-brand-400 hover:underline">
-                      {g.name}
-                    </Link>
-                  </span>
-                ))}{" "}
-                {championGroups.length === 1 ? "shelf" : "shelves"} — each of those pages prices every deck in
-                the group and shows the cheapest cart to buy one.
-              </>
-            )}
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {decks.map((d) => (
-              <Link
-                key={d.slug}
-                href={`/decks/${d.slug}`}
-                className="card-surface group flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
-                  {d.tier && <span className="chip ml-auto bg-ink-800 text-[10px] text-slate-400">Tier {d.tier}</span>}
-                </div>
-                <span className="text-xs text-slate-500">{d.archetype}</span>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {d.domains.map((dm) => (
-                    <DomainBadge key={dm} domain={dm} />
-                  ))}
-                </div>
-                {d.pricedCards > 0 && (
-                  <span className="num mt-1 text-sm font-bold text-accent">
-                    from {formatMoney(d.totalCents, currency)} <span className="text-xs font-normal text-slate-500">({d.pricedCards}/{d.totalCards} priced)</span>
-                  </span>
-                )}
-                {d.source && <span className="mt-1 text-[11px] text-slate-600">{d.source}</span>}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section className="card-surface p-6">
         <h2 className="text-xl font-extrabold text-white">Cheapest way to build {champ.name}</h2>

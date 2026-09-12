@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const description = clampText(a.excerpt, DESCRIPTION_MAX);
   return {
     // " — RiftCompare", matching every other indexed page's suffix (the root
-    // layout's title template, and TITLE_SUFFIX in lib/deck-groups.ts) — see
+    // layout's title template) — see
     // the identical note in blog/[slug]/page.tsx for why the longer, category-
     // naming suffix was dropped.
     title: { absolute: `${a.title} — RiftCompare` },
