@@ -274,7 +274,8 @@ export default async function RadiancePreordersPage() {
           <h2 className="text-xl font-extrabold text-white">When to pre-order Radiance — and when to wait</h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
             Two dates change these prices before release day. <strong className="text-slate-200">Preview Season runs
-            28 September to 9 October 2026</strong>, when the cards are revealed a handful at a time; a store that
+            25 September to 9 October 2026</strong> (it opens at the Regional Qualifier: Los Angeles), when the cards
+            are revealed a handful at a time; a store that
             priced its boxes before anyone knew what was in the set often re-prices once the chase cards are known.
             Then <strong className="text-slate-200">Pre-Rift events run 16–22 October</strong>, a week ahead of the
             23 October street date, which is when the first singles start changing hands and when sealed stock is at

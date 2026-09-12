@@ -267,11 +267,11 @@ export const SETS: SetInfo[] = [
   // and under "Upcoming & unreleased" on /sets, and is excluded from the eBay quota,
   // the box-EV calculator, movers and the pack game until cards actually import.
   //
-  // "RAD" IS A PLACEHOLDER. Riot has published the name and date but not the
-  // three-letter set code; this is our guess. Changing it later is a one-line edit
-  // here PLUS a Card.setCode backfill if any cards have been imported under it —
-  // check before importing the official gallery.
-  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23", codeProvisional: true },
+  // "RAD" IS RIOT'S CODE. It was a placeholder guess until 12 Sep 2026, when it
+  // was checked against Riot's own products-and-sets rundown, which lists
+  // "3-Letter Code: RAD" (alongside LGC for Legacy and REC for The Reckoning).
+  // codeProvisional is therefore gone: the /sets/radiance badge may show it.
+  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23" },
 ];
 
 // How long after release a set keeps first claim on the eBay quota. Two months:

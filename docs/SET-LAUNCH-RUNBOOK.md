@@ -91,7 +91,7 @@ catalogue.**
 
 ---
 
-## 3. Spoiler season (Radiance: 28 Sep – 9 Oct 2026)
+## 3. Spoiler season (Radiance: 25 Sep – 9 Oct 2026, opening at RQ Los Angeles)
 
 Run `maintenance.yml` → **`set-pipeline`** every few days from the first reveal.
 

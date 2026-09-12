@@ -427,23 +427,28 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
   {
     slug: "riftbound-radiance-what-we-know",
     category: "blog",
-    title: "Riftbound Radiance: Release Date & What's Confirmed",
+    title: "Riftbound Radiance: Release Date, Products, Prices & What's Confirmed",
     excerpt:
-      "Riftbound: Radiance lands 23 October 2026 with 180 confirmed cards and five new champion Legends. Every confirmed detail and what's still unrevealed.",
+      "Riftbound: Radiance lands 23 October 2026 with 180 confirmed cards, nine new champion Legends and a new Ultimate Rare. Every confirmed date, product and price, Ekko's revealed Legend, and what's still unrevealed.",
     author: "RiftCompare",
     date: "2026-08-27",
-    readMins: 7,
-    tags: ["radiance", "news", "set", "release date", "seraphine"],
+    // 12 Sep 2026: Riot's own rundown publishes the set code (RAD) and moves
+    // Preview Season's start to 25 Sep (RQ Los Angeles); the distributor sheet
+    // gives every product's contents and MSRP; Ekko's Legend is revealed; the
+    // Ultimate Rare is announced. All folded in below, each with its source.
+    updated: "2026-09-12",
+    readMins: 11,
+    tags: ["radiance", "news", "set", "release date", "seraphine", "prices", "products"],
     hero: {
       src: "/blog/riftbound-radiance-what-we-know.png",
       alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with 180 confirmed cards",
     },
     summary: [
-      "**Radiance releases 23 October 2026** — the fifth Riftbound set, and the next one you will actually be able to buy.",
-      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments, so the base run is around 114 and the headline number is not comparable to older sets'.",
-      "**Five new champion Legends are confirmed, with four more still unrevealed**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
-      "**The card list has not been revealed.** Anyone showing you Radiance decklists today is guessing — we will publish the gallery the day it is real.",
-      "**One Radiance card already exists in print**: Seraphine, Not Alone shipped inside the T1 Signature Edition months early, which is why it is not tournament-legal yet.",
+      "**Radiance releases 23 October 2026** — the fifth Riftbound set. **Preview Season opens 25 September** at the Regional Qualifier: Los Angeles and runs to 9 October; Pre-Rift events are 16–22 October.",
+      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments, so the base run is around 114 and the headline number is not comparable to older sets'. The set code is **RAD** (published by Riot, not a guess).",
+      "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV are named, four are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
+      "**Every product and its price is public**: booster packs (US$4.99), 24-pack displays (US$120), the Vault (six packs, runes, three foil promo tokens — US$34.99), the Evelynn vs Seraphine Showdown Decks, and a Pre-Rift kit that ships a week early. Full table below.",
+      "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. It has not been shown. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
     ],
     faq: [
       {
@@ -452,11 +457,31 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
       },
       {
         q: "How many cards are in Riftbound Radiance?",
-        a: "180, confirmed by Riot — 66 of those are Showcase treatments. That is larger than Vendetta's 166 and smaller than Origins' 298, making it the second-biggest Riftbound set so far. Expect Signature and overnumbered printings beyond the 180, the same way every previous set has had chase printings beyond its base count.",
+        a: "180, confirmed by Riot — and, unlike every earlier set's headline figure, that 180 already includes the set's 66 Showcase treatments. Counted the same way as older sets (base run only), Radiance is about 114 cards, the smallest main set so far; counted as a whole card list it sits between Vendetta and Unleashed. Expect Signature, overnumbered and the new Ultimate Rare printings on top, the way every previous set has had chase printings beyond its base count.",
+      },
+      {
+        q: "When does Radiance Preview Season start?",
+        a: "25 September 2026, at the Regional Qualifier: Los Angeles (25–27 September), then daily reveals through 9 October. Riot's product rundown originally listed the window as starting 28 September; its own schedule now opens the previews at the Los Angeles qualifier three days earlier.",
+      },
+      {
+        q: "What is the Riftbound Radiance set code?",
+        a: "RAD. It is listed in Riot's own products-and-sets rundown alongside the hashtag #RBRadiance, so it is an official code, not a community guess. Card numbers will read RAD-001 and so on.",
       },
       {
         q: "Which champions are in Riftbound Radiance?",
-        a: "Five new champion Legends are confirmed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV. Riot has also said four more champions are still to be revealed. The full card list has not been published, so the rest of the set — including which existing champions get new printings — is not yet known.",
+        a: "Nine new champion Legends in total. Five are named — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — and four are still unrevealed. The Pre-Rift kit's mini-decks come in nine champion variations, one per new Legend, which is how the total is known before the last four names are. The full card list has not been published, so which existing champions get new printings is not yet known.",
+      },
+      {
+        q: "What does Ekko's Radiance Legend do?",
+        a: "Ekko, Boy Who Shattered Time is a Fury/Mind Legend that uses Empower, the mechanic Vendetta introduced. As previewed by Riot: you may disempower Ekko to make your next unit cost 2 energy and 1 power less, and that unit is killed at the end of the turn. Ekko, Ingenious is his Champion Unit; only its art has been shown.",
+      },
+      {
+        q: "What Radiance products are there, and what do they cost?",
+        a: "Booster packs at US$4.99 and 24-pack booster displays at US$120; the Radiance Vault (six packs, 36 basic runes, three full-art foil promo tokens and a storage box) at US$34.99; the Evelynn vs Seraphine Showdown Decks (two 56-card decks, two playmats, two boosters and two deck boxes per set); and a 16-player Pre-Rift Event Kit at US$480 for stores, on sale 16 October. Everything else releases 23 October. Prices are the distributor's US MSRPs; store pre-order prices vary and are compared on our Radiance pre-order page.",
+      },
+      {
+        q: "What is the Radiance Ultimate Rare?",
+        a: "A new chase tier Riot has announced for the set but not yet shown. It sits above the overnumbered treatment, and Riot has said Ultimate Rares will not necessarily appear in every set. The community credits Unleashed's Baron Nashor as the first Ultimate-tier card, which would make Radiance's the second.",
       },
       {
         q: "Can I see the Radiance card list yet?",
@@ -481,35 +506,75 @@ Everything above is about *choosing* an archetype. Once you have, **[the meta de
         slugs: ["seraphine-not-alone-t1s-005-005-promo"],
       },
     ],
+    shop: [
+      { label: "Radiance booster boxes", query: "riftbound radiance booster box" },
+      { label: "Radiance Vault", query: "riftbound radiance vault" },
+      { label: "Evelynn vs Seraphine Showdown Decks", query: "riftbound radiance showdown deck" },
+    ],
     browseCta: {
-      href: "/release-dates",
-      label: "See the Radiance countdown →",
-      blurb: "The exact time remaining until release, plus every set date we track.",
+      href: "/radiance-preorders",
+      label: "Compare Radiance pre-order prices →",
+      blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, cheapest first, in your currency.",
     },
-    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to a confirmed **180 cards** (66 of them Showcase treatments), and it brings **five new champion Legends** — with four more still unrevealed. That is the confirmed core — and this page is deliberately limited to what is actually confirmed, because the card list has not been revealed and the internet is already full of Radiance "leaks" that are nothing of the sort.
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to a confirmed **180 cards** (66 of them Showcase treatments), it brings **nine new champion Legends** (five named, four not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — and the distributor sheet has put a price on every product. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
 ## Radiance at a glance
 
 | | |
 | --- | --- |
 | **Set number** | 5 |
+| **Set code** | **RAD** (published by Riot; hashtag #RBRadiance) |
 | **Release date** | 23 October 2026 |
+| **Preview Season** | 25 September – 9 October 2026 |
+| **Pre-Rift events** | 16 – 22 October 2026 |
 | **Card count** | 180 (66 Showcase), confirmed |
-| **New champion Legends** | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV (+4 unrevealed) |
-| **Set code** | Not published by Riot |
-| **Card list revealed?** | **No** |
+| **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, and 4 unrevealed |
+| **New chase tier** | Ultimate Rare (announced, not shown) |
+| **Tagline** | "Own the Stage. The World is Watching." |
+| **Card list revealed?** | **No** — one Legend and one T1 promo are the only cards known in full |
 
 ## The Radiance launch schedule
 
-Riot has published dates for the whole run-up, not just street date. Three of them matter if you are buying:
+Riot has published dates for the whole run-up, not just street date. Four of them matter if you are buying:
 
 | Date | What happens |
 | --- | --- |
-| **28 September – 9 October 2026** | **Preview Season.** Cards are revealed, a handful a day. This is when the set stops being four confirmed facts and becomes a card list. |
-| **16 – 22 October 2026** | **Pre-Rift events.** Local stores run sealed events with the set a week before street date, which is also when the first singles start changing hands. |
-| **23 October 2026** | **Street date.** Sealed product and singles go on general sale. |
+| **25 – 27 September 2026** | **Preview Season opens at the Regional Qualifier: Los Angeles.** The first official reveals land at the event that closes the 2026 qualifier season. |
+| **28 September – 9 October 2026** | **Preview Season continues.** Cards are revealed a handful a day. This is when the set stops being a list of facts and becomes a card list. |
+| **16 – 22 October 2026** | **Pre-Rift events.** Local stores run sealed events with the set a week before street date, which is also when the first singles start changing hands. The Pre-Rift Event Kit itself ships to stores on 16 October. |
+| **23 October 2026** | **Street date.** Every other product — boosters, displays, the Vault, the Showdown Decks — and singles go on general sale. Riot's Regional Championships follow in November. |
 
 Two practical notes on that calendar. First, **Pre-Rift week is when a new set's singles are at their most volatile** — supply is a handful of event boxes and demand is everyone who wants to build immediately, so early prices are almost never the prices a card settles at. Vendetta's singles started trading several days ahead of its official 31 July street date for exactly this reason. Second, **pre-order prices move during Preview Season**, not at release: once the chase cards are known, stores that priced a box before the reveals adjust. Our **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through both windows, and the countdown itself lives on **[Riftbound release dates](/release-dates)**, which also offers an add-to-calendar file.
+
+## Every Radiance product, and what Riot's distributor says it costs
+
+Riot's rundown names four product lines — booster packs and displays, the Evelynn vs Seraphine Showdown Decks, a Vault bundle and Pre-Rift kits — and UVS Games, Riftbound's distributor, has published the contents and US MSRP of each. Those are list prices, not what any store is charging: pre-order prices sit above and below them, which is what the **[Radiance pre-order comparison](/radiance-preorders)** is for.
+
+| Product | What is inside | US MSRP | On sale |
+| --- | --- | --- | --- |
+| **Booster pack** | 14 cards (see below) | US$4.99 | 23 October |
+| **Booster display** | 24 packs | US$120 | 23 October |
+| **Radiance Vault** | 6 booster packs, 36 basic runes, 3 full-art foil promo tokens, a storage box and 2 dividers | US$34.99 | 23 October |
+| **Showdown Decks: Evelynn vs Seraphine** | Two 56-card preconstructed decks, 2 playmats, 2 booster packs, 2 deck boxes | display of two sets: US$139.96 | 23 October |
+| **Pre-Rift Event Kit** (stores) | 16 player kits — each a 15-card mini-deck built around one of the nine new champions, 5 boosters and a Pre-Rift promo — plus a 24-pack display for prizes | US$480 | 16 October |
+
+Three things fall out of that table that are worth more than the table itself.
+
+**The Vault is not a discount on packs.** Six packs at pack MSRP is US$29.94; the Vault is US$34.99. You are paying about five dollars for the runes, the three foil tokens and the box — which is fine if you need runes (a new player does) and poor value if you already own a set. Buy it for the tokens or not at all.
+
+**A Pre-Rift seat is the cheapest way to open Radiance early.** US$480 across 16 players is US$30 a head at MSRP for five packs, a playable mini-deck with the champion's Legend and Unit, and a promo. Stores set their own entry fees, but any fee near that number is five packs at list price with the deck and promo thrown in — and it is the only Radiance product you can open before 23 October.
+
+**The Showdown Decks are the beginner product, priced like one.** A display of two sets at US$139.96 implies roughly US$70 for two full 56-card decks, two playmats and two boosters — a two-player start with nothing else needed. It is also the only place either Evelynn's or Seraphine's cards are guaranteed to be, which is why it is the product to watch if either champion is the reason you are here.
+
+## What is in a Radiance booster pack
+
+The distributor sheet lists the pack as **7 Commons, 3 Uncommons, 2 foil Rares or better, 1 foil of any rarity and 1 token slot** — the same 14-card structure every Riftbound set has shipped with, and the one our **[pack opening simulator](/games/pack-sim)** deals. Nothing about pack composition changes for Radiance. The change Riot has announced for booster packs — a Common slot becoming a Legend-or-Battlefield slot — belongs to **Legacy** in January, not to this set.
+
+## The Ultimate Rare
+
+Riot's rundown adds one line that older sets' announcements did not have: Radiance will include **a new Ultimate Rare card**. It has not been shown, and Riot has said Ultimate Rares will not necessarily appear in every set. What is known is where it sits — above the overnumbered treatment, which until now was the top of the ladder short of a Signature print — and that it is a single card, not a tier of dozens.
+
+The community credits **Unleashed's Baron Nashor** as Riftbound's first Ultimate-tier card, which would make Radiance's the second ever. Treat the precedent as community record rather than Riot's own framing; Riot's wording is simply "a new Ultimate Rare card." For a set that is already 37% Showcase, one more tier at the very top concentrates a box's value in still fewer slots — the same dynamic that keeps Origins' chase cards expensive, pushed a step further.
 
 ## Where Radiance sits in the release order
 
@@ -519,11 +584,17 @@ Radiance lands at a confirmed **180 cards**, and that number needs one qualifica
 
 What is not ambiguous is the **Showcase density**: 66 of 180 is roughly 37%, the highest share of any Riftbound set so far. A high Showcase share concentrates a box's value in fewer, rarer slots, which is the dynamic that keeps Origins' top cards expensive. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
 
-## The five champions
+## The nine champions — and the one Legend Riot has actually shown
 
-Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV** — and said four more are still to be revealed, for nine new Legends across the set in total.
+Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV** — and said four more are still to be revealed. The total is nine, and it is now pinned down from a second direction: the Pre-Rift kit's mini-decks come in **nine champion variations**, one per new Legend.
 
-All five named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining four. What has *not* been said is which domains any of them sit in, what their abilities do, or which existing champions get new printings alongside them — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+All five named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining four.
+
+**Ekko is the one Legend revealed in full.** *Ekko, Boy Who Shattered Time* was teased at Gen Con and detailed in Riot's own first-look article in August: a **Fury/Mind Legend** built on **[Empower](/keywords/empower)**, the mechanic Vendetta introduced. As previewed, you may disempower Ekko to make your next unit cost **2 energy and 1 power less**, and that unit is **killed at the end of the turn**. That is a cheat-a-threat-in-then-lose-it design — the kind of ability that wants units with enter-the-board effects, or ways to make the sacrifice not matter. It is also the clearest signal yet that Radiance extends Empower rather than retiring it, which matters for every Empower deck bought during Vendetta. *Ekko, Ingenious* is his Champion Unit, and only its art has been shown.
+
+**Evelynn and Seraphine** headline the Showdown Decks and the box art. Riot has shown the art for *Evelynn, In Control* and reporting from the Vancouver reveal places her in the Chaos domain; her card text has not been published. Seraphine's *Not Alone* is fully known because it is already in print (below). Beyond that, nothing about domains, abilities or which existing champions get new printings has been said — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+
+**On the leaks.** A photo of Riot's own PAX West demo material showed three new mechanics — Deploy, Showoff and Disarm — which we covered in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)**, hedged throughout. Since then, purported card text for several Legends has circulated from anonymous social-media accounts. We are not reproducing it here: a demo table Riot set up in public is a source; a screenshot with no provenance is not. Preview Season, which opens 25 September, is when this stops being a question.
 
 If you want the wider picture of who is already in the game, we maintain **[which League of Legends champions are in Riftbound](/guides/league-of-legends-champions-in-riftbound)**.
 
@@ -551,7 +622,7 @@ Three things are worth thinking about before release, and none of them require k
 
 ## What we will publish, and when
 
-We are not going to run Radiance speculation. What we will do, on the day the reveals are real:
+We are not going to run Radiance speculation. What we will do, from 25 September as the reveals are real:
 
 - **The full card gallery**, filterable by domain, rarity and type, straight from our database.
 - **Live prices on every card**, compared across every store we track in each market's own currency.
@@ -579,7 +650,10 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "A photo from Riot's own PAX West demo table reveals three new Riftbound: Radiance mechanics — Deploy, Showoff and Disarm — months before the set's 23 October 2026 release. Here's exactly what leaked.",
     author: "RiftCompare",
     date: "2026-09-08",
-    readMins: 7,
+    // 12 Sep 2026: status check — still unconfirmed; Preview Season now opens 25
+    // Sep; a second, weaker wave of leaks (anonymous card text) noted, not reproduced.
+    updated: "2026-09-12",
+    readMins: 8,
     tags: ["radiance", "news", "mechanics", "spoilers"],
     hero: {
       src: "/blog/riftbound-radiance-leaked-mechanics.png",
@@ -680,6 +754,10 @@ The caption also suggests Disarm "can pair well with direct damage spells like F
 
 We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet.
 
+## Status, 12 September 2026
+
+Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. It is worth noting, though, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards.
+
 ## How to read a leak like this responsibly
 
 A leak like this is worth tracking, but it's worth reading carefully rather than taking at face value — a few habits are useful here specifically:
@@ -710,6 +788,7 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
       "What Riftbound's leaked Deploy keyword reportedly does, how it's meant to work, and why Riot hasn't confirmed it yet — everything currently known about Radiance's Gear mechanic.",
     author: "RiftCompare",
     date: "2026-09-08",
+    updated: "2026-09-12",
     readMins: 5,
     tags: ["radiance", "mechanics", "deploy", "leak", "spoilers", "guide"],
     hero: {
@@ -735,7 +814,9 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
       label: "See the full Radiance mechanics leak →",
       blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
     },
-    body: `**Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
+    body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
+
+**Deploy is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what would need to happen before we'd treat any of it as settled.
 
 > "Play this gear only to a battlefield and it will grant benefits while there. When an opponent holds that battlefield, kill this gear."
 
@@ -796,6 +877,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       "What Riftbound's leaked Showoff keyword reportedly does, how the reveal-based effect is meant to work, and why it isn't Riot-confirmed yet — everything currently known.",
     author: "RiftCompare",
     date: "2026-09-08",
+    updated: "2026-09-12",
     readMins: 5,
     tags: ["radiance", "mechanics", "showoff", "leak", "spoilers", "guide"],
     hero: {
@@ -821,7 +903,9 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       label: "See the full Radiance mechanics leak →",
       blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
     },
-    body: `**Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
+    body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
+
+**Showoff is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how the mechanic reportedly works, and what's still missing before it can be judged properly.
 
 > "As you play this, you may reveal a card from hand or choose a friendly card that meets the listed criteria. The card's effect will change based on what is shown off."
 
@@ -879,6 +963,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       "What Riftbound's leaked Disarm keyword reportedly does, how it compares to the existing Assault keyword, and why it isn't Riot-confirmed yet.",
     author: "RiftCompare",
     date: "2026-09-08",
+    updated: "2026-09-12",
     readMins: 5,
     tags: ["radiance", "mechanics", "disarm", "leak", "spoilers", "guide"],
     hero: {
@@ -904,7 +989,9 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
       label: "See the full Radiance mechanics leak →",
       blurb: "Deploy, Showoff and Disarm together, with the source photo and everything that's still unconfirmed.",
     },
-    body: `**Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
+    body: `*Status, 12 September 2026: still unconfirmed by Riot. Preview Season now opens on 25 September at the Regional Qualifier: Los Angeles — the first point at which this can be confirmed, reworded or contradicted by an official card.*
+
+**Disarm is one of three new mechanics reportedly leaked from Riftbound: Radiance** ahead of the set's **[23 October 2026 release](/blog/riftbound-radiance-what-we-know)** — photographed on a physical rules-reference card at Riot's own PAX West demo table and shared publicly by Riftbound content creator AskJoshy. It has **not** been confirmed by Riot. Here's exactly what leaked, how it reportedly compares to an existing keyword, and what's still unknown.
 
 > "When this unit attacks, decrease the Might of an enemy unit here."
 
@@ -7360,6 +7447,10 @@ If neither of those describes how you use the site, the free tier — which stil
       "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final to Ornn. Singapore is deciding round two live, and Radiance's five confirmed champions show where Riot's marketing already went.",
     author: "RiftCompare",
     date: "2026-09-05",
+    // 12 Sep 2026: Radiance facts corrected — Ekko's revealed card is his LEGEND
+    // (Boy Who Shattered Time, Fury/Mind), not the Ingenious unit, and Preview
+    // Season now opens 25 Sep. Tournament content is as-written on 5 Sep.
+    updated: "2026-09-12",
     readMins: 12,
     tags: ["meta", "tournament", "regionals", "radiance", "predictions", "singapore"],
     // Kennen is the post's throughline — the most-played legend at Barcelona and
@@ -7392,7 +7483,7 @@ If neither of those describes how you use the site, the free tier — which stil
       },
       {
         q: "Which Riftbound Radiance champions has Riot confirmed?",
-        a: "Five so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV and Ziggs. Four more are set to be revealed during Preview Season, 28 September through 9 October 2026, ahead of Radiance's 23 October street date.",
+        a: "Five so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV and Ziggs. Four more are set to be revealed during Preview Season, which opens 25 September 2026 at the Regional Qualifier: Los Angeles and runs through 9 October, ahead of Radiance's 23 October street date.",
       },
       {
         q: "Which Radiance champions is Riot actually promoting hardest?",
@@ -7446,9 +7537,9 @@ The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides
 
 ## The bigger shift: Radiance, in seven weeks
 
-Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments (a ~37% Showcase share, the highest of any set so far). Preview Season runs **28 September through 9 October**, with Pre-Rift events **16–22 October** immediately before street date. That preview window opens three days after Los Angeles closes out the Regional Qualifier season — the same week the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
+Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments (a ~37% Showcase share, the highest of any set so far). Preview Season opens **25 September, at the Regional Qualifier: Los Angeles itself**, and runs through **9 October**, with Pre-Rift events **16–22 October** immediately before street date. That means the first official reveals land in the same room as the last qualifier of the season — the same weekend the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
 
-Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today: Ekko is a Champion Unit in the blue domain — Mind, in Riftbound's own domain key — with a card called *Ingenious* carrying an Empowered effect: discount a unit into play, and it dies at end of turn. That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
+Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today is Ekko's Legend, *Ekko, Boy Who Shattered Time*: a **Fury/Mind** Legend whose ability is built on Empower — disempower Ekko to discount your next unit by 2 energy and 1 power, and that unit dies at end of turn. (*Ekko, Ingenious* is his Champion Unit; only its art has been shown.) That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
 
 Radiance isn't the only structural shift on the calendar, either — just the next one. [Legacy](/guides/riftbound-sets-in-order), Riot's Set 6, ships 29 January 2027 as the largest set announced so far and the first designed specifically for draft, changing pack composition itself: a common slot becomes a Legend-or-Battlefield slot. That's a bigger structural change than any single champion reveal, and it's one more reason "the meta" is worth thinking of as something that keeps moving on a schedule, not settling once and staying settled.
 
@@ -7480,7 +7571,10 @@ We'll be watching Singapore's Top 8 the moment it's final, and updating the tier
       "Radiance is the smallest main Riftbound set yet by base cards — and by some distance the most Showcase-dense. Why 23 October is still the game's biggest release since Origins: it completes K/DA and unlocks a Seraphine that already trades.",
     author: "RiftCompare Markets Desk",
     date: "2026-09-05",
-    readMins: 8,
+    // 12 Sep 2026: product MSRPs (distributor sheet), the Ultimate Rare and the
+    // Pre-Rift kit's nine-champion structure folded in as a sixth argument.
+    updated: "2026-09-12",
+    readMins: 9,
     // "radiance" belongs here: every other post in this cluster carries it, and the
     // tag pages are how a reader who lands on one Radiance piece finds the rest.
     tags: ["radiance", "news", "set", "release", "prices"],
@@ -7496,6 +7590,7 @@ We'll be watching Singapore's Top 8 the moment it's final, and updating the tier
       "Like-for-like, that is a base run of about **114** — the smallest of any main Riftbound set. Radiance is not the biggest set since Origins, and it is not even bigger than [Vendetta](/sets/vendetta).",
       "What it is: **the most chase-dense set Riftbound has printed.** Showcase cards are about **37%** of Radiance's card list, against 23% for Spirit Forged, 22% for Unleashed and 15% for Origins.",
       "It also **completes K/DA**. Ahri and Kai'Sa came in Origins, Akali in Vendetta; Radiance brings Seraphine and Evelynn. Riot has **not** announced K/DA cards — that connection is our inference from the champion list.",
+      "**The prices are now public**: US$4.99 a pack, US$120 a 24-pack display, US$34.99 for the six-pack Vault — and a new **Ultimate Rare** tier above the overnumbered prints that concentrates a box's value further still.",
       "If you plan to open rather than buy singles, run [box EV](/tools/box-ev) against the singles market once real prices exist.",
     ],
     shop: [
@@ -7637,6 +7732,23 @@ Riot's roadmap has **Legacy** arriving on 29 January 2027 at around 346 — the 
 That makes Radiance the last release into a relatively small card pool, and the last before a set built for a different format arrives. Bigger sets historically push commons and uncommons cheaper while concentrating value at the top of the rarity ladder — which, for a set that is already 37% Showcase, is worth watching.
 
 Treat this as a structural observation about supply, not a prediction about any individual card. Card pools widen in every trading card game, and plenty of cards from small early sets end up worthless anyway.
+
+## 6. The price tags are public, and they sharpen the chase-density argument
+
+Since this was first published, Riot's distributor has put a US MSRP on every Radiance product, and Riot's own rundown has added a tier to the top of the rarity ladder. Both push in the same direction.
+
+| Product | Contents | US MSRP | Per pack |
+| --- | --- | --- | --- |
+| Booster pack | 14 cards | US$4.99 | US$4.99 |
+| Booster display | 24 packs | US$120 | US$5.00 |
+| Radiance Vault | 6 packs + 36 runes + 3 foil promo tokens + box | US$34.99 | US$5.83 |
+| Pre-Rift Event Kit (per seat, 16 seats) | 5 packs + a 15-card champion mini-deck + promo | US$30 | US$6.00 incl. deck and promo |
+
+Pack pricing is flat: a display costs the same per pack as buying singles packs, so there is no volume discount to chase, and the Vault charges about five dollars over pack price for runes, tokens and a box. The one product with a structural edge is the Pre-Rift seat, because it is the only way to open Radiance before 23 October — which, for a set this Showcase-heavy, is a week of trading before the singles market exists. Store entry fees vary; the arithmetic above is MSRP.
+
+The **Ultimate Rare** is the more important line. Riot has announced one for Radiance — not shown it — and described it as sitting above the overnumbered treatment, with no guarantee that every set gets one. A single card above the existing top of the ladder, in a set that is already 37% Showcase, means the spread between a good box and an ordinary one widens further. That is the chase-density thesis of section 1, with an extra rung added by Riot itself. It is also exactly the profile in which buying singles beats opening for anyone who wants specific cards rather than the lottery ticket.
+
+The full product table, with what each contains, is in **[what's confirmed about Radiance](/blog/riftbound-radiance-what-we-know)**; live store pre-order prices, which already sit above and below these MSRPs, are on **[the Radiance pre-order comparison](/radiance-preorders)**.
 
 ## What this means if you are buying
 

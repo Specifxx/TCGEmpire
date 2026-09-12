@@ -339,12 +339,13 @@ export default async function SetPage({
             <span className="text-slate-300">{set.name}</span>
           </nav>
 
-          {/* The code badge, but only for a code Riot has actually published.
-              Radiance's "RAD" is our own placeholder (see codeProvisional in
-              lib/constants.ts) — showing it in a badge presented a guess as the
-              official set code, on the page that ranks for the set's name. The
-              code still exists internally as the join key; it is just not stated
-              as fact until it is one. */}
+          {/* The code badge, but only for a code Riot has actually published
+              (codeProvisional in lib/constants.ts marks one that is still our
+              own guess). Showing a guessed code in a badge would present it as
+              the official set code on the page that ranks for the set's name —
+              which is what happened with Radiance's "RAD" until Riot's own
+              rundown confirmed it. The code always exists internally as the
+              join key; it is just not stated as fact until it is one. */}
           {!set.codeProvisional && (
             <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-1.5 font-display text-lg font-bold tracking-wide text-brand-300">
               {set.code}
