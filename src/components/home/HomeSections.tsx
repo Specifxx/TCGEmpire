@@ -39,7 +39,6 @@ export interface HomeSectionsProps {
   storeCount: number;
   storeWord: string;
   popularCards: CardTileData[];
-  popularVendetta: CardTileData[];
   // ALL FIVE markets, not just `country` — TodaysTopDeals/MarketPulse localise
   // to the VISITOR's own market client-side (useCountry()), which can differ
   // from the page's URL/baseline market (e.g. a bookmarked /au visited by
@@ -66,7 +65,6 @@ export function HomeSections({
   storeCount,
   storeWord,
   popularCards,
-  popularVendetta,
   topDealsByCountry,
   moversByCountry,
   recentlyUpdated,
@@ -115,8 +113,39 @@ export function HomeSections({
           placement. Hides itself if there's nothing to show today. */}
       <MarketPulse moversByCountry={pulseMoversByCountry} />
 
-      {/* Today's Top Deals — the strongest differentiator, moved up from five
-          sections deep. Hidden if no market has data. */}
+      {/* Unified popular-cards carousel — the all-time most-popular list, with
+          a "Biggest movers" tab and "Recently updated prices" (each once its
+          own always-expanded section) folded in beside it as one compact,
+          tabbed, one-row horizontal scroll. Real cards whose price genuinely
+          changed in the latest snapshot (see lib/price-history.ts's
+          outlier-guarded diff, never fabricated); a tab simply doesn't appear
+          until there's at least one real change to show.
+
+          TWO CHANGES ON 2026-09-12, both the owner's call. A fourth tab scoped
+          to Vendetta used to sit FIRST here, so the default view of this
+          section was one set's demand rather than the site's. Vendetta
+          released on 31 Jul 2026 — it stopped being the new set months ago,
+          and set-scoped popularity belongs on /sets/<slug>, which that tab was
+          only ever a teaser for. All-time leads now, which is also what the
+          page's ItemList JSON-LD at the bottom of this file has always
+          described.
+
+          AND IT NOW SITS ABOVE TODAY'S TOP DEALS. Top Deals answers "what is
+          cheap today"; this answers "what is everyone actually after", which
+          is the broader first question and the section that sends visitors
+          into card pages. */}
+      <PopularCardsCarousel
+        allTime={popularCards}
+        movers={biggestMovers}
+        recentlyUpdated={recentlyUpdatedCards}
+        storeCount={storeCount}
+        storeWord={storeWord}
+      />
+
+      {/* Today's Top Deals — the strongest differentiator, and still near the
+          top: it was moved up from five sections deep, and now sits one behind
+          the popular-cards carousel above (2026-09-12). Hidden if no market
+          has data. */}
       {anyDeals && (
         <Reveal>
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
@@ -143,28 +172,14 @@ export function HomeSections({
           commercial run reads own-inventory first, affiliate second. */}
       <EbayPicks />
 
-      {/* Unified popular-cards carousel — merges what used to be two identical
-          "Most popular…" sections (Vendetta-scoped and all-time), a "Biggest
-          movers" tab, AND "Recently updated prices" — which used to be its
-          own always-expanded section — into one compact, tabbed, one-row
-          horizontal scroll. Real cards whose price genuinely changed in the
-          latest snapshot (see lib/price-history.ts's outlier-guarded diff,
-          never fabricated); the tab simply doesn't appear until there's at
-          least one real change to show. */}
-      <PopularCardsCarousel
-        vendetta={popularVendetta}
-        allTime={popularCards}
-        movers={biggestMovers}
-        recentlyUpdated={recentlyUpdatedCards}
-        storeCount={storeCount}
-        storeWord={storeWord}
-      />
-
       {/* Return-visit hooks — Riftle, the pack simulator, and price alerts —
-          directly after Most popular cards. These are the site's best "come
-          back tomorrow" mechanics that aren't the price data itself, so they
-          get the slot right after the strongest card-browsing section instead
-          of competing with it. */}
+          after the commercial run above (deals, newsletter, eBay). These are
+          the site's best "come back tomorrow" mechanics that aren't the price
+          data itself, so they get a slot of their own rather than competing
+          with a card-browsing section. They used to sit directly under the
+          popular-cards carousel; that section moved above Top Deals on
+          2026-09-12 and these stayed where they were rather than being
+          dragged up the page with it. */}
       <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <ReturnVisitCards newestSetName={newestSet?.name} />
       </Reveal>
