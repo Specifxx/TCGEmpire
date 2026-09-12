@@ -1,5 +1,17 @@
 import type { Config } from "tailwindcss";
 
+// THEMEABLE TOKENS. Every neutral below is `rgb(var(--c-<name>) / <alpha-value>)`
+// rather than a hex, so the light theme can remap the whole palette from
+// globals.css (`:root` = dark, `:root[data-theme="light"]` = light) without a
+// single className changing — the same `text-white` / `bg-ink-900` /
+// `text-slate-400` renders correctly in both. `<alpha-value>` keeps the
+// `bg-ink-900/95`-style opacity modifiers working. The dark values in
+// globals.css are the exact hexes that used to live here, so dark mode is
+// pixel-identical. tests/theme.test.ts pins that every variable named here is
+// defined in both palettes and that the light one clears WCAG AA where the
+// dark one does. See src/lib/theme-shared.ts for how the attribute is set.
+const v = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
@@ -8,18 +20,21 @@ const config: Config = {
         // Clean, low-saturation dark palette (CSFloat-style): near-black surfaces,
         // cool grey borders, restrained accents — no neon.
         ink: {
-          950: "#0a0c10",
-          900: "#0e1116",
-          850: "#13171f",
-          800: "#191e28",
-          700: "#252b38",
-          600: "#333b4d",
+          950: v("ink-950"), // dark #0a0c10
+          900: v("ink-900"), // dark #0e1116
+          850: v("ink-850"), // dark #13171f
+          800: v("ink-800"), // dark #191e28
+          700: v("ink-700"), // dark #252b38
+          600: v("ink-600"), // dark #333b4d
         },
         // The single sharp accent — RiftCompare green, used sparingly for primary
         // actions + active states. Everything else stays neutral graphite.
         brand: {
           DEFAULT: "#1ea65c",
-          400: "#34d17e",
+          // 400 is the LINK shade (text-brand-400, ~300 usages). #34d17e is fine
+          // on dark ink and unreadable on white, so it alone is themed; 500/600
+          // are fills and borders and stay fixed.
+          400: v("brand-400"), // dark #34d17e
           500: "#1ea65c",
           600: "#188a4c",
         },
@@ -37,18 +52,30 @@ const config: Config = {
         // Changing the token rather than 660 class names means it cannot be
         // half-applied, and a new component that reaches for text-slate-500 is
         // accessible by default.
+        // The full ramp is themed (not just 500/600): text-slate-400 alone is
+        // ~630 usages, and Tailwind's stock #94a3b8 is 2.5:1 on white.
         slate: {
-          500: "#8593a6",
-          600: "#76828f",
+          100: v("slate-100"), // dark: Tailwind stock #f1f5f9
+          200: v("slate-200"), // dark: stock #e2e8f0
+          300: v("slate-300"), // dark: stock #cbd5e1
+          400: v("slate-400"), // dark: stock #94a3b8
+          500: v("slate-500"), // dark #8593a6 (lifted, see above)
+          600: v("slate-600"), // dark #76828f (lifted, see above)
+          700: v("slate-700"), // dark: stock #334155
+          800: v("slate-800"), // dark: stock #1e293b
+          900: v("slate-900"), // dark: stock #0f172a
         },
+        // `text-white` is the primary text colour (~900 usages); in the light
+        // theme it is near-black ink. bg-black overlays are NOT themed on purpose.
+        white: v("white"),
         // "accent" now reads as the high-contrast NUMERAL colour — a near-white ink
         // for prices, so figures stay crisp and neutral like a trading desk.
-        accent: "#eef1f5",
+        accent: v("accent"), // dark #eef1f5
         // Muted brass — reserved for genuine gold/foil semantics only, never UI chrome.
-        gold: "#caa85a",
+        gold: v("gold"), // dark #caa85a
         // Market deltas: gains/losses on the terminal. Calm, not neon.
-        up: "#3fb950",
-        down: "#f0506e",
+        up: v("up"), // dark #3fb950
+        down: v("down"), // dark #f0506e
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
@@ -72,9 +99,9 @@ const config: Config = {
       },
       boxShadow: {
         // Flat panels: a hairline top highlight + a quiet drop. No coloured glow.
-        card: "0 1px 0 rgba(255,255,255,0.02), 0 1px 2px rgba(0,0,0,0.4)",
+        card: "var(--shadow-card)", // dark: 0 1px 0 rgba(255,255,255,0.02), 0 1px 2px rgba(0,0,0,0.4)
         // Kept for API compatibility, neutralised to a quiet elevation (no neon).
-        glow: "0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.45)",
+        glow: "var(--shadow-glow)", // dark: 0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.45)
       },
       keyframes: {
         "fade-up": {

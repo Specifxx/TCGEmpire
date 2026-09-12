@@ -6,6 +6,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { SIDENAV_BOOT_SCRIPT } from "@/lib/sidenav-shared";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -292,6 +293,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             note above RootLayout), which is exactly why it's an inline script.
             Generated in src/lib/sidenav-shared.ts. */}
         <script dangerouslySetInnerHTML={{ __html: SIDENAV_BOOT_SCRIPT }} />
+        {/* Light/dark theme — same pattern, same reason: decided from the
+            `theme` cookie before first paint (dark unless the visitor chose
+            light), so the page never flashes the wrong palette. Generated in
+            src/lib/theme-shared.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-ink-950">
         {/* Skip link: lets keyboard/AT users bypass the navbar and jump straight

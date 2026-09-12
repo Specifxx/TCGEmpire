@@ -5524,3 +5524,38 @@ audit landing the same window as this rotation (nested-cache fix, deployed
 lower — if `HISTORY_DATABASE_URL` still drains in days rather than weeks, that
 audit's own conclusion holds: run `audit-egress` against it and fix the named
 query rather than rotating again.
+
+---
+
+## Light theme as a switchable palette — 2026-09-12
+
+The site gained a light/dark toggle. Every component hard-codes dark classes
+(`text-white` ~900 usages, `text-slate-400` ~630, `bg-ink-900` ~160), so a
+`dark:` variant per class was never a reviewable change. Decisions:
+
+- **The palette is the switch, not the components.** `tailwind.config.ts` now
+  defines ink, the full slate ramp, white, accent, gold, up/down and brand-400
+  as `rgb(var(--c-…) / <alpha-value>)`; `globals.css` gives each a dark value
+  on `:root` and a light value on `:root[data-theme="light"]`. The dark values
+  are the exact hexes the config used to hard-code, so dark mode is
+  pixel-identical — `tests/theme.test.ts` pins that, and pins that both
+  palettes define the same variable set (a token missing from one would render
+  transparent in that theme).
+- **The light palette must clear the same bar the dark one does.** The 2026
+  accessibility pass lifted slate-500/600 to 4.5:1 on ink; the test computes
+  WCAG contrast for every text token on every surface in BOTH palettes, so a
+  light-mode regression fails CI the same way a dark one would. brand-400 (the
+  link colour), up/down and gold darken in light mode for that reason;
+  brand-500/600 fills and the `bg-black/70` modal backdrops do not move.
+- **Dark stays the default; no prefers-color-scheme.** Flipping a
+  dark-by-design site for everyone whose OS is light would change the product
+  for most visitors without them asking. Light is opt-in, remembered in a
+  one-year `theme` cookie.
+- **Same first-paint mechanism as the rail.** The root layout can't read
+  cookies (caching), so `THEME_BOOT_SCRIPT` (src/lib/theme-shared.ts) stamps
+  `data-theme` in `<head>`; the toggle also rewrites `<meta name="theme-color">`.
+- **Where the control lives.** A sun/moon icon in the header from `sm` up; a
+  labelled row in the phone menu overlay below `lg`, because the 375px header
+  is already full. The two stay in sync via one window event.
+- Things deliberately left dark: OG images, the embeds, the print stylesheet,
+  and the Google sign-in button (white by Google's rules, now `bg-[#ffffff]`).

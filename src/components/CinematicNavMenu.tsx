@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PremiumNavLink } from "./PremiumNavLink";
+import { ThemeToggle } from "./ThemeToggle";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useMegaMenu } from "./MegaMenuProvider";
@@ -210,6 +211,13 @@ export function CinematicNavMenu() {
                   </Link>
                 </p>
               )}
+              {/* Light/dark switch — the phone home for the control the header
+                  shows from sm up (ThemeToggle.tsx). Below lg only: from lg the
+                  header's own icon is visible, and two switches in view at
+                  once would be one too many. */}
+              <div className="mt-3 lg:hidden">
+                <ThemeToggle variant="row" />
+              </div>
             </div>
 
             {/* Premium spotlight — reported directly: "the way to see Premium [on

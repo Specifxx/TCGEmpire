@@ -4,6 +4,41 @@
 
 :root {
   color-scheme: dark;
+  /* ── Palette: DARK (the default) ────────────────────────────────────────
+     RGB triplets, not hexes, because tailwind.config.ts wraps each one as
+     `rgb(var(--c-x) / <alpha-value>)` so opacity modifiers keep working.
+     These are the exact values the config used to hard-code, so dark mode
+     renders pixel-identically. The light set is further down under
+     `:root[data-theme="light"]`; src/lib/theme-shared.ts explains the switch
+     and tests/theme.test.ts pins that both sets define every variable. */
+  --c-ink-950: 10 12 16;
+  --c-ink-900: 14 17 22;
+  --c-ink-850: 19 23 31;
+  --c-ink-800: 25 30 40;
+  --c-ink-700: 37 43 56;
+  --c-ink-600: 51 59 77;
+  --c-brand-400: 52 209 126;
+  --c-slate-100: 241 245 249;
+  --c-slate-200: 226 232 240;
+  --c-slate-300: 203 213 225;
+  --c-slate-400: 148 163 184;
+  --c-slate-500: 133 147 166;
+  --c-slate-600: 118 130 143;
+  --c-slate-700: 51 65 85;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-accent: 238 241 245;
+  --c-gold: 202 168 90;
+  --c-up: 63 185 80;
+  --c-down: 240 80 110;
+  --c-white: 255 255 255;
+  --page-bg: #0b0e14;
+  --page-fg: #e8eaee;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.45);
+  --scroll-track: #0f131c;
+  --scroll-thumb: #2c3650;
+  --scroll-thumb-hover: #3a4564;
   /* Reserved width for the persistent desktop SideNav (components/SideNav.tsx),
      0 by default so every element that pads/positions against it (main, the
      footer ad zone, the footer itself, CinematicHero's full-bleed breakout) is
@@ -53,10 +88,50 @@
   }
 }
 
+/* ── Palette: LIGHT ──────────────────────────────────────────────────────
+   Opt-in via the header toggle (ThemeToggle.tsx), stamped on <html> before
+   first paint by THEME_BOOT_SCRIPT. Same variables, inverted lightness:
+   `text-white` becomes near-black ink, `bg-ink-900` a white card, and the
+   slate text ramp darkens so that every shade the dark theme guarantees at
+   4.5:1 still clears it on the light surfaces (pinned in tests/theme.test.ts).
+   brand-400 (the link colour) and the gain/loss reds and greens darken for
+   the same reason; brand-500/600 fills and the bg-black overlays don't move. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --c-ink-950: 244 246 248;
+  --c-ink-900: 255 255 255;
+  --c-ink-850: 238 241 245;
+  --c-ink-800: 226 230 236;
+  --c-ink-700: 207 213 222;
+  --c-ink-600: 180 188 200;
+  --c-brand-400: 21 122 69;
+  --c-slate-100: 15 23 42;
+  --c-slate-200: 30 41 59;
+  --c-slate-300: 51 65 85;
+  --c-slate-400: 71 85 105;
+  --c-slate-500: 85 98 122;
+  --c-slate-600: 95 107 128;
+  --c-slate-700: 148 163 184;
+  --c-slate-800: 203 213 225;
+  --c-slate-900: 226 232 240;
+  --c-accent: 11 15 20;
+  --c-gold: 122 95 20;
+  --c-up: 22 101 52;
+  --c-down: 190 18 60;
+  --c-white: 11 15 20;
+  --page-bg: #f4f6f8;
+  --page-fg: #0b0f14;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --shadow-glow: 0 4px 12px rgba(16, 24, 40, 0.12);
+  --scroll-track: #eef1f5;
+  --scroll-thumb: #cfd5de;
+  --scroll-thumb-hover: #b4bcc8;
+}
+
 html,
 body {
-  background-color: #0b0e14;
-  color: #e8eaee;
+  background-color: var(--page-bg);
+  color: var(--page-fg);
 }
 
 /* Guard against horizontal overflow on mobile: if any element ever exceeds the
@@ -133,7 +208,7 @@ h1 {
 /* Accessible, brand-consistent keyboard focus ring on every interactive element.
    Uses :focus-visible so it only shows for keyboard/AT users, never on mouse click. */
 :focus-visible {
-  outline: 2px solid #34d17e;
+  outline: 2px solid rgb(var(--c-brand-400));
   outline-offset: 2px;
 }
 
@@ -174,14 +249,49 @@ h1 {
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f131c;
+  background: var(--scroll-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #2c3650;
+  background: var(--scroll-thumb);
   border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a4564;
+  background: var(--scroll-thumb-hover);
+}
+
+/* Light theme: dark ink on bright fills. `text-ink-950` is the palette's
+   near-black, which the light theme inverts to near-white — right for text on
+   a page, wrong for the one place it is used on purpose: dark ink sitting ON
+   a bright fill (the green primary button, a solid gold badge). Those fills
+   stay bright in both themes, so their ink must stay dark. Pinned by
+   tests/theme.test.ts. bg-accent is deliberately NOT here: accent inverts to
+   near-black in light mode, and its ink inverting with it keeps .btn-accent
+   readable as a dark button. */
+:root[data-theme="light"] .btn-primary,
+:root[data-theme="light"] .bg-brand-500.text-ink-950,
+:root[data-theme="light"] .bg-gold.text-ink-950,
+:root[data-theme="light"] .bg-gold\/85.text-ink-950 {
+  color: #0a0c10;
+}
+/* Solid gold and bright-green FILLS keep their dark-theme colour: the light
+   palette darkens `gold` and `brand-400` for text legibility, but a badge or
+   button filled with them carries dark ink and needs the bright version. The
+   translucent tints (bg-gold/10 etc.) are separate classes and correctly use
+   the darker gold. */
+:root[data-theme="light"] .bg-gold {
+  background-color: #caa85a;
+}
+:root[data-theme="light"] .bg-gold\/85 {
+  background-color: rgb(202 168 90 / 0.85);
+}
+:root[data-theme="light"] .bg-brand-400 {
+  background-color: #34d17e;
+}
+/* .btn-primary's hover shade is brand-400, which the light palette darkens for
+   link legibility — dark ink on dark green would be 2:1. Hover to a lighter
+   green instead. */
+:root[data-theme="light"] .btn-primary:hover {
+  background-color: #27b868;
 }
 
 @layer components {
@@ -354,7 +464,7 @@ html.capacitor-native.has-native-banner body {
 /* Headline keyword accent — was a brand→gold→brand rainbow shimmer; now the brand
    green, solid. Kept as a class so existing `.brand-shimmer` markup neutralises. */
 .brand-shimmer {
-  color: #34d17e;
+  color: rgb(var(--c-brand-400));
 }
 
 /* CTA shine sweep retired for the flat terminal look — no-op container so existing

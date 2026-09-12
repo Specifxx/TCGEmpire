@@ -157,7 +157,7 @@ export function AuthForm({
             <a
               href={oauthHref("google")}
               onClick={onProviderClick}
-              className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-white py-2.5 text-sm font-semibold text-ink-950 hover:brightness-95"
+              className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-[#ffffff] py-2.5 text-sm font-semibold text-[#0a0c10] hover:brightness-95"
             >
               <GoogleIcon /> Continue with Google
             </a>
