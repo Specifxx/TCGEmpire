@@ -5435,3 +5435,92 @@ Confirmed by filtering the workflow's runs to `event=schedule`: zero runs. Its
 only run remains the 05:34 manual dispatch. The configuration is sound, so
 this is either GitHub's usual cron delay or a newly registered schedule not
 yet picked up. Tomorrow's 08:00 is the test.
+
+## History rotates onto HISTORY_DATABASE_URL: RH10 → HISTORY_DATABASE_URL — 2026-09-12
+
+Owner: "perform a full migration from RH10 to history_database_url as we are at limit."
+
+RH10 (in service since 2026-09-10) reached its 5 GB monthly Neon transfer
+allowance after two days live — the same ~2 GB/day burn every prior history
+project has shown, and consistent with the egress-audit findings from the day
+before (see "The first egress audit found the second burn: nested caches").
+History rotates onto `HISTORY_DATABASE_URL` — the **oldest** history variable
+in the whole rotation, retired since the 2026-08-16 `HISTORY_DATABASE_URL_2`
+cutover.
+
+**Verified live before writing anything**, per this file's own standing rule
+(a recycled target must be re-checked every time it comes back around, never
+trusted from old findings). A `probe-history` run confirmed both ends:
+
+| | rows | days | distinctCards | matching RM9 |
+|---|---|---|---|---|
+| `RH10` (source) | 422,589 | 2026-06-06..2026-09-10 | 1,425 | 1420/1425 |
+| `HISTORY_DATABASE_URL` (target) | 45,067 | 2026-08-04..2026-08-09 | 1,390 | 1385/1390 |
+
+Real, outdated numbers on the target — not zeroes — confirming a genuinely
+recycled project rather than a freshly re-added empty one, and (the part that
+matters most) a term that predates the 2026-09-05 GLOBAL-history migration by
+nearly a month, so it held zero `GLOBAL` rows on its own before this ran.
+
+**New workflow task, not a hand-run script.** Every history rotation this
+project has done goes through a named `workflow_dispatch` task in
+`maintenance.yml` — `migrate-history-db-rh10-to-hdu` follows the exact
+template `migrate-history-db-rh9-to-rh10` set: `SOURCE_HISTORY_URL` pinned to
+the one live variable (never a fallback chain — a chain that could resolve
+back to the target itself would make the migration silently no-op while
+reporting every row count as matching), a guard against SOURCE==TARGET, a
+guard against TARGET resolving to the operational database (RM9), a
+`User`-row check that refuses to touch anything that isn't a history-only
+project, dump-before-truncate (so a source that refuses reads can't leave the
+target half-destroyed), and a source-vs-target row-count verification that
+fails loudly on any mismatch. `migrate-history-db-rh9-to-rh10` is marked
+LEGACY, kept for reference.
+
+**Run twice**, per the template's own standing advice: once to do the bulk
+copy, once more immediately after as a top-up, so nothing written to RH10 in
+the few minutes between the two passes is lost. Both runs verified clean:
+
+```
+public."Card":         source=1436   target=1436   ✓
+public."ClickEvent":   source=698    target=698    ✓
+public."PriceHistory": source=422589 target=422589 ✓
+```
+
+**Two OTHER fallback chains in `maintenance.yml` were found stale before this
+rotation even started** — the same drift class `db-chains.ts`'s own header
+exists to stop, and each was already flagged once before for a different
+rotation:
+- The `db-push` task's `HISTORY_DB` chain still led with `RH10` (last fixed
+  2026-09-10, for the RH11-still-first staleness that preceded it).
+- The `migrate-history` (Prisma top-up) task's `TARGET` chain still led with
+  `RH11` — dead since 2026-08-30, and never corrected through the five
+  rotations (RH6→RH7→RH8→RH9→RH10) that followed it. This one was silently
+  wrong for two weeks; nothing caught it because that task hadn't been run in
+  that window.
+
+Both now lead with `HISTORY_DATABASE_URL`.
+
+**Runtime chain updated to match, once the data migration verified clean —
+not before.** `src/lib/db-chains.ts`'s `HISTORY_VARS` is now
+`["HISTORY_DATABASE_URL", "RH10", "DATABASE_URL"]` (RH9 drops out of the
+chain — it was RH10's own rollback for the 2026-09-10..09-12 stint, and a
+chain only needs one — but stays reachable by explicit name for migration
+tasks). `scripts/build-db-push.sh`'s history if/elif chain and its
+`CURRENT_HIST` diagnostic were updated to match exactly (`tests/db-chain.test.ts`
+asserts the two never drift), and `src/lib/db-history.ts`'s startup warning
+now fires on anything other than `HISTORY_DATABASE_URL`. `.env.example`'s
+history-chain documentation, already stale (it still named
+`HISTORY_DATABASE_URL_4`/`_3` as current from an earlier generation), was
+brought up to date at the same time.
+
+**Next steps, unchanged from every prior rotation's own checklist:** confirm
+`HISTORY_DATABASE_URL` is set in Vercel for Production, Preview AND
+Development before the next deploy — that deploy is what actually moves
+reads/writes onto it, `prisma db push`-ing the schema there via
+`build-db-push.sh`. Leave `RH10` set as the rollback until
+`HISTORY_DATABASE_URL` has been serving cleanly for a while. Per the egress
+audit landing the same window as this rotation (nested-cache fix, deployed
+2026-09-11), the burn rate driving these rotations should already be much
+lower — if `HISTORY_DATABASE_URL` still drains in days rather than weeks, that
+audit's own conclusion holds: run `audit-egress` against it and fix the named
+query rather than rotating again.
