@@ -2,6 +2,8 @@
 
 **Date:** 2026-08-10 · **Branch:** `growth-improvements` · **Commit at audit time:** `5a3c460`
 
+> 2026-09-12: the `/decks`, `/decks/archetype` and `/decks/domain` templates referenced below were removed (see DECISIONS.md, "Meta decks: removed"); their rows are historical.
+
 Everything below is **measured**, not estimated. Two purpose-built crawlers were written
 for this audit and are committed alongside it:
 

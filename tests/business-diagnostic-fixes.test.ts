@@ -293,47 +293,12 @@ test("the card page's cheaper-alternatives query is gated on a real priced basel
   );
 });
 
-test("the card page derives 'played alongside' from the SAME meta-deck data as 'played in these decks', not a second lookup", () => {
-  const src = read("src/app/card/[id]/page.tsx");
-  const coPlaySection = src.slice(src.indexOf("coPlayCounts"), src.indexOf("coPlayCounts") + 600);
-  assert.match(coPlaySection, /allRelatedDecks/, "co-occurrence must be derived from allRelatedDecks, not a new static/DB lookup");
-  assert.match(coPlaySection, /section === "rune"/, "runes are a mana-base choice, not synergy — must be excluded");
-});
-
-test("'played alongside' dedupes multi-print card names before rendering, so one champion can't occupy two slots", () => {
-  // A champion/legend name routinely has several printings (base, Showcase,
-  // Signature, alt-art) sharing one nameNormalized with no unique constraint —
-  // a raw findMany over 12 co-play NAMES can return more than 12 ROWS. Without
-  // a dedup step, take:12 can silently fill with several prints of one
-  // champion while dropping a genuinely different ranked synergy card, so
-  // "Often played with X" would show the same card twice under a subhead
-  // promising OTHER cards. Pinned against a real, confirmed regression a
-  // pre-production review caught with real catalogue data (verified: cards
-  // co-played with a 4-print champion in the seeded meta decks return 13-18
-  // candidate rows for 12 names).
-  const code = readCode("src/app/card/[id]/page.tsx");
-  const at = code.indexOf("const coPlayNames");
-  const section = code.slice(at, code.indexOf("const playedAlongside =", at) + 400);
-  assert.match(
-    section,
-    /playedAlongsideByName/,
-    "the resolved rows must be deduped by normalised name into a Map before rendering"
-  );
-  assert.doesNotMatch(
-    section,
-    /take:\s*12/,
-    "a bare take:12 on the ROW query is exactly the bug — the cap belongs on the deduped NAME list (already applied via coPlayNames.slice(0, 12)), not on raw rows that can include several prints per name"
-  );
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
-// Deck → Best Basket handoff.
+// Deck builder → Best Basket handoff. (The meta-deck pages used the same ?list=
+// handoff until they were removed on 2026-09-12; the two tests that pinned the
+// card page's "played in these decks" / "played alongside" rails and the deck
+// page's bestBasketHref went with them.)
 // ─────────────────────────────────────────────────────────────────────────────
-
-test("decks/[slug] builds a bestBasketHref and DeckView renders it", () => {
-  assert.match(read("src/app/decks/[slug]/page.tsx"), /bestBasketHref/);
-  assert.match(read("src/components/DeckView.tsx"), /bestBasketHref/);
-});
 
 test("BestBasket accepts an initialList and best-basket/page.tsx decodes ?list=", () => {
   assert.match(read("src/components/BestBasket.tsx"), /initialList/);

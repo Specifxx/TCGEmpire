@@ -36,14 +36,6 @@ export {};
 
 import { SECTIONS, sectionUrl } from "../src/lib/sitemap-sections";
 import { SITE_URL } from "../src/lib/site";
-import {
-  DECK_GROUPS,
-  deckGroupPath,
-  indexableDeckGroups,
-  liveDeckGroups,
-  seedsInGroup,
-} from "../src/lib/deck-groups";
-import { META_DECKS } from "../src/lib/meta-decks";
 import { CHAMPIONS } from "../src/lib/champions";
 import { KEYWORDS } from "../src/lib/keywords";
 import { DOMAIN_PAGES } from "../src/lib/domains";
@@ -94,9 +86,6 @@ const note = (msg: string) => console.log(`    ${YELLOW}·${OFF} ${msg}`);
 // integrity on deck pages, say) can be applied to the right pages.
 // ─────────────────────────────────────────────────────────────────────────────
 const TEMPLATES: [name: string, test: (p: string) => boolean, priceBearing: boolean][] = [
-  ["decks/archetype", (p) => p.startsWith("/decks/archetype/"), true],
-  ["decks/domain", (p) => p.startsWith("/decks/domain/"), true],
-  ["decks/[slug]", (p) => /^\/decks\/[^/]+$/.test(p) && p !== "/decks", true],
   ["champions/[slug]", (p) => p.startsWith("/champions/") && p !== "/champions", true],
   ["keywords/[slug]", (p) => p.startsWith("/keywords/") && p !== "/keywords", false],
   ["domains/[slug]", (p) => p.startsWith("/domains/") && p !== "/domains", true],
@@ -122,19 +111,6 @@ function printPlan(): void {
   console.log(`\n${BOLD}Page inventory (static seed data — no database)${OFF}\n`);
   const rows: [string, string, string][] = [];
 
-  const liveGroups = liveDeckGroups();
-  const idxGroups = indexableDeckGroups();
-  rows.push([
-    "decks/archetype",
-    `${liveGroups.filter((g) => g.axis === "archetype").length} live / ${idxGroups.filter((g) => g.axis === "archetype").length} submitted`,
-    `${DECK_GROUPS.filter((g) => g.axis === "archetype").length} defined`,
-  ]);
-  rows.push([
-    "decks/domain",
-    `${liveGroups.filter((g) => g.axis === "domain").length} live / ${idxGroups.filter((g) => g.axis === "domain").length} submitted`,
-    `${DECK_GROUPS.filter((g) => g.axis === "domain").length} defined`,
-  ]);
-  rows.push(["decks/[slug]", `${META_DECKS.length} live / ${META_DECKS.length} submitted`, "one per real decklist"]);
   rows.push(["keywords/[slug]", `${KEYWORDS.length} live / ${KEYWORDS.length} submitted`, "only keywords with verified rules text"]);
   rows.push(["domains/[slug]", `${DOMAIN_PAGES.length} live / ${DOMAIN_PAGES.length} submitted`, ""]);
   rows.push([
@@ -161,16 +137,6 @@ function printPlan(): void {
     console.log(`  ${name.padEnd(w)}  ${count.padEnd(28)} ${extra}`);
   }
 
-  console.log(`\n${BOLD}Deck groups, in detail${OFF}\n`);
-  for (const g of DECK_GROUPS) {
-    const n = seedsInGroup(g).length;
-    const state = n === 0 ? `${DIM}404 (no real deck)${OFF}` : n === 1 ? `${YELLOW}noindex (thin)${OFF}` : `${GREEN}submitted${OFF}`;
-    console.log(`  ${deckGroupPath(g).padEnd(30)} ${String(n).padStart(2)} deck${n === 1 ? " " : "s"}  ${state}`);
-  }
-  console.log(
-    `\n  ${idxGroups.length} new URLs submitted, ${liveGroups.length - idxGroups.length} rendered-but-noindexed, ` +
-      `${DECK_GROUPS.length - liveGroups.length} not rendered at all.\n`
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

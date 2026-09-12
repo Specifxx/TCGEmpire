@@ -13,8 +13,8 @@
  * `src/app/loading.tsx` at the APP ROOT wrapped every route in a Suspense
  * boundary. That makes Next stream: the shell flushes with a committed HTTP 200
  * before the page component runs, so a notFound() thrown afterwards could only
- * swap the UI, never the status. Result: every unknown /card/…, /sets/…,
- * /decks/… URL returned "200 OK" with the 404 page rendered inside it —
+ * swap the UI, never the status. Result: every unknown /card/…, /sets/…
+ * URL returned "200 OK" with the 404 page rendered inside it —
  * an unlimited supply of crawlable junk URLs, each a soft 404.
  *
  * It could not be fixed by moving notFound() into generateMetadata: measured,
@@ -44,7 +44,6 @@ const MUST_404 = [
   "/card/vi-destructive-ogn-999z-999",
   "/sets/nonexistent-page-test",
   "/sets/origins-extra",
-  "/decks/nonexistent-deck-test",
   "/blog/nonexistent-post-test",
   "/guides/nonexistent-guide-test",
   "/stores/nonexistent-store-test",

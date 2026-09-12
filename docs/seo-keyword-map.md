@@ -17,8 +17,9 @@ explicit link up/down to the primary).
 | `<card name> riftbound` | `/card/<slug>` | — |
 | `<card name> price` | `/card/<slug>` | — |
 | `<champion> riftbound`, `<champion> riftbound cards` | `/champions/<slug>` | `/card/<slug>` for each individual printing |
-| `<champion> deck riftbound`, `riftbound <champion> deck` | `/champions/<slug>` (deck section) if a real `META_DECKS` entry exists; otherwise `/decks` (browse) | `/deck` (builder) for a custom build |
-| `riftbound deck`, `riftbound decks` | `/decks` (meta decks hub) | `/deck` (builder tool) — different intent (build vs. browse), keep both indexable, no canonical between them |
+| `<champion> deck riftbound`, `riftbound <champion> deck` | `/champions/<slug>` — every printing priced; it no longer claims a decklist (the meta-deck dataset was removed 2026-09-12, see DECISIONS.md) | `/deck` (pricer) for a custom build; `/guides/riftbound-deck-archetypes-guide` for "which kind of deck" |
+| `riftbound deck`, `riftbound decks` | `/deck` (deck pricer/builder) — the site's only deck surface; `/decks*` 301 here | `/guides/riftbound-deck-archetypes-guide` (choose an archetype) and `/guides/budget-riftbound-decks` (build cheaply) |
+| `riftbound meta decks`, `riftbound tier list`, `best riftbound decks`, `<champion> decklist` | **Deliberately unowned.** No licensed machine-readable source exists (riftdecks/riftools ToS + Cloudflare; Piltover Archive forbids automated/commercial use; TopDeck.gg needs a key). Do not build a page for this intent until one does | `/guides/riftbound-deck-archetypes-guide` may rank incidentally; keep it count-free |
 
 ## Mechanic / keyword intent (see Task 4 precedent already shipped)
 

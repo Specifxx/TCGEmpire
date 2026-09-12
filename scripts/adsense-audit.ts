@@ -62,14 +62,13 @@ const TEMPLATES: [string, RegExp][] = [
   ["keyword", /^\/keywords\//],
   ["champion", /^\/champions\//],
   ["facet", /^\/cards\//],
-  ["deck", /^\/decks?\//],
   ["store", /^\/stores\//],
   ["marketplace-listing", /^\/marketplace\/listing/],
   ["marketplace", /^\/marketplace/],
   ["blog", /^\/blog\//],
   ["guide", /^\/guides\//],
   ["tool", /^\/(tools|market|movers|bulk-pricer|trade|deck|sealed|singles|riftle|games|portfolio|embed)/],
-  ["index", /^\/(browse|cards|sets|domains|keywords|champions|decks|stores|blog|guides|learn)\/?$/],
+  ["index", /^\/(browse|cards|sets|domains|keywords|champions|stores|blog|guides|learn)\/?$/],
   ["static", /.*/],
 ];
 const templateOf = (path: string) => TEMPLATES.find(([, re]) => re.test(path))![0];

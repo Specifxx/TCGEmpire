@@ -113,7 +113,6 @@ test("a retailer's own AU market is NOT swept away", () => {
   for (const f of [
     "src/lib/price-import.ts",
     "src/lib/sealed-import.ts",
-    "src/lib/deck-basket.ts",
     "src/lib/arbitrage.ts",
     "src/lib/retailers.ts",
   ]) {

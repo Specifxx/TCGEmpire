@@ -215,7 +215,7 @@ export default function RiftlePage() {
             <Link href="/games" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">All Riftbound games →</Link>
             <Link href="/games/pack-sim" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Pack opening simulator →</Link>
             <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Card database →</Link>
-            <Link href="/decks" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Meta decks &amp; build costs →</Link>
+            <Link href="/deck" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Price a decklist →</Link>
             <Link href="/sets/vendetta/gallery" className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors hover:border-brand-500">Vendetta card gallery →</Link>
           </div>
         </section>

@@ -46,9 +46,6 @@ interface Spec {
 
 const SPECS: Spec[] = [
   { name: "card", test: (p) => p.startsWith("/card/"), requires: ["BreadcrumbList", "Product", "FAQPage"] },
-  { name: "decks/archetype", test: (p) => p.startsWith("/decks/archetype/"), requires: ["BreadcrumbList", "ItemList", "FAQPage"] },
-  { name: "decks/domain", test: (p) => p.startsWith("/decks/domain/"), requires: ["BreadcrumbList", "ItemList", "FAQPage"] },
-  { name: "deck", test: (p) => /^\/decks\/[^/]+$/.test(p) && p !== "/decks", requires: ["BreadcrumbList"] },
   { name: "champion", test: (p) => p.startsWith("/champions/") && p !== "/champions", requires: ["BreadcrumbList", "ItemList"] },
   { name: "keyword", test: (p) => p.startsWith("/keywords/") && p !== "/keywords", requires: ["BreadcrumbList", "DefinedTerm"] },
   { name: "domain", test: (p) => p.startsWith("/domains/") && p !== "/domains", requires: ["BreadcrumbList", "CollectionPage"] },

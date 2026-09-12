@@ -20,7 +20,6 @@ import { AdSlot } from "@/components/AdSlot";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
 import { setByCode } from "@/lib/constants";
 import { domainSlug } from "@/lib/domains";
-import { decksUsingCard } from "@/lib/meta-decks";
 import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
@@ -622,62 +621,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       })
     : [];
 
-  // Meta decks that play this card — card ↔ deck internal links (and a "what's this
-  // card for?" signal for shoppers). Static seed lookup, no DB call.
-  const allRelatedDecks = decksUsingCard(card.name);
-  const relatedDecks = allRelatedDecks.slice(0, 6);
-
-  // "Often played with" — co-occurrence derived from those SAME meta decks, in
-  // process (no extra static lookup): count how often each other card name
-  // appears across every deck that plays this one, excluding runes (a mana-base
-  // choice, not a synergy) and this card itself, then resolve the top names to
-  // real card rows in ONE bounded query. With only a handful of meta decks
-  // seeded today (see prisma/meta-decks.json), this is correctly empty for most
-  // cards — gated on allRelatedDecks.length below rather than always rendering
-  // a near-empty section.
-  const coPlayCounts = new Map<string, number>();
-  for (const d of allRelatedDecks) {
-    for (const c of d.cards) {
-      if (c.section === "rune" || c.name === card.name) continue;
-      coPlayCounts.set(c.name, (coPlayCounts.get(c.name) ?? 0) + 1);
-    }
-  }
-  const coPlayNames = [...coPlayCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 12)
-    .map(([name]) => normalizeSearch(name));
-  // A champion/legend name routinely has several printings (base, Showcase,
-  // Signature, alt-art) — nameNormalized has no unique constraint, and a raw
-  // `take: 12` over 12 NAMES can silently fill its budget with several PRINTS
-  // of one splashy co-play champion, both showing that champion twice under a
-  // section titled "played alongside" and dropping a genuinely different
-  // ranked synergy card. Same dedup lib/meta-decks.ts's buildCardMap() already
-  // uses (prefer base art; otherwise the first — cheapest, since results are
-  // requested cheapest-first below) — matched here rather than a fresh
-  // heuristic, so the two "which printing represents this name" decisions on
-  // the site can't independently drift.
-  const isBasePrinting = (collectorNumber: string) => !collectorNumber.includes("*") && !/\d+[a-z]/i.test(collectorNumber);
-  const playedAlongsideMatches = coPlayNames.length
-    ? await prisma.card.findMany({
-        where: { nameNormalized: { in: coPlayNames }, id: { not: card.id } },
-        orderBy: [{ [priceField(DEFAULT_COUNTRY)]: { sort: "asc" as const, nulls: "last" as const } }],
-        select: cardTileSelect(DEFAULT_COUNTRY),
-      })
-    : [];
-  const playedAlongsideByName = new Map<string, (typeof playedAlongsideMatches)[number]>();
-  for (const m of playedAlongsideMatches) {
-    const key = normalizeSearch(m.name);
-    const existing = playedAlongsideByName.get(key);
-    if (!existing || (isBasePrinting(m.collectorNumber) && !isBasePrinting(existing.collectorNumber))) {
-      playedAlongsideByName.set(key, m);
-    }
-  }
-  // Re-ordered to the co-play frequency ranking (the dedup Map above was built
-  // in query order, not synergy order) — already capped to ≤12 distinct names
-  // by coPlayNames itself.
-  const playedAlongside = coPlayNames
-    .map((n) => playedAlongsideByName.get(n))
-    .filter((m): m is NonNullable<typeof m> => m != null);
+  // "Played in these decks" and "Often played with" used to be derived right
+  // here from prisma/meta-decks.json. That file, and every page built on it,
+  // were removed on 2026-09-12 (DECISIONS.md, "Meta decks: removed"): the lists
+  // were hand-typed, stale and partly unresolvable, so both rails asserted
+  // things the data could not back. Nothing on this page reads a decklist now.
 
   // AU price history (week-cached — see lib/price-history) reused here for the
   // genuine price-trend paragraph below. Same cache key as the chart's own fetch
@@ -822,7 +770,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         p.variant == null && !p.isPromo && p.rarity !== "Showcase" &&
         !isOvernumbered(p.collectorNumber) && !isSignature(p.collectorNumber),
     })),
-    decks: allRelatedDecks.map((d) => ({ name: d.name })),
     setContext,
   });
 
@@ -850,8 +797,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     lowest: baseline.lowest,
     stores: baseline.storeCount,
     printingCount: printings.length,
-    deckCount: allRelatedDecks.length,
-    deckNames: allRelatedDecks.slice(0, 2).map((d) => d.name),
     place: baselinePlace,
     currency: baseline.currency,
     // editionLabel() is null exactly when this is the plain version, so it
@@ -1278,53 +1223,6 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </section>
       )}
 
-      {/* Played in — meta decks that run this card. Card ↔ deck internal links,
-          and a useful "what do I build with this?" prompt for buyers. */}
-      {relatedDecks.length > 0 && (
-        <section className="mt-10">
-          <h2 className="mb-1 text-xl font-extrabold text-white">Played in these decks</h2>
-          <p className="mb-4 text-xs text-slate-500">
-            {displayName} sees play in {relatedDecks.length === 1 ? "this meta deck" : `${relatedDecks.length} meta decks`} — open one for the full list and its build cost.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {relatedDecks.map((d) => (
-              <Link
-                key={d.slug}
-                href={`/decks/${d.slug}`}
-                className="card-surface group flex flex-col gap-1 p-4 transition-colors hover:border-brand-500"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-white group-hover:text-brand-300">{d.name}</span>
-                  {d.tier && <span className="chip ml-auto bg-ink-800 text-[10px] text-slate-400">{d.tier}</span>}
-                </div>
-                <span className="text-xs text-slate-500">{d.archetype}</span>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {d.domains.map((dm) => (
-                    <DomainBadge key={dm} domain={dm} />
-                  ))}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Often played with — co-occurrence from the same meta decks as "Played in
-          these decks" above, resolved to actual card rows. Absent for most
-          cards today (only a handful of meta decks are seeded), which is
-          correct — it should not render a near-empty section. */}
-      {playedAlongside.length > 0 && (
-        <section className="mt-10">
-          <h2 className="mb-1 text-xl font-extrabold text-white">Often played with {displayName}</h2>
-          <p className="mb-4 text-xs text-slate-500">Cards that show up in the same meta decks as this one.</p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {playedAlongside.map((c) => (
-              <CardTile key={c.id} card={c} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Cheaper alternatives — same set, domain and card type, strictly priced
           below this card. Gated on the query itself (empty when unpriced), so
           this never asserts a comparison the data can't back. */}
@@ -1427,8 +1325,6 @@ type FaqContext = {
   lowest: number | null;
   stores: number;
   printingCount: number;
-  deckCount: number;
-  deckNames: string[];
   place: string;
   currency: string;
   // Only used for the "is the premium printing worth it?" FAQ, and only when
@@ -1464,7 +1360,7 @@ type FaqContext = {
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
   // Every question and answer leaves through tidy() at the end of this function
   // — same reasoning as the narrative's exit point.
-  const { lowest, stores, printingCount, deckCount, deckNames, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel, currencyAnswer } = ctx;
+  const { lowest, stores, printingCount, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel, currencyAnswer } = ctx;
   const faqs = [
     {
       q: `How much does ${card.name} cost?`,
@@ -1499,13 +1395,6 @@ function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }
     faqs.push({
       q: `Are there other printings of ${card.name}?`,
       a: `Yes — RiftCompare tracks ${printingCount} other printing${printingCount === 1 ? "" : "s"} of ${card.name} (promo, alternate-art and/or Signature versions), each a distinct product trading at its own price. See them all further down this page.`,
-    });
-  }
-  if (deckCount > 0) {
-    const named = deckNames.length ? ` including ${deckNames.join(" and ")}` : "";
-    faqs.push({
-      q: `What decks use ${card.name}?`,
-      a: `${card.name} is played in ${deckCount} meta deck${deckCount === 1 ? "" : "s"} tracked on RiftCompare${named}. See the full list and each deck's live build cost further down this page.`,
     });
   }
 

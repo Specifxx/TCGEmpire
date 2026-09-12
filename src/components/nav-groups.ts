@@ -136,8 +136,12 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Decks",
     icon: "decks",
     links: [
-      { href: "/decks", label: "Meta Decks", emoji: "🏆", keywords: ["meta", "tier list", "decklists", "best decks"], popular: true },
-      { href: "/deck", label: "Deck Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost"] },
+      // "Meta Decks" (/decks) led this group until 2026-09-12. It was ten
+      // hand-typed lists in prisma/meta-decks.json presented as the metagame —
+      // removed, with /decks/* redirecting here (DECISIONS.md, "Meta decks:
+      // removed"). The builder inherits its popular slot so the launcher and
+      // mega-menu keep a deck entry.
+      { href: "/deck", label: "Deck Builder", emoji: "🛠️", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks"], popular: true },
       { href: "/trade", label: "Trade Calculator", emoji: "🔁", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
   },
@@ -227,7 +231,7 @@ export const NAV_GROUPS: NavGroup[] = [
 // for them to look at all features only if they want to." Chosen to mirror
 // the destinations already promoted elsewhere on the site rather than a new,
 // separate editorial call — PRIMARY_NAV below (Cards/Sealed/Index/Blog), the
-// header's own md/lg-and-up row (Decks, Premium), plus the
+// header's own md/lg-and-up row (Deck builder, Premium), plus the
 // highest-intent tool/collection pages (Deal Finder, Best Basket, Daily Movers,
 // Watchlist). The full grouped list is always one tap away via "Show all
 // features" — this is a default, not a wall. Order follows NAV_GROUPS, not a

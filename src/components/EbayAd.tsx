@@ -109,7 +109,7 @@ export function EbayAd({
   // THE 728px LEADERBOARD CANNOT APPEAR AT `sm`. Tailwind's sm is 640px, and the
   // banner is a fixed 728px wide, so from 640px up to ~760px it hung ~90px past
   // the right edge and made the whole DOCUMENT scroll sideways — on the homepage,
-  // /decks, and every card page, i.e. site-wide. Measured in a real browser:
+  // the (since removed) deck hub, and every card page, i.e. site-wide. Measured in a real browser:
   // document scrollWidth 684 in a 640px viewport, 714 in a 700px one.
   //
   // The comment above this block used to say the billboard "steps down to the

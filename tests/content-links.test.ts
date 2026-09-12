@@ -286,7 +286,7 @@ test("the AI-visibility target pages exist and carry a FAQ", () => {
 test("every content-pack article links to at least three tool or category pages", () => {
   // The internal-linking rule from the brief. Counted over DISTINCT destinations
   // so three links to the same page don't pass.
-  const TOOL_OR_CATEGORY = /^\/(browse|sets|champions|movers|tools|trade|alerts|cards|sealed|market|stores|premium|singles|decks|deck|domains|keywords|portfolio)(\/|$)/;
+  const TOOL_OR_CATEGORY = /^\/(browse|sets|champions|movers|tools|trade|alerts|cards|sealed|market|stores|premium|singles|deck|domains|keywords|portfolio)(\/|$)/;
   const packSlugs = new Set([
     "riftbound-card-values",
     "ebay-bidding-strategies",

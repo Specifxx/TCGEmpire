@@ -13,9 +13,10 @@
 //      ("Yi, Meditative" / "Yi, Honed" vs "Master Yi, Tempered"), and a third
 //      variant "Master" leaks in from the Legend path via a " - Starter"
 //      slugify bug in prisma/seed.ts (fixed in the same commit as this file,
-//      but the corrupted value is already baked into production data and into
-//      prisma/meta-decks.json's `legend` field, so the alias below must stay
-//      regardless).
+//      but the corrupted value is already baked into production data — and
+//      was, until the meta decks were removed on 2026-09-12, in
+//      prisma/meta-decks.json's `legend` field too — so the alias below must
+//      stay regardless).
 //
 // So: an explicit allowlist, an alias map, and per-champion name prefixes. Every
 // name below was observed in the actual card data — none is added from general

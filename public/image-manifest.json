@@ -468,11 +468,11 @@
     "src": "/blog/riftbound-card-size-sleeves-deck-boxes.png",
     "width": 1200,
     "height": 630,
-    "bytes": 48295,
+    "bytes": 51623,
     "webp": "/blog/riftbound-card-size-sleeves-deck-boxes.webp",
-    "webpBytes": 33688,
+    "webpBytes": 34638,
     "avif": "/blog/riftbound-card-size-sleeves-deck-boxes.avif",
-    "avifBytes": 17780,
+    "avifBytes": 21339,
     "variants": [
       {
         "w": 480,
@@ -483,7 +483,7 @@
         "src": "/blog/riftbound-card-size-sleeves-deck-boxes-768w.webp"
       }
     ],
-    "fingerprint": "e62486405e226746"
+    "fingerprint": "bad5025de8eee23f"
   },
   "/blog/riftbound-card-values.png": {
     "src": "/blog/riftbound-card-values.png",

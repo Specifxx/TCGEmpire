@@ -50,16 +50,16 @@ export interface ArticleEmbed {
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
   rulesSet?: string;
-  // COMPETITIVE STAPLES — the cards played across the real tournament lists in
-  // prisma/meta-decks.json, ordered by how many of those decks run them.
+  // MOST-WANTED — the cards players search for most on RiftCompare, priced
+  // (lib/cheapest-cards.ts getPopularCards: search count, ties toward the dearer
+  // card, priced-only; the same query the homepage's popular carousel runs).
   //
-  // Exists so a "best cards" article does not have to hard-code a ranking that is
-  // wrong the next time the metagame is re-cut. The gallery is derived from the
-  // same seed file /decks and the archetype pages read, so it CANNOT show a card
-  // that isn't genuinely in a tournament list, and it re-orders itself when the
-  // lists are updated. `minDecks` is the floor for inclusion (default 2 — a card
-  // in one list is that deck's card, not a staple).
-  metaStaples?: boolean | { minDecks?: number };
+  // Exists so a "best cards" article does not have to hard-code a ranking. This
+  // replaced a `metaStaples` mode on 2026-09-12 that counted cards across the
+  // hand-typed decklists in prisma/meta-decks.json — a file that went stale
+  // within weeks and was removed with the meta decks (DECISIONS.md, "Meta decks:
+  // removed"). Demand is measured by the site itself and cannot rot that way.
+  popular?: boolean;
   take?: number; // default 12
 }
 
@@ -324,9 +324,15 @@ None of these need an insider. All three are checkable by anyone.
     category: "guide",
     title: "Riftbound Deck Archetypes: A Complete Guide",
     excerpt:
-      "Aggro, Tempo, Midrange and six more specific tags on top of them — every real Riftbound deck archetype in the current metagame, and which to build first. Want today's actual decklists instead? See the meta decks, priced.",
+      "Aggro, Tempo, Midrange and six more specific tags on top of them — what each Riftbound deck archetype is actually trying to do, how to recognise one from its list, which to build first, and how to price it once you have chosen.",
     author: "RiftCompare",
     date: "2026-08-30",
+    // 12 Sep 2026: made evergreen. This guide used to quote counts, tiers and
+    // exemplar decks from prisma/meta-decks.json and link every archetype to a
+    // /decks/archetype/* hub; that data was hand-typed and stale, and the hubs
+    // were removed with it (DECISIONS.md, "Meta decks: removed"). What remains
+    // is the part that does not go stale: what each archetype IS.
+    updated: "2026-09-12",
     readMins: 10,
     tags: ["deckbuilding", "archetypes", "meta", "beginner", "strategy"],
     hero: {
@@ -334,39 +340,24 @@ None of these need an insider. All three are checkable by anyone.
       alt: "Riftbound deck archetypes guide — Aggro, Tempo, Midrange and six more, color-coded",
     },
     summary: [
-      "**Nine named archetypes appear in the current metagame, but only three are real pillars**: Aggro, Tempo and Midrange. Every one of the ten tournament decklists we track is fundamentally one of those three.",
-      "**The other six labels — Combo, Disruption, Value, Gear, Spell, Reach — are always a more specific tag on top of one of the big three**, never a category by themselves (e.g. \"Aggro / Combo\", \"Spell Tempo\").",
-      "**Aggro and Tempo are tied for the most-played, at 4 of the 10 tracked decks each; Midrange has 3.** The current field's one Tier 1 deck (Irelia, Blade Dancer) is Tempo.",
-      "**Domain choice and archetype are linked**, not independent — most competitive lists commit to one or two of Riftbound's seven domains, and the current decks span six of them (every domain but Colorless).",
-      "Looking for actual decklists rather than the strategy behind them? **[See the real, live-priced meta decks](/decks).**",
+      "**Nine archetype labels are in common use, but only three are real pillars**: Aggro, Tempo and Midrange. Every competitive Riftbound deck is fundamentally one of those three.",
+      "**The other six — Combo, Disruption, Value, Gear, Spell, Reach — are a more specific tag on top of one of the big three**, never a category by themselves (\"Aggro / Combo\", \"Spell Tempo\").",
+      "**Domain choice and archetype are linked**, not independent — most competitive lists commit to one or two of Riftbound's seven domains, and a domain's own cards pull it toward a particular way of playing.",
+      "Already have a list and just want it priced? **[Paste it into the deck builder](/deck)** — every card priced in your market, cheapest store first.",
     ],
-    itemList: {
-      name: "Riftbound deck archetypes",
-      items: [
-        { name: "Aggro", description: "Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter.", url: "/decks/archetype/aggro" },
-        { name: "Tempo", description: "Spend every turn more efficiently than the opponent can answer.", url: "/decks/archetype/tempo" },
-        { name: "Midrange", description: "Bigger, more efficient cards than Aggro, while still faster than a pure control shell.", url: "/decks/archetype/midrange" },
-        { name: "Combo", description: "An Aggro deck whose win condition is a specific card interaction.", url: "/decks/archetype/combo" },
-        { name: "Disruption", description: "An Aggro deck built to deny the opponent's plan as much as execute its own.", url: "/decks/archetype/disruption" },
-        { name: "Value", description: "A Midrange deck built to grind out a card-advantage edge over a long game.", url: "/decks/archetype/value" },
-        { name: "Gear", description: "A Midrange deck built around equipment rather than raw unit stats.", url: "/decks/archetype/gear" },
-        { name: "Spell", description: "A Tempo deck that wins through spell-heavy swings rather than board stats.", url: "/decks/archetype/spell" },
-        { name: "Reach", description: "A Tempo deck carrying threats that can close the game from outside combat.", url: "/decks/archetype/reach" },
-      ],
-    },
     faq: [
-      { q: "How many domains can a Riftbound deck run?", a: "One or two, in practice. Nothing in the printed rules caps it lower than that, but your 12 runes have to match your deck's domains to reliably cast your cards, and every archetype in the current tournament metagame we track commits to exactly one or two — usually two." },
-      { q: "What's the actual difference between Aggro and Tempo in Riftbound?", a: "Aggro tries to end the game before the opponent's expensive cards matter, accepting a worse late game for a faster clock. Tempo also plays proactively, but its goal is staying ahead on board turn after turn rather than racing flat out — it's often willing to trade a slower start for a more efficient one. The two overlap enough that some real decks are tagged both (Aggro / Tempo) rather than purely one or the other." },
+      { q: "How many domains can a Riftbound deck run?", a: "One or two, in practice. Nothing in the printed rules caps it lower than that, but your 12 runes have to match your deck's domains to reliably cast your cards, so competitive lists commit to one or two — usually two." },
+      { q: "What's the actual difference between Aggro and Tempo in Riftbound?", a: "Aggro tries to end the game before the opponent's expensive cards matter, accepting a worse late game for a faster clock. Tempo also plays proactively, but its goal is staying ahead on board turn after turn rather than racing flat out — it's often willing to trade a slower start for a more efficient one. The two overlap enough that a list is sometimes tagged both (Aggro / Tempo) rather than purely one or the other." },
       { q: "What archetype should a beginner build first?", a: "Aggro is usually the easiest to learn on: the game plan is straightforward to execute, and mistakes are cheaper because you're rarely committing your whole turn to one expensive card. That's a starting-point recommendation, not a rule — Tempo and Midrange are just as legitimate if the playstyle appeals to you more." },
-      { q: "How many Riftbound deck archetypes are there?", a: "Nine named archetypes show up across the real tournament decklists we track, but three of them — Aggro, Tempo and Midrange — are the actual pillars. The other six (Combo, Disruption, Value, Gear, Spell, Reach) are more specific tags layered onto one of those three, not separate categories of their own." },
-      { q: "How much does a competitive Riftbound deck cost?", a: "It depends entirely on which list and which market you're buying in — the honest number changes daily as prices move. The meta decks page prices every real tournament list live, cheapest first, and the budget deckbuilding guide covers how to cut that cost without leaving the archetype you want to play." },
+      { q: "How many Riftbound deck archetypes are there?", a: "Nine labels are in common use, but three of them — Aggro, Tempo and Midrange — are the actual pillars. The other six (Combo, Disruption, Value, Gear, Spell, Reach) are more specific tags layered onto one of those three, not separate categories of their own." },
+      { q: "How much does a competitive Riftbound deck cost?", a: "It depends entirely on which list and which market you're buying in — the honest number changes daily as prices move. Paste any list into the deck builder and it prices every card live, cheapest store first; the budget deckbuilding guide covers how to cut that cost without leaving the archetype you want to play." },
     ],
     browseCta: {
-      href: "/decks",
-      label: "See today's real, live-priced meta decks →",
-      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole thing right now.",
+      href: "/deck",
+      label: "Price a decklist in your own market →",
+      blurb: "Paste any list — your own, or one from a published tournament report — and every card is priced live, cheapest store first, with the cheapest place to buy the whole thing right now.",
     },
-    body: `Search "Riftbound deck" and you'll get two different answers depending on what you actually want. If you want to see what people are winning with **right now** — real tournament lists, priced card-for-card in your own currency — that's [our meta decks page](/decks), updated as results come in. If you're trying to figure out **which kind of deck to build in the first place**, that's this page: what the real archetypes are, what actually separates them, and which one fits how you want to play.
+    body: `Search "Riftbound deck" and you'll get two different answers depending on what you actually want. If you already have a list — your own, or one from a published tournament report — and want it priced card-for-card in your own currency, that's [the deck builder](/deck): paste it in and every card is priced live, cheapest store first. If you're trying to figure out **which kind of deck to build in the first place**, that's this page: what the real archetypes are, what actually separates them, how to recognise each one from its list, and which one fits how you want to play.
 
 ## What a deck needs, in 30 seconds
 
@@ -374,25 +365,35 @@ Every Riftbound tournament deck is the same shape: a **Legend**, a **Champion**,
 
 ## Pick a domain (or two) first
 
-Riftbound has seven domains — Fury, Calm, Mind, Body, Chaos, Order and Colorless — and almost every competitive deck commits to one or two of them, since your 12 runes have to match. Domain is a real constraint on archetype: it's not that any domain can be any archetype, it's that a domain's own cards tend to reward a particular way of playing. Fury's cheap, aggressive cards pull toward Aggro; Mind's card-advantage tools pull toward Midrange and Value; and so on. Every domain gets its own breakdown — **[Fury](/decks/domain/fury)**, **[Calm](/decks/domain/calm)**, **[Mind](/decks/domain/mind)**, **[Body](/decks/domain/body)**, **[Chaos](/decks/domain/chaos)** and **[Order](/decks/domain/order)** — each with the real decks currently playing it and what they cost to build. (Colorless isn't a domain you build a deck *in* — no domain pair commits to it in the current metagame — but colorless cards slot into any list regardless of your domains, which is why they're the format's closest thing to universal staples.)
+Riftbound has seven domains — Fury, Calm, Mind, Body, Chaos, Order and Colorless — and almost every competitive deck commits to one or two of them, since your 12 runes have to match. Domain is a real constraint on archetype: it's not that any domain can be any archetype, it's that a domain's own cards tend to reward a particular way of playing. Fury's cheap, aggressive cards pull toward Aggro; Mind's card-advantage tools pull toward Midrange and Value; and so on. Every domain has its own page — **[Fury](/domains/fury)**, **[Calm](/domains/calm)**, **[Mind](/domains/mind)**, **[Body](/domains/body)**, **[Chaos](/domains/chaos)** and **[Order](/domains/order)** — with every card in it and what each costs right now. (Colorless isn't a domain you build a deck *in*, but colorless cards slot into any list regardless of your domains, which is why they're the format's closest thing to universal staples.)
 
 ## The archetypes, compared
 
-Nine named archetypes show up across the ten real tournament decklists we track, but they're not nine equal categories. **Every single one of the ten decks is fundamentally Aggro, Tempo or Midrange** — the other six labels (Combo, Disruption, Value, Gear, Spell, Reach) never stand alone; each one is a more specific tag layered onto one of those three. "Aggro / Combo" is an Aggro deck whose plan happens to be a specific card interaction. "Spell Tempo" is a Tempo deck that wins through spells rather than board stats. Knowing that changes how you should read the list below: the first three rows are real, separate ways to build; the next six are flavors of them.
+Nine archetype labels are in common use, but they're not nine equal categories. **Every competitive deck is fundamentally Aggro, Tempo or Midrange** — the other six labels (Combo, Disruption, Value, Gear, Spell, Reach) never stand alone; each one is a more specific tag layered onto one of those three. "Aggro / Combo" is an Aggro deck whose plan happens to be a specific card interaction. "Spell Tempo" is a Tempo deck that wins through spells rather than board stats. Knowing that changes how you should read the table below: the first three rows are real, separate ways to build; the next six are flavours of them.
 
-| Archetype | Playstyle | Real example right now | Domains it's shown up in |
-| --- | --- | --- | --- |
-| **[Aggro](/decks/archetype/aggro)** | Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter. | Kennen, Heart of the Tempest (Tier 2) | Body, Calm, Chaos, Fury, Order |
-| **[Tempo](/decks/archetype/tempo)** | Spend every turn more efficiently than the opponent can answer, staying ahead on board rather than racing flat out. | Irelia, Blade Dancer (Tier 1 — the field's benchmark) | Body, Calm, Chaos, Mind |
-| **[Midrange](/decks/archetype/midrange)** | Bigger, more efficient cards than Aggro plays, while still moving faster than a pure control shell. | Viktor, Herald of the Arcane (Tier 3) | Body, Fury, Mind, Order |
-| **[Combo](/decks/archetype/combo)** | An Aggro deck whose win condition is a specific card interaction rather than raw pressure alone. | Akali, Rogue Assassin (Aggro / Combo) | Calm, Fury |
-| **[Disruption](/decks/archetype/disruption)** | An Aggro deck that spends as much energy denying the opponent's plan as executing its own. | Kennen, Heart of the Tempest — same deck as the Aggro row above | Chaos, Order |
-| **[Value](/decks/archetype/value)** | A Midrange deck built to grind out a card-advantage edge over a long game rather than close fast. | Viktor, Herald of the Arcane — same deck as the Midrange row above | Mind, Order |
-| **[Gear](/decks/archetype/gear)** | A Midrange deck built around equipment rather than raw unit stats — a toolbox of repeatable effects. | Jayce, Defender of Tomorrow (Gear Midrange) | Body, Mind |
-| **[Spell](/decks/archetype/spell)** | A Tempo deck that wins through spell-heavy swings instead of board stats doing the work. | Diana, Scorn of the Moon (Spell Tempo, Tier 2) | Chaos, Mind |
-| **[Reach](/decks/archetype/reach)** | A Tempo deck carrying threats that can close the game from outside straight combat. | Ezreal, Prodigal Explorer (Tempo / Reach) | Chaos, Mind |
+| Archetype | Built on | Playstyle |
+| --- | --- | --- |
+| **Aggro** | — (a pillar) | Cheap units, a low curve, and a race to end the game before the opponent's expensive cards matter. |
+| **Tempo** | — (a pillar) | Spend every turn more efficiently than the opponent can answer, staying ahead on board rather than racing flat out. |
+| **Midrange** | — (a pillar) | Bigger, more efficient cards than Aggro plays, while still moving faster than a pure control shell. |
+| **Combo** | Aggro | The win condition is a specific card interaction rather than raw pressure alone. |
+| **Disruption** | Aggro | Spends as much energy denying the opponent's plan as executing its own. |
+| **Value** | Midrange | Built to grind out a card-advantage edge over a long game rather than close fast. |
+| **Gear** | Midrange | Built around equipment rather than raw unit stats — a toolbox of repeatable effects. |
+| **Spell** | Tempo | Wins through spell-heavy swings instead of board stats doing the work. |
+| **Reach** | Tempo | Carries threats that can close the game from outside straight combat. |
 
-Every archetype name links to its own page — the real decks in that group, what they cost to build in your market right now, and where to buy every card.
+## How to recognise each pillar from its list
+
+You can usually tell which of the three pillars a list belongs to before you've read a single card's text, just from its shape. That's worth learning, because it's also how you read a published tournament list and decide whether it's the kind of deck you want to play.
+
+**Aggro** lists are bottom-heavy. Count the units costing one or two energy: an Aggro deck runs a lot of them, often at the full three copies, and its most expensive card is rarely above four. The spells are cheap and either push damage or clear a blocker. The side deck leans toward answers to the one thing that stops it — a big early blocker or a board wipe. If a list has more one-drops than four-drops, it's Aggro, or it's trying to be.
+
+**Tempo** lists sit in the middle and are spell-heavy. The units are efficient rather than cheap — good stats for their cost, ideally with an effect on entry — and there are more reactive spells than an Aggro list carries: bounce, stun, a cheap removal spell or two. The plan is to answer whatever the opponent does *while* advancing your own board, so the curve peaks around three and the deck is full of cards that do something the turn they're played. A "Spell" or "Reach" tag on top of Tempo tells you which lever the list pulls hardest.
+
+**Midrange** lists are top-heavy by comparison. Fewer one-drops, more four-, five- and six-cost cards that are individually stronger than anything an Aggro deck plays, and card-advantage tools — draw, recursion, a repeatable Gear effect — that let the deck out-value an opponent over a long game. A Midrange list accepts a slower start in exchange for a better late game; a "Value" or "Gear" tag tells you which way it takes that trade.
+
+None of this needs the metagame to hold still. The best list of the moment changes every season; the shape of an Aggro list has not changed since the game launched.
 
 ## Which should you build first?
 
@@ -406,7 +407,7 @@ There's no universally correct answer here — this is guidance, not a rule — 
 
 ## Budget vs. chasing the meta
 
-Tier 1 isn't always the right target for your first deck. A Tier 1 list is the highest expected finish, but it's also the most-copied — which means its key cards are the most contested and often the most expensive. **[Best budget Riftbound decks](/guides/budget-riftbound-decks)** covers how to build something genuinely competitive without chasing the priciest cards in the format, and **[the most-played cards in the current metagame](/guides/best-riftbound-cards)** shows you which staples show up across multiple lists — the cards worth owning regardless of which single archetype you land on.
+The most-copied list of the moment isn't always the right target for your first deck. The deck everyone is playing has the most contested — and usually the most expensive — key cards, and it also has the most people practising against it. **[Best budget Riftbound decks](/guides/budget-riftbound-decks)** covers how to build something genuinely competitive without chasing the priciest cards in the format, and **[the most-wanted cards right now](/guides/best-riftbound-cards)** shows which staples the whole player base is searching for — the cards worth owning regardless of which single archetype you land on.
 
 Once you've picked a list, don't price it card-by-card across a dozen different stores. **[Best Basket](/tools/best-basket)** takes the whole decklist and works out the store split that's actually cheapest once postage is counted — not just the cheapest total if every store magically shipped free.
 
@@ -414,9 +415,9 @@ Once you've picked a list, don't price it card-by-card across a dozen different 
 
 Every set released so far — Origins, Origins: Proving Grounds, Spirit Forged, Unleashed and Vendetta — is currently legal in every format, and no rotation policy has been announced. That means an archetype you build today isn't on a clock: **[does Riftbound rotate?](/guides/riftbound-format-legality-rotation)** has the full picture, but the short version is that your deck stays legal for as long as the cards in it do, which so far has been indefinitely.
 
-## Where the real decklists live
+## Pricing the list you've chosen
 
-Everything above is about *choosing* an archetype. Once you have, **[the meta decks page](/decks)** is where the actual, current, real tournament lists live — every card, every domain split, priced live in your own market, with the cheapest place to buy each one. That's the page for "what is everyone actually playing" — this one was for "what should I play."`,
+Everything above is about *choosing* an archetype. Once you have, the work left is finding a list and pricing it. Published tournament lists are the usual starting point — take one, paste it into **[the deck builder](/deck)**, and every card is priced live in your own market with the cheapest store first, no account needed. Tweak it there, re-price it, and when you're ready to buy, hand the whole list to **[Best Basket](/tools/best-basket)** for the cheapest real-world store split. That's the page for "what will this cost me" — this one was for "what should I play."`,
   },
   // ── Radiance (Set 5) — the one released set with no coverage at all until now.
   // Deliberately category "blog", not "guide": news-sitemap.xml only admits blog
@@ -1279,49 +1280,37 @@ We will update this page when any of the following happens, and not before: Riot
   {
     slug: "best-riftbound-cards",
     category: "guide",
-    title: "Best Riftbound Cards: What Winning Decks Play",
+    title: "Best Riftbound Cards: The Most-Wanted Cards, Priced",
     excerpt:
-      "Which Riftbound cards are actually the best? Not an opinion — the 48 cards that show up across the real tournament decklists in the current metagame, counted, ranked by how many decks run them, and priced live.",
+      "Which Riftbound cards are actually the best? Not an opinion — the cards players search for most on RiftCompare, ranked by real demand, priced live in your market, and separated honestly from the ones that are merely expensive.",
     author: "RiftCompare",
     date: "2026-08-10",
+    // 12 Sep 2026: rebuilt on a signal the site measures itself. This guide used
+    // to rank cards by how many of the hand-typed lists in prisma/meta-decks.json
+    // ran them; that file was stale and partly unresolvable and was removed with
+    // the meta decks (DECISIONS.md, "Meta decks: removed"). Search demand is
+    // counted continuously and cannot go stale the same way.
+    updated: "2026-09-12",
     readMins: 7,
     tags: ["best cards", "meta", "staples", "deckbuilding", "buying"],
     summary: [
-      "**\"Best\" here means most-played, measured.** We counted every card across the real tournament decklists we track and ranked them by how many separate decks run them — no personal ratings.",
-      "**48 cards appear in two or more of the 10 lists.** 20 appear in three or more. The most-played card in the format right now is **Stacked Deck**, in half of them.",
-      "**Spells dominate**: 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards.",
-      "**Most-played is not most-expensive.** If you want the grails instead, that is a [different list](/guides/most-valuable-riftbound-cards) — and the two barely overlap.",
+      "**\"Best\" here means most-wanted, measured.** The gallery on this page is the cards Riftbound players search for most on RiftCompare, ranked by real demand and priced live — no personal ratings, no hand-typed list.",
+      "**Demand and price are different signals.** A common every deck wants can be searched for ten times as often as a chase Epic nobody plays; this page leads with demand and shows the price beside it.",
+      "**The ranking moves on its own.** It is generated from the live database on every render, so a card that becomes wanted appears here without anyone editing the page — and one that stops being wanted drops out.",
+      "**Most-wanted is not most-expensive.** If you want the grails instead, that is a [different list](/guides/most-valuable-riftbound-cards) — and the two barely overlap.",
     ],
-    itemList: {
-      name: "Most-played Riftbound cards in the current metagame",
-      items: [
-        { name: "Stacked Deck", description: "Played in 5 of the 10 tournament decklists we track — the most-played card in the format.", url: "/card/stacked-deck-ogn-183-298" },
-        { name: "Irelia, Fervent", description: "The only champion card played across three separate decks.", url: "/card/irelia-fervent-sfd-057-221" },
-        { name: "Bellows Breath", description: "In three of the ten lists, at up to three copies.", url: "/card/bellows-breath-sfd-080-221" },
-        { name: "Stupefy", description: "In three of the ten lists, at up to three copies.", url: "/card/stupefy-ogn-095-298" },
-        { name: "Tideturner", description: "The most-played unit outside a deck's own champion package.", url: "/card/tideturner-ogn-199-298" },
-        { name: "Zhonya's Hourglass", description: "One of only two gear cards shared across three decks.", url: "/card/zhonya-s-hourglass-ogn-077-298" },
-        { name: "Seat of Power", description: "One of seven battlefields that recur across the field.", url: "/card/seat-of-power-sfd-217-221" },
-      ],
-    },
     embeds: [
       {
-        title: "Every card played in two or more meta decks",
-        note: "Pulled live from our database and ordered by how many of the tracked tournament decklists run each card — the most-played first. Tap any card for its full text, every printing, and the cheapest store right now.",
-        metaStaples: { minDecks: 2 },
-        take: 48,
-      },
-      {
-        title: "The core: cards in three or more decks",
-        note: "The tighter cut — cards that turned up in at least three separate lists, across different archetypes and different legends.",
-        metaStaples: { minDecks: 3 },
+        title: "The most-wanted Riftbound cards right now",
+        note: "Pulled live from our database and ordered by how often players search for each card on RiftCompare — the most-wanted first, ties broken toward the higher-priced card. Only cards with a live price are shown. Tap any card for its full text, every printing, and the cheapest store right now.",
+        popular: true,
         take: 24,
       },
     ],
     browseCta: {
-      href: "/decks",
-      label: "See the decklists these cards come from",
-      blurb: "Every list on this page is a real tournament result, priced card-for-card in your own market — including the cheapest place to buy the whole deck right now.",
+      href: "/tools/demand",
+      label: "See the full demand leaderboard →",
+      blurb: "The most searched and most viewed cards on RiftCompare, by real traffic — raw demand, not a derived score — with every card priced in your own market.",
     },
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound TCG single cards" },
@@ -1330,67 +1319,69 @@ We will update this page when any of the following happens, and not before: Riot
     faq: [
       {
         q: "What are the best cards in Riftbound?",
-        a: "Measured by how often they actually appear in winning decklists, the most-played cards in the current metagame are Stacked Deck (in 5 of the 10 tournament lists we track), then a group of twenty cards that each appear in three, including Bellows Breath, Stupefy, Tideturner, Charm, Defy, Discipline, En Garde, Cleave, Hidden Blade, Star-Crossed, Zhonya's Hourglass and Irelia, Fervent. That is a measurement of play rate, not a power rating.",
+        a: "Measured by what players actually want, the best cards are the ones most searched for on RiftCompare right now — the gallery on this page, refreshed from the live database on every visit. That is a measurement of demand, not a power rating, and it changes as the game does.",
       },
       {
         q: "How did you decide which cards are best?",
-        a: "By counting. We take the real tournament decklists tracked on our meta decks page, count how many separate decks play each card, and rank by that number. A card in one list is that deck's card; a card in several is a staple. Nothing on this page is a personal rating, and no card appears that is not in a real list.",
+        a: "By counting searches. Every card on RiftCompare records how often it is searched for; this page ranks cards by that number, breaks ties toward the higher-priced card, and shows only cards that currently have a live price. Nothing here is a personal rating, and no card appears that is not genuinely in demand.",
       },
       {
         q: "Are the best cards the most expensive ones?",
-        a: "Largely no, and that surprises people. Play rate and price are driven by different things — a common spell that every deck wants can cost less than a chase Epic almost nobody plays, because the Epic's price comes from scarcity and art. Our most valuable Riftbound cards guide covers the price side separately.",
+        a: "Largely no, and that surprises people. Demand and price are driven by different things — a common every deck wants can be searched for far more often than a chase Epic almost nobody plays, because the Epic's price comes from scarcity and art. Our most valuable Riftbound cards guide covers the price side separately.",
       },
       {
-        q: "Why are most of the best cards spells?",
-        a: "It is what the counting shows: 22 of the 48 shared cards are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. Units and champion cards tend to be specific to whichever legend a deck is built around, so they are less likely to be shared between decks — spells and battlefields are the slots different decks agree on.",
+        q: "Why does this list change?",
+        a: "Because demand does. The ranking is generated from live search counts rather than typed into the page, so a card that a new set or a tournament result makes suddenly relevant climbs the list on its own, and one that falls out of favour drops down it.",
       },
       {
-        q: "How often does this list change?",
-        a: "It re-cuts whenever the underlying decklists do. The gallery on this page is generated from the same decklist data our meta decks pages use, so when a new tournament list is added the counts and the order here update with it rather than going stale.",
+        q: "Does this page track tournament decklists?",
+        a: "Not any more. An earlier version ranked cards by how many hand-maintained tournament lists ran them; those lists went stale and were retired in September 2026. Search demand is measured continuously and cannot go stale the same way, which is why the page now leads with it.",
       },
       {
         q: "What is the cheapest way to buy these cards?",
         a: "Open any card above and compare every store we track on delivered cost, or paste a full list into the deck builder to price it in one pass. Buying a spread of cheap staples from one store usually beats buying each from its individually cheapest store once postage is counted.",
       },
     ],
-    body: `Ask which Riftbound cards are "best" and you will get ten different answers, most of them somebody's opinion. This page takes the boring route instead: **we counted**.
+    body: `Ask which Riftbound cards are "best" and you will get ten different answers, most of them somebody's opinion. This page takes the boring route instead: **we measured**.
 
-Every decklist on our [meta decks page](/decks) is a real tournament result. Take all ten, count how many separate decks play each card, and rank by that number. A card that shows up in one list is that deck's card. A card that shows up in five, across different archetypes and different legends, is a card the format has agreed on — and that is a claim you can check rather than take on trust.
+Every card on RiftCompare records how often it is searched for. Rank every card by that number, keep only the ones with a live price, and you have a list of what Riftbound players actually want right now — not what a reviewer rated, and not a tournament list somebody typed in weeks ago and forgot to update. A card near the top of that list is one the game has agreed on, and that is a claim you can check by opening it rather than take on trust.
 
-## How this list was built
+## How this list is built
 
-- **Source:** the tournament decklists on [/decks](/decks), tracked from published event results.
-- **Sample:** 10 decks, spanning ten different archetypes from aggro through to value midrange.
-- **Rule:** count each card once per deck, however many copies it runs. Runes are excluded — every deck in a domain runs the same rune base, so counting them would tell you nothing.
-- **Cut-off:** two decks minimum. Below that it is not a staple, it is a preference.
+- **Source:** search demand on RiftCompare — the count of times each card has been searched for, across every market we serve.
+- **Rule:** rank by that count; when two cards tie, the more expensive one leads, because a card people search for *and* pay for is the stronger signal of the two.
+- **Filter:** priced cards only. A card no store currently lists cannot be bought, so it has no place on a buying guide even if people are looking for it.
+- **Refresh:** every render. The gallery is generated from the live database, not written into this page, so it moves when demand moves.
 
-That produces **48 cards**. Twenty of them appear in three decks or more.
+One caveat on the gallery below: it shows one printing per card, usually the base one. Alternate-art, Showcase and Signature versions are separate products with their own prices, and you will find each of them on the card's own page.
 
-One caveat on the gallery below: it is drawn from our own card database, so a card we have not catalogued a printing for yet will be counted here but will not have a tile. That is deliberate — showing a tile for a card we cannot price would be worse than showing one fewer.
-
-## The most-played cards in Riftbound
+## The most-wanted cards in Riftbound
 
 [[embed:0]]
 
-The single most-played card in the format is **Stacked Deck**, in five of the ten lists — no other card is in more than three. Below it sits a broad, flat tier: twenty cards each appearing in three separate decks, which is what a healthy, unsettled format looks like rather than one with a single obvious best card.
+Read the order, not just the names. The top of the list is where the format's attention is right now; a card sitting there is either a staple that every second deck wants a playset of, or a chase printing that collectors are hunting — and the price beside it usually tells you which. Three or four cards typically sit clear of the pack, then a broad, flat tier where the difference between tenth and twentieth is a handful of searches. That flat tier is what a healthy, unsettled format looks like rather than one with a single obvious best card.
 
-## What the counting shows
+## What demand tells you — and what it doesn't
 
-Three things stand out, and all three are just arithmetic on the table above.
+Demand is the most honest signal we have, and it is worth being precise about what it measures. It measures *interest*: a card that players are trying to find, price and buy. It does not measure how good the card is in play — a card can be searched for because it just got banned, because it just spiked in price, or because a streamer opened one. Read it as "what the community is looking at", and it will not mislead you.
 
-**Spells are the shared language.** 22 of the 48 are spells, against 15 units, 7 battlefields, 2 gear and 2 champion cards. That gap is not subtle, and it has a straightforward explanation: units and champion cards are chosen to fit whichever legend a deck is built around, so they rarely cross between decks. Spells are the slots different decks independently arrive at.
+Three patterns show up in the list consistently enough to be worth naming:
 
-**Champion cards almost never cross over.** Only two make the list at all — Irelia, Fervent in three decks and Rek'Sai, Breacher in two. Everything else in the champion slot is specific to its own list, which is what you would expect when each deck is built around a different legend.
+**Staples cluster near the top and stay there.** Cheap, flexible cards that fit several decks are searched for by everyone building anything, week after week. They are rarely expensive, and they are the safest thing on this page to buy without a specific deck in mind.
 
-**Battlefields consolidate hard.** Each deck runs three battlefields, so the ten lists have thirty battlefield slots between them — and only seven distinct battlefields recur across more than one deck. If you are buying, that is a short list doing a lot of work.
+**Chase printings spike and fade.** A Signature or Showcase print climbs the list the week it is revealed or the week a big sale lands, then settles. If a card near the top costs many times what its base printing does, that is a collector signal, not a deckbuilding one.
 
-Twenty-five of the 48 are run at the full three copies in at least one list, so "buy one" and "buy a playset" are different budgets. Every card above shows its cheapest live price, and the [card database](/browse) will compare every store on delivered cost.
+**New-set cards arrive in a wave.** In the fortnight around a release, the newest set's champions and legends crowd the list as everyone prices the cards they just opened. It is real demand, but it is demand for novelty as much as for power, and it thins out by the following month.
 
-## The core, if you are buying in
+## Three ways to read the list
 
-[[embed:1]]
+Different people come to a "best cards" page for different reasons, and the same ranking answers each of them differently.
 
-These are the cards that turned up in three or more separate decks. If you are new and want the cards least likely to be wasted whatever you end up building, start here rather than with the expensive ones — and check the [cheapest way to start guide](/guides/cheapest-way-to-start-riftbound) for the wider version of that argument.
+- **If you are building a deck**, the staples in the top tier are the cards least likely to be wasted whatever you end up playing. Buy those first, then the cards specific to your legend — [the archetypes guide](/guides/riftbound-deck-archetypes-guide) covers which kind of deck to build in the first place.
+- **If you are collecting**, look at which chase printings are climbing. Demand for a printing tends to move before its price does, because searches happen before purchases.
+- **If you are selling**, the top of this list is what buyers are looking for today. A card in demand sells faster and closer to its asking price than one nobody is searching for, whatever a price guide says it is "worth".
+
+Whichever you are, every card above shows its cheapest live price, and the [card database](/browse) will compare every store on delivered cost.
 
 [[shop]]
 
@@ -1398,17 +1389,27 @@ These are the cards that turned up in three or more separate decks. If you are n
 
 This is the part worth being clear about, because the two lists barely overlap.
 
-Play rate and price are set by different forces. A common spell that eight decks want can cost less than an Epic almost nobody plays, because the Epic's price comes from print scarcity and art rather than from anyone putting it in a deck. Neither number is wrong — they answer different questions.
+Demand and price are set by different forces. A common that every deck wants can be searched for ten times as often as an Epic almost nobody plays, because the Epic's price comes from print scarcity and art rather than from anyone putting it in a deck. Neither number is wrong — they answer different questions.
 
-- If you want to know what to **play**, this page is the list.
+- If you want to know what people **want**, this page is the list.
 - If you want to know what is **worth money**, see [the most valuable Riftbound cards](/guides/most-valuable-riftbound-cards) and [the most expensive grails](/blog/most-expensive-riftbound-cards).
 - If you want the current **chase printings** specifically, [Vendetta's chase tiers](/blog/riftbound-vendetta-chase-cards-so-far) breaks those out by tier.
 
+## Buying them without overpaying
+
+A list of wanted cards is only useful if you can buy them well. Three tools, in the order most people need them:
+
+1. **The card page** compares every store we track on delivered cost — item plus postage — for one card. Use it for a single pick-up.
+2. **[The deck builder](/deck)** prices a whole list at once: paste it in and every card is priced in your own market, cheapest store first. Free, no account.
+3. **[Best Basket](/tools/best-basket)** takes that same list and works out the store split that is actually cheapest once postage is counted — not just the cheapest total if every store magically shipped free.
+
+Buying a spread of cheap staples from one store usually beats buying each from its individually cheapest store, and Best Basket is the tool that proves it for your list.
+
 ## Keeping this honest
 
-The gallery above is generated from the decklist data itself, not typed into this page. When a new tournament list lands, the counts and the order change with it — and a card that is not in a real list cannot appear here at all, because there is nothing for it to be counted from.
+An earlier version of this guide ranked cards by how many tournament decklists ran them. That sounds more rigorous, and it was worse: the lists were maintained by hand, went stale within weeks, and the page kept asserting counts that no longer described anything real. Search demand is measured continuously, by the site itself, and cannot go stale the same way — which is why this page now leads with it.
 
-What this page deliberately does not do is tell you *why* any of these cards is good. That is a claim about how the cards play, and the honest place to check it is the card itself: open any tile above for its printed text, every printing, and what it costs right now. If you want the strategy layer, the [best Vendetta decks guide](/guides/best-riftbound-vendetta-decks) covers the archetypes these cards are assembled into.
+What this page deliberately does not do is tell you *why* any of these cards is good. That is a claim about how the cards play, and the honest place to check it is the card itself: open any tile above for its printed text, every printing, and what it costs right now. If you want the strategy layer, [the deck archetypes guide](/guides/riftbound-deck-archetypes-guide) covers the kinds of deck these cards are assembled into.
 `,
   },
   {
@@ -1756,7 +1757,7 @@ The eurozone is priced as **one market**, not one per country — a card listed 
 
 ## Ready to buy?
 
-Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or check the current **[meta decks](/decks)** to see what's worth building.
+Set your country, **[open the card database](/browse)**, find your card, and click through to the cheapest store. New to Riftbound? Browse our other **[guides](/guides)** or paste a list into the **[deck builder](/deck)** to see what it costs to build.
 
 [[shop]]
 
@@ -1882,7 +1883,7 @@ The fastest way to spot the chase cards is to **[browse the card database](/brow
 - **Signature cards** — artist-signed, overnumbered "Signature" printings are some of the rarest pulls in the game.
 - **Overnumbered / secret cards** — cards numbered beyond the set's base count are special chase pulls.
 - **Promos** — organized-play, prerelease and Nexus Night promo printings are limited and often sought-after.
-- **Playability** — a card that defines the **[current meta](/decks)** holds value because players need playsets of it.
+- **Playability** — a card that defines the current meta holds value because players need playsets of it; **[the most-wanted cards](/guides/best-riftbound-cards)** shows which ones the player base is chasing right now.
 
 On RiftCompare, each of these printings is labelled in the card's name (e.g. *(Alt Art)*, *(Signature)*, *(Promo)*) so you always know exactly which version you're looking at.
 
@@ -2073,7 +2074,7 @@ Want the full rules before you buy anything? The **[interactive learn page](/lea
 
 ## Tips for new players
 
-- **Browse the meta** on the **[decks page](/decks)** to see what top players run — and what it costs to build.
+- **Price a decklist** in the **[deck builder](/deck)** — paste any list, from a friend or a published tournament report, and see what it costs to build in your market.
 - **Price it before you buy** — drop a decklist into the **[deck pricer](/deck)** to see the full cost across stores before committing.
 
 Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
@@ -2145,8 +2146,8 @@ Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compar
     },
     embed: {
       title: "Cards worth knowing, whichever game you're coming from",
-      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
-      metaStaples: { minDecks: 2 },
+      note: "The cards Riftbound players are searching for most right now, pulled live from our database and ordered by real demand. Tap any card for its full text, every printing, and the cheapest store today.",
+      popular: true,
       take: 12,
     },
     body: `If you collect or play Pokémon, you already know the rhythm: theme decks to learn on, singles to fill out a build, a chase tier that makes a binder page worth showing off, and a habit of checking prices across a few sites before you actually buy anything. **Riftbound: League of Legends TCG** — Riot Games' real, physical card game, published in English by UVS Games — runs on the same rhythm. Here's how the two connect, and how to actually find and buy real Riftbound cards without overpaying.
@@ -2245,8 +2246,8 @@ Prices move daily, the same way a hot Pokémon set's prices do in its first week
     },
     embed: {
       title: "Cards worth knowing, whichever game you're coming from",
-      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
-      metaStaples: { minDecks: 2 },
+      note: "The cards Riftbound players are searching for most right now, pulled live from our database and ordered by real demand. Tap any card for its full text, every printing, and the cheapest store today.",
+      popular: true,
       take: 12,
     },
     body: `The One Piece Card Game trained a whole generation of collectors on what it's like to get into a card game while it's still young — chasing early-set scarcity, watching a fresh secondary market form in real time, learning a Leader's identity before you've memorized the full card pool. **Riftbound: League of Legends TCG**, Riot Games' real, physical card game (published in English by UVS Games), is at a similar point in its own life right now. Here's how the two connect, and — the part that actually matters once you're curious — how to find and buy real Riftbound cards without overpaying.
@@ -2345,8 +2346,8 @@ Both games share the same early-life pricing pattern: prices move fast while the
     },
     embed: {
       title: "Cards worth knowing, whichever game you're coming from",
-      note: "The real competitive staples right now, pulled live from our database — ordered by how many tracked tournament decklists run each one. Tap any card for its full text, every printing, and the cheapest store today.",
-      metaStaples: { minDecks: 2 },
+      note: "The cards Riftbound players are searching for most right now, pulled live from our database and ordered by real demand. Tap any card for its full text, every printing, and the cheapest store today.",
+      popular: true,
       take: 12,
     },
     body: `Magic players already have the instincts a new TCG rewards: read the whole card before you judge it, check a real market price before you buy, and don't assume a mechanic works the way you'd guess until you've read the actual rules text. **Riftbound: League of Legends TCG** — Riot Games' real, physical card game, published in English by UVS Games — is worth that same treatment. Here's the honest comparison, and how to actually find and buy real Riftbound cards without overpaying.
@@ -2454,7 +2455,7 @@ Either way, **compare prices first** — see **[where to buy Riftbound cards](/g
 
 ## Start from a known list
 
-The quickest budget route is to start from a proven decklist and trim the expensive cards. Browse current **[meta and preconstructed decks](/decks)** — each shows a **live build cost** so you can see what a deck costs in your region before committing.
+The quickest budget route is to start from a proven decklist and trim the expensive cards. Paste any published list into the **[deck builder](/deck)** — it shows a **live build cost** card by card, so you can see what a deck costs in your region before committing.
 
 ## Price your deck before you buy
 
@@ -2521,7 +2522,7 @@ Riftbound has seven domains — **Fury, Calm, Mind, Body, Chaos, Order** and **C
 
 ## Building on a budget
 
-A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. On every **[meta deck page](/decks)** we show the build cost broken down card-by-card and priced in your own market, so you can see exactly where the money goes and where to save. Want to tweak a list? Open it in the **[Deck Builder](/deck)** to re-price your own version.
+A deck's cost is dominated by a handful of chase cards — the commons, runes and battlefields are cheap. Paste a list into the **[Deck Builder](/deck)** and it shows the build cost broken down card-by-card, priced in your own market, so you can see exactly where the money goes and where to save — then tweak it and re-price your own version.
 
 ## Mulligan: keep or ship your opening hand
 
@@ -2602,7 +2603,7 @@ It matters least for a single chase card or a short shopping list of two or thre
 
 ## Try it
 
-**[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one from the current **[meta decks](/decks)** — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
+**[Open Best Basket](/tools/best-basket)**, paste in a decklist — your own, or one copied from a published tournament report — and see the store split for yourself. If you'd rather just price a list with no account, **[the deck pricer](/deck)** does that part for free.`,
     faq: [
       { q: "Is Best Basket free?", a: "No — Best Basket is a RiftCompare Premium tool. Upgrade and it's included alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list." },
       { q: "Does Best Basket account for shipping?", a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered." },
@@ -2827,7 +2828,7 @@ The instinct is to buy whatever's cheapest first because it feels like easy prog
 
 ### Identify the true chase cards early
 
-In any set, a small number of cards carry most of the price weight - usually the ones that show up in competitive decks, plus a handful of alternate arts or high-rarity pulls that collectors specifically hunt regardless of playability. Before you buy anything, spend twenty minutes looking through [decks](/decks) to see which cards from the set you're targeting actually show up in played lists. A card that's both scarce and playable will only get harder to find cheap as the set ages and more players need copies for their own decks. A card that's scarce but not played is more likely to soften in price over time once the initial hype fades, so there's less urgency to grab it this week.
+In any set, a small number of cards carry most of the price weight - usually the ones that show up in competitive decks, plus a handful of alternate arts or high-rarity pulls that collectors specifically hunt regardless of playability. Before you buy anything, spend twenty minutes looking through [the most-wanted cards](/guides/best-riftbound-cards) to see which cards from the set you're targeting actually show up in played lists. A card that's both scarce and playable will only get harder to find cheap as the set ages and more players need copies for their own decks. A card that's scarce but not played is more likely to soften in price over time once the initial hype fades, so there's less urgency to grab it this week.
 
 This matters specifically for a set like [Vendetta](/sets/vendetta): sets with a strong competitive card or two tend to have those specific singles hold value while the rest of the set drifts down, so knowing which is which changes your whole buying order.
 
@@ -2859,7 +2860,7 @@ The part collectors underestimate isn't finding cards, it's keeping an accurate 
 
 - Keep a simple running list split into three buckets: "have," "need - common priority," and "need - chase card," so you're not re-checking the same commons over and over.
 - Check prices on cards still on your want-list periodically rather than buying the moment you spot them, since single-card prices for non-chase cards tend to soften a few weeks to months after a set's release as more copies enter circulation.
-- Revisit [decks](/decks) occasionally as the competitive scene settles - a card that wasn't played at launch sometimes becomes relevant later, which can shift your priority order mid-project.
+- Revisit [the movers page](/movers) occasionally as the competitive scene settles - a card that wasn't played at launch sometimes becomes relevant later, which can shift your priority order mid-project.
 - Set a soft budget per month rather than per card. Chase cards will occasionally spike in price for a stretch; a monthly cap keeps you from overpaying during a spike out of impatience.
 
 ## Is It Worth Finishing Every Last Common?
@@ -3021,7 +3022,7 @@ The whole set is out and trading, so this is genuinely the moment to start assem
 
 Riftbound: Vendetta released worldwide on **31 July 2026** and is out now. Every one of the set's 166 cards is officially confirmed, so this is the moment to actually start acquiring the pieces for the decks you want to build. Below are three strong archetype blueprints, each grounded in Vendetta's confirmed mechanics and domain pairings, with the synergies that make them tick, real card visuals for each, and how to pilot them.
 
-An honest note up front: these are **blueprints, not netdecks**. Vendetta is out and the first events have been played, but the metagame is days old — early results still look a lot like Unleashed, with established legends adapting rather than new Vendetta legends taking over. Nasus was the first Vendetta legend to actually win a tournament, and Diana took Sideways Showdown: CN vs World on 25 July. We give you the shell — the roles each deck needs, built from confirmed cards — and we point you at the real lists on our **[meta decks page](/decks)** as the field settles.
+An honest note up front: these are **blueprints, not netdecks**. Vendetta is out and the first events have been played, but the metagame is days old — early results still look a lot like Unleashed, with established legends adapting rather than new Vendetta legends taking over. Nasus was the first Vendetta legend to actually win a tournament, and Diana took Sideways Showdown: CN vs World on 25 July. We give you the shell — the roles each deck needs, built from confirmed cards — and once you've picked one, the **[deck builder](/deck)** prices it card for card in your own market.
 
 ## First, the deckbuilding rules (the quick version)
 
@@ -7449,24 +7450,29 @@ If neither of those describes how you use the site, the free tier — which stil
     date: "2026-09-05",
     // 12 Sep 2026: Radiance facts corrected — Ekko's revealed card is his LEGEND
     // (Boy Who Shattered Time, Fury/Mind), not the Ingenious unit, and Preview
-    // Season now opens 25 Sep. Tournament content is as-written on 5 Sep.
+    // Season now opens 25 Sep. Tournament content is as-written on 5 Sep, with
+    // one exception made later the same day: the tier labels, field shares and
+    // win rates quoted from our own "tracked tier list" came out. That list was
+    // prisma/meta-decks.json, hand-copied and last reconciled on 4 Aug, and it
+    // was removed with the meta decks (DECISIONS.md, "Meta decks: removed").
+    // What stays is what Barcelona itself established.
     updated: "2026-09-12",
     readMins: 12,
     tags: ["meta", "tournament", "regionals", "radiance", "predictions", "singapore"],
     // Kennen is the post's throughline — the most-played legend at Barcelona and
-    // still the format's highest win rate — so the card itself is the thumbnail,
+    // the deck the whole Day 2 field prepared to beat — so the card is the thumbnail,
     // the same treatment the Radiance post gives Seraphine. Local file rather
     // than the CDN so next/image has a build-time manifest entry for it.
     hero: {
       src: "/signature-cards/kennen-heart-of-the-tempest-ven197.jpg",
-      alt: "Kennen, Heart of the Tempest — the most-played legend at the Barcelona Regional Qualifier, and still the format's highest win rate after losing the final to Ornn",
+      alt: "Kennen, Heart of the Tempest — the most-played legend at the Barcelona Regional Qualifier, and the deck the whole Day 2 field prepared to beat; it still lost the final to Ornn",
     },
     summary: [
       "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
-      "**Our own tracked tier list agrees with Barcelona rather than contradicting it**: Kennen's 58% win rate is the best in the format's top tier, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically.",
+      "**Losing the final doesn't make Kennen a bad deck**: it was the most-played legend in the room and put three copies into the Top 8, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically — and one of them did.",
       "**The Regional Qualifier: Singapore is running right now** (4–6 Sept) — Southeast Asia's biggest organised Riftbound event so far. Day 1's results aren't final as of writing, and this article doesn't invent ones that don't exist yet.",
       "**Radiance releases 23 October 2026** with five confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
-      "Want the real, live-priced decklists behind all of this instead of the analysis? **[See today's meta decks](/decks).**",
+      "Want to price any of these lists yourself? **[Paste one into the deck builder](/deck)** — every card priced live in your own market, cheapest store first.",
     ],
     faq: [
       {
@@ -7475,7 +7481,7 @@ If neither of those describes how you use the site, the free tier — which stil
       },
       {
         q: "Is Kennen still a good deck after losing to Ornn at Barcelona?",
-        a: "By the numbers we track, yes — Kennen's 58% win rate is the best in the format's current top tier, ahead of every other Tier 1 or Tier 2 deck. One lost final doesn't erase that; it shows the deck has a real, beatable weak point once the field has a full Swiss to prepare specifically for it, which is a different claim than \"Kennen is bad.\"",
+        a: "Yes. It was the most-played legend in the biggest field the game has drawn and still put three copies into the Top 8 — one lost final doesn't erase that. What the loss shows is that the deck has a real, beatable weak point once a field has had a full Swiss to prepare specifically for it, which is a different claim than \"Kennen is bad.\"",
       },
       {
         q: "What is the Regional Qualifier: Singapore, and has it finished?",
@@ -7492,16 +7498,16 @@ If neither of those describes how you use the site, the free tier — which stil
     ],
     embeds: [
       {
-        title: "The cards behind the decks setting the pace",
-        note: "Pulled live from the same real tournament results the tier list above is built from — every card here is genuinely played in a top-tier list, not a hand-picked guess.",
-        metaStaples: { minDecks: 2 },
+        title: "The cards players are searching for most right now",
+        note: "Pulled live from our database and ordered by real search demand on RiftCompare — the cards the player base is actually looking for this week, not a hand-picked guess.",
+        popular: true,
         take: 12,
       },
     ],
     browseCta: {
-      href: "/decks",
-      label: "See today's real, live-priced meta decks →",
-      blurb: "Every list on the meta decks page is a real tournament result, priced card-for-card in your own market — updated as new results, including Singapore's, come in.",
+      href: "/deck",
+      label: "Price a decklist in your own market →",
+      blurb: "Paste any published tournament list into the deck builder and every card is priced live, cheapest store first — including Singapore's, as the lists are published.",
     },
     body: `Riftbound's competitive calendar has never been this compressed. As of today, the **Regional Qualifier: Singapore** is in its first Swiss rounds at Singapore EXPO — the direct follow-up to the biggest field the format has ever drawn, and the result that came out of it. In three weeks, the **Regional Qualifier: Los Angeles** closes out the 2026 season. A week after that, Radiance's Preview Season starts spoiling Riot's fifth set. Seven weeks from today, Radiance actually ships. Four events, seven weeks, and each one moves the format in a different way. Here's what's confirmed, what already changed, and what we can honestly say about where this is headed — without inventing results that haven't happened yet.
 
@@ -7509,19 +7515,19 @@ If neither of those describes how you use the site, the free tier — which stil
 
 The **Regional Qualifier: Barcelona** (21–23 August 2026) was the largest Regional Qualifier Riftbound has run — over 2,200 players, more than any Vendetta-season event before it. Going into the cut, **Kennen, Heart of the Tempest** was the format's clear presumptive best deck: the single most-played legend in the building, at 12.7% of the entire field, and it put three copies into the Top 8.
 
-It didn't win. **Ornn** — a legend nobody was building around going in — beat it in the final. That's worth being precise about, because it's easy to overstate. Ornn's win doesn't mean Kennen is bad; a deck can genuinely be the format's best and still drop one best-of series, and Kennen's own win rate (below) says it's still winning more often than almost anything else in the format. What it does prove is that the format has a real, beatable weak point once you reach single elimination against a room that has spent an entire Swiss preparing for one specific deck — and Ornn found it. Reports on the winning list describe a Gear-heavy shell — Guardian Angel, Sterak's Gage, equipment built to survive to the late game rather than race — which tracks with what [our own archetype breakdown](/guides/riftbound-deck-archetypes-guide) already says about the Gear tag: a Midrange deck built to out-value board stats rather than match them turn for turn. Beating an aggressive, disruption-heavy deck by simply refusing to die to it isn't a new idea in Riftbound. It's just not one Barcelona's field had built an answer for yet.
+It didn't win. **Ornn** — a legend nobody was building around going in — beat it in the final. That's worth being precise about, because it's easy to overstate. Ornn's win doesn't mean Kennen is bad; a deck can genuinely be the format's best and still drop one best-of series, and Kennen's own Barcelona numbers say it was still the deck to beat. What it does prove is that the format has a real, beatable weak point once you reach single elimination against a room that has spent an entire Swiss preparing for one specific deck — and Ornn found it. Reports on the winning list describe a Gear-heavy shell — Guardian Angel, Sterak's Gage, equipment built to survive to the late game rather than race — which tracks with what [our own archetype breakdown](/guides/riftbound-deck-archetypes-guide) already says about the Gear tag: a Midrange deck built to out-value board stats rather than match them turn for turn. Beating an aggressive, disruption-heavy deck by simply refusing to die to it isn't a new idea in Riftbound. It's just not one Barcelona's field had built an answer for yet.
 
 ## Where the meta actually sits
 
-Barcelona is one 2,200-player snapshot. The tier list we track pulls from ten real tournament results across the whole Vendetta season, and it agrees with Barcelona more than it contradicts it:
+Barcelona is one 2,200-player snapshot, but it is the biggest one the format has, and the shape of its field is the clearest picture of the Vendetta-season meta there is. Read by archetype rather than by legend — [our archetype guide](/guides/riftbound-deck-archetypes-guide) has the taxonomy — the decks that defined the season look like this:
 
-- **Irelia, Blade Dancer** — Tier 1, 10% of the field, 52% win rate. Still the single most-played legend across the decks we price, [Calm/Chaos Tempo](/decks/archetype/tempo) built around Irelia snowballing the board, now splashing Akali's Vendetta package for a faster clock.
-- **Kennen, Heart of the Tempest** — Tier 2, 9% of the field, and this is the number that actually matters after Barcelona: the **highest win rate in the format's top tier, at 58%**. [Order/Chaos Aggro/Disruption](/decks/archetype/aggro), and the most expensive list in the meta to assemble.
-- **Master Yi, Wuju Bladesman** — Tier 2, 9%, 47% win rate. The cheapest genuine tier-2 shell, flooding cheap Body/Calm units and closing with combat tricks.
-- **Diana, Scorn of the Moon** — Tier 2, 5%, 42% win rate. Chaos/Mind spell tempo, and the deck that won the very first real Vendetta event.
-- Below that: **Viktor** posts the single best win rate on the *entire* list — 63%, at roughly a third of Kennen's price to build — with Ezreal close behind at 62%. Both are small samples, which is exactly why they sit at Tier 3 rather than above Kennen despite the raw number. But it's the same shape as Ornn's run at Barcelona: an undersized deck with an outsized win rate is precisely the kind of thing a Swiss field hasn't practiced against.
+- **Irelia, Blade Dancer** — Calm/Chaos Tempo built around Irelia snowballing the board, now splashing Akali's Vendetta package for a faster clock. The format's benchmark deck for most of the season: the list everything else was tuned against.
+- **Kennen, Heart of the Tempest** — Order/Chaos Aggro/Disruption, the most-played legend in Barcelona's field at 12.7%, three copies in the Top 8, and the most expensive list in the meta to assemble.
+- **Master Yi, Wuju Bladesman** — the cheapest genuinely competitive shell of the season, flooding cheap Body/Calm units and closing with combat tricks.
+- **Diana, Scorn of the Moon** — Chaos/Mind spell tempo, and the deck that won the very first real Vendetta event.
+- Below that, the long tail: **Viktor** and **Ezreal** shells that turn up in smaller numbers and punch above their weight when they do. That is the same shape as Ornn's run at Barcelona: an undersized deck is precisely the kind of thing a Swiss field hasn't practised against.
 
-Read the top two together and Barcelona makes complete sense. Kennen wins more than half of every match it plays — more than any deck in the format's top tier — which is exactly why every serious Day 2 competitor spent Swiss learning how to beat it specifically, and one of them did, in the round that actually mattered.
+Read Kennen's Barcelona numbers together and the final makes complete sense. The most-played deck in the room is the one every serious Day 2 competitor spent Swiss learning how to beat specifically — and one of them did, in the round that actually mattered.
 
 [[embed:0]]
 
@@ -7557,11 +7563,11 @@ Put together, those five aren't a guess at who'll be good — they're simply whe
 
 We deliberately don't predict what individual cards will do — see [why Riftbound prices actually change](/guides/why-riftbound-card-prices-change) for the real mechanics behind that, instead of a guess dressed up as one. What's actually actionable right now:
 
-- **If you're building for the rest of the Vendetta season**, Kennen's win rate is still the best in the format's top tier — one lost final is a data point, not a pattern — and [the meta decks page](/decks) prices every real tournament list live, cheapest store first, in your own currency. Priced Viktor's budget shell is on the same page, for a fraction of Kennen's cost to assemble.
+- **If you're building for the rest of the Vendetta season**, Kennen is still the deck to beat — one lost final is a data point, not a pattern — and [the deck builder](/deck) prices any published list live, cheapest store first, in your own currency; a Viktor or Master Yi shell comes in at a fraction of Kennen's cost to assemble.
 - **If you're buying into Radiance**, the five confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
 - **If you just want to know what's shipping and when**, without a hard-coded countdown that goes stale the day it's wrong, [the release calendar](/release-dates) rolls itself forward automatically as each date passes — Radiance, Legacy and everything Riot has announced beyond it.
 
-We'll be watching Singapore's Top 8 the moment it's final, and updating the tier list the same way we did after Barcelona: from the actual decklists, not a guess at what they'll say.`,
+We'll be watching Singapore's Top 8 the moment it's final — and reading it the same way we read Barcelona: from the actual decklists, not a guess at what they'll say.`,
   },
   {
     slug: "riftbound-radiance-biggest-release-since-origins",
@@ -8307,17 +8313,24 @@ We will update this post as the price is confirmed and as the first real sales d
   // as the colour-selection step; how-to-store-and-protect (450 words, storage
   // and grading-adjacent) links up to this one rather than competing.
   //
-  // The two facts here nobody else has are computed from our own catalogue and
-  // the tracked tournament lists, not asserted: 56 of the 950 catalogued cards
-  // are landscape Battlefields (prisma/riftbound-cards.json's `orientation`),
-  // and every one of the ten decks in prisma/meta-decks.json totals 65 cards as
-  // 40 main + 12 runes + 3 battlefields + 10 sideboard.
+  // The differentiating fact is computed from our own catalogue rather than
+  // asserted: 56 of the 950 catalogued cards are landscape Battlefields
+  // (prisma/riftbound-cards.json's `orientation`).
+  //
+  // THE 66-CARD ARITHMETIC IS SOURCED TO THE RULES, NOT TO A DATASET. It was
+  // first derived here from prisma/meta-decks.json's ten lists, which gave 65 —
+  // one short, because that file carried the Legend as a field rather than as a
+  // card. That file was removed on `main` the same day (PR #111) for being
+  // hand-copied and unreconcilable, so the claim is re-sourced to
+  // /guides/how-a-riftbound-deck-is-built, whose figures come from Riot's July
+  // 2026 tournament rules update: 1 Legend + 40 main + 12 runes + 3 battlefields
+  // = 56, plus a 10-card side deck = 66.
   {
     slug: "riftbound-card-size-sleeves-deck-boxes",
     category: "guide",
     title: "What Size Are Riftbound Cards? Sleeves, Boxes & Binders",
     excerpt:
-      "Riftbound cards are standard trading-card size, so any standard sleeve fits. But a real tournament deck needs 65 sleeves rather than 40, and 56 cards in the game are landscape. The complete accessory guide.",
+      "Riftbound cards are standard trading-card size, so any standard sleeve fits. But a full tournament deck needs 66 sleeves rather than 40, and 56 cards in the game are landscape. The complete accessory guide.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 11,
@@ -8328,9 +8341,9 @@ We will update this post as the price is confirmed and as the first real sales d
     },
     summary: [
       "**Riftbound cards are standard trading-card size** — the same as Magic, Pokemon and most modern TCGs. Any sleeve sold as *standard size* fits. There is no Riftbound-specific dimension to hunt for.",
-      "**Buy 65 sleeves per deck, not 40.** Every one of the ten tournament lists we track is 40 main-deck cards plus 12 runes, 3 battlefields and a 10-card sideboard.",
+      "**Buy 66 sleeves per deck, not 40.** A full tournament list is 1 Legend, a 40-card main deck, 12 runes, 3 battlefields and a 10-card side deck.",
       "**56 cards in the game are landscape**, and they are all Battlefields. They take the same sleeve, turned sideways — which changes nothing about sleeving and quite a lot about binders and playmats.",
-      "**Deck-box capacity is about thickness, not card count.** A 100-card box will not hold 65 double-sleeved cards.",
+      "**Deck-box capacity is about thickness, not card count.** A 100-card box will not hold 66 double-sleeved cards.",
       "**Sleeve the deck you play; protect the cards that are worth protecting.** Those are two different jobs with two different products.",
     ],
     faq: [
@@ -8344,7 +8357,7 @@ We will update this post as the price is confirmed and as the first real sales d
       },
       {
         q: "How many sleeves do I need for one Riftbound deck?",
-        a: "65 if you want the whole thing sleeved. Every deck in our tracked tournament list is 40 main-deck cards (the champion Legend plus 39 units, spells and gear), 12 runes, 3 battlefields and a 10-card sideboard. A 100-count pack covers one deck with 35 spare; two packs cover two decks properly.",
+        a: "66 if you want the whole thing sleeved. A full tournament list is 1 Legend, a 40-card main deck of units, gear and spells, 12 runes, 3 battlefields and a 10-card side deck — see [how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built) for the construction rules. A 100-count pack covers one deck with 34 spare; two packs cover two decks properly.",
       },
       {
         q: "Do Battlefield cards need different sleeves?",
@@ -8352,7 +8365,7 @@ We will update this post as the price is confirmed and as the first real sales d
       },
       {
         q: "What size deck box should I buy for Riftbound?",
-        a: "Look at stated capacity for sleeved cards, not raw card count, and add headroom. A 65-card deck single-sleeved sits comfortably in a box rated around 100 cards; the same deck double-sleeved needs roughly a 150-count box. Boxes quoting capacity for unsleeved cards will not close on a sleeved deck.",
+        a: "Look at stated capacity for sleeved cards, not raw card count, and add headroom. A 66-card deck single-sleeved sits comfortably in a box rated around 100 cards; the same deck double-sleeved needs roughly a 150-count box. Boxes quoting capacity for unsleeved cards will not close on a sleeved deck.",
       },
       {
         q: "How big a binder do I need for a full Riftbound set?",
@@ -8397,21 +8410,24 @@ It is a small thing, but it is the kind of small thing you only discover after b
 
 This is where most people under-buy, because the instinct from other games is to count the main deck and stop.
 
-We track ten real tournament decklists. **Every one of them totals 65 cards**, and the composition is remarkably consistent:
+A Riftbound deck is not one deck. It is a **Legend, a main deck, a rune deck, three battlefields and a side deck**, and every one of those cards is handled during play:
 
 | Part of the deck | Cards | Notes |
 | --- | --- | --- |
-| **Main deck** | **40** | The champion Legend plus 39 units, spells and gear |
-| **Runes** | **12** | A separate deck, and yes, they get sleeved too |
+| **Legend** | **1** | Your identity card, in play from the start |
+| **Main deck** | **40** | Units, gear and spells, including your champion |
+| **Runes** | **12** | A physically separate deck — and yes, they get sleeved too |
 | **Battlefields** | **3** | The landscape ones |
-| **Sideboard** | **10** | Carried to every event |
-| **Total** | **65** | |
+| **Side deck** | **10** | Carried to every event; 10 since the July 2026 rules update, up from 8 |
+| **Total** | **66** | |
 
-So the honest number is **65 sleeves per deck**, not 40. The runes catch people out most: they are a physically separate deck that gets shuffled and handled every single game, which makes them *more* exposed to wear than a main-deck card you might draw once a match, not less.
+So the honest number is **66 sleeves per deck**, not 40. Our **[guide to how a Riftbound deck is built](/guides/how-a-riftbound-deck-is-built)** carries the construction rules behind that table, including the three-copy limit shared across main and side deck.
 
-Practically, **a 100-count pack of sleeves covers one deck with 35 spare** — which is about right, because you will replace split sleeves over a season. If you are building two decks, buy two packs rather than trying to stretch one; mixing sleeve batches part-way through a deck creates a visible difference that a judge is entitled to take seriously.
+The runes catch people out most: they are a separate deck that gets shuffled and handled every single game, which makes them *more* exposed to wear than a main-deck card you might draw once a match, not less.
 
-If you want to see what a full deck costs to assemble before you spend anything on sleeves for it, **[Best Basket](/tools/best-basket)** takes a decklist and works out the cheapest store split once postage is counted, and **[the meta decks page](/decks)** carries the lists themselves with live build costs.
+Practically, **a 100-count pack of sleeves covers one deck with 34 spare** — which is about right, because you will replace split sleeves over a season. If you are building two decks, buy two packs rather than trying to stretch one; mixing sleeve batches part-way through a deck creates a visible difference that a judge is entitled to take seriously.
+
+If you want to know what a deck costs to assemble before you spend anything on sleeves for it, paste the list into **[the deck builder](/deck)** for a card-by-card build cost in your own market, or run it through **[Best Basket](/tools/best-basket)**, which works out the cheapest split across stores once postage is counted.
 
 ## Choosing sleeves: the four things that actually matter
 
@@ -8433,7 +8449,7 @@ Double-sleeving means a thin inner sleeve on the card, usually inserted upside d
 
 It is worth it when **the cards in the deck are individually expensive** — a chase-rarity Legend or a Showcase print you would not casually replace. It is not worth it for a budget build, where the sleeving costs a meaningful fraction of the deck's value and the shuffle feel gets worse for nothing.
 
-The trade-off is real: a double-sleeved 65-card deck is **noticeably thicker and stiffer** than the same deck single-sleeved, which changes both how it shuffles and what box it fits in. Which brings us to the purchase people most often get wrong.
+The trade-off is real: a double-sleeved 66-card deck is **noticeably thicker and stiffer** than the same deck single-sleeved, which changes both how it shuffles and what box it fits in. Which brings us to the purchase people most often get wrong.
 
 ## Deck boxes: the capacity number is not the card count
 
@@ -8441,8 +8457,8 @@ A deck box quoting "holds 100 cards" is usually quoting **unsleeved** cards. Tha
 
 The rough conversion:
 
-- **65 cards, single-sleeved** — comfortable in a box rated around **100**.
-- **65 cards, double-sleeved** — needs roughly a **150-count** box.
+- **66 cards, single-sleeved** — comfortable in a box rated around **100**.
+- **66 cards, double-sleeved** — needs roughly a **150-count** box.
 - **A deck plus its runes and battlefields as separate stacks** — many players prefer a box with an internal divider or a second compartment, so the 12 runes are not shuffled into the main deck by accident between games.
 
 Add headroom in both cases. A box you have to force closed puts constant pressure on the sleeves at the top of the stack and will split them along the seam within a season.
@@ -8474,7 +8490,7 @@ What you can skip, at least at first:
 
 If you have just bought your first deck and want the short version, this is the whole list:
 
-1. **One 100-count pack of matte, fully opaque, standard-size sleeves.** Covers the 65-card deck with spares.
+1. **One 100-count pack of matte, fully opaque, standard-size sleeves.** Covers the 66-card deck with spares.
 2. **One deck box rated around 100 sleeved cards**, ideally with a divider so the runes stay separate.
 3. **Nothing else.**
 
@@ -8488,7 +8504,7 @@ Worth stating plainly because it catches people at their first event: **sleeves 
 
 Two requirements do the work. Every sleeve in a deck must be **identical** — same product, ideally the same batch. And the backs must be **opaque and unmarked**, with no scratches, scuffs or bends that would let any card be identified from the back.
 
-A deck with three replacement sleeves from a different pack, or a handful of sleeves that have picked up distinguishing scuffs over a season, is a marked deck as far as a judge is concerned, regardless of intent. That is why the advice above is to buy a 100-count pack for a 65-card deck rather than exactly enough: mid-season replacements come from the same pack, and the deck stays uniform.
+A deck with three replacement sleeves from a different pack, or a handful of sleeves that have picked up distinguishing scuffs over a season, is a marked deck as far as a judge is concerned, regardless of intent. That is why the advice above is to buy a 100-count pack for a 66-card deck rather than exactly enough: mid-season replacements come from the same pack, and the deck stays uniform.
 
 It is also the strongest practical argument for matte over gloss for a deck you actually play. Gloss shows scuffing more readily, and scuffing is the thing that turns a legal deck into a marked one.
 

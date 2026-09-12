@@ -46,7 +46,6 @@ const DEFAULT_PATHS: [string, string][] = [
   ["/movers", "tool"],
   ["/market", "tool"],
   ["/marketplace", "marketplace"],
-  ["/decks", "decks"],
 ];
 const PATHS: [string, string][] = process.env.ADSENSE_VERIFY_PATHS
   ? process.env.ADSENSE_VERIFY_PATHS.split(",").map((p) => [p.trim(), p.trim()] as [string, string])

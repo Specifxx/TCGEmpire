@@ -115,8 +115,8 @@ export async function RegionHome({ region }: { region: Country }) {
           <Link href="/sets" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             Browse by set →
           </Link>
-          <Link href="/decks" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
-            Top meta decks →
+          <Link href="/deck" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+            Price a decklist →
           </Link>
           {guideSlug && (
             <Link href={`/blog/${guideSlug}`} className="font-semibold text-brand-300 underline-offset-2 hover:underline">

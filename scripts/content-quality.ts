@@ -83,9 +83,6 @@ interface Template {
 
 const TEMPLATES: Template[] = [
   { name: "card", test: (p) => p.startsWith("/card/"), requiredSections: ["about", "frequently asked questions", "read next"] },
-  { name: "decks/archetype", test: (p) => p.startsWith("/decks/archetype/") },
-  { name: "decks/domain", test: (p) => p.startsWith("/decks/domain/") },
-  { name: "deck", test: (p) => /^\/decks\/[^/]+$/.test(p) && p !== "/decks" },
   { name: "champion", test: (p) => p.startsWith("/champions/") && p !== "/champions" },
   { name: "keyword", test: (p) => p.startsWith("/keywords/") && p !== "/keywords" },
   { name: "domain", test: (p) => p.startsWith("/domains/") && p !== "/domains" },

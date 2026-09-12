@@ -227,10 +227,11 @@ const HEROES: Hero[] = [
     slug: "riftbound-deck-archetypes-guide",
     kicker: "Guide · Deckbuilding",
     title: "Riftbound Deck Archetypes",
-    // "9 real archetypes" IS the thumbnail's claim, so the grid below has to
-    // show exactly 9 — see the article's own self-checking test for why that
-    // number is read from the data rather than typed twice.
-    chips: ["9 real archetypes", "From live tournament decks", "Which to build first"],
+    // "9 named archetypes" IS the thumbnail's claim, so the grid below has to
+    // show exactly 9. The middle chip used to read "From live tournament
+    // decks"; the guide stopped deriving anything from decklists on 2026-09-12
+    // (DECISIONS.md, "Meta decks: removed") and is an evergreen explainer now.
+    chips: ["9 named archetypes", "Aggro · Tempo · Midrange", "Which to build first"],
     motif: {
       kind: "grid",
       label: "Archetypes",
@@ -381,13 +382,16 @@ const HEROES: Hero[] = [
     slug: "riftbound-card-size-sleeves-deck-boxes",
     kicker: "Guide \u00B7 Accessories",
     title: "Riftbound Card Size & Sleeves",
-    chips: ["Standard size", "65 sleeves a deck", "56 landscape cards"],
+    chips: ["Standard size", "66 sleeves a deck", "56 landscape cards"],
     // The deck arithmetic IS the article's most useful fact, and it is a list of
-    // parts that sum to one number — which is exactly what checklist draws.
+    // parts that sum to one number — which is exactly what checklist draws. The
+    // total lives in the chip above rather than as a sixth row, so every row here
+    // is a real part of the deck. Figures from /guides/how-a-riftbound-deck-is-built
+    // (Riot's July 2026 tournament rules update), not from the removed meta-decks file.
     motif: {
       kind: "checklist",
       label: "One deck",
-      items: ["40 main deck", "12 runes", "3 battlefields", "10 sideboard", "= 65 sleeves"],
+      items: ["1 legend", "40 main deck", "12 runes", "3 battlefields", "10 side deck"],
     },
   },
   {

@@ -61,8 +61,10 @@ export const COUNTRIES: Record<Country, CountryInfo> = {
   SG: { code: "SG", label: "Singapore", adjective: "Singapore", place: "Singapore", flag: "🇸🇬", currency: "SGD", locale: "en-SG" },
   CA: { code: "CA", label: "Canada", adjective: "Canadian", place: "Canada", flag: "🇨🇦", currency: "CAD", locale: "en-CA" },
   // The one entry whose `code` is not an ISO 3166 country — see the header note.
-  // `locale` is "en-IE", not "es-ES": it is only ever used for og:locale:alternate
-  // (see app/decks/page.tsx), and every page on this site is written in ENGLISH.
+  // `locale` is "en-IE", not "es-ES": its only use was og:locale:alternate on
+  // the meta-deck hub (removed 2026-09-12; nothing reads it today, and it stays
+  // for whichever page next emits one), and every page on this site is written
+  // in ENGLISH.
   // Claiming a Spanish locale for an English page is the same lie seo.ts's
   // hreflang note refuses to tell. en-IE is English in a eurozone country, which
   // is exactly what these pages are. hreflang, which DOES need a country, anchors

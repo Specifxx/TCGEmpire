@@ -52,7 +52,6 @@ const card = (over: Partial<NarrativeInput> = {}): NarrativeInput => ({
   markets: [market(), market({ country: "AU", place: "Australia", currency: "AUD", lowestCents: 1800, lowestDeliveredCents: 2200 })],
   history: { points: days(120, 1000, 0.001) },
   printings: [],
-  decks: [],
   setContext: { pricedInSet: 200, cheaperThan: 150, setMedianCents: 600 },
   ...over,
 });
@@ -75,7 +74,6 @@ test("the sparsest priced card still says something substantial", () => {
         markets: [market()],
         history: { points: [] },
         printings: [],
-        decks: [],
         setContext: null,
         baseline: market({
           cheapestFoilCents: null,
@@ -155,11 +153,6 @@ test("no set-context claim when the set has too few priced cards", () => {
 test("no variant premium without a real price on both sides", () => {
   const t = text(card({ isSignature: true, printings: [{ label: "base", priceCents: null, isBase: true }] }));
   assert.doesNotMatch(t, /premium over the plain version/);
-});
-
-test("no playset cost without a copy count", () => {
-  const t = text(card({ decks: [{ name: "Jinx Aggro", copies: null }] }));
-  assert.doesNotMatch(t, /a full set for one deck/);
 });
 
 // ── branching on data conditions, not synonym shuffling ──────────────────────
@@ -309,7 +302,6 @@ test("no branch leaks NaN, undefined, null or an empty currency", () => {
     { history: { points: days(1) } },
     { markets: [] },
     { setContext: null },
-    { decks: [{ name: "A", copies: 3 }, { name: "B", copies: 2 }] },
     { printings: [{ label: "base", priceCents: 400, isBase: true }], isSignature: true },
     { printings: [{ label: "Showcase", priceCents: 9000, isBase: false }] },
     { baseline: market({ lowestCents: 0, secondCents: 0, lowestDeliveredCents: 0 }) },
@@ -375,7 +367,6 @@ const ALL_SHAPES: Partial<NarrativeInput>[] = [
   { history: { points: days(3) } },
   { markets: [] },
   { setContext: null },
-  { decks: [{ name: "A", copies: 3 }] },
   { domain: "Colorless" },
   { energyCost: null, might: null, power: null },
   { baseline: market({ storeCount: 1, secondCents: null }) },

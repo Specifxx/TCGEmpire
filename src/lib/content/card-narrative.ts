@@ -25,7 +25,10 @@ import { hasNoRetailChannel, noRetailChannelProduct } from "@/lib/constants";
 //      cheapest is one seller).
 //   4. Variant economics — the foil/showcase/signature premium as a multiple.
 //   5. Set context — where this price sits in its set's distribution.
-//   6. Playability — which tracked meta decks run it, at what copy count.
+//   (A sixth, "playability" — which tracked meta decks run it — was removed on
+//   2026-09-12 with the meta decks themselves: the decklists behind it were
+//   hand-typed and stale, so the paragraph asserted play patterns no data
+//   backed. See DECISIONS.md, "Meta decks: removed".)
 //
 // HARD RULE, inherited from the code this replaces and worth restating: nothing
 // is asserted without the data on this render to back it. A card with two
@@ -85,8 +88,6 @@ export type NarrativeInput = {
 
   /** Other printings of the same card, with the baseline market's price. */
   printings: { label: string; priceCents: number | null; isBase: boolean }[];
-  /** Meta decks running this card. */
-  decks: { name: string; copies?: number | null }[];
   /** Where this card sits among its set's priced cards. */
   setContext: { pricedInSet: number; cheaperThan: number; setMedianCents: number | null } | null;
 };
@@ -634,29 +635,6 @@ function setContext(c: NarrativeInput): string | null {
   );
 }
 
-// ── 6. Playability ───────────────────────────────────────────────────────────
-function playability(c: NarrativeInput): string | null {
-  if (!c.decks.length) return null;
-  const named = c.decks.slice(0, 3).map((d) => d.name);
-  const copies = c.decks.map((d) => d.copies).filter((n): n is number => typeof n === "number" && n > 0);
-  const maxCopies = copies.length ? Math.max(...copies) : null;
-  const mine = c.baseline.lowestCents;
-
-  let s =
-    c.decks.length === 1
-      ? `On the play side, ${c.name} appears in one deck we track — ${named[0]}.`
-      : `${c.name} shows up in ${c.decks.length} of the meta decks we track, including ${named.slice(0, 2).join(" and ")}.`;
-
-  // A playset cost is the number a deckbuilder actually needs, and it's only
-  // worth stating when we know both the copy count and a real price.
-  if (maxCopies && maxCopies > 1 && mine != null) {
-    s += ` Builds run up to ${maxCopies} copies, so a full set for one deck costs about ${formatMoney(mine * maxCopies, c.baseline.currency)} at today's cheapest listing.`;
-  } else if (mine != null) {
-    s += ` At ${formatMoney(mine, c.baseline.currency)} it is a cheap inclusion if you are building toward ${named[0]}.`;
-  }
-  return s;
-}
-
 // ── 7. Honest fallback for a card with no market yet ──────────────────────────
 // EMPTY cards are noindexed (see lib/card-price-state.ts), but they are still
 // served to real people arriving from search, a bookmark or an internal link,
@@ -785,8 +763,6 @@ export function buildCardNarrative(c: NarrativeInput): string[] {
     if (collector) paragraphs.push(collector);
     const t = trajectory(c);
     if (t) paragraphs.push(t);
-    const p = playability(c);
-    if (p) paragraphs.push(p);
     return paragraphs.map(tidy);
   }
 
@@ -799,13 +775,12 @@ export function buildCardNarrative(c: NarrativeInput): string[] {
   const spread = crossMarket(c);
   const variant = variantEconomics(c);
   const set = setContext(c);
-  const play = playability(c);
   const coverage = coverageNotes(c);
 
   const movingFast = traj != null && /up \d\d+%|down \d\d+%/.test(traj);
   const ordered = movingFast
-    ? [traj, depth, cond, spread, variant, set, play, coverage]
-    : [depth, traj, cond, spread, variant, set, play, coverage];
+    ? [traj, depth, cond, spread, variant, set, coverage]
+    : [depth, traj, cond, spread, variant, set, coverage];
 
   for (const p of ordered) if (p) paragraphs.push(p);
   // Every paragraph leaves through tidy(), not just the two that were reported.
