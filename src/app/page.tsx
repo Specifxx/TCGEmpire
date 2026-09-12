@@ -174,7 +174,6 @@ export default async function HomePage() {
   const [
     { totalCards, statsByCountry, freshness },
     popularCards,
-    popularVendetta,
     topDealsArr,
     recentlyUpdated,
     moversArr,
@@ -185,10 +184,6 @@ export default async function HomePage() {
     getHomeStats(),
     // Most-searched singles (ties → more expensive card) — the cards people most want.
     getPopularCards(12, country),
-    // Most-searched VENDETTA singles specifically — same demand signal, scoped to
-    // the set everyone's talking about right now. Empty (no section shown) until
-    // enough early listings are actually priced.
-    getPopularCards(8, country, "VEN"),
     // Today's Top Deals blends four signals; cache per-market. We serialize ALL four
     // markets so the section localises to the visitor's chosen market client-side —
     // the page is ISR-cached with DEFAULT_COUNTRY baked in, so a single-market render
@@ -245,8 +240,8 @@ export default async function HomePage() {
           nextUpcomingSet()) — inside HomeSections below, after Explore — not a
           revival of this band. */}
 
-      {/* Everything below the hero — Market Pulse, Today's Top Deals, the
-          popular-cards carousel, How It Works, Explore, reviews, partners —
+      {/* Everything below the hero — Market Pulse, the popular-cards carousel,
+          Today's Top Deals, How It Works, Explore, reviews, partners —
           shared with the 4 region home pages (/au, /uk, /sg, /ca) via
           HomeSections, so a visitor who picks a market in the hero toggle gets
           the SAME feature set, not a stripped-down page. See HomeSections.tsx. */}
@@ -256,7 +251,6 @@ export default async function HomePage() {
         storeCount={storeCount}
         storeWord={storeWord}
         popularCards={popularCards}
-        popularVendetta={popularVendetta}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

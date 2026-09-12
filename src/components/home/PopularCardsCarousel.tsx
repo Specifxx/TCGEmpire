@@ -14,11 +14,11 @@ import { Reveal } from "@/components/Reveal";
 // doesn't ride along into the homepage's hydration payload.
 type CardWithDelta = { card: CardTileData; pct: number };
 
-// One tab's worth of content: either a plain card list (Vendetta / All-time) or
-// a list with a per-card % delta (price movers, or the recently-updated feed).
+// One tab's worth of content: either a plain card list (All-time) or a list
+// with a per-card % delta (price movers, or the recently-updated feed).
 // Rendering all these shapes through the same tab strip is what actually merges
-// what used to be three separate homepage sections instead of just visually
-// pairing them. `deltas` only ever needs `.pct` — it deliberately isn't typed as
+// what used to be separate homepage sections instead of just visually pairing
+// them. `deltas` only ever needs `.pct` — it deliberately isn't typed as
 // the full `CardWithDelta` (which also carries the card), so any per-card-delta
 // list can feed a tab, not just real movers.
 type Tab = {
@@ -32,24 +32,28 @@ type Tab = {
   deltas?: { pct: number }[]; // when set, render the % delta caption under each tile
 };
 
-// Unifies what used to be three separate, near-identically-shaped homepage
-// sections — "Most popular Vendetta cards", "Most popular Riftbound cards",
-// and the always-expanded "Recently updated prices" grid — into one compact,
-// tabbed, one-row horizontal scroll, plus a "Biggest movers" tab so
-// price-movement content lives here too instead of its own section. Every
-// tab's cards stay in the DOM at all times (only visibility toggles) — same
-// crawlability as the old always-rendered sections, and keeps the page's
-// existing ItemList JSON-LD blocks (built from the all-time and
+// Unifies what used to be separate, near-identically-shaped homepage sections
+// — "Most popular Riftbound cards" and the always-expanded "Recently updated
+// prices" grid — into one compact, tabbed, one-row horizontal scroll, plus a
+// "Biggest movers" tab so price-movement content lives here too instead of its
+// own section. Every tab's cards stay in the DOM at all times (only visibility
+// toggles) — same crawlability as the old always-rendered sections, and keeps
+// the page's existing ItemList JSON-LD blocks (built from the all-time and
 // recently-updated lists) matching what's actually in the page.
+//
+// A FOURTH TAB, "Most popular Vendetta cards", led this strip until 2026-09-12.
+// It was the merged form of a launch-window section for a set that released on
+// 31 Jul 2026, and being first it made one set's demand the default view of the
+// homepage's browse section. Removed rather than demoted: /sets/vendetta is the
+// page for set-scoped popularity, and HomeSections no longer fetches the extra
+// set-scoped query per home render at all.
 export function PopularCardsCarousel({
-  vendetta,
   allTime,
   movers,
   recentlyUpdated,
   storeCount,
   storeWord,
 }: {
-  vendetta: CardTileData[];
   allTime: CardTileData[];
   movers: CardWithDelta[];
   recentlyUpdated: CardWithDelta[];
@@ -57,19 +61,6 @@ export function PopularCardsCarousel({
   storeWord: string;
 }) {
   const tabs: Tab[] = [
-    ...(vendetta.length > 0
-      ? [
-          {
-            key: "vendetta",
-            label: "Vendetta",
-            heading: "Most popular Vendetta cards",
-            description: "The most-searched Vendetta cards right now — live prices compared across every store we track.",
-            allHref: "/sets/vendetta",
-            allLabel: "See all Vendetta prices →",
-            cards: vendetta,
-          },
-        ]
-      : []),
     {
       key: "alltime",
       label: "All-time",

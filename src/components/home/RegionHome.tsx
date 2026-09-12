@@ -18,8 +18,8 @@ const COUNTRY_CODES: Country[] = COUNTRY_LIST.map((c) => c.code);
 
 // Region home pages (/au, /uk, /sg, /ca — see app/au/page.tsx etc): the
 // homepage's own hero/search/stat building blocks, reused rather than
-// duplicated, PLUS the exact same feature set as "/" (Today's Top Deals,
-// Market Pulse, the popular-cards carousel, How It Works, Explore, reviews,
+// duplicated, PLUS the exact same feature set as "/" (Market Pulse, the
+// popular-cards carousel, Today's Top Deals, How It Works, Explore, reviews,
 // partners — see HomeSections.tsx), PLUS genuinely region-specific content
 // below all of that (real counts from THIS market, a link to that market's
 // own buying guide, a region-scoped FAQ).
@@ -45,14 +45,12 @@ export async function RegionHome({ region }: { region: Country }) {
   const [
     { totalCards, statsByCountry, freshness },
     popularCards,
-    popularVendetta,
     topDealsArr,
     recentlyUpdated,
     moversArr,
   ] = await Promise.all([
     getHomeStats(),
     getPopularCards(12, region),
-    getPopularCards(8, region, "VEN"),
     Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
     getRecentlyUpdated(region, 24),
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
@@ -85,8 +83,8 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
-      {/* The full "/" feature set — Market Pulse, Today's Top Deals, popular
-          cards, How It Works, Explore, reviews, partners — see HomeSections.tsx
+      {/* The full "/" feature set — Market Pulse, popular cards, Today's Top
+          Deals, How It Works, Explore, reviews, partners — see HomeSections.tsx
           and this file's own header comment for why this exists here now. */}
       <HomeSections
         country={region}
@@ -94,7 +92,6 @@ export async function RegionHome({ region }: { region: Country }) {
         storeCount={stat.stores}
         storeWord={storeWord}
         popularCards={popularCards}
-        popularVendetta={popularVendetta}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

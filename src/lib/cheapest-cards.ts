@@ -9,7 +9,10 @@ import type { CardTileData } from "@/components/CardTile";
 // (e.g. lots of cards with the same search count) break toward the MORE EXPENSIVE
 // card, so the section leads with the chase/high-value cards people actually want.
 // Priced-only so every tile shows a real price. Optional setCode scopes it to one
-// set (e.g. the Vendetta homepage strip) instead of the whole database.
+// set instead of the whole database — nothing passes it today. Its one caller was
+// the homepage's "Most popular Vendetta cards" tab, retired on 2026-09-12 now that
+// Vendetta (31 Jul 2026) is long past being the new set; set-scoped popularity
+// lives on /sets/<slug>, which that tab was only ever a teaser for.
 export async function getPopularCards(limit = 12, country: Country = DEFAULT_COUNTRY, setCode?: string): Promise<CardTileData[]> {
   const field = priceField(country);
   const cards = (await prisma.card.findMany({
