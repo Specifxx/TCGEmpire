@@ -186,7 +186,10 @@ const HEROES: Hero[] = [
     title: "Radiance: What's Confirmed",
     // The release date IS the story — it is the one fact the whole post is
     // built on, so it gets the graphic rather than a generic price motif.
-    chips: ["~180 cards", "5 new Legends", "Card list unrevealed"],
+    // Refreshed 12 Sep 2026 with Riot's rundown + the distributor sheet: the
+    // count is confirmed (not "~"), nine Legends are known from the Pre-Rift
+    // kit's nine mini-decks, and previews open 25 Sep at RQ Los Angeles.
+    chips: ["180 cards · 66 Showcase", "9 new Legends", "Previews 25 Sep"],
     motif: { kind: "date", label: "Releases", big: "23 OCT", sub: "2026" },
   },
   {

@@ -606,11 +606,11 @@
     "src": "/blog/riftbound-radiance-what-we-know.png",
     "width": 1200,
     "height": 630,
-    "bytes": 42161,
+    "bytes": 40683,
     "webp": "/blog/riftbound-radiance-what-we-know.webp",
-    "webpBytes": 23210,
+    "webpBytes": 25386,
     "avif": "/blog/riftbound-radiance-what-we-know.avif",
-    "avifBytes": 13231,
+    "avifBytes": 14243,
     "variants": [
       {
         "w": 480,
@@ -621,7 +621,7 @@
         "src": "/blog/riftbound-radiance-what-we-know-768w.webp"
       }
     ],
-    "fingerprint": "8758e0f892e05396"
+    "fingerprint": "63085fdec6f58975"
   },
   "/blog/riftbound-showoff-explained.png": {
     "src": "/blog/riftbound-showoff-explained.png",
