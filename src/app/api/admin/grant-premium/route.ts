@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
   // An entitlement change by hand must be traceable in the function logs.
   console.log(
-    `admin grant-premium: ${days}d to ${user.email} by ${me?.email ?? "ADMIN_TOKEN"} — premiumUntil ${user.premiumUntil?.toISOString() ?? "none"} → ${until.toISOString()}`
+    `admin grant-premium: ${days}d of ${tier} to ${user.email} by ${me?.email ?? "ADMIN_TOKEN"} — premiumUntil ${user.premiumUntil?.toISOString() ?? "none"} → ${until.toISOString()}`
   );
   return NextResponse.json({ ok: true, email: user.email, premiumUntil: until.toISOString() });
 }

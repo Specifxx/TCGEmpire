@@ -209,7 +209,10 @@ async function FlipView({
   premium: boolean;
   signedIn: boolean;
 }) {
-  const buy = buyParam ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : storeKeys;
+  // !== undefined, not a truthy check: `buy=` (the explicit "None" selection)
+  // parses to the empty string, which must NOT fall back to every store — only
+  // a param that's genuinely absent (first visit, no filter touched yet) should.
+  const buy = buyParam !== undefined ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : storeKeys;
   const sell = [ebayKey];
   // Non-Premium: ignore page/source customisation and fetch only the teaser.
   const data = await getArbitrage(country, {
@@ -239,7 +242,11 @@ async function FlipView({
       )}
 
       {data.items.length === 0 ? (
-        <Empty>No cards worth more on eBay from these sources right now in {info.place}. Try widening the store side.</Empty>
+        <Empty>
+          {buy.length === 0
+            ? "Pick at least one store on the buy side to see results."
+            : `No cards worth more on eBay from these sources right now in ${info.place}. Try widening the store side.`}
+        </Empty>
       ) : premium ? (
         <>
           <div className="card-surface overflow-x-auto">
@@ -388,7 +395,9 @@ async function TcgFlipView({
   premium: boolean;
   signedIn: boolean;
 }) {
-  const buy = buyParam ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : defaultBuyKeys;
+  // Same !== undefined distinction as the flip view above — an explicit empty
+  // selection must stay empty, not silently revert to the default store list.
+  const buy = buyParam !== undefined ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : defaultBuyKeys;
   const data = await getArbitrageVsTcgplayer(country, {
     buy,
     sort,
@@ -421,7 +430,11 @@ async function TcgFlipView({
       )}
 
       {data.items.length === 0 ? (
-        <Empty>No cards look underpriced vs TCGplayer from these stores right now in {info.place}.</Empty>
+        <Empty>
+          {buy.length === 0
+            ? "Pick at least one store on the buy side to see results."
+            : `No cards look underpriced vs TCGplayer from these stores right now in ${info.place}.`}
+        </Empty>
       ) : premium ? (
         <>
           <div className="card-surface overflow-x-auto">

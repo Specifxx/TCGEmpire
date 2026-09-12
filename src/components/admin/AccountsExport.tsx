@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 
-export type ExportUser = { name: string; email: string; registered: string; verified: boolean; premium: boolean };
+export type ExportUser = {
+  name: string;
+  email: string;
+  registered: string;
+  lastActive: string;
+  activeDays: number;
+  verified: boolean;
+  // The active tier, or "none" — a bare premium yes/no can't tell a $4.99
+  // member from a $9.99 one, which is the whole point of exporting it.
+  plan: "plus" | "premium" | "none";
+};
 
 // Copy/CSV export for the admin accounts list, so you can paste emails straight into
 // a BCC or an email tool without touching the database.
@@ -18,9 +28,9 @@ export function AccountsExport({ users }: { users: ExportUser[] }) {
 
   const downloadCsv = () => {
     const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
-    const header = "name,email,registered,verified,premium";
+    const header = "name,email,registered,last_active,active_days,verified,plan";
     const lines = users.map((u) =>
-      [u.name, u.email, u.registered, u.verified ? "yes" : "no", u.premium ? "yes" : "no"].map(esc).join(","),
+      [u.name, u.email, u.registered, u.lastActive, String(u.activeDays), u.verified ? "yes" : "no", u.plan].map(esc).join(","),
     );
     const blob = new Blob([[header, ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);

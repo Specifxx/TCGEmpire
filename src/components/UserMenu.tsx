@@ -27,7 +27,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
   const [open, setOpen] = useState(false);
   const [resent, setResent] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { premium } = useMe();
+  const { premium, tier } = useMe();
   const pathname = usePathname();
   // Carry the current page as ?next= so signing in returns the user here (not always
   // /profile). Skip auth pages to avoid a redirect loop.
@@ -154,7 +154,9 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
 
           <div className="py-1">
             {premium ? (
-              <MenuLink href="/dashboard" onClick={() => setOpen(false)}>◆ Premium dashboard</MenuLink>
+              <MenuLink href="/dashboard" onClick={() => setOpen(false)}>
+                ◆ {tier === "plus" ? "Plus" : "Premium"} dashboard
+              </MenuLink>
             ) : (
               <PremiumNavLink
                 onClick={() => setOpen(false)}

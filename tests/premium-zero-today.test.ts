@@ -39,16 +39,23 @@ test("PremiumDialog reuses TrialPriceBlock and no longer has the doubled 'today 
   assert.ok(!/ZERO_DUE_TODAY/.test(src), "the old local constant (source of the doubled 'today due today' text) must be gone");
 });
 
-test("/premium treats a signed-out, never-trialed visitor as trial-available, and both cards use TrialPriceBlock", () => {
+test("/premium treats a signed-out, never-trialed visitor as trial-available, and threads it through to the pricing cards", () => {
+  // 2026-09-11: the pricing cards stopped leading with a "$0" TrialPriceBlock
+  // headline (see PremiumPricingCards.tsx's own header and DECISIONS.md) —
+  // trialAvailable itself is unchanged and still has to reach the real
+  // component that renders the CTA and its trial disclosure.
   const src = read("src/app/premium/page.tsx");
   assert.match(
     src,
     /const trialAvailable = premiumTrialEnabled\(\) && !already && \(!user \|\| !dbUser\?\.trialStartedAt\);/,
     "trialAvailable must not require a signed-in user, unlike trialEligible",
   );
-  assert.match(src, /<TrialPriceBlock plan="monthly"/, "the monthly card must render TrialPriceBlock when trial-available");
-  assert.match(src, /<TrialPriceBlock plan="annual"/, "the annual card must render TrialPriceBlock when trial-available");
-  assert.match(src, /trialAvailable=\{trialAvailable\}/, "trialAvailable must be threaded down to PremiumCta");
+  assert.match(src, /<PremiumPricingCards/, "expected the pricing cards component");
+  assert.match(src, /trialAvailable=\{trialAvailable\}/, "trialAvailable must be threaded down to the pricing cards");
+
+  const cards = read("src/components/PremiumPricingCards.tsx");
+  assert.match(cards, /trialAvailable/, "the pricing cards must actually consume trialAvailable, not just accept it");
+  assert.match(cards, /<PremiumCta/, "the real checkout button must still be PremiumCta, not a hand-rolled one");
 });
 
 test("PremiumCta's signed-out state sells the trial when one is available, honestly", () => {

@@ -630,5 +630,34 @@
     "description": "When you play me or when I become exhausted, play a 1 [S] Recruit unit token to your base.\nI have +1 [S] for each other exhausted unit you control.",
     "imageUrl": "https://riftcompare.com/t1-worlds-cards/seraphine-not-alone-t1s005.jpg",
     "imageThumbUrl": "https://riftcompare.com/t1-worlds-cards/seraphine-not-alone-t1s005.jpg"
+  },
+  {
+    "_note": "KOREAN EVENT PROMOS (added 2026-09-11). Riftbound's first Korean-market promos, both handed out in person at the MSI Fan Festa in Daejeon, 3-12 July 2026, ahead of Origins' Korean release on 18 September. Numbers taken from the printed cards and cross-checked against live sale listings: Jinx is 'OGN 030/298 P KR' and Yasuo is 'OGN 076b/298 P KR'. GAME DATA IS THE BASE CARD'S, because a promo printing is the same card: Jinx, Demolitionist is Fury 3/4 and Yasuo, Remorseful is Calm 6/6, both read from prisma/riftbound-cards.json rather than typed from memory. NAMES ARE DELIBERATELY UNCHANGED — no '(Korean)' suffix. The card page groups printings with `where: { name: card.name }`, so a renamed promo would vanish from 'Other printings' on the base card, which is the single best way anyone actually finds one of these. The trade-off is that a site search for 'korean yasuo' will not match on name; the PROMO badge and collector number carry the distinction on the page. NO IMAGE, on purpose. dotgg has no scan for either number (both 404), and the only art available is on a competing retailer's own blog CDN — not ours to republish, and it would break the moment they reorganise. Borrowing the base card's art is worse than a placeholder and is a mistake this file has already made once: see the 197b/151b note above, where promos silently inherited the base face and showed the wrong card. Same reason scripts/fix-cloned-art.ts exists. Fill these in when a real scan appears. THEY WILL NEVER SHOW A PRICE, and that is by design rather than a gap: FOREIGN_LANG in lib/scrape-http.ts matches both the Hangul range and a bare 'kr'/'kor', and every price source checks it FIRST — resolveCardId returns null, isNonEnglishProduct drops the product at the top of the loop before byExternal is even consulted (so a PROMO_PRODUCT_OVERRIDES pin cannot reach them either), and eBay filters the same way. That guard is what stops a Chinese print stealing an English card's price, so it is not being loosened for two cards. Pricing these would need a deliberate per-card 'this card IS the foreign printing' exemption, which is its own decision."
+  },
+  {
+    "externalId": "promo-ogn-030-jinx-demolitionist-kr-launch",
+    "name": "Jinx, Demolitionist",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "030/298",
+    "domain": "Fury",
+    "type": "Unit",
+    "rarity": "Rare",
+    "isPromo": true,
+    "energyCost": 3,
+    "might": 4
+  },
+  {
+    "externalId": "promo-ogn-076b-yasuo-remorseful-kr-msi",
+    "name": "Yasuo, Remorseful",
+    "setCode": "OGN",
+    "setName": "Origins",
+    "collectorNumber": "076b/298",
+    "domain": "Calm",
+    "type": "Unit",
+    "rarity": "Rare",
+    "isPromo": true,
+    "energyCost": 6,
+    "might": 6
   }
 ]

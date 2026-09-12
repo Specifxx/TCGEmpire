@@ -39,16 +39,16 @@ set -uo pipefail
 # its own allowance had long since reset, and a 2026-09-11 probe-databases run
 # confirmed its old window's data was already carried forward (see db-chains.ts).
 CURRENT_OP="RM9"
-# CUT OVER TO RH10 ON 2026-09-10 (RH9 reached its 5 GB monthly transfer
-# allowance after about a DAY live — the fastest exhaustion of this whole
-# rotation history). RH10 is a RECYCLED project (its own prior term ran
-# 2026-08-25..08-28, before RH11 replaced it), not a fresh one —
-# migrate-history-db-rh9-to-rh10 (a full pg_dump/restore, row-count verified:
-# Card=1,434, ClickEvent=698, PriceHistory=422,589) moved history onto it.
-# See the long note on HISTORY_URL in src/lib/db-history.ts and on
-# HISTORY_VARS in src/lib/db-chains.ts for the full account. The chains are
-# CURRENT-first, not newest-first.
-CURRENT_HIST="RH10"
+# CUT OVER TO HISTORY_DATABASE_URL ON 2026-09-12 (RH10 reached its 5 GB
+# monthly transfer allowance after two days live). HISTORY_DATABASE_URL is a
+# RECYCLED project — the oldest history variable in the whole rotation,
+# retired since 2026-08-16 — not a fresh one — migrate-history-db-rh10-to-hdu
+# (a full pg_dump/restore, row-count verified: Card=1,436, ClickEvent=698,
+# PriceHistory=422,589) moved history onto it. See the long note on
+# HISTORY_URL in src/lib/db-history.ts and on HISTORY_VARS in
+# src/lib/db-chains.ts for the full account. The chains are CURRENT-first,
+# not newest-first.
+CURRENT_HIST="HISTORY_DATABASE_URL"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -91,16 +91,17 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${RH10:-}" ]; then
+if [ -n "${HISTORY_DATABASE_URL:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
+elif [ -n "${RH10:-}" ]; then
+  # Rollback: holds the same GLOBAL series as HISTORY_DATABASE_URL (via the
+  # row-count-verified pg_dump/restore that cut it over), so it's a genuinely
+  # safe fallback.
   HIST="$RH10"; HIST_SOURCE="RH10"
-elif [ -n "${RH9:-}" ]; then
-  # Rollback: holds the same GLOBAL series as RH10 (via the row-count-verified
-  # pg_dump/restore that cut RH10 over), so it's a genuinely safe fallback.
-  HIST="$RH9"; HIST_SOURCE="RH9"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. RH8/RH7/RH6/RH11 are retired or unset;
-  # HISTORY_DATABASE_URL_4/_3/_2/bare were all superseded earlier. RH5 is
+  # the push above already covered. RH9/RH8/RH7/RH6/RH11 are retired or unset;
+  # HISTORY_DATABASE_URL_4/_3/_2 were all superseded earlier. RH5 is
   # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi
@@ -119,21 +120,24 @@ else
   echo "[build-db-push] no history-database variable set — history tables share the operational DB, nothing extra to push."
 fi
 
-# DELIBERATE CHANGE from the original inline script: these three ran chained with
-# `&&` before (one failure skipped the rest). They're three unrelated maintenance
-# tasks, not a dependent pipeline, and none of them can affect whether `next build`
-# runs either way (see the trailing `exit 0` below) — so each now runs independently,
-# which is strictly more robust than letting an early one's failure silently skip
-# the other two.
-tsx scripts/marketplace-seed.ts || true
+# DELIBERATE CHANGE from the original inline script: the maintenance scripts here
+# used to run chained with `&&` (one failure skipped the rest). They're unrelated
+# maintenance tasks, not a dependent pipeline, and none of them can affect whether
+# `next build` runs either way (see the trailing `exit 0` below) — so each runs
+# independently, which is strictly more robust than letting an early one's
+# failure silently skip the others.
+#
+# marketplace-seed.ts and grant-early-premium.ts used to run here too. Both files
+# were deleted long ago and the `|| true` swallowed the resulting "cannot find
+# module" on every deploy — removed 2026-09-11 (see DECISIONS.md, "Network
+# transfer: the deploy cadence was the burn").
 tsx scripts/fix-altart-rarity.ts || true
-tsx scripts/grant-early-premium.ts || true
 
 # IndexNow: submit every blog/guide URL on every deploy, not just once a day.
 # See the script's own header for why this exists — a real content change
 # (a new or edited post) used to wait on the next scheduled batch (up to 24h)
 # before anything told Bing/Yandex/Seznam/Naver it existed. `|| true` for the
-# same reason as the three scripts above: best-effort, never blocks the build.
+# same reason as the script above: best-effort, never blocks the build.
 # No-ops outside production (pingIndexNow's own isProduction() gate).
 tsx scripts/indexnow-ping-deploy.ts || true
 
@@ -150,7 +154,7 @@ tsx scripts/indexnow-ping-deploy.ts || true
 # T1 printings shipped in the repo, were referenced by two published articles and
 # 404'd in production for that reason alone.
 #
-# Safe to run every deploy, for the same reasons as the three scripts above:
+# Safe to run every deploy, for the same reasons as the scripts above:
 # it UPSERTS by externalId (never wipes, never touches a card not listed), skips
 # any entry with a FILL_ME placeholder, and is idempotent — a second run reports
 # UPDATEs and changes nothing. `|| true` because a catalogue backstop must never

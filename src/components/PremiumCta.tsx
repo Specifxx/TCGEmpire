@@ -6,8 +6,12 @@ import { trackEvent } from "@/lib/analytics";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 
 // GREEN, NOT GOLD, AND BIG — on this page only (2026-09-10, owner brief: "it
-// should just be a big green button that says start your 14-day free trial...
-// I'm just gonna click that shit without reading").
+// should just be a big green button... I'm just gonna click that shit without
+// reading"). The button's WORDING moved on 2026-09-11 — see DECISIONS.md —
+// from "Start your N-day free trial" to a plain "Get Plus"/"Get Premium",
+// after copying the pricing-page pattern at mtgstocks.com/go-premium: name
+// the tier, not the trial; disclose the trial as small print underneath
+// instead of the headline claim. The colour choice below is unaffected.
 //
 // This is a deliberate, scoped exception to the gold-for-Premium convention,
 // not drift. Gold is this site's Premium IDENTITY — the badges, the "Best
@@ -87,17 +91,19 @@ export function PremiumCta({
 
   if (!signedIn) {
     if (trialAvailable && trialDays > 0) {
-      // The BUTTON is the headline now — it used to be a small link under a
-      // heading that said the same words. Everything else on this card is
-      // deliberately demoted to the line below it, price included.
+      // The button names the TIER, not the trial (2026-09-11 — see this
+      // file's own header and DECISIONS.md: leading with "$0"/"start your
+      // trial" tested worse than a plain price-led card). The trial is real
+      // and still disclosed — the small print below still states it, the card
+      // requirement, and when it converts — it just isn't the headline claim.
       return (
         <div className="w-full">
           <Link href="/login?next=/premium" className={CTA_BTN}>
-            Start your {trialDays}-day free trial&nbsp;→
+            Get {TIER_NAMES[tier]}&nbsp;→
           </Link>
           <p className="mt-2 text-[11px] leading-snug text-slate-400">
-            Create a free account first — free, no card needed. A card is required to start the trial; it
-            becomes {priceLabel ? `${priceLabel} ` : "the paid price "}after {dayPhrase} unless you cancel.
+            Create a free account first — free, no card needed. A card is required to start the {dayPhrase}{" "}
+            free trial; it becomes {priceLabel ? `${priceLabel} ` : "the paid price "}after that unless you cancel.
           </p>
         </div>
       );
@@ -121,7 +127,7 @@ export function PremiumCta({
   return (
     <div className="w-full">
       <button onClick={subscribe} disabled={busy} className={CTA_BTN}>
-        {busy ? "Opening checkout…" : ctaLabel ?? (trialEligible ? `Start your ${trialDays}-day free trial\u00a0→` : `Upgrade to ${TIER_NAMES[tier]} →`)}
+        {busy ? "Opening checkout…" : ctaLabel ?? `Get ${TIER_NAMES[tier]} →`}
       </button>
       {trialEligible && (
         // Required disclosure for a card-gated trial (Stripe / card-network rules):

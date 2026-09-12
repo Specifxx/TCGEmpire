@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
 import {
   SIDENAV_COOKIE,
@@ -35,13 +36,14 @@ import {
 // rail — one icon per group, the group's links in a flyout on hover, click
 // or keyboard focus. Which one renders is decided by CSS alone, off
 // `data-sidenav` on <html> and the viewport width (globals.css): 1024–1279px
-// is always the icon rail, 1280px+ is expanded unless collapsed. Both blocks
-// are in the DOM; `.sidenav-expanded` / `.sidenav-collapsed` toggle their
-// display. That keeps first paint correct with zero JS state to hydrate: an
-// inline script in the root layout stamps the attribute before paint, and
-// this component only (a) re-applies the route's default on client-side
-// navigation when there's no saved choice, and (b) flips + persists the
-// choice (a cookie) when the visitor uses the chevron or presses "[".
+// is always the icon rail, 1280px+ is the icon rail too UNLESS explicitly
+// expanded. Both blocks are in the DOM; `.sidenav-expanded` /
+// `.sidenav-collapsed` toggle their display. That keeps first paint correct
+// with zero JS state to hydrate: an inline script in the root layout stamps
+// the attribute before paint (collapsed, unless the visitor's cookie says
+// otherwise), and this component only (a) re-syncs its own aria-label state
+// on client-side navigation, and (b) flips + persists the choice (a cookie)
+// when the visitor uses the chevron or presses "[".
 //
 // COLLAPSIBLE GROUPS inside the expanded list, not a fixed always-open list.
 // Nine groups' worth of links (60+) rendered flat made the rail mostly a
@@ -102,7 +104,7 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 function readRailMode(): SidenavMode {
-  return document.documentElement.getAttribute("data-sidenav") === "collapsed" ? "collapsed" : "expanded";
+  return document.documentElement.getAttribute("data-sidenav") === "expanded" ? "expanded" : "collapsed";
 }
 
 function applyRailMode(mode: SidenavMode) {
@@ -127,13 +129,19 @@ export function SideNav() {
 
   // ── Rail mode (expanded / collapsed) ──────────────────────────────────────
   // Mirrors the <html> attribute for aria-labels only; CSS owns the layout.
-  const [railMode, setRailMode] = useState<SidenavMode>("expanded");
+  // "collapsed" is also the true default (see sidenav-shared.ts), so this
+  // initial guess already matches the common case before the effect below
+  // ever runs.
+  const [railMode, setRailMode] = useState<SidenavMode>("collapsed");
   // Which group's flyout is open in the icon rail.
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
-  // Client-side navigation: with no saved choice, follow the new route's default.
+  // Re-derive from the cookie (there's no per-route default any more, so this
+  // is the same value on every navigation) and close any open flyout — runs
+  // on mount too, which is what keeps the aria-label above correct from the
+  // first render even before this component has seen the real DOM attribute.
   useEffect(() => {
-    const next = resolveSidenavMode(readSidenavCookie(document.cookie), pathname ?? "/");
+    const next = resolveSidenavMode(readSidenavCookie(document.cookie));
     applyRailMode(next);
     setRailMode(next);
     setOpenGroup(null);
@@ -313,11 +321,19 @@ export function SideNav() {
                 title={group.title}
                 onClick={() => setOpenGroup(isOpen ? null : group.title)}
                 onFocus={() => setOpenGroup(group.title)}
-                className={`grid h-11 w-full place-items-center rounded-lg text-xl leading-none transition-colors ${
-                  groupActive ? "bg-brand-500/15" : isOpen ? "bg-ink-800" : "hover:bg-ink-800"
+                className={`grid h-11 w-full place-items-center rounded-lg transition-colors ${
+                  groupActive
+                    ? "bg-brand-500/15 text-brand-300"
+                    : isOpen
+                      ? "bg-ink-800 text-white"
+                      : "text-slate-400 hover:bg-ink-800 hover:text-white"
                 }`}
               >
-                <span aria-hidden="true">{group.icon}</span>
+                {/* The icon takes currentColor, so the active/hover states above
+                    actually reach it — the emoji this replaced could not be
+                    tinted at all, leaving the active group's only cue its
+                    background tint. */}
+                {group.icon ? <NavIcon name={group.icon} className="h-5 w-5" /> : null}
               </button>
               {isOpen && (
                 <div

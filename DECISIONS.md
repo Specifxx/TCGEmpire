@@ -4519,3 +4519,1008 @@ code was written:
   Vercel — every UI surface above renders exactly as it did before this
   change while they're unset (`premiumPlusEnabled()` gates all of it), so
   this shipped and deployed before Plus is actually purchasable.
+
+## /premium rebuilt to match mtgstocks.com/go-premium's layout — 2026-09-11
+
+Owner: "I actually hate how the premium page looks... look at how this page
+[mtgstocks.com/go-premium] does it and copy their formatting and pillars —
+obviously not the LGS one yet." Also: "Maybe the $0 was a bad idea."
+
+**The reference page, fetched and rendered headless (Cloudflare blocked the
+proxy's Chromium fingerprint directly; the server-rendered HTML came through
+fine via curl and was rendered from a local file with an absolute `<base
+href>` so its own assets resolved).** Its pillars, top to bottom: hero → one
+billing-cycle toggle (Annual "Save 15%" / Monthly "Cancel anytime") above ALL
+the pricing cards, not a separate card per plan → tier cards (Free/Common,
+then each paid tier, the recommended one highlighted and ribboned) → a
+testimonials section → a repeat "Ready to upgrade?" CTA band → a feature
+comparison table with tinted columns → a "What's included" icon-card grid.
+"Not the LGS one yet" — their fourth, game-store tier — read as "build the
+same 3-tier shape (Free/Plus/Premium), not add a fourth tier now."
+
+**What copied over, restyled in RiftCompare's own dark ink+gold+green system
+rather than mtgstocks' light theme** (the ask was the layout and structure,
+not literally reskinning the site):
+- New `PremiumPricingCards.tsx` — a client component (the toggle needs real
+  state; `/premium` itself is a server component) holding ONE billing-cycle
+  toggle and three cards (Free, Plus when configured, Premium — highlighted,
+  ribboned "Recommended", not "Most popular": that's a real subscriber-mix
+  claim this site doesn't track cleanly yet, so it stays an editorial call
+  rather than an invented data point). Replaces the old design's four
+  separate monthly/annual card pairs.
+- **A tier whose own annual price isn't configured silently falls back to
+  monthly DISPLAY when the toggle is on annual**, matching exactly what
+  `priceIdFor()` already falls back the CHARGE to — display and charge can
+  never disagree, which is exactly the kind of claim this repo's honesty
+  tests exist to catch.
+- `TierComparisonTable` gained a `tinted` prop (a faint per-column wash,
+  Plus/slate, Premium/gold) — cosmetic only, `/premium`-only, off by default
+  so the dialog's compact table is unchanged. Drive-by fix alongside it:
+  `text-brand-300` (two more instances, the tier-table header and the proof
+  strip numbers) isn't a defined Tailwind shade — same bug already fixed in
+  TrialPriceBlock/AnnualPriceBlock a few commits back, missed here.
+- The testimonials pillar has NO honest equivalent to copy: RiftCompare has
+  no verified customer quotes, and this repo's own rule against invented
+  numbers rules out writing some just to fill the slot. Kept the position and
+  the section SHAPE (a card grid between the pricing cards and the repeat
+  CTA) but filled it with the real proof-tile numbers the page already had
+  (live deal counts, savings, undervalued-card counts) under an explicit
+  "Real numbers, not a pitch" heading, rather than fabricating testimonials
+  or silently dropping the pillar.
+- Added a "Ready to upgrade?" repeat CTA band (scrolls back to the real,
+  interactive pricing cards — a plain `<a href>` can't itself open Stripe
+  checkout, that needs `PremiumCta`'s client-side POST, so this is a working
+  jump-back rather than a second dead button).
+
+**"Maybe the $0 was a bad idea."** The pricing cards no longer lead with
+`TrialPriceBlock`'s `$0` headline (added 2026-09-09, reasoned about at length
+in that day's two entries above). The headline number is now always the real
+recurring price — or its per-month equivalent under annual billing, via the
+existing `premiumEffectiveMonthly()` helper — with "Billed as $X/year" as a
+secondary caption, same as mtgstocks' own cards. The CTA button changed to
+match: "Get Plus"/"Get Premium" instead of "Start your N-day free trial".
+**The trial itself is still real and still disclosed** — the small print
+under the button still states the card requirement, the real price, and when
+it converts (required under card-network rules for a card-gated trial); only
+the HEADLINE claim moved from the trial to the tier. `TrialPriceBlock` itself
+is untouched and still live — `PremiumDialog`'s own trial-eligible price
+block still uses it. This is scoped to `/premium` only: the corner nudges
+(`PremiumSlideIn`, `SignupPromoPopup`) and the sitewide `PremiumDialog` keep
+their own "$0 today" framing, which was a separate, data-referenced decision
+in its own right (2026-09-09) — reverting those too would be a second,
+distinct call the owner hasn't made yet.
+
+**Verified against a real render, not just the source.** Stood up a local
+Postgres, ran the full app with dummy Stripe price ids, and screenshotted
+`/premium` at desktop and 375px — signed out, Plus dark and Plus live, both
+billing-cycle states. Confirmed: the toggle swaps every card's price
+together; a tier missing its own annual price falls back to monthly cleanly;
+the proof section hides itself with no real data to show (as designed); the
+comparison table's `overflow-x-auto` wrapper genuinely contains its own
+horizontal scroll rather than leaking to the page (checked against a false
+positive from a bounding-rect scan, which flags any element inside a
+legitimately-scrolling container as "overflowing" whether or not it is). A
+`document.documentElement.scrollWidth` overflow at 375px turned out to be a
+**pre-existing, site-wide issue** in the header nav (reproduces on `/` and
+`/tools` too, unrelated to anything touched here) — left alone, out of scope
+for a pricing-page redesign, and not something this pass introduced.
+
+## /premium defaults to annual billing — 2026-09-11 (same day, follow-up)
+
+Owner: "we should default to annual billing so the prices look cheaper at
+initial glance."
+
+This only works honestly because of how the previous entry built the annual
+view: the headline number under annual billing is the EFFECTIVE MONTHLY rate
+(`premiumEffectiveMonthly()` — $3.33 for Plus, $6.67 for Premium), not the
+once-a-year lump sum, with "Billed as $X/year" as the small-print caption.
+Defaulting to annual therefore shows a genuinely SMALLER first number than
+monthly does, which is exactly the ask — it isn't a trick, the number itself
+is real and is what the account is actually billed per month under that plan.
+
+`PremiumPricingCards.tsx`'s toggle now initialises to `"annual"` whenever
+annual billing is actually configured for either live tier (`anyAnnualLive`),
+`"monthly"` otherwise — never defaults to a cycle that isn't purchasable. A
+tier missing its OWN annual price (Plus configured, Premium's annual not, or
+vice versa) still falls back to a real monthly card for that tier specifically,
+regardless of the page-level default — the same `effectiveCycle` guard the
+previous entry added, unchanged.
+
+**`PremiumDialog.tsx`'s own toggle stays on monthly, deliberately not matched
+to this.** Its non-trial annual view (`AnnualPriceBlock`) shows the full
+once-a-year total as its headline — $79.99, not $6.67 — because that block is
+also used standalone elsewhere (the dialog's "Save N%" strikethrough
+framing). Defaulting the dialog to annual would show a BIGGER first number to
+someone who hasn't decided to pay anything yet, the opposite of today's ask
+and exactly what the dialog's own standing comment on defaulting to monthly
+already explains. Making the dialog's annual view lead with the effective
+monthly rate too — so it could safely default to annual on the same logic —
+is a real follow-up, just a separate change from this one.
+
+---
+
+## Plus is a real tier everywhere, not just at checkout — 2026-09-11 (same day, follow-up)
+
+Owner, in four parts: the admin dashboard needs revoke / more stats / last
+login; Plus must be separate from Premium when looking at accounts; the
+member's own `/premium` card says "Premium" to a Plus account and offers no way
+to change plan; and "the dashboard for plus accounts should only have the plus
+tools — do a site wide audit and fix all the guardrails for plus."
+
+The two-tier split shipped the *billing* correctly (tier resolved from the live
+Stripe price, grandfathering, gates on the four pro tools). What it did not do
+is teach the ~40 places that render the word "Premium" that there are now two
+answers. This entry is that sweep, plus the admin tools to run it.
+
+### The rule this settles
+
+**A surface that describes the VIEWER's own plan must read the viewer's tier.
+A surface that pitches the product to a non-member keeps saying "Premium".**
+Both halves matter: making the marketing tier-aware would be a price cut in
+copy, and leaving the member-facing half hard-coded tells a $4.99 customer they
+bought the $9.99 plan. Grep-able rule: any "Premium" inside a branch only
+reachable when `premium === true` is a bug.
+
+A second rule falls out of it: **never hand a member a link they'll bounce off.**
+A Plus member clicking "Value Finder" from their own dashboard, membership page
+or the movers CTA lands on an upsell wall — the worst place to discover a tier
+boundary. Those links are now either removed for Plus, or rendered as an
+explicitly locked card with the upgrade price stated.
+
+### Member-facing
+
+- **`/dashboard`** — `TOOLS` gained a `tier` field per tool, and the page reads
+  `premiumTierOf(user)`. Plus sees "Your Plus tools" (Rising Cards, Rising
+  Sealed, Deal Finder, Condition Calculator) and a *separate, non-clickable*
+  "Premium tools" block with a 🔒 badge and one upgrade link. The chip, the
+  hub subtitle and the ad-free footer all name the real tier. A test pins each
+  tool's `tier` against the gate on its own page, so the two can't drift.
+- **`/premium`** — the comp-grant line and the hero say the member's tier;
+  the pro-tool quick links and the "What's included" open-it buttons disappear
+  for Plus; `SubscriptionActions` (below) replaces the old upgrade-only button.
+- **`MoversToolsCta`** — the members' branch led with Value Finder, which Plus
+  can't open. Deal Finder is now the primary for Plus, with the Value Finder
+  named as an upgrade line carrying the Premium price.
+- **`TodaysTopDeals`** (homepage) — both gated columns are Deal Finder and
+  Rising Cards, i.e. *Plus* features. The gold chip now reads "Plus" whenever
+  Plus is configured, matching `/tools`' `LIST_BADGE`. Badging them "Premium"
+  over-quoted the price to every visitor and told existing Plus members their
+  own unlocked columns weren't theirs.
+- **`UserMenu`, `portfolio`, `AnnualSwitchNudge`'s aria-label** — tier named.
+- **`PremiumDialog`** — the "You're on Plus, here's the upgrade" branch now
+  keys on `tier === "plus"` ALONE, not on `premiumPlus` too. `premiumPlus`
+  means *Plus is currently sellable*; if those price ids are ever unset or
+  rotated, existing Plus accounts don't stop existing, and the old condition
+  would have dropped them into "✓ You're Premium" while they were still locked
+  out of the four tools — precisely the dead end that branch exists to avoid.
+
+### Rewards that EXTEND rather than upgrade
+
+`grantPremiumDays` only writes the tier when it's *creating* access (a comp
+must not flip a paying Plus member to Premium and back on renewal). The
+consequence nobody had followed through: feedback and referral rewards extend
+an active Plus member **at Plus**. So `/feedback`'s hero, the feedback result
+copy and `ReferralLinkCard` now say "N days of Plus" to a Plus member. Promising
+Premium and delivering Plus days is the kind of small lie that turns into a
+support ticket.
+
+Same class of bug, higher stakes: **`sendTrialEndingEmail` named "Premium" in
+the subject, body and footer of a billing email that could be for a Plus
+trial** — while quoting the real (Plus) amount beside it. It now takes a
+`planName`, resolved by `runPremiumTrialReminders` from the same live `price`
+object the amount comes from, so the plan and the figure can never disagree.
+
+### Changing plan from inside the app
+
+The original plan said **no in-app downgrade** — "cancel and resubscribe, or
+use the portal". Reversed, on the owner's ask. `SubscriptionActions` replaces
+`UpgradeTierButton` and offers whichever of three moves actually applies:
+
+| action | route | proration | why |
+|---|---|---|---|
+| Plus → Premium | `/api/premium/upgrade` | `always_invoice` | money is OWED; billing it now is what unlocks the tools now |
+| Premium → Plus | `/api/premium/downgrade` | `create_prorations` | money is OWED TO THEM; credit the next invoice, never charge or refund cash |
+| monthly → annual | `/api/premium/switch-to-annual` | `always_invoice` | buying a year now |
+
+Each button states its own money consequence *before* it's pressed, because
+"what happens to the rest of the period I already paid for" is the question a
+plan-change button has to answer, and the three answers genuinely differ. The
+displayed sentence and the route's `proration_behavior` are pinned together by
+a test — changing one without the other makes the card lie.
+
+The downgrade takes effect **now** (credited), not at period end. Deferring
+would need a multi-phase subscription schedule; that's a bigger change, and the
+UI states which of the two happens rather than leaving it ambiguous.
+
+### Admin
+
+- **Revoke** — `/api/admin/revoke-premium`, the in-app half of
+  `scripts/revoke-premium.ts`, same dual gate as every other admin mutation.
+  Clears `premiumUntil` and nothing else. It deliberately does **not** touch
+  `isAdmin` (an admin still reads as Premium — reported back rather than
+  silently stripped), `trialStartedAt` (that would hand out a second free
+  trial) or the Stripe subscription (whose next webhook re-grants — also
+  reported back). The button confirms first and surfaces both caveats, because
+  a revoke that appears to do nothing is worse than one that refuses.
+- **`premiumTier` is NOT cleared on revoke.** It only means anything while
+  `premiumUntil` is in the future, and the next grant sets it fresh.
+- **Plus vs Premium counted separately** on the accounts page — different
+  revenue per head, so a rise in one against a fall in the other is exactly the
+  thing a single "paid" total would hide. Both counts, and the new Plus/Premium
+  quick filters, are anchored to an ACTIVE `premiumUntil`: `premiumTier` is a
+  plain column defaulting to `"premium"`, so counting it alone would report
+  every free account as a Premium subscriber.
+- **`User.lastLoginAt`** (new, nullable) — stamped fire-and-forget from the
+  OAuth callback, the site's only login path. Nullable and unbackfilled on
+  purpose: an account that hasn't signed in since this shipped reads "—", not
+  a fabricated date. Drives a "Last login" column, a "Signed in · 7d" stat and
+  a quick filter. The write is `void … .catch(() => {})` — failed bookkeeping
+  must never cost someone their session.
+- The CSV export's `premium` yes/no became a `plan` column (`plus`/`premium`/
+  `none`) and gained `last_login`.
+
+### Verified against a real render, not just source
+
+Local Postgres + dev server with both tiers' price ids set, and minted session
+cookies for a Plus, a Premium and an admin account: Plus's dashboard shows four
+tools plus four locked ones; Premium's shows all eight and no locked block;
+the accounts page's Plus filter returns exactly the Plus account; revoke
+returns `wasTier: "plus"` and the filter then returns nothing; `/feedback`
+renders "7 days of Plus"; `/premium`'s quick links drop the four pro tools for
+Plus.
+
+---
+
+## Grandfathering the August $4.99 subscribers: a tier FLOOR — 2026-09-11 (same day, follow-up)
+
+Owner, looking at the accounts page's new Plus filter: "these people, except
+for bill yang, should be premium as long as they are on the $4.99 plan as part
+of our promise to keep the price the same initially."
+
+### What went wrong
+
+The two-tier plan carried an explicit warning: *create NEW Stripe Prices for
+Plus; do not reuse the August $4.99 Price ID*, because tier is resolved from
+the live price id and repointing `STRIPE_PLUS_PRICE_ID` at the old price would
+silently reclassify every August subscriber as Plus. That is what happened —
+seven accounts, six of them real August subscribers, showed up as Plus on the
+first look at the new admin filter.
+
+The reclassification is not itself a billing error: those accounts genuinely
+sit on the Price object that `STRIPE_PLUS_PRICE_ID` now names, so every layer
+did exactly what it was told. The error is that the promise made to them — the
+price holds — was made when $4.99 bought *everything*, before a reduced tier
+existed to be dropped into.
+
+### Why the price can no longer answer the question
+
+Once the August price became the Plus price, two different cohorts share one
+price id: the grandfathered subscribers, and genuine new Plus customers buying
+today at the same $4.99. No rule derived from the price alone can separate
+them, because on the price they are identical. **The difference is a fact about
+the customer, so it is stored on the customer** — `User.premiumTierFloor`.
+
+The alternative was to create a new Stripe Price for Plus and let the old id
+fall back to the unknown→premium grandfather rule. Rejected: it only works
+until someone reuses a price again, it needs Stripe surgery to be correct, and
+it still can't express "this specific person was promised more than they pay".
+
+### A floor, not an override — the design decision that matters
+
+`effectiveTier(user) = max(premiumTier, premiumTierFloor)`, applied at READ
+time in `isPremium`/`premiumTierOf`. Nothing in the Stripe pipeline knows the
+floor exists; billing keeps writing the true tier to `premiumTier` underneath.
+Three consequences, each one a bug avoided:
+
+- **Renewals, plan changes, the nightly reconcile and the audit script can
+  re-stamp the billing tier as often as they like.** A pin never has to be
+  re-applied, and no webhook can quietly undo a promise. A freeze — a flag that
+  made billing skip the tier write — would have needed changes in four files
+  and would have been one missed code path away from failing silently.
+- **A floor can only raise.** An account that genuinely upgrades past its floor
+  keeps the higher tier; no floor can strand anyone below what they pay for.
+- **A floor raises an entitlement, it never grants one.** A lapsed account with
+  a floor is still entitled to nothing — `premiumUntil` is unchanged and is
+  still the only thing that says "paid".
+
+A junk or empty floor value is deliberately NOT passed through
+`normalizeTier()`, which maps anything unrecognized to `"premium"` — doing that
+would turn an empty column into a free upgrade for every account on the site.
+Only the literal strings `"plus"` and `"premium"` are floors. There is a test
+for exactly this.
+
+`isPremium`'s argument type takes `premiumTierFloor` as optional so narrow
+selects still compile. That's safe in one direction only — a caller that omits
+the field ignores the floor, which can under-grant but never over-grant — and
+the four pro-tool gates all read `SessionUser`, which now carries it. Pinned by
+a test, because "the gate silently can't see the floor" is the one way this
+design fails.
+
+### Surfaces
+
+- `/api/admin/tier-floor` (dual-gated, logged) takes **many emails at once** —
+  grandfathering is inherently a cohort, and doing it one account at a time
+  invites missing one. Reports back per account, including "no active
+  entitlement — the floor does nothing until this account is subscribed again".
+- Admin accounts page: a "Grandfathered tier (floor)" panel, and a pinned
+  account renders BOTH halves — `Premium · <date>` plus `pinned · billed plus`.
+  An admin looking at a grandfathered subscriber needs to see the promise and
+  what Stripe is really charging, not a merged answer that hides the gap.
+- The Plus/Premium stats and quick filters query the EFFECTIVE tier, so this
+  page can't disagree with what the member sees on the site.
+- `/premium` names the effective tier on the subscription card, and suppresses
+  the upgrade/downgrade buttons for a pinned account: an "upgrade" to something
+  they already have, or a downgrade the floor would silently undo, are both
+  real money moving for no change in access.
+
+### Bill Yang is deliberately left on Plus
+
+Per the owner — the only one of the seven who isn't an August subscriber (a
+year-long Plus grant, i.e. a test account). Worth recording because "the Plus
+filter had seven rows and six were fixed" otherwise looks like a missed row.
+
+### Still true, and worth not forgetting
+
+`STRIPE_PLUS_PRICE_ID` still points at the August Price object. That is now
+fine — new Plus buyers get Plus, grandfathered accounts are pinned — but it
+means the *next* time a price is reused for a different tier, the same
+reclassification happens to whoever is sitting on it. The floor is the remedy
+that exists for it; the cheaper habit is to never reuse a Price object across
+tiers in the first place.
+
+## Network transfer: the deploy cadence was the burn — 2026-09-11
+
+Eleven Neon projects in a row — RM3 through RM11 on the operational side,
+RH5 through RH11 and four `HISTORY_DATABASE_URL*` names on the history side —
+were exhausted at roughly 2 GB/day against a 5 GB monthly allowance, each
+lasting two to three days, the history project RH9 lasting one. Every note
+written during those rotations says the same thing ("a rotation buys an
+allowance, not a fix") and every investigation looked in the same place: a
+request handler pulling an unbounded dataset. `src/lib/db.ts` carries five
+egress rules and an egress guard for that shape. `tests/segment-ttl-inversion`,
+`history-egress` and `arbitrage-egress` pin it. `scripts/audit-egress.ts` was
+written to find it.
+
+It isn't there. Two facts this repo already recorded, never put side by side:
+
+1. **The app's steady-state traffic was measured at ~0.12 GB/day** on
+   2026-08-22/23 by `audit-egress.ts` in delta mode (the number is in
+   `maintenance.yml`'s RH8 rotation note). That is 2.4% of the allowance per
+   day — a project serving only the app would last about six weeks.
+2. **`main` receives 10–30 commits a day** (`git log`: 10, 20, 24, 3, 10, 20,
+   30, 17 on the last eight days), and each push is a Vercel production build.
+
+What a build does to the databases:
+
+- `next build` prerenders ~770 database-backed pages against **both** Neon
+  projects: 200 card pages via `generateStaticParams` (the widest read on the
+  site — every retailer row for the card in every market, six tile queries,
+  its price history, its price state), plus decks, sets, galleries, stores,
+  keywords, champions, facets, feeds, sitemaps and the six regional homepages.
+  None of this appears in Vercel's function-invocation metrics.
+- Per the Next.js caching docs, verbatim: *"Unlike the Data Cache, which
+  persists across deployments, the Full Route Cache is cleared on new
+  deployments."* So every ISR page — all ~1,400 card pages, the decks, the
+  sets — re-rendered from the database on its next hit after **every**
+  deploy. `export const revalidate = 86400` never got to run for 86,400
+  seconds; the effective TTL was "time until the next push", about an hour
+  on a busy day. Vercel Observability's own figure of ~3.5K ISR writes over
+  982 unique paths in one day (recorded in the card page's set-median
+  comment) is that churn: with a working 24h TTL and two import-time
+  revalidations, the ceiling is ~3 renders per path per day and the typical
+  figure far lower.
+
+The dates line up. The burn started in the second week of August, when
+autonomous sessions began pushing many commits a day. RH9 — history — died in
+a single day across 2026-09-09/10, the two days with the most commits (20 and
+30). And the audit script's own header records the moment the answer was in
+hand and put down: a 15-minute sample on 2026-08-22 that opened two minutes
+after a push read 820 calls of the card page's set-median query, was
+extrapolated to 79,000 renders a day, and was then correctly identified as
+"a build, not a day of traffic" — and so excluded, with a rule added to never
+sample during a deploy again. Sound advice for measuring the app; a blindfold
+for measuring the burn, because the deploys *were* the burn.
+
+Why the request-handler theory was so sticky: it had been right once. The
+EbayCardPanel segment-TTL inversion (2026-08-14) was real and did regenerate
+card pages 288× a day. Fixing it "did not change the rate" — the note says so
+— and the conclusion drawn was that the inversion had been *a* cause among
+several unfound ones, rather than that the remaining rate had a different
+shape entirely.
+
+### What changed
+
+1. **Production builds are gated** — `vercel.json` `ignoreCommand` runs
+   `scripts/vercel-ignore-build.sh`, which skips any push whose commit message
+   lacks the literal marker `[deploy]` (case-insensitive; read from
+   `VERCEL_GIT_COMMIT_MESSAGE`, falling back to `git log -1`; **fails open**
+   and builds if neither is readable, because "never deploys" is a worse
+   failure than the status quo). Preview and development builds are not
+   gated: a human's non-`claude/*` branch keeps its preview URL and
+   `seo-preview-gate.yml` keeps its `deployment_status` event, and previews
+   were never the burn (`claude/*` previews are already disabled in
+   `vercel.json`). An unknown `VERCEL_ENV` is treated as production, because
+   gating a preview by mistake costs a URL and not gating production by
+   mistake recreates the burn.
+2. **One scheduled release a day** — `.github/workflows/production-deploy.yml`
+   lands an empty `release: scheduled production deploy [deploy]` commit on
+   `main` at 08:00 UTC, after the 07:00 price import and its revalidation, and
+   skips if nothing has landed since the last release. Its "Run workflow"
+   button releases immediately; so does `[deploy]` in any human commit
+   message. An empty commit rather than a deploy hook because the Ignored
+   Build Step reads HEAD's message either way — the marker has to be on the
+   commit Vercel sees.
+3. **Card pages are no longer prerendered at build** — `generateStaticParams`
+   in `src/app/card/[id]/page.tsx` returns `[]`. The 200-card prewarm cost 200
+   full renders per deploy and bought nothing, since the same deploy cleared
+   the cache those renders filled. The route is still ISR (dynamicParams is
+   on): first visit renders, `revalidate` caches for a day.
+4. **The history project can finally be measured** — `scripts/audit-egress.ts`
+   gained `--db=history`; until now it only knew the operational client, so
+   the project rotating fastest was the one never audited. A new
+   `.github/workflows/egress-audit.yml` samples both projects weekly (Sunday
+   03:00 UTC, a window with no import, cron or scheduled deploy) and on
+   demand, writing both reports into the job summary. Its own reads are
+   cheap without being incomplete: both snapshots hold counters for every
+   statement shape (keyed by `queryid`, ~40 bytes a row) so the delta cannot
+   miss a newly hot query, and statement text is fetched afterwards for only
+   the top 60 shapes the report ranks. A first draft used `ORDER BY rows
+   DESC LIMIT 1000` on the snapshot itself; Codex's review pointed out that
+   ranks by the all-time counter and would hide exactly the young, hot shape
+   a burn audit exists to find.
+
+Pinned by `tests/deploy-cadence.test.ts` (7 tests): the gate is wired, skips
+an ordinary push, builds on the marker, fails open, the release workflow
+supplies the marker, card pages prerender nothing, the history audit exists.
+
+### What deliberately did not change
+
+- **No query was touched.** The egress rules in `db.ts` are still right —
+  they describe the second-order cost, the cost per render — and every
+  bounded `select`/`take` in the codebase still earns its keep. They just
+  were not the multiplier.
+- **`revalidateContent()` still purges card pages after each import.** Two
+  full re-render waves a day are the product requirement (fresh prices), and
+  they were never the problem; thirty waves a day were.
+- **The 5-minute keep-warm** stays. It costs compute hours, not transfer
+  (`SELECT 1` plus one page of tiles), and cold starts were a real complaint.
+- **RM9 and RH10 stay** as the operational and history projects. This change
+  is what makes the next rotation unnecessary rather than what makes it
+  possible.
+
+### Expected effect
+
+Rough arithmetic, to be replaced by the weekly audit's numbers:
+
+| | before | after |
+| --- | --- | --- |
+| production builds/day | 10–30 | 1 (plus any `[deploy]` by hand) |
+| card renders at build, per day | 2,000–6,000 | 0 |
+| ISR cache clears/day | 10–30 | 1 |
+| measured steady-state app traffic | ~0.12 GB/day | unchanged |
+
+If the ~1.9 GB/day gap between the measured app traffic and the observed
+burn is the deploy cadence, the two projects should each settle well under
+0.3 GB/day — roughly a 45-day allowance instead of a three-day one — with a
+daily build costing on the order of 50–100 MB. **The first weekly audit
+after this lands is the check**; if either project is still burning more
+than ~0.3 GB/day, the report names the query shape and that becomes the next
+entry here.
+
+### Owner actions
+
+- **Merging this** stops the per-push builds immediately (Vercel reads the
+  gate from the pushed commit). The code in it — the card prerender change —
+  ships on the next release: put `[deploy]` in the merge commit message to
+  release now, or wait for 08:00 UTC. The "Run workflow" button on
+  `production-deploy.yml` only appears once the file is on `main`.
+- **Branch protection**: if `main` ever blocks pushes from `GITHUB_TOKEN`, the
+  release job fails on its push step (visibly) and production simply stays on
+  its last release until someone commits with `[deploy]`. Nothing degrades
+  silently.
+- **Automation sessions should not add `[deploy]`** to their commits by
+  default. That is the whole point.
+- **Vercel's "Automatically expose System Environment Variables"** should be
+  on (it is by default); the gate reads `git log` if it is not, so this is
+  belt-and-braces, not a prerequisite.
+
+**Also in this change (same day, follow-up):**
+
+- `scripts/build-db-push.sh` invoked `scripts/marketplace-seed.ts` and
+  `scripts/grant-early-premium.ts` on every deploy; neither file exists any
+  more and the `|| true` swallowed the module-not-found on every build. Both
+  lines removed.
+- A root `CLAUDE.md` now carries the one rule automated sessions must know
+  here: never add `[deploy]` to a commit or merge message unless the user
+  asks for an immediate release. Without that rule the gate would be undone
+  by the first session that "helpfully" deployed its own work.
+- The branch was merged to `main` with `[deploy]` in the merge commit, so the
+  card-prerender change shipped on merge rather than at the next 08:00 UTC
+  release, and a baseline `egress-audit.yml` run was triggered immediately —
+  the first measurement of the history project ever taken.
+
+## The first egress audit found the second burn: nested caches — 2026-09-11 (same day, follow-up)
+
+The deploy-cadence fix above shipped at 05:08 UTC, and the first run of the
+new `egress-audit.yml` was triggered on the same minute — the first
+measurement of the history project ever taken. Its two twenty-minute samples
+said something the deploy theory did not predict.
+
+**Operational project (RM9), 05:09–05:29 UTC**, the window right after the
+deploy's cache clear: 1,117 full card-page reads (every retailer row for a
+card, 99 rows a call) — the post-deploy re-render wave, exactly as expected,
+and self-limiting now that there is one deploy a day. But alongside it, with
+no build in the window: `DemandSnapshot` read 37 times at 8,400 rows a call,
+`SealedListing` and `SealedGroupFirstSeen` each pulled whole 38 times, and
+the arbitrage groupBys a dozen times. Extrapolated: ~5.6 GB/day.
+
+**History project (RH10), 05:29–05:49 UTC**, no build and no import
+anywhere near it: the whole-market `PriceHistory` read (`country = GLOBAL
+AND day >= cutoff`, the movers / recently-updated / bulk-summary shape) ran
+**86 times** at 12,610 rows a call, and the `cardId IN (…)` shape (rising
+cards, screener baselines, market index) ran **36 times** at 21,563 rows a
+call. Extrapolated: **8.7 GB/day** — which is precisely RH9 dying in a day.
+Every one of those loaders is wrapped in a week- or day-keyed
+`unstable_cache`. They should have run a handful of times a week.
+
+### Why the caches were not caching
+
+Read, not guessed — `node_modules/next/dist/server/web/spec-extension/unstable-cache.js`
+in the pinned 14.2.x:
+
+- A cache READ only happens when `store.fetchCache !== "force-no-store"`
+  (the "when we are nested inside of other unstable_cache's we should bypass
+  cache similar to fetches" branch).
+- Every `unstable_cache` callback runs under a store with exactly that flag
+  set (`fetchCache: "force-no-store", isUnstableCacheCallback: true`).
+
+So **a self-cached loader called from inside another `unstable_cache`
+callback never reads its own cache** — it recomputes on every outer miss,
+and the outer entry's cadence becomes the inner read's real cadence. Worse,
+`unstable_cache` serves a stale outer entry immediately and recomputes it in
+the background on *every* request that arrives while it is stale, so a
+force-dynamic page reading a stale outer entry re-ran the whole inner stack
+per request. (Checked and ruled out along the way: `force-dynamic` itself
+does NOT set `fetchCache` — `create-component-tree.js` and the app-route
+module only set `forceDynamic` — so dynamic pages and route handlers do read
+the data cache. Nesting is the whole mechanism.)
+
+Where this codebase nested:
+
+| outer cache | inner self-cached loaders it silently disabled |
+| --- | --- |
+| `getCachedTopDeals` (1h, per market; read by `/`, five region homes, `/premium`, `api/premium/proof`) | `getPriceMovers`, `getRisingCards` (wrapped again inside), `getEbayCheapest`'s row pulls |
+| `/games` (10-min wrapper) | `getPriceMovers` |
+| `/tools/value-finder` (1h teaser wrapper) | `getUndervalued` |
+| `getUndervalued` (daily) | `getBaselines` (weekly history read) |
+| `/api/search` (10-min wrapper) | `getSealedGroups` |
+| `/admin/rising` and `/tools/rising` | separate wrappers under two different keys for the same 400-card scan |
+
+The repo's own egress rule #2 ("anything big goes through a cache") was
+followed everywhere. The rule had no clause about nesting, because nobody
+knew nesting mattered.
+
+### What changed
+
+1. **`cachedOrDirect` (lib/price-history.ts) now detects nesting** from
+   Next's `isUnstableCacheCallback` store flag and logs
+   `[egress-guard:nested-cache]`, and **logs every real compute** as
+   `[egress-guard:cache-miss] <key> computed in <ms>` — so "which loader is
+   running, how often" is a Vercel log search from now on, not a theory.
+2. **Every nested site above is un-nested.** `getCachedTopDeals` no longer
+   has an outer cache at all (its four sources each cache themselves, and the
+   assembly is cheap); `getCachedRisingCards` in rise-predictor.ts is the one
+   shared day-keyed entry for the scan, used by top-deals, `/tools/rising`
+   and `/admin/rising`; `/games`, `/tools/value-finder` and `/api/search` call
+   the self-cached loaders directly; `getUndervalued` reads its baselines
+   outside its daily entry and passes them in.
+3. **The arbitrage groupBys are shared-cached** (`arb-min-by-card`,
+   `arb-min-by-card-retailer`): ~1,400-row aggregates that ran on every
+   `getEbayCheapest`/`getArbitrage` call, including every request to the
+   force-dynamic `/premium` and `/tools/deal-finder`.
+4. **Sealed groups get a second, shared layer.** The per-instance memo was
+   the only cache, and 38 cold lambdas in twenty minutes each re-pulled the
+   whole sealed table through it. The computed groups (~100 KB per market)
+   now also sit in the data cache; the memo stays as the fast path, and if a
+   market ever outgrows the entry limit the behaviour degrades to exactly
+   today's, never worse.
+5. **Egress rule #6** in `src/lib/db.ts` and a line in `CLAUDE.md`, pinned by
+   `tests/nested-cache.test.ts` (six tests: no self-cached loader is wrapped
+   again anywhere in `src/`, top-deals has no outer cache, the rising scan has
+   one entry point, the runtime guard exists, the aggregates and sealed
+   groups are cached).
+
+### What this should do to the numbers
+
+History project: the whole-market reads drop from ~120 per twenty minutes to
+their designed cadence — movers and recently-updated once per market per
+week, rising once per scope per day, baselines once per market per week, the
+market index once per market per week. Rough arithmetic: from ~8.7 GB/day to
+tens of MB/day. Operational project: the demand window and sealed pulls stop
+scaling with request volume and cold starts. The card-page re-render wave
+after a deploy remains the largest single operational item (≈100 KB per
+render, ≤3 waves a day: the deploy plus the two import-time purges) and is
+the next lever if the weekly audit says it needs pulling.
+
+### Still open
+
+- **The old per-country PriceHistory rows.** The table holds 422,589 rows;
+  the app reads only `country = GLOBAL`. The other ~80% (AU/US/UK/SG rows
+  from before the 2026-09-05 GLOBAL migration) cost nothing on the wire but
+  everything on every sequential scan and index. Deleting them, and
+  collapsing GLOBAL's daily-era rows to the weekly cadence the app already
+  assumes, would cut every remaining history read several-fold. Destructive;
+  not done without an explicit go-ahead.
+- **Re-measure.** `egress-audit.yml` runs Sunday 03:00 UTC; a manual run the
+  day after this lands is the real check.
+
+### A second sample, and what it adds
+
+A 5-minute history-project sample at 05:59–06:04 UTC — fifty minutes after
+the 05:10 deploy, with only organic traffic — showed **zero** whole-market
+reads: 32 per-card `COUNT(DISTINCT day)` calls (card-page renders) and
+nothing else. So the 86 + 36 reads in the 05:29–05:49 window were not a
+steady rate; they were the tail of a post-deploy warm-up, amplified by the
+nesting above. That reconciles the two findings into one mechanism:
+
+- A deploy clears the Full Route Cache, so every ISR page re-renders on its
+  next hit (the documented part).
+- Those re-renders call the cached loaders, and every loader nested inside
+  another cache recomputes on each of them instead of once.
+- `unstable_cache` keys include the callback's SOURCE TEXT. Verified in the
+  pinned 14.2.x, `unstable-cache.js` line 50:
+
+  ```js
+  const fixedKey = `${cb.toString()}-${Array.isArray(keyParts) && keyParts.join(",")}`;
+  ```
+
+  In a production build `cb.toString()` is MINIFIED source, so a build that
+  shifts a chunk's identifiers rotates the key of every entry in that chunk
+  and forces a first-time compute per key per market. The practical
+  consequence contradicts the headline in the Next.js caching docs ("the Data
+  Cache persists across deployments"): that holds for `fetch`, which keys on
+  the URL, and not for `unstable_cache`, whose key is the code. So a deploy
+  clears the Full Route Cache *and* orphans much of the Data Cache, and the
+  two together are the post-deploy storm. Nothing in 14.2 avoids it — naming
+  the callback does not help, since the body still minifies differently — so
+  the lever is deploy FREQUENCY, which is what the gate controls. (Consistent
+  with observation: the 05:57 manual release changed only an admin page, and
+  the 05:59 sample stayed quiet.)
+
+At 10–30 deploys a day the site lived permanently inside that warm-up. At one
+deploy a day it is a once-a-day event; with the nesting removed it is a
+once-a-day event that costs one compute per loader per market. Both halves
+of the fix were needed; neither alone would have held.
+
+## The gate deployed on a commit that said it wasn't deploying — 2026-09-11 (same day, follow-up)
+
+At 08:29 UTC Vercel built `5b02ca5`, the merge of the nested-cache fix, even
+though that merge deliberately carried no release marker. The gate was not
+broken. Its body read:
+
+> Ships at the next scheduled release (no `[deploy]` marker on purpose).
+
+`grep -qiF '[deploy]'` over the whole message matched the prose. A
+literal-string search cannot tell a marker from a sentence about the marker,
+and this repo writes long explanatory commit messages that now routinely
+discuss the deploy gate — so this was a certainty, not a fluke. Worth being
+blunt about: the failure was in the message, and the message was written by
+the same session that wrote the gate.
+
+**Fix: the SUBJECT LINE only**, in both places that read the marker —
+`scripts/vercel-ignore-build.sh` (`head -n 1`) and the release workflow's
+"has anything landed since the last release?" check (`git log -1 --format=%s`,
+was `%B`). The subject is where both intended uses already put it (the
+scheduled release commit; a human's `hotfix X [deploy]`) and it is the one
+line nobody writes prose in. Replayed against all three real commits:
+
+| commit | subject carries marker | decision |
+| --- | --- | --- |
+| `c0ce64d` merge of the gate PR | yes | build ✓ intended |
+| `538e228` manual release | yes | build ✓ intended |
+| `5b02ca5` merge of the cache PR | no (body only) | skip ✓ the accident |
+
+The workflow's `%B` read had the same latent bug pointing the other way: the
+release commit's own body contains "Pushes without `[deploy]` in their
+message are skipped", so any commit discussing the gate would have read as
+"already released" and silently skipped a day's deploy.
+
+`tests/deploy-cadence.test.ts` pins both halves, using the real 08:29 message
+as the body-only case.
+
+**Net effect of the accident: benign, and useful.** It put the nested-cache
+fix live three hours early, which was the preferable outcome anyway given the
+burn rate — and the egress audit triggered at 08:27 therefore measures a
+post-deploy window *with* the fix, directly comparable to the 05:09–05:49
+post-deploy windows measured without it. That comparison is the real
+before/after, and is better controlled than the quiet-period sample that was
+planned.
+
+### The 08:00 UTC scheduled release did not fire
+
+`production-deploy.yml` has exactly one run: the manual 05:34 dispatch. The
+configuration checks out — `cron: "0 8 * * *"`, on `main` (confirmed the
+default branch), and the file parses, which the manual run proves. GitHub
+delays scheduled events under load and a newly added schedule can take a
+cycle or more to register; the workflow first existed on `main` at 05:08,
+less than three hours before. Nothing to change yet. Tomorrow's 08:00 is the
+real test; if it misses again, the fallback is a `schedule` on an existing,
+already-registered workflow, or an external ping to a deploy hook.
+
+Note the skip-check would have done the right thing had it fired: main's HEAD
+at 08:00 was `e507f1a`, ordinary work, so it would have released.
+
+## The desktop nav rail now defaults to collapsed, everywhere — 2026-09-11 (same day, follow-up)
+
+Owner: "make the default navigation side bar collapsed."
+
+Before this, the rail's default mode was per-route: the icon rail (4rem) on
+pages that already carry their own left column or a playfield (browse, card,
+sealed, decks, games, portfolio, trade, bulk pricer), the full list (17rem)
+everywhere else, including the homepage — on the theory that a first-time
+visitor should see the site's breadth immediately. That per-route table is
+gone. The rail now defaults to the icon form on every route, and only expands
+once a visitor explicitly asks (the chevron, or `[`), remembered afterwards in
+the existing `sidenav` cookie exactly as before.
+
+**Simplified rather than just flipped a boolean.** `SIDENAV_COLLAPSED_PREFIXES`
+and `sidenavDefaultFor()` (`lib/sidenav-shared.ts`) existed only to compute the
+now-nonexistent per-route default — with every route landing on the same
+answer, the prefix table had nothing left to distinguish, so it was deleted
+rather than kept as a dead abstraction. `resolveSidenavMode` dropped its
+`pathname` parameter for the same reason: `saved ?? "collapsed"` needs no
+route to consult. `SIDENAV_BOOT_SCRIPT` shrank to match — no more
+`location.pathname` read, no more inlined prefix array.
+
+**The CSS's OWN fallback was flipped too, not just the JS default.** The
+1280px+ media query used to key off `:root:not([data-sidenav="collapsed"])` —
+i.e. expanded is what happens when the attribute is anything else, INCLUDING
+absent. That made "expanded" the true fallback if the inline boot script ever
+failed to run at all (blocked script, restrictive CSP) — collapsed would only
+have been the JS-computed common case, not the honest default. Rewritten to a
+positive `:root[data-sidenav="expanded"]` match, so collapsed is what happens
+whether the attribute says "collapsed", says nothing, or the stylesheet never
+saw JS run at all. Same flip on the `.sidenav-expanded`/`.sidenav-collapsed`
+display-toggle rules.
+
+**What didn't change:** the CSS breakpoint contract (1024–1279px is always the
+icon rail regardless of mode; nothing below 1280px has a mode to toggle), the
+toggle control, the `[` keyboard shortcut, the per-group disclosures inside
+the expanded list, and the cookie mechanism itself (`sidenav`, 1-year max-age,
+visitor's choice always wins). `tests/sidenav.test.ts` was rewritten for the
+new single-default contract rather than patched — the two per-route tests
+collapsed into one route-independent test, and the CSS/boot-script tests now
+assert the positive-match form and reject a reversion to the old negative one.
+
+Verified against a real local render: a fresh context with no cookie loads
+`/` (previously the strongest case FOR expanded — a "hub" page) with
+`data-sidenav="collapsed"` and the icon rail visible; toggling to expanded and
+reloading keeps `data-sidenav="expanded"`, confirming the visitor's own choice
+still overrides the new default exactly as it overrode the old one.
+
+---
+
+## Measured: the history project went from 8.7 GB/day to nothing — 2026-09-11 (same day, follow-up)
+
+The nested-cache fix deployed at 08:29 (accidentally — see the entry above),
+and the audit that had been triggered two minutes earlier therefore sampled a
+POST-DEPLOY window with the fix live. That is the same shape of window as the
+two measured before it, so the comparison is like-for-like rather than a quiet
+period flattering the result.
+
+### History project (RH10) — the fix, measured
+
+| | before, 05:29–05:49 | after, 08:47–09:07 |
+| --- | --- | --- |
+| whole-market read (`country = GLOBAL AND day >=`) | 86 calls @ 12,610 rows | **1 call** |
+| per-card-set read (`cardId IN (…) AND day >=`) | 36 calls @ 21,563 rows | **0 calls** |
+| `PriceHistory` sequential scans | 30 scans, 4,225,890 rows | **0** |
+| scan churn | 42.20 GB/day | 0.10 GB/day |
+| **extrapolated client egress** | **8.72 GB/day** | **0.00 GB/day** |
+
+What is left on the history project is exactly what should be there: 40
+per-card chart reads at 54 rows each (`getPriceHistory`, one per card page)
+and 84 single-row `COUNT(DISTINCT day)` calls (the card price-state check).
+The extrapolation went from "a fresh project lasts ~0.6 days" to "~8,630
+days". The 5 GB monthly allowance is no longer the binding constraint on the
+history project; nothing else needs doing there.
+
+### Operational project (RM9) — not measurable in this window, and why
+
+The same run reported 7.07 GB/day for RM9, *higher* than the 5.62 GB/day
+measured before the fix. That number is not a rate, and the script's own
+warning names the reason. Inside the window:
+
+```
+calls 170 · rows 118,634   DELETE FROM "RetailerPrice" WHERE "retailer" = $1
+calls   1 · rows  88,145   SELECT … FROM "RetailerPrice" WHERE …
+Card: 2,275 sequential scans
+```
+
+That is a full price import — delete-then-insert per retailer, plus the
+catalogue read. **The merge of the nested-cache PR triggered it**:
+`refresh-prices.yml` has a `push` trigger filtered on
+`src/lib/sealed-import.ts` among other paths, and that PR touched that file
+for caching reasons alone. The run went 08:26:58 → 09:15:28, spanning both
+audit windows. Extrapolating a 49-minute twice-daily job across a day is
+precisely the arithmetic the script warns against.
+
+So the operational side is still unmeasured after the fix. A clean window
+needs no import, no build and no post-import revalidation wave in it.
+
+**Worth deciding separately** (not changed here, because it trades freshness
+for egress and that is the owner's call): that `push` path filter cannot tell
+a pricing change from a caching change, and a full import is not cheap. The
+import already runs twice a day on schedule, so the trigger only buys "sooner
+after a price-logic change". Either narrowing the paths or dropping the push
+trigger would remove an unbounded number of full imports a day.
+
+### Where the two projects now stand
+
+- **History (RH10)**: solved and measured. Two independent samples agree — the
+  quiet 5-minute sample at 05:59 and this post-deploy one both show
+  essentially zero whole-market reads.
+- **Operational (RM9)**: both structural fixes are live (one build a day, no
+  nested caches, shared-cached arbitrage aggregates and sealed groups), but
+  the resulting rate has not been measured in a clean window. That
+  measurement is the remaining open item, ahead of any further change.
+- The `PriceHistory` row cleanup stays untouched and unneeded for now: at
+  0.00 GB/day on the history project there is nothing for it to buy.
+
+## The operational baseline, and why the extrapolation overstates it — 2026-09-11 (same day, follow-up)
+
+A 20-minute operational-only sample at 09:51–10:11, with nothing else running
+and no deploy since 08:29, reported **0.84 GB/day** — against 5.62 GB/day
+measured post-deploy before the nested-cache fix.
+
+**That 0.84 is still an overestimate, and the reason is arithmetic rather than
+opinion.** The window's top shape is the card page's own listing read:
+
+```
+calls 194 · rows 20,773 · 107.1/call   SELECT … FROM "RetailerPrice" WHERE "cardId" = …
+```
+
+194 card-page renders in twenty minutes annualises to ~14,000 a day. There are
+only ~1,400 card URLs, and each renders at most once per cache purge. Card
+pages are purged three times a day: `revalidateContent()` includes
+`["/card/[id]", "page"]`, and `refresh-prices.yml` POSTs `/api/revalidate` at
+the end of each of its two daily imports, plus the one daily deploy. So the
+real ceiling is ~4,200 card renders a day, not 14,000 — the window sat 36
+minutes inside the re-render wave from the 09:15 import, which is exactly the
+contamination the script warns about, in its third distinct form today.
+
+Bounded properly: ~4,200 renders × ~107 rows × 359 B ≈ **160 MB/day** for that
+shape, against the 438 MB/day the extrapolation charged it. Applying the same
+correction across the window puts the operational project at roughly
+**0.3 GB/day, i.e. ~9 GB/month** — better than 2 GB/day by nearly an order of
+magnitude, and still about twice the 5 GB allowance.
+
+### So the operational side needs one more lever, and it is a product call
+
+The card page is now the single dominant cost, at ~38 KB of listing rows per
+render. Two things drive that, and neither is a bug:
+
+1. **It reads every market's rows and both in- and out-of-stock listings.**
+   That is deliberate — the client market switcher needs all markets, and
+   `OutOfStockDisclosure` renders the out-of-stock list with a distinct-store
+   count. Trimming either changes what the page shows.
+2. **It is purged three times a day.** The page's own `revalidate` is 86400,
+   so without the purges it would render once per URL per day. The purges
+   exist so fresh prices appear immediately after an import.
+
+The cheapest change that does not alter a single pixel is to purge card pages
+less often — once a day rather than on both imports — which would cut card
+renders by roughly a third. The cost is that afternoon price changes wait for
+the evening wave rather than appearing within minutes.
+
+**Not decided here.** Both remaining levers (this, and the `refresh-prices.yml`
+push trigger noted in the entry above) trade freshness for transfer, and that
+is the owner's call, not a defect to fix quietly.
+
+### Where the two projects now stand, measured
+
+| | before | now | allowance |
+| --- | --- | --- | --- |
+| history (RH10) | 8.72 GB/day | **0.00 GB/day** | comfortably inside |
+| operational (RM9) | ~2 GB/day observed; 5.62 GB/day post-deploy | ~0.3 GB/day bounded | ~9 GB/month, about 2× over |
+
+The history project is finished. The operational project is roughly 7× better
+and needs one freshness decision to land inside the allowance. A genuinely
+quiet window — several hours after an import, with no purge wave in it — is
+the measurement that would confirm the 0.3 figure rather than infer it.
+
+### The 08:00 scheduled release never fired
+
+Confirmed by filtering the workflow's runs to `event=schedule`: zero runs. Its
+only run remains the 05:34 manual dispatch. The configuration is sound, so
+this is either GitHub's usual cron delay or a newly registered schedule not
+yet picked up. Tomorrow's 08:00 is the test.
+
+## History rotates onto HISTORY_DATABASE_URL: RH10 → HISTORY_DATABASE_URL — 2026-09-12
+
+Owner: "perform a full migration from RH10 to history_database_url as we are at limit."
+
+RH10 (in service since 2026-09-10) reached its 5 GB monthly Neon transfer
+allowance after two days live — the same ~2 GB/day burn every prior history
+project has shown, and consistent with the egress-audit findings from the day
+before (see "The first egress audit found the second burn: nested caches").
+History rotates onto `HISTORY_DATABASE_URL` — the **oldest** history variable
+in the whole rotation, retired since the 2026-08-16 `HISTORY_DATABASE_URL_2`
+cutover.
+
+**Verified live before writing anything**, per this file's own standing rule
+(a recycled target must be re-checked every time it comes back around, never
+trusted from old findings). A `probe-history` run confirmed both ends:
+
+| | rows | days | distinctCards | matching RM9 |
+|---|---|---|---|---|
+| `RH10` (source) | 422,589 | 2026-06-06..2026-09-10 | 1,425 | 1420/1425 |
+| `HISTORY_DATABASE_URL` (target) | 45,067 | 2026-08-04..2026-08-09 | 1,390 | 1385/1390 |
+
+Real, outdated numbers on the target — not zeroes — confirming a genuinely
+recycled project rather than a freshly re-added empty one, and (the part that
+matters most) a term that predates the 2026-09-05 GLOBAL-history migration by
+nearly a month, so it held zero `GLOBAL` rows on its own before this ran.
+
+**New workflow task, not a hand-run script.** Every history rotation this
+project has done goes through a named `workflow_dispatch` task in
+`maintenance.yml` — `migrate-history-db-rh10-to-hdu` follows the exact
+template `migrate-history-db-rh9-to-rh10` set: `SOURCE_HISTORY_URL` pinned to
+the one live variable (never a fallback chain — a chain that could resolve
+back to the target itself would make the migration silently no-op while
+reporting every row count as matching), a guard against SOURCE==TARGET, a
+guard against TARGET resolving to the operational database (RM9), a
+`User`-row check that refuses to touch anything that isn't a history-only
+project, dump-before-truncate (so a source that refuses reads can't leave the
+target half-destroyed), and a source-vs-target row-count verification that
+fails loudly on any mismatch. `migrate-history-db-rh9-to-rh10` is marked
+LEGACY, kept for reference.
+
+**Run twice**, per the template's own standing advice: once to do the bulk
+copy, once more immediately after as a top-up, so nothing written to RH10 in
+the few minutes between the two passes is lost. Both runs verified clean:
+
+```
+public."Card":         source=1436   target=1436   ✓
+public."ClickEvent":   source=698    target=698    ✓
+public."PriceHistory": source=422589 target=422589 ✓
+```
+
+**Two OTHER fallback chains in `maintenance.yml` were found stale before this
+rotation even started** — the same drift class `db-chains.ts`'s own header
+exists to stop, and each was already flagged once before for a different
+rotation:
+- The `db-push` task's `HISTORY_DB` chain still led with `RH10` (last fixed
+  2026-09-10, for the RH11-still-first staleness that preceded it).
+- The `migrate-history` (Prisma top-up) task's `TARGET` chain still led with
+  `RH11` — dead since 2026-08-30, and never corrected through the five
+  rotations (RH6→RH7→RH8→RH9→RH10) that followed it. This one was silently
+  wrong for two weeks; nothing caught it because that task hadn't been run in
+  that window.
+
+Both now lead with `HISTORY_DATABASE_URL`.
+
+**Runtime chain updated to match, once the data migration verified clean —
+not before.** `src/lib/db-chains.ts`'s `HISTORY_VARS` is now
+`["HISTORY_DATABASE_URL", "RH10", "DATABASE_URL"]` (RH9 drops out of the
+chain — it was RH10's own rollback for the 2026-09-10..09-12 stint, and a
+chain only needs one — but stays reachable by explicit name for migration
+tasks). `scripts/build-db-push.sh`'s history if/elif chain and its
+`CURRENT_HIST` diagnostic were updated to match exactly (`tests/db-chain.test.ts`
+asserts the two never drift), and `src/lib/db-history.ts`'s startup warning
+now fires on anything other than `HISTORY_DATABASE_URL`. `.env.example`'s
+history-chain documentation, already stale (it still named
+`HISTORY_DATABASE_URL_4`/`_3` as current from an earlier generation), was
+brought up to date at the same time.
+
+**Next steps, unchanged from every prior rotation's own checklist:** confirm
+`HISTORY_DATABASE_URL` is set in Vercel for Production, Preview AND
+Development before the next deploy — that deploy is what actually moves
+reads/writes onto it, `prisma db push`-ing the schema there via
+`build-db-push.sh`. Leave `RH10` set as the rollback until
+`HISTORY_DATABASE_URL` has been serving cleanly for a while. Per the egress
+audit landing the same window as this rotation (nested-cache fix, deployed
+2026-09-11), the burn rate driving these rotations should already be much
+lower — if `HISTORY_DATABASE_URL` still drains in days rather than weeks, that
+audit's own conclusion holds: run `audit-egress` against it and fix the named
+query rather than rotating again.

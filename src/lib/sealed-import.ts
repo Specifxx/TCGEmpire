@@ -3,7 +3,8 @@
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS } from "./price-history";
+import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, cachedOrDirect } from "./price-history";
+import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
@@ -799,14 +800,23 @@ export interface SealedGroup {
 
 // Group sealed listings by product for the /sealed page, for one market (AU/US).
 //
-// CACHED IN PROCESS MEMORY: this pulls the market's entire sealed table on
-// every call — fetching it from Neon per request is the network-transfer
-// pattern that burned through dexcompare's free-tier allowance. unstable_cache
-// can't hold large items (2 MB limit fails silently — verified in the Next.js
-// source; and because the payload is double-encoded on the way in, the real
-// safe ceiling is nearer 1.2 MB raw, see the note in lib/db.ts), so it uses the
-// same globalThis memo pattern as the games pool: one DB pull per market per
-// warm lambda per TTL.
+// TWO LAYERS OF CACHE. This pulls the market's entire sealed table on every
+// compute — fetching it from Neon per request is the network-transfer pattern
+// that burned through dexcompare's free-tier allowance.
+//
+//   1. A process-memory memo (below): the fast path within one warm lambda.
+//      This used to be the ONLY layer, on the reasoning that unstable_cache
+//      can't hold large items (its 2 MB limit fails silently — see the note
+//      in lib/db.ts). That reasoning was about the RAW rows. The first egress
+//      audit (2026-09-11) showed the memo alone was nearly useless under
+//      Vercel's fan-out: 38 cold lambdas in twenty minutes each re-pulled the
+//      whole table (~420 listings + the first-seen table) through it.
+//   2. The shared Next data cache (getAllSealedGroups → cachedOrDirect), holding
+//      the COMPUTED groups — ~100 KB per market, far under the limit — keyed by
+//      market, CONTENT_TAG-busted on import. A cold lambda now costs one
+//      data-cache read, not one whole-table pull. Should a market's groups ever
+//      outgrow the limit, unstable_cache drops the entry silently and the memo
+//      is exactly what it was before — never worse than today.
 type SealedMemo = Map<string, { at: number; data: SealedGroup[] }>;
 const sealedMemo: SealedMemo = ((globalThis as unknown as { __sealedGroups?: SealedMemo }).__sealedGroups ??= new Map());
 const SEALED_MEMO_TTL_MS = 15 * 60_000;
@@ -936,6 +946,19 @@ const T1_GROUP_NAME: Record<string, string> = {
 async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
+  const cached = await cachedOrDirect(() => computeAllSealedGroups(country), ["sealed-groups-v1", country], {
+    revalidate: 172800,
+    tags: [CONTENT_TAG],
+  });
+  // The data cache is a JSON round-trip: Date comes back as an ISO string.
+  const out = cached.map((g) => ({ ...g, firstSeenAt: g.firstSeenAt ? new Date(g.firstSeenAt) : null }));
+  sealedMemo.set(country, { at: Date.now(), data: out });
+  return out;
+}
+
+// The whole-table pull and grouping. Only ever reached through the two cache
+// layers above — see the comment on SealedMemo.
+async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> {
   // Only the fields the grouping uses — no point hauling unused columns.
   const rows = await prisma.sealedListing.findMany({
     where: { country },
@@ -1067,7 +1090,6 @@ async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<S
     if (ra !== rb) return ra - rb;
     return (a.lowestPriceCents ?? 9e9) - (b.lowestPriceCents ?? 9e9);
   });
-  sealedMemo.set(country, { at: Date.now(), data: out });
   return out;
 }
 

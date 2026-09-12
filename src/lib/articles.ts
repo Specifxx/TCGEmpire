@@ -170,6 +170,155 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  // Secret Garden is the first EVENT-EXCLUSIVE product this site has covered, and
+  // the distinction drives the whole piece: there is no retail channel, so the
+  // stores we price will never list it and /sealed will never show it. The
+  // analysis that makes this post worth publishing is the supply GEOGRAPHY —
+  // Riot's 11 Sep event list is the first time the remaining 2026 distribution
+  // has been public, and reading it by region explains a live price gap that
+  // nothing else does. Deliberately category "blog" (news): it hangs off a dated
+  // Riot announcement, and news-sitemap.xml only admits blog.
+  {
+    slug: "riftbound-secret-garden-bundle",
+    category: "blog",
+    title: "Riftbound Secret Garden Bundle: Price, Contents & Where to Find One",
+    excerpt:
+      "Riot's US$70 event-exclusive gift box is reselling for double in Europe — and Europe hasn't had a single event yet. The nine remaining shows, and what they should do to the price.",
+    author: "RiftCompare",
+    date: "2026-09-12",
+    readMins: 8,
+    tags: ["news", "collecting", "sealed", "prices"],
+    shop: [
+      { label: "Secret Garden bundle on eBay", query: "Riftbound Secret Garden bundle" },
+      { label: "Riftbound sealed on eBay", query: "Riftbound TCG sealed box" },
+    ],
+    summary: [
+      "**The Secret Garden Bundle is US$70 and event-exclusive** — no shop sells it, so it will never appear on our [sealed comparison](/sealed) at a retail price.",
+      "**Nine events remain in 2026**, announced 11 September: PAX West and RQ Singapore (early Sept), RQ Los Angeles, PAX Australia, Paris Games Week, Spiel Essen, Lucca, the European Regional Championship and Convergence Fest in Las Vegas.",
+      "**Europe has had zero Secret Garden events so far** — and four land inside 18 days in late October and early November. That is the single biggest scheduled supply event for this product.",
+      "**Resale is running around €165-180 in Europe** against roughly US$88 and up in the States. That gap is geography, not grading.",
+      "**Riot says it will \"see what stock remains at the end of 2026\"** — which is both the bear case (more supply) and confirmation that nothing is being reprinted.",
+    ],
+    faq: [
+      {
+        q: "What is in the Riftbound Secret Garden Bundle?",
+        a: "Three alternate-art promo cards — Bashful Bloom (Lillia), Green Father (Ivern) and Ultrasoft Poro — plus five alt-art double-sided tokens, sleeves, art postcards, three sealed Unleashed boosters and a premium storage box. The three promos are the collectible core; the boosters are ordinary [Unleashed](/sets/unleashed) product.",
+      },
+      {
+        q: "How much does the Secret Garden Bundle cost?",
+        a: "US$70 at the event booth. On the secondary market it has been running around €165-180 on European marketplaces and from roughly US$88 on eBay in the States — the gap reflects which continents have actually had events.",
+      },
+      {
+        q: "Where can I still buy a Secret Garden Bundle?",
+        a: "In person, at one of the remaining 2026 events: RQ Los Angeles (25-27 Sep), PAX Australia (9-11 Oct), Paris Games Week and Spiel Essen (both 22-25 Oct), Lucca Comics & Games (28 Oct - 1 Nov), the European Regional Championship in Stuttgart (6-8 Nov) and Convergence Fest in Las Vegas (11-13 Dec). Otherwise it is the secondary market only — no local game store can order it.",
+      },
+      {
+        q: "Is the Secret Garden Bundle a good investment?",
+        a: "Nobody can tell you that honestly, and this article does not. What is knowable: the print run is finite and unreprinted, the cards are cosmetic rather than competitively essential, and four European events are about to inject supply into the most expensive market. Those pull in opposite directions.",
+      },
+      {
+        q: "Are the Secret Garden cards tournament legal?",
+        a: "The promos are alternate-art printings of existing cards, so they play as those cards. Nothing in the box is a new mechanic or a card you cannot otherwise obtain — the value proposition is the art and the object, not the deck.",
+      },
+    ],
+    body: `Riot published its remaining 2026 event schedule for the **Secret Garden Bundle** on 11 September, and for the first time the full distribution plan for this product is public. Read by region rather than by date, that list explains something the price data has been showing for weeks and nobody had a reason for: why the same US$70 box costs roughly twice as much in Europe as it does in the United States.
+
+## What the Secret Garden Bundle actually is
+
+A US$70 collector box built around alternate art, sold **only at events**. It debuted in English at Gen Con 2026 (30 July - 2 August) after a Chinese release on 10 July, and it is the closest thing Riftbound has produced to a pure art product.
+
+What is inside:
+
+- **Three alternate-art promo cards** — Bashful Bloom (a [Lillia](/champions/lillia) legend), Green Father (an [Ivern](/champions/ivern) legend) and Ultrasoft Poro
+- **Five alternate-art double-sided tokens**, garden-themed
+- **Sleeves and full-art postcards**
+- **Three sealed [Unleashed](/sets/unleashed) boosters**
+- **A premium storage box**
+
+The boosters are ordinary product you can buy anywhere. The three promos and the token set are the entire reason this box has a secondary market.
+
+## Where you can still get one
+
+Nine events were listed, and three have already passed:
+
+| Dates | Event | Region |
+|---|---|---|
+| 4-7 Sep | PAX West, Seattle | North America |
+| 4-6 Sep | RQ Singapore | Asia-Pacific |
+| 25-27 Sep | RQ Los Angeles | North America |
+| 9-11 Oct | PAX Australia, Melbourne | Oceania |
+| 22-25 Oct | Paris Games Week | Europe |
+| 22-25 Oct | Spiel Essen | Europe |
+| 28 Oct - 1 Nov | Lucca Comics & Games | Europe |
+| 6-8 Nov | European Regional Championship, Stuttgart | Europe |
+| 11-13 Dec | Convergence Fest / NA Regional Championship, Las Vegas | North America |
+
+There is no tenth option. No local game store can order this, it is not on TCGplayer as retail stock, and it will never appear on [our sealed comparison](/sealed) with a shop price — the same situation as the [T1 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection), which is also distributed outside the retail channel entirely.
+
+## The price gap nobody had an explanation for
+
+As of early September, European marketplace listings were sitting around **€165-180** with well over 150 active sellers, while eBay listings in the United States started from around **US$88**. Call it roughly double, for an identical box.
+
+The usual explanations do not fit. There is no condition variance worth 2x on a sealed product. There is no language variant — this is the English edition in both places. Import duty and shipping across the Atlantic do not account for it either.
+
+Look at the schedule instead. Of the events that had happened when those prices were recorded, **every single one was in North America or Asia-Pacific**. Gen Con, PAX West, RQ Singapore. Europe had not had one Secret Garden event. Every box in Europe got there because somebody carried it there, and the price reflects exactly that.
+
+## The speculation: four European events in 18 days
+
+Here is where this stops being reporting and starts being an opinion, so treat it as one.
+
+Between **22 October and 8 November**, Europe goes from zero Secret Garden events to four: Paris, Essen, Lucca and Stuttgart. Spiel Essen alone drew roughly 190,000 attendees in recent years, and the European Regional Championship concentrates exactly the audience that wants this box.
+
+If the €165-180 European price is substantially a scarcity premium created by there being no European supply — and the timeline says a lot of it is — then that premium has a scheduled expiry date. My expectation is that **European prices compress toward the American ones through November**, not because demand falls but because supply finally arrives in the same continent as the buyers.
+
+Two things would prove me wrong, and they are worth stating because they are the interesting cases:
+
+**Booth allocations could be small.** "Available at an event" is not a quantity. One report from PAX West describes the bundle selling out each day under a two-per-person limit. If European booths receive a few hundred boxes each against 190,000 attendees, four events barely move the needle and the premium holds.
+
+**Demand could arrive with the supply.** An event puts the product in front of people who did not know it existed. Four European shows in 18 days is also four marketing events, and it is genuinely possible that European demand grows faster than European supply.
+
+## What makes it scarce, and what does not
+
+Four factors actually matter here, and they do not all point the same way.
+
+**The print run is finite and there is no reprint lever — probably.** Riot's own wording is the evidence: *"We will see what stock remains at the end of 2026 and if able extend it to future events into 2027."* That is a company planning to **distribute remaining stock**, not to print more. For a collector, that sentence is reassuring about reprints and worrying about supply at the same time, which is a rare thing for one sentence to do.
+
+**No retail channel means no price anchor.** Every other sealed product we track has a shop price that resale gets judged against. This one has US$70, obtainable only by standing in a queue at a convention. Price discovery happens entirely on the secondary market, and secondary markets without an anchor are volatile in both directions.
+
+**Distribution is geographically lumpy.** Nine events across five countries, with Australia getting exactly one — PAX Australia, 9-11 October — and no second chance all year. For an Australian collector this is a single-day-window product, and that is a genuinely different scarcity profile from the American one, where Las Vegas in December provides a late top-up.
+
+**Playability is not a factor, at all.** These are alternate-art printings. Nothing here is a card you cannot otherwise obtain, and no deck gets stronger. That cuts both ways: it removes the floor that competitive demand puts under a chase card, and it removes the cliff that a ban or a rotation puts over one. Art-driven collectibles are not tied to the metagame in either direction.
+
+## The comparison worth making
+
+Riftbound already ran this experiment once. The 2025 Worlds Bundle retailed at US$100, sold out in under twenty minutes, and has been trading at roughly US$150-225 — a premium of about 1.5 to 2.25x that has held rather than spiked.
+
+Secret Garden is not the same product. It is cheaper, its distribution is spread across five months rather than one sale, and it commemorates nothing — there is no championship attached to it. If you want a base rate for "limited Riftbound box, a few months on", 1.5 to 2x over the box price is what this game has actually produced so far, and the current European number is at the top of that range while the American one sits below the bottom of it.
+
+## Is it worth buying at resale?
+
+Not a question this site will answer for you, but here is the honest framing.
+
+At US$88 you are paying an 18 dollar premium over the booth price for three exclusive promos, five tokens, sleeves and three boosters — that is close to reasonable on components alone. At €175 you are paying roughly 2.5x the box price, mostly for the fact that nobody near you has one yet, and there are four events on the calendar designed to change that.
+
+If you want the box because you like the art, the American market is where to buy it, and the [deal finder](/tools/deal-finder) is built for exactly that kind of cross-region gap. If you want it because you are speculating on the print run, the thing to understand is that Riot has told you there is leftover stock and that it intends to keep handing it out.
+
+And if you simply want the cards to play with, remember what they are: alternate arts of cards already in the catalogue. The ordinary printings are [in our database](/browse) at ordinary prices.
+
+## Three things to watch, if you are tracking this
+
+None of these need an insider. All three are checkable by anyone.
+
+**Whether European listings fall in November.** That is the direct test of everything above. If four European events land and the €165-180 band holds through the end of November, the premium was demand, not geography, and I was wrong.
+
+**Whether Australian listings move after 9-11 October.** One event, one country, no second chance in 2026. If a single show meaningfully changes Australian pricing, it tells you how small a booth allocation really is.
+
+**Whether Riot says anything in January.** The stock sentence commits to a review at the end of 2026. An extension into 2027 events is more supply; silence, or a "sold through" note, is the opposite.
+
+---
+
+*Sources: Riot Games' [Secret Garden Bundle Events announcement](https://playriftbound.com/en-us/news/announcements/secret-garden-bundle-events/) of 11 September 2026 for the event list and the stock quote. Bundle contents, the US$70 price and the Gen Con debut are as reported by Riftbound community outlets; secondary-market figures are observed marketplace listings from early September 2026 and move constantly. The regional analysis and every forecast in this article are ours, and are opinion rather than fact.*`,
+  },
   {
     slug: "riftbound-deck-archetypes-guide",
     category: "guide",
@@ -3164,7 +3313,7 @@ Four things, and only one of them is the price tag.
 
 **The serial number is a one-of-one.** Every serialised card is unique: there is exactly one #0001 Galio in English and there will never be another. The three language editions are numbered separately, so a #0001 Galio exists once in English, once in Chinese and once in Korean. Riot's own returns policy makes the point better than any analysis — a damaged serialised card cannot be replaced with an identical copy, so the remedy is a full refund of the whole set. That is a company saying, in a support policy, that it cannot manufacture a second one.
 
-**There is no retail channel at all.** Every other Riftbound product we track has a shop price, which anchors resale: you can always see what a booster box costs at retail and judge a listing against it. This collection has no retail price — the only public number is the US$360 Riot charged drawing winners, and that stopped being obtainable the moment registration closed. Price discovery happens entirely on the secondary market, starting from nothing. We will report what that produces on the card pages below rather than guess at it here.
+**There is no retail channel at all.** Every other Riftbound product we track has a shop price, which anchors resale: you can always see what a booster box costs at retail and judge a listing against it. This collection has no retail price — the only public number is the US$360 Riot charged drawing winners, and that stopped being obtainable the moment registration closed. Price discovery happens entirely on the secondary market, starting from nothing. We will report what that produces on the card pages below rather than guess at it here. Riot has since run the same playbook a second time with the [Secret Garden Bundle](/blog/riftbound-secret-garden-bundle) — a cheaper, art-driven box handed out at conventions rather than through a drawing, and another product no shop can order.
 
 **The category itself is walled off.** In the same month, Riot said it has [no plans to put serialisation into booster packs](/blog/riftbound-august-2026-state-of-the-game-takeaways). Serialised Riftbound cards are therefore not a thing that will exist in the ordinary product line — they are a thing that exists in dedicated collector releases, of which this is the first.
 
@@ -7879,6 +8028,162 @@ What makes it interesting is that it is the first Riftbound set to change what a
 We will update this page as previews land from Convergence Fest onward. Until then, watch [release dates](/release-dates) for the countdown and [movers](/movers) for what the market does to Radiance on the way.`,
   },
   ...SEO_PACK_ARTICLES,
+  {
+    slug: "riftbound-gift-of-the-rift-bundle",
+    category: "blog",
+    title: "Riftbound Gift of the Rift Bundle: Contents, Price, and Whether It Holds Value",
+    excerpt:
+      "What is in the Gift of the Rift anniversary bundle, when and where to buy it, and an honest read on where the price goes — including why the usual “limited promo moons” argument does not apply cleanly here.",
+    author: "RiftCompare",
+    date: "2026-09-12",
+    readMins: 9,
+    tags: ["sealed", "buying", "collecting", "promos", "news"],
+    hero: {
+      src: "/blog/riftbound-gift-of-the-rift-bundle.png",
+      alt: "Riftbound Gift of the Rift Bundle contents — 16 booster packs across five sets, 36 foil runes, an alt-art Akali promo, 100 sleeves and a 2,000-card storage box",
+    },
+    shop: [
+      { label: "Gift of the Rift Bundle", query: "Riftbound Gift of the Rift Bundle" },
+      { label: "Alt-art Akali promo", query: "Riftbound Akali alt art promo" },
+      { label: "Radiance boosters", query: "Riftbound Radiance booster" },
+    ],
+    summary: [
+      "**One box, sixteen packs, five sets**: 3× Origins, 3× Spiritforged, 3× Unleashed, 3× Vendetta and 4× Radiance, plus 36 foil runes, 100 sleeves, a 2,000-card storage box and an exclusive **alt-art Akali** promo.",
+      "**It lands 4 December 2026**, and unlike the event-only gift boxes it is confirmed for wide distribution through local game stores and mass retailers — so it should not be hard to find at launch.",
+      "**Riot has not announced a price.** The only real numbers are retailer pre-orders: two Canadian stores listed it at **C$160.00** and **C$199.95**, both already showing unavailable.",
+      "**The “it will be scarce” case is weaker than it looks for the box, and stronger than it looks for the promo.** Wide retail distribution is the single biggest thing that stops a launch premium; a one-per-box exclusive card is a different market with its own demand.",
+      "**A December release is the awkward part.** Holiday product gets over-ordered and then marked down in January — which is an argument for patience, not panic.",
+    ],
+    faq: [
+      {
+        q: "What is in the Riftbound Gift of the Rift Bundle?",
+        a: "Sixteen booster packs (3 Origins, 3 Spiritforged, 3 Unleashed, 3 Vendetta, 4 Radiance), 36 foil runes covering all six basic runes at six copies each, one exclusive alt-art Akali promo card, 100 sleeves printed with that same Akali art, and a 2,000-card storage box.",
+      },
+      {
+        q: "When does the Gift of the Rift Bundle release?",
+        a: "4 December 2026. Pre-orders opened at some stores well ahead of that and several have already filled their allocation, so the listing you find may show as unavailable rather than sold out permanently.",
+      },
+      {
+        q: "How much does the Gift of the Rift Bundle cost?",
+        a: "Riot has not announced an official price. The observable figures are retailer pre-order listings — two Canadian stores priced it at C$160.00 and C$199.95. Treat those as a street-price band from two shops, not an MSRP, and expect variation by market.",
+      },
+      {
+        q: "Is the Gift of the Rift Bundle worth buying?",
+        a: "As a collector piece, yes at a sensible price: the alt-art Akali and the matching 100-sleeve pack only come in this box. As a way to acquire playable cards, no — sixteen packs spread across five different sets is one of the least efficient ways to get any specific card, and buying the singles you actually want is almost always cheaper.",
+      },
+      {
+        q: "Will the Gift of the Rift Bundle go up in value?",
+        a: "Nobody honestly knows, and the two halves of the product behave differently. The sealed box is confirmed for wide retail distribution, which historically suppresses any launch-day premium; its case for appreciating is slow sealed attrition once printing stops, measured in years. The alt-art Akali promo has its own single-card market driven by players who want the art but not sixteen packs, and that is where price discovery usually happens first.",
+      },
+      {
+        q: "Is the Chinese version of the bundle different?",
+        a: "Yes. The English box contains the alt-art Akali promo; the Chinese release swaps it for an exclusive Kennen promo instead. The rest of the contents are otherwise the same. If you are buying for the Akali specifically, check which version a listing is actually selling.",
+      },
+    ],
+    body: `
+Riftbound is turning one, and Riot is marking it with a single box that reaches back across the whole first year: the **Gift of the Rift Bundle**. Sixteen packs from all five 2026 sets, a stack of foil runes, an exclusive alt-art Akali, and a storage box big enough to hold the collection you have presumably accumulated in the meantime.
+
+It is also the first Riftbound product where the interesting question is not "what is in it" but "what happens to it afterwards" — so this covers both.
+
+## What is actually in the box
+
+| Item | Details |
+| --- | --- |
+| Booster packs | 16 total: 3× Origins, 3× Spiritforged, 3× Unleashed, 3× Vendetta, 4× Radiance |
+| Foil runes | 36 runes — all six basic runes, six copies each, foil treatment |
+| Promo card | 1× exclusive alt-art Akali (English release) |
+| Sleeves | 100× sleeves printed with the Akali promo art |
+| Storage box | 1× 2,000-card storage box |
+
+Radiance gets four packs rather than three, which makes sense — it is the newest set when this lands, and the one buyers are most likely to still be chasing.
+
+The detail worth pausing on is at the other end of that list. **Those three Origins packs will be about fourteen months old on release day.** A box that contains still-sealed packs from a set that has long since cycled off retail shelves is doing something more unusual than a normal bundle: it is a vehicle for out-of-print pack supply, sold at current retail.
+
+## The foil runes are quietly the best part
+
+Thirty-six runes, six of each basic rune, all foil. It is easy to read that as filler next to an exclusive promo — it is not.
+
+Runes are not optional in Riftbound. Every deck runs them, which means a full foil set is one of the few things in this box with genuine **play** value rather than shelf value: it is the component you will actually use, in every deck you build, for as long as you play. Six copies of each is enough to cover a deck without borrowing between builds.
+
+It is also the part with the least resale story, precisely because it is useful. Foil basics get sleeved and played, not graded and stored. If you are weighing the box as a collector, treat the runes as the reason it is worth opening rather than a reason it is worth keeping sealed — those are opposing arguments, and this box contains both.
+
+## What makes this different from the gift boxes
+
+Riftbound has already had limited, event-only products — the Secret Garden Gift Box being the obvious comparison. Those were genuinely hard to get, and priced accordingly almost immediately.
+
+This one is explicitly not that. **The Gift of the Rift Bundle is confirmed for wide distribution through local game stores and mass retailers.** That is one sentence, and it is the single most important fact in this article for anyone thinking about resale, because broad retail availability is exactly what prevents a launch-day premium.
+
+If you have seen people talk about this box the way they talked about the event exclusives, that is the gap in the reasoning.
+
+## The Akali promo is the real chase
+
+One card, one per box, and it does not exist anywhere else in the English release.
+
+Akali is not an obscure pick either — she is all over the current Vendetta card pool, from [Akali, Rogue Assassin](/card/akali-rogue-assassin-ven-189s-166) to [Akali, Deadly Weapon](/card/akali-deadly-weapon-ven-021a) and [Akali, Silent](/card/akali-silent-ven-038a). A new alt-art of a champion people already build around has a natural audience.
+
+More to the point: **most of the people who want that art do not want sixteen packs.** They want the card. That creates single-card demand that is completely independent of how many sealed boxes are sitting on shelves — and it is why the promo's price and the box's price can move in opposite directions.
+
+The Chinese release swaps Akali for an exclusive **Kennen** promo. If you are buying specifically for the Akali, read the listing carefully; the two versions are not interchangeable and marketplace titles are not always clear about which one is in the photo.
+
+[[shop]]
+
+## When and where to buy
+
+**Release date: 4 December 2026.** Distribution is local game stores and mass retailers.
+
+Pre-orders opened at a number of stores well before release, and some have already filled their allocation — a listing showing "unavailable" right now more often means "this shop's pre-order window closed" than "this product is gone forever". With wide retail distribution confirmed, walking into a store in December is a perfectly reasonable plan.
+
+On price, the honest position is that **Riot has not announced one.** What can be observed is what shops are charging:
+
+| Retailer listing | Price | Status |
+| --- | --- | --- |
+| Canadian LGS (pre-order) | C$160.00 | Unavailable |
+| Canadian LGS (pre-order) | C$199.95 | Unavailable |
+
+Two shops, one country, a C$40 spread. That is a street-price band, not an MSRP, and it is thin evidence — but it is real evidence, which is more than a guess. Expect your market to differ.
+
+## Where the price might go — three honest scenarios
+
+This is speculation. It is labelled as such because anyone telling you confidently what a sealed product will be worth in 2028 is guessing too, just less openly.
+
+**Scenario one: flat, then soft. (Most likely near-term.)** A December release means retailers order for Christmas. Holiday product is routinely over-ordered, and January is when the unsold stock gets discounted. Combine that with confirmed wide distribution and the most probable first six months are "available at or below launch price". If you want one and you are not in a hurry, **the post-holiday window is historically the buyer's moment**, not release week.
+
+**Scenario two: the slow sealed grind.** This is the real long-term case, and it has nothing to do with launch-day scarcity. Anniversary products do not get reprinted. Once the print run ends, sealed supply only ever goes down, because the entire purpose of the product is to be opened. That is a compounding squeeze — but it works on a timescale of years, and it rewards patience rather than flipping.
+
+**Scenario three: the promo runs ahead of the box.** The single-card market moves faster than the sealed market, because it responds to players rather than collectors. If Akali stays relevant in the meta and the alt-art is well liked, the promo can appreciate meaningfully while sealed boxes are still sitting at retail. This is the scenario people most often get right for the wrong reason — they predict "the bundle goes up" and what actually goes up is one card out of it.
+
+### The variable nobody can price
+
+All three scenarios depend on the same unknown: **how many Riftbound players there are in 2028.** A growing player base means more people who missed year one and want a piece of it, and that demand lands hardest on things that cannot be reprinted. A flat or shrinking one means sealed product from a game's first year is just inventory.
+
+That is genuinely not knowable today. Anyone modelling it is modelling their own optimism. What you *can* do is notice which scenario you are betting on, and size accordingly.
+
+## So should you buy it?
+
+**If you are a collector:** yes, at a sensible price. The Akali alt-art and the matching sleeves are exclusive, the foil rune set is a clean thing to own, and a 2,000-card box is genuinely useful rather than filler. This is the audience the product is built for.
+
+**If you are a player who wants cards:** no. Sixteen packs spread across five sets is close to the least efficient way to obtain any specific card — you are buying a thin slice of five different pools. Work out what you actually want and price the singles; our [box EV tool](/tools/box-ev) exists for exactly this comparison, and [Best Basket](/tools/best-basket) will find the cheapest split across stores once you know your list.
+
+**If you are buying to flip:** this is the weakest case of the three, and the confirmed wide retail distribution is why. A product that is easy to buy in December is hard to sell at a premium in January.
+
+**If you want the Akali and nothing else:** wait and buy the single. You will almost certainly pay less than a box costs, and you will not end up with 100 sleeves you did not want.
+
+## What would change this read
+
+Three things would move the analysis, and they are worth watching:
+
+- **An official price well above the C$160–200 band.** A high MSRP changes the value calculation on the contents outright.
+- **Any signal that distribution is narrower than announced.** "Wide retail" is the load-bearing fact here; if allocations turn out tight, scenario one weakens considerably.
+- **Akali's standing in the meta through Radiance.** The promo's ceiling tracks whether people are still building her.
+
+We will update this post as the price is confirmed and as the first real sales data appears. If you want to track the Akali promo's actual market rather than opinions about it, put it on a [watchlist](/alerts) and let the price tell you.
+`,
+    browseCta: {
+      href: "/sealed",
+      label: "Compare Riftbound sealed prices",
+      blurb: "Booster boxes, bundles and gift sets across every store we track, with shipping included in the total.",
+    },
+  },
 ];
 
 // PUBLISHED articles only. Every public surface goes through here — the indexes,

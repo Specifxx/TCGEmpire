@@ -84,7 +84,9 @@ test("the page states three account states honestly, never blurring one into ano
   // Comp grant (no Stripe subscription behind the premiumUntil date at all):
   // states the date and NOTHING about a plan or renewal, since neither exists.
   const compBranch = card.slice(card.indexOf("user.premiumUntil"));
-  assert.match(compBranch, /Premium until/, "a comp grant must still state its real expiry");
+  // The tier name is interpolated (a comp can be Plus or Premium), so the
+  // literal to look for is the "until {date}" claim, not the word "Premium".
+  assert.match(compBranch, /TIER_NAMES\[[^\]]+\]\} until/, "a comp grant must still state its tier and real expiry");
   assert.doesNotMatch(compBranch.slice(0, 120), /[Rr]enew|[Mm]onthly plan|[Aa]nnual plan/, "a comp grant must not claim a plan type or a renewal it doesn't have");
 });
 

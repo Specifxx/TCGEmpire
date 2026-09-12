@@ -51,8 +51,13 @@
  * after a partial run, or after the new code has started writing fresh GLOBAL
  * rows alongside still-unbackfilled old ones, does not double-write anything.
  *
- * DRY RUN BY DEFAULT for both phases. Pass DRY_RUN=1 to preview either phase
- * (maintenance.yml sets this from its dry_run input); omit it to write/delete
+ * WRITES BY DEFAULT for both phases — `APPLY = DRY_RUN !== "1"` below. This
+ * header used to say "DRY RUN BY DEFAULT", which flatly contradicted that line,
+ * and was the more dangerous way round to be wrong on a script whose second
+ * phase DELETES: it promised a safe default that does not exist. (The rest of
+ * the old sentence was right — maintenance.yml does set DRY_RUN, from a
+ * job-level env that every step inherits.) Pass DRY_RUN=1 to preview either
+ * phase; omit it to write/delete
  * for real.
  *
  * Usage:

@@ -527,6 +527,27 @@
     ],
     "fingerprint": "5c9764ffa81af7c7"
   },
+  "/blog/riftbound-gift-of-the-rift-bundle.png": {
+    "src": "/blog/riftbound-gift-of-the-rift-bundle.png",
+    "width": 1200,
+    "height": 630,
+    "bytes": 45858,
+    "webp": "/blog/riftbound-gift-of-the-rift-bundle.webp",
+    "webpBytes": 29766,
+    "avif": "/blog/riftbound-gift-of-the-rift-bundle.avif",
+    "avifBytes": 17992,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-gift-of-the-rift-bundle-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-gift-of-the-rift-bundle-768w.webp"
+      }
+    ],
+    "fingerprint": "0a4a0f468b199bcb"
+  },
   "/blog/riftbound-legacy-key-art.jpg": {
     "src": "/blog/riftbound-legacy-key-art.jpg",
     "width": 1478,

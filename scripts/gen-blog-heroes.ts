@@ -190,6 +190,21 @@ const HEROES: Hero[] = [
     motif: { kind: "date", label: "Releases", big: "23 OCT", sub: "2026" },
   },
   {
+    slug: "riftbound-gift-of-the-rift-bundle",
+    kicker: "Explainer \u00B7 Sealed",
+    title: "Gift of the Rift Bundle",
+    chips: ["4 Dec 2026", "Wide retail", "Alt-art Akali"],
+    // The CONTENTS are the story here — the post's whole first half is "what do
+    // you actually get". A date motif would show the one fact the chips already
+    // carry, and bars would imply a price comparison the post deliberately does
+    // not make (no MSRP has been announced).
+    motif: {
+      kind: "checklist",
+      label: "In the box",
+      items: ["16 booster packs", "36 foil runes", "Alt-art Akali", "100 sleeves", "2,000-card box"],
+    },
+  },
+  {
     slug: "riftbound-format-legality-rotation",
     kicker: "Guide · Rules",
     title: "Does Riftbound Rotate?",

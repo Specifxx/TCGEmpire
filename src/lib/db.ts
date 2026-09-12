@@ -55,6 +55,18 @@ import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 //      its page.tsx. If freshness genuinely needs a shorter window than the
 //      page, fetch it CLIENT-side instead — that is the only way the TTL cannot
 //      propagate to the segment.
+//   6. NEVER call a self-cached loader from inside another unstable_cache
+//      callback. Next.js 14.2 runs the callback under fetchCache:
+//      "force-no-store" and skips the cache READ for anything nested in it
+//      (node_modules/next/dist/server/web/spec-extension/unstable-cache.js),
+//      so the inner loader's own key, TTL and tag are ignored and it recomputes
+//      on every outer miss. Found by the first egress audit of the history
+//      project on 2026-09-11: whole-market PriceHistory reads 86 and 36 times in
+//      twenty minutes with no build or import in the window, all from loaders
+//      nested inside getCachedTopDeals, /games and /tools/value-finder. Call
+//      the loader directly — it caches itself. cachedOrDirect (lib/price-history.ts)
+//      logs [egress-guard:nested-cache] when it happens anyway, and
+//      tests/nested-cache.test.ts pins the known shapes.
 //
 // The egress guard below makes violations VISIBLE: any single query returning
 // a ~1 MB+ payload logs loudly to the Vercel function logs instead of silently
@@ -91,10 +103,31 @@ const BIG_RESULT_BYTES = 1_000_000;
 // emergency-fallback lever, but it fails LOUDLY (P1001) instead of silently
 // serving garbage, which is the trade this project now makes on purpose.
 //
-// ⚠ THE BURN RATE ITSELF IS STILL UNSOLVED. Eleven consecutive projects have
-// now been exhausted the same way (~2 GB/day), which makes this a systemic
-// read-volume problem, not bad luck with allowances. A new project buys time,
-// not a fix.
+// THE BURN RATE — DIAGNOSED 2026-09-11 (DECISIONS.md, "Network transfer: the
+// deploy cadence was the burn"). Eleven consecutive projects were exhausted at
+// ~2 GB/day and every investigation looked for a request handler pulling a
+// whole table. There isn't one. Two facts this repo already held, never put
+// side by side:
+//
+//   • scripts/audit-egress.ts measured the app's steady-state traffic at
+//     ~0.12 GB/day on 2026-08-22/23 (recorded in maintenance.yml's RH8 note).
+//   • main was receiving 10–30 commits a day, each a Vercel production build
+//     that (a) prerenders ~770 database-backed pages — 200 card pages via
+//     generateStaticParams alone — against BOTH projects, invisible to
+//     Vercel's function metrics, and (b) clears the Next.js Full Route Cache,
+//     so every ISR page re-rendered from the database on its next hit. A
+//     `revalidate = 86400` never got to run for 86,400 seconds.
+//
+// The audit script's own "never sample while a deploy is in flight" rule
+// excluded exactly the traffic that was the burn. The history project died
+// fastest (RH9, one day) on the two days with the most commits (20 and 30).
+//
+// FIX: vercel.json's ignoreCommand (scripts/vercel-ignore-build.sh) skips every
+// push without `[deploy]` in its message; .github/workflows/production-deploy.yml
+// lands one such commit a day. Card pages are no longer prerendered at build.
+// .github/workflows/egress-audit.yml now samples BOTH projects weekly (and on
+// demand) so the next claim about where the transfer goes is a measurement,
+// not a guess.
 //
 // SIZE CONTEXT FOR WHOEVER PICKS THIS UP: RetailerPrice was 128,993 rows
 // (counted during the 2026-09-11 cutover, up from 89,877 at the 2026-09-08

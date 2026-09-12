@@ -152,7 +152,7 @@ export function AnnualSwitchNudge() {
   return (
     <div
       role="region"
-      aria-label="Switch to annual Premium"
+      aria-label={`Switch to annual ${tierName}`}
       className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-all duration-300 sm:bottom-4 sm:w-auto ${
         entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}

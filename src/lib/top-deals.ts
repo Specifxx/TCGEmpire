@@ -10,7 +10,19 @@
 // hides empty columns. Each source is independently guarded, so one failing never
 // sinks the rest. Both PREMIUM columns are gated in the UI (only the single top
 // item is rendered to non-subscribers); the data layer itself is ungated.
-import { unstable_cache } from "next/cache";
+//
+// NO unstable_cache IN THIS FILE, deliberately. Every source below caches
+// ITSELF (getEbayCheapest's aggregates and row pulls, getPriceMovers,
+// getSealedGroups, getCachedRisingCards), and Next.js 14.2 disables an inner
+// cache whenever it is invoked from inside another unstable_cache callback
+// (see the note on cachedOrDirect in lib/price-history.ts). The hour-long
+// outer entry this file used to keep around getTopDeals() therefore turned all
+// four of its sources into UNCACHED reads on every miss — and, because
+// unstable_cache serves stale entries while recomputing in the background, on
+// every request that arrived after the entry went stale. The first egress
+// audit of the history project (2026-09-11) measured that as the widest
+// history and demand scans in the repo running dozens of times in twenty
+// minutes. What is left here is a cheap assembly over cached inputs.
 //
 // "undervalued" (cards furthest below their 30-day average) USED to be a fourth
 // column here — removed from the homepage feed entirely (not just hidden in the
@@ -30,10 +42,9 @@ import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
 import { getEbayCheapest } from "./arbitrage";
-import { getPriceMovers, sydneyDayKey } from "./price-history";
+import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
-import { getRisingCards } from "./rise-predictor";
-import { CONTENT_TAG } from "./revalidate-content";
+import { getCachedRisingCards } from "./rise-predictor";
 import type { CardTileData } from "@/components/CardTile";
 
 export type DealType = "savings-vs-market" | "price-drops" | "cheapest-sealed" | "rising-cards";
@@ -209,23 +220,10 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
         // column here is genuinely priced in the visitor's market, and
         // RisePick.priceCents is only safe to show under the country's
         // currency symbol when that country WAS the scope — GLOBAL mixes each
-        // card's own basis-market price under one blended view. Cache key
-        // matches /tools/rising's own ["rising-cards-public", scope] exactly,
-        // so a visit to either page warms the same entry — no extra query
-        // cost for adding this column on top of the tool that already exists.
-        // Day-keyed + long TTL, matching every other PriceHistory reader
-        // (getPriceMovers etc). getRisingCards is the WIDEST history read in the
-        // repo (SCAN cards × HISTORY_DAYS × every market on GLOBAL), and this was
-        // the one heavy reader still on an hourly TTL with no sydneyDayKey — so
-        // between the daily CONTENT_TAG purges it re-ran the full read ~hourly,
-        // on the homepage, for every market. The day key rolls the entry over
-        // once per Sydney day; the 48h revalidate means the TTL never fires a
-        // mid-day refetch, so freshness is import-driven like everything else.
-        // Key still shared verbatim with /tools/rising so one warms the other.
-        const analysis = await unstable_cache(() => getRisingCards(country), ["rising-cards-public", country, sydneyDayKey()], {
-          revalidate: 172800,
-          tags: [CONTENT_TAG],
-        })();
+        // card's own basis-market price under one blended view. The shared
+        // day-keyed cache in rise-predictor.ts is the same entry /tools/rising
+        // reads, so a visit to either warms the other.
+        const analysis = await getCachedRisingCards(country);
         const priced = analysis.picks.filter((p) => p.priceCents != null);
         const deals = priced.slice(0, perType).map((p) => ({
           dealType: "rising-cards" as const,
@@ -266,17 +264,13 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   };
 }
 
-// Cached wrapper, keyed by market only ["top-deals", country] — so "/" and all
-// four region home pages (/au, /uk, /sg, /ca) share ONE cache entry per
-// market instead of each route computing its own copy of the same blended
-// deal feed. getTopDeals() itself calls getEbayCheapest/getSealedGroups/
-// getPriceMovers, none of which are cheap to run six times an hour times five
-// routes. Same 1h TTL as the homepage used inline before this was factored
-// out — CONTENT_TAG lets the daily import bust it on-demand; the TTL is the
-// self-healing fallback for environments where that on-demand ping is skipped.
+// Kept under its old name for the callers ("/", the region homes, /premium,
+// api/premium/proof), but NO LONGER A CACHE of its own — see the header. What
+// a call costs now: four data-cache reads (each source's own entry) and, from
+// getEbayCheapest, a handful of bounded lookups for the ≤perType cards on the
+// slice. The outer ["top-deals", country] entry this used to be is exactly the
+// nesting that disabled every inner cache; removing it is the fix, not a
+// regression.
 export function getCachedTopDeals(country: Country): Promise<TopDeals> {
-  return unstable_cache(() => getTopDeals(country), ["top-deals", country], {
-    revalidate: 3600,
-    tags: [CONTENT_TAG],
-  })();
+  return getTopDeals(country);
 }

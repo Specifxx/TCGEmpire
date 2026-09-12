@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { getPriceMovers } from "@/lib/price-history";
 import { PriceWatch } from "@/components/PriceWatch";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/country";
@@ -18,9 +17,9 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 // workflow (GitHub Action → import-prices), so a 24-hour window keeps the page fresh
 // without recomputing the 35-day aggregation on every request.
 //
-// The inner unstable_cache below MUST NOT declare a shorter TTL than this — see
-// its own comment. It used to say 600, which quietly made this page regenerate
-// 144× a day instead of once, defeating the sentence above.
+// No inner unstable_cache may declare a shorter TTL than this — see the note on
+// getPriceMovers below. One used to say 600, which quietly made this page
+// regenerate 144× a day instead of once, defeating the sentence above.
 export const revalidate = 86400;
 
 // Market-neutral metadata (no country in the title) so the page can rank globally;
@@ -52,30 +51,28 @@ export default async function MoversPage() {
   const country = DEFAULT_COUNTRY;
   const info = COUNTRIES[country];
 
-  // Deeper list than the homepage teaser. Cache the heavy 35-day aggregation
-  // across regenerations (the data only changes on the daily import).
+  // Deeper list than the homepage teaser. getPriceMovers caches ITSELF — one
+  // week-keyed entry per market, shared with the homepage, /games, /decks and
+  // the digests — so it is called directly here.
   //
-  // THIS TTL MUST MATCH `export const revalidate` ABOVE, NEVER UNDERCUT IT.
-  // It was 600, chosen so "a manual re-import surfaces sooner" — but an
-  // unstable_cache entry does not have a private TTL. Next sets
-  // `store.revalidate = options.revalidate` unless the store's is already
-  // smaller, so the SHORTEST inner TTL becomes the whole SEGMENT's: 600 on an
-  // 86400 page re-ran this 35-day aggregation, and every uncached query beside
-  // it, 144× a day instead of once. That is the same mechanism that cost
-  // ~2 GB/day via EbayCardPanel on /card/[id] until 2026-08-14 (see the egress
-  // rules at the top of lib/db.ts); this page was missed by that sweep and was
-  // still paying it on 2026-08-22.
+  // It used to be wrapped in a second unstable_cache on this page. Two things
+  // were wrong with that, one known and one not:
+  //   • TTL. That wrapper once said 600, and an inner TTL is not private: Next
+  //     sets `store.revalidate = options.revalidate` unless the store's is
+  //     already smaller, so the SHORTEST inner TTL becomes the whole SEGMENT's.
+  //     600 on an 86400 page re-ran the aggregation, and every uncached query
+  //     beside it, 144× a day. Same mechanism that cost ~2 GB/day via
+  //     EbayCardPanel on /card/[id] until 2026-08-14 (egress rules, lib/db.ts).
+  //   • NESTING. Even at 86400 the wrapper was worse than nothing: Next.js 14.2
+  //     bypasses a cache invoked from inside another unstable_cache callback,
+  //     so getPriceMovers' own weekly entry was never read from here — the
+  //     whole-market history scan re-ran on every regeneration of this page
+  //     (egress rule #6 in lib/db.ts; tests/nested-cache.test.ts).
   //
-  // The original goal is already met without the penalty: the price importer
-  // POSTs /api/revalidate at the end of every run, which purges this path
-  // outright — faster than a 10-minute TTL ever was. If a shorter window is
-  // genuinely needed in future, fetch it CLIENT-side; that is the only way a
-  // TTL cannot propagate to the segment.
-  const movers = await unstable_cache(
-    () => getPriceMovers(country, 20),
-    ["price-movers-page", country],
-    { revalidate: 86400 }
-  )();
+  // getPriceMovers' own TTL (8 days) is longer than this page's, so it cannot
+  // undercut the segment. Freshness comes from the price importer POSTing
+  // /api/revalidate at the end of every run, which purges this path outright.
+  const movers = await getPriceMovers(country, 20);
 
   const hasAny = movers.spiking.length || movers.plummeting.length || movers.value.length;
 

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AccountsExport, type ExportUser } from "@/components/admin/AccountsExport";
 import { GrantPremiumForm } from "@/components/admin/GrantPremiumForm";
+import { TierFloorForm } from "@/components/admin/TierFloorForm";
 import { NOT_SEED_WHERE } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,10 @@ export default async function AccountsAdminPage({
   if (!(keyOk || me?.isAdmin)) notFound(); // don't reveal the page exists
 
   const q = (searchParams.q ?? "").trim();
-  const filter = searchParams.f === "premium" || searchParams.f === "verified" ? searchParams.f : null;
+  const FILTERS = ["paid", "plus", "premium", "verified", "active"] as const;
+  const filter = (FILTERS as readonly string[]).includes(searchParams.f ?? "")
+    ? (searchParams.f as (typeof FILTERS)[number])
+    : null;
   const keySuffix = keyOk && !me?.isAdmin ? `&key=${encodeURIComponent(token!)}` : "";
 
   const now = new Date();
@@ -45,10 +49,15 @@ export default async function AccountsAdminPage({
     discordId: string | null;
     isAdmin: boolean;
     premiumUntil: Date | null;
+    premiumTier: string;
+    premiumTierFloor: string | null;
     trialStartedAt: Date | null;
+    lastActiveAt: Date | null;
+    activeDays: number;
+    lastLoginAt: Date | null;
     createdAt: Date;
   }[] = [];
-  let totals = { all: 0, verified: 0, premium: 0, new7: 0, new30: 0 };
+  let totals = { all: 0, verified: 0, premium: 0, plus: 0, active7: 0, new7: 0, new30: 0 };
   // Signups-over-time + attribution, so "did last week's change move signups"
   // is answerable from this page instead of being two bare integers (7d/30d).
   let daily: { day: string; count: number }[] = [];
@@ -67,11 +76,40 @@ export default async function AccountsAdminPage({
           ],
         }
       : {};
-    // Quick filters: premium = active entitlement right now; verified = confirmed email.
+    // Quick filters. The tier ones are always ANDed with an ACTIVE premiumUntil:
+    // premiumTier is a plain column with a "premium" default, so it says nothing
+    // on its own — a free account that never paid still reads premiumTier
+    // "premium". Active-entitlement-first is what makes the Plus/Premium split
+    // here mean the same thing isPremium() means everywhere else.
+    const active = { premiumUntil: { gt: now } };
+    // EFFECTIVE tier, not the raw column: an account billed Plus but pinned to
+    // Premium (a grandfathered $4.99 subscriber) has Premium access, so it must
+    // count and filter as Premium here — otherwise this page disagrees with
+    // what that person actually sees on the site. Mirrors effectiveTier().
+    const billedPlus = { premiumTier: "plus" };
+    const notRaised = { OR: [{ premiumTierFloor: null }, { premiumTierFloor: "plus" }] };
+    const isEffPlus = { AND: [billedPlus, notRaised] };
+    const effPlus = { AND: [active, isEffPlus] };
+    const effPremium = { AND: [active, { NOT: isEffPlus }] };
     const quick =
-      filter === "premium" ? { premiumUntil: { gt: now } } : filter === "verified" ? { emailVerified: { not: null } } : {};
+      filter === "paid"
+        ? active
+        : filter === "plus"
+          ? effPlus
+          : filter === "premium"
+            ? effPremium
+            : filter === "verified"
+              ? { emailVerified: { not: null } }
+              : filter === "active"
+                // ACTIVE means "used the site", not "authenticated". Sessions are
+                // long-lived JWTs, so lastLoginAt could be months stale for a
+                // daily visitor — see lib/activity.ts. lastLoginAt is kept in the
+                // OR purely so accounts that predate activity tracking and have
+                // not been back since still count.
+                ? { OR: [{ lastActiveAt: { gte: d7 } }, { lastActiveAt: null, lastLoginAt: { gte: d7 } }] }
+                : {};
     const where = { AND: [notSeed, search, quick] };
-    const [list, all, verified, premium, new7, new30, recent30, anonEmails] = await Promise.all([
+    const [list, all, verified, premium, plus, active7, new7, new30, recent30, anonEmails] = await Promise.all([
       prisma.user.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -79,12 +117,19 @@ export default async function AccountsAdminPage({
         select: {
           id: true, email: true, displayName: true, emailVerified: true, passwordHash: true,
           googleId: true, discordId: true, isAdmin: true,
-          premiumUntil: true, trialStartedAt: true, createdAt: true,
+          premiumUntil: true, premiumTier: true, premiumTierFloor: true, trialStartedAt: true,
+          lastActiveAt: true, activeDays: true, lastLoginAt: true, createdAt: true,
         },
       }),
       prisma.user.count({ where: notSeed }),
       prisma.user.count({ where: { AND: [notSeed, { emailVerified: { not: null } }] } }),
-      prisma.user.count({ where: { AND: [notSeed, { premiumUntil: { gt: now } }] } }),
+      prisma.user.count({ where: { AND: [notSeed, effPremium] } }),
+      prisma.user.count({ where: { AND: [notSeed, effPlus] } }),
+      prisma.user.count({
+        where: {
+          AND: [notSeed, { OR: [{ lastActiveAt: { gte: d7 } }, { lastActiveAt: null, lastLoginAt: { gte: d7 } }] }],
+        },
+      }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d7 } }] } }),
       prisma.user.count({ where: { AND: [notSeed, { createdAt: { gte: d30 } }] } }),
       // Raw createdAt+signupSource for the last 30 days — bucketed by UTC day in
@@ -106,7 +151,7 @@ export default async function AccountsAdminPage({
       `,
     ]);
     rows = list;
-    totals = { all, verified, premium, new7, new30 };
+    totals = { all, verified, premium, plus, active7, new7, new30 };
     unclaimedAlertEmails = Number(anonEmails[0]?.n ?? 0);
     // Bucket by UTC day, zero-filling so a quiet day renders as a gap, not a
     // shorter x-axis (30 entries, oldest first).
@@ -137,8 +182,14 @@ export default async function AccountsAdminPage({
     name: u.displayName,
     email: u.email,
     registered: fmt(u.createdAt),
+    lastActive: fmt(u.lastActiveAt ?? u.lastLoginAt),
+    activeDays: u.activeDays,
     verified: !!u.emailVerified,
-    premium: !!(u.premiumUntil && u.premiumUntil > now),
+    plan: !(u.premiumUntil && u.premiumUntil > now)
+      ? "none"
+      : u.premiumTier === "plus" && u.premiumTierFloor !== "premium"
+        ? "plus"
+        : "premium",
   }));
 
   return (
@@ -151,11 +202,16 @@ export default async function AccountsAdminPage({
       <h1 className="text-2xl font-bold text-white">Accounts</h1>
       <p className="mt-1 text-sm text-slate-400">Every registered account, newest first. Admin-only, excluded from search.</p>
 
-      {/* Summary */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Summary. Plus and Premium are counted separately rather than as one
+          "paid" number: they're different revenue per head, so a rise in one and
+          a fall in the other is the thing worth seeing, and a single total hides
+          exactly that. */}
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Total users" value={num(totals.all)} />
         <Stat label="Email-verified" value={num(totals.verified)} />
+        <Stat label="Plus (active)" value={num(totals.plus)} />
         <Stat label="Premium (active)" value={num(totals.premium)} />
+        <Stat label="Active · 7d" value={num(totals.active7)} sub="used the site within a week" />
         <Stat
           label="Watching, no account"
           value={num(unclaimedAlertEmails)}
@@ -209,8 +265,9 @@ export default async function AccountsAdminPage({
       {/* Manual premium grant — the remediation lever for a stranded paying
           account (see /api/admin/grant-premium). Passes the ?key= through when
           the page was opened by key link rather than an admin session. */}
-      <div className="mt-5">
+      <div className="mt-5 space-y-4">
         <GrantPremiumForm adminKey={keyOk && !me?.isAdmin ? token : undefined} />
+        <TierFloorForm adminKey={keyOk && !me?.isAdmin ? token : undefined} />
       </div>
 
       {/* Export */}
@@ -227,22 +284,25 @@ export default async function AccountsAdminPage({
       <div className="mt-4 flex flex-wrap gap-1.5">
         {([
           [null, "All"],
+          ["paid", "Any paid"],
+          ["plus", "● Plus"],
           ["premium", "◆ Premium"],
           ["verified", "✓ Verified"],
+          ["active", "Signed in · 7d"],
         ] as const).map(([f, label]) => {
           const p = new URLSearchParams();
           if (q) p.set("q", q);
           if (f) p.set("f", f);
           if (keyOk && !me?.isAdmin) p.set("key", token!);
           const qs = p.toString();
-          const active = filter === f || (!filter && f === null);
+          const on = filter === f || (!filter && f === null);
           return (
             <Link
               key={label}
               href={`/admin/accounts${qs ? `?${qs}` : ""}`}
               className={`chip border px-3 py-1.5 text-xs font-semibold ${
-                active ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 text-slate-400 hover:border-brand-500/50"
-              } ${f === "premium" && active ? "border-gold bg-gold/15 text-gold" : ""}`}
+                on ? "border-brand-500 bg-brand-500/15 text-brand-400" : "border-ink-700 text-slate-400 hover:border-brand-500/50"
+              } ${f === "premium" && on ? "border-gold bg-gold/15 text-gold" : ""}`}
             >
               {label}
             </Link>
@@ -286,14 +346,15 @@ export default async function AccountsAdminPage({
             {!q && totals.all > rows.length && <> of {num(totals.all)} (most recent {TAKE} — search to find older accounts)</>}.
           </p>
           <div className="mt-2 overflow-x-auto rounded-xl border border-ink-700 bg-ink-850">
-            <table className="w-full min-w-[720px] text-sm">
+            <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-ink-700 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-3 py-2 font-medium">User</th>
                   <th className="px-3 py-2 font-medium">Registered</th>
+                  <th className="px-3 py-2 font-medium">Last active</th>
                   <th className="px-3 py-2 font-medium">Verified</th>
                   <th className="px-3 py-2 font-medium">Sign-in</th>
-                  <th className="px-3 py-2 font-medium">Premium</th>
+                  <th className="px-3 py-2 font-medium">Plan</th>
                   <th className="px-3 py-2 font-medium">Flags</th>
                 </tr>
               </thead>
@@ -305,6 +366,12 @@ export default async function AccountsAdminPage({
                     u.passwordHash ? "Password" : null,
                   ].filter(Boolean) as string[];
                   const premiumActive = u.premiumUntil && u.premiumUntil > now;
+                  // What the account can actually DO — the floor can raise it
+                  // above what its Stripe price says. The billing tier is still
+                  // surfaced below, since an admin looking at a grandfathered
+                  // account needs to see both halves, not a merged answer.
+                  const effective = u.premiumTierFloor === "premium" ? "premium" : u.premiumTier;
+                  const isPlus = effective === "plus";
                   return (
                     <tr key={u.id} className="border-b border-ink-800 last:border-0 align-top hover:bg-ink-800/50">
                       <td className="px-3 py-2">
@@ -313,8 +380,31 @@ export default async function AccountsAdminPage({
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-300">{fmt(u.createdAt)}</td>
                       <td className="whitespace-nowrap px-3 py-2">
+                        {u.lastActiveAt ? (
+                          <span className={u.lastActiveAt >= d7 ? "text-slate-200" : "text-slate-500"}>
+                            {fmt(u.lastActiveAt)}
+                            {u.activeDays > 0 ? (
+                              <span className="ml-1.5 text-xs text-slate-600">{u.activeDays}d</span>
+                            ) : null}
+                          </span>
+                        ) : u.lastLoginAt ? (
+                          // Activity tracking starts at its deploy, so an account
+                          // that hasn't been back since reads its last LOGIN
+                          // instead — a genuine lower bound on when it was last
+                          // used, marked so it isn't mistaken for the real thing.
+                          <span
+                            className="text-slate-600"
+                            title="No activity recorded yet — showing last sign-in, which is a lower bound"
+                          >
+                            {fmt(u.lastLoginAt)} <span className="text-xs">(login)</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-600" title="Never recorded — no sign-in or visit since tracking started">—</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2">
                         {u.emailVerified ? (
-                          <span className="text-brand-300">✓ {fmt(u.emailVerified)}</span>
+                          <span className="text-brand-400">✓ {fmt(u.emailVerified)}</span>
                         ) : (
                           <span className="text-slate-600">—</span>
                         )}
@@ -330,9 +420,24 @@ export default async function AccountsAdminPage({
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">
                         {premiumActive ? (
-                          <span className="chip bg-gold/20 text-gold">until {fmt(u.premiumUntil)}</span>
+                          <>
+                            <span
+                              className={`chip ${isPlus ? "bg-slate-500/20 text-slate-200" : "bg-gold/20 text-gold"}`}
+                              title={`${isPlus ? "Plus" : "Premium"} until ${fmt(u.premiumUntil)}`}
+                            >
+                              {isPlus ? "Plus" : "Premium"} · {fmt(u.premiumUntil)}
+                            </span>
+                            {u.premiumTierFloor && (
+                              <span
+                                className="chip ml-1 bg-brand-500/15 text-brand-400"
+                                title={`Grandfathered: billing says ${u.premiumTier}, floor pins this account to ${u.premiumTierFloor}`}
+                              >
+                                pinned · billed {u.premiumTier}
+                              </span>
+                            )}
+                          </>
                         ) : u.premiumUntil ? (
-                          <span className="chip bg-ink-800 text-slate-500">lapsed</span>
+                          <span className="chip bg-ink-800 text-slate-500">lapsed {fmt(u.premiumUntil)}</span>
                         ) : u.trialStartedAt ? (
                           <span className="chip bg-ink-800 text-slate-500">trial used</span>
                         ) : (

@@ -104,14 +104,29 @@ export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
  * `showPlus` renders the Plus column between Free account and Premium — pass
  * it only once Plus is actually configured (premiumPlusEnabled()) so a dark
  * Plus tier never appears as a real, choosable column.
+ *
+ * `tinted` gives each paid column a faint background wash (Plus: slate,
+ * Premium: gold) instead of a flat table — the comp-page pattern the pricing
+ * cards above this table borrow their whole layout from. Cosmetic only, no
+ * new data; off by default so the dialog's compact table is unaffected.
  */
-export function TierComparisonTable({ compact = false, showPlus = false }: { compact?: boolean; showPlus?: boolean }) {
+export function TierComparisonTable({
+  compact = false,
+  showPlus = false,
+  tinted = false,
+}: {
+  compact?: boolean;
+  showPlus?: boolean;
+  tinted?: boolean;
+}) {
   const cell = compact ? "px-2 py-1.5" : "px-3 py-2.5";
   const rows = compact
     ? TIER_COMPARISON.filter((r) => !DIALOG_OMIT_FEATURES.has(r.feature)).map((r) =>
         DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, account: false, plus: true, premium: true } : r
       )
     : TIER_COMPARISON;
+  const plusWash = tinted ? "bg-slate-500/[0.06]" : "";
+  const premiumWash = tinted ? "bg-gold/[0.07]" : "";
   return (
     // min-w forces the tier columns to stay readable; the wrapper scrolls
     // horizontally rather than letting them crush together on a phone.
@@ -129,15 +144,15 @@ export function TierComparisonTable({ compact = false, showPlus = false }: { com
                 No account
               </th>
             )}
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-brand-300`}>
+            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-brand-400`}>
               Free account
             </th>
             {showPlus && (
-              <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-slate-200`}>
+              <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} ${plusWash} text-center font-bold text-slate-200`}>
                 Plus
               </th>
             )}
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-gold`}>
+            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} ${premiumWash} text-center font-bold text-gold`}>
               Premium
             </th>
           </tr>
@@ -148,8 +163,8 @@ export function TierComparisonTable({ compact = false, showPlus = false }: { com
               <th scope="row" className={`${cell} text-left font-normal text-slate-200`}>{r.feature}</th>
               {!compact && <td className={`${cell} text-center`}><TierCell v={r.anon} /></td>}
               <td className={`${cell} text-center`}><TierCell v={r.account} dialog={compact} /></td>
-              {showPlus && <td className={`${cell} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
-              <td className={`${cell} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
+              {showPlus && <td className={`${cell} ${plusWash} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
+              <td className={`${cell} ${premiumWash} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
             </tr>
           ))}
         </tbody>

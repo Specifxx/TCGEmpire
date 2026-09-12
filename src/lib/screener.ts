@@ -102,9 +102,15 @@ function getBaselines(country: Country): Promise<Baseline[]> {
   )();
 }
 
-async function computeUndervalued(country: Country, limit: number): Promise<ValuePick[]> {
+// Takes the baselines as an argument rather than calling getBaselines() itself:
+// this runs INSIDE getUndervalued's day-keyed unstable_cache, and a cached
+// loader called from inside another cached callback is bypassed by Next.js
+// 14.2 (see the note on cachedOrDirect in lib/price-history.ts) — so the
+// weekly history read behind getBaselines() was re-running on every daily miss
+// for every market. The caller reads the baselines from their own cache first,
+// outside this callback, and passes them in.
+async function rankUndervalued(country: Country, baselines: Baseline[], limit: number): Promise<ValuePick[]> {
   try {
-    const baselines = await getBaselines(country);
     if (!baselines.length) return [];
     const baseById = new Map(baselines.map((b) => [b.cardId, b]));
 
@@ -151,10 +157,16 @@ async function computeUndervalued(country: Country, limit: number): Promise<Valu
 // price import refreshes it directly, which is exactly what should happen when
 // the prices this ranking is built on have just changed.
 export async function getUndervalued(country: Country, limit = 24): Promise<ValuePick[]> {
+  // Baselines first, OUTSIDE the daily cache below, so their own weekly entry is
+  // honoured (a cached loader invoked inside another cached callback is bypassed
+  // by Next.js 14.2 — see rankUndervalued). The closure captures them; the day
+  // key identifies the entry, and baselines only move on the week boundary that
+  // key already lives inside.
+  const baselines = await getBaselines(country);
   // Compute at a generous cap keyed by (market, day) only, then slice — so a deeper
   // list can't trigger a second scan.
   const full = await unstable_cache(
-    () => computeUndervalued(country, 100),
+    () => rankUndervalued(country, baselines, 100),
     ["rc-undervalued", country, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   )();

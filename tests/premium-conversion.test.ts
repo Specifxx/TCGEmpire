@@ -82,14 +82,14 @@ test("TopDeals carries savingsVsMarketCents, sourced from getEbayCheapest's own 
   assert.match(src, /savingsVsMarketCents: savings\.savingsTotalCents/, "must be threaded from the same getEbayCheapest call, not re-derived");
 });
 
-test("every reader of savingsVsMarketCents falls back to 0 for a stale cached object", () => {
+test("the proof route's reader of savingsVsMarketCents falls back to 0 for a stale cached object", () => {
   // A TopDeals value served from the 1h unstable_cache from before this field
-  // existed won't have it for up to an hour after deploy — every read site
+  // existed won't have it for up to an hour after deploy — the read site
   // must tolerate that with `?? 0`, not assume the field is always present.
+  // (/premium's own proof strip was removed 2026-09-11 — this endpoint is
+  // still read by PremiumSlideIn, so its guard still matters.)
   const proofRoute = read("src/app/api/premium/proof/route.ts");
   assert.match(proofRoute, /savingsVsMarketCents \?\? 0/, "the proof route must guard the field with ?? 0");
-  const premiumPage = read("src/app/premium/page.tsx");
-  assert.match(premiumPage, /savingsVsMarketCents \?\? 0/, "/premium must guard the field with ?? 0");
 });
 
 test("the proof endpoint validates its country param and sets a long-lived cache header", () => {
@@ -118,12 +118,6 @@ test("/premium renders an FAQPage via faqPage(), and the same Q&A is rendered vi
   assert.ok(faqMatch, "expected a FAQ array declaration");
   const count = (faqMatch![1].match(/q: /g) ?? []).length;
   assert.ok(count >= 4, `expected a real FAQ (>=4 entries), found ${count}`);
-});
-
-test("/premium's proof strip hides any tile with nothing to show, and the whole strip if all are empty", () => {
-  const src = read("src/app/premium/page.tsx");
-  assert.match(src, /proofTiles\.length > 0/, "the strip itself must be conditionally rendered");
-  assert.match(src, /savingsVsMarketTotal > 0/, "the deals-count tile must hide at zero");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

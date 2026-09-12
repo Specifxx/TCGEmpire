@@ -212,10 +212,17 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
           <div className="mt-5">
             {!loaded ? (
               <div className="h-11 animate-pulse rounded-lg bg-ink-800" />
-            ) : premium && tier === "plus" && premiumPlus ? (
+            ) : premium && tier === "plus" ? (
               // A Plus subscriber hitting a Premium-only gate — this IS a real
               // upgrade opportunity, not the "you already have it" dead end the
               // plain `premium` branch below would show.
+              //
+              // Keyed on the member's OWN tier alone, never on premiumPlus:
+              // that flag says Plus is currently SELLABLE, and if the Plus
+              // price ids are ever unset or rotated, existing Plus accounts
+              // don't stop existing — they'd just fall through to "You're
+              // Premium" while still locked out of these four tools. The
+              // upgrade button below handles its own unavailability.
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">

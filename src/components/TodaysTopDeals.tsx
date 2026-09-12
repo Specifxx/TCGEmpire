@@ -244,7 +244,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
   // can see a brief locked flash before it resolves — the safe direction to
   // default in, since the alternative is a free visitor briefly seeing
   // unlocked Premium content.
-  const { premium } = useMe();
+  const { premium, premiumPlus } = useMe();
   const deals = dealsByCountry[country] ?? dealsByCountry.AU;
   const thresholds = TIER_THRESHOLDS[country] ?? TIER_THRESHOLDS.AU;
   const [tier, setTier] = useState<Tier>("all");
@@ -336,7 +336,15 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
                   {def.label}
                 </span>
-                {def.premium && !ADSENSE_REVIEW_MODE && <span className="chip bg-gold/20 text-gold">Premium</span>}
+                {/* Both gated columns (Deal Finder, Rising Cards) are FULL-LIST
+                    tools on the cheaper Plus tier, so the badge names the lowest
+                    tier that actually unlocks them — same rule as the tools
+                    index. Badging them "Premium" would both over-quote the price
+                    and tell an existing Plus member their own unlocked column
+                    belongs to a tier they're not on. */}
+                {def.premium && !ADSENSE_REVIEW_MODE && (
+                  <span className="chip bg-gold/20 text-gold">{premiumPlus ? "Plus" : "Premium"}</span>
+                )}
               </div>
 
               <ul className="flex flex-1 flex-col divide-y divide-ink-800">

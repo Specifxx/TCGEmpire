@@ -154,13 +154,27 @@ export interface ArbPage {
   pageCount: number;
 }
 
+// The two ranking aggregates below are full-market groupBys (~1,400 rows each)
+// and they used to run on EVERY call — every request to the force-dynamic
+// /tools/deal-finder and /premium pages, and every assembly of the homepage
+// deals feed. Shared-cached the same way as the row pulls above: day-keyed,
+// CONTENT_TAG-busted on import (the only time RetailerPrice changes). The
+// cached value is the plain groupBy row array — a Map would JSON-serialise to
+// {} on the way into the data cache — and the Map is rebuilt on the way out.
+// The retailer-key list is part of the key because the caller's source
+// selection (which stores, which eBay) changes the aggregate.
 async function minByCard(country: Country, keys: string[]) {
   if (!keys.length) return new Map<string, number>();
-  const rows = await prisma.retailerPrice.groupBy({
-    by: ["cardId"],
-    where: { country, inStock: true, retailer: { in: keys } },
-    _min: { priceCents: true },
-  });
+  const rows = await cachedOrDirect(
+    () =>
+      prisma.retailerPrice.groupBy({
+        by: ["cardId"],
+        where: { country, inStock: true, retailer: { in: keys } },
+        _min: { priceCents: true },
+      }),
+    ["arb-min-by-card", country, [...keys].sort().join("|"), sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
   return new Map(rows.filter((r) => r._min.priceCents != null).map((r) => [r.cardId, r._min.priceCents!]));
 }
 
@@ -171,11 +185,16 @@ async function minByCard(country: Country, keys: string[]) {
 async function minByCardAndRetailer(country: Country, keys: string[]) {
   const map = new Map<string, Map<string, number>>();
   if (!keys.length) return map;
-  const rows = await prisma.retailerPrice.groupBy({
-    by: ["cardId", "retailer"],
-    where: { country, inStock: true, retailer: { in: keys } },
-    _min: { priceCents: true },
-  });
+  const rows = await cachedOrDirect(
+    () =>
+      prisma.retailerPrice.groupBy({
+        by: ["cardId", "retailer"],
+        where: { country, inStock: true, retailer: { in: keys } },
+        _min: { priceCents: true },
+      }),
+    ["arb-min-by-card-retailer", country, [...keys].sort().join("|"), sydneyDayKey()],
+    { revalidate: 172800, tags: [CONTENT_TAG] },
+  );
   for (const r of rows) {
     if (r._min.priceCents == null) continue;
     const inner = map.get(r.cardId) ?? new Map<string, number>();
