@@ -1,5 +1,6 @@
 import { CardArt } from "./CardArt";
 import { cardImageAlt } from "@/lib/image-alt";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { optimisedImage } from "@/lib/image-manifest";
 
 export interface CardImageData {
@@ -47,9 +48,9 @@ function PromoStamp() {
 // so both portrait and landscape cards look good. Falls back to generated SVG art
 // when no image is available.
 export function CardImage({ card, isFoil = false, full = false, className, priority = false }: Props) {
-  const src = full
-    ? card.imageUrl ?? card.imageThumbUrl
-    : card.imageThumbUrl ?? card.imageUrl;
+  // lib/card-image-url.ts, not card.imageUrl directly: the CDN's `originals/`
+  // tree is gone and every row still stores one of those dead URLs.
+  const src = cardImageSrc(card, { full });
 
   if (!src) {
     return (

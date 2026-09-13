@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { titleCase } from "../src/lib/constants";
 import { normalizeSearch } from "../src/lib/format";
 import { cardSlug } from "../src/lib/card-url";
+import { liveCardImage } from "../src/lib/card-image-url";
 
 const prisma = new PrismaClient();
 
@@ -169,8 +170,14 @@ async function main() {
       energyCost: c.stats?.energy ?? null,
       might: c.stats?.might ?? null,
       power: c.stats?.power ?? null,
-      imageUrl: c.image ?? null,
-      imageThumbUrl: c.image_thumb?.large ?? c.image_thumb?.medium ?? null,
+      // The dataset's `image` field is the CDN's `originals/` path, which the CDN
+      // no longer serves — liveCardImage maps it onto the rendition that exists.
+      // Read paths normalise too (lib/card-image-url.ts), so rows written before
+      // this still render; this just stops the dead URL being written back.
+      imageUrl: liveCardImage(c.image),
+      // `medium` went the same way as `originals`; `small` (300×418) is the
+      // only other rendition still served, and beats no art at all.
+      imageThumbUrl: c.image_thumb?.large ?? c.image_thumb?.small ?? null,
       blurDataUrl: c.image_blur_data_url ?? null,
       marketPriceCents: referencePrice(rarity, c.type),
       artSeed: Math.floor(rng() * 1_000_000),

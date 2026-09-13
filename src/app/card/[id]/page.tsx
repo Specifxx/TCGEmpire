@@ -16,6 +16,7 @@ import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
 import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { AdSlot } from "@/components/AdSlot";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY, isoCountry, priceField, type Country } from "@/lib/country";
 import { setByCode } from "@/lib/constants";
@@ -466,7 +467,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         description: card.description
           ? `${clampText(card.description, 300)} — ${displayName}, Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`
           : `${displayName} — ${card.domain} ${card.type.toLowerCase()}, ${card.rarity}. Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`,
-        ...(card.imageUrl ? { image: card.imageUrl } : {}),
+        ...(cardImageSrc(card, { full: true }) ? { image: cardImageSrc(card, { full: true }) } : {}),
         additionalProperty: [
           { "@type": "PropertyValue", name: "Set", value: card.setName },
           { "@type": "PropertyValue", name: "Collector number", value: card.collectorNumber },

@@ -5970,7 +5970,7 @@ Every set gets its own page on RiftCompare the moment its cards are catalogued, 
     readMins: 6,
     tags: ["sets", "guide", "origins", "rarity", "collecting"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/ogn-305-298-8e1d15a18d1dffb2.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/ogn-305-298-8e1d15a18d1dffb2.webp",
       alt: "Yasuo, Unforgiven — a Showcase-rarity card from the Riftbound Origins set",
     },
     summary: [
@@ -6071,7 +6071,7 @@ We've written the same breakdown for the two sets that followed — [what's in S
     readMins: 8,
     tags: ["sets", "guide", "spirit forged", "spiritforged", "sfd", "rarity", "collecting"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/sfd-240-221-566fd852914c74f8.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/sfd-240-221-566fd852914c74f8.webp",
       alt: "Rumble, Mechanized Menace — a Showcase-rarity Legend from the Riftbound Spirit Forged set",
     },
     summary: [
@@ -6246,7 +6246,7 @@ For the sets on either side of it, we've written the same breakdown for [Origins
     readMins: 8,
     tags: ["sets", "guide", "unleashed", "unl", "rarity", "collecting"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/unl-226-219-83304d9a6f157642.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/unl-226-219-83304d9a6f157642.webp",
       alt: "Jhin, Virtuoso — a Showcase-rarity Legend from the Riftbound Unleashed set",
     },
     summary: [
@@ -6606,7 +6606,7 @@ Once you're ready to buy anything — a starter deck, a booster box, or your fir
     readMins: 5,
     tags: ["champions", "guide", "league of legends", "new player"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/ogn-303-298-83981e813ecd5837.webp",
       alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
     },
     summary: [
@@ -6937,7 +6937,7 @@ We've tried to keep the two halves of this article clearly separate: the price h
     readMins: 6,
     tags: ["ahri", "champions", "collecting", "chase cards"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-star-298-d34b6d90cc0eee6c.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/ogn-303-star-298-d34b6d90cc0eee6c.webp",
       alt: "Ahri, Nine-Tailed Fox (OGN 303*/298) — the Signature printing, the most expensive Riftbound card tracked",
     },
     summary: [
@@ -7092,7 +7092,7 @@ The same pattern repeats on **Ahri, Inquisitive** in Spirit Forged: SFD 227/221 
     readMins: 9,
     tags: ["investing", "opinion", "market analysis", "risk", "collecting"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-star-298-d34b6d90cc0eee6c.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/ogn-303-star-298-d34b6d90cc0eee6c.webp",
       alt: "Ahri, Nine-Tailed Fox (OGN 303*/298), the Signature printing — priced nine times its unsigned twin, and the clearest real example of where Riftbound value actually sits today",
     },
     summary: [
@@ -7793,7 +7793,7 @@ Track it on the [Radiance set page](/sets/radiance), where every card appears as
     readMins: 10,
     tags: ["opinion", "market analysis", "league of legends", "esports", "riftbound", "trading card games"],
     hero: {
-      src: "https://cdn.riftscribe.gg/cards/originals/ogn-303-298-83981e813ecd5837.png",
+      src: "https://cdn.riftscribe.gg/cards/thumbnails/large/ogn-303-298-83981e813ecd5837.webp",
       alt: "Ahri, Nine-Tailed Fox — a Showcase-rarity Riftbound card from the Origins set",
     },
     summary: [

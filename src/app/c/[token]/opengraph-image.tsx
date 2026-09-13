@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getSharedCollection } from "@/lib/share";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 
@@ -24,7 +25,7 @@ export default async function Image({ params }: { params: { token: string } }) {
 
   const owner = shared?.ownerName ?? "A collector";
   const arts = (shared?.holdings ?? [])
-    .map((h) => h.card.imageUrl ?? h.card.imageThumbUrl)
+    .map((h) => cardImageSrc(h.card, { full: true }))
     .filter((a): a is string => Boolean(a))
     .slice(0, 3);
 

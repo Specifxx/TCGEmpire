@@ -6,6 +6,7 @@ import { useCountry } from "./CountryProvider";
 import { COUNTRIES } from "@/lib/country";
 import { cardHref } from "@/lib/card-url";
 import { cardImageAlt } from "@/lib/image-alt";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { trackEvent } from "@/lib/analytics";
 
 // The builder has no persisted "save deck" feature (a pasted list only ever
@@ -177,10 +178,10 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
           <div className="mt-4 hidden lg:block">
             <div className="card-surface overflow-hidden">
               <div className="relative aspect-[5/7] w-full bg-ink-900">
-                {preview?.imageUrl || preview?.imageThumbUrl ? (
+                {preview && cardImageSrc(preview, { full: true }) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={(preview.imageUrl ?? preview.imageThumbUrl) as string}
+                    src={cardImageSrc(preview, { full: true }) as string}
                     alt={preview.name}
                     className="h-full w-full object-cover object-top"
                   />

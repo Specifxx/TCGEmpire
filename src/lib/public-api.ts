@@ -14,6 +14,7 @@ import { COUNTRIES, DEFAULT_COUNTRY, type Country } from "./country";
 import { CONTENT_TAG } from "./revalidate-content";
 import { cachedOrDirect, sydneyDayKey, historySource } from "./price-history";
 import { cardHref } from "./card-url";
+import { cardImageSrc } from "./card-image-url";
 import { affiliateUrl } from "./affiliate";
 import { effectiveShippingCents, shippingPolicyUrl } from "./retailers";
 import { computeMarket, type MarketRow } from "./market-rows";
@@ -154,7 +155,7 @@ export async function getCardPricesData(idOrSlug: string) {
       setCode: card.setCode,
       collectorNumber: card.collectorNumber,
       url: `${SITE_URL}${cardHref(card)}`,
-      image: card.imageUrl,
+      image: cardImageSrc(card, { full: true }),
     },
     prices: {
       AU: { lowestCents: card.lowestPriceCents, currency: "AUD" },

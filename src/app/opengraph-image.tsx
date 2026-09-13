@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 
 // Default social-share card for the whole site — the image that unfurls in
@@ -81,7 +82,7 @@ async function loadFeatured(): Promise<Featured> {
       return {
         name: card.name,
         setLine: `${card.setCode} · ${card.collectorNumber}`,
-        art: card.imageUrl ?? card.imageThumbUrl,
+        art: cardImageSrc(card, { full: true }),
         rows,
       };
     }

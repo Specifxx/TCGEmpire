@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { INTL_ENABLED } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
 
@@ -76,7 +77,13 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   if (!card) return NextResponse.json({ error: "not found" }, { status: 404 });
 
-  return NextResponse.json(card, {
+  // Normalise the two art URLs on the way out (lib/card-image-url.ts): the
+  // column still holds the CDN's dead `originals/` path, and this response is a
+  // documented public endpoint — third parties get the URL that resolves, the
+  // same one the site itself renders.
+  const body = { ...card, imageUrl: cardImageSrc(card, { full: true }), imageThumbUrl: cardImageSrc(card) };
+
+  return NextResponse.json(body, {
     headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
   });
 }

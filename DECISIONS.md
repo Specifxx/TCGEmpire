@@ -5694,3 +5694,55 @@ page's primary target on near-zero volume.
 All three carry `faq` (so FAQPage JSON-LD and the visible Q&A come from one
 source), `summary` answer boxes, generated heroes, and ownership rows in
 `docs/seo-keyword-map.md` — added *before* publishing, per that file's own rule 3.
+
+## Card art: the CDN dropped `originals/`, so URL choice moved into one module, 2026-09-13
+
+Card images stopped rendering across most of the site. Not a regression of
+ours: every `Card` row carries two RiftScribe URLs, written from
+`prisma/riftbound-cards.json` -
+
+```
+imageUrl       https://cdn.riftscribe.gg/cards/originals/<stem>.png
+imageThumbUrl  https://cdn.riftscribe.gg/cards/thumbnails/large/<stem>.webp
+```
+
+- and the CDN deleted the whole `originals/` tree. Measured by hand, one serial
+request per URL: **0 of 16** `originals/*.png` return 200, across OGN, OGS, SFD
+and UNL; `thumbnails/medium/` is gone with it; `thumbnails/large/` answers 200
+for every card tested and is **744x1039**, larger than any slot this site
+renders a card in, hero included. `riftscribe.gg` itself now 404s, so this
+looks like the site being wound down rather than a path reshuffle.
+
+(Batching those probes in parallel produced a scatter of false 404s - up to a
+third of a sample - that vanished on a serial re-request. Anything measuring an
+external host from this repo should go one request at a time, or it will
+diagnose an outage that isn't there.)
+
+Nothing in our data was null, so the `imageUrl ?? imageThumbUrl` fallbacks
+written all over the codebase never fired: the field was populated, it was just
+dead. `CardImage`'s `full` branch preferred it, which is why the card-detail
+hero, the article close-ups, the OG unfurls, the JSON-LD `image`, the image
+sitemap and the public API all pointed at a 404 while the grid tiles - which
+happened to prefer the thumbnail - still worked.
+
+**The fix is a rewrite rule, not an UPDATE.** `src/lib/card-image-url.ts` maps
+any `originals/<stem>.png` onto `thumbnails/large/<stem>.webp` (same stem, so
+it is derived, never looked up) and returns every other URL untouched - the
+Vendetta signature prints we re-host ourselves at
+`riftcompare.com/signature-cards/*.jpg` are genuinely full-resolution and
+`full` callers must keep getting them. Every render path now asks that module
+instead of reading the column, and `tests/card-image-url.test.ts` fails if a
+raw `cards/originals/` string reappears anywhere in `src/` or if one of those
+call sites reads `.imageUrl` directly again.
+
+A one-off `UPDATE` was the obvious alternative and is the wrong shape: the
+upstream dataset still ships the dead `image` field, so the next `sync-cards`
+run would write it straight back. The two importers normalise on write as well,
+so rows heal as they are re-synced, but the read path is what keeps the site
+correct in the meantime - and what absorbs the next path change without a
+migration.
+
+Verified in a browser against a local database seeded with the real URLs: the
+hero decodes at 744x1039 and `/card/<slug>` renders the art (the sandbox's own
+browser cannot tunnel to the CDN, so the bytes were fetched with curl and
+handed to the page through a route interceptor - the URL under test unchanged).

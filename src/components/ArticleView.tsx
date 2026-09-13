@@ -3,6 +3,7 @@ import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
 import { ARTICLES } from "@/lib/articles";
 import { prisma } from "@/lib/db";
 import { cardTileSelect } from "@/lib/cards";
+import { cardImageSrc } from "@/lib/card-image-url";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 import { CardTile, type CardTileData } from "./CardTile";
 import { FilterableCardGallery } from "./FilterableCardGallery";
@@ -133,7 +134,8 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
 // height, converted to %-of-width) and translateY slides the full-size image up so
 // the requested region shows. Pure CSS on the official image — no derivative files.
 function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData }) {
-  if (!card?.imageUrl) return null;
+  const art = card ? cardImageSrc(card, { full: true }) : null;
+  if (!card || !art) return null;
   const top = cu.topPct ?? 56;
   const height = cu.heightPct ?? 30;
   return (
@@ -144,7 +146,7 @@ function CardCloseUpFig({ cu, card }: { cu: ArticleCloseUp; card?: CardTileData 
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={card.imageUrl}
+          src={art}
           alt={`${card.name} — rules-text close-up`}
           loading="lazy"
           className="absolute left-0 top-0 w-full"

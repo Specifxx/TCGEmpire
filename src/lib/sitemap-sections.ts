@@ -13,6 +13,7 @@
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { SITE_URL } from "./site";
+import { cardImageSrc } from "./card-image-url";
 import { getArticles } from "./articles";
 import { SETS } from "./constants";
 import { DOMAIN_PAGES } from "./domains";
@@ -237,6 +238,9 @@ async function cards(): Promise<SitemapEntry[]> {
     // only a UK price still serves a page whose prices moved with today's import
     // — its lastmod is that day, not its import date.
     const priced = hasAnyMarketPrice(c);
+    // The stored imageUrl points at a CDN path that no longer exists; this is
+    // the URL that actually resolves (see lib/card-image-url.ts).
+    const art = cardImageSrc(c, { full: true });
     return {
       url: `${SITE_URL}/card/${c.slug ?? c.id}`,
       changeFrequency: "daily" as const,
@@ -259,7 +263,7 @@ async function cards(): Promise<SitemapEntry[]> {
       // outliving its RetailerPrice rows isn't impossible), then to createdAt.
       lastModified: priced ? maxLastSeenByCard.get(c.id) ?? day ?? c.createdAt : c.createdAt,
       // Image sitemap: surface each card's unique art to image search (absolute URLs only).
-      ...(c.imageUrl && c.imageUrl.startsWith("http") ? { images: [c.imageUrl] } : {}),
+      ...(art?.startsWith("http") ? { images: [art] } : {}),
     };
   });
 }
