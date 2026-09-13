@@ -10,6 +10,7 @@ import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { preordersHrefForSet } from "@/lib/release-calendar";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
@@ -96,6 +97,11 @@ export function HomeSections({
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
   const nextSet = nextUpcomingSet();
+  // Same "point at the next one without naming it in code" pattern as nextSet
+  // itself — preordersHrefForSet reads isPreorderSetCode(), so this is Radiance
+  // today and clears itself the moment the set ships (getPreorderGroups() then
+  // returns [], see sealed-import.ts) or a future set has no pre-order page yet.
+  const preordersHref = nextSet ? preordersHrefForSet(nextSet.code) : null;
   // Two teaser rows: news/analysis/opinion from the blog, then the evergreen,
   // reference-shaped guides underneath. Same data everywhere this renders,
   // since it's the same in-memory list on every market.
@@ -111,7 +117,10 @@ export function HomeSections({
           data. Sits right after the hero: the single strongest "come back
           tomorrow" signal a price site can show, so it earns above-the-fold
           placement. Hides itself if there's nothing to show today. */}
-      <MarketPulse moversByCountry={pulseMoversByCountry} />
+      <MarketPulse
+        moversByCountry={pulseMoversByCountry}
+        preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
+      />
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its

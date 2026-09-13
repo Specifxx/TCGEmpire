@@ -126,11 +126,16 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const stores = new Set(card.retailerPrices.map((r) => r.retailer)).size;
   const hasPrice = lowestCents != null && stores > 0;
 
-  // TITLE — card name FIRST (the actual query is "<card name> riftbound", not
-  // "<card name> price"), then the identifiers that disambiguate printings, then
-  // the value props. "Prices" only leads when we genuinely have a price to show;
-  // promising a price on a page that renders "—" is what earns a pogo-stick back
-  // to the SERP and suppresses the whole cluster's CTR.
+  // TITLE — card name FIRST (the actual query is "<card name> riftbound"), then
+  // "Price" right after the name ONLY when we genuinely have one to show, then
+  // the identifiers that disambiguate printings — set NAME *and* CODE, not code
+  // alone, so "riftbound origins jinx price" (a set-name-shaped query) has a
+  // literal match to land on, not just "riftbound OGN jinx".
+  //
+  // "Price" still never leads when hasPrice is false: promising a price on a
+  // page that renders "—" is what earns a pogo-stick back to the SERP and
+  // suppresses the whole cluster's CTR (see the no-price branch below, which
+  // keeps the same "Card Text" framing the site already validated).
   //
   // Built longest-first and stepped down so the card name + "Riftbound" + set id
   // always survive Google's ~60-char truncation on even the longest legend names.
@@ -145,19 +150,26 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // "Title too long" for exactly this: simulated against the real card corpus,
   // 87.5% of rendered titles landed over 65 chars, and this template alone (the
   // site's highest-volume, ~1,400 pages) was more than enough to explain it.
-  const ident = `Riftbound ${card.setCode} ${card.collectorNumber}`;
-  const tail = hasPrice ? "Card Text & Live Prices" : "Card Text, Stats & Printings";
-  // Every candidate keeps `ident` (which carries collectorNumber) — the ONLY
+  const identCode = `${card.setCode} ${card.collectorNumber}`;
+  // Every candidate keeps `identCode` (which carries collectorNumber) — the ONLY
   // field that disambiguates two distinct printings sharing the same
   // displayName + setCode (e.g. an NN1 promo vs. a 042b/298 promo of the same
   // card). A prior version's final fallback dropped it down to bare setCode,
   // so two such printings could render byte-identical <title>s — a real
   // duplicate-title collision Google flagged on two Calm Rune (Promo) pages.
-  const titleCandidates = [
-    `${displayName} — ${ident} | ${tail}`,
-    `${displayName} — ${ident} | ${hasPrice ? "Live Prices" : "Card Text"}`,
-    `${displayName} — ${ident}`,
-  ];
+  // Longest candidate carries the set NAME too (Origins, not just OGN); the
+  // shorter steps drop the name before ever dropping identCode.
+  const titleCandidates = hasPrice
+    ? [
+        `${displayName} Price — Riftbound ${card.setName} (${identCode})`,
+        `${displayName} Price — Riftbound ${identCode}`,
+        `${displayName} — Riftbound ${identCode}`,
+      ]
+    : [
+        `${displayName} — Riftbound ${card.setName} (${identCode}) | Card Text`,
+        `${displayName} — Riftbound ${identCode} | Card Text`,
+        `${displayName} — Riftbound ${identCode}`,
+      ];
   const title =
     titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
 
@@ -187,7 +199,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // fact to state, and padding one in would be the fabrication this avoids.
   const printingBit = printingKind(card) === "base" ? "" : `the ${printingLabel(card)} printing of a `;
   const description = textBit
-    ? `${displayName} (${ident}) — ${textBit} ${priceBit}`
+    ? `${displayName} (Riftbound ${identCode}) — ${textBit} ${priceBit}`
     : `${displayName} — ${printingBit}${printingBit ? statBit.toLowerCase() : statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
 
   // ── Index only what's worth indexing ─────────────────────────────────────

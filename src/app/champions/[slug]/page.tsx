@@ -64,9 +64,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // single fixed string had no length guard at all — every one of the 87
   // champion pages rendered over 60 chars and 43 over 65, part of Bing's 397
   // "Title too long" warnings.
+  //
+  // "Prices" front-loaded right after the champion's name (searchers type
+  // "<champion> riftbound price", not "riftbound cards <champion>") — unlike
+  // the set page's "Card List & Prices" order, there is no committed evidence
+  // here that price-first hurts this template, and every indexed champion hub
+  // clears CHAMPION_THIN_THRESHOLD so it always has real printings to price.
   const titleCandidates = [
-    `${champ.name} Riftbound Cards — All Printings & Live Prices`,
-    `${champ.name} Riftbound Cards — Prices & Printings`,
+    `${champ.name} Prices — Riftbound Champion Cards & Printings`,
+    `${champ.name} Prices — Riftbound Champion Cards`,
     `${champ.name} — Riftbound Cards`,
     `Riftbound ${champ.name} Cards`,
   ];

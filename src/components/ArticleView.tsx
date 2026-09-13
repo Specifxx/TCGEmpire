@@ -503,6 +503,27 @@ export async function ArticleView({ article }: { article: Article }) {
         />
       )}
 
+      {/* Radiance pre-order CTA — every article tagged "radiance" gets this
+          automatically, rather than relying on each post's author to remember to
+          hand-link /radiance-preorders in the body (several already do; this is
+          the template-level guarantee for the ones that don't and for whatever
+          gets tagged "radiance" next). Retires itself the same way the rest of
+          the Radiance surfaces do: isPreorderSetCode("RAD") flips false the
+          moment the set ships, and getPreorderGroups() (which the page itself
+          reads) returns [] from then on, so this keeps pointing at a live page
+          rather than an empty one — no separate expiry to remember here. */}
+      {article.tags.includes("radiance") && cta.href !== "/radiance-preorders" && (
+        <section className="card-surface mt-8 flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-500/5 p-5">
+          <div>
+            <h2 className="font-bold text-white">Pre-ordering Radiance?</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Opening prices already differ a lot between stores — see the real spread before you order.
+            </p>
+          </div>
+          <Link href="/radiance-preorders" className="btn-primary shrink-0">Compare Radiance preorder prices</Link>
+        </section>
+      )}
+
       {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so
           always offer the direct path into the live database. Guides can override
           this to point somewhere more specific (browseCta) instead of the generic

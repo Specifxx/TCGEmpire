@@ -108,7 +108,16 @@ function PulseCard({ m, up, currency, duplicate }: { m: MoverSummary; up: boolea
   );
 }
 
-export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Country, PulseMovers> }) {
+export function MarketPulse({
+  moversByCountry,
+  preorders,
+}: {
+  moversByCountry: Record<Country, PulseMovers>;
+  // Set-agnostic on purpose (see HomeSections.tsx's preordersHref) — this is
+  // Radiance today and disappears by itself once the set ships or nothing is
+  // upcoming, same as every other "next set" surface on the homepage.
+  preorders?: { href: string; setName: string } | null;
+}) {
   const { country } = useCountry();
   const info = COUNTRIES[country];
   const movers = moversByCountry[country] ?? moversByCountry.AU;
@@ -161,9 +170,16 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
           <h2 className="text-xl font-extrabold text-white">Market pulse</h2>
           <p className="mt-0.5 text-xs text-slate-500">Today&apos;s biggest risers and fallers in {info.place}.</p>
         </div>
-        <Link href="/market" className="btn-ghost hidden text-xs sm:inline-flex">
-          View market index →
-        </Link>
+        <div className="hidden items-center gap-2 sm:flex">
+          {preorders && (
+            <Link href={preorders.href} className="btn-primary text-xs">
+              Compare {preorders.setName} preorder prices
+            </Link>
+          )}
+          <Link href="/market" className="btn-ghost text-xs">
+            View market index →
+          </Link>
+        </div>
       </div>
 
       {/* Soft fade at both edges so cards don't feel like they're cut off
@@ -187,9 +203,16 @@ export function MarketPulse({ moversByCountry }: { moversByCountry: Record<Count
         </div>
       </div>
 
-      <Link href="/market" className="mt-3 block text-center text-xs font-semibold text-brand-300 hover:underline sm:hidden">
-        View market index →
-      </Link>
+      <div className="mt-3 flex flex-col items-center gap-2 sm:hidden">
+        {preorders && (
+          <Link href={preorders.href} className="btn-primary text-xs">
+            Compare {preorders.setName} preorder prices
+          </Link>
+        )}
+        <Link href="/market" className="text-center text-xs font-semibold text-brand-300 hover:underline">
+          View market index →
+        </Link>
+      </div>
     </section>
   );
 }

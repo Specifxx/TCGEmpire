@@ -5826,3 +5826,63 @@ responsive `srcset` for the mirror. `optimize-images.ts` already builds both for
 png/jpeg sources, and pointing it at these files would cut what a browsing
 visitor downloads by more than half - at the cost of roughly tripling what the
 repo carries. Worth doing as its own change, with its own measurement.
+
+## An external audit's title/preorder brief, checked against this repo's own SEO history first, 2026-09-13
+
+A growth brief (13 Sep 2026, competitive audit vs. PriceCharting/riftbound.gg)
+asked for four things: reorder card/set/champion/domain titles to front-load
+"Price", add five named stores to `/radiance-preorders`, a Riftle share button,
+and a UTM audit. Three of the four assumptions in it didn't match what this
+repo's own history already says, so this wasn't a blind find-and-replace.
+
+**Set page titles were NOT reordered**, despite the brief asking for it
+literally as written ("front-load {Name} Prices"). `tests/seo-landing-pages.test.ts`
+("set page title leads with card-list intent, price second") pins the opposite
+ordering, for a documented reason: a prior pass measured "Riftbound Vendetta
+Prices — Cheapest Sellers" against real Search Console data ("vendetta card
+list", 146 impressions, 2.1% CTR, position 10.5 — a buyer-hook title against a
+list-shaped query) and reverted it. Re-reversing that on an external brief's
+unmeasured assumption, with a test actively asserting the fix stays in place,
+would have been trading a proven regression back in for a plausible-sounding
+one. Card, champion and domain titles WERE changed (see the "Card/champion/
+domain titles" commit) — none of those three had a committed test or a cited
+GSC figure arguing the other way, and the card-page gap the brief named (set
+CODE with no set NAME) was real there.
+
+**"riftbound card prices" / "riftbound price tracker" are not real targets.**
+`docs/seo-keyword-map.md` already states, from real trend data: these phrases
+have near-zero search volume and are deliberately never primary-targeted
+anywhere on the site (served only as incidental phrasing inside card/champion/
+set pages). The brief's own Search-Console-queries-to-watch list names both.
+Watching them is harmless; building anything to chase them is not — see that
+file's "Price-modifier long-tails" section before doing so.
+
+**universetcg.com was already tracked** (`src/lib/retailers.ts`, added as an
+EU/Barcelona store) and already lists the full Radiance product line live —
+the brief named it as untracked. Of the other four named stores, two
+(skyfoxgames, tierzerogames) were real, live, verified Shopify additions;
+miniaturemarket.com and dragonparlorgames.com use neither Shopify nor
+WooCommerce (a gzipped sales-channel sitemap and a WordPress site with no
+Store API respectively) and would need a bespoke scraper, which is out of
+scope for a registry entry — see the "Radiance pre-orders" commit.
+
+**Riftle's share button already existed** (`src/components/Riftle.tsx`'s
+`share()`, emoji grid + win-streak line + `navigator.share`/clipboard
+fallback) and already meets the brief's spec, including the compact-for-
+Discord/Twitter constraint. The one piece of the brief that didn't apply:
+there is no `riftle.riftcompare.com` subdomain (no rewrite in
+`middleware.ts`/`next.config.js`), so the share text correctly only ever
+says `riftcompare.com/riftle`.
+
+**The UTM audit found nothing to fix.** Checked all four places traffic could
+lose `utm_source`/`utm_medium` between a Discord-bot click and a GA4 report:
+`middleware.ts`'s apex/www redirect (query preserved by `URL.clone()`),
+`next.config.js`'s `redirects()` (Next.js passes through unmatched query
+params to the destination by default), every `pageAlternates()` call site
+(all pass bare paths — canonicals never carry a query string in the first
+place, so there's nothing to strip), and `GAPageViewTracker.tsx` (builds
+`page_location` from `pathname + searchParams.toString()` explicitly, on
+every SPA navigation, not just the initial load). A real Discord bot already
+exists and already tags its links (`utm_source=discord-bot&utm_medium=bot&
+utm_campaign=price-command`, `src/app/api/discord/interactions/route.ts`) —
+this audit is what confirms that tagging actually survives to a GA4 report.
