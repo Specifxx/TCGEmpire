@@ -1677,7 +1677,7 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
       "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, the United States, the United Kingdom, Singapore, Canada and the EU, and how to always find the cheapest price.",
     author: "RiftCompare",
     date: "2026-06-08",
-    updated: "2026-08-24",
+    updated: "2026-09-13",
     hero: {
       src: "/blog/where-to-buy-riftbound-cards.png",
       alt: "Where to buy Riftbound cards — 6 markets and over 100 tracked stores, singles and sealed",
@@ -1711,6 +1711,7 @@ The US is the deepest Riftbound market by far — thousands of in-stock singles 
 - Switch the country to the **United States** and **[search the database](/browse)** for live USD prices across US stores, eBay US and major marketplaces.
 - Sealed product (booster boxes, cases, Proving Grounds) is on the **[sealed page](/sealed)**.
 - **Tip:** for high-value chase cards, condition matters — we surface Near-Mint English prices so you're comparing like for like, not a cheaper played or foreign-language copy.
+- **Prefer to buy in person?** [Find Riftbound card shops near you](https://yestcg.com/stores/riftbound) — YesTCG's locator covers local game stores across 190+ US metros and shows who has your card in stock before you drive over.
 
 ## 🇬🇧 Buying Riftbound cards in the United Kingdom
 
