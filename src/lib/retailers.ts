@@ -837,6 +837,25 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "US",
   }, // registry sweep 2026-09-09: 44 in-stock singles, cur=USD
 
+  // ---- Added 2026-09-13, Radiance pre-order coverage pass ---------------------
+  // These two were found ranking for "radiance preorder" queries that
+  // /radiance-preorders wasn't answering (only punkouter/manyrealms/TCGplayer
+  // were tracked). Both verified live and Shopify before adding: skyfoxgames
+  // carries a dedicated `league-of-legends-rift-bound-pre-order` collection with
+  // a real "Riftbound Radiance Booster Box (PREORDER)" + "Radiance Vault
+  // (PRE-ORDER)" listing, and a 750-product `riftbound-singles` catalogue (627
+  // with a real collector number) — nowhere near a thin directory entry.
+  skyfoxgames: {
+    key: "skyfoxgames",
+    name: "Sky Fox Games",
+    base: "https://www.skyfoxgames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 200,
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.00 · free over US$50",
+    country: "US",
+  },
+
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
   // Riftbound singles are still thin on UK Shopify shops — the biggest UK chains (Magic
   // Madhouse, Chaos Cards, Big Orbit, Element Games, Wayland) aren't Shopify so can't be
@@ -1108,6 +1127,23 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. £1.50 · free over £30",
     country: "UK",
   },
+  // ---- Added 2026-09-13, Radiance pre-order coverage pass ---------------------
+  // Verified live and Shopify: a dedicated `riftbound-radiance-set-5` collection
+  // with real "Radiance Set 5 Booster Box Pre-Order" (£119.95) and "Radiance Set
+  // 5 Vault Bundle Pre-Order" (£34.95) listings, plus 514 products in
+  // `riftbound-singles` — real per-card titles (e.g. "OGN-116 - Thousand-Tailed
+  // Watcher - Rare"), not a sealed-only storefront.
+  tierzerogames: {
+    key: "tierzerogames",
+    name: "Tier Zero Games",
+    base: "https://tierzerogames.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 150,
+    freeOverCents: 2500,
+    shippingNote: "est. £1.50 · free over £25",
+    country: "UK",
+  },
+
   // ---- UK leads checked and NOT added ----------------------------------------
   // Registry sweep (2026-09-09): 159 untracked UK registry domains probed —
   // ZERO cleared MIN_SINGLES_FOR_STORE. UK Riftbound retail is genuinely thin
