@@ -7,9 +7,29 @@ import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri, type O
 import { claimAlertsForUser } from "@/lib/alerts";
 import { SIGNUP_SOURCE_COOKIE, parseSignupSource } from "@/lib/signup-source-shared";
 import { sanitizeNextPath } from "@/lib/next-param";
+import { PREMIUM_START_PATH } from "@/lib/premium-start";
 
-function fail(req: Request, code: string) {
-  return NextResponse.redirect(new URL(`/login?error=${code}`, req.url));
+// Where a failed sign-in lands. /login by default — it renders AuthForm, which
+// turns ?error= into a readable message and offers the buttons again.
+//
+// The one exception is /premium/start, which renders that SAME form as its
+// signed-out state (see that page: sign-in is a step inside checkout now).
+// Sending a failure back there keeps the purchase intact — the tier, plan and
+// `back` selection survive in the URL — instead of stranding a buyer on a login
+// page with no memory of what they were buying. Restricted to that ONE path on
+// purpose: any other ?next= destination has no error UI at all, so a failure
+// there would render as a silent no-op.
+function errorBase(req: Request, provider: string): string {
+  const next = sanitizeNextPath(
+    cookies().get(`oauth_next_${provider}`)?.value ?? new URL(req.url).searchParams.get("next")
+  );
+  return next && (next === PREMIUM_START_PATH || next.startsWith(`${PREMIUM_START_PATH}?`)) ? next : "/login";
+}
+
+function fail(req: Request, code: string, provider = "") {
+  const dest = new URL(errorBase(req, provider), req.url);
+  dest.searchParams.set("error", code);
+  return NextResponse.redirect(dest);
 }
 
 export async function GET(req: Request, { params }: { params: { provider: string } }) {
@@ -21,7 +41,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   const state = searchParams.get("state");
   const saved = cookies().get(`oauth_state_${provider}`)?.value;
   cookies().set(`oauth_state_${provider}`, "", { path: "/", maxAge: 0 });
-  if (!code || !state || !saved || state !== saved) return fail(req, "oauth_state");
+  if (!code || !state || !saved || state !== saved) return fail(req, "oauth_state", provider);
 
   const cfg = providerConfig(provider);
 
@@ -39,21 +59,21 @@ export async function GET(req: Request, { params }: { params: { provider: string
         redirect_uri: redirectUri(provider),
       }),
     });
-    if (!res.ok) return fail(req, "oauth_token");
+    if (!res.ok) return fail(req, "oauth_token", provider);
     tok = await res.json();
   } catch {
-    return fail(req, "oauth_token");
+    return fail(req, "oauth_token", provider);
   }
-  if (!tok.access_token) return fail(req, "oauth_token");
+  if (!tok.access_token) return fail(req, "oauth_token", provider);
 
   // 2) Fetch the profile.
   let profile: Record<string, unknown>;
   try {
     const res = await fetch(cfg.userUrl, { headers: { Authorization: `Bearer ${tok.access_token}` } });
-    if (!res.ok) return fail(req, "oauth_profile");
+    if (!res.ok) return fail(req, "oauth_profile", provider);
     profile = await res.json();
   } catch {
-    return fail(req, "oauth_profile");
+    return fail(req, "oauth_profile", provider);
   }
 
   // 3) Normalise the fields per provider.
@@ -86,7 +106,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
     name = (profile.global_name as string) || (profile.username as string);
     avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : null;
   }
-  if (!providerId || !email) return fail(req, "oauth_noemail");
+  if (!providerId || !email) return fail(req, "oauth_noemail", provider);
 
   // 4) Find-or-create the user (by provider id, then by email), link the identity,
   // and start their session. Wrapped so a DB blip or a misconfigured AUTH_SECRET
@@ -96,12 +116,12 @@ export async function GET(req: Request, { params }: { params: { provider: string
   let isNew: boolean;
   try {
     const linked = await upsertOAuthUser(provider, providerId, email, emailVerified, name, avatar);
-    if (!linked) return fail(req, "oauth_unverified");
+    if (!linked) return fail(req, "oauth_unverified", provider);
     user = linked.user;
     isNew = linked.isNew;
     await createSession(user.id);
   } catch {
-    return fail(req, "oauth_session");
+    return fail(req, "oauth_session", provider);
   }
   // Adopt any price watches this address created before it had an account —
   // fire-and-forget: a failure here must never block signing in.

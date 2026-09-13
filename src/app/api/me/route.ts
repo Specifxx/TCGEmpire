@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { analyticsUserId } from "@/lib/ga-user-id";
+import { enabledProviders } from "@/lib/oauth";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumAnnualEnabled, premiumPlusEnabled, plusAnnualEnabled, premiumTierOf, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
 
 // Session endpoint for the client-side chrome (UserMenu, wishlist sync,
@@ -44,6 +45,14 @@ export async function GET() {
       trialDays: PREMIUM_TRIAL_DAYS,
       premiumAnnual: premiumAnnualEnabled(),
       plusAnnual: plusAnnualEnabled(),
+      // Which OAuth buttons to render. Env-derived, no session in it — here so a
+      // CLIENT component can show the sign-in form without being handed the list
+      // as a prop: PremiumDialog embeds AuthForm for signed-out visitors, and it
+      // is mounted by PremiumDialogProvider, which the root layout renders as a
+      // bare literal (pinned by tests/premium-slidein.test.ts) with nowhere to
+      // thread a prop through. SignupPromoPopup and PriceAlertModal still take
+      // theirs from the layout; unify later, not in this pass.
+      providers: enabledProviders(),
     },
     { headers: { "Cache-Control": "no-store" } }
   );

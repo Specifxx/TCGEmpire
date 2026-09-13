@@ -5886,3 +5886,84 @@ every SPA navigation, not just the initial load). A real Discord bot already
 exists and already tags its links (`utm_source=discord-bot&utm_medium=bot&
 utm_campaign=price-command`, `src/app/api/discord/interactions/route.ts`) —
 this audit is what confirms that tagging actually survives to a GA4 report.
+
+## Sign-in is a step inside checkout, not a gate in front of it — 2026-09-13
+
+Owner: "Any chance we can streamline people buying premium? Like optional sign
+ups or something? There has to be a better strategy."
+
+**The measurement.** Counted on the real code, signed out, to reaching Stripe:
+
+| Entry point | Clicks before | Clicks after |
+|---|---|---|
+| `/premium` pricing-card CTA | 5 | 3 |
+| Tool blur-wall → `PremiumDialog` | 6 | 3 |
+| `SignupPromoPopup` | 3 | 3 (unchanged) |
+| Signed in, any surface | 1 | 1 (unchanged) |
+
+Five, because sign-in was a GATE: CTA → `/login?next=/premium` → provider button
+→ Google's account picker → back on `/premium` → find the CTA again → Stripe.
+Six from a blur-wall, and that path was worse than one extra click: the dialog's
+signed-out link hardcoded `next=/premium`, so a visitor who hit the wall on a
+deck page was returned to the pricing page and the deck was simply gone. Three is
+the floor without dropping Google's `prompt=select_account`, which the OAuth
+start route sets deliberately.
+
+**What changed.** `/premium/start?tier=&plan=&back=&src=` is the new destination
+of every buy button. Signed out, that page IS the sign-in step — it renders the
+same `AuthForm` `/login` does, with `?next=` pointing back at its own URL, so the
+OAuth round trip returns with the tier, the plan and `back` intact. Signed in, a
+client `CheckoutLauncher` fires `premium_checkout_started` and POSTs the existing
+`/api/premium/checkout`. The dialog does the same thing without a navigation at
+all: the provider buttons render inside the wall, and its `next` is a
+`premiumStartHref` carrying `back: pathname`.
+
+**What deliberately did NOT change: the security model.** OAuth stays the only
+way an address enters `User`. `upsertOAuthUser` still refuses an address the
+provider has not verified, for the reason in its own comment — `isAdminEmail()`
+grants moderator powers BY ADDRESS, so an unproven address must not enter the
+system at all. The webhook still resolves a buyer only through
+`metadata.userId ?? client_reference_id`, `TrialRedemption.userId` is still
+required, and the card-gated trial (owner's call, asked and confirmed) is
+untouched. True guest checkout — pay with an address typed into Stripe, claim the
+account afterwards — was scoped and deferred: it needs a `PendingCheckout` table,
+changes to `premiumStarted`, `stampFromSubscription` and the reconcile's
+unmatched branch (otherwise the daily admin alert fires for every unclaimed
+purchase), orphan/refund policy, and it edits the two files behind both prior
+billing incidents. Roughly 3–4× the work of this pass for the same three clicks.
+
+**`/portfolio?upgraded=1` was a dead end and is now `/premium/welcome`.** Nothing
+on the site ever read that param: a buyer was returned to the ordinary free-tier
+portfolio with no confirmation and no way back to what they had been doing. The
+new page re-reads the Checkout Session from Stripe and refuses unless
+`metadata.userId`/`client_reference_id` matches the signed-in account — a
+`success_url` is attacker-reachable, so the `cs_…` in the URL proves nothing by
+itself. Entitlement is still webhook-async, so the page polls `/api/me` for up to
+20s and then says so honestly rather than claiming failure; a synchronous
+`runStripeReconcile` was rejected because it sweeps every Stripe subscription and
+emails the admin, which is not a page-view-shaped operation.
+
+**Attribution that was missing.** `PremiumCta`'s signed-out link called neither
+`markSignupSource` nor `trackEvent`, so the highest-intent signups on the site
+recorded as `"login"` — indistinguishable from someone typing `/login`. Added
+`premium_cta` and `premium_dialog` to `SIGNUP_SOURCES` (the `/admin/accounts`
+chips pick them up with no further work) and a new `premium_signin_step` event.
+That event and `premium_checkout_started` are both low-volume conversion steps,
+so neither goes in `GA4_ONLY_EVENTS`.
+
+**Two shapes the code forced.** `providers` moved onto `/api/me` rather than
+being threaded as a prop, because the root layout mounts `<PremiumDialogProvider>`
+as a bare literal (pinned by `tests/premium-slidein.test.ts`) with nowhere to pass
+one through. And `SignupPromoPopup` keeps `next="/premium"`: it is pinned twice,
+and a popup visitor has not chosen a tier yet, so the start step would have
+nothing to show them.
+
+**An OAuth failure now returns to the step it started at**, but only when that
+step is `/premium/start` — the one other page besides `/login` that renders
+`?error=` through `AuthForm`'s `OAUTH_ERRORS`. Any other `next` still falls back
+to `/login`; sending an error to a page with no error UI would be a silent no-op.
+
+**Read in two weeks** (`/admin/accounts` source chips, GA4): `premium_signin_step`
+→ `sign_up` → `premium_checkout_started` with `via=start`, and the share of
+signups now attributed to `premium_cta`/`premium_dialog`. If the sign-in step is
+still where people fall out, that is the evidence for reopening guest checkout.

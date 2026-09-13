@@ -21,6 +21,9 @@ export interface Me {
   trialDays: number; // configured free-trial length (0 = trial off)
   premiumAnnual: boolean; // annual plan is configured (Stripe annual price set)
   plusAnnual: boolean; // Plus's own annual plan is configured
+  // Which OAuth sign-in buttons are configured — for client components that
+  // render AuthForm themselves (PremiumDialog's signed-out state).
+  providers: ("google" | "discord")[];
 }
 
 const EMPTY_ME: Me = {
@@ -34,6 +37,7 @@ const EMPTY_ME: Me = {
   trialDays: 0,
   premiumAnnual: false,
   plusAnnual: false,
+  providers: [],
 };
 
 let mePromise: Promise<Me> | null = null;
@@ -53,6 +57,11 @@ function fetchMe(): Promise<Me> {
         trialDays: Number(d.trialDays) || 0,
         premiumAnnual: !!d.premiumAnnual,
         plusAnnual: !!d.plusAnnual,
+        // Narrowed to the two known providers so a malformed payload can never
+        // put an arbitrary string into an OAuth href.
+        providers: (Array.isArray(d.providers) ? d.providers : []).filter(
+          (p: unknown): p is "google" | "discord" => p === "google" || p === "discord"
+        ),
       }))
       .catch(() => EMPTY_ME);
   }

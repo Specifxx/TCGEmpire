@@ -3,12 +3,22 @@ import { cookies } from "next/headers";
 import { randomBytes } from "node:crypto";
 import { providerConfig, isProviderEnabled, isOAuthProvider, redirectUri } from "@/lib/oauth";
 import { sanitizeNextPath } from "@/lib/next-param";
+import { PREMIUM_START_PATH } from "@/lib/premium-start";
 
 // Kick off the OAuth flow: set a CSRF state cookie and redirect to the provider.
 export async function GET(req: Request, { params }: { params: { provider: string } }) {
   const provider = params.provider;
+  const wanted = sanitizeNextPath(new URL(req.url).searchParams.get("next"));
   if (!isOAuthProvider(provider) || !isProviderEnabled(provider)) {
-    return NextResponse.redirect(new URL("/login?error=provider_unavailable", req.url));
+    // Same rule as the callback's errorBase(): a failure that started at
+    // /premium/start goes back there, where the form (and the tier/plan/back
+    // selection) still exists. Everything else falls back to /login, the only
+    // other page that renders ?error= at all.
+    const base =
+      wanted && (wanted === PREMIUM_START_PATH || wanted.startsWith(`${PREMIUM_START_PATH}?`)) ? wanted : "/login";
+    const dest = new URL(base, req.url);
+    dest.searchParams.set("error", "provider_unavailable");
+    return NextResponse.redirect(dest);
   }
   const cfg = providerConfig(provider);
   const state = randomBytes(16).toString("hex");
@@ -24,7 +34,7 @@ export async function GET(req: Request, { params }: { params: { provider: string
   // state stays an opaque token, and there are no provider URL-length/encoding
   // edge cases to reason about. Sanitized here AND again in the callback
   // (defense in depth); the callback clears it either way.
-  const next = sanitizeNextPath(new URL(req.url).searchParams.get("next"));
+  const next = wanted;
   if (next) {
     cookies().set(`oauth_next_${provider}`, next, {
       httpOnly: true,

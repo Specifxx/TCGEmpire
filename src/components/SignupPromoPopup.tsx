@@ -44,8 +44,9 @@ import {
 // creating an account used to silently hand over some real days of the paid
 // tier for free, no purchase involved. Nothing here grants anything: this is a
 // pitch plus a redirect, the exact same pattern PremiumDialog.tsx already uses
-// for a signed-out visitor who clicks "Get Premium" elsewhere on the site
-// (`<Link href="/login?next=/premium">Create a free account to start →</Link>`)
+// for a signed-out visitor who clicks "Get Premium" elsewhere on the site (it
+// renders this same AuthForm inline and hands the OAuth round trip a
+// premiumStartHref, so checkout opens as soon as sign-in finishes)
 // — just surfaced as the FIRST thing a new visitor sees instead of something
 // they have to go find. Premium itself is still only ever reached by a real
 // Stripe trial/checkout on /premium, same as always.

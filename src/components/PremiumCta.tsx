@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { markSignupSource } from "@/lib/signup-source";
+import { premiumStartHref } from "@/lib/premium-start";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 
 // GREEN, NOT GOLD, AND BIG — on this page only (2026-09-10, owner brief: "it
@@ -31,7 +33,9 @@ import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/sit
 const CTA_BTN = "btn-primary w-full py-3.5 text-center text-base leading-tight";
 
 // The Premium subscribe button. Three states: checkout live (Stripe hosted
-// checkout), signed out (route through login first), or checkout not yet
+// checkout), signed out (straight to /premium/start, which IS the sign-in step
+// and opens Stripe the moment it completes — see lib/premium-start.ts for why
+// the old /login?next=/premium hop was five clicks), or checkout not yet
 // configured (honest waitlist CTA via the contact form — no fake buy button).
 export function PremiumCta({
   checkoutLive,
@@ -89,6 +93,17 @@ export function PremiumCta({
     }
   }
 
+  // The signed-out click. Two things the old /login link did NOT do: name the
+  // surface (those signups recorded as "login", indistinguishable from someone
+  // typing /login) and record the funnel step at all. Both fire before the
+  // navigation; markSignupSource sets the attribution cookie AND the
+  // sign_in_click event, so this is the one extra call needed.
+  const onStartClick = () => {
+    trackEvent("premium_signin_step", { tier, plan, source: "premium-page", copy: PREMIUM_COPY_VERSION });
+    markSignupSource("premium_cta");
+  };
+  const startHref = premiumStartHref({ tier, plan, src: "premium-page" });
+
   if (!signedIn) {
     if (trialAvailable && trialDays > 0) {
       // The button names the TIER, not the trial (2026-09-11 — see this
@@ -98,11 +113,12 @@ export function PremiumCta({
       // requirement, and when it converts — it just isn't the headline claim.
       return (
         <div className="w-full">
-          <Link href="/login?next=/premium" className={CTA_BTN}>
+          <Link href={startHref} onClick={onStartClick} className={CTA_BTN}>
             Get {TIER_NAMES[tier]}&nbsp;→
           </Link>
           <p className="mt-2 text-[11px] leading-snug text-slate-400">
-            Create a free account first — free, no card needed. A card is required to start the {dayPhrase}{" "}
+            Sign in on the next screen and checkout opens straight after. Create a free account in one tap
+            if you don&apos;t have one — no card needed for that. A card is required to start the {dayPhrase}{" "}
             free trial; it becomes {priceLabel ? `${priceLabel} ` : "the paid price "}after that unless you cancel.
           </p>
         </div>
@@ -111,7 +127,12 @@ export function PremiumCta({
     return (
       <div className="w-full">
         <p className="text-sm font-semibold text-white">Ready when you are</p>
-        <Link href="/login?next=/premium" className={`${CTA_BTN} mt-3`}>Sign in first →</Link>
+        <Link href={startHref} onClick={onStartClick} className={`${CTA_BTN} mt-3`}>
+          Get {TIER_NAMES[tier]}&nbsp;→
+        </Link>
+        <p className="mt-2 text-[11px] leading-snug text-slate-400">
+          Sign in on the next screen — checkout opens straight after.
+        </p>
       </div>
     );
   }
