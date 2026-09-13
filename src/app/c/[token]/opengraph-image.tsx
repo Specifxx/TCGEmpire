@@ -25,7 +25,7 @@ export default async function Image({ params }: { params: { token: string } }) {
 
   const owner = shared?.ownerName ?? "A collector";
   const arts = (shared?.holdings ?? [])
-    .map((h) => cardImageSrc(h.card, { full: true }))
+    .map((h) => cardImageSrc(h.card, { full: true, absolute: true }))
     .filter((a): a is string => Boolean(a))
     .slice(0, 3);
 

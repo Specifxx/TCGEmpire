@@ -467,7 +467,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         description: card.description
           ? `${clampText(card.description, 300)} — ${displayName}, Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`
           : `${displayName} — ${card.domain} ${card.type.toLowerCase()}, ${card.rarity}. Riftbound ${card.setName} (${card.setCode}) ${card.collectorNumber}.`,
-        ...(cardImageSrc(card, { full: true }) ? { image: cardImageSrc(card, { full: true }) } : {}),
+        ...(cardImageSrc(card, { full: true, absolute: true }) ? { image: cardImageSrc(card, { full: true, absolute: true }) } : {}),
         additionalProperty: [
           { "@type": "PropertyValue", name: "Set", value: card.setName },
           { "@type": "PropertyValue", name: "Collector number", value: card.collectorNumber },

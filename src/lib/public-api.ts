@@ -155,7 +155,7 @@ export async function getCardPricesData(idOrSlug: string) {
       setCode: card.setCode,
       collectorNumber: card.collectorNumber,
       url: `${SITE_URL}${cardHref(card)}`,
-      image: cardImageSrc(card, { full: true }),
+      image: cardImageSrc(card, { full: true, absolute: true }),
     },
     prices: {
       AU: { lowestCents: card.lowestPriceCents, currency: "AUD" },

@@ -82,7 +82,7 @@ async function loadFeatured(): Promise<Featured> {
       return {
         name: card.name,
         setLine: `${card.setCode} · ${card.collectorNumber}`,
-        art: cardImageSrc(card, { full: true }),
+        art: cardImageSrc(card, { full: true, absolute: true }),
         rows,
       };
     }

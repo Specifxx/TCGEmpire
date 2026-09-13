@@ -240,7 +240,7 @@ async function cards(): Promise<SitemapEntry[]> {
     const priced = hasAnyMarketPrice(c);
     // The stored imageUrl points at a CDN path that no longer exists; this is
     // the URL that actually resolves (see lib/card-image-url.ts).
-    const art = cardImageSrc(c, { full: true });
+    const art = cardImageSrc(c, { full: true, absolute: true });
     return {
       url: `${SITE_URL}/card/${c.slug ?? c.id}`,
       changeFrequency: "daily" as const,

@@ -81,7 +81,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // column still holds the CDN's dead `originals/` path, and this response is a
   // documented public endpoint — third parties get the URL that resolves, the
   // same one the site itself renders.
-  const body = { ...card, imageUrl: cardImageSrc(card, { full: true }), imageThumbUrl: cardImageSrc(card) };
+  const body = { ...card, imageUrl: cardImageSrc(card, { full: true, absolute: true }), imageThumbUrl: cardImageSrc(card, { absolute: true }) };
 
   return NextResponse.json(body, {
     headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },

@@ -44,12 +44,13 @@ function PromoStamp() {
   );
 }
 
-// Renders the real Riftbound card image (RiftScribe CDN) over a blurred backdrop
-// so both portrait and landscape cards look good. Falls back to generated SVG art
-// when no image is available.
+// Renders the real Riftbound card image over a blurred backdrop so both portrait
+// and landscape cards look good. Falls back to generated SVG art when no image is
+// available. The art is served from our own mirror (public/card-art) — see
+// lib/card-image-url.ts for why we stopped hotlinking the RiftScribe CDN.
 export function CardImage({ card, isFoil = false, full = false, className, priority = false }: Props) {
-  // lib/card-image-url.ts, not card.imageUrl directly: the CDN's `originals/`
-  // tree is gone and every row still stores one of those dead URLs.
+  // lib/card-image-url.ts, not card.imageUrl directly: the rows still store
+  // RiftScribe URLs, and the helper is what maps them onto our mirrored copy.
   const src = cardImageSrc(card, { full });
 
   if (!src) {
@@ -74,8 +75,9 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
 
   const isLandscape = card.orientation === "landscape";
 
-  // Only our own re-hosted card art is in the build-time manifest; anything on the
-  // RiftScribe CDN resolves to null and falls through to the plain <img>.
+  // Only the signature prints are in the build-time manifest: optimize-images.ts
+  // processes png/jpeg sources, and the mirror is already optimised .webp, so a
+  // mirrored card resolves to null here and falls through to the plain <img>.
   const meta = optimisedImage(src);
   const webpSrcSet = meta?.webp
     ? [...(meta.variants ?? []).map((v) => `${v.src} ${v.w}w`), `${meta.webp} ${meta.width}w`].join(", ")
@@ -103,11 +105,11 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
           width and height" audit and stop layout shift anywhere a wrapper doesn't
           already fix the aspect; the h-full/w-full CSS still controls rendered size.
 
-          <picture> rather than a bare <img> because a handful of card images are
-          RE-HOSTED BY US (the Vendetta Signature prints in prisma/manual-cards.json
-          point at riftcompare.com/signature-cards/*.jpg) — those have a WebP
-          rendition and a responsive srcset built at build time, and this is where
-          they get served. Cards on the RiftScribe CDN have no manifest entry, so
+          <picture> rather than a bare <img> because the Vendetta Signature prints
+          (prisma/manual-cards.json, pointing at riftcompare.com/signature-cards/*.jpg)
+          are JPEGs that optimize-images.ts turns into a WebP rendition plus a
+          responsive srcset at build time, and this is where those get served.
+          Mirrored cards are already .webp and carry no manifest entry, so
           `webpSrcSet` is null and this renders exactly the <img> it always did. */}
       <picture>
         {meta?.avif && <source type="image/avif" srcSet={meta.avif} />}

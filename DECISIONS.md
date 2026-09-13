@@ -5746,3 +5746,83 @@ Verified in a browser against a local database seeded with the real URLs: the
 hero decodes at 744x1039 and `/card/<slug>` renders the art (the sandbox's own
 browser cannot tunnel to the CDN, so the bytes were fetched with curl and
 handed to the page through a route interceptor - the URL under test unchanged).
+
+## Card art is served from our own origin now, 2026-09-13
+
+Same day as the entry above, and the reason for it: rewriting our URLs onto
+whichever RiftScribe rendition still answered fixed the outage and left us
+exactly as exposed to the next deletion. `riftscribe.gg` itself 404s, so there
+will probably be a next deletion. `scripts/mirror-card-art.ts` takes one copy
+of every card into `public/card-art/`, and `cardImageSrc` - which every render
+path already went through after the morning's fix - maps a stored URL onto that
+copy. The site no longer depends at runtime on anyone else's hosting.
+
+**Bytes in `public/`, not in Postgres.** The brief was "store our own images in
+the database". The database is the one place they must not go: Neon free tier is
+5 GB/month of transfer per project, that budget is the constraint this whole
+repo is organised around (see the deploy-cadence entry, 2026-09-11), and ~90 MiB
+of art served out of Postgres would exhaust it in days. Static files cost the
+database nothing and are served by the CDN in front of the app.
+
+**The rewrite is unconditional, and that is a deliberate trade.** `CardImage` is
+pulled into the client bundle by its client-component callers (QuickView,
+SellForm), so anything `lib/card-image-url.ts` imports ships to the browser. A
+lookup table of "which cards did we mirror" would be ~33 KB of dead JavaScript on
+every page, so the helper stays pure string work: any `cdn.riftscribe.gg/cards/`
+URL becomes `/card-art/<stem>.webp`, no questions asked. What makes that safe is
+coverage, enforced in `tests/card-image-url.test.ts`: every card in
+`prisma/riftbound-cards.json` must have a mirrored file. Refresh the dataset
+without re-running the mirror and the test goes red before the missing art
+reaches production.
+
+**Keeping the CDN's filename stem** (`ogn-029-298-723927dee729ccc5`) is what
+makes that string rewrite possible at all. It also means re-running the mirror
+after an upstream refresh is idempotent: same stem, same file, skipped.
+
+**`public/card-art/`, not `public/cards/`.** `/cards` is a real route tree
+(`/cards/rarity/[rarity]` and friends). Nothing collides today, because none of
+its segments is dynamic at the top level - but a future `app/cards/[slug]` would
+start silently competing with 950 static files. A separate prefix costs nothing.
+
+**71 cards have no art left at all.** Measured, not inferred: those stems 404 at
+`originals`, `thumbnails/large` AND `thumbnails/small`, on five serial retries
+each. There is nothing to mirror, so `scripts/mirror-card-art.ts` regenerates
+`src/lib/card-art-missing.ts` and `cardImageSrc` returns null for them - which
+makes `CardImage` draw its generated `CardArt`, the behaviour an artless card has
+always had, instead of linking to a 404. That list is the ONE lookup table in
+this design, so the test caps it at 150 entries: a list growing toward the
+catalogue would mean the mirror is broken and would reintroduce exactly the
+client-bundle payload the string rewrite exists to avoid. The script also refuses
+to rewrite the list when more than 15% of a run fails, so a run with the network
+down cannot blank out the catalogue.
+
+**Size, measured rather than guessed**: 879 files, 83.4 MiB (~99 KiB a card),
+taking `.git` from 45 MiB to roughly 130 MiB. That is the real price of this
+decision and it was taken with the number known. Roughly one card in sixteen
+arrives above `MAX_BYTES` (150 KB), which `scripts/check-images.ts` fails the
+build on; the mirror script re-encodes just those with sharp, stepping quality
+down until they fit, and writes everything else byte-for-byte as served rather
+than putting a second generation of lossy encoding through every card.
+
+**The mirror downloads with `curl`, not `fetch`**, which looks like a wart and is
+not. Node's fetch returned 404 for files that `curl` fetched successfully on the
+same machine seconds apart, consistently enough to write off a third of the
+catalogue as missing on one run. A wrong 404 here is not a slow run - it is a
+card silently dropped from the mirror and a list entry claiming its art no longer
+exists - so the client that demonstrably tells the truth is the one to use. The
+same caution as the parallel-probe note in the entry above, one layer down.
+
+`optimize-images.ts` ignores the folder for free - its `RASTER` pattern is
+png/jpe?g and these are webp - so this adds nothing to build time.
+
+**The database still records the CDN URL.** `liveCardImage` (the dead-prefix
+repair) is what the importers use, so a row keeps saying where its art actually
+came from; serving our own copy is a presentation decision made on read. That is
+also why a missing mirror is fixed by re-running one script instead of by a
+migration.
+
+**Still on the table, deliberately not done here**: `avif` renditions and a
+responsive `srcset` for the mirror. `optimize-images.ts` already builds both for
+png/jpeg sources, and pointing it at these files would cut what a browsing
+visitor downloads by more than half - at the cost of roughly tripling what the
+repo carries. Worth doing as its own change, with its own measurement.

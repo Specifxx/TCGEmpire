@@ -35,7 +35,7 @@ export default async function Image({ params }: { params: { id: string } }) {
   const name = card?.name ?? "Riftbound card";
   const setLine = card ? `${card.setCode} · ${card.collectorNumber}` : "RiftCompare";
   const price = card?.lowestPriceCents != null ? formatMoney(card.lowestPriceCents) : null;
-  const art = card ? cardImageSrc(card, { full: true }) : null;
+  const art = card ? cardImageSrc(card, { full: true, absolute: true }) : null;
 
   return new ImageResponse(
     (

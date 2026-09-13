@@ -120,6 +120,14 @@ Then, in order of preference for anything still missing:
    the top of that file first; most "missing" cards are just prod being behind the
    snapshot.
 
+**If you refresh `prisma/riftbound-cards.json`, mirror the new art in the same
+change**: `npx tsx scripts/mirror-card-art.ts`, then commit `public/card-art/`.
+The site serves card art from that folder rather than hotlinking RiftScribe (see
+DECISIONS.md, 2026-09-13), and the URL rewrite is unconditional, so a card in the
+dataset with no mirrored file would render a 404. `tests/card-image-url.test.ts`
+fails if you forget, which is the guard — not a reason to skip the step. Cards
+imported from the official gallery carry Riot CDN art and are left alone.
+
 Every card-mutating task auto-POSTs `/api/cron/ping-new-cards` afterwards, which
 purges the sitemap and pings IndexNow. That is the launch-week discoverability
 path and it needs no action.
