@@ -23,9 +23,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // single fixed string had no length guard — every one of the 7 domain pages
   // rendered over 60 chars with the suffix, part of Bing's 397 "Title too
   // long" warnings.
+  //
+  // "Prices" front-loaded right after the domain name, matching the champion
+  // hub's ordering — a domain hub is a price-comparison list first, and
+  // "Riftbound Fury cards" is the query, not "cards Riftbound Fury".
   const titleCandidates = [
-    `Riftbound ${domain.label} Cards — Prices, Values & Full List`,
-    `Riftbound ${domain.label} Cards — Prices & Values`,
+    `${domain.label} Prices — Riftbound Domain Cards & Values`,
+    `${domain.label} Prices — Riftbound Domain Cards`,
     `Riftbound ${domain.label} Cards`,
   ];
   const title =
