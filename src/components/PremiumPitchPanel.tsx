@@ -1,9 +1,14 @@
 // THE PREMIUM PITCH, AS THE OWNER DESIGNED IT (2026-09-10). Replaces the
 // two-bar SVG that briefly stood here, which in turn replaced a wall of text.
 // The owner supplied a finished comp: character art bleeding behind a dark
-// scrim, the RiftCompare wordmark and a gold PREMIUM badge, "GET AN / UNFAIR
-// EDGE / FOR BUYING AND SELLING" as the headline, four icon rows, then the
-// price and the real sign-in buttons.
+// scrim, the RiftCompare wordmark and a gold PREMIUM badge, a three-line
+// headline, four icon rows, then the price and the real sign-in buttons.
+//
+// THE HEADLINE WORDING CHANGED 2026-09-14 (see DECISIONS.md). The comp's own
+// line was an advantage-over-other-buyers claim; it now leads with the saving
+// the reader makes. The LAYOUT below — short line, big brand-coloured line,
+// small trailing line — is unchanged, because that shape is what the comp
+// actually contributed and it still holds the new words.
 //
 // BUILT AS REAL MARKUP, NOT THE COMP ITSELF. Shipping the comp as one flat
 // image was the obvious shortcut and is wrong here for a reason that is easy
@@ -57,8 +62,8 @@ const FEATURES: Feature[] = [
   },
   {
     // TIER_COMPARISON: Value Finder / Bulk Pricer / Best Basket — Premium only.
-    title: "The pro screeners",
-    body: "Value Finder, Bulk Pricer and Best Basket.",
+    title: "Buy a whole list for less",
+    body: "Best Basket, Bulk Pricer and Value Finder.",
     icon: (
       <svg {...iconBase}>
         <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -68,7 +73,10 @@ const FEATURES: Feature[] = [
   },
   {
     // TIER_COMPARISON: Rising Cards full list + Demand Finder — Premium only.
-    title: "Market insights",
+    // "Know before you buy", not "know before the market does": these two are
+    // genuinely prediction/attention signals, so the row promises INFORMATION
+    // ahead of a purchase decision, which is what they actually deliver.
+    title: "Know before you buy",
     body: "Rising Cards and Demand Finder, in full.",
     icon: (
       <svg {...iconBase}>
@@ -141,15 +149,15 @@ export function PremiumPitchPanel({
         </div>
         {badge ? <div className="mt-1.5">{badge}</div> : null}
         <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-          Buy smarter. Sell higher.
+          Spend less on every order.
         </p>
 
         <h2 className="mt-2 font-display text-[22px] font-extrabold uppercase italic leading-[0.95] tracking-tight text-white">
-          Get an
+          Never
           <br />
-          <span className="text-[26px] text-brand-400">Unfair edge</span>
+          <span className="text-[26px] text-brand-400">Overpay</span>
           <br />
-          <span className="text-[13px] text-slate-300">for buying and selling</span>
+          <span className="text-[13px] text-slate-300">for a Riftbound card</span>
         </h2>
 
         {showFeatures && (

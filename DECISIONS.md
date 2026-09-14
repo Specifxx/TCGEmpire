@@ -5967,3 +5967,70 @@ to `/login`; sending an error to a page with no error UI would be a silent no-op
 → `sign_up` → `premium_checkout_started` with `via=start`, and the share of
 signups now attributed to `premium_cta`/`premium_dialog`. If the sign-in step is
 still where people fall out, that is the evidence for reopening guest checkout.
+
+## REVERSAL: Premium stops selling an "unfair edge" and starts selling not overpaying — 2026-09-14
+
+Owner: *"Maybe 'get an unfair edge' is the wrong way to advertise it. And maybe we are doing
+too much to promote scalping. Can we reframe the premium and advertise it another way that is
+more drawing to people."* Their three calls, asked and answered: lead on **buyer savings**,
+**reframe copy only** (every feature keeps its name), and **write the position down**.
+
+This reverses the tagline decision four entries up (2026-09-10, "Power tools for buyers &
+sellers" → "Get an unfair edge buying and selling"), the same way the `$0`-headline framing was
+reversed on 2026-09-11 after "Maybe the $0 was a bad idea". The layout that came with the
+owner's comp is untouched; only the words changed.
+
+**Why it was wrong, beyond taste.** The site already had a written mission that the tagline
+contradicted. `/about`: *"so players can spend less time hunting and more time playing."* And
+the speculation audience already has its own brand, RiftboundStocks.com, which `/about` also
+links — so the tagline was both off-mission and cannibalising a separate product's positioning.
+Around it had accumulated a layer of resale language: *flippers* in five places on the Value
+Finder page alone (two of them inside FAQPage JSON-LD), *"Unlock every flip and deal"*,
+*"spot undervalued cards before they bounce back"*, *"cards worth more if you resell them"*,
+*"likely to go up soon"*, and a FAQ answer selling the subscription as an investment that pays
+for itself.
+
+It was also the weaker pitch. Most visitors arrive wanting one thing — the cheapest way to buy a
+card or a deck — and **Best Basket** is the one Premium tool that is unambiguously that, and the
+only one that proves its own claim by showing the unoptimised total next to its own. It was
+buried third behind the screeners.
+
+| | From | To |
+|---|---|---|
+| Tagline | Get an unfair edge buying and selling | **Never overpay for a Riftbound card** |
+| Panel eyebrow | Buy smarter. Sell higher. | **Spend less on every order.** |
+
+**The honesty constraint that shaped the rewrite.** Rising Cards and Rising Sealed genuinely are
+appreciation-prediction screens; Demand Finder is an attention signal built from our own traffic.
+Re-describing any of them as savings tools would be exactly the invented claim this repo fails
+builds over — the same rule that made the retired edge graphic drop its fabricated figures. So
+the split is: **the pitch sells savings, and each tool keeps describing itself accurately on its
+own page, disclaimers intact.** What went is the advantage framing wrapped around them.
+"Rising Cards shows what's about to move" became "Rising Cards tells you whether to buy it now
+or leave it" — same tool, and the second sentence is the one a player actually has a use for.
+Deal Finder's own "Net profit" and "Margin" column headers stay: that view really does compute a
+resale margin, and mislabelling it would be worse than naming it.
+
+**The stated position, so this can't drift back.** `/about` gains a "Who it's for" section (with
+a linkable `#who-its-for` id) saying the site is for buying the cards you want without
+overpaying, that we don't market it as a way to profit at another player's expense, and pointing
+the asset-tracking use case at RiftboundStocks.com. `/editorial-policy` carries the same
+commitment next to its existing "nothing here is financial advice" line and links back.
+
+**`tests/premium-positioning.test.ts`** is what makes it durable rather than a one-off edit: no
+pitch surface may contain "unfair edge", flipper/flipping/"every flip", "scalp", or pre-emption
+framing ("before they bounce", "ahead of the market"); the tagline must be present on all four
+headline surfaces and match the panel's three-line split; `/about` and `/editorial-policy` must
+carry the position; the prediction tools must keep their disclaimers and the pitch must not
+promise a price will move; and the existing scarcity/countdown guards are re-applied to every
+file this pass touched.
+
+One scoping note worth keeping: `lib/email.ts` is checked only across its Premium region, not
+whole. Two legitimate lines elsewhere in it would trip the rules — a password-reset link that
+really does expire in an hour, and sealed-email copy whose at-RRP flag exists so a buyer can
+tell *"a fair price or a scalp"* apart. Banning the word there would have deleted anti-scalping
+copy in the name of an anti-scalping rule.
+
+`PREMIUM_COPY_VERSION` → `never-overpay-2026-09-14`, so GA4 can split the funnel on either side
+of the change. Read in two weeks: `premium_checkout_started` per `premium_slidein_shown`, split
+by `copy`.

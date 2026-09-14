@@ -26,11 +26,11 @@ export const metadata: Metadata = {
 const TOOLS: { title: string; desc: string; href: string; icon: string; tier: PremiumTierKey }[] = [
   { title: "Bulk Pricer", desc: "Price a whole want-list or trade pile in one paste.", href: "/bulk-pricer", icon: "📋", tier: "premium" },
   { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", icon: "🧺", tier: "premium" },
-  { title: "Value Finder", desc: "Cards trading below their recent average — undervalued picks.", href: "/tools/value-finder", icon: "🔎", tier: "premium" },
-  { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — likely to go up soon.", href: "/tools/rising", icon: "🚀", tier: "plus" },
-  { title: "Rising Sealed", desc: "Sealed products ranked by price-timing + supply signals — likely to go up soon.", href: "/tools/rising-sealed", icon: "📦", tier: "plus" },
+  { title: "Value Finder", desc: "Cards trading below their recent average — what's going cheap today.", href: "/tools/value-finder", icon: "🔎", tier: "premium" },
+  { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — buy now, or leave it.", href: "/tools/rising", icon: "🚀", tier: "plus" },
+  { title: "Rising Sealed", desc: "Sealed products ranked by price-timing + supply signals — when to buy.", href: "/tools/rising-sealed", icon: "📦", tier: "plus" },
   { title: "Demand Finder", desc: "The most searched and viewed cards right now, by real traffic.", href: "/tools/demand", icon: "📊", tier: "premium" },
-  { title: "Deal Finder", desc: "Cards worth more on eBay and the cheapest eBay buys, updated daily.", href: "/tools/deal-finder", icon: "⚖️", tier: "plus" },
+  { title: "Deal Finder", desc: "The cheapest eBay buys, cross-market gaps, and resale spreads. Daily.", href: "/tools/deal-finder", icon: "⚖️", tier: "plus" },
   { title: "Condition Calculator", desc: "Estimate a card's value swap between NM, LP, MP, HP and DMG.", href: "/tools/condition-calculator", icon: "🩹", tier: "plus" },
 ];
 

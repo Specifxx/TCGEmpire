@@ -275,7 +275,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
 
   if (!shown) return null;
 
-  const heading = trialAvailable ? "Try Premium free" : "Get an unfair edge buying and selling";
+  const heading = trialAvailable ? "Try Premium free" : "Never overpay for a Riftbound card";
 
   return (
     // Bottom-LEFT, same corner and z-tier as PremiumSlideIn (z-[70], under every

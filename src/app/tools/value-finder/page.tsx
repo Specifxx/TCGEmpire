@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Value Finder — Undervalued Riftbound Cards | RiftCompare" },
   description:
-    "A Premium screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers, ranked by how far below their usual price they are. Just want to check what a card is worth? Use the free value checker.",
+    "A Premium screener for Riftbound cards trading below their recent average, ranked by how far below their usual price they are — so you can tell whether a card on your want-list is genuinely cheap right now. Just want to check what a card is worth? Use the free value checker.",
   keywords: [
     "undervalued riftbound cards",
     "riftbound card deals",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 const VF_FAQS = [
   {
     q: "What is the Riftbound Value Finder?",
-    a: "A screener that surfaces Riftbound cards currently trading below their own recent average price — a mean-reversion signal for value buyers and flippers. Cards are ranked by how far below their usual price they sit and how far off their recent high they are.",
+    a: "A screener that surfaces Riftbound cards currently trading below their own recent average price. Cards are ranked by how far below their usual price they sit and how far off their recent high they are, so you can see which of the cards you want are going cheap today rather than checking them one at a time.",
   },
   {
     q: "How is “undervalued” calculated?",
@@ -49,7 +49,7 @@ const VF_FAQS = [
   },
   {
     q: "Does undervalued mean the price will go up?",
-    a: "Not necessarily. A card below its average can keep falling if demand is genuinely cooling. Treat the screen as a starting point for research, not a guarantee — check the card's price history and current demand before buying to flip.",
+    a: "Not necessarily. A card below its average can keep falling if demand is genuinely cooling, and nothing here is investment advice. Treat the screen as a starting point, not a guarantee — check the card's price history and current demand on its own page before you buy.",
   },
 ];
 
@@ -83,7 +83,7 @@ export default async function ValueFinderPage() {
         </div>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           {info.adjective} cards trading <strong className="text-slate-200">below their own recent average</strong> — a
-          mean-reversion signal for value buyers and flippers. Ranked by how far below their usual price they sit, not just
+          plain read on which cards are going cheap today. Ranked by how far below their usual price they sit, not just
           today&apos;s movement.
         </p>
       </div>
@@ -148,7 +148,7 @@ export default async function ValueFinderPage() {
               <div>
                 <p className="text-sm font-bold text-white">Unlock the full Value Finder</p>
                 <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                  See every undervalued card — ranked by how far below its 30-day average it&apos;s trading — not just the top pick.
+                  See every card going cheap — ranked by how far below its 30-day average it&apos;s trading — not just the top pick.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                   {user ? (
@@ -249,7 +249,7 @@ export default async function ValueFinderPage() {
               operatingSystem: "Web",
               offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
               description:
-                "A screener for Riftbound cards trading below their recent average — a mean-reversion signal for value buyers and flippers.",
+                "A screener for Riftbound cards trading below their recent average, ranked by how far below their usual price they sit.",
             },
           ]),
         }}

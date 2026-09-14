@@ -586,7 +586,7 @@ function LockedTable({ children, signedIn }: { children: React.ReactNode; signed
         <div className="pointer-events-auto mx-auto max-w-sm rounded-lg border border-ink-700 bg-ink-900/95 p-5 text-center">
           <h2 className="text-base font-extrabold text-white">The full list is a Premium feature</h2>
           <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
-            The top opportunity is on us. Unlock every flip and deal — all sources, sortable and paginated, updated daily — with Premium.
+            The top pick is on us. Unlock every deal — all sources, sortable and paginated, updated daily — with Premium.
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             {signedIn ? (

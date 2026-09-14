@@ -46,12 +46,12 @@ export function MoversToolsCta() {
   return (
     <section className="card-surface relative overflow-hidden p-5">
       <span className="chip absolute right-4 top-4 bg-gold/20 text-gold">Premium</span>
-      <h2 className="text-lg font-bold text-white">For keen buyers &amp; sellers</h2>
+      <h2 className="text-lg font-bold text-white">Know what a card should cost</h2>
       <p className="mt-1 max-w-xl text-sm text-slate-400">
-        Movers show what already moved. Premium shows what&apos;s <strong className="text-slate-200">about to</strong>:
+        Movers tell you a price changed. Premium tells you whether today&apos;s price is a good one:
         the <strong className="text-slate-200">Value Finder</strong> screens every card trading below its 30-day
         average, and the <strong className="text-slate-200">Deal Finder</strong> lists cards that are cheaper in
-        one place than another (and worth more on eBay if you&apos;re selling) — the full lists, ranked.
+        one place than another — the full lists, ranked.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <PremiumButton />

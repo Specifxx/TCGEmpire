@@ -38,8 +38,8 @@ import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "RiftCompare Premium — get an unfair edge buying and selling",
-  description: "RiftCompare Premium: the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Demand Finder, the full Deal Finder list and an ad-free site. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
+  title: "RiftCompare Premium — never overpay for a Riftbound card",
+  description: "RiftCompare Premium finds the cheapest way to buy what you actually want: Best Basket splits a whole decklist across stores with postage included, the Bulk Pricer costs a want-list in one paste, and the full Deal Finder and Value Finder lists show where a card is going cheap. Price comparison is free for everyone, and a free account adds alerts and your portfolio.",
   alternates: pageAlternates("/premium"),
 };
 
@@ -67,7 +67,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Value Finder screener",
-    body: "Every card trading below its own 30-day average right now, ranked by discount — spot undervalued cards before they bounce back.",
+    body: "Every card trading below its own 30-day average right now, ranked by discount — so you can tell at a glance whether a card you want is cheap by its own standards or just cheap-looking.",
     href: "/tools/value-finder",
     cta: "Open Value Finder",
     tier: "premium",
@@ -75,7 +75,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Rising Cards",
-    body: "Cards ranked by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested. Free shows only the top pick.",
+    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, backtested, and not financial advice. Free shows only the top pick.",
     href: "/tools/rising",
     cta: "Open Rising Cards",
     tier: "plus",
@@ -83,7 +83,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Rising Sealed",
-    body: "Booster boxes, packs and bundles ranked by price-timing and supply signals — sitting near their own recent low, thin in-stock, not already spiking. Free shows only the top pick.",
+    body: "Booster boxes, packs and bundles ranked by price-timing and supply signals — near their own recent low, thin in-stock, not already spiking. Useful for timing a box you were going to open anyway; not financial advice. Free shows only the top pick.",
     href: "/tools/rising-sealed",
     cta: "Open Rising Sealed",
     tier: "plus",
@@ -99,7 +99,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Deal Finder",
-    body: "The full list of cards worth more on eBay than in stores (handy if you're selling), the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — all sources, sortable, updated daily. Free shows only the top pick.",
+    body: "The full list of cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — plus, if you're selling, the cards worth more on eBay than in stores. All sources, sortable, updated daily. Free shows only the top pick.",
     href: "/tools/deal-finder",
     cta: "Open Deal Finder",
     tier: "plus",
@@ -156,7 +156,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Is Premium worth it?",
-    a: "Deal Finder and Value Finder alone routinely surface savings worth more than a month's subscription — see the live numbers above. If you buy or sell more than the occasional single card, the pro tools tend to pay for themselves.",
+    a: "Depends entirely on how much you buy. Best Basket is the honest test: it shows the unoptimised total next to its own, so the saving on a single deck order is a number you can check rather than a claim we make. On a full deck that difference is often more than a month of Premium. If you only buy the occasional single card, the free tier is genuinely all you need — that's deliberate.",
   },
   ...(premiumPlusEnabled()
     ? [
@@ -254,12 +254,12 @@ export default async function PremiumPage() {
       <div className="text-center">
         <span className="chip mb-3 inline-flex bg-gold/15 font-bold uppercase tracking-wide text-gold">Premium</span>
         <h1 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Get an unfair edge buying and selling"}
+          {already ? `You're ${TIER_NAMES[currentTier ?? "premium"]}` : "Never overpay for a Riftbound card"}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it, and add ad-free browsing and the pro tools serious buyers and sellers actually need${
+            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it, and add ad-free browsing and the tools that work out the cheapest way to buy what you want${
                 premiumTrialEnabled() ? ` — every plan starts with a ${PREMIUM_TRIAL_DAYS}-day free trial` : ""
               }.`}
         </p>

@@ -99,6 +99,12 @@ export const PITCH_TOOLS: { emoji: string; label: string }[] = [
 // most relevant to where the visitor already is — a deck page sells Best
 // Basket, a card page sells Value Finder — rather than the flat "unlock N
 // tools" line that's true everywhere and therefore compelling nowhere.
+//
+// EVERY HEADING IS ABOUT WHAT THE READER SAVES OR LEARNS BEFORE BUYING
+// (2026-09-14 reframe, see DECISIONS.md). Rising Cards genuinely is a
+// prediction screen, so its heading promises a buy-now-or-wait ANSWER rather
+// than pretending it finds a discount — describing it as a savings tool would
+// be the invented claim this repo fails builds over.
 // First matching prefix wins; no match falls back to the original generic copy.
 //
 // Every `tool` here MUST be a real PITCH_TOOLS label (tests/premium-slidein.test.ts
@@ -115,14 +121,14 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
   {
     prefixes: ["/card/"],
     tool: "Value Finder",
-    heading: "Value Finder shows what's trading below average right now",
+    heading: "Value Finder shows which cards are cheap right now",
     line: "Every card currently priced below its own 30-day average, ranked by discount.",
   },
   {
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
-    heading: "Rising Cards shows what's about to move, not what already did",
-    line: "Ranked by demand and price-timing signals, backtested. Free shows only the top pick.",
+    heading: "Rising Cards tells you whether to buy it now or leave it",
+    line: "Ranked by demand and price-timing signals, backtested. Not financial advice. Free shows only the top pick.",
   },
 ];
 
@@ -283,8 +289,8 @@ export function PremiumSlideIn() {
   if (!shown) return null;
 
   const heading =
-    contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Get an unfair edge buying and selling");
-  const bodyLine = contextPitch?.line ?? "You've been comparing prices — Premium adds the pro tools and goes ad-free:";
+    contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Never overpay for a Riftbound card");
+  const bodyLine = contextPitch?.line ?? "You've been comparing prices — Premium finds the cheapest way to buy the whole list, and goes ad-free:";
   const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
 
   return (

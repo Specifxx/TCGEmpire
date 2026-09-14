@@ -282,9 +282,9 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="px-5 py-5">
-          <h2 className="text-lg font-extrabold text-white">Get an unfair edge buying and selling</h2>
+          <h2 className="text-lg font-extrabold text-white">Never overpay for a Riftbound card</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Unlock the pro screeners and go ad-free. The portfolio tracker and price comparison stay free.
+            Get the cheapest way to buy a whole list, and go ad-free. The portfolio tracker and price comparison stay free.
           </p>
 
           {/* Only for someone who could still act on it — already-Premium
@@ -325,7 +325,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               <div className="text-center">
                 <p className="text-sm font-semibold text-gold">✓ You&apos;re on Plus</p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Upgrade to Premium for the four pro tools — Value Finder, Bulk Pricer, Best Basket and Demand Finder.
+                  Upgrade to Premium for the four list tools — Best Basket, Bulk Pricer, Value Finder and Demand Finder.
                 </p>
                 <button onClick={upgradeTier} disabled={busy} className={`${GOLD_BTN} mt-3`}>
                   {busy ? "Upgrading…" : `Upgrade to Premium — ${PREMIUM_PRICE_LABEL} →`}
