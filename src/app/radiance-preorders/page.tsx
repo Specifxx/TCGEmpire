@@ -3,11 +3,9 @@ import Link from "next/link";
 import { getPreorderGroups } from "@/lib/sealed-import";
 import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
-import { formatMoney } from "@/lib/format";
-import { affiliateUrl } from "@/lib/affiliate";
-import { OutboundLink } from "@/components/OutboundLink";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
+import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderPriceTable";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
@@ -86,13 +84,7 @@ export default async function RadiancePreordersPage() {
   const set = setByCode(SET_CODE);
   const stillUpcoming = isPreorderSetCode(SET_CODE);
   const groups = stillUpcoming ? await getPreorderGroups(country) : [];
-
-  // Only groups with a real price are worth showing; the rest would be an empty row.
-  const priced = groups
-    .filter((g) => g.lowestPriceCents != null && g.listings.length > 0)
-    .sort((a, b) => (a.lowestPriceCents ?? 9e9) - (b.lowestPriceCents ?? 9e9));
-
-  const storeCount = new Set(priced.flatMap((g) => g.listings.map((l) => l.retailer))).size;
+  const priced = pricedPreorderGroups(groups);
 
   const ld = ldJson(
     webPage({
@@ -150,80 +142,13 @@ export default async function RadiancePreordersPage() {
       </p>
 
       {priced.length > 0 ? (
-        <>
-          <p className="mt-4 text-xs text-slate-500">
-            {priced.length} product{priced.length === 1 ? "" : "s"} across {storeCount} store
-            {storeCount === 1 ? "" : "s"} · sorted cheapest first
-          </p>
-
-          <div className="mt-4 space-y-4">
-            {priced.map((g) => {
-              const rows = [...g.listings].sort((a, b) => a.priceCents - b.priceCents);
-              const cheapest = rows[0];
-              return (
-                <section key={g.groupKey} className="card-surface overflow-hidden">
-                  <div className="flex items-center justify-between gap-3 border-b border-ink-800 px-4 py-3">
-                    <div className="min-w-0">
-                      <h2 className="truncate font-bold text-white">{g.name}</h2>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {rows.length} store{rows.length === 1 ? "" : "s"} taking pre-orders
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="num text-lg font-extrabold text-brand-400">
-                        {formatMoney(cheapest.priceCents, currency)}
-                      </div>
-                      <div className="text-[11px] text-slate-500">cheapest</div>
-                    </div>
-                  </div>
-                  <ul className="divide-y divide-ink-800">
-                    {rows.map((l) => {
-                      const overPct =
-                        cheapest.priceCents > 0
-                          ? Math.round(((l.priceCents - cheapest.priceCents) / cheapest.priceCents) * 100)
-                          : 0;
-                      return (
-                        <li key={`${g.groupKey}-${l.retailer}`} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                          <span className="min-w-0 truncate text-sm text-slate-300">{l.retailerName}</span>
-                          <span className="flex shrink-0 items-center gap-3">
-                            {overPct > 0 && (
-                              <span className="num text-[11px] text-slate-500">+{overPct}%</span>
-                            )}
-                            <span className="num text-sm font-semibold text-white">
-                              {formatMoney(l.priceCents, currency)}
-                            </span>
-                            <OutboundLink
-                              href={affiliateUrl(l.url, l.retailer)}
-                              retailer={l.retailer}
-                              country={country}
-                              kind="sealed"
-                              className="btn-ghost px-2.5 py-1 text-xs"
-                            >
-                              Pre-order
-                            </OutboundLink>
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
-
-          <p className="mt-4 text-xs leading-relaxed text-slate-500">
-            Every price above is a <strong className="text-slate-300">pre-order</strong> — the store is taking payment
-            or a deposit now for stock that arrives on or after 23 October 2026. Pre-order prices move before release,
-            and store terms differ, so confirm both at checkout.
-          </p>
-          {/* Store links here are affiliate-tagged (affiliateUrl), so the page
-              carries its own disclosure. AffiliateDisclosure only speaks for
-              eBay/TCGplayer, so the wording is stated directly instead. */}
-          <p className="mt-2 text-[11px] leading-snug text-slate-400">
-            Some store links on this page are affiliate links. If you pre-order through one we may earn a commission,
-            at no extra cost to you. It never affects the ranking above — these are sorted purely by price.
-          </p>
-        </>
+        <div className="mt-4">
+          {/* PreorderPriceTable's own product headings are <h3> (it also renders
+              inside RadianceHub's "Products & preorders" <h2>), so this page needs
+              its own enclosing <h2> or h1 -> h3 skips a level. */}
+          <h2 className="sr-only">Radiance pre-order prices by product</h2>
+          <PreorderPriceTable groups={priced} country={country} currency={currency} />
+        </div>
       ) : (
         <div className="card-surface mt-5 p-6">
           <h2 className="font-bold text-white">
