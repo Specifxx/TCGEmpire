@@ -28,6 +28,9 @@ import { buildCollectionNarrative } from "@/lib/content/collection-narrative";
 import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
+import { RadianceHub } from "@/components/sets/RadianceHub";
+import { RADIANCE_FAQ } from "@/lib/sets/radiance";
+import { faqPage } from "@/lib/jsonld";
 
 // Per-set pre-release reading, shown on a set page that has no cards yet. Keyed by
 // slug and DATA, not JSX, so adding the next set is one array — the previous shape
@@ -38,6 +41,21 @@ import { preordersHrefForSet } from "@/lib/release-calendar";
 // resolves every one of them. Radiance's list deliberately leads with the two
 // pages that can be acted on today — what is confirmed, and what the pre-orders
 // cost — rather than with the mechanic leaks, which are interesting but unbuyable.
+//
+// TODO (not done this pass — non-trivial, deliberately deferred): a brief asked
+// for every existing /sets/radiance mention sitewide to use one consistent
+// anchor text ("Radiance card list & prices"). Checked both real candidates and
+// left them as-is rather than force a phrase that doesn't fit:
+//   - src/app/sets/page.tsx's "Upcoming & unreleased" tile grid shows every
+//     set's bare NAME as the link text (a UI pattern, not prose) — retyping just
+//     Radiance's tile breaks visual consistency with every sibling tile for no
+//     real SEO gain.
+//   - src/lib/articles.ts already links /sets/radiance from several posts
+//     (search the file for the literal string) with natural, already-relevant
+//     anchor text ("Radiance set page", "[Radiance](/sets/radiance)") woven
+//     into real sentences — forcing one exact phrase into each would read as
+//     keyword-stuffing mid-sentence, not a genuine gap the way an actually
+//     missing link would be.
 const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
   radiance: [
     { href: "/blog/riftbound-radiance-what-we-know", label: "Release date & what's confirmed" },
@@ -181,7 +199,13 @@ export async function generateMetadata({
     ],
     // Single cookie-switched URL is the global default for all four markets.
     alternates: pageAlternates(canonicalPath, { languages: { "x-default": `${SITE_URL}${canonicalPath}` } }),
-    ...(cardCount === 0 || filtered ? { robots: { index: false, follow: true } } : {}),
+    // set.hubReady is the one exception to the "0 cards = thin = noindex" rule
+    // above: a set with a real, populated content hub (confirmed facts,
+    // legends, products, FAQ — see RadianceHub) is not thin just because no
+    // cards have imported yet. Every OTHER comingSoon set with no hub built
+    // keeps the default noindex until it earns hubReady the same way, so this
+    // can never flip a genuinely empty future-set stub to indexable by accident.
+    ...((cardCount === 0 && !set.hubReady) || filtered ? { robots: { index: false, follow: true } } : {}),
     openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
   };
 }
@@ -324,9 +348,17 @@ export default async function SetPage({
     // set's HTML weight (≈1 MB / 1.8k links on Origins) for zero extra crawl value.
   };
 
+  // FAQPage JSON-LD only where a real, visible FAQ backs it (RadianceHub renders
+  // the identical RADIANCE_FAQ array via HubFaq) — Google only honours FAQPage
+  // when the answer text is actually on the page, and every other set has none.
+  const faqLd = set.slug === "radiance" ? faqPage(RADIANCE_FAQ) : null;
+
   return (
     <div className="flex flex-col gap-8">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, collection]) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumb, collection, ...(faqLd ? [faqLd] : [])]) }}
+      />
 
       {/* Breadcrumb + hero */}
       <section className="card-surface animate-fade-up relative overflow-hidden">
@@ -428,6 +460,13 @@ export default async function SetPage({
           ) : null}
         </div>
       </section>
+
+      {/* Radiance content hub — confirmed facts, legends, products + a real
+          pre-order table, a release timeline, and the FAQ backing faqLd above.
+          Radiance-only for now (see PRE_RELEASE_LINKS's own per-slug pattern
+          above); renders regardless of totalInSet, unlike PRE_RELEASE_LINKS
+          which is confined to the empty-grid stub below. */}
+      {set.slug === "radiance" && <RadianceHub country={country} />}
 
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through
           spoiler season the official-gallery importer populates revealed cards early

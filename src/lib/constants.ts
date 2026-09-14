@@ -252,6 +252,21 @@ export interface SetInfo {
    * Set it alongside the guess, delete it when the real code is confirmed.
    */
   codeProvisional?: boolean;
+  /**
+   * TRUE only for a set whose /sets/<slug> page has a real, populated content
+   * hub (confirmed facts, legends, products, FAQ — see src/lib/sets/<slug>.ts
+   * and the RadianceHub-style component that renders it) even while it still
+   * has zero imported cards.
+   *
+   * This is the guard that lets /sets/[set]'s generateMetadata index a
+   * pre-release set page: the default rule is noindex whenever cardCount is
+   * 0, because an empty stub is thin content. A set with this flag set and a
+   * real hub is not thin, so it flips back to indexable — but every OTHER
+   * comingSoon set with no hub built yet (a future Legacy, The Reckoning...)
+   * keeps the default noindex until it earns the same flag the same way
+   * Radiance did: build the hub first, then flip this.
+   */
+  hubReady?: boolean;
 }
 export const SETS: SetInfo[] = [
   { code: "OGN", name: "Origins", slug: "origins" },
@@ -271,7 +286,15 @@ export const SETS: SetInfo[] = [
   // was checked against Riot's own products-and-sets rundown, which lists
   // "3-Letter Code: RAD" (alongside LGC for Legacy and REC for The Reckoning).
   // codeProvisional is therefore gone: the /sets/radiance badge may show it.
-  { code: "RAD", name: "Radiance", slug: "radiance", totalCards: 180, comingSoon: true, releasedOn: "2026-10-23" },
+  {
+    code: "RAD",
+    name: "Radiance",
+    slug: "radiance",
+    totalCards: 180,
+    comingSoon: true,
+    releasedOn: "2026-10-23",
+    hubReady: true,
+  },
 ];
 
 // How long after release a set keeps first claim on the eBay quota. Two months:
