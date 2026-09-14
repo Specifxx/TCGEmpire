@@ -57,7 +57,12 @@ test("an unverified provider email cannot reach the email-matching branches", ()
   );
   assert.match(
     callback,
-    /if \(!linked\) return fail\(req, "oauth_unverified"\)/,
+    // fail() gained a `provider` argument on 2026-09-13 so a failure that began
+    // at /premium/start goes back THERE (that page renders the same AuthForm,
+    // and the tier/plan selection survives in its URL) rather than stranding a
+    // buyer on /login. What this test pins is unchanged: the refusal is a
+    // redirect to a readable error, never an unhandled throw.
+    /if \(!linked\) return fail\(req, "oauth_unverified"(, provider)?\)/,
     "the refusal has to surface as a failed sign-in, not a thrown 500"
   );
 });

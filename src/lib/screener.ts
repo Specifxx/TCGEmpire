@@ -1,5 +1,5 @@
 // Value-finder screener (Premium): cards trading meaningfully BELOW their own
-// recent average — a mean-reversion signal flippers and value buyers want. Unlike
+// recent average — which cards are going cheap relative to their own recent norm. Unlike
 // /movers (raw recent % drops), this compares today's lowest to the card's ~30-day
 // average, so a card that's been quietly cheap for a while still surfaces.
 //

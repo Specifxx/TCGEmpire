@@ -543,7 +543,8 @@ export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, f
       : `Premium is ${fromLine}.`;
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine}
+      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine} It works out the
+      cheapest way to buy a whole want-list or decklist, postage included.
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
@@ -609,8 +610,8 @@ export function buildPremiumOfferEmail(opts: PremiumOfferEmailOpts, fromLine: st
       ${greeting}
     </td></tr>
     <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      Thanks for using RiftCompare. Price comparison, alerts and your portfolio stay free — but if you buy, sell or
-      track Riftbound seriously, Premium is the set of tools we built for exactly that:
+      Thanks for using RiftCompare. Price comparison, alerts and your portfolio stay free — Premium is for when
+      you're buying more than one card at a time and want the cheapest way to get the lot:
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}<li style="margin:4px 0">No ads on any page</li></ul>

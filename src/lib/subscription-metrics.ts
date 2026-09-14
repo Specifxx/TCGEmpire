@@ -121,7 +121,10 @@ function monthKey(ms: number): string {
 
 // True for a subscription that is live right now (billing or in a paid-committed
 // state). `trialing` is counted separately, not as active MRR.
-function isActive(s: Stripe.Subscription.Status): boolean {
+// Exported so scripts/funnel-report.ts applies the SAME definition of
+// "currently paying" as the admin page, rather than a second copy that can
+// drift (past_due counts — a card that failed this cycle is still a customer).
+export function isActive(s: Stripe.Subscription.Status): boolean {
   return s === "active" || s === "past_due";
 }
 

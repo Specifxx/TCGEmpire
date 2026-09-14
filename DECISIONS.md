@@ -5886,3 +5886,316 @@ every SPA navigation, not just the initial load). A real Discord bot already
 exists and already tags its links (`utm_source=discord-bot&utm_medium=bot&
 utm_campaign=price-command`, `src/app/api/discord/interactions/route.ts`) —
 this audit is what confirms that tagging actually survives to a GA4 report.
+
+## Sign-in is a step inside checkout, not a gate in front of it — 2026-09-13
+
+Owner: "Any chance we can streamline people buying premium? Like optional sign
+ups or something? There has to be a better strategy."
+
+**The measurement.** Counted on the real code, signed out, to reaching Stripe:
+
+| Entry point | Clicks before | Clicks after |
+|---|---|---|
+| `/premium` pricing-card CTA | 5 | 3 |
+| Tool blur-wall → `PremiumDialog` | 6 | 3 |
+| `SignupPromoPopup` | 3 | 3 (unchanged) |
+| Signed in, any surface | 1 | 1 (unchanged) |
+
+Five, because sign-in was a GATE: CTA → `/login?next=/premium` → provider button
+→ Google's account picker → back on `/premium` → find the CTA again → Stripe.
+Six from a blur-wall, and that path was worse than one extra click: the dialog's
+signed-out link hardcoded `next=/premium`, so a visitor who hit the wall on a
+deck page was returned to the pricing page and the deck was simply gone. Three is
+the floor without dropping Google's `prompt=select_account`, which the OAuth
+start route sets deliberately.
+
+**What changed.** `/premium/start?tier=&plan=&back=&src=` is the new destination
+of every buy button. Signed out, that page IS the sign-in step — it renders the
+same `AuthForm` `/login` does, with `?next=` pointing back at its own URL, so the
+OAuth round trip returns with the tier, the plan and `back` intact. Signed in, a
+client `CheckoutLauncher` fires `premium_checkout_started` and POSTs the existing
+`/api/premium/checkout`. The dialog does the same thing without a navigation at
+all: the provider buttons render inside the wall, and its `next` is a
+`premiumStartHref` carrying `back: pathname`.
+
+**What deliberately did NOT change: the security model.** OAuth stays the only
+way an address enters `User`. `upsertOAuthUser` still refuses an address the
+provider has not verified, for the reason in its own comment — `isAdminEmail()`
+grants moderator powers BY ADDRESS, so an unproven address must not enter the
+system at all. The webhook still resolves a buyer only through
+`metadata.userId ?? client_reference_id`, `TrialRedemption.userId` is still
+required, and the card-gated trial (owner's call, asked and confirmed) is
+untouched. True guest checkout — pay with an address typed into Stripe, claim the
+account afterwards — was scoped and deferred: it needs a `PendingCheckout` table,
+changes to `premiumStarted`, `stampFromSubscription` and the reconcile's
+unmatched branch (otherwise the daily admin alert fires for every unclaimed
+purchase), orphan/refund policy, and it edits the two files behind both prior
+billing incidents. Roughly 3–4× the work of this pass for the same three clicks.
+
+**`/portfolio?upgraded=1` was a dead end and is now `/premium/welcome`.** Nothing
+on the site ever read that param: a buyer was returned to the ordinary free-tier
+portfolio with no confirmation and no way back to what they had been doing. The
+new page re-reads the Checkout Session from Stripe and refuses unless
+`metadata.userId`/`client_reference_id` matches the signed-in account — a
+`success_url` is attacker-reachable, so the `cs_…` in the URL proves nothing by
+itself. Entitlement is still webhook-async, so the page polls `/api/me` for up to
+20s and then says so honestly rather than claiming failure; a synchronous
+`runStripeReconcile` was rejected because it sweeps every Stripe subscription and
+emails the admin, which is not a page-view-shaped operation.
+
+**Attribution that was missing.** `PremiumCta`'s signed-out link called neither
+`markSignupSource` nor `trackEvent`, so the highest-intent signups on the site
+recorded as `"login"` — indistinguishable from someone typing `/login`. Added
+`premium_cta` and `premium_dialog` to `SIGNUP_SOURCES` (the `/admin/accounts`
+chips pick them up with no further work) and a new `premium_signin_step` event.
+That event and `premium_checkout_started` are both low-volume conversion steps,
+so neither goes in `GA4_ONLY_EVENTS`.
+
+**Two shapes the code forced.** `providers` moved onto `/api/me` rather than
+being threaded as a prop, because the root layout mounts `<PremiumDialogProvider>`
+as a bare literal (pinned by `tests/premium-slidein.test.ts`) with nowhere to pass
+one through. And `SignupPromoPopup` keeps `next="/premium"`: it is pinned twice,
+and a popup visitor has not chosen a tier yet, so the start step would have
+nothing to show them.
+
+**An OAuth failure now returns to the step it started at**, but only when that
+step is `/premium/start` — the one other page besides `/login` that renders
+`?error=` through `AuthForm`'s `OAUTH_ERRORS`. Any other `next` still falls back
+to `/login`; sending an error to a page with no error UI would be a silent no-op.
+
+**Read in two weeks** (`/admin/accounts` source chips, GA4): `premium_signin_step`
+→ `sign_up` → `premium_checkout_started` with `via=start`, and the share of
+signups now attributed to `premium_cta`/`premium_dialog`. If the sign-in step is
+still where people fall out, that is the evidence for reopening guest checkout.
+
+## REVERSAL: Premium stops selling an "unfair edge" and starts selling not overpaying — 2026-09-14
+
+Owner: *"Maybe 'get an unfair edge' is the wrong way to advertise it. And maybe we are doing
+too much to promote scalping. Can we reframe the premium and advertise it another way that is
+more drawing to people."* Their three calls, asked and answered: lead on **buyer savings**,
+**reframe copy only** (every feature keeps its name), and **write the position down**.
+
+This reverses the tagline decision four entries up (2026-09-10, "Power tools for buyers &
+sellers" → "Get an unfair edge buying and selling"), the same way the `$0`-headline framing was
+reversed on 2026-09-11 after "Maybe the $0 was a bad idea". The layout that came with the
+owner's comp is untouched; only the words changed.
+
+**Why it was wrong, beyond taste.** The site already had a written mission that the tagline
+contradicted. `/about`: *"so players can spend less time hunting and more time playing."* And
+the speculation audience already has its own brand, RiftboundStocks.com, which `/about` also
+links — so the tagline was both off-mission and cannibalising a separate product's positioning.
+Around it had accumulated a layer of resale language: *flippers* in five places on the Value
+Finder page alone (two of them inside FAQPage JSON-LD), *"Unlock every flip and deal"*,
+*"spot undervalued cards before they bounce back"*, *"cards worth more if you resell them"*,
+*"likely to go up soon"*, and a FAQ answer selling the subscription as an investment that pays
+for itself.
+
+It was also the weaker pitch. Most visitors arrive wanting one thing — the cheapest way to buy a
+card or a deck — and **Best Basket** is the one Premium tool that is unambiguously that, and the
+only one that proves its own claim by showing the unoptimised total next to its own. It was
+buried third behind the screeners.
+
+| | From | To |
+|---|---|---|
+| Tagline | Get an unfair edge buying and selling | **Never overpay for a Riftbound card** |
+| Panel eyebrow | Buy smarter. Sell higher. | **Spend less on every order.** |
+
+**The honesty constraint that shaped the rewrite.** Rising Cards and Rising Sealed genuinely are
+appreciation-prediction screens; Demand Finder is an attention signal built from our own traffic.
+Re-describing any of them as savings tools would be exactly the invented claim this repo fails
+builds over — the same rule that made the retired edge graphic drop its fabricated figures. So
+the split is: **the pitch sells savings, and each tool keeps describing itself accurately on its
+own page, disclaimers intact.** What went is the advantage framing wrapped around them.
+"Rising Cards shows what's about to move" became "Rising Cards tells you whether to buy it now
+or leave it" — same tool, and the second sentence is the one a player actually has a use for.
+Deal Finder's own "Net profit" and "Margin" column headers stay: that view really does compute a
+resale margin, and mislabelling it would be worse than naming it.
+
+**The stated position, so this can't drift back.** `/about` gains a "Who it's for" section (with
+a linkable `#who-its-for` id) saying the site is for buying the cards you want without
+overpaying, that we don't market it as a way to profit at another player's expense, and pointing
+the asset-tracking use case at RiftboundStocks.com. `/editorial-policy` carries the same
+commitment next to its existing "nothing here is financial advice" line and links back.
+
+**`tests/premium-positioning.test.ts`** is what makes it durable rather than a one-off edit: no
+pitch surface may contain "unfair edge", flipper/flipping/"every flip", "scalp", or pre-emption
+framing ("before they bounce", "ahead of the market"); the tagline must be present on all four
+headline surfaces and match the panel's three-line split; `/about` and `/editorial-policy` must
+carry the position; the prediction tools must keep their disclaimers and the pitch must not
+promise a price will move; and the existing scarcity/countdown guards are re-applied to every
+file this pass touched.
+
+One scoping note worth keeping: `lib/email.ts` is checked only across its Premium region, not
+whole. Two legitimate lines elsewhere in it would trip the rules — a password-reset link that
+really does expire in an hour, and sealed-email copy whose at-RRP flag exists so a buyer can
+tell *"a fair price or a scalp"* apart. Banning the word there would have deleted anti-scalping
+copy in the name of an anti-scalping rule.
+
+`PREMIUM_COPY_VERSION` → `never-overpay-2026-09-14`, so GA4 can split the funnel on either side
+of the change. Read in two weeks: `premium_checkout_started` per `premium_slidein_shown`, split
+by `copy`.
+
+## The pricing page was asking for $79.99 — and other answers to "why did sign-ups fall" — 2026-09-14
+
+Owner: *"Why did we have more premium users signing up before? What are we doing
+wrong now? I need to have a good strategy."*
+
+**The premise needed correcting first.** The owner's own figures say $9.99 is the
+best price this site has run: ~0.67 subscribers/day (31 Aug–6 Sep) against ~0.38/day
+at $4.99 (18–31 Aug). The price is already back at $9.99. It is not a traffic story
+either — robots, middleware, `vercel.json`, the 1,849-URL sitemap and Googlebot all
+check out clean, and the 12 Sep card-art outage is fixed.
+
+**Two accounting artefacts make the fall look steeper than it is.** The trial went
+3 → 14 days on 24 Aug (`2b8adb42`), so every subscription since is 14 days from
+being revenue where August's were 3. And on 31 Aug (`c6f64138`, `63b83f5e`)
+`past_due` and unpaid checkouts stopped counting as entitled, which cut the
+headcount with no change in demand. Neither is visible in a raw subscriber count.
+
+**What actually broke: `/premium`, on 11 Sep, in three commits the same day.**
+
+- `32d76329` defaulted the billing toggle to annual so prices would "look cheaper at
+  initial glance". Both buy buttons carry the selected cycle, so — verified on the
+  live page today — the entire 260 KB document contained **exactly two buy links and
+  both committed to a year**. The per-month figure got smaller; the ask went from
+  $9.99 to $79.99.
+- In that annual state `PaidTierCard` renders "Billed as $79.99/year" *instead of*
+  the trial line, not alongside it. The only visible `✓ 14-day free trial` row on the
+  page sat inside the **Plus** card. The one zero-risk thing on offer was invisible
+  on the tier being recommended.
+- `89004da9` removed the `$0` headline and `e507f1ae` removed the proof tiles and the
+  repeat CTA band. The last buy button now sits 20% down the page; the remaining 80%
+  — comparison table, feature list, FAQ — has nothing to click.
+
+**And Plus was cannibalising Premium.** Ad-free and the full Deal Finder list, the
+two things this site sells hardest, were both in Plus at $4.99, leaving Premium
+differentiated only by four bulk/screener tools most visitors have no use for. In
+the annual default a reader saw **$3.33 immediately left of $6.67**.
+
+**What shipped.** Monthly is the default again, matching the rule the Premium dialog
+has followed all along and states in its own comment — defaulting to annual shows a
+bigger number to someone who has not decided to pay anything yet. The trial line now
+renders in both cycles (the yearly line became its own conditional rather than the
+other arm of a ternary) and appears in Premium's feature list, not only Plus's.
+Ad-free moved Plus → Premium: `TIER_COMPARISON`'s row, a new `adFree` flag on
+`/api/me` computed at the premium minimum, and `PremiumProvider` reading that
+instead of `premium`. Those are now **different questions** — `isPremium(user)`
+still defaults to the plus minimum and gates everything else — so wiring the ad
+components back to `premium` would silently hand ad-free to every Plus account and
+nothing else would fail. `tests/ad-free-tier.test.ts` exists to catch exactly that.
+
+**Nobody loses what they bought.** `scripts/grandfather-plus-adfree.ts` pins every
+current Plus subscriber to `premiumTierFloor = "premium"`, reusing the read-time
+floor built on 11 Sep for the August cohort. Stated plainly because it is a real
+trade-off: a floor raises the *whole* tier, so these accounts also gain four pro
+tools they did not buy. The population is a handful, the alternatives were taking a
+paid-for benefit away or building a parallel entitlement path, and "you keep what you
+bought, plus a bit more" is the version we can explain without embarrassment.
+
+**The actual deliverable is `scripts/funnel-report.ts`.** The honest answer to the
+owner's question was that nobody could tell, because neither admin page can show it:
+`/admin/subscriptions` computes trial→paid as an **all-time** ratio with in-flight
+trials stuck in the denominator, so it has no time dimension at all; `/admin/accounts`
+looks back exactly 30 days and cannot reach the August baseline. The new report
+buckets both sides by ISO week — accounts, signup sources, `PremiumClick`, trial
+stamps and expiries from Postgres, joined to Stripe subscriptions, trials, cohort
+conversions and churn — and prints its own caveats (the 3→14 day trial change, the
+31 Aug entitlement fix, `premium_cta`/`premium_dialog` only existing from 13 Sep, and
+the 20–22 Aug write gap) so the numbers are never read naively. Read-only, aggregate
+only, no PII; it reuses `isActive` and `monthlyValueCents` from
+`subscription-metrics.ts` rather than restating what "currently paying" means.
+
+**The deeper finding is cadence, and it is why the freeze matters more than any fix
+above.** Pricing, tiers, nudges, pitch copy and the checkout flow changed roughly
+every other day for four weeks — the price moved three times in nine days, the
+tagline twice in four — across a window that also contains three Neon exhaustions and
+a day of sitewide broken card art. Nothing ran long enough to attribute a result.
+**No further funnel changes for two weeks.** `PREMIUM_COPY_VERSION` bumps once here,
+to `monthly-default-2026-09-14`, and then stays put so GA4 has a clean boundary.
+
+**The 5-second nudge delay stays**, at the owner's explicit call, despite
+`nudge-timing.ts` recording that this exact value previously drove bounce up,
+pages/visitor down, `buy_click` down and a 78% dismiss rate. It was re-raised with
+that evidence and the answer was to measure it rather than reverse the same number a
+third time. `PROMO_VARIANT` and the copy version already split it in GA4.
+
+**Deliberately deferred to after the freeze**, so each can be attributed separately:
+restoring a second CTA below the pricing cards, re-expanding the collapsed desktop
+nav rail, the 409 that blocks a comped user from buying (`isPremium` defaults to the
+plus minimum, so a 7-day feedback grant locks checkout), and the Premium link being
+invisible between 1024px and 1279px.
+
+**One thing that has been broken since before 10 Sep and still is:** Brevo rejects
+every send with `401 unrecognised IP address`, so the Premium offer campaign reached
+1 of 263 accounts and the daily registered-account digest has been failing silently.
+That is one setting in the Brevo dashboard, not a code change, and it is the cheapest
+unclaimed upside on this list.
+
+## The signup popup finally has a frequency cap, and why it isn't a locked ✕ — 2026-09-14
+
+Owner: *"I think we could also make it harder for people to dismiss the message — make
+them wait 5 seconds."*
+
+**Declined, and the owner chose the alternative.** Three specific grounds, recorded
+because this idea will come back:
+
+1. A forced wait before dismissal is the pattern the Better Ads Standards name
+   directly ("ads with countdown"). `docs/adsense-remediation.md` already treats the
+   Better Ads Standards half of Google's Publisher Policies as a live constraint on
+   this site, and AdSense is part of its revenue. This is a policy risk, not a matter
+   of taste.
+2. Six tests already forbid countdown pressure on Premium surfaces
+   (`access-tiers:126`, `premium-pitch-panel:56`, `premium-positioning:168`,
+   `premium-start:230`, `premium-tiers:236`, `premium-zero-today:115`). A close button
+   that does not close is the same category of thing those guards exist to stop.
+3. The dismiss rate is already 78%. A locked ✕ does not convert a dismissal into a
+   read; it converts it into a back-button exit. This popup has already cost one
+   production incident by being hard to close on a short phone (`263eaeb`).
+
+**The real cause of reflexive dismissal was frequency, not the button.**
+`SignupPromoPopup` had **no lifetime cap at all** — its own header admitted it. It
+returned every `PAGES_BETWEEN_SHOWS` (3) pages after every dismissal, forever, and
+because both counters lived in **sessionStorage**, a new tab or a browser restart
+wiped them: the visitor was treated as never-having-dismissed and asked again on their
+very first page. Someone could decline it indefinitely and keep being asked. That is
+what makes a ✕ reflexive rather than considered.
+
+`PremiumSlideIn`, the signed-in sibling in the same corner with the same colouring,
+has had the right shape since 2026-08-27: two dismissals is a permanent no, held in
+localStorage, 7-day snooze after a dismiss, 14 after a CTA click. The popup simply
+never got it.
+
+| | Before | After |
+|---|---|---|
+| Dismissals before it stops | unlimited | 2, per device, ever |
+| Quiet stretch after a dismissal | 3 pages, same session only | 3 pages, then 7 days |
+| After a new tab | reset — asked again on page 1 | cap and snooze both hold |
+| After clicking sign in | no snooze | 14 days, and no strike burned |
+
+**Engaging is not refusing.** A provider click snoozes for a fortnight but burns no
+strike — someone who signed in and came back should not be one dismissal from
+silence. It rides `AuthForm`'s existing `onProviderClick` hook, the same prop
+`PriceAlertModal` uses to stash a pending watch, so it needed no new plumbing.
+
+**`MAX_NUDGE_DISMISSALS` and both snooze windows moved into `lib/nudge-timing.ts`**,
+which already owns `NUDGE_DELAY_MS` for exactly the reason that three nudges had
+drifted to three different answers. `PremiumSlideIn` keeps a local `MAX_DISMISSALS`
+alias because it reads it in five places, but the value has one home. Two tests pinned
+`MAX_DISMISSALS = 2` as a literal *declaration* in that file and would have blocked
+the de-duplication; both now assert the value from its new home plus that the file
+consumes it.
+
+`PROMO_VARIANT` → `premium_graphic_capped`. Frequency axis, the same one
+`premium_graphic_repeat` recorded, and the one that moves shown-count and dismiss-rate
+most directly — without a rename the capped and uncapped impressions average together
+in GA4 and neither can be read. **Fewer impressions is the intended outcome.** The
+numbers that should improve are dismissals per impression and `sign_up` per impression.
+
+**`tests/nudge-frequency.test.ts` includes a guard against the change that was
+declined**: no corner nudge may disable, `aria-disabled`, or timer-gate its own close
+control, and the dismiss handler must be bound directly rather than behind a
+"may they close it yet" predicate. The reasoning belongs in a test rather than only in
+an entry someone has to remember to read.
+
+The 5-second delay *before showing* is untouched — that remains the owner's standing
+call from 11 Sep, and it is being measured rather than reversed a third time.

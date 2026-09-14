@@ -7381,7 +7381,7 @@ The pattern is deliberate: **nothing about seeing a price is ever gated.** A fre
 
 ![The Value Finder tool — a screener for Riftbound cards trading below their own 30-day average price](/blog/premium/03-value-finder.png)
 
-Value Finder scans every card in the database and surfaces the ones trading **below their own 30-day average right now**, ranked by how far below their usual price they sit — not just by today's dip. It's a mean-reversion signal built for value buyers and flippers: the cards here aren't necessarily cheap in absolute terms, they're cheap *relative to their own recent history*, which is a meaningfully different (and harder to eyeball) signal than "biggest % drop today."
+Value Finder scans every card in the database and surfaces the ones trading **below their own 30-day average right now**, ranked by how far below their usual price they sit — not just by today's dip. It answers one question: is the price I'm looking at today a good one? The cards here aren't necessarily cheap in absolute terms, they're cheap *relative to their own recent history*, which is a meaningfully different (and harder to eyeball) signal than "biggest % drop today."
 
 This is Premium-only outright — a free account doesn't get even a teaser of it.
 
@@ -7395,7 +7395,7 @@ Rising Cards ranks cards by a composite of **demand and price-timing signals** �
 
 ![The Deal Finder tool, with its four tabs: Worth more on eBay, Underpriced vs TCGplayer, Cheapest on eBay, and Cross-region](/blog/premium/05-deal-finder.png)
 
-Deal Finder is the one built specifically around arbitrage — the same card, priced meaningfully differently in two places RiftCompare tracks at the same time. It has four separate views:
+Deal Finder is the one built around price gaps — the same card, priced meaningfully differently in two places RiftCompare tracks at the same time. Two of its views are about buying it cheaper and two are about what it would fetch if you sold it. It has four separate views:
 
 - **Worth more on eBay** — cards that sell for more on eBay than the cheapest tracked store currently charges (useful if you're deciding whether to sell)
 - **Underpriced vs TCGplayer** — cards cheaper elsewhere than TCGplayer's own listing
@@ -7435,7 +7435,7 @@ Neither of these requires ever entering a payment method. If Premium turns out t
 
 Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free tier already does that job completely — you'd be paying for tools you won't open. Premium earns its price for three kinds of RiftCompare users specifically:
 
-1. **Active buyers who want an edge** — Value Finder and Rising Cards exist to surface opportunities you would not have found by browsing normally.
+1. **People buying more than one card at a time** — Best Basket and the Bulk Pricer turn a want-list into a single cheapest order; Value Finder and Rising Cards tell you whether today's price on any of it is a good one.
 2. **Anyone pricing or buying a whole list at a time** — the Bulk Pricer turns a tedious, repetitive pricing task into one paste, and Best Basket does the equivalent for actually buying the list at the lowest landed cost.
 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.

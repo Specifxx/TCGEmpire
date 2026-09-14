@@ -208,6 +208,17 @@ export default function EditorialPolicyPage() {
             Nothing on this site is financial or investment advice. Trading card prices are volatile
             and can fall as easily as they rise.
           </p>
+          <p>
+            We also do not market our tools as a way to profit at another buyer&rsquo;s expense. Our
+            paid tools exist to answer buying questions — what is the cheapest way to get this list,
+            and is today&rsquo;s price a good one. Where a tool reports demand or price-timing
+            signals, we say plainly what it measures and where it is uncertain, rather than dressing
+            it up as a strategy. See{" "}
+            <Link href="/about#who-its-for" className="text-brand-400 hover:underline">
+              who RiftCompare is for
+            </Link>
+            .
+          </p>
         </section>
       </div>
     </article>

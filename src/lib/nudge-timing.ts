@@ -32,3 +32,43 @@
  * here makes a nudge show to someone it would not otherwise have shown to.
  */
 export const NUDGE_DELAY_MS = 5_000;
+
+/**
+ * HOW OFTEN A CORNER NUDGE MAY COME BACK, and when it must stop asking.
+ *
+ * Added 2026-09-14. `PremiumSlideIn` had all three of these as local constants
+ * and `SignupPromoPopup` had NONE of them — no lifetime cap at all, a fact its
+ * own header admitted. It returned every few pages after every dismissal
+ * forever, and because its counters were sessionStorage, a new tab wiped even
+ * that and the visitor was asked again on their very first page. Someone could
+ * decline it indefinitely and keep being asked, which is what makes a ✕
+ * reflexive rather than considered.
+ *
+ * THE ASK THAT PRODUCED THIS WAS THE OPPOSITE ONE: make the dismiss button wait
+ * five seconds before it works. That was declined on three specific grounds and
+ * the owner chose this instead. Recording them, because the idea will come back:
+ *
+ *   1. A forced wait before dismissal is the pattern the Better Ads Standards
+ *      name directly ("ads with countdown"). docs/adsense-remediation.md
+ *      already cites the Better Ads Standards half of Google's Publisher
+ *      Policies as a live constraint on this site, and AdSense is part of its
+ *      revenue.
+ *   2. Six tests already forbid countdown pressure on Premium surfaces. A close
+ *      button that does not close is the same category of thing.
+ *   3. The dismiss rate is already 78%. A locked ✕ does not convert a dismissal
+ *      into a read; it converts it into a back-button exit. This popup has
+ *      already cost one production incident by being hard to close on a short
+ *      phone.
+ *
+ * Capping frequency attacks the same problem from the honest end: fewer
+ * impressions, each landing on someone who has not already said no. The numbers
+ * below are PremiumSlideIn's, which have been in production since 2026-08-27 —
+ * this is the popup adopting its sibling's proven shape, not a new experiment.
+ *
+ * A CTA click snoozes WITHOUT burning a strike: engaging with an offer is not
+ * refusing it, and someone who signed in and came back should not be two
+ * dismissals from silence.
+ */
+export const MAX_NUDGE_DISMISSALS = 2;
+export const SNOOZE_AFTER_DISMISS_MS = 7 * 864e5; // 7 days
+export const SNOOZE_AFTER_CLICK_MS = 14 * 864e5; // 14 days

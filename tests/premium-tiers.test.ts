@@ -247,20 +247,37 @@ test("the dialog's tier toggle still defaults to monthly — the smaller of its 
   assert.match(src, /useState<"monthly" \| "annual">\("monthly"\)/, "the dialog must default to the monthly plan");
 });
 
-test("/premium's billing-cycle toggle defaults to annual, when annual is actually live", () => {
-  // 2026-09-11, owner: "default to annual billing so the prices look cheaper
-  // at initial glance" — this only works honestly because /premium's annual
-  // headline is the EFFECTIVE MONTHLY rate (premiumEffectiveMonthly()), a
-  // SMALLER number than the monthly-plan price, not the dialog's once-a-year
-  // lump sum. A tier missing its own annual price still displays monthly
-  // regardless of this default (PaidTierCard's own effectiveCycle guard).
+test("/premium's billing-cycle toggle defaults to MONTHLY, same as the dialog", () => {
+  // REVERSED 2026-09-14. From 2026-09-11 this defaulted to annual so the prices
+  // would "look cheaper at initial glance". The per-month figure did get
+  // smaller — but both buy buttons carry the selected cycle, so the live page
+  // offered nothing but a $79.99/year commitment, and the card's trial line was
+  // suppressed in the annual branch. The smaller number came with an eight-times
+  // bigger ask and no visible zero-risk option.
+  //
+  // The test directly above states the principle this now matches, in the
+  // dialog's own words: defaulting to annual shows a BIGGER number to someone
+  // who has not decided to pay anything yet. Both surfaces finally agree.
   const src = read("src/components/PremiumPricingCards.tsx");
   assert.match(
     src,
-    /useState<"monthly" \| "annual">\(anyAnnualLive \? "annual" : "monthly"\)/,
-    "must default to annual whenever annual billing is actually configured",
+    /useState<"monthly" \| "annual">\("monthly"\)/,
+    "the opening ask must be the monthly price, not a yearly commitment",
   );
   assert.match(src, /effectiveCycle/, "a tier without its own annual price must still fall back to monthly display");
+});
+
+test("the free trial is visible in BOTH billing cycles, not traded against the yearly line", () => {
+  // The annual branch used to REPLACE "{N}-day free trial" with "Billed as
+  // $79.99/year" — the strongest line on the card swapped for the scariest.
+  // They answer different questions (what happens today vs what happens in 14
+  // days) and must both render.
+  const src = read("src/components/PremiumPricingCards.tsx");
+  assert.match(src, /effectiveCycle === "annual" && \(/, "the yearly line must be its own conditional, not an either/or arm");
+  assert.match(src, /\{trialDays\}-day free trial/, "the trial line must survive");
+  // And the trial must be advertised on the Premium feature list, not only Plus.
+  const premiumLists = src.slice(src.indexOf("const PREMIUM_FEATURES_ON_PLUS"), src.indexOf("function FreeCard"));
+  assert.match(premiumLists, /N-day free trial/, "Premium's own feature list must carry the trial row too");
 });
 
 test("grantPremiumDays and grantPremiumMonths accept an optional tier, defaulting to premium", () => {
@@ -315,7 +332,15 @@ test("the dashboard never calls a Plus member Premium", () => {
   // Everything that names the viewer's own plan must interpolate the tier.
   assert.match(src, /Your \{tierName\} tools/, "the tools heading must name the member's real tier");
   assert.match(src, /Your \{tierName\} hub/, "the subheading must name the member's real tier");
-  assert.match(src, /you&apos;re \{tierName\}/, "the ad-free footer must name the member's real tier");
+  // The closing footer line. Pinned by INTENT, not by wording: it must
+  // interpolate the real tier and must never hard-code "Premium", because that
+  // is how a Plus member ends up being told they are Premium. The phrasing
+  // itself changed on 2026-09-14 when ad-free moved to Premium and the line
+  // stopped being about ads.
+  const footer = src.slice(src.lastIndexOf("mt-6 text-center text-xs text-slate-600"));
+  assert.ok(footer.length > 0, "fixture check: expected the closing footer paragraph");
+  assert.match(footer, /\{tierName\}/, "the closing footer must name the member's real tier");
+  assert.ok(!/\bPremium\b/.test(footer.slice(0, 400)), "the footer must not hard-code a tier name");
   // The Premium-only tools are shown to Plus as locked, not as links.
   assert.match(src, /lockedTools/, "Premium-only tools must be rendered separately for Plus, not hidden or linked");
 });

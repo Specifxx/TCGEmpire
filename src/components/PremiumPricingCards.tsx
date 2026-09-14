@@ -57,11 +57,23 @@ export function PremiumPricingCards({
   const anyAnnualLive = annualLive || (plusLive && plusAnnualLive);
   // Annual by default (2026-09-11, owner: "so the prices look cheaper at
   // initial glance") — this only works because the headline number under
-  // annual billing is the EFFECTIVE MONTHLY rate (premiumEffectiveMonthly()
-  // in PaidTierCard below), not the once-a-year lump sum. A tier with no
-  // annual price of its own still falls back to monthly display regardless
-  // of this default — see PaidTierCard's own effectiveCycle guard.
-  const [cycle, setCycle] = useState<"monthly" | "annual">(anyAnnualLive ? "annual" : "monthly");
+  // MONTHLY IS THE DEFAULT AGAIN (2026-09-14). This defaulted to annual from
+  // 2026-09-11 so the per-month figure would "look cheaper at initial glance",
+  // and the per-month figure did get smaller — but the ASK got eight times
+  // bigger, because both buy buttons carry the selected cycle. The live page
+  // ended up offering nothing but a $79.99/year commitment, and the card's
+  // trial line is suppressed in the annual branch (see PaidTierCard), so the
+  // one genuinely zero-risk thing on offer stopped being visible at all.
+  //
+  // This is the rule the Premium DIALOG has followed the whole time, in its
+  // own words: defaulting to annual shows a bigger number to someone who has
+  // not decided to pay anything yet. The two surfaces now agree. Annual is one
+  // tap away and keeps its "Save 33%" badge, which is where it belongs — an
+  // upgrade for someone already sold, not the opening ask.
+  //
+  // A tier with no annual price of its own still falls back to monthly display
+  // regardless of this default — see PaidTierCard's own effectiveCycle guard.
+  const [cycle, setCycle] = useState<"monthly" | "annual">("monthly");
   const premiumSave = annualSavingPct("premium");
   const plusSave = annualSavingPct("plus");
   // The badge shows whichever live tier's saving is real — they're both ~33%
@@ -117,7 +129,7 @@ export function PremiumPricingCards({
         {plusLive && (
           <PaidTierCard
             tier="plus"
-            tagline="Ad-free & the full lists"
+            tagline="The full lists, unlocked"
             features={PLUS_FEATURES}
             cycle={cycle}
             annualLiveForTier={plusAnnualLive}
@@ -156,16 +168,17 @@ const FREE_FEATURES = [
 // "N-day" is a placeholder, substituted for the real PREMIUM_TRIAL_DAYS value
 // by PaidTierCard below — this file can't import the server-only constant
 // directly, and the real count arrives as the `trialDays` prop instead.
-const PLUS_FEATURES = ["Everything free", "Ad-free browsing", "Full Deal Finder, Rising Cards & Rising Sealed lists", "N-day free trial"];
+const PLUS_FEATURES = ["Everything free", "Full Deal Finder, Rising Cards & Rising Sealed lists", "N-day free trial"];
 // Two different lists depending on whether Plus exists to build on top of —
 // same reasoning TIER_COMPARISON's own header gives for keeping one row set
 // rather than two near-duplicate copies of the feature list.
-const PREMIUM_FEATURES_ON_PLUS = ["Everything in Plus", "Value Finder screener", "Bulk Pricer", "Best Basket optimiser", "Demand Finder"];
+const PREMIUM_FEATURES_ON_PLUS = ["Everything in Plus", "Ad-free browsing", "Value Finder screener", "Bulk Pricer", "Best Basket optimiser", "Demand Finder", "N-day free trial"];
 const PREMIUM_FEATURES_STANDALONE = [
   "Everything free",
   "Ad-free browsing",
   "Full Deal Finder, Rising Cards & Rising Sealed lists",
   "Value Finder, Bulk Pricer, Best Basket & Demand Finder",
+  "N-day free trial",
 ];
 
 function FreeCard({ signedIn }: { signedIn: boolean }) {
@@ -257,11 +270,17 @@ function PaidTierCard({
           <span className="num text-3xl font-extrabold text-white">{headline}</span>
           <span className="text-sm text-slate-400">/mo</span>
         </div>
-        {effectiveCycle === "annual" ? (
+        {/* The trial survives BOTH cycles. This used to be an either/or, so
+            selecting annual replaced "14-day free trial" with "Billed as
+            $79.99/year" — the strongest and the scariest line on the card
+            traded for one another. They are not alternatives: the trial is
+            what happens today, the billing line is what happens in 14 days. */}
+        {effectiveCycle === "annual" && (
           <p className="mt-1 text-[11px] font-semibold text-brand-400">Billed as {annualAmount}/year</p>
-        ) : trialAvailable && trialDays > 0 ? (
+        )}
+        {trialAvailable && trialDays > 0 ? (
           <p className="mt-1 text-[11px] text-slate-500">{trialDays}-day free trial</p>
-        ) : (
+        ) : effectiveCycle === "annual" ? null : (
           <p className="mt-1 text-[11px] text-slate-500">&nbsp;</p>
         )}
       </div>

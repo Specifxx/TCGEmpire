@@ -138,7 +138,7 @@ test("the shimmer is defined once, guarded for reduced motion, and used on exact
   );
 });
 
-test("the tagline replaced 'power tools' everywhere it was the Premium headline", () => {
+test("one tagline, on every surface that carries the Premium headline", () => {
   for (const file of [
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
@@ -146,8 +146,14 @@ test("the tagline replaced 'power tools' everywhere it was the Premium headline"
     "src/components/SignupPromoPopup.tsx",
   ]) {
     const src = read(file);
-    assert.match(src, /Get an unfair edge buying and selling/, `${file} must carry the new tagline`);
-    assert.ok(!/[Pp]ower tools for buyers/.test(src), `${file} still carries the retired tagline`);
+    // 2026-09-14: "Get an unfair edge buying and selling" retired in favour of a
+    // saving the reader makes rather than an advantage over other buyers. See
+    // DECISIONS.md and tests/premium-positioning.test.ts, which guards the tone
+    // the new line establishes. "Power tools for buyers" was the one before that.
+    assert.match(src, /Never overpay for a Riftbound card/, `${file} must carry the current tagline`);
+    for (const retired of [/[Pp]ower tools for buyers/, /unfair edge/i]) {
+      assert.ok(!retired.test(src), `${file} still carries a retired tagline (${retired})`);
+    }
   }
 });
 

@@ -17,7 +17,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Free Riftbound TCG Tools & Calculators | RiftCompare" },
   description:
-    "Every RiftCompare tool in one place: box EV, deck and trade calculators free for everyone, plus Premium's Deal Finder, value screeners, Bulk Pricer and Best Basket.",
+    "Every RiftCompare tool in one place: box EV, deck and trade calculators free for everyone, plus Premium's Best Basket, Bulk Pricer, Deal Finder and value screeners for buying a whole list for less.",
   alternates: pageAlternates("/tools"),
   keywords: [
     "riftbound tools",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   ],
   openGraph: pageOpenGraph({
     title: "Free Riftbound TCG Tools & Calculators",
-    description: "Box EV, deck and trade calculators free for everyone, plus Premium's Deal Finder, value screeners, Bulk Pricer & Best Basket.",
+    description: "Box EV, deck and trade calculators free for everyone, plus Premium's Best Basket, Bulk Pricer, Deal Finder & value screeners.",
     url: "/tools",
   }),
 };
@@ -88,14 +88,14 @@ const GROUPS: ToolGroup[] = [
         href: "/tools/value-finder",
         emoji: "🔎",
         title: "Value finder",
-        desc: "Surface the cards trading below their fair value right now — the best buys on the board.",
+        desc: "Surface the cards going cheap right now — the best buys on the board.",
         badge: "Premium",
       },
       {
         href: "/tools/rising",
         emoji: "🚀",
         title: "Rising cards",
-        desc: "Cards ranked by demand and price-timing signals — high or rising interest that hasn't re-rated yet.",
+        desc: "Cards ranked by demand and price-timing signals — whether to buy one now or wait.",
         badge: LIST_BADGE,
       },
       {
@@ -109,7 +109,7 @@ const GROUPS: ToolGroup[] = [
         href: "/tools/deal-finder",
         emoji: "💱",
         title: "Deal Finder",
-        desc: "Spot cards that are cheaper in one place than another — including another market entirely — and cards worth more if you resell them.",
+        desc: "Spot cards that are cheaper in one place than another — including another market entirely — plus resale spreads if you're selling.",
         badge: LIST_BADGE,
       },
       {
@@ -198,7 +198,7 @@ export default function ToolsHubPage() {
     webPage({
       name: "Riftbound TCG Tools & Calculators",
       href: "/tools",
-      description: "Every RiftCompare tool and calculator for Riftbound TCG buyers, sellers and collectors.",
+      description: "Every RiftCompare tool and calculator for Riftbound TCG players, buyers and collectors.",
       type: "CollectionPage",
     }),
     itemListLd,
@@ -216,8 +216,8 @@ export default function ToolsHubPage() {
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
         Every RiftCompare tool in one place. Price-check a card, work out whether a box is worth ripping, and build
         decks for less — most need no sign-up at all. A free account adds watchlists and price alerts, and the pro
-        screeners and list tools (<span className="text-gold">Premium</span>) go deeper for keen buyers and
-        collectors.
+        screeners and list tools (<span className="text-gold">Premium</span>) work out the cheapest way to buy a
+        whole want-list.
       </p>
 
       {GROUPS.map((group) => (

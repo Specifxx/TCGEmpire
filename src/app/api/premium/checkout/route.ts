@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, type PremiumTier } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, type PremiumTier } from "@/lib/premium";
+import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -17,14 +18,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Premium checkout isn't configured yet" }, { status: 503 });
   }
 
+  // Already paying? Starting a SECOND Stripe subscription is never what anyone
+  // means — a Plus member who wants Premium upgrades in place (api/premium/
+  // upgrade, prorated) and a Premium member has nothing to buy. /premium/start
+  // redirects these people too, but this is the real fence: the route is
+  // reachable directly.
+  if (isPremium(user) && !user.isAdmin) {
+    return NextResponse.json(
+      { error: "You already have a subscription — manage it from /premium" },
+      { status: 409 }
+    );
+  }
+
   // Which tier — Plus (cheaper, requires its own Stripe price to be configured)
   // or Premium (the default, and the only option while Plus is unconfigured).
   // Which plan — annual (yearly price) or monthly; priceIdFor() falls back to
   // monthly cleanly if annual is requested but unset for that tier.
+  //
+  // parseCheckoutSelection is SHARED with /premium/start (lib/premium-start.ts)
+  // so the page that shows the price and this route that charges for it apply
+  // one rule, not two copies of it.
   const body = await req.json().catch(() => null);
-  const tier: PremiumTier = body?.tier === "plus" && premiumPlusEnabled() ? "plus" : "premium";
-  const plan: "monthly" | "annual" = body?.plan === "annual" ? "annual" : "monthly";
+  const sel = parseCheckoutSelection(body?.tier, body?.plan, premiumPlusEnabled());
+  const tier: PremiumTier = sel.tier;
+  const plan: "monthly" | "annual" = sel.plan;
   const priceId = priceIdFor(tier, plan);
+
+  // Where the visitor was before they started buying — the deck/card page a
+  // blur-wall interrupted. Carried through Stripe so both the success and the
+  // cancel paths return them there instead of dumping them on /premium.
+  const back = sanitizeBackPath(body?.back);
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
@@ -68,8 +91,14 @@ export async function POST(req: Request) {
       },
       // Force card collection even though $0 is due now during a trial.
       ...(trialEligible ? { payment_method_collection: "always" as const } : {}),
-      success_url: `${SITE_URL}/portfolio?upgraded=1`,
-      cancel_url: `${SITE_URL}/premium`,
+      // {CHECKOUT_SESSION_ID} is a Stripe PLACEHOLDER — it must stay literal
+      // here; Stripe substitutes the real session id on the redirect. The
+      // welcome page re-reads that session and checks it belongs to the viewer
+      // before showing anything (entitlement itself still comes from the
+      // webhook). This replaced /portfolio?upgraded=1, which nothing read: the
+      // buyer landed on a page that still said they were on the free tier.
+      success_url: `${SITE_URL}/premium/welcome?session_id={CHECKOUT_SESSION_ID}${back ? `&back=${encodeURIComponent(back)}` : ""}`,
+      cancel_url: `${SITE_URL}${back ?? "/premium"}`,
       allow_promotion_codes: true,
     });
     return NextResponse.json({ url: session.url });

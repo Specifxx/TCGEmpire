@@ -38,6 +38,11 @@ import { track as vercelTrack } from "@vercel/analytics";
 // companion. They go to GA4 only for the same billing reason. The valuable low-
 // volume leg — premium_slidein_click — is deliberately NOT here, so it still
 // reaches Vercel alongside buy_click and sign_up.
+//
+// Same rule, stated once for the whole checkout funnel: premium_signin_step
+// (a signed-out visitor clicking a buy button, 2026-09-13) and
+// premium_checkout_started are both LOW-VOLUME conversion steps — a handful a
+// day — so they stay dual-destination and must not be added below.
 const GA4_ONLY_EVENTS = new Set([
   "signup_promo_shown",
   "signup_promo_dismissed",

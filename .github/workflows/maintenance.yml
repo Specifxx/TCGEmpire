@@ -59,6 +59,8 @@ on:
           - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
+          - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
+          - grandfather-plus-adfree # ONE-OFF (2026-09-14): pin every CURRENT Plus subscriber to premiumTierFloor='premium' so moving ad-free from Plus to Premium takes nothing away from someone who already paid for it. Idempotent. Report-only unless `apply` is ticked.
           - audit-inbox      # read-only dump of the four /admin/messages queues (contact messages, store suggestions, feedback, wrong-price/card reports). Emails reduced to their domain and IPs never printed — job logs are collaborator-visible and these are the tables where the public typed their own address. ALL=1 via the `apply` input shows every row rather than only open ones.
           - close-inbox-items # THE WRITE half of audit-inbox: sets the status each worked item actually earned (added / rejected / FIXED / HIDDEN), row by named row. Never a blanket "mark all done" — a suggestion that could NOT be added is stamped rejected with the reason, not added. Refuses any row whose status has moved since. Report-only unless `apply` is ticked.
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
@@ -6089,6 +6091,24 @@ jobs:
       - name: Audit users/Premium (read-only census)
         if: inputs.task == 'audit-users'
         run: npx tsx scripts/audit-users.ts
+
+      - name: Weekly premium funnel report (read-only)
+        # The answer to "why did we have more premium users signing up before?"
+        # — which, on 2026-09-14, nobody could give, because the two admin pages
+        # between them have no week-over-week view of the funnel. Reads Postgres
+        # and Stripe, writes neither. Aggregate only: no emails, names or
+        # customer ids, because these job logs are collaborator-visible.
+        if: inputs.task == 'funnel-report'
+        run: npx tsx scripts/funnel-report.ts
+
+      - name: Grandfather current Plus subscribers to a Premium floor
+        # Pairs with moving ad-free from Plus to Premium: a floor raises the tier
+        # at READ time (effectiveTier), so billing keeps writing the true tier and
+        # nobody loses a benefit they paid for. Report-only unless `apply`.
+        if: inputs.task == 'grandfather-plus-adfree'
+        run: |
+          if [ "${{ inputs.dry_run }}" = "false" ]; then export APPLY=1; fi
+          npx tsx scripts/grandfather-plus-adfree.ts
 
       - name: Audit the inbox (read-only dump of every unactioned form submission)
         # /admin/messages is otherwise the ONLY way to read these four queues, and

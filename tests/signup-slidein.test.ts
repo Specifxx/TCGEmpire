@@ -116,7 +116,7 @@ test("the heading and badge match PremiumSlideIn's Premium colouring, not the ol
   // heading — the chip row those tools were counted for is now a graphic.
   assert.match(
     code,
-    /trialAvailable \? "Try Premium free" : "Get an unfair edge buying and selling"/,
+    /trialAvailable \? "Try Premium free" : "Never overpay for a Riftbound card"/,
     "heading logic must mirror PremiumSlideIn's own",
   );
 });

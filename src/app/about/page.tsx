@@ -83,6 +83,38 @@ export default async function AboutPage() {
           </p>
         </section>
 
+        {/* WHO THIS IS FOR — the stated position, added 2026-09-14 (see
+            DECISIONS.md). The site previously had no written answer to "what is
+            RiftCompare for?" beyond the sentence above, and the Premium pitch had
+            drifted into selling an advantage over other buyers. This is the
+            paragraph that reframe is anchored to, so the tone has somewhere to
+            return to rather than drifting again. */}
+        <section id="who-its-for" className="scroll-mt-24 space-y-2">
+          <h2 className="text-lg font-bold text-white">Who it&rsquo;s for</h2>
+          <p>
+            {SITE_NAME} is built for people who want to <strong className="text-slate-200">buy the cards
+            they want without overpaying</strong> — a deck they&rsquo;re assembling, a want-list, a set
+            they&rsquo;re completing. Every paid tool exists to answer a buying question: what is the
+            cheapest way to get this whole list, and is today&rsquo;s price on it a good one.
+          </p>
+          <p>
+            Some of those tools show demand and price-timing signals, and we publish them honestly —
+            including where they are uncertain. But we don&rsquo;t market {SITE_NAME} as a way to profit
+            at another player&rsquo;s expense, and we don&rsquo;t want to be the reason a card gets harder
+            for someone to buy. Card prices fall as readily as they rise, and nothing here is investment
+            advice. If you want to track Riftbound cards as an asset, that&rsquo;s what our sister site{" "}
+            <a
+              href="https://riftboundstocks.com"
+              className="text-brand-400 hover:underline"
+              target="_blank"
+              rel="noopener"
+            >
+              RiftboundStocks.com
+            </a>{" "}
+            is for.
+          </p>
+        </section>
+
         <section id="methodology" className="scroll-mt-24 space-y-2">
           <h2 className="text-lg font-bold text-white">How it works</h2>
           <p>

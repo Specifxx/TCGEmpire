@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { MAX_NUDGE_DISMISSALS } from "../src/lib/nudge-timing";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -39,7 +40,13 @@ test("it is NON-MODAL: it yields to real modals and never blocks them", () => {
 
 test("frequency is capped hard across sessions, not just per session", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /MAX_DISMISSALS\s*=\s*2/, "two dismissals must be a permanent no");
+  // The VALUE moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup
+  // could adopt the same cap from one definition instead of a second copy of
+  // the number. Assert it there, and that this file actually consumes it —
+  // pinning the literal here would have blocked the de-duplication.
+  assert.equal(MAX_NUDGE_DISMISSALS, 2, "two dismissals must be a permanent no");
+  assert.match(code, /MAX_DISMISSALS = MAX_NUDGE_DISMISSALS/, "the slide-in must use the shared cap, not its own copy");
+  assert.match(code, />= MAX_DISMISSALS\) return/, "and must actually enforce it");
   assert.match(code, /localStorage/, "the lifetime dismissal count / snooze must survive the session");
   assert.match(code, /sessionStorage/, "must also cap to once per browser session");
   // A snooze window after both a dismiss and an engaged click.
