@@ -18,7 +18,18 @@ export function getLastEmailError(): string | null {
 }
 async function noteProviderFailure(provider: string, res: Response): Promise<void> {
   const body = await res.text().catch(() => "");
-  lastEmailError = `${provider} ${res.status}: ${body.slice(0, 300)}`;
+  // Brevo's "Authorised IPs" account setting rejects every request from a
+  // platform with rotating outbound IPs (every Vercel serverless invocation)
+  // with this exact message — first diagnosed 2026-09-14 after a live
+  // premium-offer batch came back sent 0/90 with no other symptom (see
+  // DECISIONS.md, "why Brevo failed"). It is an account setting, not
+  // anything this code can retry or route around, so callers batching
+  // hundreds of sends deserve the real cause on the first failure rather
+  // than 90 identical opaque "401" lines before anyone reads one closely.
+  const ipBlocked = provider === "Brevo" && res.status === 401 && /unrecognised ip address/i.test(body);
+  lastEmailError = ipBlocked
+    ? `Brevo: rejecting Vercel's IP (account "Authorised IPs" restriction is on — Brevo dashboard → Security → Authorised IPs → turn it off; Vercel's outbound IP is not static, so allow-listing one address will not hold)`
+    : `${provider} ${res.status}: ${body.slice(0, 300)}`;
 }
 
 // Send a transactional email via Resend's REST API. Requires RESEND_API_KEY (and
