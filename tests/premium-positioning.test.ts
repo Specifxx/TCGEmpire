@@ -146,8 +146,15 @@ test("the funnel events carry a copy version that post-dates the reframe", () =>
   // Its own header in site.ts requires a bump whenever the price or framing
   // changes, so GA4 can split before/after. Without this the reframe is
   // unmeasurable — every event before and after lands in one bucket.
-  assert.notEqual(PREMIUM_COPY_VERSION, "tiers-2026-09-11", "bump the copy version with the framing change");
-  assert.match(PREMIUM_COPY_VERSION, /never-overpay/, "the tag should name the framing it labels");
+  // Pinned by SHAPE, not by campaign name — this constant is expected to change
+  // every time the price or framing does (its own header in site.ts says so),
+  // and pinning one value here just means the next legitimate bump fails CI.
+  // What must hold: it is not a pre-reframe value, and it is dated, so GA4 can
+  // order the eras it labels.
+  for (const stale of ["tiers-2026-09-11", "edge-graphic-2026-09-10", "zero-today-2026-09-09"]) {
+    assert.notEqual(PREMIUM_COPY_VERSION, stale, "bump the copy version with the framing change");
+  }
+  assert.match(PREMIUM_COPY_VERSION, /-20\d{2}-\d{2}-\d{2}$/, "the tag should end in the date of the framing it labels");
 });
 
 test("the reframe did not smuggle in scarcity or invented numbers", () => {

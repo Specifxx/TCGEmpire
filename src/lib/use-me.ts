@@ -14,6 +14,9 @@ export interface Me {
   // profile data, and nothing that renders the account chrome should read it.
   analyticsId: string | null;
   premium: boolean;
+  // Ads hidden for this viewer — a Premium-tier entitlement, not the same
+  // question as `premium` (which is true for Plus too).
+  adFree: boolean;
   tier: "plus" | "premium" | null; // which paid tier, or null if not entitled
   premiumCheckout: boolean; // Stripe premium checkout is configured
   premiumPlus: boolean; // the cheaper Plus tier is configured (Stripe Plus price set)
@@ -30,6 +33,7 @@ const EMPTY_ME: Me = {
   user: null,
   analyticsId: null,
   premium: false,
+  adFree: false,
   tier: null,
   premiumCheckout: false,
   premiumPlus: false,
@@ -50,6 +54,7 @@ function fetchMe(): Promise<Me> {
         user: d.user ?? null,
         analyticsId: typeof d.analyticsId === "string" ? d.analyticsId : null,
         premium: !!d.premium,
+        adFree: !!d.adFree,
         tier: d.tier === "plus" || d.tier === "premium" ? d.tier : null,
         premiumCheckout: !!d.premiumCheckout,
         premiumPlus: !!d.premiumPlus,

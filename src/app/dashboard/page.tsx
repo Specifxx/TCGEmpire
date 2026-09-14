@@ -148,7 +148,7 @@ export default async function DashboardPage() {
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-600">
-        Ad-free is active across the site while you&apos;re {tierName}. Thanks for supporting RiftCompare.
+        Thanks for supporting RiftCompare — your {tierName} plan is what keeps price comparison free for everyone.
       </p>
     </div>
   );

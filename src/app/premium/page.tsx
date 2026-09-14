@@ -107,7 +107,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Ad-free everywhere",
-    body: "No ads on any page while you're Plus or Premium — automatic, nothing to switch on.",
+    body: "No ads on any page while you're Premium — automatic, nothing to switch on.",
     href: null,
     cta: null,
     tier: "plus",
@@ -132,7 +132,7 @@ const fmtDate = (d: Date) => d.toLocaleDateString("en-AU", { day: "numeric", mon
 const FAQ: { q: string; a: string }[] = [
   {
     q: "What's free vs what needs Plus or Premium?",
-    a: `Price comparison, the deck builder, trade calculator, box EV and a free account's alerts, watchlist and portfolio are free for everyone. ${premiumPlusEnabled() ? `Plus (${tierMonthlyAmount("plus")}/mo) adds the full Deal Finder, Rising Cards and Rising Sealed lists and an ad-free site; Premium adds the four pro tools on top — Bulk Pricer, Best Basket, Value Finder and Demand Finder.` : "Premium adds the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Rising Sealed, Demand Finder, the full Deal Finder list and an ad-free site."}`,
+    a: `Price comparison, the deck builder, trade calculator, box EV and a free account's alerts, watchlist and portfolio are free for everyone. ${premiumPlusEnabled() ? `Plus (${tierMonthlyAmount("plus")}/mo) adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds an ad-free site and the four pro tools on top — Bulk Pricer, Best Basket, Value Finder and Demand Finder.` : "Premium adds the Bulk Pricer, Best Basket optimiser, Value Finder screener, Rising Cards, Rising Sealed, Demand Finder, the full Deal Finder list and an ad-free site."}`,
   },
   {
     q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
@@ -259,7 +259,7 @@ export default async function PremiumPage() {
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-400">
           {already
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
-            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it, and add ad-free browsing and the tools that work out the cheapest way to buy what you want${
+            : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it. ${plusLive ? "Plus unlocks the full deal lists; Premium adds ad-free browsing and" : "Premium adds ad-free browsing and"} the tools that work out the cheapest way to buy what you want${
                 premiumTrialEnabled() ? ` — every plan starts with a ${PREMIUM_TRIAL_DAYS}-day free trial` : ""
               }.`}
         </p>
@@ -394,7 +394,7 @@ export default async function PremiumPage() {
         <h2 className="mb-1 text-center text-lg font-extrabold text-white">Feature comparison</h2>
         <p className="mb-3 text-center text-xs text-slate-500">
           {plusLive
-            ? "See exactly what you get with each tier — Plus adds the full lists and no ads, Premium adds the pro screeners on top."
+            ? "See exactly what you get with each tier — Plus adds the full lists, Premium adds no ads and the pro screeners on top."
             : "See exactly what you get with each tier — Premium adds the list-pricing tools and the pro screeners."}
         </p>
         <div className="card-surface p-1">

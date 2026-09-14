@@ -6034,3 +6034,99 @@ copy in the name of an anti-scalping rule.
 `PREMIUM_COPY_VERSION` → `never-overpay-2026-09-14`, so GA4 can split the funnel on either side
 of the change. Read in two weeks: `premium_checkout_started` per `premium_slidein_shown`, split
 by `copy`.
+
+## The pricing page was asking for $79.99 — and other answers to "why did sign-ups fall" — 2026-09-14
+
+Owner: *"Why did we have more premium users signing up before? What are we doing
+wrong now? I need to have a good strategy."*
+
+**The premise needed correcting first.** The owner's own figures say $9.99 is the
+best price this site has run: ~0.67 subscribers/day (31 Aug–6 Sep) against ~0.38/day
+at $4.99 (18–31 Aug). The price is already back at $9.99. It is not a traffic story
+either — robots, middleware, `vercel.json`, the 1,849-URL sitemap and Googlebot all
+check out clean, and the 12 Sep card-art outage is fixed.
+
+**Two accounting artefacts make the fall look steeper than it is.** The trial went
+3 → 14 days on 24 Aug (`2b8adb42`), so every subscription since is 14 days from
+being revenue where August's were 3. And on 31 Aug (`c6f64138`, `63b83f5e`)
+`past_due` and unpaid checkouts stopped counting as entitled, which cut the
+headcount with no change in demand. Neither is visible in a raw subscriber count.
+
+**What actually broke: `/premium`, on 11 Sep, in three commits the same day.**
+
+- `32d76329` defaulted the billing toggle to annual so prices would "look cheaper at
+  initial glance". Both buy buttons carry the selected cycle, so — verified on the
+  live page today — the entire 260 KB document contained **exactly two buy links and
+  both committed to a year**. The per-month figure got smaller; the ask went from
+  $9.99 to $79.99.
+- In that annual state `PaidTierCard` renders "Billed as $79.99/year" *instead of*
+  the trial line, not alongside it. The only visible `✓ 14-day free trial` row on the
+  page sat inside the **Plus** card. The one zero-risk thing on offer was invisible
+  on the tier being recommended.
+- `89004da9` removed the `$0` headline and `e507f1ae` removed the proof tiles and the
+  repeat CTA band. The last buy button now sits 20% down the page; the remaining 80%
+  — comparison table, feature list, FAQ — has nothing to click.
+
+**And Plus was cannibalising Premium.** Ad-free and the full Deal Finder list, the
+two things this site sells hardest, were both in Plus at $4.99, leaving Premium
+differentiated only by four bulk/screener tools most visitors have no use for. In
+the annual default a reader saw **$3.33 immediately left of $6.67**.
+
+**What shipped.** Monthly is the default again, matching the rule the Premium dialog
+has followed all along and states in its own comment — defaulting to annual shows a
+bigger number to someone who has not decided to pay anything yet. The trial line now
+renders in both cycles (the yearly line became its own conditional rather than the
+other arm of a ternary) and appears in Premium's feature list, not only Plus's.
+Ad-free moved Plus → Premium: `TIER_COMPARISON`'s row, a new `adFree` flag on
+`/api/me` computed at the premium minimum, and `PremiumProvider` reading that
+instead of `premium`. Those are now **different questions** — `isPremium(user)`
+still defaults to the plus minimum and gates everything else — so wiring the ad
+components back to `premium` would silently hand ad-free to every Plus account and
+nothing else would fail. `tests/ad-free-tier.test.ts` exists to catch exactly that.
+
+**Nobody loses what they bought.** `scripts/grandfather-plus-adfree.ts` pins every
+current Plus subscriber to `premiumTierFloor = "premium"`, reusing the read-time
+floor built on 11 Sep for the August cohort. Stated plainly because it is a real
+trade-off: a floor raises the *whole* tier, so these accounts also gain four pro
+tools they did not buy. The population is a handful, the alternatives were taking a
+paid-for benefit away or building a parallel entitlement path, and "you keep what you
+bought, plus a bit more" is the version we can explain without embarrassment.
+
+**The actual deliverable is `scripts/funnel-report.ts`.** The honest answer to the
+owner's question was that nobody could tell, because neither admin page can show it:
+`/admin/subscriptions` computes trial→paid as an **all-time** ratio with in-flight
+trials stuck in the denominator, so it has no time dimension at all; `/admin/accounts`
+looks back exactly 30 days and cannot reach the August baseline. The new report
+buckets both sides by ISO week — accounts, signup sources, `PremiumClick`, trial
+stamps and expiries from Postgres, joined to Stripe subscriptions, trials, cohort
+conversions and churn — and prints its own caveats (the 3→14 day trial change, the
+31 Aug entitlement fix, `premium_cta`/`premium_dialog` only existing from 13 Sep, and
+the 20–22 Aug write gap) so the numbers are never read naively. Read-only, aggregate
+only, no PII; it reuses `isActive` and `monthlyValueCents` from
+`subscription-metrics.ts` rather than restating what "currently paying" means.
+
+**The deeper finding is cadence, and it is why the freeze matters more than any fix
+above.** Pricing, tiers, nudges, pitch copy and the checkout flow changed roughly
+every other day for four weeks — the price moved three times in nine days, the
+tagline twice in four — across a window that also contains three Neon exhaustions and
+a day of sitewide broken card art. Nothing ran long enough to attribute a result.
+**No further funnel changes for two weeks.** `PREMIUM_COPY_VERSION` bumps once here,
+to `monthly-default-2026-09-14`, and then stays put so GA4 has a clean boundary.
+
+**The 5-second nudge delay stays**, at the owner's explicit call, despite
+`nudge-timing.ts` recording that this exact value previously drove bounce up,
+pages/visitor down, `buy_click` down and a 78% dismiss rate. It was re-raised with
+that evidence and the answer was to measure it rather than reverse the same number a
+third time. `PROMO_VARIANT` and the copy version already split it in GA4.
+
+**Deliberately deferred to after the freeze**, so each can be attributed separately:
+restoring a second CTA below the pricing cards, re-expanding the collapsed desktop
+nav rail, the 409 that blocks a comped user from buying (`isPremium` defaults to the
+plus minimum, so a 7-day feedback grant locks checkout), and the Premium link being
+invisible between 1024px and 1279px.
+
+**One thing that has been broken since before 10 Sep and still is:** Brevo rejects
+every send with `401 unrecognised IP address`, so the Premium offer campaign reached
+1 of 263 accounts and the daily registered-account digest has been failing silently.
+That is one setting in the Brevo dashboard, not a code change, and it is the cheapest
+unclaimed upside on this list.

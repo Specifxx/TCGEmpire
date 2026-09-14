@@ -33,6 +33,11 @@ export async function GET() {
       // signed out, which is what clears the id on the client.
       analyticsId: user ? analyticsUserId(user.id) : null,
       premium: isPremium(user),
+      // Whether to hide ads. Deliberately NOT the same flag as `premium`:
+      // ad-free is a Premium-tier entitlement (2026-09-14), while `premium`
+      // still means "entitled at all" and gates the Plus-level features.
+      // Grandfathered Plus accounts read true here through premiumTierFloor.
+      adFree: isPremium(user, "premium"),
       // Which paid tier ("plus" | "premium"), or null if not entitled at all —
       // for surfaces that need to NAME the tier rather than just gate on it.
       tier: premiumTierOf(user),

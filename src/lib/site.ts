@@ -200,4 +200,4 @@ export function premiumLockInTail(): string {
 // changes again, including a price-only change like this one: without a bump,
 // events from the $14.99 era and the reverted $9.99 era would share one tag
 // and the before/after comparison this constant exists for would be lost.
-export const PREMIUM_COPY_VERSION = "never-overpay-2026-09-14";
+export const PREMIUM_COPY_VERSION = "monthly-default-2026-09-14";
