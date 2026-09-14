@@ -1260,6 +1260,38 @@ model AnnouncementOptOut {
   @@index([optedOutAt])
 }
 
+// One-off "3 days of Premium, free, no card" win-back email to recently-
+// registered free accounts (see lib/premium-winback.ts). Structurally
+// DIFFERENT from the PremiumOfferBlast flow above AnnouncementOptOut serves:
+// that one emails, then the OWNER manually extends premiumUntil by hand only
+// after a real Stripe subscription lands. This one grants immediately, off a
+// single-use link, with no checkout involved at all — closer in shape to the
+// SIGNUP_PREMIUM_DAYS auto-grant removed entirely on 2026-08-23 (see
+// lib/premium.ts's "NO PREMIUM ON SIGNUP" note) than to anything else live on
+// the site today. Kept as its own row (not a User field) because it has to
+// hold a real bearer secret, not just a dedupe timestamp.
+model PremiumWinbackTrial {
+  id        String    @id @default(cuid())
+  // One row per account — this IS the "was this account ever sent this
+  // campaign" dedupe, so a resumable batched run never double-emails.
+  userId    String    @unique
+  email     String    @unique
+  // Single-use claim token embedded in the campaign email's link. Minted only
+  // once the send actually succeeds (mirrors User.premiumOfferSentAt's
+  // "stamped ONLY on success" rule), so a failed send is retried by the next
+  // run rather than silently skipped.
+  token     String    @unique
+  createdAt DateTime  @default(now())
+  // Null until the link is actually claimed. THIS is the one-time-use lock:
+  // the claim route flips it with an atomic conditional UPDATE (`WHERE token
+  // = ? AND claimedAt IS NULL`), so two concurrent requests for the same
+  // token can never both win, and a second visit after that always finds it
+  // already set. The 3-day grant is applied in the same request that wins.
+  claimedAt DateTime?
+
+  @@index([claimedAt])
+}
+
 model NewsletterSubscriber {
   id             String   @id @default(cuid())
   email          String   @unique
