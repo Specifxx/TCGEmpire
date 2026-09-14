@@ -42,36 +42,42 @@
 /**
  * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM9 — the ONLY operational variable, in service since 2026-09-11. RM8
- *        (live only since 2026-09-08) neared its own 5 GB monthly transfer
- *        allowance after about three days — the same ~2 GB/day burn every
- *        prior project has shown. This cutover RECYCLES RM9 — the account it
- *        was live on 2026-08-23..~08-26, before RM10 replaced it once RM9's
- *        OWN allowance ran out — rather than provisioning a new RM12.
+ *   RM10 — the ONLY operational variable, in service since 2026-09-14. RM9
+ *        (live only since 2026-09-11) exhausted its own 5 GB monthly transfer
+ *        allowance after three days — the same ~2 GB/day burn every prior
+ *        project has shown, and pointedly the FIRST full project life since
+ *        the 2026-09-11 deploy-cadence gate, which had been the leading
+ *        explanation for the burn. It dying on the old schedule says that gate
+ *        was not the whole cause; the real query is still unidentified.
  *
- *        UNLIKE AN UNCHECKED RECYCLE, RM9's old contents were verified fresh,
- *        not assumed from the 2026-08-26-era precedent (this file's own rule:
+ *        This cutover RECYCLES RM10 — live once before on 2026-08-26..~08-29,
+ *        until RM11 replaced it when RM10's own allowance ran out — rather
+ *        than provisioning a new RM12.
+ *
+ *        UNLIKE AN UNCHECKED RECYCLE, RM10's old contents were verified fresh,
+ *        not assumed from the 2026-08-29-era precedent (this file's own rule:
  *        a recycled target must be re-verified each time it comes back around,
- *        never trusted from old findings). A 2026-09-11 probe-databases run
- *        answered whether RM9's old data had ever been carried forward with
+ *        never trusted from old findings). A 2026-09-14 probe-databases run
+ *        answered whether RM10's old data had ever been carried forward with
  *        row counts, not a guess:
- *          RM9 (died)  User=209  PriceAlert=40   CollectionCard=634   RetailerPrice=90773
- *          RM10        User=238  PriceAlert=114  CollectionCard=702   RetailerPrice=89828
+ *          RM10 (died) User=238  PriceAlert=114  CollectionCard=702   RetailerPrice=89828
  *          RM11        User=281  PriceAlert=131  CollectionCard=1029  RetailerPrice=90721
  *          RM6         User=298  PriceAlert=158  CollectionCard=1160  RetailerPrice=90372
  *          RM7         User=308  PriceAlert=158  CollectionCard=1163  RetailerPrice=89877
- *          RM8 (live)  User=322  PriceAlert=219  CollectionCard=1195  RetailerPrice=128993
- *        Every metric climbs monotonically from RM9 through to RM8 — the
+ *          RM9 (live)  User=347  PriceAlert=204  CollectionCard=1389  RetailerPrice=131008
+ *        Every metric climbs monotonically from RM10 through to RM9 — the
  *        signature of data that was carried forward and grew normally, not an
- *        orphaned last copy. So migrate-main-db-rm8-to-rm9 restored a
- *        row-count verified copy of RM8 (User 322, Card 1,429, RetailerPrice
- *        128,993, and every other table matching exactly) over it,
- *        `pg_restore --clean` dropping and recreating every table from the RM8
- *        dump.
+ *        orphaned last copy. (The same run found RM8 UNREACHABLE, which is
+ *        what a fully spent allowance looks like.) So
+ *        migrate-main-db-rm9-to-rm10 restored a row-count verified copy of RM9
+ *        (User 347, Card 1,431, RetailerPrice 131,008, SealedListing 2,703 and
+ *        every other table matching exactly) over it, `pg_restore --clean`
+ *        dropping and recreating every table from the RM9 dump, with the
+ *        schema confirmed already in sync afterwards.
  *
- *        Like RM8, RM7, RM6, RM11 and RM10 before it, RM9 is a SINGLE name,
- *        not a chain — a deliberate departure from the RM3 through RM8 era
- *        (its FIRST term), when each was a FALLBACK CHAIN (CURRENT-first,
+ *        Like RM9, RM8, RM7, RM6, RM11 and RM10's own first term before it,
+ *        RM10 is a SINGLE name, not a chain — a deliberate departure from the
+ *        RM3 through RM8 era, when each was a FALLBACK CHAIN (CURRENT-first,
  *        falling through to older, often exhausted projects), and every real
  *        outage this database has had traced back to that shape, not to the
  *        database itself.
@@ -90,16 +96,16 @@
  * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
- * RM3 through RM11 (bar RM9 itself) and DATABASE_URL_2 are retired and stay out
+ * RM3 through RM11 (bar RM10 itself) and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm8-to-rm9 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm9-to-rm10 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM9"] as const;
+export const OPERATIONAL_VARS = ["RM10"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.

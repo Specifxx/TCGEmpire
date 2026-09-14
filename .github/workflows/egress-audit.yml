@@ -29,9 +29,9 @@ name: Egress audit (Neon transfer)
 # Weekly rather than daily because the audit itself costs transfer; press
 # "Run workflow" for an ad-hoc reading (e.g. the day after a change).
 #
-# ENV. The same variable names every other DB workflow here uses. RM9 is the
-# only operational variable (src/lib/db-chains.ts); RH10 is the current history
-# project with RH9 as its rollback. DB_SOURCE_NAME exists because Actions
+# ENV. The same variable names every other DB workflow here uses. RM10 is the
+# only operational variable (src/lib/db-chains.ts); HISTORY_DATABASE_URL is the
+# current history project with RH10 as its rollback. DB_SOURCE_NAME exists because Actions
 # collapses the chain into one DATABASE_URL before the job starts, so the app's
 # own "which variable won" diagnostic would otherwise always say DATABASE_URL.
 
@@ -60,10 +60,10 @@ jobs:
     # Two sequential samples of up to ~20 minutes each, plus setup.
     timeout-minutes: 55
     env:
-      DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-      DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+      DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+      DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
+      HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
       RH10: ${{ secrets.RH10 || vars.RH10 }}
-      RH9: ${{ secrets.RH9 || vars.RH9 }}
       # Empty on a scheduled run (no inputs); the steps default it to 20 in the
       # shell rather than here, because a GitHub expression treats 0 as falsy
       # and `0 || 20` would silently turn a requested cumulative run into a
@@ -84,7 +84,7 @@ jobs:
         run: |
           set -o pipefail
           if [ -z "${DATABASE_URL:-}" ]; then
-            echo "::error::RM9 is not set for Actions — nothing to audit."
+            echo "::error::RM10 is not set for Actions — nothing to audit."
             exit 1
           fi
           SAMPLE="${SAMPLE:-20}"
@@ -93,7 +93,7 @@ jobs:
           echo "npx tsx scripts/audit-egress.ts $ARGS"
           npx tsx scripts/audit-egress.ts $ARGS | tee operational.txt
           {
-            echo "## Operational project (RM9)"
+            echo "## Operational project (RM10)"
             echo '```'
             cat operational.txt
             echo '```'
@@ -103,8 +103,8 @@ jobs:
         if: env.WHICH != 'operational'
         run: |
           set -o pipefail
-          if [ -z "${RH10:-}" ] && [ -z "${RH9:-}" ]; then
-            echo "::error::Neither RH10 nor RH9 is set for Actions — the history audit would silently run against the operational database instead."
+          if [ -z "${HISTORY_DATABASE_URL:-}" ] && [ -z "${RH10:-}" ]; then
+            echo "::error::Neither HISTORY_DATABASE_URL nor RH10 is set for Actions — the history audit would silently run against the operational database instead."
             exit 1
           fi
           SAMPLE="${SAMPLE:-20}"
@@ -113,7 +113,7 @@ jobs:
           echo "npx tsx scripts/audit-egress.ts $ARGS"
           npx tsx scripts/audit-egress.ts $ARGS | tee history.txt
           {
-            echo "## History project (RH10)"
+            echo "## History project (HISTORY_DATABASE_URL)"
             echo '```'
             cat history.txt
             echo '```'

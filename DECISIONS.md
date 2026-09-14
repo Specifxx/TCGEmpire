@@ -6199,3 +6199,63 @@ an entry someone has to remember to read.
 
 The 5-second delay *before showing* is untouched — that remains the owner's standing
 call from 11 Sep, and it is being measured rather than reversed a third time.
+
+## RM9 lasted three days too — the operational cutover to RM10, 2026-09-14
+
+RM9 went live on 11 Sep and reached its 5 GB Neon transfer allowance on the 14th.
+Three days, which is what RM8, RM7 and RM6 each managed before it. The site degrades
+while a project is at its limit, so this cutover ships with `[deploy]` in the subject
+rather than waiting for the 08:00 release — the one standing exception to that gate.
+
+**The uncomfortable part is the timing.** The deploy-cadence fix landed on
+2026-09-11 — the *same day* RM9 went live — and it was the leading explanation for
+the burn: ~770 database-backed pages prerendered on every push, at 10–30 pushes a
+day. RM9 is therefore the first full project life measured with that fix in place,
+and it died on exactly the old schedule. That is close to a clean experiment, and it
+says the cadence was not the whole cause. `audit-egress` runs immediately after this,
+against fresh RM10 traffic; the standing lead is the `RetailerPrice` note at the top
+of `src/lib/db.ts`. **A new project buys three days, not a fix.**
+
+**RM10 is a recycled name, and it was checked rather than assumed** — the rule
+`OPERATIONAL_VARS` has carried since the chain was retired. It was the live
+operational project from 2026-08-26 to 08-29, so it held a real, stale August
+snapshot rather than being empty. A `probe-databases` run (34837948437) put numbers
+on it before anything was written:
+
+| | RM10 (pre-restore) | RM9 (live) |
+|---|---|---|
+| User | 238 | 347 |
+| PriceAlert | 114 | 204 |
+| CollectionCard | 702 | 1,389 |
+| RetailerPrice | 89,828 | 131,008 |
+| SealedListing | 2,168 | 2,703 |
+
+Behind on *every* metric, which is what makes `pg_restore --clean` over it safe: its
+window is superseded, not an orphaned last copy. The same probe found RM8 already
+UNREACHABLE (a spent allowance) while RM9 still answered — the drain window is
+narrow, and it is why the source is dumped before it goes fully dark rather than after.
+
+`migrate-main-db-rm9-to-rm10` (run 34838296746) verified every table row-for-row —
+`User 347`, `RetailerPrice 131008`, `SealedListing 2703`, `PremiumClick 252`,
+`PremiumWinbackTrial 127`, `TrialRedemption 5`, `StoreHealthSnapshot 3816` — and the
+follow-up `prisma db push` reported "already in sync with the Prisma schema", which is
+the check that catches a restore silently reinstating an older column set. It was run
+twice: once for the bulk copy, once immediately before this commit, so writes RM9
+accepted in between are carried over.
+
+**Still a single name, still no fallback chain.** The argument in the
+`OPERATIONAL_VARS` header is unchanged: every real outage in this rotation came from
+the chain shape, where a dead head silently demoted traffic onto a stale project and
+the site kept serving. One name fails loudly instead.
+
+**Two pieces of drift found while sweeping the workflows**, both the same class of
+bug on the history side and both fixed here. `db-audit.yml` and `weekly-promo.yml`
+never passed `HISTORY_DATABASE_URL`, so since the 2026-09-12 history cutover they had
+been resolving to `RH10` — the *rollback* — and reporting it as live; `egress-audit.yml`
+was measuring `RH10` as "the history project" for the same reason. An audit pointed at
+the wrong database is worse than no audit, and the next thing scheduled to run here is
+an audit. The `probe-databases` labels had drifted too (`HISTORY_DATABASE_URL_4` was
+still marked "(current)") and now match `HISTORY_VARS`.
+
+Retired projects stay reachable **by name** from the `migrate-*` tasks so a drain can
+still find them. They do not re-enter the runtime chain.

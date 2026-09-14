@@ -79,13 +79,13 @@ jobs:
       # schedule. Do those by hand via maintenance.yml's db-push task.
       - name: Sync database schema (additive)
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-09-11 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-09-14 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
         run: |
           if [ -z "${DATABASE_URL:-}" ]; then
             echo "::error::No database URL configured — cannot sync schema."
@@ -99,13 +99,13 @@ jobs:
           fi
       - name: Import prices
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-09-11 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-09-14 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           # eBay is optional — the import skips it if these aren't set.
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
@@ -128,12 +128,13 @@ jobs:
           CARDMARKET_PRODUCTLIST_NONSINGLES_URL: ${{ vars.CARDMARKET_PRODUCTLIST_NONSINGLES_URL }}
           CARDMARKET_PRICEGUIDE_URL: ${{ vars.CARDMARKET_PRICEGUIDE_URL }}
           CARDMARKET_EUR_TO_GBP: ${{ vars.CARDMARKET_EUR_TO_GBP }}
-          # RH10 is the current history project (see src/lib/db-history.ts) — RH9
-          # is its rollback, and everything older is a dead fallback kept only
-          # so a drain can still reach it. THIS STEP WRITES PriceHistory — if RH10
-          # is missing here, db-history.ts falls through to RH9 (or, at the end of
-          # the chain, to the OPERATIONAL database), so keep this list in sync
-          # with db-history.ts / db-chains.ts.
+          # HISTORY_DATABASE_URL is the current history project (see
+          # src/lib/db-history.ts) — RH10 is its rollback, and everything older is
+          # a dead fallback kept only so a drain can still reach it. THIS STEP
+          # WRITES PriceHistory — if HISTORY_DATABASE_URL is missing here,
+          # db-history.ts falls through to RH10 (or, at the end of the chain, to
+          # the OPERATIONAL database), so keep this list in sync with
+          # db-history.ts / db-chains.ts.
           RH11: ${{ secrets.RH11 || vars.RH11 }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
@@ -150,13 +151,13 @@ jobs:
         # Populate the /sealed page (booster boxes/packs across AU/US). Nothing
         # else scheduled this before, so the table went empty.
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-09-11 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-09-14 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}

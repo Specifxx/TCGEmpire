@@ -34,19 +34,20 @@ jobs:
       - run: npx prisma generate
       - name: Run audit
         env:
-          DATABASE_URL: ${{ secrets.RM9 || vars.RM9 }}
-          # RM9 is the only operational variable now (2026-09-11 cutover — see
+          DATABASE_URL: ${{ secrets.RM10 || vars.RM10 }}
+          # RM10 is the only operational variable now (2026-09-14 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM9 || vars.RM9) && 'RM9' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM10 || vars.RM10) && 'RM10' || 'UNSET' }}
           # The audit's Freshness section reads PriceHistory, which lives in the
           # separate history project (src/lib/db-history.ts). Without these, that
           # client falls all the way through its chain to DATABASE_URL — the
           # OPERATIONAL database, whose PriceHistory is deliberately empty — and
-          # the audit reports a false "PriceHistory is EMPTY". RH10 is CURRENT;
-          # RH9 is its rollback.
+          # the audit reports a false "PriceHistory is EMPTY".
+          # HISTORY_DATABASE_URL is CURRENT; RH10 is its rollback.
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
           RH10: ${{ secrets.RH10 || vars.RH10 }}
           RH9: ${{ secrets.RH9 || vars.RH9 }}
           RH8: ${{ secrets.RH8 || vars.RH8 }}

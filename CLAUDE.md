@@ -32,7 +32,7 @@ So, for automated sessions:
 
 ## Databases
 
-Two Neon projects: operational (`RM9`) and history (`RH10`). Both resolve
+Two Neon projects: operational (`RM10`) and history (`HISTORY_DATABASE_URL`). Both resolve
 through `src/lib/db-chains.ts`; never hand-roll a connection chain in a script
 (`tests/db-chain.test.ts` fails if you do). Free-tier transfer is 5 GB/month
 per project; `.github/workflows/egress-audit.yml` measures where it goes.
