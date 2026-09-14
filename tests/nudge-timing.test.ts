@@ -3,7 +3,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { NUDGE_DELAY_MS } from "../src/lib/nudge-timing";
+import {
+  MAX_NUDGE_DISMISSALS,
+  NUDGE_DELAY_MS,
+  SNOOZE_AFTER_CLICK_MS,
+  SNOOZE_AFTER_DISMISS_MS,
+} from "../src/lib/nudge-timing";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const readCode = (p: string) =>
@@ -84,7 +89,7 @@ test("the delay is a timing change only — every frequency cap is untouched", (
   // would be easiest to lose while editing the timer next to them.
   const promo = readCode("src/components/PremiumSlideIn.tsx");
   assert.match(promo, /MIN_PAGEVIEWS\s*=\s*2/, "the slide-in still waits for an engaged visitor");
-  assert.match(promo, /MAX_DISMISSALS\s*=\s*2/, "two dismissals is still a permanent no");
+  assert.match(promo, /MAX_DISMISSALS = MAX_NUDGE_DISMISSALS/, "two dismissals is still a permanent no");
   assert.match(promo, /!!user/, "still signed-in only — the signed-out surface is SignupPromoPopup");
 
   const signup = readCode("src/components/SignupPromoPopup.tsx");

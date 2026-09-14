@@ -16,7 +16,7 @@ import {
   premiumFromLine,
 } from "@/lib/site";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
-import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
+import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
 import { formatMoneyCompact } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
 
@@ -54,9 +54,13 @@ const PV_KEY = "rc_prem_slidein_pv"; // sessionStorage: this component's own per
 // "after they visit 2 pages in one session" — engaged, not a first-impression pop.
 const MIN_PAGEVIEWS = 2;
 // A second dismissal means never again — two firm no's is a no.
-const MAX_DISMISSALS = 2;
-const SNOOZE_AFTER_DISMISS_MS = 7 * 864e5; // 7 days
-const SNOOZE_AFTER_CLICK_MS = 14 * 864e5; // 14 days
+//
+// These three moved to lib/nudge-timing.ts on 2026-09-14 so SignupPromoPopup
+// could adopt the same cap from ONE definition rather than a second copy of
+// these numbers. MAX_DISMISSALS stays as a local alias because this file reads
+// it in five places and the shorter name is what those lines were written
+// around; the VALUE has exactly one home.
+const MAX_DISMISSALS = MAX_NUDGE_DISMISSALS;
 
 // Don't nudge on auth pages or on /premium itself (they're already there).
 const SKIP_PATHS = ["/login", "/verify", "/premium"];

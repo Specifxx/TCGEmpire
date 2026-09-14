@@ -6130,3 +6130,72 @@ every send with `401 unrecognised IP address`, so the Premium offer campaign rea
 1 of 263 accounts and the daily registered-account digest has been failing silently.
 That is one setting in the Brevo dashboard, not a code change, and it is the cheapest
 unclaimed upside on this list.
+
+## The signup popup finally has a frequency cap, and why it isn't a locked ✕ — 2026-09-14
+
+Owner: *"I think we could also make it harder for people to dismiss the message — make
+them wait 5 seconds."*
+
+**Declined, and the owner chose the alternative.** Three specific grounds, recorded
+because this idea will come back:
+
+1. A forced wait before dismissal is the pattern the Better Ads Standards name
+   directly ("ads with countdown"). `docs/adsense-remediation.md` already treats the
+   Better Ads Standards half of Google's Publisher Policies as a live constraint on
+   this site, and AdSense is part of its revenue. This is a policy risk, not a matter
+   of taste.
+2. Six tests already forbid countdown pressure on Premium surfaces
+   (`access-tiers:126`, `premium-pitch-panel:56`, `premium-positioning:168`,
+   `premium-start:230`, `premium-tiers:236`, `premium-zero-today:115`). A close button
+   that does not close is the same category of thing those guards exist to stop.
+3. The dismiss rate is already 78%. A locked ✕ does not convert a dismissal into a
+   read; it converts it into a back-button exit. This popup has already cost one
+   production incident by being hard to close on a short phone (`263eaeb`).
+
+**The real cause of reflexive dismissal was frequency, not the button.**
+`SignupPromoPopup` had **no lifetime cap at all** — its own header admitted it. It
+returned every `PAGES_BETWEEN_SHOWS` (3) pages after every dismissal, forever, and
+because both counters lived in **sessionStorage**, a new tab or a browser restart
+wiped them: the visitor was treated as never-having-dismissed and asked again on their
+very first page. Someone could decline it indefinitely and keep being asked. That is
+what makes a ✕ reflexive rather than considered.
+
+`PremiumSlideIn`, the signed-in sibling in the same corner with the same colouring,
+has had the right shape since 2026-08-27: two dismissals is a permanent no, held in
+localStorage, 7-day snooze after a dismiss, 14 after a CTA click. The popup simply
+never got it.
+
+| | Before | After |
+|---|---|---|
+| Dismissals before it stops | unlimited | 2, per device, ever |
+| Quiet stretch after a dismissal | 3 pages, same session only | 3 pages, then 7 days |
+| After a new tab | reset — asked again on page 1 | cap and snooze both hold |
+| After clicking sign in | no snooze | 14 days, and no strike burned |
+
+**Engaging is not refusing.** A provider click snoozes for a fortnight but burns no
+strike — someone who signed in and came back should not be one dismissal from
+silence. It rides `AuthForm`'s existing `onProviderClick` hook, the same prop
+`PriceAlertModal` uses to stash a pending watch, so it needed no new plumbing.
+
+**`MAX_NUDGE_DISMISSALS` and both snooze windows moved into `lib/nudge-timing.ts`**,
+which already owns `NUDGE_DELAY_MS` for exactly the reason that three nudges had
+drifted to three different answers. `PremiumSlideIn` keeps a local `MAX_DISMISSALS`
+alias because it reads it in five places, but the value has one home. Two tests pinned
+`MAX_DISMISSALS = 2` as a literal *declaration* in that file and would have blocked
+the de-duplication; both now assert the value from its new home plus that the file
+consumes it.
+
+`PROMO_VARIANT` → `premium_graphic_capped`. Frequency axis, the same one
+`premium_graphic_repeat` recorded, and the one that moves shown-count and dismiss-rate
+most directly — without a rename the capped and uncapped impressions average together
+in GA4 and neither can be read. **Fewer impressions is the intended outcome.** The
+numbers that should improve are dismissals per impression and `sign_up` per impression.
+
+**`tests/nudge-frequency.test.ts` includes a guard against the change that was
+declined**: no corner nudge may disable, `aria-disabled`, or timer-gate its own close
+control, and the dismiss handler must be bound directly rather than behind a
+"may they close it yet" predicate. The reasoning belongs in a test rather than only in
+an entry someone has to remember to read.
+
+The 5-second delay *before showing* is untouched — that remains the owner's standing
+call from 11 Sep, and it is being measured rather than reversed a third time.

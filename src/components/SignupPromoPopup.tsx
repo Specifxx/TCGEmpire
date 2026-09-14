@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
-import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
+import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
 import { AuthForm } from "./AuthForm";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import {
@@ -61,6 +61,9 @@ import {
 // the popup. The gap between them is what decides whether it comes back.
 const VIEWS_KEY = "rc_signup_promo_views";
 const DISMISSED_AT_KEY = "rc_signup_promo_dismissed_at";
+// localStorage, so they survive the new tab that resets the two above.
+const DISMISS_COUNT_KEY = "rc_signup_promo_dismisses"; // lifetime dismissals
+const SNOOZE_UNTIL_KEY = "rc_signup_promo_until"; // epoch ms; don't show before this
 
 // IT COMES BACK (owner brief, 2026-09-10: "the slider should show up again
 // every 3 pages a user visits if they're not logged in"). Until now a dismissal
@@ -80,6 +83,27 @@ function readCount(key: string): number {
     return Number(sessionStorage.getItem(key) ?? "0") || 0;
   } catch {
     return 0;
+  }
+}
+
+// The lifetime counters live in localStorage, NOT sessionStorage, and that is
+// the whole point of them: the two keys above reset on a new tab, so before
+// this the arming gate treated a returning visitor as never-having-dismissed
+// and asked again on their very first page. Fails open to 0 — a private window
+// behaves exactly as it did before, which is the same trade every other read in
+// this file makes.
+function readLocal(key: string): number {
+  try {
+    return Number(window.localStorage.getItem(key) ?? "0") || 0;
+  } catch {
+    return 0;
+  }
+}
+function writeLocal(key: string, value: number): void {
+  try {
+    window.localStorage.setItem(key, String(value));
+  } catch {
+    /* private mode — the cap is best-effort, never a crash */
   }
 }
 
@@ -148,6 +172,14 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // "comparison_instant" and "premium_graphic_repeat" each recorded — and since
 // the last time this site ran a 5s delay the dismiss rate was 78%, separating
 // these impressions in GA4 is the entire point of the rename.
+// → "premium_graphic_capped" (2026-09-14): the popup finally has a LIFETIME
+// dismissal cap and a snooze, held in localStorage, so two dismissals is a
+// permanent no and a new tab no longer resets the count. FREQUENCY axis — the
+// same one "premium_graphic_repeat" recorded, and the one that moves the shown
+// count and the dismiss rate most directly, so without a new name the capped
+// and uncapped impressions average together and neither can be read. Expect
+// FEWER impressions on purpose; the number that should improve is dismissals
+// per impression, and sign_up per impression.
 // → "premium_graphic" (2026-09-10): the pitch stopped being text at all. The
 // sentence and the six-chip tool row became the designed PremiumPitchPanel; the
 // heading's non-trial fallback became the new tagline. Same axis as the last
@@ -160,7 +192,7 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_graphic_5s";
+const PROMO_VARIANT = "premium_graphic_capped";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded, trialDays } = useMe();
@@ -198,9 +230,20 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     if (!loaded || user || shown) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
 
+    // THE LIFETIME CAP, checked before anything else because it is the cheapest
+    // read and the most final. Two dismissals is a no — same rule, same numbers
+    // and now the same constants as PremiumSlideIn, which has enforced them
+    // since 2026-08-27. Before this the popup had no cap at all and could ask
+    // someone who had declined it a dozen times.
+    if (readLocal(DISMISS_COUNT_KEY) >= MAX_NUDGE_DISMISSALS) return;
+    if (Date.now() < readLocal(SNOOZE_UNTIL_KEY)) return;
+
     // Never dismissed this session → show at the first opportunity, with no
     // gate of any kind, exactly as before. Dismissed → stay away until they
     // have moved on PAGES_BETWEEN_SHOWS further pages, then come back.
+    //
+    // This within-session spacing is UNCHANGED and still does its own job; the
+    // cap above sits on top of it rather than replacing it.
     let views = 0;
     let dismissedAt: number | null = null;
     try {
@@ -260,7 +303,20 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     } catch {
       /* private mode */
     }
+    // AND the lifetime half: one more strike, and a week of quiet. Written here
+    // for the same reason as the line above — synchronously, so a dismiss
+    // immediately followed by a navigation still lands.
+    writeLocal(DISMISS_COUNT_KEY, readLocal(DISMISS_COUNT_KEY) + 1);
+    writeLocal(SNOOZE_UNTIL_KEY, Date.now() + SNOOZE_AFTER_DISMISS_MS);
   }, [hide]);
+
+  // ENGAGING IS NOT REFUSING. Clicking a provider button snoozes the popup for
+  // a fortnight but burns NO strike — someone who signed in and came back
+  // should not be one dismissal away from never being asked again. Same split
+  // PremiumSlideIn's accept() already makes between its two snooze windows.
+  const snoozeForClick = useCallback(() => {
+    writeLocal(SNOOZE_UNTIL_KEY, Date.now() + SNOOZE_AFTER_CLICK_MS);
+  }, []);
 
   // Esc dismisses it — non-trapping, because this is not a modal (matches
   // PremiumSlideIn exactly: no focus trap, no scroll lock, no aria-modal).
@@ -371,7 +427,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
               OAuth round trip lands the visitor ready to start a trial or
               check out, instead of back where they were with Premium still
               something they have to go find later. */}
-          <AuthForm providers={providers} bare compact source="popup" next="/premium" />
+          <AuthForm providers={providers} bare compact source="popup" next="/premium" onProviderClick={snoozeForClick} />
           <button
             type="button"
             onClick={dismiss}
