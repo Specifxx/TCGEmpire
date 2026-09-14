@@ -59,15 +59,29 @@ test("scarcity is a real live in-stock listing count, not a demand proxy", () =>
 });
 
 test("universe is the whole shipped (non-preorder) catalogue, no SCAN/DISPLAY cap — the catalogue is already small", () => {
+  // getSealedGroups(market) moved from inside this file to the page (2026-09-14,
+  // DECISIONS.md "Find the fifth burn before RM10 dies") — the page wraps
+  // getRisingSealed in its own unstable_cache, and getSealedGroups is itself
+  // self-cached, so calling it from in here was invisible transitive nesting
+  // (Next.js 14.2 bypasses a self-cached loader called inside another cache's
+  // callback). getRisingSealed now takes the already-fetched groups as a
+  // parameter instead. Still must be the shipped-only listing, just fetched
+  // one level up.
+  const page = codeOnly(read(PAGE));
+  assert.match(page, /getSealedGroups\(market\)/, "must use the shipped-only (non-preorder) listing");
+  assert.doesNotMatch(page, /getAllSealedGroups|getPreorderGroups/);
+
   const code = codeOnly(read(LIB));
-  assert.match(code, /getSealedGroups\(market\)/, "must use the shipped-only (non-preorder) listing");
-  assert.doesNotMatch(code, /getAllSealedGroups|getPreorderGroups/);
+  assert.doesNotMatch(code, /getSealedGroups\(/, "must receive groups as a parameter, not fetch them itself — see the nesting note above");
+  assert.match(code, /allGroups\.filter\(/, "must still filter to groups with a live price, just from the passed-in array");
   assert.doesNotMatch(code, /\bSCAN\b|\bDISPLAY\b/, "no scan/display cap — every qualifying product is shown, ranked");
 });
 
 test("single-market scope only — no GLOBAL, no historySource()/CA-EU derivation", () => {
   const code = codeOnly(read(LIB));
-  assert.match(code, /export async function getRisingSealed\(market: Country = DEFAULT_COUNTRY\)/);
+  // Takes `groups` as a second parameter now — see the nesting note in the
+  // "no SCAN/DISPLAY cap" test above.
+  assert.match(code, /export async function getRisingSealed\(\s*market: Country = DEFAULT_COUNTRY,\s*groups: SealedGroup\[\]\s*\)/);
   assert.doesNotMatch(code, /GLOBAL/, "no cross-region composite — one region in its own currency beats a blend");
   assert.doesNotMatch(code, /historySource/, "every market's sealed history is tracked natively — no derivation layer needed");
   assert.match(

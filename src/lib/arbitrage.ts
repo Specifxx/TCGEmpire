@@ -45,15 +45,34 @@ const MAX_DEAL_PCT = 80;
 // puts it in the shared Next data cache instead, day-keyed and CONTENT_TAG-busted
 // on import (the data only changes then), and falls back to a direct query in any
 // context without the incremental cache (scripts) so nothing else has to care.
+//
+// REDUCED IN POSTGRES, NOT NODE (2026-09-14, DECISIONS.md "Find the fifth burn
+// before RM10 dies"). This used to be a plain findMany returning EVERY in-stock
+// eBay row for the market — RetailerPrice grew 89,877 → 131,008 rows in three
+// days (+43%), and the caller only ever wanted the cheapest DELIVERED
+// (price + shipping) listing per card, reduced in a Node Map afterwards. That
+// put this cache entry in the dead zone between unstable_cache's ~1.2 MB silent-
+// drop ceiling and the egress guard's 1 MB threshold: past ~6,600 rows it could
+// be dropped with no warning, and every request to the three FORCE-DYNAMIC pages
+// that read it (/tools/deal-finder, /premium, /api/premium/proof) would then
+// re-pull the whole table. DISTINCT ON pushes the same reduction into Postgres —
+// same pattern as app/stores/report/page.tsx's rivals query — so the result is
+// bounded by the CARD catalogue (~1,400 rows), not by how many eBay listings
+// exist. DISTINCT ON's leading ORDER BY term must match the DISTINCT list, so
+// cardId sorts first and the delivered-cost expression sorts last; that is what
+// makes the surviving row per card the cheapest one.
 type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
 
 function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
   return cachedOrDirect(
     () =>
-      prisma.retailerPrice.findMany({
-        where: { country, inStock: true, retailer: ebayKey },
-        select: { cardId: true, priceCents: true, shippingCents: true, url: true },
-      }),
+      prisma.$queryRaw<EbayRow[]>`
+        SELECT DISTINCT ON ("cardId")
+               "cardId", "priceCents", "shippingCents", "url"
+        FROM "RetailerPrice"
+        WHERE country = ${country} AND retailer = ${ebayKey} AND "inStock" = true
+        ORDER BY "cardId", ("priceCents" + COALESCE("shippingCents", 0)) ASC
+      `,
     ["arb-ebay-rows", country, ebayKey, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   );
@@ -61,6 +80,9 @@ function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow
 
 // TCGplayer's US reference rows are market-neutral (one price per card regardless
 // of the viewer's country), so this is a single global slot, not keyed by country.
+// Documented invariant: ONE row per card (US, in USD) — enforced here with a
+// `take` rather than only asserted in prose, so a data bug that broke the
+// invariant would truncate rather than silently balloon this cache entry.
 type TcgRow = { cardId: string; priceCents: number; url: string };
 function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
   return cachedOrDirect(
@@ -68,6 +90,7 @@ function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
       prisma.retailerPrice.findMany({
         where: { retailer: TCG_US.retailer, inStock: true },
         select: { cardId: true, priceCents: true, url: true },
+        take: 5000, // ~3.5x the current card catalogue — see invariant above
       }),
     ["arb-tcg-us-rows", sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
@@ -589,16 +612,35 @@ type XRegionRow = { card: CardTileData; homeCents: number; away: Country; awayNa
 // cards) on every request to the force-dynamic deal-finder cross-region tab and
 // /market/records. cachedOrDirect collapses it to one pull per home market per
 // day (CONTENT_TAG busts it on import), shared across all lambda instances.
+//
+// TWO PASSES, NOT ONE (2026-09-14, DECISIONS.md "Find the fifth burn before
+// RM10 dies"). Ranking every card needs only its six lowestPriceCents* columns
+// (pickPrice reads nothing else) — but this used to fetch the FULL cardTileSelect
+// width (two image URLs, name/slug/set text, a per-row _count subquery) for
+// every one of ~1,400 cards just to throw most of them away in the loop below.
+// Only the cards that actually clear XREGION_MIN_GAP_PCT — typically a small
+// fraction — need the full display payload. Splitting into a narrow SCORING
+// pass + a display pass scoped to just the winners cuts the egress of this
+// (already once-a-day, shared) compute without changing a single result.
 function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[]> {
   return cachedOrDirect(async () => {
   const homeCurrency = currencyOf(homeCountry);
-  const cards = await prisma.card.findMany({
+  const priceRows = await prisma.card.findMany({
     where: { variant: null, isPromo: false },
-    select: cardTileSelect(homeCountry),
+    select: {
+      id: true,
+      lowestPriceCents: true,
+      lowestPriceCentsUs: true,
+      lowestPriceCentsUk: true,
+      lowestPriceCentsSg: true,
+      lowestPriceCentsCa: true,
+      lowestPriceCentsEu: true,
+    },
   });
 
-  const rows: XRegionRow[] = [];
-  for (const c of cards as unknown as CardTileData[]) {
+  type Ranked = { id: string; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
+  const ranked: Ranked[] = [];
+  for (const c of priceRows) {
     const homeCents = pickPrice(c, homeCountry);
     if (homeCents == null || homeCents < XREGION_MIN_HOME_CENTS) continue;
 
@@ -614,7 +656,22 @@ function computeCrossRegionRows(homeCountry: Country): Promise<XRegionRow[]> {
       if (!best || pct > best.pct) best = { native: awayNative, converted: awayConverted, country: info.code, pct };
     }
     if (!best) continue;
-    rows.push({ card: c, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
+    ranked.push({ id: c.id, homeCents, away: best.country, awayNative: best.native, awayConverted: best.converted, pct: best.pct });
+  }
+  if (!ranked.length) return [];
+
+  // DISPLAY PASS: full tile data only for the cards that actually qualified.
+  const cards = await prisma.card.findMany({
+    where: { id: { in: ranked.map((r) => r.id) } },
+    select: cardTileSelect(homeCountry),
+  });
+  const cardById = new Map((cards as unknown as CardTileData[]).map((c) => [c.id, c]));
+
+  const rows: XRegionRow[] = [];
+  for (const r of ranked) {
+    const card = cardById.get(r.id);
+    if (!card) continue; // defensive — the id came from the same table a moment ago
+    rows.push({ card, homeCents: r.homeCents, away: r.away, awayNative: r.awayNative, awayConverted: r.awayConverted, pct: r.pct });
   }
   rows.sort((a, b) => b.pct - a.pct);
   return rows;

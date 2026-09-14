@@ -34,6 +34,14 @@ name: Egress audit (Neon transfer)
 # current history project with RH10 as its rollback. DB_SOURCE_NAME exists because Actions
 # collapses the chain into one DATABASE_URL before the job starts, so the app's
 # own "which variable won" diagnostic would otherwise always say DATABASE_URL.
+#
+# CADENCE CHECK (added 2026-09-14, DECISIONS.md "Find the fifth burn before
+# RM10 dies"). Every prior write-up of this burn measured QUERIES and assumed
+# the deploy-cadence fix (2026-09-11) was holding at ~1 build/day. It wasn't:
+# RM9 lived exactly four days and shipped 16 `[deploy]` commits in that span —
+# ~4/day. Nothing anywhere counted this, so the drift was invisible until
+# someone did `git log | grep` by hand. This step is that grep, on a schedule,
+# needing no database and no build.
 
 on:
   schedule:
@@ -72,10 +80,38 @@ jobs:
       WHICH: ${{ inputs.which || 'both' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, not the default shallow clone — the cadence check
+          # below needs a real week of commits to count against.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+
+      - name: Report deploy cadence (no DB, no build)
+        run: |
+          set -o pipefail
+          echo "== [deploy]-subject commits per day, last 7 days ==" | tee cadence.txt
+          # Subject line only, matching scripts/vercel-ignore-build.sh's own rule —
+          # a commit whose BODY mentions [deploy] does not build and must not count.
+          git log --since="7 days ago" --pretty='%ad|%s' --date=short | \
+            awk -F'|' 'BEGIN{IGNORECASE=1} $2 ~ /\[deploy\]/ {print $1}' | \
+            sort | uniq -c | tee -a cadence.txt
+          TOTAL=$(git log --since="7 days ago" --pretty='%s' | grep -ciF '[deploy]' || true)
+          DAYS=$(git log --since="7 days ago" --pretty='%ad' --date=short | sort -u | wc -l)
+          DAYS=${DAYS:-1}
+          echo "" | tee -a cadence.txt
+          echo "$TOTAL deploying commits over $DAYS distinct day(s) with activity." | tee -a cadence.txt
+          AVG=$(awk -v t="$TOTAL" -v d="$DAYS" 'BEGIN { printf "%.1f", t/d }')
+          echo "Average: $AVG/day (the gate assumes ~1/day; RM9 died at ~4/day)." | tee -a cadence.txt
+          {
+            echo "## Deploy cadence (last 7 days)"
+            echo '```'
+            cat cadence.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - run: npm ci
       - run: npx prisma generate
 

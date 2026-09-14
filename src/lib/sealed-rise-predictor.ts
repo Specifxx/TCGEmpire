@@ -1,5 +1,5 @@
 import { dbHistory } from "./db-history";
-import { getSealedGroups, type SealedGroup } from "./sealed-import";
+import type { SealedGroup } from "./sealed-import";
 import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { computeSignals, type Signals } from "./ai-insight";
 import { type PricePoint } from "./price-history";
@@ -86,20 +86,37 @@ function emptyAnalysis(market: Country): SealedRiseAnalysis {
   };
 }
 
+// Takes `groups` as an argument rather than calling getSealedGroups(market)
+// itself (2026-09-14, DECISIONS.md "Find the fifth burn before RM10 dies").
+// The one caller (tools/rising-sealed/page.tsx) wraps this in its own
+// unstable_cache — and getSealedGroups is self-cached (cachedOrDirect), so
+// calling it from inside another cache's callback is bypassed by Next.js
+// 14.2 (see the note on cachedOrDirect in lib/price-history.ts): every outer
+// miss re-pulled the whole SealedListing table for that market instead of
+// reading getSealedGroups's own cache. This is transitively nested — one hop
+// through this function — which is exactly what tests/nested-cache.test.ts's
+// static check cannot see (it only matches a direct
+// `unstable_cache(() => <name>(` call). Same fix as getUndervalued/
+// getBaselines in screener.ts: the caller reads groups from their OWN cache
+// first, outside the wrapping callback, and passes them in here.
+//
 // NEVER let a data anomaly 500 the page — same reasoning as getRisingCards.
-export async function getRisingSealed(market: Country = DEFAULT_COUNTRY): Promise<SealedRiseAnalysis> {
+export async function getRisingSealed(
+  market: Country = DEFAULT_COUNTRY,
+  groups: SealedGroup[]
+): Promise<SealedRiseAnalysis> {
   try {
-    return await computeRisingSealed(market);
+    return await computeRisingSealed(market, groups);
   } catch (err) {
     console.error(`[sealed-rise-predictor] getRisingSealed(${market}) failed — serving an empty analysis:`, err);
     return emptyAnalysis(market);
   }
 }
 
-async function computeRisingSealed(market: Country): Promise<SealedRiseAnalysis> {
+async function computeRisingSealed(market: Country, allGroups: SealedGroup[]): Promise<SealedRiseAnalysis> {
   // Universe: every shipped (non-preorder), currently-priced sealed group in this
   // market — the whole small catalogue, same constituent rule as the Sealed Index.
-  const groups = (await getSealedGroups(market)).filter((g) => g.lowestPriceCents != null);
+  const groups = allGroups.filter((g) => g.lowestPriceCents != null);
   if (!groups.length) return emptyAnalysis(market);
 
   const cutoff = new Date(Date.now() - HISTORY_DAYS * 86400_000);

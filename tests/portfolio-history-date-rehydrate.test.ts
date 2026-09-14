@@ -28,7 +28,10 @@ test("portfolioHistory re-hydrates `day` into a real Date after the cache read",
   assert.ok(fnStart >= 0, "expected to find portfolioHistory");
   const fn = code.slice(fnStart, code.indexOf("\n}", fnStart) + 2);
 
-  assert.match(fn, /unstable_cache/, "must still be the cached read");
+  // cachedOrDirect (2026-09-14) wraps unstable_cache with the same JSON
+  // round-trip characteristics — the Date bug this test pins is unchanged by
+  // that migration, so accept either the direct call or the shared wrapper.
+  assert.match(fn, /unstable_cache|cachedOrDirect/, "must still be a cached read that round-trips through JSON");
   assert.match(
     fn,
     // [^}]* (not a fixed field list) — this test's only concern is the `day`

@@ -14,13 +14,25 @@ contains the callback's minified source). At 10–30 pushes a day that alone
 exhausted a Neon transfer allowance every three days — see DECISIONS.md,
 "Network transfer: the deploy cadence was the burn", 2026-09-11.
 
+Measured 2026-09-14 ("Find the fifth burn before RM10 dies", DECISIONS.md):
+even with every session following this rule as written, `[deploy]` landed on
+**16 commits in RM9's four-day life — ~4/day, not the ~1/day the gate assumes**.
+About half were legitimate feature commits carrying the marker because "push
+to prod" was read as "deploy this specific change right now". The arithmetic
+alone explains a project dying on the old three-day schedule. The gate's
+mechanism was never broken; its premise was.
+
 So, for automated sessions:
 
 - **Never** put `[deploy]` (any casing) in a commit or merge SUBJECT on your
   own initiative. Ordinary work waits for the daily release; that is the point.
   Explaining the gate in a commit BODY is fine and does not deploy.
-- Add it **only** when the user explicitly asks for an immediate release, and
-  say so in the summary.
+- **"Push to prod" / "ship this" defaults to landing on `main` and riding the
+  daily 08:00 UTC release — it does NOT by itself mean "deploy this exact
+  commit right now".** Add `[deploy]` only when the user says the release is
+  urgent (can't wait for the next scheduled build), and say so explicitly in
+  the summary. If it's ambiguous whether a request means "get it live" or
+  "get it live immediately", ask rather than defaulting to `[deploy]`.
 - Do not add `generateStaticParams` prewarming back to database-backed dynamic
   routes, and do not lower a page's `export const revalidate` — see the egress
   rules at the top of `src/lib/db.ts` before adding any query.

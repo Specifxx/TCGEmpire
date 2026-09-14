@@ -70,6 +70,111 @@ test("no self-cached loader is wrapped in another unstable_cache / cachedOrDirec
   assert.deepEqual(offenders, [], "call the loader directly — it caches itself:\n" + offenders.join("\n"));
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TRANSITIVE NESTING — ONE OR MORE HOPS AWAY (added 2026-09-14, DECISIONS.md
+// "Find the fifth burn before RM10 dies").
+// ─────────────────────────────────────────────────────────────────────────────
+// The direct-call test above only sees `unstable_cache(() => getSealedGroups(`.
+// The real bug that shipped (tools/rising-sealed/page.tsx) was
+// `unstable_cache(() => getRisingSealed(market))`, where getRisingSealed calls
+// computeRisingSealed, which called getSealedGroups — two hops away, and
+// invisible to a regex that only looks at the immediate callback. Next's
+// fetchCache: "force-no-store" flag is inherited down the whole call chain
+// from the outer unstable_cache, not just the first call, so a self-cached
+// loader is disabled no matter how many local function calls sit between it
+// and the outer wrapper.
+//
+// This walks every top-level named function in src/, indexes its body (brace-
+// matched, not line-based, so multi-line bodies are captured correctly), then
+// for every unstable_cache/cachedOrDirect callback that calls ONE locally-named
+// function (and that function isn't itself already in SELF_CACHED — the test
+// above owns that case), recursively checks whether that function's body — or
+// anything IT calls, up to a few hops — contains a bare call to a self-cached
+// loader. A name-based heuristic across the whole tree, not a real per-file
+// import graph, so a generic helper name could in principle cause a false
+// positive; SELF_CACHED's names are specific enough that this has not
+// happened running it against this codebase.
+function indexFunctionBodies(files: string[]): Map<string, string[]> {
+  const bodiesByName = new Map<string, string[]>();
+  const funcDeclRe = /(?:export\s+)?(?:async\s+)?function\s+([A-Za-z0-9_]+)\s*\(/g;
+  for (const file of files) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(funcDeclRe)) {
+      const name = m[1];
+      let i = m.index! + m[0].length;
+      let depth = 1; // already past the opening "(" of the parameter list
+      while (depth > 0 && i < src.length) {
+        if (src[i] === "(") depth++;
+        else if (src[i] === ")") depth--;
+        i++;
+      }
+      const braceStart = src.indexOf("{", i);
+      if (braceStart === -1) continue;
+      let bd = 0;
+      let j = braceStart;
+      for (; j < src.length; j++) {
+        if (src[j] === "{") bd++;
+        else if (src[j] === "}") {
+          bd--;
+          if (bd === 0) break;
+        }
+      }
+      const body = src.slice(braceStart, j + 1);
+      const arr = bodiesByName.get(name) ?? [];
+      arr.push(body);
+      bodiesByName.set(name, arr);
+    }
+  }
+  return bodiesByName;
+}
+
+function findsSelfCachedCall(
+  name: string,
+  bodiesByName: Map<string, string[]>,
+  depth: number,
+  visited: Set<string>,
+): string | null {
+  if (depth <= 0 || visited.has(name)) return null;
+  visited.add(name);
+  for (const body of bodiesByName.get(name) ?? []) {
+    for (const s of SELF_CACHED) {
+      if (new RegExp(`(?<![A-Za-z0-9_.])${s}\\(`).test(body)) return s;
+    }
+    for (const m of body.matchAll(/([A-Za-z0-9_]+)\(/g)) {
+      const callee = m[1];
+      if (callee !== name && bodiesByName.has(callee)) {
+        const hit = findsSelfCachedCall(callee, bodiesByName, depth - 1, visited);
+        if (hit) return hit;
+      }
+    }
+  }
+  return null;
+}
+
+test("no self-cached loader is nested through a chain of local function calls", () => {
+  const files = walk(SRC);
+  const bodiesByName = indexFunctionBodies(files);
+  const callbackRe = /(?:unstable_cache|cachedOrDirect)\(\s*(?:async\s*)?\(\)\s*=>\s*(?:await\s+)?([A-Za-z0-9_]+)\(/g;
+  const offenders: string[] = [];
+  for (const file of files) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(callbackRe)) {
+      const called = m[1];
+      if (SELF_CACHED.includes(called)) continue; // the direct test above owns this shape
+      const hit = findsSelfCachedCall(called, bodiesByName, 5, new Set());
+      if (hit) {
+        const line = src.slice(0, m.index).split("\n").length;
+        offenders.push(
+          `${relative(ROOT, file)}:${line} — ${called}() transitively calls self-cached ${hit}(); ` +
+            `read ${hit}() OUTSIDE the wrapping cache and pass its result in as a parameter instead ` +
+            `(see screener.ts's getBaselines/rankUndervalued split)`,
+        );
+      }
+    }
+  }
+  assert.deepEqual(offenders, [], offenders.join("\n"));
+});
+
 test("getCachedTopDeals assembles independently cached sources; it has no outer cache of its own", () => {
   // getTopDeals fans out to four loaders that each cache themselves. An outer
   // unstable_cache around the whole thing turned every one of them into an

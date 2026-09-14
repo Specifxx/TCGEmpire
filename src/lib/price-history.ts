@@ -81,6 +81,20 @@ const HISTORY_CACHE_TTL = 8 * 86400;
 //   2. Every real compute is logged as [egress-guard:cache-miss] with its key
 //      and duration, so "which loader is actually running, and how often" is a
 //      log search rather than a theory.
+// RULE 2 — the one egress rule with no automated guard at all (2026-09-14,
+// DECISIONS.md "Find the fifth burn before RM10 dies"). unstable_cache stores
+// `JSON.stringify(result)` and then stringifies the WHOLE entry again on the
+// way into the incremental cache, so the real ceiling is well under the 2 MB
+// hard check — budget ~1.2 MB raw (see the header of src/lib/db.ts). Past
+// that, Next.js silently DECLINES to cache the entry: no error, just a
+// console.warn in production and every subsequent request recomputing it. A
+// static audit found two cache entries sitting in that dead zone — big enough
+// to matter, too small to trip src/lib/db.ts's own per-QUERY guard (which
+// gates on ≥1 MB of a single Prisma call, not the assembled cache payload) —
+// and a genuine, if slow-growing, per-user cliff in a third. This checks the
+// actual thing that matters: the size of what is ABOUT to go into the cache.
+const CACHE_ENTRY_WARN_BYTES = 1_200_000;
+
 export async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], opts: { revalidate: number; tags: string[] }): Promise<T> {
   const label = keys.join(",");
   if (isNestedInUnstableCache()) {
@@ -94,6 +108,19 @@ export async function cachedOrDirect<T>(fn: () => Promise<T>, keys: string[], op
     const started = Date.now();
     const result = await fn();
     console.log(`[egress-guard:cache-miss] ${label} computed in ${Date.now() - started} ms`);
+    try {
+      const bytes = JSON.stringify(result).length;
+      if (bytes >= CACHE_ENTRY_WARN_BYTES) {
+        console.warn(
+          `[egress-guard:oversize] ${label} is ~${(bytes / 1e6).toFixed(2)} MB going into unstable_cache — ` +
+            `past ~1.2 MB raw, Next.js may silently DECLINE to cache this entry, and every request would ` +
+            `then recompute it instead of one pull per key. Narrow the select, take a cap, or split the ` +
+            `payload — see egress rule 2 in src/lib/db.ts.`,
+        );
+      }
+    } catch {
+      /* sizing is best-effort — never break the cache on account of measuring it */
+    }
     return result;
   };
   try {

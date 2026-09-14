@@ -4,14 +4,13 @@
 // paid period's end on every successful payment, so entitlement is a simple date
 // check — no live Stripe call on page loads, and a lapsed sub just stops being
 // extended. Inert until STRIPE_PREMIUM_PRICE_ID is configured.
-import { unstable_cache } from "next/cache";
 import type Stripe from "stripe";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { pickPrice, priceField, type Country } from "./country";
 import { CONDITION_MULTIPLIER } from "./constants";
 import { investedCents, unitCostCents } from "./collection-cost";
-import { sydneyWeekKey, historySource } from "./price-history";
+import { sydneyWeekKey, historySource, cachedOrDirect } from "./price-history";
 import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
@@ -36,6 +35,16 @@ import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine } from "./s
 // every consumer gets a real Date either way instead of each one needing to
 // remember to guard against a cache hit that looks identical to a miss until
 // this exact line throws.
+// MIGRATED TO cachedOrDirect (2026-09-14, DECISIONS.md "Find the fifth burn
+// before RM10 dies"). This is genuinely unbounded by design — the whole point
+// is the user's own, complete price history for their own collection — so it
+// cannot be `take`-capped without silently truncating a real customer's chart.
+// A static audit flagged it as the one PER-USER cliff in the app: a ~2,000-
+// card collection at the weekly write cadence is ~26,000 rows, over the ~1.2 MB
+// raw budget rule 2 documents. cachedOrDirect's own oversize check is the
+// correct instrument here — it measures instead of guessing at a cap that
+// would just mean "your portfolio chart is silently missing history" for the
+// site's heaviest collectors.
 function portfolioHistory(
   cardIds: string[],
   country: Country,
@@ -43,7 +52,7 @@ function portfolioHistory(
 ): Promise<{ cardId: string; day: Date; lowestPriceCents: number }[]> {
   const { source, convert } = historySource(country);
   const cutoff = new Date(Date.now() - windowDays * 86400_000);
-  return unstable_cache(
+  return cachedOrDirect(
     () =>
       dbHistory.priceHistory.findMany({
         where: { country: source, cardId: { in: cardIds }, day: { gte: cutoff } },
@@ -52,7 +61,7 @@ function portfolioHistory(
       }),
     ["rc-portfolio-hist", country, String(windowDays), sydneyWeekKey(), cardIds.join(",")],
     { revalidate: 8 * 86400, tags: [HISTORY_TAG] },
-  )().then((rows) => rows.map((r) => ({ ...r, day: new Date(r.day), lowestPriceCents: convert(r.lowestPriceCents) })));
+  ).then((rows) => rows.map((r) => ({ ...r, day: new Date(r.day), lowestPriceCents: convert(r.lowestPriceCents) })));
 }
 import { cardTileSelect } from "./cards";
 import type { CardTileData } from "@/components/CardTile";

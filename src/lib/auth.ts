@@ -126,7 +126,26 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Ses
     const { payload } = await jwtVerify(token, getSecret());
     const userId = payload.sub as string;
     if (!userId) return null;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    // NARROW SELECT (2026-09-14, DECISIONS.md "Find the fifth burn before RM10
+    // dies"). This used to be a bare findUnique with no `select`, pulling all
+    // ~35 User columns — including passwordHash and nine free-text shipping
+    // fields — on essentially every authenticated render (the root layout calls
+    // this for the ad-free check). React's `cache()` above makes it one read
+    // per request rather than per component, so the bytes were modest, but
+    // reading a password hash into every page render was wrong regardless of
+    // size. lastActiveAt/activeDays MUST stay in this projection: touchActivity
+    // below reasons "free to decide, the row is already loaded" and its
+    // 30-minute throttle silently breaks (writes on every render) if either is
+    // dropped from here — see egress rule 3 in src/lib/db.ts.
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, email: true, displayName: true, avatarUrl: true, emailVerified: true,
+        balanceCents: true, isAdmin: true, premiumUntil: true, premiumTier: true,
+        premiumTierFloor: true, trialStartedAt: true, preferredCountry: true,
+        lastActiveAt: true, activeDays: true,
+      },
+    });
     if (!user) return null;
     // "They are here right now." Free to decide (the row is already loaded) and
     // throttled to at most one write per ACTIVITY_STAMP_INTERVAL_MS per user,

@@ -6259,3 +6259,200 @@ still marked "(current)") and now match `HISTORY_VARS`.
 
 Retired projects stay reachable **by name** from the `migrate-*` tasks so a drain can
 still find them. They do not re-enter the runtime chain.
+
+## Find the fifth burn before RM10 dies — 2026-09-14
+
+RM9 was the first operational project to live an entire life *after* the
+2026-09-11 deploy-cadence gate — and it still died in three days, exhausted
+at ~1.7 GB/day. That gate was the leading explanation for eleven prior
+projects' deaths. Its surviving successor dying on the same schedule meant
+either the gate wasn't holding, or a fifth cause was live. Both turned out
+to be true, in different proportions.
+
+### Finding 1 — the gate works; its premise is violated 4×
+
+Only commits whose subject carries `[deploy]` build. Counted on `main`:
+**4, 4, 3, 5** across RM9's four days — sixteen builds, against 34 commits
+the gate correctly suppressed. Roughly half were release commits (three
+scheduled, five manual dispatches); half were ordinary feature commits
+carrying the marker because "push to prod" was read as "deploy this
+specific change right now."
+
+The arithmetic closes without a new bug. The 2026-09-11 write-up predicted
+~0.3 GB/day *at one deploy a day*, over a ~0.12 GB/day app baseline: at
+four, `4 × 0.3 + 0.12 ≈ 1.3 GB/day`. RM9 burned ~1.7. Same order.
+
+**Correction to something reported mid-session:** the 08:00 UTC scheduled
+release was said to have "never fired." It does fire — three runs that day
+carry `event: "schedule"` — just at 11:51–13:01 UTC, ordinary GitHub cron
+drift under load, not a fault.
+
+**What changed:** `CLAUDE.md` now says plainly that "push to prod" defaults
+to landing on `main` and riding the daily release; `[deploy]` goes on a
+commit only when the owner says the release is urgent. `egress-audit.yml`
+gained a cadence-outcome step — a `git log` count of `[deploy]` subjects
+over the last 7 days, no database, no build — because nothing before this
+measured the *outcome* of the cadence fix, only its mechanism
+(`tests/deploy-cadence.test.ts` pins the gate script itself thoroughly and
+always did; it has no opinion on how often the gate is asked to say yes).
+
+### Finding 2 — a cache payload growing into a silent cliff
+
+`RetailerPrice` grew 89,877 → 131,008 rows in three days (+43%). Two
+arbitrage cache entries read it unbounded and sat in a dead zone: above
+`unstable_cache`'s ~1.2 MB silent-drop ceiling, below the egress guard's
+1 MB-and-500-row gate. Consumers are force-dynamic (`/tools/deal-finder`,
+`/premium`, `/api/premium/proof`), so a silent drop meant every request
+re-pulling the table instead of one pull a day.
+
+`arb-ebay-rows` (`src/lib/arbitrage.ts`) is rewritten as a `DISTINCT ON`
+raw query — the same reduction the caller was already doing in a Node Map
+afterwards, pushed into Postgres, matching the pattern
+`app/stores/report/page.tsx`'s rivals query already used. The result is
+now bounded by the card catalogue (~1,400 rows), not by how many eBay
+listings exist, and needs no defensive cap because it can no longer grow
+with the table it reads. `arb-tcg-us-rows` got a `take: 5000` as a
+belt-and-suspenders enforcement of its own documented "one row per card"
+invariant, same reasoning as `MAX_LOOKBACK_DAYS` in `market-index.ts`.
+
+`computeCrossRegionRows` was pulling the full `cardTileSelect` width
+(two image URLs, a per-row `_count` subquery) for the whole catalogue just
+to rank it, then discarding everything that didn't qualify. Split into a
+narrow SCORING pass (six price columns only) and a DISPLAY pass scoped to
+just the cards that qualified — same result, a fraction of the egress
+during the compute.
+
+**Two more, sized honestly rather than "fixed" wrong.** `market-index.ts`'s
+`MAX_LOOKBACK_DAYS = 730` was flagged by a static audit as unbounded; its
+own header already argues, with real arithmetic, that the read is bounded
+by 200 *constituent* cards (rule 1's per-entity scoping), not by history
+depth, and is a circuit breaker rather than a live problem — verifying
+that claim needs `scripts/audit-history.ts` against production, which this
+session couldn't run. Left alone rather than second-guessed against
+already-reasoned, checkable math. `market-records.ts`'s shortlist-scoped
+history read (~60 cards, no day cutoff) is real but slow-growing (weekly
+cache, bounded by history depth for a handful of cards, not by the table),
+and a `take` would silently break its "first day this peak was reached"
+and "most recent price" semantics — a records board is exactly the kind of
+page where a wrong-but-confident number is worse than a slow one. Neither
+change is made; both are named here so the next person doesn't have to
+re-derive the same reasoning from nothing.
+
+**`src/lib/auth.ts`'s `getCurrentUser`** pulled all ~35 `User` columns
+(including `passwordHash`, nine free-text shipping fields) on essentially
+every authenticated render via a bare `findUnique`. React's `cache()`
+already made it one read per request, so the byte cost was modest — but
+reading a password hash into every page render was wrong regardless of
+size. Narrowed to exactly `SessionUser`'s fields plus `lastActiveAt`/
+`activeDays`, which `touchActivity`'s 30-minute throttle depends on being
+in that same read (dropping them would make it write on every render).
+
+**`app/stores/report/page.tsx`** — the B2B repricing report — had an
+unbounded, uncached `findMany` of a partner's own listings. Left uncapped
+in the ordinary case (this report exists to show a store *everything* they
+carry; a `take` that silently hid inventory would defeat the page), but
+given a generous `take: 20,000` as a safety valve against a data bug
+duplicating a retailer key, not as a real limit any legitimate store
+should reach.
+
+### Three cheap fixes with an outsized ratio
+
+- `embed/card/[id]/route.ts` carried `revalidate = 300`, the lowest in the
+  app — 288 regenerations a day per embedded card URL, showing the same
+  prices the canonical `/card/[id]` page revalidates once a day. Raised to
+  3600 to match its siblings (`/embed/index`, `/embed/release-countdown`).
+- `app/learn/page.tsx` had **no** `export const revalidate` at all, while
+  its own `unstable_cache` carried `{ revalidate: 3600 }` — an inner TTL
+  governs the whole segment regardless of whether the page declares one, so
+  this was already regenerating hourly; the missing declaration was a trap
+  for whoever next added an uncached query expecting a static page's usual
+  free ride, not a real behavior change once made explicit.
+- `tools/rising-sealed/page.tsx` wrapped `getRisingSealed(market)` in its
+  own `unstable_cache`; `getRisingSealed` called `computeRisingSealed`,
+  which called the self-cached `getSealedGroups` — a real, live rule-6
+  violation, two hops deep, invisible to `tests/nested-cache.test.ts`'s
+  direct-call regex. Fixed the same way `screener.ts` already fixed the
+  identical shape for `getUndervalued`/`getBaselines`: `getRisingSealed`
+  now takes `groups: SealedGroup[]` as a parameter, and the page fetches
+  them outside the wrapping cache and passes them in.
+
+### The guards, closed where they had real holes
+
+**Rule 5's own test couldn't see the bug it's named after.**
+`tests/segment-ttl-inversion.test.ts` scanned `src/app/**` only, matching
+an inner `revalidate:` literal against the page's own, same-file
+declaration. `components/EbayCardPanel.tsx` — the file this exact bug is
+named after — lives in `src/components`; reintroducing its old
+`{ revalidate: 300 }` today would have passed. Added a second test that
+resolves each page's local imports into `src/components` (recursively, so
+a component rendering another component is covered) and applies the same
+comparison there, plus treats an undeclared `export const revalidate` on a
+page.tsx as effectively Infinity rather than "skip" (closing the `/learn`
+shape generally, not just the one instance). **Deliberately scoped to
+`src/components`, not `src/lib`**: an earlier version walked the full
+import graph into `src/lib` and produced three dozen false "offenders" —
+shared modules like `src/lib/db.ts` transitively reachable from routes
+that never call the specific cached function inside them. Importing a file
+is not calling the function in it that happens to hold a cache. A rendered
+component is a much tighter signal (if it's imported, it's in the render
+tree), and the new test was verified against the actual incident: it
+catches EbayCardPanel's old value when reintroduced, and reports zero
+offenders on the real, current codebase.
+
+**Rule 6's static test only saw direct nesting.** `tests/nested-cache.test.ts`
+matched `unstable_cache(() => <name>(` for seventeen named self-cached
+loaders — a direct call inside the wrapper's own arrow. The rising-sealed
+bug above was two hops away and passed it. Added a second test that
+indexes every top-level function body in `src/` (brace-matched, not
+line-based) and, for any cache callback that calls one locally-named
+function, recursively checks that function's own call chain — to a few
+hops — for a bare call to a self-cached loader. Verified the same way: it
+flags the rising-sealed shape when reverted, reports zero offenders on the
+fixed codebase.
+
+**Rule 2 had no automated guard of any kind** — confirmed by grep: zero
+hits for `2_000_000`, `1.2 MB`, `prerender-manifest`, `initialRevalidateSeconds`,
+or `BIG_RESULT` anywhere outside `src/lib/db.ts` itself. It was enforced
+only by comments asserting "well under the limit" about a table that had
+just grown 43% in three days. `cachedOrDirect` (`src/lib/price-history.ts`)
+now measures the actual cache ENTRY size after every real compute and logs
+`[egress-guard:oversize] <key>` past ~1.2 MB — the thing that actually
+matters, rather than a query-shape guess. Two sites that are genuinely,
+correctly unbounded by design (`box-ev-usd-basis`'s whole-catalogue EV
+pools; `rc-portfolio-hist`'s whole-collection history, a real per-user
+cliff for heavy collectors) were migrated from bare `unstable_cache` to
+`cachedOrDirect` specifically to gain this visibility, with no change to
+what they read — truncating either would have silently produced wrong
+answers (an incomplete EV pool, a missing chunk of one customer's own
+portfolio chart) rather than a safely smaller one.
+
+**A static companion for rule 2 was attempted and deliberately not
+shipped.** The obvious next check — flag any `findMany` inside a cache
+callback with neither `take` nor an id-like `where` key — was prototyped
+and run against the real codebase. Its first two hits were both
+legitimate, already-reasoned patterns (`sets/[set]/page.tsx`'s
+set-scoped narrative read; `riftle.ts`'s deliberately-filtered ~600-card
+pool), not violations. A hard-failing test that flags correct code on
+contact is worse than no test — it either needs constant exemption-list
+upkeep or teaches people to distrust the gate, which is exactly how an
+emergency lever earns its way into being pulled. The runtime oversize
+guard above is the correct, precise instrument for this rule; a
+low-precision static one was not added on top of it.
+
+**`db.ts`'s own egress guard was temporarily widened** (`BIG_RESULT_ROWS`
+500→200, `BIG_RESULT_BYTES` 1 MB→400 KB) for one measurement cycle, to
+cover the dead zone between it and `unstable_cache`'s ceiling — so the
+Vercel logs would name the offender directly rather than the next audit
+guessing from static analysis alone. Revert once `audit-egress` has run
+against the fixed code; the header says so.
+
+### What this doesn't claim
+
+The real test is whether RM10 outlives 17 September. `audit-egress` is
+scheduled to run a few hours after this ships, against fresh traffic on
+the fixed code — that comparison, not this write-up, is the actual
+verification. This session had no access to the Vercel function logs
+where `[egress-guard]`, `[egress-guard:nested-cache]` and
+`[egress-guard:cache-miss]` have likely already been naming the real
+answer for weeks; reading those before the next rotation would settle in
+minutes what took this entire exercise to narrow down statically.

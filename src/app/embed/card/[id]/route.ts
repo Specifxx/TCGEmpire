@@ -11,7 +11,15 @@ import { cardImageAlt } from "@/lib/image-alt";
 //
 // Built as a route handler (not a page) so it escapes the root layout entirely and
 // so /embed can be framed cross-origin (see next.config.js frame-ancestors).
-export const revalidate = 300;
+//
+// RAISED FROM 300 (2026-09-14, DECISIONS.md "Find the fifth burn before RM10
+// dies"). 300s was the lowest revalidate anywhere in the app — 288
+// regenerations/day PER embedded card URL, showing the same price data the
+// canonical /card/[id] page revalidates once a day. No freshness requirement
+// was ever documented for a 5-minute embed badge; matching /embed/index and
+// /embed/release-countdown (both 3600) removes the outlier rather than
+// guessing at a new number.
+export const revalidate = 3600;
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -47,7 +55,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": card
-        ? "public, s-maxage=300, stale-while-revalidate=900"
+        ? "public, s-maxage=3600, stale-while-revalidate=900"
         : "public, s-maxage=60",
       // The shell already carries <meta name="robots" content="noindex">; the
       // header covers the case where the widget is fetched as a subresource and

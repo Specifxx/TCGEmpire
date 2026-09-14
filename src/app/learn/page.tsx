@@ -28,6 +28,19 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/learn"),
 };
 
+// EXPLICIT, MATCHING WHAT WAS ALREADY HAPPENING (2026-09-14, DECISIONS.md "Find
+// the fifth burn before RM10 dies"). This page had no `export const
+// revalidate` at all — Next's default for a page with no dynamic/revalidate
+// config is effectively static (∞) — but getLearnData's own `unstable_cache`
+// below carries `{ revalidate: 3600 }`, and an inner cache TTL governs the
+// WHOLE segment (see the long note in src/lib/db.ts, egress rule 5). So this
+// page was ALREADY regenerating hourly; the implicit ∞ was never real, just
+// invisible to a static reader (and to tests/segment-ttl-inversion.test.ts,
+// which only compares two revalidate NUMBERS — it can't flag "missing"
+// against a real 3600). Declaring it removes the trap for whoever next adds an
+// uncached query here expecting a static page's usual free ride.
+export const revalidate = 3600;
+
 // Everything on this page is data-backed (live counts + real example cards) or
 // links out to the official rules — we deliberately don't paraphrase rules text we
 // can't verify. Free community resource: no signup, no gating.

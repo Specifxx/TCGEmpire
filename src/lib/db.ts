@@ -73,8 +73,21 @@ import { OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-chains";
 // burning the allowance.
 // ────────────────────────────────────────────────────────────────────────────────
 
-const BIG_RESULT_ROWS = 500; // only size-check results at least this long (CPU)
-const BIG_RESULT_BYTES = 1_000_000;
+// TEMPORARILY WIDENED 2026-09-14 (revert after one measurement cycle — see
+// DECISIONS.md, "Find the fifth burn before RM10 dies"). RM9 died on the OLD
+// three-day schedule despite the 2026-09-11 deploy-cadence fix, and a static
+// audit found two arbitrage cache entries (arb-ebay-rows, arb-x-region-rows)
+// reading RetailerPrice unboundedly and sitting in a DEAD ZONE: above
+// unstable_cache's ~1.2 MB silent-drop ceiling but below this guard's original
+// 500-row/1 MB gate, so a payload could cross the cache ceiling — and get
+// silently dropped, forcing a full re-pull on every force-dynamic request —
+// with NOTHING logging it. Lowering both thresholds for one cycle turns "which
+// query is doing this" from a guess into a Vercel log line. Restore to 500 /
+// 1_000_000 once the audit-egress comparison lands; leaving this permanently
+// low adds console.warn cost to ordinary large-but-fine reads (sitemap builds,
+// public API pages).
+const BIG_RESULT_ROWS = 200; // was 500
+const BIG_RESULT_BYTES = 400_000; // was 1_000_000
 
 // RM10 is the ONLY operational Neon project, cut over 2026-09-14 (RM9 exhausted
 // its 5 GB monthly transfer allowance after three days live) — a

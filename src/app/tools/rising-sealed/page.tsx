@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getRisingSealed, type SealedRisePick, type SealedRiseComponents } from "@/lib/sealed-rise-predictor";
+import { getSealedGroups } from "@/lib/sealed-import";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { sydneyDayKey } from "@/lib/price-history";
 import { formatMoney } from "@/lib/format";
@@ -177,12 +178,21 @@ export default async function RisingSealedPage({ searchParams }: { searchParams:
   const market = parseMarket(searchParams.market);
   const currency = currencyOf(market);
 
+  // Groups FIRST, outside the cache below (2026-09-14, DECISIONS.md "Find the
+  // fifth burn before RM10 dies"). getSealedGroups is self-cached; calling it
+  // from inside another unstable_cache callback is bypassed by Next.js 14.2
+  // (see getRisingSealed's own comment), so this used to re-pull the whole
+  // SealedListing table for this market on every outer cache miss instead of
+  // reading getSealedGroups's cache. Reading it out here means its own cache
+  // entry governs its cost, exactly as intended.
+  const groups = await getSealedGroups(market);
+
   // Cached per market, shared between the free teaser and the full Premium view —
   // same day-key + 48h TTL as /tools/rising, and for the same reason: the
   // price-history half of the score is weekly, but the scarcity half reads live
   // in-stock counts that can change on any price import, so a week-scoped key
   // (like the Sealed Index's own cache) would under-refresh that half.
-  const analysis = await unstable_cache(() => getRisingSealed(market), ["rising-sealed-public", market, sydneyDayKey()], {
+  const analysis = await unstable_cache(() => getRisingSealed(market, groups), ["rising-sealed-public", market, sydneyDayKey()], {
     revalidate: 172800,
     tags: [CONTENT_TAG],
   })();

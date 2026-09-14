@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { cachedOrDirect } from "@/lib/price-history";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { SETS } from "@/lib/constants";
 import { SITE_URL } from "@/lib/site";
@@ -52,36 +52,47 @@ const GRID_PER_POOL = 8;
 // listing, which is frequently a foreign-language copy (see lib/tcgplayer.ts) —
 // it exists for essentially every card, and being one number for all markets
 // means the EV is comparable everywhere and only the currency changes.
-const getBoxEvData = unstable_cache(
-  async () => {
-    const tcgUs = await prisma.retailerPrice
-      .findMany({
-        // Literals rather than importing TCG_US, so this page doesn't drag the
-        // whole importer module graph into the server bundle.
-        where: { retailer: "tcgplayer", country: "US" },
-        select: { cardId: true, priceCents: true, isFoil: true },
-      })
-      .catch(() => [] as { cardId: string; priceCents: number; isFoil: boolean }[]);
+// MIGRATED TO cachedOrDirect (2026-09-14, DECISIONS.md "Find the fifth burn
+// before RM10 dies"). Both reads are genuinely whole-catalogue by design — the
+// comment above (GRID_PER_POOL) already explains that the POOLS need every
+// card even though only a handful get a picture — so neither can safely take
+// a `take` cap, and every field selected on `cards` is actually rendered (see
+// the grid below), so nothing here was a real trim candidate either. What was
+// missing was visibility: this used to call unstable_cache directly, which
+// has no size instrumentation at all. cachedOrDirect's oversize check is the
+// correct fix for an already-correctly-scoped read.
+function getBoxEvData() {
+  return cachedOrDirect(
+    async () => {
+      const tcgUs = await prisma.retailerPrice
+        .findMany({
+          // Literals rather than importing TCG_US, so this page doesn't drag the
+          // whole importer module graph into the server bundle.
+          where: { retailer: "tcgplayer", country: "US" },
+          select: { cardId: true, priceCents: true, isFoil: true },
+        })
+        .catch(() => [] as { cardId: string; priceCents: number; isFoil: boolean }[]);
 
-    const cards = await prisma.card
-      .findMany({
-        // Promos excluded: they come from events and box toppers, not packs.
-        // `variant: null` is DELIBERATELY no longer filtered — alt-art clones
-        // are a chase pool now rather than something to hide.
-        where: { isPromo: false },
-        select: {
-          id: true, slug: true, name: true, setCode: true, rarity: true,
-          collectorNumber: true, variant: true, isOvernumbered: true,
-          imageThumbUrl: true, orientation: true, domain: true, type: true,
-        },
-      })
-      .catch(() => [] as CardRow[]);
+      const cards = await prisma.card
+        .findMany({
+          // Promos excluded: they come from events and box toppers, not packs.
+          // `variant: null` is DELIBERATELY no longer filtered — alt-art clones
+          // are a chase pool now rather than something to hide.
+          where: { isPromo: false },
+          select: {
+            id: true, slug: true, name: true, setCode: true, rarity: true,
+            collectorNumber: true, variant: true, isOvernumbered: true,
+            imageThumbUrl: true, orientation: true, domain: true, type: true,
+          },
+        })
+        .catch(() => [] as CardRow[]);
 
-    return { tcgUs, cards };
-  },
-  ["box-ev-usd-basis"],
-  { revalidate: 86400, tags: [CONTENT_TAG] },
-);
+      return { tcgUs, cards };
+    },
+    ["box-ev-usd-basis"],
+    { revalidate: 86400, tags: [CONTENT_TAG] },
+  );
+}
 
 type CardRow = {
   id: string; slug: string | null; name: string; setCode: string; rarity: string;

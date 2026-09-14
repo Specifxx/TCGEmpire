@@ -33,12 +33,23 @@ export default async function StoreReportPage({ searchParams }: { searchParams: 
 
   // The store's in-stock listings + every competing in-stock listing for the same
   // cards in the same market.
+  //
+  // TAKE IS A SAFETY VALVE, NOT A REAL BOUND (2026-09-14, DECISIONS.md "Find the
+  // fifth burn before RM10 dies"). This is a B2B report — the whole point is
+  // showing a partner EVERY one of their own listings, so a hard truncation that
+  // silently hid real inventory would defeat the page rather than protect it.
+  // Retailer-scoped already keeps this small in practice (the biggest tracked
+  // stores carry low thousands of listings, nowhere near RetailerPrice's
+  // 131,000+ total), so 20,000 exists purely to stop a data bug that somehow
+  // duplicated a retailer key from turning this uncached, force-dynamic page
+  // into a full-table read — see egress rule 3 in src/lib/db.ts.
   const mine = await prisma.retailerPrice.findMany({
     where: { retailer: partner.retailer, inStock: true },
     select: {
       cardId: true, priceCents: true, country: true, isFoil: true, condition: true, lastSeen: true,
       card: { select: { name: true, slug: true, id: true, setCode: true, collectorNumber: true } },
     },
+    take: 20_000,
   });
   const cardIds = [...new Set(mine.map((m) => m.cardId))];
   // Cheapest rival per (card, country, finish), reduced IN POSTGRES.
