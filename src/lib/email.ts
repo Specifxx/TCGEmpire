@@ -633,6 +633,50 @@ export async function sendPremiumOfferEmail(to: string, opts: PremiumOfferEmailO
   return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
 }
 
+// One-off "N days of Premium, free, no card" win-back email. See
+// lib/premium-winback.ts's header for how this differs from the offer above:
+// this one grants the moment the link is claimed, with no checkout at all.
+export interface PremiumWinbackEmailOpts {
+  displayName: string;
+  days: number; // how many days the claim link grants
+  claimUrl: string;
+  claimWindowDays: number; // how long the link stays live before it expires
+  unsubUrl: string;
+  via?: "brevo" | "resend";
+}
+
+export function premiumWinbackSubject(days: number): string {
+  return `${days} days of RiftCompare Premium, free — no card needed`;
+}
+
+export function buildPremiumWinbackEmail(opts: PremiumWinbackEmailOpts): { subject: string; heading: string; html: string } {
+  const name = opts.displayName.includes("@") ? "" : escapeHtml(opts.displayName.trim().split(/\s+/)[0] ?? "");
+  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const heading = `${opts.days} days of Premium, on us`;
+  const inner = `
+    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      ${greeting}
+    </td></tr>
+    <tr><td style="padding:4px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      You joined RiftCompare recently, so here's a proper look at what Premium adds on top of the free tools you're
+      already using: Value Finder, Bulk Pricer, Best Basket, Demand Finder, the full Deal Finder and Rising Cards
+      lists, and no ads on any page.
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#fff">${opts.days} days, completely free — no card required, nothing to cancel.</strong>
+      Click below once to switch it on for your account. The link works once, and it's live for the next
+      ${opts.claimWindowDays} days.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${opts.claimUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Claim my ${opts.days} free days</a></td></tr>`;
+
+  return { subject: premiumWinbackSubject(opts.days), heading, html: emailShell(heading, inner, announcementFooter(opts.unsubUrl)) };
+}
+
+export async function sendPremiumWinbackEmail(to: string, opts: PremiumWinbackEmailOpts): Promise<boolean> {
+  const { subject, html } = buildPremiumWinbackEmail(opts);
+  return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
+}
+
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
 export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {

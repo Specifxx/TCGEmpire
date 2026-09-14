@@ -33,6 +33,12 @@ const TOOLS: Tool[] = [
     desc: "Send the 'full month of Premium' email — pick who, preview, send in batches — and grant the extra days once they subscribe.",
   },
   {
+    href: "/admin/premium-winback",
+    title: "Premium win-back email",
+    icon: "🔗",
+    desc: "Send recently-registered free accounts a single-use link that grants a few days of Premium instantly — no card, no checkout, no manual grant step.",
+  },
+  {
     href: "/admin/subscriptions",
     title: "Subscription metrics",
     icon: "📊",
