@@ -771,7 +771,7 @@ This is the same bar we hold every unreleased-set claim to, and it's why none of
 
 ## What to actually do with this before release
 
-Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and none of these three cards have been shown. If you want to track the set as real information lands, **[Radiance pre-order pricing](/radiance-preorders)** already compares sealed product across stores, and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
+Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, and none of these three cards have been shown. If you want to track the set as real information lands: our **[Radiance hub](/sets/radiance)** rounds up every confirmed fact, the legends revealed so far and live pre-order prices in one place; **[Radiance pre-order pricing](/radiance-preorders)** compares sealed product across stores on its own; and our **[what's actually confirmed](/blog/riftbound-radiance-what-we-know)** roundup is where we keep everything Riot has said on the record, updated as it changes. We'll publish a proper keyword page for any of these three the moment Riot — not a demo-table photo — confirms it.`,
   },
   // ── Per-mechanic deep dives for the Radiance leak above, targeting "riftbound
   // deploy" / "riftbound showoff" / "riftbound disarm" query intent the same way

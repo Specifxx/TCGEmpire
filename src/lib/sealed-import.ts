@@ -432,7 +432,14 @@ export async function importSealed(): Promise<number> {
       // market can borrow another market's real reference price instead.
       const marketRefs = new Map<string, Map<string, { cents: number; currency: string }>>();
       for (const m of EBAY_SEALED_MARKETS) {
-        const groups = await getSealedGroups(m.country);
+        // Pre-order groups included too (2026-09-14): a set with no local
+        // non-eBay reference in the market being searched can still borrow one
+        // from wherever it DOES have store/TCGplayer coverage, same as a
+        // shipped set — Radiance already has real pre-order listings in some
+        // markets before others. Both calls hit the same getAllSealedGroups
+        // memo for this country (see its own comment above), so this costs
+        // nothing extra.
+        const groups = [...(await getSealedGroups(m.country)), ...(await getPreorderGroups(m.country))];
         const currency = currencyOf(m.country);
         for (const g of groups) {
           const nonEbay = g.listings.filter((l) => !l.retailer.startsWith("ebay")).map((l) => l.priceCents);
@@ -555,7 +562,21 @@ async function refreshEbaySealedMarket(
   // against listings priced in this marketplace's currency, and SealedListing
   // has no currency column — an AUD reference against a USD listing would
   // reject good listings and admit bad ones.
-  const groups = await getSealedGroups(mkt.country);
+  //
+  // BOTH shipped and pre-order groups (2026-09-14): this used to be
+  // getSealedGroups() only, which meant a set in its pre-order window — e.g.
+  // Radiance, released via SETS/release-calendar but not yet shipped — got
+  // store-scrape and TCGplayer coverage on /radiance-preorders but never an
+  // eBay search, even though real pre-order listings exist there. Nothing
+  // else below needs to change: trustedRef() already reads each group's own
+  // `listings` (which getPreorderGroups() populates identically to
+  // getSealedGroups(), just filtered the other way on isPreorderSetCode), the
+  // eBay keyword/set-name tables already carry Radiance-specific entries
+  // (SEALED_TYPE_KW's Vault/Showdown Decks, ebay.ts's SET_NAMES.RAD), and the
+  // write path below keys off mkt.retailer, not shipped-vs-preorder — so a
+  // written row shows up via getPreorderGroups() today and getSealedGroups()
+  // automatically once isPreorderSetCode flips on release day.
+  const groups = [...(await getSealedGroups(mkt.country)), ...(await getPreorderGroups(mkt.country))];
   const mktCurrency = currencyOf(mkt.country);
   // Always attempt eBay for the per-set promo (Nexus Night) packs — even ones no
   // AU store currently lists (e.g. the Unleashed pack) — so they appear once
