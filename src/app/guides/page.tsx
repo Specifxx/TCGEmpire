@@ -3,6 +3,7 @@ import { getArticles } from "@/lib/articles";
 import { FilterableArticles, type ArticleSection } from "@/components/FilterableArticles";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
+import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
@@ -87,7 +88,11 @@ export default function GuidesPage() {
       <div className="mb-5">
         <h1 className="text-2xl font-extrabold text-white">Guides</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Learn Riftbound — deckbuilding basics, buying tips and more, for {info.adjective} players.
+          Learn Riftbound — deckbuilding basics, buying tips and more, for {info.adjective} players. Looking
+          for the wider community?{" "}
+          <Link href="/community" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+            See community links →
+          </Link>
         </p>
       </div>
       <FilterableArticles articles={articles} basePath="/guides" sections={GUIDE_SECTIONS} featured={FEATURED_GUIDES} />

@@ -172,6 +172,11 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/guides", label: "Guides", emoji: "📖", keywords: ["guides", "how to", "tutorials", "explainers"] },
       { href: "/blog", label: "News & analysis", emoji: "📰", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
+      // hideInFooter: the footer's four columns are already at the top of their
+      // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
+      // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
+      // added on /blog and /guides themselves.
+      { href: "/community", label: "Community links", emoji: "🔗", keywords: ["community", "resources", "links", "other sites", "riftbound news", "deck builders", "wikis", "tier list", "meta"], hideInFooter: true },
       { href: "/learn", label: "Learn Riftbound", emoji: "🎓", keywords: ["learn", "beginner", "how to play", "getting started", "rules"] },
       { href: "/authors", label: "Who writes this", emoji: "✍️", keywords: ["authors", "team", "byline", "who writes"] },
       { href: "/editorial-policy", label: "Editorial policy", emoji: "📐", keywords: ["editorial", "policy", "standards", "corrections"] },

@@ -145,6 +145,7 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/games/sealed-bid`, changeFrequency: "monthly", priority: 0.7, lastModified: staticPageDate("/games/sealed-bid") },
     { url: `${SITE_URL}/guides`, changeFrequency: "weekly", priority: 0.7, lastModified: latestGuide },
     { url: `${SITE_URL}/blog`, changeFrequency: "weekly", priority: 0.7, lastModified: latestBlog },
+    { url: `${SITE_URL}/community`, changeFrequency: "monthly", priority: 0.5, lastModified: staticPageDate("/community") },
     // The release calendar. This slot used to be a per-set countdown URL that had
     // to be swapped here every launch (/vendetta-countdown, then
     // /radiance-countdown — both now 301, see next.config.js), and a redirecting

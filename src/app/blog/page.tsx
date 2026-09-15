@@ -109,6 +109,10 @@ export default async function BlogPage() {
               instead of two (footer + ⌘K only). */}
           <Link href="/guides" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
             Browse the guides →
+          </Link>{" "}
+          Want more than our own writing?{" "}
+          <Link href="/community" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
+            See community links →
           </Link>
         </p>
       </div>
