@@ -3172,8 +3172,8 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
       "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
     author: "RiftCompare",
     date: "2026-07-16",
-    updated: "2026-07-17",
-    readMins: 6,
+    updated: "2026-09-15",
+    readMins: 7,
     tags: ["banlist", "competitive", "rules", "guide"],
     shop: [
       { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
@@ -3182,8 +3182,15 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
     // this can never silently include or drop a card as the database grows. A slug
     // that doesn't resolve is simply omitted (see resolveEmbed), never a broken card.
     // Positioned inline via [[embed:N]] (plural `embeds` array), right under each
-    // list, so readers see the real cards next to the text explaining them.
+    // list, so readers see the real cards next to the text explaining them. Ordered
+    // newest-first to match the body's own section order — embeds[N] is whatever
+    // [[embed:N]] appears under, so a new wave goes at index 0 and the rest shift.
     embeds: [
+      {
+        title: "September 2026 additions",
+        note: "The 2 cards added to the banlist on 15 September 2026 (effective 18 September), with live prices across every store RiftCompare tracks.",
+        slugs: ["ekko-recurrent-ogn-110-298", "stacked-deck-ogn-183-298"],
+      },
       {
         title: "July 2026 additions",
         note: "The 4 cards added to the banlist on 17 July 2026 (effective 24 July), with live prices across every store RiftCompare tracks.",
@@ -3209,7 +3216,20 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
         ],
       },
     ],
-    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. On **17 July 2026** Riot announced a second wave — four more bans, effective **24 July 2026** — plus a brand-new **Constructed 2v2 ban list**. Here's the complete, current picture: every banned card, why each was banned, and what it means if you own one.
+    body: `Riftbound's first banlist landed on **31 March 2026**, when Riot Games banned seven cards from competitive constructed play. On **17 July 2026** Riot announced a second wave — four more bans, effective **24 July 2026** — plus a brand-new **Constructed 2v2 ban list**. On **15 September 2026** Riot announced a third wave — two more bans, effective **18 September 2026** — the first wave to hit the Standard and 2v2 ban lists together from day one, rather than needing a separate 2v2-only addendum. Here's the complete, current picture: every banned card, why each was banned, and what it means if you own one.
+
+## September 2026 update: 2 more bans, hitting both formats at once
+
+Effective **18 September 2026**, Riot added two cards to **both** the Standard and Constructed 2v2 ban lists:
+
+- **Ekko, Recurrent** (Origins, Mind) — enabled an infinite-turn combo with Lux that Riot says emerged once Unleashed released. Ekko both grants an extra turn and recycles itself, which Riot judged a "solitaire-esque" play pattern with too little room for the opponent to interact, even though the deck's tournament play rate stayed low.
+- **Stacked Deck** (Origins, Chaos) — a low-cost consistency piece that Riot says became a compounding problem once Kennen, Heart of the Tempest (Vendetta) released: paired with Lightning Rush, it let Kennen decks dig for key cards like Nocturne while filling the trash for Rhasa the Sunderer and Last Rites more efficiently than Riot wants any single card doing. Riot's own framing is a targeted hit on Kennen specifically — not an attempt to remove the deck outright — intended to bring it back in line with the format's other top decks rather than obliterate it.
+
+Riot published the reasoning fast on purpose: the **Shenyang Regional Open** had just wrapped, and with the **Los Angeles Regional Qualifier** and the **Chengdu Major** both ahead, Riot wanted players adjusting decklists before either event rather than after. Both cards are two-year-old Origins prints, not new Vendetta cards — a reminder that a card can sit fine in the format for a long time and still get banned once a later set's release changes what it enables.
+
+[[embed:0]]
+
+For how the community reacted to this specific wave, and the (explicitly speculative) theories going around about which decks gain ground now that Chaos lost one of its cheapest consistency pieces, see **[our September ban reaction roundup](/blog/riftbound-september-2026-bans-meta-shift)**.
 
 ## July 2026 update: 4 more bans + a new 2v2 ban list
 
@@ -3225,7 +3245,7 @@ Effective **24 July 2026**, Riot added three cards to the Standard banlist and o
 
 Riot's own words on how they decide a ban: *"there are three questions we ask ourselves when considering whether to ban a card: is this card overrepresented in an unhealthy way? Are the problems with this card likely to get better or worse over time? Does this card promote unhealthy play patterns?"* Going forward, Riot says any ban that applies to both formats will say so explicitly — otherwise assume a new Standard ban does **not** automatically apply to 2v2, and vice versa.
 
-[[embed:0]]
+[[embed:1]]
 
 ## The original 7 banned cards (31 March 2026)
 
@@ -3237,11 +3257,11 @@ Riot's own words on how they decide a ban: *"there are three questions we ask ou
 - **The Dreaming Tree** (Origins) — provided so much card flow it tipped the balance toward specific deck styles.
 - **Obelisk of Power** (Origins) — banned for its sheer ubiquity; it was in nearly every competitive list.
 
-[[embed:1]]
+[[embed:2]]
 
 ## What "banned" actually means
 
-A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events. And as of July 2026, "banned" isn't one list any more — a card can be banned in Standard, in 2v2 only, or (per Riot) in both if a future update says so explicitly.
+A banned card can't be included in a deck for **competitive constructed play** — organized tournaments and ranked events run under Riot's official rules. It doesn't necessarily mean your local game store's casual nights follow the same list; check with your local organizer if you're unsure, since casual play often runs looser rules than sanctioned events. And as of July 2026, "banned" isn't one list any more — a card can be banned in Standard, in 2v2 only, or in both. September's wave was the first to do the latter from day one, hitting both lists in the same announcement rather than needing a separate 2v2-only addendum.
 
 ## Does a ban affect a card's price?
 
@@ -3253,7 +3273,7 @@ If you're building a deck today, none of the cards above are legal in sanctioned
 
 We'll update this guide the moment any further changes to either ban list are announced.
 
-*Ban reasoning summarized from Riot Games' official announcements (31 March 2026 and 17 July 2026) and community coverage of Riftbound's ban history.*`,
+*Ban reasoning summarized from Riot Games' official announcements (31 March 2026, 17 July 2026 and 15 September 2026) and community coverage of Riftbound's ban history.*`,
   },
   {
     slug: "riftbound-july-2026-ban-list-update",
@@ -3310,6 +3330,100 @@ Same as any ban: these cards stay perfectly playable outside sanctioned events (
 For the complete, always-current picture — including March's original 7 bans — see our **[full Riftbound banlist guide](/guides/riftbound-banlist-explained)**, which we update the moment anything changes.
 
 *Ban reasoning and effective dates are Riot Games' own words from their 17 July 2026 announcement.*`,
+  },
+  {
+    slug: "riftbound-september-2026-bans-meta-shift",
+    category: "blog",
+    title: "Riftbound's September 2026 Bans: Community Reaction and the Meta Shift Ahead",
+    excerpt:
+      "Riot banned Ekko, Recurrent and Stacked Deck on 15 September, hitting Standard and 2v2 together. Here's what r/riftboundtcg is actually saying, and its own speculative theories on where the meta shifts next.",
+    author: "RiftCompare",
+    date: "2026-09-15",
+    readMins: 6,
+    tags: ["banlist", "news", "competitive", "meta", "community"],
+    shop: [
+      { label: "Riftbound singles on eBay", query: "Riftbound TCG singles" },
+    ],
+    summary: [
+      "**Riot banned Ekko, Recurrent (Mind) and Stacked Deck (Chaos)** on 15 September 2026, effective **18 September** — the first ban wave to hit both the Standard and Constructed 2v2 lists in the same announcement.",
+      "**Both are two-year-old Origins cards**, not new Vendetta prints — Riot's own reasoning ties both bans to combos that only emerged once later sets (Kennen in Vendetta, a Lux combo in Unleashed) gave them new partners.",
+      "**r/riftboundtcg is split on whether Stacked Deck was the right target** — some think it correctly slows Kennen down without killing the deck outright; others think it barely touches Kennen while gutting every other Chaos ('purple') deck instead.",
+      "**The 'what benefits' theorizing is genuinely community speculation**, not a RiftCompare prediction — see the caveat below for why we're reporting it rather than backing a specific outcome.",
+      "Adjusting a decklist around either ban? **[Paste it into the deck builder](/deck)** — every remaining card priced live, cheapest store first.",
+    ],
+    faq: [
+      {
+        q: "Which cards did Riftbound ban in September 2026?",
+        a: "Two: Ekko, Recurrent (a Mind-domain Unit from Origins) and Stacked Deck (a Chaos-domain Spell, also from Origins). Both bans are effective 18 September 2026 and apply to both the Standard and Constructed 2v2 ban lists — the first time a wave has hit both formats in the same announcement.",
+      },
+      {
+        q: "Why did Riot ban Stacked Deck instead of Rhasa the Sunderer or Nocturne?",
+        a: "Riot's own stated reasoning targets Stacked Deck as the low-cost consistency engine that lets Kennen decks find cards like Nocturne and fill the trash for Rhasa the Sunderer more efficiently than intended, framing it as a deliberately narrow hit rather than an attempt to remove the deck outright. Not everyone in the community agrees this is the right card to remove — see the reaction section below for the actual debate.",
+      },
+      {
+        q: "Is Riftbound's Chaos ('purple') archetype dead after the September 2026 bans?",
+        a: "No consensus on this. Some players in r/riftboundtcg's reaction thread argue Chaos decks still carry some of the game's best cards and will adapt; others think every Chaos deck besides Kennen just got hit harder than the deck the ban was actually aimed at. This is community opinion, not a RiftCompare call — we don't publish price or meta predictions dressed up as analysis.",
+      },
+      {
+        q: "Where can I see Riftbound's complete, current ban list?",
+        a: "The banlist guide covers every banned card in both Standard and 2v2, why each was banned, and live prices for all of them — updated the moment anything changes.",
+      },
+    ],
+    embed: {
+      title: "The 2 newly banned cards",
+      note: "Ekko, Recurrent and Stacked Deck, banned 15 September 2026 (effective 18 September), with live prices across every store RiftCompare tracks.",
+      slugs: ["ekko-recurrent-ogn-110-298", "stacked-deck-ogn-183-298"],
+    },
+    browseCta: {
+      href: "/guides/riftbound-banlist-explained",
+      label: "See the complete, current ban list →",
+      blurb: "Every banned card in Standard and 2v2, why each was banned, and live prices for all of them — updated the moment anything changes.",
+    },
+    body: `Riot announced a new ban wave today, **15 September 2026**: **Ekko, Recurrent** and **Stacked Deck**, both effective **18 September**, both hitting the Standard and Constructed 2v2 ban lists together — the first wave to do that from day one rather than needing a separate 2v2-only addendum. The full mechanics of what changed and why are in **[our banlist guide](/guides/riftbound-banlist-explained)**, kept current with every wave. This piece is about something the guide isn't built for: what r/riftboundtcg actually thinks about it, within an hour of the announcement going up, and the community's own (explicitly speculative) theories on where the metagame goes next.
+
+## Why these two, according to Riot
+
+Briefly, since the guide has the full breakdown: **Ekko, Recurrent** (Mind) enabled an infinite-turn combo with Lux that Riot says only emerged once Unleashed released, and got banned for being a low-interaction, "solitaire-esque" play pattern despite a low tournament play rate. **Stacked Deck** (Chaos) is the consistency piece that Riot says became a compounding problem once Kennen, Heart of the Tempest — [Vendetta's most-played legend at the Barcelona Regional Qualifier](/blog/riftbound-meta-shift-radiance-singapore) — released; paired with Lightning Rush, it let Kennen dig for Nocturne and fill the trash for Rhasa the Sunderer more efficiently than Riot wanted. Riot's own framing is a targeted hit meant to slow Kennen down, not remove it.
+
+Riot's announcement also restated the three questions it says decide every ban — is the card overrepresented in an unhealthy way, do the problems get better or worse over time, and does it promote unhealthy play patterns — and added a line rarely seen in a ban announcement: an explicit acknowledgment of the community itself. *"We've been carefully monitoring the win rates of decks in our major tournaments as well as general community sentiment around the current metagame. For everyone that's talked to us and shared opinions, we hear you, and genuinely appreciate your passion."* On the specific goal, Riot was direct about what it isn't trying to do: *"We want to avoid having a definitive best deck in the format. Kennen's play rate and win rate warrant a targeted ban that doesn't obliterate the deck and strategy, but brings it more in line with other top decks."* That's a narrower goal than "fix the meta," and it's the exact goal the thread below spends most of its energy arguing about.
+
+Timing is worth a note too, since it isn't the first time a Riftbound ban has landed right before a major event. July's wave hit a week before Vendetta's own release; this one lands three days before results start mattering again, with the **Los Angeles Regional Qualifier** and the **Chengdu Major** both ahead and the **Shenyang Regional Open** just finished. Riot said as much directly — it wanted this out fast, in English first and other languages after, specifically so players have time to adjust before either event rather than finding out mid-tournament.
+
+## What r/riftboundtcg is actually saying
+
+The thread ["New banned cards"](https://www.reddit.com/r/riftboundtcg/comments/1wgkixo/new_banned_cards/), posted by u/TheSllimRevilo linking Riot's own announcement, filled up within minutes. The first substantive reply set the tone:
+
+> "Stacked deck and blue ekko, effective Friday." — u/CataChronix
+
+From there, opinion split fast on whether Stacked Deck was actually the right card to remove. u/Jerryxm was skeptical: *"Stacked deck is going to hurt every purple deck immensely. I don't think this will have the intended outcome..."* — echoed by u/AffectionateCod8301, who argued the ban lands well beyond its intended target. u/Lazarius put the harder version of the same argument directly:
+
+> "Is this a joke? Stacked deck was the problem, really? Not Rhasa, Fizz, Nocturne, Ride the Wind, or Star-Crossed?" — u/Lazarius
+
+u/TheSandMan713 pushed back with what became the thread's most-repeated counter-argument: *"All of those were enabled by stacked deck. Treat the cause not the symptom."* Others sided with Riot's approach outright — u/okayypanda asked "couldn't you argue that is a good thing? This encourages more diversity and purple still has some of the best cards in the game right now," and u/Sevson said plainly: *"I actually prefer they take this approach to balancing... let's slow purple down and take stock on where everything's at."* u/pujolsrox11 was even more direct: "this is honestly fantastic." Adding to the confusion over who the ban actually hits hardest, u/ShiroMiriel offered a genuinely contrarian read — *"Kennen is probably the purple deck that cares the least about stacked deck"* — which u/HotelPigeon partly agreed with, calling the ban "really good" for the format overall while still expecting it to sting every Chaos deck besides Kennen the most.
+
+The Ekko side of the ban got a much warmer reception. u/polecy: *"Well at least lux infinity combo is dead, it's too toxic to play against, even if not a lot of people played it."* u/BestSamiraNA1 claimed some vindication: "I called the Ekko ban when Vendetta was still in preview phase and everyone was like 'lol no he's fine' — glad he's gone." For anyone specifically playing the champion rather than this one card, u/Shadowolf127 offered the reassurance that "Ekko will still get a Red and Blue legend next set," with u/polecy adding the sensible caveat that whether that matters "depends on how the designers tested" around this exact card.
+
+## Players caught mid-purchase and mid-build
+
+Some of the thread's most genuine reactions had nothing to do with tier lists. u/Technical_Wrap283: "My stacked decks just arrived today..... this is ridiculous." u/Muppetboy was "looking forward to playing ezreal next week," and u/StopThirdImpact had a deck half-built: "was in the process of building irelia... man that's nuts." That specific worry turned out to be smaller than feared — u/dubeaua pointed out that "Irelia doesn't even always play Stacked Deck, you'll be fine," and u/Wesilii confirmed "a lot of Irelia lists ran zero Stacked Decks," adding, for the copies that did run it: "I was a fan of 3x Stacked Deck; it's too much like Ponder in MTG — can't help myself." u/kitty_is_bby credited a deckbuilder by name for the shift away from it: "guubums made every other Irelia reconsider this, too bad for the copy-1:1 meta-deck people" — a reminder that not every competitive Irelia list was built the same way to begin with.
+
+The more concrete problem was for decks built specifically around Stacked Deck rather than splashing it. u/duckyg305 was mid-build on "the best of Kha'Zix deck from Singapore RQ that played Baron and Rengar" and asked the thread directly what to replace it with; u/JadeNovanis suggested leaning on Kai'Sa for card draw instead, though u/duckyg305 noted the obvious catch — Kai'Sa isn't cheap, and not everyone can just add more copies of an expensive card to solve a rotation problem.
+
+## Where players think the meta goes next
+
+We're going to be direct about what this section is and isn't. **[We don't publish price or meta predictions dressed up as analysis](/blog/riftbound-meta-shift-radiance-singapore)** — Kennen was Barcelona's most-played legend and still lost the final, which is exactly the kind of thing that makes single-card meta calls unreliable. What follows is the community's own theorizing, reported because it's genuinely what's being discussed today, not because we're endorsing any of it.
+
+The dominant theory is simple domain rotation: Chaos ("purple," in the thread's own shorthand) just lost a cheap consistency piece, so whatever gains the most ground from a slower Chaos is next. u/Hijacks: *"Every purple deck just cried out loud, but now all the moaning will be about how strong green will become, imo."* u/MetalNo1322 named names: "so you're telling me LA is gonna be green fest with Yi, Irelia and Akali now" — Master Yi's competitive printings run Calm ("green" in the same shorthand), and Irelia's own benchmark build splits Calm/Chaos, so a slower Chaos plausibly helps at least the Calm half of that pairing.
+
+Not everyone agrees the story is that clean. u/Teaganz countered that "Irelia is still good without stacked deck — other decks like Kennen and Blurple decks got hit way harder," and u/MetalNo1322's own follow-up complicated the "green wins" theory from the other direction: some Calm players are reportedly *hoping* Chaos decks stick around, because they're short on ways to answer specific big threats — Elder Dragon among them — without them. u/RektoKyoma raised a different possibility entirely, joking that "Jayce Aurora about to make you beg to see Kennen every game again" — the suggestion being that whatever fills a slower Kennen's spot might not actually be healthier for the format. And zooming out from any single archetype, u/burgusto raised a format-wide concern that has nothing to do with who "wins" the ban: *"I feel like this game lacks cantrips and card draw in a big way... what will people do for card advantage now?"* — a fair question with no confirmed answer yet, since the two-day-old ban hasn't had a real tournament to test it in.
+
+## What to actually do about it
+
+If you're running either card, both bans take effect **18 September 2026** — same-week adjustment, not a grace period. The **[full banlist guide](/guides/riftbound-banlist-explained)** has the complete current list across both formats, and **[the deck builder](/deck)** will price whatever you swap in, cheapest store first, in your own currency. Beyond that, the honest answer is that nobody — us included — has a tournament result yet to actually test any of the theories above. We'll cover it the same way we covered Barcelona and Singapore: from what actually happens, not a guess dressed up as one.
+
+---
+
+*Ban facts (cards, effective date, Riot's stated reasoning) are from [Riot Games' 15 September 2026 announcement](https://playriftbound.com/en-us/news/announcements/september-ban-list-updates-effective-september-18-2026/). Community reaction is quoted from the ["New banned cards"](https://www.reddit.com/r/riftboundtcg/comments/1wgkixo/new_banned_cards/) thread on r/riftboundtcg, current as of publication — usernames are as posted publicly on Reddit, and every quoted or paraphrased opinion belongs to its named commenter, not to RiftCompare.*`,
   },
   // IMAGE SLOT (author): under "## How the drawing actually works", a screenshot of
   // the Riot Merch Store entry form once registration opens on 14 August would make
@@ -5287,8 +5401,8 @@ Vendetta introduced three mechanics, and they generate the bulk of current rules
 
 ## What's currently legal
 
-- **[The banlist explained](/guides/riftbound-banlist-explained)** — how bans work and what they mean for your decks.
-- **[The July 2026 ban list update](/blog/riftbound-july-2026-ban-list-update)** — the most recent changes.
+- **[The banlist explained](/guides/riftbound-banlist-explained)** — how bans work and what they mean for your decks, kept current with every wave.
+- **[September 2026 ban reaction & meta shift](/blog/riftbound-september-2026-bans-meta-shift)** — the most recent wave, plus how the community thinks the meta responds.
 
 Bans and errata move prices as well as decks — **[why Riftbound prices change](/guides/why-riftbound-card-prices-change)** covers that side.
 
@@ -5314,13 +5428,13 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
 
 **What does Overnumbered mean on a Riftbound card?** It's a collector number that runs past the set's stated total — for example a number higher than the set size — marking a chase printing that sits outside the main numbered run. The Overnumbers guide covers how these differ from signed prints.
 
-**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work, and the July 2026 update covers the most recent changes.`,
+**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes.`,
     faq: [
       { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
       { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so your discarded and used cards become a second pool of plays rather than being gone for good." },
       { q: "What is Burn in Riftbound?", a: "Burn sends cards from a Main Deck to the trash — either your own (to fuel Flow and other trash payoffs) or your opponent's (a deck attack)." },
       { q: "What does Overnumbered mean on a Riftbound card?", a: "It's a collector number that runs past the set's stated total, marking a chase printing that sits outside the main numbered run. Overnumbered prints and signed prints are distinct — the Overnumbers guide covers the difference." },
-      { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound, and the July 2026 ban list update covers the most recent changes." },
+      { q: "Where can I find Riftbound's current banned cards?", a: "RiftCompare's banlist guide explains how bans work in Riftbound and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes." },
     ],
   },
   {
