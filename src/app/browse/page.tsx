@@ -266,8 +266,6 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
 
         <ActiveFilters />
 
-        <AdSlot format="horizontal" height={90} className="mb-4" />
-
         {/* Tailored eBay unit. Above the results grid: browse is where buying
             intent is highest, and the tiles are chase cards rather than a
             generic banner. */}
@@ -293,6 +291,11 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
             <Pagination page={page} totalPages={totalPages} params={searchParams as Record<string, string | undefined>} />
           </>
         )}
+
+        {/* Moved below the results (was above, ahead of EbayPicks) — a visitor
+            searching a card wants to see matches first; the ad now sits after
+            them instead of being the first thing rendered. */}
+        <AdSlot format="horizontal" height={90} className="mt-6" />
       </section>
     </div>
   );
