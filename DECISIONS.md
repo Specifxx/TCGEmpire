@@ -6456,3 +6456,70 @@ where `[egress-guard]`, `[egress-guard:nested-cache]` and
 `[egress-guard:cache-miss]` have likely already been naming the real
 answer for weeks; reading those before the next rotation would settle in
 minutes what took this entire exercise to narrow down statically.
+
+## Portfolio: answer the shipping question without corrupting the value, 2026-09-15
+
+Inbox feedback `cmu24pck9`, from the /portfolio widget, in the submitter's own
+words: *"some way to include shipping cost to sourced prices in portfolio.
+You'll often have some card at the ass end of the world for well unders tanking
+the price, but with $50 shipping not factored."*
+
+They are right about the defect. "Collection value" is `pickPrice()` — the
+lowest in-stock ITEM price in the viewer's market, condition-adjusted — and the
+cheapest copy of a card is frequently one far-off store. Postage appears nowhere
+on the page, so the number quietly describes a purchase nobody would make.
+
+**What was NOT done: fold postage into the headline.** Value (what the cards are
+worth) and replacement cost (what re-buying them costs) are different numbers.
+Folding delivery into the first would make /portfolio disagree with every other
+price on the site, and would answer "what is my collection worth" with a figure
+that is neither a sale price nor a purchase price. The headline is unchanged;
+`tests/portfolio-replacement-cost.test.ts` fails if `getPortfolio` ever grows a
+shipping term.
+
+**What was done**: a second figure, "Replacement cost, delivered", which is the
+question the feedback is actually asking. On the seeded verification collection
+it read A$18.90 listed against A$25.24 delivered - a third of the real cost had
+been invisible.
+
+**It reuses the Best-Basket optimiser rather than adding a shipping fee per
+card.** Postage is charged PER ORDER. Adding a per-card fee would be wrong in the
+opposite direction: buy eight cards from one store and you pay postage once, and
+most stores ship free over a threshold. `lib/basket.ts` already minimises exactly
+that trade (consolidate vs. chase each cheapest listing), so the collection goes
+to the solver we already ship instead of to a second, worse answer invented here.
+
+**Behind a button, not on render.** The route reads every in-stock listing for
+every card held, which is far heavier than the portfolio page's own query. On the
+page that runs for every visitor on every view; behind a button it runs when
+someone asks. With RetailerPrice the standing suspect in the transfer burn (see
+"Find the fifth burn before RM10 dies", and the egress rules at the top of
+`lib/db.ts`) that is not a trade worth making. The read is still scoped as those
+rules require - this user's card ids, in-stock, one market, explicit `select`,
+and a 200-holding cap - and a capped run prices the DEAREST holdings and says in
+the UI how many it left out, rather than silently pricing some of them.
+
+**Three things the panel says out loud**, because each would otherwise be a quiet
+overclaim:
+
+- The optimiser is a greedy start plus a single-move hill-climb. It lands close,
+  not provably first - consolidating against free-shipping thresholds has no fast
+  exact answer. Writing the test taught me this the direct way: a case I expected
+  to consolidate stayed in a local optimum, and the honest fix was the wording,
+  not the solver.
+- A replacement is priced at the shop's condition, not yours. A played copy is
+  valued above at its condition multiplier and replaced here at full price, which
+  is most of why the two numbers diverge.
+- Replacement cost is *normally* the higher of the pair, not always: a card that
+  nothing stocks today counts towards value but cannot enter a basket at all, so
+  the gap is rendered signed in both directions.
+
+eBay stays out, same call `/api/basket` makes: its postage is quoted per listing
+and is not comparable with a store's flat rate.
+
+`scripts/close-inbox-items.ts` was rewritten for this pass rather than appended
+to - a row closed in an earlier pass only ever prints "already X", and the
+archive made the one thing the script is about harder to read. The open sealed
+report `cmtx3yed0` ("Booster Case" priced off a single eBay box) is deliberately
+left NEW: nothing about sealed classification was changed, so closing it would
+claim work that has not happened.

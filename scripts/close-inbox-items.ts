@@ -1,5 +1,5 @@
 /**
- * Closes the inbox items worked on 2026-09-10, and ONLY those — every row is
+ * Closes the inbox items worked on 2026-09-15, and ONLY those — every row is
  * named by id, with the status it actually earned.
  *
  * WHY IDS AND NOT A SWEEP. "Mark everything as done" is one query, and it is the
@@ -8,6 +8,11 @@
  * not. The queue's value is that its status means something. So this script
  * changes exactly the rows below, refuses to touch a row whose status has moved
  * since (someone else may have actioned it), and prints what it did.
+ *
+ * THE LISTS ARE REPLACED EACH PASS, not appended to. A row closed in an earlier
+ * pass only ever prints "already X" here, and carrying a growing archive of them
+ * makes the one thing this script is about — what was just worked — harder to
+ * read. The record of previous passes lives in DECISIONS.md and in git history.
  *
  * DRY RUN BY DEFAULT — pass --apply to write.
  *
@@ -27,71 +32,26 @@ const APPLY = process.argv.includes("--apply");
 type Close = { id: string; from: string; to: string; what: string; why: string };
 
 // ── Store suggestions ────────────────────────────────────────────────────────
-// Three of the four are live. Each was verified before being wired up: robots.txt
-// checked with the app's own robotsAllows(), collection handles confirmed to
-// return products, shipping read off the store's own policy page.
-const SUGGESTIONS: Close[] = [
-  {
-    id: "cmtvv7uh800011by93e0kcmpa",
-    from: "pending",
-    to: "added",
-    what: "Alt F4",
-    why: "live in retailers.ts as `altf4` — 911 singles + 28 sealed, also in STORES_WITH_POLICY",
-  },
-  {
-    id: "cmtvv4fsx0000sdwxzp38zpt0",
-    from: "pending",
-    to: "added",
-    what: "Card Brawlers",
-    why: "live as `cardbrawlers` — free shipping over C$50 on singles, per the store's own page",
-  },
-  {
-    id: "cmtvv6xty00001by9qvqw6ktz",
-    from: "pending",
-    to: "added",
-    what: "Boutique Hobby Expert",
-    why: "live as `hobbyexpert` — stock is under riftbound-origins/-copy/-promo-cards, NOT its empty `riftbound-singles` handle",
-  },
-  {
-    // NOT "added". Saying otherwise would tell the person who suggested it that
-    // their store is on the site, and produce a permanently empty store page for
-    // every shopper who opened it.
-    id: "cmtvv8q5000021by9oo042xvm",
-    from: "pending",
-    to: "rejected",
-    what: "imaginaire.com",
-    why: "Cloudflare returns 403 to every request, including a full browser UA — there is no feed to scrape",
-  },
-];
+// None pending this pass.
+const SUGGESTIONS: Close[] = [];
 
-// ── Wrong-card report ────────────────────────────────────────────────────────
-const REPORTS: Close[] = [
-  {
-    id: "cmtuou4vl0000zq34y41eqy02",
-    from: "NEW",
-    to: "FIXED",
-    what: "/card/warwick-hunter-ogn-159a-298 showed a promo's price on a page claiming to be a Showcase",
-    why: "root cause was a drifted promo-set regex in add-tcg-printings.ts; source fixed + pinned by tests, and 9 mis-filed cards repaired by fix-promo-as-variant.ts",
-  },
-];
+// ── Wrong-price / wrong-card reports ─────────────────────────────────────────
+// cmtx3yed0 (sealed OGN "Booster Case" priced off a single box on eBay US) is
+// STILL OPEN and deliberately absent: nothing has been changed about how sealed
+// listings are classified, so closing it would be a lie about work that has not
+// happened.
+const REPORTS: Close[] = [];
 
 // ── Feedback ─────────────────────────────────────────────────────────────────
-// HIDDEN, not APPROVED: APPROVED publishes the text as a public review, and
-// neither of these people ticked the consent box. Both are bug reports anyway.
+// HIDDEN, not APPROVED: APPROVED publishes the text as a public review, and the
+// submitter did not tick the consent box. It is a feature request anyway.
 const FEEDBACK: Close[] = [
   {
-    id: "cmtvsjnb800004chyw1su7zpx",
+    id: "cmu24pck90000tizoma4sqcka",
     from: "NEW",
     to: "HIDDEN",
-    what: "portfolio P&L wrong — duplicate copies of a card share one cost basis",
-    why: "a collection row can now record a TOTAL as well as a per-copy price (lib/collection-cost.ts), so $770 across two copies and 20/20/25 across three are both expressible",
-  },
-  {
-    id: "cmtu4c26z0000shkhor1f8lmo",
-    from: "NEW",
-    to: "HIDDEN",
-    what: "Hobby Collectors Australia listings throwing off card prices",
-    why: "they were Pokémon/One Piece singles: a mixed-game collection whose handle said 'riftbound', matched to our cards by collector NUMERATOR alone via the OGN default. Both holes closed in price-import.ts",
+    what: "portfolio ignores shipping — the cheapest copy is often one far-off store, and $50 of postage never shows",
+    why: "/portfolio now carries a 'Replacement cost, delivered' panel: the Best-Basket optimiser run over the whole collection, postage charged once per store and free over a store's threshold, shown against the item-price headline",
   },
 ];
 

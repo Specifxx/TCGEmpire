@@ -14,6 +14,7 @@ import { MyCollection } from "@/components/MyCollection";
 import { CollectionShare } from "@/components/CollectionShare";
 import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PremiumButton } from "@/components/PremiumButton";
+import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
 
 export const dynamic = "force-dynamic";
 
@@ -199,6 +200,12 @@ export default async function PortfolioPage() {
               </div>
             )}
           </section>
+
+          {/* What re-buying the collection would actually cost, postage included.
+              Sits directly under the headline because it answers the question the
+              headline raises: that number prices each card at the cheapest listing
+              in the market and says nothing about getting them to your door. */}
+          {pro && <PortfolioReplacementCost currency={info.currency} />}
 
           {/* Cost-basis P&L + market benchmark — the investor view. */}
           <section className="card-surface p-5">
