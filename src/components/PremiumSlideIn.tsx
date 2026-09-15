@@ -150,7 +150,7 @@ function readNum(store: Storage | undefined | null, key: string): number {
 }
 
 export function PremiumSlideIn() {
-  const { user, premium, premiumCheckout, trialEligible, trialDays, loaded } = useMe();
+  const { user, premium, premiumCheckout, premiumPlus, trialEligible, trialDays, loaded } = useMe();
   const { country } = useCountry();
   const router = useRouter();
   const pathname = usePathname();
@@ -312,8 +312,17 @@ export function PremiumSlideIn() {
         entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       }`}
     >
-      <div className="relative overflow-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl">
-        <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/60 px-4 py-2.5">
+      {/* max-h + scroll (2026-09-15, matching SignupPromoPopup's own guard):
+          the comparison table below made this card tall enough that the same
+          short-viewport overflow this component never used to risk is now a
+          real possibility. Belt to the panel's own internal height rules. */}
+      <div className="relative max-h-[calc(100dvh-6.5rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-gold/50 bg-ink-900 shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+        {/* sticky, not just in-flow (2026-09-15): once the card can scroll, an
+            in-flow header scrolls away with it, and the dismiss button inside
+            it is exactly the control the short-phone incident documented in
+            SignupPromoPopup's own header was about losing. z-10 + an opaque
+            background keeps it above the scrolling body underneath it. */}
+        <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-ink-800 bg-ink-950 px-4 py-2.5">
           <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
             Premium
           </span>
@@ -351,17 +360,22 @@ export function PremiumSlideIn() {
             </p>
           )}
           {/* Same designed panel the signed-out popup leads with, so the two
-              nudges read as one offer — but with showFeatures off. This card
-              already carries a per-route contextual pitch naming ONE specific
-              tool above (a deck page sells Best Basket, a card page sells Value
-              Finder), which beats a generic four-row list and is pinned by
-              tests/premium-slidein.test.ts; running both would just make the
-              card tall enough to be the thing it was designed not to be.
+              nudges read as one offer. showFeatures is back on: the panel's
+              old four-row feature list was dropped for exactly this card's
+              height budget, but it has since been replaced by the compact
+              tick/✗ table, which is the format actually asked for and fits
+              the same space — a returning, signed-in visitor should see the
+              same quick comparison a brand-new one does, not a lesser pitch.
+              This card still carries its own per-route contextual pitch above
+              (a deck page sells Best Basket, a card page sells Value Finder),
+              pinned by tests/premium-slidein.test.ts — that stays, since it is
+              more specific than any table row, and the table is what answers
+              the very next question ("okay, but what does Premium get me").
               NB: no ISO date in this comment on purpose — it sits inside the
               400-character window after the price-increase banner above that
               tests/premium-price-increase.test.ts scans for hard-coded dates. */}
           <div className="-mx-4 mt-2.5 overflow-hidden">
-            <PremiumPitchPanel showFeatures={false} />
+            <PremiumPitchPanel showFeatures showPlus={premiumPlus} />
           </div>
           {/* PROMOTED above the CTA row, 2026-09-09 (previously an 11px
               footnote BELOW the button). ALWAYS shown. Two different framings

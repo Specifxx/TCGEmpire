@@ -6456,3 +6456,75 @@ where `[egress-guard]`, `[egress-guard:nested-cache]` and
 `[egress-guard:cache-miss]` have likely already been naming the real
 answer for weeks; reading those before the next rotation would settle in
 minutes what took this entire exercise to narrow down statically.
+
+## Premium pitch: the character art is gone, and the feature list became a real comparison table — 2026-09-15
+
+Owner: *"The slider should have — maybe we get rid of the thumbnail at the back with [the
+character] because that doesn't really mean anything. Maybe we just continue to use the
+RiftCompare logo. And a very quick comparison, ticks and X's, of what a Premium account can do
+versus a free account — fit it into that space especially for mobile, and keep having that show
+up for returning users as well. We're not getting any Premium or Plus subscribers lately."*
+
+Two changes to `PremiumPitchPanel.tsx` — the designed panel both corner nudges
+(`PremiumSlideIn`, `SignupPromoPopup`) share, shipped 2026-09-10:
+
+1. **The character-art background is retired.** Nothing in the panel's own copy ever referred to
+   her, so the art carried no claim and competed with the offer for attention rather than
+   reinforcing it — exactly the owner's complaint. Replaced with `BrandLogo`, the same mark the
+   nav and hero already use: a small icon next to the wordmark, and a large, faint watermark
+   bleeding off the corner the art used to occupy. The panel now reads as RiftCompare's own,
+   rather than a stock character card with a pitch bolted underneath it.
+2. **The four persuasive feature rows became the real Free-vs-Premium tick/✗ table** —
+   `TierComparisonTable`, `compact`, the same component `PremiumDialog` and `/premium` already
+   render. "A very quick comparison, ticks and X's" is a different thing from four sentences with
+   icons: it lets a visitor SEE the gap in one glance instead of being told about it in prose, in
+   about the same vertical space, and it can never drift from the real entitlements (the retired
+   `FEATURES` array had already gone stale once, naming two tools that were actually the FREE
+   tier — see `tests/ad-free-tier.test.ts`'s history on this file).
+
+**"Show up for returning users as well" was the more consequential instruction.** `PremiumSlideIn`
+targets logged-in, non-Premium visitors — people who already have an account and have come back
+to the site — which is the "returning users" audience here, distinct from `SignupPromoPopup`'s
+brand-new, signed-out one. `PremiumSlideIn` had `showFeatures={false}` from the start: the old
+four-row list was too tall to run alongside this card's own per-route contextual pitch (a deck
+page sells Best Basket, a card page sells Value Finder) without pushing the CTA off a short
+phone's screen. The compact table fits that same budget the icon rows didn't leave room for, so
+both nudges now pass `showFeatures` true — a returning visitor sees the identical quick
+comparison a brand-new one does, not a lesser pitch, closing a real gap rather than a cosmetic
+one.
+
+**A new prop, not a new hook.** `PremiumPitchPanel` stays presentational (`tests/ad-free-tier.test.ts`
+pins "no hooks, no fetch") so it can render inside the server `/premium` tree and a client nudge
+alike. `showPlus` is threaded down from each caller's own session read (`useMe().premiumPlus`)
+rather than the panel reading it itself — same contract `TierComparisonTable` already uses in
+`PremiumDialog`.
+
+**The height risk this reopens, and the fix that came with it.** Adding a ~8-row table to
+`PremiumSlideIn` is the first time that card could plausibly overflow a short viewport —
+`SignupPromoPopup` already carries a `max-h-[calc(100dvh-6.5rem)] overflow-y-auto` guard for
+exactly this reason (a real production incident on a short iOS Safari viewport, documented in
+that file's own header), but `PremiumSlideIn` never needed one before. Added the same cap here,
+plus made its own header **`sticky`** (it wasn't before) so the ✕ and the heading don't scroll
+away with the body underneath them — the specific control the original incident was about
+losing. `SignupPromoPopup` solved the same problem differently (an absolutely-positioned ✕ with
+no header strip at all); `sticky` was the smaller diff for a card that already had a real header
+row worth keeping.
+
+**What this doesn't do.** The headline, tagline and eyebrow copy are unchanged — this was a
+layout/visual pass, not a repositioning, so `tests/premium-positioning.test.ts`'s wording
+guarantees needed no changes. `PREMIUM_COPY_VERSION` was deliberately NOT bumped: it is shared
+across four surfaces (`/premium`, the dialog, both corner nudges), only two of which changed
+here, and neither the wording nor the price moved — bumping it would have conflated
+`/premium`/dialog impressions (unaffected) with the two that changed. `SignupPromoPopup`'s own
+`PROMO_VARIANT` — already the established axis for exactly this kind of content-only change, per
+its own changelog — became `"premium_graphic_table"` instead. `PremiumSlideIn` has no equivalent
+per-content variant tag of its own (only the shared `copy: PREMIUM_COPY_VERSION`, which several
+unrelated surfaces also carry), so its `premium_slidein_shown`/`_dismissed` events cannot
+separate the before/after of this specific change in GA4 the way the popup's can — a real gap,
+left as one rather than papered over with a tag that would mean something different everywhere
+else it appears.
+
+Whether any of this actually moves `premium_checkout_started` per impression is the real
+question the owner asked, and this write-up isn't the answer to it — reading GA4 in a week or two
+(split by `PROMO_VARIANT` on the popup's events; the slide-in's own `context`/`copy` fields on
+its) is.

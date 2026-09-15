@@ -1,148 +1,82 @@
-// THE PREMIUM PITCH, AS THE OWNER DESIGNED IT (2026-09-10). Replaces the
-// two-bar SVG that briefly stood here, which in turn replaced a wall of text.
-// The owner supplied a finished comp: character art bleeding behind a dark
-// scrim, the RiftCompare wordmark and a gold PREMIUM badge, a three-line
-// headline, four icon rows, then the price and the real sign-in buttons.
+// THE PREMIUM PITCH (REDESIGNED 2026-09-15, see DECISIONS.md). Replaces the
+// owner's original comp — character art bleeding behind a dark scrim, the
+// RiftCompare wordmark and a gold PREMIUM badge, a three-line headline, four
+// icon rows, then the price and the real sign-in buttons — which shipped
+// 2026-09-10 and, per the owner's own review, wasn't converting: "the
+// thumbnail at the back with [the character] doesn't really mean anything."
+// Two changes, both explicit product instructions:
+//   1. The character art is GONE. Nothing in this panel's copy referred to
+//      her, so a visitor had no reason to connect the art to the pitch — it
+//      was decoration competing with the offer, not reinforcing it. Replaced
+//      with the site's own identity (BrandLogo, the same mark the nav and
+//      hero use) so the panel reads as RiftCompare's, not a stock character
+//      card.
+//   2. The four icon rows — a claim + an icon, no comparison — became the
+//      real Free-vs-Premium tick/✗ table (TierComparisonTable, compact),
+//      the same one PremiumDialog and /premium already show. "A very quick
+//      comparison, ticks and X's, of what Premium can do vs a free account"
+//      is a materially different ask from four persuasive sentences: it lets
+//      a visitor SEE the gap rather than be told about it, in the same
+//      vertical space, and it can never drift from the real entitlements the
+//      way hand-written feature copy already had once (see the retired
+//      FEATURES array's own history, still checked against TIER_COMPARISON
+//      by tests/premium-pitch-panel.test.ts).
 //
-// THE HEADLINE WORDING CHANGED 2026-09-14 (see DECISIONS.md). The comp's own
-// line was an advantage-over-other-buyers claim; it now leads with the saving
-// the reader makes. The LAYOUT below — short line, big brand-coloured line,
-// small trailing line — is unchanged, because that shape is what the comp
-// actually contributed and it still holds the new words.
+// THE LAYOUT'S OWN SHAPE — short eyebrow line, big brand-coloured headline,
+// small trailing line — is UNCHANGED, along with the exact headline wording
+// (see DECISIONS.md, "the headline changed 2026-09-14" — that decision
+// stands; only the art and the feature block underneath it changed here).
 //
-// BUILT AS REAL MARKUP, NOT THE COMP ITSELF. Shipping the comp as one flat
-// image was the obvious shortcut and is wrong here for a reason that is easy
-// to measure: the comp is 1145px wide and this card renders at 384px, so every
-// baked-in word would land at about a third of its designed size — the body
-// copy would be roughly 5px tall and simply unreadable. Real text also scales
-// with the viewport, survives a screen reader, can be translated, and lets the
-// price come from the shared helpers instead of being frozen into a picture on
-// the day it was exported. Only the artwork is a raster (public/premium/
-// premium-pitch.webp, 36KB, cropped out of the comp — the left-hand column of
-// the comp had the UI text baked over it, so the crop starts to its right).
+// BUILT AS REAL MARKUP, STILL. The table renders from the same shared rows
+// /premium and the dialog use, and the price still comes from the shared
+// helpers in the caller — nothing here is a flattened image.
 //
-// EVERY FEATURE ROW IS A REAL PREMIUM-ONLY ENTITLEMENT. The comp's own rows
-// read "Advanced filters — find the exact cards, sets and rarities you want"
-// and "See the best prices across stores instantly", and both of those are the
-// FREE tier: TierComparisonTable's TIER_COMPARISON has "Compare prices across
-// every store + eBay" and "Full card database, search & browse" as ticks in
-// the anon column. Selling those as Premium would be the one thing this repo
-// consistently refuses to do, so the rows below keep the comp's shape, icons
-// and rhythm but name things that are genuinely behind the paywall. Each maps
-// to a TIER_COMPARISON row that is Premium-only or Premium-full-list.
+// showPlus is a PROP, not a session read: this file stays presentational (no
+// session hook, no fetch — tests/ad-free-tier.test.ts pins that), so a caller
+// that already reads live session state for its own reasons (both current
+// callers do) passes premiumPlus down rather than this component reading it
+// itself.
 //
-// Presentational only — no hooks, no props beyond layout, no fetch — so it
-// renders inside the server tree or a client nudge alike.
+// Presentational only — no hooks, no fetch — so it renders inside the server
+// tree or a client nudge alike.
 
-type Feature = { title: string; body: string; icon: React.ReactNode };
-
-// 24x24, 1.75 stroke, rounded joins — the icon system HomeIcons.tsx sets out.
-const iconBase = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.75,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-};
-
-const FEATURES: Feature[] = [
-  {
-    // TIER_COMPARISON: Deal Finder — "Top pick" free, "Full list" Premium.
-    title: "Every deal, ranked",
-    body: "The full Deal Finder list, not just the top pick.",
-    icon: (
-      <svg {...iconBase}>
-        <ellipse cx="12" cy="6" rx="7" ry="3" />
-        <path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
-        <path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
-      </svg>
-    ),
-  },
-  {
-    // TIER_COMPARISON: Value Finder / Bulk Pricer / Best Basket — Premium only.
-    title: "Buy a whole list for less",
-    body: "Best Basket, Bulk Pricer and Value Finder.",
-    icon: (
-      <svg {...iconBase}>
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <path d="M3 9h18M9 9v11" />
-      </svg>
-    ),
-  },
-  {
-    // TIER_COMPARISON: Rising Cards full list + Demand Finder — Premium only.
-    // "Know before you buy", not "know before the market does": these two are
-    // genuinely prediction/attention signals, so the row promises INFORMATION
-    // ahead of a purchase decision, which is what they actually deliver.
-    title: "Know before you buy",
-    body: "Rising Cards and Demand Finder, in full.",
-    icon: (
-      <svg {...iconBase}>
-        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-      </svg>
-    ),
-  },
-  {
-    // Not a feature claim at all, so nothing to verify — and the one row from
-    // the comp that needed no rewording.
-    title: "Support RiftCompare",
-    body: "Help keep price comparison free for everyone.",
-    icon: (
-      <svg {...iconBase}>
-        <path d="M12 3l4 5-4 13-4-13 4-5zM8 8h8" />
-      </svg>
-    ),
-  },
-];
+import { BrandLogo } from "./BrandLogo";
+import { TierComparisonTable } from "./TierComparisonTable";
 
 export function PremiumPitchPanel({
   badge,
   showFeatures = true,
+  showPlus = false,
 }: {
   // The gold PREMIUM badge is passed in rather than declared here: both callers
   // are pinned by tests that read their OWN source for the badge's classes.
   badge?: React.ReactNode;
-  // The signed-in nudge sets this false — it already carries a per-route
-  // contextual pitch naming one specific tool, which beats a generic four-row
-  // list, and it has no room for both.
+  // The signed-in nudge used to set this false to save space for its own
+  // per-route contextual pitch — the compact tick/✗ table below replaced the
+  // old four-row feature list specifically because it fits that same budget,
+  // so both callers now pass true. Kept as a real prop (not hard-coded) in
+  // case a future surface genuinely has no room for either.
   showFeatures?: boolean;
+  // Whether to render the Plus column in the comparison table — pass the
+  // caller's own premiumPlus (from its own session read) once Plus is
+  // actually configured, same contract as TierComparisonTable's own showPlus.
+  showPlus?: boolean;
 }) {
   return (
-    <div className="relative overflow-hidden">
-      {/* Artwork, cropped from the owner's comp, anchored to the RIGHT rather
-          than stretched across the whole panel. At the comp's 1145px the
-          character and the copy sit side by side with room to spare; at 384px
-          they would land on top of each other, and a scrim dark enough to keep
-          the headline legible turns her face into a smudge. Confining the art
-          to the right ~64% and fading its left edge into the card keeps both
-          readable — the copy gets clean ink, the character stays a character.
-          Decorative: every claim it carries is in the real text beside it, so
-          an empty alt is correct (scripts/check-images.ts requires the
-          attribute to be present and allows it to be empty). */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-[64%]">
-        <img
-          src="/premium/premium-pitch.webp"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover object-[38%_26%]"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, #0e1116 0%, rgba(14,17,22,0.82) 26%, rgba(14,17,22,0.30) 62%, rgba(14,17,22,0.12) 100%)",
-          }}
-        />
+    <div className="relative overflow-hidden bg-gradient-to-br from-ink-900 via-ink-950 to-ink-950">
+      {/* The site's own mark, not a stock character — bled large and faint off
+          the top-right corner as a watermark, the same spot the retired
+          artwork occupied. Wrapped rather than relying on BrandLogo's own
+          aria-label: at this size and opacity it is pure decoration, and the
+          real wordmark right below already identifies the brand for anyone
+          using a screen reader. */}
+      <div aria-hidden="true" className="pointer-events-none absolute -right-6 -top-8 opacity-[0.10]">
+        <BrandLogo className="h-36 w-36" />
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950 via-transparent to-transparent" />
 
-      {/* A soft shadow on every word in here, rather than a heavier scrim. The
-          feature rows run a little way over the character's face at this width,
-          and darkening the whole art to fix that costs more than it buys. */}
-      <div className="relative px-4 pb-3 pt-3.5" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.85)" }}>
+      <div className="relative px-4 pb-3 pt-3.5">
         <div className="flex items-center gap-2">
+          <BrandLogo className="h-6 w-6" />
           <span className="font-display text-base font-extrabold italic tracking-tight text-white">
             Rift<span className="text-brand-400">compare</span>
           </span>
@@ -161,36 +95,21 @@ export function PremiumPitchPanel({
         </h2>
 
         {showFeatures && (
-          <ul className="mt-3 space-y-2">
-            {FEATURES.map((f, i) => (
-              <li
-                key={f.title}
-                // Rows 3 and 4 stand down on a short viewport so the sign-in
-                // buttons stay above the fold on a small phone. The card also
-                // caps its own height and scrolls (see the caller), but needing
-                // to scroll to reach the CTA is a worse card than a shorter one.
-                className={`flex items-start gap-2.5 ${i >= 2 ? "hidden [@media(min-height:700px)]:flex" : "flex"}`}
-              >
-                <span
-                  className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg border ${
-                    i === 0 ? "border-gold/60 bg-gold/10 text-gold" : "border-ink-700 bg-ink-900/70 text-slate-300"
-                  }`}
-                >
-                  <span className="block h-3.5 w-3.5">{f.icon}</span>
-                </span>
-                <span className="min-w-0">
-                  <span
-                    className={`block text-[10.5px] font-extrabold uppercase tracking-wide ${
-                      i === 0 ? "text-gold" : "text-white"
-                    }`}
-                  >
-                    {f.title}
-                  </span>
-                  <span className="block text-[10.5px] leading-snug text-slate-400">{f.body}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+              Free vs Premium, at a glance
+            </p>
+            {/* Same compact table PremiumDialog and /premium already render —
+                see TierComparisonTable's own header for why this can never be
+                a second, hand-typed comparison. Its own overflow-x-auto wrapper
+                is what actually solves "fit this on a phone": narrower than
+                that, the table scrolls sideways inside this card rather than
+                crushing every column, exactly as it already does inside
+                PremiumDialog today. */}
+            <div className="mt-1.5 overflow-hidden rounded-lg border border-ink-800 bg-ink-950/60">
+              <TierComparisonTable compact showPlus={showPlus} />
+            </div>
+          </div>
         )}
       </div>
     </div>
