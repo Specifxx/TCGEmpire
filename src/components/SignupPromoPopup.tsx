@@ -186,16 +186,23 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // rename (CONTENT), so again a new name rather than a suffix — without it the
 // text-pitch and graphic-pitch impressions would average together in GA4 and
 // neither could be read.
+// → "premium_graphic_table" (2026-09-15): PremiumPitchPanel itself changed —
+// the character-art background is gone (explicit feedback: it "doesn't really
+// mean anything") and the four persuasive feature rows became the real
+// Free-vs-Premium tick/✗ table (TierComparisonTable, compact). Same CONTENT
+// axis as the two renames above it, for the same reason: this is the change
+// most likely to move dismiss/click rates, so it needs its own bucket rather
+// than blending into "premium_graphic"'s numbers.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_graphic_capped";
+const PROMO_VARIANT = "premium_graphic_table";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
-  const { user, loaded, trialDays } = useMe();
+  const { user, loaded, trialDays, premiumPlus } = useMe();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
   const [entered, setEntered] = useState(false); // drives the slide-in transition
@@ -372,6 +379,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
               Premium
             </span>
           }
+          showPlus={premiumPlus}
         />
 
         <div className="px-4 pb-1 pt-2">

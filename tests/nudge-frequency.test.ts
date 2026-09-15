@@ -102,9 +102,16 @@ test("the within-session spacing is untouched — the cap sits on top of it", ()
 });
 
 test("the frequency change is separable in GA4 from the uncapped era", () => {
+  // PROMO_VARIANT has moved on again since this test was written (2026-09-15,
+  // the character-art-to-comparison-table content change — see the file's own
+  // changelog), so the literal here tracks whichever value is current rather
+  // than re-pinning "premium_graphic_capped" specifically. What actually
+  // matters for THIS test is that the frequency-cap era's name isn't the one
+  // that regresses back to an uncapped-era value.
   const src = code(POPUP);
-  assert.match(src, /const PROMO_VARIANT = "premium_graphic_capped"/, "a frequency change needs its own variant name");
-  assert.ok(!/premium_graphic_5s/.test(src), "the previous variant name must be retired, not carried forward");
+  assert.match(src, /const PROMO_VARIANT = "premium_graphic_table"/, "expected the current variant name");
+  assert.ok(!/premium_graphic_5s/.test(src), "the pre-cap variant name must be retired, not carried forward");
+  assert.ok(!/"premium_graphic_capped"/.test(src), "the pre-table variant name must be retired, not carried forward");
 });
 
 // ── The guard against what was asked for and declined ───────────────────────
