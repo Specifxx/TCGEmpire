@@ -7238,3 +7238,37 @@ used throughout `tests/mobile-bottom-bar.test.ts` — plus two new files,
 `tests/single-menu-entry.test.ts` and `tests/nav-menu-full-grid.test.ts` — over
 manually confirming the diff hits its target lines. 1492/1492 tests, typecheck
 and lint clean.
+
+## Notification bell hidden on phones; profile icon's tap target does not shrink with it, 2026-09-16
+
+Reported directly: "get rid of the notification icon so we make more space
+for the profile icon. Also profile icon should be smaller so it fits for
+mobile." Two judgment calls, both checked with the reporter before touching
+code, since either one has a real cost attached:
+
+**Scope of the bell removal.** There is no separate `/notifications` page —
+`NotificationBell`'s dropdown is the only surface for price-drop/trial/release
+notifications, so removing it outright would delete a feature, not just
+declutter a header. Confirmed the ask was about mobile space specifically:
+the bell now renders inside a `hidden sm:inline-flex` wrapper in `NavUser.tsx`
+rather than being deleted, so it's still one tap away for anyone with screen
+width to spare. `use-unread.ts`'s poll is a single shared module-level
+interval regardless of how many components read it or whether they're
+visible, so hiding rather than unmounting costs nothing extra.
+
+**"Smaller" without breaking the tap-target floor.** `UserMenu.tsx`'s avatar
+button was already exactly `.tap-icon`-sized — the same 44px-on-phones /
+48px-on-coarse-pointer minimum the bell uses, documented in `globals.css` as a
+deliberate fix for a Lighthouse tap-target audit this codebase failed before
+(537 controls at the time). Shrinking that box on request would silently
+re-fail the same audit. Instead, the button itself keeps `.tap-icon` sizing
+and now wraps the actual circle (avatar image or initials, border, background)
+in an inner `<span>` sized `h-8 w-8` below `sm`, `h-9 w-9` (unchanged) from
+`sm` up — a visibly smaller icon centered inside an unchanged, fully
+accessible touch box. The "email not verified" badge moved with it, nested
+inside the circle-sized wrapper instead of the outer button, so it still
+anchors to the circle's actual corner rather than floating off toward the
+now-bigger invisible tap area around it.
+
+1495/1495 tests (three new, `tests/header-mobile-space.test.ts`), typecheck
+and lint clean.
