@@ -7111,3 +7111,70 @@ pitch** rather than being deleted: `PremiumSlideIn`, `PremiumDialog`,
 surface lists in `premium-price-increase.test.ts` and `premium-zero-today.test.ts`.
 Two tests now pin the exact opposite of what they used to, and say so in their
 own comments, which is the honest way to record a reversal.
+
+## The Z Fold 7 fix caused a gap, and took the header down with it: measured, not inferred, 2026-09-16
+
+Two more reports on the same device, minutes after the previous fix shipped: a
+persistent gap under the bottom bar, and the top header "disappearing" during
+scroll — "it needs to always sit there so the site is smooth."
+
+**The gap was the previous fix's own doing.** `--chrome-lift: calc(100lvh -
+100dvh)` computed the right IDEA but trusted two CSS viewport units this
+codebase has no way to verify on this exact browser. A persistent nonzero
+reading with no chrome actually covering anything is exactly what a foldable
+reporting a stuck or wrong `dvh`/`lvh` value would produce, and Chromium has a
+documented history of exactly that bug class on foldables.
+
+**The header was very likely collateral damage, not its own bug.**
+`position: sticky; top: 0` structurally shouldn't be affected by a mobile
+browser's chrome collapsing — the TOP edge of the viewport doesn't move when
+the address bar retracts, only the bottom edge does (which is why the bottom
+bar needed a fix and the header, in principle, shouldn't). Checked and ruled
+out directly: no ancestor of the header carries a `transform`/`filter`/
+`will-change` that would create a new containing block and break `sticky`'s
+reference to the real viewport. The remaining, better-supported theory: `dvh`/
+`lvh` are recalculated by the browser CONTINUOUSLY and UNCONTROLLABLY while its
+own chrome animates, and every recalculation invalidates a `:root` custom
+property, forcing a global style-recalculation pass — landing on the exact
+same frames the browser is already spending on its own chrome animation. On a
+lower-powered chip that is enough main-thread contention to drop a frame
+anywhere, including a sticky header's composite layer, and "the header
+disappeared" is a plausible visible symptom of exactly that kind of dropped
+frame.
+
+**The fix replaces the CSS-unit approach entirely** with a value this codebase
+can actually reason about: `window.visualViewport`, the standards-track API
+MDN's own canonical example uses for pinning a bottom UI element to the real,
+currently-visible screen. `BottomTabBar.tsx`'s new `useChromeLift()` tracks the
+LARGEST `visualViewport.height` observed this session (that is the screen with
+chrome fully retracted) and reports `max - current` — always >= 0 by
+construction, no clamp needed, and using ONLY visualViewport's own numbers so
+there is no risk of two different browser APIs disagreeing about what "the
+viewport" means (the exact ambiguity that made the CSS-unit version
+unverifiable in the first place). It updates rAF-throttled, on THIS file's
+schedule — at most once per animation frame — rather than however often the
+engine's own internal dvh recalculation fires, which was never under this
+codebase's control. No support for `visualViewport`: the effect never runs,
+`--chrome-lift` stays the 0px default, and the bar behaves exactly as it did
+before any of this existed (hidden behind an expanded address bar until the
+first scroll) — a smaller, known failure rather than a wrong nonzero lift.
+Verified with a synthetic `visualViewport` resize in a headless browser (which
+has no real chrome to shrink): growing the reading to a new max reports 0 lift,
+then shrinking it back by 50px reports exactly 50px, applied as
+`translateY(-50px)` with `bottom` unchanged — the running-max arithmetic is
+correct.
+
+**`NavbarShell.tsx`'s own, independent half of the fix**: `scrolled` was React
+state, so its one scroll-position threshold (`window.scrollY > 8`) triggered a
+component re-render — reconciliation, a new class string, a DOM diff — on top
+of whatever the browser was already doing to its own chrome that frame. It is
+now a ref with a direct `classList` toggle: identical classes, identical
+threshold, identical CSS transition, zero React render cost tied to scroll.
+This was a one-time boundary crossing, not a per-frame cost, so it was never
+expensive on its own — removing it anyway costs nothing and directly answers
+"always sit there," on the chance the theory above isn't the whole story.
+
+Both changes ship together because they were reported together, on the same
+device, in the same scroll gesture, and the most defensible single diagnosis
+covers both: uncontrolled `:root` custom-property churn during a native
+chrome-animation window. 1485/1485 tests, typecheck and lint clean.

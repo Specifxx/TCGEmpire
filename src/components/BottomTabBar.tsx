@@ -2,10 +2,72 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { NavIcon, type NavIconName } from "./NavIcon";
 import { focusCardSearch } from "@/lib/search-focus";
 import { useMegaMenu } from "./MegaMenuProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
+
+/**
+ * Measures how much of the screen a mobile browser's own collapsible chrome
+ * is covering RIGHT NOW, and writes it to `--chrome-lift` for both this bar
+ * and `.above-bottombar` (globals.css) to read.
+ *
+ * SELF-CONSISTENT ON PURPOSE. The first version of this computed the lift in
+ * pure CSS as `100lvh - 100dvh`, and that caused two new bugs on a Z Fold 7: a
+ * persistent gap under the bar (the value read nonzero with no chrome actually
+ * covering anything) and a stutter across the WHOLE page during scroll,
+ * including the unrelated sticky header — see globals.css's own doc comment on
+ * `--chrome-lift` for the full diagnosis. This measures instead of trusting a
+ * CSS unit: it tracks the LARGEST `visualViewport.height` seen so far this
+ * session (that is the screen with chrome fully retracted, i.e. `lvh`) and
+ * reports `max - current` (`current` is `dvh` — chrome however far out right
+ * now). Both numbers come from the SAME API, so they can never disagree about
+ * what "the viewport" means the way two different browser features might.
+ * `Math.max(0, …)` is a pure formality — the subtraction is >= 0 by
+ * construction — but costs nothing to keep honest.
+ *
+ * DEGRADES TO "NO LIFT", NEVER TO A WRONG ONE. No `visualViewport` (very old
+ * WebViews): the effect never runs, `--chrome-lift` stays the 0px in
+ * globals.css, and the bar behaves exactly as it did before any of this
+ * existed — hidden behind an expanded address bar until the visitor scrolls,
+ * the ORIGINAL bug, which is a far smaller failure than a wrong nonzero lift.
+ * Before the first chrome-retracting scroll this SESSION: `max` is whatever
+ * `visualViewport.height` happened to be on mount, which may be smaller than
+ * the device's true full height if the address bar was already showing — the
+ * same graceful floor, corrected the moment a scroll reveals more screen.
+ *
+ * rAF-THROTTLED, SO THIS FILE CONTROLS THE UPDATE RATE. `resize`/`scroll` on
+ * `visualViewport` can fire faster than the browser can usefully repaint; at
+ * most one `--chrome-lift` write happens per animation frame, both here and
+ * consumed downstream only as a compositor-only `transform` (see the bar's own
+ * className comment) — never as a layout property again.
+ */
+function useChromeLift() {
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return; // globals.css's 0px default stands — see the doc comment above.
+    let maxHeight = vv.height;
+    let raf = 0;
+    function apply() {
+      raf = 0;
+      if (vv!.height > maxHeight) maxHeight = vv!.height;
+      const lift = Math.max(0, Math.round(maxHeight - vv!.height));
+      document.documentElement.style.setProperty("--chrome-lift", `${lift}px`);
+    }
+    function onChange() {
+      if (!raf) raf = requestAnimationFrame(apply);
+    }
+    apply();
+    vv.addEventListener("resize", onChange);
+    vv.addEventListener("scroll", onChange);
+    return () => {
+      vv.removeEventListener("resize", onChange);
+      vv.removeEventListener("scroll", onChange);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+}
 
 // SideNav's complement below `lg` — the rail is `hidden lg:flex`, this is
 // `lg:hidden`, one breakpoint decision either way (see --bottombar-h /
@@ -32,6 +94,7 @@ export function BottomTabBar() {
   const { setOpen: setMenuOpen, open: menuOpen } = useMegaMenu();
   const { watched } = useWatchlist();
   const watchCount = watched?.size ?? 0;
+  useChromeLift();
 
   // Only a real PAGE match lights up the sliding indicator — Search and Menu
   // open overlays, they are never the "current page".
@@ -66,6 +129,10 @@ export function BottomTabBar() {
       // browser to promote this to its own layer up front rather than
       // discovering the need mid-animation, which is when a promotion itself
       // can cause a visible hitch.
+      //
+      // --chrome-lift's VALUE comes from useChromeLift() above, not from CSS —
+      // see that function's doc comment for why a measured value replaced the
+      // dvh/lvh arithmetic this comment was originally written against.
       className="fixed inset-x-0 bottom-[var(--native-banner-h)] z-bottombar flex h-[var(--bottombar-h)] translate-y-[calc(var(--chrome-lift)*-1)] will-change-transform border-t border-ink-800 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
       {activeIndex >= 0 && (

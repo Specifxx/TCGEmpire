@@ -60,47 +60,45 @@
      native-app rule further down. 0 on the web, where there is no banner. */
   --native-banner-h: 0px;
   /* How much of the viewport a mobile browser's own collapsible chrome is
-     covering RIGHT NOW. 0 everywhere it doesn't apply; the @supports block
-     below gives it a real value where lvh/dvh exist.
+     covering RIGHT NOW. Set ENTIRELY BY JAVASCRIPT (BottomTabBar.tsx's
+     visualViewport effect) via `documentElement.style.setProperty` — nothing
+     in CSS ever assigns this a nonzero value. 0px here is only the value for
+     a browser where that script hasn't run yet (or can't: no
+     window.visualViewport) — a bar that never lifts at all is a far smaller
+     bug than one lifted by a wrong amount.
 
      WHY THIS EXISTS. Reported directly: "you have to scroll down in order for
      the bottom to show up. The bottom should be up all the time for mobile
-     phone users." The bottom bar is `position: fixed; bottom: …` and was always
-     rendered — verified in the server HTML, so it is not a hydration delay, and
-     a headless mobile-emulated Chromium pins it correctly at scroll-top. The
-     problem only appears on a REAL phone: a fixed element is positioned against
-     the LAYOUT viewport, which on iOS Safari and Chrome Android is the large
-     viewport (`lvh`, the size with the chrome retracted). With the URL bar and
-     toolbar showing, the bottom of that viewport sits BEHIND them, so the bar
-     is off-screen until you scroll and the chrome collapses.
+     phone users." The bottom bar is `position: fixed; bottom: …`, and a fixed
+     element is positioned against the LAYOUT viewport, which on iOS Safari and
+     Chrome Android is the LARGE viewport (chrome retracted). With the URL bar
+     and toolbar showing, the bottom of that viewport sits behind them, so the
+     bar is off-screen until a scroll collapses the chrome.
 
-     `100lvh - 100dvh` is exactly how much chrome is covering at this instant —
-     0 when it is retracted, the toolbar height when it is out. The bar applies
-     it as a `transform: translateY()`, NOT a change to `bottom` — see the
-     Z Fold 7 comment on BottomTabBar.tsx for why that distinction is the
-     whole fix for the second bug this variable caused.
+     WHY THIS IS NO LONGER `calc(100lvh - 100dvh)`. That was the first fix, and
+     it caused two NEW bugs on a Z Fold 7: a persistent gap under the bar (this
+     value reading nonzero when no chrome was actually covering anything —
+     Chromium has a documented history of dvh/svh/lvh bugs on foldables) and a
+     visible stutter across the WHOLE page during scroll, including the
+     unrelated sticky header. The second one is the tell: dvh/lvh are
+     recalculated by the browser continuously and uncontrollably while its own
+     chrome animates, and every recalculation invalidates a `:root` custom
+     property, forcing a global style-recalculation pass — on the exact same
+     frames the browser is already spending on its own chrome animation. A
+     value this file cannot verify, updating at a frequency this file does not
+     control, on a device this file was never tested against, is a bad trade
+     for what a JS effect can measure directly and update on its own schedule.
 
-     CLAMPED, not raw. dvh/lvh are recalculated by the browser continuously as
-     its chrome animates, and a foldable is exactly the class of device most
-     likely to report a transient bad viewport reading during a fold/unfold or
-     an orientation change (Chromium has a history of dvh/svh/lvh bugs specific
-     to foldables). `max(0px, …)` refuses a negative reading (which would push
-     the bar UP off-screen instead of lifting it), and `min(…, 200px)` refuses
-     one larger than any real mobile browser chrome (which would fling the bar
-     far off the top of the viewport). Neither clamp fires in the ordinary
-     case; both exist purely so one bad frame reads as "no lift" instead of
-     "bar in the wrong place". */
+     `window.visualViewport` is the standards-track answer to "how much of the
+     screen is actually visible right now" (MDN's own canonical example for
+     pinning a bottom UI element uses it) — and BottomTabBar's effect uses it
+     SELF-CONSISTENTLY: it tracks the largest `visualViewport.height` ever
+     observed this session and reports `max - current`, never mixing in
+     `window.innerHeight` or any other API whose semantics could disagree with
+     it. The result is always >= 0 by construction, needs no clamp, and is
+     rAF-throttled by that effect — at most once per animation frame, on ITS
+     terms, not the engine's. */
   --chrome-lift: 0px;
-}
-
-/* Only where the units resolve AND clamp() exists. An unsupported function
-   inside calc() invalidates the whole declaration, and a bottom bar with no
-   `bottom` at all would be a far worse bug than the one this fixes — so the
-   0px default above stands unless the browser can do all of this arithmetic. */
-@supports (height: 100dvh) and (height: 100lvh) and (width: clamp(1px, 1px, 1px)) {
-  :root {
-    --chrome-lift: clamp(0px, calc(100lvh - 100dvh), 200px);
-  }
 }
 
 /* 1024–1279px: the rail is ALWAYS its icon form (4rem) — there isn't room for

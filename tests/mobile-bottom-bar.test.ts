@@ -115,43 +115,79 @@ test("the close button and the \"/\" hint never fight over the same slot", () =>
   assert.match(code, /pl-11 pr-14 text-base shadow-glow sm:pr-11/, "hero variant");
 });
 
-test("the bottom bar clears the phone browser's own chrome at every scroll position", () => {
-  const css = read(CSS);
-  assert.match(css, /--chrome-lift:\s*0px;/, "must default to 0 where it doesn't apply");
-  assert.match(
-    css,
-    /@supports \(height: 100dvh\) and \(height: 100lvh\)[\s\S]*?--chrome-lift:\s*clamp\(0px, calc\(100lvh - 100dvh\), 200px\);/,
-    "the real value belongs behind @supports, and clamped — see the Z Fold 7 test below for why"
-  );
-  // An unsupported function inside calc() invalidates the whole declaration —
-  // a bar with no `bottom` would be worse than the bug being fixed, so the
-  // 0px default must sit OUTSIDE the @supports block, not inside it.
-  const guardAt = css.indexOf("@supports (height: 100dvh)");
-  assert.ok(css.indexOf("--chrome-lift: 0px;") < guardAt, "the fallback must be declared before the guarded override");
+test("--chrome-lift has no CSS source any more — only useChromeLift() may set it", () => {
+  // First version: `calc(100lvh - 100dvh)`. That caused a persistent GAP under
+  // the bar on a Z Fold 7 (the value read nonzero with no chrome actually
+  // covering anything) and a stutter across the WHOLE page during scroll,
+  // including the unrelated sticky header — dvh/lvh are recalculated by the
+  // browser continuously and uncontrollably while its own chrome animates, and
+  // every recalculation invalidates a `:root` custom property globally.
+  // Strip comments first — the doc comment on --chrome-lift NAMES the old
+  // `100lvh - 100dvh` approach to explain why it was replaced, and a test that
+  // failed on its own history lesson would be self-defeating.
+  const css = read(CSS).replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(css, /--chrome-lift:\s*0px;/, "the only value CSS may ever give it — a measured effect supplies the rest");
+  assert.doesNotMatch(css, /100lvh|100dvh|100svh/, "no LIVE viewport-unit arithmetic left to reintroduce the same bug");
+  assert.doesNotMatch(css, /@supports[\s\S]*--chrome-lift/, "no guarded CSS override either");
 });
 
-test("the chrome-lift is clamped against a bad viewport reading, not trusted raw", () => {
-  // Foldables are exactly the device class most likely to report a garbage
-  // dvh/lvh value mid fold-state-change — a negative reading would push the
-  // bar UP off-screen (translateY negative-of-negative), and an oversized one
-  // would fling it far past any real browser chrome height.
-  const css = read(CSS);
-  assert.match(css, /clamp\(0px, calc\(100lvh - 100dvh\), 200px\)/);
+test("the lift is MEASURED (visualViewport), not inferred from a CSS unit this file cannot verify", () => {
+  const code = readCode(BAR);
+  assert.match(code, /window\.visualViewport/, "the standards-track API for \"how much of the screen is visible right now\"");
+  assert.doesNotMatch(code, /100lvh|100dvh|100svh/, "must not fall back to the CSS-unit approach anywhere in this file");
+});
+
+test("the measurement is self-consistent: one API's own numbers, never mixed with a second", () => {
+  // window.innerHeight vs visualViewport.height is exactly the kind of
+  // cross-API disagreement that made the CSS-unit version unverifiable on a
+  // device this codebase has no way to test against. Tracking visualViewport's
+  // own running maximum avoids needing a second source at all.
+  const code = readCode(BAR);
+  assert.doesNotMatch(code, /window\.innerHeight/, "must not reintroduce a second, differently-behaved height source");
+  assert.match(code, /maxHeight/i, "must track the largest visualViewport reading seen, not a fixed baseline");
+  assert.match(code, /maxHeight\s*-\s*vv!?\.height/, "the lift is max minus CURRENT — recomputed, not cached once");
+});
+
+test("the update rate is under THIS file's control, not the browser engine's", () => {
+  const code = readCode(BAR);
+  assert.match(code, /requestAnimationFrame/, "rAF-throttled — at most one write per frame, on our terms");
+  assert.match(code, /addEventListener\("resize"/);
+  assert.match(code, /addEventListener\("scroll"/, "visualViewport fires both — a pinch-zoom pan is a scroll event, not a resize");
+  assert.match(code, /removeEventListener/, "cleaned up on unmount");
+});
+
+test("no support for visualViewport degrades to NO lift, never to a wrong one", () => {
+  const code = readCode(BAR);
+  const fn = code.slice(code.indexOf("function useChromeLift"), code.indexOf("function useChromeLift") + 400);
+  assert.match(fn, /if \(!vv\) return;/, "must bail out cleanly rather than guess");
 });
 
 test("the lift is applied via transform, never via `bottom` — that split IS the Z Fold 7 fix", () => {
   // Reported on a Z Fold 7 (cover screen): "the bottom is glitched … should not
   // be able to move or lag when I scroll down." The original version put
-  // --chrome-lift straight into `bottom`, a LAYOUT property, and dvh/lvh are
-  // deliberately DYNAMIC — the browser recomputes them continuously while its
-  // own chrome animates. That forced a full reflow of the bar PLUS a
-  // backdrop-blur repaint at its new position on every frame: layout thrash
-  // plus a backdrop-filter repaint every frame is a textbook jank source.
+  // --chrome-lift straight into `bottom`, a LAYOUT property. Layout thrash plus
+  // a backdrop-filter repaint on every frame is a textbook jank source.
   const code = readCode(BAR);
   assert.match(code, /bottom-\[var\(--native-banner-h\)\]/, "`bottom` must be static — no chrome-lift in it");
   assert.doesNotMatch(code, /bottom-\[calc\(var\(--native-banner-h\)\+var\(--chrome-lift\)\)\]/, "the old layout-thrashing form must be gone");
   assert.match(code, /translate-y-\[calc\(var\(--chrome-lift\)\*-1\)\]/, "the SAME value, carried by a compositor-only property instead");
   assert.match(code, /will-change-transform/, "promote to its own layer up front, not discover the need mid-animation");
+});
+
+test("the header stays sticky with no scroll-tied React render to compete for the same frame", () => {
+  // "at the very top when you scroll it should be there and not disappear …
+  // always sit there so the site is smooth." position:sticky;top:0 shouldn't
+  // itself be susceptible to the address-bar phenomenon (the top edge of the
+  // viewport doesn't move when chrome collapses — only the bottom edge does),
+  // so the prime suspect was contention: a React re-render competing with the
+  // browser's own chrome animation on the same frames the (now-fixed) bottom
+  // bar was also thrashing layout on. This removes this file's own half of
+  // that contention regardless of which theory is right.
+  const code = readCode("src/components/NavbarShell.tsx");
+  assert.doesNotMatch(code, /useState/, "no React state tied to scroll position any more");
+  assert.match(code, /useRef/, "direct DOM manipulation instead");
+  assert.match(code, /classList\.(add|remove)/, "a class toggle, not a re-render");
+  assert.match(code, /sticky top-0/, "still sticky — this changes HOW it updates, not the positioning strategy");
 });
 
 test("everything that floats above the bar rides up with it", () => {
