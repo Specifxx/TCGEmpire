@@ -181,6 +181,44 @@ test("SegmentedTabs implements the real ARIA tabs pattern and EbayTabs re-export
   assert.match(wrapper, /export type EbayTab/, "existing `import { EbayTab }` call sites must keep compiling");
 });
 
+test("SegmentedTabs' sliding pill is sized to the ACTIVE TAB, never to the whole tablist", () => {
+  // A real phone bug, reported live with a screenshot (2026-09-16). The tablist
+  // is `flex-wrap`, and at 393px the homepage's three tabs wrap to two rows
+  // ("All-time" + "Biggest movers", then "Recently updated"). The indicator was
+  // `inset-y-0` with an x-only translate, so it stretched to the full height of
+  // a two-row tablist: measured 93x96 instead of 93x44, and `rounded-full` on
+  // that box rendered a giant green blob over the first pill that bled into the
+  // second row. A tab on row two also had no y offset to slide to, so the pill
+  // would have marked the wrong tab outright.
+  //
+  // Both halves are pinned because either alone leaves the bug: an explicit
+  // measured height (not inset-y-0) AND a two-axis translate.
+  const src = readCode("src/components/ui/SegmentedTabs.tsx");
+  const indicator = src.slice(src.indexOf("{indicator && ("), src.indexOf("/>", src.indexOf("{indicator && (")));
+  assert.ok(indicator, "expected the sliding indicator span");
+  assert.doesNotMatch(
+    indicator,
+    /inset-y-0/,
+    "inset-y-0 makes the pill as tall as the whole tablist, which is two rows deep once the tabs wrap",
+  );
+  assert.match(indicator, /height: indicator\.h/, "the pill must take the active tab's own height");
+  assert.match(
+    indicator,
+    /translate\(\$\{indicator\.x\}px, \$\{indicator\.y\}px\)/,
+    "a tab on the second row needs a y offset, not just an x one",
+  );
+  // And the measurement itself must record all four numbers.
+  assert.match(src, /y: elRect\.top - listRect\.top/);
+  assert.match(src, /h: elRect\.height/);
+  // One measure() shared by the layout effect and the ResizeObserver: these were
+  // two copies of the same arithmetic, so a fix to one silently missed the other.
+  assert.equal(
+    (src.match(/elRect\.left - listRect\.left/g) ?? []).length,
+    1,
+    "the measuring arithmetic must exist exactly once",
+  );
+});
+
 test("PopularCardsCarousel no longer hand-rolls aria-pressed tabs", () => {
   const src = readCode("src/components/home/PopularCardsCarousel.tsx");
   assert.doesNotMatch(src, /aria-pressed/, "must use SegmentedTabs, not a toggle-button row");

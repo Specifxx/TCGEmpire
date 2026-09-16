@@ -54,35 +54,52 @@ export function SegmentedTabs({
   const setActive = onActiveChange ?? setInternalActive;
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
-  const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
+  const [indicator, setIndicator] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
   const activeIndex = Math.max(0, tabs.findIndex((t) => t.key === active));
 
-  // Measure the active tab's own box (relative to the tablist) so the pill
-  // can slide to it — re-measured on every active change and whenever the
-  // tablist itself resizes (a tab's count pill changing width, the viewport
-  // narrowing the flex-wrap).
-  useLayoutEffect(() => {
+  // Measure the active tab's own box relative to the tablist, so the pill can
+  // sit exactly on it.
+  //
+  // BOTH AXES AND BOTH DIMENSIONS, which is the fix for a real phone bug
+  // (2026-09-16). This tablist is `flex-wrap`, and at 393px the three-tab set
+  // on the homepage wraps: "All-time" and "Biggest movers" on the first row,
+  // "Recently updated" on the second. The indicator used to be `inset-y-0`
+  // with an x-only translate, so it stretched to the FULL height of a
+  // now-two-row tablist and `rounded-full` turned that ~130x96 box into a
+  // giant green blob sitting over the first pill and bleeding into the second
+  // row. A tab on the second row had no y offset to move to either, so the
+  // pill would have marked the wrong tab entirely.
+  //
+  // One function, used by the layout effect and the ResizeObserver alike:
+  // these were two copies of the same arithmetic, and only one of them would
+  // have been fixed by someone patching the bug they happened to be looking at.
+  const measure = () => {
     const el = refs.current[activeIndex];
     const list = listRef.current;
     if (!el || !list) return;
     const elRect = el.getBoundingClientRect();
     const listRect = list.getBoundingClientRect();
-    setIndicator({ x: elRect.left - listRect.left, w: elRect.width });
-  }, [activeIndex, tabs.length]);
+    setIndicator({
+      x: elRect.left - listRect.left,
+      y: elRect.top - listRect.top,
+      w: elRect.width,
+      h: elRect.height,
+    });
+  };
+
+  // Re-measured on every active change, and whenever the tablist resizes (a
+  // count pill changing width, or the viewport narrowing enough to re-wrap).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- measure() reads only refs
+  useLayoutEffect(measure, [activeIndex, tabs.length]);
 
   useEffect(() => {
     const list = listRef.current;
     if (!list || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
-      const el = refs.current[activeIndex];
-      if (!el) return;
-      const elRect = el.getBoundingClientRect();
-      const listRect = list.getBoundingClientRect();
-      setIndicator({ x: elRect.left - listRect.left, w: elRect.width });
-    });
+    const ro = new ResizeObserver(measure);
     ro.observe(list);
     return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- measure() reads only refs
   }, [activeIndex]);
 
   // A tab disappearing (its content expired between renders) must not leave
@@ -120,8 +137,14 @@ export function SegmentedTabs({
           {indicator && (
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-y-0 rounded-full bg-brand-500 motion-safe:transition-transform motion-safe:duration-base motion-safe:ease-out"
-              style={{ width: indicator.w, transform: `translateX(${indicator.x}px)` }}
+              // left-0 top-0 + an explicit height, never inset-y-0: see the
+              // measure() note above for the wrapped-tablist bug that caused.
+              className="pointer-events-none absolute left-0 top-0 rounded-full bg-brand-500 motion-safe:transition-transform motion-safe:duration-base motion-safe:ease-out"
+              style={{
+                width: indicator.w,
+                height: indicator.h,
+                transform: `translate(${indicator.x}px, ${indicator.y}px)`,
+              }}
             />
           )}
           {tabs.map((t, i) => {
