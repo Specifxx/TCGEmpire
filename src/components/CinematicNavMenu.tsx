@@ -181,7 +181,12 @@ export function CinematicNavMenu() {
         }}
         // Same reasoning as the backdrop above — this panel is always
         // mounted, so its hidden state can't be motion-safe:-gated.
-        className={`absolute inset-0 overflow-y-auto p-4 transition-all duration-slow ease-out sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-3"}`}
+        // Below sm the panel enters from the bottom (a real sheet feel, matching
+        // ui/Dialog's own placement="sheet") rather than the subtle lift+fade
+        // larger screens get — translate-y-6, overridden back to -3 at sm:.
+        // pb-[env(...)] keeps the last row clear of a notched phone's home
+        // indicator, same reasoning as ui/Dialog's own safe-area padding.
+        className={`absolute inset-0 overflow-y-auto p-4 pb-[env(safe-area-inset-bottom)] transition-all duration-slow ease-out sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-6 sm:translate-y-3"}`}
       >
         {/* The middle panel — flat, bordered. */}
         <div className="relative mx-auto my-auto max-w-5xl">

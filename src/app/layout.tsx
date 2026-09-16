@@ -5,6 +5,7 @@ import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
+import { BottomTabBar } from "@/components/BottomTabBar";
 import { SIDENAV_BOOT_SCRIPT } from "@/lib/sidenav-shared";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -365,6 +366,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}
                 <FeedbackWidget />
+                {/* SideNav's mobile complement — lg:hidden, one breakpoint
+                    decision either way (see --bottombar-h in globals.css). */}
+                <BottomTabBar />
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>

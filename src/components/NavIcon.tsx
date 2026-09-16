@@ -50,7 +50,12 @@ export type NavIconName =
   | "trophy"
   | "wrench"
   | "import"
-  | "gift";
+  | "gift"
+  // Added for BottomTabBar.tsx (mobile bottom tab bar, P7). "Search" and
+  // "Portfolio" reuse "browse" and "collection" above rather than drawing
+  // near-duplicate glyphs — same concepts, same icons, everywhere on the site.
+  | "home"
+  | "menu";
 
 // A Record (not a partial index) so adding a NavIconName without drawing it is
 // a TYPE ERROR here rather than an invisible blank square in the rail.
@@ -178,6 +183,21 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
       <path d="M12 9.5V21" />
       <path d="M12 9.5C9 9.5 7.5 8 7.5 6.3A2.3 2.3 0 0 1 12 6.3v3.2Z" />
       <path d="M12 9.5C15 9.5 16.5 8 16.5 6.3A2.3 2.3 0 0 0 12 6.3v3.2Z" />
+    </>
+  ),
+  // Home — a roof over a base. The bottom bar's first tab.
+  home: (
+    <>
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" />
+      <path d="M10 20v-5h4v5" />
+    </>
+  ),
+  // Menu — three lines, the bottom bar's own "everything else" tab (opens the
+  // same full-screen overlay MobileNav's navbar hamburger does).
+  menu: (
+    <>
+      <path d="M4 7h16M4 12h16M4 17h16" />
     </>
   ),
 };

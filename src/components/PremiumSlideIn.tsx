@@ -308,16 +308,17 @@ export function PremiumSlideIn() {
 
   return (
     // Bottom-LEFT so it never collides with the bottom-right feedback pill
-    // (FeedbackWidget, fixed bottom-4 right-4). Lifted to bottom-20 on phones so
-    // it clears that pill; z-[70] keeps it under every real modal (feedback panel
-    // z-85, premium dialog z-120) while sitting above page chrome. SignupPromoPopup
-    // shares this exact z-tier now too (it became a non-modal slide-in itself,
+    // (FeedbackWidget, above-bottombar right-4). `.above-bottombar` clears the
+    // mobile bottom tab bar (0 on desktop, where it's a plain corner inset);
+    // z-[70] keeps it under every real modal (feedback panel z-85, premium
+    // dialog z-120) while sitting above page chrome. SignupPromoPopup shares
+    // this exact z-tier now too (it became a non-modal slide-in itself,
     // 2026-09-01) — safe, since the two audiences (signed-out here, signed-in
     // non-Premium there) can never both apply to the same visitor at once.
     <div
       role="region"
       aria-label="RiftCompare Premium offer"
-      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:bottom-4 sm:w-auto ${
+      className={`above-bottombar fixed left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:w-auto ${
         entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >

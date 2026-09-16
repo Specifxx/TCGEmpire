@@ -60,8 +60,15 @@ test("dismissible independently of content height: the ✕, Escape, and a full-w
 
 test("shares PremiumSlideIn's exact corner, sizing and entrance pattern", () => {
   const code = codeOnly(read(SRC));
-  assert.match(code, /bottom-20 left-4 z-\[70\][\s\S]{0,100}sm:bottom-4/, "must share PremiumSlideIn's corner and breakpoint");
+  // 2026-09-16 (P7, mobile bottom tab bar): the sm:bottom-4/bottom-20 pair
+  // retired in favour of one shared corner utility (globals.css) that clears
+  // the bar below lg and collapses to the same plain inset above it — so all
+  // THREE corner nudges (this one, PremiumSlideIn, AnnualSwitchNudge) must
+  // carry the identical string, not just this one and PremiumSlideIn.
+  const CORNER = /above-bottombar fixed left-4 z-\[70\]/;
+  assert.match(code, CORNER, "must share the tab-bar-aware corner utility");
   assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-sm[\s\S]{0,80}sm:w-auto/, "must share PremiumSlideIn's responsive width");
+  assert.match(codeOnly(read("src/components/AnnualSwitchNudge.tsx")), CORNER, "AnnualSwitchNudge must carry the identical corner string");
   // 2026-09-16: the hand-rolled double-rAF entrance + bare setTimeout exit
   // (that this test used to pin literally) both moved onto the shared
   // usePresence(shown, 250) primitive (src/lib/motion.ts) — same 250ms exit,

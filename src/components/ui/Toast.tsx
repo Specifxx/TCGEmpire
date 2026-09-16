@@ -7,15 +7,15 @@ import { usePresence, DUR } from "@/lib/motion";
  * Presentational bottom toast. Callers own WHEN it's shown (a boolean/message
  * they control) — this only owns how it enters/exits.
  *
- * NOTE: `bottom-4` here is re-anchored to `.above-bottombar` in the P7 mobile
- * pass, once the bottom tab bar exists to clear — that utility doesn't exist
- * yet, so this stays the same `bottom-4` position toasts already used.
+ * `.above-bottombar` (not a bare `bottom-4`): clears the mobile bottom tab
+ * bar, which is `0` on desktop so this is a plain `bottom-4`-equivalent
+ * inset everywhere the bar doesn't render.
  */
 export function Toast({ open, message, action, className = "" }: { open: boolean; message: ReactNode; action?: ReactNode; className?: string }) {
   const { mounted, entered } = usePresence(open, DUR.fast);
   if (!mounted) return null;
   return (
-    <div className={`fixed inset-x-0 bottom-4 z-toast flex justify-center px-4 ${className}`}>
+    <div className={`above-bottombar fixed inset-x-0 z-toast flex justify-center px-4 ${className}`}>
       <div
         role="status"
         aria-live="polite"

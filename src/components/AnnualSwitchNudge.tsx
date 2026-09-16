@@ -164,7 +164,7 @@ export function AnnualSwitchNudge() {
     <div
       role="region"
       aria-label={`Switch to annual ${tierName}`}
-      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:bottom-4 sm:w-auto ${
+      className={`above-bottombar fixed left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:w-auto ${
         entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >

@@ -294,3 +294,42 @@ test("WelcomeChecklist is never a modal and keys eligibility off the rc_welcome_
   assert.doesNotMatch(src, /useSearchParams/, "must not race SignupWelcome's own ?welcome param strip");
   assert.match(src, /id="welcome"/, "the /profile anchor target must exist");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P7 — mobile bottom tab bar.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("--bottombar-h is 0 inside the exact same 1024px query that sets --sidenav-w, so the two can never disagree", () => {
+  const css = read("src/app/globals.css");
+  assert.match(css, /--bottombar-h:\s*3\.5rem;/, "must default to a real height below lg");
+  assert.match(
+    css,
+    /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;[\s\S]{0,400}?--bottombar-h:\s*0px;/,
+    "--bottombar-h: 0px must live in the SAME :root block as --sidenav-w: 4rem, not a second 1024px query"
+  );
+  assert.match(css, /\.above-bottombar\s*\{[\s\S]{0,200}var\(--bottombar-h\)[\s\S]{0,200}var\(--native-banner-h\)/, "the utility must stack both reservations");
+});
+
+test("BottomTabBar is lg:hidden, carries aria-label, and has exactly five targets", () => {
+  const src = readCode("src/components/BottomTabBar.tsx");
+  assert.match(src, /aria-label="Primary"/);
+  assert.match(src, /lg:hidden/);
+  const tabsAt = src.indexOf("const TABS");
+  const tabs = src.slice(tabsAt, src.indexOf("];", tabsAt));
+  const labels = [...tabs.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(labels, ["Home", "Search", "Watch", "Portfolio", "Menu"]);
+});
+
+test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the bar via .above-bottombar", () => {
+  for (const rel of [
+    "src/components/SignupPromoPopup.tsx",
+    "src/components/PremiumSlideIn.tsx",
+    "src/components/AnnualSwitchNudge.tsx",
+    "src/components/FeedbackWidget.tsx",
+    "src/components/ui/Toast.tsx",
+  ]) {
+    const src = readCode(rel);
+    assert.match(src, /above-bottombar/, `${rel} must anchor off the shared utility, not a hard-coded bottom-4/bottom-20`);
+    assert.doesNotMatch(src, /\bbottom-(4|20)\b/, `${rel} must not also carry the retired hard-coded inset`);
+  }
+});
