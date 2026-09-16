@@ -1068,3 +1068,178 @@ export async function searchEbaySealed(
     imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUCTIONS (the /auctions board). Every search above this line sends
+// `buyingOptions:{FIXED_PRICE}`, so auctions have never been in any response
+// this file has paid for — they are not scavengeable the way graded slabs were
+// (see captureGraded), and need their own call with the opposite filter.
+//
+// WHAT MAKES THIS CHEAP, given that a per-card auction pass was deleted on
+// 2026-08-20 for costing ~960 Browse calls/day: it is not per-card. Nothing
+// here names a card. One call asks for "live Riftbound auctions, soonest
+// first" and gets up to `limit` of them — Browse's documented maximum is 200 —
+// so the entire auction pool of a marketplace fits in one or two calls instead
+// of one call per printing. See the header on EbayAuctionListing in
+// prisma/schema.prisma for why the two shapes are not comparable, and
+// AUCTION_PAGE_CAP in lib/ebay-auctions.ts for the arithmetic.
+//
+// Parameters verified against eBay's own Browse API OpenAPI spec (Baseline
+// v1.20.4) rather than assumed, because a silently-wrong sort or filter name
+// here returns a plausible-looking page of the wrong listings:
+//   • sort=endingSoonest  — "Returned items are sorted based on the date/time
+//     on which their listing is scheduled to end."
+//   • filter=buyingOptions:{AUCTION}  — auctions are NOT returned by default.
+//   • limit max 200; offset must be 0 or a multiple of limit.
+//   • currentBidPrice {value,currency}, bidCount, itemEndDate (UTC
+//     yyyy-MM-ddThh:mm:ss.sssZ) are all "returned for auction items" only.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Browse's documented ceiling for `limit` on item_summary/search. */
+export const EBAY_MAX_LIMIT = 200;
+
+// Things that are never a Riftbound collectible, even at auction.
+//
+// DELIBERATELY NOT `NOT_A_SINGLE`: that list exists to protect the PRICE table,
+// where a lot, a booster box or a sealed deck is the wrong product to quote for
+// a single card. On an auctions board they are the opposite of noise — a sealed
+// Origins box or a bulk lot going to the wire is exactly the kind of auction
+// someone opens this page to find. Only genuinely-not-the-hobby items and
+// counterfeits are dropped here.
+// Exported for tests/ebay-auctions.test.ts, which asserts on real titles rather
+// than on this pattern's source — same reason GRADED_SLAB and LANGUAGE_SIGNAL
+// are exported. Grepping the source cannot tell "box" (a booster box, wanted)
+// from "deck box" (an empty accessory, not wanted); running it against titles
+// can.
+export const AUCTION_JUNK =
+  /\b(proxy|proxies|orica|custom made|fan made|fan-made|replica|fake|counterfeit|reprint set|keychain|key ?ring|keyring|sticker|plush|poster|magnet|lanyard|pin badge|sleeves?|toploader|top ?loader|binder|playmat|deck ?box|funko|digital code|code card|download)\b/i;
+
+export interface EbayAuctionResult {
+  itemId: string;
+  title: string;
+  url: string;
+  imageUrl: string | null;
+  /** The live high bid (or the opening price when there are no bids yet). */
+  currentBidCents: number;
+  /** The marketplace's own currency — never converted at import time. */
+  currency: string;
+  bidCount: number;
+  endsAt: Date;
+  /** Set only when the auction also carries a Buy It Now. */
+  buyItNowCents: number | null;
+  condition: string | null;
+  /** From parseGrade on the title — grader with a null grade means "graded, to
+   *  an unstated number", which the board shows as such rather than guessing. */
+  grader: string | null;
+  grade: number | null;
+}
+
+function centsOf(amount: any): number | null {
+  const v = amount?.value;
+  if (v == null) return null;
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? Math.round(n * 100) : null;
+}
+
+/**
+ * One page of live Riftbound auctions on one marketplace, soonest-ending first.
+ *
+ * Returns `ok: false` for anything that is not an answer (no token, budget
+ * spent, network error, 429, 5xx) so the caller can tell "this market has no
+ * auctions" from "we never got to ask" — the same distinction searchEbayLowest's
+ * `status` out-param exists for, and the reason the importer never deletes rows
+ * on a failed sweep.
+ */
+export async function searchEbayAuctions(opts: {
+  marketplace: string;
+  /** Keyword query. One word on purpose — Browse ANDs keywords, and every extra
+   *  token drops real auctions (the same false-negative measured in
+   *  searchEbayLowest's two-query note). */
+  query?: string;
+  offset?: number;
+  limit?: number;
+}): Promise<{ items: EbayAuctionResult[]; ok: boolean }> {
+  const token = await getToken();
+  if (!token) return { items: [], ok: false };
+
+  const limit = Math.min(opts.limit ?? EBAY_MAX_LIMIT, EBAY_MAX_LIMIT);
+  const params = new URLSearchParams({
+    q: opts.query ?? "Riftbound",
+    filter: "buyingOptions:{AUCTION}",
+    sort: "endingSoonest",
+    limit: String(limit),
+    offset: String(opts.offset ?? 0),
+  });
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    "X-EBAY-C-MARKETPLACE-ID": opts.marketplace,
+  };
+  if (EBAY_CAMPAIGN_ID) {
+    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
+  }
+
+  if (!spend()) return { items: [], ok: false }; // budget exhausted — don't call
+
+  let res: Response;
+  try {
+    res = await fetch(`${SEARCH_URL}?${params}`, { headers });
+  } catch {
+    return { items: [], ok: false };
+  }
+  if (res.status === 429) {
+    rateLimited = true;
+    return { items: [], ok: false };
+  }
+  if (!res.ok) return { items: [], ok: false };
+
+  const data = await res.json();
+  const raw: any[] = data.itemSummaries ?? [];
+  const now = Date.now();
+
+  const items: EbayAuctionResult[] = [];
+  for (const it of raw) {
+    const title: string = it?.title ?? "";
+    if (!it?.itemId || !title) continue;
+    // `q` is keyword-matched rather than title-only, so require the game name in
+    // the title — the same precision guard searchEbaySealed uses. An auction that
+    // omits it would not have come back from this query anyway; what this drops
+    // is the description-matched noise that did.
+    if (!/riftbound/i.test(title)) continue;
+    if (AUCTION_JUNK.test(title)) continue;
+    if (isForeignListing(it)) continue;
+
+    // currentBidPrice is the auction-specific field; `price` carries the same
+    // amount for an auction and is the fallback if eBay omits the former.
+    const bid = centsOf(it.currentBidPrice) ?? centsOf(it.price);
+    if (bid == null) continue;
+    const currency: string | null = it.currentBidPrice?.currency ?? it.price?.currency ?? null;
+    if (!currency) continue;
+
+    // No end date means no countdown, and a countdown is the entire product
+    // here — skip rather than render a lot whose clock we cannot show. Already-
+    // ended lots are dropped too: endingSoonest puts them first if eBay is mid-
+    // close, and a board led by dead auctions is worse than a shorter board.
+    const endsAt = it.itemEndDate ? new Date(it.itemEndDate) : null;
+    if (!endsAt || Number.isNaN(endsAt.getTime()) || endsAt.getTime() <= now) continue;
+
+    const options: string[] = Array.isArray(it.buyingOptions) ? it.buyingOptions : [];
+    if (!options.includes("AUCTION")) continue; // belt-and-braces against a filter change
+
+    const { grader, grade } = parseGrade(title);
+    items.push({
+      itemId: String(it.itemId),
+      title,
+      url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl),
+      imageUrl: it.image?.imageUrl ?? it.thumbnailImages?.[0]?.imageUrl ?? null,
+      currentBidCents: bid,
+      currency,
+      bidCount: Number.isFinite(it.bidCount) ? Number(it.bidCount) : 0,
+      endsAt,
+      buyItNowCents: options.includes("FIXED_PRICE") ? centsOf(it.price) : null,
+      condition: it.condition ?? null,
+      grader,
+      grade,
+    });
+  }
+  return { items, ok: true };
+}

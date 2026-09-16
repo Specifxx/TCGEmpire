@@ -6677,3 +6677,99 @@ on top of this one. No code-side switch exists for it.
 `/dashboard` sessions (a number that didn't exist before this pass, since free
 users were redirected away from it). The one guardrail the whole pass is
 judged against: `buy_click` and pages/visitor must not fall.
+
+---
+
+## /auctions: the auction feature, rebuilt at 7% of the cost that killed it — 2026-09-16
+
+The owner asked for a live eBay auction board — "all the hot auctions right
+now, default sorted by ending soonest" — with one explicit constraint: *as
+long as it doesn't go over our credit limits for API usage on eBay*.
+
+**That constraint is the whole entry, because this feature already existed and
+was deleted for exactly that reason.** `refreshEbayAuctions` and an
+`EbayAuction` model were removed on 2026-08-20, described in
+`price-import.ts`'s own value-floor note as "~960 Browse calls/day for a
+countdown widget, the single most expensive line in the whole quota model
+relative to what it returned". Its removal is what funded dropping the singles
+value floor from $10 to $5, and `tests/affiliate-priority.test.ts` has pinned
+its absence ever since. Re-adding it as it was would have quietly undone a
+measured trade.
+
+**What changed is the question being asked, not the budget.** The deleted pass
+was per-card: ~120 chase printings × 2 markets, one Browse call each, to put a
+clock on ~120 card pages. A price for a named card *has* to name that card —
+you cannot find "the cheapest Akali" in a generic response. A *list of live
+auctions* has no such requirement, so one call with
+`filter=buyingOptions:{AUCTION}&sort=endingSoonest&limit=200` returns up to 200
+lots — `limit`'s documented maximum — and the whole auction pool of a
+marketplace fits in one or two calls:
+
+| | deleted per-card pass | this sweep |
+|---|---|---|
+| unit of work | one call per printing | one call per ~200 lots |
+| markets | 2 | 6 (every priced market) |
+| worst case | ~960 calls/day | **72 calls/day** |
+| grows with the catalogue | yes | **no** |
+| covers | ~120 chase printings | every live Riftbound lot |
+
+72 is worst case (6 markets × a 2-page cap × 6 sweeps); pagination stops on a
+short page and the real pool is tens-to-low-hundreds of lots per market, so
+steady state is nearer 36–50. Against 5,000/day less the 600 reserve, with the
+price and sealed importers already taking ~2,850, it is under 2% of the
+allowance — and `dailyCalls()` in `tests/affiliate-priority.test.ts` now
+includes it as `AUCTION_CALLS_PER_DAY`, read from `AUCTION_MARKETS`,
+`AUCTION_PAGE_CAP` and the workflow's own cron rather than copied, so raising
+any of the three has to move the modelled number or fail the budget assertion.
+
+**The old guard was renamed, not deleted.** "auctions are gone" was a test name
+that would now deny a live feature; it is
+"the PER-CARD auction pass stays gone and sealed's eBay pass is gated to once a
+day", asserting the same thing it always did — no `refreshEbayAuctions`, no
+`prisma.ebayAuction` in `price-import.ts`. The sweep deliberately lives in its
+own module (`lib/ebay-auctions.ts`) and its own workflow so that guard stays
+both true and meaningful.
+
+**API field names were verified, not recalled.** Local `.env` has no eBay
+credentials, so a live probe wasn't available; the parameters came from eBay's
+own Browse OpenAPI spec (Baseline v1.20.4) instead. Worth writing down because
+a wrong one here fails silently in the worst way — `buyingOptions:{AUCTION}` is
+*required* (the spec states auctions are not returned by default, so omitting
+it returns a plausible page of fixed-price listings), `sort=endingSoonest` is
+the exact spelling, `limit` maxes at 200, and `currentBidPrice` / `bidCount` /
+`itemEndDate` are documented as returned for auction items only.
+
+**Freshness without egress.** The page is ISR at 1800s and its loader caches at
+exactly 1800s — never lower, per egress rule 5 in `lib/db.ts`, the rule that
+cost five database projects. The countdown people come for ticks client-side in
+`AuctionsBoard`, which is the only place a TTL cannot leak to the route segment,
+and it also means a lot closing while the page is open drops off the board
+instead of sitting there looking live. `now` stays `null` until mounted so the
+first render matches the server's byte for byte; the pre-clock label is
+formatted from the ISO string's own parts, because anything timezone-derived
+hydration-mismatches on every row. The sweep runs every 4h on its own workflow —
+separate from `refresh-prices` so a long price import can't delay the board and
+a failed sweep can't fail the price run.
+
+**Two things deliberately not built.** No `cardId` on `EbayAuctionListing`:
+matching a free-text title *back* to a catalogue card is the inverse of what
+`listingMatchesCard` does and would be guesswork on titles like "Riftbound OGN
+Lot Ahri PSA 10", so every row links to eBay and nothing claims to know which
+card it is — a wrong card link is worse than none. And no `Offer`/
+`AggregateOffer` JSON-LD: the price is a third party's, changes by the minute,
+and would be ours to answer for. An `ItemList` of what is actually rendered is
+all this page claims.
+
+**`NOT_A_SINGLE` is not reused here, on purpose.** That list exists to stop a
+bundle being quoted as one card's price; on an auction board a sealed box or a
+bulk lot is exactly what someone came to find. `AUCTION_JUNK` drops only
+counterfeits and merch (proxy, orica, keychain, playmat, sleeves), and the test
+asserts it against real titles rather than its own source — a source grep
+cannot tell "booster box" from "deck box", because one contains the other.
+
+Not verified in this environment, for the usual reason (no local Postgres, and
+building against RM10 is the burn `CLAUDE.md` exists to prevent): the page has
+never rendered against real rows, and the sweep has never run. The first
+scheduled `refresh-auctions` run is the real test — its log prints
+`eBay auctions <MARKET>: N live lots` per market and the total Browse calls
+spent, which is also the number to check `AUCTION_CALLS_PER_DAY` against.

@@ -67,8 +67,28 @@ async function priceDay(): Promise<Date | undefined> {
   }
 }
 
+// /auctions' honest lastmod is the last time the auction sweep wrote anything —
+// not the price-snapshot day (a different pipeline entirely) and certainly not a
+// hand-maintained date in static-page-dates.ts, which would freeze at whatever
+// day someone last remembered to bump while the board turned over completely
+// every few hours. undefined on failure, exactly like priceDay above: no lastmod
+// beats a made-up one.
+async function auctionSweepDay(): Promise<Date | undefined> {
+  try {
+    return (
+      await prisma.ebayAuctionListing.findFirst({
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true },
+      })
+    )?.updatedAt;
+  } catch {
+    return undefined;
+  }
+}
+
 async function core(): Promise<SitemapEntry[]> {
   const day = await priceDay();
+  const auctionDay = await auctionSweepDay();
   // /guides and /blog are hubs whose own visible content is "whatever articles
   // exist" — their honest lastmod is the newest article in each category, not a
   // fabricated date and not the unrelated price-snapshot day.
@@ -92,6 +112,10 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/browse`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/singles`, changeFrequency: "daily", priority: 0.9, lastModified: day },
     { url: `${SITE_URL}/movers`, changeFrequency: "daily", priority: 0.8, lastModified: day },
+    // Hourly, genuinely: the board is swept every 4 hours and its lots expire on
+    // a clock, so this is one of the few pages on the site where "hourly" is a
+    // description rather than a wish.
+    { url: `${SITE_URL}/auctions`, changeFrequency: "hourly", priority: 0.8, lastModified: auctionDay },
     { url: `${SITE_URL}/market`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/market/records`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/sealed`, changeFrequency: "daily", priority: 0.8, lastModified: day },

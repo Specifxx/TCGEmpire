@@ -160,6 +160,16 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Blog
           </Link>
+          {/* Auctions — the live eBay auction board. At xl, not lg, for the same
+              reason Premium and Discord below are: the lg row is already at the
+              width that overflowed on tablets once (the 640-790px fix, see
+              scripts/mobile-check.ts) and a sixth lg item walks back toward it.
+              Below xl it is one keystroke away in the ⌘K launcher, in the phone
+              Explore overlay, in the side rail and in the footer — it is in the
+              Prices group in nav-groups.ts, so all four get it from one entry. */}
+          <Link href="/auctions" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white xl:block xl:px-2.5">
+            Auctions
+          </Link>
           {/* The P2P marketplace was removed entirely (2026-08) — the site is
               back to pure price comparison — so there is no Marketplace chip
               here, and Premium (below) is the header's only always-visible,

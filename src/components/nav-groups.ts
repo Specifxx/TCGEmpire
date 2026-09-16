@@ -77,6 +77,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/radiance-preorders", label: "Radiance pre-orders", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
       { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
       { href: "/movers", label: "Daily Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
+      { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"], popular: true },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
       { href: "/bulk-pricer", label: "Bulk Pricer", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
