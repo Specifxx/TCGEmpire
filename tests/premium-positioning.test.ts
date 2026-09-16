@@ -96,7 +96,10 @@ test("the tagline is present on all four surfaces that carry the headline, and t
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
     "src/components/PremiumSlideIn.tsx",
-    "src/components/SignupPromoPopup.tsx",
+    // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
+    // free account and names no price, so it carries no Premium headline, no
+    // tagline and no lock-in copy to keep in sync. Premium lives on the three
+    // surfaces below plus PremiumSlideIn for signed-in visitors.
   ]) {
     assert.match(code(file), /Never overpay for a Riftbound card/, `${file} must carry the tagline`);
   }

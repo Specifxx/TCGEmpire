@@ -54,15 +54,20 @@ test("no character art — the panel uses the site's own brand mark instead", ()
   assert.equal((src.match(/<BrandLogo /g) ?? []).length, 2, "expected exactly two BrandLogo uses (wordmark icon + watermark)");
 });
 
-test("both corner nudges render the graphic instead of a tool-chip row", () => {
-  for (const file of ["src/components/SignupPromoPopup.tsx", "src/components/PremiumSlideIn.tsx"]) {
-    const src = read(file);
-    assert.match(src, /<PremiumPitchPanel/, `${file} must render the shared designed panel`);
-    assert.ok(
-      !/PITCH_TOOLS\.map\(/.test(src),
-      `${file} must no longer render the tool chip row the graphic replaced`,
-    );
-  }
+test("the Premium corner nudge renders the graphic, and the free-account one renders nothing Premium", () => {
+  // WAS "both corner nudges" until 2026-09-16, when SignupPromoPopup stopped
+  // pitching Premium at all (owner's reversal — see that component's header).
+  // PremiumSlideIn is now the only corner nudge carrying the panel, and the
+  // assertion that matters for the popup is the opposite one: it must not
+  // carry it, or the paid pitch is back on the signed-out surface by accident.
+  const slideIn = read("src/components/PremiumSlideIn.tsx");
+  assert.match(slideIn, /<PremiumPitchPanel/, "PremiumSlideIn must render the shared designed panel");
+  assert.ok(!/PITCH_TOOLS\.map\(/.test(slideIn), "must no longer render the tool chip row the graphic replaced");
+
+  const popup = read("src/components/SignupPromoPopup.tsx");
+  assert.ok(!/<PremiumPitchPanel/.test(popup), "the signed-out popup must not render the Premium panel");
+  assert.ok(!/PITCH_TOOLS/.test(popup), "nor name Premium-only tools");
+  assert.match(popup, /<FreeAccountCompare \/>/, "it renders the free-account comparison instead");
 });
 
 test("PITCH_TOOLS survives as the canonical Premium-only tool list even though nothing renders it", () => {
@@ -133,7 +138,10 @@ test("one tagline, on every surface that carries the Premium headline", () => {
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
     "src/components/PremiumSlideIn.tsx",
-    "src/components/SignupPromoPopup.tsx",
+    // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
+    // free account and names no price, so it carries no Premium headline, no
+    // tagline and no lock-in copy to keep in sync. Premium lives on the three
+    // surfaces below plus PremiumSlideIn for signed-in visitors.
   ]) {
     const src = read(file);
     // 2026-09-14: "Get an unfair edge buying and selling" retired in favour of a

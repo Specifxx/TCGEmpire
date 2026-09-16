@@ -7026,3 +7026,88 @@ a real phone's chrome-collapse animation, which no available emulator
 reproduces — the fix is verified by removing the mechanism (layout-property
 animation) known to cause exactly this class of stutter, not by reproducing the
 stutter itself.
+---
+
+## The signed-out nudge sells the free account again, and got out of the way — 2026-09-16
+
+Two changes to `SignupPromoPopup`, both the owner's call, both reversing or
+softening something this file already records.
+
+**1. Back to the free account.** On 2026-09-04 an explicit instruction turned
+this popup from a free-account comparison into a Premium pitch, reasoning that a
+visitor who arrived already wanting the pro tools otherwise had to survive a
+whole separate, later nudge before anyone mentioned Premium. Reversed now, with
+the reason stated plainly: asking a stranger to **buy** — before they have an
+account, a watchlist, or any reason to come back — puts the paid ask in front of
+the audience least ready for it. Signed-out visitors get the free account;
+Premium waits for `PremiumSlideIn`, which only fires once someone is signed in
+and has browsed a little. The two audiences remain mutually exclusive, so
+nothing can stack.
+
+What actually moved:
+
+- The pitch is a new `FreeAccountCompare` (no account vs free account, four
+  rows) instead of `PremiumPitchPanel` (free vs Premium). The panel is untouched
+  and remains `PremiumSlideIn`'s.
+- **No price, no trial, no $0-today, no price-increase banner, no gold.**
+  Nothing on the card mentions money, because nothing on it asks for any. Gold
+  is this site's Premium colour on every surface that sells it, and wearing it on
+  a card selling the free tier would promise a paid tier the card never mentions.
+- The CTA returns the visitor **to the page they were on**, not `/premium`.
+  Sending a brand-new free account to a pricing page is a bait-and-switch on what
+  they just agreed to.
+- The four rows are AuthForm's own `PERKS` (watchlist, price alerts, portfolio)
+  plus one deliberately honest row: price comparison, the whole reason anyone is
+  on the site, needs no account and gets a tick in **both** columns. Conceding
+  that up front is what makes the three rows under it believable.
+
+**2. It stopped covering the phone.** Corroborated independently: the entry
+immediately above measured this same popup occupying **79% of a phone screen**
+while flagging the site as reading "too money focused". That entry reported the
+problem; this one is the fix, and the two were written the same day from
+different directions. Reported directly here too: *"the slider is
+actually really, really annoying… on a mobile it covers the full page, but maybe
+it can be a bit transparent and we can have it cover like less than a full
+page."* All three parts are now true. Measured at 393×852: the card is
+**320×414, 49% of viewport height and 40% of its area, with no scrolling** —
+down from a card whose ceiling was `calc(100dvh-6.5rem)`, about 88% of the
+height, which the taller Premium table filled.
+
+- `max-h-[62dvh]`, down from `calc(100dvh-6.5rem)`. Worth being precise about
+  why the old value existed: it was a **safety rail**, added because a card
+  taller than the viewport once hid its own close button on a short phone (a real
+  production incident — see `tests/signup-slidein.test.ts`'s header). A rail set
+  just under the viewport prevents that *and* permits a near-full-screen card.
+  Both the rail and the scroll stay; the content is now short enough not to need
+  them, and "not needed" is not the same guarantee as "cannot happen".
+- Translucent with a blur (`bg-ink-900/85 backdrop-blur-md`), behind
+  `supports-[backdrop-filter]` so a browser without it gets the solid background
+  rather than an unreadable see-through card.
+- `max-w-[20rem]` on phones, returning to `max-w-sm` from `sm` up. This
+  deliberately **diverges** from `PremiumSlideIn`'s width, which a test had
+  pinned as shared. The shared things worth pinning are the corner utility, the
+  z-tier and the `usePresence` primitive; a matching pixel width never was.
+
+**The variant is `free_account_compare_subtle`**, a new name rather than a
+suffix, because the ASK changed and nothing in the `premium_graphic_*` buckets is
+comparable. One measurement warning recorded with it: the number to watch is
+**sign_up per impression**, and a higher rate here is *expected* and is not by
+itself evidence the reversal was right — the Premium buckets were being asked to
+convert a stranger into a purchase, a different funnel with a much lower ceiling.
+The honest comparison is downstream: accounts created, then Premium conversions
+from those accounts via `PremiumSlideIn`, against the Premium-popup era's direct
+rate.
+
+**On the fourteen tests this broke.** That count is the point, not an
+inconvenience: this component's behaviour was pinned by thirteen files, and each
+assertion encoded a real decision. They were re-pointed individually, never
+weakened. The durable guarantees were kept exactly (no automatic Premium grant,
+no fake scarcity, no countdown pressure, no hand-typed duplicate of a shared
+list, and the card still states that signing up is free and needs no card). The
+price-honesty assertions — the unconditional price block, the bare $0-today trial
+branch, the non-trial branch quoting the real recurring price — **moved with the
+pitch** rather than being deleted: `PremiumSlideIn`, `PremiumDialog`,
+`PremiumCta` and `/premium` all still carry them, and all four remain in the
+surface lists in `premium-price-increase.test.ts` and `premium-zero-today.test.ts`.
+Two tests now pin the exact opposite of what they used to, and say so in their
+own comments, which is the honest way to record a reversal.

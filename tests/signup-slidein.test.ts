@@ -67,7 +67,13 @@ test("shares PremiumSlideIn's exact corner, sizing and entrance pattern", () => 
   // carry the identical string, not just this one and PremiumSlideIn.
   const CORNER = /above-bottombar fixed left-4 z-\[70\]/;
   assert.match(code, CORNER, "must share the tab-bar-aware corner utility");
-  assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-sm[\s\S]{0,80}sm:w-auto/, "must share PremiumSlideIn's responsive width");
+  // WIDTH DIVERGES ON PURPOSE since 2026-09-16 ("the slider is actually
+  // really, really annoying… on a mobile it covers the full page"). This card
+  // is max-w-[20rem] on phones and only returns to PremiumSlideIn's max-w-sm
+  // from sm up. The shared things — the corner utility, the z-tier and the
+  // presence primitive — are what this test is actually for, and they are all
+  // still asserted here; a matching pixel width was never the invariant.
+  assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-\[20rem\][\s\S]{0,120}sm:max-w-sm/, "phones get the narrower card");
   assert.match(codeOnly(read("src/components/AnnualSwitchNudge.tsx")), CORNER, "AnnualSwitchNudge must carry the identical corner string");
   // 2026-09-16: the hand-rolled double-rAF entrance + bare setTimeout exit
   // (that this test used to pin literally) both moved onto the shared
@@ -95,10 +101,14 @@ test("the popup embeds AuthForm the same way it always has", () => {
 // the full reasoning behind the change and tests/access-tiers.test.ts for the
 // honesty/no-automatic-grant guarantees on the new content.
 
-test("the CTA sends the OAuth round trip to /premium, not back to the current page", () => {
+test("the CTA returns the visitor to the page they were on, NOT to /premium", () => {
+  // REVERSED 2026-09-16 with the pitch itself. Sending a brand-new account
+  // straight to the pricing page was coherent while this card sold Premium;
+  // now that it sells the free account, landing them on /premium is a
+  // bait-and-switch on what they just agreed to.
   const code = codeOnly(read(SRC));
-  assert.match(code, /next="\/premium"/, "AuthForm must be given a literal /premium next, not pathname");
-  assert.doesNotMatch(code, /next=\{pathname/, "must not fall back to returning the visitor to where they were");
+  assert.match(code, /next=\{pathname \?\? "\/"\}/, "AuthForm must return the visitor to the current route");
+  assert.doesNotMatch(code, /next="\/premium"/, "the free-account CTA must not divert to the paid page");
 });
 
 test("/premium is in SKIP_PATHS — no point pitching a sign-up-for-Premium popup on the page that already sells it", () => {
@@ -108,31 +118,36 @@ test("/premium is in SKIP_PATHS — no point pitching a sign-up-for-Premium popu
   assert.match(skipMatch![1], /"\/premium"/, "SKIP_PATHS must include /premium, mirroring PremiumSlideIn's own list");
 });
 
-test("trial framing is computed from trialDays (config), not trialEligible (which requires sign-in)", () => {
-  // useMe()'s trialEligible is only ever true for a SIGNED-IN user (it checks
-  // their own trialStartedAt) — always false for the signed-out audience this
-  // popup targets, per lib/use-me.ts's own Me type comment. A brand-new
-  // account has by definition never used the trial, so eligibility here only
-  // needs the trial to be configured at all (trialDays > 0), which api/me's
-  // route returns unconditionally, signed in or not.
+test("the card reads no trial or price state at all — it makes no paid offer", () => {
+  // This used to pin HOW the popup decided its trial framing (trialDays, the
+  // config value, rather than the signed-in-only trialEligible flag). With the
+  // 2026-09-16 reversal there is no trial framing to get right: the card names
+  // no price, no trial and no $0, because it asks for no money. Reading any of
+  // that state here would be the first step back toward a paid pitch on the
+  // surface the owner explicitly took it off.
+  //
+  // The trialDays-vs-trialEligible distinction still matters and is still
+  // pinned — in tests/premium-slidein.test.ts, for the surface that does pitch.
   const code = codeOnly(read(SRC));
-  assert.match(code, /const trialAvailable = trialDays > 0/, "must derive eligibility from config, not the signed-in-only flag");
-  assert.doesNotMatch(code, /trialEligible/, "must not reference the signed-in-only trialEligible flag at all");
+  assert.doesNotMatch(code, /trialEligible|trialAvailable|trialDays/, "no trial state on a free-account card");
+  assert.doesNotMatch(code, /premiumZeroToday|premiumFromLine|premiumLockInTail|PREMIUM_PRICE_AMOUNT/, "no price helpers");
+  assert.doesNotMatch(code, /premiumPriceIncreaseAnnounced/, "no price-increase banner on a card that quotes no price");
 });
 
-test("the heading and badge match PremiumSlideIn's Premium colouring, not the old brand-blue free-account styling", () => {
+test("it wears NO gold: gold is reserved for the surfaces that ask for money", () => {
+  // REVERSED 2026-09-16. Gold is this site's Premium colour on every surface
+  // that sells it (PremiumButton, PremiumSlideIn, the nav spotlight). A card
+  // that sells the FREE tier wearing Premium's colour promises a paid tier it
+  // deliberately never mentions, which is the kind of small dishonesty this
+  // suite exists to prevent.
   const code = codeOnly(read(SRC));
-  assert.match(code, /border-gold\/50/, "the card border must be gold, matching PremiumSlideIn");
-  assert.match(code, /border-gold\/40[^"]*text-gold/s, "the badge must be gold-styled");
-  assert.match(code, />\s*Premium\s*</, "the badge text must say Premium");
-  // 2026-09-10: the non-trial fallback stopped being a tool count and became
-  // the site's new Premium tagline, in lockstep with PremiumSlideIn's own
-  // heading — the chip row those tools were counted for is now a graphic.
-  assert.match(
-    code,
-    /trialAvailable \? "Try Premium free" : "Never overpay for a Riftbound card"/,
-    "heading logic must mirror PremiumSlideIn's own",
-  );
+  assert.doesNotMatch(code, /gold/, "no gold anywhere on the free-account card");
+  assert.doesNotMatch(code, />\s*Premium\s*</, "no Premium badge");
+  assert.match(code, /Create a free account/, "the heading must state the actual ask");
+  // The pitch is the shared comparison component, not a table hand-rolled into
+  // this file (see the access-tiers test of the same name).
+  assert.match(code, /<FreeAccountCompare \/>/, "the pitch must be the shared component");
+  assert.doesNotMatch(code, /PremiumPitchPanel/, "the free-vs-Premium panel belongs to PremiumSlideIn now");
 });
 
 test("shows instantly — the buy_click-aware timing system was removed after this file was first written (2026-09-01)", () => {
