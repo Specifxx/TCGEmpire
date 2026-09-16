@@ -194,13 +194,25 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // axis as the two renames above it, for the same reason: this is the change
 // most likely to move dismiss/click rates, so it needs its own bucket rather
 // than blending into "premium_graphic"'s numbers.
+// → "premium_graphic_5s_motion" (2026-09-16, UI polish pass): a new axis —
+// CHROME/MOTION, not content, timing or frequency. The hand-rolled double-rAF
+// entrance became the shared usePresence(shown, 250) primitive, the transition
+// itself moved onto the site's tokenized duration/easing curve instead of an
+// ad-hoc duration-300, and the corner anchor moved onto .above-bottombar (the
+// mobile bottom tab bar's own arrival — the popup now clears it, where it used
+// to just sit at a fixed bottom-4/bottom-20). The pitch, the 5s delay and the
+// dismissal caps are all byte-identical to "premium_graphic_table"; only HOW
+// it animates in and where it sits changed. Worth its own bucket on the chance
+// a visibly smoother, correctly-eased entrance moves the dismiss rate by
+// itself — the same reasoning "comparison_instant" used for the opposite
+// change (removing a delay) back at the top of this history.
 //
 // READ THESE IN GA4, NOT VERCEL. Both events are in GA4_ONLY_EVENTS
 // (lib/analytics.ts): shown is an impression that fires for a large share of
 // visitors, and Vercel bills custom events against a monthly quota, so the pair
 // was crowding out buy_click and sign_up. The trackEvent() calls below are
 // unchanged and still carry this variant — only the Vercel leg is suppressed.
-const PROMO_VARIANT = "premium_graphic_table";
+const PROMO_VARIANT = "premium_graphic_5s_motion";
 
 export function SignupPromoPopup({ providers }: { providers: ("google" | "discord")[] }) {
   const { user, loaded, trialDays, premiumPlus } = useMe();

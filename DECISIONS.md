@@ -6594,3 +6594,86 @@ archive made the one thing the script is about harder to read. The open sealed
 report `cmtx3yed0` ("Booster Case" priced off a single eBay box) is deliberately
 left NEW: nothing about sealed classification was changed, so closing it would
 claim work that has not happened.
+
+## The UI/UX sophistication pass (P0–P8) — 2026-09-16
+
+The functionality was in a good place; the presentation wasn't yet at the level
+that makes a first-time visitor think "this is a serious product, I'll sign up
+and pay." The owner's own bar for "good" was the desktop SideNav — a
+collapsible icon rail with hover flyouts and hand-drawn glyphs — because that's
+the one surface that had actually been asked for and built with care. Everything
+else showed the seams: zero motion tokens and zero `ease-*` usages anywhere in
+`src/`, seven hand-rolled modals each reimplementing overlay/scroll-lock/Escape,
+57 `emoji:` nav fields, three spinner `loading.tsx` files, `notify()` with zero
+callers, no mobile primary nav, and two live honesty bugs (a "target price"
+`/alerts` never implemented, and `/premium`'s FAQ pointing at proof numbers that
+didn't exist on the page). Eight phases, one branch, `docs/DESIGN-SYSTEM.md` is
+the reference for all of it going forward — this entry is the why, not the what.
+
+**Motion: tokens plus `usePresence()`, not an animation library.** The whole
+system is `src/lib/motion-tokens.ts` (a dependency-free plain object) plus one
+hook, `usePresence(open, exitMs)`, that every overlay and nudge migrated onto.
+A library (Framer Motion, react-spring) would have solved the same problem with
+a real runtime cost on every page that mounts an overlay, for a site whose
+actual motion vocabulary turned out to be exactly one pattern: mount → double-rAF
+→ entered, close → exit class → unmount after `exitMs`. Naming that pattern once
+and reusing it is cheaper and more auditable than a dependency that can do
+things this site will never ask it to.
+
+**The `AccountStrip` ↔ `WelcomeBack` slot swap.** The homepage's one
+account-shaped section used to be `AccountStrip` alone, which already
+self-hid for signed-in members (rendering nothing rather than repitching an
+account to someone who has one). Rather than add a second, separately-placed
+section for signed-in visitors, `WelcomeBack` renders in the exact same
+position and is the mirror image of that same hide condition — exactly one of
+the two is ever on screen, so the slot is layout-neutral regardless of who's
+looking at it. `WelcomeChecklist` (the three-step onboarding) then nests inside
+whichever of `WelcomeBack` (homepage) or `/profile` is showing, rather than
+becoming a third competing section.
+
+**`--bottombar-h` mirrors `--sidenav-w` exactly on purpose.** Both variables
+change at the identical `@media (min-width: 1024px)` block in `globals.css` —
+literally the same block, `--bottombar-h: 0px` added beside
+`--sidenav-w: 4rem`, not a second copy of the media query. SideNav is
+`hidden lg:flex`; `BottomTabBar` is `lg:hidden`. One breakpoint decision,
+expressed once, means the rail and the bar can never both reserve layout space
+at the same viewport width — there's no way for the two to drift out of sync
+because there's only one place either of them is written.
+
+**Target-price alerts are backlog, not shipped.** `/alerts` and `AdSlot.tsx`'s
+house ad used to promise a "target price" — `shouldEmailDrop`
+(`src/lib/price-alerts.ts`) has never implemented one; it emails on a new low
+since the last email, and at most one reminder every ~2 months otherwise. All
+of that copy was rewritten to describe the real mechanism instead of the
+imagined one (this repo's own rule: never describe a mechanism the code
+doesn't run). Building the described feature for real would need a
+`PriceAlert.targetCents` nullable column, a UI to set it, and a third branch in
+`shouldEmailDrop` for "current ≤ target" — recorded here as backlog, not done
+in this pass, because the honest fix (accurate copy) was available today and
+the built feature wasn't.
+
+**Lighthouse and the homepage audit were not run this pass.** Both require a
+production build against a live Postgres, and this environment has no
+`DATABASE_URL` configured and no schema loaded into its local Postgres
+cluster — running either against RM9 instead is exactly the burn
+`CLAUDE.md` and the egress rules in `lib/db.ts` exist to prevent (a build
+prerenders ~770 database-backed pages). `npm run typecheck`, `npm run lint`,
+`npm test` and `scripts/adsense-guard.ts` are green after every phase; the
+diff was additionally reviewed by hand against every ground-truth item in the
+original plan. The numbers this entry can't supply — Lighthouse a11y,
+the mobile page-height budget (now including `--bottombar-h`'s body padding),
+interactive-target counts — are gated on `.github/workflows/seo-preview-gate.yml`
+the next time this branch (or `main`) actually builds.
+
+**Also not code**: AdSense anchor ads need turning off in the AdSense console
+before the bottom tab bar ships to real traffic — `AD_STRATEGY` defaults to
+`"auto"`, and an auto anchor ad renders its own fixed bottom bar that would sit
+on top of this one. No code-side switch exists for it.
+
+**Success metrics to watch, once there's traffic to read**: `signup_promo_shown
+→ sign_up` by `PROMO_VARIANT` (date-split at the `_motion` rename above);
+`watch_add`/`collection_add` per signed-in session; `recent_viewed_click` CTR;
+`notification_open` rate; `riftle_start` → leaderboard row growth; free-tier
+`/dashboard` sessions (a number that didn't exist before this pass, since free
+users were redirected away from it). The one guardrail the whole pass is
+judged against: `buy_click` and pages/visitor must not fall.

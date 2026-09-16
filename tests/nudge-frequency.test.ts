@@ -102,15 +102,17 @@ test("the within-session spacing is untouched — the cap sits on top of it", ()
 });
 
 test("the frequency change is separable in GA4 from the uncapped era", () => {
-  // PROMO_VARIANT has moved on again since this test was written (2026-09-15,
-  // the character-art-to-comparison-table content change — see the file's own
-  // changelog), so the literal here tracks whichever value is current rather
-  // than re-pinning "premium_graphic_capped" specifically. What actually
-  // matters for THIS test is that the frequency-cap era's name isn't the one
-  // that regresses back to an uncapped-era value.
+  // PROMO_VARIANT has moved on again since this test was written (now
+  // "premium_graphic_5s_motion", the P7 UI-polish CHROME/MOTION rename — see
+  // the file's own changelog), so the literal here tracks whichever value is
+  // current rather than re-pinning "premium_graphic_capped" specifically.
+  // What actually matters for THIS test is that the frequency-cap era's name
+  // isn't the one that regresses back to an uncapped-era value — checked as
+  // an EXACT retired string, not a substring, since the current name itself
+  // legitimately contains "premium_graphic_5s" as a prefix.
   const src = code(POPUP);
-  assert.match(src, /const PROMO_VARIANT = "premium_graphic_table"/, "expected the current variant name");
-  assert.ok(!/premium_graphic_5s/.test(src), "the pre-cap variant name must be retired, not carried forward");
+  assert.match(src, /const PROMO_VARIANT = "premium_graphic_5s_motion"/, "expected the current variant name");
+  assert.ok(!/const PROMO_VARIANT = "premium_graphic_5s"/.test(src), "the pre-cap variant name must be retired, not carried forward");
   assert.ok(!/"premium_graphic_capped"/.test(src), "the pre-table variant name must be retired, not carried forward");
 });
 
