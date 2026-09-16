@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import type { SealedGroup } from "@/lib/sealed-import";
 import { OutboundLink } from "./OutboundLink";
@@ -10,6 +10,7 @@ import { useCountry } from "./CountryProvider";
 import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
 import { sealedImageAlt } from "@/lib/image-alt";
+import { Dialog } from "./ui/Dialog";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
@@ -32,6 +33,12 @@ const EBAY_HOST: Record<string, string> = {
 
 export function SealedQuickViewProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<OpenArg | null>(null);
+  // Kept around through a close so the panel still has content to render
+  // while Dialog's exit transition plays — same shape as QuickView's own
+  // lastCardRef.
+  const lastStateRef = useRef<OpenArg | null>(null);
+  if (state) lastStateRef.current = state;
+  const displayState = state ?? lastStateRef.current;
 
   const open = useCallback((group: SealedGroup, currency: string) => {
     setState({ group, currency });
@@ -44,7 +51,11 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
   return (
     <Ctx.Provider value={{ open }}>
       {children}
-      {state && <SealedQuickViewModal group={state.group} currency={state.currency} onClose={close} />}
+      <Dialog open={!!state} onClose={close} size="2xl" z="overlay" labelledBy="sealed-quickview-title">
+        {displayState && (
+          <SealedQuickViewModal key={displayState.group.groupKey} group={displayState.group} currency={displayState.currency} onClose={close} />
+        )}
+      </Dialog>
     </Ctx.Provider>
   );
 }
@@ -52,16 +63,6 @@ export function SealedQuickViewProvider({ children }: { children: React.ReactNod
 function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup; currency: string; onClose: () => void }) {
   const { country } = useCountry();
   const fmt = (cents: number) => formatMoney(cents, currency);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
 
   const listings = group.listings;
   // One entry per STORE, in-stock and out-of-stock alike ("you list it as
@@ -76,9 +77,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
   const ebayHref = ebayAffiliateUrl(`https://www.${host}/sch/i.html?_nkw=${encodeURIComponent(group.name)}`);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
+    <div className="max-h-[88vh] overflow-hidden rounded-lg border border-ink-700 bg-ink-900 shadow-2xl">
         <button
           onClick={onClose}
           aria-label="Close"
@@ -103,7 +102,7 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
                 <span className="chip bg-brand-500/15 font-semibold text-brand-300">{group.productType}</span>
                 {group.setCode && <span className="chip bg-ink-800 text-slate-300">{group.setCode}</span>}
               </div>
-              <h2 className="mt-1.5 text-lg font-extrabold leading-tight text-white">{group.name}</h2>
+              <h2 id="sealed-quickview-title" className="mt-1.5 text-lg font-extrabold leading-tight text-white">{group.name}</h2>
               <div className="mt-2">
                 {lowest != null ? (
                   <>
@@ -200,7 +199,6 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
             <AffiliateDisclosure partner="both" />
           </div>
         </div>
-      </div>
     </div>
   );
 }

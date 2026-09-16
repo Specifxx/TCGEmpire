@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useCountry } from "./CountryProvider";
+import { Dialog } from "./ui/Dialog";
 import {
   ISSUES,
   MAX_NOTE,
@@ -63,7 +64,9 @@ export function ReportPriceButton({ subject, listings, compact, className }: Pro
       >
         Spotted a wrong price? Report it
       </button>
-      {open && <ReportDialog subject={subject} listings={listings} onClose={() => setOpen(false)} />}
+      <Dialog open={open} onClose={() => setOpen(false)} placement="sheet" size="md" z="modal" labelledBy="report-price-title">
+        <ReportDialog subject={subject} listings={listings} onClose={() => setOpen(false)} />
+      </Dialog>
     </>
   );
 }
@@ -87,18 +90,6 @@ function ReportDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const firstField = useRef<HTMLSelectElement>(null);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    firstField.current?.focus();
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
 
   const chosen = listings.find((l) => l.retailer === retailer);
   const wantsPrice = issueWantsPrice(issue);
@@ -152,20 +143,10 @@ function ReportDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Report a wrong price"
-      onClick={onClose}
-    >
-      <div
-        className="card-surface max-h-[92vh] w-full max-w-md overflow-y-auto rounded-b-none sm:rounded-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-ink-800 p-4">
+    <>
+      <div className="flex items-start justify-between gap-3 border-b border-ink-800 p-4">
           <div className="min-w-0">
-            <h2 className="font-bold text-white">Report a wrong price</h2>
+            <h2 id="report-price-title" className="font-bold text-white">Report a wrong price</h2>
             <p className="mt-0.5 truncate text-xs text-slate-500">{subject.name}</p>
           </div>
           <button
@@ -176,7 +157,7 @@ function ReportDialog({
           >
             ✕
           </button>
-        </div>
+      </div>
 
         {done ? (
           /* No "we'll fix it by Tuesday" promise. The honest outcome is that a
@@ -197,7 +178,7 @@ function ReportDialog({
             <label className="block">
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Which store?</span>
               <select
-                ref={firstField}
+                data-autofocus
                 value={retailer}
                 onChange={(e) => setRetailer(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-white"
@@ -313,7 +294,6 @@ function ReportDialog({
             </p>
           </form>
         )}
-      </div>
-    </div>
+    </>
   );
 }

@@ -22,6 +22,8 @@ import { buyButtonClass, buyButtonLabel } from "./CardMarketSection";
 import { useCountry } from "./CountryProvider";
 import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
+import { Dialog } from "./ui/Dialog";
+import { Spinner } from "./ui/Skeleton";
 
 interface RetailerPrice {
   id: string;
@@ -43,6 +45,13 @@ export const useQuickView = () => useContext(Ctx);
 export function QuickViewProvider({ children }: { children: React.ReactNode }) {
   const [card, setCard] = useState<CardTileData | null>(null);
   const pushedRef = useRef(false);
+  // The last card shown, kept around through a close so the panel still has
+  // something to render WHILE Dialog's exit transition plays — `card` itself
+  // goes null the instant close() runs, but the fade-out needs a frame or two
+  // of real content behind it, not a blank panel.
+  const lastCardRef = useRef<CardTileData | null>(null);
+  if (card) lastCardRef.current = card;
+  const displayCard = card ?? lastCardRef.current;
 
   // Open the modal AND give it a shareable address: the URL bar becomes /card/slug
   // (via history, no navigation = no slow page load), so users can copy/share it,
@@ -83,9 +92,13 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx.Provider value={{ open }}>
       {children}
-      {/* Keyed by card so switching cards remounts the modal (resets collection
-          state, prices and chart instead of leaking them across cards). */}
-      {card && <QuickViewModal key={card.id} card={card} onClose={close} />}
+      <Dialog open={!!card} onClose={close} size="3xl" z="overlay" labelledBy="quickview-title">
+        {/* Keyed by card so switching cards remounts the modal (resets
+            collection state, prices and chart instead of leaking them across
+            cards) — displayCard, not card, so the key stays stable through
+            the close animation instead of unmounting mid-fade. */}
+        {displayCard && <QuickViewModal key={displayCard.id} card={displayCard} onClose={close} />}
+      </Dialog>
     </Ctx.Provider>
   );
 }
@@ -119,9 +132,6 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   }
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
     let alive = true;
     const ref = card.slug ?? card.id;
     // Record the view (popularity signal) — fire-and-forget.
@@ -137,10 +147,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       .catch(() => { if (alive) setHistory([]); });
     return () => {
       alive = false;
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
     };
-  }, [card, onClose, country]);
+  }, [card, country]);
 
   // Rank by ITEM price — the cheapest card price is the "lowest price". Known postage
   // (eBay) is shown for transparency but must not change which listing is cheapest;
@@ -189,9 +197,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       : null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
+    <div className="max-h-[88vh] overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
         <button
           onClick={onClose}
           aria-label="Close"
@@ -226,7 +232,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             </div>
             <div className="mt-2 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="truncate text-xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h2>
+                <h2 id="quickview-title" className="truncate text-xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h2>
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
               </div>
               <PriceWatchButton cardId={card.id} variant="full" />
@@ -322,7 +328,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Price comparison</div>
               {prices === null ? (
                 <div className="flex items-center gap-2 py-6 text-sm text-slate-500">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink-600 border-t-brand-400" />
+                  <Spinner size="sm" />
                   Loading live prices…
                 </div>
               ) : inStock.length === 0 ? (
@@ -486,7 +492,6 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 buy button above) — same reasoning as the full card page. */}
           </div>
         </div>
-      </div>
     </div>
   );
 }

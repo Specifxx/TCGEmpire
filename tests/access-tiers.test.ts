@@ -367,15 +367,30 @@ test("every dialog-only row override names a row that actually exists", async ()
 });
 
 test("the Premium dialog stays closable once the table makes it tall", () => {
-  const src = read("src/components/PremiumDialog.tsx");
-  assert.match(src, /fixed inset-0[^"]*overflow-y-auto/, "the overlay must scroll, or a tall card hides its own close button");
-  assert.match(src, /min-h-full items-center justify-center/, "min-h-full (not h-full) is what stops the card overflowing above the viewport");
+  // 2026-09-16: the scroll-safe overlay shape this test guards moved OUT of
+  // PremiumDialog.tsx and into ui/Dialog.tsx — the shared shell six other
+  // hand-rolled modals migrated onto in the same pass — rather than staying a
+  // copy only this one dialog had. The protection is the same; where it lives
+  // changed. See ui/Dialog.tsx's own "THE OVERLAY SCROLLS" comment for the
+  // full history (the 263eaeb short-phone incident this test was written
+  // for).
+  const dialogSrc = read("src/components/ui/Dialog.tsx");
+  assert.match(dialogSrc, /fixed inset-0[^"]*overflow-y-auto/, "the overlay must scroll, or a tall card hides its own close button");
+  assert.match(dialogSrc, /min-h-full/, "min-h-full (not h-full) is what stops the card overflowing above the viewport");
+  assert.match(dialogSrc, /items-center/, "the centred placement must actually centre");
   assert.doesNotMatch(
-    src,
-    /fixed inset-0 z-\[120\] flex items-center justify-center/,
-    "the old centred, non-scrolling overlay put the close button at y = -23 on a 360x480 screen"
+    dialogSrc,
+    /fixed inset-0[^`]*flex items-center justify-center/,
+    "the old centred, non-scrolling overlay put the close button at y = -23 on a 360x480 screen — the overlay itself must not be the flex-centring element"
   );
-  assert.match(src, /h-\[100dvh\]/, "dvh, or iOS Safari puts the dialog behind its own toolbars");
-  assert.match(src, /safe-area-inset-top/, "the top inset is what keeps the close button clear of the notch");
+  assert.match(dialogSrc, /h-\[100dvh\]/, "dvh, or iOS Safari puts the dialog behind its own toolbars");
+  assert.match(dialogSrc, /safe-area-inset-top/, "the top inset is what keeps the close button clear of the notch");
+
+  // PremiumDialog itself must actually be ON this shell (not a stray copy)
+  // and keep its own additional cap on the tier table.
+  const src = read("src/components/PremiumDialog.tsx");
+  assert.match(src, /import \{ Dialog \} from "\.\/ui\/Dialog"/, "PremiumDialog must render through the shared Dialog shell");
+  assert.match(src, /<Dialog open=\{isOpen\}/, "PremiumDialog's provider must control Dialog's open state");
+  assert.doesNotMatch(src, /document\.body\.style\.overflow/, "scroll lock now belongs to Dialog, not a private copy");
   assert.match(src, /max-h-\[\d+vh\] overflow-y-auto/, "the table needs its own height cap and scroll");
 });

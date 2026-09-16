@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe, invalidateMe } from "@/lib/use-me";
@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/analytics";
 import { AuthForm } from "./AuthForm";
 import { premiumStartHref } from "@/lib/premium-start";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
+import { Dialog } from "./ui/Dialog";
 import { TrialPriceBlock } from "./TrialPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
 import {
@@ -60,7 +61,9 @@ export function PremiumDialogProvider({ children }: { children: React.ReactNode 
   return (
     <PremiumDialogContext.Provider value={{ open }}>
       {children}
-      {isOpen && <PremiumDialog onClose={close} />}
+      <Dialog open={isOpen} onClose={close} size="xl" z="modal" labelledBy="premium-dialog-title">
+        <PremiumDialog onClose={close} />
+      </Dialog>
     </PremiumDialogContext.Provider>
   );
 }
@@ -93,17 +96,6 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   // Without this the signed-out card quoted the full price for a purchase that
   // will actually charge $0 today.
   const showTrial = trialEligible || (!user && trialDays > 0);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
 
   async function checkout(selected: "monthly" | "annual") {
     setBusy(true);
@@ -241,35 +233,11 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
   );
 
   return (
-    // THE OVERLAY SCROLLS; THE CARD DOES NOT CENTRE ITSELF OFF-SCREEN.
-    //
-    // This was `fixed inset-0 flex items-center justify-center` with an
-    // overflow-hidden card and no scroll container anywhere — the exact shape
-    // that made SignupPromoPopup impossible to close on short phones (fixed in
-    // 263eaeb, and measured there: the close button rendered at y = -131 on a
-    // 375x667 iPhone SE). Once a centred card grows taller than the viewport it
-    // overflows EQUALLY in both directions, so the header — and the ✕ pinned to
-    // it — sits above the top of the screen with nothing to scroll to reach it.
-    //
-    // That was latent here while the body was six short list rows. Adding the
-    // full tier table makes it certain, so the layout is fixed in the same
-    // commit rather than shipped broken and patched later:
-    //   overflow-y-auto on the overlay  — it becomes the scroll container
-    //   min-h-full (not h-full) wrapper — grows to a taller-than-viewport card
-    //                                     instead of overflowing above it
-    //   h-[100dvh] + safe-area insets   — inset-0 resolves against the LARGE
-    //                                     viewport on iOS Safari, which puts a
-    //                                     fixed element behind the browser chrome
-    //   max-h + internal scroll on the table so the CTA stays reachable
-    <div
-      className="fixed inset-0 z-[120] h-[100dvh] overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="RiftCompare Premium"
-    >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative flex min-h-full items-center justify-center">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
+    // Dialog (ui/Dialog.tsx) now owns the "overlay scrolls, not the card"
+    // shape this comment used to document in full — the h-[100dvh] +
+    // safe-area + overflow-y-auto overlay, the min-h-full centering wrapper,
+    // all of it. This is just the panel itself.
+    <div className="relative w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl">
         {/* Terminal-style header bar */}
         <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 px-5 py-3">
           <div className="flex items-center gap-2">
@@ -282,7 +250,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="px-5 py-5">
-          <h2 className="text-lg font-extrabold text-white">Never overpay for a Riftbound card</h2>
+          <h2 id="premium-dialog-title" className="text-lg font-extrabold text-white">Never overpay for a Riftbound card</h2>
           <p className="mt-1 text-sm text-slate-400">
             Get the cheapest way to buy a whole list, and go ad-free. The portfolio tracker and price comparison stay free.
           </p>
@@ -419,8 +387,6 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
             </Link>
           </p>
         </div>
-      </div>
-      </div>
     </div>
   );
 }

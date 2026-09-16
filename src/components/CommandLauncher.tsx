@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { NAV_GROUPS } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { NavIcon } from "./NavIcon";
+import { Dialog } from "./ui/Dialog";
 
 // A global "command launcher": one searchable, full-screen overlay listing every
 // section of the site, opened from a button on any page (navbar) or the homepage
@@ -61,16 +62,6 @@ export function CommandLauncherProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Lock background scroll while the overlay is open.
-  useEffect(() => {
-    if (!isOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [isOpen]);
-
   const value = useMemo(() => ({ open, close, isOpen }), [open, close, isOpen]);
 
   return (
@@ -78,8 +69,12 @@ export function CommandLauncherProvider({ children }: { children: ReactNode }) {
       {children}
       {/* The query lives in the overlay, NOT here. This provider wraps the whole
           app, so holding the search text in its state re-rendered every page on
-          every keystroke. */}
-      {isOpen && <LauncherOverlay onClose={close} />}
+          every keystroke. Scroll lock/focus-trap/Escape now live on Dialog —
+          this provider keeps only the global ⌘K toggle above, which must work
+          even while the overlay is closed. */}
+      <Dialog open={isOpen} onClose={close} size="3xl" placement="top" z="overlay" label="Explore RiftCompare">
+        <LauncherOverlay onClose={close} />
+      </Dialog>
     </Ctx.Provider>
   );
 }
@@ -140,14 +135,7 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
   }, [searching]);
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Explore RiftCompare"
-    >
-      <button className="absolute inset-0 animate-fade-in bg-ink-950/80 backdrop-blur-md" aria-label="Close" onClick={onClose} />
-      <div className="card-surface relative z-10 mt-[7vh] flex max-h-[82vh] w-full max-w-3xl animate-fade-up flex-col overflow-hidden">
+    <div className="card-surface flex max-h-[82vh] w-full flex-col overflow-hidden">
         {/* Search */}
         <div className="flex items-center gap-2 border-b border-ink-800 p-3">
           <GridIcon className="h-5 w-5 shrink-0 text-brand-400" />
@@ -266,7 +254,6 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
           <kbd className="rounded bg-ink-800 px-1.5 py-0.5 font-sans">Esc</kbd> close ·{" "}
           <kbd className="rounded bg-ink-800 px-1.5 py-0.5 font-sans">⌘K</kbd> anywhere
         </div>
-      </div>
     </div>
   );
 }

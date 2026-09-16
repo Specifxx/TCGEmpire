@@ -9,6 +9,8 @@ import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
 import { useMe } from "@/lib/use-me";
 import { useCountry } from "./CountryProvider";
 import { AuthForm } from "./AuthForm";
+import { Dialog } from "./ui/Dialog";
+import { Toast } from "./ui/Toast";
 
 // Where we remember the visitor's email so clicking "watch price" again
 // doesn't re-prompt — it silently extends their existing watch instead.
@@ -50,6 +52,11 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
   // habitual anonymous watcher ever sees, since this path never opens a modal.
   const [toast, setToast] = useState<{ msg: string; accountLink?: boolean } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Kept around through the toast's own timeout so Toast's exit fade has
+  // something to render for its last ~120ms instead of going blank.
+  const lastToastRef = useRef<typeof toast>(null);
+  if (toast) lastToastRef.current = toast;
+  const displayToast = toast ?? lastToastRef.current;
 
   const flashToast = useCallback((msg: string, accountLink = false) => {
     setToast({ msg, accountLink });
@@ -127,16 +134,6 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
     };
   }, [subscribe, flashToast, user?.email]);
 
-  // Close on Escape.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const addr = email.trim();
@@ -163,11 +160,12 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
   return (
     <>
       {/* Toast (silent path) */}
-      {toast && (
-        <div className="fixed inset-x-0 bottom-4 z-[80] flex justify-center px-4">
-          <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-center text-sm font-medium text-slate-100 shadow-2xl">
-            {toast.msg}
-            {toast.accountLink && !user && (
+      <Toast
+        open={!!toast}
+        message={
+          <>
+            {displayToast?.msg}
+            {displayToast?.accountLink && !user && (
               <Link
                 href="/login?next=/watching"
                 rel="nofollow"
@@ -177,14 +175,12 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                 Manage your watches in a free account →
               </Link>
             )}
-          </div>
-        </div>
-      )}
+          </>
+        }
+      />
 
-      {open && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
-          <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
+      <Dialog open={open} onClose={() => setOpen(false)} size="md" z="modal" labelledBy="price-alert-title">
+          <div className="relative w-full overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl">
             <button
               onClick={() => setOpen(false)}
               aria-label="Close"
@@ -201,7 +197,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                   </svg>
                   <span className="text-xs font-semibold uppercase tracking-wide">Watching this card</span>
                 </div>
-                <h2 className="font-display text-xl font-bold text-white">Get a price-drop email</h2>
+                <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">Get a price-drop email</h2>
                 {/* ACCOUNT FIRST for signed-out visitors — this is the site's
                     highest-intent moment, and it used to hand it straight to an
                     email field. The email path below is UNCHANGED and always
@@ -279,7 +275,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                     <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <h2 className="font-display text-xl font-bold text-white">You&apos;re all set</h2>
+                <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">You&apos;re all set</h2>
                 <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-300">
                   We&apos;re watching this card&apos;s price. We&apos;ll email you the moment it drops. Check your
                   inbox for a confirmation.
@@ -306,7 +302,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
 
             {phase === "error" && (
               <div className="p-6 text-center">
-                <h2 className="font-display text-xl font-bold text-white">Something went wrong</h2>
+                <h2 id="price-alert-title" className="font-display text-xl font-bold text-white">Something went wrong</h2>
                 <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-300">
                   We couldn&apos;t set up your alerts just now. Please try again in a moment.
                 </p>
@@ -316,8 +312,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
               </div>
             )}
           </div>
-        </div>
-      )}
+      </Dialog>
     </>
   );
 }

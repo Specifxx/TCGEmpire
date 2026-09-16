@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { track } from "@vercel/analytics";
 import { ShareRow } from "./ShareRow";
+import { Dialog } from "./ui/Dialog";
 
 // Site-wide feedback / review widget.
 //
@@ -51,9 +52,6 @@ export function FeedbackWidget() {
   const [overAdZone, setOverAdZone] = useState(false);
   const [overHero, setOverHero] = useState(false);
 
-  const panelRef = useRef<HTMLDivElement>(null);
-  const launcherRef = useRef<HTMLButtonElement>(null);
-  const firstFieldRef = useRef<HTMLButtonElement>(null);
 
   const positive = rating != null && rating >= 4;
 
@@ -92,52 +90,14 @@ export function FeedbackWidget() {
     return () => io.disconnect();
   }, [pathname]);
 
-  const close = useCallback(() => {
-    setOpen(false);
-    // Hand focus back where it came from — a dialog that drops focus to the
-    // document strands keyboard and screen-reader users at the top of the page.
-    launcherRef.current?.focus();
-  }, []);
-
-  // ESC to close + a focus trap for as long as the panel is open.
-  useEffect(() => {
-    if (!open) return;
-    // SignupPromoPopup reads this before auto-opening, so the two dialogs can
-    // never stack. It skips WITHOUT marking itself seen, so that visitor still
-    // gets it on a later visit rather than silently losing it.
-    document.body.dataset.rcDialog = "1";
-
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        close();
-        return;
-      }
-      if (e.key !== "Tab" || !panelRef.current) return;
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([type="hidden"]), textarea, select, [tabindex]:not([tabindex="-1"])'
-      );
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      delete document.body.dataset.rcDialog;
-    };
-  }, [open, close]);
-
-  useEffect(() => {
-    if (open) firstFieldRef.current?.focus();
-  }, [open, phase]);
+  // Escape, the focus trap, scroll lock and the shared rcDialog flag (read by
+  // SignupPromoPopup before it auto-opens, so the two dialogs can never
+  // stack) now all belong to Dialog — refcounted there, so this widget shares
+  // the exact same flag every other Dialog-based overlay sets, rather than
+  // its own private copy. Dialog also restores focus to whatever triggered
+  // it (the launcher button) once the panel unmounts, so close() no longer
+  // needs to do that by hand.
+  const close = useCallback(() => setOpen(false), []);
 
   function openWidget() {
     setOpen(true);
@@ -204,7 +164,6 @@ export function FeedbackWidget() {
           launcher on the homepage for as long as the hero is in view. */}
       {!open && !overAdZone && !overHero && (
         <button
-          ref={launcherRef}
           type="button"
           onClick={openWidget}
           aria-label="Send feedback"
@@ -215,16 +174,7 @@ export function FeedbackWidget() {
         </button>
       )}
 
-      {open && (
-        <div className="fixed inset-0 z-[85] flex items-end justify-center p-0 sm:items-center sm:p-4">
-          <div className="absolute inset-0 bg-black/70" onClick={close} aria-hidden />
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rc-feedback-title"
-            className="card-surface relative w-full max-w-md rounded-b-none p-5 sm:rounded-xl"
-          >
+      <Dialog open={open} onClose={close} placement="sheet" size="md" z="sheet" labelledBy="rc-feedback-title" className="p-5">
             <button
               type="button"
               onClick={close}
@@ -247,7 +197,7 @@ export function FeedbackWidget() {
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
-                      ref={n === 1 ? firstFieldRef : undefined}
+                      {...(n === 1 ? { "data-autofocus": true } : {})}
                       type="button"
                       onClick={() => pickRating(n)}
                       aria-label={`${n} out of 5`}
@@ -395,9 +345,7 @@ export function FeedbackWidget() {
                 </button>
               </>
             )}
-          </div>
-        </div>
-      )}
+      </Dialog>
     </>
   );
 }
