@@ -355,7 +355,10 @@ test("BottomTabBar is lg:hidden, carries aria-label, and has exactly five target
   const tabsAt = src.indexOf("const TABS");
   const tabs = src.slice(tabsAt, src.indexOf("];", tabsAt));
   const labels = [...tabs.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(labels, ["Home", "Search", "Watch", "Portfolio", "Menu"]);
+  // "Portfolio" until 2026-09-16 — see tests/game-before-money.test.ts for why
+  // the binder stopped being named after a brokerage account. The COUNT is what
+  // this test is really about; the label is pinned so a rename is deliberate.
+  assert.deepEqual(labels, ["Home", "Search", "Watch", "Binder", "Menu"]);
 });
 
 test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the bar via .above-bottombar", () => {

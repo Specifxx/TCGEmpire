@@ -15,7 +15,7 @@ import { useMe } from "@/lib/use-me";
 // HTML. Perks mirror the popup's PERKS list; one primary CTA, `home` source.
 const PERKS: [string, string][] = [
   ["Price alerts", "get an email when a card hits your price"],
-  ["Portfolio", "see what your collection is worth, live"],
+  ["Binder", "keep your collection in one place, priced live"],
   ["Watchlist", "save cards and jump back anytime"],
 ];
 

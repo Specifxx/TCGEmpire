@@ -6830,3 +6830,67 @@ wrong half of the market to watch, the fix is the env var, not a rewrite.
 Expect empty days outside the US. $500+ Riftbound auctions are a US-and-
 sometimes-AU phenomenon, so the empty state names both filters explicitly rather
 than saying "no auctions", which would be false and would read as a broken page.
+
+## "Too money focused for a card GAME": rebalancing the furniture, not the product, 2026-09-16
+
+Reader feedback, and explicitly not the first time they had said it: *"Think my
+main feedback is still the same: simply a too greedy/capitalistic/money focused
+site for a card GAME for me."*
+
+**They were right, and the site's own structure was the evidence.** Measured on
+production before this pass:
+
+- `/premium` was the **2nd** internal link on the page. The first game was the **34th**.
+- `box-ev` (booster-box expected value) and `selling-fees` both outranked every
+  one of the **ten** playable things this site has.
+- The homepage ran **five consecutive price sections** - Market pulse, Most
+  popular, Biggest movers, Recently updated, Top Deals - before anything playable.
+- "How RiftCompare works" was **Search → Compare → Buy**, full stop. The site's
+  own three-word story about itself ended at the till.
+- All **eleven** `popular` nav links, which are what the phone Explore overlay
+  leads with, were prices, tools, Premium or the blog. Not one game.
+
+**The complication, recorded because it changes how to read the feedback.** The
+whole Feedback table is three rows and they are all from this same person (each
+signed-in, each from the /portfolio widget, one opening "Back again with another
+suggestion"). All three earlier notes asked for BETTER money features - bad
+listings skewing portfolio prices, P&L wrong on duplicate cards, and, the day
+before this one, *"Makes number small, small number makes me sad. Big number on
+portfolio good."*
+
+So the site's loudest critic of its money-focus is also its heaviest portfolio
+user. That is not hypocrisy and it is not a reason to discount them: the honest
+reading is that they like the tools and the site's PERSONALITY makes them feel
+like a mark rather than a player. That is a framing problem, and framing is what
+this pass changes. Not one number, price, ad slot or feature was removed.
+
+**What changed**
+
+- **Nav**: Decks and Games moved above "Deals & value". Prices stays first,
+  because that is the product and what people arrive for. Measured after: first
+  game link went from #34 to #21, and Games now precedes all ten money tools.
+- **Riftle joins `popular`** - the first game ever in the phone overlay's default
+  glance view.
+- **Homepage**: the Riftle / pack-sim / alerts block moved back above Top Deals
+  and eBay Picks. First playable section went from 6th to 3rd.
+- **A fourth step** in How-it-works: "Then go and play", linking the deck
+  builder, /learn and Riftle. Step 3 is untouched - this adds to the story rather
+  than removing the purchase from it.
+- **The binder stopped talking like a trading desk.** "My portfolio" → "My
+  binder"; Profit & Loss → "Since you bought"; Invested / Current value / Profit
+  / Return → "You paid" / "Worth now" / "Up / down" / "Change"; "3 priced
+  holdings" → "3 cards with a live price". The route stays `/portfolio` (noindex,
+  so no SEO rides on it, and every bookmark does) and "portfolio" stays a ⌘K
+  keyword, so the old word still finds the page. "Binder" is what a player calls
+  it and was already this site's own share vocabulary ("<name>'s binder").
+
+**What was deliberately NOT changed, and why.** Premium's nav prominence. It is
+tempting - `✦ Premium` appears twice in the header and again as a `popular` tile
+and again as the gold spotlight banner in the phone overlay. But that spotlight
+exists because a DIFFERENT user reported the opposite problem: Premium was
+"way too hidden" (see tests/nav-premium-spotlight.test.ts). Reversing one user's
+explicit request to satisfy another's inference is not a trade to make quietly.
+Flagged to the owner instead. Ads (two slots), affiliate links and the price
+comparison itself likewise stay: the complaint was about proportion, not about
+those things existing, and `tests/game-before-money.test.ts` asserts every one of
+them is still reachable so a future pass cannot quietly call deletion a fix.

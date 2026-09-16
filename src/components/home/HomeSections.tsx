@@ -153,6 +153,22 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
+      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
+          BACK ABOVE THE COMMERCIAL RUN (2026-09-16). These sat below Top Deals,
+          eBay Picks and the newsletter, which put five consecutive price
+          sections between the hero and the first thing on this site you can
+          actually play. Reader feedback, more than once: "simply a too
+          greedy/capitalistic/money focused site for a card GAME for me" — and
+          the page order was the evidence for it.
+
+          They are also the site's best "come back tomorrow" mechanics that
+          aren't the price data itself, so earning a slot this high is not
+          charity. Top Deals and eBay Picks still sit inside the first screenful
+          or two; they just no longer come first, second AND third. */}
+      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ReturnVisitCards newestSetName={newestSet?.name} />
+      </Reveal>
+
       {/* Today's Top Deals — the strongest differentiator, and still near the
           top: it was moved up from five sections deep, and now sits one behind
           the popular-cards carousel above (2026-09-12). Hidden if no market
@@ -167,18 +183,6 @@ export function HomeSections({
           listing, rather than a generic banner. Sits after Top Deals so the
           commercial run reads own-inventory first, affiliate second. */}
       <EbayPicks />
-
-      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts —
-          after the commercial run above (deals, newsletter, eBay). These are
-          the site's best "come back tomorrow" mechanics that aren't the price
-          data itself, so they get a slot of their own rather than competing
-          with a card-browsing section. They used to sit directly under the
-          popular-cards carousel; that section moved above Top Deals on
-          2026-09-12 and these stayed where they were rather than being
-          dragged up the page with it. */}
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <ReturnVisitCards newestSetName={newestSet?.name} />
-      </Reveal>
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. After the commercial sections (deals, popular cards, movers):

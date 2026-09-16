@@ -17,7 +17,7 @@ const TABS: { label: string; icon: NavIconName; href?: string }[] = [
   { label: "Home", icon: "home", href: "/" },
   { label: "Search", icon: "browse" },
   { label: "Watch", icon: "bell", href: "/watching" },
-  { label: "Portfolio", icon: "collection", href: "/portfolio" },
+  { label: "Binder", icon: "collection", href: "/portfolio" },
   { label: "Menu", icon: "menu" },
 ];
 

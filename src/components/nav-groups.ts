@@ -105,6 +105,53 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Decks and Games sit ABOVE the money tools on purpose (2026-09-16).
+    //
+    // Reader feedback, more than once: "simply a too greedy/capitalistic/money
+    // focused site for a card GAME for me". Measured on the live site before
+    // this change, /premium was the 2nd internal link on a page and the first
+    // game was the 34th; `box-ev` and `selling-fees` — a booster-box gambling
+    // calculator and a marketplace commission calculator — both outranked every
+    // one of the ten games this site actually has.
+    //
+    // Prices stay first, because that IS the product and it is what people
+    // arrive for. But a site about a card game should reach "build a deck" and
+    // "play something" before it reaches "work out your selling fees".
+    title: "Decks",
+    icon: "decks",
+    links: [
+      // "Meta Decks" (/decks) led this group until 2026-09-12. It was ten
+      // hand-typed lists in prisma/meta-decks.json presented as the metagame —
+      // removed, with /decks/* redirecting here (DECISIONS.md, "Meta decks:
+      // removed"). The builder inherits its popular slot so the launcher and
+      // mega-menu keep a deck entry.
+      { href: "/deck", label: "Deck Builder", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks"], popular: true },
+      { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
+    ],
+  },
+  {
+    title: "Games",
+    icon: "games",
+    links: [
+      // `popular` puts Riftle in the phone Explore overlay's default glance view.
+      // Before this, all eleven popular links were prices, tools, Premium or the
+      // blog — a visitor opening the menu on a phone saw no way to PLAY anything.
+      // The daily puzzle is the right one to promote: it is free, needs no account,
+      // and is the site's best "come back tomorrow" hook that isn't a price.
+      { href: "/riftle", label: "Riftle (daily)", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"], popular: true },
+      { href: "/games/pack-sim", label: "Pack Simulator", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
+      { href: "/games/price-check", label: "Price Check", keywords: ["price check", "guess the price"], hideInFooter: true },
+      { href: "/games/higher-lower", label: "Higher or Lower", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
+      { href: "/games/card-smash", label: "Card Smash", keywords: ["card smash", "whack a mole", "reflex"], hideInFooter: true },
+      { href: "/games/pairs", label: "Pairs", keywords: ["pairs", "memory", "matching"], hideInFooter: true },
+      { href: "/games/twenty48", label: "Riftbound 2048", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
+      { href: "/games/zoomed", label: "Zoomed In", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
+      { href: "/games/card-rain", label: "Card Rain", keywords: ["card rain", "catch", "falling cards", "arcade"], hideInFooter: true },
+      { href: "/games/sealed-bid", label: "Sealed Bid", keywords: ["sealed bid", "multiplayer", "auction", "play with friends", "party game"], hideInFooter: true },
+      { href: "/games", label: "All Games", keywords: ["games", "play", "fun", "quiz", "minigames"] },
+    ],
+  },
+  {
     // Smart-shopping / value tools (several Premium).
     title: "Deals & value",
     icon: "deals",
@@ -126,40 +173,13 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Your collection",
     icon: "collection",
     links: [
-      { href: "/portfolio", label: "My Portfolio", keywords: ["collection", "my cards", "holdings", "portfolio", "what is mine worth"] },
+      // Labelled "My Portfolio" until 2026-09-16. The route stays /portfolio (it is
+      // noindex, so nothing SEO rides on the label) and "portfolio" stays a search
+      // keyword, so anyone who types it still lands here.
+      { href: "/portfolio", label: "My Binder", keywords: ["collection", "my cards", "holdings", "portfolio", "binder", "what is mine worth"] },
       { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
       { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
       { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"], popular: true },
-    ],
-  },
-  {
-    title: "Decks",
-    icon: "decks",
-    links: [
-      // "Meta Decks" (/decks) led this group until 2026-09-12. It was ten
-      // hand-typed lists in prisma/meta-decks.json presented as the metagame —
-      // removed, with /decks/* redirecting here (DECISIONS.md, "Meta decks:
-      // removed"). The builder inherits its popular slot so the launcher and
-      // mega-menu keep a deck entry.
-      { href: "/deck", label: "Deck Builder", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks"], popular: true },
-      { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
-    ],
-  },
-  {
-    title: "Games",
-    icon: "games",
-    links: [
-      { href: "/riftle", label: "Riftle (daily)", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
-      { href: "/games/pack-sim", label: "Pack Simulator", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
-      { href: "/games/price-check", label: "Price Check", keywords: ["price check", "guess the price"], hideInFooter: true },
-      { href: "/games/higher-lower", label: "Higher or Lower", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
-      { href: "/games/card-smash", label: "Card Smash", keywords: ["card smash", "whack a mole", "reflex"], hideInFooter: true },
-      { href: "/games/pairs", label: "Pairs", keywords: ["pairs", "memory", "matching"], hideInFooter: true },
-      { href: "/games/twenty48", label: "Riftbound 2048", keywords: ["2048", "twenty48", "merge"], hideInFooter: true },
-      { href: "/games/zoomed", label: "Zoomed In", keywords: ["zoomed", "guess the card", "art quiz"], hideInFooter: true },
-      { href: "/games/card-rain", label: "Card Rain", keywords: ["card rain", "catch", "falling cards", "arcade"], hideInFooter: true },
-      { href: "/games/sealed-bid", label: "Sealed Bid", keywords: ["sealed bid", "multiplayer", "auction", "play with friends", "party game"], hideInFooter: true },
-      { href: "/games", label: "All Games", keywords: ["games", "play", "fun", "quiz", "minigames"] },
     ],
   },
   {
