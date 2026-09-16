@@ -11,6 +11,7 @@ import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
 import { NavIcon } from "./NavIcon";
 import { useMe } from "@/lib/use-me";
+import { useScrollLock, useModalFlag } from "./ui/Dialog";
 
 // Shared by the Popular grid and the full category panels below — both need
 // the identical active-pathname/external branching, so it's factored out
@@ -99,10 +100,17 @@ export function CinematicNavMenu() {
     }
   }, [open]);
 
+  // Scroll lock and the shared rcDialog flag now come from the same
+  // refcounted hooks every Dialog-based overlay uses (ui/Dialog.tsx) — this
+  // menu never set the flag before, so the corner nudges could slide in over
+  // an open phone Explore overlay. It stays mounted and class-toggled rather
+  // than using Dialog itself, so it keeps its own Escape listener and focus
+  // trap below.
+  useScrollLock(open);
+  useModalFlag(open);
+
   useEffect(() => {
     if (!open) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
@@ -111,7 +119,6 @@ export function CinematicNavMenu() {
       dialogRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     }, 60);
     return () => {
-      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
       clearTimeout(t);
     };
@@ -148,12 +155,18 @@ export function CinematicNavMenu() {
     <div
       ref={overlayRef}
       aria-hidden={!open}
-      className={`fixed inset-0 z-[95] ${open ? "" : "pointer-events-none"}`}
+      className={`fixed inset-0 z-menu ${open ? "" : "pointer-events-none"}`}
     >
       {/* Solid backdrop — no transparency, no blur. */}
       <div
         onClick={close}
-        className={`absolute inset-0 bg-ink-950 transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
+        // NOT motion-safe:opacity-0 — unlike Dialog/Toast/the nudges, this
+        // overlay stays MOUNTED (and painted) at all times; the closed state
+        // must actually hide it for every visitor, reduced-motion included.
+        // Only the ANIMATION needs to skip for reduced motion, and the global
+        // nuke at the bottom of globals.css already forces the transition
+        // duration near-zero there — closed still means closed, just instant.
+        className={`absolute inset-0 bg-ink-950 transition-opacity duration-slow ease-out ${open ? "opacity-100" : "opacity-0"}`}
       />
 
       {/* Content (click empty space to close) */}
@@ -166,7 +179,9 @@ export function CinematicNavMenu() {
         onClick={(e) => {
           if (e.target === e.currentTarget) close();
         }}
-        className={`absolute inset-0 overflow-y-auto p-4 transition-all duration-300 sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-3"}`}
+        // Same reasoning as the backdrop above — this panel is always
+        // mounted, so its hidden state can't be motion-safe:-gated.
+        className={`absolute inset-0 overflow-y-auto p-4 transition-all duration-slow ease-out sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-3"}`}
       >
         {/* The middle panel — flat, bordered. */}
         <div className="relative mx-auto my-auto max-w-5xl">

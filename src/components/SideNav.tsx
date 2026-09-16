@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
+import type { NavGroup, NavGroupLink } from "./nav-groups";
+import { usePresence, DUR } from "@/lib/motion";
 import {
   SIDENAV_COOKIE,
   SIDENAV_COOKIE_MAX_AGE,
@@ -114,6 +116,115 @@ function applyRailMode(mode: SidenavMode) {
 function isTypingTarget(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
   return !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+
+// One collapsed-rail icon + its flyout — extracted so usePresence (a hook)
+// can run once per group instead of once for the whole NAV_GROUPS.map(), and
+// so the flyout's own keyboard handling (roving tabindex, Escape-returns-
+// focus) has somewhere to live without cluttering SideNav itself.
+function RailGroup({
+  group,
+  isOpen,
+  groupActive,
+  setOpenGroup,
+  renderLink,
+}: {
+  group: NavGroup;
+  isOpen: boolean;
+  groupActive: boolean;
+  setOpenGroup: (title: string | null) => void;
+  renderLink: (link: NavGroupLink) => React.ReactNode;
+}) {
+  const { mounted, entered } = usePresence(isOpen, DUR.fast);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const buttonId = useId();
+
+  function focusables(): HTMLElement[] {
+    return Array.from(panelRef.current?.querySelectorAll<HTMLElement>("a[href]") ?? []);
+  }
+
+  // Roving tabindex within the open flyout: Arrow keys move between links,
+  // Home/End jump to the ends, Escape closes and returns focus to the
+  // trigger button — the same "close returns you to where you were" contract
+  // Dialog gives every overlay, applied here since the flyout isn't Dialog.
+  function onPanelKeyDown(e: React.KeyboardEvent) {
+    const items = focusables();
+    if (!items.length) return;
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      items[(idx + 1 + items.length) % items.length]?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length]?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items[0]?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1]?.focus();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setOpenGroup(null);
+      buttonRef.current?.focus();
+    }
+  }
+
+  // ArrowRight from the collapsed button opens the flyout and moves straight
+  // into it — the keyboard equivalent of hovering onto the panel.
+  function onButtonKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== "ArrowRight") return;
+    e.preventDefault();
+    setOpenGroup(group.title);
+    requestAnimationFrame(() => focusables()[0]?.focus());
+  }
+
+  return (
+    <li className="relative mb-1" onMouseEnter={() => setOpenGroup(group.title)}>
+      <button
+        ref={buttonRef}
+        id={buttonId}
+        type="button"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        aria-label={group.title}
+        title={group.title}
+        onClick={() => setOpenGroup(isOpen ? null : group.title)}
+        onFocus={() => setOpenGroup(group.title)}
+        onKeyDown={onButtonKeyDown}
+        className={`grid h-11 w-full place-items-center rounded-lg transition-colors ${
+          groupActive
+            ? "bg-brand-500/15 text-brand-300"
+            : isOpen
+              ? "bg-ink-800 text-white"
+              : "text-slate-400 hover:bg-ink-800 hover:text-white"
+        }`}
+      >
+        {/* The icon takes currentColor, so the active/hover states above
+            actually reach it — the emoji this replaced could not be
+            tinted at all, leaving the active group's only cue its
+            background tint. */}
+        {group.icon ? <NavIcon name={group.icon} className="h-5 w-5" /> : null}
+      </button>
+      {mounted && (
+        <div
+          ref={panelRef}
+          role="group"
+          aria-labelledby={buttonId}
+          onKeyDown={onPanelKeyDown}
+          className={`absolute left-full top-0 z-flyout ml-2 w-60 rounded-lg border border-ink-700 bg-ink-900 p-2 shadow-card transition-[opacity,transform] duration-fast ease-out ${
+            entered ? "translate-x-0 opacity-100" : "motion-safe:-translate-x-1 motion-safe:opacity-0"
+          }`}
+        >
+          <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            {group.title}
+          </div>
+          <ul className="space-y-0.5">{group.links.map(renderLink)}</ul>
+        </div>
+      )}
+    </li>
+  );
 }
 
 export function SideNav() {
@@ -308,48 +419,16 @@ export function SideNav() {
           scroll container — ten 44px icons fit any laptop viewport, and an
           overflow-y:auto parent would clip the flyout that pops out to the right. */}
       <ul className="sidenav-collapsed min-h-0 flex-1 px-2 pb-3 pt-1">
-        {NAV_GROUPS.map((group) => {
-          const groupActive = group.title === activeGroupTitle;
-          const isOpen = openGroup === group.title;
-          return (
-            <li key={group.title} className="relative mb-1" onMouseEnter={() => setOpenGroup(group.title)}>
-              <button
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={isOpen}
-                aria-label={group.title}
-                title={group.title}
-                onClick={() => setOpenGroup(isOpen ? null : group.title)}
-                onFocus={() => setOpenGroup(group.title)}
-                className={`grid h-11 w-full place-items-center rounded-lg transition-colors ${
-                  groupActive
-                    ? "bg-brand-500/15 text-brand-300"
-                    : isOpen
-                      ? "bg-ink-800 text-white"
-                      : "text-slate-400 hover:bg-ink-800 hover:text-white"
-                }`}
-              >
-                {/* The icon takes currentColor, so the active/hover states above
-                    actually reach it — the emoji this replaced could not be
-                    tinted at all, leaving the active group's only cue its
-                    background tint. */}
-                {group.icon ? <NavIcon name={group.icon} className="h-5 w-5" /> : null}
-              </button>
-              {isOpen && (
-                <div
-                  role="group"
-                  aria-label={group.title}
-                  className="absolute left-full top-0 z-30 ml-2 w-60 rounded-lg border border-ink-700 bg-ink-900 p-2 shadow-card"
-                >
-                  <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    {group.title}
-                  </div>
-                  <ul className="space-y-0.5">{group.links.map(renderLink)}</ul>
-                </div>
-              )}
-            </li>
-          );
-        })}
+        {NAV_GROUPS.map((group) => (
+          <RailGroup
+            key={group.title}
+            group={group}
+            isOpen={openGroup === group.title}
+            groupActive={group.title === activeGroupTitle}
+            setOpenGroup={setOpenGroup}
+            renderLink={renderLink}
+          />
+        ))}
       </ul>
     </nav>
   );

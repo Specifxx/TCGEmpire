@@ -526,7 +526,9 @@ html.capacitor-native.has-native-banner body {
 .cine-item {
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  /* 0.32s / the brand ease-out — src/lib/motion-tokens.ts's DURATION.slow and
+     EASING.out, matched by hand since this file can't import a TS module. */
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--cine-delay, 0ms);
 }
 .cine-open .cine-item { opacity: 1; transform: none; }
