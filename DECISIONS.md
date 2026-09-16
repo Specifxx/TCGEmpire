@@ -6773,3 +6773,60 @@ never rendered against real rows, and the sweep has never run. The first
 scheduled `refresh-auctions` run is the real test — its log prints
 `eBay auctions <MARKET>: N live lots` per market and the total Browse calls
 spent, which is also the number to check `AUCTION_CALLS_PER_DAY` against.
+
+### Addendum, same day: the 24h window and the $500 floor
+
+The owner asked to narrow the board to lots ending within 24 hours and at or
+above US$500, "so that will probably save some quota right".
+
+**Mostly no, and the reason is worth recording so the next person doesn't
+re-derive it.** eBay bills the Browse API per CALL, not per result. A call that
+returns four lots and a call that returns two hundred cost exactly the same one
+call. Since the sweep was already one-to-two calls per market, filtering the
+results could not save much by construction.
+
+What it did buy is the page cap: **2 → 1**, because with a 24h window and a $500
+floor, 200 qualifying lots in a single marketplace is not a reachable state, so a
+second page could only ever come back empty. That halves the modelled worst case
+from 72 to **36 calls/day** (6 markets × 1 page × 6 sweeps) — real, but a
+handful of calls, not the order-of-magnitude the request assumed. `dailyCalls()`
+picks the change up automatically, since `AUCTION_CALLS_PER_DAY` is derived from
+`AUCTION_PAGE_CAP` rather than written down.
+
+The filters' real value is editorial, and it is the bigger one: the board is now
+the high-stakes end of the market — signatures, over-numbered prints and slabs,
+closing today — which is what the owner actually buys at auction and what no
+other Riftbound site aggregates. A list of two hundred $8 lots was never going to
+be worth opening twice.
+
+**Both filters are pushed to eBay, not applied after the fact**, using the syntax
+in its Buy API field-filters reference: `itemEndDate:[from..to]` (two bounds,
+spelled out) and `price:[500.00]` + `priceCurrency:XXX`. Two details that would
+have failed silently or loudly if guessed: a price filter without
+`priceCurrency` is rejected ("this filter must be used with the priceCurrency
+filter"), and `itemEndDate`'s failure mode is *returning everything* — so the
+horizon is also re-checked locally in `searchEbayAuctions`, and the page query
+carries its own upper bound on `endsAt`. The price is deliberately NOT re-checked
+locally: that would mean re-deriving the currency, and getting that wrong is a
+worse bug than the one it guards against. Timestamps are trimmed to
+`2026-09-16T04:21:00Z` because every documented example omits milliseconds and
+`toISOString()` does not.
+
+**The floor is converted per market** through `lib/fx.ts`'s indicative rates
+(`usdCentsToCountry`), so US$500 is one real threshold rather than five different
+ones — a bare USD number passed to eBay would have meant ~£500 in the UK (a
+third higher in real terms) and ~A$500 in Australia (a third lower). Both
+thresholds are env-overridable (`EBAY_AUCTION_WINDOW_HOURS`,
+`EBAY_AUCTION_MIN_USD_CENTS`), following `EBAY_MIN_VALUE_CENTS`'s precedent:
+these are numbers to tune off a real lot count, which nobody has yet.
+
+**The trade-off the owner should know about**, stated on the page as well as
+here: the bar is the *current bid*, not the expected hammer price. A signature
+card that opens at a dollar does not appear until bidding has already carried it
+past $500. So this is a board of what is already hot, not a way to find something
+nobody has noticed — the opposite of a sniping tool. If that turns out to be the
+wrong half of the market to watch, the fix is the env var, not a rewrite.
+
+Expect empty days outside the US. $500+ Riftbound auctions are a US-and-
+sometimes-AU phenomenon, so the empty state names both filters explicitly rather
+than saying "no auctions", which would be false and would read as a broken page.

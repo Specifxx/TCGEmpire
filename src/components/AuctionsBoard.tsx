@@ -76,7 +76,19 @@ function gradeLabel(row: AuctionRow): string | null {
   return row.grade == null ? `${row.grader} graded` : `${row.grader} ${row.grade}`;
 }
 
-export function AuctionsBoard({ rows, market }: { rows: AuctionRow[]; market: string }) {
+export function AuctionsBoard({
+  rows,
+  market,
+  windowHours,
+  minUsd,
+}: {
+  rows: AuctionRow[];
+  market: string;
+  windowHours: number;
+  /** The board's floor in whole USD — shown so an empty board explains itself
+   *  rather than reading as "eBay has no Riftbound auctions". */
+  minUsd: number;
+}) {
   const [sort, setSort] = useState<SortKey>("ending");
   const [filter, setFilter] = useState<FilterKey>("all");
   // null until mounted: the first render must match the server's, so the clock
@@ -119,10 +131,19 @@ export function AuctionsBoard({ rows, market }: { rows: AuctionRow[]; market: st
     return (
       <div className="card-surface grid place-items-center p-12 text-center">
         <div>
-          <p className="text-base font-semibold text-white">No live auctions in this market right now</p>
+          <p className="text-base font-semibold text-white">
+            Nothing above US${minUsd} closing in the next {windowHours} hours
+          </p>
+          {/* Says WHY, not just "nothing here". This board is deliberately
+              narrow — high-value lots, closing today — so an empty state that
+              read as "eBay has no Riftbound auctions" would be plainly false
+              and would send people away thinking the page was broken. */}
           <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-slate-400">
-            Riftbound auctions come and go in waves, and smaller eBay markets can go quiet for a day at a
-            time. Try another market above — the US board is usually the busiest.
+            This board only shows lots whose bidding has already passed{" "}
+            <strong className="text-slate-300">US${minUsd}</strong> and that close within{" "}
+            <strong className="text-slate-300">{windowHours} hours</strong> — the chase end of the market,
+            where the clock actually matters. Days go by without one, especially outside the US. There are
+            plenty of cheaper Riftbound auctions running; they just aren&rsquo;t what this page is for.
           </p>
         </div>
       </div>

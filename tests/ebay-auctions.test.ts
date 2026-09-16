@@ -3,9 +3,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { AUCTION_MARKETS, AUCTION_PAGE_CAP, AUCTION_ROW_CAP } from "../src/lib/ebay-auctions";
+import {
+  AUCTION_MARKETS,
+  AUCTION_PAGE_CAP,
+  AUCTION_ROW_CAP,
+  AUCTION_WINDOW_HOURS,
+  AUCTION_MIN_USD_CENTS,
+} from "../src/lib/ebay-auctions";
 import { EBAY_MAX_LIMIT, EBAY_MARKETPLACE, AUCTION_JUNK } from "../src/lib/ebay";
 import { COUNTRY_LIST } from "../src/lib/country";
+import { usdCentsToCountry } from "../src/lib/fx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /auctions — the live eBay auction board (2026-09-16).
@@ -50,10 +57,42 @@ test("it asks eBay for auctions, soonest-ending, at Browse's maximum page size",
   // Verified against eBay's Browse API OpenAPI spec (Baseline v1.20.4) — auctions
   // are NOT returned by default, so a missing/renamed filter here silently
   // returns fixed-price listings and the whole board becomes wrong-but-plausible.
-  assert.match(fn, /filter:\s*"buyingOptions:\{AUCTION\}"/, "auctions are not returned without this filter");
+  assert.match(fn, /filters = \["buyingOptions:\{AUCTION\}"\]/, "auctions are not returned without this filter");
   assert.match(fn, /sort:\s*"endingSoonest"/, "the board's default order comes from eBay, not a client sort");
   assert.match(fn, /limit:\s*String\(limit\)/);
   assert.equal(EBAY_MAX_LIMIT, 200, "Browse's documented limit ceiling — raising this past 200 is an API error");
+});
+
+test("the window and price floor are pushed to eBay in its documented filter syntax", () => {
+  const code = codeOnly(read("src/lib/ebay.ts"));
+  const fn = code.slice(code.indexOf("export async function searchEbayAuctions"));
+  // Syntax from eBay's Buy API field-filters reference. Each is wrong in a
+  // different silent way: a malformed itemEndDate range returns EVERYTHING, and
+  // a price filter without priceCurrency is rejected outright ("this filter must
+  // be used with the priceCurrency filter").
+  assert.match(fn, /itemEndDate:\[\$\{ebayInstant\(now\)\}\.\.\$\{ebayInstant\(/, "two-dot range, both bounds");
+  assert.match(fn, /price:\[\$\{\(opts\.minPriceCents \/ 100\)\.toFixed\(2\)\}\]/, "whole units, not cents");
+  assert.match(fn, /priceCurrency:\$\{opts\.currency\}/, "price is invalid without its currency");
+  // filter values are comma-separated within the one `filter` parameter
+  assert.match(fn, /filter: filters\.join\(","\)/);
+});
+
+test("the end-date timestamp matches eBay's documented shape, with no milliseconds", () => {
+  const code = codeOnly(read("src/lib/ebay.ts"));
+  assert.match(code, /function ebayInstant[\s\S]*?toISOString\(\)\.slice\(0, 19\)/);
+  // Prove the shape rather than trusting the slice: 2026-09-16T04:21:00Z.
+  const sample = `${new Date(Date.UTC(2026, 8, 16, 4, 21, 0)).toISOString().slice(0, 19)}Z`;
+  assert.equal(sample, "2026-09-16T04:21:00Z");
+  assert.doesNotMatch(sample, /\.\d{3}Z$/, "the reference's examples carry no milliseconds");
+});
+
+test("the closing window is re-checked locally, because its failure mode is 'returns everything'", () => {
+  const code = codeOnly(read("src/lib/ebay.ts"));
+  const fn = code.slice(code.indexOf("export async function searchEbayAuctions"));
+  assert.match(fn, /if \(horizon != null && endsAt\.getTime\(\) > horizon\) continue/);
+  // Deliberately NOT re-checked for price: that would mean re-deriving the
+  // currency locally, and getting that wrong is worse than the bug it guards.
+  assert.doesNotMatch(fn, /currentBidCents < opts\.minPriceCents|bid < opts\.minPriceCents/);
 });
 
 test("the auction-only response fields are read under their real eBay names", () => {
@@ -132,6 +171,65 @@ test("the sweep's worst-case cost is a small, flat share of the daily Browse quo
     perDay <= 250,
     `the auction sweep would cost ~${perDay} Browse calls/day — the per-card pass deleted on 2026-08-20 cost ~960, so this must stay far below it`,
   );
+});
+
+test("one page per market — a filtered board cannot fill a second one", () => {
+  // The only real quota saving the 2026-09-16 filters bought. eBay bills per
+  // CALL, not per result, so asking for fewer lots is not itself cheaper; what
+  // the window and floor make safe is the halved page cap, because 200
+  // qualifying lots in one marketplace cannot happen.
+  assert.equal(AUCTION_PAGE_CAP, 1, "raising this needs a much looser filter and a re-run of the cost model");
+});
+
+test("the board is filtered to closing-today, high-value lots, and both bars are tunable without a deploy", () => {
+  assert.equal(AUCTION_WINDOW_HOURS, 24, "the owner's window: lots closing today");
+  assert.equal(AUCTION_MIN_USD_CENTS, 50_000, "the owner's floor: US$500 current bid");
+  const code = read(LIB);
+  // Same escape hatch as EBAY_MIN_VALUE_CENTS in price-import.ts: these are
+  // thresholds someone will want to move off a real lot count, not a guess.
+  assert.match(code, /process\.env\.EBAY_AUCTION_WINDOW_HOURS/);
+  assert.match(code, /process\.env\.EBAY_AUCTION_MIN_USD_CENTS/);
+});
+
+test("the USD floor is converted per market, so it is one real threshold and not five", () => {
+  const code = codeOnly(read(LIB));
+  // eBay evaluates its price filter in the currency you name, and every
+  // marketplace quotes its own — passing a bare USD number would silently mean
+  // ~£500 in the UK (a third higher) and ~A$500 in Australia (a third lower).
+  assert.match(code, /const currency = currencyOf\(market\)/);
+  assert.match(code, /usdCentsToCountry\(AUCTION_MIN_USD_CENTS, market\)/);
+  assert.match(code, /minPriceCents,\s*\n\s*currency,/, "both must reach the search together");
+  // Sanity-check the conversion actually moves the bar in the right direction.
+  const gbp = usdCentsToCountry(AUCTION_MIN_USD_CENTS, "UK");
+  const aud = usdCentsToCountry(AUCTION_MIN_USD_CENTS, "AU");
+  assert.ok(gbp < AUCTION_MIN_USD_CENTS, `£ bar should be below the USD figure, got ${gbp}`);
+  assert.ok(aud > AUCTION_MIN_USD_CENTS, `A$ bar should be above the USD figure, got ${aud}`);
+});
+
+test("the page query bounds the window too, so the page's promise is true of the data", () => {
+  const code = codeOnly(read(LIB));
+  assert.match(
+    code,
+    /endsAt: \{ gt: new Date\(\), lte: new Date\(Date\.now\(\) \+ AUCTION_WINDOW_HOURS \* 3600_000\) \}/,
+    "loosening the window then tightening it must not leave long-dated rows on a board that says they can't be there",
+  );
+});
+
+test("an empty board explains the filter instead of implying eBay has no auctions", () => {
+  const src = read(BOARD);
+  // A narrow board that renders "no auctions" reads as broken. It must name both
+  // bars, and the page must hand it the numbers rather than hardcoding them.
+  assert.match(src, /Nothing above US\$\{minUsd\} closing in the next \{windowHours\} hours/);
+  assert.match(read(PAGE), /windowHours=\{AUCTION_WINDOW_HOURS\} minUsd=\{minUsd\}/);
+});
+
+test("the page states the current-bid consequence of a price floor", () => {
+  // The honest limit of filtering on price: a chase card opening at $1 is
+  // invisible here until bidding carries it past the floor. Saying so is the
+  // difference between a board that is narrow and one that is misleading.
+  const page = read(PAGE);
+  assert.match(page, /current bid<\/em>/, "must say the bar is the current bid, not the expected hammer price");
+  assert.match(page, /already hot/i);
 });
 
 test("pagination stops early instead of paying for pages that cannot exist", () => {

@@ -1134,6 +1134,18 @@ export interface EbayAuctionResult {
   grade: number | null;
 }
 
+/**
+ * A timestamp in the exact shape eBay's filter reference uses —
+ * `2018-11-14T07:47:48Z`, no milliseconds.
+ *
+ * toISOString() emits `.000Z`, which the documented examples never show. Rather
+ * than find out whether the parser tolerates it on a filter whose failure mode
+ * is "silently returns everything", this trims to the documented form.
+ */
+function ebayInstant(ms: number): string {
+  return `${new Date(ms).toISOString().slice(0, 19)}Z`;
+}
+
 function centsOf(amount: any): number | null {
   const v = amount?.value;
   if (v == null) return null;
@@ -1158,14 +1170,51 @@ export async function searchEbayAuctions(opts: {
   query?: string;
   offset?: number;
   limit?: number;
+  /** Only lots scheduled to end within this many hours from now. */
+  endsWithinHours?: number;
+  /** Minimum price, in `currency`'s cents. Requires `currency` — eBay's price
+   *  filter is invalid without priceCurrency alongside it. For an auction the
+   *  filtered `price` is the CURRENT BID, so this asks "already at or above",
+   *  not "will sell for at least". */
+  minPriceCents?: number;
+  /** ISO 4217 code for minPriceCents. Must be the marketplace's own currency —
+   *  the caller converts (see usdCentsToCountry in lib/fx.ts). */
+  currency?: string;
 }): Promise<{ items: EbayAuctionResult[]; ok: boolean }> {
   const token = await getToken();
   if (!token) return { items: [], ok: false };
 
   const limit = Math.min(opts.limit ?? EBAY_MAX_LIMIT, EBAY_MAX_LIMIT);
+  const now = Date.now();
+
+  // Filter syntax verified against eBay's Buy API field-filters reference, not
+  // recalled — each of these three fails differently and quietly when wrong:
+  //   • buyingOptions:{AUCTION}          auctions are not returned without it
+  //   • itemEndDate:[from..to]           "only items scheduled to end within
+  //                                       the specified date-time range"
+  //   • price:[N] + priceCurrency:XXX    "[N]" alone means AT OR ABOVE N, and
+  //                                       the reference states the price filter
+  //                                       "must be used with the priceCurrency
+  //                                       filter" — omitting it is an error,
+  //                                       not a default.
+  // Values are comma-separated in one `filter` parameter. URLSearchParams
+  // percent-encodes them, which is what the reference asks for.
+  const filters = ["buyingOptions:{AUCTION}"];
+  if (opts.endsWithinHours != null) {
+    // Both bounds given explicitly. The reference documents the two-bound form
+    // and an open-ended one; spelling out `now` costs nothing and says exactly
+    // what is meant — lots closing between this instant and the horizon.
+    filters.push(`itemEndDate:[${ebayInstant(now)}..${ebayInstant(now + opts.endsWithinHours * 3600_000)}]`);
+  }
+  if (opts.minPriceCents != null && opts.currency) {
+    // Whole units, not cents: the reference's own examples are `price:[10]`.
+    filters.push(`price:[${(opts.minPriceCents / 100).toFixed(2)}]`);
+    filters.push(`priceCurrency:${opts.currency}`);
+  }
+
   const params = new URLSearchParams({
     q: opts.query ?? "Riftbound",
-    filter: "buyingOptions:{AUCTION}",
+    filter: filters.join(","),
     sort: "endingSoonest",
     limit: String(limit),
     offset: String(opts.offset ?? 0),
@@ -1194,7 +1243,15 @@ export async function searchEbayAuctions(opts: {
 
   const data = await res.json();
   const raw: any[] = data.itemSummaries ?? [];
-  const now = Date.now();
+
+  // The horizon, re-checked locally as well as sent to eBay. Not belt-and-braces
+  // for its own sake: `itemEndDate` is the one filter here whose failure mode is
+  // "returns everything", and a board whose whole promise is "closing within
+  // N hours" must not quietly become a board of everything if a filter name
+  // drifts. Deliberately NOT done for price — re-comparing money would mean
+  // re-deriving the currency locally, and getting THAT wrong is a worse bug than
+  // the one it guards against.
+  const horizon = opts.endsWithinHours != null ? now + opts.endsWithinHours * 3600_000 : null;
 
   const items: EbayAuctionResult[] = [];
   for (const it of raw) {
@@ -1221,6 +1278,7 @@ export async function searchEbayAuctions(opts: {
     // close, and a board led by dead auctions is worse than a shorter board.
     const endsAt = it.itemEndDate ? new Date(it.itemEndDate) : null;
     if (!endsAt || Number.isNaN(endsAt.getTime()) || endsAt.getTime() <= now) continue;
+    if (horizon != null && endsAt.getTime() > horizon) continue;
 
     const options: string[] = Array.isArray(it.buyingOptions) ? it.buyingOptions : [];
     if (!options.includes("AUCTION")) continue; // belt-and-braces against a filter change

@@ -1,7 +1,8 @@
 import { prisma } from "./db";
 import { cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
-import { COUNTRY_LIST, type Country } from "./country";
+import { COUNTRY_LIST, currencyOf, type Country } from "./country";
+import { usdCentsToCountry } from "./fx";
 import {
   EBAY_MARKETPLACE,
   EBAY_MAX_LIMIT,
@@ -28,31 +29,84 @@ import {
 // eBay allows 5,000 Browse calls/day; lib/ebay.ts holds back a 600 reserve, so
 // ~4,400 are spendable and the price/sealed importers already use ~2,850.
 //
-//   MARKETS (6) × AUCTION_PAGE_CAP (2) = 12 calls per sweep, worst case
-//   12 × 6 sweeps a day (every 4h)      = 72 calls/day, worst case
+//   MARKETS (6) × AUCTION_PAGE_CAP (1) = 6 calls per sweep
+//   6 × 6 sweeps a day (every 4h)      = 36 calls/day
 //
-// Worst case, because pagination stops as soon as a page comes back short: the
-// Riftbound auction pool is tens-to-low-hundreds of lots per marketplace, so a
-// typical market costs ONE call, not two, and a quiet market costs one call and
-// returns nothing. Realistic steady state is ~36-50 calls/day — under 2% of the
-// allowance, and ~7% of what the deleted per-card pass spent for a countdown on
-// 120 card pages rather than a board covering every live lot.
+// Under 1% of the allowance, and ~4% of what the deleted per-card pass spent
+// for a countdown on 120 card pages rather than a board of every live lot.
 //
 // The reason the arithmetic is this different for the same feature name: a
 // PRICE for a named card needs a query naming that card. A LIST of auctions
 // does not, so one call at Browse's `limit` maximum of 200 returns the pool.
+//
+// ── WHAT THE FILTERS BELOW DO AND DO NOT SAVE (2026-09-16) ──────────────────
+// The window and price floor were added on the owner's request, to "save our
+// quota". Worth being exact, because the intuition does not match the billing:
+// eBay charges per CALL, not per result, so asking for fewer lots does not by
+// itself cost less. A call returning 4 lots and a call returning 200 cost the
+// same one call.
+//
+// What they DO buy is the page cap: 1 instead of 2. With a 24h window and a
+// $500 floor, 200 qualifying lots in a single marketplace is not a situation
+// that can arise, so a second page could only ever be empty — and the sweep
+// already stopped on a short page, which made the second call rare rather than
+// impossible. Halving the cap halves the MODELLED worst case (72 → 36) and
+// removes the tail case entirely. Real saving: a handful of calls a day.
+//
+// The filters' actual value is editorial, and it is the larger one: a board of
+// "$500+ lots closing today" is the high-stakes end of the market, which is
+// what the owner buys and what nobody else aggregates.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Pages of 200 to pull per market per sweep.
  *
- * Two, not more, on purpose: 400 live auctions in one marketplace is already
- * far more than the board shows or the real Riftbound pool holds, and `sort=
- * endingSoonest` means page 1 is always the part that matters — the lots
- * closest to closing. Raising this buys the tail of a list nobody scrolls to,
- * at a linear cost in quota.
+ * ONE, since the filters landed. `sort=endingSoonest` means page 1 is always
+ * the part that matters, and with the window and floor applied a marketplace
+ * cannot produce 200 qualifying lots — so page 2 is a call spent to receive
+ * nothing. Raise it only alongside a much looser filter, and expect the cost
+ * model in tests/affiliate-priority.test.ts to move with it.
  */
-export const AUCTION_PAGE_CAP = 2;
+export const AUCTION_PAGE_CAP = 1;
+
+/**
+ * How far ahead the board looks. Lots ending beyond this are not fetched.
+ *
+ * 24h on the owner's call: the board is for auctions closing TODAY, where the
+ * countdown is the point and there is still time to act. A lot ending in six
+ * days is a bookmark, not a board entry — and it will arrive here on its own
+ * as its clock runs down, since the sweep re-runs every four hours.
+ *
+ * Env-overridable, like EBAY_MIN_VALUE_USD_CENTS in price-import.ts: this is a
+ * threshold someone will want to tune from a real number (how many lots the
+ * board actually carries) without a deploy.
+ */
+export const AUCTION_WINDOW_HOURS = Number(process.env.EBAY_AUCTION_WINDOW_HOURS ?? 24);
+
+/**
+ * Minimum CURRENT BID, in USD cents, for a lot to make the board.
+ *
+ * $500 on the owner's call — the chase end of the market (signatures, graded
+ * slabs, over-numbered prints), which is what they buy at auction and what a
+ * price-comparison site has no other way to show.
+ *
+ * TWO CONSEQUENCES WORTH KNOWING, both inherent to filtering on price rather
+ * than on the card:
+ *
+ *   1. It is the CURRENT BID, not the expected hammer price. A signature card
+ *      opening at $1 appears only once bidding has carried it past $500 — so
+ *      this board shows lots that have ALREADY attracted serious money, and
+ *      cannot show a chase card that is still cheap early. That is a real
+ *      trade-off: it favours "what is hot" over "what is a steal".
+ *   2. It is checked per market in that market's own currency, converted
+ *      through lib/fx.ts's indicative rates — so the bar is ~A$750 / ~£395 /
+ *      ~S$675 / ~C$685 / ~€460. Those rates are deliberately crude (see fx.ts),
+ *      which is fine for a threshold and would not be for a quoted price.
+ *
+ * Expect small markets to be empty most days: $500+ Riftbound auctions are a
+ * US-and-sometimes-AU phenomenon. The board says so rather than looking broken.
+ */
+export const AUCTION_MIN_USD_CENTS = Number(process.env.EBAY_AUCTION_MIN_USD_CENTS ?? 50_000);
 
 /** Markets swept. Every market the site prices, so switching market on the
  *  board never lands on an empty page that looks broken. Each is ~1 call. */
@@ -103,12 +157,23 @@ export async function sweepAuctionMarket(market: Country): Promise<AuctionSweepS
   const seen = new Map<string, AuctionRow & { endsAtDate: Date }>();
   let ok = false;
 
+  // The $500 bar, in this marketplace's own currency. eBay's price filter is
+  // evaluated in the currency you name, and every marketplace quotes its own —
+  // so a bare USD figure would mean five different real thresholds. Converted
+  // through the site's one indicative rate table (lib/fx.ts), same as every
+  // other cross-market reference figure here.
+  const currency = currencyOf(market);
+  const minPriceCents = usdCentsToCountry(AUCTION_MIN_USD_CENTS, market);
+
   for (let page = 0; page < AUCTION_PAGE_CAP; page++) {
     if (isEbayRateLimited()) break;
     const { items, ok: pageOk } = await searchEbayAuctions({
       marketplace,
       offset: page * EBAY_MAX_LIMIT,
       limit: EBAY_MAX_LIMIT,
+      endsWithinHours: AUCTION_WINDOW_HOURS,
+      minPriceCents,
+      currency,
     });
     if (!pageOk) break;
     ok = true;
@@ -177,6 +242,11 @@ export async function refreshAuctions(): Promise<AuctionSweepSummary[]> {
     return [];
   }
   await primeEbayBudget();
+  console.log(
+    `eBay auctions: sweeping ${AUCTION_MARKETS.length} markets for lots ending within ` +
+      `${AUCTION_WINDOW_HOURS}h at or above US$${(AUCTION_MIN_USD_CENTS / 100).toFixed(0)} ` +
+      `(${AUCTION_PAGE_CAP} page/market max).`,
+  );
   const out: AuctionSweepSummary[] = [];
   for (const market of AUCTION_MARKETS) {
     if (isEbayRateLimited()) {
@@ -215,7 +285,15 @@ export function getLiveAuctions(market: Country): Promise<AuctionRow[]> {
     async () => {
       const rows = await prisma.ebayAuctionListing
         .findMany({
-          where: { country: market, endsAt: { gt: new Date() } },
+          // Upper bound as well as lower, so the page's promise ("closing within
+          // N hours") is true of the QUERY and not just of whatever the last
+          // sweep happened to fetch. Without it, loosening
+          // EBAY_AUCTION_WINDOW_HOURS and tightening it again would leave
+          // long-dated rows showing on a board that says they cannot be there.
+          where: {
+            country: market,
+            endsAt: { gt: new Date(), lte: new Date(Date.now() + AUCTION_WINDOW_HOURS * 3600_000) },
+          },
           orderBy: { endsAt: "asc" },
           take: AUCTION_ROW_CAP,
           select: {
