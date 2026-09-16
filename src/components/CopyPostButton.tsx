@@ -73,7 +73,7 @@ export function CopyPostButton({
         // long ones don't need scrolling to check before posting.
         rows={Math.min(8, text.split("\n").length + 1)}
         aria-label="Post text"
-        className="mt-2 w-full resize-y rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 font-mono text-xs leading-relaxed text-slate-300 focus:border-brand-500 focus:outline-none"
+        className="mt-2 w-full resize-y rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 font-mono text-xs leading-relaxed text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
       />
     </div>
   );

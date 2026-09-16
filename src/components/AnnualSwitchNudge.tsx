@@ -180,7 +180,7 @@ export function AnnualSwitchNudge() {
             <button
               onClick={dismiss}
               aria-label="Dismiss"
-              className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+              className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               ✕
             </button>
@@ -221,7 +221,7 @@ export function AnnualSwitchNudge() {
                 <button
                   onClick={doSwitch}
                   disabled={phase === "working"}
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-gold/50 disabled:opacity-60"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 disabled:opacity-60"
                 >
                   {phase === "working" ? "Switching…" : "Switch to annual →"}
                 </button>

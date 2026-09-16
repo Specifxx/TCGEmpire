@@ -168,3 +168,49 @@ test("template.tsx's server render never contains a hidden opacity class", () =>
   assert.doesNotMatch(src, /className="[^"]*opacity-0/, "a bare unconditional opacity-0 className would render in server HTML on first load");
   assert.match(src, /firstLoad\s*\?\s*undefined/, "first load must render with no className at all");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P4 — micro-interactions and systemic focus.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("SegmentedTabs implements the real ARIA tabs pattern and EbayTabs re-exports EbayTab", () => {
+  const src = read("src/components/ui/SegmentedTabs.tsx");
+  assert.match(src, /role="tablist"/);
+  assert.match(src, /aria-selected=\{isActive\}/);
+  const wrapper = read("src/components/EbayTabs.tsx");
+  assert.match(wrapper, /export type EbayTab/, "existing `import { EbayTab }` call sites must keep compiling");
+});
+
+test("PopularCardsCarousel no longer hand-rolls aria-pressed tabs", () => {
+  const src = readCode("src/components/home/PopularCardsCarousel.tsx");
+  assert.doesNotMatch(src, /aria-pressed/, "must use SegmentedTabs, not a toggle-button row");
+  assert.match(src, /<SegmentedTabs/);
+  assert.match(src, /renderAllPanels/, "every tab's cards must stay in the DOM for the page's ItemList JSON-LD");
+});
+
+test("every outline-none in src/**/*.tsx carries a focus-visible: ring in the same className", () => {
+  // A bare `outline-none` with no replacement leaves keyboard/AT users with
+  // NO focus indicator at all — worse than doing nothing, since it actively
+  // removes the browser default. `focus:` (not `focus-visible:`) is also
+  // wrong here: it shows the ring on a mouse click too, which :focus-visible
+  // exists specifically to avoid (globals.css's own top-level rule).
+  const offenders: { file: string; line: number }[] = [];
+  function walk(dir: string) {
+    for (const entry of readdirSync(join(process.cwd(), dir), { withFileTypes: true })) {
+      if (entry.name === "ui") continue; // ui/ primitives own their own focus handling
+      const rel = `${dir}/${entry.name}`;
+      if (entry.isDirectory()) walk(rel);
+      else if (entry.name.endsWith(".tsx")) {
+        const code = readCode(rel);
+        code.split("\n").forEach((line, i) => {
+          if (/\boutline-none\b/.test(line) && !/focus-visible:/.test(line)) {
+            offenders.push({ file: rel, line: i + 1 });
+          }
+        });
+      }
+    }
+  }
+  walk("src/components");
+  walk("src/app");
+  assert.deepEqual(offenders, [], "every outline-none needs a focus-visible: ring in the same className string");
+});

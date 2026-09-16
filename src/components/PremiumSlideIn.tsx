@@ -339,7 +339,7 @@ export function PremiumSlideIn() {
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="ml-auto -mr-1 shrink-0 self-start rounded px-1 text-slate-500 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            className="ml-auto -mr-1 shrink-0 self-start rounded px-1 text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             ✕
           </button>
@@ -424,13 +424,13 @@ export function PremiumSlideIn() {
           <div className="mt-3 flex items-center gap-2">
             <button
               onClick={accept}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-gold/50"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gold px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
             >
               {cta}
             </button>
             <button
               onClick={dismiss}
-              className="rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-500 transition hover:bg-ink-800 hover:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+              className="rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-500 transition hover:bg-ink-800 hover:text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               Not now
             </button>

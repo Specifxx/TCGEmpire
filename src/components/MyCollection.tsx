@@ -472,7 +472,7 @@ function CostInput({
         disabled={disabled}
         placeholder="—"
         aria-label={total ? "Total price paid for this row" : "Price paid per copy"}
-        className="w-14 bg-transparent text-right text-white outline-none placeholder:text-slate-600"
+        className="w-14 rounded bg-transparent text-right text-white outline-none placeholder:text-slate-600 focus-visible:ring-1 focus-visible:ring-brand-500/40"
       />
       <button
         type="button"

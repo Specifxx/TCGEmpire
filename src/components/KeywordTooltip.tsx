@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useId } from "react";
 import { KEYWORDS, keywordSlug } from "@/lib/keywords";
+import { Tooltip } from "./ui/Tooltip";
 
 // Recognise a printed keyword marker ("[Empower]", "[Flow]") — the exact bracket
 // format cards are printed with and the same predicate the guides/keyword pages
@@ -12,35 +13,39 @@ import { KEYWORDS, keywordSlug } from "@/lib/keywords";
 const MARKER_RE = /\[([A-Za-z][A-Za-z ]*)\]/g;
 
 function KeywordChip({ name }: { name: string }) {
-  const [open, setOpen] = useState(false);
+  const id = useId();
   const entry = KEYWORDS.find((k) => k.name.toLowerCase() === name.toLowerCase());
   if (!entry) return <>{`[${name}]`}</>;
   return (
-    <span className="relative inline-block">
-      <Link
-        href={`/keywords/${entry.slug}`}
-        className="font-semibold text-brand-400 underline decoration-dotted underline-offset-2 hover:text-brand-300"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onClick={(e) => {
-          // First tap on touch devices reveals the definition instead of navigating;
-          // a second tap (or a mouse click, which never sets `open` via touch) follows
-          // the link — same UX pattern riftbound.gg's glossary tooltips use.
-          if (!open) {
-            e.preventDefault();
-            setOpen(true);
-          }
-        }}
-      >
-        [{name}]
-      </Link>
-      {open && (
-        <span className="absolute bottom-full left-1/2 z-30 mb-1.5 w-56 -translate-x-1/2 rounded-lg border border-ink-700 bg-ink-900 p-2.5 text-xs font-normal normal-case leading-snug text-slate-300 shadow-xl">
+    <Tooltip
+      id={id}
+      content={
+        <>
           {entry.directAnswer.slice(0, 140)}…{" "}
           <span className="text-brand-400">Read more →</span>
-        </span>
+        </>
+      }
+    >
+      {({ revealed, reveal, ...trigger }) => (
+        <Link
+          href={`/keywords/${entry.slug}`}
+          className="font-semibold text-brand-400 underline decoration-dotted underline-offset-2 hover:text-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          {...trigger}
+          onClick={(e) => {
+            // First tap/focus on touch devices reveals the definition instead of
+            // navigating; a second tap (or a mouse click, which never reveals via
+            // touch) follows the link — same UX pattern riftbound.gg's glossary
+            // tooltips use.
+            if (!revealed) {
+              e.preventDefault();
+              reveal();
+            }
+          }}
+        >
+          [{name}]
+        </Link>
       )}
-    </span>
+    </Tooltip>
   );
 }
 

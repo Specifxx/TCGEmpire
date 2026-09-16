@@ -279,14 +279,21 @@ test("the chase pass never runs in the same invocation as the full pass", () => 
 // ── The tabbed panel ─────────────────────────────────────────────────────────
 
 test("tabs implement the real ARIA pattern, not aria-pressed buttons", () => {
-  const src = read("src/components/EbayTabs.tsx");
+  // 2026-09-16: EbayTabs.tsx became a thin wrapper over ui/SegmentedTabs (the
+  // implementation moved there so PopularCardsCarousel's own aria-pressed
+  // button row could adopt the same pattern) — the ARIA/keyboard contract
+  // this test guards moved with it. EbayTabs.tsx itself must still visibly
+  // be that wrapper, not a stray reimplementation.
+  const src = read("src/components/ui/SegmentedTabs.tsx");
   for (const attr of ['role="tablist"', 'role="tab"', "aria-selected", "aria-controls", "aria-labelledby"]) {
-    assert.ok(src.includes(attr), `EbayTabs must set ${attr}`);
+    assert.ok(src.includes(attr), `SegmentedTabs must set ${attr}`);
   }
   assert.match(src, /tabIndex=\{isActive \? 0 : -1\}/, "roving tabindex");
   for (const key of ["ArrowRight", "ArrowLeft", "Home", "End"]) {
     assert.ok(src.includes(key), `keyboard support for ${key}`);
   }
+  const wrapper = read("src/components/EbayTabs.tsx");
+  assert.match(wrapper, /import \{ SegmentedTabs/, "EbayTabs must render through the shared implementation");
 });
 
 test("the eBay section does not claim its listings include graded copies", () => {
@@ -328,8 +335,10 @@ test("graded is split out before anything that can reach a price", () => {
 });
 
 test("a single tab renders no tablist chrome", () => {
-  // Most cards have listings only. A tablist of one reads as a broken control.
-  const src = read("src/components/EbayTabs.tsx");
+  // Most cards have listings only. A tablist of one reads as a broken
+  // control. Lives in ui/SegmentedTabs.tsx now — see the note on the ARIA
+  // pattern test above.
+  const src = read("src/components/ui/SegmentedTabs.tsx");
   assert.match(src, /const showTabs = tabs\.length > 1;/);
 });
 

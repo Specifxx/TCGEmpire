@@ -372,7 +372,7 @@ function TradeColumn({
                         onOverride(c.id, Number.isFinite(v) && v >= 0 ? Math.round(v * 100) : 0);
                       }}
                       onFocus={(e) => e.target.select()}
-                      className={`w-14 rounded border bg-ink-900 px-1 py-0.5 text-right text-[11px] outline-none focus:border-brand-500 ${
+                      className={`w-14 rounded border bg-ink-900 px-1 py-0.5 text-right text-[11px] outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/40 ${
                         ov != null ? "border-brand-500/60 text-brand-300" : "border-ink-700 text-slate-300"
                       }`}
                       aria-label="Card value"
@@ -429,7 +429,7 @@ function TradeColumn({
                 if (Number.isFinite(v)) onPct(Math.min(100, Math.max(1, v)));
               }}
               onFocus={(e) => e.target.select()}
-              className="w-11 rounded border border-ink-700 bg-ink-900 px-1 py-0.5 text-right text-xs font-bold text-white outline-none focus:border-brand-500"
+              className="w-11 rounded border border-ink-700 bg-ink-900 px-1 py-0.5 text-right text-xs font-bold text-white outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/40"
               aria-label={`${title} value percentage`}
             />
             <span className="text-xs text-slate-400">%</span>

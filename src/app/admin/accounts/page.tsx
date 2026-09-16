@@ -320,7 +320,7 @@ export default async function AccountsAdminPage({
             name="q"
             defaultValue={q}
             placeholder="Search email or name…"
-            className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+            className="flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
           />
           <button type="submit" className="btn-primary text-sm">Search</button>
           {q && (

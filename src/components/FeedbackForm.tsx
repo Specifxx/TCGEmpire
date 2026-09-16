@@ -136,7 +136,7 @@ export function FeedbackForm({ days }: { days: number }) {
           rows={6}
           maxLength={4000}
           placeholder="What do you love? What's missing or frustrating? What would make RiftCompare a must-use for you?"
-          className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+          className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
         />
       </label>
 
@@ -163,7 +163,7 @@ export function FeedbackForm({ days }: { days: number }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
           />
         </label>
       )}
@@ -190,7 +190,7 @@ export function FeedbackForm({ days }: { days: number }) {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Name to show (optional)"
             maxLength={60}
-            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
             aria-label="Display name for the public review, optional"
           />
         )}

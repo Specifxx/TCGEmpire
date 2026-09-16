@@ -26,7 +26,7 @@ export function MarketSwitcher({
         value={value}
         onChange={(e) => router.push(`${basePath}?market=${e.target.value}`)}
         aria-label={label}
-        className="min-h-11 rounded-lg border border-ink-700 bg-ink-900 px-2.5 py-1.5 text-sm font-medium text-slate-100 hover:bg-ink-800 focus:border-brand-500 focus:outline-none sm:min-h-0"
+        className="min-h-11 rounded-lg border border-ink-700 bg-ink-900 px-2.5 py-1.5 text-sm font-medium text-slate-100 hover:bg-ink-800 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:min-h-0"
       >
         {REGION_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>

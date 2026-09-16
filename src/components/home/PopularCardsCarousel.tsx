@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CardTile, type CardTileData } from "@/components/CardTile";
 import { Reveal } from "@/components/Reveal";
+import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 
 // A card + its % change — all this carousel's movers/recently-updated tabs
 // ever need. Deliberately narrower than the full Mover/RecentUpdate shapes
@@ -100,65 +101,64 @@ export function PopularCardsCarousel({
       : []),
   ];
 
-  const [active, setActive] = useState(tabs[0]?.key);
+  const [active, setActive] = useState(tabs[0]?.key ?? "");
   if (tabs.length === 0) return null;
 
   return (
     <section>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setActive(t.key)}
-            aria-pressed={active === t.key}
-            className={`inline-flex min-h-11 items-center justify-center rounded-full px-4 text-xs font-bold uppercase tracking-wide transition-colors ${
-              active === t.key ? "bg-brand-500 text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {tabs.map((t) => (
-        <div key={t.key} className={active === t.key ? "" : "hidden"}>
-          <div className="mb-4 flex items-end justify-between gap-3">
+      <SegmentedTabs
+        label="Popular cards"
+        active={active}
+        onActiveChange={setActive}
+        // Every panel feeds this page's ItemList JSON-LD (built from the
+        // all-time and recently-updated lists), so all of them must stay in
+        // the DOM and crawlable regardless of which tab is visually active —
+        // the same reason these used to be separate, always-rendered
+        // sections before they were merged into tabs at all.
+        renderAllPanels
+        tabs={tabs.map((t) => ({
+          key: t.key,
+          label: t.label,
+          content: (
             <div>
-              <h2 className="text-xl font-extrabold text-white">{t.heading}</h2>
-              <p className="mt-0.5 text-sm text-slate-400">{t.description}</p>
+              <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-extrabold text-white">{t.heading}</h2>
+                  <p className="mt-0.5 text-sm text-slate-400">{t.description}</p>
+                </div>
+                <Link href={t.allHref} className="btn-ghost text-xs shrink-0">{t.allLabel}</Link>
+              </div>
+              {/* Right-edge fade + scroll-padding signal there's more to scroll to —
+                  without it the last card just sits flush against the container
+                  edge with a bare scrollbar underneath, no cue anything continues
+                  past it. The mask is a decorative overlay (aria-hidden), not part
+                  of the scroll container itself, so it never blocks pointer/touch
+                  scrolling. */}
+              <div className="relative">
+                <Reveal stagger className="scroll-px-1 -mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-2">
+                  {t.cards.map((c, i) => {
+                    const pct = t.deltas?.[i]?.pct;
+                    return (
+                      <div key={c.id} className="w-36 shrink-0 snap-start sm:w-44">
+                        <CardTile card={c} />
+                        {pct != null && (
+                          <p className={`num mt-1 text-center text-xs font-bold ${pct > 0 ? "text-up" : "text-down"}`}>
+                            {pct > 0 ? "▲" : "▼"} {Math.abs(pct)}%
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </Reveal>
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-ink-950 to-transparent sm:w-16"
+                />
+              </div>
             </div>
-            <Link href={t.allHref} className="btn-ghost text-xs shrink-0">{t.allLabel}</Link>
-          </div>
-          {/* Right-edge fade + scroll-padding signal there's more to scroll to —
-              without it the last card just sits flush against the container
-              edge with a bare scrollbar underneath, no cue anything continues
-              past it. The mask is a decorative overlay (aria-hidden), not part
-              of the scroll container itself, so it never blocks pointer/touch
-              scrolling. */}
-          <div className="relative">
-            <Reveal stagger className="scroll-px-1 -mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-2">
-              {t.cards.map((c, i) => {
-                const pct = t.deltas?.[i]?.pct;
-                return (
-                  <div key={c.id} className="w-36 shrink-0 snap-start sm:w-44">
-                    <CardTile card={c} />
-                    {pct != null && (
-                      <p className={`num mt-1 text-center text-xs font-bold ${pct > 0 ? "text-up" : "text-down"}`}>
-                        {pct > 0 ? "▲" : "▼"} {Math.abs(pct)}%
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </Reveal>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-ink-950 to-transparent sm:w-16"
-            />
-          </div>
-        </div>
-      ))}
+          ),
+        }))}
+      />
     </section>
   );
 }

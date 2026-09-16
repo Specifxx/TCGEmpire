@@ -58,7 +58,7 @@ export function ClicksTable({ events }: { events: ClickRow[] }) {
           onChange={(e) => setQ(e.target.value)}
           placeholder="Filter by store or page…"
           aria-label="Filter clicks"
-          className="w-full max-w-xs rounded-lg border border-ink-700 bg-ink-900 px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
+          className="w-full max-w-xs rounded-lg border border-ink-700 bg-ink-900 px-3 py-1.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
         />
         <span className="shrink-0 text-xs text-slate-500">{rows.length} shown</span>
       </div>

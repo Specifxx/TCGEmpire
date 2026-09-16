@@ -359,7 +359,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
         <button
           onClick={dismiss}
           aria-label="Dismiss"
-          className="absolute right-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-slate-300 transition hover:bg-ink-950/60 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+          className="absolute right-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-slate-300 transition hover:bg-ink-950/60 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
         >
           ✕
         </button>
@@ -436,7 +436,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
           <button
             type="button"
             onClick={dismiss}
-            className="mt-2 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+            className="mt-2 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             Maybe later
           </button>

@@ -75,7 +75,7 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
             onChange={(e) => setQ(e.target.value)}
             placeholder="Filter by card or set…"
             aria-label="Filter constituents"
-            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40 sm:min-h-0"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0"
           />
         </div>
         <div className="flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1">

@@ -167,7 +167,7 @@ export function FeedbackWidget() {
           type="button"
           onClick={openWidget}
           aria-label="Send feedback"
-          className="fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
+          className="fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
         >
           <span aria-hidden>💬</span>
           <span className="hidden sm:inline">Feedback</span>
@@ -179,7 +179,7 @@ export function FeedbackWidget() {
               type="button"
               onClick={close}
               aria-label="Close feedback"
-              className="absolute right-3 top-3 rounded-lg px-2 py-1 text-slate-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+              className="absolute right-3 top-3 rounded-lg px-2 py-1 text-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               ✕
             </button>
@@ -201,7 +201,7 @@ export function FeedbackWidget() {
                       type="button"
                       onClick={() => pickRating(n)}
                       aria-label={`${n} out of 5`}
-                      className="rounded-lg px-2 py-1 text-3xl leading-none text-ink-600 transition-colors hover:text-gold focus:outline-none focus:ring-2 focus:ring-brand-500/50"
+                      className="rounded-lg px-2 py-1 text-3xl leading-none text-ink-600 transition-colors hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
                     >
                       ★
                     </button>

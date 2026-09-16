@@ -86,7 +86,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name or number…"
             aria-label="Search cards"
-            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/40 sm:min-h-0"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0"
           />
         </div>
         <button
@@ -106,7 +106,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label="Sort cards"
-            className="shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-xs font-semibold text-slate-300 focus:border-brand-500 focus:outline-none"
+            className="shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-xs font-semibold text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             <option value="number">Sort: Collector №</option>
             <option value="recent">Sort: Recently added</option>
