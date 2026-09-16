@@ -143,6 +143,23 @@ test("layout.tsx mounts NextTopLoader, not between Navbar and SideNav", () => {
   assert.doesNotMatch(src, /<Navbar \/>\s*<NextTopLoader/);
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// P3 — perceived performance: skeletons + an optimistic watchlist.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("use-watchlist.ts is optimistic: publish() before the fetch, with a rollback on failure", () => {
+  const src = readCode("src/lib/use-watchlist.ts");
+  const watchFn = /async watch\(cardId, market\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
+  const unwatchFn = /async unwatch\(cardId\) \{[\s\S]*?\n\s*\},/.exec(src)?.[0] ?? "";
+  for (const [name, fn] of [["watch", watchFn], ["unwatch", unwatchFn]] as const) {
+    assert.ok(fn, `expected to find ${name}()`);
+    const publishAt = fn.indexOf("publish();");
+    const fetchAt = fn.indexOf("await fetch(");
+    assert.ok(publishAt >= 0 && fetchAt >= 0 && publishAt < fetchAt, `${name}() must publish() the optimistic state before awaiting the fetch`);
+    assert.match(fn, /watched = prev/, `${name}() must roll back to the pre-click snapshot on failure`);
+  }
+});
+
 test("template.tsx's server render never contains a hidden opacity class", () => {
   const src = read("src/app/template.tsx");
   assert.match(src, /let navigatedBefore = false/, "the first-load flag must be module-level, not component state");

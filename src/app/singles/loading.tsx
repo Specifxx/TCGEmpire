@@ -1,4 +1,4 @@
-import { RouteLoading } from "@/components/RouteLoading";
+import { SinglesSkeleton } from "@/components/RouteLoading";
 
 // SCOPED DELIBERATELY — never move this to src/app/loading.tsx.
 //
@@ -14,5 +14,5 @@ import { RouteLoading } from "@/components/RouteLoading";
 // safe here. scripts/adsense-guard.ts fails the build if a loading.tsx appears
 // at the app root, or in any segment that has a notFound()-calling descendant.
 export default function Loading() {
-  return <RouteLoading />;
+  return <SinglesSkeleton />;
 }

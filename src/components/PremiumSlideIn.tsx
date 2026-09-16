@@ -20,6 +20,7 @@ import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFT
 import { formatMoneyCompact } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
 import { usePresence } from "@/lib/motion";
+import { Skeleton } from "./ui/Skeleton";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "most logged-in free users never see a Premium pitch
@@ -168,6 +169,10 @@ export function PremiumSlideIn() {
   // never causes this request at all.
   const [proof, setProof] = useState<{ deals: number; savingsCents: number } | null>(null);
   const proofFetched = useRef(false);
+  // Distinguishes "still fetching" from "fetched, nothing worth showing" —
+  // proof itself stays null in both cases, but only the first should render
+  // a skeleton; the second should render nothing, same as it always did.
+  const [proofSettled, setProofSettled] = useState(false);
 
   // Count route views once per pathname, on its own key so this component never
   // depends on the signup popup's counter existing.
@@ -242,6 +247,9 @@ export function PremiumSlideIn() {
       })
       .catch(() => {
         /* best-effort — no proof line is a fine fallback */
+      })
+      .finally(() => {
+        if (!cancelled) setProofSettled(true);
       });
     return () => {
       cancelled = true;
@@ -342,13 +350,18 @@ export function PremiumSlideIn() {
               nothing until the fetch resolves (or if there's too little to
               make a real case, or it fails), so this can only ever make the
               pitch stronger, never weaker or slower to appear. */}
-          {proof && proof.deals >= 5 && (
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-              <span className="font-bold text-white">
-                {proof.deals} deals worth {formatMoneyCompact(proof.savingsCents, currencyOf(country))}
-              </span>{" "}
-              live on Deal Finder right now.
-            </p>
+          {proof === null && !proofSettled ? (
+            <Skeleton className="mt-1.5 h-3.5 w-48" />
+          ) : (
+            proof &&
+            proof.deals >= 5 && (
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+                <span className="font-bold text-white">
+                  {proof.deals} deals worth {formatMoneyCompact(proof.savingsCents, currencyOf(country))}
+                </span>{" "}
+                live on Deal Finder right now.
+              </p>
+            )
           )}
           {/* Same real, decided increase the dialog and /premium announce (see
               lib/site.ts) — sized down for this card rather than the full

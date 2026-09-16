@@ -77,31 +77,45 @@ export function useWatchlist(): WatchlistApi {
   return {
     watched: state.watched,
     loaded: state.loaded,
-    // Await the server, THEN update local state. Deliberately not optimistic:
-    // nothing else in this codebase is (MyCollection and MarketplaceOrders both
-    // await before mutating), and an optimistic bell that silently reverts is a
-    // worse lie than a bell that takes 200ms.
+    // OPTIMISTIC (2026-09-16, was await-then-mutate). The bell flips the
+    // instant a visitor taps it — mutate + publish() FIRST, fetch second —
+    // and rolls back to the pre-click snapshot if the request fails. A bell
+    // that flips instantly and rolls back on the rare failure beats 200ms of
+    // dead air on every tap, and the rollback means a silent failure is never
+    // a silent LIE: the UI always converges on what the server actually has.
+    // MyCollection stays await-first, on purpose — it renders money, where a
+    // rollback flicker on a number is worse than a moment of latency.
     async watch(cardId, market) {
+      const prev = watched ? new Set(watched) : null;
+      watched = watched ? new Set(watched) : new Set();
+      watched.add(cardId);
+      publish();
       const res = await fetch("/api/alerts/watchlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cardId, market }),
       }).catch(() => null);
-      if (!res?.ok) return false;
-      watched = watched ?? new Set();
-      watched.add(cardId);
-      publish();
+      if (!res?.ok) {
+        watched = prev;
+        publish();
+        return false;
+      }
       return true;
     },
     async unwatch(cardId) {
+      const prev = watched ? new Set(watched) : null;
+      watched?.delete(cardId);
+      publish();
       const res = await fetch(`/api/alerts/watchlist/${encodeURIComponent(cardId)}`, {
         method: "DELETE",
       }).catch(() => null);
       // 404 means it was already gone — treat as success so the UI converges
       // rather than getting stuck showing a watch that no longer exists.
-      if (!res || (!res.ok && res.status !== 404)) return false;
-      watched?.delete(cardId);
-      publish();
+      if (!res || (!res.ok && res.status !== 404)) {
+        watched = prev;
+        publish();
+        return false;
+      }
       return true;
     },
   };

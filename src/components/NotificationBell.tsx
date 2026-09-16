@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Skeleton } from "./ui/Skeleton";
 
 interface NotificationRow {
   id: string;
@@ -127,7 +128,16 @@ export function NotificationBell() {
 
           <div className="max-h-96 overflow-y-auto">
             {notifications === null ? (
-              <p className="p-4 text-center text-sm text-slate-500">Loading…</p>
+              <div className="space-y-3 p-4" role="status" aria-label="Loading notifications">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex gap-2">
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <Skeleton className="h-3.5 w-3/4" />
+                      <Skeleton className="h-3 w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : notifications.length === 0 ? (
               <p className="p-6 text-center text-sm text-slate-500">Nothing yet — sales, purchases and order updates show up here.</p>
             ) : (
