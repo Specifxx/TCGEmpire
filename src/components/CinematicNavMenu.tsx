@@ -8,10 +8,38 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
+import { cardHref } from "@/lib/card-url";
 import { BrandLogo } from "./BrandLogo";
 import { NavIcon } from "./NavIcon";
 import { useMe } from "@/lib/use-me";
 import { useScrollLock, useModalFlag } from "./ui/Dialog";
+
+// How many database matches the overlay shows before deferring to /browse.
+// Small on purpose: this is a phone menu, and the feature grid it sits above
+// still has to be reachable without a long scroll past search results.
+const CARD_HITS_SHOWN = 6;
+const SEALED_HITS_SHOWN = 3;
+
+// Just the fields this overlay renders, not the full CardTileData the route
+// returns. Narrower on purpose: a nav row shows a name and where the card is
+// from, and NO PRICE — the route localises price per market across six price
+// columns (see cardTileSelect), and a nav menu that rendered one of those
+// without the client-side market resolution SearchBar does would show some
+// visitors another market's currency. The card page it links to has the real
+// localised price.
+interface CardHit {
+  id: string;
+  slug: string | null;
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+}
+
+interface SealedHit {
+  groupKey: string;
+  name: string;
+  productType: string;
+}
 
 // Shared by the Popular grid and the full category panels below — both need
 // the identical active-pathname/external branching, so it's factored out
@@ -74,6 +102,58 @@ export function CinematicNavMenu() {
   // launcher uses, so "prices"/"deals"/"blog"/"alerts" behave identically on a
   // phone and on a desktop.
   const filtering = filter.trim().length > 0;
+
+  // ── CARDS AND SEALED, from the same box ────────────────────────────────────
+  // This input filtered features ONLY until 2026-09-16, and the history matters
+  // because it has now been reported in BOTH directions. It originally held the
+  // card SearchBar, which was reported as broken ("it acts like a normal search
+  // bar and searches all the cards") because a card search sat directly above a
+  // grid of features it did not filter. It was switched to a pure feature
+  // filter, and that was then reported as the opposite defect: on a phone this
+  // overlay is the search box people find, and typing a card name into it
+  // returned nothing but pages.
+  //
+  // Flipping it a third time would just re-break the other half. It does both
+  // now: the feature grid still narrows as you type (the earlier fix stands),
+  // and real card/sealed matches appear above it. /api/search already returns
+  // both lists for the navbar dropdown, so this adds a consumer, not a query.
+  const [cardHits, setCardHits] = useState<CardHit[]>([]);
+  const [sealedHits, setSealedHits] = useState<SealedHit[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    const q = filter.trim();
+    // Closed overlay must never fetch, and <2 chars is what the route itself
+    // treats as "no query" (it returns empty lists) — so don't spend the trip.
+    if (!open || q.length < 2) {
+      setCardHits([]);
+      setSealedHits([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const ctrl = new AbortController();
+    // Debounced, and the controller aborts the in-flight request on every
+    // keystroke: without it a fast typist's earlier, slower response can land
+    // last and overwrite the results for what they actually typed.
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+        if (!res.ok) return;
+        const data = (await res.json()) as { results?: CardHit[]; sealed?: SealedHit[] };
+        setCardHits((data.results ?? []).slice(0, CARD_HITS_SHOWN));
+        setSealedHits((data.sealed ?? []).slice(0, SEALED_HITS_SHOWN));
+      } catch {
+        /* aborted or offline — leave whatever is on screen rather than flashing empty */
+      } finally {
+        setSearching(false);
+      }
+    }, 200);
+    return () => {
+      clearTimeout(t);
+      ctrl.abort();
+    };
+  }, [filter, open]);
   const sections = useMemo(() => {
     if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, icon: g.icon, links: g.links }));
     const hits = searchNav(filter);
@@ -97,6 +177,8 @@ export function CinematicNavMenu() {
     if (!open) {
       setFilter("");
       setShowAll(false);
+      setCardHits([]);
+      setSealedHits([]);
     }
   }, [open]);
 
@@ -210,32 +292,94 @@ export function CinematicNavMenu() {
               </button>
             </div>
 
-            {/* FEATURE filter front-and-centre — NOT the card search.
-                This slot used to hold the card SearchBar. On a phone
-                this overlay IS the Explore menu (the ⌘K launcher's button is
-                desktop-only and ⌘K needs a keyboard), so the one input sitting
-                directly above a grid of features searched the card database
-                instead of filtering the grid — reported as "the search bar is
-                broken for the explore features… it acts like a normal search bar
-                and searches all the cards". The card search has its own
-                full-width row in the phone navbar, so nothing is lost. */}
+            {/* ONE box, both kinds of answer. It filters the feature grid below
+                AND searches the card/sealed database above it.
+                This slot originally held the card SearchBar, which was reported
+                as broken ("it acts like a normal search bar and searches all the
+                cards") because on a phone this overlay IS the Explore menu and
+                the input sat directly above a grid of features it did not
+                filter. Making it a pure feature filter then drew the opposite
+                report: it is the search box people find on a phone, and a card
+                name typed into it returned only pages. So it now does both, and
+                neither report is re-opened by fixing the other. */}
             <div className="mx-auto mt-6 max-w-2xl">
               <input
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                placeholder="Filter features, tools and pages…"
-                aria-label="Filter RiftCompare features"
+                placeholder="Search cards, sealed, features…"
+                aria-label="Search RiftCompare cards, sealed products and features"
                 className="input w-full"
                 type="search"
               />
               {filtering && (
                 <p className="mt-2 text-center text-xs text-slate-500">
                   {sections.reduce((n, s2) => n + s2.links.length, 0)} feature
-                  {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "s"} match &ldquo;{filter}&rdquo; ·{" "}
-                  <Link href={`/browse?q=${encodeURIComponent(filter)}`} onClick={close} className="text-brand-400 hover:underline">
-                    search cards for &ldquo;{filter}&rdquo; instead →
-                  </Link>
+                  {sections.reduce((n, s2) => n + s2.links.length, 0) === 1 ? "" : "s"} match &ldquo;{filter}&rdquo;
                 </p>
+              )}
+
+              {/* Database matches, above the feature grid: someone typing a card
+                  name wants the card, and on a phone anything below the fold is
+                  effectively absent. */}
+              {(cardHits.length > 0 || sealedHits.length > 0) && (
+                <div className="mt-4 rounded-lg border border-ink-800 bg-ink-900/60 p-2 text-left">
+                  {cardHits.length > 0 && (
+                    <>
+                      <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        Cards
+                      </div>
+                      <ul>
+                        {cardHits.map((c) => (
+                          <li key={c.id}>
+                            <Link
+                              href={cardHref(c)}
+                              onClick={close}
+                              className="flex min-h-11 items-center justify-between gap-3 rounded-md px-2 py-2 text-sm text-slate-200 outline-none transition-colors hover:bg-ink-800 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-400"
+                            >
+                              <span className="min-w-0 truncate font-semibold">{c.name}</span>
+                              <span className="shrink-0 text-[11px] text-slate-500">
+                                {c.setCode} {c.collectorNumber}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  {sealedHits.length > 0 && (
+                    <>
+                      <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        Sealed
+                      </div>
+                      <ul>
+                        {sealedHits.map((s2) => (
+                          <li key={s2.groupKey}>
+                            <Link
+                              href={`/sealed?q=${encodeURIComponent(s2.name)}`}
+                              onClick={close}
+                              className="flex min-h-11 items-center justify-between gap-3 rounded-md px-2 py-2 text-sm text-slate-200 outline-none transition-colors hover:bg-ink-800 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-400"
+                            >
+                              <span className="min-w-0 truncate font-semibold">{s2.name}</span>
+                              <span className="shrink-0 text-[11px] text-slate-500">{s2.productType}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                  <Link
+                    href={`/browse?q=${encodeURIComponent(filter)}`}
+                    onClick={close}
+                    className="flex min-h-11 items-center justify-center rounded-md px-2 py-2 text-xs font-semibold text-brand-400 outline-none transition-colors hover:bg-ink-800 focus-visible:ring-2 focus-visible:ring-brand-400"
+                  >
+                    See all results for &ldquo;{filter}&rdquo; →
+                  </Link>
+                </div>
+              )}
+              {/* Only while a search is genuinely outstanding AND nothing is on
+                  screen yet, so results never flicker to "Searching…" mid-type. */}
+              {searching && cardHits.length === 0 && sealedHits.length === 0 && filter.trim().length >= 2 && (
+                <p className="mt-3 text-center text-xs text-slate-500">Searching cards and sealed…</p>
               )}
               {/* Light/dark switch — the phone home for the control the header
                   shows from sm up (ThemeToggle.tsx). Below lg only: from lg the
