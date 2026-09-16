@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePremium } from "./PremiumProvider";
 import { AD_STRATEGY, AD_UNITS_ENABLED, ADSENSE_CLIENT_ID } from "@/lib/adsense";
+import { NATIVE_HTML_CLASS } from "@/lib/native-boot";
 
 // Mounts the real ad unit only once its slot scrolls near the viewport, so an ad
 // request fires on demand rather than for every slot on the page at once (a
@@ -172,7 +173,17 @@ export function AdSlot({
   // point is that such a page stays as bare as possible.
   if (pageIsThin || pageIsNoindex) return null;
 
-  const canServeUnit = AD_UNITS_ENABLED && AD_STRATEGY === "manual" && Boolean(slot);
+  // Never a real AdSense unit inside the native app: that inventory is AdMob's
+  // (the shell shows a native banner), and an AdSense impression served in a
+  // WebView app is a Publisher Policies violation. The house promo still fills
+  // the same fixed-height box, so nothing shifts. Read from the class the
+  // <head> boot script stamps rather than navigator directly, so this agrees
+  // with the CSS and with NativeShell — and note it is evaluated on the client
+  // only, where `near` has already gated the unit behind an effect, so there is
+  // no server/client markup to mismatch.
+  const inNativeApp =
+    typeof document !== "undefined" && document.documentElement.classList.contains(NATIVE_HTML_CLASS);
+  const canServeUnit = AD_UNITS_ENABLED && AD_STRATEGY === "manual" && Boolean(slot) && !inNativeApp;
   // The real ad only mounts (and only pushes an ad request) once this slot is
   // near the viewport — see useNearViewport above. Until then, and for every
   // slot that can't serve a real unit, the house promo fills the same

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Long-press the launcher icon → jump straight to a task. These are the three
+  things people open RiftCompare to do, so they should not cost a cold start
+  plus two taps.
+
+  Each one fires a VIEW intent at a riftcompare.com URL, which is the same shape
+  as an incoming App Link — so it flows through exactly one code path
+  (MainActivity's deep-link filter → Capacitor's appUrlOpen → the SPA router in
+  NativeShell.tsx) rather than needing its own handling.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="search"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_search"
+        android:shortcutShortLabel="@string/shortcut_search_short"
+        android:shortcutLongLabel="@string/shortcut_search_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.riftcompare.app"
+            android:targetClass="com.riftcompare.app.MainActivity"
+            android:data="https://riftcompare.com/cards" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="movers"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_movers"
+        android:shortcutShortLabel="@string/shortcut_movers_short"
+        android:shortcutLongLabel="@string/shortcut_movers_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.riftcompare.app"
+            android:targetClass="com.riftcompare.app.MainActivity"
+            android:data="https://riftcompare.com/movers" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="watching"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_watching"
+        android:shortcutShortLabel="@string/shortcut_watching_short"
+        android:shortcutLongLabel="@string/shortcut_watching_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.riftcompare.app"
+            android:targetClass="com.riftcompare.app.MainActivity"
+            android:data="https://riftcompare.com/watching" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

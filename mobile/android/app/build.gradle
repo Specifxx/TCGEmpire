@@ -1,50 +1,102 @@
 apply plugin: 'com.android.application'
 
-// Release signing is configured via mobile/android/keystore.properties (which is
-// git-ignored — never commit it or the keystore). If that file is absent (e.g. a
-// fresh checkout or a debug-only build) we simply skip release signing so debug
-// builds still work. See store/android-signing.md.
+// Release signing is configured via mobile/android/keystore.properties, which is
+// git-ignored — never commit it or the keystore itself. When that file is absent
+// (a fresh clone, or a debug-only build) release signing is simply skipped, so
+// the project still builds. See store/android-signing.md.
 def keystorePropsFile = rootProject.file("keystore.properties")
 def keystoreProps = new Properties()
 if (keystorePropsFile.exists()) {
-    keystoreProps.load(new FileInputStream(keystorePropsFile))
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+// Resolve storeFile relative to mobile/android/ (where keystore.properties and,
+// by convention, the keystore itself live) rather than to this app/ module.
+// A bare `file(...)` here resolves against mobile/android/app/, so the documented
+// `storeFile=riftcompare-upload.keystore` failed with "Keystore file not found"
+// and only absolute paths worked. Absolute paths still work — rootProject.file
+// returns them unchanged.
+def resolveKeystore = { String path ->
+    path == null || path.trim().isEmpty() ? null : rootProject.file(path)
 }
 
 android {
-    namespace "com.riftcompare.app"
-    compileSdk rootProject.ext.compileSdkVersion
+    namespace = "com.riftcompare.app"
+    compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.riftcompare.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
-            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
     signingConfigs {
         if (keystorePropsFile.exists()) {
             release {
-                storeFile file(keystoreProps['storeFile'])
+                storeFile resolveKeystore(keystoreProps['storeFile'])
                 storePassword keystoreProps['storePassword']
                 keyAlias keystoreProps['keyAlias']
                 keyPassword keystoreProps['keyPassword']
             }
         }
     }
+
     buildTypes {
+        debug {
+            // Marks the build in the About screen / Play Console uploads without
+            // changing applicationId. Deliberately NO applicationIdSuffix: the
+            // launcher shortcuts in res/xml/shortcuts.xml name
+            // com.riftcompare.app.MainActivity explicitly (a shortcuts resource
+            // cannot read the ${applicationId} manifest placeholder), and the
+            // App Links filter is verified against that same package — a
+            // suffixed debug build would have shortcuts that launch the wrong
+            // package and links that never verify.
+            versionNameSuffix "-debug"
+        }
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            // Use the release signing config when a keystore is configured.
+            // R8. Capacitor's AAR ships consumerProguardFiles that keep every
+            // @CapacitorPlugin class and its @PluginMethod members, so plugin
+            // reflection survives shrinking — see proguard-rules.pro for the few
+            // extra keeps this app needs on top.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (keystorePropsFile.exists()) {
                 signingConfig signingConfigs.release
             }
         }
+    }
+
+    bundle {
+        // Play splits an AAB per language by default and ships only the ones
+        // matching the device locale. The WebView's UI text comes from
+        // riftcompare.com, not from Android resources, but AndroidX/Play
+        // Services strings do get split — and when a user switches the system
+        // language the missing split shows up as blank system dialogs until
+        // Play backfills it. Shipping all languages in one base module costs a
+        // few hundred KB and removes that whole class of report.
+        language {
+            enableSplit = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    lint {
+        // Don't let a lint warning in a transitive AndroidX dependency block a
+        // release build at 2am; the report is still written out either way.
+        abortOnError false
+        checkReleaseBuilds true
     }
 }
 

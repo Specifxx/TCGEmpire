@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Capacitor Android template's styles.xml references @color/colorPrimary,
+  @color/colorPrimaryDark and @color/colorAccent but ships no colors.xml to
+  define them, so a generated project fails to build with
+  "resource color/colorPrimary not found". This file is that missing piece, in
+  RiftCompare's palette (the same tokens the website uses).
+-->
+<resources>
+    <!-- ink-950 — the app background, matched by capacitor.config.ts's
+         backgroundColor so there is no white flash between the two. -->
+    <color name="colorPrimary">#0a0f1a</color>
+    <color name="colorPrimaryDark">#060a12</color>
+    <!-- The brand green used for prices, CTAs and the splash spinner. -->
+    <color name="colorAccent">#22c55e</color>
+
+    <!-- Splash + system bars. Kept separate from colorPrimary so the splash can
+         be retuned without dragging the whole theme with it. -->
+    <color name="splashBackground">#0a0f1a</color>
+    <color name="statusBarColor">#0a0f1a</color>
+    <color name="navigationBarColor">#0a0f1a</color>
+</resources>

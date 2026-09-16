@@ -448,7 +448,32 @@ html {
    padding below and the bottom bar's own position (bottom-[var(--native-banner-h)])
    stack rather than fight — the tab bar sits ABOVE the banner, not under it. */
 html.capacitor-native.has-native-banner {
-  --native-banner-h: 64px;
+  /* Fallback only. AdMob's ADAPTIVE_BANNER is NOT a fixed 64px — its height is
+     derived from the device width and orientation (roughly 50px on a small
+     phone, 90px on a tablet, and it re-computes on rotation), so a hard-coded
+     value either left a dead strip under the content or let the banner cover
+     the last row of it. NativeShell now sets --native-banner-h from the
+     plugin's own bannerAdSizeChanged event, and this value only applies for the
+     few frames between the class landing and the first size report. */
+  --native-banner-h: 50px;
+}
+
+/* While the soft keyboard is up the banner is hidden (NativeShell reacts to
+   Keyboard's show/hide events), so the space reserved for it has to collapse
+   too — otherwise a focused search box sits above an empty 50px gap. */
+html.capacitor-native.keyboard-open {
+  --native-banner-h: 0px;
+}
+
+/* Belt and braces over the two JS gates (lib/native-boot.ts's pauseAdRequests
+   and AdSlot's own check): if an AdSense unit is ever rendered inside the app
+   anyway, it must not be VISIBLE there. In-app ad inventory is AdMob's, and the
+   shell already shows a native banner — an AdSense impression in a WebView app
+   breaks the Google Publisher Policies. README.md and NativeShell.tsx both
+   described this rule long before it existed; now it does. */
+html.capacitor-native .adsbygoogle,
+html.capacitor-native ins.adsbygoogle {
+  display: none !important;
 }
 
 /* Reserve space at the bottom for the bottom tab bar (mobile) and/or the

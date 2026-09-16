@@ -5,6 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 import { outboundRel } from "@/lib/affiliate";
 import { markBuyClick, registerBuyLink } from "@/lib/buy-intent";
 import { reportOutboundConversion } from "@/lib/google-ads";
+import { haptic, isNative, openExternal } from "@/lib/native";
 
 // An outbound "buy" link. Used to also fire a click beacon (to /api/click) for
 // eBay retailer keys so click counts could be verified in our own DB — that
@@ -154,12 +155,18 @@ export function OutboundLink({
     // Inside the native app, open retailer links in the system browser so the user
     // leaves our WebView (and can come back), instead of getting stuck on the
     // store's site. On the web this branch never runs — it's a normal link.
-    const cap = (window as any).Capacitor;
-    if (cap?.isNativePlatform?.()) {
+    if (isNative()) {
       e.preventDefault();
-      import("@capacitor/browser")
-        .then(({ Browser }) => Browser.open({ url: href }))
-        .catch(() => window.open(href, "_blank"));
+      // A short tick to confirm the tap landed — the Custom Tab takes a beat to
+      // animate in, and this is the one action on the site worth confirming.
+      haptic("light");
+      // openExternal (lib/native.ts) is the single definition of "leave the
+      // app": a Custom Tab with a close button back to us, falling back to
+      // window.open if the Browser plugin can't start. The old inline version
+      // fell back to `window.open(href, "_blank")` with no `noopener`, which in
+      // a WebView hands the retailer's page a window.opener handle back into
+      // the app's own origin.
+      void openExternal(href);
     }
   }
   return (

@@ -1,81 +1,312 @@
-# RiftCompare — Store Listing (copy-paste ready)
+# RiftCompare — Google Play listing (copy-paste ready)
 
-Shared metadata for the Apple App Store and Google Play. Adjust freely.
+Everything the Play Console asks for, written out and within Google's limits.
+Character counts are given where Play enforces one; they were counted for the
+exact text in the block, so edits need re-counting.
 
-## Identity
+Apple App Store copy is at the bottom — the two stores want different shapes.
 
-- **App name:** `RiftCompare`
-- **Bundle / Application id:** `com.riftcompare.app`
-- **Developer / Publisher:** _your name or company_
-- **Support email:** `riftcompare@gmail.com`
-- **Marketing / support URL:** `https://riftcompare.com`
-- **Privacy policy URL:** `https://riftcompare.com/privacy`
-- **Category:** Shopping (primary) · Entertainment (secondary)
-- **Price:** Free (ad-supported)
+---
 
-## Subtitle / short description (≤ 30 chars Apple, ≤ 80 Google)
+## 1. Store settings
 
-> Compare Riftbound card prices
+| Field | Value |
+| --- | --- |
+| **App name** (≤30) | `RiftCompare: Riftbound Prices` — 29 chars |
+| **Package / Application id** | `com.riftcompare.app` |
+| **Default language** | English (United States) — `en-US` |
+| **App or game** | App |
+| **Free or paid** | Free |
+| **Category** | Shopping |
+| **Tags** (choose ≤5) | Price Comparison · Deals & Coupons · Collectibles · Card Games · Shopping Tools |
+| **Contact email** | `riftcompare@gmail.com` |
+| **Website** | `https://riftcompare.com` |
+| **Privacy Policy** | `https://riftcompare.com/privacy` |
 
-## Promotional text (Apple, ≤ 170 chars)
+> **App name note.** Play forbids performance claims, emoji, ALL-CAPS gimmicks
+> and keyword stuffing in the title. `RiftCompare: Riftbound Prices` is a brand
+> plus a plain description of function, which is what Play's metadata policy
+> asks for. Don't be tempted into `#1 BEST Riftbound Price Tracker!!` — that is
+> a rejection.
 
-> Find the cheapest place to buy every Riftbound TCG card. Live prices from stores
-> across Australia and the US — updated daily.
+---
 
-## Full description
+## 2. Short description (≤80 characters)
 
-> **RiftCompare is the fastest way to find the cheapest Riftbound cards.**
->
-> Browse the complete Riftbound TCG card database and compare live prices across
-> dozens of stores in Australia and the United States — so you always
-> know the best place to buy.
->
-> **Features**
-> • Search every Riftbound card by name, set, rarity, type and domain
-> • Live price comparison across multiple retailers, side by side
-> • Tap straight through to the cheapest store to buy
-> • Build and price-check decks
-> • Wishlist the cards you're hunting
-> • Switch between AU and US pricing
->
-> Prices are sourced from public store listings and may change — always confirm on
-> the retailer's site before buying.
->
-> Not affiliated with or endorsed by Riot Games.
+Play shows this under the icon in search results. It matters more than the full
+description, because most people never open the full one.
 
-## Keywords (Apple, ≤ 100 chars, comma-separated)
+```
+Compare live Riftbound card prices across every store and find the cheapest.
+```
+*(76 characters.)*
 
-> riftbound,tcg,card prices,price comparison,league of legends,trading cards,singles,deck,riot
+Alternatives, all under 80, if you want to A/B them later:
 
-## Content rating
+```
+Find the cheapest Riftbound cards. Live prices from stores worldwide.
+```
+*(69 characters.)*
 
-- **Apple age rating:** 4+ (no objectionable content). The app contains
-  third-party ads → answer "yes" to ads in the questionnaire.
-- **Google content rating:** complete the IARC questionnaire → expect **Everyone**.
-  Declare that the app **contains ads**.
+```
+Every Riftbound card price, compared. Know what a card should cost.
+```
+*(67 characters.)*
 
-## Data safety / privacy answers
+---
 
-The app shows ads via Google AdMob and uses the website's existing accounts.
+## 3. Full description (≤4000 characters)
 
-- **Data collected:** account email (if the user registers), approximate usage
-  analytics, and **advertising identifiers** (via AdMob).
-- **Advertising ID / tracking:** YES — used for ads (AdMob). On iOS this is gated
-  behind the App Tracking Transparency prompt; declining still allows
-  non-personalised ads.
-- **Encryption in transit:** YES (HTTPS only).
-- **Account deletion:** users can contact `riftcompare@gmail.com`; link the
-  account/privacy page (`https://riftcompare.com/privacy`).
+Paste verbatim. Play renders a small amount of formatting; the bullets below use
+a plain `•` because Play does not render Markdown lists.
 
-> Fill these to match what the live site actually collects — keep this in sync
-> with `https://riftcompare.com/privacy`.
+```
+Stop overpaying for Riftbound cards.
+
+RiftCompare checks what every store is charging for a card and shows you the
+cheapest one, side by side — so a single tap takes you to the best price
+instead of the first shop you happened to open.
+
+WHAT IT DOES
+
+• Compare prices across every store we track, ranked cheapest first
+• Search the complete Riftbound card database by name, set, rarity, domain and
+  card type
+• See the real delivered cost — postage is included in the comparison, not
+  hidden until checkout
+• Track price history so you know whether today's price is actually a good one
+• Watch the cards you're hunting and check back on what's moved
+• Follow the biggest risers and fallers of the week
+• Price sealed product — boxes, bundles and cases — on what a pack really costs
+• Value your collection as prices move
+• Switch between Australian, US, UK, Canadian, Singaporean and European
+  pricing, each in its own currency
+
+BUILT FOR THE WAY PEOPLE ACTUALLY BUY
+
+Prices come from public store listings and are refreshed daily. Every listing
+shows whether it's in stock and what condition it's in before you commit, and
+out-of-stock shops are collapsed out of your way rather than padding the list.
+
+FAST, AND IT STAYS OUT OF YOUR WAY
+
+Jump straight to search, this week's movers, or your watchlist by holding the
+app icon. Tapping a riftcompare.com link anywhere on your phone opens it right
+here. Buy links open in a proper browser tab with a close button, so you never
+lose your place.
+
+FREE
+
+RiftCompare is free and supported by ads. A Premium tier is available on the
+website if you'd rather browse without them.
+
+HOW WE MAKE MONEY
+
+Some store links are affiliate links, which means we may earn a commission on a
+purchase — at no extra cost to you. It never changes the ranking: the cheapest
+price is always shown first, whether or not we earn anything on it. Our full
+methodology is published at riftcompare.com/methodology.
+
+A NOTE ON PRICES
+
+Prices are collected from public store listings and can change at any time.
+Always confirm the final price on the retailer's own site before you buy.
+
+RiftCompare is an independent price-comparison service. It is not affiliated
+with, endorsed by, or sponsored by Riot Games. Riftbound and League of Legends
+are trademarks of Riot Games, Inc.
+```
+
+*(2,299 characters — comfortably inside the 4,000 limit, with room to add
+features later.)*
+
+> **Why the affiliate + trademark paragraphs are not optional.** Play's
+> Monetisation and Ads policy requires affiliate relationships to be disclosed,
+> and the Intellectual Property policy is the single most common reason a
+> fan-adjacent TCG app gets pulled. Naming Riot's trademarks and disclaiming
+> affiliation in the listing is what keeps this app in the "independent price
+> comparison" bucket rather than the "unauthorised Riot app" one.
+
+---
+
+## 4. Graphics
+
+All generated by `npx tsx scripts/gen-store-screenshots.ts` into
+[`assets/`](assets). Re-run it after a redesign rather than hand-capturing.
+
+| Asset | Spec | File |
+| --- | --- | --- |
+| App icon | 512×512 PNG, **no alpha channel** | `assets/icon-512.png` |
+| Feature graphic | 1024×500 PNG | `assets/feature-graphic.png` |
+| Phone screenshots | 2–8, 1080×1920 (9:16) | `assets/phone-1.png` … `phone-6.png` |
+
+Upload the phone screenshots in this order — the first two are the only ones
+most people see:
+
+1. `phone-1` — "Every Riftbound price, one search" (the homepage and search)
+2. `phone-2` — "See who's cheapest before you buy" (**the price comparison —
+   this is the app's whole pitch; never demote it below the fold**)
+3. `phone-3` — "Catch a card before it spikes" (price movers)
+4. `phone-4` — "The complete card database" (a full set with prices)
+5. `phone-5` — "Sealed product, priced per pack"
+6. `phone-6` — "Track the whole market, not one card"
+
+> **Tablet screenshots.** Play will warn that the listing has no 7"/10" tablet
+> screenshots and will exclude the app from some tablet surfacing. That is a
+> warning, not a blocker — you can publish without them. To add them later,
+> extend the `SHOTS` list in the generator with a tablet viewport.
+
+---
+
+## 5. Content rating questionnaire (IARC)
+
+Answer these and expect **Everyone** / PEGI 3.
+
+| Question | Answer |
+| --- | --- |
+| Category | Utility, Productivity, Communication, or Other |
+| Violence, sexuality, language, controlled substances | No to all |
+| Does the app share the user's location? | No |
+| Does the app allow users to interact or exchange content? | No |
+| Does the app contain **digital purchases**? | No (Premium is sold on the website, not in-app) |
+| Does the app contain **ads**? | **Yes** |
+| Gambling / simulated gambling | No |
+
+> **"Does this app contain ads" also has to be ticked separately** in the Play
+> Console's *Store presence → Main store listing → Ads* section. It shows an
+> "Contains ads" badge on the listing. Ticking it is mandatory and forgetting it
+> is a policy violation on its own.
+
+---
+
+## 6. Data safety form
+
+This is the section that most often gets an app rejected, because the answers
+must match what the app *actually* does. What RiftCompare does:
+
+**Does your app collect or share any of the required user data types?** — Yes.
+
+| Data type | Collected | Shared | Purpose | Optional? |
+| --- | --- | --- | --- | --- |
+| **Email address** | Yes | No | Account management | Yes — only if the user signs in |
+| **Name** | Yes | No | Account management | Yes — comes from the OAuth profile |
+| **App interactions** | Yes | Yes | Analytics, Advertising | No |
+| **Device or other IDs** (advertising ID) | Yes | Yes | Advertising | No |
+| **Crash logs / diagnostics** | Yes | No | Crash reporting | No |
+
+Then:
+
+- **Is all data encrypted in transit?** — **Yes.** The app is HTTPS-only and
+  `res/xml/network_security_config.xml` blocks cleartext outright.
+- **Do you provide a way for users to request data deletion?** — **Yes.**
+  Point it at `https://riftcompare.com/privacy`, which must describe how to
+  request deletion (email `riftcompare@gmail.com` is acceptable if the policy
+  says so explicitly).
+- **Has your data collection been independently verified?** — No.
+
+> **The advertising ID answer is not optional.** The app declares
+> `com.google.android.gms.permission.AD_ID` in its manifest, which Play reads
+> directly. Declaring the permission and then answering "no advertising ID" is
+> an automatic mismatch, and Play will reject the release.
+
+> **Keep this in sync with `https://riftcompare.com/privacy`.** If the privacy
+> policy doesn't mention advertising identifiers and AdMob, the form and the
+> policy contradict each other — also a rejection.
+
+---
+
+## 7. Advertising ID declaration
+
+Play Console → *Policy → App content → Advertising ID*.
+
+- **Does your app use advertising ID?** — Yes
+- **Purpose** — Advertising or marketing; Analytics
+
+---
+
+## 8. Government apps / financial features / health
+
+Answer **No** to all of these App content sections:
+
+- Government app: No
+- Financial features: **No** — comparing retail prices is not a financial
+  product, and the app takes no payments
+- Health apps: No
+- News app: No
+- COVID-19 contact tracing: No
+- Data safety: (completed above)
+
+---
+
+## 9. Target audience and content
+
+- **Target age groups:** 18 and over, and 13–17.
+  Do **not** tick 12-and-under: that pulls the app into **Families policy**,
+  which bans the AdMob configuration this app uses (it would require a
+  Play-certified, child-safe ad SDK and a much stricter ad review).
+- **Appeal to children:** No.
+- **Store listing preview:** leave unticked (no children's section).
+
+---
+
+## 10. App access
+
+The Play reviewer must be able to see everything.
+
+- **All functionality is available without special access** — tick this.
+
+Every screen that matters (search, price comparison, movers, sealed, sets) works
+signed out. Watchlist and portfolio prompt for sign-in, which is standard and
+does not require providing reviewer credentials. If a reviewer ever asks, note
+that sign-in is Google or Discord OAuth only — there is no username/password to
+hand over — and point them at the signed-out functionality.
+
+---
+
+## Apple App Store (for the iOS build)
+
+| Field | Value |
+| --- | --- |
+| **Name** (≤30) | `RiftCompare: Riftbound Prices` |
+| **Subtitle** (≤30) | `Compare TCG card prices` — 23 chars |
+| **Category** | Shopping (primary), Entertainment (secondary) |
+| **Age rating** | 4+ |
+
+**Promotional text** (≤170, changeable without a new build):
+
+```
+Find the cheapest place to buy every Riftbound card. Live prices from stores
+across Australia, the US, the UK and more — updated daily.
+```
+
+**Keywords** (≤100 characters, comma-separated, no spaces after commas, and
+never repeat words already in the name/subtitle):
+
+```
+riftbound,tcg,card,prices,deals,collect,league,legends,singles,sealed,deck,trading,riot,shop
+```
+*(92 characters.)*
+
+**Description** — reuse the Play full description above; it is within Apple's
+4,000-character limit too.
+
+> **Apple guideline 4.2 (minimum functionality).** Apple sometimes rejects apps
+> that are "just a website". This one ships native deep links, launcher/quick
+> actions, an offline screen, a native share sheet, haptics, a native ad layer
+> and hardware back handling, which is normally enough. If a reviewer pushes
+> back, the fastest additions are push notifications for price drops (see
+> `mobile/README.md`) and an offline-readable watchlist.
+
+---
 
 ## Pre-launch checklist
 
-- [ ] Real AdMob App ids set natively (iOS Info.plist + Android strings.xml)
-- [ ] Real AdMob banner unit ids set as website env vars + site redeployed
-- [ ] `app-ads.txt` published on riftcompare.com (from the AdMob console)
-- [ ] Version/build numbers bumped
-- [ ] Screenshots captured (see `screenshots.md`)
-- [ ] Privacy policy reachable at the URL above
-- [ ] Signed build produced (Android `.aab` / iOS archive)
+- [ ] Real AdMob **App id** in `mobile/android/app/src/main/res/values/strings.xml`
+- [ ] Real AdMob **banner unit id** in the website env (`NEXT_PUBLIC_ADMOB_BANNER_ANDROID`), site redeployed
+- [ ] `app-ads.txt` published on `riftcompare.com` (AdMob shows the exact line)
+- [ ] `assetlinks.json` published (see `assetlinks.json.template`) so App Links verify
+- [ ] `https://riftcompare.com/privacy` mentions AdMob + advertising identifiers + deletion
+- [ ] Signed `.aab` built (`mobile/store/android-signing.md`)
+- [ ] Data safety form matches the table above
+- [ ] "Contains ads" ticked in the store listing
+- [ ] Screenshots + feature graphic + 512 icon uploaded

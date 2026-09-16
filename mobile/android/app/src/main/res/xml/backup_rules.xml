@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 11 and below (android:fullBackupContent).
+
+  The WebView's cookie store holds the riftcompare.com session cookie. Letting
+  auto-backup carry it off the device would mean a restore onto a *different*
+  phone silently resumes someone's signed-in session, so every WebView data
+  store is excluded. Nothing else the app keeps locally is worth restoring —
+  the site is the source of truth — so this is an exclude-everything-sensitive
+  list rather than a curated include list.
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="WebViewChromiumPrefs.xml" />
+    <exclude domain="database" path="webview.db" />
+    <exclude domain="database" path="webviewCookiesChromium.db" />
+    <exclude domain="file" path="app_webview/" />
+</full-backup-content>

@@ -51,12 +51,31 @@ It is pre-loaded alongside 6 seller accounts, 54 cards (the "Origins" set) and
 
 ## Mobile app (iOS + Android)
 
-A native iOS + Android app lives in [`mobile/`](mobile/). It's a
-[Capacitor](https://capacitorjs.com) shell that loads the live site and shows
-native **Google AdMob** ads, so it reuses 100% of this web app and stays in sync
-automatically (a website deploy updates every installed app — no store update).
-See [`mobile/README.md`](mobile/README.md) for build & store-release steps. The
-website is app-aware via `src/components/NativeShell.tsx` and `src/lib/admob.ts`.
+A native Android + iOS app lives in [`mobile/`](mobile/). It's a
+[Capacitor 8](https://capacitorjs.com) shell that loads the live site and layers
+real native behaviour over it — **Google AdMob** ads, verified App Links,
+launcher shortcuts, an offline screen bundled in the binary, a share sheet,
+haptics, Custom Tabs for outbound links and hardware-back handling. It reuses
+100% of this web app and stays in sync automatically: a website deploy updates
+every installed app, with no store update.
+
+See [`mobile/README.md`](mobile/README.md) for build and store-release steps,
+and [`mobile/store/`](mobile/store) for the Play Console copy, signing guide and
+generated graphics.
+
+The website is app-aware through four files:
+
+| File | Role |
+| --- | --- |
+| `src/lib/native-boot.ts` | The `<head>` boot script. Detects the app from the User-Agent before any bundle loads, and **pauses AdSense** — in-app ad inventory belongs to AdMob, not AdSense. |
+| `src/components/NativeShell.tsx` | Splash, status bar, AdMob banner, back button, deep links, connectivity, keyboard. No-op on the web. |
+| `src/lib/native.ts` | `isNative()`, `openExternal()`, `haptic()`, `shareUrl()`. |
+| `src/lib/admob.ts` | AdMob ad-unit ids. |
+
+> ⚠️ The Capacitor plugin versions in this `package.json` and in
+> `mobile/package.json` **must stay on the same major**. The website imports the
+> plugin JS; the shell provides the native half. A mismatch fails at runtime in
+> the user's hands, not at build time.
 
 ## Useful scripts
 

@@ -23,6 +23,7 @@ import { FooterNav } from "@/components/FooterNav";
 import { ShareRow } from "@/components/ShareRow";
 import { enabledProviders } from "@/lib/oauth";
 import { AdSenseLoader } from "@/components/AdSenseLoader";
+import { NATIVE_BOOT_SCRIPT } from "@/lib/native-boot";
 import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
@@ -279,6 +280,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             belonging to no account under review, is the fault that most likely
             voided the last two applications. See docs/adsense-remediation.md. */}
         {ADSENSE_CONFIGURED && <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />}
+        {/* Inside the native app ONLY: flag <html> and tell AdSense not to
+            request ads. AdSense is a web product — app inventory belongs to
+            AdMob, which the shell shows natively — and the two were running
+            together in the WebView. Must precede the loader below; see
+            lib/native-boot.ts for why this is a UA sniff and not headers(). */}
+        <script dangerouslySetInnerHTML={{ __html: NATIVE_BOOT_SCRIPT }} />
         {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
             consent message, on every page, ungated. See the component header. */}
         <AdSenseLoader />

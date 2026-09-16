@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RiftCompare talks to exactly one origin (https://riftcompare.com) plus the ad
+  and OAuth endpoints, all of which are HTTPS. Turning cleartext off app-wide
+  means a downgrade attack on a hostile network cannot quietly serve a
+  plaintext page into the WebView.
+
+  Note this is enforced ON TOP of capacitor.config.ts's `cleartext: false` —
+  that setting only governs Capacitor's own local server, not arbitrary
+  navigations the WebView performs.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- Debug builds may additionally trust user-installed CAs so a proxy like
+         Charles/mitmproxy can be used while developing. This block is ignored
+         entirely in release builds. -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

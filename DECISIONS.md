@@ -6830,3 +6830,143 @@ wrong half of the market to watch, the fix is the env var, not a rewrite.
 Expect empty days outside the US. $500+ Riftbound auctions are a US-and-
 sometimes-AU phenomenon, so the empty state names both filters explicitly rather
 than saying "no auctions", which would be false and would read as a broken page.
+
+---
+
+## The Android app: what "a full app" actually needed, 2026-09-16
+
+The brief was a sophisticated Android app for RiftCompare with as many bugs
+fixed as possible, plus a Play Store listing with the copy and graphics written.
+`mobile/` already held a Capacitor shell, so this is mostly what was wrong with
+it and what the Play Console demands in 2026 that it did not do.
+
+**It could not have been published at all: `targetSdkVersion 34`.** Play has
+required API 35 for new submissions since Aug 2025 and API 36 since Aug 2026;
+an upload targeting 34 is rejected by the Console before a human sees it. The
+shell was also two Capacitor majors behind (6, current is 8). Rather than
+hand-patch the Gradle toolchain, the Android project was regenerated from
+Capacitor 8's template, which brings compileSdk/targetSdk 36, AGP 8.13,
+Gradle 8.14.3, JDK 21 and minSdk 24 as a matched set, and the customisations
+were re-applied on top. The debug APK, release APK and release `.aab` all build
+(verified against a real SDK, not assumed); R8 and resource shrinking take the
+release APK from 10.7 MB to 4.9 MB.
+
+**The website and the app were on different Capacitor majors.** The root
+`package.json` pinned the plugin JS at v6 while the shell now ran a v8 native
+runtime. That is invisible to both `tsc` and Gradle — the bridge simply calls a
+native plugin with a contract it no longer has, at runtime, in the user's hands.
+Both files are now on 8, and `mobile/README.md` says why they must move together.
+
+**AdSense was running inside the app, alongside AdMob.** This is the find that
+mattered most. AdSense is a web product; in-app inventory — including a WebView
+wrapping your own site — belongs to AdMob under the Google Publisher Policies.
+Nothing gated it: the loader is in `<head>` unconditionally (correctly — it is
+also the ownership verification and the EEA consent transport, as
+`AdSenseLoader.tsx` argues at length), Auto ads would place into the WebView,
+and `AdSlot` mounted real `<ins>` units. Both `mobile/README.md` and
+`NativeShell.tsx` *claimed* `globals.css` suppressed web ads in-app. It did not;
+there was no such rule, and the `HilltopAdsLoader.tsx` the README pointed at no
+longer exists.
+
+The fix had to survive one hard constraint: **the root layout may not read
+`headers()`**, because one dynamic-API read there opts every route out of static
+caching — the same constraint that already forces the sidenav and theme boot
+scripts. So detection is a User-Agent sniff from static HTML, not a server-side
+header check. `capacitor.config.ts` appends `RiftCompareApp` to the WebView's
+UA; a new `<head>` boot script (`src/lib/native-boot.ts`, inlined before the
+AdSense loader) reads it, stamps `html.capacitor-native`, and sets
+`adsbygoogle.pauseAdRequests = 1` — AdSense's own documented "load the library,
+request nothing" switch, which stops Auto ads without removing the tag that the
+account verification depends on. `AdSlot` gains an `isNative` gate for manual
+units, and the CSS rule the docs always described now exists as a third net.
+`tests/native-boot.test.ts` executes the boot string in a VM against both UAs
+and asserts the config still appends the token the site looks for — if those two
+drift, the site silently goes back to serving AdSense in-app and nothing else
+fails.
+
+The UA token is chosen over `window.Capacitor` deliberately: the bridge global
+is injected by the native layer and is not guaranteed to exist before the page's
+own head scripts run when the WebView loads a **remote** url, which is exactly
+this setup. `navigator.userAgent` is available on the first line of the first
+script, every time.
+
+**Smaller bugs, each real:**
+
+- *The back button could trap you in the app.* The handler accepted
+  `canGoBack || window.history.length > 1`. `history.length` never shrinks as
+  you navigate back, so once a session had been more than one page deep,
+  returning to the first entry left `canGoBack` false and `history.length` still
+  above 1 — `history.back()` on an empty stack, which does nothing, forever. Now
+  it keys on `canGoBack` alone, with a confirming second press to exit.
+- *The AdMob banner's height was hard-coded at 64px.* `ADAPTIVE_BANNER` derives
+  its height from screen width and re-reports on rotation (~50px on a small
+  phone, ~90px on a tablet), so the reserved space was wrong on every device in
+  one direction or the other. `--native-banner-h` is now driven by the plugin's
+  own `bannerAdSizeChanged` event.
+- *The banner sat over the keyboard.* It is pinned to the bottom of the window,
+  which is where the soft keyboard appears — an ad between the user and the
+  search field, and AdMob counts taps on it. It is now hidden while the keyboard
+  is up, with the reserved space collapsing to match.
+- *The shell leaked listeners and stacked banners.* Setup ran in an async IIFE
+  whose handles were assigned after the cleanup could already have run. The
+  banner is a native view that outlives the component unless destroyed, so a
+  remount put a second one on top of the first.
+- *`storeFile` in `keystore.properties` never worked as documented.*
+  `store/android-signing.md` said the path was relative to `mobile/android/`,
+  but `build.gradle` used a bare `file(...)`, which in the `app` module resolves
+  against `mobile/android/app/`. Only absolute paths worked. Now
+  `rootProject.file(...)`, matching the docs.
+- *The app was themed Material indigo and pink.* `styles.xml` referenced
+  `@color/colorPrimary` and friends with no `colors.xml` to define them, so it
+  silently inherited `capacitor-android`'s fallbacks (`#3F51B5` / `#FF4081`) —
+  visible in text-selection handles, the cursor, system dialogs and the task
+  switcher, on a dark green app. It also used a *Light* base theme, so every
+  system-drawn surface came up white. (First read as a build-breaking missing
+  resource; a build with the file removed proved otherwise. Cosmetic, not fatal.)
+- *Retailer links fell back to `window.open(href, "_blank")` with no `noopener`*,
+  handing the retailer's page a handle back into the app's own origin.
+- *`www/manifest.json` declared `image/png` for seven `.webp` icons.*
+
+**Native behaviour added**, both because the app should be worth installing and
+because "it's just a website" is what gets wrapper apps rejected: an offline
+screen bundled in the binary via `server.errorPath` (with retry and
+auto-recovery, working with no network at all), verified App Links so any
+riftcompare.com link opens in the app and routes through the SPA router,
+launcher long-press shortcuts, connectivity notices, a native share sheet,
+haptics on buy taps, Custom Tabs for outbound links, Android 15 edge-to-edge,
+and the Android 12+ splash API dismissed on first paint. Hardening: cleartext
+blocked app-wide, the WebView cookie jar (which holds the session) excluded from
+both cloud backup and device transfer, and a `<queries>` block so the outbound
+buy link — the one tap on this app that earns money — still resolves when no
+Custom-Tabs browser is installed.
+
+**Push notifications were removed, not shipped.** Price-drop push is the obvious
+flagship feature, but `@capacitor/push-notifications` cannot function without a
+Firebase `google-services.json`, and bundling it meant declaring
+`POST_NOTIFICATIONS`, `WAKE_LOCK`, `FOREGROUND_SERVICE` and `c2dm.RECEIVE` for a
+feature that does nothing. A dead dependency with a live permission footprint is
+worse than an honest omission; `mobile/README.md` carries the five steps to add
+it.
+
+**Google sign-in still does not work in the app, and was deliberately not
+fixed.** Google blocks OAuth in embedded WebViews by policy
+(`disallowed_useragent`); no setting changes it. Discord now works, because the
+provider hosts were missing from `allowNavigation` entirely — Capacitor was
+punting them to the external browser, where the callback set the session cookie
+in *that* browser's jar and the app came back still signed out. The real fix for
+Google is native Credential Manager plus a server endpoint that exchanges an ID
+token for a session, which is a change to production auth that cannot be tested
+without live OAuth credentials. A Custom Tab is not a workaround: Custom Tabs
+share cookies with Chrome, not with the app's WebView.
+
+**Store assets are generated, not captured.** `scripts/gen-store-screenshots.ts`
+produces the 512 icon, the 1024×500 feature graphic and six 1080×1920 captioned
+phone screenshots from the live site, so a redesign means re-running a script
+rather than re-shooting eight frames. It sends the app's own UA, so the frames
+show the site as it renders *inside* the app — no web ad slots the app never
+displays. Two things in it are load-bearing and non-obvious: it scrolls with a
+plain `window.scrollTo` because the site sets `overflow: clip` on `<html>` and
+the CDP scroll-into-view behind Playwright's `scrollIntoViewIfNeeded` silently
+no-ops against it; and it scrolls **twice**, because these pages lazy-load rows
+as they come into range and a single pass overshot the target heading by
+several hundred pixels every time.

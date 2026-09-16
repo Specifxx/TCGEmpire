@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <!-- Base application theme.
+         The Capacitor template ships Theme.AppCompat.Light.DarkActionBar here.
+         RiftCompare is a permanently dark app, so a *Light* base meant every
+         system-drawn surface the WebView doesn't paint — the file chooser, the
+         permission dialogs, the text-selection and share menus — came up white
+         on a black app. DayNight + forced night below keeps them dark. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorPrimary</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Light icons on our dark bars. Ignored from API 35 (edge-to-edge is
+             mandatory and the bars are transparent), which is why the WebView
+             margins are handled by Capacitor's adjustMarginsForEdgeToEdge and
+             the page's own env(safe-area-inset-*) CSS instead. -->
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/statusBarColor</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/navigationBarColor</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
-
+    <!-- Launch theme. On Android 12+ the platform draws the splash itself from
+         the windowSplashScreen* attributes below; android:background is the
+         pre-12 fallback. postSplashScreenTheme is what the system swaps to when
+         the splash is dismissed — without it the app would keep the splash
+         drawable as its window background for the whole session. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splashBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

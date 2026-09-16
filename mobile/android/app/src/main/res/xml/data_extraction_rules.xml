@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ (android:dataExtractionRules). Replaces backup_rules.xml on API 31+
+  and splits the old single rule set in two:
+
+  * <cloud-backup>   — Google Drive auto-backup, restored onto ANY device.
+  * <device-transfer> — direct device-to-device migration.
+
+  Same reasoning as backup_rules.xml: the WebView cookie jar carries the
+  riftcompare.com session, so it never leaves the device by either route.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="WebViewChromiumPrefs.xml" />
+        <exclude domain="database" path="webview.db" />
+        <exclude domain="database" path="webviewCookiesChromium.db" />
+        <exclude domain="file" path="app_webview/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="WebViewChromiumPrefs.xml" />
+        <exclude domain="database" path="webview.db" />
+        <exclude domain="database" path="webviewCookiesChromium.db" />
+        <exclude domain="file" path="app_webview/" />
+    </device-transfer>
+</data-extraction-rules>

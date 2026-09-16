@@ -1,0 +1,51 @@
+{
+  "_comment": [
+    "Android App Links for RiftCompare. Publish this at",
+    "https://riftcompare.com/.well-known/assetlinks.json — in this repo that",
+    "means public/.well-known/assetlinks.json, which Next.js serves as a static",
+    "file. It must be served over HTTPS, as application/json, with NO redirect.",
+    "",
+    "What it does: AndroidManifest.xml declares an intent-filter with",
+    "android:autoVerify=\"true\" for riftcompare.com. At install time Android",
+    "fetches this file and checks that the installed app's signing certificate",
+    "is listed below. If it matches, every riftcompare.com link on the phone",
+    "opens directly in the app with no 'open with' chooser. If it does not, the",
+    "app still works — links simply keep opening in the browser.",
+    "",
+    "!! WHICH FINGERPRINT !! With Play App Signing enabled (the default, and",
+    "recommended), Google re-signs your upload with ITS OWN key, so the",
+    "certificate on the installed app is NOT the one in your upload keystore.",
+    "Using the upload fingerprint here is the single most common reason App",
+    "Links silently fail to verify. Take the value from:",
+    "",
+    "  Play Console → your app → Test and release → Setup → App signing",
+    "  → 'App signing key certificate' → SHA-256 certificate fingerprint",
+    "",
+    "For a locally-built debug/release APK (not via Play), get it with:",
+    "",
+    "  $ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs app.apk",
+    "",
+    "You may list BOTH fingerprints in the array below — that is supported, and",
+    "is what lets a locally sideloaded build and the Play build both verify.",
+    "",
+    "Delete this _comment key before publishing: Digital Asset Links tolerates",
+    "it, but there is no reason to serve it.",
+    "",
+    "Verify once live:",
+    "  curl -sS https://riftcompare.com/.well-known/assetlinks.json",
+    "  adb shell pm verify-app-links --re-verify com.riftcompare.app",
+    "  adb shell pm get-app-links com.riftcompare.app     (expect: verified)"
+  ],
+  "statements": [
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.riftcompare.app",
+        "sha256_cert_fingerprints": [
+          "REPLACE:WITH:THE:SHA256:FINGERPRINT:FROM:PLAY:APP:SIGNING"
+        ]
+      }
+    }
+  ]
+}
