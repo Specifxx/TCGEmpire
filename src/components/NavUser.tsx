@@ -15,7 +15,17 @@ export function NavUser() {
   if (!loaded) return <div aria-hidden className="h-11 w-11 sm:h-9 sm:w-9" />;
   return (
     <>
-      {user && <NotificationBell />}
+      {/* Bell hidden below sm: reported directly — "get rid of the
+          notification icon so we make more space for the profile icon" on
+          phones, where the header row is already tight (see Navbar.tsx's own
+          breakpoint history). Still reachable from sm up; the shared poll in
+          use-unread.ts is unaffected either way (one interval regardless of
+          how many components read it, or whether they're visible). */}
+      {user && (
+        <span className="hidden sm:inline-flex">
+          <NotificationBell />
+        </span>
+      )}
       <UserMenu user={user} />
     </>
   );
