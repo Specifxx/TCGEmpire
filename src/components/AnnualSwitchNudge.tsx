@@ -5,6 +5,7 @@ import { useMe, invalidateMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { TIER_NAMES, tierAnnualAmount, annualSavingPct, type PremiumTierKey } from "@/lib/site";
 import { NUDGE_DELAY_MS } from "@/lib/nudge-timing";
+import { usePresence } from "@/lib/motion";
 
 // RETENTION LEVER: nudge a monthly Premium subscriber onto the annual plan.
 // Annual up-front is the single biggest churn win on a small-ticket consumer sub
@@ -38,14 +39,24 @@ function readNum(store: Storage | null, key: string): number {
 export function AnnualSwitchNudge() {
   const { premium, loaded } = useMe();
   const [phase, setPhase] = useState<"hidden" | "offer" | "working" | "done" | "error">("hidden");
-  const [entered, setEntered] = useState(false);
   const [tier, setTier] = useState<PremiumTierKey>("premium");
   const checked = useRef(false); // one subscription fetch per mount, max
 
-  const hide = useCallback(() => {
-    setEntered(false);
-    setTimeout(() => setPhase("hidden"), 250);
-  }, []);
+  // `open` (not `phase`) drives usePresence — `phase` carries the CONTENT
+  // (offer/working/done/error), `open` is purely "should the card be on
+  // screen". Collapsing them into one usePresence(phase !== "hidden") call
+  // would mean flipping phase back to "hidden" the instant hide() runs,
+  // which swaps the content out mid-fade instead of fading the real card.
+  const [open, setOpen] = useState(false);
+  const { mounted, entered } = usePresence(open, 250);
+
+  // Reset the phase machine back to "hidden" only once the exit transition
+  // has actually finished (mounted flips false), not the instant hide() runs.
+  useEffect(() => {
+    if (!mounted) setPhase("hidden");
+  }, [mounted]);
+
+  const hide = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
     if (!loaded || !premium || checked.current) return;
@@ -86,7 +97,7 @@ export function AnnualSwitchNudge() {
           }
           setTier(d.tier === "plus" ? "plus" : "premium");
           setPhase("offer");
-          requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
+          setOpen(true);
           trackEvent("annual_switch_shown", { months_active: d.monthsActive ?? 0 });
         }, NUDGE_DELAY_MS);
       })
@@ -143,7 +154,7 @@ export function AnnualSwitchNudge() {
     return () => document.removeEventListener("keydown", onKey);
   }, [phase, dismiss]);
 
-  if (phase === "hidden") return null;
+  if (!mounted) return null;
 
   const savePct = annualSavingPct(tier);
   const annualAmount = tierAnnualAmount(tier);
@@ -153,8 +164,8 @@ export function AnnualSwitchNudge() {
     <div
       role="region"
       aria-label={`Switch to annual ${tierName}`}
-      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-all duration-300 sm:bottom-4 sm:w-auto ${
-        entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:bottom-4 sm:w-auto ${
+        entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >
       <div className="relative overflow-hidden rounded-xl border border-gold/40 bg-ink-900 shadow-2xl">

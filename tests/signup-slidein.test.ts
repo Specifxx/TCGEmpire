@@ -62,8 +62,15 @@ test("shares PremiumSlideIn's exact corner, sizing and entrance pattern", () => 
   const code = codeOnly(read(SRC));
   assert.match(code, /bottom-20 left-4 z-\[70\][\s\S]{0,100}sm:bottom-4/, "must share PremiumSlideIn's corner and breakpoint");
   assert.match(code, /w-\[calc\(100%-2rem\)\] max-w-sm[\s\S]{0,80}sm:w-auto/, "must share PremiumSlideIn's responsive width");
-  assert.match(code, /requestAnimationFrame\(\(\) => requestAnimationFrame\(\(\) => setEntered\(true\)\)\)/, "must use the same double-rAF entrance trick");
-  assert.match(code, /setTimeout\(\(\) => setShown\(false\), 250\)/, "must let the exit transition finish before unmounting, same 250ms as PremiumSlideIn");
+  // 2026-09-16: the hand-rolled double-rAF entrance + bare setTimeout exit
+  // (that this test used to pin literally) both moved onto the shared
+  // usePresence(shown, 250) primitive (src/lib/motion.ts) — same 250ms exit,
+  // same "let the transition finish before unmounting" contract, just no
+  // longer duplicated per-component. Assert the SAME call exists in
+  // PremiumSlideIn.tsx too, since that's this test's actual intent: one
+  // shared pattern, not two copies that can drift.
+  assert.match(code, /usePresence\(shown, 250\)/, "must use the shared presence primitive, same 250ms exit as PremiumSlideIn");
+  assert.match(codeOnly(read("src/components/PremiumSlideIn.tsx")), /usePresence\(shown, 250\)/, "PremiumSlideIn must share the exact same call");
 });
 
 test("the popup embeds AuthForm the same way it always has", () => {

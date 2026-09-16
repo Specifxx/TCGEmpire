@@ -114,12 +114,16 @@ test("the dead NavMenu.tsx renderer is gone", () => {
   assert.throws(() => read("src/components/NavMenu.tsx"), "NavMenu.tsx had zero importers and read the now-deleted l.emoji field");
 });
 
-test("no component outside ui/ and the three corner nudges hand-rolls the double-rAF entrance", () => {
-  const nudgeFiles = new Set(["SignupPromoPopup.tsx", "PremiumSlideIn.tsx", "AnnualSwitchNudge.tsx"]);
+test("no component hand-rolls the double-rAF entrance any more — usePresence() covers all of them now", () => {
+  // 2026-09-16: the three corner nudges (SignupPromoPopup, PremiumSlideIn,
+  // AnnualSwitchNudge) were the last holdouts, each with its own copy of the
+  // double-rAF entrance + a bare setTimeout exit. All three now share
+  // usePresence(shown, 250) from @/lib/motion, so this check no longer needs
+  // an exclusion list — the pattern should not exist anywhere in src/.
   const dir = join(process.cwd(), "src/components");
   const offenders: string[] = [];
   for (const entry of readdirSync(dir)) {
-    if (!entry.endsWith(".tsx") || nudgeFiles.has(entry)) continue;
+    if (!entry.endsWith(".tsx")) continue;
     const code = readCode(join("src/components", entry));
     if (/requestAnimationFrame\(\(\) => requestAnimationFrame\(/.test(code)) offenders.push(entry);
   }

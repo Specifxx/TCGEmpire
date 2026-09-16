@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMe } from "@/lib/use-me";
 import { trackEvent } from "@/lib/analytics";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
+import { usePresence } from "@/lib/motion";
 import { AuthForm } from "./AuthForm";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import {
@@ -205,7 +206,11 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   const { user, loaded, trialDays, premiumPlus } = useMe();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
-  const [entered, setEntered] = useState(false); // drives the slide-in transition
+  // mounted/entered now come from the shared usePresence primitive
+  // (src/lib/motion.ts) instead of a hand-rolled double-rAF entrance + a bare
+  // setTimeout exit — same contract (entered drives the slide-in, mounted
+  // gates the unmount), same 250ms exit as PremiumSlideIn shares below.
+  const { mounted, entered } = usePresence(shown, 250);
   const lastCountedPath = useRef<string | null>(null);
 
   // A brand-new account has, by definition, never started a trial before — so
@@ -275,12 +280,6 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
       if (document.body.dataset.rcDialog === "1") return;
 
       setShown(true);
-      // Next paint → play the transition from the off-screen start state, same
-      // double-rAF as PremiumSlideIn (one frame isn't reliably enough for the
-      // browser to have committed the initial off-screen styles first). This is
-      // the animation settling in, not the deliberate wait — that's the timer
-      // above.
-      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
       trackEvent("signup_promo_shown", { path: pathname ?? "/", variant: PROMO_VARIANT, copy: PREMIUM_COPY_VERSION, repeat: dismissedAt !== null });
     }, NUDGE_DELAY_MS);
 
@@ -289,12 +288,10 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     return () => clearTimeout(t);
   }, [loaded, user, shown, pathname]);
 
-  // Mirrors PremiumSlideIn's hide(): let the exit transition finish before
-  // actually unmounting, instead of popping out instantly.
-  const hide = useCallback(() => {
-    setEntered(false);
-    setTimeout(() => setShown(false), 250);
-  }, []);
+  // usePresence(shown, 250) now owns letting the exit transition finish
+  // before actually unmounting — mirrors PremiumSlideIn's own hide(), which
+  // shares the exact same call.
+  const hide = useCallback(() => setShown(false), []);
 
   const dismiss = useCallback(() => {
     hide();
@@ -336,7 +333,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     return () => document.removeEventListener("keydown", onKey);
   }, [shown, dismiss]);
 
-  if (!shown) return null;
+  if (!mounted) return null;
 
   const heading = trialAvailable ? "Try Premium free" : "Never overpay for a Riftbound card";
 
@@ -348,8 +345,8 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     <div
       role="region"
       aria-label="RiftCompare Premium — sign up to get started"
-      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-all duration-300 sm:bottom-4 sm:w-auto ${
-        entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:bottom-4 sm:w-auto ${
+        entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >
       {/* max-h + scroll is the belt to the braces of the short-viewport rules

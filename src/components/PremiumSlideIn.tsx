@@ -19,6 +19,7 @@ import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
 import { formatMoneyCompact } from "@/lib/format";
 import { currencyOf } from "@/lib/country";
+import { usePresence } from "@/lib/motion";
 
 // A LOW-INTRUSION Premium nudge for LOGGED-IN, NON-PREMIUM users — aimed squarely
 // at the funnel gap behind "most logged-in free users never see a Premium pitch
@@ -155,7 +156,10 @@ export function PremiumSlideIn() {
   const router = useRouter();
   const pathname = usePathname();
   const [shown, setShown] = useState(false);
-  const [entered, setEntered] = useState(false); // drives the slide-in transition
+  // Same shared primitive SignupPromoPopup uses — one definition of "how a
+  // corner nudge enters/exits" instead of two copies of the double-rAF +
+  // setTimeout trick.
+  const { mounted, entered } = usePresence(shown, 250);
   const lastCountedPath = useRef<string | null>(null);
   const contextPitch = contextPitchFor(pathname);
   // Live "N deals worth $X right now" proof line. Fetched from the shared,
@@ -211,8 +215,6 @@ export function PremiumSlideIn() {
         /* ignore */
       }
       setShown(true);
-      // Next paint → play the transition from the off-screen start state.
-      requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
       trackEvent("premium_slidein_shown", {
         path: pathname ?? "/",
         trial_eligible: trialEligible,
@@ -246,10 +248,9 @@ export function PremiumSlideIn() {
     };
   }, [shown, country]);
 
-  const hide = useCallback(() => {
-    setEntered(false);
-    setTimeout(() => setShown(false), 250); // let the exit transition finish
-  }, []);
+  // usePresence(shown, 250) now owns letting the exit transition finish
+  // before actually unmounting.
+  const hide = useCallback(() => setShown(false), []);
 
   const dismiss = useCallback(() => {
     hide();
@@ -290,7 +291,7 @@ export function PremiumSlideIn() {
     return () => document.removeEventListener("keydown", onKey);
   }, [shown, dismiss]);
 
-  if (!shown) return null;
+  if (!mounted) return null;
 
   const heading =
     contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Never overpay for a Riftbound card");
@@ -308,8 +309,8 @@ export function PremiumSlideIn() {
     <div
       role="region"
       aria-label="RiftCompare Premium offer"
-      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-all duration-300 sm:bottom-4 sm:w-auto ${
-        entered ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      className={`fixed bottom-20 left-4 z-[70] w-[calc(100%-2rem)] max-w-sm transition-[opacity,transform] duration-slow ease-out sm:bottom-4 sm:w-auto ${
+        entered ? "translate-y-0 opacity-100" : "motion-safe:translate-y-4 motion-safe:opacity-0"
       }`}
     >
       {/* max-h + scroll (2026-09-15, matching SignupPromoPopup's own guard):
