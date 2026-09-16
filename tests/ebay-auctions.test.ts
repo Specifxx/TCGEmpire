@@ -318,6 +318,64 @@ test("the countdown ticks client-side, and the first render matches the server's
   assert.match(src, /function endLabelUtc/, "the pre-clock label must be timezone-deterministic");
 });
 
+test("the board is a tile grid matching the database's, not a row list", () => {
+  // Owner's call 2026-09-16: "make the auctions a tiled format like the
+  // database". The grid classes are asserted against /browse's OWN string
+  // rather than a copy, so the two surfaces cannot drift into looking like
+  // different sites — which was the entire point of the change.
+  const board = read(BOARD);
+  const browseGrid = /grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5/;
+  assert.match(read("src/app/browse/page.tsx"), browseGrid, "expected /browse's grid to still be the reference");
+  assert.match(board, browseGrid, "the auction board must use the database's own grid");
+  assert.match(board, /aspect-\[5\/7\]/, "tiles must share CardTile's aspect box so rows line up");
+  assert.doesNotMatch(board, /<ul className="space-y-2">/, "the old vertical row list must be gone");
+});
+
+test("a seller's photo is never cropped — object-contain, unlike CardTile's own scans", () => {
+  // The one deliberate difference from CardTile. Our card scans are uniform and
+  // crop safely; an eBay photo is the seller's, and cropping it can cut off the
+  // grading label or the corner wear someone is bidding against.
+  const board = read(BOARD);
+  assert.match(board, /object-contain/, "listing photos must letterbox rather than crop");
+  assert.doesNotMatch(board, /object-cover/, "cropping a marketplace photo can hide what is being bid on");
+});
+
+test("filters cover bid activity, including the owner's 'more than 1 bid' case", () => {
+  const board = read(BOARD);
+  // "2+" is the one that matters and was asked for by name: a single bid is
+  // often just the seller's opening price being met once, while two or more
+  // means somebody is actually competing. The visible chips are terse so three
+  // filter groups fit above the fold on a phone, so the ARIA label is what
+  // carries the meaning — and it is pinned here in the owner's own words.
+  assert.match(board, /aria: "More than 1 bid", min: 2/, "must offer a more-than-one-bid filter");
+  assert.match(board, /aria: "At least 1 bid", min: 1/);
+  assert.match(board, /min: HOT_BID_COUNT/, "the contested threshold must reuse the badge's own constant");
+  assert.match(board, /r\.bidCount < minBids/, "the filter must actually apply the minimum");
+  // Every terse chip must still be announced in full, and the group needs its
+  // visible "Bids" prefix for anyone reading "2+" with no screen reader.
+  assert.match(board, /ariaLabel=\{b\.aria\}/, "terse chips must carry a full accessible name");
+  assert.match(board, />Bids<\/span>/, "the group needs a visible prefix to make '2+' legible");
+  // Plus the two independent toggles.
+  assert.match(board, /&lt; 1h left/);
+  assert.match(board, /ariaLabel="Only lots closing within the hour"/);
+  assert.match(board, /ariaLabel="Only lots that also have a Buy It Now price"/);
+  assert.match(board, /binOnly && r\.buyItNowCents == null/);
+  // A filtered-to-empty board must offer a way back out, or it reads as broken.
+  assert.match(board, /Clear filters/);
+});
+
+test("the closing-soon filter cannot break hydration", () => {
+  // Every other filter is time-independent, so it produces the same result on
+  // the server and in the browser. This one is not: it must be inert until the
+  // clock starts, or the first client render disagrees with the server's HTML.
+  const board = read(BOARD);
+  assert.match(
+    board,
+    /closingOnly && now != null &&/,
+    "the time-based filter must be gated on the clock having started",
+  );
+});
+
 test("bids are shown in the marketplace's own currency, never converted at import time", () => {
   assert.match(read(BOARD), /formatMoney\(row\.currentBidCents, row\.currency\)/);
   const lib = codeOnly(read(LIB));

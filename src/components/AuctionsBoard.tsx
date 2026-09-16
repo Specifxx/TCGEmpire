@@ -15,6 +15,11 @@ import type { AuctionRow } from "@/lib/ebay-auctions";
 // that cadence). A server-rendered "2h 14m left" would therefore be up to half
 // an hour wrong, on the one number this page exists to show. Ticking in the
 // browser is the only way to be both honest and cheap.
+//
+// TILES, NOT ROWS (2026-09-16, owner's call: "make the auctions a tiled format
+// like the database"). Same grid as /browse — grid-cols-2 on a phone up to
+// xl:grid-cols-5 — so the two surfaces read as one site. See AuctionTile below
+// for the one place it deliberately differs from CardTile.
 
 /** Bids that mean a lot is genuinely being contested rather than sitting at its
  *  opening price. Five is a judgement call, not a measurement — it is the point
@@ -26,7 +31,10 @@ const HOT_BID_COUNT = 5;
 const CLOSING_SOON_MS = 60 * 60 * 1000;
 
 type SortKey = "ending" | "bids" | "bid-desc" | "bid-asc";
-type FilterKey = "all" | "graded" | "raw";
+type GradeKey = "all" | "graded" | "raw";
+/** Minimum bid count. Named rather than a bare number so the chip labels and
+ *  the filter can never disagree about what "contested" means. */
+type BidsKey = "any" | "one" | "two" | "hot";
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "ending", label: "Ending soonest" },
@@ -35,11 +43,61 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "bid-asc", label: "Lowest bid" },
 ];
 
-const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: "all", label: "Everything" },
+const GRADES: { key: GradeKey; label: string }[] = [
+  { key: "all", label: "All lots" },
   { key: "graded", label: "Graded slabs" },
   { key: "raw", label: "Ungraded" },
 ];
+
+// "More than 1 bid" was the owner's own example of a filter worth having, and it
+// is the useful one: a single bid is often the seller's own opening price being
+// met once, while two or more means somebody is actually competing.
+//
+// The labels are terse ("1+", not "1+ bid") because there are now three chip
+// groups above the grid, and at 393px the verbose set pushed the first lot
+// entirely below the fold. The visible "Bids" prefix beside them carries the
+// meaning, and each chip still has a full aria-label for anyone who cannot see
+// that prefix.
+const BIDS: { key: BidsKey; label: string; aria: string; min: number }[] = [
+  { key: "any", label: "Any", aria: "Any number of bids", min: 0 },
+  { key: "one", label: "1+", aria: "At least 1 bid", min: 1 },
+  { key: "two", label: "2+", aria: "More than 1 bid", min: 2 },
+  { key: "hot", label: `${HOT_BID_COUNT}+`, aria: `At least ${HOT_BID_COUNT} bids`, min: HOT_BID_COUNT },
+];
+
+function Chip({
+  active,
+  onClick,
+  children,
+  tone = "brand",
+  ariaLabel,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+  tone?: "brand" | "neutral";
+  /** For a chip whose visible label is terse ("2+") and only reads as a filter
+   *  next to the group's own prefix. */
+  ariaLabel?: string;
+}) {
+  const on =
+    tone === "brand"
+      ? "border-brand-500 bg-brand-500/15 text-brand-200"
+      : "border-slate-500 bg-ink-800 text-slate-100";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={ariaLabel}
+      className={`chip min-h-8 border px-2.5 py-1 text-xs font-semibold transition-colors ${
+        active ? on : "border-ink-700 text-slate-400 hover:border-ink-600 hover:text-slate-200"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 /**
  * Absolute end time, formatted from the ISO string's own parts.
@@ -76,6 +134,104 @@ function gradeLabel(row: AuctionRow): string | null {
   return row.grade == null ? `${row.grader} graded` : `${row.grader} ${row.grade}`;
 }
 
+function AuctionTile({
+  row,
+  market,
+  index,
+  remaining,
+}: {
+  row: AuctionRow;
+  market: string;
+  index: number;
+  /** null until the clock starts; see the `now` note in AuctionsBoard. */
+  remaining: number | null;
+}) {
+  const closingSoon = remaining != null && remaining <= CLOSING_SOON_MS;
+  const grade = gradeLabel(row);
+  return (
+    <OutboundLink
+      href={row.url}
+      retailer="ebay_auction"
+      country={market}
+      price={row.currentBidCents}
+      positionInList={index}
+      pageType="auctions"
+      className="group card-surface flex h-full flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow active:translate-y-0"
+    >
+      {/* Same aspect-[5/7] box as CardTile, so a row of auction tiles lines up
+          with a row of database tiles. ONE deliberate difference: object-contain
+          rather than cover. A CardTile shows our own uniform card scan, which
+          crops safely; this shows a seller's photo, where cropping can cut off
+          the grading label or the very corner wear someone is bidding against.
+          Letterboxing an odd-shaped photo is the honest trade. */}
+      <div className="relative aspect-[5/7] w-full shrink-0 overflow-hidden bg-ink-900 p-2">
+        {row.imageUrl ? (
+          // Arbitrary eBay CDN hosts, so a plain lazy <img> rather than
+          // next/image — the same call EbayPicksLive makes for the same reason.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={row.imageUrl}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="h-full w-full object-contain transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03]"
+          />
+        ) : (
+          <span className="grid h-full w-full place-items-center">
+            <span className="rb-eyebrow text-[9px] text-slate-700">No photo</span>
+          </span>
+        )}
+        <span className="absolute left-1.5 top-1.5 z-20 flex flex-col items-start gap-1">
+          {grade && (
+            <span className="chip bg-gold/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gold">
+              {grade}
+            </span>
+          )}
+          {row.bidCount >= HOT_BID_COUNT && (
+            <span className="chip bg-up/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-up">
+              Hot
+            </span>
+          )}
+        </span>
+        {/* The clock sits ON the photo, bottom-right: it is the one number this
+            page exists for, and in a grid it has to survive being scanned at a
+            glance rather than read row by row. */}
+        <span
+          className={`absolute bottom-1.5 right-1.5 z-20 rounded-md px-1.5 py-0.5 text-[11px] font-bold tabular-nums ${
+            closingSoon ? "bg-ink-950/85 text-down" : "bg-ink-950/75 text-slate-200"
+          }`}
+        >
+          <time dateTime={row.endsAt}>{remaining == null ? endLabelUtc(row.endsAt) : timeLeft(remaining)}</time>
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-1 border-t border-ink-700 p-2.5">
+        <h3 className="line-clamp-2 text-xs font-semibold leading-snug text-white" title={row.title}>
+          {row.title}
+        </h3>
+        {/* STACKED, not a justify-between row. Side by side, "US$2,199.00" plus
+            "BIN US$2,499.00" overflows a 2-column phone tile (and a 5-column
+            desktop one) and the BIN price gets clipped at the tile edge —
+            measured at 393px before this was changed. Stacking costs one short
+            line and can never clip at any column count. */}
+        <div className="mt-auto pt-1">
+          <span className="block text-[10px] text-slate-500">
+            {row.bidCount} {row.bidCount === 1 ? "bid" : "bids"}
+          </span>
+          <span className="block text-sm font-bold text-accent">
+            {formatMoney(row.currentBidCents, row.currency)}
+          </span>
+          {row.buyItNowCents != null && (
+            <span className="block truncate text-[10px] font-semibold text-slate-500">
+              BIN {formatMoney(row.buyItNowCents, row.currency)}
+            </span>
+          )}
+        </div>
+      </div>
+    </OutboundLink>
+  );
+}
+
 export function AuctionsBoard({
   rows,
   market,
@@ -90,7 +246,10 @@ export function AuctionsBoard({
   minUsd: number;
 }) {
   const [sort, setSort] = useState<SortKey>("ending");
-  const [filter, setFilter] = useState<FilterKey>("all");
+  const [grade, setGrade] = useState<GradeKey>("all");
+  const [bids, setBids] = useState<BidsKey>("any");
+  const [closingOnly, setClosingOnly] = useState(false);
+  const [binOnly, setBinOnly] = useState(false);
   // null until mounted: the first render must match the server's, so the clock
   // starts in an effect rather than during render. See endLabelUtc above.
   const [now, setNow] = useState<number | null>(null);
@@ -101,13 +260,22 @@ export function AuctionsBoard({
     return () => clearInterval(t);
   }, []);
 
+  const minBids = BIDS.find((b) => b.key === bids)?.min ?? 0;
+
   const visible = useMemo(() => {
     // Before the clock starts, show the server's payload in the server's order —
     // it was already filtered to live lots when the page was cached.
     const live = now == null ? rows : rows.filter((r) => new Date(r.endsAt).getTime() > now);
-    const filtered = live.filter((r) =>
-      filter === "all" ? true : filter === "graded" ? r.grader != null : r.grader == null,
-    );
+    const filtered = live.filter((r) => {
+      if (grade === "graded" && r.grader == null) return false;
+      if (grade === "raw" && r.grader != null) return false;
+      if (r.bidCount < minBids) return false;
+      if (binOnly && r.buyItNowCents == null) return false;
+      // Only applicable once the clock is running; before that every lot passes,
+      // which keeps the pre-hydration render identical to the server's.
+      if (closingOnly && now != null && new Date(r.endsAt).getTime() - now > CLOSING_SOON_MS) return false;
+      return true;
+    });
     const sorted = [...filtered];
     switch (sort) {
       case "bids":
@@ -123,9 +291,9 @@ export function AuctionsBoard({
         sorted.sort((a, b) => a.endsAt.localeCompare(b.endsAt));
     }
     return sorted;
-  }, [rows, now, filter, sort]);
+  }, [rows, now, grade, minBids, binOnly, closingOnly, sort]);
 
-  const contested = visible.filter((r) => r.bidCount >= HOT_BID_COUNT).length;
+  const anyFilter = grade !== "all" || bids !== "any" || closingOnly || binOnly;
 
   if (rows.length === 0) {
     return (
@@ -152,140 +320,84 @@ export function AuctionsBoard({
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mb-3 space-y-2">
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sort auctions">
           {SORTS.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setSort(s.key)}
-              aria-pressed={sort === s.key}
-              className={`chip min-h-8 px-2.5 py-1 text-xs font-semibold transition-colors ${
-                sort === s.key
-                  ? "border border-brand-500 bg-brand-500/15 text-brand-200"
-                  : "border border-ink-700 text-slate-400 hover:border-ink-600 hover:text-slate-200"
-              }`}
-            >
+            <Chip key={s.key} active={sort === s.key} onClick={() => setSort(s.key)}>
               {s.label}
-            </button>
+            </Chip>
           ))}
         </div>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter auctions">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setFilter(f.key)}
-              aria-pressed={filter === f.key}
-              className={`chip min-h-8 px-2.5 py-1 text-xs font-semibold transition-colors ${
-                filter === f.key
-                  ? "border border-slate-500 bg-ink-800 text-slate-100"
-                  : "border border-ink-700 text-slate-400 hover:border-ink-600 hover:text-slate-200"
-              }`}
-            >
-              {f.label}
-            </button>
+          {GRADES.map((g) => (
+            <Chip key={g.key} tone="neutral" active={grade === g.key} onClick={() => setGrade(g.key)}>
+              {g.label}
+            </Chip>
           ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by bid activity">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bids</span>
+          {BIDS.map((b) => (
+            <Chip
+              key={b.key}
+              tone="neutral"
+              active={bids === b.key}
+              onClick={() => setBids(b.key)}
+              ariaLabel={b.aria}
+            >
+              {b.label}
+            </Chip>
+          ))}
+          <Chip tone="neutral" active={closingOnly} onClick={() => setClosingOnly((v) => !v)} ariaLabel="Only lots closing within the hour">
+            &lt; 1h left
+          </Chip>
+          <Chip tone="neutral" active={binOnly} onClick={() => setBinOnly((v) => !v)} ariaLabel="Only lots that also have a Buy It Now price">
+            Buy It Now
+          </Chip>
         </div>
       </div>
 
       <p className="mb-3 text-xs text-slate-500">
-        {visible.length} live {visible.length === 1 ? "lot" : "lots"}
-        {contested > 0 && <> · {contested} with {HOT_BID_COUNT}+ bids</>}
+        {anyFilter ? `${visible.length} of ${rows.length}` : visible.length} live{" "}
+        {visible.length === 1 ? "lot" : "lots"}
       </p>
 
       {visible.length === 0 ? (
         <div className="card-surface p-8 text-center text-sm text-slate-400">
-          Nothing matches that filter right now.
+          <p>No lot matches every filter right now.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setGrade("all");
+              setBids("any");
+              setClosingOnly(false);
+              setBinOnly(false);
+            }}
+            className="mt-2 text-xs font-semibold text-brand-400 hover:underline"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
-        <ul className="space-y-2">
-          {visible.map((row, i) => {
-            const endsMs = new Date(row.endsAt).getTime();
-            const remaining = now == null ? null : endsMs - now;
-            const closingSoon = remaining != null && remaining <= CLOSING_SOON_MS;
-            const grade = gradeLabel(row);
-            return (
-              <li key={`${row.itemId}`}>
-                <OutboundLink
-                  href={row.url}
-                  retailer="ebay_auction"
-                  country={market}
-                  price={row.currentBidCents}
-                  positionInList={i}
-                  pageType="auctions"
-                  className="card-surface flex items-center gap-3 p-3 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:gap-4"
-                >
-                  {/* Fixed box either way, so a listing with no image can't make
-                      the row a different height than its neighbours. */}
-                  <span className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-ink-900 sm:h-20 sm:w-20">
-                    {row.imageUrl ? (
-                      // Arbitrary eBay CDN hosts, so a plain lazy <img> rather than
-                      // next/image — the same call EbayPicksLive makes for the same
-                      // reason. An auction thumbnail is transient anyway (the lot is
-                      // gone within days), so there is nothing to cache-optimise.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={row.imageUrl}
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="rb-eyebrow text-[9px] text-slate-700">No image</span>
-                    )}
-                  </span>
-
-                  <span className="min-w-0 flex-1">
-                    <span className="line-clamp-2 text-sm font-semibold text-white">{row.title}</span>
-                    <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                      {grade && (
-                        <span className="chip bg-gold/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gold">
-                          {grade}
-                        </span>
-                      )}
-                      {row.bidCount >= HOT_BID_COUNT && (
-                        <span className="chip bg-up/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-up">
-                          Hot
-                        </span>
-                      )}
-                      <span className="text-[11px] text-slate-500">
-                        {row.bidCount} {row.bidCount === 1 ? "bid" : "bids"}
-                      </span>
-                      {row.condition && <span className="text-[11px] text-slate-500">· {row.condition}</span>}
-                      {row.buyItNowCents != null && (
-                        <span className="text-[11px] text-slate-500">
-                          · BIN {formatMoney(row.buyItNowCents, row.currency)}
-                        </span>
-                      )}
-                    </span>
-                  </span>
-
-                  <span className="shrink-0 text-right">
-                    <span className="block text-sm font-extrabold text-white sm:text-base">
-                      {formatMoney(row.currentBidCents, row.currency)}
-                    </span>
-                    <time
-                      dateTime={row.endsAt}
-                      className={`mt-0.5 block text-[11px] font-semibold tabular-nums ${
-                        closingSoon ? "text-down" : "text-slate-400"
-                      }`}
-                    >
-                      {remaining == null ? endLabelUtc(row.endsAt) : timeLeft(remaining)}
-                    </time>
-                  </span>
-                </OutboundLink>
-              </li>
-            );
-          })}
-        </ul>
+        // The database's own grid (src/app/browse/page.tsx), verbatim — the point
+        // of the change was that the two surfaces should look like one site.
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {visible.map((row, i) => (
+            <AuctionTile
+              key={row.itemId}
+              row={row}
+              market={market}
+              index={i}
+              remaining={now == null ? null : new Date(row.endsAt).getTime() - now}
+            />
+          ))}
+        </div>
       )}
 
       {/* Bids are stored and shown in the marketplace's own currency, never
           converted — a bid converted at import time is wrong by the time anyone
           reads it, and the symbol (US$/A$/£…) already says which market it is. */}
-      <p className="mt-2 text-[11px] text-slate-500">
+      <p className="mt-3 text-[11px] text-slate-500">
         Bids are shown in each eBay marketplace&rsquo;s own currency, exactly as eBay reports them.
       </p>
 
