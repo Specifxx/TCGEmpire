@@ -102,6 +102,37 @@ test("the watchlist page is noindex and never cached", () => {
   assert.ok(!/AdSlot/.test(src), "never monetise a noindex personal page");
 });
 
+test("the watchlist navigates instantly: a scoped loading boundary, safe on all three guard rules", () => {
+  // Reported as "the watchlist takes too long to load" (2026-09-16). The list
+  // was never the slow part — Watchlist is a client component that fetches
+  // after mount and shows its own SkeletonTile grid meanwhile. The wait was the
+  // NAVIGATION: /watching is force-dynamic, and the App Router keeps the
+  // visitor on their previous page until the server responds. A loading.tsx
+  // gives the segment a Suspense boundary so the route commits first.
+  const loading = join(ROOT, "src/app/watching/loading.tsx");
+  assert.ok(existsSync(loading), "/watching needs a route-level loading boundary to navigate instantly");
+  assert.match(read("src/app/watching/loading.tsx"), /WatchlistSkeleton/);
+
+  // The three things scripts/adsense-guard.ts fails the build over, asserted
+  // here too so the reason survives next to the file that depends on it.
+  const page = read("src/app/watching/page.tsx");
+  assert.ok(!existsSync(join(ROOT, "src/app/loading.tsx")), "a root loading.tsx turns every notFound() into a soft 404");
+  assert.doesNotMatch(page, /notFound\(\)/, "a boundary above a notFound() route would serve HTTP 200 error pages");
+  assert.doesNotMatch(page, /searchParams/, "a boundary above a searchParams-reading page can serve the spinner as the final response");
+
+  // The route skeleton must reuse the component's own tile and grid, or the
+  // handover shows one placeholder shape being replaced by a different one.
+  const skeleton = read("src/components/RouteLoading.tsx");
+  const fn = skeleton.slice(skeleton.indexOf("export function WatchlistSkeleton"));
+  assert.match(fn, /<SkeletonTile /, "same tile as the client loading state");
+  assert.match(
+    fn,
+    /grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4/,
+    "same grid as Watchlist's own loading state, so the handover is invisible",
+  );
+  assert.match(read("src/components/Watchlist.tsx"), /grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4/);
+});
+
 test("the watchlist page exists as a real route and is reachable from the nav", () => {
   assert.ok(existsSync(join(ROOT, "src/app/watching/page.tsx")));
   assert.match(read("src/components/nav-groups.ts"), /href: "\/watching"/);
