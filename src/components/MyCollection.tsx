@@ -7,6 +7,7 @@ import { cardDisplayName } from "@/lib/card-name";
 import { CONDITIONS, CONDITION_KEYS } from "@/lib/constants";
 import { useCountry } from "./CountryProvider";
 import { cardImageAlt } from "@/lib/image-alt";
+import { trackEvent } from "@/lib/analytics";
 
 type CollCard = {
   id: string;
@@ -282,6 +283,7 @@ function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) 
       if (res.ok) {
         setJustAdded(card.id);
         setTimeout(() => setJustAdded((v) => (v === card.id ? null : v)), 1500);
+        trackEvent("collection_add", { card_id: card.id });
         await onAdded();
       }
     } finally {

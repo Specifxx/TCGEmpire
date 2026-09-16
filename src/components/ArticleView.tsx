@@ -23,6 +23,7 @@ import { ArticleShare } from "./ArticleShare";
 import { ArticleTopValue } from "./ArticleTopValue";
 import { Picture } from "./Picture";
 import { getPopularCards } from "@/lib/cheapest-cards";
+import { ScrollDepthTracker } from "./ScrollDepthTracker";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -340,6 +341,9 @@ export async function ArticleView({ article }: { article: Article }) {
 
   return (
     <article className="mx-auto max-w-3xl">
+      {/* Client island, renders null — covers both /blog/[slug] and
+          /guides/[slug], the only two routes that render ArticleView. */}
+      <ScrollDepthTracker />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

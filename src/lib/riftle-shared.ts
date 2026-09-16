@@ -40,3 +40,18 @@ export type Feedback = {
   // but it's the wrong card" failure mode (Legends share set/type/domain/rarity).
   cells: { set: Cell; num: Cell; type: Cell; domain: Cell; rarity: Cell; cost: Cell; might: Cell };
 };
+
+// Riftle's daily win-streak, read from the same localStorage key Riftle.tsx
+// itself writes (rc_riftle_stats). Shared so a homepage teaser can show the
+// streak without importing the game component's whole client bundle.
+const RIFTLE_STATS_KEY = "rc_riftle_stats";
+
+export function readRiftleStreak(): number {
+  try {
+    const v = JSON.parse(localStorage.getItem(RIFTLE_STATS_KEY) || "") as { streak?: unknown } | null;
+    const n = Number(v?.streak);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}

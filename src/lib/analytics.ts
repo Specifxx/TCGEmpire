@@ -43,6 +43,13 @@ import { track as vercelTrack } from "@vercel/analytics";
 // (a signed-out visitor clicking a buy button, 2026-09-13) and
 // premium_checkout_started are both LOW-VOLUME conversion steps — a handful a
 // day — so they stay dual-destination and must not be added below.
+// scroll_depth/watch_add/watch_remove/collection_add/recent_viewed_click/
+// notification_open/riftle_start (2026-09-16): the retention pass's own
+// telemetry — every one fires per-scroll-threshold, per-tile-tap or per-poll
+// across a large share of sessions, exactly the volume profile that burns the
+// Vercel quota fastest. None of them decide a go/no-go the way buy_click or
+// sign_up do; GA4 (no per-event billing) is where high-cardinality usage
+// telemetry like this belongs.
 const GA4_ONLY_EVENTS = new Set([
   "signup_promo_shown",
   "signup_promo_dismissed",
@@ -50,6 +57,13 @@ const GA4_ONLY_EVENTS = new Set([
   "premium_slidein_dismissed",
   "annual_switch_shown",
   "annual_switch_dismissed",
+  "scroll_depth",
+  "watch_add",
+  "watch_remove",
+  "collection_add",
+  "recent_viewed_click",
+  "notification_open",
+  "riftle_start",
 ]);
 
 export function trackEvent(name: string, params?: Record<string, string | number | boolean | undefined>): void {

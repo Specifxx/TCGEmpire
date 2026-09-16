@@ -25,6 +25,10 @@ export const GAMES: Record<string, GameMeta> = {
   // against catcher scores. The old rows stay in GameScore, orphaned and
   // invisible — no lookup can reach a key that isn't in this table.
   "card-rain": { label: "Card Rain", dir: "desc", min: 0, max: 100_000, unit: "pts" },
+  // The score IS the win streak (not guesses used) — a loss resets the client's
+  // streak to 0 before it would ever be submitted, so min: 1 is just a guard,
+  // never a value this leaderboard is expected to actually clamp.
+  riftle: { label: "Riftle", dir: "desc", min: 1, max: 1000, unit: "win streak" },
   // Multiplayer. Unlike every board above, this score is computed SERVER-side at
   // the end of a room (lib/sealed-bid.ts → submitScore), never posted by the
   // client. The cap is generous: 1,000 Shards + a full vault of chase cards +

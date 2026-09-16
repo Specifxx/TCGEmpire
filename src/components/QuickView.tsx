@@ -24,6 +24,8 @@ import { PriceChart } from "./PriceChart";
 import type { PricePoint } from "@/lib/price-history";
 import { Dialog } from "./ui/Dialog";
 import { Spinner } from "./ui/Skeleton";
+import { pushRecentCard } from "@/lib/recently-viewed";
+import { cardImageSrc } from "@/lib/card-image-url";
 
 interface RetailerPrice {
   id: string;
@@ -69,6 +71,16 @@ export function QuickViewProvider({ children }: { children: React.ReactNode }) {
     // people actually stop to look at", distinct from search/view counts
     // (which mix quickview opens with full page loads and API traffic).
     trackEvent("quickview_open", { card: c.slug ?? c.id });
+    // The other writer of the recently-viewed rail — see CardViewBeacon for
+    // the card page's own call and why imageSrc must go through the helper.
+    pushRecentCard({
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      setCode: c.setCode,
+      collectorNumber: c.collectorNumber,
+      imageSrc: cardImageSrc(c),
+    });
   }, []);
 
   const close = useCallback(() => {
@@ -126,6 +138,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       if (res.status === 401) return setColl("signin");
       if (!res.ok) return setColl("error");
       setColl("added");
+      trackEvent("collection_add", { card_id: card.id, is_foil: collFoil });
     } catch {
       setColl("error");
     }

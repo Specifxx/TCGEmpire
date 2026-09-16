@@ -5,23 +5,7 @@ import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { CardsIcon } from "@/components/icons/HomeIcons";
 import { NavIcon } from "@/components/NavIcon";
-
-// Riftle keeps its win-streak in localStorage under this key (see
-// components/Riftle.tsx's private KEY_STATS/Stats). Read-only, and duplicated
-// rather than imported: Riftle.tsx's constants aren't exported, and importing
-// the game component itself here would pull its whole client bundle into a
-// homepage teaser that only needs one number.
-const RIFTLE_STATS_KEY = "rc_riftle_stats";
-
-function readRiftleStreak(): number {
-  try {
-    const v = JSON.parse(localStorage.getItem(RIFTLE_STATS_KEY) || "") as { streak?: unknown } | null;
-    const n = Number(v?.streak);
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  } catch {
-    return 0;
-  }
-}
+import { readRiftleStreak } from "@/lib/riftle-shared";
 
 // Return-visit hooks — Riftle, the pack simulator, and price alerts — moved up
 // to directly after "Most popular cards" (were buried near the bottom). A
@@ -64,7 +48,7 @@ export function ReturnVisitCards({ newestSetName }: { newestSetName?: string }) 
         <div className="min-w-0 flex-1">
           <h2 className="flex flex-wrap items-center gap-2 text-lg font-extrabold text-white">
             Play today&apos;s Riftle
-            {streak > 0 && <span className="chip bg-gold/20 text-[11px] font-bold text-gold">Day {streak} streak</span>}
+            {streak > 0 && <span className="chip bg-gold/20 text-[11px] font-bold text-gold">{streak} win streak</span>}
           </h2>
           <p className="mt-0.5 text-sm text-slate-400">Guess the daily Riftbound card in 8 tries — a new puzzle every day.</p>
         </div>

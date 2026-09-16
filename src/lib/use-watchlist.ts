@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Country } from "./country";
+import { trackEvent } from "./analytics";
 
 // Shared client-side view of "which cards am I watching?".
 //
@@ -90,6 +91,7 @@ export function useWatchlist(): WatchlistApi {
       watched = watched ? new Set(watched) : new Set();
       watched.add(cardId);
       publish();
+      trackEvent("watch_add", { card_id: cardId });
       const res = await fetch("/api/alerts/watchlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -106,6 +108,7 @@ export function useWatchlist(): WatchlistApi {
       const prev = watched ? new Set(watched) : null;
       watched?.delete(cardId);
       publish();
+      trackEvent("watch_remove", { card_id: cardId });
       const res = await fetch(`/api/alerts/watchlist/${encodeURIComponent(cardId)}`, {
         method: "DELETE",
       }).catch(() => null);

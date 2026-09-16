@@ -10,6 +10,7 @@ import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
+import { RecentlyViewedRail } from "./home/RecentlyViewedRail";
 
 // How long a focused-but-not-yet-typing field has to stay focused before it
 // counts as "focus with intent" for search_initiated below — long enough that
@@ -627,7 +628,8 @@ export function SearchBar({
       {showDropdown && (
         <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl">
           {isZeroState ? (
-            /* overflow-y-auto + a measured maxHeight is a safety net, not the
+            <>
+            {/* overflow-y-auto + a measured maxHeight is a safety net, not the
                 primary no-scrollbar mechanism — see dropdownMaxHeight's own
                 doc comment. In the common case suggestionCap's row limiting
                 already keeps this list shorter than dropdownMaxHeight, so no
@@ -635,7 +637,7 @@ export function SearchBar({
                 enough on a short-enough viewport that even the capped row
                 count wouldn't otherwise fit. overscroll-contain keeps
                 scrolling through a long list from chaining into the page
-                behind it once you ARE inside the list. */
+                behind it once you ARE inside the list. */}
             <ul
               id={listboxId}
               role="listbox"
@@ -718,6 +720,15 @@ export function SearchBar({
                 );
               })}
             </ul>
+            {/* Sibling row, NOT inside the listbox above — this has its own
+                links, not options, so it must stay out of the roving
+                aria-activedescendant/optionId() contract those <li role="option">
+                rows implement. role="presentation" keeps it out of the
+                accessibility tree as a list. */}
+            <div role="presentation" className="border-t border-ink-800 px-3 py-2">
+              <RecentlyViewedRail />
+            </div>
+            </>
           ) : results.length === 0 && sealed.length === 0 ? (
             <div className="px-4 py-3 text-sm text-slate-400">
               {loading ? "Searching…" : "No matches — press Enter to search anyway."}

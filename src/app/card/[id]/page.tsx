@@ -25,6 +25,7 @@ import { SITE_URL } from "@/lib/site";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getPriceHistory } from "@/lib/price-history";
 import { CardConversionCta } from "@/components/CardConversionCta";
+import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
@@ -845,7 +846,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-      <CardViewBeacon idOrSlug={card.slug ?? card.id} cardId={card.id} cardName={displayName} rarity={card.rarity} />
+      <CardViewBeacon
+        idOrSlug={card.slug ?? card.id}
+        cardId={card.id}
+        cardName={displayName}
+        rarity={card.rarity}
+        slug={card.slug}
+        setCode={card.setCode}
+        collectorNumber={card.collectorNumber}
+        imageSrc={cardImageSrc(card, { absolute: true })}
+      />
       <nav aria-label="Breadcrumb" className="mb-2 text-sm text-slate-400 sm:mb-4">
         <ol className="flex flex-wrap items-center gap-1.5">
           <li><Link href="/" className="hover:text-white">Home</Link></li>
@@ -1089,6 +1099,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <div className="mt-6">
             <CardConversionCta cardId={card.id} />
           </div>
+
+          {/* Client-only, renders nothing on the server or for a first-ever
+              visitor — see RecentlyViewedRail's own comment. */}
+          <RecentlyViewedRail exclude={card.id} className="mt-6" />
 
           {/* AI Tips is suppressed on this page — not just while the AdSense
               review is open (see docs/adsense-remediation.md § Phase 9), but

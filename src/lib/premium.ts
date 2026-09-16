@@ -15,6 +15,7 @@ import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendCheckoutRecoveryEmail } from "./email";
+import { notify } from "./notifications";
 import { formatMoney } from "./format";
 import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine } from "./site";
 
@@ -164,7 +165,10 @@ export async function runPremiumTrialReminders(): Promise<number> {
         // Same price object the amount comes from, so the plan name and the
         // figure next to it can never disagree.
         const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium";
-        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel, planName)) sent++;
+        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel, planName)) {
+          sent++;
+          void notify(u.id, "trial_ending", "Your trial ends soon", `${amountLabel} starts once it converts.`, "/premium").catch(() => {});
+        }
       }
       // No active trialing subscription (already converted, cancelled, or a lookup
       // race) — nothing to warn about, but still stamp below so this account is
@@ -228,7 +232,10 @@ export async function runCheckoutRecovery(): Promise<number> {
       // Only offer the trial framing if this account genuinely hasn't used one
       // yet — otherwise state the plain price, never a trial that no longer applies.
       const trialDays = premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0;
-      if (await sendCheckoutRecoveryEmail(u.email, trialDays, premiumFromLine())) sent++;
+      if (await sendCheckoutRecoveryEmail(u.email, trialDays, premiumFromLine())) {
+        sent++;
+        void notify(u.id, "checkout_recovery", "Still thinking it over?", "Your Premium checkout is right where you left it.", "/premium").catch(() => {});
+      }
     } catch {
       /* best-effort — one failed send must not block the rest of the batch */
     }

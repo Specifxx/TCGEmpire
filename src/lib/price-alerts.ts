@@ -3,6 +3,7 @@ import { pickPrice, type Country } from "./country";
 import { cardHref } from "./card-url";
 import { sendPriceDropEmail, type PriceDropItem } from "./email";
 import { SITE_URL } from "./site";
+import { notify } from "./notifications";
 
 export interface AlertRunSummary {
   alerts: number; // rows examined
@@ -86,7 +87,7 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
   const now = new Date();
 
   // email → { token, items[] } for cards that dropped.
-  const byEmail = new Map<string, { token: string; items: PriceDropItem[]; anonymous: boolean }>();
+  const byEmail = new Map<string, { token: string; items: PriceDropItem[]; anonymous: boolean; userId: string | null }>();
   // Baseline writes to apply after we've decided who to notify.
   const updates: { id: string; price: number }[] = [];
   const notifiedIds: string[] = [];
@@ -116,11 +117,15 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
           newCents: current,
           market,
         };
-        const bucket = byEmail.get(a.email) ?? { token: a.unsubToken, items: [], anonymous: true };
+        const bucket = byEmail.get(a.email) ?? { token: a.unsubToken, items: [], anonymous: true, userId: null };
         bucket.items.push(item);
         // ANY linked row means this address has an account (claimAlertsForUser
         // adopts them all on signup, but pre-claim mixes can exist briefly).
         if (a.userId != null) bucket.anonymous = false;
+        // First linked row's userId wins — enough to reach notify() below; a
+        // pre-claim mix of linked/unlinked rows for the same address still
+        // shares one account once claimAlertsForUser runs.
+        if (bucket.userId == null) bucket.userId = a.userId;
         byEmail.set(a.email, bucket);
       } else {
         // A real drop we deliberately stay quiet about: not a new low, and the
@@ -138,11 +143,19 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
   // Send one digest per email. Sequential to stay gentle on the email provider's
   // rate limits; the daily volume is small.
   const failedEmails = new Set<string>();
-  for (const [email, { token, items, anonymous }] of byEmail) {
+  for (const [email, { token, items, anonymous, userId }] of byEmail) {
     const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
     const sent = await sendPriceDropEmail(email, items, unsubUrl, anonymous);
-    if (sent) summary.emails++;
-    else failedEmails.add(email);
+    if (sent) {
+      summary.emails++;
+      // In-app mirror of the email, for the account's own bell — only when
+      // the watch is actually linked to one (anonymous watchers have nowhere
+      // in-app to see it).
+      if (userId) {
+        const title = items.length === 1 ? `${items[0].name} just dropped` : `${items.length} watched cards just dropped`;
+        void notify(userId, "price_drop", title, "Check your watchlist for the new price.", "/watching").catch(() => {});
+      }
+    } else failedEmails.add(email);
   }
 
   // Persist new baselines + note who we notified. Deferring the write until after

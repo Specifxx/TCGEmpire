@@ -6,6 +6,8 @@ import { EbayPicks } from "@/components/EbayPicks";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { AccountStrip } from "@/components/home/AccountStrip";
+import { WelcomeBack } from "@/components/home/WelcomeBack";
+import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
@@ -337,9 +339,15 @@ export function HomeSections({
           than no block at all. */}
       <ReviewsSection />
 
-      {/* The homepage's one free-account pitch — hides itself for members.
-          See AccountStrip for why this is ISR-safe. */}
+      {/* The homepage's one account-shaped slot: AccountStrip pitches the free
+          tier and hides itself for members; WelcomeBack is its signed-in
+          twin and hides itself for everyone else. Exactly one renders. */}
       <AccountStrip />
+      <WelcomeBack />
+
+      {/* Renders nothing on the server or on a first-ever visit — see
+          RecentlyViewedRail's own comment. */}
+      <RecentlyViewedRail />
 
       {/* Approved partners + affiliate disclosure. Client component (reads
           useCountry() itself) so every visitor's eBay click here is tagged

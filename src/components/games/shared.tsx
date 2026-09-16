@@ -157,7 +157,20 @@ type Board = { unit: string; rows: LeaderRow[]; you: { rank: number; score: numb
 // Drop into a game's result screen: submits this run's score (once), tells the
 // player where they landed, prompts a sign-up if they're logged out, and shows the
 // live top 10. `seconds` is an optional tiebreak (Pairs).
-export function GameResultExtras({ game, score, seconds }: { game: string; score: number; seconds?: number }) {
+export function GameResultExtras({
+  game,
+  score,
+  seconds,
+  href,
+}: {
+  game: string;
+  score: number;
+  seconds?: number;
+  // Where "Sign in" and the leaderboard's implicit "keep playing" link back to.
+  // Defaults to /games/<game> (every game under games/*), but Riftle lives at
+  // /riftle, not /games/riftle.
+  href?: string;
+}) {
   const [board, setBoard] = useState<Board | null>(null);
   const [status, setStatus] = useState<"saving" | "saved" | "signin" | "error">("saving");
   const [myRank, setMyRank] = useState<number | null>(null);
@@ -186,7 +199,7 @@ export function GameResultExtras({ game, score, seconds }: { game: string; score
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const next = `/games/${game}`;
+  const next = href ?? `/games/${game}`;
   return (
     <div className="mt-5 text-left">
       {status === "signin" ? (

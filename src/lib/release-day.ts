@@ -20,6 +20,7 @@ import { setBySlug } from "./constants";
 import { RETAILER_LIST } from "./retailers";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, priceField } from "./country";
 import { getSealedGroups } from "./sealed-import";
+import { notify } from "./notifications";
 
 // WHO gets the blast.
 //   subscribers — the opt-IN newsletter list only (NewsletterSubscriber).
@@ -103,6 +104,7 @@ export async function runReleaseDayBlast(opts: {
     email: string;
     kind: "subscriber" | "user";
     subId?: string;
+    userId?: string;
     unsubToken?: string | null;
     alreadySent?: boolean; // subscriber already stamped for THIS campaign
   };
@@ -116,7 +118,7 @@ export async function runReleaseDayBlast(opts: {
   const userRows =
     audience === "subscribers"
       ? []
-      : await prisma.user.findMany({ select: { email: true } });
+      : await prisma.user.findMany({ select: { id: true, email: true } });
 
   const subscribers = await prisma.newsletterSubscriber.count();
   const users = await prisma.user.count();
@@ -124,7 +126,7 @@ export async function runReleaseDayBlast(opts: {
   const byEmail = new Map<string, Recipient>();
   for (const u of userRows) {
     const key = u.email.trim().toLowerCase();
-    if (key) byEmail.set(key, { email: u.email, kind: "user" });
+    if (key) byEmail.set(key, { email: u.email, kind: "user", userId: u.id });
   }
   // Subscribers overwrite users: they have a real opt-in and their own unsub token.
   for (const r of subRows) {
@@ -213,6 +215,9 @@ export async function runReleaseDayBlast(opts: {
         await prisma.newsletterSubscriber
           .update({ where: { id: r.subId }, data: { lastEditionKey: campaign } })
           .catch(() => {});
+      } else if (r.userId) {
+        // In-app mirror of the email, for the account's own bell.
+        void notify(r.userId, "release_day", `${set.name} is out`, "Card database and live prices are up.", `/sets/${setSlug}`).catch(() => {});
       }
     } else {
       failed++;

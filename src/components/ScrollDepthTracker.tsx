@@ -21,17 +21,18 @@ const THRESHOLDS = [25, 50, 75, 90] as const;
 // of re-rendering also means checking it costs nothing on every scroll tick.
 //
 // MOUNTED PER-ROUTE, NOT IN THE ROOT LAYOUT: this component is deliberately
-// rendered from src/app/page.tsx (homepage-scoped) rather than
-// src/app/layout.tsx (site-wide chrome). The root layout in this app's App
-// Router tree stays mounted across client-side navigations between routes
-// that share it — only the route segment below it swaps — so a tracker
-// living there would only ever run its mount effect once per full document
-// load, not once per pageview. A visitor who navigates home → a card page →
-// back home via client-side <Link>s would then get scroll-depth events for
-// only the first of those two homepage visits. Mounting inside page.tsx
+// rendered from src/components/ArticleView.tsx — the shared body of
+// /blog/[slug] and /guides/[slug], the long-form pages this was built to
+// measure — rather than src/app/layout.tsx (site-wide chrome). The root
+// layout in this app's App Router tree stays mounted across client-side
+// navigations between routes that share it — only the route segment below it
+// swaps — so a tracker living there would only ever run its mount effect once
+// per full document load, not once per pageview. A visitor who navigates
+// article A → article B via client-side <Link>s would then get scroll-depth
+// events for only the first of those two visits. Mounting inside ArticleView
 // means the tracker's own effect (and its `fired` Set) is torn down and
-// recreated every time the "/" route segment itself remounts, which is
-// exactly "once per pageview". The component itself has zero homepage-
+// recreated every time the article route segment itself remounts, which is
+// exactly "once per pageview". The component itself has zero article-
 // specific code — any other route can mount it the same way once scroll-
 // depth reporting is wanted there too (see DECISIONS.md for this call).
 export function ScrollDepthTracker() {

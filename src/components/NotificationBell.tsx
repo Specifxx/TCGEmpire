@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "./ui/Skeleton";
+import { useUnreadCount, setUnreadCount, bumpUnreadCount } from "@/lib/use-unread";
+import { trackEvent } from "@/lib/analytics";
 
 interface NotificationRow {
   id: string;
@@ -29,29 +31,16 @@ function timeAgo(iso: string): string {
 }
 
 // Notification bell — only rendered for signed-in users (see NavUser.tsx).
-// Polls the cheap unread-count endpoint periodically; the full feed is only
-// fetched when the dropdown actually opens, matching the same "don't read
-// what you don't need" discipline as the rest of this codebase's egress rules.
+// The unread count comes from the shared use-unread.ts store (polled every
+// 60s, one interval for every reader on the page — see WelcomeBack); the full
+// feed is only fetched when the dropdown actually opens, matching the same
+// "don't read what you don't need" discipline as the rest of this codebase's
+// egress rules.
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUnreadCount();
   const [notifications, setNotifications] = useState<NotificationRow[] | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-
-  const refreshCount = useCallback(async () => {
-    try {
-      const res = await fetch("/api/notifications/unread-count");
-      if (res.ok) setUnreadCount((await res.json()).unreadCount ?? 0);
-    } catch {
-      /* best-effort — try again next poll */
-    }
-  }, []);
-
-  useEffect(() => {
-    void refreshCount();
-    const id = setInterval(refreshCount, 60_000);
-    return () => clearInterval(id);
-  }, [refreshCount]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -89,8 +78,10 @@ export function NotificationBell() {
   }
 
   async function markRead(id: string) {
+    const row = notifications?.find((r) => r.id === id);
+    if (row && !row.readAt) trackEvent("notification_open", { type: row.type });
     setNotifications((rows) => rows?.map((r) => (r.id === id && !r.readAt ? { ...r, readAt: new Date().toISOString() } : r)) ?? null);
-    setUnreadCount((n) => Math.max(0, n - 1));
+    bumpUnreadCount(-1);
     await fetch("/api/notifications/read", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -139,7 +130,7 @@ export function NotificationBell() {
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              <p className="p-6 text-center text-sm text-slate-500">Nothing yet — sales, purchases and order updates show up here.</p>
+              <p className="p-6 text-center text-sm text-slate-500">Nothing yet — price drops, trial reminders and set releases show up here.</p>
             ) : (
               <ul className="divide-y divide-ink-800">
                 {notifications.map((n) => {

@@ -9,6 +9,8 @@ import { track } from "@vercel/analytics";
 import type { Feedback, RiftleCard } from "@/lib/riftle-shared";
 import { RIFTLE_HINT_GATES } from "@/lib/riftle-shared";
 import { cardImageAlt } from "@/lib/image-alt";
+import { GameResultExtras } from "@/components/games/shared";
+import { trackEvent } from "@/lib/analytics";
 
 // Riftle — free guess-the-card game with two modes:
 //   • Daily: one card per Sydney day, shared by everyone; progress + streak persist.
@@ -225,6 +227,9 @@ export function Riftle() {
 
   async function submit(name: string) {
     if (busy || done) return;
+    // The FIRST guess of a fresh game (never the resume of an already-started
+    // one) — GA4-only, high-volume, see analytics.ts's GA4_ONLY_EVENTS.
+    if (rows.length === 0) trackEvent("riftle_start", { mode });
     setBusy(true);
     setError(null);
     try {
@@ -498,6 +503,12 @@ export function Riftle() {
                 <Link href="/market" className="chip border border-ink-700 px-3 py-1.5 text-xs hover:border-brand-500">📊 The RiftCompare Index</Link>
               </div>
             </div>
+          )}
+
+          {/* Only a daily win submits — the score IS the streak (see lib/games.ts),
+              so an unlimited run or a loss has nothing worth putting on the board. */}
+          {mode !== "unlimited" && done === "win" && (
+            <GameResultExtras game="riftle" score={stats.streak} href="/riftle" />
           )}
         </div>
       )}
