@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { NavIcon, type NavIconName } from "./NavIcon";
-import { focusCardSearch } from "@/lib/search-focus";
 import { useMegaMenu } from "./MegaMenuProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
 
@@ -77,13 +76,14 @@ function useChromeLift() {
 // needs for a tab COUNT that isn't fixed.
 const TABS: { label: string; icon: NavIconName; href?: string }[] = [
   { label: "Home", icon: "home", href: "/" },
-  // Focuses the header's CARD search (cards + sealed products), not the ⌘K
-  // command launcher this used to open. The launcher searches pages and tools,
-  // and said so itself: "to look up a card, use the search box in the header".
-  // On a phone that is the wrong tool behind the one button most likely to be
-  // pressed — reported directly: "the search bar at the bottom … should be
-  // searching through the card pages, not the features".
-  { label: "Search", icon: "browse" },
+  // A real page link now, not an in-place focus trick — reported directly:
+  // "the search bar should open to like a new page… just like when you click
+  // on portfolio, it opens to a new page… we should keep that consistent so
+  // the feel is the same." /browse is the same full card+sealed database
+  // page the header's own search box navigates to on submit
+  // (SearchBar.tsx's commitSearch), so this tab and the header box land in
+  // the identical place rather than two different "search" experiences.
+  { label: "Search", icon: "browse", href: "/browse" },
   { label: "Watch", icon: "bell", href: "/watching" },
   { label: "Binder", icon: "collection", href: "/portfolio" },
   { label: "Menu", icon: "menu" },
@@ -96,8 +96,8 @@ export function BottomTabBar() {
   const watchCount = watched?.size ?? 0;
   useChromeLift();
 
-  // Only a real PAGE match lights up the sliding indicator — Search and Menu
-  // open overlays, they are never the "current page".
+  // Only a real PAGE match lights up the sliding indicator — Menu opens an
+  // overlay, it is never the "current page".
   const activeIndex = TABS.findIndex((t) => t.href && (t.href === "/" ? pathname === "/" : pathname?.startsWith(t.href)));
 
   return (
@@ -171,13 +171,9 @@ export function BottomTabBar() {
           );
         }
 
+        // Only "Menu" ever reaches here now — every other tab is a real page link above.
         return (
-          <button
-            key={tab.label}
-            type="button"
-            onClick={() => (tab.label === "Search" ? focusCardSearch() : setMenuOpen(true))}
-            className={cls}
-          >
+          <button key={tab.label} type="button" onClick={() => setMenuOpen(true)} className={cls}>
             {content}
           </button>
         );

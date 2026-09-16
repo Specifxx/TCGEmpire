@@ -1,21 +1,26 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { SEARCH_FOCUS_EVENT } from "../src/lib/search-focus";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 const readCode = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Two phone complaints, reported together:
+// Three phone complaints, reported over time:
 //
 //   1. "the search bar at the bottom on a mobile app, it should be searching
 //      through the card pages, not the features … cards and like sealed
 //      products". The Search tab opened the ⌘K command launcher, which searches
 //      NAV_GROUPS. Its own empty state admitted the mismatch: "This searches
 //      pages and tools — to look up a card, use the search box in the header."
+//      Fixed first by focusing the on-screen card SearchBar in place (an
+//      SEARCH_FOCUS_EVENT dispatch), then reported again for consistency:
+//      "the search bar should open to like a new page… just like when you
+//      click on portfolio, it opens to a new page." The tab is now a plain
+//      `Link href="/browse"`, same as Watch/Binder, and the old event/focus
+//      machinery (search-focus.ts, SearchBar's onFocusSearch) is gone with it.
 //
 //   2. "you have to scroll down in order for the bottom to show up. The bottom
 //      should be up all the time for mobile phone users." Not a hydration
@@ -29,11 +34,19 @@ const readCode = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace
 const BAR = "src/components/BottomTabBar.tsx";
 const CSS = "src/app/globals.css";
 
-test("the phone's Search tab reaches the CARD search, not the feature launcher", () => {
+test("the phone's Search tab is a real page link to the card database, not an in-place focus trick", () => {
   const code = readCode(BAR);
-  assert.match(code, /focusCardSearch\(\)/, "Search must focus the card box");
+  assert.match(code, /\{ label: "Search", icon: "browse", href: "\/browse" \}/, "Search must be a plain Link tab, matching Watch/Binder");
+  assert.doesNotMatch(code, /focusCardSearch/, "the old in-place-focus mechanism must be gone");
   assert.doesNotMatch(code, /useCommandLauncher/, "the ⌘K feature launcher is the wrong tool behind this button");
   assert.doesNotMatch(code, /openLauncher/);
+});
+
+test("the old focus-event machinery left no trace once Search became a real link", () => {
+  assert.ok(!existsSync(join(ROOT, "src/lib/search-focus.ts")), "search-focus.ts has no remaining consumer");
+  const searchBar = readCode("src/components/SearchBar.tsx");
+  assert.doesNotMatch(searchBar, /SEARCH_FOCUS_EVENT/, "SearchBar must not still wire up the removed event");
+  assert.doesNotMatch(searchBar, /onFocusSearch/);
 });
 
 test("…and that search really does cover cards AND sealed products", () => {
@@ -54,28 +67,16 @@ test("the feature launcher is still reachable — this moved it, it didn't delet
   assert.match(navbar, /CommandLauncherButton/, "…and still be rendered in the header at phone width");
 });
 
-test("sender and receiver agree on one event name, defined in one place", () => {
-  assert.equal(SEARCH_FOCUS_EVENT, "rc:focus-search");
-  // Neither side may hard-code the string: a typo would silently do nothing,
-  // which is the worst possible failure for a button.
-  for (const f of [BAR, "src/components/SearchBar.tsx"]) {
-    assert.match(read(f), /from "@\/lib\/search-focus"/, `${f} must import the shared module`);
-    assert.doesNotMatch(readCode(f), /"rc:focus-search"/, `${f} must not re-type the event name`);
-  }
-  // The always-mounted tab bar must not drag the 900-line SearchBar into its
-  // dependency graph just to get a constant.
-  assert.doesNotMatch(readCode(BAR), /from "\.\/SearchBar"/);
-});
-
-test("the receiver only answers if it is the instance actually on screen", () => {
-  // 2-3 SearchBars are mounted at once (nav desktop, nav mobile, hero). Focusing
-  // an off-screen one would open the keyboard and scroll nowhere useful.
+test("the surviving \"/\" shortcut still only focuses the instance actually on screen", () => {
+  // 2-3 SearchBars are mounted at once (nav desktop, nav mobile, hero). This
+  // visibility rule used to serve two entry points (the "/" key and the phone
+  // tab's focus event); it now serves only "/", but must still work correctly.
   const code = readCode("src/components/SearchBar.tsx");
-  const handler = code.slice(code.indexOf("function onFocusSearch"));
-  assert.match(handler, /isVisible\(el\)/, "must reuse the same visibility rule the / shortcut uses");
+  const handler = code.slice(code.indexOf("function onKeyDown"));
+  assert.match(handler, /isVisible\(el\)/, "must check visibility before focusing");
   assert.match(handler, /el\.focus\(\)/);
-  assert.match(code, /addEventListener\(SEARCH_FOCUS_EVENT/);
-  assert.match(code, /removeEventListener\(SEARCH_FOCUS_EVENT/, "listener must be cleaned up");
+  assert.match(code, /addEventListener\("keydown", onKeyDown\)/);
+  assert.match(code, /removeEventListener\("keydown", onKeyDown\)/, "listener must be cleaned up");
 });
 
 test("the search can be closed without a keyboard — there is a real button", () => {

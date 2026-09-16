@@ -194,7 +194,8 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
     </>
   ),
   // Menu — three lines, the bottom bar's own "everything else" tab (opens the
-  // same full-screen overlay MobileNav's navbar hamburger does).
+  // full-screen CinematicNavMenu overlay — the header no longer has its own
+  // duplicate hamburger for this, see Navbar.tsx).
   menu: (
     <>
       <path d="M4 7h16M4 12h16M4 17h16" />

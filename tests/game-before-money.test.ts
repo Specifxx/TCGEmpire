@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NAV_GROUPS, POPULAR_LINKS } from "../src/components/nav-groups";
+import { NAV_GROUPS } from "../src/components/nav-groups";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -46,13 +46,15 @@ test("…but Prices still leads, because that IS the product", () => {
   assert.ok(at("Prices") < at("Games"));
 });
 
-test("the phone Explore overlay's default view offers something to play", () => {
-  const hrefs = POPULAR_LINKS.map((l) => l.href);
-  const playable = hrefs.filter((h) => h === "/riftle" || h.startsWith("/games"));
-  assert.ok(playable.length >= 1, `no game in the default glance view: ${hrefs.join(", ")}`);
-  // Deck building counts as playing too, and was already there — but a game
-  // proper has to be present on its own, or this reverts to "tools only".
-  assert.ok(hrefs.includes("/riftle"), "the free daily puzzle is the one to promote: no account, no purchase");
+test("the phone Explore overlay has a Games group with something to play", () => {
+  // This used to check the overlay's curated "Popular" default view — that
+  // subset was removed 2026-09-16 (it duplicated the same links' entries in
+  // the full grid below them, see CinematicNavMenu.tsx), so the overlay now
+  // always renders every NAV_GROUPS category and the guarantee simplifies to
+  // "the Games group exists and is reachable", not "…and is in the glance view".
+  const games = NAV_GROUPS.find((g) => g.title === "Games");
+  assert.ok(games, "expected a Games nav group");
+  assert.ok(games.links.some((l) => l.href === "/riftle"), "the free daily puzzle must be reachable: no account, no purchase");
 });
 
 test("the homepage puts something playable above the commercial run", () => {

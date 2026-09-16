@@ -37,13 +37,6 @@ export interface NavGroupLink {
    * the secondary mini-games, whose hub (/games) is in the footer already.
    */
   hideInFooter?: boolean;
-  /**
-   * One of the ~10 highest-traffic destinations — the default view the phone
-   * Explore overlay (CinematicNavMenu) leads with, before a visitor asks to see
-   * everything. See POPULAR_LINKS below for the full contract on what belongs
-   * here.
-   */
-  popular?: boolean;
 }
 
 export interface NavGroup {
@@ -68,16 +61,16 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Prices",
     icon: "prices",
     links: [
-      { href: "/browse", label: "Card Database", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"], popular: true },
-      { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"], popular: true },
+      { href: "/browse", label: "Card Database", keywords: ["cards", "search", "find", "lookup", "compare prices", "database", "singles"] },
+      { href: "/sealed", label: "Sealed Products", keywords: ["booster box", "packs", "boxes", "bundles", "cases", "sealed"] },
       // Label deliberately omits the word "prices": nav search scores the label, and
       // "Radiance pre-order prices" outranked the Bulk Pricer on a bare "prices"
       // query (caught by tests/nav-search.test.ts). The pre-order keywords below
       // still carry every intent that should land here.
       { href: "/radiance-preorders", label: "Radiance pre-orders", keywords: ["preorder", "pre-order", "radiance preorder", "booster box preorder", "set 5 preorder"] },
-      { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"], popular: true },
-      { href: "/movers", label: "Daily Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"], popular: true },
-      { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"], popular: true },
+      { href: "/market", label: "Market Index", keywords: ["index", "market", "chart", "trend", "how is the market"] },
+      { href: "/movers", label: "Daily Movers", keywords: ["movers", "risers", "fallers", "gainers", "drops", "trending", "biggest movers"] },
+      { href: "/auctions", label: "Live Auctions", keywords: ["auctions", "auction", "ebay auctions", "bid", "bidding", "ending soon", "ending soonest", "hot auctions", "graded auctions", "psa auction", "slab", "bidding war"] },
       { href: "/stores/tracked", label: "Stores we track", keywords: ["stores", "shops", "retailers", "which stores"] },
       { href: "/bulk-pricer", label: "Bulk Pricer", keywords: ["bulk", "price a list", "paste a list", "collection value"] },
     ],
@@ -123,9 +116,8 @@ export const NAV_GROUPS: NavGroup[] = [
       // "Meta Decks" (/decks) led this group until 2026-09-12. It was ten
       // hand-typed lists in prisma/meta-decks.json presented as the metagame —
       // removed, with /decks/* redirecting here (DECISIONS.md, "Meta decks:
-      // removed"). The builder inherits its popular slot so the launcher and
-      // mega-menu keep a deck entry.
-      { href: "/deck", label: "Deck Builder", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks"], popular: true },
+      // removed").
+      { href: "/deck", label: "Deck Builder", keywords: ["build a deck", "deck price", "brew", "deck cost", "decklist", "meta", "decks"] },
       { href: "/trade", label: "Trade Calculator", keywords: ["trade", "swap", "fair trade", "is this trade fair"] },
     ],
   },
@@ -133,12 +125,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Games",
     icon: "games",
     links: [
-      // `popular` puts Riftle in the phone Explore overlay's default glance view.
-      // Before this, all eleven popular links were prices, tools, Premium or the
-      // blog — a visitor opening the menu on a phone saw no way to PLAY anything.
-      // The daily puzzle is the right one to promote: it is free, needs no account,
-      // and is the site's best "come back tomorrow" hook that isn't a price.
-      { href: "/riftle", label: "Riftle (daily)", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"], popular: true },
+      { href: "/riftle", label: "Riftle (daily)", keywords: ["riftle", "wordle", "daily", "puzzle", "guess the card"] },
       { href: "/games/pack-sim", label: "Pack Simulator", keywords: ["pack sim", "pack opening", "open packs", "rip packs", "simulator"] },
       { href: "/games/price-check", label: "Price Check", keywords: ["price check", "guess the price"], hideInFooter: true },
       { href: "/games/higher-lower", label: "Higher or Lower", keywords: ["higher lower", "higher or lower"], hideInFooter: true },
@@ -156,12 +143,12 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Deals & value",
     icon: "deals",
     links: [
-      { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"], popular: true },
+      { href: "/tools/deal-finder", label: "Deal Finder", keywords: ["deals", "bargains", "cheapest", "savings", "arbitrage", "underpriced"] },
       { href: "/tools/value-finder", label: "Value Finder", keywords: ["value", "best value", "worth", "undervalued"] },
       { href: "/tools/rising", label: "Rising Cards", keywords: ["rising", "hot", "momentum", "spiking", "going up"] },
       { href: "/tools/rising-sealed", label: "Rising Sealed", keywords: ["rising sealed", "booster box", "sealed momentum", "sealed going up"] },
       { href: "/tools/demand", label: "Demand Finder", keywords: ["demand", "trending", "most searched", "most viewed", "popular cards", "what to buy"] },
-      { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"], popular: true },
+      { href: "/tools/best-basket", label: "Best Basket", keywords: ["basket", "cart", "multi card", "cheapest combination", "one order", "shipping"] },
       { href: "/tools/condition-calculator", label: "Condition Calculator", keywords: ["condition", "nm", "lp", "mp", "hp", "damaged", "grading", "value calculator"] },
       { href: "/tools/box-ev", label: "Box EV Calc", keywords: ["ev", "expected value", "is a box worth it", "booster box value", "box ev"] },
       { href: "/tools/selling-fees", label: "Selling Fee Calc", keywords: ["tcgplayer fees", "ebay fees", "selling fees", "net proceeds", "marketplace commission"] },
@@ -177,9 +164,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // noindex, so nothing SEO rides on the label) and "portfolio" stays a search
       // keyword, so anyone who types it still lands here.
       { href: "/portfolio", label: "My Binder", keywords: ["collection", "my cards", "holdings", "portfolio", "binder", "what is mine worth"] },
-      { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"], popular: true },
+      { href: "/watching", label: "My Watchlist", keywords: ["watchlist", "watching", "saved", "favourites", "favorites", "tracked cards"] },
       { href: "/alerts", label: "Price Alerts", keywords: ["alerts", "price alerts", "notify me", "notifications", "email me", "price drop"] },
-      { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"], popular: true },
+      { href: "/premium", label: "Premium", keywords: ["premium", "upgrade", "subscription", "pro", "plans", "pricing"] },
     ],
   },
   {
@@ -191,7 +178,7 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: "news",
     links: [
       { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers"] },
-      { href: "/blog", label: "News & analysis", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"], popular: true },
+      { href: "/blog", label: "News & analysis", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"] },
       // hideInFooter: the footer's four columns are already at the top of their
       // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
       // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
@@ -248,21 +235,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
-
-// The phone Explore overlay's DEFAULT view (CinematicNavMenu) — the ~10
-// highest-traffic destinations, flat (no category headers), instead of every
-// link across all ~9 groups. Reported directly: "we don't need everything to
-// show up... we can have a subset of the most used features and have a way
-// for them to look at all features only if they want to." Chosen to mirror
-// the destinations already promoted elsewhere on the site rather than a new,
-// separate editorial call — PRIMARY_NAV below (Cards/Sealed/Index/Blog), the
-// header's own md/lg-and-up row (Deck builder, Premium), plus the
-// highest-intent tool/collection pages (Deal Finder, Best Basket, Daily Movers,
-// Watchlist). The full grouped list is always one tap away via "Show all
-// features" — this is a default, not a wall. Order follows NAV_GROUPS, not a
-// separate list, so a link can't silently drift out of sync with its own
-// entry there.
-export const POPULAR_LINKS: NavGroupLink[] = NAV_GROUPS.flatMap((g) => g.links).filter((l) => l.popular);
 
 // TOP-LEVEL header items — the handful of destinations that get their own
 // always-visible link rather than living inside the mega-menu.

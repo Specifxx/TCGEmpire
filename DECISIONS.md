@@ -7178,3 +7178,63 @@ Both changes ship together because they were reported together, on the same
 device, in the same scroll gesture, and the most defensible single diagnosis
 covers both: uncontrolled `:root` custom-property churn during a native
 chrome-animation window. 1485/1485 tests, typecheck and lint clean.
+
+## Consistency pass: one search destination, one menu, no gated features, 2026-09-16
+
+Reported directly, three related asks in one message:
+
+> "the search bar should... open to like a new page... just like when you
+> click on portfolio, it opens to a new page... we have the menu, but we also
+> have the menu on the top right... we only need one of them... get rid of the
+> duplicates... get rid of any duplicate information... we don't even need the
+> see all features anymore... they can just scroll down and look at all the
+> features."
+
+**1. The phone Search tab is now a real page link.** It used to dispatch
+`focusCardSearch()` — an in-place focus of whichever `SearchBar` instance was
+on screen (`SEARCH_FOCUS_EVENT`, added 2026-09-16 earlier the same day to fix
+the tab opening the wrong search entirely). That was a defensible fix for the
+bug it targeted, but it made Search behave differently from every other tab:
+Watch and Binder are plain `Link`s to real routes. `BottomTabBar.tsx`'s Search
+tab is now `{ href: "/browse" }`, the same full card+sealed database page the
+header's own `SearchBar` already navigates to on submit (`commitSearch()`), so
+the tab and the header box land in the identical place. The now-unused
+`SEARCH_FOCUS_EVENT` plumbing (`src/lib/search-focus.ts`, and its listener in
+`SearchBar.tsx`) was deleted rather than left as dead code; the `"/"` keyboard
+shortcut, which shared the same visibility-detection helper, is untouched.
+
+**2. One menu trigger below `lg`, not two.** `Navbar.tsx` rendered its own
+hamburger (`MobileNav.tsx`) at the top right; `BottomTabBar.tsx` independently
+renders a "Menu" tab. Both called the exact same `useMegaMenu().setOpen(true)`
+and opened the identical `CinematicNavMenu` overlay — confirmed by reading
+both components, not inferred from a comment. `MobileNav.tsx` is deleted. The
+bottom-bar tab is the one that survives: it's the already-established,
+thumb-reachable pattern the same bar uses for Watch and Binder, so every
+phone-only action lives in one place instead of being split across the header
+and the bottom bar.
+
+**3. The overlay's "Popular" subset and its "Show all features" gate are both
+gone.** `POPULAR_LINKS` (`nav-groups.ts`) was a `filter()` over the exact same
+`NAV_GROUPS` links the full category grid renders below it — every visitor who
+tapped "Show all features →" saw each popular link twice, once flat and once
+inside its own category. That curated default was a deliberate answer to an
+earlier, opposite report ("we don't need everything to show up... have a
+subset... and a way to see all features only if they want to") — this reverses
+that call on the same reporter's later feedback that the gate is "kind of
+useless" now that scrolling reaches everything anyway. The fix removes the
+`showAll` state, the Popular block, and the button, and always renders the
+full category grid (still narrowed by the search filter when one is active).
+The now-dead `popular?: boolean` field on `NavGroupLink` and every `popular:
+true` flag across `nav-groups.ts` were removed with it — no lingering
+per-link markers with nothing left to read them.
+
+No destination was removed in any of the three changes — every href reachable
+before is still in `NAV_GROUPS` and still rendered, just without the duplicate
+copy or the extra tap. Not verified against a live per-page render: every page
+in this app is DB-backed (`next dev` needs `DATABASE_URL`, which is
+deliberately absent outside `.env.production`/CI, per this file's own egress
+rules), so verification here is the same regex/structure test style already
+used throughout `tests/mobile-bottom-bar.test.ts` — plus two new files,
+`tests/single-menu-entry.test.ts` and `tests/nav-menu-full-grid.test.ts` — over
+manually confirming the diff hits its target lines. 1492/1492 tests, typecheck
+and lint clean.

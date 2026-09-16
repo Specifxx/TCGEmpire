@@ -4,7 +4,6 @@ import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { HeaderSearchSlot } from "./HeaderSearchSlot";
-import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { NavUser } from "./NavUser";
@@ -24,8 +23,8 @@ export function Navbar() {
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
        <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
         {/* Logo + the primary Database link, kept together on the left. On phones the
-            right-hand inline nav collapses into the hamburger, so the Database tab lives
-            here in the header's open space instead. */}
+            right-hand inline nav collapses into the phone Menu overlay (BottomTabBar's
+            Menu tab), so the Database tab lives here in the header's open space instead. */}
         <div className="flex shrink-0 items-center gap-1 sm:gap-3">
           <Link href="/" className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home">
             <BrandLogo />
@@ -39,7 +38,7 @@ export function Navbar() {
           {/* Premium, on phones, sitting next to Database (2026-09-10, owner
               brief). The desktop "✦ Premium" link further down is gated xl:block,
               so before this a phone visitor could only reach Premium through the
-              hamburger overlay — see CinematicNavMenu's spotlight banner, which
+              Menu-tab overlay — see CinematicNavMenu's spotlight banner, which
               stays as the in-menu answer. Same lg:hidden band and same shape as
               Database above so the two read as one pair, but gold and shimmering
               because the brief is specifically that this one should stand out.
@@ -71,15 +70,16 @@ export function Navbar() {
             scripts/mobile-check.ts audits 375px only, which is why it never
             surfaced.
 
-            The fix is what the hamburger exists for, applied in order of how
-            navigational each item is:
-              • below lg — logo, Database, Explore, Marketplace, country, burger.
+            The fix is what the phone Menu overlay exists for, applied in order of
+            how navigational each item is:
+              • below lg — logo, Database, Explore, Marketplace, country.
               • from lg  — everything else at once: the navigation links (Sealed,
                 Decks, Blog), Database moving into this row, the
                 Premium upsell (96px, opens a dialog) and the Discord icon (36px,
                 external).
-            Everything hidden at a given width is in the hamburger via
-            nav-groups.ts, and Discord is in the footer, so no link is lost.
+            Everything hidden at a given width is in the Menu overlay (opened from
+            BottomTabBar's Menu tab below lg) via nav-groups.ts, and Discord is in
+            the footer, so no link is lost.
 
             THE NAV LINKS MOVED md → lg, and the reason is worth keeping: `md`
             put them on screen from 768px, but the SEARCH BAR — the only element
@@ -107,7 +107,7 @@ export function Navbar() {
           {/* Command launcher — every page can reach every page from here (⌘K). */}
           {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
               (worse once the logged-in avatar showed). Everything here is reachable
-              from the hamburger pop-up menu, so hide it below sm. */}
+              from the phone Menu tab's pop-up overlay, so hide it below sm. */}
           <span className="hidden sm:inline-flex">
             <CommandLauncherButton />
           </span>
@@ -185,7 +185,15 @@ export function Navbar() {
           </PremiumNavLink>
           {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
               full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
-              the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}
+              the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model).
+              Below lg there is likewise only one entry point now: this header no longer
+              renders its own hamburger (MobileNav) — BottomTabBar's "Menu" tab opens the
+              exact same CinematicNavMenu overlay via the same useMegaMenu()/setOpen, and
+              having both on screen at once below lg was reported directly: "we have the
+              menu, but we also have the menu on the top right… we only need one of them."
+              The bottom-bar tab wins: it's the thumb-reachable slot already used for
+              Watch/Binder, so keeping Menu there rather than in the header keeps every
+              phone-only action in the one place. */}
           {/* Discord, the region switcher and the sign-in control (NavUser) —
               always visible now, see the doc comment above this nav's opening
               tag for why the prior pre-scroll hiding on "/" was reverted. A
@@ -214,12 +222,11 @@ export function Navbar() {
             </svg>
           </a>
           {/* Light/dark switch. sm and up only: the phone header already holds
-              the region switcher, sign-in and hamburger at 375px, so on phones
-              the same control lives as a row inside the menu overlay instead. */}
+              the region switcher and sign-in at 375px, so on phones the same
+              control lives as a row inside the menu overlay instead. */}
           <ThemeToggle className="hidden sm:grid" />
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
-          <MobileNav />
         </nav>
        </div>
 
