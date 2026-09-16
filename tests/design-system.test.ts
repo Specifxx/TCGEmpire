@@ -87,6 +87,33 @@ test("Reveal.tsx's reduced-motion check stays a SYNCHRONOUS pre-paint read, not 
   assert.doesNotMatch(code, /useReducedMotion\(\)/, "the hook would hydrate false then flip a frame later — exactly the flash this component exists to avoid");
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// P1 — icons everywhere. nav-groups.ts's 57 `emoji:` fields (one per
+// NavGroupLink) are gone; the collapsed rail's drawn-icon language now covers
+// every group-level heading across SideNav, CinematicNavMenu and
+// CommandLauncher. tests/sidenav.test.ts and tests/nav-icon.test.ts own the
+// renderer-level assertions; this file owns the cross-cutting ones.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("NavGroupLink carries no emoji field — nav-groups.ts is icon-key-only data", () => {
+  const src = readCode("src/components/nav-groups.ts");
+  assert.doesNotMatch(src, /emoji/, "the emoji field left both the interface and every entry");
+});
+
+test("every NavIconName union member is actually drawn", () => {
+  const src = read("src/components/NavIcon.tsx");
+  const names = [...src.matchAll(/^\s+\| "(\w+)"/gm)].map((m) => m[1]);
+  assert.ok(names.length > 0, "expected to find NavIconName union members");
+  const drawn = new Set([...src.matchAll(/^  (\w+): \(/gm)].map((m) => m[1]));
+  for (const name of names) {
+    assert.ok(drawn.has(name), `NavIconName "${name}" has no drawing in the ICONS record`);
+  }
+});
+
+test("the dead NavMenu.tsx renderer is gone", () => {
+  assert.throws(() => read("src/components/NavMenu.tsx"), "NavMenu.tsx had zero importers and read the now-deleted l.emoji field");
+});
+
 test("no component outside ui/ and the three corner nudges hand-rolls the double-rAF entrance", () => {
   const nudgeFiles = new Set(["SignupPromoPopup.tsx", "PremiumSlideIn.tsx", "AnnualSwitchNudge.tsx"]);
   const dir = join(process.cwd(), "src/components");

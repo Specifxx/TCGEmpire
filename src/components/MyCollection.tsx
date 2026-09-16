@@ -132,7 +132,7 @@ export function MyCollection() {
               : `${summary.distinct} ${summary.distinct === 1 ? "card" : "cards"} · ${summary.total} total${summary.priced ? ` · worth ~${fmt(summary.value)}` : ""}`}
           </p>
         </div>
-        <button onClick={() => setImporting((v) => !v)} className="btn-ghost shrink-0 text-sm">📋 Import a list</button>
+        <button onClick={() => setImporting((v) => !v)} className="btn-ghost shrink-0 text-sm">Import a list</button>
       </div>
 
       {/* Search any card and add it without leaving the page. */}
@@ -153,7 +153,7 @@ export function MyCollection() {
 
       {!loadError && items != null && items.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">
-          Search a card above (or <span className="font-semibold text-brand-300">📋 Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from any{" "}
+          Search a card above (or <span className="font-semibold text-brand-300">Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from any{" "}
           <Link href="/browse" className="text-brand-400 hover:underline">price watches</Link> you&apos;ve set.
         </p>
       )}
@@ -296,7 +296,7 @@ function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) 
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="🔎 Search a card to add to your collection…"
+        placeholder="Search a card to add to your collection…"
         className="input"
         autoComplete="off"
       />

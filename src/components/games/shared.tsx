@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { PriceWatchButton } from "../PriceWatchButton";
 import { AdSlot } from "../AdSlot";
+import { NavIcon } from "../NavIcon";
 
 export type GameCard = {
   id: string;
@@ -190,7 +191,10 @@ export function GameResultExtras({ game, score, seconds }: { game: string; score
     <div className="mt-5 text-left">
       {status === "signin" ? (
         <div className="rounded-xl border border-brand-500/40 bg-brand-500/10 p-4 text-center">
-          <p className="text-sm font-semibold text-white">🏆 Want on the leaderboard?</p>
+          <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-white">
+            <NavIcon name="trophy" className="h-4 w-4 text-gold" />
+            Want on the leaderboard?
+          </p>
           <p className="mt-1 text-xs text-slate-300">
             Create a free account to save your scores and climb the global rankings — it takes a few seconds.
           </p>
@@ -208,7 +212,10 @@ export function GameResultExtras({ game, score, seconds }: { game: string; score
       {board && board.rows.length > 0 && (
         <div className="card-surface mt-4 overflow-hidden">
           <div className="flex items-center justify-between border-b border-ink-700 px-4 py-2.5">
-            <h3 className="text-sm font-bold text-white">🏆 Leaderboard</h3>
+            <h3 className="flex items-center gap-1.5 text-sm font-bold text-white">
+              <NavIcon name="trophy" className="h-4 w-4 text-gold" />
+              Leaderboard
+            </h3>
             <span className="text-[11px] text-slate-500">{board.total} {board.total === 1 ? "player" : "players"}</span>
           </div>
           <ul className="divide-y divide-ink-800">

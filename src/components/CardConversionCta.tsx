@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePremium } from "@/components/PremiumProvider";
+import { NavIcon } from "@/components/NavIcon";
 
 // Conversion island for the card page (the site's biggest landing surface, which had
 // no price-watch CTA and no Premium mention). Client-side so the route stays ISR.
@@ -21,8 +22,9 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-ink-700 bg-ink-850 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <div className="flex items-center gap-2 text-sm font-bold text-white">
-          <span aria-hidden>🔔</span> Watch this price
+        <div className="flex items-center gap-1.5 text-sm font-bold text-white">
+          <NavIcon name="bell" className="h-4 w-4 text-brand-400" />
+          Watch this price
         </div>
         <p className="mt-0.5 text-xs text-slate-400">
           {watching
@@ -39,7 +41,7 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
         </button>
         {!premium && (
           <Link href="/tools/value-finder" className="btn-ghost text-sm">
-            💎 Find undervalued cards →
+            Find undervalued cards →
           </Link>
         )}
       </div>

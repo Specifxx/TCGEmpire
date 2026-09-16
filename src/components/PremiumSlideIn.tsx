@@ -89,13 +89,13 @@ const SKIP_PATHS = ["/login", "/verify", "/premium"];
 // validated to name a real label from it. Deleting it would silently remove the
 // guard that catches the next tier change, which is the exact failure this list
 // was created to prevent.
-export const PITCH_TOOLS: { emoji: string; label: string }[] = [
-  { emoji: "📋", label: "Bulk Pricer" },
-  { emoji: "🧺", label: "Best Basket" },
-  { emoji: "🔎", label: "Value Finder" },
-  { emoji: "🚀", label: "Rising Cards" },
-  { emoji: "📊", label: "Demand Finder" },
-  { emoji: "💱", label: "Deal Finder" },
+export const PITCH_TOOLS: { label: string }[] = [
+  { label: "Bulk Pricer" },
+  { label: "Best Basket" },
+  { label: "Value Finder" },
+  { label: "Rising Cards" },
+  { label: "Demand Finder" },
+  { label: "Deal Finder" },
 ];
 
 // A contextual heading/line, keyed by the CURRENT page, instead of the one
@@ -355,7 +355,7 @@ export function PremiumSlideIn() {
               against its own "low-intrusion" design (see this file's header). */}
           {premiumPriceIncreaseAnnounced() && (
             <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
-              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
               {PREMIUM_NEXT_PRICE_AMOUNT}
             </p>
           )}

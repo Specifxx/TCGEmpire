@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { track } from "@vercel/analytics";
 import { CardsIcon } from "@/components/icons/HomeIcons";
+import { NavIcon } from "@/components/NavIcon";
 
 // Riftle keeps its win-streak in localStorage under this key (see
 // components/Riftle.tsx's private KEY_STATS/Stats). Read-only, and duplicated
@@ -40,8 +41,8 @@ export function ReturnVisitCards({ newestSetName }: { newestSetName?: string }) 
         onClick={() => track("packsim_cta_click", { source: "home" })}
         className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gold/15 text-2xl leading-none" aria-hidden>
-          🎁
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold">
+          <NavIcon name="gift" className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-extrabold text-white">Riftbound pack opening simulator</h2>
@@ -63,7 +64,7 @@ export function ReturnVisitCards({ newestSetName }: { newestSetName?: string }) 
         <div className="min-w-0 flex-1">
           <h2 className="flex flex-wrap items-center gap-2 text-lg font-extrabold text-white">
             Play today&apos;s Riftle
-            {streak > 0 && <span className="chip bg-gold/20 text-[11px] font-bold text-gold">🔥 Day {streak} streak</span>}
+            {streak > 0 && <span className="chip bg-gold/20 text-[11px] font-bold text-gold">Day {streak} streak</span>}
           </h2>
           <p className="mt-0.5 text-sm text-slate-400">Guess the daily Riftbound card in 8 tries — a new puzzle every day.</p>
         </div>
@@ -75,8 +76,8 @@ export function ReturnVisitCards({ newestSetName }: { newestSetName?: string }) 
         onClick={() => track("alerts_cta_click", { source: "home" })}
         className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-2xl leading-none" aria-hidden>
-          🔔
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-brand-400">
+          <NavIcon name="bell" className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-extrabold text-white">Watching a card?</h2>

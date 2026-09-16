@@ -10,6 +10,7 @@ import { SITE_URL } from "@/lib/site";
 import { AdSlot } from "@/components/AdSlot";
 import { cardImageAlt } from "@/lib/image-alt";
 import { pageAlternates } from "@/lib/seo";
+import { NavIcon } from "@/components/NavIcon";
 
 export const metadata: Metadata = {
   title: "Riftbound Games — Free Daily Puzzles & Arcade",
@@ -41,7 +42,6 @@ export const metadata: Metadata = {
 const GAMES = [
   {
     href: "/riftle",
-    emoji: "🃏",
     name: "Riftle",
     tag: "Daily + Unlimited",
     desc: "Guess the mystery card in 8 tries with Wordle-style clues on set, type, domain, rarity, cost and might.",
@@ -54,7 +54,6 @@ const GAMES = [
     // simulator") and it carries the sourced pack-structure and pull-rate
     // tables — it earns the position that the other six mini-games do not.
     href: "/games/pack-sim",
-    emoji: "🎁",
     name: "Pack Opening Simulator",
     tag: "Rip packs",
     desc: "Open virtual Riftbound packs dealt to Riot's real 14-card pack structure, from the actual card pool, with a live price on every pull.",
@@ -66,7 +65,6 @@ const GAMES = [
     // knowledge the rest of the arcade teaches is played AGAINST other people —
     // so it gets the third wide tile, right under the two daily habits.
     href: "/games/sealed-bid",
-    emoji: "🔨",
     name: "Sealed Bid",
     tag: "NEW · Multiplayer 2–6",
     desc: "The blind auction where nobody sees the price. Real cards, live prices hidden, one sealed bid a round — outguess your friends and build the richest vault.",
@@ -75,7 +73,6 @@ const GAMES = [
   },
   {
     href: "/games/higher-lower",
-    emoji: "⚖️",
     name: "Higher or Lower",
     tag: "Streak",
     desc: "Which card costs more? Live prices, one mistake ends the run. How long can you last?",
@@ -83,7 +80,6 @@ const GAMES = [
   },
   {
     href: "/games/price-check",
-    emoji: "🏷️",
     name: "Price Check",
     tag: "5 rounds",
     desc: "The Price Is Right, for Riftbound: guess each card's market price, score by closeness.",
@@ -91,7 +87,6 @@ const GAMES = [
   },
   {
     href: "/games/zoomed",
-    emoji: "🔍",
     name: "Zoomed In",
     tag: "Art quiz",
     desc: "Name the card from a tiny patch of its art. Zoom out once if you must — at half points.",
@@ -99,7 +94,6 @@ const GAMES = [
   },
   {
     href: "/games/pairs",
-    emoji: "🧠",
     name: "Pairs",
     tag: "Memory",
     desc: "Classic memory with real card art. Match all eight pairs in the fewest moves.",
@@ -107,7 +101,6 @@ const GAMES = [
   },
   {
     href: "/games/twenty48",
-    emoji: "🧬",
     name: "Riftbound 2048",
     tag: "Puzzle",
     desc: "Slide and merge cards up the rarity ladder — two Commons make an Uncommon, all the way to Legend. Arrow keys or swipe.",
@@ -115,7 +108,6 @@ const GAMES = [
   },
   {
     href: "/games/card-smash",
-    emoji: "💥",
     name: "Card Smash",
     tag: "Reflex",
     desc: "Whack-a-mole with cards: tap them as they pop, dodge the bombs, beat the clock. Pricier cards score more.",
@@ -123,7 +115,6 @@ const GAMES = [
   },
   {
     href: "/games/card-rain",
-    emoji: "🌧️",
     name: "Card Rain",
     tag: "Arcade",
     desc: "Cards fall from the sky — slide your deck box to catch them, grab the power-ups, don't drop three. Pricier cards score more.",
@@ -179,7 +170,10 @@ export default async function GamesPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, itemListLd]) }} />
 
       <div className="mb-6 text-center">
-        <h1 className="font-display text-3xl font-extrabold text-white">🎮 Riftbound Games</h1>
+        <h1 className="flex items-center justify-center gap-2 font-display text-3xl font-extrabold text-white">
+          <NavIcon name="games" className="h-7 w-7 text-brand-400" />
+          Riftbound Games
+        </h1>
         <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Free mini-games built on the live card database — every round secretly makes you better at
           the card pool and the market. No signup, no paywall, play forever.
@@ -190,13 +184,13 @@ export default async function GamesPage() {
       {user ? (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3">
           <p className="text-sm text-slate-200">
-            🏆 You&apos;re signed in as <strong className="text-white">{user.displayName}</strong> — every game you finish counts toward the global leaderboards.
+            You&apos;re signed in as <strong className="text-white">{user.displayName}</strong> — every game you finish counts toward the global leaderboards.
           </p>
         </div>
       ) : (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/30 bg-brand-500/10 px-4 py-3">
           <p className="text-sm text-slate-200">
-            🏆 <strong className="text-white">Make a free account</strong> to save your scores and climb the global leaderboards.
+            <strong className="text-white">Make a free account</strong> to save your scores and climb the global leaderboards.
           </p>
           <div className="flex shrink-0 gap-2">
             <Link href="/login?next=/games" className="btn-primary text-sm">Sign in</Link>
@@ -215,9 +209,6 @@ export default async function GamesPage() {
             <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${g.accent} opacity-60`} />
             <div className="relative">
               <div className="flex items-center gap-3">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink-900/80 text-2xl transition-transform group-hover:scale-110" aria-hidden>
-                  {g.emoji}
-                </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-extrabold text-white">{g.name}</h2>
@@ -239,7 +230,7 @@ export default async function GamesPage() {
         <section className="mt-10">
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <h2 className="text-lg font-extrabold text-white">💸 Between games: today&apos;s best buys</h2>
+              <h2 className="text-lg font-extrabold text-white">Between games: today&apos;s best buys</h2>
               <p className="mt-0.5 text-xs text-slate-500">
                 Real {info.adjective} cards trading furthest below their recent high — the games run on these prices.
               </p>

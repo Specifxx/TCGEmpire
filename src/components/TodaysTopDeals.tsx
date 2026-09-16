@@ -8,6 +8,7 @@ import type { Deal, DealColumnKey, TopDeals } from "@/lib/top-deals";
 import { formatMoney } from "@/lib/format";
 import { OutboundLink } from "@/components/OutboundLink";
 import { useCountry } from "@/components/CountryProvider";
+import { NavIcon } from "@/components/NavIcon";
 import { useQuickView } from "@/components/QuickView";
 import { useMe } from "@/lib/use-me";
 import { cardImageAlt } from "@/lib/image-alt";
@@ -208,7 +209,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
 function LockedTeaser({ count, href }: { count: number; href: string }) {
   return (
     <li className="flex flex-1 flex-col items-center justify-center gap-1.5 px-3 py-6 text-center">
-      <span aria-hidden className="text-xl">🔒</span>
+      <NavIcon name="lock" className="h-5 w-5 text-gold" />
       <Link href={href} className="text-xs font-bold text-gold hover:underline">
         Unlock {count} more with Premium →
       </Link>

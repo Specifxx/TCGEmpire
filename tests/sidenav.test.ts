@@ -141,23 +141,25 @@ test("CinematicHero's full-bleed breakout compensates for --sidenav-w, not a bar
 // emoji made the one nav surface that's on screen permanently read as
 // AI-generated decoration, and rendering all ~9 groups flat and always-open
 // meant scrolling past Games and Guides to reach Your Collection on every
-// page. This is the one NAV_GROUPS renderer that drops the emoji (the
-// dropdown/footer/launcher renderers are untouched — a link.emoji shown for a
-// moment reads differently than one sitting on screen at all times) and the
+// page. SideNav was the FIRST NAV_GROUPS renderer to drop the emoji and the
 // one that lets a visitor collapse a group and has it stay collapsed.
+//
+// 2026-09-16: the emoji left every renderer. `emoji` came off NavGroupLink
+// itself (nav-groups.ts) in the P1 icon pass, so the ⌘K launcher and the
+// phone Explore overlay — which used to be the deliberate exception, shown
+// only for the moment they're open rather than sitting on screen — now carry
+// the same drawn-icon language SideNav pioneered (a NavIcon per section
+// header instead of a per-link glyph). FooterNav was already text-only
+// before any of this and stays out of the assertion below either way.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("SideNav renders no per-link emoji, unlike the launcher/mobile-nav renderers", () => {
-  const src = read("src/components/SideNav.tsx");
-  assert.doesNotMatch(src, /link\.emoji/, "SideNav must not read link.emoji — text only, by design");
-  // Untouched by this change, so still emoji: the ⌘K launcher and the phone
-  // Explore overlay, both surfaces that are open for a moment rather than
-  // sitting on screen permanently. (FooterNav was already text-only before
-  // this change — it never rendered link.emoji at all — so it isn't a
-  // counter-example either way and isn't asserted on here.)
-  for (const renderer of ["CommandLauncher.tsx", "CinematicNavMenu.tsx"]) {
-    assert.match(read(`src/components/${renderer}`), /link\.emoji|l\.emoji/, `${renderer} should still render emoji — only SideNav drops them`);
+test("no NAV_GROUPS renderer reads link.emoji any more — the field itself is gone", () => {
+  for (const renderer of ["SideNav.tsx", "CommandLauncher.tsx", "CinematicNavMenu.tsx"]) {
+    const src = read(`src/components/${renderer}`);
+    assert.doesNotMatch(src, /link\.emoji|l\.emoji/, `${renderer} must not read a per-link emoji — text only, by design`);
   }
+  // The field itself must be gone from the data, not just unread.
+  assert.doesNotMatch(read("src/components/nav-groups.ts"), /emoji:\s*string|emoji:\s*"/, "NavGroupLink must not carry an emoji field any more");
 });
 
 test("SideNav's groups are collapsible and remember a visitor's choice", () => {

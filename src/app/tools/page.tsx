@@ -70,7 +70,6 @@ const FAQS = [
 
 interface Tool {
   href: string;
-  emoji: string;
   title: string;
   desc: string;
   badge?: string;
@@ -86,49 +85,42 @@ const GROUPS: ToolGroup[] = [
     tools: [
       {
         href: "/tools/value-finder",
-        emoji: "🔎",
         title: "Value finder",
         desc: "Surface the cards going cheap right now — the best buys on the board.",
         badge: "Premium",
       },
       {
         href: "/tools/rising",
-        emoji: "🚀",
         title: "Rising cards",
         desc: "Cards ranked by demand and price-timing signals — whether to buy one now or wait.",
         badge: LIST_BADGE,
       },
       {
         href: "/tools/demand",
-        emoji: "📊",
         title: "Demand finder",
         desc: "The most searched and viewed cards right now, by real traffic — raw demand, no price-timing filter.",
         badge: "Premium",
       },
       {
         href: "/tools/deal-finder",
-        emoji: "💱",
         title: "Deal Finder",
         desc: "Spot cards that are cheaper in one place than another — including another market entirely — plus resale spreads if you're selling.",
         badge: LIST_BADGE,
       },
       {
         href: "/tools/best-basket",
-        emoji: "🧺",
         title: "Best basket",
         desc: "Building a want-list? Find the cheapest single-store (or split) basket to buy it all.",
         badge: "Premium",
       },
       {
         href: "/bulk-pricer",
-        emoji: "📋",
         title: "Bulk pricer",
         desc: "Paste a whole want-list, trade pile or collection and price every card at once with a running total.",
         badge: "Premium",
       },
       {
         href: "/tools/condition-calculator",
-        emoji: "🩹",
         title: "Condition calculator",
         desc: "Estimate how a card's value shifts between NM, LP, MP, HP and DMG — the same scale your portfolio uses.",
       },
@@ -139,19 +131,16 @@ const GROUPS: ToolGroup[] = [
     tools: [
       {
         href: "/tools/box-ev",
-        emoji: "🎲",
         title: "Box EV calculator",
         desc: "Is ripping a booster box worth it? Compare a box's price against the expected pull value.",
       },
       {
         href: "/sealed",
-        emoji: "📦",
         title: "Sealed prices",
         desc: "Booster boxes, packs, Proving Grounds and bundles priced across stores — with an in-stock-at-MSRP flag.",
       },
       {
         href: "/tools/rising-sealed",
-        emoji: "🚀",
         title: "Rising sealed",
         desc: "Sealed products ranked by price-timing and supply signals — sitting near their own low, thin in-stock, not already spiking.",
         badge: LIST_BADGE,
@@ -163,13 +152,11 @@ const GROUPS: ToolGroup[] = [
     tools: [
       {
         href: "/deck",
-        emoji: "🛠️",
         title: "Deck builder",
         desc: "Build a deck and price every card across stores as you go.",
       },
       {
         href: "/trade",
-        emoji: "🔁",
         title: "Trade calculator",
         desc: "Value both sides of a card trade fairly before you commit.",
       },
@@ -230,9 +217,6 @@ export default function ToolsHubPage() {
                 href={t.href}
                 className="card-surface group flex gap-3 p-4 transition-colors hover:border-ink-600"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-ink-800 text-xl" aria-hidden>
-                  {t.emoji}
-                </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-white group-hover:text-brand-300">{t.title}</h3>

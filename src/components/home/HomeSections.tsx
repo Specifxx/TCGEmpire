@@ -171,7 +171,7 @@ export function HomeSections({
           siteName={SITE_NAME}
           source="home"
           variant="card"
-          heading={`📈 Get the weekly ${SITE_NAME} Index — the market summary every collector reads, each Monday. Free.`}
+          heading={`Get the weekly ${SITE_NAME} Index — the market summary every collector reads, each Monday. Free.`}
           cta="Subscribe"
         />
       </div>
@@ -209,9 +209,6 @@ export function HomeSections({
         href="/tools/best-basket"
         className="card-surface group flex flex-wrap items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:flex-nowrap"
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-2xl leading-none" aria-hidden>
-          🧺
-        </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-extrabold text-white">Building a decklist? Find the cheapest way to buy it</h2>
           <p className="mt-0.5 text-sm text-slate-400">

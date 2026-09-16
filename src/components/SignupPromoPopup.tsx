@@ -391,7 +391,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
               a full banner). Nothing renders while no increase is announced. */}
           {premiumPriceIncreaseAnnounced() && (
             <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
-              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
               {PREMIUM_NEXT_PRICE_AMOUNT}
             </p>
           )}

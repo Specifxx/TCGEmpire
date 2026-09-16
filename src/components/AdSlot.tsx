@@ -75,10 +75,10 @@ function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
 // First-party units: links to our own tools, no third-party network and no
 // tracking. This is what a slot shows before — and instead of — real ads.
 const HOUSE_ADS = [
-  { emoji: "📈", title: "Today's biggest price moves", sub: "Risers, drops and best-value buys — updated daily", cta: "See the movers", href: "/movers" },
-  { emoji: "🎲", title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
-  { emoji: "📊", title: "The RiftCompare Index", sub: "The whole Riftbound market in one number", cta: "View the index", href: "/market" },
-  { emoji: "🔔", title: "Never overpay for a card again", sub: "Free price alerts when a card hits your target", cta: "Browse & set an alert", href: "/browse" },
+  { title: "Today's biggest price moves", sub: "Risers, drops and best-value buys — updated daily", cta: "See the movers", href: "/movers" },
+  { title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
+  { title: "The RiftCompare Index", sub: "The whole Riftbound market in one number", cta: "View the index", href: "/market" },
+  { title: "Never overpay for a card again", sub: "Free price alerts when a card hits your target", cta: "Browse & set an alert", href: "/browse" },
 ];
 
 // Deterministic pick so server render === hydration (no Math.random) and each
@@ -98,7 +98,6 @@ function HouseAd({ seed, height }: { seed: string; height: number }) {
       style={{ height }}
     >
       <span className="flex min-w-0 items-center gap-3">
-        <span className="text-2xl" aria-hidden>{ad.emoji}</span>
         <span className="min-w-0">
           <span className="block truncate text-sm font-bold text-white">{ad.title}</span>
           <span className="block truncate text-xs text-slate-400">{ad.sub}</span>

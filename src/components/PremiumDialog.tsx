@@ -292,7 +292,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               left to say to them. */}
           {!premium && premiumPriceIncreaseAnnounced() && (
             <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-center text-xs font-semibold text-gold">
-              ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
               {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD}.
             </div>
           )}

@@ -48,14 +48,13 @@ export const metadata: Metadata = {
 // (also included in Premium), "premium" for the four pro tools. Shown as a
 // small caption only once Plus is actually live (see the render below); with
 // Plus dark every card reads as Premium-only, same as before the split.
-const FEATURES: { title: string; body: string; href: string | null; cta: string | null; tier: PremiumTierKey; emoji: string }[] = [
+const FEATURES: { title: string; body: string; href: string | null; cta: string | null; tier: PremiumTierKey }[] = [
   {
     title: "Bulk Pricer",
     body: "Paste an entire want-list, trade pile or collection and price every card at once, each matched to its cheapest live store price with a running total.",
     href: "/bulk-pricer",
     cta: "Open Bulk Pricer",
     tier: "premium",
-    emoji: "📋",
   },
   {
     title: "Best Basket",
@@ -63,7 +62,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: "/tools/best-basket",
     cta: "Open Best Basket",
     tier: "premium",
-    emoji: "🧺",
   },
   {
     title: "Value Finder screener",
@@ -71,7 +69,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: "/tools/value-finder",
     cta: "Open Value Finder",
     tier: "premium",
-    emoji: "🔎",
   },
   {
     title: "Rising Cards",
@@ -79,7 +76,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: "/tools/rising",
     cta: "Open Rising Cards",
     tier: "plus",
-    emoji: "🚀",
   },
   {
     title: "Rising Sealed",
@@ -87,7 +83,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: "/tools/rising-sealed",
     cta: "Open Rising Sealed",
     tier: "plus",
-    emoji: "🚀",
   },
   {
     title: "Demand Finder",
@@ -95,7 +90,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: "/tools/demand",
     cta: "Open Demand Finder",
     tier: "premium",
-    emoji: "📊",
   },
   {
     title: "Deal Finder",
@@ -103,7 +97,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: "/tools/deal-finder",
     cta: "Open Deal Finder",
     tier: "plus",
-    emoji: "💱",
   },
   {
     title: "Ad-free everywhere",
@@ -111,7 +104,6 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
     href: null,
     cta: null,
     tier: "plus",
-    emoji: "🚫",
   },
 ];
 
@@ -271,7 +263,7 @@ export default async function PremiumPage() {
           {premiumPriceIncreaseAnnounced() && (
             <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
               <p className="text-sm font-bold text-gold">
-                ⏳ Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} now
+                Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} now
               </p>
               <p className="mt-1 text-xs text-gold/80">
                 New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
@@ -419,7 +411,6 @@ export default async function PremiumPage() {
           {FEATURES.map((f) => (
             <div key={f.title} className={`card-surface flex flex-col border-l-2 p-4 ${f.tier === "plus" && plusLive ? "border-slate-400/40" : "border-gold/40"}`}>
               <div className="flex items-center gap-2">
-                <span aria-hidden="true" className="text-base">{f.emoji}</span>
                 <h3 className="font-bold text-white">{f.title}</h3>
                 {plusLive && (
                   <span className={`chip text-[9px] font-semibold ${f.tier === "plus" ? "bg-slate-500/15 text-slate-300" : "bg-gold/15 text-gold"}`}>

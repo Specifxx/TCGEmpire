@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Watchlist } from "@/components/Watchlist";
+import { NavIcon } from "@/components/NavIcon";
 
 // getCurrentUser() reads cookies(), so this route can never be cached. Declared
 // explicitly rather than left to inference — a stray session read is what once
@@ -50,7 +51,10 @@ export default async function WatchingPage() {
           <span>/</span>
           <span className="text-slate-300">My watchlist</span>
         </nav>
-        <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">🔔 My watchlist</h1>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white sm:text-3xl">
+          <NavIcon name="bell" className="h-6 w-6 shrink-0 text-brand-400" />
+          My watchlist
+        </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Every card you&apos;re tracking, with the price it was at when you started. We email{" "}
           <strong className="text-slate-200">{user.email}</strong> whenever one of them drops below that

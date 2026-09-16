@@ -15,6 +15,7 @@ import { CollectionShare } from "@/components/CollectionShare";
 import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PremiumButton } from "@/components/PremiumButton";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
+import { NavIcon } from "@/components/NavIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -124,7 +125,10 @@ export default async function PortfolioPage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-extrabold text-white">💼 My portfolio</h1>
+          <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
+            <NavIcon name="collection" className="h-6 w-6 text-brand-400" />
+            My portfolio
+          </h1>
           <p className="mt-1 text-sm text-slate-400">
             Your collection valued at the live {info.adjective} lowest prices, condition-adjusted.
           </p>
@@ -185,7 +189,10 @@ export default async function PortfolioPage() {
                   </div>
                   <div className="absolute inset-0 grid place-items-center bg-ink-950/40 p-4 text-center">
                     <div>
-                      <p className="text-sm font-bold text-white">📈 Value-over-time is a Premium feature</p>
+                      <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-white">
+                        <NavIcon name="chart" className="h-4 w-4 text-gold" />
+                        Value-over-time is a Premium feature
+                      </p>
                       <p className="mt-1 text-xs text-slate-400">Daily history, CSV export, unlimited price alerts and an ad-free site.</p>
                       <div className="mt-3"><PremiumButton /></div>
                     </div>
@@ -210,7 +217,10 @@ export default async function PortfolioPage() {
           {/* Cost-basis P&L + market benchmark — the investor view. */}
           <section className="card-surface p-5">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-lg font-extrabold text-white">📊 Profit &amp; Loss</h2>
+              <h2 className="flex items-center gap-1.5 text-lg font-extrabold text-white">
+                <NavIcon name="chart" className="h-5 w-5 text-brand-400" />
+                Profit &amp; Loss
+              </h2>
             </div>
             {pro ? (
               portfolio.pnl ? (
@@ -235,7 +245,10 @@ export default async function PortfolioPage() {
                 </div>
                 <div className="absolute inset-0 grid place-items-center bg-ink-950/40 p-4 text-center">
                   <div>
-                    <p className="text-sm font-bold text-white">💰 Profit &amp; Loss is a Premium feature</p>
+                    <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-white">
+                      <NavIcon name="lock" className="h-4 w-4 text-gold" />
+                      Profit &amp; Loss is a Premium feature
+                    </p>
                     <p className="mt-1 text-xs text-slate-400">
                       Record what you paid, see your real gains, and track your collection against the market.
                     </p>

@@ -8,6 +8,7 @@ import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { TIER_NAMES, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, type PremiumTierKey } from "@/lib/site";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
+import { NavIcon } from "@/components/NavIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -23,15 +24,15 @@ export const metadata: Metadata = {
 // member is shown as theirs, so a mismatch either dangles a tool that bounces
 // them to /premium or hides one they've paid for. tests/premium-tiers.test.ts
 // checks the pairing against TIER_COMPARISON.
-const TOOLS: { title: string; desc: string; href: string; icon: string; tier: PremiumTierKey }[] = [
-  { title: "Bulk Pricer", desc: "Price a whole want-list or trade pile in one paste.", href: "/bulk-pricer", icon: "📋", tier: "premium" },
-  { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", icon: "🧺", tier: "premium" },
-  { title: "Value Finder", desc: "Cards trading below their recent average — what's going cheap today.", href: "/tools/value-finder", icon: "🔎", tier: "premium" },
-  { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — buy now, or leave it.", href: "/tools/rising", icon: "🚀", tier: "plus" },
-  { title: "Rising Sealed", desc: "Sealed products ranked by price-timing + supply signals — when to buy.", href: "/tools/rising-sealed", icon: "📦", tier: "plus" },
-  { title: "Demand Finder", desc: "The most searched and viewed cards right now, by real traffic.", href: "/tools/demand", icon: "📊", tier: "premium" },
-  { title: "Deal Finder", desc: "The cheapest eBay buys, cross-market gaps, and resale spreads. Daily.", href: "/tools/deal-finder", icon: "⚖️", tier: "plus" },
-  { title: "Condition Calculator", desc: "Estimate a card's value swap between NM, LP, MP, HP and DMG.", href: "/tools/condition-calculator", icon: "🩹", tier: "plus" },
+const TOOLS: { title: string; desc: string; href: string; tier: PremiumTierKey }[] = [
+  { title: "Bulk Pricer", desc: "Price a whole want-list or trade pile in one paste.", href: "/bulk-pricer", tier: "premium" },
+  { title: "Best Basket", desc: "The cheapest multi-store cart for a whole deck list.", href: "/tools/best-basket", tier: "premium" },
+  { title: "Value Finder", desc: "Cards trading below their recent average — what's going cheap today.", href: "/tools/value-finder", tier: "premium" },
+  { title: "Rising Cards", desc: "Cards ranked by demand + price-timing signals — buy now, or leave it.", href: "/tools/rising", tier: "plus" },
+  { title: "Rising Sealed", desc: "Sealed products ranked by price-timing + supply signals — when to buy.", href: "/tools/rising-sealed", tier: "plus" },
+  { title: "Demand Finder", desc: "The most searched and viewed cards right now, by real traffic.", href: "/tools/demand", tier: "premium" },
+  { title: "Deal Finder", desc: "The cheapest eBay buys, cross-market gaps, and resale spreads. Daily.", href: "/tools/deal-finder", tier: "plus" },
+  { title: "Condition Calculator", desc: "Estimate a card's value swap between NM, LP, MP, HP and DMG.", href: "/tools/condition-calculator", tier: "plus" },
 ];
 
 export default async function DashboardPage() {
@@ -104,7 +105,6 @@ export default async function DashboardPage() {
             href={t.href}
             className="card-surface group flex flex-col gap-2 border-l-2 border-gold/40 p-4 transition-colors hover:border-gold hover:bg-ink-800"
           >
-            <span className="text-2xl" aria-hidden>{t.icon}</span>
             <h3 className="font-bold text-white group-hover:text-gold">{t.title}</h3>
             <p className="flex-1 text-sm leading-relaxed text-slate-400">{t.desc}</p>
             <span className="text-sm font-semibold text-gold">Open →</span>
@@ -128,10 +128,12 @@ export default async function DashboardPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             {lockedTools.map((t) => (
               <div key={t.title} className="card-surface flex flex-col gap-2 border-l-2 border-ink-700 p-4 opacity-70">
-                <span className="text-2xl grayscale" aria-hidden>{t.icon}</span>
                 <h3 className="font-bold text-slate-300">{t.title}</h3>
                 <p className="flex-1 text-sm leading-relaxed text-slate-500">{t.desc}</p>
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">🔒 Premium</span>
+                <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <NavIcon name="lock" className="h-3.5 w-3.5" />
+                  Premium
+                </span>
               </div>
             ))}
           </div>

@@ -9,11 +9,18 @@ import { useMegaMenu } from "./MegaMenuProvider";
 import { NAV_GROUPS, POPULAR_LINKS, type NavGroupLink } from "./nav-groups";
 import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
+import { NavIcon } from "./NavIcon";
 import { useMe } from "@/lib/use-me";
 
 // Shared by the Popular grid and the full category panels below — both need
 // the identical active-pathname/external branching, so it's factored out
 // rather than duplicated (and drifting) between the two render paths.
+//
+// 2026-09-16: text-only. Every link here used to lead with its own emoji
+// (🗃️, 📦, 💼…) — the same "AI generated" look the collapsed rail's icons
+// replaced on 2026-09-11 (see NavIcon.tsx). This overlay is the last place
+// that language survived; the group-level NavIcon glyph on each section
+// header (below) now carries the visual identity instead of one per link.
 function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: string; onClick: () => void }) {
   const active = !l.external && (pathname === l.href || (l.href !== "/" && pathname.startsWith(l.href)));
   const className = `group flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 ${
@@ -22,14 +29,12 @@ function FeatureLink({ l, pathname, onClick }: { l: NavGroupLink; pathname: stri
   if (l.external) {
     return (
       <a href={l.href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={className}>
-        <span className="text-lg" aria-hidden>{l.emoji}</span>
         <span className="font-medium">{l.label}</span>
       </a>
     );
   }
   return (
     <Link href={l.href} onClick={onClick} aria-current={active ? "page" : undefined} className={className}>
-      <span className="text-lg" aria-hidden>{l.emoji}</span>
       <span className="font-medium">{l.label}</span>
     </Link>
   );
@@ -69,7 +74,7 @@ export function CinematicNavMenu() {
   // phone and on a desktop.
   const filtering = filter.trim().length > 0;
   const sections = useMemo(() => {
-    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, links: g.links }));
+    if (!filtering) return NAV_GROUPS.map((g) => ({ title: g.title, icon: g.icon, links: g.links }));
     const hits = searchNav(filter);
     const byGroup = new Map<string, typeof hits>();
     for (const h of hits) {
@@ -79,6 +84,7 @@ export function CinematicNavMenu() {
     }
     return NAV_GROUPS.filter((g) => byGroup.has(g.title)).map((g) => ({
       title: g.title,
+      icon: g.icon,
       links: byGroup.get(g.title)!,
     }));
   }, [filter, filtering]);
@@ -306,8 +312,8 @@ export function CinematicNavMenu() {
                     className="cine-item relative overflow-hidden rounded-lg border border-ink-800 border-l-2 border-l-brand-500 bg-ink-850 p-4"
                     style={{ "--cine-delay": `${si * 70}ms` } as CSSProperties}
                   >
-                    <div className="mb-2 flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
-                      <span className="h-2 w-2 rounded-full bg-brand-500" aria-hidden />
+                    <div className="mb-2 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-400">
+                      {sec.icon && <NavIcon name={sec.icon} className="h-3.5 w-3.5 text-brand-400" />}
                       {sec.title}
                     </div>
                     <ul className="space-y-0.5">

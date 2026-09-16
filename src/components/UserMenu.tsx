@@ -167,7 +167,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             )}
             <MenuLink href="/profile" onClick={() => setOpen(false)}>Profile</MenuLink>
             <MenuLink href="/profile#collection" onClick={() => setOpen(false)}>My collection</MenuLink>
-            <MenuLink href="/watching" onClick={() => setOpen(false)}>🔔 My watchlist</MenuLink>
+            <MenuLink href="/watching" onClick={() => setOpen(false)}>My watchlist</MenuLink>
             {/* The P2P marketplace was removed entirely (2026-08), so the seller
                 dashboard / orders / funds links this menu used to carry are gone
                 with it — the site is back to pure price comparison. */}

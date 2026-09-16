@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { NavIcon } from "@/components/NavIcon";
 
 // Route-segment error boundary. Without this, ANY client-side exception falls
 // through to Next's bare "Application error: a client-side exception has
@@ -32,7 +33,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
 
   return (
     <div className="mx-auto max-w-xl py-16 text-center">
-      <p className="text-5xl" aria-hidden>🛠️</p>
+      <NavIcon name="wrench" className="mx-auto h-12 w-12 text-slate-500" />
       <h1 className="mt-3 text-2xl font-extrabold text-white">
         {isChunkError ? "Refreshing to the latest version…" : "Something went wrong"}
       </h1>

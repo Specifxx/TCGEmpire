@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { NAV_GROUPS } from "./nav-groups";
 import { searchNav } from "./nav-search";
+import { NavIcon } from "./NavIcon";
 
 // A global "command launcher": one searchable, full-screen overlay listing every
 // section of the site, opened from a button on any page (navbar) or the homepage
@@ -135,7 +136,7 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
   // list is also the only thing arrow keys can traverse sensibly.
   const grouped = useMemo(() => {
     if (searching) return [];
-    return NAV_GROUPS.map((g) => ({ title: g.title, links: g.links }));
+    return NAV_GROUPS.map((g) => ({ title: g.title, icon: g.icon, links: g.links }));
   }, [searching]);
 
   return (
@@ -192,7 +193,6 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
                   }`;
                   const inner = (
                     <>
-                      <span className="text-base leading-none" aria-hidden>{l.emoji}</span>
                       <span className="min-w-0 flex-1 truncate">{l.label}</span>
                       <span className="shrink-0 text-[11px] uppercase tracking-wide text-slate-500">{l.group}</span>
                     </>
@@ -232,16 +232,14 @@ function LauncherOverlay({ onClose }: { onClose: () => void }) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {grouped.map((g) => (
                 <div key={g.title}>
-                  <div className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-brand-300">{g.title}</div>
+                  <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-brand-300">
+                    {g.icon && <NavIcon name={g.icon} className="h-3.5 w-3.5" />}
+                    {g.title}
+                  </div>
                   <ul className="space-y-0.5">
                     {g.links.map((l) => {
                       const groupedClassName = "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-ink-800 hover:text-white";
-                      const inner = (
-                        <>
-                          <span className="text-base leading-none" aria-hidden>{l.emoji}</span>
-                          {l.label}
-                        </>
-                      );
+                      const inner = l.label;
                       return (
                         <li key={l.href}>
                           {l.external ? (

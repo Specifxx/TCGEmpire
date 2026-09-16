@@ -36,7 +36,21 @@ export type NavIconName =
   | "games"
   | "news"
   | "calendar"
-  | "help";
+  | "help"
+  // Added 2026-09-16 (UI polish pass) for decorative-emoji removal OUTSIDE the
+  // rail proper — headings, CTAs and chrome that used to lead with a picture
+  // emoji (🔔, 🔒, 📈, 🏆, 🛠️, 📋…). Six, not a name-per-emoji: most of the
+  // ~500 emoji found across the app are either game CONTENT (kept — see
+  // Riftle/Pairs/etc.) or one-off tool-tile decoration that's simply dropped
+  // (text-only tiles, same call FooterNav already made for every link it
+  // renders). These six cover every REPEATED chrome concept.
+  | "bell"
+  | "lock"
+  | "chart"
+  | "trophy"
+  | "wrench"
+  | "import"
+  | "gift";
 
 // A Record (not a partial index) so adding a NavIconName without drawing it is
 // a TYPE ERROR here rather than an invisible blank square in the rail.
@@ -110,6 +124,60 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
       <circle cx="12" cy="12" r="9" />
       <path d="M9.5 9.3a2.55 2.55 0 0 1 4.96.85c0 1.7-2.46 2.25-2.46 3.6" />
       <path d="M12 17.1h.01" />
+    </>
+  ),
+  // Bell — watchlist/alerts/notifications. Replaces 🔔 everywhere it was
+  // leading a heading or CTA.
+  bell: (
+    <>
+      <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z" />
+      <path d="M10 19.5a2 2 0 0 0 4 0" />
+    </>
+  ),
+  // Lock — Premium/locked content. Replaces 🔒.
+  lock: (
+    <>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  // Chart — market/index/P&L concepts. Replaces 📈/📊/💰 in headings.
+  chart: (
+    <>
+      <path d="M4 20V10M11 20V4M18 20v-7" />
+      <path d="M3 20h18" />
+    </>
+  ),
+  // Trophy — leaderboards/scores. Replaces 🏆.
+  trophy: (
+    <>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+      <path d="M7 5.5H4a1 1 0 0 0-1 1V8a3.5 3.5 0 0 0 3.5 3.5M17 5.5h3a1 1 0 0 1 1 1V8a3.5 3.5 0 0 1-3.5 3.5" />
+      <path d="M12 14v3.5M9 20.5h6M9.5 17.5h5" />
+    </>
+  ),
+  // Wrench — errors/tools/maintenance. Replaces 🛠️.
+  wrench: (
+    <>
+      <path d="M14.5 6.5a4 4 0 0 0-5.4 4.9L3 17.5 6.5 21l6.1-6.1a4 4 0 0 0 4.9-5.4l-3 3-2.3-2.3 3-3Z" />
+    </>
+  ),
+  // Import — bringing a list of your own cards in. Replaces 📋.
+  import: (
+    <>
+      <path d="M12 3v11" />
+      <path d="M7.5 9.5 12 14l4.5-4.5" />
+      <path d="M4 16.5v2A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5v-2" />
+    </>
+  ),
+  // Gift — pack opening / a reward to claim. Replaces 🎁.
+  gift: (
+    <>
+      <rect x="3.5" y="9.5" width="17" height="4.5" rx="1" />
+      <rect x="5" y="14" width="14" height="7" rx="1" />
+      <path d="M12 9.5V21" />
+      <path d="M12 9.5C9 9.5 7.5 8 7.5 6.3A2.3 2.3 0 0 1 12 6.3v3.2Z" />
+      <path d="M12 9.5C15 9.5 16.5 8 16.5 6.3A2.3 2.3 0 0 0 12 6.3v3.2Z" />
     </>
   ),
 };
