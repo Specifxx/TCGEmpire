@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton, ResendVerifyButton } from "@/components/ProfileActions";
+import { WelcomeChecklist } from "@/components/WelcomeChecklist";
 import { MyCollection } from "@/components/MyCollection";
 import { ReferralLinkCard } from "@/components/ReferralLinkCard";
 import { REFERRAL_PREMIUM_DAYS } from "@/lib/premium";
@@ -46,6 +47,10 @@ export default async function ProfilePage() {
         </div>
         <LogoutButton />
       </div>
+
+      {/* Renders nothing once dismissed, no longer eligible, or all three
+          steps are done — see its own comment. */}
+      <WelcomeChecklist />
 
       {/* My Collection — cards the user owns, valued live (separate from wishlist) */}
       <MyCollection />

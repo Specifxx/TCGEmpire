@@ -78,7 +78,7 @@ const HOUSE_ADS = [
   { title: "Today's biggest price moves", sub: "Risers, drops and best-value buys — updated daily", cta: "See the movers", href: "/movers" },
   { title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
   { title: "The RiftCompare Index", sub: "The whole Riftbound market in one number", cta: "View the index", href: "/market" },
-  { title: "Never overpay for a card again", sub: "Free price alerts when a card hits your target", cta: "Browse & set an alert", href: "/browse" },
+  { title: "Never overpay for a card again", sub: "Free price alerts the moment a card hits a new low", cta: "Browse & start watching", href: "/browse" },
 ];
 
 // Deterministic pick so server render === hydration (no Math.random) and each

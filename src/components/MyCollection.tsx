@@ -8,6 +8,7 @@ import { CONDITIONS, CONDITION_KEYS } from "@/lib/constants";
 import { useCountry } from "./CountryProvider";
 import { cardImageAlt } from "@/lib/image-alt";
 import { trackEvent } from "@/lib/analytics";
+import { EmptyState } from "./ui/EmptyState";
 
 type CollCard = {
   id: string;
@@ -144,19 +145,25 @@ export function MyCollection() {
       {importing && <BulkImport onDone={refresh} />}
 
       {loadError && (
-        <p role="alert" className="mt-4 text-sm text-rose-400">
-          Something went wrong loading your collection — it&apos;s still there, this page just couldn&apos;t reach it.{" "}
-          <button onClick={() => void load()} className="font-semibold text-brand-300 hover:underline">
-            Try again
-          </button>
-        </p>
+        <div role="alert" className="mt-4">
+          <EmptyState
+            bare
+            icon="wrench"
+            title="Something went wrong"
+            body="It's still there, this page just couldn't reach it."
+            primary={{ onClick: () => void load(), label: "Try again" }}
+          />
+        </div>
       )}
 
       {!loadError && items != null && items.length === 0 && (
-        <p className="mt-4 text-sm text-slate-500">
-          Search a card above (or <span className="font-semibold text-brand-300">Import a list</span>) to start tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from any{" "}
-          <Link href="/browse" className="text-brand-400 hover:underline">price watches</Link> you&apos;ve set.
-        </p>
+        <EmptyState bare icon="collection" title="Nothing in your collection yet">
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-400">
+            Search a card above (or <span className="font-semibold text-brand-300">Import a list</span>) to start
+            tracking what you own — we&apos;ll value the whole thing live as prices move. It&apos;s separate from any{" "}
+            <Link href="/browse" className="text-brand-400 hover:underline">price watches</Link> you&apos;ve set.
+          </p>
+        </EmptyState>
       )}
 
       {items != null && items.length > 0 && (
@@ -243,7 +250,9 @@ type SearchCard = {
 
 // In-page card search: type a name, pick a result, and it's added to the collection
 // (1× Near Mint) without leaving the page. Reuses the navbar typeahead endpoint.
-function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) {
+// Exported for PortfolioQuickAdd.tsx — the portfolio page's zero-state reuses
+// this exact search-and-add widget rather than a second copy of it.
+export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<void> }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<SearchCard[]>([]);
   const [open, setOpen] = useState(false);

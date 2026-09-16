@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "./ui/Skeleton";
+import { EmptyState } from "./ui/EmptyState";
 import { useUnreadCount, setUnreadCount, bumpUnreadCount } from "@/lib/use-unread";
 import { trackEvent } from "@/lib/analytics";
 
@@ -130,7 +131,7 @@ export function NotificationBell() {
                 ))}
               </div>
             ) : notifications.length === 0 ? (
-              <p className="p-6 text-center text-sm text-slate-500">Nothing yet — price drops, trial reminders and set releases show up here.</p>
+              <EmptyState bare icon="bell" title="Nothing yet" body="Price drops, trial reminders and set releases show up here." />
             ) : (
               <ul className="divide-y divide-ink-800">
                 {notifications.map((n) => {

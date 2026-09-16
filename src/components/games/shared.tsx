@@ -212,7 +212,7 @@ export function GameResultExtras({
             Create a free account to save your scores and climb the global rankings — it takes a few seconds.
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-            <Link href={`/login?next=${encodeURIComponent(next)}`} className="btn-primary text-sm">Sign in</Link>
+            <Link href={`/login?next=${encodeURIComponent(next)}`} className="btn-primary text-sm">Create free account</Link>
             <Link href={`/login?next=${encodeURIComponent(next)}`} className="btn-ghost text-sm">Sign in</Link>
           </div>
         </div>

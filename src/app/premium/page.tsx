@@ -34,6 +34,7 @@ import { pageAlternates } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { faqPage, ldJson } from "@/lib/jsonld";
 import { PremiumRecoveryBeacon } from "@/components/PremiumRecoveryBeacon";
+import { PremiumProofLine } from "@/components/PremiumProofLine";
 
 export const dynamic = "force-dynamic";
 
@@ -148,7 +149,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Is Premium worth it?",
-    a: "Depends entirely on how much you buy. Best Basket is the honest test: it shows the unoptimised total next to its own, so the saving on a single deck order is a number you can check rather than a claim we make. On a full deck that difference is often more than a month of Premium. If you only buy the occasional single card, the free tier is genuinely all you need — that's deliberate.",
+    a: "Depends entirely on how much you buy. Best Basket is the honest test: it shows the unoptimised total next to its own, so the saving on a single deck order is a number you can check rather than a claim we make. On a full deck that difference is often more than a month of Premium. See the live numbers above for what Deal Finder is showing right now. If you only buy the occasional single card, the free tier is genuinely all you need — that's deliberate.",
   },
   ...(premiumPlusEnabled()
     ? [
@@ -272,6 +273,9 @@ export default async function PremiumPage() {
               </p>
             </div>
           )}
+
+          {/* Client island, renders nothing until it resolves — see its own comment. */}
+          <PremiumProofLine />
 
           <div id="top-pricing" className="scroll-mt-20">
           <PremiumPricingCards

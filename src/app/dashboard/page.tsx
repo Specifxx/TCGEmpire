@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTierOf, getPortfolio } from "@/lib/premium";
+import { premiumCheckoutEnabled, premiumPlusEnabled, premiumTierOf, getPortfolio } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { TIER_NAMES, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, type PremiumTierKey } from "@/lib/site";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { NavIcon } from "@/components/NavIcon";
+import { WatchlistSnapshot } from "@/components/WatchlistSnapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -38,21 +39,22 @@ const TOOLS: { title: string; desc: string; href: string; tier: PremiumTierKey }
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/dashboard");
-  if (!isPremium(user)) redirect("/premium");
 
   const country = getCountry();
   const info = COUNTRIES[country];
   const portfolio = await getPortfolio(user.id, country).catch(() => null);
   const hasValue = !!portfolio && portfolio.totalCents > 0;
 
-  // premiumTierOf reads admins as "premium"; the redirect above guarantees a
-  // tier here, so the ?? is only for the type.
-  const tier = premiumTierOf(user) ?? "premium";
-  const tierName = TIER_NAMES[tier];
+  // Free tier included (2026-09-16): a signed-in non-paying visitor gets a
+  // reason to come back too — their real portfolio/watchlist, every tool
+  // shown as locked rather than hidden, and an upgrade path, never a wall.
+  const tier = premiumTierOf(user);
+  const tierName = tier ? TIER_NAMES[tier] : "Free";
   const isPlus = tier === "plus";
-  const myTools = TOOLS.filter((t) => t.tier === "plus" || !isPlus);
-  const lockedTools = isPlus ? TOOLS.filter((t) => t.tier === "premium") : [];
-  const canUpgrade = isPlus && premiumPlusEnabled();
+  const isFree = tier == null;
+  const myTools = isFree ? [] : TOOLS.filter((t) => t.tier === "plus" || !isPlus);
+  const lockedTools = isFree ? TOOLS : isPlus ? TOOLS.filter((t) => t.tier === "premium") : [];
+  const canUpgrade = isFree ? premiumCheckoutEnabled() : isPlus && premiumPlusEnabled();
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -76,52 +78,63 @@ export default async function DashboardPage() {
         {premiumCheckoutEnabled() && <ManageSubscriptionButton />}
       </div>
 
-      {/* Portfolio snapshot */}
-      <div className="card-surface mt-6 flex flex-wrap items-center justify-between gap-4 border-l-2 border-brand-500 p-5">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Collection value ({info.currency})</div>
-          <div className="mt-1 flex items-baseline gap-3">
-            <span className="num text-3xl font-extrabold text-white">
-              {hasValue ? formatMoney(portfolio!.totalCents, info.currency) : "—"}
-            </span>
-            {hasValue && portfolio!.d7 != null && (
-              <span className={`num text-sm font-bold ${portfolio!.d7 > 0 ? "text-up" : portfolio!.d7 < 0 ? "text-down" : "text-slate-400"}`}>
-                {portfolio!.d7 > 0 ? "+" : ""}{portfolio!.d7}% · 7d
+      {/* Portfolio + watchlist snapshots */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="card-surface flex flex-wrap items-center justify-between gap-4 border-l-2 border-brand-500 p-5">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Collection value ({info.currency})</div>
+            <div className="mt-1 flex items-baseline gap-3">
+              <span className="num text-3xl font-extrabold text-white">
+                {hasValue ? formatMoney(portfolio!.totalCents, info.currency) : "—"}
               </span>
-            )}
+              {hasValue && portfolio!.d7 != null && (
+                <span className={`num text-sm font-bold ${portfolio!.d7 > 0 ? "text-up" : portfolio!.d7 < 0 ? "text-down" : "text-slate-400"}`}>
+                  {portfolio!.d7 > 0 ? "+" : ""}{portfolio!.d7}% · 7d
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-        <Link href="/portfolio" className="btn-ghost text-sm">
-          {hasValue ? "Open portfolio →" : "Start tracking →"}
-        </Link>
-      </div>
-
-      {/* Tools the member actually has */}
-      <h2 className="mb-3 mt-8 text-lg font-extrabold text-white">Your {tierName} tools</h2>
-      <div className="grid gap-3 sm:grid-cols-3">
-        {myTools.map((t) => (
-          <Link
-            key={t.title}
-            href={t.href}
-            className="card-surface group flex flex-col gap-2 border-l-2 border-gold/40 p-4 transition-colors hover:border-gold hover:bg-ink-800"
-          >
-            <h3 className="font-bold text-white group-hover:text-gold">{t.title}</h3>
-            <p className="flex-1 text-sm leading-relaxed text-slate-400">{t.desc}</p>
-            <span className="text-sm font-semibold text-gold">Open →</span>
+          <Link href="/portfolio" className="btn-ghost text-sm">
+            {hasValue ? "Open portfolio →" : "Start tracking →"}
           </Link>
-        ))}
+        </div>
+        {/* Client island — see WatchlistSnapshot's own comment for why. */}
+        <WatchlistSnapshot />
       </div>
 
-      {/* Premium-only tools, shown to Plus as locked rather than hidden: a card
-          that bounces you to an upsell wall is worse than one that says up front
-          it isn't yours. Not links — nothing here navigates. */}
+      {/* Tools the member actually has — nothing for a free account. */}
+      {myTools.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-8 text-lg font-extrabold text-white">Your {tierName} tools</h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {myTools.map((t) => (
+              <Link
+                key={t.title}
+                href={t.href}
+                className="card-surface group flex flex-col gap-2 border-l-2 border-gold/40 p-4 transition-colors hover:border-gold hover:bg-ink-800"
+              >
+                <h3 className="font-bold text-white group-hover:text-gold">{t.title}</h3>
+                <p className="flex-1 text-sm leading-relaxed text-slate-400">{t.desc}</p>
+                <span className="text-sm font-semibold text-gold">Open →</span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Locked tools, shown rather than hidden: a card that bounces you to an
+          upsell wall is worse than one that says up front it isn't yours yet.
+          Not links — nothing here navigates. A free account sees every tool
+          (Plus AND Premium) locked; a Plus member only sees the Premium ones —
+          each tagged with the tier that actually unlocks it, since a free
+          account's locked set spans both. */}
       {lockedTools.length > 0 && (
         <>
           <div className="mb-3 mt-8 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-lg font-extrabold text-white">Premium tools</h2>
+            <h2 className="text-lg font-extrabold text-white">{isFree ? "Member tools" : "Premium tools"}</h2>
             {canUpgrade && (
               <Link href="/premium#top-pricing" className="text-sm font-semibold text-gold hover:underline">
-                Upgrade to Premium — {tierMonthlyAmount("premium")}/{PREMIUM_PRICE_PERIOD} →
+                {isFree ? "See plans" : `Upgrade to Premium — ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}`} →
               </Link>
             )}
           </div>
@@ -132,7 +145,7 @@ export default async function DashboardPage() {
                 <p className="flex-1 text-sm leading-relaxed text-slate-500">{t.desc}</p>
                 <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <NavIcon name="lock" className="h-3.5 w-3.5" />
-                  Premium
+                  {TIER_NAMES[t.tier]}
                 </span>
               </div>
             ))}
@@ -150,7 +163,11 @@ export default async function DashboardPage() {
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-600">
-        Thanks for supporting RiftCompare — your {tierName} plan is what keeps price comparison free for everyone.
+        {isFree ? (
+          "Free, always — watchlist, portfolio and price alerts, no card required."
+        ) : (
+          <>Thanks for supporting RiftCompare — your {tierName} plan is what keeps price comparison free for everyone.</>
+        )}
       </p>
     </div>
   );

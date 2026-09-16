@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { CardTile, type CardTileData } from "./CardTile";
 import { useCountry } from "./CountryProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
+import { EmptyState } from "./ui/EmptyState";
+import { SkeletonTile } from "./ui/Skeleton";
 
 // The body of /watchlist.
 //
@@ -44,7 +45,11 @@ export function Watchlist() {
 
   if (items === null) {
     return (
-      <div className="card-surface grid min-h-[200px] place-items-center text-sm text-slate-500">Loading…</div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4" role="status" aria-label="Loading your watchlist">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <SkeletonTile key={i} />
+        ))}
+      </div>
     );
   }
 
@@ -55,14 +60,12 @@ export function Watchlist() {
 
   if (visible.length === 0) {
     return (
-      <div className="card-surface p-8 text-center">
-        <p className="text-base font-semibold text-white">Nothing on watch yet</p>
-        <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-slate-400">
-          Tap the 🔔 on any card and we&apos;ll email you the moment it gets cheaper — no need to keep
-          checking back.
-        </p>
-        <Link href="/browse" className="btn-primary mt-4 inline-flex">Browse cards →</Link>
-      </div>
+      <EmptyState
+        icon="bell"
+        title="Nothing on watch yet"
+        body="Tap the bell on any card and we'll email you the moment it gets cheaper — no need to keep checking back."
+        primary={{ href: "/browse", label: "Browse cards →" }}
+      />
     );
   }
 
@@ -73,7 +76,7 @@ export function Watchlist() {
           <span className="num font-semibold text-white">{visible.length}</span>{" "}
           {visible.length === 1 ? "card" : "cards"} · newest first
         </p>
-        <p className="text-xs text-slate-500">Tap a card&apos;s 🔔 to stop watching it</p>
+        <p className="text-xs text-slate-500">Tap a card&apos;s bell to stop watching it</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">

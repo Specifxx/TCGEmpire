@@ -214,3 +214,83 @@ test("every outline-none in src/**/*.tsx carries a focus-visible: ring in the sa
   walk("src/app");
   assert.deepEqual(offenders, [], "every outline-none needs a focus-visible: ring in the same className string");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P5 — the product remembers you.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("recently-viewed entries store an already-resolved image, never a raw imageUrl/imageThumbUrl column", () => {
+  const src = readCode("src/lib/recently-viewed.ts");
+  assert.match(src, /imageSrc:\s*string \| null/, "RecentCardEntry must carry a resolved src, not raw DB columns");
+  assert.doesNotMatch(src, /\bimageUrl\b|\bimageThumbUrl\b/, "the light cache must never carry the raw column names");
+  // CardViewBeacon itself just carries the prop through — its CALLER (the
+  // card page) is what must resolve it; QuickView resolves it itself since
+  // it already holds the full CardTileData.
+  for (const rel of ["src/app/card/[id]/page.tsx", "src/components/QuickView.tsx"]) {
+    const writer = readCode(rel);
+    assert.match(writer, /cardImageSrc\(/, `${rel} must resolve the image through cardImageSrc() before caching it`);
+  }
+});
+
+test("notify() has real callers across price drops, premium lifecycle and release day", () => {
+  for (const rel of ["src/lib/price-alerts.ts", "src/lib/premium.ts", "src/lib/release-day.ts"]) {
+    const src = readCode(rel);
+    assert.match(src, /import \{ notify \} from "\.\/notifications"/, `${rel} must import notify()`);
+    assert.match(src, /void notify\(/, `${rel} must actually call notify()`);
+    assert.match(src, /\.catch\(\(\) => \{\}\)/, `${rel}'s notify() call must be fire-and-forget`);
+  }
+});
+
+test("GA4_ONLY_EVENTS carries the P5 retention events and use-watchlist.ts fires watch_add/watch_remove optimistically", () => {
+  const analytics = read("src/lib/analytics.ts");
+  for (const name of ["scroll_depth", "watch_add", "watch_remove", "collection_add", "recent_viewed_click", "notification_open", "riftle_start"]) {
+    assert.match(analytics, new RegExp(`"${name}"`), `GA4_ONLY_EVENTS must list ${name}`);
+  }
+  const watchlist = read("src/lib/use-watchlist.ts");
+  assert.match(watchlist, /publish\(\);\s*\n\s*trackEvent\("watch_add"/, "watch_add must fire right after the optimistic publish()");
+  assert.match(watchlist, /publish\(\);\s*\n\s*trackEvent\("watch_remove"/, "watch_remove must fire right after the optimistic publish()");
+});
+
+test("use-unread.ts is a single shared poller, and NotificationBell reads it instead of polling itself", () => {
+  const shared = read("src/lib/use-unread.ts");
+  assert.match(shared, /setInterval\(refresh, 60_000\)/);
+  const bell = readCode("src/components/NotificationBell.tsx");
+  assert.doesNotMatch(bell, /setInterval/, "the bell must not run its own poll any more — see use-unread.ts");
+  assert.match(bell, /useUnreadCount\(\)/, "the bell must read the shared store");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P6 — onboarding, empty states, honesty, the free-tier dashboard.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("/dashboard no longer bounces a free signed-in user to /premium", () => {
+  const src = readCode("src/app/dashboard/page.tsx");
+  assert.doesNotMatch(src, /if \(!isPremium\(user\)\) redirect\("\/premium"\)/, "free tier must be able to open the dashboard");
+  assert.match(src, /const tierName = tier \? TIER_NAMES\[tier\] : "Free"/, "a free account must read as Free, never a blank/undefined tier");
+  assert.match(src, /const isFree = tier == null/);
+});
+
+test("Watchlist, MyCollection and NotificationBell render their empty/error states through ui/EmptyState", () => {
+  for (const rel of ["src/components/Watchlist.tsx", "src/components/MyCollection.tsx", "src/components/NotificationBell.tsx"]) {
+    const src = readCode(rel);
+    assert.match(src, /import \{ EmptyState \} from "\.\/ui\/EmptyState"/, `${rel} must import the shared EmptyState`);
+    assert.match(src, /<EmptyState\b/, `${rel} must actually render it`);
+  }
+});
+
+test("no price-alert surface still promises a target price shouldEmailDrop doesn't implement", () => {
+  const priceAlerts = read("src/lib/price-alerts.ts");
+  assert.doesNotMatch(priceAlerts, /targetCents/, "no target-price column exists yet — see DECISIONS.md backlog");
+  for (const rel of ["src/app/alerts/page.tsx", "src/components/AdSlot.tsx"]) {
+    const src = readCode(rel);
+    assert.doesNotMatch(src, /target price|hits your (target|price)|reaches your price|set your price/i, `${rel} must not describe a mechanism the code doesn't run`);
+  }
+});
+
+test("WelcomeChecklist is never a modal and keys eligibility off the rc_welcome_at stamp, not a live ?welcome param", () => {
+  const src = readCode("src/components/WelcomeChecklist.tsx");
+  assert.doesNotMatch(src, /from "\.\/ui\/Dialog"/, "onboarding must be inline, never an overlay");
+  assert.match(src, /rc_welcome_at/, "must read the stamp SignupWelcome.tsx writes");
+  assert.doesNotMatch(src, /useSearchParams/, "must not race SignupWelcome's own ?welcome param strip");
+  assert.match(src, /id="welcome"/, "the /profile anchor target must exist");
+});

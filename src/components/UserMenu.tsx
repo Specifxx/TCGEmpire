@@ -153,11 +153,12 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
           )}
 
           <div className="py-1">
-            {premium ? (
-              <MenuLink href="/dashboard" onClick={() => setOpen(false)}>
-                ◆ {tier === "plus" ? "Plus" : "Premium"} dashboard
-              </MenuLink>
-            ) : (
+            {/* Free included (2026-09-16): every signed-in user has a
+                dashboard now, not just paying tiers — see app/dashboard/page.tsx. */}
+            <MenuLink href="/dashboard" onClick={() => setOpen(false)}>
+              ◆ {premium ? (tier === "plus" ? "Plus" : "Premium") : "Your"} dashboard
+            </MenuLink>
+            {!premium && (
               <PremiumNavLink
                 onClick={() => setOpen(false)}
                 className="block w-full px-4 py-2.5 text-left text-sm font-bold text-gold hover:bg-ink-800"

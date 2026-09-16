@@ -15,6 +15,7 @@ import { CollectionShare } from "@/components/CollectionShare";
 import { HoldingsGrid } from "@/components/HoldingsGrid";
 import { PremiumButton } from "@/components/PremiumButton";
 import { PortfolioReplacementCost } from "@/components/PortfolioReplacementCost";
+import { PortfolioQuickAdd } from "@/components/PortfolioQuickAdd";
 import { NavIcon } from "@/components/NavIcon";
 
 export const dynamic = "force-dynamic";
@@ -144,10 +145,11 @@ export default async function PortfolioPage() {
         )}
       </div>
 
-      {portfolio.holdings.length > 0 && (
-        <>
-          {/* Headline value */}
-          <section className="card-surface overflow-hidden bg-gradient-to-br from-brand-600/15 via-ink-850 to-gold/10 p-5">
+      {/* Headline value — always shown, even before the first card is added,
+          so a brand-new free account has a reason to come back. */}
+      <section className="card-surface overflow-hidden bg-gradient-to-br from-brand-600/15 via-ink-850 to-gold/10 p-5">
+        {portfolio.holdings.length > 0 ? (
+          <>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
@@ -206,8 +208,23 @@ export default async function PortfolioPage() {
                 <a href="/api/portfolio/export" className="btn-ghost text-xs">⬇ Export CSV</a>
               </div>
             )}
-          </section>
+          </>
+        ) : (
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              Collection value · {info.code} market
+            </div>
+            <div className="font-display text-5xl font-extrabold text-white">{formatMoney(0, info.currency)}</div>
+            <p className="mt-1 text-sm text-slate-400">Add your first card to start valuing your collection.</p>
+            <div className="mt-4 max-w-sm">
+              <PortfolioQuickAdd />
+            </div>
+          </div>
+        )}
+      </section>
 
+      {portfolio.holdings.length > 0 && (
+        <>
           {/* What re-buying the collection would actually cost, postage included.
               Sits directly under the headline because it answers the question the
               headline raises: that number prices each card at the cheapest listing
