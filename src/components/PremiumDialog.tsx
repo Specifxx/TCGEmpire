@@ -9,6 +9,7 @@ import { AuthForm } from "./AuthForm";
 import { premiumStartHref } from "@/lib/premium-start";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
 import { Dialog } from "./ui/Dialog";
+import { Spinner } from "./ui/Skeleton";
 import { TrialPriceBlock } from "./TrialPriceBlock";
 import { TierComparisonTable } from "./TierComparisonTable";
 import {
@@ -38,7 +39,7 @@ export function usePremiumDialog() {
 }
 
 const GOLD_BTN =
-  "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50";
+  "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50 aria-busy:pointer-events-none aria-busy:opacity-70";
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -344,7 +345,8 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               <>
                 {selector}
 
-                <button onClick={() => checkout(activePlan)} disabled={busy} className={GOLD_BTN}>
+                <button onClick={() => checkout(activePlan)} disabled={busy} aria-busy={busy} className={GOLD_BTN}>
+                  {busy && <Spinner size="sm" />}
                   {busy
                     ? "Opening checkout…"
                     : trialEligible

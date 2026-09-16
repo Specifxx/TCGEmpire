@@ -310,7 +310,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   {/* btn-ghost, not btn-primary: the in-stock retailer buy buttons
                       above are the page's only primary (filled) CTA — this is a
                       secondary action and shouldn't compete with them visually. */}
-                  <button onClick={addToCollection} disabled={coll === "saving"} className="btn-ghost flex-1 justify-center text-sm">
+                  <button onClick={addToCollection} disabled={coll === "saving"} aria-busy={coll === "saving"} className="btn-ghost flex-1 justify-center gap-1.5 text-sm">
+                    {coll === "saving" && <Spinner size="sm" />}
                     {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : "＋ Add to collection"}
                   </button>
                   <button

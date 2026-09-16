@@ -20,7 +20,7 @@ export function SealedTile({ group, currency }: { group: SealedGroup; currency: 
     <button
       type="button"
       onClick={() => open(g, currency)}
-      className="cv-auto group card-surface relative flex flex-col overflow-hidden text-left transition-colors hover:border-ink-600"
+      className="cv-auto group card-surface relative flex flex-col overflow-hidden text-left transition-[transform,box-shadow,border-color] duration-base motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0"
     >
       <div className="relative grid aspect-square w-full place-items-center overflow-hidden bg-ink-950 p-4">
         {g.imageUrl ? (

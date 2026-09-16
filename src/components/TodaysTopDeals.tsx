@@ -182,7 +182,7 @@ function DealRow({ deal, currency, country }: { deal: Deal; currency: string; co
     </>
   );
 
-  const cls = "flex items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-ink-900/50";
+  const cls = "flex items-center gap-2.5 px-3 py-2.5 transition-colors duration-fast hover:bg-ink-900/50";
   if (deal.outboundUrl) {
     return (
       <li>
@@ -332,7 +332,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           const total = def.totalKey ? deals[def.totalKey] : items.length;
           const locked = gated ? Math.max(0, total - shown.length) : 0;
           return (
-            <div key={def.key} className="card-surface flex h-full flex-col p-3 transition-colors duration-200 hover:border-brand-500/60 hover:bg-ink-800">
+            <div key={def.key} className="card-surface flex h-full flex-col p-3 transition-colors duration-base hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
                   {def.label}

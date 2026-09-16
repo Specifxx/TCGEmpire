@@ -11,6 +11,7 @@ import { useCountry } from "./CountryProvider";
 import { AuthForm } from "./AuthForm";
 import { Dialog } from "./ui/Dialog";
 import { Toast } from "./ui/Toast";
+import { Spinner } from "./ui/Skeleton";
 
 // Where we remember the visitor's email so clicking "watch price" again
 // doesn't re-prompt — it silently extends their existing watch instead.
@@ -255,7 +256,8 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                   placeholder="you@example.com"
                   className="input mt-4"
                 />
-                <button type="submit" disabled={submitting} className="btn-primary mt-3 w-full">
+                <button type="submit" disabled={submitting} aria-busy={submitting} className="btn-primary mt-3 w-full gap-1.5">
+                  {submitting && <Spinner size="sm" />}
                   {submitting ? "Subscribing…" : "Notify me of price drops"}
                 </button>
                 <button

@@ -237,6 +237,13 @@ h1 {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scroll-thumb-hover);
 }
+/* Firefox has no ::-webkit-scrollbar-* support — this is its own two-value
+   API (thumb, then track), same theme-aware variables as the rule above so
+   the two engines never disagree. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+}
 
 /* Light theme: dark ink on bright fills. `text-ink-950` is the palette's
    near-black, which the light theme inverts to near-white — right for text on
@@ -282,7 +289,7 @@ h1 {
      on every page that renders a .btn (scripts/mobile-check.ts). Setting the
      floor on the base class fixes every variant at once and can't drift. */
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-[background-color,border-color,color,box-shadow,transform] duration-fast active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 aria-busy:pointer-events-none aria-busy:opacity-70;
   }
   /* Primary action: flat, solid RiftCompare green — the one accent. No gradient/glow. */
   /* Dark ink on the green, not white. White on #1ea65c measures 3.15:1 — the

@@ -204,7 +204,7 @@ export default async function GamesPage() {
           <Link
             key={g.href}
             href={g.href}
-            className={`card-surface group relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow ${g.featured ? "sm:col-span-2" : ""}`}
+            className={`card-surface group relative overflow-hidden p-5 transition-[transform,box-shadow,border-color] duration-base motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0 ${g.featured ? "sm:col-span-2" : ""}`}
           >
             <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${g.accent} opacity-60`} />
             <div className="relative">
@@ -239,7 +239,7 @@ export default async function GamesPage() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {deals.map((m) => (
-              <Link key={m.card.id} href={cardHref(m.card)} className="card-surface group p-2.5 transition-all hover:-translate-y-0.5 hover:shadow-glow">
+              <Link key={m.card.id} href={cardHref(m.card)} className="card-surface group p-2.5 transition-[transform,box-shadow,border-color] duration-base motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0">
                 {m.card.imageThumbUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.card.imageThumbUrl} alt={cardImageAlt(m.card)} width={300} height={420} loading="lazy" decoding="async" className="aspect-[5/7] w-full rounded-md object-cover" />

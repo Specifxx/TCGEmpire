@@ -101,7 +101,7 @@ export function CardTile({ card }: { card: CardTileData }) {
     // button is a SIBLING of the link (not inside it) so toggling it never triggers
     // navigation or the top loading bar. h-full + flex so every tile in a row (even
     // one with no price yet) matches its siblings' height.
-    <div className="cv-auto group card-surface relative flex h-full flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-glow">
+    <div className="cv-auto group card-surface relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0">
       <div className="absolute right-2 top-2 z-10">
         <PriceWatchButton cardId={card.id} />
       </div>
@@ -112,7 +112,7 @@ export function CardTile({ card }: { card: CardTileData }) {
         >
           <CardImage
             card={card}
-            className="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03]"
           />
           <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
             <VariantBadge variant={card.variant} />

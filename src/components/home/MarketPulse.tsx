@@ -63,7 +63,7 @@ function PulseCard({ m, up, currency, duplicate }: { m: MoverSummary; up: boolea
       // loop trick (see the animate-marquee keyframes) to stay seamless.
       aria-hidden={duplicate || undefined}
       tabIndex={duplicate ? -1 : undefined}
-      className="card-surface flex w-36 shrink-0 flex-col gap-1.5 p-2.5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:w-40"
+      className="card-surface flex w-36 shrink-0 flex-col gap-1.5 p-2.5 transition-colors duration-fast hover:border-brand-500/60 hover:bg-ink-800 sm:w-40"
     >
       <div className="flex items-center gap-2">
         <div className="h-10 w-7 shrink-0 overflow-hidden rounded bg-ink-900">
