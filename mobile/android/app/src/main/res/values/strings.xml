@@ -5,13 +5,12 @@
     <string name="package_name">com.riftcompare.app</string>
     <string name="custom_url_scheme">com.riftcompare.app</string>
 
-    <!-- Google AdMob app id. This is Google's official TEST app id, which is safe
-         to ship while developing: it serves test ads and can be tapped without
-         risking the account. Replace with your real id
-         (ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY) from the AdMob console before
-         publishing. The ad UNIT ids live in the web app (src/lib/admob.ts), not
-         here, so they can be changed without a store update. -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- Google AdMob app id — RiftCompare's real AdMob account (set 2026-09-16).
+         The ad UNIT ids live in the web app (src/lib/admob.ts), not here, so
+         they can be changed without a store update; this App id is the one
+         value that genuinely has to live natively, because AdMob reads it at
+         SDK init time before any web page has loaded. -->
+    <string name="admob_app_id">ca-app-pub-6842128782879909~6916932523</string>
 
     <!-- Launcher long-press shortcuts (res/xml/shortcuts.xml). "short" is what
          fits under the icon, "long" is what the launcher shows when it has room. -->

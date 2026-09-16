@@ -58,10 +58,16 @@ test("isNativeUserAgent agrees with the inlined script", () => {
 test("the native shell actually appends the token the site looks for", () => {
   // If these two drift, the site silently goes back to serving AdSense in-app
   // and nothing else fails — so the config is asserted against the constant.
+  //
+  // appendUserAgent carries more than one space-delimited token (this one, plus
+  // the AdMob banner override tests/admob.test.ts checks) so this only requires
+  // NATIVE_UA_TOKEN to appear as a whole token — followed by a space (more
+  // tokens) or the closing quote (nothing else) — not that it's the entire
+  // string, and isNativeUserAgent (a substring search) doesn't care either way.
   const config = readFileSync("mobile/capacitor.config.ts", "utf8");
   assert.match(
     config,
-    new RegExp(`appendUserAgent:\\s*"${NATIVE_UA_TOKEN}"`),
+    new RegExp(`appendUserAgent:\\s*"${NATIVE_UA_TOKEN}(\\s|")`),
     "mobile/capacitor.config.ts must append NATIVE_UA_TOKEN to the WebView User-Agent"
   );
 });

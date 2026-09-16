@@ -56,12 +56,35 @@ const config: CapacitorConfig = {
       "accounts.google.com",
     ],
   },
-  // Appended to the WebView's User-Agent on both platforms. This is the ONLY
-  // signal the website has, at first byte, that it is running in the app — the
-  // <head> boot script in src/lib/native-boot.ts reads it to stamp <html> and
-  // to stop AdSense requesting ads in-app (app inventory is AdMob's). Keep it
-  // in sync with NATIVE_UA_TOKEN there; tests/native-boot.test.ts asserts it.
-  appendUserAgent: "RiftCompareApp",
+  // Appended to the WebView's User-Agent on both platforms, as space-delimited
+  // tokens. This is the ONLY signal the website has, at first byte, that it is
+  // running in the app.
+  //
+  //   RiftCompareApp                    — the <head> boot script in
+  //                                        src/lib/native-boot.ts reads this to
+  //                                        stamp <html> and stop AdSense
+  //                                        requesting ads in-app (app inventory
+  //                                        is AdMob's). Keep in sync with
+  //                                        NATIVE_UA_TOKEN there;
+  //                                        tests/native-boot.test.ts asserts it.
+  //
+  //   RCAdMobBannerAndroid/<id>          — the real Android AdMob banner ad
+  //                                        unit id, read by src/lib/admob.ts.
+  //                                        Ad units are still primarily driven
+  //                                        by the NEXT_PUBLIC_ADMOB_BANNER_*
+  //                                        website env vars (so they can change
+  //                                        without a store rebuild) — this is
+  //                                        only a build-time FLOOR, for a build
+  //                                        made before that env var is ever
+  //                                        set on the website deployment. The
+  //                                        id's one "/" is swapped for "_"
+  //                                        because UA tokens are
+  //                                        space-delimited, not
+  //                                        slash-delimited; admob.ts reverses
+  //                                        it. tests/admob.test.ts asserts this
+  //                                        decodes to a real (non-test)
+  //                                        ca-app-pub id.
+  appendUserAgent: "RiftCompareApp RCAdMobBannerAndroid/ca-app-pub-6842128782879909_1664605849",
   ios: {
     contentInset: "always",
   },
