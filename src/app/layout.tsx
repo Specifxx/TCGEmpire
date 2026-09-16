@@ -30,6 +30,7 @@ import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
 import { ADSENSE_CLIENT_ID, ADSENSE_CONFIGURED } from "@/lib/adsense";
+import NextTopLoader from "nextjs-toploader";
 
 // Neither is needed for the initial paint or SEO: the alert modal only opens in
 // response to a PriceWatchButton click, and the signup popup waits 25s before
@@ -315,6 +316,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+        {/* Route-change progress bar (owner decision: "progress bar + 150ms
+            fade" for navigation feedback). nextjs-toploader has been a
+            declared dependency since before this pass and was never mounted
+            — this is the first thing that actually uses it. Brand green,
+            2px, no spinner (the fade in template.tsx is the rest of the
+            feedback). zIndex 200 matches the skip link's own z-[200] above —
+            it must win over every overlay's backdrop, including a modal. */}
+        <NextTopLoader color="#34d17e" height={2} showSpinner={false} shadow={false} zIndex={200} />
         <PremiumProvider>
         <PremiumDialogProvider>
         <CountryProvider initial={DEFAULT_COUNTRY}>

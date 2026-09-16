@@ -570,4 +570,7 @@ html.capacitor-native.has-native-banner body {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+  /* nextjs-toploader's progress bar is pure motion with no informational
+     content once it's gone — nothing here is lost by hiding it outright. */
+  #nprogress { display: none !important; }
 }

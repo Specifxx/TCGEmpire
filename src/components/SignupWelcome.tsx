@@ -7,6 +7,7 @@ import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
 import type { Country } from "@/lib/country";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
+import { Toast } from "./ui/Toast";
 
 // Fires the sign_up analytics event for a BRAND-NEW account.
 //
@@ -33,12 +34,25 @@ function SignupWelcomeInner() {
   const { watch } = useWatchlist();
   const claimed = useRef(false);
   const [toast, setToast] = useState<string | null>(null);
+  // Kept around through the toast's own timeout so Toast's exit fade has
+  // something to render for its last ~120ms instead of going blank.
+  const lastToastRef = useRef<string | null>(null);
+  if (toast) lastToastRef.current = toast;
 
   useEffect(() => {
     const welcome = searchParams?.get("welcome");
     if (!welcome || fired.current) return;
     fired.current = true;
     trackEvent("sign_up", { method: welcome });
+    // A localStorage stamp, not a server field — /api/me has no createdAt.
+    // This is the only code that knows a sign-in just created an account, so
+    // it's the natural place to mark it; WelcomeChecklist (P6) reads this to
+    // decide whether an account is "new enough" to still show onboarding.
+    try {
+      localStorage.setItem("rc_welcome_at", String(Date.now()));
+    } catch {
+      /* private mode — the checklist just never shows for this visitor */
+    }
     // Rebuild the URL without the welcome param (keep anything else intact).
     const rest = new URLSearchParams(searchParams.toString());
     rest.delete("welcome");
@@ -71,14 +85,7 @@ function SignupWelcomeInner() {
     });
   }, [loaded, user, watch]);
 
-  if (!toast) return null;
-  return (
-    <div className="fixed inset-x-0 bottom-4 z-[80] flex justify-center px-4">
-      <div className="rounded-xl border border-brand-500/40 bg-ink-900/95 px-4 py-2.5 text-sm font-medium text-slate-100 shadow-2xl">
-        {toast}
-      </div>
-    </div>
-  );
+  return <Toast open={!!toast} message={lastToastRef.current} />;
 }
 
 export function SignupWelcome() {

@@ -129,3 +129,25 @@ test("no component hand-rolls the double-rAF entrance any more — usePresence()
   }
   assert.deepEqual(offenders, [], "new overlay/animation code should use usePresence() from @/lib/motion instead of hand-rolling the double-rAF trick");
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// P2 route feedback — owner decision: "progress bar + 150ms fade".
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("layout.tsx mounts NextTopLoader, not between Navbar and SideNav", () => {
+  const src = readCode("src/app/layout.tsx");
+  assert.match(src, /import NextTopLoader from "nextjs-toploader"/);
+  assert.match(src, /<NextTopLoader\b/);
+  // tests/sidenav.test.ts pins <Navbar /> immediately followed by <SideNav />
+  // — the loader must sit outside that pair, not between them.
+  assert.doesNotMatch(src, /<Navbar \/>\s*<NextTopLoader/);
+});
+
+test("template.tsx's server render never contains a hidden opacity class", () => {
+  const src = read("src/app/template.tsx");
+  assert.match(src, /let navigatedBefore = false/, "the first-load flag must be module-level, not component state");
+  // The hidden-state string must only ever be reached through the `firstLoad`
+  // ternary's false branch — never emitted unconditionally.
+  assert.doesNotMatch(src, /className="[^"]*opacity-0/, "a bare unconditional opacity-0 className would render in server HTML on first load");
+  assert.match(src, /firstLoad\s*\?\s*undefined/, "first load must render with no className at all");
+});
