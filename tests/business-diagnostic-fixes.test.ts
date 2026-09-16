@@ -254,12 +254,17 @@ test("the hero's primary CTA row still carries only one <Link> (test constraint 
   assert.ok(linkCount <= 2, `the CTA row has ${linkCount} <Link>s — tests/internal-linking.test.ts caps it at 2`);
 });
 
-test("Best Basket has a homepage section with a real crawlable Link", () => {
-  // Moved into HomeSections.tsx (shared with the 5 region home pages) when
-  // the homepage's feature sections were factored out — see that file's own
-  // header comment.
+test("the homepage no longer promotes Best Basket or the inline newsletter card — both removed 2026-09-16", () => {
+  // Owner call: the homepage was carrying a promo <Link> to Best Basket and an
+  // inline NewsletterSignup card, in addition to everything else on the page.
+  // Best Basket stays reachable from the card page, deck builder and /tools
+  // (see the tests right below and access-tiers.test.ts); the newsletter form
+  // stays in the footer. Only the homepage-specific placements are gone, in
+  // favour of the new /community teaser (community.test.ts).
   const src = read("src/components/home/HomeSections.tsx");
-  assert.match(src, /href="\/tools\/best-basket"/);
+  assert.doesNotMatch(src, /href="\/tools\/best-basket"/);
+  assert.doesNotMatch(src, /<NewsletterSignup/);
+  assert.match(src, /<CommunityTeaser \/>/);
 });
 
 test("the /stores pitch page counts real tracked stores (RETAILER_LIST), not every distinct retailer key ever seen", () => {

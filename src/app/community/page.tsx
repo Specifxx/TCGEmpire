@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
-import { COMMUNITY_RESOURCES, type CommunityResource } from "@/lib/content/community";
+import { COMMUNITY_RESOURCES, CATEGORY_ORDER, type CommunityResource } from "@/lib/content/community";
 import { CommunityLink } from "@/components/CommunityLink";
 
 // /community — a directory of THIRD-PARTY Riftbound sites: news, wikis, deck
@@ -46,16 +46,6 @@ const pageLd = {
   description: "A directory of Riftbound community sites: news, wikis, deck builders, tier lists and video.",
   publisher: { "@id": `${SITE_URL}/#org` },
 };
-
-// Fixed display order — independent of array insertion order in the data file,
-// so appending a new resource under an existing category can never reshuffle
-// the page's section order.
-const CATEGORY_ORDER: CommunityResource["category"][] = [
-  "News, Wikis & Databases",
-  "Deck Builders & Simulators",
-  "Meta & Tier Lists",
-  "Video",
-];
 
 export default function CommunityPage() {
   const byCategory = new Map<CommunityResource["category"], CommunityResource[]>();

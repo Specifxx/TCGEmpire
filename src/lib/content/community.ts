@@ -39,6 +39,17 @@ export interface CommunityResource {
   category: "News, Wikis & Databases" | "Deck Builders & Simulators" | "Meta & Tier Lists" | "Video";
 }
 
+// Fixed display order — independent of array insertion order above, so
+// appending a new resource under an existing category can never reshuffle a
+// rendered section's order. Shared by /community (every entry, grouped) and
+// the homepage teaser (one highlight per category).
+export const CATEGORY_ORDER: CommunityResource["category"][] = [
+  "News, Wikis & Databases",
+  "Deck Builders & Simulators",
+  "Meta & Tier Lists",
+  "Video",
+];
+
 export const COMMUNITY_RESOURCES: CommunityResource[] = [
   // ── News, Wikis & Databases ────────────────────────────────────────────────
   {

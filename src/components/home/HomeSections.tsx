@@ -1,7 +1,6 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { EbayPicks } from "@/components/EbayPicks";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -10,10 +9,11 @@ import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
+import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
 import type { TopDeals } from "@/lib/top-deals";
@@ -163,21 +163,6 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* Inline email capture with a concrete value prop, right after the deals
-          the reader was just looking at — the footer signup (still there too)
-          is easy to never scroll to. Exact same handler/API as the footer form,
-          just a different `source` for attribution. No popup/exit-intent — the
-          brief is explicit that this stays inline. */}
-      <div className="mx-auto w-full max-w-xl">
-        <NewsletterSignup
-          siteName={SITE_NAME}
-          source="home"
-          variant="card"
-          heading={`Get the weekly ${SITE_NAME} Index — the market summary every collector reads, each Monday. Free.`}
-          cta="Subscribe"
-        />
-      </div>
-
       {/* Tailored eBay unit — the set's chase cards with their cheapest live
           listing, rather than a generic banner. Sits after Top Deals so the
           commercial run reads own-inventory first, affiliate second. */}
@@ -200,26 +185,6 @@ export function HomeSections({
           those are the stronger differentiator and shouldn't sit behind an
           explainer. */}
       <HowItWorks totalCards={totalCards} />
-
-      {/* Best Basket promo — the multi-store cart optimiser is the hardest
-          feature in this category to replicate (it needs real per-store
-          shipping data, not just prices) and answers the single highest-intent
-          moment in the hobby: "I have a decklist, what's the cheapest way to
-          buy all of it". Server-rendered real <Link>, so it's crawlable, not a
-          client-only teaser. */}
-      <Link
-        href="/tools/best-basket"
-        className="card-surface group flex flex-wrap items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:flex-nowrap"
-      >
-        <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-extrabold text-white">Building a decklist? Find the cheapest way to buy it</h2>
-          <p className="mt-0.5 text-sm text-slate-400">
-            Best Basket splits your list across stores — postage included — and finds the lowest total cost, not just
-            the lowest sticker price on each card.
-          </p>
-        </div>
-        <span className="btn-primary shrink-0 text-sm">Try Best Basket →</span>
-      </Link>
 
       {/* Explore — sets + domains consolidated into one entry point */}
       <section>
@@ -332,6 +297,14 @@ export function HomeSections({
           />
         </Reveal>
       )}
+
+      {/* Community directory teaser — RiftCompare isn't the only Riftbound site
+          worth knowing about; this points at /community's curated, unpaid
+          directory of news, wikis, deck builders, tier lists and video. Same
+          "further reading" slot as the blog/guides rows just above. */}
+      <Reveal>
+        <CommunityTeaser />
+      </Reveal>
 
       {/* Real, consented, approved reviews — renders NOTHING until there are at
           least a few genuine ones (see ReviewsSection). No placeholder state on

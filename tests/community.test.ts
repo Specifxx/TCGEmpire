@@ -19,6 +19,8 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 const PAGE = "src/app/community/page.tsx";
 const LINK = "src/components/CommunityLink.tsx";
 const DATA = "src/lib/content/community.ts";
+const TEASER = "src/components/home/CommunityTeaser.tsx";
+const HOME = "src/components/home/HomeSections.tsx";
 
 test("every resource has a real https url, a source name and a non-empty description", () => {
   assert.ok(COMMUNITY_RESOURCES.length > 0, "the directory must not be empty");
@@ -65,6 +67,17 @@ test("the page is static (ISR, no DB read) and carries breadcrumb + WebPage JSON
   assert.match(src, /"@type": "BreadcrumbList"/);
   assert.match(src, /"@type": "WebPage"/);
   assert.doesNotMatch(src, /prisma\./, "no database-backed data on this page");
+});
+
+test("the homepage features a community teaser, rendered through the shared CommunityLink component", () => {
+  const home = read(HOME);
+  assert.match(home, /<CommunityTeaser \/>/, "the homepage must render the teaser");
+  assert.match(home, /import \{ CommunityTeaser \} from "@\/components\/home\/CommunityTeaser"/);
+
+  const teaser = read(TEASER);
+  assert.match(teaser, /import \{ COMMUNITY_RESOURCES, CATEGORY_ORDER \} from "@\/lib\/content\/community"/, "must reuse the same shared ordering as /community, not a second copy");
+  assert.match(teaser, /<CommunityLink /, "must render entries through the dedicated component, same as /community");
+  assert.match(teaser, /href="\/community"/, "must link through to the full directory");
 });
 
 test("the page is discoverable: sitemap, nav and internal links from /blog and /guides all point at it", () => {
