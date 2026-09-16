@@ -6894,3 +6894,66 @@ Flagged to the owner instead. Ads (two slots), affiliate links and the price
 comparison itself likewise stay: the complaint was about proportion, not about
 those things existing, and `tests/game-before-money.test.ts` asserts every one of
 them is still reachable so a future pass cannot quietly call deletion a fix.
+
+## The phone's Search tab searched the wrong thing, and the bar hid behind Safari, 2026-09-16
+
+Two complaints from the owner, on a real phone, in one message.
+
+### 1. Search searched features, not cards
+
+The bottom bar's Search tab opened the ⌘K command launcher, which searches
+`NAV_GROUPS` - pages and tools. Its own empty state admitted the mismatch:
+*"This searches pages and tools - to look up a card, use the search box in the
+header."* On a phone that is the wrong tool behind the button most likely to be
+pressed, and telling someone to go and find a different box is not an answer.
+
+It now focuses the header's card search, which is the existing, well-tested
+`SearchBar`: cards AND sealed products off one `/api/search` call (verified
+against production - "yasuo" returns 10 cards, "booster" returns 4 sealed
+products). The header is `sticky top-0` and its mobile search row is never
+scroll-gated, so that box is on screen at any scroll position on any route -
+which is what makes focusing it from the bottom of the screen work at all.
+
+**Why a window event and not a context.** There are 2-3 `SearchBar` instances
+mounted at once (nav desktop, nav mobile, hero) and only one is visible; which
+one is a DOM question, not a state question. The existing `"/"` shortcut already
+had to solve exactly this and has a careful `isVisible` check for it, so the new
+listener sits next to it and reuses it rather than growing a second answer.
+`SEARCH_FOCUS_EVENT` lives in its own `lib/search-focus.ts` so `BottomTabBar` -
+which the root layout renders on every page - does not pull the 900-line
+`SearchBar` into its dependency graph just to read a constant.
+
+The feature launcher is not gone: it is still the header's grid button on phones
+and still ⌘K on desktop. The test asserts that, so "fixing" this later by
+deleting it is not available.
+
+### 2. "The bottom should be up all the time"
+
+Not a hydration delay - the bar is in the server HTML, checked with a phone
+user-agent - and not reproducible in a mobile-emulated headless Chromium, which
+pinned it correctly at scroll-top (`bottom: 712`, `innerHeight: 712`). The bug
+only exists on a real phone: a `position: fixed` element is positioned against
+the LAYOUT viewport, which on iOS Safari and Chrome Android is the LARGE
+viewport - the size with the browser chrome retracted. With the URL bar and
+toolbar showing, the bottom of that viewport is behind them, so the bar is
+genuinely off-screen until a scroll collapses the chrome.
+
+`--chrome-lift: calc(100lvh - 100dvh)` is exactly how much chrome is covering at
+any instant: 0 when retracted, the toolbar height when out. Adding it to the
+bar's `bottom` keeps it glued just above the chrome at every scroll position.
+It is declared `0px` first and overridden inside `@supports (height: 100dvh) and
+(height: 100lvh)`, because an unsupported unit inside `calc()` invalidates the
+whole declaration - and a bottom bar with no `bottom` at all would be a worse
+bug than the one being fixed. `.above-bottombar` (the nudges, the feedback FAB,
+Toast) takes the same term, or the bar would slide up over the top of them.
+
+### Noticed while verifying, not changed
+
+The Premium slide-in measures 80px to 640px on a 712px iPhone viewport - it
+covers most of the screen, and it is what Playwright kept hitting instead of the
+tab bar. The bar itself is NOT blocked (`elementFromPoint` at the Search
+button's centre returns a node inside the bar), so this is not a tap bug. But on
+the day after a reader called the site "too greedy/capitalistic/money focused",
+an upsell occupying 79% of a phone screen is worth the owner's attention. Same
+class of call as the Premium nav spotlight flagged in the entry above: it exists
+because a user asked for it, so it is reported rather than quietly reversed.

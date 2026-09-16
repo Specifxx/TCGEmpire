@@ -10,6 +10,7 @@ import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import type { CardTileData } from "./CardTile";
 import { cardImageAlt } from "@/lib/image-alt";
+import { SEARCH_FOCUS_EVENT } from "@/lib/search-focus";
 import { RecentlyViewedRail } from "./home/RecentlyViewedRail";
 
 // How long a focused-but-not-yet-typing field has to stay focused before it
@@ -239,11 +240,16 @@ export function SearchBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Global "/" shortcut — focuses whichever mounted SearchBar instance is
-  // actually visible right now (there can be 2-3 in the DOM simultaneously:
-  // nav desktop, nav mobile, hero — see the visibility check below). Skipped
-  // entirely while focus is already inside any input/textarea/contenteditable
-  // so it never steals a keystroke from another field.
+  // TWO WAYS TO REACH THE CARD SEARCH FROM ANYWHERE, one visibility rule.
+  //
+  //   • the "/" key — desktop, and skipped while focus is already in a field
+  //   • the SEARCH_FOCUS_EVENT — dispatched by the phone's bottom tab bar,
+  //     which has no "/" key to press (the hint for it is hidden on touch)
+  //
+  // Both have to solve the same awkward problem: there are 2-3 SearchBar
+  // instances mounted at once (nav desktop, nav mobile, hero), and only one of
+  // them is on screen. `isVisible` below picks that one, so both entry points
+  // land in the box the visitor can actually see.
   useEffect(() => {
     function isVisible(el: HTMLElement): boolean {
       // offsetParent is null for display:none (and its ancestors) — catches
@@ -272,8 +278,30 @@ export function SearchBar({
       e.preventDefault();
       el.focus();
     }
+    // The phone's Search tab (components/BottomTabBar.tsx) dispatches this.
+    // It used to open the ⌘K command launcher, which searches PAGES AND TOOLS —
+    // its own empty state said "to look up a card, use the search box in the
+    // header". Reported directly: "the search bar at the bottom on a mobile app,
+    // it should be searching through the card pages, not the features … cards
+    // and like sealed products". This is that box, and it does both.
+    function onFocusSearch() {
+      const el = inputRef.current;
+      if (!el || !isVisible(el)) return;
+      // Opening the keyboard is the whole intent here, unlike autoFocusDesktop
+      // — so the zero-state dropdown is allowed to open with it.
+      el.focus();
+      // iOS sometimes leaves a just-focused field under the sticky header when
+      // the keyboard animates in; nudging it into view costs nothing when it is
+      // already there.
+      el.scrollIntoView({ block: "nearest" });
+    }
+
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    window.addEventListener(SEARCH_FOCUS_EVENT, onFocusSearch);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener(SEARCH_FOCUS_EVENT, onFocusSearch);
+    };
   }, []);
 
   // Tear down a pending focus-intent timer if the component unmounts while

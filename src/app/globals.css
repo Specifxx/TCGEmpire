@@ -59,6 +59,36 @@
   /* Height of the native AdMob banner inside the Capacitor shell — see the
      native-app rule further down. 0 on the web, where there is no banner. */
   --native-banner-h: 0px;
+  /* How much of the viewport a mobile browser's own collapsible chrome is
+     covering RIGHT NOW. 0 everywhere it doesn't apply; the @supports block
+     below gives it a real value where lvh/dvh exist.
+
+     WHY THIS EXISTS. Reported directly: "you have to scroll down in order for
+     the bottom to show up. The bottom should be up all the time for mobile
+     phone users." The bottom bar is `position: fixed; bottom: …` and was always
+     rendered — verified in the server HTML, so it is not a hydration delay, and
+     a headless mobile-emulated Chromium pins it correctly at scroll-top. The
+     problem only appears on a REAL phone: a fixed element is positioned against
+     the LAYOUT viewport, which on iOS Safari and Chrome Android is the large
+     viewport (`lvh`, the size with the chrome retracted). With the URL bar and
+     toolbar showing, the bottom of that viewport sits BEHIND them, so the bar
+     is off-screen until you scroll and the chrome collapses.
+
+     `100lvh - 100dvh` is exactly how much chrome is covering at this instant —
+     0 when it is retracted, the toolbar height when it is out. Adding it to the
+     bar's `bottom` keeps the bar glued just above the chrome at every scroll
+     position instead of hiding underneath it. */
+  --chrome-lift: 0px;
+}
+
+/* Only where BOTH units resolve. An unsupported unit inside calc() invalidates
+   the whole declaration, and a bottom bar with no `bottom` at all would be a
+   far worse bug than the one this fixes — so the 0px default above stands
+   unless the browser can actually do the arithmetic. */
+@supports (height: 100dvh) and (height: 100lvh) {
+  :root {
+    --chrome-lift: calc(100lvh - 100dvh);
+  }
 }
 
 /* 1024–1279px: the rail is ALWAYS its icon form (4rem) — there isn't room for
@@ -385,7 +415,9 @@ html {
      to a plain 1rem inset on desktop. Used by the three corner nudges,
      FeedbackWidget's FAB and ui/Toast instead of a hard-coded bottom-4. */
   .above-bottombar {
-    bottom: calc(var(--bottombar-h) + var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 1rem);
+    /* --chrome-lift moves the bar itself (see its definition); these have to
+       ride along or the bar would slide up over the top of them. */
+    bottom: calc(var(--bottombar-h) + var(--native-banner-h) + var(--chrome-lift) + env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
   @media (pointer: coarse) {

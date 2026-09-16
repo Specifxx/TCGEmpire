@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NavIcon, type NavIconName } from "./NavIcon";
-import { useCommandLauncher } from "./CommandLauncher";
+import { focusCardSearch } from "@/lib/search-focus";
 import { useMegaMenu } from "./MegaMenuProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
 
@@ -15,6 +15,12 @@ import { useWatchlist } from "@/lib/use-watchlist";
 // needs for a tab COUNT that isn't fixed.
 const TABS: { label: string; icon: NavIconName; href?: string }[] = [
   { label: "Home", icon: "home", href: "/" },
+  // Focuses the header's CARD search (cards + sealed products), not the ⌘K
+  // command launcher this used to open. The launcher searches pages and tools,
+  // and said so itself: "to look up a card, use the search box in the header".
+  // On a phone that is the wrong tool behind the one button most likely to be
+  // pressed — reported directly: "the search bar at the bottom … should be
+  // searching through the card pages, not the features".
   { label: "Search", icon: "browse" },
   { label: "Watch", icon: "bell", href: "/watching" },
   { label: "Binder", icon: "collection", href: "/portfolio" },
@@ -23,7 +29,6 @@ const TABS: { label: string; icon: NavIconName; href?: string }[] = [
 
 export function BottomTabBar() {
   const pathname = usePathname();
-  const { open: openLauncher } = useCommandLauncher();
   const { setOpen: setMenuOpen, open: menuOpen } = useMegaMenu();
   const { watched } = useWatchlist();
   const watchCount = watched?.size ?? 0;
@@ -35,7 +40,7 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-[var(--native-banner-h)] z-bottombar flex h-[var(--bottombar-h)] border-t border-ink-800 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-[calc(var(--native-banner-h)+var(--chrome-lift))] z-bottombar flex h-[var(--bottombar-h)] border-t border-ink-800 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
       {activeIndex >= 0 && (
         <span
@@ -77,7 +82,7 @@ export function BottomTabBar() {
           <button
             key={tab.label}
             type="button"
-            onClick={() => (tab.label === "Search" ? openLauncher() : setMenuOpen(true))}
+            onClick={() => (tab.label === "Search" ? focusCardSearch() : setMenuOpen(true))}
             className={cls}
           >
             {content}
