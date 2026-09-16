@@ -6957,3 +6957,72 @@ the day after a reader called the site "too greedy/capitalistic/money focused",
 an upsell occupying 79% of a phone screen is worth the owner's attention. Same
 class of call as the Premium nav spotlight flagged in the entry above: it exists
 because a user asked for it, so it is reported rather than quietly reversed.
+
+## The search box had no exit, and the bottom bar juddered on a Z Fold 7, 2026-09-16
+
+Two more phone reports, right after the two above.
+
+### "You also need to be able to close the search bar on phone"
+
+The only ways to dismiss the card-search dropdown were Escape (no such key on a
+touch keyboard) and tapping outside the box — and once the suggestions list and
+the on-screen keyboard are both up, there is often no "outside" left on screen
+to tap. There was also a genuinely stuck state: tapping the bottom bar's Search
+tab focuses the field and raises the keyboard immediately, but the dropdown
+itself stays shut until it has something to show (no recent searches on a first
+visit) — a window with the keyboard up and neither exit available.
+
+A close (×) button now sits in the input's right slot, shown whenever there is
+something to close: the field is focused, the dropdown is open, or there is
+text. Tapping it clears the query, closes the dropdown AND blurs the field —
+dismissing the list but leaving the keyboard up would only be half an exit. The
+"/" keyboard-shortcut hint that lived in the same slot yields to it whenever the
+button is showing, and the input's own padding was widened at both `.tap-icon`
+breakpoints (44px below `sm`, 36px from `sm` up) so typed text never runs under
+the button.
+
+### "The bottom is glitched … should not be able to move or lag"
+
+Reported on a Z Fold 7's cover screen, right after shipping the chrome-lift fix
+for the earlier "bottom hides until you scroll" bug. The chrome-lift fix was
+correct in VALUE — it computes exactly how much of the viewport a phone
+browser's own collapsible toolbar is covering — but wrong in HOW it was applied:
+straight into the `bottom` CSS property. `bottom` is a layout property, and
+`dvh`/`lvh` are deliberately DYNAMIC units that the browser recomputes
+continuously while its own chrome animates. Every one of those recomputations
+forced a full reflow of the bar, plus a `backdrop-blur` repaint at its new
+position — layout thrash stacked on an expensive filter repaint, on every frame
+of the animation. That is a textbook jank source (web.dev's own performance
+guidance: animate `transform`/`opacity` only, never `top`/`bottom`/`margin`),
+and a foldable's chrome is a plausible candidate for showing it worst.
+
+The value is unchanged; only the property carrying it moved. `bottom` is now
+static (`--native-banner-h` alone, which changes once — on native-app detection
+— never mid-scroll), and the lift travels as `translateY(calc(var(--chrome-lift)
+* -1))` instead: a compositor-only operation that repositions the
+already-painted layer on the GPU without touching layout or repainting the page
+underneath. `will-change: transform` promotes the bar to its own layer up front,
+so the browser isn't discovering the need to do that mid-animation, which is
+itself a common cause of a visible hitch.
+
+Also added, defensively: `--chrome-lift` is now `clamp(0px, calc(100lvh -
+100dvh), 200px)` rather than the raw calc. Foldables are exactly the device
+class most likely to report a transient bad viewport reading around a fold
+state change (Chromium has a documented history of dvh/svh/lvh bugs specific to
+foldables) — a negative reading would push the bar UP off-screen, and an
+oversized one would fling it far past any real browser chrome height. Neither
+clamp fires in the ordinary case; both exist so one bad frame reads as "no
+lift" rather than "bar in the wrong place". `.above-bottombar` (the corner
+nudges, the feedback FAB, Toast) still carries the lift via `bottom` — it was
+not the reported bug, and those elements already drive their own `transform`
+for slide-in/out animation, so stacking a second transform source there would
+fight the first rather than help it.
+
+Verified in a mobile-emulated headless browser (which has no chrome to lift
+against, so `--chrome-lift` resolves to 0 and the transform is the identity
+matrix): `bottom: 0px` static, `will-change: transform` applied, bar correctly
+pinned before and after scrolling. The actual jank this fixes only manifests on
+a real phone's chrome-collapse animation, which no available emulator
+reproduces — the fix is verified by removing the mechanism (layout-property
+animation) known to cause exactly this class of stutter, not by reproducing the
+stutter itself.

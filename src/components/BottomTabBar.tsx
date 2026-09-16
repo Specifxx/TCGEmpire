@@ -40,7 +40,33 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-[calc(var(--native-banner-h)+var(--chrome-lift))] z-bottombar flex h-[var(--bottombar-h)] border-t border-ink-800 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      // `bottom` is STATIC (native-banner-h only — that changes once, on native
+      // app detection, never mid-scroll). The chrome-lift compensation moves
+      // through `translateY` instead, on its own line below, and that split is
+      // the whole fix for a second bug this bar shipped with.
+      //
+      // Reported on a Z Fold 7 (cover screen): "the bottom is glitched … should
+      // not be able to move or lag when I scroll down." The previous version
+      // put --chrome-lift straight into `bottom`, and `bottom` is a LAYOUT
+      // property — every recalculation of that calc() (and dvh/lvh are
+      // deliberately DYNAMIC, so the browser recomputes them continuously while
+      // its own chrome animates) forced a full reflow of this element, PLUS a
+      // repaint of `backdrop-blur` at its new position, on every single frame
+      // of that animation. Layout thrash plus a backdrop-filter repaint on
+      // every frame is a textbook jank source — web.dev's own performance
+      // guidance is to animate `transform`/`opacity` and nothing else, for
+      // exactly this reason. A foldable's chrome is also one of the more
+      // unusual/actively-changing ones out there, so it is a plausible
+      // candidate for showing this worst.
+      //
+      // `translate-y-[calc(var(--chrome-lift)*-1)]` carries the identical
+      // value but as a compositor-only transform: the browser can reposition
+      // the already-painted layer on the GPU without touching layout or
+      // repainting the page underneath. `will-change-transform` asks the
+      // browser to promote this to its own layer up front rather than
+      // discovering the need mid-animation, which is when a promotion itself
+      // can cause a visible hitch.
+      className="fixed inset-x-0 bottom-[var(--native-banner-h)] z-bottombar flex h-[var(--bottombar-h)] translate-y-[calc(var(--chrome-lift)*-1)] will-change-transform border-t border-ink-800 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
     >
       {activeIndex >= 0 && (
         <span

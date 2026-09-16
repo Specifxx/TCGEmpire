@@ -161,6 +161,12 @@ export function SearchBar({
   const [results, setResults] = useState<Result[]>([]);
   const [sealed, setSealed] = useState<SealedResult[]>([]);
   const [open, setOpen] = useState(false);
+  // Tracked ONLY so the close button can appear the moment the field takes
+  // focus. Tapping Search on a phone focuses the box and raises the keyboard,
+  // but the dropdown stays shut until there is something to put in it (no
+  // recent searches on a first visit, no matches yet while typing) — and that
+  // in-between state was the one with a keyboard up and no way out.
+  const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -605,6 +611,7 @@ export function SearchBar({
             // for free after 1200ms of simply not having typed, which isn't
             // what that event is supposed to mean). Any focus after this one —
             // a real click, a real Tab back into the box — is untouched.
+            setFocused(true);
             if (suppressNextFocusOpenRef.current) {
               suppressNextFocusOpenRef.current = false;
               return;
@@ -620,10 +627,13 @@ export function SearchBar({
               }, FOCUS_INTENT_MS);
             }
           }}
-          onBlur={clearFocusIntentTimer}
+          onBlur={() => {
+            setFocused(false);
+            clearFocusIntentTimer();
+          }}
           onKeyDown={onKeyDown}
           placeholder={isHero ? "Search any Riftbound card…" : "Search cards, champions, sets…"}
-          className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 text-base shadow-glow sm:pr-9 sm:text-lg" : "input pl-9 sm:pr-8"}
+          className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 pr-14 text-base shadow-glow sm:pr-11 sm:text-lg" : "input pl-9 pr-12 sm:pr-10"}
           aria-label="Search cards"
           autoComplete="off"
           enterKeyHint="search"
@@ -641,7 +651,7 @@ export function SearchBar({
             handler on this badge, so it's aria-hidden and doesn't count
             against the page's interactive-target budget. Hidden below `sm`
             — a touch keyboard has no physical "/" key worth advertising. */}
-        {value.length === 0 && (
+        {value.length === 0 && !showDropdown && !focused && (
           <kbd
             aria-hidden="true"
             className={`pointer-events-none absolute top-1/2 hidden -translate-y-1/2 items-center justify-center rounded border border-ink-700 bg-ink-900 font-mono text-slate-500 sm:flex ${
@@ -650,6 +660,45 @@ export function SearchBar({
           >
             /
           </kbd>
+        )}
+
+        {/* CLOSE. Reported directly: "you also need to be able to close the
+            search bar on phone". Until this, the only ways out were Escape
+            (no such key on a phone) and a tap outside the box — and once the
+            suggestions and the on-screen keyboard are both up there is often
+            no "outside" left to tap. `type="button"` so it never submits the
+            form it sits in.
+
+            Shown whenever there is something TO close: a focused field, an open
+            dropdown, or text. FOCUS is the important one — tapping Search
+            raises the keyboard but the dropdown stays shut until it has
+            something to show, and that gap was the stuck state.
+
+            `onMouseDown` preventDefault stops the input blurring before the
+            click lands, which on a phone would close the dropdown first and
+            leave the tap hitting whatever was underneath. */}
+        {(focused || showDropdown || value.length > 0) && (
+          <button
+            type="button"
+            aria-label="Close search"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setValue("");
+              setActiveIndex(-1);
+              setOpen(false);
+              clearFocusIntentTimer();
+              // Put the keyboard away too — on a phone a dismissed dropdown
+              // with the keyboard still up is only half closed.
+              inputRef.current?.blur();
+            }}
+            className={`tap-icon absolute top-1/2 -translate-y-1/2 rounded-full text-slate-400 transition-colors hover:bg-ink-800 hover:text-white ${
+              isHero ? "right-2" : "right-1"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
         )}
       </form>
 

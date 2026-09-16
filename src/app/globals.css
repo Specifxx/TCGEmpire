@@ -75,19 +75,31 @@
      is off-screen until you scroll and the chrome collapses.
 
      `100lvh - 100dvh` is exactly how much chrome is covering at this instant —
-     0 when it is retracted, the toolbar height when it is out. Adding it to the
-     bar's `bottom` keeps the bar glued just above the chrome at every scroll
-     position instead of hiding underneath it. */
+     0 when it is retracted, the toolbar height when it is out. The bar applies
+     it as a `transform: translateY()`, NOT a change to `bottom` — see the
+     Z Fold 7 comment on BottomTabBar.tsx for why that distinction is the
+     whole fix for the second bug this variable caused.
+
+     CLAMPED, not raw. dvh/lvh are recalculated by the browser continuously as
+     its chrome animates, and a foldable is exactly the class of device most
+     likely to report a transient bad viewport reading during a fold/unfold or
+     an orientation change (Chromium has a history of dvh/svh/lvh bugs specific
+     to foldables). `max(0px, …)` refuses a negative reading (which would push
+     the bar UP off-screen instead of lifting it), and `min(…, 200px)` refuses
+     one larger than any real mobile browser chrome (which would fling the bar
+     far off the top of the viewport). Neither clamp fires in the ordinary
+     case; both exist purely so one bad frame reads as "no lift" instead of
+     "bar in the wrong place". */
   --chrome-lift: 0px;
 }
 
-/* Only where BOTH units resolve. An unsupported unit inside calc() invalidates
-   the whole declaration, and a bottom bar with no `bottom` at all would be a
-   far worse bug than the one this fixes — so the 0px default above stands
-   unless the browser can actually do the arithmetic. */
-@supports (height: 100dvh) and (height: 100lvh) {
+/* Only where the units resolve AND clamp() exists. An unsupported function
+   inside calc() invalidates the whole declaration, and a bottom bar with no
+   `bottom` at all would be a far worse bug than the one this fixes — so the
+   0px default above stands unless the browser can do all of this arithmetic. */
+@supports (height: 100dvh) and (height: 100lvh) and (width: clamp(1px, 1px, 1px)) {
   :root {
-    --chrome-lift: calc(100lvh - 100dvh);
+    --chrome-lift: clamp(0px, calc(100lvh - 100dvh), 200px);
   }
 }
 

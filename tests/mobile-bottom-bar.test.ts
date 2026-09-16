@@ -78,20 +78,80 @@ test("the receiver only answers if it is the instance actually on screen", () =>
   assert.match(code, /removeEventListener\(SEARCH_FOCUS_EVENT/, "listener must be cleaned up");
 });
 
+test("the search can be closed without a keyboard — there is a real button", () => {
+  // "YOU ALSO need to be able to close the search bar on phone." The only exits
+  // were Escape (no such key on a phone) and a tap outside the box — and with
+  // the suggestions and the on-screen keyboard both up there is often no
+  // "outside" left to tap.
+  const code = readCode("src/components/SearchBar.tsx");
+  assert.match(code, /aria-label="Close search"/, "a labelled control, not just an icon");
+  assert.match(code, /type="button"/, "must not submit the form it sits inside");
+
+  const btn = code.slice(code.indexOf('aria-label="Close search"'));
+  assert.match(btn, /setOpen\(false\)/, "closes the dropdown");
+  assert.match(btn, /setValue\(""\)/, "clears the query");
+  assert.match(btn, /inputRef\.current\?\.blur\(\)/, "…and puts the keyboard away — half-closed is not closed");
+  assert.match(btn, /onMouseDown=\{\(e\) => e\.preventDefault\(\)\}/, "blur must not beat the click to it");
+});
+
+test("the close button is there the moment the field is focused, not only once results appear", () => {
+  // The stuck state this was reported from: tapping Search raises the keyboard,
+  // but the dropdown stays shut until it has something to show (no recent
+  // searches on a first visit). Gating the button on the dropdown alone would
+  // have left exactly that gap unfixed.
+  const code = readCode("src/components/SearchBar.tsx");
+  assert.match(code, /\{\(focused \|\| showDropdown \|\| value\.length > 0\) && \(/, "focus alone must be enough to show it");
+  assert.match(code, /setFocused\(true\)/);
+  assert.match(code, /setFocused\(false\)/, "and it must go away again on blur");
+});
+
+test("the close button and the \"/\" hint never fight over the same slot", () => {
+  const code = readCode("src/components/SearchBar.tsx");
+  // Both are absolutely positioned at the right edge of the input.
+  assert.match(code, /value\.length === 0 && !showDropdown && !focused/, "the hint yields whenever the button is up");
+  // …and the input reserves room for the button at BOTH tap-icon sizes
+  // (44px below sm, 36px from sm up — see .tap-icon in globals.css).
+  assert.match(code, /input pl-9 pr-12 sm:pr-10/, "nav variant");
+  assert.match(code, /pl-11 pr-14 text-base shadow-glow sm:pr-11/, "hero variant");
+});
+
 test("the bottom bar clears the phone browser's own chrome at every scroll position", () => {
   const css = read(CSS);
   assert.match(css, /--chrome-lift:\s*0px;/, "must default to 0 where it doesn't apply");
   assert.match(
     css,
-    /@supports \(height: 100dvh\) and \(height: 100lvh\)[\s\S]*?--chrome-lift:\s*calc\(100lvh - 100dvh\);/,
-    "the real value belongs behind @supports"
+    /@supports \(height: 100dvh\) and \(height: 100lvh\)[\s\S]*?--chrome-lift:\s*clamp\(0px, calc\(100lvh - 100dvh\), 200px\);/,
+    "the real value belongs behind @supports, and clamped — see the Z Fold 7 test below for why"
   );
-  // An unsupported unit inside calc() invalidates the whole declaration — a bar
-  // with no `bottom` would be worse than the bug being fixed, so the 0px
-  // default must sit OUTSIDE the @supports block, not inside it.
+  // An unsupported function inside calc() invalidates the whole declaration —
+  // a bar with no `bottom` would be worse than the bug being fixed, so the
+  // 0px default must sit OUTSIDE the @supports block, not inside it.
   const guardAt = css.indexOf("@supports (height: 100dvh)");
   assert.ok(css.indexOf("--chrome-lift: 0px;") < guardAt, "the fallback must be declared before the guarded override");
-  assert.match(readCode(BAR), /bottom-\[calc\(var\(--native-banner-h\)\+var\(--chrome-lift\)\)\]/);
+});
+
+test("the chrome-lift is clamped against a bad viewport reading, not trusted raw", () => {
+  // Foldables are exactly the device class most likely to report a garbage
+  // dvh/lvh value mid fold-state-change — a negative reading would push the
+  // bar UP off-screen (translateY negative-of-negative), and an oversized one
+  // would fling it far past any real browser chrome height.
+  const css = read(CSS);
+  assert.match(css, /clamp\(0px, calc\(100lvh - 100dvh\), 200px\)/);
+});
+
+test("the lift is applied via transform, never via `bottom` — that split IS the Z Fold 7 fix", () => {
+  // Reported on a Z Fold 7 (cover screen): "the bottom is glitched … should not
+  // be able to move or lag when I scroll down." The original version put
+  // --chrome-lift straight into `bottom`, a LAYOUT property, and dvh/lvh are
+  // deliberately DYNAMIC — the browser recomputes them continuously while its
+  // own chrome animates. That forced a full reflow of the bar PLUS a
+  // backdrop-blur repaint at its new position on every frame: layout thrash
+  // plus a backdrop-filter repaint every frame is a textbook jank source.
+  const code = readCode(BAR);
+  assert.match(code, /bottom-\[var\(--native-banner-h\)\]/, "`bottom` must be static — no chrome-lift in it");
+  assert.doesNotMatch(code, /bottom-\[calc\(var\(--native-banner-h\)\+var\(--chrome-lift\)\)\]/, "the old layout-thrashing form must be gone");
+  assert.match(code, /translate-y-\[calc\(var\(--chrome-lift\)\*-1\)\]/, "the SAME value, carried by a compositor-only property instead");
+  assert.match(code, /will-change-transform/, "promote to its own layer up front, not discover the need mid-animation");
 });
 
 test("everything that floats above the bar rides up with it", () => {
