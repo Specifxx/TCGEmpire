@@ -1,4 +1,8 @@
 import type { Config } from "tailwindcss";
+// Relative import, not the `@/` alias: this file is loaded by Next's jiti
+// loader, which does not resolve path aliases. See motion-tokens.ts's own
+// header for why the values themselves live there and not here.
+import { DURATION, EASING, Z } from "./src/lib/motion-tokens";
 
 // THEMEABLE TOKENS. Every neutral below is `rgb(var(--c-<name>) / <alpha-value>)`
 // rather than a hex, so the light theme can remap the whole palette from
@@ -103,6 +107,38 @@ const config: Config = {
         // Kept for API compatibility, neutralised to a quiet elevation (no neon).
         glow: "var(--shadow-glow)", // dark: 0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.45)
       },
+      // The site's motion system (src/lib/motion-tokens.ts): named durations,
+      // ONE brand ease curve (previously there were zero `ease-*` usages
+      // anywhere in src/ — every transition rode the browser default), and a
+      // z-index scale. Overriding transitionTimingFunction.DEFAULT is safe
+      // precisely because nothing referenced `ease-*` before this: every
+      // existing bare `transition-*`/`transition-colors` utility now inherits
+      // the brand curve for free instead of needing a per-component edit.
+      transitionDuration: {
+        fast: `${DURATION.fast}ms`,
+        base: `${DURATION.base}ms`,
+        slow: `${DURATION.slow}ms`,
+        page: `${DURATION.page}ms`,
+      },
+      transitionTimingFunction: {
+        DEFAULT: EASING.out,
+        out: EASING.out,
+        "in-out": EASING.inOut,
+      },
+      zIndex: {
+        rail: String(Z.rail),
+        flyout: String(Z.flyout),
+        header: String(Z.header),
+        bottombar: String(Z.bottombar),
+        dropdown: String(Z.dropdown),
+        overlay: String(Z.overlay),
+        nudge: String(Z.nudge),
+        toast: String(Z.toast),
+        sheet: String(Z.sheet),
+        menu: String(Z.menu),
+        modal: String(Z.modal),
+        skip: String(Z.skip),
+      },
       keyframes: {
         "fade-up": {
           "0%": { opacity: "0", transform: "translateY(12px)" },
@@ -119,17 +155,11 @@ const config: Config = {
         // utilities, so this 4px/4s version was permanently shadowed. Deleting
         // only the CSS half would have left the class name working with
         // different motion, which is worse than either.
-        // Slow, organic drift for the blurred hero "aurora" blobs.
-        blob: {
-          "0%,100%": { transform: "translate(0px,0px) scale(1)" },
-          "33%": { transform: "translate(26px,-18px) scale(1.08)" },
-          "66%": { transform: "translate(-20px,14px) scale(0.94)" },
-        },
-        // Gentle brand-glow breathing for emphasis chips/icons.
-        "glow-pulse": {
-          "0%,100%": { opacity: "0.5", transform: "scale(1)" },
-          "50%": { opacity: "0.85", transform: "scale(1.06)" },
-        },
+        // REMOVED: `blob` (hero aurora drift) and `glow-pulse` (emphasis-chip
+        // breathing). Both had zero `animate-blob`/`animate-glow-pulse`
+        // consumers left in src/ — dead weight, not just unused decoration —
+        // by the time the P0 motion pass audited every keyframe/animation
+        // pair here for a live class-name reference.
         // Continuous right-to-left ticker. Translates by exactly -50%: the
         // caller renders its track content TWICE back-to-back (see
         // MarketPulse.tsx), so -50% is precisely one full copy's width and the
@@ -155,8 +185,6 @@ const config: Config = {
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
         "fade-in": "fade-in 0.6s ease-out both",
-        blob: "blob 16s ease-in-out infinite",
-        "glow-pulse": "glow-pulse 3.4s ease-in-out infinite",
         marquee: "marquee 42s linear infinite",
         // Slow enough to read as a sheen rather than a blink. Every consumer must
         // also carry motion-reduce:animate-none, matching the marquee in

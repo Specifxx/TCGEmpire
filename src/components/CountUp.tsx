@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DUR, easeOutCubic, prefersReducedMotion } from "@/lib/motion";
 
 // Animated number that counts up to `value` the first time it scrolls into view.
 // Renders a localised integer. Degrades gracefully: if the user prefers reduced
@@ -15,10 +16,7 @@ export function CountUp({ value, className }: { value: number; className?: strin
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || value <= 0) {
+    if (prefersReducedMotion() || value <= 0) {
       setDisplay(value);
       return;
     }
@@ -32,14 +30,14 @@ export function CountUp({ value, className }: { value: number; className?: strin
     // frame before the animation actually starts.
     let raf = 0;
     const run = () => {
-      const duration = 1100;
+      const duration = DUR.count;
       // Zero only now that we're definitely animating this frame.
       setDisplay(0);
       let start: number | null = null;
       const step = (t: number) => {
         if (start === null) start = t;
         const p = Math.min((t - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+        const eased = easeOutCubic(p);
         setDisplay(Math.round(value * eased));
         if (p < 1) raf = requestAnimationFrame(step);
       };

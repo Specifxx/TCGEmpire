@@ -222,27 +222,6 @@ h1 {
   contain-intrinsic-size: auto 360px;
 }
 
-/* Proxy print sheets: real 63x88mm cards, 3x3 per A4 page for cutting out. */
-.proxy-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 63mm);
-  gap: 0;
-  justify-content: center;
-}
-.proxy-card {
-  width: 63mm;
-  height: 88mm;
-  overflow: hidden;
-  outline: 1px dashed #94a3b8; /* cut guide */
-}
-.proxy-card img { width: 100%; height: 100%; object-fit: cover; }
-@media print {
-  @page { size: A4; margin: 6mm; }
-  body { background: #fff !important; }
-  .no-print { display: none !important; }
-  .proxy-card { outline: 1px dashed #cbd5e1; break-inside: avoid; }
-}
-
 /* Thin custom scrollbar to match the dark marketplace aesthetic */
 ::-webkit-scrollbar {
   width: 10px;
@@ -424,10 +403,6 @@ h1 {
   .chip {
     @apply inline-flex items-center gap-1 rounded px-2.5 py-0.5 text-xs font-medium;
   }
-  /* Interactive surfaces (tiles, link cards): hairline highlight on hover, no lift/glow. */
-  .lift {
-    @apply transition-colors duration-150 hover:border-ink-600;
-  }
   /* Tabular numerals for prices/tickers — the terminal voice. */
   .num {
     @apply font-mono tabular-nums tracking-tight;
@@ -453,23 +428,11 @@ html.capacitor-native.has-native-banner body {
    bottom disables it all under prefers-reduced-motion.
    --------------------------------------------------------------------------- */
 
-/* Soft dotted texture for the hero, masked to fade out toward the edges. */
-.hero-dots {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
-  mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
-}
-
-/* Headline keyword accent — was a brand→gold→brand rainbow shimmer; now the brand
-   green, solid. Kept as a class so existing `.brand-shimmer` markup neutralises. */
-.brand-shimmer {
-  color: rgb(var(--c-brand-400));
-}
-
-/* CTA shine sweep retired for the flat terminal look — no-op container so existing
-   `.cta-shine` markup keeps its clipping without the moving gloss. */
-.cta-shine { position: relative; overflow: hidden; }
+/* REMOVED (P0 motion pass, 2026-09-16): .hero-dots, .brand-shimmer and
+   .cta-shine. All three were already tombstones/no-op containers with zero
+   className consumers left in src/ (`grep -rn 'hero-dots\|brand-shimmer\|
+   cta-shine' src` found only this file) — dead weight carried forward from
+   earlier flat-terminal-look passes, not live decoration. */
 
 /* Gold sheen for the ONE element that is meant to stand out: the phone header's
    "✦ Premium" link (Navbar.tsx). Pair with `animate-premium-shimmer
@@ -550,23 +513,12 @@ html.capacitor-native.has-native-banner body {
 .reveal-stagger.reveal-in > *:nth-child(10) { transition-delay: 270ms; }
 .reveal-stagger.reveal-in > *:nth-child(n + 11) { transition-delay: 300ms; }
 
-/* Cinematic hero parallax. The layers read CSS custom properties set at runtime by
-   useParallax (scroll/pointer); the var() fallbacks of 0 mean the server HTML and
-   any no-JS / reduced-motion render compose as a clean, flat hero. Transform-only,
-   so it's GPU-composited and never triggers layout. */
-.parallax-art {
-  transform: translate3d(calc(var(--px, 0) * 14px), calc(var(--py, 0) * 14px + var(--sy, 0) * 60px), 0) scale(1.1);
-  will-change: transform;
-}
-.parallax-aurora {
-  transform: translate3d(calc(var(--px, 0) * -8px), calc(var(--py, 0) * -8px + var(--sy, 0) * 28px), 0);
-  will-change: transform;
-}
-
-/* Cinematic vignette: darken the corners to frame the hero content. */
-.hero-vignette {
-  background: radial-gradient(120% 90% at 50% 32%, transparent 55%, rgba(8, 10, 14, 0.55) 100%);
-}
+/* REMOVED (P0 motion pass, 2026-09-16): .parallax-art, .parallax-aurora and
+   .hero-vignette. They read --px/--py/--sy, written by the useParallax hook
+   that ALSO shipped in this commit's removal — CinematicHero's own comments
+   already noted none of the three had a live consumer ("none of globals.css's
+   three parallax/vignette classes are referenced by any component anymore").
+   Deleting the CSS half finally matches what the markup had been for a while. */
 
 /* Cinematic full-screen nav: staggered entrance for the category panels, tied to
    the `.cine-open` state so it replays each time the overlay opens. Delay per item
@@ -594,6 +546,18 @@ html.capacitor-native.has-native-banner body {
    purpose — that block neutralises every animation with !important, so anything
    animated must be declared before it. Keep that ordering for whatever lands
    here next. */
+
+/* ── The `motion-safe:` convention (P0 motion pass, 2026-09-16) ──────────────
+   Every hidden/entering state introduced from here on is written with a
+   `motion-safe:` prefix — e.g. `motion-safe:opacity-0 motion-safe:translate-y-2`
+   — never a bare `opacity-0`. That means a reduced-motion visitor's FIRST
+   render already has the class variant resolve to nothing, so there is no
+   hidden frame to flash past; the @media block below, which forcibly zeroes
+   every animation/transition duration, is the belt for anything that slips
+   through (JS-driven state, a missed prefix), and motion-safe: is the braces.
+   src/lib/motion.ts's usePresence() is the JS half of the same contract: under
+   reduced motion it sets `entered` true (and unmounts) immediately rather than
+   waiting out a transition that will never visibly run. */
 
 /* Respect users who prefer less motion: neutralise every animation/transition. */
 @media (prefers-reduced-motion: reduce) {

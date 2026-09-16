@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { prefersReducedMotion } from "@/lib/motion";
 
 // Run the setup as a layout effect on the client (so the hidden state is applied
 // before paint — no flash of the final state) while falling back to a normal
@@ -35,8 +36,11 @@ export function Reveal({
   useIsoLayoutEffect(() => {
     const el = ref.current;
     if (!el || typeof window === "undefined") return;
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || !("IntersectionObserver" in window)) return; // leave content visible
+    // Synchronous, pre-paint read — must stay this way, not the useReducedMotion
+    // HOOK from @/lib/motion, which would hydrate `false` then flip a frame
+    // later and cause exactly the flash-of-motion this layout effect exists to
+    // avoid.
+    if (prefersReducedMotion() || !("IntersectionObserver" in window)) return; // leave content visible
 
     // Hide before paint so the reveal animates from the hidden state.
     el.classList.add(stagger ? "reveal-stagger" : "reveal-init");

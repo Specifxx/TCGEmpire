@@ -46,8 +46,9 @@ function otherMarketsList(exclude: Country): string {
 // The cinematic, full-bleed homepage hero. Breaks out of the centered content
 // column to fill the viewport (left-1/2 + w-screen + -translate-x-1/2). All
 // decorative layers are aria-hidden; the foreground re-aligns to the normal grid via
-// container-app. Parallax is layered on by ParallaxRoot (client) and degrades to a
-// clean static composition with no JS / reduced motion.
+// container-app. ParallaxRoot is a plain server element now (the parallax effect
+// it used to layer on had no live CSS consumer left — see its own header) kept
+// only for the stable `#rc-hero` marker other components watch.
 //
 // Search-first: the old hero packed in 4 CTAs, 4 stat boxes, a partner-logo row
 // and the affiliate disclosure — nothing above the fold was an actual price. Now
