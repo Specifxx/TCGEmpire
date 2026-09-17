@@ -128,6 +128,26 @@ export function cardTitle(input: CardTitleInput): string {
     }
   }
 
+  // TWO UNIVERSAL LAST RESORTS, and they exist because the first version of this
+  // ladder did not have them. A catalogue-wide audit
+  // (scripts/audit-card-titles.ts, run 2026-09-17) found 69 titles still over 60,
+  // and they were NOT the comma-less long names the ladder was designed around —
+  // they were special printings whose name happens to have no comma:
+  //
+  //   "Plundering Poro Overnumbered Price — Riftbound UNL 222/219"   (72)
+  //   "Red Brambleback Alternate art Price — Riftbound UNL 029a/219" (74)
+  //
+  // Every rung above them either kept "Price" or kept the full printing word, and
+  // with no champion half there was nothing left to shorten, so the `??` returned
+  // an over-long title. These two rungs shed the credential to its abbreviated
+  // form ("Alternate art" → "Alt Art", which is what cardCredentials already
+  // calls it) and then, only if that still overflows, shed it entirely.
+  //
+  // Dropping the credential is safe for UNIQUENESS even though it looks unsafe:
+  // identCode stays, and it differs between a printing and its base sibling by
+  // construction. The audit confirms it — 0 colliding titles across 1,431 cards.
+  candidates.push(bare(`${short}${creds}`), bare(short));
+
   // De-duplicate in place. For a comma-less card with no credentials the type
   // rungs are literally the same string as the rungs above them, and leaving the
   // repeats in would make the ladder's shape depend on the card rather than on

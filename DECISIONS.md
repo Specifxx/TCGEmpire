@@ -7540,7 +7540,29 @@ room. Nothing here will rank above TCGplayer for "ahri riftbound price", and
 "ahri nine tailed fox overnumbered" is a handful of impressions a month. The
 larger prize was always the titles.
 
-No local database in this sandbox, so verification is 1,561 passing tests (32 new,
+**The catalogue audit immediately earned its keep.** Its first run, against the
+real 1,431 rows, reported **0 colliding titles and 0 colliding descriptions** —
+so the near-duplicate worry above is measured, not assumed. It also reported **69
+titles still over 60 characters, and none of them was the case the ladder was
+designed around.** They were special printings whose name has no champion half:
+`Plundering Poro Overnumbered Price — Riftbound UNL 222/219` (72),
+`Red Brambleback Alternate art Price — Riftbound UNL 029a/219` (74). Every rung
+either kept "Price" or kept the full printing word, and with no comma there was
+nothing left to shorten. Two universal last-resort rungs now shed the credential
+to the abbreviated form `cardCredentials` already uses ("Alternate art" →
+"Alt Art") and then, only if that still overflows, shed it entirely. Dropping the
+credential looks unsafe for uniqueness and is not: `identCode` stays, and it
+differs between a printing and its base sibling by construction — which is what
+the zero-collision result confirms. A small residue is irreducible
+(`Guardian of the Passage — Riftbound SFD 035/221` is 61 with nothing left to
+give but the collector number or the word "Riftbound", and losing one character
+to truncation costs nothing).
+
+Description lengths across the catalogue after the change: min 87, median 134,
+p90 191, max 262. The median now sits inside Google's render window, which it did
+not before.
+
+No local database in this sandbox, so verification is 1,564 passing tests (35 new,
 `tests/card-type-seo.test.ts`), a clean typecheck and lint, and the AdSense
 guard's 22 checks. The two catalogue-wide facts — that every title fits 60 and
 that no two collide — can only be checked where the data is, so

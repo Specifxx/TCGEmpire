@@ -1,0 +1,73 @@
+name: GSC index coverage — which card pages is Google actually indexing?
+
+# WEEKLY, and weekly on purpose. See scripts/gsc-url-inspect.ts for the full
+# reasoning; the short version is that Search Console's URL Inspection quota is
+# 2,000 queries per DAY per site and there are ~1,425 card URLs, so one run is
+# 71% of a day's allowance — and that allowance is shared with a human opening
+# the URL Inspection tool in the Search Console UI. Daily would leave the
+# property effectively uninspectable by hand. Weekly costs one day in seven.
+#
+# WHAT THIS ANSWERS THAT gsc-coverage.yml CANNOT. That workflow reports pages
+# which earned IMPRESSIONS. Measured 2026-09-17: 994 of 1,425 card URLs did, and
+# the other ~431 carry no noindex and sit in the sitemap. "No impressions"
+# collapses four states with mutually exclusive remedies:
+#
+#   URL is unknown to Google            → never discovered  → links, sitemap
+#   Discovered – currently not indexed  → never fetched     → links, crawl budget
+#   Crawled – currently not indexed     → judged not worth it → on-page work
+#   Submitted and indexed, 0 impressions → nobody searched  → nothing to fix
+#
+# Only URL Inspection tells them apart. Read the coverageState table before
+# spending a session on the backlog.
+#
+# Read-only. No new secret and no new scope: the same GSC_SA_KEY that
+# gsc-coverage.yml uses. It does need the service account to be an OWNER or a
+# FULL user on the property — URL Inspection 403s on Restricted where
+# searchAnalytics does not, and the script says so in its error path rather than
+# letting you go regenerate a key that was fine.
+on:
+  workflow_dispatch:
+    inputs:
+      section:
+        description: "Sitemap section to inspect (cards, core, sets, champions, …)"
+        required: false
+        default: "cards"
+      limit:
+        description: "Max URLs to inspect this run (hard cap 1400)"
+        required: false
+        default: ""
+  schedule:
+    # Mondays, 05:40 UTC — before the daily gsc-coverage run at 07:20 so the two
+    # reports in a Monday inbox describe the same morning.
+    - cron: "40 5 * * 1"
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Inspect every card URL in the sitemap
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          GSC_PROPERTY: ${{ vars.GSC_PROPERTY || 'https://riftcompare.com/' }}
+        run: |
+          if [ -z "$GSC_SA_KEY" ]; then
+            echo "No GSC_SA_KEY secret set — skipping." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          npx tsx scripts/gsc-url-inspect.ts \
+            --section "${{ inputs.section || 'cards' }}" \
+            ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
+      - name: Upload the per-URL report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: index-coverage
+          path: docs/index-coverage.json
+          if-no-files-found: ignore

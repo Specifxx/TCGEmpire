@@ -180,6 +180,48 @@ test("the previous pass's overnumbered result is unchanged", () => {
   );
 });
 
+test("a comma-less special printing still fits — the gap the catalogue audit found", () => {
+  // 69 titles were over 60 on the first catalogue-wide run, and none of them was
+  // the case the ladder was designed around. They were special printings whose
+  // name has no champion half, so nothing above the last two rungs could shorten:
+  //   "Plundering Poro Overnumbered Price — Riftbound UNL 222/219"   was 72
+  //   "Red Brambleback Alternate art Price — Riftbound UNL 029a/219" was 74
+  for (const [name, credentials, identCode, kind] of [
+    ["Plundering Poro", ["Overnumbered"], "UNL 222/219", "overnumbered"],
+    ["Red Brambleback", ["Alt Art"], "UNL 029a/219", "alternate-art"],
+    ["Ravenbloom Student", ["Promo"], "OGN 103/298", "promo"],
+    ["Seal of Focus", ["Overnumbered"], "SFD 226/221", "overnumbered"],
+  ] as [string, string[], string, "overnumbered" | "alternate-art" | "promo"][]) {
+    const t = title({
+      name,
+      displayName: `${name} (${credentials.join(", ")})`,
+      setName: "Unleashed",
+      identCode,
+      type: "Unit",
+      credentials,
+      kind,
+    });
+    assert.ok(titleFits(t), `${t} is ${t.length + " | RiftCompare".length}`);
+    assert.ok(t.includes(identCode), t);
+  }
+});
+
+test("the abbreviated credential is preferred over dropping it entirely", () => {
+  // cardCredentials calls a variant "Alt Art" (7 chars) where PRINTING_DISPLAY
+  // calls it "Alternate art" (13). When the long form overflows and the short one
+  // fits, the credential survives rather than being thrown away.
+  const t = title({
+    name: "Master Yi, Tempered",
+    displayName: "Master Yi, Tempered (Alt Art)",
+    setName: "Unleashed",
+    identCode: "UNL 113a/219",
+    type: "Unit",
+    credentials: ["Alt Art"],
+    kind: "alternate-art",
+  });
+  assert.equal(t, "Master Yi Alt Art — Riftbound UNL 113a/219");
+});
+
 // ── 5. The invariants that hold for every combination ──────────────────────
 
 test("every title keeps the collector number, whatever the ladder chooses", () => {
@@ -484,6 +526,17 @@ test("the URL Inspection script never touches either database", () => {
   const code = codeOnly(read("scripts/gsc-url-inspect.ts"));
   assert.doesNotMatch(code, /from "\.\.\/src\/lib\/db/);
   assert.doesNotMatch(code, /prisma/);
+});
+
+test("the coverage report runs weekly, not daily — the quota is shared with a person", () => {
+  const wf = read(".github/workflows/gsc-index-coverage.yml");
+  // A daily run at ~1,425 of 2,000 inspections would leave the property
+  // effectively uninspectable by hand for the rest of each day.
+  assert.match(wf, /cron: "40 5 \* \* 1"/);
+  assert.doesNotMatch(wf, /cron: "[^"]*\* \* \*"/, "must not be scheduled daily");
+  assert.match(wf, /GSC_SA_KEY/);
+  // No key means skip, never fail — same contract as gsc-coverage.yml.
+  assert.match(wf, /if \[ -z "\$GSC_SA_KEY" \]/);
 });
 
 test("both read-only audits are dispatchable, and coverage runs the census first", () => {
