@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { NavIcon, type NavIconName } from "./NavIcon";
 import { useMegaMenu } from "./MegaMenuProvider";
 import { useWatchlist } from "@/lib/use-watchlist";
+import { nextChromeLift, type ChromeLiftState } from "@/lib/chrome-lift";
 
 /**
  * Measures how much of the screen a mobile browser's own collapsible chrome
@@ -41,18 +42,64 @@ import { useWatchlist } from "@/lib/use-watchlist";
  * most one `--chrome-lift` write happens per animation frame, both here and
  * consumed downstream only as a compositor-only `transform` (see the bar's own
  * className comment) — never as a layout property again.
+ *
+ * ── NOT EVERY LOST PIXEL IS BROWSER CHROME ──────────────────────────────────
+ * Reported on a Z Fold 7 cover screen (1080x2520) with a screenshot: the bar
+ * floating a third of the way up the screen with page content scrolling in the
+ * gap beneath it, and its fifth tab, "Menu", clipped to "M" off the right edge.
+ *
+ * Both symptoms are one cause, and it is PINCH-ZOOM. Zooming in shrinks the
+ * VISUAL viewport while leaving the LAYOUT viewport alone. A `position: fixed`
+ * element is sized and placed against the layout viewport, so when it is drawn
+ * at the zoomed scale it is wider than the screen and its right-hand end is
+ * simply off it — that part is the browser behaving correctly and there is
+ * nothing here to fix. What was NOT correct is the vertical float: the old
+ * version read the shrunken `visualViewport.height`, subtracted it from the
+ * largest height it had ever seen, and handed the difference to `translateY` as
+ * though a URL bar had slid out. On a 15% zoom that is hundreds of pixels of
+ * lift with no chrome behind it at all — the bar parked in mid-air.
+ *
+ * `visualViewport.scale` says which of the two is happening, so it is now the
+ * gate: while the visitor is zoomed, the lift is zero and `maxHeight` is not
+ * updated from a reading that does not mean what it usually means.
+ *
+ * ── AND THE MAXIMUM MUST NOT RATCHET ACROSS A GEOMETRY CHANGE ───────────────
+ * `maxHeight` only ever grows, which is right while the screen stays the same
+ * screen and wrong the moment it does not. Unfold a foldable, or rotate, and the
+ * tallest height ever seen belongs to a viewport that no longer exists — every
+ * later reading is smaller than it, so the bar lifts by the DIFFERENCE BETWEEN
+ * TWO DEVICES and never comes down. The layout viewport's WIDTH is the signal
+ * for that: `documentElement.clientWidth` ignores chrome retracting (which is
+ * why it is used instead of `window.innerHeight`, which tracks chrome on iOS
+ * Safari and would reset the maximum on every scroll, reinstating the original
+ * "bar hidden until you scroll" bug) and ignores pinch-zoom, but changes the
+ * instant the device's geometry does.
+ *
+ * The clamp on top is belt and braces. No phone's chrome covers a quarter of
+ * the screen, so a lift that large is a misreading whatever produced it, and the
+ * failure it prevents — the bar stranded in the middle of the page — is much
+ * worse than the one it risks, a bar sitting a little low under unusually tall
+ * chrome.
  */
+
 function useChromeLift() {
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return; // globals.css's 0px default stands — see the doc comment above.
-    let maxHeight = vv.height;
+    // All three decisions above live in lib/chrome-lift.ts as pure arithmetic,
+    // so they can be unit-tested against real numbers. This half only reads the
+    // browser and writes the custom property.
+    let state: ChromeLiftState = { maxHeight: vv.height, layoutWidth: document.documentElement.clientWidth };
     let raf = 0;
     function apply() {
       raf = 0;
-      if (vv!.height > maxHeight) maxHeight = vv!.height;
-      const lift = Math.max(0, Math.round(maxHeight - vv!.height));
-      document.documentElement.style.setProperty("--chrome-lift", `${lift}px`);
+      const next = nextChromeLift(state, {
+        height: vv!.height,
+        scale: vv!.scale,
+        layoutWidth: document.documentElement.clientWidth,
+      });
+      state = next.state;
+      document.documentElement.style.setProperty("--chrome-lift", `${next.lift}px`);
     }
     function onChange() {
       if (!raf) raf = requestAnimationFrame(apply);

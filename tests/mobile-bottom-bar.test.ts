@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { nextChromeLift, MAX_LIFT_RATIO, type ChromeLiftState } from "../src/lib/chrome-lift";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -33,6 +34,126 @@ const readCode = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace
 
 const BAR = "src/components/BottomTabBar.tsx";
 const CSS = "src/app/globals.css";
+const LIFT = "src/lib/chrome-lift.ts";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. "We need to fix this glitch with the bottom bar" — a screenshot of a Z Fold
+//    7 cover screen (1080x2520) with the bar floating about a third of the way
+//    up, page content scrolling in the gap under it, and the fifth tab clipped
+//    from "Menu" to "M" off the right edge.
+//
+//    One cause, PINCH-ZOOM, and only one half of it is ours. A fixed element is
+//    sized against the LAYOUT viewport, so under zoom it is drawn wider than the
+//    screen and its right end is off it — the browser doing the right thing. The
+//    float was ours: the lift subtracted the zoom-shrunken visual viewport from
+//    the tallest height ever seen and handed the difference to translateY as
+//    though a URL bar had slid out.
+//
+//    The arithmetic lives in lib/chrome-lift.ts now, so these are real cases
+//    with real numbers rather than assertions that certain words appear in a
+//    file. That matters here: the words were all present and correct in the
+//    version that shipped this bug.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Z Fold 7 cover screen: 1080x2520 physical at DPR 2.625 ≈ 411x960 CSS px.
+const FOLD_W = 411;
+const FOLD_H = 960;
+const CHROME = 112;
+
+const run = (
+  start: ChromeLiftState,
+  steps: { height: number; scale?: number; layoutWidth?: number }[]
+): { state: ChromeLiftState; lifts: number[] } => {
+  let state = start;
+  const lifts: number[] = [];
+  for (const s of steps) {
+    const r = nextChromeLift(state, {
+      height: s.height,
+      scale: s.scale ?? 1,
+      layoutWidth: s.layoutWidth ?? FOLD_W,
+    });
+    state = r.state;
+    lifts.push(r.lift);
+  }
+  return { state, lifts };
+};
+
+const fresh = (): ChromeLiftState => ({ maxHeight: FOLD_H - CHROME, layoutWidth: FOLD_W });
+
+test("chrome sliding back out still lifts the bar by exactly what it covers", () => {
+  // The behaviour everything else must not break: this is why the lift exists.
+  const { lifts } = run(fresh(), [
+    { height: FOLD_H - CHROME }, // mount, chrome out — nothing learned yet
+    { height: FOLD_H }, // a scroll retracts it: now we know the full height
+    { height: FOLD_H - CHROME }, // and it slides back out
+  ]);
+  assert.deepEqual(lifts, [0, 0, CHROME]);
+});
+
+test("PINCH-ZOOM IS NOT CHROME — the bar stays on the bottom edge", () => {
+  // THE REPORTED BUG. Zoom to ~1.14 (measured off the screenshot: the fixed bar
+  // rendered ~1228 physical px wide on a 1080 px screen). The old arithmetic
+  // read the shrunken visual viewport as chrome and lifted the bar ~117 CSS px
+  // into the middle of the page.
+  const start = run(fresh(), [{ height: FOLD_H }]).state; // full height learned
+  const { lifts } = run(start, [
+    { height: Math.round(FOLD_H / 1.14), scale: 1.14 },
+    { height: 700, scale: 1.14 }, // panned around while still zoomed
+    { height: Math.round(FOLD_H / 2), scale: 2 }, // zoomed harder still
+  ]);
+  assert.deepEqual(lifts, [0, 0, 0], "a zoomed viewport must never lift the bar");
+});
+
+test("zooming does not poison the maximum for when they zoom back out", () => {
+  const start = run(fresh(), [{ height: FOLD_H }]).state;
+  const after = run(start, [{ height: 600, scale: 1.6 }]).state;
+  assert.equal(after.maxHeight, FOLD_H, "the zoomed reading must not be learned");
+  // And chrome still works immediately afterwards.
+  assert.deepEqual(run(after, [{ height: FOLD_H - CHROME }]).lifts, [CHROME]);
+});
+
+test("unfolding and folding back does not strand the bar in mid-air", () => {
+  // The maximum only ever grows, which is right while the screen stays the same
+  // screen. Unfold, and the tallest height ever seen belongs to a viewport that
+  // no longer exists — every later reading sits below it, so without the reset
+  // the bar lifts by the difference between two DEVICES and never comes down.
+  const cover = run(fresh(), [{ height: FOLD_H }]).state;
+  const { state, lifts } = run(cover, [
+    { height: 1180, layoutWidth: 674 }, // unfolded to the inner display
+    { height: FOLD_H, layoutWidth: FOLD_W }, // folded back to the cover screen
+  ]);
+  assert.deepEqual(lifts, [0, 0], "neither the unfold nor the fold may lift the bar");
+  assert.equal(state.maxHeight, FOLD_H, "the maximum belongs to the screen in front of you");
+  assert.deepEqual(run(state, [{ height: FOLD_H - CHROME }]).lifts, [CHROME], "chrome still works after");
+});
+
+test("no misreading can park the bar more than a quarter of the way up", () => {
+  // Belt and braces over the two named fixes. Whatever produces a lift this
+  // large it is wrong, and a bar stranded mid-page is far worse than one sitting
+  // low under unusually tall chrome.
+  const tall = run(fresh(), [{ height: FOLD_H }]).state;
+  const { lifts } = run(tall, [{ height: 10 }]);
+  assert.equal(lifts[0], Math.round(FOLD_H * MAX_LIFT_RATIO));
+  assert.ok(lifts[0] < FOLD_H / 3);
+});
+
+test("the lift is never negative and never a fraction of a pixel", () => {
+  const { lifts } = run({ maxHeight: 800.4, layoutWidth: FOLD_W }, [{ height: 900.7 }, { height: 855.2 }]);
+  for (const l of lifts) {
+    assert.ok(Number.isInteger(l), `${l} must be a whole pixel`);
+    assert.ok(l >= 0, `${l} must not be negative`);
+  }
+});
+
+test("the geometry signal ignores chrome, or it would reinstate the original bug", () => {
+  // documentElement.clientWidth, not window.innerHeight. innerHeight tracks the
+  // chrome on iOS Safari, so using it would reset the maximum on every scroll —
+  // the lift would always be 0 and the bar would go back to hiding behind the
+  // URL bar until you scrolled, which is the complaint that started all of this.
+  const code = readCode("src/lib/chrome-lift.ts") + readCode(BAR);
+  assert.match(code, /documentElement\.clientWidth/);
+  assert.doesNotMatch(code, /window\.innerHeight/);
+});
 
 test("the phone's Search tab is a real page link to the card database, not an in-place focus trick", () => {
   const code = readCode(BAR);
@@ -143,10 +264,19 @@ test("the measurement is self-consistent: one API's own numbers, never mixed wit
   // cross-API disagreement that made the CSS-unit version unverifiable on a
   // device this codebase has no way to test against. Tracking visualViewport's
   // own running maximum avoids needing a second source at all.
-  const code = readCode(BAR);
+  // The arithmetic moved to lib/chrome-lift.ts so it could be unit-tested with
+  // real numbers (see the cases above); the invariant is unchanged, so this
+  // follows it there rather than being dropped.
+  const code = readCode(BAR) + readCode(LIFT);
   assert.doesNotMatch(code, /window\.innerHeight/, "must not reintroduce a second, differently-behaved height source");
   assert.match(code, /maxHeight/i, "must track the largest visualViewport reading seen, not a fixed baseline");
-  assert.match(code, /maxHeight\s*-\s*vv!?\.height/, "the lift is max minus CURRENT — recomputed, not cached once");
+  assert.match(
+    code,
+    /next\.maxHeight\s*-\s*reading\.height/,
+    "the lift is max minus CURRENT — recomputed, not cached once"
+  );
+  // And the component must not keep a second, private copy of the same maths.
+  assert.doesNotMatch(readCode(BAR), /maxHeight\s*-/, "one derivation, in one place");
 });
 
 test("the update rate is under THIS file's control, not the browser engine's", () => {

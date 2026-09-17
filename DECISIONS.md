@@ -7654,3 +7654,55 @@ guard's 22 checks. The two catalogue-wide facts — that every title fits 60 and
 that no two collide — can only be checked where the data is, so
 `scripts/audit-card-titles.ts` runs as a `maintenance.yml` task and must be run
 before this reaches production.
+
+## The bottom bar floated in mid-air, and pinch-zoom was the reason, 2026-09-17
+
+Third bug on the same few lines of arithmetic, reported with a screenshot of a
+Z Fold 7 cover screen (1080x2520): the bar parked about a third of the way up
+the display with page content scrolling in the gap beneath it, and its fifth
+tab clipped from "Menu" to "M" off the right edge.
+
+**Both symptoms are one cause and only half of it is ours.** A `position: fixed`
+element is sized and placed against the LAYOUT viewport. Pinch-zoom shrinks the
+VISUAL viewport and leaves the layout viewport alone, so the bar is drawn at the
+zoomed scale, comes out wider than the screen, and its right-hand end is simply
+off it. That is the browser behaving correctly and there is nothing to fix. It is
+also what identifies the cause: a `fixed inset-x-0` bar cannot be wider than the
+viewport by any other mechanism, and measured off the screenshot it was rendering
+about 1,228 physical pixels wide on a 1,080-pixel screen — a scale of roughly
+1.14.
+
+The float was ours. `useChromeLift` read `visualViewport.height`, subtracted it
+from the tallest height seen this session, and handed the difference to
+`translateY` as though a URL bar had slid out. Under a 1.14 zoom that is over a
+hundred CSS pixels of lift with no chrome behind it at all.
+`visualViewport.scale` distinguishes the two cases and is now the gate: while the
+visitor is zoomed the lift is zero, and the running maximum is not learned from a
+reading that does not mean what it usually means.
+
+**A second latent bug, found while fixing the first.** The maximum only ever
+grew, which is right while the screen stays the same screen and wrong the moment
+it does not. Unfold a foldable, or rotate, and the tallest height ever recorded
+belongs to a viewport that no longer exists — every later reading sits below it,
+so the bar lifts by the difference between two DEVICES and never comes down.
+Given this is the third report from a foldable, that is not hypothetical.
+`documentElement.clientWidth` is the reset signal: it ignores chrome retracting
+and ignores zoom, and changes exactly when the device's geometry does.
+Deliberately not `window.innerHeight`, which tracks the chrome on iOS Safari and
+would reset the maximum on every scroll, reinstating the original "the bar only
+appears once you scroll" complaint that started this whole thread.
+
+A clamp at a quarter of the screen sits on top of both. Whatever produces a lift
+that large it is a misreading, and the failure it prevents — the bar stranded in
+the middle of the page, which is what was photographed — is far worse than the
+one it risks, a bar sitting a little low under unusually tall chrome.
+
+**The arithmetic moved to `src/lib/chrome-lift.ts` as a pure function**, and that
+is the durable part of this entry. Every test written against these lines so far
+could only read the source and assert that certain words appeared — which catches
+a deletion but cannot catch a wrong number, and every word was present and
+correct in the version that shipped this bug. A `fixed` bar under collapsing
+chrome is also not reproducible in headless Chromium, which has no chrome to
+collapse, so a real browser was never going to be the answer either. Six
+behavioural cases now run the real function over real numbers: chrome out and
+back, three zoom levels, an unfold and re-fold, the clamp, and the rounding.
