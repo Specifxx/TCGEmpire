@@ -7389,3 +7389,160 @@ a clean typecheck and lint, and the AdSense guard's 22 static checks. The three
 things that need production data to confirm — titles under 60 characters across
 the real catalogue, no new near-duplicate descriptions, and the printing queries
 actually earning impressions — come from the next crawl and the next GSC run.
+
+## The card template's problem was never noindex, and the history join is gone, 2026-09-17
+
+Follow-up to "Card pages could not be found by the name people call them" above.
+The owner asked for two things: indexing coverage for every card in the database,
+and the wider long-tail keyword space captured, naming TCGplayer as the model.
+Their examples were "kennen legend riftbound" and "ahri nine tailed fox
+overnumbered".
+
+**Measure first. The premise was wrong.** The reasoning available at the start was
+"994 of 1,425 card URLs earned an impression in 28 days, so ~431 are not
+indexed". Two measurements killed that:
+
+- I sampled 40 random URLs out of the live `cards.xml` and fetched them. **All 40
+  served `index, follow`.** The sitemap and the pages agree, so there is no
+  "submitted URL marked noindex" contradiction and no mass-noindex event.
+- `maintenance.yml` → `audit-indexability` on the live catalogue: **1,431 cards,
+  1,417 indexable (99.0%), 14 noindexed.** The 14 are promo runes and the like
+  with no in-stock listing anywhere and no history.
+
+So the ~431 zero-impression URLs are submitted, indexable, and carry no defect.
+"No impressions" collapses four states that look identical in the impressions
+report and have mutually exclusive remedies: never discovered, discovered but
+never fetched, crawled and judged not worth indexing, or indexed with nobody
+searching for it. Only Search Console's URL Inspection API tells them apart, so
+`scripts/gsc-url-inspect.ts` exists now and runs before any further work aimed at
+that backlog. It is dispatch-only, never scheduled: the quota is 2,000
+inspections per DAY per site, shared with a human opening the Search Console UI,
+and 1,425 URLs is 71% of it. The endpoint is on `/v1/`, not the `/webmasters/v3/`
+path the neighbouring `searchAnalytics` helper uses — copying that base URL
+returns 404, so a test pins the constant.
+
+**THE FINDING THAT MATTERS MORE THAN ANY OF THIS.** The same census printed:
+
+    distinct cardIds in PriceHistory : 0
+    with >= 2 days of history        : 0
+    with an in-stock listing         : 1,411 of 1,431
+
+and, above it, `[db-history] history DB resolved to DATABASE_URL (no history
+project set …)`. The history project is **missing from the environment**, so
+`PriceHistory` is empty in the operational database and the history half of the
+indexability rule contributes nothing at all. `indexable = hasInStockListing OR
+historyDays >= 2` is currently carried **entirely by live listings**. 1,411 card
+pages are indexable only because something is in stock right now; the moment a
+card's last listing goes out of stock it noindexes immediately, with no history
+fallback, silently. That is a single point of failure under the whole template,
+and it is exactly the scenario `audit-indexability.ts` was written to catch. It
+also means every price chart on the site is blank. Not fixed here — it needs a
+database decision, not a code change. `maintenance.yml` →
+`repair-history-card-ids` is the documented repair.
+
+**Titles: "Price" now outranks the epithet.** The template earns 24,835
+impressions for 103 clicks, a 0.41% click-through rate, the lowest of any
+template on the site. A large part of that is the ladder's third rung
+`${displayName} — Riftbound ${identCode}`, which wins whenever a champion name
+overflows and carries neither a price signal nor any distinguishing word —
+`Ahri, Nine-Tailed Fox — Riftbound OGN 255/298` was the live title of a card that
+costs money. Some titles overflowed 60 outright and shipped truncated via the
+`?? last` fallthrough: `Kennen, Storm of Shuriken — Riftbound VEN 113/166` is 63.
+The ladder now prefers the champion's short name with "Price" over the full name
+without it, so that card reads `Kennen Price — Riftbound VEN 113/166` and Ahri's
+Legend reads `Ahri Legend Price — Riftbound OGN 255/298`. The owner chose this
+trade explicitly, shown a before/after preview.
+
+A card whose name has no comma has no champion half, so its short-name rungs
+collapse into their full-name siblings and are dropped by de-duplication — those
+titles are byte-identical, and a test pins three of them.
+
+**"Legend" is the only type that gets a rung**, because "kennen legend riftbound"
+is a query shape and "ahri unit riftbound" is not. A Legend is the one card a deck
+is built around and there is one per champion per set. Special printings skip the
+type rungs structurally — the type rungs live inside `if (kind === "base")` and
+the printing rungs inside its `else` — because the printing is what separates two
+rows that share a name and the type is not.
+
+**A defect caught in review, worth recording because it nearly shipped.** The
+first version of the short-name rung dropped the credentials parenthetical along
+with the epithet, which turned a base Showcase printing and its plain sibling into
+`Lee Sin Price — Riftbound OGN 151a/298` and `Lee Sin Price — Riftbound OGN
+151/298` — two titles differing by one character sitting next to digits, which is
+the near-duplicate shape Google clusters and leaves one of unindexed. Trading
+truncation for near-duplication is trading down. `CardTitleInput.credentials` is
+required, the shortened rungs re-add it space-joined, and a test strips every
+digit from the pair and asserts they still differ.
+
+**The description said what the card does, never what it is.** `statBit`
+("Calm legend · Rare") was built for every card and used only in the branch for
+cards that print NO rules text — so ~90% of descriptions named no domain, no
+type and no rarity, and a Signature Legend's snippet read like a common spell's.
+Both branches carry it now, positioned early enough to survive truncation, paid
+for by dropping the rules-text clamp from 90 to 70. Measured length-neutral, and
+a test pins that: the tail being clipped was already past Google's cut.
+
+**The About narrative had the same shape of bug.** `kind` (rarity + type) is
+interpolated only by the two base branches, so a Signature, Crystal Rose, promo
+or overnumbered page never said whether it was a Legend or a Spell. All four now
+emit "It is a Legend in the Calm domain". Capitalised and with a hardcoded "a":
+every one of the six types takes "a", and the first-letter vowel test that works
+for rarity would produce "an Unit".
+
+**The visible page was poorer than its own markup.** The card-details list
+carried four cells — Rarity, Printing, Set, a count — while the Product JSON-LD
+was already publishing type, domain, collector number, energy and might. A person
+reads the page and a search engine cross-checks its markup against the page, so
+that is backwards. Eight cells now, each omitted when null, every value one the
+markup already asserts. `Power` was added to the markup as the one attribute the
+page rendered and the markup did not.
+
+**On-site search: facet words are an ALTERNATIVE, never a constraint.** Measured
+across the catalogue, "rune" occurs in 31 card names ("Fury Rune", "Rune
+Prison"), every domain word in 5-6, and "legends" in one ("Hall of Legends"). A
+top-level filter built from a word like that deletes results the visitor asked for
+and leaves a page that looks like it worked. So `buildCardWhere` tries the entire
+typed phrase as a literal name FIRST, and offers the facet reading as an extra OR
+branch — an OR can only add rows, so a literal name match is unloseable
+regardless of what a future set is called. `rune`, `runes` and `legends` are not
+mapped at all: no alternative rescues a word that is one card's whole name. When
+the phrase is nothing but facet words ("epic fury spell") there is no name to
+protect, so they are promoted to ordinary top-level filters and the visitor gets
+the shelf. A test sweeps every facet term alone and in pairs asserting no
+`contains: ""` ever reaches Prisma — that is `LIKE '%%'`, every row in the table.
+
+**Paginated set pages were planned for the sitemap and deliberately dropped.**
+The reasoning was that `/sets/<slug>?page=N` is the only complete crawl path into
+the catalogue. It is not: `/sets/<slug>/gallery` renders up to 500 non-promo cards
+of a set on one ISR-cached, sitemapped page, and I counted the live pages — 352,
+306, 304 and 243 card links for Origins, Spiritforged, Unleashed and Vendetta. So
+every non-promo card already has a durable inbound link at depth 3, and
+submitting ~12 `?page=N` URLs would have invited Googlebot to repeatedly crawl
+force-dynamic pages that fail the `isDefaultView` cache check and run four live
+queries each. On a project that has burned eleven Neon allowances, that is a bad
+trade for a link graph that already exists.
+
+**What the gallery actually left out was promos**: `getGalleryCards` filters
+`isPromo: false`, and **188 of the 1,425 card URLs are promo printings**, whose
+only route in was the "Other printings" rail on a sibling card's page — one click
+deeper than everything else and dependent on Google having indexed the sibling.
+They have their own labelled section on the gallery page now: no new URL, no new
+dynamic surface, one extra cached query. That is the sub-population with a
+structural explanation rather than a "nobody searched for it" one.
+
+**The honest ceiling, stated because the brief named TCGplayer.** TCGplayer ranks
+on two decades of domain authority and on inventory depth as content — hundreds
+of live seller listings per page against our one to six rows. No on-page work buys
+either. What on-page work wins is the specific long tail, one printing plus one
+modifier, where intent is unambiguous and the best answer is a page we have; and
+click-through on the 994 pages already earning impressions, where 0.41% has real
+room. Nothing here will rank above TCGplayer for "ahri riftbound price", and
+"ahri nine tailed fox overnumbered" is a handful of impressions a month. The
+larger prize was always the titles.
+
+No local database in this sandbox, so verification is 1,561 passing tests (32 new,
+`tests/card-type-seo.test.ts`), a clean typecheck and lint, and the AdSense
+guard's 22 checks. The two catalogue-wide facts — that every title fits 60 and
+that no two collide — can only be checked where the data is, so
+`scripts/audit-card-titles.ts` runs as a `maintenance.yml` task and must be run
+before this reaches production.

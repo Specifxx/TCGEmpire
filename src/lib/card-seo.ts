@@ -30,55 +30,97 @@ export interface CardTitleInput {
   identCode: string;
   hasPrice: boolean;
   kind: PrintingKind;
+  /**
+   * cardCredentials(card) — ["Showcase"] and nothing else, for a base printing.
+   *
+   * REQUIRED because the shortened rungs below must not drop it. `displayName`
+   * carries these inside a parenthetical, and that parenthetical is the only
+   * thing separating the titles of a Showcase printing and its plain sibling —
+   * which share a name, a set and, near enough, a collector number ("151a/298"
+   * vs "151/298"). Shorten to `shortCardName` without re-adding them and the two
+   * titles differ by one character sitting next to digits, which is precisely the
+   * near-duplicate shape Google clusters and leaves one of unindexed.
+   */
+  credentials: string[];
+  /**
+   * Card.type — Unit | Spell | Gear | Rune | Battlefield | Legend.
+   *
+   * REQUIRED, not optional, and deliberately so. An optional field with a quiet
+   * default is exactly how generateMetadata ended up computing the printing from
+   * a query that selected none of the fields it needed; making this a compile
+   * error at the call site is the cheap version of that lesson.
+   */
+  type: string;
 }
 
 /**
  * The title, chosen from a longest-first ladder.
  *
- * The first three candidates are EXACTLY what shipped before this file existed,
- * so base-card titles are byte-identical and ~1,200 pages see no change at all.
- * Candidates 4-6 are new and only exist for special printings, because that is
- * the only place the ladder was broken:
+ * ── WHAT THE LADDER IS TRADING ──────────────────────────────────────────────
+ * 60 characters including " | RiftCompare" does not fit a Riftbound champion
+ * card. Something has to go, and the order below is the order we are willing to
+ * lose things in: the set NAME first, then the card's epithet, then the word
+ * "Price", and never the collector number or the word "Riftbound".
  *
- *   "Shen, Eye of Twilight (Showcase, Signature) — Riftbound VEN 193★/166"
+ * The epithet ranks BELOW "Price" on purpose, and that is the one judgement call
+ * here. `Ahri, Nine-Tailed Fox — Riftbound OGN 255/298` is 59 characters and is
+ * what this card's title used to be: it fits, it is accurate, and it tells a
+ * searcher nothing about why they would click. `Ahri Legend Price — Riftbound
+ * OGN 255/298` is 55 and tells them three useful things. The /card template
+ * earns a 0.41% click-through rate — the worst of any template on the site —
+ * and the epithet is the cheapest thing in the string. The full name is still
+ * the H1, the breadcrumb, the meta description and the Product `name`.
  *
- * is 82 characters with the suffix. Every candidate overflowed, so the `??`
- * fallthrough returned an over-long title and Google cut it — and what it cut
- * was the trailing "Riftbound", the one word the target query
- * ("shen signature riftbound") depends on.
+ * ── WHY "Legend" AND NO OTHER TYPE ──────────────────────────────────────────
+ * "kennen legend riftbound" is a real query shape; "ahri unit riftbound" is not.
+ * A Legend is the one card a deck is built around and there is one per champion
+ * per set, so the type is genuinely identifying. For a Unit or a Spell it would
+ * be seven wasted characters, so no other type gets a rung.
  *
- * The new rungs shorten the two redundant parts rather than dropping the ident:
- *   • "(Showcase, Signature)" → "Signature". Showcase is the rarity of every
- *     Signature print, so the pair says one thing twice.
- *   • "Shen, Eye of Twilight" → "Shen". This is the load-bearing one: even
- *     `${name} Signature — Riftbound VEN 193★/166` is 70 characters. Only the
- *     short form fits (53, or 59 with "Price"), and it is also what people
- *     actually type.
+ * ── WHAT CANNOT MOVE ────────────────────────────────────────────────────────
+ * A card whose name has no comma has `short === name`, so the short-name rungs
+ * collapse into their full-name siblings and are dropped by the de-duplication
+ * below. Those titles are byte-identical to what shipped before this rung
+ * existed — see tests/card-type-seo.test.ts, which pins one.
  *
- * Candidate 6 drops "Price" as a last resort — a long name with a long set code
- * can still overflow rung 5, and losing the word "Price" costs less than losing
- * "Riftbound" or the collector number.
+ * Special printings (kind !== "base") skip the type rungs entirely: the printing
+ * is what separates two rows that share a name, so it always outranks the type.
+ * Their rungs are unchanged from the previous pass.
  */
 export function cardTitle(input: CardTitleInput): string {
-  const { name, displayName, setName, identCode, hasPrice, kind } = input;
+  const { name, displayName, setName, identCode, hasPrice, kind, type, credentials } = input;
 
-  const base = hasPrice
-    ? [
-        `${displayName} Price — Riftbound ${setName} (${identCode})`,
-        `${displayName} Price — Riftbound ${identCode}`,
-        `${displayName} — Riftbound ${identCode}`,
-      ]
-    : [
-        `${displayName} — Riftbound ${setName} (${identCode}) | Card Text`,
-        `${displayName} — Riftbound ${identCode} | Card Text`,
-        `${displayName} — Riftbound ${identCode}`,
-      ];
+  const short = shortCardName(name);
+  const legend = type === "Legend" ? " Legend" : "";
+  // Space-joined rather than parenthesised, because these rungs are already
+  // fighting for characters: "Lee Sin Showcase" beats "Lee Sin (Showcase)" by two
+  // and reads the same. What matters is that it is PRESENT — see `credentials`.
+  const creds = credentials.length ? ` ${credentials.join(" ")}` : "";
+  // The two shapes the ladder alternates between: a priced card advertises the
+  // price, an unpriced one advertises the rules text. Same slot, same cost.
+  const priced = (subject: string) =>
+    hasPrice ? `${subject} Price — Riftbound ${identCode}` : `${subject} — Riftbound ${identCode} | Card Text`;
+  const bare = (subject: string) => `${subject} — Riftbound ${identCode}`;
 
-  const candidates = [...base];
-  if (kind !== "base") {
+  const candidates: string[] = [
+    hasPrice
+      ? `${displayName} Price — Riftbound ${setName} (${identCode})`
+      : `${displayName} — Riftbound ${setName} (${identCode}) | Card Text`,
+    priced(displayName),
+  ];
+
+  if (kind === "base") {
+    // Shed the set name (rung 1 → 2), then the EPITHET (2 → 3), then the type
+    // word, then "Price". The credentials never come off: they are load-bearing
+    // for uniqueness in a way the epithet is not, and a title that collides is a
+    // title Google may drop entirely.
+    candidates.push(priced(`${short}${legend}${creds}`), priced(`${short}${creds}`));
+    candidates.push(bare(displayName));
+    candidates.push(bare(`${short}${legend}${creds}`), bare(`${short}${creds}`));
+  } else {
+    candidates.push(bare(displayName));
     const P = PRINTING_DISPLAY[kind];
     const priceWord = hasPrice ? " Price" : "";
-    const short = shortCardName(name);
     candidates.push(`${name} ${P}${priceWord} — Riftbound ${identCode}`);
     if (short !== name) {
       candidates.push(`${short} ${P}${priceWord} — Riftbound ${identCode}`);
@@ -86,7 +128,12 @@ export function cardTitle(input: CardTitleInput): string {
     }
   }
 
-  return candidates.find(titleFits) ?? candidates[candidates.length - 1];
+  // De-duplicate in place. For a comma-less card with no credentials the type
+  // rungs are literally the same string as the rungs above them, and leaving the
+  // repeats in would make the ladder's shape depend on the card rather than on
+  // the rule.
+  const ladder = candidates.filter((c, i) => candidates.indexOf(c) === i);
+  return ladder.find(titleFits) ?? ladder[ladder.length - 1];
 }
 
 export interface CardDescriptionInput {
@@ -107,16 +154,17 @@ export interface CardDescriptionInput {
 /**
  * The meta description.
  *
- * TWO FIXES OVER THE INLINE VERSION, both about the same blind spot. The
- * printing phrase used to appear only in the no-rules-text branch, so the
- * ~90% of cards that DO print rules text never said which printing they were in
- * words — only inside the parenthetical of displayName. And the `kind` handed
- * in was computed from a query that selected none of the fields Signature,
- * Overnumbered or Crystal Rose are derived from, so it was "base" for all three
- * regardless. Both branches now name the printing when there is one to name.
+ * THE SAME BLIND SPOT, TWICE. `statBit` ("Calm legend · Rare") and the printing
+ * phrase were both built for every card and then used only in the branch for
+ * cards that print NO rules text. Since ~90% of the catalogue does print rules
+ * text, the overwhelming majority of descriptions named neither the card's
+ * domain, nor its type, nor its rarity, nor which printing it was — the snippet
+ * for a Signature Legend read exactly like the snippet for a common spell. The
+ * structured data carried all four fields the whole time, which is backwards:
+ * the visible snippet is the thing a person reads before deciding to click.
  *
- * Base printings still get nothing added: there is no distinguishing fact to
- * state and padding one in would be the fabrication this avoids.
+ * Both branches now carry both facts. The order is deliberate and unchanged in
+ * spirit: what the card IS, then what it DOES, then what it COSTS.
  */
 export function cardMetaDescription(input: CardDescriptionInput): string {
   const { displayName, identCode, setName, collectorNumber, kind, textBit, statBit, priceBit } = input;
@@ -126,8 +174,8 @@ export function cardMetaDescription(input: CardDescriptionInput): string {
   let description: string;
   if (textBit) {
     description = special
-      ? `${displayName} — the ${PRINTING_PROSE[kind]} printing (Riftbound ${identCode}). ${textBit} ${priceBit}`
-      : `${displayName} (Riftbound ${identCode}) — ${textBit} ${priceBit}`;
+      ? `${displayName} — ${statBit}, the ${PRINTING_PROSE[kind]} printing (Riftbound ${identCode}). ${textBit} ${priceBit}`
+      : `${displayName} — ${statBit} (Riftbound ${identCode}). ${textBit} ${priceBit}`;
   } else {
     const printingBit = special ? `the ${PRINTING_PROSE[kind]} printing of a ` : "";
     description = `${displayName} — ${printingBit}${printingBit ? statBit.toLowerCase() : statBit} from Riftbound ${setName} (${collectorNumber}). ${priceBit}`;

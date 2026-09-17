@@ -38,10 +38,34 @@ export interface SearchQueryFilters {
   set?: string;
 }
 
+/**
+ * Facet words that ALSO occur inside real card names, so they can never be
+ * applied as a plain narrowing filter.
+ *
+ * Measured across the catalogue: "rune" appears in 31 card names (the cards are
+ * literally called "Fury Rune" and "Rune Prison"), every domain word appears in
+ * 5-6, and "legends" appears in one ("Hall of Legends"). A top-level filter
+ * built from a word like that deletes results the visitor asked for and leaves a
+ * page that looks like it worked — the worst failure mode a search box has.
+ *
+ * So these are kept apart from `filters` and applied by `buildCardWhere` as an
+ * ALTERNATIVE rather than a constraint: the whole typed phrase is always tried
+ * as a literal name first, and only then as "this name, of this kind". See
+ * lib/cards.ts. `rune`, `runes` and `legends` are not mapped at all — no
+ * alternative can rescue a word that is one card's entire name.
+ */
+export interface ScopedFilters {
+  type?: string;
+  domain?: string;
+  rarity?: string;
+}
+
 export interface ParsedSearchQuery {
   /** What is left after the filter words are removed — possibly "". */
   name: string;
   filters: SearchQueryFilters;
+  /** Facet words that must be applied as an alternative, never as a constraint. */
+  scoped: ScopedFilters;
   /** Card slugs whose community nickname the whole raw query matches. */
   aliasSlugs: string[];
 }
@@ -70,6 +94,35 @@ const TOKENS: Record<string, SearchQueryFilters | null> = {
   card: null,
 };
 
+// The ambiguous half. Singular AND plural where both are safe; nothing here is
+// mapped unless its collision count across the catalogue is zero or the
+// alternative-match shape in buildCardWhere covers it.
+//
+// DELIBERATELY ABSENT: `rune`/`runes` (31 name collisions — "Fury Rune", "Rune
+// Prison") and `legends` (one, "Hall of Legends"). Adding either would mean a
+// search for a card by its own name is answered by a filter.
+const SCOPED_TOKENS: Record<string, ScopedFilters> = {
+  legend: { type: "Legend" },
+  unit: { type: "Unit" },
+  units: { type: "Unit" },
+  spell: { type: "Spell" },
+  spells: { type: "Spell" },
+  gear: { type: "Gear" },
+  battlefield: { type: "Battlefield" },
+  battlefields: { type: "Battlefield" },
+  fury: { domain: "Fury" },
+  calm: { domain: "Calm" },
+  mind: { domain: "Mind" },
+  body: { domain: "Body" },
+  chaos: { domain: "Chaos" },
+  order: { domain: "Order" },
+  colorless: { domain: "Colorless" },
+  common: { rarity: "Common" },
+  uncommon: { rarity: "Uncommon" },
+  rare: { rarity: "Rare" },
+  epic: { rarity: "Epic" },
+};
+
 /**
  * Split a raw search string into a name and the filters it names.
  *
@@ -91,15 +144,20 @@ export function parseSearchQuery(raw: string): ParsedSearchQuery {
     }
   }
 
+  const scoped: ScopedFilters = {};
   const kept: string[] = [];
   for (const token of work.split(" ").filter(Boolean)) {
-    if (!(token in TOKENS)) {
-      kept.push(token);
+    if (token in TOKENS) {
+      const f = TOKENS[token];
+      if (f) Object.assign(filters, f);
       continue;
     }
-    const f = TOKENS[token];
-    if (f) Object.assign(filters, f);
+    if (token in SCOPED_TOKENS) {
+      Object.assign(scoped, SCOPED_TOKENS[token]);
+      continue;
+    }
+    kept.push(token);
   }
 
-  return { name: kept.join(" "), filters, aliasSlugs };
+  return { name: kept.join(" "), filters, scoped, aliasSlugs };
 }

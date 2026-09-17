@@ -66,6 +66,8 @@ on:
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
           - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
           - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
+          - index-coverage    # READ-ONLY. Runs audit-indexability FIRST, then walks cards.xml through Google's URL Inspection API and reports, per card URL, whether Google has it INDEXED and why not. This is the only thing that separates "never discovered" from "crawled and judged not worth indexing" from "indexed but nobody searches for it" — three states that look identical in the impressions report and have three different, mutually exclusive fixes. Spends property quota: 2,000 URL inspections per day, shared with the Search Console UI, so this is dispatch-only and never scheduled.
+          - audit-card-titles # READ-ONLY. Builds the <title> and meta description for every card through the real lib/card-seo.ts builders and reports any that overflow 60 characters and any two pages that COLLIDE. scripts/seo-gate.ts fails the build on a duplicate title, but it runs against a deployed site — this catches it before the release. RUN THIS BEFORE landing any change to the title ladder; there is no database in the dev sandbox, so CI is the only place it can run.
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
@@ -6401,6 +6403,37 @@ jobs:
         # join makes every number under it meaningless.
         if: inputs.task == 'audit-indexability'
         run: npx tsx scripts/audit-indexability.ts
+
+      - name: Index coverage (indexability census, then Google URL Inspection)
+        # TWO STEPS IN ONE TASK, AND THE ORDER IS THE POINT. cards.xml is built by
+        # subtracting getEmptyCardIds() from the catalogue, and that set is
+        # computed from the cross-database history join. If the join is broken
+        # that day, the sitemap is built from the wrong list of URLs and every
+        # coverage number measured against it is measuring the wrong thing. So the
+        # census runs first and its join-health line is the gate on believing
+        # anything printed after it.
+        #
+        # Read-only against Search Console. No new secret and no new scope: the
+        # same GSC_SA_KEY that gsc-coverage.yml uses, with
+        # webmasters.readonly. It does need the service account to be an owner or
+        # a FULL user on the property — URL Inspection 403s on Restricted where
+        # searchAnalytics does not, and the script says so in its error path.
+        if: inputs.task == 'index-coverage'
+        env:
+          GSC_SA_KEY: ${{ secrets.GSC_SA_KEY }}
+          GSC_PROPERTY: ${{ vars.GSC_PROPERTY || 'https://riftcompare.com/' }}
+        run: |
+          npx tsx scripts/audit-indexability.ts
+          npx tsx scripts/gsc-url-inspect.ts
+
+      - name: Audit card titles + descriptions (read-only, whole catalogue)
+        # The two invariants that unit tests structurally cannot check: that every
+        # one of ~1,430 real card names still fits 60 characters through the
+        # ladder, and that no two submitted pages end up sharing a title. The
+        # ladder's `?? last` returns an over-long title rather than throwing, so a
+        # miss is silent.
+        if: inputs.task == 'audit-card-titles'
+        run: npx tsx scripts/audit-card-titles.ts
 
       - name: Audit database egress (read-only forensics)
         # THE OPEN INCIDENT. Ten Neon projects have been burned through at

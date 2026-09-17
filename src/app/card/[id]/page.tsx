@@ -177,12 +177,23 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     identCode,
     hasPrice,
     kind: metaPrintingKind,
+    type: card.type,
+    // The same credentials cardDisplayName() baked into the parenthetical. The
+    // shortened title rungs re-add them space-joined rather than dropping them —
+    // see CardTitleInput.credentials for why that is not optional.
+    credentials: cardCredentials(card),
   });
 
   // DESCRIPTION — lead with what the card DOES (the informational half of the
   // intent), then the commercial half. Degrades in three steps so a card with no
   // printed text and no price still gets a unique, non-boilerplate sentence.
-  const textBit = card.description ? clampText(card.description, 90) : null;
+  // 70, not 90. The description now leads with statBit ("Calm legend · Rare"),
+  // which costs about twenty characters, and Google renders roughly 155-160
+  // before it truncates. Paying for the new words out of the rules-text tail
+  // keeps the snippet the same length: what the card IS survives the cut, and
+  // what gets clipped is the back half of a sentence that is printed in full,
+  // twice, further down the page.
+  const textBit = card.description ? clampText(card.description, 70) : null;
   const statBit = `${card.domain} ${card.type.toLowerCase()} · ${card.rarity}`;
   const priceBit = hasPrice
     ? `Live prices from ${fmtBaselineMoney(lowestCents!)} across ${stores} ${stores === 1 ? "store" : "stores"}, updated daily.`
@@ -550,6 +561,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           { "@type": "PropertyValue", name: "Type", value: card.type },
           ...(card.energyCost != null ? [{ "@type": "PropertyValue", name: "Energy", value: String(card.energyCost) }] : []),
           ...(card.might != null ? [{ "@type": "PropertyValue", name: "Might", value: String(card.might) }] : []),
+          // Power is Might's counterpart on the card types that have no Might, and
+          // it was the one attribute the visible page rendered (CardPriceMetrics)
+          // while the markup did not.
+          ...(card.power != null ? [{ "@type": "PropertyValue", name: "Power", value: String(card.power) }] : []),
         ],
         offers: offersLd.length === 1 ? offersLd[0] : offersLd,
       }
@@ -1184,8 +1199,28 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               row and the About prose above; this just gives them one crawlable,
               explicitly-headed answer for "is this printing rare/special" queries. */}
           <section className="card-surface mt-6 p-5">
-            <h2 className="font-bold text-white">Rarity, prints &amp; variants</h2>
+            <h2 className="font-bold text-white">Card details</h2>
+            {/* WHAT THIS CARD IS, as data rather than as prose.
+                This list used to carry four cells — Rarity, Printing, Set and a
+                count — while the Product JSON-LD a few hundred lines up was
+                already publishing the type, the domain, the collector number and
+                the stats. The structured data being richer than the visible page
+                is backwards: a person reads the page, and a search engine
+                cross-checks its markup AGAINST the page. Every value here is one
+                the markup already asserts, so nothing new is being claimed.
+
+                It is also the only place the card TYPE and DOMAIN appear as data
+                on a special printing — the badge chips show them as bare words
+                with no label, which reads as decoration rather than as fact. */}
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Type</dt>
+                <dd className="text-slate-200">{card.type}</dd>
+              </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Domain</dt>
+                <dd className="text-slate-200">{card.domain}</dd>
+              </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-slate-500">Rarity</dt>
                 <dd className="text-slate-200">{card.rarity}</dd>
@@ -1203,6 +1238,30 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 <dt className="text-xs uppercase tracking-wide text-slate-500">Set</dt>
                 <dd className="text-slate-200">{card.setName} ({card.setCode})</dd>
               </div>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-slate-500">Collector number</dt>
+                <dd className="font-mono text-slate-200">{card.collectorNumber}</dd>
+              </div>
+              {/* Stats are nullable and genuinely absent on Battlefields, Runes and
+                  most Spells — an omitted cell is honest, a zero would not be. */}
+              {card.energyCost != null && (
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Energy</dt>
+                  <dd className="text-slate-200">{card.energyCost}</dd>
+                </div>
+              )}
+              {card.might != null && (
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Might</dt>
+                  <dd className="text-slate-200">{card.might}</dd>
+                </div>
+              )}
+              {card.might == null && card.power != null && (
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">Power</dt>
+                  <dd className="text-slate-200">{card.power}</dd>
+                </div>
+              )}
               <div>
                 <dt className="text-xs uppercase tracking-wide text-slate-500">Other tracked printings</dt>
                 <dd className="text-slate-200">{printings.length}</dd>

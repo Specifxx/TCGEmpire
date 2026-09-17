@@ -63,6 +63,11 @@ const SHEN = {
   setName: "Vendetta",
   identCode: "VEN 193*/166",
   kind: "signature" as const,
+  credentials: ["Showcase", "Signature"],
+  // Shen's 193*/166 is the champion's Legend card. It is set here so the fixture
+  // is honest, and because the Signature rungs must win over the Legend rung —
+  // the test below asserts exactly that.
+  type: "Legend",
 };
 
 test("a Signature card's title fits, and keeps the short name, the printing and Riftbound", () => {
@@ -83,6 +88,8 @@ test("a long Overnumbered name needs the last rung — the one that drops 'Price
     identCode: "VEN 189/166",
     hasPrice: true,
     kind: "overnumbered",
+    type: "Legend",
+    credentials: ["Overnumbered"],
   });
   assert.ok(titleFits(title), `over ${TITLE_MAX} with the suffix: ${title}`);
   assert.match(title, /Akali Overnumbered/);
@@ -101,6 +108,8 @@ test("base cards keep byte-identical titles — ~1,200 pages must not move", () 
     identCode: "UNL 198",
     hasPrice: true,
     kind: "base",
+    type: "Spell",
+    credentials: [],
   });
   assert.equal(priced, "Moonfall Price — Riftbound Unleashed (UNL 198)");
   const unpriced = cardTitle({
@@ -110,6 +119,8 @@ test("base cards keep byte-identical titles — ~1,200 pages must not move", () 
     identCode: "UNL 198",
     hasPrice: false,
     kind: "base",
+    type: "Spell",
+    credentials: [],
   });
   // The set-name rung does not fit here ("… Riftbound Unleashed (UNL 198) | Card
   // Text | RiftCompare" is 65), so the second rung wins — exactly as before.
@@ -143,7 +154,7 @@ test("a card WITHOUT rules text says it too", () => {
   assert.match(d, /the Signature printing/);
 });
 
-test("a base card's description gains nothing — there is no printing to name", () => {
+test("a base card's description names no printing — but it does say what the card is", () => {
   const d = cardMetaDescription({
     displayName: "Moonfall",
     identCode: "UNL 198",
@@ -154,7 +165,10 @@ test("a base card's description gains nothing — there is no printing to name",
     statBit: "Fury spell · Rare",
     priceBit: "Compare live prices.",
   });
-  assert.equal(d, "Moonfall (Riftbound UNL 198) — Deal 3 damage to a unit. Compare live prices.");
+  assert.equal(d, "Moonfall — Fury spell · Rare (Riftbound UNL 198). Deal 3 damage to a unit. Compare live prices.");
+  // A base printing still gets no printing phrase: there is no distinguishing
+  // fact to state and padding one in would be the fabrication this avoids.
+  assert.doesNotMatch(d, /printing/);
 });
 
 test("a nickname is appended last, so it can never displace the price", () => {
@@ -307,6 +321,10 @@ test("a printing word becomes the filter the browse chips would have set", () =>
   assert.deepEqual(parseSearchQuery("akali overnumbered"), {
     name: "akali",
     filters: { over: "1" },
+    // A printing word is unambiguous — it never occurs inside a card name — so
+    // it belongs in `filters`, applied as a top-level constraint. The `scoped`
+    // bucket is for the words that DO occur in names; see search-query.ts.
+    scoped: {},
     aliasSlugs: [],
   });
   const shen = parseSearchQuery("Shen signature riftbound");

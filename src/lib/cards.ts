@@ -102,22 +102,55 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
     where.collectorNumber = { not: { contains: "*" } };
   }
 
-  if (query.q) {
+  // Facet words that also occur inside card names ("legend", "fury", "epic") —
+  // see ScopedFilters in lib/search-query.ts for the collision counts. A
+  // dimension the caller set explicitly in the URL always wins, so an inferred
+  // word never contradicts a chip the visitor actually clicked.
+  const scopedClauses: Prisma.CardWhereInput[] = [];
+  if (parsed.scoped.type && query.type === undefined) scopedClauses.push({ type: parsed.scoped.type });
+  if (parsed.scoped.domain && query.domain === undefined) scopedClauses.push({ domain: parsed.scoped.domain });
+  if (parsed.scoped.rarity && query.rarity === undefined) scopedClauses.push({ rarity: parsed.scoped.rarity });
+
+  const strippedName = normalizeSearch(parsed.name);
+
+  // THE WHOLE QUERY WAS FACET WORDS ("legend", "epic fury spell"). There is no
+  // name left to protect, so they become ordinary top-level filters and the
+  // visitor gets the whole shelf — which is what they asked for.
+  if (query.q && !strippedName) {
+    for (const clause of scopedClauses) Object.assign(where, clause);
+  }
+
+  if (query.q && strippedName) {
     // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number —
     // against the RAW string, which keeps the case and the "*" that a collector
     // number needs ("193*/166", "SP1"); the name half is normalised instead.
-    const or: Prisma.CardWhereInput[] = [];
-    if (parsed.name) {
-      or.push({ nameNormalized: { contains: normalizeSearch(parsed.name) } });
-      or.push({ collectorNumber: { contains: query.q } });
+    const raw = normalizeSearch(query.q);
+    const or: Prisma.CardWhereInput[] = [
+      // ALTERNATIVE ONE, AND IT COMES FIRST ON PURPOSE: the entire typed phrase,
+      // compared against the name as typed. This is the clause that makes the
+      // scoped words safe. "Rune Prison" and "Hall of Legends" are real cards
+      // whose names contain a facet word, and this alternative never consults
+      // the tokeniser, so searching for one by name can never be turned into a
+      // filtered search that misses it.
+      { nameNormalized: { contains: raw } },
+      { collectorNumber: { contains: query.q } },
+    ];
+    if (scopedClauses.length) {
+      // ALTERNATIVE TWO: what is left of the name, of the kind the phrase named.
+      // "kennen legend" → a card called Kennen that is a Legend. Every column
+      // here is indexed (prisma/schema.prisma), so this is not a scan.
+      or.push({ AND: [{ nameNormalized: { contains: strippedName } }, ...scopedClauses] });
+    } else if (strippedName !== raw) {
+      // No scoped words, but printing words were stripped ("akali overnumbered"):
+      // match the remaining name, narrowed by the top-level printing filters.
+      or.push({ nameNormalized: { contains: strippedName } });
     }
     // A community nickname resolves to specific printings by slug — a unique
     // column, so this is an indexed lookup of a handful of ids, not a scan.
     if (parsed.aliasSlugs.length) or.push({ slug: { in: parsed.aliasSlugs } });
-    // Left unset when the whole query was filter words ("signature"): an empty
-    // OR matches NOTHING in Prisma, which would turn a valid search into zero
-    // results instead of "every signature card".
-    if (or.length) where.OR = or;
+    where.OR = or;
+  } else if (query.q && parsed.aliasSlugs.length) {
+    where.OR = [{ slug: { in: parsed.aliasSlugs } }];
   }
 
   const price: Prisma.IntNullableFilter = {};
