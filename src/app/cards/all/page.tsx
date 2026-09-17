@@ -83,13 +83,13 @@ const getEveryCard = unstable_cache(
 );
 
 export const metadata: Metadata = {
-  title: { absolute: "Every Riftbound Card — Full A-Z Card List | RiftCompare" },
+  title: { absolute: "Every Riftbound Card — Complete A-Z Index | RiftCompare" },
   description:
-    "The complete list of every Riftbound card we track, grouped by set, each linking to its own price-comparison page across every store in six markets.",
+    "The complete index of every Riftbound card we track, grouped by set, each linking to its own price-comparison page across every store in six markets.",
   alternates: pageAlternates(PATH),
   openGraph: pageOpenGraph({
     title: "Every Riftbound card | RiftCompare",
-    description: "The complete card list, grouped by set, every one linked to live prices.",
+    description: "The complete card index, grouped by set, every one linked to live prices.",
     url: PATH,
   }),
 };

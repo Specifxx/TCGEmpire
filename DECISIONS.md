@@ -8058,6 +8058,7 @@ comment and the keyword map say so.
 Fixed in passing, in the sentence already being edited: the hero subhead said
 "plus four more markets" while listing five. It has listed five since the EU
 launched on 2026-08-23.
+
 ## /cards/all: an HTML index of every card page, 2026-09-17
 
 Asked for as "maybe make a page or sitemap contain every single card page so I
@@ -8106,3 +8107,13 @@ already 92.6% of inspected card URLs indexed, so discovery was not the binding
 constraint; this improves the internal link graph, which is a real but modest
 gain, and the honest lever on the rest is the click-through work in the entries
 above.
+
+**It is titled "Complete A-Z Index", not "card list", and that is a deliberate
+climbdown.** The first draft titled on `Full A-Z Card List`. A parallel session
+landed the entry above this one hours earlier, which gave `riftbound card list`
+a real owner — `/browse`, in both its `<title>` and its H1 — and wrote into
+`docs/seo-keyword-map.md` that other pages "must not retitle onto this phrase".
+Two of our own pages competing for one query is the cannibalisation the keyword
+map exists to prevent, and the newer page is the one with no history to lose, so
+it moved. The page's own body copy already said "complete index"; only the
+title, description and OG blurb needed the word changed.
