@@ -180,18 +180,27 @@ test("the previous pass's overnumbered result is unchanged", () => {
   );
 });
 
-test("a comma-less special printing still fits — the gap the catalogue audit found", () => {
-  // 69 titles were over 60 on the first catalogue-wide run, and none of them was
-  // the case the ladder was designed around. They were special printings whose
-  // name has no champion half, so nothing above the last two rungs could shorten:
-  //   "Plundering Poro Overnumbered Price — Riftbound UNL 222/219"   was 72
-  //   "Red Brambleback Alternate art Price — Riftbound UNL 029a/219" was 74
-  for (const [name, credentials, identCode, kind] of [
+test("a comma-less special printing keeps its credential, even at the cost of 60 chars", () => {
+  // Two catalogue-wide audit runs shaped this rung, and the second one reversed
+  // the first. Run 1 found 69 titles over 60, none of them the comma-less long
+  // NAME the ladder was designed around — they were special printings whose name
+  // has no champion half, so nothing could shorten:
+  //     "Plundering Poro Overnumbered Price — Riftbound UNL 222/219"  72
+  // Run 2, after a rung was added that dropped the credential entirely, found
+  // DUPLICATE titles — because a promo shares its base card's collector number,
+  // so both reduced to "Eye of the Herald — Riftbound SFD 153/221".
+  //
+  // Uniqueness outranks length. A duplicate fails scripts/seo-gate.ts and can
+  // cost a page its place in the index; an over-long title loses a few characters
+  // of collector number to truncation. So the credential stays and a small
+  // residue runs 61-66 characters.
+  const special: [string, string[], string, "overnumbered" | "alternate-art" | "promo"][] = [
     ["Plundering Poro", ["Overnumbered"], "UNL 222/219", "overnumbered"],
     ["Red Brambleback", ["Alt Art"], "UNL 029a/219", "alternate-art"],
     ["Ravenbloom Student", ["Promo"], "OGN 103/298", "promo"],
     ["Seal of Focus", ["Overnumbered"], "SFD 226/221", "overnumbered"],
-  ] as [string, string[], string, "overnumbered" | "alternate-art" | "promo"][]) {
+  ];
+  for (const [name, credentials, identCode, kind] of special) {
     const t = title({
       name,
       displayName: `${name} (${credentials.join(", ")})`,
@@ -201,9 +210,37 @@ test("a comma-less special printing still fits — the gap the catalogue audit f
       credentials,
       kind,
     });
-    assert.ok(titleFits(t), `${t} is ${t.length + " | RiftCompare".length}`);
+    assert.ok(t.includes(credentials[0]), `the credential must survive: ${t}`);
     assert.ok(t.includes(identCode), t);
+    // Bounded, so a regression cannot quietly return to the 82-character title
+    // that started all of this.
+    assert.ok(t.length + " | RiftCompare".length <= 70, `${t} is ${t.length + 14}`);
   }
+});
+
+test("a promo never shares a title with the base card it reprints", () => {
+  // THE DUPLICATE THE AUDIT CAUGHT. A promo shares its base card's collector
+  // number — that is why cardSlug appends "-promo" (lib/card-url.ts) — so the
+  // credential is the ONLY thing separating the two titles. identCode is not
+  // enough here, which is exactly what the reasoning behind the deleted rung got
+  // wrong.
+  const base = title({
+    name: "Eye of the Herald",
+    setName: "Spiritforged",
+    identCode: "SFD 153/221",
+    type: "Gear",
+  });
+  const promo = title({
+    name: "Eye of the Herald",
+    displayName: "Eye of the Herald (Promo)",
+    setName: "Spiritforged",
+    identCode: "SFD 153/221",
+    type: "Gear",
+    credentials: ["Promo"],
+    kind: "promo",
+  });
+  assert.notEqual(base, promo);
+  assert.match(promo, /Promo/);
 });
 
 test("the abbreviated credential is preferred over dropping it entirely", () => {

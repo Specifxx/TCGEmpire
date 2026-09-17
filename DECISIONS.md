@@ -7548,15 +7548,31 @@ designed around.** They were special printings whose name has no champion half:
 `Plundering Poro Overnumbered Price — Riftbound UNL 222/219` (72),
 `Red Brambleback Alternate art Price — Riftbound UNL 029a/219` (74). Every rung
 either kept "Price" or kept the full printing word, and with no comma there was
-nothing left to shorten. Two universal last-resort rungs now shed the credential
-to the abbreviated form `cardCredentials` already uses ("Alternate art" →
-"Alt Art") and then, only if that still overflows, shed it entirely. Dropping the
-credential looks unsafe for uniqueness and is not: `identCode` stays, and it
-differs between a printing and its base sibling by construction — which is what
-the zero-collision result confirms. A small residue is irreducible
-(`Guardian of the Passage — Riftbound SFD 035/221` is 61 with nothing left to
-give but the collector number or the word "Riftbound", and losing one character
-to truncation costs nothing).
+nothing left to shorten.
+
+**Then the second run reversed the first, and this is the part worth reading.**
+The fix was two last-resort rungs: shed the credential to the abbreviated form
+`cardCredentials` already uses ("Alternate art" → "Alt Art"), then shed it
+entirely. I justified the second rung by arguing that `identCode` keeps every
+title unique because it differs between a printing and its base sibling **by
+construction**. That is false. **A promo shares its base card's collector
+number** — it is the reason `cardSlug()` appends a `-promo` suffix at all — so
+base `Eye of the Herald` SFD 153/221 and its promo both reduced to
+`Eye of the Herald — Riftbound SFD 153/221`, and the audit reported a hard
+duplicate on the next run. The rung is gone.
+
+Uniqueness outranks length, and not narrowly: a duplicate title fails
+`scripts/seo-gate.ts` and can cost a page its place in the index, while an
+over-long one loses a few characters of collector number to truncation. So the
+credential never comes off, and a small residue runs 61-66 characters —
+`Plundering Poro Overnumbered — Riftbound UNL 222/219` is 66 with nothing left to
+shed. Set against the 82-character Signature title that started this work and
+lost the word "Riftbound", that is a different and much smaller harm. A test
+bounds the residue at 70 so it cannot quietly grow back.
+
+**The audit paid for itself twice in twenty minutes**, once by disproving the
+near-duplicate worry and once by catching a duplicate I had reasoned my way into.
+Neither result was reachable from the unit tests: both needed all 1,431 rows.
 
 Description lengths across the catalogue after the change: min 87, median 134,
 p90 191, max 262. The median now sits inside Google's render window, which it did

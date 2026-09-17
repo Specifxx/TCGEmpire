@@ -143,10 +143,23 @@ export function cardTitle(input: CardTitleInput): string {
   // form ("Alternate art" → "Alt Art", which is what cardCredentials already
   // calls it) and then, only if that still overflows, shed it entirely.
   //
-  // Dropping the credential is safe for UNIQUENESS even though it looks unsafe:
-  // identCode stays, and it differs between a printing and its base sibling by
-  // construction. The audit confirms it — 0 colliding titles across 1,431 cards.
-  candidates.push(bare(`${short}${creds}`), bare(short));
+  // THE CREDENTIAL NEVER COMES OFF, and the first version of this rung got that
+  // wrong. It also offered `bare(short)` — the credential dropped entirely — on
+  // the reasoning that identCode keeps every title unique. That reasoning was
+  // false: a PROMO SHARES ITS BASE CARD'S COLLECTOR NUMBER. That is why
+  // cardSlug() appends a "-promo" suffix at all (lib/card-url.ts). So base
+  // "Eye of the Herald" SFD 153/221 and its promo both reduce to
+  // "Eye of the Herald — Riftbound SFD 153/221", and scripts/audit-card-titles.ts
+  // caught it as a hard duplicate on the very next run.
+  //
+  // Uniqueness outranks length, and not by a little: a duplicate title fails
+  // scripts/seo-gate.ts and can cost a page its place in the index, while an
+  // over-long one loses a few characters of collector number to truncation. So
+  // this is the last rung, and a handful of comma-less special printings with a
+  // long name still exceed 60 — "Plundering Poro Overnumbered — Riftbound
+  // UNL 222/219" is 67 and there is nothing left to shed but the credential
+  // itself. That is the right trade, and the audit reports the residue.
+  candidates.push(bare(`${short}${creds}`));
 
   // De-duplicate in place. For a comma-less card with no credentials the type
   // rungs are literally the same string as the rungs above them, and leaving the
