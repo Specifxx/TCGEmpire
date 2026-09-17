@@ -7798,3 +7798,95 @@ five days instead of two or three is a data point in the right direction, not
 proof the burn is fixed. If `HISTORY_DATABASE_URL_2` exhausts in days rather
 than weeks, `audit-egress` (dispatchable the same way) is the next step, not
 another rotation.
+## Card pages are always indexable now: Phase 7a reversed, 2026-09-17
+
+Owner's call, and an urgent one: "we need all cards to be indexable and never
+become non indexable so it has time to aggregate on search console."
+
+**What was there.** Phase 7a (`docs/adsense-remediation.md`) noindexed any card
+with no in-stock listing and no recorded price history, and withheld it from
+`cards.xml`. It was correct when written. Those pages "rendered as a shell: a
+name, a rarity badge, a templated sentence and an empty price table", and a
+reviewer sampling `/card/*` hit one about one time in ten.
+
+**Why it had to go, and it is not mainly the thin-content argument.**
+Indexability was a function of TODAY'S STOCK. A page that had earned its place in
+Google's index left it the day its last listing sold out, taking its accumulated
+Search Console history with it, and had to earn the position back afterwards.
+Ranking accrues over months; a page cannot accrue anything while it is flickering
+in and out of the index. The second half of the OR was meant to absorb exactly
+that — a card with recorded history stays indexable regardless of stock — and
+that half was dead when this was measured: `audit-indexability` reported zero
+distinct cardIds in `PriceHistory` and zero cards clearing the threshold, so in
+practice **1,411 of 1,431 card pages were resting on live stock alone**, one
+failed import run away from a silent mass de-indexing.
+
+A parallel session cut the history database over to `HISTORY_DATABASE_URL_2`
+within the hour (the entry directly above), restoring a joinable
+`PriceHistory` — so that specific reading is already out of date, and this entry
+should not be read as claiming the history half is permanently broken. It does
+not change the conclusion, for two reasons. A card with fewer than
+`MIN_HISTORY_DAYS` days of history — every newly imported card — was noindexed
+regardless. And the rotation entry above is the eighteenth-plus history project
+term, each ending in transfer exhaustion after two to five days and each cutover
+another chance to re-break the `cardId` join. A safety net that has failed that
+often is not a safety net; the page should not be able to fall in the first
+place.
+
+The thin-content premise had also expired on its own. Phase 7b de-templatised the
+card narrative and took the median card page to ~1,021 unique editorial words. A
+priceless card still carries its rules text, its art, a printings rail, a FAQ and
+several paragraphs saying accurately that nothing we track has it in stock — for
+a token or a promo rune that is the most useful page on the web about that card.
+
+**What changed.** `CardPriceState.indexable` is deleted rather than pinned to
+true: a boolean that is always true invites someone to make it conditional again,
+while an absent one is a compile error at every call site. `getEmptyCardIds()` is
+deleted rather than emptied, for the same reason. `generateMetadata` no longer
+calls `getCardPriceState` at all, which takes two database round-trips off every
+metadata render of the highest-volume template, one of them against the history
+project. `isEmpty` survives untouched — it is presentation (the honest
+no-listings explainer, the thin-page ad treatment), never a robots decision.
+
+`getCanonicalTwin` still noindexes duplicate rows, and that stays. It is a "two
+URLs, one card" rule, not a judgement about whether a card deserves an index slot.
+
+**A policy budget was relaxed, deliberately, and it should be said plainly.**
+`scripts/adsense-guard.ts` carried a zero-tolerance budget, "indexable card pages
+with no price data", which was the enforcement arm of the rule being removed —
+leaving it would have failed the build on the very state this change creates. It
+is now counted and printed but no longer blocks a deploy. What actually enforces
+the AdSense "low-value content" policy is untouched and still zero-tolerance:
+pages under 150 unique editorial words, near-duplicate clusters above 90%, and
+pages whose server HTML has no content. "Has no price today" was a proxy for
+thinness that stopped tracking it when Phase 7b landed.
+
+**The owner's premise about a reference price is half true, and the half that is
+false matters.** "Even if it falls out of stock we have a reference price that's
+always there." For a card a shop still lists but has none of, yes — the
+out-of-stock `RetailerPrice` row keeps its real price, and the card page was
+already fetching it and then throwing it away, rendering an em dash. `MarketView`
+now exposes `lastSeen` (the cheapest out-of-stock listing) and the hero tile
+relabels itself "Last seen · <market>" with an "out of stock" subtitle rather
+than showing a blank. A live price always wins; the two are never shown together.
+
+But there is **no durable reference price in the schema**, and nothing here
+creates one. `price-import.ts` does `retailerPrice.deleteMany({ where: {
+retailer } })` and re-inserts, so a row vanishes entirely once a store drops the
+card; the six `lowestPriceCents*` columns are set to `null` in the same pass when
+no listings remain; and `Card.marketPriceCents` is a SYNTHETIC figure derived
+from rarity and type at seed time (`prisma/seed.ts`), which must never be shown
+as a market price. A price that outlives its listing needs a new column the
+importer only ever writes forward. That is a schema plus importer change and was
+not in scope for a same-hour fix.
+
+**Also fixed in passing**: the no-listings explainer told readers "fewer than
+seven days of recorded price history" while `MIN_HISTORY_DAYS` has been 2 since
+snapshots went weekly. Rather than correct the number it now states the fact a
+reader can act on, without quoting an internal threshold that a future change
+would falsify again.
+
+**The old rule had no test of any kind**, which is most of why it went unexamined
+through a change that invalidated its premise. Ten cases pin the new one
+(`tests/card-always-indexable.test.ts`), including the last-seen fallback run
+against the real `computeMarket`.

@@ -22,7 +22,6 @@ import { CHAMPIONS, championCardWhere, CHAMPION_THIN_THRESHOLD } from "./champio
 import { TYPE_FACETS, RARITY_FACETS, PRINTING_FACETS, FACET_THIN_THRESHOLD } from "./facets";
 import { STORE_PAGES, STORE_THIN_THRESHOLD } from "./store-pages";
 import { buildCardWhere } from "./cards";
-import { getEmptyCardIds } from "./card-price-state";
 import { getDuplicateCardIds } from "./card-duplicates";
 import { DEFAULT_COUNTRY } from "./country";
 import { hasAnyMarketPrice } from "./market-rows";
@@ -208,7 +207,7 @@ async function core(): Promise<SitemapEntry[]> {
 
 async function cards(): Promise<SitemapEntry[]> {
   const day = await priceDay();
-  const [rows, empty, dupes, maxLastSeenByCard] = await Promise.all([
+  const [rows, dupes, maxLastSeenByCard] = await Promise.all([
     // The BASELINE market's column, not the AU one. `lowestPriceCents` is
     // Australia (see schema.prisma) while DEFAULT_COUNTRY is "US" — the market
     // the card page actually renders for a crawler, and the one whose rows gate
@@ -239,10 +238,13 @@ async function cards(): Promise<SitemapEntry[]> {
     // exact contradiction that fills Search Console's "Excluded by noindex tag"
     // bucket and devalues the sitemap's other 950-odd entries.
     //
-    // Not a hand-maintained list: the same query drives the page's own robots
-    // tag, so a card re-enters this sitemap automatically on the next
-    // regeneration once it gains a listing or a week of history.
-    getEmptyCardIds(),
+    // EVERY CARD IS SUBMITTED NOW. A getEmptyCardIds() call sat here and withheld
+    // any card with no live listing and no price history, matching the page's own
+    // robots tag. Both are gone: see lib/card-price-state.ts's header. The short
+    // version is that indexability was a function of TODAY'S STOCK, so a page
+    // would leave Google's index the day its last listing sold out and take its
+    // accumulated Search Console history with it.
+    //
     // Same contradiction, different cause: duplicate rows for one printing point
     // their canonical at the original and carry noindex, so only the canonical
     // URL belongs here. Also self-healing — merge the rows and they come back.
@@ -257,7 +259,9 @@ async function cards(): Promise<SitemapEntry[]> {
       .then((rows) => new Map(rows.map((r) => [r.cardId, r._max.lastSeen])))
       .catch(() => new Map<string, Date | null>()),
   ]);
-  return rows.filter((c) => !empty.has(c.id) && !dupes.has(c.id)).map((c) => {
+  // Duplicates are still withheld — that is a "two URLs, one card" rule, not a
+  // judgement about whether a card deserves an index slot.
+  return rows.filter((c) => !dupes.has(c.id)).map((c) => {
     // "Priced" means priced in ANY market we track, not just the baseline one.
     // The card page localises client-side off a single ISR render, so a card with
     // only a UK price still serves a page whose prices moved with today's import

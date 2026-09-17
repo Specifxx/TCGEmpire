@@ -217,9 +217,24 @@ export function CardPriceMetrics({
           rows): that only ever applies to a live UK-market-shown-as-EUR
           session, and this tile never shows a market other than the fixed
           US baseline. */}
+      {/* A SOLD-OUT CARD SHOWS ITS LAST PRICE, not an em dash. The listing is
+          still there and still priced; filtering out-of-stock rows out of the
+          summary and rendering nothing threw away the only figure the page had.
+          It matters more now that card pages are always indexable (see
+          lib/card-price-state.ts) — a blank is what a crawler arrives to.
+          Labelled "last seen" because it is not a price anyone can pay today and
+          must never be mistaken for one.
+
+          NO timeAgo() IN THIS TILE. The component has no `mounted` guard — the
+          one further down belongs to CardPriceComparison — and the page is ISR
+          with revalidate=86400, so a relative time baked into HTML up to a day
+          old and recomputed at hydration is a mismatch waiting to happen. The
+          exact date is already on the out-of-stock row lower down, which IS
+          guarded. */}
       <Metric
-        label={`Cheapest price · ${place}`}
-        value={m.lowest != null ? fmt(m.lowest) : "—"}
+        label={m.lowest == null && m.lastSeen ? `Last seen · ${place}` : `Cheapest price · ${place}`}
+        value={m.lowest != null ? fmt(m.lowest) : m.lastSeen ? fmt(m.lastSeen.priceCents) : "—"}
+        sub={m.lowest == null && m.lastSeen ? "out of stock" : undefined}
         highlight
       />
       <Metric

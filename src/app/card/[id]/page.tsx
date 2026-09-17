@@ -35,8 +35,8 @@ import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { compareMarkets, marketPriceListSentence, marketSpreadSentence } from "@/lib/market-comparison";
 import { KeywordText } from "@/components/KeywordTooltip";
 import { championForCardName, championCardWhere } from "@/lib/champions";
-import { getCardPriceState } from "@/lib/card-price-state";
 import { getCanonicalTwin } from "@/lib/card-duplicates";
+import { getCardPriceState } from "@/lib/card-price-state";
 import { typeFacetBySlug, rarityFacetBySlug } from "@/lib/facets";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import {
@@ -252,12 +252,15 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // built from, so they emit byte-identical titles. The extras keep working and
   // stay crawlable; they just point their canonical at the original and drop out
   // of the index. Nothing is deleted or renamed. See lib/card-duplicates.ts.
-  const [priceState, twin] = await Promise.all([
-    getCardPriceState(card),
-    getCanonicalTwin(card),
-  ]);
+  //
+  // A DUPLICATE ROW IS NOW THE ONLY REASON A CARD PAGE EVER CARRIES NOINDEX.
+  // This used to also await getCardPriceState() and noindex any card with no
+  // live listing — see lib/card-price-state.ts's header for why that is gone.
+  // Dropping it takes two database round-trips off every metadata render of the
+  // site's highest-volume template, one of them against the history project.
+  const twin = await getCanonicalTwin(card);
   const canonicalPath = `/card/${twin ? twin.slug ?? twin.id : card.slug ?? params.id}`;
-  const noindex = !priceState.indexable || twin != null;
+  const noindex = twin != null;
 
   return {
     title: { absolute: `${title} | RiftCompare` },
@@ -1033,10 +1036,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   </>
                 ) : (
                   <>
+                    {/* "fewer than seven days" was here and had been wrong for months:
+                        MIN_HISTORY_DAYS has been 2 since snapshots went weekly. Rather
+                        than correct the number, the sentence now states the fact a
+                        reader can act on — nothing is in stock — without quoting an
+                        internal threshold at them that means nothing outside this
+                        codebase, and that a future change would falsify again. */}
                     None of the stores we track in Australia, the United States, the
-                    United Kingdom, Singapore, Canada or the EU has this printing in stock today, and we have
-                    fewer than seven days of recorded price history for it — so there is nothing
-                    honest to compare yet. We check every store daily; this page fills in on its own
+                    United Kingdom, Singapore, Canada or the EU has this printing in stock today, and we
+                    have no recorded price history for it yet — so there is nothing
+                    honest to compare. We check every store daily; this page fills in on its own
                     the moment one lists it.
                   </>
                 )}
