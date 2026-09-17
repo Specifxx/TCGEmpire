@@ -102,16 +102,72 @@ test("the homepage owns 'price check' in its description, hero subhead and an FA
   assert.match(home, /faqPage\(FAQS\)/, "FAQS must still feed FAQPage JSON-LD");
 });
 
-test("the homepage's hard-won title is NOT traded away for the new long-tail", () => {
-  // Three documented audits (2026-08-20, 08-30, 09-10) converged on this exact
-  // string, the last of them on live SERP evidence. A future pass reaching for
-  // "price check" in the title would be swapping a proven head-term match for an
-  // adjacent long-tail — the trade this test exists to refuse.
-  assert.match(
-    read(HOME),
-    /title: \{ absolute: "Riftbound Card Prices \(US\) — Compare Every Store \| RiftCompare" \}/,
-    "homepage title must still target 'Riftbound Card Prices' exactly",
+test("the homepage's hard-won title HEAD TERM is NOT traded away for a long-tail", () => {
+  // Three documented audits (2026-08-20, 08-30, 09-10) converged on the exact
+  // phrase "Riftbound Card Prices", the last of them on live SERP evidence (the
+  // page sat at #10 and was the only page-one result whose title lacked the
+  // words). A pass reaching for "price check" — or, as of 2026-09-17, for the
+  // "Buy Riftbound Cards" phrasing the H1 took on — would be swapping a proven
+  // head-term match for an adjacent long-tail. That is the trade this refuses.
+  //
+  // AMENDED 2026-09-17, deliberately and by owner instruction: the "(US)"
+  // market marker was dropped from the title ("it doesn't need to say US on the
+  // Chrome tab header"). The marker was a separate 2026-08-30 decision from the
+  // head term this test guards, so the assertion is narrowed to the head term
+  // rather than deleted — and it now ALSO pins that the marker stays gone,
+  // because silently reinstating it is the other half of the same drift.
+  const title = /title: \{ absolute: "([^"]+)" \}/.exec(read(HOME))?.[1] ?? "";
+  assert.ok(title, "expected an absolute title on the homepage");
+  assert.ok(
+    title.startsWith("Riftbound Card Prices"),
+    `homepage title must still front-load 'Riftbound Card Prices' exactly — got "${title}"`,
   );
+  assert.ok(!/\(US\)|\bUS\b/.test(title), `the market marker was removed on purpose — got "${title}"`);
+  // Bing warns past 65; see card/[id]/page.tsx for why that number.
+  assert.ok(title.length <= 65, `homepage title is ${title.length} chars, over the 65-char budget`);
+});
+
+test("the homepage H1 owns the market-free BUY query, and the title does not duplicate it", () => {
+  // Owner call, 2026-09-17: the H1 pivoted from comparison intent ("Compare
+  // Riftbound prices across every US store") to transactional intent. The split
+  // that makes this safe is the point — `buy riftbound cards` lives in the H1,
+  // `riftbound card prices` in the <title>, and neither field carries both.
+  const hero = read(HERO);
+  assert.match(
+    hero,
+    /Buy <span className="text-brand-400">Riftbound<\/span> cards at the best price/,
+    "the hero H1 must carry the transactional phrase",
+  );
+  assert.doesNotMatch(hero, /Compare <span[^>]*>Riftbound<\/span> prices across every/, "the old comparison H1 must be gone");
+
+  // The nearest neighbour for this phrase is the guide, whose title leads with
+  // "Where to" (research intent: which stores exist). The homepage must not
+  // claim the bare phrase in the one field that would actually collide.
+  const title = /title: \{ absolute: "([^"]+)" \}/.exec(read(HOME))?.[1] ?? "";
+  assert.ok(
+    !/buy riftbound cards/i.test(title),
+    `the homepage title must not compete with /guides/where-to-buy-riftbound-cards — got "${title}"`,
+  );
+
+  // The H1 gave up the "Riftbound prices" adjacency the 2026-08-20 audit fixed.
+  // It is not allowed to simply vanish: the subhead took it over in the same
+  // pass, and the About H2 + an FAQ carry it further down the page.
+  assert.match(hero, /live Riftbound prices from/, "the hero subhead must carry the adjacency the H1 released");
+  const home = read(HOME);
+  assert.match(home, /<h2[^>]*>Riftbound prices in /, "the About section H2 must still carry it verbatim");
+  assert.match(home, /q: "How do I find the cheapest Riftbound prices\?"/, "and so must the FAQ that feeds FAQPage JSON-LD");
+});
+
+test("root's H1 names no market; the four region pages' H1s each name their own", () => {
+  // The 2026-08-30 "(US)" marker and this are the same concern — tell Google
+  // which market a page is for — solved on the page instead of in the title.
+  const hero = read(HERO);
+  assert.match(
+    hero,
+    /\{region \? ` in \$\{SHORT_PLACE\[region\.code\]\}` : ""\}/,
+    "the market clause must be region-only, so root's H1 stays market-free",
+  );
+  assert.ok(!/at the best price in the US/.test(hero), "root must not hard-code a market back into the H1");
 });
 
 test("the price-check MINI-GAME no longer reads as the site's answer to the query", () => {

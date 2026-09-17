@@ -8006,3 +8006,55 @@ One property worth knowing: `EbayPicksLive` returns null for ad-free members, so
 Premium visitors now open on the popular-cards carousel rather than an empty
 slot, and a listings outage degrades to the generic eBay CTA rather than a blank
 first section.
+
+---
+
+## The homepage sells before it compares, and drops "(US)" from its title — 2026-09-17
+
+Owner instruction, verbatim in substance: *"instead of saying compare Riftbound
+prices across every US store, maybe we can say something like buy Riftbound
+cards … that sounds better than compare prices"*, plus *"it doesn't need to say
+US on the Chrome tab header"*. The exact wording was delegated ("I'll let you
+decide the call for that"). Both changes reverse decisions this file records, so
+the reversals are recorded here rather than left as a silent edit.
+
+**H1: `Compare Riftbound prices across every {market} store` → `Buy Riftbound
+cards at the best price`** (region pages append ` in Australia` / ` in the UK` /
+…). What that gives up is real and was measured: the 2026-08-20 audit found
+`riftbound prices` ranking ~13th with that exact adjacency — "Riftbound" next to
+"prices", not split by "Card"/"TCG" — absent from *every* on-page signal, and
+this H1 was where it was fixed. It is not simply dropped: the hero subhead gave
+up its own "Riftbound card prices" wording to say "Riftbound prices" instead
+(the title still owns the "card prices" variant verbatim, so the hero was
+spending two slots on one phrase), and the About H2 and one FAQ — real FAQPage
+JSON-LD — carried it already.
+
+What it buys is a query the site had **no owner for at all**: bare `buy
+riftbound cards`, no market named. The six regional posts all require a market
+in the phrase, and `/guides/where-to-buy-riftbound-cards` answers the research
+half ("which stores exist"), not "take me to the cheapest one now". The
+homepage is the thing that does it.
+
+**The split is the safety, and it is load-bearing.** `buy riftbound cards` lives
+in the H1 only; `riftbound card prices` lives in the `<title>` only. Putting the
+buy phrase into the title to "reinforce" the H1 would collide root head-on with
+the umbrella guide, whose title leads "Where to Buy Riftbound Cards…" — the
+exact rule-4 cannibalization `docs/seo-keyword-map.md` exists to prevent.
+`tests/keyword-ownership.test.ts` now pins both halves.
+
+**Title: `Riftbound Card Prices (US) — …` → `Riftbound Card Prices — …`** (62 →
+56 chars). The head term stays — three audits converged on it and the last,
+2026-09-10, was live SERP evidence (root at #10, the only page-one result whose
+title lacked "card prices"). Only the geo marker went. That marker was added
+2026-08-30 for a real, found failure: `/au`'s title screamed "Australian" while
+root's named nothing, so `riftbound card prices US` went to `/au`. The geo
+signal now rides the mechanism actually built for it — hreflang, where root is
+the x-default/en-US member of the region-home set — plus the H1s, which are
+*more* explicit than before: root names no market, each region home names its
+own. **If Search Console shows `/au` reclaiming that query from root, put
+`(US)` back.** That is a measurable trigger, not a hunch, and both the code
+comment and the keyword map say so.
+
+Fixed in passing, in the sentence already being edited: the hero subhead said
+"plus four more markets" while listing five. It has listed five since the EU
+launched on 2026-08-23.
