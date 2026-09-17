@@ -1,5 +1,12 @@
 import { formatMoney } from "@/lib/format";
-import { hasNoRetailChannel, noRetailChannelProduct } from "@/lib/constants";
+import { shortCardName } from "@/lib/card-name";
+import {
+  hasNoRetailChannel,
+  noRetailChannelProduct,
+  isSignature,
+  isOvernumbered,
+  isCrystalRose,
+} from "@/lib/constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The card page's "About" section, generated compositionally from real data.
@@ -159,6 +166,36 @@ export interface PrintingFields {
  * size), so the order only decides ties that cannot occur — but it is fixed
  * here rather than left to two call sites to agree on by accident.
  */
+/**
+ * The PrintingFields for a card row, derived the one way the site derives them.
+ *
+ * `isSignature` and `isCrystalRose` are not columns — they are read off the
+ * collector number and set code (constants.ts). `isOvernumbered` IS a column,
+ * but the card page has always derived it too, so a row whose denormalised
+ * column drifted from its collector number cannot make the body and the
+ * metadata disagree.
+ *
+ * THIS EXISTS BECAUSE THE TWO HALVES OF THE CARD PAGE DISAGREED. The body built
+ * these flags by hand and got all three; generateMetadata built none of them, so
+ * printingKind() there could only ever return promo/alternate-art/base and the
+ * meta description of every Signature, Overnumbered and Crystal Rose card
+ * silently described it as an ordinary printing. One helper, both callers.
+ */
+export function printingFieldsFrom(c: {
+  setCode: string;
+  collectorNumber: string;
+  isPromo?: boolean | null;
+  variant?: string | null;
+}): PrintingFields {
+  return {
+    isSignature: isSignature(c.collectorNumber),
+    isOvernumbered: isOvernumbered(c.collectorNumber),
+    isCrystalRose: isCrystalRose(c.setCode, c.collectorNumber),
+    isPromo: c.isPromo ?? false,
+    variant: c.variant ?? null,
+  };
+}
+
 export function printingKind(c: PrintingFields): PrintingKind {
   if (c.isCrystalRose) return "crystal-rose";
   if (c.isSignature) return "signature";
@@ -268,6 +305,24 @@ function identity(c: NarrativeInput): string {
       ? "It carries no domain, so it slots into any deck"
       : `It sits in the ${c.domain} domain`;
 
+  // The phrase a collector actually types is the SHORT name plus the printing —
+  // "Shen Signature", never "Shen, Eye of Twilight (Showcase, Signature)". That
+  // adjacency appeared nowhere on the card page in any casing, so the page that
+  // is the single best answer to "shen signature riftbound" had no text the
+  // query could match. Naming the card that way once, as the subject of the
+  // opening sentence, is simply true — it IS the Signature print of Shen — and
+  // the full name is restated in the same sentence, so nothing is lost.
+  //
+  // Only when the name actually has a champion half (a comma). "Moonfall" has
+  // none, so `shortCardName` returns it unchanged and the opening is byte-for-
+  // byte what it was; base printings are untouched for the same reason.
+  const printKind = printingKind(c);
+  const shortName = shortCardName(c.name);
+  const queryName =
+    printKind !== "base" && shortName !== c.name
+      ? `${shortName} ${PRINTING_DISPLAY[printKind]}`
+      : c.displayName;
+
   const stats: string[] = [];
   if (c.energyCost != null) stats.push(`${c.energyCost} energy to play`);
   if (c.might != null) stats.push(`${c.might} might`);
@@ -288,7 +343,7 @@ function identity(c: NarrativeInput): string {
       ? `numbered ${c.collectorNumber}, past the end of ${c.setName}'s base run, which is what makes it far scarcer than the ordinary ${c.rarity.toLowerCase()} printing`
       : `numbered ${c.collectorNumber} and carrying the stamped signature on its art, which makes it far scarcer than the ordinary ${c.rarity.toLowerCase()} printing`;
     return (
-      `${c.displayName} is the Signature print of ${c.name} — ${scarcity}. ` +
+      `${queryName} is the Signature print of ${c.name} — ${scarcity}. ` +
       `${domainClause}${stats.length ? `, at ${stats.join(" and ")}` : ""}.`
     );
   }
@@ -301,7 +356,7 @@ function identity(c: NarrativeInput): string {
   }
   if (c.isPromo) {
     return (
-      `${c.displayName} is a promotional printing of ${c.name}. It shares collector number ${c.collectorNumber} with ` +
+      `${queryName} is a promotional printing of ${c.name}. It shares collector number ${c.collectorNumber} with ` +
       `the ${c.setName} original but is a separate product that trades at its own price. ` +
       `${domainClause}${stats.length ? ` and costs ${stats.join(", with ")}` : ""}.`
     );
@@ -310,9 +365,10 @@ function identity(c: NarrativeInput): string {
   // collector number has no distinct printing to cover, so it must not claim
   // one — it falls through to the ordinary opening below, which names its
   // rarity ("a showcase unit from …") where a rarity belongs.
-  if (printingKind(c) !== "base") {
+  if (printKind !== "base") {
+    const lead = queryName === c.displayName ? "This page covers the" : `This page covers ${queryName} — the`;
     return (
-      `This page covers the ${printingLabel(c)} printing of ${c.name}, card ${c.collectorNumber} of ` +
+      `${lead} ${printingLabel(c)} printing of ${c.name}, card ${c.collectorNumber} of ` +
       `${c.setName} (${c.setCode}) — the same card as the base version but a distinct product with its own market. ` +
       `${domainClause}${stats.length ? `, at ${stats.join(" and ")}` : ""}.`
     );

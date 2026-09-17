@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
+import { parseSearchQuery } from "./search-query";
 import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
@@ -50,17 +51,31 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
   const where: Prisma.CardWhereInput = {};
   const field = priceField(country);
 
-  const domains = csv(query.domain);
+  // A typed phrase can name a printing ("akali overnumbered", "alt art jinx").
+  // Those words become the same filters the browse chips set — but ONLY where the
+  // caller left the filter unset. An explicit URL parameter is a deliberate
+  // choice by someone looking at the chips; a word inferred from free text is a
+  // guess, and a guess must never overrule the choice. `printing=normal` plus a
+  // typed "signature" is the case that matters: the block further down still
+  // wins, and the visitor keeps the base prints they asked for.
+  const parsed = parseSearchQuery(query.q ?? "");
+  const eff: CardQuery = { ...query };
+  for (const [k, v] of Object.entries(parsed.filters)) {
+    const key = k as keyof CardQuery;
+    if (eff[key] === undefined) eff[key] = v;
+  }
+
+  const domains = csv(eff.domain);
   if (domains) where.domain = { in: domains };
-  const rarities = csv(query.rarity);
+  const rarities = csv(eff.rarity);
   if (rarities) where.rarity = { in: rarities };
-  const types = csv(query.type);
+  const types = csv(eff.type);
   if (types) where.type = { in: types };
-  const sets = csv(query.set);
+  const sets = csv(eff.set);
   if (sets) where.setCode = { in: sets };
 
-  if (query.variant === "alt") where.variant = { not: null };
-  else if (query.variant === "base") where.variant = null;
+  if (eff.variant === "alt") where.variant = { not: null };
+  else if (eff.variant === "base") where.variant = null;
 
   // Keyword tag filter (tags is a comma-separated string; substring match is fine for
   // the distinct word-tags we store). Powers the crawlable tag chips on card pages.
@@ -74,9 +89,9 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
     if (query.rulesSet) where.setCode = query.rulesSet;
   }
 
-  if (query.sig === "1") where.collectorNumber = { contains: "*" };
-  if (query.over === "1") where.isOvernumbered = true;
-  if (query.promo === "1") where.isPromo = true;
+  if (eff.sig === "1") where.collectorNumber = { contains: "*" };
+  if (eff.over === "1") where.isOvernumbered = true;
+  if (eff.promo === "1") where.isPromo = true;
 
   // "Normal only" — hide the special prints (alt-art, signature, promo) so players
   // browsing for the standard card aren't shown showcase/promo variants.
@@ -88,11 +103,21 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
   }
 
   if (query.q) {
-    // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number.
-    where.OR = [
-      { nameNormalized: { contains: normalizeSearch(query.q) } },
-      { collectorNumber: { contains: query.q } },
-    ];
+    // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number —
+    // against the RAW string, which keeps the case and the "*" that a collector
+    // number needs ("193*/166", "SP1"); the name half is normalised instead.
+    const or: Prisma.CardWhereInput[] = [];
+    if (parsed.name) {
+      or.push({ nameNormalized: { contains: normalizeSearch(parsed.name) } });
+      or.push({ collectorNumber: { contains: query.q } });
+    }
+    // A community nickname resolves to specific printings by slug — a unique
+    // column, so this is an indexed lookup of a handful of ids, not a scan.
+    if (parsed.aliasSlugs.length) or.push({ slug: { in: parsed.aliasSlugs } });
+    // Left unset when the whole query was filter words ("signature"): an empty
+    // OR matches NOTHING in Prisma, which would turn a valid search into zero
+    // results instead of "every signature card".
+    if (or.length) where.OR = or;
   }
 
   const price: Prisma.IntNullableFilter = {};

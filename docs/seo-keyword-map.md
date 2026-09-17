@@ -16,6 +16,8 @@ explicit link up/down to the primary).
 |---|---|---|
 | `<card name> riftbound` | `/card/<slug>` | — |
 | `<card name> price` | `/card/<slug>` | — |
+| `<card short name> signature\|overnumbered\|promo\|alt art [riftbound]` (e.g. `shen signature riftbound`, `akali overnumbered`) | `/card/<slug>` **of that exact printing** — every printing is its own row and its own page; the title, subtitle, About opening, Product `additionalProperty` and breadcrumb all name the printing, and only that page does | `/cards/printing/<x>` for the whole shelf; `/guides/riftbound-variant-glossary` for "what is a Signature?" |
+| `<community nickname> [riftbound]` (e.g. `armpit shen`, 711 impr/28d at pos 5.9) | `/card/<slug>` via `lib/content/card-aliases.ts` — the nickname is in the meta description, in visible "Also known as" copy and in Product `alternateName`, and on-site search resolves it | the blog/guide that coined it may still rank; it answers "why is it called that", not "what does it cost" |
 | `<champion> riftbound`, `<champion> riftbound cards` | `/champions/<slug>` | `/card/<slug>` for each individual printing |
 | `<champion> deck riftbound`, `riftbound <champion> deck` | `/champions/<slug>` — every printing priced; it no longer claims a decklist (the meta-deck dataset was removed 2026-09-12, see DECISIONS.md) | `/deck` (pricer) for a custom build; `/guides/riftbound-deck-archetypes-guide` for "which kind of deck" |
 | `riftbound deck`, `riftbound decks` | `/deck` (deck pricer/builder) — the site's only deck surface; `/decks*` 301 here | `/guides/riftbound-deck-archetypes-guide` (choose an archetype) and `/guides/budget-riftbound-decks` (build cheaply) |

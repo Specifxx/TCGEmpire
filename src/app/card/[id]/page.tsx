@@ -13,7 +13,9 @@ import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { clampText, formatMoney, normalizeSearch } from "@/lib/format";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
 import { affiliateUrl, ebayLabel, ebaySearchUrl } from "@/lib/affiliate";
-import { cardCredentials, cardDisplayName, cardSearchName } from "@/lib/card-name";
+import { cardCredentials, cardDisplayName, cardSearchName, shortCardName } from "@/lib/card-name";
+import { cardTitle, cardMetaDescription } from "@/lib/card-seo";
+import { aliasesForSlug } from "@/lib/content/card-aliases";
 import { CardTile } from "@/components/CardTile";
 import { cardTileSelect } from "@/lib/cards";
 import { cardImageSrc } from "@/lib/card-image-url";
@@ -41,6 +43,7 @@ import {
   buildCardNarrative,
   editionLabel,
   printingKind,
+  printingFieldsFrom,
   printingLabel,
   tidy,
   PRINTING_DISPLAY,
@@ -160,19 +163,21 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // duplicate-title collision Google flagged on two Calm Rune (Promo) pages.
   // Longest candidate carries the set NAME too (Origins, not just OGN); the
   // shorter steps drop the name before ever dropping identCode.
-  const titleCandidates = hasPrice
-    ? [
-        `${displayName} Price — Riftbound ${card.setName} (${identCode})`,
-        `${displayName} Price — Riftbound ${identCode}`,
-        `${displayName} — Riftbound ${identCode}`,
-      ]
-    : [
-        `${displayName} — Riftbound ${card.setName} (${identCode}) | Card Text`,
-        `${displayName} — Riftbound ${identCode} | Card Text`,
-        `${displayName} — Riftbound ${identCode}`,
-      ];
-  const title =
-    titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
+  //
+  // THE LADDER ITSELF NOW LIVES IN lib/card-seo.ts, unchanged for base cards but
+  // with extra rungs for special printings — every candidate here overflowed for
+  // a Signature, so the `??` fallthrough shipped an 82-character title and the
+  // word Google truncated was "Riftbound". See cardTitle()'s own comment.
+  const metaPrintingKind = printingKind(printingFieldsFrom(card));
+  const aliases = aliasesForSlug(card.slug);
+  const title = cardTitle({
+    name: card.name,
+    displayName,
+    setName: card.setName,
+    identCode,
+    hasPrice,
+    kind: metaPrintingKind,
+  });
 
   // DESCRIPTION — lead with what the card DOES (the informational half of the
   // intent), then the commercial half. Degrades in three steps so a card with no
@@ -194,14 +199,28 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   //   Lee Sin, Centered (Showcase) — Body unit · Showcase from Riftbound Origins (151a/298). Live prices from …
   //   Lee Sin, Centered (Showcase, Promo) — Body unit · Showcase from Riftbound Origins (151/298). Live prices from …
   //
-  // printingLabel() is the same helper the page's own "Printing" cell and its
-  // About narrative use, so the description cannot claim a printing the body
+  // PRINTING_PROSE is the same source the page's own "Printing" cell and its
+  // About narrative read, so the description cannot claim a printing the body
   // contradicts. Base printings get nothing added — there is no distinguishing
   // fact to state, and padding one in would be the fabrication this avoids.
-  const printingBit = printingKind(card) === "base" ? "" : `the ${printingLabel(card)} printing of a `;
-  const description = textBit
-    ? `${displayName} (Riftbound ${identCode}) — ${textBit} ${priceBit}`
-    : `${displayName} — ${printingBit}${printingBit ? statBit.toLowerCase() : statBit} from Riftbound ${card.setName} (${card.collectorNumber}). ${priceBit}`;
+  //
+  // TWO BUGS FIXED HERE (see cardMetaDescription): the printing phrase used to
+  // be emitted ONLY in the no-rules-text branch, so the ~90% of cards that do
+  // print rules text never named their printing in words; and `printingKind`
+  // was handed the raw `card`, whose metadata query selects nothing that
+  // Signature/Overnumbered/Crystal Rose are derived from, so it answered "base"
+  // for all three. printingFieldsFrom() is now the single derivation.
+  const description = cardMetaDescription({
+    displayName,
+    identCode,
+    setName: card.setName,
+    collectorNumber: card.collectorNumber,
+    kind: metaPrintingKind,
+    textBit,
+    statBit,
+    priceBit,
+    aliases,
+  });
 
   // ── Index only what's worth indexing ─────────────────────────────────────
   // A card with no in-stock listing in ANY market and under a week of recorded
@@ -441,6 +460,42 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         : {}),
     })),
   ];
+  // THE printing this page is, resolved once and shared by the "Printing" cell,
+  // the About narrative, the FAQ, the structured data and — since
+  // printingFieldsFrom() replaced the hand-built object here — generateMetadata,
+  // so all of them name it identically. See that helper's own comment for the
+  // bug this closes.
+  //
+  // Resolved HERE, above the JSON-LD, rather than beside the "other printings"
+  // query further down: it depends on nothing but `card`, and the Product and
+  // BreadcrumbList blocks below now state the printing too. Computing it after
+  // them was why the markup couldn't.
+  const thisPrinting = printingFieldsFrom(card);
+  const thisIsSignature = thisPrinting.isSignature!;
+  const thisIsOvernumbered = thisPrinting.isOvernumbered!;
+  const thisIsCrystalRose = thisPrinting.isCrystalRose!;
+  const thisPrintingKind = printingKind(thisPrinting);
+  const thisEdition = editionLabel({ ...thisPrinting, rarity: card.rarity });
+  // Community nicknames for this exact printing. Almost always empty.
+  const cardAliases = aliasesForSlug(card.slug);
+  // The other names this one product is genuinely called: the space-joined
+  // credential form people paste into a marketplace search ("Shen, Eye of
+  // Twilight Showcase Signature"), the short query form ("Shen Signature"), and
+  // any community nickname. All three are real references to THIS printing, which
+  // is exactly what schema.org/alternateName is for — it is not a keyword slot,
+  // so nothing is added that a person would not use to mean this card.
+  const productAlternateNames = Array.from(
+    new Set(
+      [
+        cardSearchName(card.name, card),
+        ...(thisPrintingKind !== "base" && shortCardName(card.name) !== card.name
+          ? [`${shortCardName(card.name)} ${PRINTING_DISPLAY[thisPrintingKind]}`]
+          : []),
+        ...cardAliases,
+      ].filter((n) => n && n !== displayName)
+    )
+  );
+
   // Product is emitted ONLY when real offers exist. That is deliberate and stays:
   // Google treats a Product carrying none of offers/review/aggregateRating as a
   // critical error, so a card with no live listing is better off with no Product
@@ -466,6 +521,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         "@id": `${cardAbsUrl}#product`,
         mainEntityOfPage: cardAbsUrl,
         name: displayName,
+        ...(productAlternateNames.length ? { alternateName: productAlternateNames } : {}),
         category: "Trading Card",
         sku: `${card.setCode}-${card.collectorNumber}`,
         productID: `${card.setCode}-${card.collectorNumber}`,
@@ -485,6 +541,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           { "@type": "PropertyValue", name: "Set", value: card.setName },
           { "@type": "PropertyValue", name: "Collector number", value: card.collectorNumber },
           { "@type": "PropertyValue", name: "Rarity", value: card.rarity },
+          // Always emitted, "Base" included: rarity and printing are independent
+          // (a Showcase card at a base collector number is a base printing), so
+          // stating the printing is the only way the markup distinguishes two
+          // rows that share a name, a set and a rarity.
+          { "@type": "PropertyValue", name: "Printing", value: PRINTING_DISPLAY[thisPrintingKind] },
           { "@type": "PropertyValue", name: "Domain", value: card.domain },
           { "@type": "PropertyValue", name: "Type", value: card.type },
           ...(card.energyCost != null ? [{ "@type": "PropertyValue", name: "Energy", value: String(card.energyCost) }] : []),
@@ -518,7 +579,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
       ...(hasSetPage
         ? [{ "@type": "ListItem", position: 3, name: card.setName, item: `${SITE_URL}${setUrl}` }]
         : []),
-      { "@type": "ListItem", position: hasSetPage ? 4 : 3, name: card.name, item: `${SITE_URL}${cardUrl}` },
+      // displayName, not card.name: every printing of a card shares `name`, so the
+      // bare form gave four different URLs the same final crumb — a trail that
+      // cannot tell the reader (or Google) which printing they are on.
+      { "@type": "ListItem", position: hasSetPage ? 4 : 3, name: displayName, item: `${SITE_URL}${cardUrl}` },
     ],
   };
 
@@ -532,27 +596,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     select: cardTileSelect(DEFAULT_COUNTRY),
   });
 
-  // This printing's own special-print flags, and (if this IS a special printing)
-  // the real tracked price of its plain base sibling — used ONLY for the
-  // "is the premium printing worth it?" FAQ below. Never asserted without both a
-  // real base sibling AND a real price on both sides to compare.
-  const thisIsSignature = isSignature(card.collectorNumber);
-  const thisIsOvernumbered = isOvernumbered(card.collectorNumber);
-  const thisIsCrystalRose = isCrystalRose(card.setCode, card.collectorNumber);
+  // If this IS a special printing, the real tracked price of its plain base
+  // sibling — used ONLY for the "is the premium printing worth it?" FAQ below.
+  // Never asserted without both a real base sibling AND a real price on both
+  // sides to compare. (The printing flags themselves moved up to the JSON-LD.)
   const basePrinting = printings.find(
     (p) => p.variant == null && !p.isPromo && p.rarity !== "Showcase" && !isOvernumbered(p.collectorNumber) && !isSignature(p.collectorNumber)
   );
-  // THE printing this page is, resolved once and shared by the "Printing" cell,
-  // the About narrative and the FAQ so all three name it identically.
-  const thisPrinting = {
-    isSignature: thisIsSignature,
-    isCrystalRose: thisIsCrystalRose,
-    isOvernumbered: thisIsOvernumbered,
-    isPromo: card.isPromo,
-    variant: card.variant,
-  };
-  const thisPrintingKind = printingKind(thisPrinting);
-  const thisEdition = editionLabel({ ...thisPrinting, rarity: card.rarity });
   const basePriceCents = basePrinting ? (basePrinting[priceField(DEFAULT_COUNTRY)] as number | null) : null;
 
   // Similar cards — more from the same set, same domain first. This is the single
@@ -813,6 +863,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
     printingCount: printings.length,
     place: baselinePlace,
     currency: baseline.currency,
+    displayName,
     // editionLabel() is null exactly when this is the plain version, so it
     // answers "is this a special printing?" and "what do we call it?" with one
     // decision. Same helper the About narrative uses, so the two can't disagree
@@ -900,9 +951,19 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <div className="mt-2 flex items-start justify-between gap-3 sm:mt-3">
               <div>
                 <h1 className="text-xl font-extrabold text-white sm:text-2xl">{displayName}</h1>
+                {/* The subtitle names the PRINTING first for anything that is not
+                    the base card. The badges above already say "Signature", but
+                    a badge is a word floating on its own — this is the line that
+                    reads as a fact about the card, and it is what makes the page
+                    legible to someone who arrived on it from a query naming the
+                    printing. Base cards keep exactly the line they had. */}
                 <p className="mt-1 font-mono text-xs text-slate-500">
+                  {thisPrintingKind !== "base" ? `${PRINTING_DISPLAY[thisPrintingKind]} printing · ` : ""}
                   {card.setName} ({card.setCode}) · {card.collectorNumber}
                 </p>
+                {cardAliases.length > 0 && (
+                  <p className="mt-1 text-xs text-slate-400">Also known as: {cardAliases.join(", ")}</p>
+                )}
               </div>
               <PriceWatchButton cardId={card.id} variant="full" />
               <ShareButton />
@@ -1349,6 +1410,17 @@ type CardForCopy = {
 };
 
 type FaqContext = {
+  /**
+   * cardDisplayName(card.name, card) — the printing-specific name.
+   *
+   * The price question uses it because `card.name` is shared by every printing,
+   * so four pages published the same FAQ question and answer-opening as
+   * structured data while quoting four different prices. The "worth it?"
+   * question below deliberately keeps the bare name: "…of Shen, Eye of Twilight
+   * (Showcase, Signature)" would be asking whether the Signature is worth it
+   * over itself.
+   */
+  displayName: string;
   lowest: number | null;
   stores: number;
   printingCount: number;
@@ -1387,10 +1459,10 @@ type FaqContext = {
 function buildFaqs(card: CardForCopy, ctx: FaqContext): { q: string; a: string }[] {
   // Every question and answer leaves through tidy() at the end of this function
   // — same reasoning as the narrative's exit point.
-  const { lowest, stores, printingCount, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel, currencyAnswer } = ctx;
+  const { displayName, lowest, stores, printingCount, place, currency, isSpecialPrinting, specialPrintingLabel, basePriceCents, noRetailChannel, currencyAnswer } = ctx;
   const faqs = [
     {
-      q: `How much does ${card.name} cost?`,
+      q: `How much does ${displayName} cost?`,
       a: lowest != null && stores > 0
         ? `The cheapest live price for ${card.name} (${card.setCode} ${card.collectorNumber}) is currently ${formatMoney(lowest, currency)} across ${stores} ${stores === 1 ? "store" : "stores"} in ${place}; every other market we cover is compared on this page too. Prices update daily.`
         : noRetailChannel

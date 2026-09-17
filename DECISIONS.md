@@ -7272,3 +7272,120 @@ now-bigger invisible tap area around it.
 
 1495/1495 tests (three new, `tests/header-mobile-space.test.ts`), typecheck
 and lint clean.
+
+## Card pages could not be found by the name people call them, 2026-09-17
+
+The owner asked for the card pages to rank for queries naming a specific
+printing — "Shen signature riftbound", "Akali Overnumbered", "moonfall
+riftbound". Six things were in the way, and only one of them was a missing
+feature; the rest were bugs on a page that looked finished.
+
+**The metadata could not see three of the six printings.** `generateMetadata`
+called `printingKind()` on an object built from a query that selected none of
+the fields Signature, Overnumbered and Crystal Rose are derived from. It could
+therefore only ever return promo, alternate-art or base, and the meta
+description of every Signature card on the site described it as an ordinary
+printing. The page BODY got this right, twenty lines of hand-built object
+further down. Two derivations of one fact, and they had drifted.
+`printingFieldsFrom()` in `lib/content/card-narrative.ts` is now the only one,
+and both halves call it.
+
+**The title overflowed for exactly the cards that needed it.** The ladder tried
+three candidates and then shipped the last one whether it fit or not.
+`Shen, Eye of Twilight (Showcase, Signature) — Riftbound VEN 193★/166 |
+RiftCompare` is 82 characters; Google truncates near 60, and the word it cut was
+"Riftbound" — the one word the target query depends on. The fix shortens the two
+redundant parts rather than dropping the collector number: "(Showcase,
+Signature)" becomes "Signature" (Showcase is the rarity of *every* Signature
+print, so the pair says one thing twice), and "Shen, Eye of Twilight" becomes
+"Shen". The short-name rung is load-bearing, not a nicety: even
+`Shen, Eye of Twilight Signature — Riftbound VEN 193★/166` is 70 characters. Only
+`Shen Signature Price — Riftbound VEN 193★/166` fits, at 59 — and it is also what
+people actually type. A sixth rung drops the word "Price" for the long names
+where rung five still overflows (`Akali Overnumbered Price — …` is 62); losing
+"Price" costs less than losing "Riftbound".
+
+`cardTitle` and `cardMetaDescription` moved out of the route into
+`lib/card-seo.ts` to get there. The 60-character guard is the highest-volume SEO
+invariant on the site — ~1,400 pages — and it had no test at all, because
+reaching it meant importing a file that imports Prisma. The first three rungs are
+byte-identical to what shipped, so the ~1,200 base cards do not move, and there
+is now a test that says so.
+
+**The phrase appeared nowhere on the page.** People type the short name plus the
+printing; "Shen Signature" did not occur in any casing anywhere in the markup.
+It now occurs twice, both times as a statement of fact rather than a keyword: the
+subtitle under the H1 leads with "Signature printing · Vendetta (VEN) ·
+193★/166", and the About section opens "Shen Signature is the Signature print of
+Shen, Eye of Twilight — numbered 193★/166, past the end of Vendetta's base run…".
+A name with no comma ("Moonfall") has no champion half, so `shortCardName`
+returns it unchanged and those cards read exactly as they did.
+
+`cardDisplayName` was deliberately not touched. The H1, the Product `name`, the
+QuickView and the eBay search query all ride on it, and shortening it to suit a
+title would have changed all four.
+
+**Structured data now distinguishes the printings.** The last breadcrumb was the
+bare `card.name`, which four different URLs share; it is the display name now.
+Product gains a "Printing" `additionalProperty` (always, "Base" included — rarity
+and printing are independent) and an `alternateName` list of the other real names
+for the same product. The price FAQ asks about the display name, which also stops
+four printings publishing the same question with four different prices in the
+answer. The "is the premium printing worth it?" FAQ keeps the bare name on
+purpose: the display name there would ask whether the Signature is worth it over
+itself.
+
+**Nicknames are a hand-maintained TS map, not a column.** `lib/content/card-aliases.ts`,
+same convention as `creators.ts` and `community.ts`: no schema change, no admin
+UI, a PR edits it. The bar for a row is explicit in the file and has two halves —
+verified community usage, AND one unambiguous printing. Both current entries are
+the same card. "Armpit Shen" is not folklore: Search Console, 28 days to
+2026-09-17, shows 711 impressions at average position 5.9 with a 1.4%
+click-through against roughly 3% typical for that position. We already rank for
+it; what answers it is a blog post, when the page someone typing a card nickname
+wants is the card.
+
+One trap found while writing the matcher. It matched a query against a nickname
+in both directions by substring, and "Armpit Shen" compacts to "armpitshen",
+which CONTAINS "shen". A plain search for "shen" would have resolved to one
+Signature printing and ranked it above every real Shen card on the site. The
+"nickname contains query" direction is a PREFIX test now (someone still typing),
+and only the "query contains nickname" direction is a substring test. There is a
+test asserting `aliasSlugsFor("shen")` is empty.
+
+**"Moonwalk" was a typo.** It was reported as a search term; it is not a card. The
+owner confirmed it meant Moonfall (UNL 198), which is a real card whose own page
+already owns "moonfall riftbound" through the ordinary name path. No alias, no
+special handling — and it is written into `card-aliases.ts` as the worked example
+of the bar: the fix for a reported query is to identify the card first, not to
+guess a mapping.
+
+**On-site search could not answer the same queries the page now ranks for.**
+`normalizeSearch` strips spaces, so "akali overnumbered" became
+"akaliovernumbered" and was compared against `nameNormalized`, which holds the
+name alone. No card has ever matched it. A visitor who arrived from Google and
+retyped their query got nothing. `lib/search-query.ts` now splits the raw string
+into a name and the filters it names, so "akali overnumbered" builds the same
+WHERE as the browse page's Overnumbered chip. Two deliberate limits: an explicit
+URL parameter always beats a word inferred from prose (`printing=normal` plus a
+typed "signature" still shows base prints), and bare "over" and bare "alt" are
+NOT keywords — they are ordinary English and plausible name fragments, and
+mapping them would remove results the visitor asked for while the page still
+looked like it worked. The typeahead route now shares `buildCardWhere` instead of
+building its own weaker name-only query.
+
+**Baseline to measure against** (Search Console, 28 days to 2026-09-17): 1,467
+pages with impressions, 144,101 impressions, 2,479 clicks. The `/card` template
+is 994 of those pages and 24,835 impressions for **103 clicks** — 0.41%, the
+lowest click-through of any template on the site, which is the shape a truncated
+title leaves. No `<name> signature` or `<name> overnumbered` query appears in
+either the top-query list or the twenty content opportunities, so the starting
+point for those is effectively zero. Re-read the `gsc-coverage` report ~28 days
+after this ships.
+
+No local database in this sandbox, so none of the above was verified against real
+rows: the evidence is 1,529 passing tests (30 new, `tests/card-printing-seo.test.ts`),
+a clean typecheck and lint, and the AdSense guard's 22 static checks. The three
+things that need production data to confirm — titles under 60 characters across
+the real catalogue, no new near-duplicate descriptions, and the printing queries
+actually earning impressions — come from the next crawl and the next GSC run.
