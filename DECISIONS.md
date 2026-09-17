@@ -8058,3 +8058,51 @@ comment and the keyword map say so.
 Fixed in passing, in the sentence already being edited: the hero subhead said
 "plus four more markets" while listing five. It has listed five since the EU
 launched on 2026-08-23.
+## /cards/all: an HTML index of every card page, 2026-09-17
+
+Asked for as "maybe make a page or sitemap contain every single card page so I
+can index them on google search."
+
+**The sitemap half already existed and was already complete.** `cards.xml`
+carries all 1,431 card URLs — verified live immediately before this, right after
+the change that stopped withholding priceless cards from it. There was nothing to
+add there, and saying so mattered more than building something.
+
+**The HTML half did not exist.** A crawler reaches an XML sitemap by being told
+where it is; it reaches an HTML index by following a link, and Google uses both
+paths. Every existing browse surface caps what it renders — facet pages at 60
+tiles, set galleries at 500, set pages at 100 per page — so seeing the whole
+catalogue meant following a paginated chain, and "follow fourteen pages" has a
+real crawl drop-off. `/cards/all` is the flat, complete, one-hop version.
+
+**Grouped by set, with the printing in the anchor text.** Not alphabetical: 31
+cards in the catalogue are called "Fury Rune", so an A-Z list would be hundreds
+of identical anchors pointing at different URLs — and identical anchor text is
+how you tell a crawler that two pages are the same page. Each label runs through
+`cardDisplayName` (so a Signature reads as one) and carries its collector number,
+which makes all 1,431 anchors distinct.
+
+**Cost.** One query, seven short columns, no image or price fields, wrapped in
+`unstable_cache` at the route's own `revalidate` — the same binding is passed to
+both so they cannot diverge, per the egress rule that cost five database projects
+(CLAUDE.md). Comparable to what the sitemap already reads once a day. It fails
+open to an empty list and says so on the page, rather than 500-ing an indexable
+URL.
+
+**It carries 150+ words of real editorial copy, deliberately.** A page of 1,431
+links and nothing else is the textbook case the still-zero-tolerance "indexable
+pages under 150 unique editorial words" budget exists to catch, and this page is
+indexable. A test counts the words rather than trusting that someone will notice.
+
+**Linked from the facet index, site navigation and the sitemap.** An HTML index
+that nothing links to helps nothing — `crawl-check` counts exactly that as a
+sitemap orphan.
+
+**What this does NOT do, recorded because the request implies otherwise.** It does
+not index anything. There is no public Google API to bulk-index ordinary pages
+(the Indexing API covers job postings and livestreams only), and Search Console's
+"Request indexing" is capped at roughly ten URLs a day. The measured position is
+already 92.6% of inspected card URLs indexed, so discovery was not the binding
+constraint; this improves the internal link graph, which is a real but modest
+gain, and the honest lever on the rest is the click-through work in the entries
+above.

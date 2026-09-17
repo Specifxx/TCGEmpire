@@ -110,6 +110,8 @@ export default async function CardsIndexPage() {
           Every way to slice the Riftbound card database — by domain, card type, rarity or printing —
           each a live, server-rendered page with real prices. Want every filter at once?{" "}
           <Link href="/browse" className="text-brand-400 hover:underline">Use the full filterable database →</Link>
+          {" · "}
+          <Link href="/cards/all" className="text-brand-400 hover:underline">See every card on one page →</Link>
         </p>
       </div>
 
