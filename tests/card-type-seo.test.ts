@@ -577,6 +577,23 @@ test("the URL Inspection script stays inside Google's published quota", () => {
   assert.equal(num("QUOTA_PER_MINUTE"), 600);
   assert.ok(num("PER_MINUTE") < num("QUOTA_PER_MINUTE"), "leave headroom under the per-minute ceiling");
   assert.ok(num("MAX_INSPECTIONS") < num("QUOTA_PER_DAY"), "never let one run reach the daily ceiling");
+  // Concurrency is a LATENCY control, not a rate control — every worker draws
+  // from the same token bucket, so raising it cannot breach the per-minute
+  // quota. It exists because the first real run was cancelled at a 30-minute
+  // job timeout: an index:inspect call takes seconds, so 1,425 of them at 5 in
+  // flight is ~24 minutes of waiting, not 2.6 minutes of pacing.
+  assert.ok(num("CONCURRENCY") <= num("PER_MINUTE"), "concurrency cannot exceed the per-minute budget");
+  assert.ok(num("CONCURRENCY") >= 10, "too low and the run cannot finish inside its job timeout");
+});
+
+test("a cancelled coverage run still leaves the rows it collected", () => {
+  const code = codeOnly(read("scripts/gsc-url-inspect.ts"));
+  // The first run died at a job timeout having written nothing, so the whole
+  // 30 minutes of inspection was lost.
+  assert.match(code, /rows\.length % FLUSH_EVERY === 0/);
+  assert.match(code, /const flush = \(\) =>/);
+  const wf = read(".github/workflows/gsc-index-coverage.yml");
+  assert.match(wf, /timeout-minutes: 60/);
 });
 
 test("the URL Inspection script never touches either database", () => {

@@ -44,7 +44,12 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 60, not 30. The first run was cancelled at 30 having written nothing: an
+    # index:inspect call takes seconds because Google evaluates the URL rather
+    # than reading a counter, so 1,425 of them is wall-clock bound, not
+    # quota-bound. The script flushes its report every 250 rows now, so even a
+    # cancelled run leaves usable data.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -7590,6 +7590,16 @@ SHORTEST candidate: rung order expresses what we would rather keep, which is not
 claim about length, so it must not decide the overflow case. Ties keep the earlier
 rung, so nothing moves for any card that has a fitting candidate.
 
+**The coverage report's own first run was cancelled at its 30-minute job timeout
+having written nothing**, which is worth recording because the cause was not the
+obvious one. Pacing was fine: 1,425 URLs at 550/minute is a 2.6-minute floor. An
+individual `index:inspect` call just takes SECONDS — Google fetches and evaluates
+the URL rather than reading a counter — so at five requests in flight the run is
+wall-clock bound at roughly 24 minutes before `npm ci`. Concurrency is now 20,
+which cannot breach the quota because every worker still draws from the same
+token bucket, and the report flushes every 250 rows so a cancelled run leaves the
+rows it did collect. The job timeout is 60 minutes.
+
 **The audit paid for itself three times in half an hour** — disproving the
 near-duplicate worry, catching a duplicate I had reasoned my way into, and then
 showing that the overflow residue was partly self-inflicted. None of the three was

@@ -65,7 +65,24 @@ const QUOTA_PER_MINUTE = 600;
  *  Search Console UI draws on the same bucket. */
 const PER_MINUTE = 550;
 const MAX_INSPECTIONS = 1400;
-const CONCURRENCY = 5;
+/**
+ * 20, not 5, and the reason is latency rather than throughput.
+ *
+ * The first real run was CANCELLED by the job's 30-minute timeout having written
+ * nothing. Pacing was not the cause: 1,425 URLs at 550/minute is a 2.6-minute
+ * floor. The cause is that an individual index:inspect call takes seconds, not
+ * milliseconds — Google is fetching and evaluating a URL's index state, not
+ * reading a counter — so at 5 in flight the wall clock is
+ * 1,425 / 5 × ~5s ≈ 24 minutes, and npm ci on top of that ran it past the limit.
+ *
+ * Concurrency cannot breach the quota here because every worker still draws from
+ * the same token bucket below, which is the thing that enforces 550/minute. More
+ * workers only close the gap between the rate we are allowed and the rate
+ * latency leaves us.
+ */
+const CONCURRENCY = 20;
+/** Flush the report this often, so a cancelled run still leaves its evidence. */
+const FLUSH_EVERY = 250;
 
 const arg = (name: string): string | undefined => {
   const i = process.argv.indexOf(`--${name}`);
@@ -249,6 +266,18 @@ async function main() {
   line(`- Quota: ${QUOTA_PER_DAY}/day and ${QUOTA_PER_MINUTE}/min per site; this run is capped at ${PER_MINUTE}/min.`);
   if (urls.length < all.length) line(`- **Truncated** by --limit. Re-run tomorrow for the rest; do not raise the cap.`);
 
+  const { writeFileSync } = await import("node:fs");
+  const REPORT = "docs/index-coverage.json";
+  const flush = () =>
+    writeFileSync(
+      REPORT,
+      JSON.stringify(
+        { generatedAt: new Date().toISOString(), property, section, total: all.length, inspected: rows.length, rows },
+        null,
+        2
+      )
+    );
+
   const wait = rateLimiter(PER_MINUTE);
   const rows: InspectionRow[] = [];
   let cursor = 0;
@@ -259,6 +288,13 @@ async function main() {
         if (i >= urls.length) return;
         await wait();
         rows.push(await inspectOne(token, property, urls[i]));
+        // Progress AND partial durability. The first run died at a job timeout
+        // with nothing written, so a slow run must still be diagnosable from the
+        // log and must still leave the rows it did manage to collect.
+        if (rows.length % FLUSH_EVERY === 0) {
+          flush();
+          console.log(`  … ${rows.length}/${urls.length} inspected`);
+        }
       }
     })
   );
@@ -304,13 +340,9 @@ async function main() {
   line(`**Never crawled: ${never.length}**`);
   for (const r of never.slice(0, 15)) line(`- ${r.url}`);
 
-  const { writeFileSync } = await import("node:fs");
-  writeFileSync(
-    "docs/index-coverage.json",
-    JSON.stringify({ generatedAt: new Date().toISOString(), property, section, total: all.length, rows }, null, 2)
-  );
+  flush();
   line("");
-  line("Wrote docs/index-coverage.json");
+  line(`Wrote ${REPORT} (${rows.length} rows)`);
 
   if (process.env.GITHUB_STEP_SUMMARY) {
     const { appendFileSync } = await import("node:fs");
