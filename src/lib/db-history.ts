@@ -18,61 +18,67 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // SAFE BY DEFAULT: falls back to the same database as db.ts when NO history
 // variable is set at all, so this ships as a NO-OP (same physical database,
 // identical behaviour) until a second Neon project is provisioned and the
-// current history variable — HISTORY_DATABASE_URL, see the chain below — is
+// current history variable — HISTORY_DATABASE_URL_2, see the chain below — is
 // added to Vercel + GitHub secrets. The schema
 // (prisma/schema.prisma) is unchanged and shared — run `prisma db push` against
 // the new URL once to create the tables there too (the unused Card/RetailerPrice/
 // etc. tables it also creates cost negligible storage empty; only PriceHistory /
 // ClickEvent get real traffic).
 
-// HISTORY_DATABASE_URL is the CURRENT history project — cut over 2026-09-12,
-// once RH10 (below) reached its own 5 GB monthly transfer allowance after two
-// days live. HISTORY_DATABASE_URL is a RECYCLED name — the OLDEST history
-// variable in the whole rotation, retired since the 2026-08-16
-// HISTORY_DATABASE_URL_2 cutover. migrate-history-db-rh10-to-hdu
-// (.github/workflows/maintenance.yml) moved history onto it — a full
-// pg_dump/restore of RH10, row-count verified (Card=1,436, ClickEvent=698,
-// PriceHistory=422,589, every count matching exactly), TRUNCATE-then-restore
-// over the real (if outdated) numbers HISTORY_DATABASE_URL held from its own
-// prior term (rows=45,067, distinctCards=1390 — not zeroes, confirming it
-// really was a recycled project and not a freshly re-added empty one).
+// HISTORY_DATABASE_URL_2 is the CURRENT history project — cut over
+// 2026-09-17, once HISTORY_DATABASE_URL (below) reached its own 5 GB monthly
+// transfer allowance after five days live. HISTORY_DATABASE_URL_2 is a
+// RECYCLED name — retired since the 2026-08-19 HISTORY_DATABASE_URL_3
+// cutover. migrate-history-db-hdu-to-hdu2 (.github/workflows/maintenance.yml)
+// moved history onto it — a full pg_dump/restore of HISTORY_DATABASE_URL,
+// row-count verified (rows=423,999, distinctCards=1426, GLOBAL rows=82,175,
+// every count matching exactly), TRUNCATE-then-restore over the real (if
+// outdated) numbers HISTORY_DATABASE_URL_2 held from its own prior term
+// (rows=45,067, distinctCards=1390 — not zeroes, confirming it really was a
+// recycled project and not a freshly re-added empty one).
 //
-// RH10's OWN STINT IN THIS SLOT RAN 2026-09-10..09-12. It was cut over from
-// RH9 — see git history for the long account of that cutover, which is what
-// first carried the GLOBAL-history series (below) onto RH10.
+// HISTORY_DATABASE_URL's OWN STINT IN THIS SLOT RAN 2026-09-12..09-17 — its
+// longest yet, but still a terminal exhaustion, not a stable resting point.
+// It was cut over from RH10 — see git history for the long account of that
+// cutover, which is what first carried the GLOBAL-history series (below)
+// onto HISTORY_DATABASE_URL.
 //
-// (RH10's second term replaced RH9's second term, which served from
-// 2026-09-09; RH9's second term replaced RH8's second term, which served from
-// 2026-09-06; RH8's second term replaced RH6's second term, which served from
-// 2026-09-04; RH6's second term replaced RH11, which served from 2026-08-30;
-// RH11 replaced RH10's FIRST term, which served from 2026-08-28; RH10's first
-// term replaced RH9's FIRST term, which served from 2026-08-25; RH9's first
-// term replaced RH8's FIRST term, which served from 2026-08-23; RH8's first
-// term replaced HISTORY_DATABASE_URL_4, which served from 2026-08-21; _4
-// replaced _3, which replaced _2 on 2026-08-19; _2 replaced
-// HISTORY_DATABASE_URL's own prior term; that replaced RH7's first term on
-// 2026-08-16; RH7's first term replaced RH6's very first term on 2026-08-04;
-// that replaced RH5 on 2026-07-31.)
+// (HISTORY_DATABASE_URL's second term replaced RH10's second term, which
+// served from 2026-09-10; RH10's second term replaced RH9's second term,
+// which served from 2026-09-09; RH9's second term replaced RH8's second
+// term, which served from 2026-09-06; RH8's second term replaced RH6's
+// second term, which served from 2026-09-04; RH6's second term replaced
+// RH11, which served from 2026-08-30; RH11 replaced RH10's FIRST term, which
+// served from 2026-08-28; RH10's first term replaced RH9's FIRST term, which
+// served from 2026-08-25; RH9's first term replaced RH8's FIRST term, which
+// served from 2026-08-23; RH8's first term replaced HISTORY_DATABASE_URL_4,
+// which served from 2026-08-21; _4 replaced _3, which served from
+// 2026-08-19; _3 replaced HISTORY_DATABASE_URL_2's own prior term, which
+// served from 2026-08-16; that replaced HISTORY_DATABASE_URL's own prior
+// term; that replaced RH7's first term on 2026-08-16; RH7's first term
+// replaced RH6's very first term on 2026-08-04; that replaced RH5 on
+// 2026-07-31.)
 //
 // THE CHAIN IS CURRENT-FIRST, NOT NEWEST-FIRST. Read the head as "in service
 // today", never as a timeline — several rotations went BACKWARDS onto recycled
-// names (HISTORY_DATABASE_URL is now the oldest name in the list, cycling back
-// after nearly a month retired, and RH6/RH7/RH8/RH9/RH10 have all now cycled
-// through more than once) because Neon's caps are per project per month, so a
-// long-retired project has a fully reset allowance.
+// names (HISTORY_DATABASE_URL_2 last served nearly a month ago, and
+// RH6/RH7/RH8/RH9/RH10/HISTORY_DATABASE_URL have all now cycled through more
+// than once) because Neon's caps are per project per month, so a long-retired
+// project has a fully reset allowance.
 //
-// THE GLOBAL-HISTORY MIGRATION, AND WHY IT STILL MATTERS FOR HISTORY_DATABASE_URL
-// SPECIFICALLY: 2026-09-05 shipped a separate migration
-// (scripts/backfill-global-history.ts, price-import.ts) collapsing every
-// market's PriceHistory rows into one country="GLOBAL" row per card per day —
-// historySource() in price-history.ts now ALWAYS reads country=GLOBAL,
-// unconditionally. HISTORY_DATABASE_URL's own prior term (2026-08-04..08-09)
-// predates that migration by nearly a month and never held a single GLOBAL row
-// on its own; the pg_dump/restore FROM RH10 is what actually carries the
-// GLOBAL series onto it here. Recycling it straight from its own old contents
-// would have hit the exact same "site-wide empty chart" trap RH6 itself needed
-// rescuing from during the RH7-exhaustion fallback — see the long note on
-// HISTORY_VARS in src/lib/db-chains.ts for the full account.
+// THE GLOBAL-HISTORY MIGRATION, AND WHY IT STILL MATTERS FOR
+// HISTORY_DATABASE_URL_2 SPECIFICALLY: 2026-09-05 shipped a separate
+// migration (scripts/backfill-global-history.ts, price-import.ts) collapsing
+// every market's PriceHistory rows into one country="GLOBAL" row per card
+// per day — historySource() in price-history.ts now ALWAYS reads
+// country=GLOBAL, unconditionally. HISTORY_DATABASE_URL_2's own prior term
+// (2026-08-04..08-09) predates that migration by nearly a month and never
+// held a single GLOBAL row on its own; the pg_dump/restore FROM
+// HISTORY_DATABASE_URL is what actually carries the GLOBAL series onto it
+// here. Recycling it straight from its own old contents would have hit the
+// exact same "site-wide empty chart" trap RH6 itself needed rescuing from
+// during the RH7-exhaustion fallback — see the long note on HISTORY_VARS in
+// src/lib/db-chains.ts for the full account.
 //
 // A recycled name carries a trap: the older vars are also migration SOURCES in
 // .github/workflows/maintenance.yml, so a name that is both target and listed
@@ -96,9 +102,9 @@ import { HISTORY_VARS, OPERATIONAL_VARS, resolveUrl, resolveVar } from "./db-cha
 // next offender, and measuring it (scripts/audit-egress.ts) beats an
 // eighteenth project.
 //
-// RH9 is kept as the rollback fallback and every older var below it is a
-// read-only fallback/migration source; treat them as dead, never the primary
-// target.
+// HISTORY_DATABASE_URL is kept as the rollback fallback and every older var
+// below it is a read-only fallback/migration source; treat them as dead,
+// never the primary target.
 //
 // ORDER MATTERS AND IS LOAD-BEARING: this list is duplicated, by necessity, in
 // a few places that cannot import this module (scripts/build-db-push.sh runs
@@ -122,12 +128,13 @@ export const HISTORY_URL_SOURCE =
     ? "DATABASE_URL (no history project set — history shares the operational DB)"
     : resolveVar(HISTORY_VARS)!;
 
-if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL") {
+if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_2") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL — the ` +
-      `current history project is missing from this environment. RH10 is the rollback (holds ` +
-      `the same GLOBAL series via a row-count-verified pg_dump/restore); RH9/RH8/RH7/RH6/RH5/` +
-      `_2/_3/_4 are spent or retired. Expect P1001 or writes landing in the wrong place.`
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_2 — the ` +
+      `current history project is missing from this environment. HISTORY_DATABASE_URL is the ` +
+      `rollback (holds the same GLOBAL series via a row-count-verified pg_dump/restore); ` +
+      `RH10/RH9/RH8/RH7/RH6/RH5/_3/_4 are spent or retired. Expect P1001 or writes landing in ` +
+      `the wrong place.`
   );
 }
 

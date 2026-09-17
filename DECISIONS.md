@@ -7706,3 +7706,95 @@ chrome is also not reproducible in headless Chromium, which has no chrome to
 collapse, so a real browser was never going to be the answer either. Six
 behavioural cases now run the real function over real numbers: chrome out and
 back, three zoom levels, an unfold and re-fold, the clamp, and the rounding.
+
+## History database: HISTORY_DATABASE_URL → HISTORY_DATABASE_URL_2, 2026-09-17
+
+`HISTORY_DATABASE_URL` reached its 5 GB monthly Neon transfer allowance after
+five days live (2026-09-12..09-17) — its longest stint of the whole rotation
+so far, but still the same terminal exhaustion every prior history project has
+shown (RH10 before it lasted two days; RH9 three; the pattern goes back
+eighteen-plus project-terms). Ran the same playbook this repo has now run more
+than a dozen times, in order:
+
+1. **`probe-history` first, not last.** Before touching anything, fixed a real
+   bug this rotation surfaced: `OPERATIONAL_VARS` moved to `["RM10"]` on
+   2026-09-14 (the RM9→RM10 operational cutover, a separate DECISIONS.md
+   entry), and `scripts/probe-history-dbs.ts` correctly imports and iterates
+   it — but the `probe-history` job's own `env:` block in
+   `.github/workflows/maintenance.yml` still only forwarded `RM9`. The exact
+   drift class this file's own header warns about: a script resolves the
+   right variable name, but the workflow never forwards it, so the live
+   catalogue cross-check would have silently read "unreachable" even with
+   `RM10` genuinely configured in Actions. Fixed and merged on its own first
+   (a one-line, obviously-safe change), then dispatched `probe-history`
+   cleanly.
+
+2. **The probe's real numbers, not assumed ones.** `HISTORY_DATABASE_URL_2` —
+   the recycling target, retired since the 2026-08-19
+   `HISTORY_DATABASE_URL_3` cutover — came back live and holding real, if
+   stale, data: `rows=45,067 days=2026-08-04..2026-08-09 distinctCards=1390`,
+   1385/1390 (100%) still joinable against the live RM10 catalogue, and (like
+   every project's pre-cutover term) zero `GLOBAL` rows of its own — not
+   zeroes across the board, the actual signature of a genuinely recycled
+   project rather than a fresh, empty one. The source,
+   `HISTORY_DATABASE_URL`, was confirmed still live and being written to
+   *today* (`rows=423,999 days=2026-06-06..2026-09-17`, latest day
+   2026-09-17, `GLOBAL rows=82,175`) — reachable, not yet hard-capped, so the
+   dump itself was not a race against a dead connection.
+
+3. **The migration task, named with both endpoints.** Added
+   `migrate-history-db-hdu-to-hdu2` (a bare `migrate-history-db-to-hdu2`
+   already exists as the 2026-08-16 LEGACY cutover, so reusing it would have
+   been ambiguous — same naming rule `migrate-main-db-rm9-to-rm10` and
+   `migrate-history-db-rh10-to-hdu` already established). Same shape as every
+   prior pg_dump/restore step: dump `Card` + `ClickEvent` + `PriceHistory`
+   from the source, refuse to run if the target has any `User` rows (proof
+   it's actually a history-only project, not an operational one by
+   accident), refuse if source and target resolve to the same URL, refuse if
+   the target is the live operational database, `TRUNCATE ... CASCADE` the
+   target, restore `Card` first (the FK parent), then `ClickEvent` +
+   `PriceHistory`, then verify every table's row count matches source and
+   target exactly before declaring success. Marked
+   `migrate-history-db-rh10-to-hdu` LEGACY in the same commit, per this
+   file's established rule that only one history task is ever "CURRENT" at a
+   time.
+
+4. **The chain itself, updated everywhere it's duplicated.**
+   `src/lib/db-chains.ts`'s `HISTORY_VARS` is now
+   `["HISTORY_DATABASE_URL_2", "HISTORY_DATABASE_URL", "DATABASE_URL"]` —
+   `RH10` drops out of the chain entirely (it was `HISTORY_DATABASE_URL`'s
+   own rollback for the 2026-09-12..09-17 stint; a chain only ever needs
+   one), same as `RH9` dropped out on the previous rotation. `HISTORY_DATABASE_URL`
+   moves into the rollback slot `RH10` used to hold.
+   `src/lib/db-history.ts` (which imports the chain rather than re-declaring
+   it) had its header narrative and its `HISTORY_URL_SOURCE !== "..."`
+   fallback warning updated to match — the literal string there is what
+   `tests/db-chain.test.ts` cross-checks against the chain's own head, so a
+   drift between the two fails a test instead of silently misnaming the
+   database in a P1001 log. `scripts/build-db-push.sh`'s hand-rolled shell
+   chain (the one consumer that cannot `import` the shared list) was
+   reordered to match, and its `CURRENT_HIST` diagnostic updated. All three
+   were re-verified against `tests/db-chain.test.ts`, which exists
+   specifically to catch exactly this kind of three-way drift.
+
+**What's deliberately NOT done yet.** The code changes make
+`HISTORY_DATABASE_URL_2` what the app *will* resolve to on the next deploy —
+they do not themselves move any traffic, since this session has no access to
+a live database to run the actual `pg_dump`/`pg_restore` (that runs inside
+GitHub Actions, which holds the real Neon connection strings this sandbox
+does not). The `migrate-history-db-hdu-to-hdu2` task was dispatched
+separately, against `main`, immediately after this code merged — see the
+workflow run for the actual before/after row counts. Per this file's own
+standing rule ("RUN THIS BEFORE deploying the ...-first chain"), the data
+copy has to land before a deploy makes the app start reading the new project,
+or a deploy landing in between would have pointed live traffic at a
+five-week-stale snapshot for however long the migration took to catch up.
+
+**Still unaddressed, and worth saying plainly rather than rotating past it
+again**: eighteen-plus history-project terms in under six weeks, plus this
+one, is a read-pattern problem, not a capacity one — the same conclusion
+`db-history.ts`'s own header already draws. `HISTORY_DATABASE_URL` lasting
+five days instead of two or three is a data point in the right direction, not
+proof the burn is fixed. If `HISTORY_DATABASE_URL_2` exhausts in days rather
+than weeks, `audit-egress` (dispatchable the same way) is the next step, not
+another rotation.
