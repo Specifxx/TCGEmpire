@@ -7570,9 +7570,30 @@ shed. Set against the 82-character Signature title that started this work and
 lost the word "Riftbound", that is a different and much smaller harm. A test
 bounds the residue at 70 so it cannot quietly grow back.
 
-**The audit paid for itself twice in twenty minutes**, once by disproving the
-near-duplicate worry and once by catching a duplicate I had reasoned my way into.
-Neither result was reachable from the unit tests: both needed all 1,431 rows.
+**And a third time, on the fallthrough itself.** With duplicates gone the residue
+was 40 titles, and reading the list showed the worst of them were not irreducible
+at all — they were the ladder picking badly:
+
+    Seal of Discord Showcase Overnumbered — Riftbound SFD 234/221   75
+    Seal of Discord Overnumbered — Riftbound SFD 234/221            66
+
+Both were in the candidate list, in that order, and the fallthrough was
+`?? ladder[ladder.length - 1]` — the LAST candidate, not the shortest. So it
+shipped nine extra characters of truncation for the word "Showcase", which is the
+rarity of every overnumbered reprint and therefore adds nothing the next word does
+not already say. The same redundancy the previous pass removed from Signature
+titles, surviving in the population that pass did not reach.
+
+Two fixes. The no-price printing rung is no longer gated on the name having a
+comma, so a comma-less printing can reach it. And the fallthrough now returns the
+SHORTEST candidate: rung order expresses what we would rather keep, which is not a
+claim about length, so it must not decide the overflow case. Ties keep the earlier
+rung, so nothing moves for any card that has a fitting candidate.
+
+**The audit paid for itself three times in half an hour** — disproving the
+near-duplicate worry, catching a duplicate I had reasoned my way into, and then
+showing that the overflow residue was partly self-inflicted. None of the three was
+reachable from the unit tests; all three needed the real 1,431 rows.
 
 Description lengths across the catalogue after the change: min 87, median 134,
 p90 191, max 262. The median now sits inside Google's render window, which it did

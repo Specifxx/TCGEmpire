@@ -122,9 +122,22 @@ export function cardTitle(input: CardTitleInput): string {
     const P = PRINTING_DISPLAY[kind];
     const priceWord = hasPrice ? " Price" : "";
     candidates.push(`${name} ${P}${priceWord} — Riftbound ${identCode}`);
-    if (short !== name) {
-      candidates.push(`${short} ${P}${priceWord} — Riftbound ${identCode}`);
-      if (priceWord) candidates.push(`${short} ${P} — Riftbound ${identCode}`);
+    if (short !== name) candidates.push(`${short} ${P}${priceWord} — Riftbound ${identCode}`);
+    // Drop "Price" but keep the SINGLE printing word. This used to sit inside the
+    // `short !== name` branch, which meant a comma-less name could never reach it
+    // — and the catalogue audit found what that cost:
+    //
+    //   "Seal of Discord Showcase Overnumbered — Riftbound SFD 234/221"  75
+    //
+    // That is the last-resort rung below, falling back on `cardCredentials`, which
+    // for an overnumbered printing is ["Showcase", "Overnumbered"] — and Showcase
+    // is the rarity of every overnumbered reprint, so the pair says one thing
+    // twice. PRINTING_DISPLAY says it once: "Seal of Discord Overnumbered —
+    // Riftbound SFD 234/221" is 66. Same redundancy the previous pass removed
+    // from Signature titles, in the population it did not reach.
+    if (priceWord) {
+      candidates.push(`${name} ${P} — Riftbound ${identCode}`);
+      if (short !== name) candidates.push(`${short} ${P} — Riftbound ${identCode}`);
     }
   }
 
@@ -166,7 +179,22 @@ export function cardTitle(input: CardTitleInput): string {
   // repeats in would make the ladder's shape depend on the card rather than on
   // the rule.
   const ladder = candidates.filter((c, i) => candidates.indexOf(c) === i);
-  return ladder.find(titleFits) ?? ladder[ladder.length - 1];
+  // WHEN NOTHING FITS, SHIP THE SHORTEST — not the last one written down.
+  //
+  // The old fallthrough was `?? ladder[ladder.length - 1]`, and the catalogue
+  // audit is how that showed up as a real cost. For an overnumbered printing with
+  // a comma-less name, the ladder produces
+  //
+  //   "Seal of Discord Overnumbered — Riftbound SFD 234/221"           (66)
+  //   "Seal of Discord Showcase Overnumbered — Riftbound SFD 234/221"  (75)
+  //
+  // in that order, neither fits, and taking the LAST one shipped the worse of the
+  // two — nine characters of extra truncation for a word ("Showcase") that is the
+  // rarity of every overnumbered reprint and therefore says nothing the next word
+  // does not. Rung ORDER expresses what we would rather keep; it is not a claim
+  // about length, so it must not decide the overflow case. Ties keep the earlier
+  // rung, so this changes nothing for any card that has a fitting candidate.
+  return ladder.find(titleFits) ?? ladder.reduce((a, b) => (b.length < a.length ? b : a));
 }
 
 export interface CardDescriptionInput {

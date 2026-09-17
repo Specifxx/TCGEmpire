@@ -218,6 +218,26 @@ test("a comma-less special printing keeps its credential, even at the cost of 60
   }
 });
 
+test("when nothing fits, the SHORTEST candidate ships — not the last one written", () => {
+  // An overnumbered reprint is Showcase by definition, so cardCredentials gives
+  // ["Showcase", "Overnumbered"] and the pair says one thing twice. The ladder
+  // produces both forms; neither fits; the old `?? last` shipped the longer one.
+  const t = title({
+    name: "Seal of Discord",
+    displayName: "Seal of Discord (Showcase, Overnumbered)",
+    setName: "Spiritforged",
+    identCode: "SFD 234/221",
+    type: "Gear",
+    credentials: ["Showcase", "Overnumbered"],
+    kind: "overnumbered",
+  });
+  assert.equal(t, "Seal of Discord Overnumbered — Riftbound SFD 234/221");
+  // Rung order says what we would RATHER keep; it is not a claim about length, so
+  // it must not decide the overflow case.
+  assert.ok(!t.includes("Showcase"), t);
+  assert.ok(t.includes("Overnumbered"), "the distinguishing word must survive");
+});
+
 test("a promo never shares a title with the base card it reprints", () => {
   // THE DUPLICATE THE AUDIT CAUGHT. A promo shares its base card's collector
   // number — that is why cardSlug appends "-promo" (lib/card-url.ts) — so the
