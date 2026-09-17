@@ -70,26 +70,27 @@ test("deal images render as a plain <img>, not next/image — any CDN host works
   assert.match(code, /<img\b/, "must render the thumbnail with a plain img tag");
 });
 
-test("Market Pulse is trimmed to 3 risers + 3 fallers (was 4+4=8)", () => {
-  const code = readCode("src/components/home/MarketPulse.tsx");
-  assert.match(code, /COUNT_PER_SIDE\s*=\s*3/, "expected the per-side count constant to be 3");
-});
+// ─────────────────────────────────────────────────────────────────────────────
+// The three Market Pulse tests that used to live here (3+3 trim, the slow
+// marquee + prefers-reduced-motion, the inert duplicated track half) were
+// removed on 2026-09-17: the owner had Market Pulse taken off the homepage, and
+// with no other page rendering it the component was deleted rather than left as
+// unrendered code guarded by tests. tests/market-pulse-quickview.test.ts went
+// with it for the same reason. Git history has both if it ever comes back.
+//
+// What this file still guards — Today's Top Deals' declutter (no Undervalued
+// column, no "was $X" badge, QuickView on click, plain <img> thumbnails) — is
+// untouched by that removal and all still renders.
+// ─────────────────────────────────────────────────────────────────────────────
 
-test("Market Pulse auto-scrolls right-to-left via a CSS marquee, slowly, and respects prefers-reduced-motion", () => {
-  const code = readCode("src/components/home/MarketPulse.tsx");
-  assert.match(code, /animate-marquee/, "must use the marquee animation utility");
-  assert.match(code, /motion-reduce:animate-none/, "must freeze for prefers-reduced-motion");
-  assert.match(code, /group-hover:\[animation-play-state:paused\]/, "hovering must pause the scroll so a card is actually clickable/readable");
-
-  const twConfig = readCode("tailwind.config.ts");
-  const marqueeAnim = twConfig.match(/marquee:\s*"marquee\s+(\d+)s/);
-  assert.ok(marqueeAnim, "expected a marquee animation duration declared in tailwind.config.ts");
-  const seconds = Number(marqueeAnim![1]);
-  assert.ok(seconds >= 25, `marquee duration (${seconds}s) must read as slow, not a fast ticker`);
-});
-
-test("the marquee's duplicated track half is inert to assistive tech and keyboard tabbing", () => {
-  const code = readCode("src/components/home/MarketPulse.tsx");
-  assert.match(code, /aria-hidden=\{duplicate \|\| undefined\}/, "the visual-only duplicate half must be aria-hidden");
-  assert.match(code, /tabIndex=\{duplicate \? -1 : undefined\}/, "the visual-only duplicate half must not be keyboard-focusable");
+test("Market Pulse is gone from the homepage, and left nothing dangling behind it", () => {
+  const home = readCode("src/components/home/HomeSections.tsx");
+  assert.ok(!/<MarketPulse/.test(home), "the homepage must not render Market Pulse");
+  assert.ok(!/toPulseMovers/.test(home), "its server/client trim helper must not be imported either");
+  // The helper existed only for this component; it went with it, so nothing in
+  // src/ may still reference it.
+  assert.ok(
+    !/export function toPulseMovers/.test(readCode("src/lib/price-history.ts")),
+    "toPulseMovers had exactly one caller and must not linger as a helper with none",
+  );
 });

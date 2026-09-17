@@ -7955,3 +7955,54 @@ for weeks.
 Not deployed on its own: SEO copy has no urgency that justifies an extra build
 (see this file's 2026-09-14 entry on the deploy-cadence burn), so it rides the
 daily release.
+
+## Homepage: Market Pulse and the domain chips removed, eBay Picks promoted to the top slot — 2026-09-17
+
+Owner: *"get rid of the market pulse on the homepage, get rid of the domain (e.g.
+fury calm) Move the ad listings on ebay where the market pulse used to be."*
+Done as asked. Three consequences were not asked for and are recorded here
+because two of them are reversals and one was nearly a silent regression.
+
+**This partially reverses yesterday's "game before money" pass, and that is the
+headline.** The 2026-09-16 pass moved the playable sections above the commercial
+run after repeated feedback from the site's most engaged reviewer — *"simply a
+too greedy/capitalistic/money focused site for a card GAME for me"* — and
+`tests/game-before-money.test.ts` pinned eBay Picks below Riftle and the pack
+simulator. An affiliate unit now leads the page instead. The instruction was
+explicit about the slot, so it is followed, but the guard is **narrowed, not
+deleted**: Today's Top Deals — the larger commercial block, and one of the "five
+consecutive price sections" that pass was written against — still has to sit
+below the games, and the test still fails if that changes. The test also now
+asserts `ebay < play` outright, so the reversal reads as a decision in the test
+file rather than as a missing assertion.
+
+**Market Pulse was deleted, not just unmounted.** Nothing else rendered
+`components/home/MarketPulse.tsx`, so leaving it would have meant an unrendered
+component plus ~10 tests guarding it. The component, `tests/market-pulse-
+quickview.test.ts`, and the three Market Pulse cases in
+`tests/homepage-declutter.test.ts` all went; `homepage-declutter` keeps its
+Today's-Top-Deals coverage and gains one test asserting the removal stuck.
+`lib/price-history.ts`'s `toPulseMovers`/`PulseMovers`/`MoverSummary` went with
+it — they existed solely to trim the mover payload at the server/client boundary
+for that one marquee, and with no consumer a trim has nothing to trim for.
+`getPriceMovers()`'s real callers (/movers, /games, the newsletter digest) are
+untouched.
+
+**The pre-order CTA was nearly lost as collateral, and was rewired instead.**
+Market Pulse carried the homepage's *only* link to `/radiance-preorders` — with
+Radiance shipping 23 Oct and that page's own eBay coverage built days ago, losing
+the homepage's only entry point to it would have been an expensive accident from
+a layout change nobody intended that way. `NextSetCountdownCard` now takes an
+optional `preorders` prop and renders the link; it is already the "next set"
+slot, still names no set in code (`preordersHrefForSet` resolves it), and still
+retires itself when the set ships.
+
+**The domain hubs are not orphaned by dropping their homepage chips.** `/cards`
+renders the same six `/domains/<slug>` links from `DOMAIN_PAGES`, and every card
+page links to its own domain facet. One homepage row went; the hubs' path into
+the index did not.
+
+One property worth knowing: `EbayPicksLive` returns null for ad-free members, so
+Premium visitors now open on the popular-cards carousel rather than an empty
+slot, and a listings outage degrades to the generic eBay CTA rather than a blank
+first section.
