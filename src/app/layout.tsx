@@ -154,8 +154,25 @@ export const metadata: Metadata = {
   // above — nothing renders until BING_SITE_VERIFICATION is set in the deploy
   // env. A fabricated placeholder would just fail Bing's verification check
   // silently; omitting the tag entirely until a real token exists is the
-  // correct failure mode. Bing + DuckDuckGo + Brave (Bing-indexed) are ~45% of
-  // this site's search referrals and were unmonitored before this.
+  // correct failure mode.
+  //
+  // STILL UNSET AS OF 2026-09-17, and the live site therefore serves no
+  // msvalidate.01 tag at all (checked against production HTML).
+  // /BingSiteAuth.xml 404s too, so unless the property was verified by a Search
+  // Console import or by DNS, it is not verified in Bing Webmaster Tools by any
+  // route this repo provides. Setting BING_SITE_VERIFICATION in the Vercel
+  // production env is the whole fix; the code path is already here.
+  //
+  // THIS COMMENT USED TO ASSERT that "Bing + DuckDuckGo + Brave (Bing-indexed)
+  // are ~45% of this site's search referrals". That number is UNSOURCED: it
+  // appears nowhere in DECISIONS.md or docs/, no commit message derives it, and
+  // this repo has never held a single measured Bing figure. It is kept here as a
+  // HYPOTHESIS rather than deleted, because if it is true then Bing matters far
+  // more than its ~3-4% search share suggests and verifying this property is
+  // urgent rather than tidy. Two things can check it: GA4's referral breakdown
+  // (GAPageViewTracker already records the external referrer), and
+  // .github/workflows/bing-coverage.yml once BING_API_KEY exists. Do not cite it
+  // as fact until one of those has run.
   verification: {
     google:
       process.env.GOOGLE_SITE_VERIFICATION ??

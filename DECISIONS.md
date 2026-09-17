@@ -8117,3 +8117,63 @@ Two of our own pages competing for one query is the cannibalisation the keyword
 map exists to prevent, and the newer page is the one with no history to lose, so
 it moved. The page's own body copy already said "complete index"; only the
 title, description and OG blurb needed the word changed.
+
+## Bing was never measured, and two numbers were steering decisions from code comments — 2026-09-17
+
+Asked why "Google SEO is skyrocketing but Bing is staying the same." The honest
+answer turned out to be that **only the first half of that sentence is a
+measurement**, and fixing that is what this entry is about.
+
+**What was already working, recorded because it was misdiagnosed once in this
+same session.** IndexNow is fully wired and has been for 84 days:
+`src/lib/indexnow.ts`, `indexnow-submit.yml` daily at 06:10 UTC, plus targeted
+pings from the price refresh and the card importer. Today's run submitted 1,859
+URLs and got HTTP 200, with the key file verified live at `/indexnow.txt`.
+`bingbot` is not in `BLOCKED_BOTS`. So Bing is told about every page every day —
+**discovery is not the gap**, and an earlier reply in this session that said
+IndexNow was not set up was simply wrong.
+
+**The gap is measurement.** Google has `GSC_SA_KEY` and two workflows pulling
+real figures; every SEO decision in this file rests on one of them. Bing had no
+API key, no workflow, no script, and not one recorded number. "Bing is flat" and
+"Bing is small and growing in proportion" are completely different situations
+with different remedies, and nothing here could tell them apart.
+
+So `scripts/bing-coverage.ts` + `.github/workflows/bing-coverage.yml` now report,
+daily at 07:35 UTC (fifteen minutes after the Google run, so one morning's two
+reports describe the same morning): whether the property is in the account at
+all, the daily impressions/clicks series **with its trend halves printed rather
+than a single total**, a per-template rollup using the *same* path normalisation
+as `gsc-coverage.yml` so the `/card` rows are directly comparable, query
+coverage, the URL-submission allowance, and crawl health against what IndexNow
+submitted. Read-only — it never submits a URL, because Bing's allowance is a real
+lever and spending it is a human decision, not a cron's.
+
+**Verification is probably the actual problem, and it is one env var.** The live
+site serves no `msvalidate.01` tag: `layout.tsx` emits one only when
+`BING_SITE_VERIFICATION` is set, and it is not set in the Vercel production env.
+`/BingSiteAuth.xml` 404s. So unless the property was verified by a Search Console
+import or by DNS, it is not verified by any route this repo provides — which
+would explain a flat, empty Bing picture entirely. The code path already exists;
+it needs the token.
+
+**Two unsourced numbers, retracted rather than deleted.** `layout.tsx` asserted
+that Bing + DuckDuckGo + Brave are "~45% of this site's search referrals", and
+`stores/[slug]/page.tsx` cited "Bing's 397 'Title too long' warnings". Neither
+appears anywhere in this file or in `docs/`, no commit derives either, and the
+repo has never held a measured Bing figure — yet the 45% is exactly the kind of
+claim that reorders a roadmap. Both are now marked as unsourced at their sites,
+the 45% kept explicitly as a *hypothesis* (if true, verifying the property is
+urgent rather than tidy) and the 397 retracted with a note that the 60-char title
+budget stands on the repo's own SEO gate regardless. This is the same failure
+class as the stale `PriceHistory` assertion corrected earlier today: a number
+written into a comment, cited as fact thereafter, sourced nowhere.
+
+**Tested where it can be tested.** There is no Bing key in this sandbox, so the
+network half is unexercised by construction. What *can* be silently wrong is the
+parsing — Bing wraps payloads in a `d` property and returns .NET
+`/Date(1758067200000)/` strings — so all fourteen cases in
+`tests/bing-coverage.test.ts` pin the pure helpers, including that junk dates
+return `null` rather than reaching a report as the literal string "Invalid Date",
+and that `templateOf` agrees with `gsc-coverage.yml`'s `tpl()`, without which the
+comparison the whole script exists for would be wrong rather than absent.
