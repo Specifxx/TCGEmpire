@@ -6302,8 +6302,14 @@ jobs:
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
           # The orphan check needs the LIVE operational database to compare card
           # ids against — this script iterates OPERATIONAL_VARS from
-          # src/lib/db-chains.ts directly, which is now just ["RM9"].
-          RM9: ${{ secrets.RM9 || vars.RM9 }}
+          # src/lib/db-chains.ts directly, which is now just ["RM10"] (the
+          # 2026-09-14 RM9→RM10 cutover — this line still said RM9 until the
+          # 2026-09-17 history rotation caught it, the exact drift class this
+          # file's own header warns about: the script resolved OPERATIONAL_VARS
+          # correctly, but this env block never forwarded the variable it
+          # actually asked for, so RM10 read back as unset here even with the
+          # secret genuinely configured in Actions).
+          RM10: ${{ secrets.RM10 || vars.RM10 }}
         run: npx tsx scripts/probe-history-dbs.ts
 
       # Dry run unless dry_run is explicitly false — the inverse of every other
