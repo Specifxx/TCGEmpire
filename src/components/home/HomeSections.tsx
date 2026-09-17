@@ -11,13 +11,13 @@ import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
-import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { SETS, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
 import type { TopDeals } from "@/lib/top-deals";
-import { toPulseMovers, type PriceMovers } from "@/lib/price-history";
+import type { PriceMovers } from "@/lib/price-history";
 import type { CardTileData } from "@/components/CardTile";
 import type { RecentUpdate } from "@/lib/price-history";
 
@@ -30,7 +30,6 @@ const TodaysTopDeals = dynamic(() => import("@/components/TodaysTopDeals").then(
 const PopularCardsCarousel = dynamic(() =>
   import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
 );
-const MarketPulse = dynamic(() => import("@/components/home/MarketPulse").then((m) => m.MarketPulse));
 const ReturnVisitCards = dynamic(() => import("@/components/home/ReturnVisitCards").then((m) => m.ReturnVisitCards));
 
 export interface HomeSectionsProps {
@@ -87,14 +86,6 @@ export function HomeSections({
   // the `recentlyUpdated` prop) because the JSON-LD ItemList further down
   // still needs the full RecentUpdate list it was passed.
   const recentlyUpdatedCards = recentlyUpdated.map((u) => ({ card: u.card, pct: u.pct }));
-  // MarketPulse renders across all five markets (client-side switching, no
-  // refetch) but only ever reads spiking/plummeting's card/nowCents/pct — see
-  // toPulseMovers' doc comment in lib/price-history.ts for exactly what this
-  // drops (the unused "value" list and every mover's sparkline points) and why
-  // it's safe.
-  const pulseMoversByCountry = Object.fromEntries(
-    COUNTRY_CODES.map((c) => [c, toPulseMovers(moversByCountry[c])])
-  ) as Record<Country, ReturnType<typeof toPulseMovers>>;
   const newestSet = newestReleasedSet();
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
@@ -115,14 +106,24 @@ export function HomeSections({
 
   return (
     <>
-      {/* Market pulse — today's top risers/fallers, reusing the Daily Movers
-          data. Sits right after the hero: the single strongest "come back
-          tomorrow" signal a price site can show, so it earns above-the-fold
-          placement. Hides itself if there's nothing to show today. */}
-      <MarketPulse
-        moversByCountry={pulseMoversByCountry}
-        preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
-      />
+      {/* eBay Picks — the newest set's chase cards with their cheapest live
+          listing, rather than a generic banner.
+          MOVED INTO THE TOP SLOT 2026-09-17, on the owner's explicit
+          instruction, taking the place of Market Pulse (removed in the same
+          pass — see DECISIONS.md).
+
+          THIS IS A DELIBERATE PARTIAL REVERSAL of the 2026-09-16 "game before
+          money" pass, and is flagged rather than buried: that pass moved the
+          playable sections ABOVE the commercial run after repeated feedback
+          that the site read as "too greedy/capitalistic/money focused… for a
+          card GAME", and tests/game-before-money.test.ts pinned eBay Picks
+          below them. An affiliate unit now leads the page instead.
+
+          What that pass won is NOT fully given back, and the test still pins
+          the half that holds: Today's Top Deals — the bigger commercial block —
+          stays BELOW Riftle/the pack simulator. The reversal is one section,
+          not the ordering principle. */}
+      <EbayPicks />
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its
@@ -178,11 +179,6 @@ export function HomeSections({
           <TodaysTopDeals dealsByCountry={topDealsByCountry} />
         </Reveal>
       )}
-
-      {/* Tailored eBay unit — the set's chase cards with their cheapest live
-          listing, rather than a generic banner. Sits after Top Deals so the
-          commercial run reads own-inventory first, affiliate second. */}
-      <EbayPicks />
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. After the commercial sections (deals, popular cards, movers):
@@ -242,23 +238,15 @@ export function HomeSections({
           </p>
         )}
 
-        <div className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">By domain</div>
-        <Reveal stagger className="flex flex-wrap gap-2">
-          {DOMAIN_KEYS.map((k) => {
-            const d = domainInfo(k);
-            return (
-              <Link
-                key={k}
-                href={`/domains/${k.toLowerCase()}`}
-                className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
-                style={{ color: d.color }}
-              >
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                {d.label}
-              </Link>
-            );
-          })}
-        </Reveal>
+        {/* THE "BY DOMAIN" CHIP ROW (Fury/Calm/Mind/Body/Chaos/Order) WAS
+            REMOVED HERE on 2026-09-17, on the owner's instruction.
+
+            The /domains/<slug> pages themselves are untouched and are NOT
+            orphaned by this: /cards renders the same six links from
+            DOMAIN_PAGES (see that route's FacetGrid), and every card page
+            links to its own domain facet. This drops one homepage row, not
+            the domain hubs' path into the index — which is the thing that
+            would actually have cost something. */}
       </section>
 
       {/* Next-set countdown — new-set hype, right after Explore (which already
@@ -269,7 +257,16 @@ export function HomeSections({
           is announced. */}
       {showNextSetCard && (
         <Reveal>
-          <NextSetCountdownCard set={nextSet} />
+          {/* preorders passed down 2026-09-17: Market Pulse used to carry the
+              homepage's ONLY link to /radiance-preorders, and removing it would
+              have silently dropped the pre-order CTA from the homepage six
+              weeks before Radiance ships. This card is already the "next set"
+              slot, so the link belongs here rather than being lost as
+              collateral from a layout change nobody intended that way. */}
+          <NextSetCountdownCard
+            set={nextSet}
+            preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
+          />
         </Reveal>
       )}
 

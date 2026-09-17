@@ -57,14 +57,27 @@ test("the phone Explore overlay has a Games group with something to play", () =>
   assert.ok(games.links.some((l) => l.href === "/riftle"), "the free daily puzzle must be reachable: no account, no purchase");
 });
 
-test("the homepage puts something playable above the commercial run", () => {
+// AMENDED 2026-09-17, by explicit owner instruction, and narrowed rather than
+// deleted. The eBay unit was moved into the homepage's top slot (vacated by
+// Market Pulse, removed in the same pass), which puts one affiliate section
+// above the playable ones and reverses that half of this pass. See DECISIONS.md.
+//
+// The half that still holds is still pinned: Today's Top Deals — the larger
+// commercial block, and the one this file's own header counted among the "FIVE
+// consecutive price sections" — stays BELOW Riftle and the pack simulator. If a
+// later edit pushes the games back under Top Deals too, the original complaint
+// is fully back and this test still fails.
+test("the homepage keeps something playable above Today's Top Deals", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
   const play = code.indexOf("<ReturnVisitCards");
   const deals = code.indexOf("<TodaysTopDeals");
   const ebay = code.indexOf("<EbayPicks");
   assert.ok(play > 0 && deals > 0 && ebay > 0, "expected all three homepage sections to render");
   assert.ok(play < deals, "Riftle/pack-sim must not sit below Today's Top Deals again");
-  assert.ok(play < ebay, "…nor below the eBay unit");
+  // eBay Picks is deliberately ABOVE the games now; asserted explicitly so the
+  // reversal reads as a decision in the test file too, not as a gap where an
+  // assertion used to be.
+  assert.ok(ebay < play, "eBay Picks is the owner-chosen top slot as of 2026-09-17");
 });
 
 test("the site's story about itself no longer ends at the purchase", () => {

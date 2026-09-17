@@ -248,9 +248,11 @@ export const CARD_TILE_SELECT = cardTileSelect("AU");
  * payload, and are never read: genuinely dead weight, not a legitimately-used
  * field like the five per-market price columns (which stay, because instant
  * currency switching on the client needs all of them). Same "strip what this
- * render never reads" pattern as toPulseMovers() in lib/price-history.ts,
- * applied where a page renders enough tiles for the bytes to matter — see its
- * use in /browse and /sets/[set]/gallery, the two heaviest CardTile grids.
+ * render never reads" pattern lib/price-history.ts's toPulseMovers() used for
+ * the homepage's Market Pulse marquee until both were removed on 2026-09-17 —
+ * this is now the only instance of it, applied where a page renders enough
+ * tiles for the bytes to matter: /browse and /sets/[set]/gallery, the two
+ * heaviest CardTile grids.
  */
 export function trimTileArtFallback<T extends Pick<CardTileData, "imageUrl" | "imageThumbUrl" | "energyCost" | "might" | "artSeed">>(
   card: T
