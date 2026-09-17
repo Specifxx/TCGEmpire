@@ -70,6 +70,7 @@ explicit link up/down to the primary).
 | `buy riftbound cards canada` | `/blog/buy-riftbound-cards-canada` | Real: Canada landed as a full sixth market mid-pass (20 CA stores, CAD pricing, end-to-end) — this guide was rewritten to match the AU/NZ/US/UK/SG template with real data, replacing an earlier "honest interim" draft written before CA support existed. |
 | `riftbound singapore/brunei/malaysia` | Existing SG post covers SG. Brunei/Malaysia — **not built**, same zero-infrastructure blocker as Canada (backlog item 6). | |
 | `where to buy riftbound` (no market named) | `/guides/where-to-buy-riftbound-cards` (multi-market umbrella, exists) | Every regional post links back to this |
+| `buy riftbound cards`, `buy riftbound cards online` (no market named) | `/` — the homepage. Its **H1 only**: "Buy Riftbound cards at the best price" as of 2026-09-17. Nothing owned the bare, market-free transactional phrase before; the six rows above all require a market, and the umbrella guide answers the *research* half ("which stores exist"), not "take me to the cheapest one now" | **The homepage `<title>` deliberately does NOT carry this phrase** — it keeps `Riftbound Card Prices` (three audits, see below). That split is what stops root colliding with `/guides/where-to-buy-riftbound-cards`, whose own title leads "Where to Buy Riftbound Cards…", in the field that carries the most weight. Do not "reinforce" the H1 by putting the phrase in the title too. The four region home pages take the same H1 with ` in <place>` appended, which is the geo variant the six regional blog posts already own — so those posts stay primary for `buy riftbound cards <market>` on title strength |
 
 ## Events / competitive intent
 
@@ -138,6 +139,17 @@ words — see `src/app/page.tsx`'s own comment). The near-zero-volume finding
 above still stands for the rest of the list; this row is kept because the
 *policy* (don't spray price modifiers across pages) is still right even where
 one specific head term earned an exception.
+
+**Market marker dropped 2026-09-17**: that title read
+`Riftbound Card Prices (US) — Compare Every Store | RiftCompare` between
+2026-08-30 and 2026-09-17 and now reads `Riftbound Card Prices — Compare Every
+Store | RiftCompare`. Owner call ("it doesn't need to say US on the Chrome tab
+header"). The head term is untouched — only the geo marker went, and the geo
+signal it stood in for now rides hreflang (root is the x-default/en-US member of
+the region-home set) plus the per-page H1s: root's names no market, each region
+home's names its own. The failure `(US)` was added to fix — `/au` outranking
+root for `riftbound card prices US` — is a measurable trigger to put it back if
+Search Console shows it recurring.
 
 ## Vendetta-cluster cannibalization audit (backlog item 25)
 
