@@ -39,7 +39,7 @@ explicit link up/down to the primary).
 |---|---|---|
 | `riftbound <set name>`, `riftbound <set name> prices` | `/sets/<slug>` | — |
 | `riftbound <set> card list` | `/guides/riftbound-<set>-card-list` (exists for Vendetta only today — `riftbound-vendetta-card-list`). For the older sets the owner is the `whats-in-the-riftbound-<set>-set` breakdown guide instead: Origins, Spirit Forged and Unleashed all exist (backlog item 10, closed 2026-09-10); Proving Grounds is covered inside `riftbound-sets-in-order` | `every-riftbound-<set>-card-revealed` blog gallery post (Vendetta only today) — the two are DIFFERENT angles (checklist guide vs. embedded live gallery), keep both when both exist |
-| `riftbound card list` (no set named) | `/guides/riftbound-card-list` (all-sets hub — **not yet built, backlog item 12**) | — |
+| `riftbound card list` (no set named) | `/browse` — the card database IS the card list. Its `<title>` and H1 both read "Riftbound Card List" as of 2026-09-17 | `/cards` (browse by type/rarity/printing) and `/guides/riftbound-sets-in-order` (which SETS exist) are different questions and must not retitle onto this phrase. **This row previously said `/guides/riftbound-card-list`, "not yet built, backlog item 12"** — stale twice over: item 12 was closed 2026-08-13 by shipping `riftbound-sets-in-order`, and that guide answers set-list intent, not card-list intent, so the query was left genuinely unowned in the meantime |
 | `riftbound roadmap` | `/blog/riftbound-2027-set-roadmap` (exists — corrects the slug this file previously guessed at) | — |
 | `riftbound radiance`, `riftbound radiance cards`, `radiance card list` | `/sets/radiance` — the set hub. Generic template, so it fills in with real cards through Preview Season (25 Sep – 9 Oct 2026, opening at RQ Los Angeles) and gets live prices on release day with no new page | `/blog/riftbound-radiance-what-we-know` for the confirmed-facts write-up. Do **not** build `/guides/riftbound-radiance-card-list` until cards actually exist — a checklist guide with nothing to check is the thin page AdSense rejected the Vendetta cluster for |
 | `riftbound radiance release date`, `when does radiance come out`, `radiance countdown` | `/release-dates` — names no set in code, leads with whatever is next, and carries the countdown, the Event JSON-LD and an .ics | **Never rebuild a `/<set>-countdown` page.** It has been built and retired twice (`/vendetta-countdown`, `/radiance-countdown`, both now 301s); `lib/release-calendar.ts`'s header is the post-mortem |
@@ -109,6 +109,19 @@ explicit link up/down to the primary).
 | `how much is my riftbound collection worth`, `riftbound collection value`, `value my riftbound cards`, `riftbound collection appraisal` | `/blog`-adjacent guide `/guides/how-much-is-your-riftbound-collection-worth` (added 2026-09-12). **Nothing owned this intent before** — a repo-wide search for "collection worth" returned zero hits across articles and routes, despite `/portfolio` and `/bulk-pricer` both existing to answer it | `/bulk-pricer` and `/portfolio` are the TOOLS the guide sends you to — tool intent, not question intent, so no cannibalisation. `/guides/most-valuable-riftbound-cards` stays primary for `most valuable riftbound cards` (which cards), a different question from `what is mine worth` (how much) |
 | `how to sell riftbound cards` | unchanged — `/blog/how-to-sell-riftbound-cards` | The valuation guide stops at the number and hands off to the selling post for the channels |
 
+## Price-check intent
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `riftbound price check`, `price check riftbound card`, `check riftbound card price` | `/` — the homepage. Its description, hero subhead and a dedicated FAQ (real `FAQPage` JSON-LD) carry the phrase as of 2026-09-17; the search box IS the price check | `/browse` owns the list/database half of this and must not retitle onto "price check". `/bulk-pricer` ("Bulk Riftbound Card Price Checker") keeps the **many cards at once** query, a genuinely different job, and is Premium-gated where this is not |
+| `riftbound price check` — **what it must NOT resolve to** | — | `/games/price-check` is a guess-the-price MINI-GAME. Until 2026-09-17 it was the only page on the site whose `<title>` contained the phrase, i.e. the site's de facto answer to a query about what a card is worth. Retitled "Price Check Game — …" to break the adjacency. **Do not put the bare phrase back in a game title.** |
+
+Note this is a deliberate, scoped exception to the section immediately below:
+`price check` is a distinct job-to-be-done phrase ("what is this worth right
+now"), not one of the `<product> <price-word>` modifier long-tails that section
+retired. The exception is one page and one phrase — it is not licence to
+re-target `riftbound singles`/`riftbound cardmarket` etc.
+
 ## Price-modifier long-tails — deliberately NOT primary-targeted
 
 Per the trend data's own finding: `riftbound singles`, `riftbound card prices`,
@@ -117,6 +130,14 @@ queries for any page — they're served as secondary/incidental phrasing inside
 card, champion, set and regional pages (which target the real-volume queries:
 card names, champion names, mechanics, set names) via the price-comparison
 modules embedded in those pages, never as a page's primary keyword target.
+
+**Partially superseded for `riftbound card prices` specifically**: the homepage
+`<title>` has targeted that exact phrase since 2026-09-10, on live SERP evidence
+(the page sat at #10 and was the only page-one result whose title lacked the
+words — see `src/app/page.tsx`'s own comment). The near-zero-volume finding
+above still stands for the rest of the list; this row is kept because the
+*policy* (don't spray price modifiers across pages) is still right even where
+one specific head term earned an exception.
 
 ## Vendetta-cluster cannibalization audit (backlog item 25)
 
