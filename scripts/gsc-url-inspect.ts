@@ -299,6 +299,23 @@ async function main() {
     })
   );
 
+  // ROWS THAT ACTUALLY RETURNED DATA. Everything below is a share of THIS, not of
+  // the sitemap, and the first report got that wrong in two places: it counted
+  // "never crawled" and "no referring URLs" across rows that had simply failed,
+  // which inflated both to look like findings. A row that could not be inspected
+  // is missing evidence, not evidence of absence.
+  const SENTINELS = new Set(["(quota exhausted)", "(inspection failed)"]);
+  const ok = rows.filter((r) => !SENTINELS.has(r.verdict));
+  const unusable = rows.length - ok.length;
+  if (unusable > 0) {
+    line("");
+    line(
+      `> **${unusable.toLocaleString()} of ${rows.length.toLocaleString()} inspections returned no data** ` +
+        "(quota or transport). Every figure below is out of the " +
+        `${ok.length.toLocaleString()} that did.`
+    );
+  }
+
   const table = (title: string, pairs: [string, number][]) => {
     line("");
     line(`**${title}**`);
@@ -308,21 +325,26 @@ async function main() {
     for (const [k, n] of pairs) line(`| ${k} | ${n.toLocaleString()} |`);
   };
 
-  table("coverageState — the table that decides what to do next", histogram(rows, "coverageState"));
-  table("verdict", histogram(rows, "verdict"));
+  table("coverageState — the table that decides what to do next", histogram(ok, "coverageState"));
+  table("verdict", histogram(ok, "verdict"));
 
   // EXPECTED ZERO. cards.xml already excludes both noindex populations
   // (getEmptyCardIds + getDuplicateCardIds in lib/sitemap-sections.ts), so a
   // non-zero here is the sitemap contradicting the pages — a bug in this repo,
   // not a finding about Google.
-  const blocked = rows.filter((r) => r.indexingState && r.indexingState !== "INDEXING_ALLOWED");
+  // Only the states that genuinely block indexing. INDEXING_STATE_UNSPECIFIED is
+  // what Google returns for a URL it has never crawled — that is the "Discovered"
+  // story, not a robots directive, and counting it here reported 17 blocked pages
+  // when one was.
+  const BLOCKING = new Set(["BLOCKED_BY_META_TAG", "BLOCKED_BY_HTTP_HEADER", "BLOCKED_BY_ROBOTS_TXT"]);
+  const blocked = ok.filter((r) => BLOCKING.has(r.indexingState));
   line("");
   line(`**Submitted but blocked from indexing: ${blocked.length}** (expected 0 — a non-zero is our bug, not Google's)`);
   for (const r of blocked.slice(0, 10)) line(`- ${r.url} — ${r.indexingState}`);
 
   // Google choosing a different canonical is the near-duplicate failure mode,
   // measured rather than assumed. Four printings of one card share a name.
-  const reCanonical = rows.filter(
+  const reCanonical = ok.filter(
     (r) => r.googleCanonical && r.userCanonical && r.googleCanonical !== r.userCanonical
   );
   line("");
@@ -330,12 +352,12 @@ async function main() {
   for (const r of reCanonical.slice(0, 15)) line(`- ${r.url}\n  → ${r.googleCanonical}`);
 
   // Google's own answer to "does this page have an inbound internal link".
-  const orphans = rows.filter((r) => r.referringUrls === 0);
+  const orphans = ok.filter((r) => r.referringUrls === 0);
   line("");
   line(`**No referring URLs known to Google: ${orphans.length}**`);
   for (const r of orphans.slice(0, 15)) line(`- ${r.url}`);
 
-  const never = rows.filter((r) => !r.lastCrawlTime);
+  const never = ok.filter((r) => !r.lastCrawlTime);
   line("");
   line(`**Never crawled: ${never.length}**`);
   for (const r of never.slice(0, 15)) line(`- ${r.url}`);

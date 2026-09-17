@@ -586,6 +586,27 @@ test("the URL Inspection script stays inside Google's published quota", () => {
   assert.ok(num("CONCURRENCY") >= 10, "too low and the run cannot finish inside its job timeout");
 });
 
+test("coverage figures are a share of what returned DATA, not of the sitemap", () => {
+  const code = codeOnly(read("scripts/gsc-url-inspect.ts"));
+  // The first report counted "never crawled" and "no referring URLs" across rows
+  // that had simply failed, inflating both into findings. A row that could not be
+  // inspected is missing evidence, not evidence of absence.
+  assert.match(code, /const SENTINELS = new Set\(\["\(quota exhausted\)", "\(inspection failed\)"\]\)/);
+  assert.match(code, /const ok = rows\.filter\(\(r\) => !SENTINELS\.has\(r\.verdict\)\)/);
+  for (const derived of ["blocked", "reCanonical", "orphans", "never"]) {
+    assert.match(
+      code,
+      new RegExp(`const ${derived} = ok\\b|const ${derived} = ok\\.filter`),
+      `${derived} must be derived from the rows that returned data`
+    );
+  }
+  // INDEXING_STATE_UNSPECIFIED is what Google returns for a URL it has never
+  // crawled — the "Discovered" story, not a robots directive. Counting it as
+  // blocked reported 17 blocked pages when one was.
+  assert.match(code, /BLOCKED_BY_META_TAG", "BLOCKED_BY_HTTP_HEADER", "BLOCKED_BY_ROBOTS_TXT/);
+  assert.doesNotMatch(code, /r\.indexingState !== "INDEXING_ALLOWED"/);
+});
+
 test("a cancelled coverage run still leaves the rows it collected", () => {
   const code = codeOnly(read("scripts/gsc-url-inspect.ts"));
   // The first run died at a job timeout having written nothing, so the whole

@@ -7600,6 +7600,45 @@ which cannot breach the quota because every worker still draws from the same
 token bucket, and the report flushes every 250 rows so a cancelled run leaves the
 rows it did collect. The job timeout is 60 minutes.
 
+**THE COVERAGE ANSWER, and it settles the question this pass opened with.** Of
+the card URLs that returned data on the first successful run:
+
+| coverageState | pages |
+|---|---:|
+| Submitted and indexed | 575 |
+| Crawled – currently not indexed | 29 |
+| Discovered – currently not indexed | 12 |
+| URL is unknown to Google | 3 |
+| Excluded by "noindex" tag | 2 |
+
+**92.6% are already indexed.** Forty-six pages across all four not-indexed states,
+and Google picked a different canonical for **zero** — so the near-duplicate
+printing worry that shaped two of this pass's decisions does not exist in the
+index either. The ~431 zero-impression URLs are overwhelmingly the fourth state
+from the list at the top of `scripts/gsc-url-inspect.ts`: indexed, and nobody
+searched for them. There is no indexing backlog to fix. **The click-through rate
+on the 994 pages that DO earn impressions is the whole prize**, which is where
+the title and description work went.
+
+Two caveats on those numbers, both recorded so the next reader does not
+over-trust them. Only 621 of 1,400 inspections returned data: the cancelled run
+described above had already spent most of the day's 2,000-query allowance, so the
+rest came back quota-exhausted. And the first version of this report counted
+"never crawled" and "no referring URLs" across those failed rows, which inflated
+them to 794 and 1,237 — findings that were not findings. Every figure is now a
+share of the rows that actually returned data, and the report says how many did
+not. `INDEXING_STATE_UNSPECIFIED` is likewise no longer counted as "blocked": it
+is what Google returns for a URL it has never crawled, which is the Discovered
+story, not a robots directive, and counting it reported 17 blocked pages when one
+was.
+
+That one is real: `/card/mind-rune-ogn-nn1-promo` is in `cards.xml` and serves a
+noindex. It is a benign race rather than a bug — the sitemap has
+`revalidate = 86400`, so a card that loses its last in-stock listing noindexes
+immediately while yesterday's cached sitemap still lists it, and it self-heals
+within a day. Worth knowing before someone treats a single-digit "Submitted URL
+marked noindex" in Search Console as an incident.
+
 **The audit paid for itself three times in half an hour** — disproving the
 near-duplicate worry, catching a duplicate I had reasoned my way into, and then
 showing that the overflow residue was partly self-inflicted. None of the three was
