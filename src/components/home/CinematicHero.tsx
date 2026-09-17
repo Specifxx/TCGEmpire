@@ -177,9 +177,18 @@ export function CinematicHero({
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
           Compare <span className="text-brand-400">Riftbound</span> prices across every {heroAdjective} store
         </h1>
+        {/* "Price check" ADDED 2026-09-17 — the homepage is the declared owner of
+            `riftbound price check` (docs/seo-keyword-map.md; see page.tsx's
+            description comment for why that query had no owner but a mini-game).
+            It is added to the FRONT of this subhead rather than into the H1
+            above, which stays reserved for the "Riftbound prices" adjacency the
+            2026-08-20 audit fixed. Both variants this subhead already carried
+            verbatim — "Riftbound cards" and "Riftbound card prices" — are
+            untouched, so the sentence still lands all of the page's target
+            phrases in the first ~45 words. */}
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound cards — live Riftbound card prices from every {heroAdjective} retailer we track,
-          plus four more markets in their own currency: {otherMarkets}, updated daily.
+          Price check any card and find the cheapest place to buy Riftbound cards — live Riftbound card prices from
+          every {heroAdjective} retailer we track, plus four more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact

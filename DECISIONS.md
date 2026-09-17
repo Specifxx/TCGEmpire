@@ -7890,3 +7890,68 @@ would falsify again.
 through a change that invalidated its premise. Ten cases pin the new one
 (`tests/card-always-indexable.test.ts`), including the last-seen fallback run
 against the real `computeMarket`.
+
+## Two keywords got an owner, and one of them was being answered by a mini-game — 2026-09-17
+
+Asked to make the site rank for `riftbound card list` and `riftbound price
+check`. Neither was a "put the keyword in more places" job; both had a specific,
+findable reason they weren't ranking, and the interesting part of this pass is
+what was *not* changed.
+
+**`riftbound card list` had no owner, while the map said it merely had no page
+yet.** `docs/seo-keyword-map.md`'s row read `/guides/riftbound-card-list`
+(all-sets hub — **not yet built, backlog item 12**). But item 12 was closed on
+2026-08-13, by shipping `/guides/riftbound-sets-in-order` — a narrative guide
+about which SETS exist, in release order. That is a different question from "show
+me the list of cards", so the query sat unowned for a month behind a row that
+made it look merely pending. The owner is now `/browse`, which has literally
+been the card list all along: `<title>` and `<h1>` both read "Riftbound Card
+List", and the map row is corrected rather than a third page being built (the
+map's own rule 5: publish fewer pages than feels natural).
+
+This **replaces** the exact phrase "Riftbound Cards" that the 2026-08-20 audit
+front-loaded into that title, deliberately and on that audit's own logic — one
+page, one exact-match phrase. "Riftbound Card" survives inside "Card List" for
+the singular query, the H1's subhead and the JSON-LD still say "Riftbound cards"
+verbatim, and `/cards` keeps a title-level exact match on the plural.
+
+**`riftbound price check` was being answered by a guessing game.** It had no row
+in the map at all, and the only page on the site whose `<title>` contained the
+phrase was `/games/price-check` — "Price Check — Guess the Riftbound Card
+Price", a five-round mini-game. Someone searching what a card is worth was being
+pointed at a toy. That is precisely the map's rule-4 cannibalization signal
+("whose visible H1/title/meta-description already targets that phrase"), just
+aimed at the wrong page. The game is now "Price Check **Game** — …", which
+breaks the "Riftbound … price check" adjacency while keeping it findable by
+name, and the homepage takes the query in its description, hero subhead and a
+dedicated FAQ (real `FAQPage` JSON-LD, not body copy).
+
+**The homepage title was deliberately left alone, and that is the main
+judgement call here.** The obvious move — put "price check" in the `<title>` —
+was refused. That string is 62 chars inside Bing's 65-char threshold and carries
+"Riftbound Card Prices (US)", which *three* separate documented audits
+(2026-08-20, 08-30, 09-10) converged on, the last of them on live SERP evidence
+that this page sat at #10 and was the only page-one result whose title lacked
+the words "card prices". Trading a proven head-term match for an adjacent
+long-tail is a bad swap, and `tests/keyword-ownership.test.ts` now refuses it on
+a future pass's behalf too.
+
+**A scoped exception to a standing policy, written down as one.** The map's
+"Price-modifier long-tails — deliberately NOT primary-targeted" section retires
+`riftbound singles`/`riftbound card prices`/`riftbound cardmarket` as near-zero
+volume. `price check` is a distinct job-to-be-done phrase ("what is this worth
+right now"), not a `<product> <price-word>` modifier, so it gets an exception —
+one page, one phrase, stated in the map as an exception rather than quietly
+contradicting it. That section is also now annotated as partially superseded for
+`riftbound card prices`, which the homepage has in fact targeted since
+2026-09-10; the policy stayed on the page while the practice had already moved.
+
+Two stale facts were corrected in passing because this pass was rewriting the
+exact lines that carried them: `/browse`'s description and subhead both still
+named "AU, US, UK & SG" as the tracked markets — the set as it stood before
+Canada and the EU launched in August, and a list the homepage had disagreed with
+for weeks.
+
+Not deployed on its own: SEO copy has no urgency that justifies an extra build
+(see this file's 2026-09-14 entry on the deploy-cadence burn), so it rides the
+daily release.

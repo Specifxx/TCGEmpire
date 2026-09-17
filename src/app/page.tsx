@@ -119,8 +119,26 @@ export const metadata: Metadata = {
   // fix in layout.tsx for the same AU-first leftover, same reasoning: COUNTRY_LIST
   // is US-first because DEFAULT_COUNTRY is "US", and this had never been updated
   // to match). EU added — missing entirely since its 2026-08-23 launch.
+  // "price check" ADDED 2026-09-17, in place of "see every card price" — same
+  // length, so the 25–160 char budget above is unchanged, and the front-loaded
+  // "Riftbound prices" the 2026-08-20 audit fixed is untouched.
+  //
+  // This page is now the declared owner of `riftbound price check`
+  // (docs/seo-keyword-map.md), which had NO owner at all: the only page on the
+  // site whose <title> contained that phrase was /games/price-check — a guess-
+  // the-price MINI-GAME. A searcher wanting to check what a card is worth was
+  // being pointed at a game, which is the exact "whose title already targets
+  // that phrase" cannibalization signal the keyword map's rule 4 describes. The
+  // game's title is differentiated in the same commit; the phrase now lives
+  // here, on the page that actually answers it, plus the hero subhead and a
+  // dedicated FAQ (which is real FAQPage JSON-LD — see faqPage(FAQS) below).
+  //
+  // The TITLE is deliberately NOT changed: it is 62 chars inside Bing's 65-char
+  // threshold and carries "Riftbound Card Prices (US)", which three separate
+  // documented audits (2026-08-20, 08-30, 09-10) converged on. Trading a proven
+  // head-term match for an adjacent long-tail would be a bad swap.
   description:
-    "Riftbound prices, compared live: see every card price across US, AU, UK, Singapore, Canada & EU stores and find the cheapest place to buy. Updated daily.",
+    "Riftbound prices, compared live: price check any card across US, AU, UK, Singapore, Canada & EU stores and find the cheapest place to buy. Updated daily.",
   // NO keywords meta — removed 2026-08-20. Google has ignored this tag since 2009
   // (see layout.tsx's own sitewide policy comment, which this page had quietly
   // re-added and contradicted); it carried the exact phrase "Riftbound prices"
@@ -154,6 +172,15 @@ const FAQS: { q: string; a: string }[] = [
   {
     q: "How do I find the cheapest Riftbound prices?",
     a: "Search or browse the card database — every card shows the lowest live price across the stores in your market, ranked by price, with delivered cost shown where a store publishes its shipping. It's the fastest way to find the cheapest Riftbound cards wherever you are.",
+  },
+  // Carries the `riftbound price check` phrase in real FAQPage JSON-LD (see
+  // faqPage(FAQS) below), not just body copy. Every claim here is one this page
+  // and the card template already make elsewhere — store-by-store ranking,
+  // delivered cost, the six markets, and the price-history chart on each card
+  // page — so nothing new is being asserted to fit a keyword.
+  {
+    q: "How do I price check a Riftbound card?",
+    a: "Search the card by name and open it: RiftCompare lists every store that stocks that exact printing with its live price, cheapest first, and shows delivered cost where the store publishes shipping. The same price check runs across US, AU, UK, Singapore, Canada and EU stores plus eBay, and each card page charts its price history so you can see whether today's number is high or low for that card.",
   },
   {
     q: "Does RiftCompare cover Riftbound singles and sealed products?",
