@@ -8471,3 +8471,51 @@ target under 44×44 at 320/360/375/390/414, and none of those at 640/720/790
 either. The one remaining sub-floor control is the country switcher's **height**
 (38px) from `sm` up, which is `sm:min-h-0` by deliberate design so desktop rows
 stay 36px tall — it predates all of this work and is untouched.
+---
+
+## The HEARTSTEEL post is a fact-check, because the card is a reprint — 2026-09-18
+
+HEARTSTEEL released "LIVE MY LIFE" on 18 September 2026 and Riftbound card
+images carrying the band's art started circulating with it. The brief was a
+spoilers post. What the research turned up made it a different post.
+
+**The Kayn card is not a new card.** Its name, 6 cost and rules text are `Kayn,
+Unleashed` — `ogn-189-298` in `prisma/riftbound-cards.json`, a Rare Chaos Unit
+from **Origins**, legal since launch. New art on old rules is a new *printing*,
+and that distinction is the difference between "this changes deckbuilding" (it
+does not) and "this prices separately" (it does). Writing the obvious "new
+Radiance card spoiled" post would have been wrong on the only checkable fact in
+it.
+
+**Two findings came out of the same lookup, and neither appears in any coverage
+this was checked against.** Kayn is the *only* HEARTSTEEL champion with a card
+and no alternate printing of any kind — Ezreal, Sett, Yone and Aphelios all have
+Showcase versions, Sett and Yone have signatures. And K'Sante has **no Riftbound
+card at all**, which is exactly what makes the reports putting him in Radiance
+worth anything: it would be his debut. That is content only this site can write,
+because it needs the card database, and it is why the post embeds the real rows
+(`embeds[]`) instead of describing them.
+
+**Three claims were deliberately NOT made**, all of which the obvious version of
+this post would have made:
+
+1. **That the music video reveals the cards.** No source says so — not Riot, not
+   the trade coverage, not the leak reporting — and the video was hours old.
+   The body says the images surfaced *alongside* the comeback, which is what the
+   evidence supports.
+2. **That the cards are in Radiance.** The leak reporting on music-themed
+   Riftbound cards (True Damage Yasuo, via @LeagueOfLeaks / @RiftboundCN) points
+   at a **Worlds 2026-themed** product. Radiance's roster — Seraphine and
+   Evelynn as legends, a Seraphine vs. Evelynn Showdown Decks — makes it the
+   natural guess, and a natural guess is not a confirmation. The post says so
+   explicitly, because "buy the sealed product this card is in" is the expensive
+   way to be wrong.
+3. **That anything is Riot-confirmed.** Same standing confirmed/not-confirmed
+   split `riftbound-radiance-leaked-mechanics` holds itself to.
+
+**Named for the band, not the set** (`riftbound-heartsteel-cards`), so the URL
+survives whichever product the cards land in. `docs/seo-keyword-map.md` records
+that rule so a True Damage or K/DA post later gets a sibling row rather than
+this one being rewritten into a generic "music cards" page — the
+publish-fewer-pages rule cuts the other way when the pages are genuinely
+different bands.
