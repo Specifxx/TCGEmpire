@@ -8519,3 +8519,70 @@ that rule so a True Damage or K/DA post later gets a sibling row rather than
 this one being rewritten into a generic "music cards" page — the
 publish-fewer-pages rule cuts the other way when the pages are genuinely
 different bands.
+
+## RM10 → RM12: the rotation ran out of rested names, so this one is a new project — 2026-09-18
+
+RM10 reached its 5 GB monthly transfer allowance after four days live. The
+thirteenth operational project to die the same way.
+
+**Two projects have now died on the old schedule SINCE the deploy-cadence gate
+landed** (2026-09-11): RM9 in three days, RM10 in four. That gate was the leading
+explanation for the ~2 GB/day burn and this retires it as the cause. The real
+query is still unidentified — `audit-egress` after cutover, and see the
+RetailerPrice note at the top of `src/lib/db.ts`.
+
+**RM12 IS A GENUINELY NEW PROJECT, breaking a six-cutover habit.** RM6 → RM7 →
+RM8 → RM9 → RM10 each recycled a rested name and inherited whatever was left of
+that project's monthly allowance, which is part of why each term kept getting
+shorter. By today the rotation had run out of rested names: a probe found RM11 —
+the obvious candidate — already at its limit from its 2026-08-29..09-03 term, and
+RM8 outright UNREACHABLE. Only a new project starts with the full 5 GB.
+
+**That inverts one of this repo's own safety rules, and the inverse is what got
+asserted.** `db-chains.ts` says "a recycled target must be re-verified each time
+it comes back around, never trusted from old findings" — a rule about a project
+that might still hold real data. RM12 has never been used, so the migration task
+asserts the opposite: the pre-restore inventory expects RM12 to be **empty**, on
+the stated grounds that a "new" project holding rows is not the project you think
+it is. It came back empty. It also makes the closing `prisma db push`
+load-bearing rather than belt-and-braces, since RM12 has only what the dump
+carried.
+
+**Measured, not assumed, at both ends.** `probe-databases` first confirmed RM10
+still REACHABLE and ahead of every other project on every metric (User=370,
+PriceAlert=213, CollectionCard=1823, RetailerPrice=131,599, Card=1431) — a
+planned rotation with the data fully drainable, not a recovery from a dead
+project. The migration then matched **every table exactly**: User 370,
+RetailerPrice 131,599, PriceAlert 213, SealedListing 2,727, StoreHealthSnapshot
+4,661, PremiumClick 277, PremiumWinbackTrial 127, UserDigestOptOut 367, Order 9,
+OrderMessage 1, SellerProfile 3, TrialRedemption 6 … and `prisma db push`
+reported the schema already in sync.
+
+**The cutover touched more than the chain, and the extras are where a rotation
+usually breaks.** Beyond `OPERATIONAL_VARS`, `build-db-push.sh`'s gate/CURRENT_OP/
+export and `db.ts`'s startup warning, three classes of reference had to move
+together or they would have drifted silently:
+
+- **`DB_SOURCE_NAME` (10 of them).** These name which database a job used. Left
+  behind, every workflow would have *reported* "RM10" while *writing* to RM12 —
+  a diagnostic that lies is worse than none.
+- **`OPERATIONAL_URL` (6).** The "did this history variable accidentally get set
+  to the operational database?" guard. Comparing against a retired project would
+  let a genuine misconfiguration through.
+- **The bare `RM10:` env var (2).** The most dangerous: `resolveVar()` looks it
+  up **by name**, so leaving it would have made `migrate-history` and
+  `probe-history-dbs` report "no database is set" with the secret correctly
+  configured. This exact drift was caught once before, on 2026-09-17.
+
+What deliberately did NOT move: the migration tasks' own `SOURCE_DATABASE_URL`/
+`TARGET_DATABASE_URL` (they name real endpoints, and repointing them would make
+a migration silently no-op while reporting every row count as matching) and
+`probe-databases`' `P_RM10`.
+
+**One test caught a real mistake.** `tests/db-migration-guard.test.ts` derives the
+current step's name from `OPERATIONAL_VARS` and looks for it exactly; the new
+step had been named "…to RM12 (RM10 -> RM12 cutover)", so the guard could not
+find it and three assertions about schema re-push and row verification failed
+against a step it thought was missing. The step was renamed to the convention
+rather than the test loosened — the convention is what makes the guard able to
+find the current step at all.
