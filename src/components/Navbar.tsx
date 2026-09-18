@@ -22,7 +22,10 @@ export function Navbar() {
     <NavbarShell>
       {/* Full-window header (not capped at the content max-width) so the nav fits the
           whole window on wide screens. */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
+      {/* px-3 below sm (was px-4): 8px of the ~40 that putting "Premium" back as
+          TEXT needed, and the cheapest 8px available — it is whitespace, not a
+          control. sm and up are untouched. */}
+      <div className="mx-auto w-full px-3 sm:px-6 lg:px-8">
        <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
         {/* Logo + the phone Premium link. The below-lg Database link used to live
             here too and was removed when HeaderMenuButton joined this row — see
@@ -80,10 +83,10 @@ export function Navbar() {
           <PremiumNavLink
             aria-label="Premium"
             title="Premium"
-            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-2 text-sm font-semibold text-gold hover:bg-ink-800 sm:px-2.5 lg:hidden"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
           >
             <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">
-              ✦<span className="hidden sm:inline"> Premium</span>
+              ✦<span className="hidden min-[360px]:inline"> Premium</span>
             </span>
           </PremiumNavLink>
         </div>

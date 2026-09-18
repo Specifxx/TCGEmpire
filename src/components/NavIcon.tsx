@@ -45,15 +45,6 @@ export type NavIconName =
   // (text-only tiles, same call FooterNav already made for every link it
   // renders). These six cover every REPEATED chrome concept.
   | "bell"
-  // Star — the WATCHLIST specifically, added 2026-09-18 when the watchlist got
-  // its own header control beside the menu. It deliberately does NOT reuse
-  // "bell": NavUser renders a NotificationBell from sm up for signed-in
-  // visitors, so a bell here would have put two near-identical bells side by
-  // side in an icon-only row. The deleted bottom tab bar could use a bell for
-  // its Watch tab because that tab carried the word "Watch" underneath it; a
-  // header icon has no label to disambiguate it. A star is the conventional
-  // "saved/tracked" mark and reads as a different concept at a glance.
-  | "star"
   | "lock"
   | "chart"
   | "trophy"
@@ -148,11 +139,6 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
       <path d="M10 19.5a2 2 0 0 0 4 0" />
     </>
   ),
-  // Star — watchlist. See the union above for why this is not the bell.
-  // Single stroked path so it inherits the same 1.5 stroke as every sibling.
-  star: (
-    <path d="M12 3.6l2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.9l-5.2 2.7 1-5.75-4.2-4.1 5.8-.85L12 3.6Z" />
-  ),
   // Lock — Premium/locked content. Replaces 🔒.
   lock: (
     <>
@@ -222,13 +208,25 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
  * control it sits inside (the rail's button carries aria-label + title), so a
  * <title> here would make a screen reader announce the group name twice.
  */
-export function NavIcon({ name, className = "" }: { name: NavIconName; className?: string }) {
+export function NavIcon({
+  name,
+  className = "",
+  // Almost always "none" — these are stroked glyphs. The exception is a control
+  // whose STATE is legible only as fill: HeaderWatchButton fills the bell when
+  // the watchlist has something in it, which is the same convention
+  // PriceWatchButton uses on every card tile.
+  fill = "none",
+}: {
+  name: NavIconName;
+  className?: string;
+  fill?: string;
+}) {
   return (
     <svg
       aria-hidden="true"
       focusable="false"
       viewBox="0 0 24 24"
-      fill="none"
+      fill={fill}
       stroke="currentColor"
       strokeWidth="1.75"
       strokeLinecap="round"

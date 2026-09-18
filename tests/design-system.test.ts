@@ -401,11 +401,20 @@ test("the watchlist is its own header control, linking to /watching and carrying
   assert.match(src, /useWatchlist\(\)/);
   assert.match(src, /9\+/, "same 9+ cap the deleted bar's badge used");
   assert.match(src, /aria-current=\{active \? "page" : undefined\}/);
-  // A STAR, NOT A BELL: NavUser renders a NotificationBell from sm up, and two
-  // adjacent bells in an icon-only row are indistinguishable.
-  assert.match(src, /name="star"/);
-  assert.doesNotMatch(src, /name="bell"/);
-  assert.match(readCode("src/components/NavUser.tsx"), /<NotificationBell \/>/, "the other bell still exists — hence the star");
+  // THE BELL, because that is what the watchlist is everywhere else: the watch
+  // toggle on every card tile (PriceWatchButton) draws one, and /watching's own
+  // heading is <NavIcon name="bell">. This shipped as a star for one release and
+  // was reverted — "it should be the same icon as the watch has". An icon that
+  // disagrees with the control it represents is worse than two bells that differ
+  // in state.
+  assert.match(src, /name="bell"/);
+  assert.doesNotMatch(src, /name="star"/, "the star must be gone, not just unused");
+  assert.match(readCode("src/components/PriceWatchButton.tsx"), /const bell = \(/, "the card-tile watch control this matches");
+  assert.match(readCode("src/app/watching/page.tsx"), /<NavIcon name="bell"/, "and the watchlist page's own heading");
+  // Filled when there is something in it — PriceWatchButton's own convention,
+  // and what separates this from the outline NotificationBell in the sm-to-lg
+  // band where a signed-in visitor sees both.
+  assert.match(src, /fill=\{count > 0 \? "currentColor" : "none"\}/);
   assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="lg:hidden" \/>/);
 });
 

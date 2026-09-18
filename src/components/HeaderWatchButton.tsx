@@ -25,12 +25,20 @@ import { useWatchlist } from "@/lib/use-watchlist";
  * 9+ cap the bar's badge used, so nothing about the number changed — only which
  * control carries it.
  *
- * A STAR, NOT A BELL, and that is not cosmetic. NavUser renders a
- * NotificationBell from `sm` up for signed-in visitors, so a bell here would
- * have put two near-identical bells side by side in a row where every control
- * is icon-only. The deleted bottom bar could use a bell for its Watch tab
- * because that tab carried the word "Watch" underneath it; this has no label to
- * disambiguate it. See NavIcon's "star" entry.
+ * THE BELL, BECAUSE THAT IS WHAT THE WATCHLIST IS EVERYWHERE ELSE.
+ * `PriceWatchButton` (the watch toggle on every card tile and card page) draws a
+ * bell, and `/watching`'s own heading is `<NavIcon name="bell">`. This shipped
+ * as a star for one release on the reasoning that NavUser's NotificationBell
+ * also uses a bell and two of them would be confusable — which was solving the
+ * wrong problem: "it should be the same icon as the watch has", and an icon that
+ * disagrees with the control it represents is worse than two bells that differ
+ * in state. The star is gone.
+ *
+ * FILLED WHEN THERE IS SOMETHING IN IT, which is `PriceWatchButton`'s own
+ * convention ("filled when watching — the state has to be legible at tile size")
+ * and is also what separates this from NotificationBell in the one band where
+ * both appear (sm to lg, signed in): this one is filled and carries a count, that
+ * one is outline and carries an unread dot.
  *
  * `aria-current` lights it on /watching itself, matching how the deleted bar
  * marked its active tab.
@@ -50,7 +58,9 @@ export function HeaderWatchButton({ className = "" }: { className?: string }) {
         active ? "text-brand-400" : "text-slate-200"
       } ${className}`}
     >
-      <NavIcon name="star" className="h-5 w-5" />
+      {/* Same two paths PriceWatchButton draws, via the shared icon. `fill`
+          carries the "you have some" state exactly as it does there. */}
+      <NavIcon name="bell" className="h-5 w-5" fill={count > 0 ? "currentColor" : "none"} />
       {count > 0 && (
         <span
           aria-hidden="true"

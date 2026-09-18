@@ -73,10 +73,23 @@ test("Premium keeps its phone slot — it was an explicit brief, not incidental"
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
   assert.match(row, /<PremiumNavLink/);
   assert.match(row, /lg:hidden/);
-  // shrink-0 + nowrap, and BOTH are load-bearing — see the next test.
-  assert.match(row, /shrink-0 items-center whitespace-nowrap/);
-  // Icon-only below sm: the gold star alone, the word from sm up.
-  assert.match(row, /✦<span className="hidden sm:inline"> Premium<\/span>/);
+  // shrink-0 + nowrap, and BOTH are load-bearing — see the next test. Checked as
+  // independent tokens, not as one contiguous string: the class list has been
+  // reordered twice by unrelated edits and a positional match just breaks.
+  const premClass = /<PremiumNavLink[\s\S]*?className="([^"]*)"/.exec(row)?.[1] ?? "";
+  for (const t of ["shrink-0", "whitespace-nowrap", "min-h-11", "min-w-11", "lg:hidden"]) {
+    assert.ok(premClass.split(/\s+/).includes(t), `Premium must keep "${t}" (has: ${premClass})`);
+  }
+  // THE WORD IS BACK. It shipped icon-only below sm for one release and was
+  // rejected: "for the premium rides, it's gone now… it's just a diamond. I need
+  // the actual premium letters to show up." The text now renders from 360px up —
+  // every phone in real use — and the ~40px it needed was paid for by tightening
+  // three things rather than dropping a control: px-4 -> px-3 below sm, text-sm
+  // -> text-xs below sm, and the country switcher's chevron (see below).
+  assert.match(row, /✦<span className="hidden min-\[360px\]:inline"> Premium<\/span>/);
+  // Under 360px the glyph alone is all that fits beside five 44px targets; it
+  // must still BE a 44px target.
+  assert.match(row, /min-w-11/);
   // A bare glyph needs a name of its own.
   assert.match(row, /aria-label="Premium"/);
 });
@@ -94,6 +107,16 @@ test("Premium cannot wrap AND cannot shrink — two screenshots' worth of bugs",
   const row = readCode(NAVBAR).slice(readCode(NAVBAR).indexOf("h-16 w-full items-center"), readCode(NAVBAR).indexOf("<HeaderSearchSlot>"));
   assert.match(row, /whitespace-nowrap/);
   assert.match(row, /shrink-0/);
+});
+
+test("the country switcher keeps a 44px target after losing its chevron below sm", () => {
+  // The chevron was ~14px of what the Premium text needed. Removing it took the
+  // control to 38px WIDE — the tap floor is a width rule as well as a height
+  // one, and `min-h-11` only covered half of it. Caught by the harness, not by
+  // reading the diff.
+  const code = readCode("src/components/CountrySwitcher.tsx");
+  assert.match(code, /min-h-11 min-w-11/);
+  assert.match(code, /hidden h-3\.5 w-3\.5 transition-transform sm:block/, "chevron returns from sm up");
 });
 
 test("the launcher and the theme toggle wait for lg, because the overlay owns both below it", () => {

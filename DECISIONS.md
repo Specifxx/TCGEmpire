@@ -8413,3 +8413,61 @@ it will not know what it is from the glyph alone. The alternative was dropping
 Premium from the phone header entirely — it is in the overlay and the user menu
 — and that is a product call, not a layout one, so it was left as it is and
 flagged rather than decided here.
+
+## The watchlist is the bell everywhere, and Premium gets its letters back — 2026-09-18
+
+Two corrections to the header shipped hours earlier, both reported directly.
+
+**THE STAR WAS THE WRONG CALL, and the reasoning behind it was solving the wrong
+problem.** The watchlist is a BELL everywhere else on the site: `PriceWatchButton`
+draws one on every card tile and card page, and `/watching`'s own heading is
+`<NavIcon name="bell">`. The header control shipped as a star purely because
+`NavUser` renders a `NotificationBell` from `sm` up and two bells seemed
+confusable. "It should be the same icon as the watch has" — and that is right: an
+icon that disagrees with the control it represents is a worse failure than two
+bells that differ in state. The `star` glyph is deleted, not merely unused.
+
+The two-bells case is handled the way `PriceWatchButton` already handles it:
+**filled when there is something in it**, plus a count badge, against
+NotificationBell's outline and unread dot. `NavIcon` gained an optional `fill`
+prop for exactly this. Note the overlap is narrow — the watchlist control is
+`lg:hidden` and NotificationBell is `hidden sm:inline-flex`, so both appear only
+between `sm` and `lg`, and only for a signed-in visitor.
+
+Hiding NotificationBell below `lg` would have removed the overlap outright and
+freed 44px, and it was rejected: there is **no `/notifications` page**, the
+dropdown is the only surface, so that would delete notification access for
+tablet users who never asked for it.
+
+**PREMIUM WAS UNREADABLE AS A BARE GLYPH, which was the flagged residue of the
+previous pass and is now fixed rather than flagged.** "It's just a diamond,
+right? I need the actual premium letters to show up as well. If it means
+adjusting the size of things so it fits in the header, let's do that." The text
+renders from **360px** up — every phone in real use, including the Z Fold 7 cover
+screen this whole thread has been about.
+
+The ~40px came from tightening three things rather than dropping a control:
+
+| change | saved | scope |
+|---|---|---|
+| header side padding `px-4` → `px-3` | 8px | below sm |
+| Premium `text-sm` → `text-xs` | ~16px | below sm |
+| country switcher's chevron hidden | ~14px | below sm |
+
+Below 360px the glyph alone is genuinely all that fits beside five 44px targets,
+and it keeps a 44px target of its own.
+
+**Two defects the harness caught that reading the diff would not have.** Removing
+the chevron took the country switcher to **38px wide** — the tap floor is a width
+rule as well as a height one, and `min-h-11` only covered half of it, which had
+never mattered while the chevron padded it out. And Premium's icon-only form was a
+22px target. Both now carry `min-w-11` below sm. This is the third distinct
+failure mode in this header that a plain overflow check could not see (after
+wrapping and overlap), which is why the Chromium harness now checks scroll,
+pairwise overlap, text spill AND per-control tap size together.
+
+Measured after: no horizontal scroll, no overlap, no spilled text and no tap
+target under 44×44 at 320/360/375/390/414, and none of those at 640/720/790
+either. The one remaining sub-floor control is the country switcher's **height**
+(38px) from `sm` up, which is `sm:min-h-0` by deliberate design so desktop rows
+stay 36px tall — it predates all of this work and is untouched.
