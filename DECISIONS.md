@@ -8059,6 +8059,418 @@ Fixed in passing, in the sentence already being edited: the hero subhead said
 "plus four more markets" while listing five. It has listed five since the EU
 launched on 2026-08-23.
 
+## /cards/all: an HTML index of every card page, 2026-09-17
+
+Asked for as "maybe make a page or sitemap contain every single card page so I
+can index them on google search."
+
+**The sitemap half already existed and was already complete.** `cards.xml`
+carries all 1,431 card URLs — verified live immediately before this, right after
+the change that stopped withholding priceless cards from it. There was nothing to
+add there, and saying so mattered more than building something.
+
+**The HTML half did not exist.** A crawler reaches an XML sitemap by being told
+where it is; it reaches an HTML index by following a link, and Google uses both
+paths. Every existing browse surface caps what it renders — facet pages at 60
+tiles, set galleries at 500, set pages at 100 per page — so seeing the whole
+catalogue meant following a paginated chain, and "follow fourteen pages" has a
+real crawl drop-off. `/cards/all` is the flat, complete, one-hop version.
+
+**Grouped by set, with the printing in the anchor text.** Not alphabetical: 31
+cards in the catalogue are called "Fury Rune", so an A-Z list would be hundreds
+of identical anchors pointing at different URLs — and identical anchor text is
+how you tell a crawler that two pages are the same page. Each label runs through
+`cardDisplayName` (so a Signature reads as one) and carries its collector number,
+which makes all 1,431 anchors distinct.
+
+**Cost.** One query, seven short columns, no image or price fields, wrapped in
+`unstable_cache` at the route's own `revalidate` — the same binding is passed to
+both so they cannot diverge, per the egress rule that cost five database projects
+(CLAUDE.md). Comparable to what the sitemap already reads once a day. It fails
+open to an empty list and says so on the page, rather than 500-ing an indexable
+URL.
+
+**It carries 150+ words of real editorial copy, deliberately.** A page of 1,431
+links and nothing else is the textbook case the still-zero-tolerance "indexable
+pages under 150 unique editorial words" budget exists to catch, and this page is
+indexable. A test counts the words rather than trusting that someone will notice.
+
+**Linked from the facet index, site navigation and the sitemap.** An HTML index
+that nothing links to helps nothing — `crawl-check` counts exactly that as a
+sitemap orphan.
+
+**What this does NOT do, recorded because the request implies otherwise.** It does
+not index anything. There is no public Google API to bulk-index ordinary pages
+(the Indexing API covers job postings and livestreams only), and Search Console's
+"Request indexing" is capped at roughly ten URLs a day. The measured position is
+already 92.6% of inspected card URLs indexed, so discovery was not the binding
+constraint; this improves the internal link graph, which is a real but modest
+gain, and the honest lever on the rest is the click-through work in the entries
+above.
+
+**It is titled "Complete A-Z Index", not "card list", and that is a deliberate
+climbdown.** The first draft titled on `Full A-Z Card List`. A parallel session
+landed the entry above this one hours earlier, which gave `riftbound card list`
+a real owner — `/browse`, in both its `<title>` and its H1 — and wrote into
+`docs/seo-keyword-map.md` that other pages "must not retitle onto this phrase".
+Two of our own pages competing for one query is the cannibalisation the keyword
+map exists to prevent, and the newer page is the one with no history to lose, so
+it moved. The page's own body copy already said "complete index"; only the
+title, description and OG blurb needed the word changed.
+
+## Bing was never measured, and two numbers were steering decisions from code comments — 2026-09-17
+
+Asked why "Google SEO is skyrocketing but Bing is staying the same." The honest
+answer turned out to be that **only the first half of that sentence is a
+measurement**, and fixing that is what this entry is about.
+
+**What was already working, recorded because it was misdiagnosed once in this
+same session.** IndexNow is fully wired and has been for 84 days:
+`src/lib/indexnow.ts`, `indexnow-submit.yml` daily at 06:10 UTC, plus targeted
+pings from the price refresh and the card importer. Today's run submitted 1,859
+URLs and got HTTP 200, with the key file verified live at `/indexnow.txt`.
+`bingbot` is not in `BLOCKED_BOTS`. So Bing is told about every page every day —
+**discovery is not the gap**, and an earlier reply in this session that said
+IndexNow was not set up was simply wrong.
+
+**The gap is measurement.** Google has `GSC_SA_KEY` and two workflows pulling
+real figures; every SEO decision in this file rests on one of them. Bing had no
+API key, no workflow, no script, and not one recorded number. "Bing is flat" and
+"Bing is small and growing in proportion" are completely different situations
+with different remedies, and nothing here could tell them apart.
+
+So `scripts/bing-coverage.ts` + `.github/workflows/bing-coverage.yml` now report,
+daily at 07:35 UTC (fifteen minutes after the Google run, so one morning's two
+reports describe the same morning): whether the property is in the account at
+all, the daily impressions/clicks series **with its trend halves printed rather
+than a single total**, a per-template rollup using the *same* path normalisation
+as `gsc-coverage.yml` so the `/card` rows are directly comparable, query
+coverage, the URL-submission allowance, and crawl health against what IndexNow
+submitted. Read-only — it never submits a URL, because Bing's allowance is a real
+lever and spending it is a human decision, not a cron's.
+
+**Verification is probably the actual problem, and it is one env var.** The live
+site serves no `msvalidate.01` tag: `layout.tsx` emits one only when
+`BING_SITE_VERIFICATION` is set, and it is not set in the Vercel production env.
+`/BingSiteAuth.xml` 404s. So unless the property was verified by a Search Console
+import or by DNS, it is not verified by any route this repo provides — which
+would explain a flat, empty Bing picture entirely. The code path already exists;
+it needs the token.
+
+**Two unsourced numbers, retracted rather than deleted.** `layout.tsx` asserted
+that Bing + DuckDuckGo + Brave are "~45% of this site's search referrals", and
+`stores/[slug]/page.tsx` cited "Bing's 397 'Title too long' warnings". Neither
+appears anywhere in this file or in `docs/`, no commit derives either, and the
+repo has never held a measured Bing figure — yet the 45% is exactly the kind of
+claim that reorders a roadmap. Both are now marked as unsourced at their sites,
+the 45% kept explicitly as a *hypothesis* (if true, verifying the property is
+urgent rather than tidy) and the 397 retracted with a note that the 60-char title
+budget stands on the repo's own SEO gate regardless. This is the same failure
+class as the stale `PriceHistory` assertion corrected earlier today: a number
+written into a comment, cited as fact thereafter, sourced nowhere.
+
+**Tested where it can be tested.** There is no Bing key in this sandbox, so the
+network half is unexercised by construction. What *can* be silently wrong is the
+parsing — Bing wraps payloads in a `d` property and returns .NET
+`/Date(1758067200000)/` strings — so all fourteen cases in
+`tests/bing-coverage.test.ts` pin the pure helpers, including that junk dates
+return `null` rather than reaching a report as the literal string "Invalid Date",
+and that `templateOf` agrees with `gsc-coverage.yml`'s `tpl()`, without which the
+comparison the whole script exists for would be wrong rather than absent.
+
+## The TCGplayer reference price reaches the card popup — 2026-09-18
+
+Asked for directly: "add TCGplayer reference price to the actual cards pop ups".
+The full card page has carried this block for months. The QuickView modal — which
+opens from every card tile on the site and is where most visitors actually
+compare prices, without ever loading a card page — showed no TCGplayer figure at
+all.
+
+**It is a reference block below the comparison, NOT a row inside it, and that is
+a standing product rule rather than a layout preference.** `constants.ts`'s "THE
+RULE" section is explicit: TCGplayer's AU/UK/SG/CA prices are its single USD
+market price run through an FX rate. Nobody can buy from "TCGplayer Australia",
+the figure excludes international postage and duty, and admitting it to the
+comparison would let it undercut the real local stores this site exists to
+compare. The popup's `!isFallbackRetailer` filter is untouched; the new block
+sits after the list, carries the "reference" chip and the "may not ship to your
+country" caveat, and renders its own affiliate disclosure rather than leaning on
+the comparison list's — that one is conditional on the list being non-empty, and
+the case where the reference matters most is precisely a card with no local
+listings.
+
+**The selection rule is now shared, and that is the substance of the change
+rather than the forty lines of wiring.** `lib/tcg-reference.ts` holds one
+`tcgReferenceRows(rows, country)`, called by both `CardMarketSection` and
+`QuickView`. A second copy is how this broke the first time: the card page's
+predicate was a hand-listed `tcgplayer | tcgplayer_uk | tcgplayer_sg`, which
+suppressed the block for UK and SG visitors even though their converted row is
+never rendered, so those two markets saw no TCGplayer price anywhere.
+`lib/tcgplayer.ts` carries a scar from the same class of bug
+(`tests/tcgplayer.test.ts`: "The cause was DRIFT between two copies of one
+rule"). The shared predicate asks **"is TCGplayer already a buyable row in this
+market?"** — not any list of retailer keys — so it stays correct for every
+market that exists and any market added later.
+
+**Verified against the live row set, not only against fixtures.** Running the
+selector over the real `/api/card` response for `Vi, Piltover Enforcer` (15 rows,
+production): US suppresses, and AU/UK/SG/CA/EU each quote `retailer="tcgplayer"`
+at US$4,000.00 — the USD row, never a pre-converted `tcgplayer_<market>` row,
+which would double-convert since `TcgMarketPrice` converts what it is handed
+from USD. The EU case is worth recording: the importer writes no `tcgplayer_eu`
+at all (the EU's reference source is Cardmarket), so nothing is suppressed and
+the USD row carries it — which is exactly why the predicate asks about the table
+rather than about the existence of a fallback.
+
+**Costs no request.** The USD row is already in the `/api/card` response the
+modal fetches for its comparison list, so this is a pure render of data that was
+being discarded.
+
+**Not visually verified in a browser, and the reason is worth writing down.**
+There is no database in this sandbox, so the popup cannot be rendered locally —
+it fetches `/api/card`. Driving the live site with Chromium to check the
+equivalent card-page block failed too: `ERR_CERT_AUTHORITY_INVALID`, because the
+sandbox's Chromium does not read the agent proxy's CA, and disabling TLS
+verification to get a screenshot is not a trade worth making. So the evidence
+here is thirteen unit cases plus the live-row probe above, and the visual side
+rests on reusing a component that has been live on the card page for months.
+`TcgMarketPrice` gained one `compact` prop (tighter spacing, smaller headline)
+because the page block's `mt-6 p-4 text-2xl` reads as a different component
+inside a modal whose own rhythm is `mt-3`/`p-3`; the figures, the caveat and the
+disclosure are identical, since a reference price that says less in the popup
+than on the page is how two surfaces start disagreeing.
+
+**Cardmarket's equivalent block is still page-only.** `CardmarketPrice` serves
+UK and EU visitors on the card page and was deliberately left out of this pass —
+the request named TCGplayer, and the same shared-selector treatment should be
+applied to it rather than a second hand-rolled predicate.
+
+**One defect found and fixed in the same pass, caused by this change's own test.**
+`tests/bing-coverage.test.ts` imports `scripts/bing-coverage.ts` to unit-test its
+parsing, and that script called `main()` at the top level — so importing it ran
+the whole report. `npm test` silently wrote a `docs/bing-coverage.json`, which
+got as far as being staged into a commit, and in any environment holding
+`BING_API_KEY` the test run would have fired six live Bing API calls. `main()` is
+now guarded on `import.meta.url === pathToFileURL(process.argv[1]).href` and both
+halves are verified (direct run still writes the report; import writes nothing).
+No other script in `scripts/` needs this guard because no other test imports one
+— this was the first, and since the parsing is precisely what must be tested
+without a key, the import is not going away.
+
+## The mobile bottom tab bar is deleted; navigation is back in the header — 2026-09-18
+
+"The bottom part keeps rising up on the phone I've given up fixing it. Let's get
+rid of it and add the menu bar back to the top and make sure it all fits on a
+mobile phone."
+
+**Three attempts, each a real fix for the previous one's bug, none of them
+enough.** Recorded because the pattern matters more than the code:
+
+1. `calc(100lvh - 100dvh)` in the bar's `bottom:` — a permanent gap on a Z Fold 7
+   and a stutter across the whole page during scroll, because dvh/lvh are
+   recomputed continuously while the browser's own chrome animates and every
+   recomputation invalidated a `:root` custom property, forcing a global style
+   recalculation on exactly those frames.
+2. The same value moved to a compositor-only `translateY` — killed the jank,
+   kept the wrong number.
+3. `lib/chrome-lift.ts`: a measured `visualViewport` value, self-consistent
+   (largest height seen minus current, both from one API), with a pinch-zoom gate
+   on `scale`, a geometry-change reset keyed on `documentElement.clientWidth`,
+   and a 25% clamp. Unit-tested. The most correct of the three. The bar still
+   rode up the screen.
+
+**The diagnosis that ends it is structural, not another patch.** A
+`position: fixed` bottom element is placed against the LAYOUT viewport, whose
+bottom edge sits behind the browser's chrome whenever that chrome is out, and the
+offset between the two is not reliably knowable from inside the page on every
+device. The top edge has no such problem: it does not move when chrome collapses.
+So a header button is not a better fix for this bug — it is a position where the
+bug cannot occur. `position: sticky; top: 0` on NavbarShell needs no
+compensation at all.
+
+**Deleted, not disabled:** `components/BottomTabBar.tsx`, `lib/chrome-lift.ts`,
+`tests/mobile-bottom-bar.test.ts` (24 cases pinning arithmetic that no longer
+exists), the `--bottombar-h` and `--chrome-lift` custom properties, and the
+`body { padding-bottom }` that reserved 3.5rem under every page on every phone.
+`.above-bottombar` keeps its name — five components anchor off it and the native
+AdMob banner still needs exactly that reservation — but now carries only the
+banner and the safe-area inset.
+
+**What the five tabs became.** Home is the logo beside the new button; Search is
+the full-width box on the header's second row; Watch and Binder are in the
+overlay the button opens, one tap further than before. The WATCH COUNT BADGE
+moved onto the button rather than being dropped: it is the only thing in that
+list that was not navigation, being the one ambient signal that a price alert
+has fired.
+
+**"Make sure it all fits" needed measuring, and the first attempt did not fit.**
+Moving the Menu tab into the header cost 46px in a row that had ONE pixel of
+slack at 375px. Measured in Chromium against a real dev server:
+
+| width | header row needed / had | page scrollWidth / viewport |
+|---|---|---|
+| 320px | 390 / 288 | 406 / 320 |
+| 360px | 390 / 328 | 406 / 360 |
+| 375px | 390 / 343 | 406 / 375 |
+| 390px | 390 / 358 | 406 / 390 |
+| 640px | 700 / 592 | 724 / 640 |
+
+Every phone width scrolled sideways. **320px and 640px were already broken before
+this change** — the baseline measured 360/320 and 684/640 with the new button
+hidden — so the header row had been over budget for a while and nothing was
+watching; `scripts/mobile-check.ts` audits 375px, where it fitted by one pixel.
+
+Two changes fixed all of it. The left cluster lost `shrink-0` for `min-w-0`: a
+non-shrinkable group cannot absorb anything, so the overflow had nowhere to go
+but the document, and the worst case is now a truncated label rather than a
+horizontally scrolling site. And the below-lg **"Database" text link was removed**
+(~76px) — the most redundant thing in the header, since the full-width search box
+on the very next row submits to `/browse` and the overlay lists it too. The
+desktop `lg:block` copy is untouched. **Premium stayed**: it is there by an
+explicit 2026-09-10 brief and is the reason the cluster must be able to shrink.
+
+After: 288/288, 328/328, 343/343, 358/358, 592/592, 672/672 — no page-level
+horizontal scroll at any of 320/360/375/390/414/640/720/790/1024/1280, no tap
+target under 44x44 at any phone width, no clipped text, and the overlay opens
+full-width with 59 links. Two sub-44px targets remain at 640px and up (the
+command-launcher button and the country switcher, both `sm:`-gated); both predate
+this change and are untouched by it.
+
+**One entry point, still.** `tests/single-menu-entry.test.ts` has always pinned
+"exactly one control opens CinematicNavMenu below lg", and it still does — it now
+checks the whole component set for a second `setOpen(true)` rather than naming
+the winner, so the invariant survives the next time this moves.
+
+**Verified in a browser this time, which earlier passes could not be.** The
+sandbox has no database, but a dev server with a dummy `DATABASE_URL` serves
+`/privacy` (no data loaders), and that is enough to measure the header — it is
+site chrome, identical on every route.
+
+## The watchlist is its own header control, not a badge on the menu — 2026-09-18
+
+Immediately after the bottom bar was deleted: "the watchlist and the menu should
+be separate."
+
+**The mistake being corrected was mine, made in the same pass.** Folding the
+deleted Watch tab's count badge onto HeaderMenuButton kept the signal alive but
+put two unrelated jobs on one target: "open the navigation" and "N cards are
+tracked, one of which may have moved". A badge belongs to the thing it counts —
+tapping it has to reach `/watching`, not a menu you then navigate — and a menu
+button that sometimes wears a number reads as unread navigation.
+`HeaderWatchButton` is a plain link to `/watching` with the count and the same
+9+ cap; HeaderMenuButton is a menu button and nothing else.
+
+**A STAR, NOT A BELL, and this is not cosmetic.** `NavUser` already renders a
+`NotificationBell` from `sm` up for signed-in visitors. A bell here would have
+put two near-identical bells side by side in a row where every control is
+icon-only. The deleted bottom bar could use a bell for its Watch tab because that
+tab carried the word "Watch" underneath it; a header icon has no label to
+disambiguate it. `NavIcon` gained a `star`.
+
+**Then the row ran out of space, and two of the three failures were invisible to
+measurement.** A fifth below-lg control pushed the intrinsic width past the
+container, and because the left cluster is `min-w-0` (the fix from the previous
+entry) the overflow could no longer escape to the document — so instead of a
+scrolling page it came out as:
+
+1. **`✦ Premium` wrapping onto two lines.** `scrollWidth === clientWidth` when
+   text WRAPS rather than clips, so the overflow audit passed clean. Only a
+   screenshot showed it.
+2. **After adding `whitespace-nowrap`: the label spilling its box, with the
+   theme toggle drawn straight through it** — "P☀mium" at 640px. Also invisible
+   to a scroll check, because nothing overflowed the page. A nowrap label in a
+   shrinkable box does not wrap; it overlaps its neighbour.
+
+The lesson worth keeping: **an overflow audit cannot see a layout that fits by
+wrapping or by overlapping.** Both of these passed `scrollWidth > clientWidth`
+and both were obvious in a 200px-tall screenshot of the header. The audit script
+now has a pairwise bounding-box intersection check in this repo's Chromium
+harness for exactly that reason.
+
+**What actually paid for the space**, rather than squashing something:
+
+- Premium is `shrink-0 whitespace-nowrap` so it can neither wrap nor spill, and
+  **icon-only below `sm`** (the bare gold `✦`, full "✦ Premium" from `sm`). It
+  keeps the gold, the shimmer, an `aria-label` and a `title`, so the 2026-09-10
+  brief holds as prominence-by-colour rather than by width. On a phone every
+  other control in that row is already an icon, so the lone label was the odd
+  one out.
+- **The ⌘K launcher and the theme toggle moved `sm` → `lg`.** Both were
+  duplicating something CinematicNavMenu already carries below lg — its own
+  search box over the same NAV_GROUPS, and a "Theme — Dark · tap to switch" row
+  that states its state in words rather than as an ambiguous glyph. ⌘K is a
+  keyboard affordance and the menu button now does that job for a touch device.
+  That is ~78px at 640-1023px, where the row needed ~641 inside 592.
+
+**Measured after, with overlap and spill checks, not just scroll:** no
+horizontal scroll, no overlapping controls, no spilled text at any of
+320/360/375/390/414/640/720/790/1024/1280, and the watchlist and menu both
+present below lg and both absent from lg. 1,613 tests green.
+
+**The honest residue**: below `sm`, Premium is a bare gold star. It is
+prominent and it is named for assistive tech, but a visitor who has never seen
+it will not know what it is from the glyph alone. The alternative was dropping
+Premium from the phone header entirely — it is in the overlay and the user menu
+— and that is a product call, not a layout one, so it was left as it is and
+flagged rather than decided here.
+
+## The watchlist is the bell everywhere, and Premium gets its letters back — 2026-09-18
+
+Two corrections to the header shipped hours earlier, both reported directly.
+
+**THE STAR WAS THE WRONG CALL, and the reasoning behind it was solving the wrong
+problem.** The watchlist is a BELL everywhere else on the site: `PriceWatchButton`
+draws one on every card tile and card page, and `/watching`'s own heading is
+`<NavIcon name="bell">`. The header control shipped as a star purely because
+`NavUser` renders a `NotificationBell` from `sm` up and two bells seemed
+confusable. "It should be the same icon as the watch has" — and that is right: an
+icon that disagrees with the control it represents is a worse failure than two
+bells that differ in state. The `star` glyph is deleted, not merely unused.
+
+The two-bells case is handled the way `PriceWatchButton` already handles it:
+**filled when there is something in it**, plus a count badge, against
+NotificationBell's outline and unread dot. `NavIcon` gained an optional `fill`
+prop for exactly this. Note the overlap is narrow — the watchlist control is
+`lg:hidden` and NotificationBell is `hidden sm:inline-flex`, so both appear only
+between `sm` and `lg`, and only for a signed-in visitor.
+
+Hiding NotificationBell below `lg` would have removed the overlap outright and
+freed 44px, and it was rejected: there is **no `/notifications` page**, the
+dropdown is the only surface, so that would delete notification access for
+tablet users who never asked for it.
+
+**PREMIUM WAS UNREADABLE AS A BARE GLYPH, which was the flagged residue of the
+previous pass and is now fixed rather than flagged.** "It's just a diamond,
+right? I need the actual premium letters to show up as well. If it means
+adjusting the size of things so it fits in the header, let's do that." The text
+renders from **360px** up — every phone in real use, including the Z Fold 7 cover
+screen this whole thread has been about.
+
+The ~40px came from tightening three things rather than dropping a control:
+
+| change | saved | scope |
+|---|---|---|
+| header side padding `px-4` → `px-3` | 8px | below sm |
+| Premium `text-sm` → `text-xs` | ~16px | below sm |
+| country switcher's chevron hidden | ~14px | below sm |
+
+Below 360px the glyph alone is genuinely all that fits beside five 44px targets,
+and it keeps a 44px target of its own.
+
+**Two defects the harness caught that reading the diff would not have.** Removing
+the chevron took the country switcher to **38px wide** — the tap floor is a width
+rule as well as a height one, and `min-h-11` only covered half of it, which had
+never mattered while the chevron padded it out. And Premium's icon-only form was a
+22px target. Both now carry `min-w-11` below sm. This is the third distinct
+failure mode in this header that a plain overflow check could not see (after
+wrapping and overlap), which is why the Chromium harness now checks scroll,
+pairwise overlap, text spill AND per-control tap size together.
+
+Measured after: no horizontal scroll, no overlap, no spilled text and no tap
+target under 44×44 at 320/360/375/390/414, and none of those at 640/720/790
+either. The one remaining sub-floor control is the country switcher's **height**
+(38px) from `sm` up, which is `sm:min-h-0` by deliberate design so desktop rows
+stay 36px tall — it predates all of this work and is untouched.
 ---
 
 ## The HEARTSTEEL post is a fact-check, because the card is a reprint — 2026-09-18

@@ -146,6 +146,10 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/domains`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
     { url: `${SITE_URL}/keywords`, changeFrequency: "weekly", priority: 0.7, lastModified: staticPageDate("/keywords") },
     { url: `${SITE_URL}/cards`, changeFrequency: "weekly", priority: 0.7, lastModified: day },
+    // The flat HTML index of every card page. `day` (the latest price-history
+    // day), not a static date: its content is the catalogue, which grows on an
+    // import, and every entry's own page reprices daily.
+    { url: `${SITE_URL}/cards/all`, changeFrequency: "daily", priority: 0.7, lastModified: day },
     // Added 2026-08-20 targeting "riftbound cards rarity" / "riftbound card
     // gallery" directly — see each route's own doc comment.
     { url: `${SITE_URL}/cards/rarity`, changeFrequency: "weekly", priority: 0.7, lastModified: day },

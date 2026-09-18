@@ -80,18 +80,27 @@ test("PITCH_TOOLS survives as the canonical Premium-only tool list even though n
   assert.match(src, /CONTEXT_PITCH/, "the contextual per-route pitch must stay — it is more specific than any graphic");
 });
 
-test("the phone header carries a Premium link next to Database, without disturbing the desktop one", () => {
+test("the phone header still carries a gold Premium link, without disturbing the desktop one", () => {
   const src = read("src/components/Navbar.tsx");
-  // The FIRST /browse link in the file is the mobile one in the left cluster
-  // (the desktop twin further down is gated lg:block).
-  const dbAt = src.indexOf('href="/browse"');
-  assert.ok(dbAt >= 0, "expected the mobile Database link");
-
-  // The new link sits in the same left cluster and the same lg-and-below band.
-  const after = src.slice(dbAt, dbAt + 1400);
-  assert.match(after, /<PremiumNavLink/, "Premium must sit immediately after Database in the left cluster");
-  assert.match(after, /lg:hidden/, "the mobile Premium link must be gated to the same band as Database");
-  assert.match(after, /text-gold/, "it must be gold — the Premium identity colour");
+  // THIS TEST USED TO ANCHOR ON THE MOBILE "Database" LINK, which sat beside
+  // Premium in the left cluster and is gone as of 2026-09-18: when the bottom
+  // tab bar was deleted, its Menu tab moved into this row as HeaderMenuButton
+  // and cost 46px in a row with one pixel of slack at 375px. Database was the
+  // most redundant ~76px available — the full-width search box on the next row
+  // submits to /browse — so it went, and the page stopped scrolling sideways on
+  // every phone (tests/mobile-header-fit.test.ts carries the measurements).
+  //
+  // PREMIUM DID NOT GO WITH IT, and that is what this test is really for: it is
+  // there by an explicit 2026-09-10 brief, and it is the reason the left cluster
+  // now has to be shrinkable rather than fixed-width.
+  // Comment-stripped: the tombstone explaining the removal names "Database", and
+  // a source-text search would match the explanation rather than a rendered link.
+  const code = src.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+  const leftCluster = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
+  assert.match(leftCluster, /<PremiumNavLink/, "Premium must still be in the header's left cluster on phones");
+  assert.match(leftCluster, /lg:hidden/, "the mobile Premium link must stay in the below-lg band");
+  assert.match(leftCluster, /text-gold/, "it must be gold — the Premium identity colour");
+  assert.doesNotMatch(leftCluster, /Database/, "the mobile Database link is deliberately gone — see above");
 
   // The header's horizontal budget: nav links may not turn on before lg, and
   // the desktop Premium link must still defer to xl. Both are also pinned by

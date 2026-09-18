@@ -208,13 +208,25 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
  * control it sits inside (the rail's button carries aria-label + title), so a
  * <title> here would make a screen reader announce the group name twice.
  */
-export function NavIcon({ name, className = "" }: { name: NavIconName; className?: string }) {
+export function NavIcon({
+  name,
+  className = "",
+  // Almost always "none" — these are stroked glyphs. The exception is a control
+  // whose STATE is legible only as fill: HeaderWatchButton fills the bell when
+  // the watchlist has something in it, which is the same convention
+  // PriceWatchButton uses on every card tile.
+  fill = "none",
+}: {
+  name: NavIconName;
+  className?: string;
+  fill?: string;
+}) {
   return (
     <svg
       aria-hidden="true"
       focusable="false"
       viewBox="0 0 24 24"
-      fill="none"
+      fill={fill}
       stroke="currentColor"
       strokeWidth="1.75"
       strokeLinecap="round"

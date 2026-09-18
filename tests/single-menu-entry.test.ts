@@ -8,35 +8,66 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 const readCode = (p: string) => read(p).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Reported directly: "we have the menu, but we also have the menu on the top
-// right. So I'm thinking we only need one of them... get rid of the
-// duplicates." Below the `lg` breakpoint, the header rendered its own
-// hamburger (MobileNav.tsx) AND BottomTabBar rendered a "Menu" tab — both
-// called the exact same `useMegaMenu().setOpen(true)`, opening the identical
-// CinematicNavMenu overlay. The header's copy is gone; the thumb-reachable
-// bottom-bar tab (already the pattern Watch/Binder/Search use) is the one
-// entry point that survives.
+// ONE MENU ENTRY POINT BELOW lg — the invariant survives; its address changed.
 //
-// A second, related complaint in the same message — "get rid of any duplicate
-// information... we don't even need the see all features anymore... they can
-// just scroll down and look at all the features" — is pinned in
-// nav-menu-full-grid.test.ts: the overlay's curated "Popular" subset (a
-// filter() over the same NAV_GROUPS links shown again below it) and its
-// "Show all features" gate are both gone too.
+// Originally reported as: "we have the menu, but we also have the menu on the
+// top right… we only need one of them." Two controls — the header's own
+// hamburger (MobileNav.tsx) and BottomTabBar's "Menu" tab — both called the same
+// useMegaMenu().setOpen(true). MobileNav was deleted and the bottom-bar tab won,
+// because a thumb reaches the bottom of a phone more easily than the top.
+//
+// THEN THE BOTTOM BAR ITSELF WAS DELETED (2026-09-18). It could not be kept
+// pinned to the bottom of a phone screen across three attempts — a dvh/lvh calc
+// in `bottom:`, the same value as a compositor-only transform, and finally a
+// measured visualViewport version with a pinch-zoom gate, a geometry-change
+// reset and a 25% clamp. Reported as "the bottom part keeps rising up on the
+// phone I've given up fixing it. Let's get rid of it and add the menu bar back
+// to the top." So the surviving control moved back into the header as
+// HeaderMenuButton.
+//
+// THE RULE IS UNCHANGED AND IS WHAT THIS FILE PINS: at any given width there is
+// exactly ONE control that opens CinematicNavMenu. What follows checks there is
+// one, not zero (the failure this change could most easily have caused — the
+// overlay reachable from nowhere on a phone) and not two.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("MobileNav (the header's own hamburger) no longer exists", () => {
-  assert.ok(!existsSync(join(ROOT, "src/components/MobileNav.tsx")), "the duplicate header trigger must be deleted, not just unused");
+test("MobileNav (the original duplicate hamburger) is still gone", () => {
+  assert.ok(
+    !existsSync(join(ROOT, "src/components/MobileNav.tsx")),
+    "the old duplicate must stay deleted — HeaderMenuButton is not a reinstatement of it",
+  );
 });
 
-test("Navbar.tsx renders no menu-opening control of its own below lg", () => {
-  const code = readCode("src/components/Navbar.tsx");
-  assert.doesNotMatch(code, /MobileNav/, "no import or render of the removed hamburger");
-  assert.doesNotMatch(code, /setOpen\(true\)/, "the header must not open the mega menu itself any more");
+test("the bottom bar is gone, so it cannot be a second entry point", () => {
+  assert.ok(!existsSync(join(ROOT, "src/components/BottomTabBar.tsx")));
+  assert.doesNotMatch(readCode("src/app/layout.tsx"), /BottomTabBar/);
 });
 
-test("BottomTabBar's Menu tab is the one surviving entry point to the overlay", () => {
-  const code = readCode("src/components/BottomTabBar.tsx");
-  assert.match(code, /setOpen: setMenuOpen/, "still reads from the same useMegaMenu() context");
-  assert.match(code, /onClick=\{\(\) => setMenuOpen\(true\)\}/, "the Menu tab still opens it");
+test("HeaderMenuButton is the one surviving entry point to the overlay", () => {
+  const code = readCode("src/components/HeaderMenuButton.tsx");
+  assert.match(code, /useMegaMenu\(\)/, "reads the same context the deleted tab used");
+  assert.match(code, /onClick=\{\(\) => setOpen\(true\)\}/, "and opens it the same way");
+});
+
+test("exactly one component in the tree opens the mega menu", () => {
+  // The real invariant, checked against the source rather than against a list of
+  // names — a third opener added anywhere would fail here.
+  const files = [
+    "src/components/HeaderMenuButton.tsx",
+    "src/components/Navbar.tsx",
+    "src/components/NavbarShell.tsx",
+    "src/components/SideNav.tsx",
+    "src/components/CommandLauncher.tsx",
+    "src/app/layout.tsx",
+  ].filter((f) => existsSync(join(ROOT, f)));
+  const openers = files.filter((f) => /setOpen\(true\)/.test(readCode(f)));
+  assert.deepEqual(openers, ["src/components/HeaderMenuButton.tsx"], "exactly one opener, and it is the header button");
+});
+
+test("the header renders it below lg only, so desktop keeps the launcher as its one surface", () => {
+  const nav = readCode("src/components/Navbar.tsx");
+  assert.match(nav, /<HeaderMenuButton className="lg:hidden" \/>/);
+  // From lg the ⌘K launcher is the full-nav surface; a menu button there too
+  // would be the exact duplication this file exists to prevent.
+  assert.match(nav, /<CommandLauncherButton \/>/);
 });

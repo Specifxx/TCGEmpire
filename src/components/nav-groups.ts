@@ -88,6 +88,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/sets", label: "Sets & card lists", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
       { href: "/champions", label: "Champions", keywords: ["champions", "by champion", "legends"] },
       { href: "/cards", label: "By type & rarity", keywords: ["type", "rarity", "showcase", "epic", "signature", "promo", "printings", "facets", "alt art"] },
+      { href: "/cards/all", label: "Every card (A-Z)", keywords: ["all cards", "every card", "full list", "complete list", "card index", "sitemap", "a-z", "list of all riftbound cards"] },
       // The set-agnostic hub for /sets/<set>/gallery (added 2026-08-20 to target
       // "riftbound card gallery" directly — see that route's own doc comment for
       // the Search Console data behind the per-set galleries it links to).
