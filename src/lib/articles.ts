@@ -3425,6 +3425,199 @@ If you're running either card, both bans take effect **18 September 2026** — s
 
 *Ban facts (cards, effective date, Riot's stated reasoning) are from [Riot Games' 15 September 2026 announcement](https://playriftbound.com/en-us/news/announcements/september-ban-list-updates-effective-september-18-2026/). Community reaction is quoted from the ["New banned cards"](https://www.reddit.com/r/riftboundtcg/comments/1wgkixo/new_banned_cards/) thread on r/riftboundtcg, current as of publication — usernames are as posted publicly on Reddit, and every quoted or paraphrased opinion belongs to its named commenter, not to RiftCompare.*`,
   },
+  // HEARTSTEEL comeback post, written the day "LIVE MY LIFE" landed (18 Sep
+  // 2026). THE ANGLE IS THE FACT-CHECK, and it is the one thing on this topic
+  // only this site can write: the card image circulating with the comeback shows
+  // a name, cost and rules text that belong to Kayn, Unleashed — OGN-189, in the
+  // game since Origins — so it is a new PRINTING, not a new card, and our own
+  // prisma/riftbound-cards.json is the proof. The same lookup produced the two
+  // findings the piece is built on (Kayn is the only HEARTSTEEL champion with a
+  // card and no variant at all; K'Sante has no card whatsoever), neither of
+  // which appears in any of the coverage this was checked against.
+  //
+  // DELIBERATELY NOT CLAIMED: that the music video itself reveals cards. No
+  // source found says so — not Riot, not the trade coverage, not the leak
+  // reporting — and the video was hours old at the time of writing. The body
+  // says the images surfaced "alongside" the comeback and keeps a standing
+  // confirmed/not-confirmed split, the same bar riftbound-radiance-leaked-
+  // mechanics holds itself to. Also flagged, because it cuts against the
+  // obvious assumption: the leak reporting points at a WORLDS-themed Riftbound
+  // product, not necessarily Radiance.
+  {
+    slug: "riftbound-heartsteel-cards",
+    category: "blog",
+    title: "Riftbound HEARTSTEEL Cards: What the Kayn Tease Actually Is",
+    excerpt:
+      "HEARTSTEEL's comeback brought Riftbound card images with it — and the Kayn one is not a new card. It is Kayn, Unleashed from Origins in new art. Here's what our database says about every HEARTSTEEL champion's cards.",
+    author: "RiftCompare",
+    date: "2026-09-18",
+    readMins: 8,
+    tags: ["radiance", "news", "spoilers", "heartsteel", "collecting"],
+    shop: [
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+    ],
+    summary: [
+      "**HEARTSTEEL released \"LIVE MY LIFE\" on 18 September 2026**, their first track since 2023's \"PARANOIA\" — and Riftbound cards carrying the band's art started circulating alongside it.",
+      "**The Kayn card is not a new card.** Its name, 6 cost and rules text are **Kayn, Unleashed** — collector number 189 in **Origins**, legal since the game launched. What is new is the art, which makes it a new *printing*, not a new card.",
+      "**Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Ezreal, Sett, Yone and Aphelios all already have Showcase versions; Kayn, Unleashed has exactly one print.",
+      "**K'Sante has no Riftbound card whatsoever** — so if the reports putting him in Radiance hold, it is his debut, and his first card would arrive wearing a skin line.",
+      "**Nothing here is Riot-confirmed yet.** Preview Season runs [25 September to 9 October](/release-dates) and [Radiance releases 23 October 2026](/blog/riftbound-radiance-what-we-know).",
+    ],
+    embeds: [
+      {
+        title: "Kayn, Unleashed — the card the tease is actually showing",
+        note: "One card, one printing, in the game since Origins. Click it for the full price comparison across every store we track.",
+        slugs: ["kayn-unleashed-ogn-189-298"],
+      },
+      {
+        title: "Every HEARTSTEEL champion's existing Riftbound cards",
+        note: "Ezreal, Sett, Yone, Aphelios and Kayn all have cards today. K'Sante does not — which is exactly why the Radiance reports about him matter.",
+        slugs: [
+          "ezreal-dashing-sfd-082-221",
+          "ezreal-prodigy-sfd-149-221",
+          "sett-brawler-ogn-164-298",
+          "sett-kingpin-ogn-240-298",
+          "yone-blademaster-sfd-116-221",
+          "aphelios-exalted-sfd-049-221",
+          "kayn-unleashed-ogn-189-298",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Are there HEARTSTEEL cards in Riftbound?",
+        a: "Card images carrying HEARTSTEEL art began circulating alongside the band's 18 September 2026 comeback single \"LIVE MY LIFE\", and separate leak reporting has shown a True Damage Yasuo Riftbound card. Riot has not officially announced a HEARTSTEEL Riftbound product, so treat every specific card as unconfirmed until Preview Season, which runs 25 September to 9 October 2026.",
+      },
+      {
+        q: "Is the HEARTSTEEL Kayn a new Riftbound card?",
+        a: "No. The name, the 6 energy cost and the rules text on the circulating image all belong to Kayn, Unleashed — collector number 189 in Origins, the game's first set. It is a Rare, Chaos-domain Unit with 6 Might and 1 Power, and it has been legal since launch. A HEARTSTEEL version would be a new printing of that existing card, not a new card, so it changes nothing about deckbuilding.",
+      },
+      {
+        q: "How many Riftbound cards does Kayn have?",
+        a: "Exactly one: Kayn, Unleashed (OGN-189). That makes him the only HEARTSTEEL champion whose card has no alternate printing at all — Ezreal, Sett, Yone and Aphelios each already have at least one Showcase version, and Sett and Yone have signature prints on top of that.",
+      },
+      {
+        q: "Does K'Sante have a Riftbound card?",
+        a: "Not as of 18 September 2026 — he has no card in the game at all. He has been reported as coming in Radiance off a Riftbound Championship post, so if that holds, Radiance would be his Riftbound debut and his first card would arrive carrying a skin-line art rather than a base splash.",
+      },
+      {
+        q: "Will the HEARTSTEEL cards be in Riftbound: Radiance?",
+        a: "Unconfirmed, and worth being careful about: the leak reporting on music-themed Riftbound cards points at a Worlds 2026-themed Riftbound product, which is not necessarily Radiance. Radiance does already lean musical — Seraphine and Evelynn are both confirmed legends and the Showdown Decks product is Seraphine vs. Evelynn — but that is a theme, not a confirmation.",
+      },
+      {
+        q: "Does an alternate art change how a card plays?",
+        a: "No. An alternate art, Showcase or signature printing is the same card with the same name, cost and rules text — it is legal wherever the base print is legal and counts toward the same copy limit. The difference is entirely collectability and price.",
+      },
+      {
+        q: "When does Riftbound Radiance come out?",
+        a: "23 October 2026 worldwide, with 180 cards of which 66 are Showcase. Preview Season runs 25 September to 9 October 2026, opening at RQ Los Angeles.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Track every Radiance card as it's revealed →",
+      blurb: "The set hub fills in with real cards through Preview Season and gets live prices across every store we track on release day.",
+    },
+    body: `**HEARTSTEEL are back.** "LIVE MY LIFE" landed on **18 September 2026**, the group's first release in nearly three years, and Riftbound card images carrying the band's art started doing the rounds alongside it. One of those images — a Kayn card — is the one everybody is sharing.
+
+It is also, on inspection, **not a new card**. That is not a criticism of anyone sharing it; it is the sort of thing you only catch if you look the card up. So we did, in our own database, and the answer turns out to be more interesting than "new Kayn spoiled".
+
+## Who HEARTSTEEL are, and why Riftbound is in the conversation
+
+HEARTSTEEL is Riot's boy-band-styled virtual group, assembled from six League champions: **Aphelios, Ezreal, Kayn, K'Sante, Sett and Yone**. They debuted in 2023 with "PARANOIA" and then went quiet for the better part of three years.
+
+"LIVE MY LIFE" ended that on 18 September 2026 at 9:00 AM Pacific, produced by Jon Bellion, with BAEKHYUN returning as Ezreal alongside Anderson .Paak as K'Sante, Connor Price as Sett and Nic D as Kayn. It is not a one-off, either: League's 2026 Season 3, Act 2 is built around music, with several of Riot's virtual bands returning at once.
+
+That matters for this game because Riftbound's next set is, in everything but name, already a music set.
+
+## Radiance was a pop-star set before HEARTSTEEL showed up
+
+**[Riftbound: Radiance](/sets/radiance) releases 23 October 2026**, with 180 cards — **66 of them Showcase prints**, which is a very large proportion and will be relevant in a moment. Of the ten legends the set will carry, six have been named: **Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna**. The set's Showdown Decks product is, literally, *Seraphine vs. Evelynn*.
+
+Seraphine and Evelynn are two thirds of K/DA's front line. Ekko fronted True Damage. Before a single HEARTSTEEL image surfaced, Radiance was already stacked with Riot's music roster. Our full rundown of [what is actually confirmed about Radiance](/blog/riftbound-radiance-what-we-know) tracks the rest, and the separately-sourced [Deploy, Showoff and Disarm leak](/blog/riftbound-radiance-leaked-mechanics) covers the mechanics side.
+
+So HEARTSTEEL art turning up on Riftbound cards in the same month is not a coincidence. It is the whole season's theme arriving.
+
+## The Kayn card: what the database actually says
+
+Here is the check almost nobody doing the rounds on this has run. Look the card up.
+
+**Kayn has exactly one card in Riftbound.** Not one recent card — one, full stop:
+
+[[embed:0]]
+
+**Kayn, Unleashed**, collector number **189** in **Origins**, the game's first set. A **Rare**, **Chaos**-domain Unit costing **6 energy**, with **6 Might** and **1 Power**, carrying the Ganking text players have known since launch: if it has moved twice this turn, it doesn't take damage.
+
+A card image showing the name *Kayn, Unleashed*, a **6** in the cost slot and that same "moved twice this turn" wording is therefore not a reveal of a new card. It is a **new printing of a card that has been legal since the game launched** — new art on old rules.
+
+## Why "printing, not card" is the whole story
+
+This distinction gets waved away constantly, and it changes almost everything about what the card is worth to you.
+
+An **alternate art**, **Showcase** or **signature** printing is the same card. Same name, same cost, same rules text, same copy limit, legal in exactly the same places. If you already run Kayn, Unleashed, a HEARTSTEEL version does not give you a new option, a new line of play, or a new deck — it gives you a different-looking copy of a card you can already run. Our [variant and finish glossary](/guides/riftbound-variant-glossary) covers how to tell these apart on the card itself, and where the collector number and the asterisk live.
+
+What it *does* change is the price, and in two directions at once. The premium printing prices off hype and scarcity rather than playability, which makes its first fortnight the single worst time to buy one. And the **base** print often moves too — a skin-line spotlight sends people looking up a card many of them had never thought about, and demand for the cheap version rises with it.
+
+That second effect is the one worth watching here, because of what the rest of the band looks like.
+
+## Every HEARTSTEEL champion's Riftbound cards right now
+
+[[embed:1]]
+
+Running the whole band through our card database as of 18 September 2026:
+
+| Champion | Cards today | Printings |
+|---|---|---|
+| **Ezreal** | Ezreal, Dashing (Spirit Forged, Mind, 4 cost); Ezreal, Prodigy (Spirit Forged, Chaos, 3 cost) | 4 — both cards already have Showcase versions |
+| **Sett** | Sett, Brawler (Origins, Body, 5 cost); Sett, Kingpin (Origins, Order, 4 cost) | 6 — Showcase prints plus a signature Brawler |
+| **Yone** | Yone, Blademaster (Spirit Forged, Body, 5 cost) | 3 — base, Showcase and signature |
+| **Aphelios** | Aphelios, Exalted (Spirit Forged, Calm, 4 cost) | 3 — base, Showcase and signature |
+| **Kayn** | Kayn, Unleashed (Origins, Chaos, 6 cost) | **1 — no variant of any kind** |
+| **K'Sante** | **None** | **0** |
+
+Two things fall straight out of that table, and neither has shown up in the coverage we checked this against.
+
+**Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Every other member who has a card already has at least one Showcase version; Sett and Yone have signature prints on top. [Kayn, Unleashed](/champions/kayn) has exactly one print and has never had a variant. A HEARTSTEEL Kayn would be the first alternate art this card has ever received — which is precisely the profile that spikes hardest and corrects hardest.
+
+**K'Sante has no Riftbound card whatsoever.** He is not under-printed; he is absent. And he is the one HEARTSTEEL member separately reported as confirmed for Radiance, off a Riftbound Championship post whose Top 8 art the community read as HEARTSTEEL. If that holds, Radiance is K'Sante's **Riftbound debut**, and his first card in the game arrives wearing a skin line rather than a base splash. Seraphine is in the same position — a confirmed Radiance legend with no card in the game today.
+
+[[shop]]
+
+## What is confirmed, and what genuinely is not
+
+We keep this split explicit on every leak story, and this one needs it more than most.
+
+**Confirmed:** HEARTSTEEL's comeback and the 18 September release of "LIVE MY LIFE"; the group's six champions; HEARTSTEEL 2026 skins for all six; that League's Season 3 Act 2 is music-themed with multiple bands returning. On the Riftbound side: Radiance's 23 October 2026 release, its 180 cards and 66 Showcase prints, the Seraphine vs. Evelynn Showdown Decks, and the six legends named so far.
+
+**Not confirmed:** that any specific HEARTSTEEL card exists in a specific product. Riot has not announced a HEARTSTEEL Riftbound release. We have also found no source — Riot, trade coverage or leak reporting — stating that the "LIVE MY LIFE" video itself reveals cards, so we are not repeating that; the images surfaced *alongside* the comeback, which is a weaker claim and the one the evidence supports.
+
+**And one that cuts against the obvious assumption:** the leak reporting on music-themed Riftbound cards (the True Damage Yasuo card shared by @LeagueOfLeaks and @RiftboundCN) points at a **Worlds 2026-themed Riftbound product**, not necessarily Radiance. Radiance's musical roster makes it the natural guess, but a natural guess is not a confirmation, and buying on the assumption that a card lands in a specific set is how people end up holding the wrong sealed product.
+
+## What to do about it if you're buying
+
+A few things worth being deliberate about over the next month.
+
+**Check the set code and collector number before you pay a Radiance price.** If a listing shows Kayn, Unleashed, it is an Origins card — OGN-189 — regardless of what art is on it or what the listing title says. That is the single most likely way to overpay in the next few weeks, and it takes five seconds to check on [the card's own page](/card/kayn-unleashed-ogn-189-298).
+
+**Watch the base prints, not just the premium ones.** The existing Kayn, Unleashed, Sett, Brawler and Yone, Blademaster prints are the cards most likely to drift upward on attention alone, and they are cheap enough that the move is affordable to catch. [Price movers](/movers) tracks that across every store we compare.
+
+**Do not buy a premium printing in its first fortnight.** Alt-art and Showcase prints of a spotlighted card are at their most expensive when the spotlight is brightest. With 66 Showcase cards in a 180-card set, Radiance will not be short of them.
+
+**If you want the set itself, pre-orders are already live.** We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks — cheapest first, in your own currency.
+
+## What to watch, and when
+
+**Preview Season runs 25 September to 9 October 2026**, opening at RQ Los Angeles. That is the window in which speculation becomes cards: if HEARTSTEEL printings are in Radiance, this is when they get shown properly, with a collector number and a rarity attached. Our [release calendar](/release-dates) carries the dates and the countdown.
+
+**Radiance itself lands 23 October 2026.** [The set hub](/sets/radiance) fills in with real cards through Preview Season and switches on live price comparison across every store we track the day it releases.
+
+## The bottom line
+
+HEARTSTEEL's return is real, the music theme running through Riot's autumn is real, and Riftbound is visibly part of it. But the specific card everyone is sharing is Kayn, Unleashed from Origins in new clothes — and the genuinely new information sits one lookup further on: Kayn has never had a variant, and K'Sante has never had a card.
+
+Those two facts are what to watch when Preview Season opens. Everything else is theme.`,
+  },
   // IMAGE SLOT (author): under "## How the drawing actually works", a screenshot of
   // the Riot Merch Store entry form once registration opens on 14 August would make
   // the "this is a form, not a checkout" point concrete — and it is OUR screenshot,
