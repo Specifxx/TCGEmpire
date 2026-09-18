@@ -384,12 +384,29 @@ test("HeaderMenuButton is the below-lg nav entry point and opens the same overla
   assert.match(src, /setOpen\(true\)/);
   assert.match(src, /aria-label="Open menu"/);
   assert.match(src, /aria-haspopup="dialog"/);
-  // The watch count was the one non-navigational thing the bar carried: the only
-  // ambient signal that a price alert fired. It moved rather than being dropped.
-  assert.match(src, /useWatchlist\(\)/);
-  assert.match(src, /9\+/, "same 9+ cap the bar's badge used");
+  // A MENU BUTTON AND NOTHING ELSE. The watch count briefly lived here to keep
+  // the deleted bar's signal alive, and that conflated "open the navigation"
+  // with "N cards are being tracked" on one target — "the watchlist and the
+  // menu should be separate."
+  assert.doesNotMatch(src, /useWatchlist/, "the watchlist must not be folded back into the menu button");
   // Below lg only — from lg the command launcher and SideNav already cover it.
   assert.match(readCode("src/components/Navbar.tsx"), /<HeaderMenuButton className="lg:hidden" \/>/);
+});
+
+test("the watchlist is its own header control, linking to /watching and carrying the count", () => {
+  const src = readCode("src/components/HeaderWatchButton.tsx");
+  assert.match(src, /href="\/watching"/, "it must be a LINK to the watchlist, not a menu trigger");
+  assert.doesNotMatch(src, /useMegaMenu/, "it must not open the menu");
+  // The count is the point: the only ambient signal a price alert fired.
+  assert.match(src, /useWatchlist\(\)/);
+  assert.match(src, /9\+/, "same 9+ cap the deleted bar's badge used");
+  assert.match(src, /aria-current=\{active \? "page" : undefined\}/);
+  // A STAR, NOT A BELL: NavUser renders a NotificationBell from sm up, and two
+  // adjacent bells in an icon-only row are indistinguishable.
+  assert.match(src, /name="star"/);
+  assert.doesNotMatch(src, /name="bell"/);
+  assert.match(readCode("src/components/NavUser.tsx"), /<NotificationBell \/>/, "the other bell still exists — hence the star");
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="lg:hidden" \/>/);
 });
 
 test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {

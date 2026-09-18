@@ -2,7 +2,6 @@
 
 import { NavIcon } from "./NavIcon";
 import { useMegaMenu } from "./MegaMenuProvider";
-import { useWatchlist } from "@/lib/use-watchlist";
 
 /**
  * The phone/tablet navigation entry point, back in the header where it started.
@@ -40,16 +39,13 @@ import { useWatchlist } from "@/lib/use-watchlist";
  * both in the overlay this opens (nav-groups.ts), one tap further than before.
  * Nothing became unreachable.
  *
- * The WATCH COUNT badge moved here rather than being dropped, because it is the
- * one thing in that list that is not just navigation — it is the only ambient
- * signal that a price alert has fired, and a visitor who does not open the menu
- * would otherwise never learn there is something to look at. Same data source
- * (`useWatchlist`), same 9+ cap, now on the control that reveals the link.
+ * The WATCH COUNT badge briefly lived on this button, to keep that signal alive.
+ * It has since moved to its own control (HeaderWatchButton), because a badge
+ * belongs to the thing it counts: "the watchlist and the menu should be
+ * separate." This button is a menu button and nothing else.
  */
 export function HeaderMenuButton({ className = "" }: { className?: string }) {
   const { setOpen, open } = useMegaMenu();
-  const { watched } = useWatchlist();
-  const count = watched?.size ?? 0;
 
   return (
     <button
@@ -58,18 +54,9 @@ export function HeaderMenuButton({ className = "" }: { className?: string }) {
       aria-label="Open menu"
       aria-expanded={open}
       aria-haspopup="dialog"
-      className={`tap-icon relative rounded-lg text-slate-200 transition-colors hover:bg-ink-800 hover:text-white ${className}`}
+      className={`tap-icon rounded-lg text-slate-200 transition-colors hover:bg-ink-800 hover:text-white ${className}`}
     >
       <NavIcon name="menu" className="h-5 w-5" />
-      {count > 0 && (
-        <span
-          aria-hidden="true"
-          className="num absolute right-0.5 top-0.5 grid h-3.5 min-w-[14px] place-items-center rounded-full bg-accent px-0.5 text-[9px] font-bold text-ink-950"
-        >
-          {count > 9 ? "9+" : count}
-        </span>
-      )}
-      <span className="sr-only">{count > 0 ? `${count} watched cards` : ""}</span>
     </button>
   );
 }

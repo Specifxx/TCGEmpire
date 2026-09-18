@@ -11,6 +11,7 @@ import { PremiumNavLink } from "./PremiumNavLink";
 import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
 import { HeaderMenuButton } from "./HeaderMenuButton";
+import { HeaderWatchButton } from "./HeaderWatchButton";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -58,8 +59,32 @@ export function Navbar() {
               The shimmer lives on the inner span, NOT this link: .premium-shimmer
               uses background-clip:text, which would clip the hover background to
               the glyphs if both sat on the same element. */}
-          <PremiumNavLink className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-gold hover:bg-ink-800 lg:hidden">
-            <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">✦ Premium</span>
+          {/* `whitespace-nowrap` IS LOAD-BEARING, and the reason is worth keeping.
+              Once the watchlist got its own control, this row carried five
+              targets below lg and the shrinkable left cluster absorbed the extra
+              44px by WRAPPING this label — "✦" on one line, "Premium" on the
+              next, which looks like a broken header. No measurement caught it:
+              scrollWidth/clientWidth are equal when text wraps rather than
+              clips, so it took a screenshot. Nowrap forces the row to find the
+              space instead, which the icon-only band below does.
+
+              ICON-ONLY BELOW sm, full "✦ Premium" from sm up. At 375px the row's
+              budget is 343px and nowrap needed ~367; dropping to the bare gold
+              star saves ~40px and it fits with room. This is also the coherent
+              reading of the row — on a phone every other control here is already
+              an icon (market flag, account, watchlist, menu), so a lone label was
+              the odd one out. The glyph keeps the gold, the shimmer and an
+              accessible name, so the 2026-09-10 brief ("Premium should stand out
+              on phones") still holds; it is prominence by colour and motion
+              rather than by width. */}
+          <PremiumNavLink
+            aria-label="Premium"
+            title="Premium"
+            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-2 text-sm font-semibold text-gold hover:bg-ink-800 sm:px-2.5 lg:hidden"
+          >
+            <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">
+              ✦<span className="hidden sm:inline"> Premium</span>
+            </span>
           </PremiumNavLink>
         </div>
 
@@ -118,10 +143,16 @@ export function Navbar() {
               way to sign in at all. The whole nav is unconditionally visible
               on every route now, homepage included. */}
           {/* Command launcher — every page can reach every page from here (⌘K). */}
-          {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
-              (worse once the logged-in avatar showed). Everything here is reachable
-              from the phone menu overlay, so hide it below sm. */}
-          <span className="hidden sm:inline-flex">
+          {/* ⌘K MOVED sm -> lg, 2026-09-18. It is a KEYBOARD affordance, and below
+              lg the menu button at the end of this row now does the same job for a
+              touch device — CinematicNavMenu opens with its own search box over the
+              same NAV_GROUPS the launcher searches. Two controls for one job is
+              exactly the duplication this header keeps being pruned of, and at
+              640-1023px the row could no longer afford both: with the watchlist
+              split out of the menu button, its intrinsic width was ~641px inside
+              592, which `min-w-0` turned from a scrolling page into the Premium
+              label being overdrawn by the theme toggle. */}
+          <span className="hidden lg:inline-flex">
             <CommandLauncherButton />
           </span>
           {/* Database is beside the logo on smaller screens; keep it in the right nav on desktop. */}
@@ -233,10 +264,12 @@ export function Navbar() {
               <path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.249.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.369a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
             </svg>
           </a>
-          {/* Light/dark switch. sm and up only: the phone header already holds
-              the region switcher and sign-in at 375px, so on phones the same
-              control lives as a row inside the menu overlay instead. */}
-          <ThemeToggle className="hidden sm:grid" />
+          {/* Light/dark switch, lg and up (was sm, moved 2026-09-18 for the same
+              width reason as ⌘K above). CinematicNavMenu already carries a
+              "Theme — Dark · tap to switch" row, so below lg this is a second
+              copy of a control the overlay owns, and the overlay's version reads
+              its state in words rather than as an ambiguous glyph. */}
+          <ThemeToggle className="hidden lg:grid" />
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
           {/* THE PHONE/TABLET MENU, BACK IN THE HEADER. Below lg only — from lg
@@ -249,6 +282,16 @@ export function Navbar() {
               the bottom of a phone screen across three attempts (see
               HeaderMenuButton.tsx). LAST in the row, so it sits at the screen's
               right edge — the nearest thing to a thumb that a top bar has. */}
+          {/* WATCHLIST, ITS OWN CONTROL — deliberately not a badge on the menu
+              button next to it. A count belongs to the thing it counts: tapping
+              it has to land on /watching, and a menu button that sometimes wears
+              a number reads as unread navigation. "The watchlist and the menu
+              should be separate." Below lg only, like the menu: from lg the
+              SideNav rail already lists "My Watchlist" from NAV_GROUPS (no
+              count there — the rail renders links, not live state) and the
+              launcher finds it, so a third control would be the duplication
+              this header keeps being pruned of. */}
+          <HeaderWatchButton className="lg:hidden" />
           <HeaderMenuButton className="lg:hidden" />
         </nav>
        </div>

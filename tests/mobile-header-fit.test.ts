@@ -71,7 +71,42 @@ test("Premium keeps its phone slot — it was an explicit brief, not incidental"
   // still needs to be able to shrink.
   const code = readCode(NAVBAR);
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
-  assert.match(row, /<PremiumNavLink className="[^"]*lg:hidden"/);
+  assert.match(row, /<PremiumNavLink/);
+  assert.match(row, /lg:hidden/);
+  // shrink-0 + nowrap, and BOTH are load-bearing — see the next test.
+  assert.match(row, /shrink-0 items-center whitespace-nowrap/);
+  // Icon-only below sm: the gold star alone, the word from sm up.
+  assert.match(row, /✦<span className="hidden sm:inline"> Premium<\/span>/);
+  // A bare glyph needs a name of its own.
+  assert.match(row, /aria-label="Premium"/);
+});
+
+test("Premium cannot wrap AND cannot shrink — two screenshots' worth of bugs", () => {
+  // Neither flag is cosmetic, and neither failure was visible to a measurement:
+  //   • shrinkable + wrapping  → "✦" on one line and "Premium" on the next.
+  //     scrollWidth === clientWidth when text WRAPS, so the overflow audit
+  //     passed and only a screenshot showed it.
+  //   • shrinkable + nowrap    → the label spilled its box and the theme toggle
+  //     was drawn straight through it ("P☀mium") at 640px. Also invisible to a
+  //     scroll check, since nothing overflowed the PAGE.
+  // Fixed-width + nowrap forces the row to find the space instead, which is
+  // what deferring the launcher and the theme toggle to lg pays for.
+  const row = readCode(NAVBAR).slice(readCode(NAVBAR).indexOf("h-16 w-full items-center"), readCode(NAVBAR).indexOf("<HeaderSearchSlot>"));
+  assert.match(row, /whitespace-nowrap/);
+  assert.match(row, /shrink-0/);
+});
+
+test("the launcher and the theme toggle wait for lg, because the overlay owns both below it", () => {
+  const code = readCode(NAVBAR);
+  // Both were sm-gated and both were duplicating something the menu overlay
+  // already carries (its own search box; its own "Theme" row). At 640-1023px
+  // the row's intrinsic width was ~641px inside 592 with the watchlist split
+  // out, and that is what the overlap above was really telling us.
+  assert.match(code, /<span className="hidden lg:inline-flex">\s*<CommandLauncherButton \/>/);
+  assert.match(code, /<ThemeToggle className="hidden lg:grid" \/>/);
+  assert.doesNotMatch(code, /<ThemeToggle className="hidden sm:grid" \/>/);
+  const menu = readCode("src/components/CinematicNavMenu.tsx");
+  assert.match(menu, /<ThemeToggle variant="row" \/>/, "the overlay must still carry the theme row");
 });
 
 test("the menu button is an icon button that meets the tap-target floor", () => {

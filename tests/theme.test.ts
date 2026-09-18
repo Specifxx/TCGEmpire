@@ -137,8 +137,16 @@ test("the layout inlines the boot script in <head> and the meta theme-colour mat
   assert.doesNotMatch(layout, /from "next\/headers"/, "the caching rule still holds — no cookies() in the root layout");
 });
 
-test("the toggle is reachable at every width: header icon from sm up, a row in the phone menu below lg", () => {
-  assert.match(read("src/components/Navbar.tsx"), /<ThemeToggle className="hidden sm:grid" \/>/);
+test("the toggle is reachable at every width: header icon from lg up, a row in the phone menu below lg", () => {
+  // MOVED sm -> lg on 2026-09-18. The header row below lg gained a separate
+  // watchlist control ("the watchlist and the menu should be separate") and no
+  // longer had room: at 640px its intrinsic width was ~641px inside 592, which
+  // showed up as the Premium label being overdrawn by this very toggle. The
+  // overlay's "Theme — Dark · tap to switch" row already covered every width
+  // below lg, so this was the duplicate copy, and it states its state in words
+  // rather than as an ambiguous glyph. The two gates still tile the full range
+  // with no gap, which is what this test is for.
+  assert.match(read("src/components/Navbar.tsx"), /<ThemeToggle className="hidden lg:grid" \/>/);
   const menu = read("src/components/CinematicNavMenu.tsx");
   assert.match(menu, /<ThemeToggle variant="row" \/>/);
   assert.match(menu, /className="mt-3 lg:hidden">\s*<ThemeToggle variant="row" \/>/);

@@ -8345,3 +8345,71 @@ the winner, so the invariant survives the next time this moves.
 sandbox has no database, but a dev server with a dummy `DATABASE_URL` serves
 `/privacy` (no data loaders), and that is enough to measure the header — it is
 site chrome, identical on every route.
+
+## The watchlist is its own header control, not a badge on the menu — 2026-09-18
+
+Immediately after the bottom bar was deleted: "the watchlist and the menu should
+be separate."
+
+**The mistake being corrected was mine, made in the same pass.** Folding the
+deleted Watch tab's count badge onto HeaderMenuButton kept the signal alive but
+put two unrelated jobs on one target: "open the navigation" and "N cards are
+tracked, one of which may have moved". A badge belongs to the thing it counts —
+tapping it has to reach `/watching`, not a menu you then navigate — and a menu
+button that sometimes wears a number reads as unread navigation.
+`HeaderWatchButton` is a plain link to `/watching` with the count and the same
+9+ cap; HeaderMenuButton is a menu button and nothing else.
+
+**A STAR, NOT A BELL, and this is not cosmetic.** `NavUser` already renders a
+`NotificationBell` from `sm` up for signed-in visitors. A bell here would have
+put two near-identical bells side by side in a row where every control is
+icon-only. The deleted bottom bar could use a bell for its Watch tab because that
+tab carried the word "Watch" underneath it; a header icon has no label to
+disambiguate it. `NavIcon` gained a `star`.
+
+**Then the row ran out of space, and two of the three failures were invisible to
+measurement.** A fifth below-lg control pushed the intrinsic width past the
+container, and because the left cluster is `min-w-0` (the fix from the previous
+entry) the overflow could no longer escape to the document — so instead of a
+scrolling page it came out as:
+
+1. **`✦ Premium` wrapping onto two lines.** `scrollWidth === clientWidth` when
+   text WRAPS rather than clips, so the overflow audit passed clean. Only a
+   screenshot showed it.
+2. **After adding `whitespace-nowrap`: the label spilling its box, with the
+   theme toggle drawn straight through it** — "P☀mium" at 640px. Also invisible
+   to a scroll check, because nothing overflowed the page. A nowrap label in a
+   shrinkable box does not wrap; it overlaps its neighbour.
+
+The lesson worth keeping: **an overflow audit cannot see a layout that fits by
+wrapping or by overlapping.** Both of these passed `scrollWidth > clientWidth`
+and both were obvious in a 200px-tall screenshot of the header. The audit script
+now has a pairwise bounding-box intersection check in this repo's Chromium
+harness for exactly that reason.
+
+**What actually paid for the space**, rather than squashing something:
+
+- Premium is `shrink-0 whitespace-nowrap` so it can neither wrap nor spill, and
+  **icon-only below `sm`** (the bare gold `✦`, full "✦ Premium" from `sm`). It
+  keeps the gold, the shimmer, an `aria-label` and a `title`, so the 2026-09-10
+  brief holds as prominence-by-colour rather than by width. On a phone every
+  other control in that row is already an icon, so the lone label was the odd
+  one out.
+- **The ⌘K launcher and the theme toggle moved `sm` → `lg`.** Both were
+  duplicating something CinematicNavMenu already carries below lg — its own
+  search box over the same NAV_GROUPS, and a "Theme — Dark · tap to switch" row
+  that states its state in words rather than as an ambiguous glyph. ⌘K is a
+  keyboard affordance and the menu button now does that job for a touch device.
+  That is ~78px at 640-1023px, where the row needed ~641 inside 592.
+
+**Measured after, with overlap and spill checks, not just scroll:** no
+horizontal scroll, no overlapping controls, no spilled text at any of
+320/360/375/390/414/640/720/790/1024/1280, and the watchlist and menu both
+present below lg and both absent from lg. 1,613 tests green.
+
+**The honest residue**: below `sm`, Premium is a bare gold star. It is
+prominent and it is named for assistive tech, but a visitor who has never seen
+it will not know what it is from the glyph alone. The alternative was dropping
+Premium from the phone header entirely — it is in the overlay and the user menu
+— and that is a product call, not a layout one, so it was left as it is and
+flagged rather than decided here.
