@@ -5,7 +5,6 @@ import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
-import { BottomTabBar } from "@/components/BottomTabBar";
 import { SIDENAV_BOOT_SCRIPT } from "@/lib/sidenav-shared";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -383,9 +382,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}
                 <FeedbackWidget />
-                {/* SideNav's mobile complement — lg:hidden, one breakpoint
-                    decision either way (see --bottombar-h in globals.css). */}
-                <BottomTabBar />
+                {/* SideNav's mobile complement USED TO BE <BottomTabBar /> here.
+                    Removed outright: three successive attempts to keep a fixed
+                    bottom bar pinned on a phone all failed (see
+                    components/HeaderMenuButton.tsx for the list), and the
+                    navigation it carried is now the header's own menu button —
+                    which cannot have that class of bug, because the TOP edge of
+                    the layout viewport does not move when browser chrome
+                    collapses. --bottombar-h and --chrome-lift went with it. */}
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>

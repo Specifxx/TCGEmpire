@@ -8256,3 +8256,92 @@ halves are verified (direct run still writes the report; import writes nothing).
 No other script in `scripts/` needs this guard because no other test imports one
 — this was the first, and since the parsing is precisely what must be tested
 without a key, the import is not going away.
+
+## The mobile bottom tab bar is deleted; navigation is back in the header — 2026-09-18
+
+"The bottom part keeps rising up on the phone I've given up fixing it. Let's get
+rid of it and add the menu bar back to the top and make sure it all fits on a
+mobile phone."
+
+**Three attempts, each a real fix for the previous one's bug, none of them
+enough.** Recorded because the pattern matters more than the code:
+
+1. `calc(100lvh - 100dvh)` in the bar's `bottom:` — a permanent gap on a Z Fold 7
+   and a stutter across the whole page during scroll, because dvh/lvh are
+   recomputed continuously while the browser's own chrome animates and every
+   recomputation invalidated a `:root` custom property, forcing a global style
+   recalculation on exactly those frames.
+2. The same value moved to a compositor-only `translateY` — killed the jank,
+   kept the wrong number.
+3. `lib/chrome-lift.ts`: a measured `visualViewport` value, self-consistent
+   (largest height seen minus current, both from one API), with a pinch-zoom gate
+   on `scale`, a geometry-change reset keyed on `documentElement.clientWidth`,
+   and a 25% clamp. Unit-tested. The most correct of the three. The bar still
+   rode up the screen.
+
+**The diagnosis that ends it is structural, not another patch.** A
+`position: fixed` bottom element is placed against the LAYOUT viewport, whose
+bottom edge sits behind the browser's chrome whenever that chrome is out, and the
+offset between the two is not reliably knowable from inside the page on every
+device. The top edge has no such problem: it does not move when chrome collapses.
+So a header button is not a better fix for this bug — it is a position where the
+bug cannot occur. `position: sticky; top: 0` on NavbarShell needs no
+compensation at all.
+
+**Deleted, not disabled:** `components/BottomTabBar.tsx`, `lib/chrome-lift.ts`,
+`tests/mobile-bottom-bar.test.ts` (24 cases pinning arithmetic that no longer
+exists), the `--bottombar-h` and `--chrome-lift` custom properties, and the
+`body { padding-bottom }` that reserved 3.5rem under every page on every phone.
+`.above-bottombar` keeps its name — five components anchor off it and the native
+AdMob banner still needs exactly that reservation — but now carries only the
+banner and the safe-area inset.
+
+**What the five tabs became.** Home is the logo beside the new button; Search is
+the full-width box on the header's second row; Watch and Binder are in the
+overlay the button opens, one tap further than before. The WATCH COUNT BADGE
+moved onto the button rather than being dropped: it is the only thing in that
+list that was not navigation, being the one ambient signal that a price alert
+has fired.
+
+**"Make sure it all fits" needed measuring, and the first attempt did not fit.**
+Moving the Menu tab into the header cost 46px in a row that had ONE pixel of
+slack at 375px. Measured in Chromium against a real dev server:
+
+| width | header row needed / had | page scrollWidth / viewport |
+|---|---|---|
+| 320px | 390 / 288 | 406 / 320 |
+| 360px | 390 / 328 | 406 / 360 |
+| 375px | 390 / 343 | 406 / 375 |
+| 390px | 390 / 358 | 406 / 390 |
+| 640px | 700 / 592 | 724 / 640 |
+
+Every phone width scrolled sideways. **320px and 640px were already broken before
+this change** — the baseline measured 360/320 and 684/640 with the new button
+hidden — so the header row had been over budget for a while and nothing was
+watching; `scripts/mobile-check.ts` audits 375px, where it fitted by one pixel.
+
+Two changes fixed all of it. The left cluster lost `shrink-0` for `min-w-0`: a
+non-shrinkable group cannot absorb anything, so the overflow had nowhere to go
+but the document, and the worst case is now a truncated label rather than a
+horizontally scrolling site. And the below-lg **"Database" text link was removed**
+(~76px) — the most redundant thing in the header, since the full-width search box
+on the very next row submits to `/browse` and the overlay lists it too. The
+desktop `lg:block` copy is untouched. **Premium stayed**: it is there by an
+explicit 2026-09-10 brief and is the reason the cluster must be able to shrink.
+
+After: 288/288, 328/328, 343/343, 358/358, 592/592, 672/672 — no page-level
+horizontal scroll at any of 320/360/375/390/414/640/720/790/1024/1280, no tap
+target under 44x44 at any phone width, no clipped text, and the overlay opens
+full-width with 59 links. Two sub-44px targets remain at 640px and up (the
+command-launcher button and the country switcher, both `sm:`-gated); both predate
+this change and are untouched by it.
+
+**One entry point, still.** `tests/single-menu-entry.test.ts` has always pinned
+"exactly one control opens CinematicNavMenu below lg", and it still does — it now
+checks the whole component set for a second `setOpen(true)` rather than naming
+the winner, so the invariant survives the next time this moves.
+
+**Verified in a browser this time, which earlier passes could not be.** The
+sandbox has no database, but a dev server with a dummy `DATABASE_URL` serves
+`/privacy` (no data loaders), and that is enough to measure the header — it is
+site chrome, identical on every route.

@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { DURATION, EASING, Z } from "../src/lib/motion-tokens";
 import tailwindConfig from "../tailwind.config";
 
-const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+const ROOT = process.cwd();
+const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/\/\*[\s\S]*?\*\//g, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -334,34 +335,64 @@ test("WelcomeChecklist is never a modal and keys eligibility off the rc_welcome_
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// P7 — mobile bottom tab bar.
+// P7's mobile bottom tab bar — REMOVED, 2026-09-18, and these pin the removal.
+//
+// It shipped three attempts at staying pinned to the bottom of a phone screen
+// (a dvh/lvh calc in `bottom:`, the same value as a compositor-only transform,
+// then a measured visualViewport version with a pinch-zoom gate and a geometry
+// reset) and rode up the screen through all three. Reported as "the bottom part
+// keeps rising up on the phone I've given up fixing it. Let's get rid of it and
+// add the menu bar back to the top." Navigation moved to HeaderMenuButton, which
+// cannot have that class of bug: the TOP edge of the layout viewport does not
+// move when a mobile browser's chrome collapses.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("--bottombar-h is 0 inside the exact same 1024px query that sets --sidenav-w, so the two can never disagree", () => {
+test("the bottom bar and its viewport arithmetic are deleted, not merely unmounted", () => {
+  for (const rel of ["src/components/BottomTabBar.tsx", "src/lib/chrome-lift.ts"]) {
+    assert.ok(!existsSync(join(ROOT, rel)), `${rel} must be deleted`);
+  }
+  const layout = readCode("src/app/layout.tsx");
+  assert.doesNotMatch(layout, /BottomTabBar/, "no import and no render may survive");
+});
+
+test("the CSS reservations went with it, and .above-bottombar keeps only what still applies", () => {
   const css = read("src/app/globals.css");
-  assert.match(css, /--bottombar-h:\s*3\.5rem;/, "must default to a real height below lg");
+  // --bottombar-h reserved space for a bar that no longer exists; --chrome-lift
+  // corrected a position that is no longer computed. Both had to go together —
+  // leaving either would silently pad every page by 3.5rem or shift the corner
+  // nudges by a value nothing writes any more.
+  assert.doesNotMatch(css, /--bottombar-h:/, "--bottombar-h must be gone");
+  assert.doesNotMatch(css, /--chrome-lift:/, "--chrome-lift must be gone");
+  assert.doesNotMatch(css, /var\(--bottombar-h\)/, "nothing may still read --bottombar-h");
+  assert.doesNotMatch(css, /var\(--chrome-lift\)/, "nothing may still read --chrome-lift");
+  // The native AdMob banner reservation is a separate, still-live concern, and
+  // the utility keeps its name because five components anchor off it.
   assert.match(
     css,
-    /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;[\s\S]{0,400}?--bottombar-h:\s*0px;/,
-    "--bottombar-h: 0px must live in the SAME :root block as --sidenav-w: 4rem, not a second 1024px query"
+    /\.above-bottombar\s*\{[\s\S]{0,200}var\(--native-banner-h\)[\s\S]{0,120}safe-area-inset-bottom/,
+    "the utility must still clear the native banner and the safe area"
   );
-  assert.match(css, /\.above-bottombar\s*\{[\s\S]{0,200}var\(--bottombar-h\)[\s\S]{0,200}var\(--native-banner-h\)/, "the utility must stack both reservations");
+  assert.match(css, /body\s*\{\s*padding-bottom:\s*calc\(var\(--native-banner-h\)/, "body padding keeps the banner reservation only");
+  // --sidenav-w's own 1024px block must survive the edit that removed its
+  // former neighbour.
+  assert.match(css, /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;/);
 });
 
-test("BottomTabBar is lg:hidden, carries aria-label, and has exactly five targets", () => {
-  const src = readCode("src/components/BottomTabBar.tsx");
-  assert.match(src, /aria-label="Primary"/);
-  assert.match(src, /lg:hidden/);
-  const tabsAt = src.indexOf("const TABS");
-  const tabs = src.slice(tabsAt, src.indexOf("];", tabsAt));
-  const labels = [...tabs.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
-  // "Portfolio" until 2026-09-16 — see tests/game-before-money.test.ts for why
-  // the binder stopped being named after a brokerage account. The COUNT is what
-  // this test is really about; the label is pinned so a rename is deliberate.
-  assert.deepEqual(labels, ["Home", "Search", "Watch", "Binder", "Menu"]);
+test("HeaderMenuButton is the below-lg nav entry point and opens the same overlay", () => {
+  const src = readCode("src/components/HeaderMenuButton.tsx");
+  assert.match(src, /useMegaMenu\(\)/, "same context the deleted tab used");
+  assert.match(src, /setOpen\(true\)/);
+  assert.match(src, /aria-label="Open menu"/);
+  assert.match(src, /aria-haspopup="dialog"/);
+  // The watch count was the one non-navigational thing the bar carried: the only
+  // ambient signal that a price alert fired. It moved rather than being dropped.
+  assert.match(src, /useWatchlist\(\)/);
+  assert.match(src, /9\+/, "same 9+ cap the bar's badge used");
+  // Below lg only — from lg the command launcher and SideNav already cover it.
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderMenuButton className="lg:hidden" \/>/);
 });
 
-test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the bar via .above-bottombar", () => {
+test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
   for (const rel of [
     "src/components/SignupPromoPopup.tsx",
     "src/components/PremiumSlideIn.tsx",

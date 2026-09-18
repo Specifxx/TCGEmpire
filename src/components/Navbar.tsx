@@ -10,6 +10,7 @@ import { NavUser } from "./NavUser";
 import { PremiumNavLink } from "./PremiumNavLink";
 import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
+import { HeaderMenuButton } from "./HeaderMenuButton";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -22,23 +23,35 @@ export function Navbar() {
           whole window on wide screens. */}
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
        <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
-        {/* Logo + the primary Database link, kept together on the left. On phones the
-            right-hand inline nav collapses into the phone Menu overlay (BottomTabBar's
-            Menu tab), so the Database tab lives here in the header's open space instead. */}
-        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+        {/* Logo + the phone Premium link. The below-lg Database link used to live
+            here too and was removed when HeaderMenuButton joined this row — see
+            the tombstone just below. Everything the right-hand inline nav hides
+            at these widths is in the menu overlay that button opens. */}
+        {/* `min-w-0` + shrinkable, NOT `shrink-0`. Measured at 320-390px after the
+            bottom bar's Menu tab moved into this row as HeaderMenuButton: the row
+            needed 390px inside 343 at 375px and the PAGE scrolled sideways (406 in
+            375). A `shrink-0` group cannot give, so the overflow had nowhere to go
+            but the document. Letting this side shrink means the worst case is a
+            truncated label on a very narrow phone rather than a horizontally
+            scrolling site. */}
+        <div className="flex min-w-0 items-center gap-1 sm:gap-3">
           <Link href="/" className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home">
             <BrandLogo />
             <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
               Rift<span className="text-brand-400">Compare</span>
             </span>
           </Link>
-          <Link href="/browse" className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
-            Database
-          </Link>
+          {/* THE BELOW-lg "Database" TEXT LINK USED TO SIT HERE and was removed when
+              HeaderMenuButton took the deleted bottom bar's place in this row. It
+              cost ~76px of a row that had 1px of slack at 375px, and it is the most
+              redundant thing in the header: the full-width search box on the very
+              next row submits to /browse (SearchBar's commitSearch), and /browse is
+              in the menu overlay too. The desktop copy in the right-hand nav
+              (lg:block) is untouched. */}
           {/* Premium, on phones, sitting next to Database (2026-09-10, owner
               brief). The desktop "✦ Premium" link further down is gated xl:block,
               so before this a phone visitor could only reach Premium through the
-              Menu-tab overlay — see CinematicNavMenu's spotlight banner, which
+              menu overlay — see CinematicNavMenu's spotlight banner, which
               stays as the in-menu answer. Same lg:hidden band and same shape as
               Database above so the two read as one pair, but gold and shimmering
               because the brief is specifically that this one should stand out.
@@ -77,9 +90,9 @@ export function Navbar() {
                 Decks, Blog), Database moving into this row, the
                 Premium upsell (96px, opens a dialog) and the Discord icon (36px,
                 external).
-            Everything hidden at a given width is in the Menu overlay (opened from
-            BottomTabBar's Menu tab below lg) via nav-groups.ts, and Discord is in
-            the footer, so no link is lost.
+            Everything hidden at a given width is in the Menu overlay (opened by
+            HeaderMenuButton below lg) via nav-groups.ts, and Discord is in the
+            footer, so no link is lost.
 
             THE NAV LINKS MOVED md → lg, and the reason is worth keeping: `md`
             put them on screen from 768px, but the SEARCH BAR — the only element
@@ -107,7 +120,7 @@ export function Navbar() {
           {/* Command launcher — every page can reach every page from here (⌘K). */}
           {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
               (worse once the logged-in avatar showed). Everything here is reachable
-              from the phone Menu tab's pop-up overlay, so hide it below sm. */}
+              from the phone menu overlay, so hide it below sm. */}
           <span className="hidden sm:inline-flex">
             <CommandLauncherButton />
           </span>
@@ -183,17 +196,16 @@ export function Navbar() {
           <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">
             ✦ Premium
           </PremiumNavLink>
-          {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
-              full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
-              the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model).
-              Below lg there is likewise only one entry point now: this header no longer
-              renders its own hamburger (MobileNav) — BottomTabBar's "Menu" tab opens the
-              exact same CinematicNavMenu overlay via the same useMegaMenu()/setOpen, and
-              having both on screen at once below lg was reported directly: "we have the
-              menu, but we also have the menu on the top right… we only need one of them."
-              The bottom-bar tab wins: it's the thumb-reachable slot already used for
-              Watch/Binder, so keeping Menu there rather than in the header keeps every
-              phone-only action in the one place. */}
+          {/* Single nav entry point, and it is still exactly one at every width.
+              From lg the ⌘K "Explore" command launcher (above) is the full-nav
+              surface — it lists the same NAV_GROUPS searchably — so there is no
+              separate "Menu" dropdown. Below lg the one control is
+              HeaderMenuButton at the end of this row, which opens the same
+              CinematicNavMenu overlay through the same useMegaMenu()/setOpen.
+              "We have the menu, but we also have the menu on the top right… we
+              only need one of them" was reported directly and still holds; the
+              surviving copy simply moved back up here when the bottom tab bar
+              that had been hosting it was deleted. */}
           {/* Discord, the region switcher and the sign-in control (NavUser) —
               always visible now, see the doc comment above this nav's opening
               tag for why the prior pre-scroll hiding on "/" was reverted. A
@@ -227,6 +239,17 @@ export function Navbar() {
           <ThemeToggle className="hidden sm:grid" />
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
+          {/* THE PHONE/TABLET MENU, BACK IN THE HEADER. Below lg only — from lg
+              the ⌘K launcher above is the full-nav surface and the SideNav rail
+              takes over, so this would be a third entry point at a width that
+              already has two. Still exactly ONE control opening the overlay at
+              any given width, which is what tests/single-menu-entry.test.ts
+              pins; what changed is that the one control is here rather than in
+              a fixed bottom bar, because that bar could not be kept pinned to
+              the bottom of a phone screen across three attempts (see
+              HeaderMenuButton.tsx). LAST in the row, so it sits at the screen's
+              right edge — the nearest thing to a thumb that a top bar has. */}
+          <HeaderMenuButton className="lg:hidden" />
         </nav>
        </div>
 
