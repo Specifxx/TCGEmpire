@@ -12,7 +12,8 @@ import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from 
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
-import { isFallbackRetailer, normaliseCondition, CONDITIONS, CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER } from "@/lib/constants";
+import { normaliseCondition, CONDITIONS, CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER } from "@/lib/constants";
+import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
@@ -308,25 +309,24 @@ export function CardPriceComparison({
   // existing row. It's a reference figure regardless: it never feeds `prices`/
   // `storeCount`/the cheapest metrics (those come only from computeMarket).
   const tcg = useMemo(() => {
-    // Suppress this block only where TCGplayer is ALREADY a buyable row in the
-    // table above — in practice the US alone, since every converted variant is a
-    // fallback retailer and computeMarket strips those from the comparison
-    // entirely (see ALL_FALLBACK_RETAILERS).
-    //
-    // The test used to be a hand-listed "tcgplayer | tcgplayer_uk | tcgplayer_sg",
-    // which hid the block from UK/SG visitors even though their converted row is
-    // never rendered — so those markets saw no TCGplayer figure at all. Matching
-    // every tcgplayer* retailer instead would have extended that to AU and CA.
-    // Asking the real question — "is it in the table?" — fixes all four.
-    const shownNatively = rows.some(
-      (r) => r.retailer.startsWith("tcgplayer") && r.country === country && !isFallbackRetailer(r.retailer),
-    );
-    if (shownNatively) return null;
-    const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil);
-    const foil = rows.find((r) => r.retailer === "tcgplayer" && r.isFoil);
-    const src = std ?? foil;
+    // The suppression rule and the row choice now live in lib/tcg-reference.ts,
+    // because the QuickView popup needs the identical decision and a second copy
+    // of this predicate is how it broke the first time: it was a hand-listed
+    // "tcgplayer | tcgplayer_uk | tcgplayer_sg", which hid the block from UK and
+    // SG visitors even though their converted row is never rendered. Read that
+    // file's header before changing the behaviour here.
+    const ref = tcgReferenceRows(rows, country);
+    if (!ref) return null;
+    const src = ref.std ?? ref.foil;
     if (!src) return null;
-    return { usdCents: std?.priceCents ?? null, usdCentsFoil: foil?.priceCents ?? null, href: src.buyHref };
+    return {
+      usdCents: ref.std?.priceCents ?? null,
+      usdCentsFoil: ref.foil?.priceCents ?? null,
+      // MarketRow arrives with its outbound link already affiliate-wrapped;
+      // the QuickView wraps a raw url itself. That difference is why the shared
+      // helper returns rows rather than a finished block.
+      href: src.buyHref,
+    };
   }, [rows, country]);
   // Cardmarket reference price — same shape as the TCGplayer block above, but
   // UK/EU only, and no currency conversion (the UK row is already GBP-converted

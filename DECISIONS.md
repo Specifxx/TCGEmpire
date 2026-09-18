@@ -8177,3 +8177,82 @@ parsing — Bing wraps payloads in a `d` property and returns .NET
 return `null` rather than reaching a report as the literal string "Invalid Date",
 and that `templateOf` agrees with `gsc-coverage.yml`'s `tpl()`, without which the
 comparison the whole script exists for would be wrong rather than absent.
+
+## The TCGplayer reference price reaches the card popup — 2026-09-18
+
+Asked for directly: "add TCGplayer reference price to the actual cards pop ups".
+The full card page has carried this block for months. The QuickView modal — which
+opens from every card tile on the site and is where most visitors actually
+compare prices, without ever loading a card page — showed no TCGplayer figure at
+all.
+
+**It is a reference block below the comparison, NOT a row inside it, and that is
+a standing product rule rather than a layout preference.** `constants.ts`'s "THE
+RULE" section is explicit: TCGplayer's AU/UK/SG/CA prices are its single USD
+market price run through an FX rate. Nobody can buy from "TCGplayer Australia",
+the figure excludes international postage and duty, and admitting it to the
+comparison would let it undercut the real local stores this site exists to
+compare. The popup's `!isFallbackRetailer` filter is untouched; the new block
+sits after the list, carries the "reference" chip and the "may not ship to your
+country" caveat, and renders its own affiliate disclosure rather than leaning on
+the comparison list's — that one is conditional on the list being non-empty, and
+the case where the reference matters most is precisely a card with no local
+listings.
+
+**The selection rule is now shared, and that is the substance of the change
+rather than the forty lines of wiring.** `lib/tcg-reference.ts` holds one
+`tcgReferenceRows(rows, country)`, called by both `CardMarketSection` and
+`QuickView`. A second copy is how this broke the first time: the card page's
+predicate was a hand-listed `tcgplayer | tcgplayer_uk | tcgplayer_sg`, which
+suppressed the block for UK and SG visitors even though their converted row is
+never rendered, so those two markets saw no TCGplayer price anywhere.
+`lib/tcgplayer.ts` carries a scar from the same class of bug
+(`tests/tcgplayer.test.ts`: "The cause was DRIFT between two copies of one
+rule"). The shared predicate asks **"is TCGplayer already a buyable row in this
+market?"** — not any list of retailer keys — so it stays correct for every
+market that exists and any market added later.
+
+**Verified against the live row set, not only against fixtures.** Running the
+selector over the real `/api/card` response for `Vi, Piltover Enforcer` (15 rows,
+production): US suppresses, and AU/UK/SG/CA/EU each quote `retailer="tcgplayer"`
+at US$4,000.00 — the USD row, never a pre-converted `tcgplayer_<market>` row,
+which would double-convert since `TcgMarketPrice` converts what it is handed
+from USD. The EU case is worth recording: the importer writes no `tcgplayer_eu`
+at all (the EU's reference source is Cardmarket), so nothing is suppressed and
+the USD row carries it — which is exactly why the predicate asks about the table
+rather than about the existence of a fallback.
+
+**Costs no request.** The USD row is already in the `/api/card` response the
+modal fetches for its comparison list, so this is a pure render of data that was
+being discarded.
+
+**Not visually verified in a browser, and the reason is worth writing down.**
+There is no database in this sandbox, so the popup cannot be rendered locally —
+it fetches `/api/card`. Driving the live site with Chromium to check the
+equivalent card-page block failed too: `ERR_CERT_AUTHORITY_INVALID`, because the
+sandbox's Chromium does not read the agent proxy's CA, and disabling TLS
+verification to get a screenshot is not a trade worth making. So the evidence
+here is thirteen unit cases plus the live-row probe above, and the visual side
+rests on reusing a component that has been live on the card page for months.
+`TcgMarketPrice` gained one `compact` prop (tighter spacing, smaller headline)
+because the page block's `mt-6 p-4 text-2xl` reads as a different component
+inside a modal whose own rhythm is `mt-3`/`p-3`; the figures, the caveat and the
+disclosure are identical, since a reference price that says less in the popup
+than on the page is how two surfaces start disagreeing.
+
+**Cardmarket's equivalent block is still page-only.** `CardmarketPrice` serves
+UK and EU visitors on the card page and was deliberately left out of this pass —
+the request named TCGplayer, and the same shared-selector treatment should be
+applied to it rather than a second hand-rolled predicate.
+
+**One defect found and fixed in the same pass, caused by this change's own test.**
+`tests/bing-coverage.test.ts` imports `scripts/bing-coverage.ts` to unit-test its
+parsing, and that script called `main()` at the top level — so importing it ran
+the whole report. `npm test` silently wrote a `docs/bing-coverage.json`, which
+got as far as being staged into a commit, and in any environment holding
+`BING_API_KEY` the test run would have fired six live Bing API calls. `main()` is
+now guarded on `import.meta.url === pathToFileURL(process.argv[1]).href` and both
+halves are verified (direct run still writes the report; import writes nothing).
+No other script in `scripts/` needs this guard because no other test imports one
+— this was the first, and since the parsing is precisely what must be tested
+without a key, the import is not going away.

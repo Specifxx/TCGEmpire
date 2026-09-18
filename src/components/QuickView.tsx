@@ -7,6 +7,8 @@ import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS } from "@/lib/constants";
+import { tcgReferenceRows } from "@/lib/tcg-reference";
+import { TcgMarketPrice } from "./TcgMarketPrice";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -194,6 +196,35 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       }
     }
     return [...byRetailer.values()];
+  })();
+
+  // TCGPLAYER REFERENCE PRICE. Asked for directly: the popup is where most
+  // visitors actually compare prices, and it was the one surface carrying no
+  // TCGplayer figure at all — the full card page has had this block for months.
+  //
+  // NOT a comparison row, and that distinction is a standing product rule rather
+  // than a styling choice (constants.ts, "THE RULE"): TCGplayer's AU/UK/SG/CA
+  // prices are its USD market price through an FX rate, so they must never sit in
+  // the list above where they could undercut the real local stores this site
+  // exists to compare. `inStock` still filters them out, untouched. This is the
+  // labelled reference block, below the comparison, exactly as on the page.
+  //
+  // The selection rule is shared with CardMarketSection (lib/tcg-reference.ts)
+  // instead of copied — see that file's header for the bug a second copy caused.
+  // Costs no request: the USD row is already in the /api/card response the modal
+  // fetches for the comparison list.
+  const tcgRef = (() => {
+    const ref = tcgReferenceRows(prices ?? [], country);
+    if (!ref) return null;
+    const src = ref.std ?? ref.foil;
+    if (!src) return null;
+    return {
+      usdCents: ref.std?.priceCents ?? null,
+      usdCentsFoil: ref.foil?.priceCents ?? null,
+      // Raw url here, unlike the card page's pre-wrapped buyHref — same call the
+      // comparison rows' buy buttons make.
+      href: affiliateUrl(src.url, src.retailer),
+    };
   })();
 
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
@@ -455,6 +486,20 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                   under the list, not only in the page footer. */}
               {prices && inStock.length > 0 && <AffiliateDisclosure partner="both" tight />}
             </div>
+
+            {/* Below the comparison, never inside it — see the tcgRef comment
+                above. Renders its own affiliate disclosure (the default) rather
+                than leaning on the list's: the disclosure above belongs to the
+                rows above it, and this block can appear when that list is empty,
+                which is in fact the case it matters most in. */}
+            {tcgRef && (
+              <TcgMarketPrice
+                usdCents={tcgRef.usdCents}
+                usdCentsFoil={tcgRef.usdCentsFoil}
+                href={tcgRef.href}
+                compact
+              />
+            )}
 
             {/* Shown whenever this market has no live eBay row for the card
                 (`!hasEbay`) — which now includes every Common/Uncommon base

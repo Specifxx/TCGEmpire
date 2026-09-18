@@ -148,6 +148,21 @@ test("the script is read-only — it never submits a URL to Bing", () => {
   assert.doesNotMatch(code, /prisma/i);
 });
 
+test("main() runs only when invoked as a script, never on import", () => {
+  // This file imports the module, and an UNGUARDED main() made that import run
+  // the whole report: `npm test` left a docs/bing-coverage.json behind (it was
+  // committed once before this was caught), and with BING_API_KEY set in the
+  // environment it would have fired six live API calls from the test run. The
+  // import is not optional — the parsing above is exactly what has to be
+  // unit-tested — so the guard is what keeps both true.
+  const code = codeOnly(read("scripts/bing-coverage.ts"));
+  assert.match(code, /const invokedDirectly =/);
+  assert.match(code, /import\.meta\.url === pathToFileURL\(process\.argv\[1\]\)\.href/);
+  assert.match(code, /if \(invokedDirectly\) \{\s*main\(\)/);
+  // A bare top-level call must not come back.
+  assert.doesNotMatch(code, /^main\(\)/m, "main() must not be called at the top level");
+});
+
 test("a missing key explains itself and exits 0, like gsc-coverage does", () => {
   const code = codeOnly(read("scripts/bing-coverage.ts"));
   assert.match(code, /if \(!key\)/);

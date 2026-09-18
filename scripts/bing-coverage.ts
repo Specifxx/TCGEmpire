@@ -80,6 +80,7 @@
  */
 
 import { writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 const API_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
 const REPORT_PATH = "docs/bing-coverage.json";
@@ -442,8 +443,23 @@ function finish(out: string[], report: Record<string, unknown>) {
   }
 }
 
-// Never fail the job: this is a monitor. A crash here would page someone about
-// Bing's API rather than about the site.
-main().catch((e) => {
-  console.error("bing-coverage failed:", e instanceof Error ? e.message : e);
-});
+// RUN ONLY WHEN INVOKED AS A SCRIPT, never on import.
+//
+// tests/bing-coverage.test.ts imports the pure helpers above, and an unguarded
+// `main()` made that import execute the whole report: `npm test` left a
+// docs/bing-coverage.json behind (it got as far as being committed once), and in
+// any environment that has BING_API_KEY set it would have fired six live API
+// calls from the test run. No other script here needs this guard because no
+// other test imports one — this is the first, and the parsing is exactly the
+// part that has to be unit-tested, so the import is not going away.
+//
+// Never fails the job either way: this is a monitor. A crash here would page
+// someone about Bing's API rather than about the site.
+const invokedDirectly =
+  process.argv[1] != null && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (invokedDirectly) {
+  main().catch((e) => {
+    console.error("bing-coverage failed:", e instanceof Error ? e.message : e);
+  });
+}

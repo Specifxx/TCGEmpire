@@ -26,11 +26,20 @@ export function TcgMarketPrice({
   // disclosure beside it. Pass false ONLY where a caller renders its own
   // adjacent disclosure covering this block (see CardMarketSection).
   disclosure = true,
+  // Tighter spacing and a smaller headline, for the QuickView popup. The card
+  // page block is sized for a full-width section; dropped into a modal whose
+  // own panels are p-3 and whose rhythm is mt-3/mt-4, the default mt-6/p-4 and
+  // text-2xl read as a different component rather than the same one.
+  // Presentation only — the figures, the caveat and the disclosure are
+  // identical, because a reference price that says less in the popup than on
+  // the page is how the two surfaces start disagreeing.
+  compact = false,
 }: {
   usdCents: number | null; // standard (non-foil) TCGplayer market price, USD cents
   usdCentsFoil: number | null; // foil market price, USD cents (if the card has a foil)
   href: string | null; // affiliate-wrapped TCGplayer product URL
   disclosure?: boolean;
+  compact?: boolean;
 }) {
   const { country, currency: cur } = useCountry();
   if (usdCents == null && usdCentsFoil == null) return null;
@@ -45,7 +54,11 @@ export function TcgMarketPrice({
   const foil = local(usdCentsFoil);
 
   return (
-    <div className="card-surface mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 p-4">
+    <div
+      className={`card-surface flex flex-wrap items-center justify-between gap-x-4 gap-y-3 ${
+        compact ? "mt-3 p-3" : "mt-6 p-4"
+      }`}
+    >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-white">TCGplayer market price</span>
@@ -53,7 +66,7 @@ export function TcgMarketPrice({
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           {std != null && (
-            <span className="num text-2xl font-extrabold text-accent">
+            <span className={`num font-extrabold text-accent ${compact ? "text-xl" : "text-2xl"}`}>
               {formatMoney(std, cur)}
               {usdCents != null && (
                 <span className="ml-1.5 align-middle text-xs font-medium text-slate-500">
