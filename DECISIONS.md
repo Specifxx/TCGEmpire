@@ -8586,3 +8586,58 @@ find it and three assertions about schema re-push and row verification failed
 against a step it thought was missing. The step was renamed to the convention
 rather than the test loosened — the convention is what makes the guard able to
 find the current step at all.
+
+## The Database link is back, ungated, and the notification bell is gone — 2026-09-19
+
+"The database button is gone on mobile phone, that's the most important one, put
+that back, squeeze the premium in there, get rid of the notification bell" — and
+then, mid-change: "bring the database button back completely on desktop as well,
+this is a big issue."
+
+**The desktop half of that report was real, and worse than it looked.** Removing
+the below-lg Database link on 2026-09-18 left one copy gated `lg:block`. The
+other had been `lg:hidden`. Two links with complementary gates read as "covered
+everywhere" and were not: the whole **640-1023px band — every tablet and every
+narrow laptop window — had no Database link at all**. Nobody noticed because the
+two gates looked like a pair.
+
+There is now **one ungated link**, in the left cluster beside the logo. No width
+can hide it and there is no second copy to drift.
+
+**The 2026-09-18 reasoning for removing it was wrong, and worth naming.** It went:
+the search box one row down submits to `/browse`, so the link is redundant. That
+confuses a route with a way in. `/browse` is the product's primary destination;
+a search box is a thing you use when you already know what you want.
+
+**Restoring it cost ~76px in a row with none, so something had to go.** The
+notification bell (asked for) covered it from `sm` up, where that bell already
+lived — it was nothing below `sm`. Two cuts covered the rest:
+
+- **The "RiftCompare" wordmark waits for `lg`** (was `sm`). Measured: the logo
+  link is **151px with the word and 48px without**, and the 640-1023px band
+  needed 77px. It is the only thing in the row that is decoration rather than a
+  destination — the mark is still the home link, still tappable, still the brand.
+  This is the cut to prefer over any nav control, every time.
+- **The watchlist moves to `sm`-and-up.** Below `sm` seven controls measurably
+  overlapped, and it was the cheapest 48px: one tap away in the menu overlay,
+  where Database and Premium were both named must-haves and the market switcher,
+  account control and menu are each the only route to something. It remains a
+  **separate** control from the menu wherever it appears, which is what "the
+  watchlist and the menu should be separate" actually asked for.
+
+**Measured after, at ten widths** (320/360/375/390/414/640/720/790/1024/1280): no
+horizontal scroll, no overlapping controls, no spilled text, no tap target under
+44x44 at any phone width, Database present at **every** width, Premium present
+below lg, and zero notification bells.
+
+**What removing the bell costs, stated rather than dropped.** `NotificationBell`
+was an in-place dropdown with **no page equivalent — there is no `/notifications`
+route** — so unread notifications currently have no surface at all. The component
+and `use-unread.ts` are deliberately left in the tree. If notifications matter,
+the fix is a real page linked from the menu overlay, not squeezing the bell back
+into a row that has now lost this argument twice.
+
+**Two pre-existing things this pass did not touch**, both predating it: the
+market switcher is 38px tall from `sm` up (`sm:min-h-0`, so desktop rows stay
+36px), and there is no Premium link between 1024 and 1279px — the below-lg copy
+is `lg:hidden` and the desktop copy is `xl:block`, leaving `lg` itself bare.

@@ -82,8 +82,8 @@ test("PITCH_TOOLS survives as the canonical Premium-only tool list even though n
 
 test("the phone header still carries a gold Premium link, without disturbing the desktop one", () => {
   const src = read("src/components/Navbar.tsx");
-  // THIS TEST USED TO ANCHOR ON THE MOBILE "Database" LINK, which sat beside
-  // Premium in the left cluster and is gone as of 2026-09-18: when the bottom
+  // THIS TEST ONCE ANCHORED ON THE MOBILE "Database" LINK, which was briefly
+  // removed on 2026-09-18 and restored on 2026-09-19. The history: when the bottom
   // tab bar was deleted, its Menu tab moved into this row as HeaderMenuButton
   // and cost 46px in a row with one pixel of slack at 375px. Database was the
   // most redundant ~76px available — the full-width search box on the next row
@@ -100,7 +100,9 @@ test("the phone header still carries a gold Premium link, without disturbing the
   assert.match(leftCluster, /<PremiumNavLink/, "Premium must still be in the header's left cluster on phones");
   assert.match(leftCluster, /lg:hidden/, "the mobile Premium link must stay in the below-lg band");
   assert.match(leftCluster, /text-gold/, "it must be gold — the Premium identity colour");
-  assert.doesNotMatch(leftCluster, /Database/, "the mobile Database link is deliberately gone — see above");
+  // Database is back in this cluster as of 2026-09-19 ("that's the most important
+  // one"), sitting immediately before Premium — the 2026-09-10 pairing restored.
+  assert.match(leftCluster, /Database/, "Database sits beside Premium again");
 
   // The header's horizontal budget: nav links may not turn on before lg, and
   // the desktop Premium link must still defer to xl. Both are also pinned by

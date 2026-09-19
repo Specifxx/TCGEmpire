@@ -415,7 +415,14 @@ test("the watchlist is its own header control, linking to /watching and carrying
   // and what separates this from the outline NotificationBell in the sm-to-lg
   // band where a signed-in visitor sees both.
   assert.match(src, /fill=\{count > 0 \? "currentColor" : "none"\}/);
-  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="lg:hidden" \/>/);
+  // sm..lg, not 0..lg, as of 2026-09-19: restoring the Database link (the
+  // explicit priority) put seven controls in this row and they measurably
+  // overlapped below sm. The watchlist was the cheapest 48px — one tap away in
+  // the menu overlay — where Database, Premium, the market switcher, the account
+  // control and the menu were each either named a must-have or the only route to
+  // something. It is still a SEPARATE control from the menu wherever it appears,
+  // which is what "the watchlist and the menu should be separate" asked for.
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex lg:hidden" \/>/);
 });
 
 test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {

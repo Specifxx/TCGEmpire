@@ -47,22 +47,55 @@ const NAVBAR = "src/components/Navbar.tsx";
 test("the header's left group can shrink, so the row can never push the page sideways", () => {
   const code = readCode(NAVBAR);
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
-  assert.match(row, /className="flex min-w-0 items-center gap-1 sm:gap-3"/, "left group must be shrinkable with min-w-0");
+  assert.match(row, /className="flex min-w-0 items-center gap-[\d.]+ sm:gap-3"/, "left group must be shrinkable with min-w-0");
   assert.doesNotMatch(
     row,
-    /className="flex shrink-0 items-center gap-1 sm:gap-3"/,
+    /className="flex shrink-0 items-center gap-[\d.]+ sm:gap-3"/,
     "shrink-0 here is what made the overflow escape to the document",
   );
 });
 
-test("the redundant below-lg Database link stays out of the header row", () => {
+test("there is exactly ONE Database link and NO width can hide it", () => {
+  // THIS TEST IS THE REVERSE OF WHAT IT ONCE ASSERTED, and the reversal is the
+  // point. It used to pin the below-lg Database link OUT of the row, on the
+  // reasoning that the search box one row down submits to /browse anyway — a
+  // trade made to buy ~76px when HeaderMenuButton replaced the deleted bottom
+  // bar. Reported back as "the database button is gone on mobile phone, that's
+  // the most important one" and then "bring it back completely on desktop as
+  // well, this is a big issue".
+  //
+  // The desktop half of that report was real and worse than it looked: the
+  // surviving copy was gated `lg:block`, so the whole 640-1023px band — every
+  // tablet and every narrow laptop window — had NO Database link either. Two
+  // links with complementary gates (`lg:hidden` + `lg:block`) had left a hole
+  // between them.
+  //
+  // One ungated link is the only arrangement with no gap and nothing to drift.
   const code = readCode(NAVBAR);
+  const links = [...code.matchAll(/<Link\s+href="\/browse"([\s\S]{0,400}?)<\/Link>/g)];
+  const headerLinks = links.filter((m) => /Database/.test(m[1]));
+  assert.equal(headerLinks.length, 1, "exactly one Database link in the header");
+  const cls = /className="([^"]*)"/.exec(headerLinks[0][1])?.[1] ?? "";
+  for (const hide of ["hidden", "lg:block", "lg:hidden", "sm:hidden"]) {
+    assert.ok(!cls.split(/\s+/).includes(hide), `Database must not be gated by "${hide}" (has: ${cls})`);
+  }
+  // It lives in the left cluster, before the search slot.
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
-  assert.doesNotMatch(row, /Database/, "the left group must not carry a Database text link below lg");
-  // The DESKTOP one, in the right-hand nav, is untouched and must stay.
-  assert.match(code, /href="\/browse"[^>]*lg:block[\s\S]{0,40}Database/, "the lg:block Database link must survive");
-  // And nothing lost access: the mobile search row still submits to /browse.
+  assert.match(row, /Database/, "and it sits in the left cluster beside the logo");
+  // The mobile search row still submits to /browse — a second route, not a
+  // substitute (that substitution is exactly what got this removed once).
   assert.match(code, /<HeaderSearchSlot mobile>/);
+});
+
+test("the wordmark, not a nav control, is what pays for the tablet band", () => {
+  // Restoring Database put the 640-1023px row 77px over. The logo link measures
+  // 151px with "RiftCompare" beside the mark and 48px without, so deferring the
+  // WORD to lg covers it with room — and it is the only thing in the row that is
+  // decoration rather than a destination. The mark stays: still the home link,
+  // still tappable, still the brand.
+  const code = readCode(NAVBAR);
+  assert.match(code, /<span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">/);
+  assert.doesNotMatch(code, /tracking-tight text-white sm:block/, "the wordmark must not turn back on at sm");
 });
 
 test("Premium keeps its phone slot — it was an explicit brief, not incidental", () => {

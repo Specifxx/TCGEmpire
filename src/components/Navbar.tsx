@@ -22,11 +22,11 @@ export function Navbar() {
     <NavbarShell>
       {/* Full-window header (not capped at the content max-width) so the nav fits the
           whole window on wide screens. */}
-      {/* px-3 below sm (was px-4): 8px of the ~40 that putting "Premium" back as
+      {/* px-2 below sm (was px-4, then px-3): 16px of what putting "Premium" back as
           TEXT needed, and the cheapest 8px available — it is whitespace, not a
           control. sm and up are untouched. */}
-      <div className="mx-auto w-full px-3 sm:px-6 lg:px-8">
-       <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
+      <div className="mx-auto w-full px-2 sm:px-6 lg:px-8">
+       <div className="flex h-16 w-full items-center justify-between gap-1 sm:gap-4">
         {/* Logo + the phone Premium link. The below-lg Database link used to live
             here too and was removed when HeaderMenuButton joined this row — see
             the tombstone just below. Everything the right-hand inline nav hides
@@ -38,20 +38,40 @@ export function Navbar() {
             but the document. Letting this side shrink means the worst case is a
             truncated label on a very narrow phone rather than a horizontally
             scrolling site. */}
-        <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+        <div className="flex min-w-0 items-center gap-0.5 sm:gap-3">
           <Link href="/" className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home">
             <BrandLogo />
-            <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
+            {/* THE WORDMARK WAITS FOR lg (was sm). Measured at 640px: this link is
+                151px with the word, 48px as the mark alone — 103px, and the
+                640-1023px band needed 77px once Database came back. It is the
+                only thing in this row that is decoration rather than a
+                destination: the mark beside it is still the home link, still the
+                brand, and still tappable. The word returns at lg where the row
+                has the width for it. */}
+            <span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">
               Rift<span className="text-brand-400">Compare</span>
             </span>
           </Link>
-          {/* THE BELOW-lg "Database" TEXT LINK USED TO SIT HERE and was removed when
-              HeaderMenuButton took the deleted bottom bar's place in this row. It
-              cost ~76px of a row that had 1px of slack at 375px, and it is the most
-              redundant thing in the header: the full-width search box on the very
-              next row submits to /browse (SearchBar's commitSearch), and /browse is
-              in the menu overlay too. The desktop copy in the right-hand nav
-              (lg:block) is untouched. */}
+          {/* DATABASE — ONE LINK, VISIBLE AT EVERY WIDTH. Reported as "the database
+              button is gone on mobile phone, that's the most important one" and
+              then "bring it back completely on desktop as well, this is a big
+              issue".
+              It had been removed below lg to buy ~76px when HeaderMenuButton
+              replaced the deleted bottom bar, on the reasoning that the search box
+              one row down submits to /browse anyway. That reasoning was wrong about
+              what the link is FOR: /browse is the product's primary destination, and
+              a search box is not a substitute for a visible way in. Worse, the
+              surviving copy was gated `lg:block`, so the whole 640-1023px band —
+              every tablet and every narrow laptop window — had no Database link at
+              all, which is the "gone on desktop" half of the report.
+              Now ungated and in the left cluster beside the logo, so there is no
+              width where it can disappear and no second copy to drift. */}
+          <Link
+            href="/browse"
+            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm"
+          >
+            Database
+          </Link>
           {/* Premium, on phones, sitting next to Database (2026-09-10, owner
               brief). The desktop "✦ Premium" link further down is gated xl:block,
               so before this a phone visitor could only reach Premium through the
@@ -158,10 +178,11 @@ export function Navbar() {
           <span className="hidden lg:inline-flex">
             <CommandLauncherButton />
           </span>
-          {/* Database is beside the logo on smaller screens; keep it in the right nav on desktop. */}
-          <Link href="/browse" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5 lg:block">
-            Database
-          </Link>
+          {/* The desktop-only Database copy that used to sit here is GONE — not the
+              link, the DUPLICATE. It was `lg:block` while the other was
+              `lg:hidden`, so the two never appeared together and the pair left
+              640-1023px with neither. One ungated link in the left cluster now
+              covers every width, which is the only arrangement with no gap. */}
           {/* Sealed products — high-AOV, right after the database. */}
           <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Sealed
@@ -294,7 +315,20 @@ export function Navbar() {
               count there — the rail renders links, not live state) and the
               launcher finds it, so a third control would be the duplication
               this header keeps being pruned of. */}
-          <HeaderWatchButton className="lg:hidden" />
+          {/* WATCHLIST FROM sm UP, not below it. Bringing Database back (the
+              explicit priority: "that's the most important one") put seven
+              controls in this row, and at 320-414px they measurably overlapped —
+              Premium and Database drawn through the market switcher. Removing
+              the notification bell paid for part of it but only from sm up,
+              where that bell already lived.
+              The watchlist is the cheapest of the remaining 48px: below sm it
+              is one tap away in the menu overlay, whereas Database and Premium
+              were both named as must-haves and the market switcher, account and
+              menu are each the only route to something. It stays a SEPARATE
+              control from the menu at every width it appears, which is what
+              "the watchlist and the menu should be separate" actually asked
+              for. */}
+          <HeaderWatchButton className="hidden sm:inline-flex lg:hidden" />
           <HeaderMenuButton className="lg:hidden" />
         </nav>
        </div>

@@ -1,10 +1,9 @@
 "use client";
 
 import { UserMenu } from "./UserMenu";
-import { NotificationBell } from "./NotificationBell";
 import { useMe } from "@/lib/use-me";
 
-// Client shell around UserMenu + NotificationBell: fetches the session via
+// Client shell around UserMenu: fetches the session via
 // /api/me after mount so the Navbar (and therefore every page) can be
 // server-rendered without reading the session cookie — the read that used to
 // force the whole site dynamic. Renders a fixed-size placeholder until the
@@ -15,17 +14,23 @@ export function NavUser() {
   if (!loaded) return <div aria-hidden className="h-11 w-11 sm:h-9 sm:w-9" />;
   return (
     <>
-      {/* Bell hidden below sm: reported directly — "get rid of the
-          notification icon so we make more space for the profile icon" on
-          phones, where the header row is already tight (see Navbar.tsx's own
-          breakpoint history). Still reachable from sm up; the shared poll in
-          use-unread.ts is unaffected either way (one interval regardless of
-          how many components read it, or whether they're visible). */}
-      {user && (
-        <span className="hidden sm:inline-flex">
-          <NotificationBell />
-        </span>
-      )}
+      {/* THE NOTIFICATION BELL IS GONE FROM THE HEADER ENTIRELY (2026-09-19),
+          not just hidden below sm as it had been since "get rid of the
+          notification icon so we make more space for the profile icon". Asked
+          for directly alongside bringing the Database link back: this row could
+          not carry both, and Database is the more valuable of the two.
+
+          It also ends an ambiguity: HeaderWatchButton draws a bell for the
+          watchlist, and between sm and lg a signed-in visitor saw two bells
+          side by side, distinguishable only by fill and badge.
+
+          WHAT THIS COSTS, stated plainly because nothing replaces it:
+          NotificationBell was an in-place dropdown with no page equivalent —
+          there is no /notifications route — so unread notifications currently
+          have no surface at all. The component and use-unread.ts are left in
+          the tree deliberately; if notifications matter, the fix is a real page
+          linked from the menu overlay, not squeezing the bell back into a row
+          that has already lost this argument twice. */}
       <UserMenu user={user} />
     </>
   );
