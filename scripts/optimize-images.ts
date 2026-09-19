@@ -356,11 +356,30 @@ async function main() {
   // Drop manifest entries whose source file no longer exists, so a deleted image
   // can't leave a dangling <picture> source behind — and delete the .webp
   // derivatives it owned, so they don't linger in the deploy as dead weight.
+  //
+  // EXCEPT the ones a SURVIVING entry also claims. Derivative names are derived
+  // from the source's basename with the extension swapped, so `hero.png` and
+  // `hero.jpg` both own `/blog/hero.webp`, `/blog/hero.avif` and every
+  // `-<w>w.webp`. Re-encoding a hero from PNG to JPEG (right call for a photo —
+  // a quantised PNG of a photograph is both larger and worse) therefore left a
+  // stale `.png` entry here whose cleanup deleted the derivatives the `.jpg`
+  // entry had just written, three lines earlier in the same run. The manifest
+  // then advertised a .webp/.avif/srcset that were not on disk, so every
+  // <picture> for that image shipped 404ing sources and fell back to the
+  // original — silently, because nothing downstream verifies a manifest path
+  // still resolves. Found doing exactly that swap on the HEARTSTEEL hero.
+  const claimed = new Set<string>();
+  for (const [key, entry] of Object.entries(manifest)) {
+    if (!fs.existsSync(path.join(PUBLIC_DIR, key.slice(1)))) continue;
+    if (entry.webp) claimed.add(entry.webp);
+    if (entry.avif) claimed.add(entry.avif);
+    for (const v of entry.variants ?? []) claimed.add(v.src);
+  }
   for (const [key, entry] of Object.entries(manifest)) {
     if (fs.existsSync(path.join(PUBLIC_DIR, key.slice(1)))) continue;
-    if (entry.webp) dropWebp(entry.webp);
-    if (entry.avif) dropWebp(entry.avif);
-    for (const v of entry.variants ?? []) dropWebp(v.src);
+    if (entry.webp && !claimed.has(entry.webp)) dropWebp(entry.webp);
+    if (entry.avif && !claimed.has(entry.avif)) dropWebp(entry.avif);
+    for (const v of entry.variants ?? []) if (!claimed.has(v.src)) dropWebp(v.src);
     delete manifest[key];
   }
 

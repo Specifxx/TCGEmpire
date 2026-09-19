@@ -3451,14 +3451,22 @@ If you're running either card, both bans take effect **18 September 2026** — s
       "HEARTSTEEL's comeback brought Riftbound card images with it — and the Kayn one is not a new card. It is Kayn, Unleashed from Origins in new art. Here's what our database says about every HEARTSTEEL champion's cards.",
     author: "RiftCompare",
     date: "2026-09-18",
+    // 19 Sep: the owner supplied a labelled still-grab from the video showing
+    // FIVE members' cards, which is what promoted "images surfaced alongside the
+    // comeback" to "the video shows them" below. Substantive, so it dates.
+    updated: "2026-09-19",
     readMins: 8,
     tags: ["radiance", "news", "spoilers", "heartsteel", "collecting"],
+    hero: {
+      src: "/blog/riftbound-heartsteel-cards.jpg",
+      alt: "Five Riftbound cards in HEARTSTEEL art from the Live My Life music video, labelled Kayn, Ezreal, Aphelios, Sett and K'Sante, each shown on a wooden table",
+    },
     shop: [
       { label: "Riftbound singles", query: "Riftbound TCG singles" },
       { label: "Radiance pre-orders", query: "Riftbound Radiance" },
     ],
     summary: [
-      "**HEARTSTEEL released \"LIVE MY LIFE\" on 18 September 2026**, their first track since 2023's \"PARANOIA\" — and Riftbound cards carrying the band's art started circulating alongside it.",
+      "**HEARTSTEEL released \"LIVE MY LIFE\" on 18 September 2026**, their first track since 2023's \"PARANOIA\" — and the video shows HEARTSTEEL-art Riftbound cards for **five of the six members**: Kayn, Ezreal, Aphelios, Sett and K'Sante. Yone is the one not shown.",
       "**The Kayn card is not a new card.** Its name, 6 cost and rules text are **Kayn, Unleashed** — collector number 189 in **Origins**, legal since the game launched. What is new is the art, which makes it a new *printing*, not a new card.",
       "**Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Ezreal, Sett, Yone and Aphelios all already have Showcase versions; Kayn, Unleashed has exactly one print.",
       "**K'Sante has no Riftbound card whatsoever** — so if the reports putting him in Radiance hold, it is his debut, and his first card would arrive wearing a skin line.",
@@ -3487,7 +3495,7 @@ If you're running either card, both bans take effect **18 September 2026** — s
     faq: [
       {
         q: "Are there HEARTSTEEL cards in Riftbound?",
-        a: "Card images carrying HEARTSTEEL art began circulating alongside the band's 18 September 2026 comeback single \"LIVE MY LIFE\", and separate leak reporting has shown a True Damage Yasuo Riftbound card. Riot has not officially announced a HEARTSTEEL Riftbound product, so treat every specific card as unconfirmed until Preview Season, which runs 25 September to 9 October 2026.",
+        a: "The \"LIVE MY LIFE\" music video, released 18 September 2026, shows Riftbound cards in HEARTSTEEL art for five of the band's six members — Kayn, Ezreal, Aphelios, Sett and K'Sante — with Yone the one not shown. Separate leak reporting has also shown a True Damage Yasuo Riftbound card. Riot has not announced a HEARTSTEEL Riftbound product, print run or set, so treat the cards as sighted rather than released until Preview Season, which runs 25 September to 9 October 2026.",
       },
       {
         q: "Is the HEARTSTEEL Kayn a new Riftbound card?",
@@ -3519,7 +3527,7 @@ If you're running either card, both bans take effect **18 September 2026** — s
       label: "Track every Radiance card as it's revealed →",
       blurb: "The set hub fills in with real cards through Preview Season and gets live prices across every store we track on release day.",
     },
-    body: `**HEARTSTEEL are back.** "LIVE MY LIFE" landed on **18 September 2026**, the group's first release in nearly three years, and Riftbound card images carrying the band's art started doing the rounds alongside it. One of those images — a Kayn card — is the one everybody is sharing.
+    body: `**HEARTSTEEL are back.** "LIVE MY LIFE" landed on **18 September 2026**, the group's first release in nearly three years — and the video has Riftbound cards in it. Stills doing the rounds show HEARTSTEEL-art cards for five of the six members, laid out on a table between shots. The Kayn one is the image everybody is sharing.
 
 It is also, on inspection, **not a new card**. That is not a criticism of anyone sharing it; it is the sort of thing you only catch if you look the card up. So we did, in our own database, and the answer turns out to be more interesting than "new Kayn spoiled".
 
@@ -3580,7 +3588,7 @@ Two things fall straight out of that table, and neither has shown up in the cove
 
 **Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Every other member who has a card already has at least one Showcase version; Sett and Yone have signature prints on top. [Kayn, Unleashed](/champions/kayn) has exactly one print and has never had a variant. A HEARTSTEEL Kayn would be the first alternate art this card has ever received — which is precisely the profile that spikes hardest and corrects hardest.
 
-**K'Sante has no Riftbound card whatsoever.** He is not under-printed; he is absent. And he is the one HEARTSTEEL member separately reported as confirmed for Radiance, off a Riftbound Championship post whose Top 8 art the community read as HEARTSTEEL. If that holds, Radiance is K'Sante's **Riftbound debut**, and his first card in the game arrives wearing a skin line rather than a base splash. Seraphine is in the same position — a confirmed Radiance legend with no card in the game today.
+**K'Sante has no Riftbound card whatsoever.** He is not under-printed; he is absent from the game entirely — which makes the gold-bordered K'Sante card in the video stills the most genuinely new thing in them. He is also the one HEARTSTEEL member separately reported as confirmed for Radiance, off a Riftbound Championship post whose Top 8 art the community read as HEARTSTEEL. Put those together and Radiance looks like K'Sante's **Riftbound debut**, with his first card in the game arriving in a skin line rather than a base splash. Seraphine is in the same position — a confirmed Radiance legend with no card in the game today.
 
 [[shop]]
 
@@ -3590,7 +3598,9 @@ We keep this split explicit on every leak story, and this one needs it more than
 
 **Confirmed:** HEARTSTEEL's comeback and the 18 September release of "LIVE MY LIFE"; the group's six champions; HEARTSTEEL 2026 skins for all six; that League's Season 3 Act 2 is music-themed with multiple bands returning. On the Riftbound side: Radiance's 23 October 2026 release, its 180 cards and 66 Showcase prints, the Seraphine vs. Evelynn Showdown Decks, and the six legends named so far.
 
-**Not confirmed:** that any specific HEARTSTEEL card exists in a specific product. Riot has not announced a HEARTSTEEL Riftbound release. We have also found no source — Riot, trade coverage or leak reporting — stating that the "LIVE MY LIFE" video itself reveals cards, so we are not repeating that; the images surfaced *alongside* the comeback, which is a weaker claim and the one the evidence supports.
+**Shown, but not announced:** the video itself is where the cards appear. Stills from "LIVE MY LIFE" show HEARTSTEEL-art Riftbound cards for **five** of the band's six members — Kayn, Ezreal, Aphelios, Sett and K'Sante — laid out on a table between shots. **Yone is the one member not shown in the stills we have seen.** That is a sighting in official Riot footage, which is a great deal stronger than a leak; it is still not a product announcement, and none of the five has been shown with a legible set code, collector number or rarity.
+
+**Not confirmed:** that any of these cards exists in a specific product you can buy. Riot has not announced a HEARTSTEEL Riftbound release, a print run, or where these sit. A card built as a prop for a music video and a card that ships in a booster are not automatically the same object — and even when they are, the treatment and the set decide the price.
 
 **And one that cuts against the obvious assumption:** the leak reporting on music-themed Riftbound cards (the True Damage Yasuo card shared by @LeagueOfLeaks and @RiftboundCN) points at a **Worlds 2026-themed Riftbound product**, not necessarily Radiance. Radiance's musical roster makes it the natural guess, but a natural guess is not a confirmation, and buying on the assumption that a card lands in a specific set is how people end up holding the wrong sealed product.
 
