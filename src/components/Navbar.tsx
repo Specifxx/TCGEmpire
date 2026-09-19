@@ -52,7 +52,7 @@ export function Navbar() {
               Rift<span className="text-brand-400">Compare</span>
             </span>
           </Link>
-          {/* DATABASE — ONE LINK, VISIBLE AT EVERY WIDTH. Reported as "the database
+          {/* BROWSE — ONE LINK, VISIBLE AT EVERY WIDTH. Reported as "the database
               button is gone on mobile phone, that's the most important one" and
               then "bring it back completely on desktop as well, this is a big
               issue".
@@ -65,12 +65,23 @@ export function Navbar() {
               every tablet and every narrow laptop window — had no Database link at
               all, which is the "gone on desktop" half of the report.
               Now ungated and in the left cluster beside the logo, so there is no
-              width where it can disappear and no second copy to drift. */}
+              width where it can disappear and no second copy to drift.
+
+              LABELLED "Browse", NOT "Database" — corrected on 2026-09-19: "as in
+              bring the browse button back sorry, it's meant to be the browse
+              button on the header". The header link has carried the word
+              "Database" for its whole history and never said "Browse", so this
+              is a rename rather than a restoration; the destination (/browse) is
+              unchanged. It matches the URL and the page's own "Browse & Compare
+              Prices" title. NOTE the menu overlay and the ⌘K launcher still call
+              the same destination "Card Database" (nav-groups.ts) — deliberately
+              left alone here because that label is shared by the launcher, the
+              side rail and the footer, and renaming it is a separate decision. */}
           <Link
             href="/browse"
             className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm"
           >
-            Database
+            Browse
           </Link>
           {/* Premium, on phones, sitting next to Database (2026-09-10, owner
               brief). The desktop "✦ Premium" link further down is gated xl:block,

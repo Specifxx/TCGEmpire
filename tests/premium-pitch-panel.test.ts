@@ -93,7 +93,7 @@ test("the phone header still carries a gold Premium link, without disturbing the
   // PREMIUM DID NOT GO WITH IT, and that is what this test is really for: it is
   // there by an explicit 2026-09-10 brief, and it is the reason the left cluster
   // now has to be shrinkable rather than fixed-width.
-  // Comment-stripped: the tombstone explaining the removal names "Database", and
+  // Comment-stripped: the tombstone explaining the history names "Database", and
   // a source-text search would match the explanation rather than a rendered link.
   const code = src.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
   const leftCluster = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
@@ -102,7 +102,7 @@ test("the phone header still carries a gold Premium link, without disturbing the
   assert.match(leftCluster, /text-gold/, "it must be gold — the Premium identity colour");
   // Database is back in this cluster as of 2026-09-19 ("that's the most important
   // one"), sitting immediately before Premium — the 2026-09-10 pairing restored.
-  assert.match(leftCluster, /Database/, "Database sits beside Premium again");
+  assert.match(leftCluster, /Browse/, "the Browse link sits beside Premium again");
 
   // The header's horizontal budget: nav links may not turn on before lg, and
   // the desktop Premium link must still defer to xl. Both are also pinned by

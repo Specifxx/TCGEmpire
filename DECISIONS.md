@@ -8637,6 +8637,20 @@ and `use-unread.ts` are deliberately left in the tree. If notifications matter,
 the fix is a real page linked from the menu overlay, not squeezing the bell back
 into a row that has now lost this argument twice.
 
+**It is labelled "Browse", not "Database".** Corrected within the same session:
+"as in bring the browse button back sorry, it's meant to be the browse button on
+the header". Worth recording that this was a RENAME rather than a restoration —
+the header link had carried the word "Database" for its entire history and never
+said "Browse" — so the thing that was actually missing was the link, and the
+label was wrong separately. The destination (`/browse`) never changed, and the
+new label matches both the URL and the page's own "Browse & Compare Prices"
+title. It is also ~15px narrower, which the row keeps as slack.
+
+`nav-groups.ts` still calls the same destination **"Card Database"** for the menu
+overlay, the ⌘K launcher, the side rail and the footer. That inconsistency is
+deliberate for now: one label feeds four surfaces, and renaming it is a separate
+decision from what the header button says.
+
 **Two pre-existing things this pass did not touch**, both predating it: the
 market switcher is 38px tall from `sm` up (`sm:min-h-0`, so desktop rows stay
 36px), and there is no Premium link between 1024 and 1279px — the below-lg copy
