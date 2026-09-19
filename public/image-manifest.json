@@ -611,6 +611,31 @@
     ],
     "fingerprint": "0a4a0f468b199bcb"
   },
+  "/blog/riftbound-heartsteel-cards.jpg": {
+    "src": "/blog/riftbound-heartsteel-cards.jpg",
+    "width": 1221,
+    "height": 693,
+    "bytes": 85637,
+    "webp": "/blog/riftbound-heartsteel-cards.webp",
+    "webpBytes": 52700,
+    "avif": "/blog/riftbound-heartsteel-cards.avif",
+    "avifBytes": 37758,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/riftbound-heartsteel-cards-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/riftbound-heartsteel-cards-768w.webp"
+      },
+      {
+        "w": 1200,
+        "src": "/blog/riftbound-heartsteel-cards-1200w.webp"
+      }
+    ],
+    "fingerprint": "e9e4b377eded8994"
+  },
   "/blog/riftbound-legacy-key-art.jpg": {
     "src": "/blog/riftbound-legacy-key-art.jpg",
     "width": 1478,

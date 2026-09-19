@@ -8655,3 +8655,34 @@ decision from what the header button says.
 market switcher is 38px tall from `sm` up (`sm:min-h-0`, so desktop rows stay
 36px), and there is no Premium link between 1024 and 1279px — the below-lg copy
 is `lg:hidden` and the desktop copy is `xl:block`, leaving `lg` itself bare.
+
+---
+
+## Changing a hero's format silently deleted its own renditions — 2026-09-19
+
+Found wiring a supplied still-grab onto the HEARTSTEEL post. The source was a
+photographic composite, and a quantised PNG of a photograph is the worst of both
+worlds: `optimize-images.ts` got it to 149,053 bytes — **947 bytes under the
+150 KB build gate** — with visible banding. Re-encoding the *original* as JPEG
+q88 gave 85 KB at better quality, so the hero is `.jpg`. Precedent existed
+(`public/blog/astral-heron-ven044.jpg`); PNG is for flat art, not photos.
+
+Swapping the extension is what exposed the bug. Derivative names are the
+source's basename with the extension swapped, so `hero.png` and `hero.jpg` both
+own `/blog/hero.webp`, `/blog/hero.avif` and every `-<w>w.webp`. The optimiser's
+end-of-run cleanup drops derivatives belonging to manifest entries whose source
+file is gone — and the stale `.png` entry's cleanup deleted the derivatives the
+new `.jpg` entry had written **three lines earlier in the same run**. The
+manifest then advertised a `.webp`, an `.avif` and a full srcset that were not on
+disk.
+
+That failure is invisible. `<picture>` ships 404ing `<source>` elements, the
+browser falls back to the original, the page looks right in review, and the only
+consequence is that the renditions this entire build-time pipeline exists to
+produce are never served. `npm run build` does not catch it either:
+`check-images.ts` gates file *size*, and a file that does not exist has no size.
+
+Fix: the cleanup now collects every derivative path claimed by a **surviving**
+entry first, and skips those. `tests/image-manifest.test.ts` is the guard —
+every path the manifest advertises must resolve in `public/`. It would have
+caught this, and nothing else would have.
