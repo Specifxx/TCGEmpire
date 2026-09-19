@@ -179,7 +179,15 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: "news",
     links: [
       { href: "/guides", label: "Guides", keywords: ["guides", "how to", "tutorials", "explainers"] },
-      { href: "/blog", label: "News & analysis", keywords: ["blog", "news", "articles", "posts", "updates", "announcements"] },
+      // "Blog", not "News & analysis" (renamed 2026-09-19, owner call). The site
+      // was calling one destination two different things depending on which
+      // navigation surface you were in: PRIMARY_NAV (the top bar) has always said
+      // "Blog", the page's own H1 is "Blog", and its <title> is "Riftbound Blog —
+      // …" — while this entry, which feeds the Explore overlay, the footer,
+      // SideNav and the ⌘K launcher, said "News & analysis". Clicking it landed
+      // you on a page headed something else. The `keywords` below already carry
+      // news/articles/announcements, so ⌘K still finds it by any of the old words.
+      { href: "/blog", label: "Blog", keywords: ["blog", "news", "articles", "posts", "updates", "announcements", "analysis"] },
       // hideInFooter: the footer's four columns are already at the top of their
       // readable-spread ceiling (tests/nav-search.test.ts) — still reachable via
       // the ⌘K launcher, SideNav and llms.txt, plus the direct links this page
