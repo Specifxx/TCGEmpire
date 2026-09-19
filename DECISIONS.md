@@ -8686,3 +8686,58 @@ Fix: the cleanup now collects every derivative path claimed by a **surviving**
 entry first, and skips those. `tests/image-manifest.test.ts` is the guard —
 every path the manifest advertises must resolve in `public/`. It would have
 caught this, and nothing else would have.
+
+---
+
+## "You're not catching this eBay listing" was a landing-tab bug — 2026-09-19
+
+Reported against `ebay.com.au/itm/407214784944` and
+`/card/irelia-fervent-sfd-225s-221`: the listing "doesn't show on AU". Every
+instinct here points at the matcher, and every one of them is wrong — so the
+order of the diagnosis is the part worth keeping.
+
+`diagnose-card` (maintenance task, input `url`) printed the AU funnel:
+
+```
+3 kept  0 dropped  eBay returned
+3 kept  0 dropped  has price
+0 kept  3 dropped  not excluded (lots/bundles/etc)
+   Riftbound Spiritforged IRELIA Fervent SIGNATURE 225/221 Novelty Keychain
+   2026 RIFTBOUND LOL SPIRITFORGED SIGNATURE OVERNUMBER #225* IRELIA FERVENT PSA 10
+   PSA 10 Irelia - Fervent 225* Spiritforged Signature Overnumber RIFTBOUND
+```
+
+Three results in the whole AU market: one keychain (`NOT_A_SINGLE`) and two
+slabs (`GRADED_SLAB`). A new `diagnose-ebay-item` task (`scripts/diagnose-ebay-item.ts`,
+Browse `getItem` across all six marketplaces) confirmed the reported item
+directly — `condition=Graded`, `buyingOptions=FIXED_PRICE`,
+`GRADED_SLAB matches title: true`. The live page's payload already carried it as
+an AU graded row at **A$6,500**. Nothing was being missed, and loosening either
+regex would have put a PSA 10 back into the price comparison — the exact failure
+the graded partition exists to prevent.
+
+What the visitor actually met: the panel's **Listings** tab, selected, showing
+EbayAdCarouselLive's generic "search eBay" CTA, because AU has no raw carousel
+row for this card. "We found nothing" in the open tab, the two copies we did
+find behind an unselected one. Read as a matching bug, entirely reasonably.
+
+So the fix is which tab opens, not what matches. When a market has no raw
+listings but does have slabs, **Graded** opens; a tab the visitor clicks wins
+from then on. Both eBay panels needed it (`EbayCardPanelLive`, `QuickView`) and
+both needed the active tab **controlled**: `SegmentedTabs` seeds its
+uncontrolled default from `tabs[0]` on the first render, which is before
+`mounted` flips on the card page and before `/api/card` resolves in the popup —
+the Graded tab does not exist yet, so it could never have been selected. That
+is also why the automatic choice is gated on `mounted`: pre-hydration the
+country is still `DEFAULT_COUNTRY` and the answer would be about the wrong
+market.
+
+Tidied while there: the tab was gated and counted on `gradedHere` but handed
+`graded`. Nothing foreign was ever drawn — `EbayGradedLive` re-filters by
+country — but the count depended on a filter in another file. It now passes the
+rows it counted, and the re-filter stays, because QuickView still passes every
+market's rows.
+
+Guards in `tests/ebay-graded.test.ts`. Verification is tests plus the live page
+payload; there is no database in the sandbox, so both diagnostics ran as
+`maintenance.yml` tasks in CI.

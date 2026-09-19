@@ -21,6 +21,31 @@ export type EbayTab = SegmentedTab;
  * the caller knows whether "no graded listings" means empty or still
  * loading.
  */
-export function EbayTabs({ tabs, label, className }: { tabs: EbayTab[]; label: string; className?: string }) {
-  return <SegmentedTabs tabs={tabs} label={label} className={className} />;
+export function EbayTabs({
+  tabs,
+  label,
+  active,
+  onActiveChange,
+  className,
+}: {
+  tabs: EbayTab[];
+  label: string;
+  /** Controlled active tab. Omit both of these for the uncontrolled default
+   *  (first tab), which is what an ordinary card wants. A caller passes them
+   *  when the RIGHT tab to open on depends on data that only settles after
+   *  hydration — see EbayCardPanelLive, where the Graded tab does not even
+   *  exist until the visitor's market is known. */
+  active?: string;
+  onActiveChange?: (key: string) => void;
+  className?: string;
+}) {
+  return (
+    <SegmentedTabs
+      tabs={tabs}
+      label={label}
+      active={active}
+      onActiveChange={onActiveChange}
+      className={className}
+    />
+  );
 }

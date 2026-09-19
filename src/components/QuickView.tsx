@@ -125,6 +125,13 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   const [history, setHistory] = useState<PricePoint[] | null>(null);
   const [coll, setColl] = useState<"idle" | "saving" | "added" | "signin" | "error">("idle");
   const [collFoil, setCollFoil] = useState(false);
+  // Which eBay tab the visitor has picked, null until they pick one. Controlled
+  // for the same reason EbayCardPanelLive is — see that file's header: `graded`
+  // arrives from a fetch, so the uncontrolled default would already have seeded
+  // itself from the only tab that existed at first render (Listings), and a
+  // chase card whose only live copies in this market are slabs would open on
+  // the generic "search eBay" CTA as if we had found nothing.
+  const [ebayTab, setEbayTab] = useState<string | null>(null);
   const href = cardHref(card);
   const { country, currency, fmt, price } = useCountry();
   const lowest = price(card);
@@ -149,6 +156,9 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   useEffect(() => {
     let alive = true;
     const ref = card.slug ?? card.id;
+    // A different card (or market) is a different tab question; the previous
+    // card's pick must not carry over.
+    setEbayTab(null);
     // Record the view (popularity signal) — fire-and-forget.
     fetch(`/api/card/${ref}/view`, { method: "POST", keepalive: true }).catch(() => {});
     fetch(`/api/card/${ref}`)
@@ -234,6 +244,10 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
   // used to lack a CA entry, silently dropping the fallback for CA visitors
   // specifically.)
   const ebayMkt = { label: ebayLabel(country) };
+  const gradedHere = graded.filter((g) => g.country === country);
+  // The same filter EbayAdCarouselLive applies before falling back to the
+  // generic CTA — "the Listings tab has nothing of its own in this market".
+  const adListingsHere = adListings.some((l) => l.country === country);
   const hasEbay = (prices ?? []).some((p) => p.retailer.startsWith("ebay") && p.inStock && p.country === country);
   const ebaySearchUrl =
     prices !== null && !hasEbay
@@ -307,6 +321,8 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
             <EbayTabs
               className="mt-3"
               label={`eBay listings for ${card.name}`}
+              active={ebayTab ?? (!adListingsHere && gradedHere.length > 0 ? "graded" : "listings")}
+              onActiveChange={setEbayTab}
               tabs={[
                 {
                   key: "listings",
@@ -320,12 +336,12 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                     />
                   ),
                 },
-                ...(graded.some((g) => g.country === country)
+                ...(gradedHere.length > 0
                   ? [
                       {
                         key: "graded",
                         label: "Graded",
-                        count: graded.filter((g) => g.country === country).length,
+                        count: gradedHere.length,
                         content: (
                           <EbayGradedLive
                             listings={graded.map((g) => ({ ...g, marketCents: lowest ?? null }))}
