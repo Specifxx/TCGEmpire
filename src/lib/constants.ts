@@ -116,6 +116,23 @@ export function isFallbackRetailer(retailer: string): boolean {
   return ALL_FALLBACK_RETAILERS.includes(retailer);
 }
 
+/**
+ * Which Cardmarket retailer key carries THIS market's reference price, or null
+ * for the four markets Cardmarket does not price at all.
+ *
+ * One line, shared by the card page and the QuickView popup, for the reason
+ * lib/tcg-reference.ts exists: the TCGplayer equivalent of this decision was
+ * hand-inlined at two call sites and the second copy was wrong for two whole
+ * markets. The keys differ per market (RetailerPrice is keyed without a
+ * country — see CARDMARKET_EU_RETAILER above), so this is exactly the kind of
+ * detail a second copy gets subtly wrong.
+ */
+export function cardmarketRetailerFor(country: string): string | null {
+  if (country === "UK") return CARDMARKET_RETAILER;
+  if (country === "EU") return CARDMARKET_EU_RETAILER;
+  return null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Reference/aggregate price sources, for MONITORING and DIRECTORY visibility only.
 // ─────────────────────────────────────────────────────────────────────────────

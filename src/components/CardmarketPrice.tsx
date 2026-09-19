@@ -20,22 +20,34 @@ export function CardmarketPrice({
   currency,
   href,
   isEu,
+  // Tighter spacing and a smaller headline for the QuickView popup, matching
+  // TcgMarketPrice's `compact` exactly — see that component for why the two
+  // surfaces must stay the same component rather than diverge. Presentation
+  // only: the figure, the caveat and the link are identical.
+  compact = false,
 }: {
   priceCents: number;
   currency: string;
   href: string | null;
   /** EU rows are Cardmarket's native price; UK rows are EUR converted to GBP. */
   isEu: boolean;
+  compact?: boolean;
 }) {
   return (
-    <div className="card-surface mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 p-4">
+    <div
+      className={`card-surface flex flex-wrap items-center justify-between gap-x-4 gap-y-3 ${
+        compact ? "mt-3 p-3" : "mt-6 p-4"
+      }`}
+    >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-white">Cardmarket price</span>
           <span className="chip bg-ink-800 text-[11px] text-slate-400">reference</span>
         </div>
         <div className="mt-1">
-          <span className="num text-2xl font-extrabold text-accent">{formatMoney(priceCents, currency)}</span>
+          <span className={`num font-extrabold text-accent ${compact ? "text-xl" : "text-2xl"}`}>
+            {formatMoney(priceCents, currency)}
+          </span>
         </div>
         <p className="mt-1.5 text-[11px] leading-snug text-slate-500">
           {isEu

@@ -12,7 +12,7 @@ import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from 
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
-import { normaliseCondition, CONDITIONS, CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER } from "@/lib/constants";
+import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
 
@@ -335,7 +335,7 @@ export function CardPriceComparison({
   // above), unlike TCGplayer, so there's no "already shown natively" suppression
   // to check here.
   const cardmarket = useMemo(() => {
-    const retailer = country === "UK" ? CARDMARKET_RETAILER : country === "EU" ? CARDMARKET_EU_RETAILER : null;
+    const retailer = cardmarketRetailerFor(country);
     if (!retailer) return null;
     const row = rows.find((r) => r.retailer === retailer && r.country === country);
     if (!row) return null;
@@ -537,13 +537,24 @@ export function CardPriceComparison({
         </div>
       </div>
 
-      {/* TCGplayer market price (reference, currency-converted) — rendered below the
-          buyable table so it still appears on cards with no local listings.
-          disclosure=false: covered by the canonical disclosure above. */}
-      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
-
       {/* Cardmarket reference price (UK/EU only) — see the `cardmarket` memo above.
-          Not an affiliate link, so no AffiliateDisclosure prop to suppress here. */}
+          Not an affiliate link, so no AffiliateDisclosure prop to suppress here.
+
+          FIRST of the two reference blocks, ABOVE TCGplayer, and only in the two
+          markets it renders in at all. From a user, 2026-09-19: "I'd use the app
+          to check faster on CardMarket prices, so I would like to have it not as
+          a last option, but between the first ones." They are right about the
+          ordering, and the reason is market-specific rather than a preference —
+          European singles trade on Cardmarket, which is why the EU has eleven
+          tracked shop websites for a whole continent (see the Cardmarket block
+          in lib/price-import.ts). To a UK or EU visitor, a USD market price run
+          through an FX rate is the less relevant of the two, so it should not be
+          the one they reach first.
+
+          What does NOT change is that this is a reference, below the buyable
+          comparison, never a row in it — Cardmarket's figure is a marketplace
+          LOW across every seller of the print, not one verified listing. That is
+          THE RULE in lib/constants.ts, and it outranks ordering. */}
       {cardmarket && (
         <CardmarketPrice
           priceCents={cardmarket.priceCents}
@@ -552,6 +563,11 @@ export function CardPriceComparison({
           isEu={cardmarket.isEu}
         />
       )}
+
+      {/* TCGplayer market price (reference, currency-converted) — rendered below the
+          buyable table so it still appears on cards with no local listings.
+          disclosure=false: covered by the canonical disclosure above. */}
+      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
 
       {/* eBay fallback — shown whenever this market has no live eBay row for the
           card, so a thin market is never a dead end. */}

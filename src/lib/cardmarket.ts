@@ -178,6 +178,7 @@ import type { Prisma } from "@prisma/client";
 import { gunzipSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER } from "@/lib/constants";
+import { cardmarketProductUrl } from "@/lib/cardmarket-url";
 import { classifySealed } from "@/lib/sealed-import";
 import { poolOf, POOL_ORDER, type PoolCard } from "@/lib/box-ev";
 
@@ -510,11 +511,6 @@ export function buildCardmarketRows(
     rows.push({ ...base, retailer: CARDMARKET_EU_RETAILER, priceCents: Math.round(lowEur * 100), currency: "EUR", country: "EU" });
   }
   return { totalSingleProducts, expansionsMapped: expansionSetCode.size, matched, skippedAmbiguousName, skippedUnmappedExpansion, skippedNoPrice, rows, unmatchedSamples };
-}
-
-// The download files carry no canonical product URL; build one from the id.
-function cardmarketProductUrl(idProduct: number): string {
-  return `https://www.cardmarket.com/en/Riftbound/Products/Singles?idProduct=${idProduct}`;
 }
 
 // ---- singles, tier 2: ambiguous families recovered by price rank -----------

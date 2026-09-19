@@ -6,9 +6,11 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS } from "@/lib/constants";
+import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
+import { COUNTRIES } from "@/lib/country";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { TcgMarketPrice } from "./TcgMarketPrice";
+import { CardmarketPrice } from "./CardmarketPrice";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName, cardSearchName } from "@/lib/card-name";
 import { effectiveShippingCents, shippingPolicyUrl } from "@/lib/retailers";
@@ -235,6 +237,28 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
       // comparison rows' buy buttons make.
       href: affiliateUrl(src.url, src.retailer),
     };
+  })();
+
+  // CARDMARKET REFERENCE PRICE, UK/EU only. Same reasoning as the TCGplayer block
+  // above and the same shape, added for the same reason: "I'd use the app to check
+  // faster on CardMarket prices" (user, 2026-09-19) — and the popup IS the fast
+  // path, the surface a browse-page visitor compares on without ever loading a
+  // card page. It carried a TCGplayer figure and no Cardmarket one, which for a
+  // European visitor is the less useful of the two.
+  //
+  // Which retailer key belongs to which market comes from constants.ts rather
+  // than being inlined here; see cardmarketRetailerFor's own comment for the
+  // duplication bug that rule exists to prevent.
+  //
+  // Unlike TCGplayer there is no "already shown natively" suppression to do:
+  // Cardmarket is always a fallback retailer, so it is never a row in the list
+  // above. Costs no request — the row is already in the /api/card response.
+  const cardmarketRef = (() => {
+    const retailer = cardmarketRetailerFor(country);
+    if (!retailer) return null;
+    const row = (prices ?? []).find((p) => p.retailer === retailer && p.country === country);
+    if (!row) return null;
+    return { priceCents: row.priceCents, href: affiliateUrl(row.url, row.retailer), isEu: country === "EU" };
   })();
 
   // eBay quota fallback — mirrors the full card page (src/app/card/[id]/page.tsx).
@@ -508,6 +532,22 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                 than leaning on the list's: the disclosure above belongs to the
                 rows above it, and this block can appear when that list is empty,
                 which is in fact the case it matters most in. */}
+            {/* Cardmarket first, above TCGplayer, exactly as on the card page —
+                see CardMarketSection's note on that ordering. */}
+            {cardmarketRef && (
+              <CardmarketPrice
+                priceCents={cardmarketRef.priceCents}
+                // The MARKET's native currency, not useCountry()'s display
+                // currency: the stored row is already GBP (UK) or EUR (EU), so
+                // an EU-display visitor on the UK market would otherwise see a
+                // GBP figure labelled in euro.
+                currency={COUNTRIES[country].currency}
+                href={cardmarketRef.href}
+                isEu={cardmarketRef.isEu}
+                compact
+              />
+            )}
+
             {tcgRef && (
               <TcgMarketPrice
                 usdCents={tcgRef.usdCents}

@@ -3,6 +3,7 @@
 // via env if you ever rotate them).
 
 import { SITE_URL } from "./site";
+import { normalizeCardmarketUrl } from "@/lib/cardmarket-url";
 
 // eBay Partner Network campaign id. Passed to the Browse API so listing URLs come
 // back already affiliate-tagged (itemAffiliateWebUrl). See lib/ebay.ts.
@@ -354,6 +355,15 @@ export function affiliateUrl(
         `&sharedid=${encodeURIComponent(affiliateSubId(subId, page))}`
       );
     }
+    // Cardmarket has no affiliate program we are in (their partnership track is
+    // separately "subject to approval" — see lib/cardmarket.ts's header), so
+    // nothing is appended. What DOES happen here is a repair: every Cardmarket
+    // link written before 2026-09-19 pointed at `/Products/Singles?idProduct=…`,
+    // which is the browse-all singles page with an ignored query — it opened
+    // Cardmarket but never the card. See lib/cardmarket-url.ts. The importer now
+    // writes the resolving form, and this makes every row already in the database
+    // right on deploy instead of after the next price refresh.
+    if (/(?:^|\.)cardmarket\.com$/i.test(u.hostname)) return normalizeCardmarketUrl(url);
     // A signed per-store direct program (none yet) rewrites the URL here.
     const direct = directProgramUrl(u);
     if (direct) return direct;

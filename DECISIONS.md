@@ -8741,3 +8741,66 @@ market's rows.
 Guards in `tests/ebay-graded.test.ts`. Verification is tests plus the live page
 payload; there is no database in the sandbox, so both diagnostics ran as
 `maintenance.yml` tasks in CI.
+
+---
+
+## Cardmarket: a link that never reached the card, and a block nobody scrolled to — 2026-09-19
+
+Two things from one user, and they are worth keeping together because one of
+them was invisible to every test we had.
+
+**The link.** Every Cardmarket URL we had ever written was
+`/en/Riftbound/Products/Singles?idProduct=<id>`. `/en/Riftbound/Products/Singles`
+is a **real page** — browse-all singles for the game — so Cardmarket rendered it
+and ignored the unknown query. Nothing 404ed, nothing errored, the button
+"worked", and it never once opened the card. That is the failure mode to
+remember: a wrong URL that resolves is not detectable by checking that it
+resolves.
+
+The resolving form drops the segment: `/en/Riftbound/Products?idProduct=<id>` is
+Cardmarket's id dispatcher. Not a guess — it is the exact shape Scryfall
+publishes as `purchase_uris.cardmarket` for every Magic card
+(`…/en/Magic/Products?idProduct=693418&referrer=scryfall`), pulled live from
+their API while diagnosing this.
+
+The full slug URL (`/Products/Singles/<Expansion>/<Card>`) is not available to
+us: Cardmarket's public download files carry `idExpansion` as a bare number with
+no name anywhere public, so the expansion half of that path cannot be built from
+the data we have. The dispatcher needs neither half.
+
+**Stated plainly: neither form can be verified from here.** `www.cardmarket.com`
+sits behind a Cloudflare WAF that hard-403s every automated client — `curl` and
+the fetch tooling both, confirmed again today. The evidence is Scryfall's live
+production links plus the reporter's own observation of the old form. If the
+dispatcher ever stops redirecting, `src/lib/cardmarket-url.ts` is the one file to
+change.
+
+That file is new and holds both the builder and a repair, because the importer
+fix alone only heals rows on the next price refresh — and a link someone checks
+the minute a fix ships cannot be "correct tomorrow". `affiliateUrl` now
+normalises any Cardmarket URL carrying an `idProduct` under a `/Products/...`
+sub-path, so every row already in the database is right on deploy.
+
+**The ordering.** *"I'd use the app to check faster on CardMarket prices, so I
+would like to have it not as a last option, but between the first ones."*
+
+Correct, and for a market-specific reason rather than a preference: European
+singles trade on Cardmarket, which is exactly why the EU has eleven tracked shop
+websites for a whole continent (see the Cardmarket block in `price-import.ts`).
+To a UK or EU visitor, TCGplayer's USD market price run through an FX rate is
+the *less* relevant of the two reference blocks, and it was the one they reached
+first. Cardmarket now leads on the card page, and — this is the half that
+actually answers "faster" — the **QuickView popup carries it at all**, which it
+never did. The popup is where a browse-page visitor compares without ever
+loading a card page; it had a TCGplayer figure and no Cardmarket one.
+
+What did **not** change: Cardmarket stays a fallback retailer, below the buyable
+comparison, never a row in it. Its figure is a marketplace LOW across every
+seller of the print, not one verified in-stock listing — THE RULE in
+`constants.ts`. Ordering is a preference; that is not, and a test now pins the
+block to render after the comparison list closes on both surfaces.
+
+`cardmarketRetailerFor()` in `constants.ts` because the two surfaces now both
+need "which key is this market's Cardmarket row", and the TCGplayer equivalent
+of that decision was hand-inlined twice and the second copy was wrong for two
+whole markets (`lib/tcg-reference.ts`). Guards in `tests/cardmarket-eu.test.ts`.
