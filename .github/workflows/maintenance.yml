@@ -71,6 +71,7 @@ on:
           - audit-card-titles # READ-ONLY. Builds the <title> and meta description for every card through the real lib/card-seo.ts builders and reports any that overflow 60 characters and any two pages that COLLIDE. scripts/seo-gate.ts fails the build on a duplicate title, but it runs against a deployed site — this catches it before the release. RUN THIS BEFORE landing any change to the title ladder; there is no database in the dev sandbox, so CI is the only place it can run.
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
+          - diagnose-ebay-item # READ-ONLY: why doesn't ONE eBay listing show up? Takes an item id or a full /itm/ URL in the `url` input and asks Browse's getItem for it in EVERY marketplace. Answers what diagnose-card's funnel cannot: when the reported listing was never in the result window at all, this says whether it is even in that marketplace's index (a 404 is a RESULT — an item LISTED on eBay US is often visible on ebay.com.au because it ships there, while being absent from EBAY_AU's Browse index), and prints the title, price, itemLocation, buyingOptions and whether GRADED_SLAB matches — none of which can be read any other way, since eBay serves 403 to any scripted fetch of an /itm/ page.
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
           - diagnose-billing # read-only: why does ONE account have (or lack) Premium, per Stripe's own records? Dumps the DB row's billing fields, then every Stripe subscription on the linked customer (ALL statuses, not just entitled ones) with its latest invoice and, if that invoice's payment failed, the actual decline reason (email input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
@@ -6965,6 +6966,17 @@ jobs:
       # guess: its RetailerPrice rows, its eBay carousel rows, whether those two
       # disagree (the stale-carousel tell), and a LIVE eBay re-search showing
       # what the matcher does with today's listings. Read-only.
+      - name: Diagnose one eBay listing (why is it missing?)
+        # READ-ONLY, two Browse calls per marketplace, no database access at all.
+        # Reuses the `url` input like every other single-subject diagnostic here;
+        # the script accepts a bare item id or a full /itm/ URL.
+        if: inputs.task == 'diagnose-ebay-item'
+        env:
+          EBAY_ITEM_ID: ${{ inputs.url }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+        run: npx tsx scripts/diagnose-ebay-item.ts
+
       - name: Diagnose one card's pricing
         if: inputs.task == 'diagnose-card'
         env:
