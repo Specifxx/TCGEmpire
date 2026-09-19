@@ -430,23 +430,23 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
     category: "blog",
     title: "Riftbound Radiance: Release Date, Products, Prices & What's Confirmed",
     excerpt:
-      "Riftbound: Radiance lands 23 October 2026 with 180 confirmed cards, nine new champion Legends and a new Ultimate Rare. Every confirmed date, product and price, Ekko's revealed Legend, and what's still unrevealed.",
+      "Riftbound: Radiance lands 23 October 2026 with nine new champion Legends and a new Ultimate Rare. Every confirmed date, product and price, the first card seen in print, and what is still unrevealed.",
     author: "RiftCompare",
     date: "2026-08-27",
     // 12 Sep 2026: Riot's own rundown publishes the set code (RAD) and moves
     // Preview Season's start to 25 Sep (RQ Los Angeles); the distributor sheet
     // gives every product's contents and MSRP; Ekko's Legend is revealed; the
     // Ultimate Rare is announced. All folded in below, each with its source.
-    updated: "2026-09-12",
+    updated: "2026-09-19",
     readMins: 11,
     tags: ["radiance", "news", "set", "release date", "seraphine", "prices", "products"],
     hero: {
       src: "/blog/riftbound-radiance-what-we-know.png",
-      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with 180 confirmed cards",
+      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026, with nine new champion Legends and a new Ultimate Rare chase tier",
     },
     summary: [
       "**Radiance releases 23 October 2026** — the fifth Riftbound set. **Preview Season opens 25 September** at the Regional Qualifier: Los Angeles and runs to 9 October; Pre-Rift events are 16–22 October.",
-      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments, so the base run is around 114 and the headline number is not comparable to older sets'. The set code is **RAD** (published by Riot, not a guess).",
+      "**The base run is 167 cards.** Riot announced \"180 (66 Showcase)\", but the first Radiance card seen in print — [Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler) — is numbered **167/167**, which is the only card-count figure anyone has actually held. The two do not reconcile yet. The set code is **RAD** (published by Riot, not a guess).",
       "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV are named, four are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
       "**Every product and its price is public**: booster packs (US$4.99), 24-pack displays (US$120), the Vault (six packs, runes, three foil promo tokens — US$34.99), the Evelynn vs Seraphine Showdown Decks, and a Pre-Rift kit that ships a week early. Full table below.",
       "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. It has not been shown. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
@@ -458,7 +458,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       },
       {
         q: "How many cards are in Riftbound Radiance?",
-        a: "180, confirmed by Riot — and, unlike every earlier set's headline figure, that 180 already includes the set's 66 Showcase treatments. Counted the same way as older sets (base run only), Radiance is about 114 cards, the smallest main set so far; counted as a whole card list it sits between Vendetta and Unleashed. Expect Signature, overnumbered and the new Ultimate Rare printings on top, the way every previous set has had chase printings beyond its base count.",
+        a: "The base numbered run is 167. That comes from the first Radiance card to surface in print, Neeko, Blending In, which is numbered 167/167 — and a denominator printed on a card is better evidence than any announcement. Riot's own product rundown said 180 cards including 66 Showcase treatments, and those two figures have not been reconciled: read inclusively, Riot's number implies a 114-card base, which the printed card rules out. What 167 does tell you is that Radiance's base run is slightly larger than Vendetta's 166 and far smaller than Origins' 298, with Showcase, Signature, overnumbered and the new Ultimate Rare printings numbered above it the way every previous set has done.",
       },
       {
         q: "When does Radiance Preview Season start?",
@@ -517,7 +517,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       label: "Compare Radiance pre-order prices →",
       blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, cheapest first, in your currency.",
     },
-    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to a confirmed **180 cards** (66 of them Showcase treatments), it brings **nine new champion Legends** (five named, four not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — and the distributor sheet has put a price on every product. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (five named, four not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
 ## Radiance at a glance
 
@@ -528,11 +528,11 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
 | **Release date** | 23 October 2026 |
 | **Preview Season** | 25 September – 9 October 2026 |
 | **Pre-Rift events** | 16 – 22 October 2026 |
-| **Card count** | 180 (66 Showcase), confirmed |
+| **Card count** | **167 base run**, from the printed 167/167 on the first card seen. Riot announced 180 including 66 Showcase; unreconciled |
 | **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, and 4 unrevealed |
 | **New chase tier** | Ultimate Rare (announced, not shown) |
 | **Tagline** | "Own the Stage. The World is Watching." |
-| **Card list revealed?** | **No** — one Legend and one T1 promo are the only cards known in full |
+| **Card list revealed?** | **No** — one Legend, one T1 promo and one photographed card (Neeko) are all that is known in full |
 
 ## The Radiance launch schedule
 
@@ -581,9 +581,13 @@ The community credits **Unleashed's Baron Nashor** as Riftbound's first Ultimate
 
 Riftbound has shipped five sets so far — Origins (298 cards), Origins: Proving Grounds (24), Spirit Forged (221), Unleashed (219) and Vendetta (166). Radiance is the sixth release and the fifth mainline set.
 
-Radiance lands at a confirmed **180 cards**, and that number needs one qualification before it means anything: Riot's 180 is **inclusive of the set's 66 Showcase treatments**, while the counts above — 298, 221, 219, 166 — are base runs, with each of those sets' Showcase printings numbered *on top*. Compare like with like and Radiance's base run is roughly **114 cards**, which would make it the smallest mainline Riftbound set rather than the second-largest. Compare total printings instead and 180 sits between Vendetta and Unleashed. We flag this rather than pick the flattering reading, because the two framings point at opposite conclusions about scarcity and we do not yet know which one the printed collector numbers will settle on.
+**A printed collector number has now settled this, and it settled it on neither answer.** This section used to lay out two readings of Riot's "180 (66 Showcase)" — an inclusive one making Radiance's base run about **114 cards** (the smallest mainline set ever) and an exclusive one putting 180 between Vendetta and Unleashed — and said we would not pick the flattering one because we did not yet know which the printed collector numbers would settle on.
 
-What is not ambiguous is the **Showcase density**: 66 of 180 is roughly 37%, the highest share of any Riftbound set so far. A high Showcase share concentrates a box's value in fewer, rarer slots, which is the dynamic that keeps Origins' top cards expensive. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
+They have. The first Radiance card photographed in print, **[Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler)**, reads **RAD · 167/167 · EN**. So the base numbered run is **167**: slightly larger than Vendetta's 166, comfortably smaller than Unleashed's 219, and nothing like the 114 the inclusive reading implied. Showcase printings will be numbered above it, exactly as in every earlier set.
+
+We are not going to pretend that reconciles with Riot's announcement, because it does not. 167 is not 180, and 167 + 66 Showcase is not 180 either. One of three things is true — the announced figure changed, it counted something outside the main numbering, or it was never precise — and we do not know which. What we do know is which number is printed on cardboard, and that is the one this site now uses everywhere, including in how it matches a "x/167" listing to the right set.
+
+The **Showcase density** is the figure still resting on Riot's announcement alone: 66 Showcase cards, which against a 167-card base is a very high share by this game's standards. A high Showcase share concentrates a box's value in fewer, rarer slots, which is the dynamic that keeps Origins' top cards expensive. Treat the 66 as announced-not-verified until a Showcase card is photographed too. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
 
 ## The nine champions — and the one Legend Riot has actually shown
 
@@ -594,6 +598,12 @@ All five named champions are League of Legends champions without an existing Rif
 **Ekko is the one Legend revealed in full.** *Ekko, Boy Who Shattered Time* was teased at Gen Con and detailed in Riot's own first-look article in August: a **Fury/Mind Legend** built on **[Empower](/keywords/empower)**, the mechanic Vendetta introduced. As previewed, you may disempower Ekko to make your next unit cost **2 energy and 1 power less**, and that unit is **killed at the end of the turn**. That is a cheat-a-threat-in-then-lose-it design — the kind of ability that wants units with enter-the-board effects, or ways to make the sacrifice not matter. It is also the clearest signal yet that Radiance extends Empower rather than retiring it, which matters for every Empower deck bought during Vendetta. *Ekko, Ingenious* is his Champion Unit, and only its art has been shown.
 
 **Evelynn and Seraphine** headline the Showdown Decks and the box art. Riot has shown the art for *Evelynn, In Control* and reporting from the Vancouver reveal places her in the Chaos domain; her card text has not been published. Seraphine's *Not Alone* is fully known because it is already in print (below). Beyond that, nothing about domains, abilities or which existing champions get new printings has been said — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+
+## The first Radiance card seen in print: Neeko
+
+On **19 September 2026**, days before Preview Season opens, a photograph of a physical Radiance card surfaced: **Neeko, Blending In** — a **6-energy, 4-Might Neutral Champion Unit**, numbered **167/167**, art by Luscinia Studio. It is the first Radiance card anyone has held rather than heard about, and it is already in our database with a live price page.
+
+Its text changes deckbuilding rather than the board: if Neeko is in your deck you choose **three extra Legends** alongside your starting one, and playing her adds one of them to your Legend Zone for as long as she is on the board. We have pulled that apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)** — including why a *Neutral* card that touches the Legend Zone is a bigger deal than a 6-drop's stat line suggests.
 
 **On the leaks.** A photo of Riot's own PAX West demo material showed three new mechanics — Deploy, Showoff and Disarm — which we covered in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)**, hedged throughout. Since then, purported card text for several Legends has circulated from anonymous social-media accounts. We are not reproducing it here: a demo table Riot set up in public is a source; a screenshot with no provenance is not. Preview Season, which opens 25 September, is when this stops being a question.
 
@@ -3424,6 +3434,193 @@ If you're running either card, both bans take effect **18 September 2026** — s
 ---
 
 *Ban facts (cards, effective date, Riot's stated reasoning) are from [Riot Games' 15 September 2026 announcement](https://playriftbound.com/en-us/news/announcements/september-ban-list-updates-effective-september-18-2026/). Community reaction is quoted from the ["New banned cards"](https://www.reddit.com/r/riftboundtcg/comments/1wgkixo/new_banned_cards/) thread on r/riftboundtcg, current as of publication — usernames are as posted publicly on Reddit, and every quoted or paraphrased opinion belongs to its named commenter, not to RiftCompare.*`,
+  },
+  // NEEKO SPOILER, 19 Sep 2026 — the first Radiance card anyone has photographed
+  // in print, six days before Preview Season opens. Written from the photograph
+  // itself, not from coverage of it.
+  //
+  // Two things here are this site's own work and are the reason the post exists
+  // rather than restating a leak:
+  //   1. The printed "RAD · 167/167 · EN" settles Radiance's base run at 167,
+  //      which contradicts Riot's announced "180 (66 Showcase)" AND the 114 that
+  //      an inclusive reading of it implied. lib/price-import.ts and
+  //      lib/tcgplayer.ts's twin setFromTotal() switches, lib/constants.ts,
+  //      lib/release-calendar.ts and riftbound-radiance-what-we-know all moved to
+  //      167 in the same pass; tests/radiance-card-count-accuracy.test.ts records
+  //      the supersession rather than pretending 180 was never asserted.
+  //   2. The rarity is VERIFIED, not guessed: the bottom-centre gem is an orange
+  //      pentagon, matched against Sett, Brawler (OGN-164, epic) and against the
+  //      magenta diamond on Kayn, Unleashed (OGN-189, rare) from cdn.riftscribe.gg.
+  //
+  // The card is in prisma/manual-cards.json, so it has a real /card/ page and the
+  // embed below renders it live rather than as a photo.
+  {
+    slug: "riftbound-neeko-blending-in-spoiler",
+    category: "blog",
+    title: "Riftbound Neeko Spoiler: Blending In Breaks the One-Legend Rule",
+    excerpt:
+      "The first Riftbound: Radiance card photographed in print is Neeko, Blending In — a 6-cost Neutral Champion Unit that hands you three extra Legends. Its collector number also settles how big Radiance actually is.",
+    author: "RiftCompare",
+    date: "2026-09-19",
+    readMins: 8,
+    tags: ["radiance", "news", "spoilers", "neeko", "deckbuilding"],
+    hero: {
+      src: "/radiance-spoilers/neeko-blending-in.jpg",
+      alt: "Riftbound Radiance spoiler — Neeko, Blending In, a 6-energy 4-Might Neutral Champion Unit numbered 167/167",
+    },
+    shop: [
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
+    // `embeds` + a positioned [[embed:0]] marker, not the singular `embed`: the
+    // gallery belongs directly under the stat table, and only the indexed marker
+    // form is positionable (tests/article-shop-strip.test.ts pins the split).
+    embeds: [
+      {
+        title: "Neeko, Blending In — in the database, with live prices",
+        note: "Added from the spoiler photo on 19 September 2026. The art is the photograph until Radiance's official card images land; every other field is read off the print.",
+        slugs: ["neeko-blending-in-rad-167-167"],
+      },
+    ],
+    summary: [
+      "**Neeko, Blending In** is the first Riftbound: Radiance card photographed in print — a **6-energy, 4-Might Neutral Champion Unit**, numbered **167/167**, art by Luscinia Studio.",
+      "**It breaks the one-Legend rule.** If Neeko is in your deck you choose **three extra Legends** at deckbuilding, and playing her adds one of them to your Legend Zone for as long as she is on the board.",
+      "**It is Neutral**, so it is not locked to a domain — every Radiance deck can run it, which is what makes a Legend-Zone effect on a single card significant rather than niche.",
+      "**The collector number is the other story.** 167/167 puts Radiance's base run at **167 cards** — contradicting both Riot's announced 180 and the 114 an inclusive reading of that figure implied.",
+      "**Rarity is Epic**, verified against known cards rather than guessed — see how below. [Its price page is live](/card/neeko-blending-in-rad-167-167).",
+    ],
+    faq: [
+      {
+        q: "What is Neeko, Blending In in Riftbound?",
+        a: "A Champion Unit in Riftbound: Radiance, numbered 167/167. It costs 6 energy, has 4 Might, and is Neutral — meaning it can go in a deck of any Domain. Its text: if Neeko is in your deck you choose 3 different Legends in addition to your starting Legend, and when you play her you choose one of those Legends and add it to your Legend Zone while she is on the board.",
+      },
+      {
+        q: "Is the Neeko Riftbound card real?",
+        a: "It is a photograph of a physical card, printed RAD · 167/167 · EN with a Luscinia Studio artist credit and a ©2026 RGI line, and its text matches wording that circulated as an unconfirmed Radiance leak earlier in September. That is strong evidence, but Riot has not officially revealed it — Preview Season opens 25 September 2026, and that is when it becomes official.",
+      },
+      {
+        q: "How many cards are in Riftbound: Radiance?",
+        a: "The base numbered run is 167, because this card is printed 167/167. Riot's own product rundown announced 180 cards including 66 Showcase treatments, and the two figures do not reconcile — 167 is not 180, and 167 plus 66 is not 180 either. A number printed on a card is better evidence than an announcement, so 167 is what we use, with Showcase printings expected to be numbered above it as in every previous set.",
+      },
+      {
+        q: "What rarity is Neeko, Blending In?",
+        a: "Epic. The rarity gem at the bottom centre of a Riftbound card is shape- and colour-coded, and Neeko's is an orange pentagon — the same mark Sett, Brawler (OGN-164, an Epic) carries, and clearly not the magenta diamond on Kayn, Unleashed (OGN-189, a Rare). We compared the three directly rather than inferring from the card's treatment.",
+      },
+      {
+        q: "Can any deck play Neeko in Riftbound?",
+        a: "Yes, as far as Domain goes — the card says outright that Neutral cards can go in decks of any Domain, so no rune commitment is required. The real cost is the deckbuilding one: you have to name three different extra Legends when you build, and those slots are spent whether or not you ever draw her.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026 worldwide. Preview Season runs 25 September to 9 October 2026, opening at the Regional Qualifier in Los Angeles, and Pre-Rift events run 16–22 October.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card as it's revealed →",
+      blurb: "The set hub fills in through Preview Season and switches on live price comparison across every store we track on release day.",
+    },
+    body: `**The first Riftbound: Radiance card anyone has photographed in print is Neeko** — six days before Preview Season was due to show us anything. It is a good one to get first, because it does something no Riftbound card has done before, and because the small print at the bottom of it quietly settles an argument about how big this set actually is.
+
+## What the card says
+
+Read straight off the print:
+
+| | |
+| --- | --- |
+| **Name** | Neeko, Blending In |
+| **Type** | Champion Unit · Neeko · Ixtal |
+| **Energy cost** | 6 |
+| **Might** | 4 |
+| **Domain** | Neutral |
+| **Rarity** | Epic |
+| **Collector number** | RAD · 167/167 · EN |
+| **Artist** | Luscinia Studio (©2026 RGI) |
+
+And the text:
+
+> *(Neutral cards can go in decks of any Domain.)*
+> If Neeko is in your deck, choose 3 different legends in addition to your starting legend. *(Different means none match names.)*
+> When you play me, choose one of those Legends and add it to your Legend Zone while I'm on the board.
+
+[[embed:0]]
+
+## Why this is not just another 6-drop
+
+A 6-energy 4-Might body is, on its own, unremarkable — [Kayn, Unleashed](/card/kayn-unleashed-ogn-189-298) costs the same and hits for 6. Nobody is playing this card for the statline.
+
+They are playing it because of what a Legend is. In Riftbound, **your Legend is the card the whole deck is built around** — it is the closest thing the game has to locking in a champion, and critically it is what fixes your Domains. As our own deckbuilding guidance puts it: stay in your Legend's domains, because you cannot splash a card your runes cannot pay for. One Legend, one identity, decided before the game starts.
+
+Neeko puts a second Legend on the table mid-game. Not permanently — the text is explicit that it lasts *while I'm on the board* — but for as long as she survives, your Legend Zone holds something it could not otherwise hold. That is a category of effect this game has not had, and it is why a card with a modest body is worth more attention than the Legend reveals it will sit alongside.
+
+The deckbuilding half is just as unusual. **You choose the three extra Legends when you build the deck**, not when you play her, and they have to be three *different* ones — the card even defines "different" as "none match names", which is the kind of clause you only write when the obvious abuse is stacking three copies of the same Legend's printings.
+
+## The cost is paid before the game starts
+
+Here is the part that will decide whether this card is a staple or a curiosity, and it is a genuinely open question.
+
+Those three Legend slots are spent whether or not you ever draw Neeko. You commit them at deckbuild. If she is in your opening hand, you have a 6-drop that reshapes what your deck can do. If she is at the bottom of your deck, you have paid a real cost for nothing and you are down a card.
+
+That is a variance trade rather than a power trade, and variance trades are exactly the kind of thing a format takes weeks to price correctly. Expect the first fortnight of Radiance to be loud and wrong about this card in both directions.
+
+## Neutral is doing a lot of work here
+
+If Neeko were a Chaos card, this would be a Chaos-deck card and the conversation would end there. She is **Neutral** — the card says so in its own reminder text, in brackets, before anything else: *Neutral cards can go in decks of any Domain.*
+
+That is what turns a single interesting effect into a format-wide one. Every Radiance deck, in every Domain, can run her without touching its rune base. Riftbound's neutral cards are the closest thing the game has to universal staples precisely because they cost nothing in deck identity to include — and the game has not previously handed the neutral slot an effect that reaches into the Legend Zone.
+
+## The other story: 167/167
+
+Now the small print, which is arguably the bigger news.
+
+The card is numbered **167/167**. That denominator is the size of Radiance's base numbered run, and until this photograph nobody outside Riot had seen one.
+
+It matters because the published figure said something else. Riot's own product rundown announced Radiance at **"180 cards (66 Showcase)"**, and that phrasing is ambiguous in a way that pointed at two very different sets:
+
+- Read **inclusively** — 180 total, of which 66 are Showcase — the base run would be about **114 cards**, which would make Radiance the smallest mainline Riftbound set ever printed.
+- Read **exclusively** — 180 base cards with Showcase on top, the way Origins, Spirit Forged, Unleashed and Vendetta all number their alt-arts — Radiance would be the second-largest.
+
+We wrote both readings up rather than picking the flattering one, and said we would wait for a printed collector number to settle it.
+
+It has settled it, and it settled it on **neither**. 167 is not 114 and it is not 180. It sits just above Vendetta's 166 and well below Unleashed's 219 — a normal-sized mainline set, which is the least dramatic of the three possibilities and probably the correct one.
+
+We are not going to pretend that reconciles with the announcement, because it does not: 167 is not 180, and 167 plus 66 Showcase is not 180 either. Either the figure changed, or it was counting something outside the main numbering, or it was never exact. What is not in doubt is which number is printed on cardboard.
+
+**This has a practical consequence for pricing**, which is why we changed it everywhere the same day. Our price matcher identifies a set from a listing's collector-number denominator — a listing titled "042/166" is unambiguously Vendetta. Radiance was carrying both guesses, 114 and 180, because no card had been seen. Both were wrong, and a Radiance listing reading "x/167" would have matched nothing and fallen through to an Origins default, quietly pricing a brand-new card as a two-year-old one. That is fixed.
+
+## How we checked the rarity
+
+Small thing, but it is the sort of detail that gets guessed and then repeated for months.
+
+Riftbound prints a rarity gem at the bottom centre of the card, and it is both shape- and colour-coded. Rather than infer Epic from the card's treatment — the art bleeds over the text box and the whole thing has a foil sheen, which is suggestive but not proof — we pulled two cards of known rarity from the card database and compared the gems directly:
+
+- **Kayn, Unleashed** (OGN-189), a **Rare**: a magenta **diamond**.
+- **Sett, Brawler** (OGN-164), an **Epic**: an orange **pentagon**.
+- **Neeko**: an orange **pentagon**.
+
+So: Epic. That is what is recorded on [her card page](/card/neeko-blending-in-rad-167-167), and it is checkable rather than asserted.
+
+## What is still unknown
+
+Worth being explicit, because a lot of Radiance "information" currently is not.
+
+**Riot has not revealed this card.** Preview Season opens 25 September at the Regional Qualifier in Los Angeles and runs to 9 October; that is when this stops being a photograph and becomes an announcement. The text does match wording that circulated as an unconfirmed leak earlier in September, which is corroboration of a sort — two independent sightings agreeing — but it is not the same as official.
+
+**Whether there is a Showcase Neeko** is unknown. With 66 Showcase treatments announced and Neeko sitting in the set's final numbered slot as an Epic Champion Unit, a premium printing would be unsurprising. Nobody has seen one.
+
+**How it actually plays** is unknown, and anyone telling you otherwise on day one is guessing. A card that changes deckbuilding rules rather than board states is exactly the type the community consistently misprices early.
+
+## What this means if you are buying
+
+Three things worth holding onto.
+
+**Do not buy a Radiance single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. Anything offered as a Neeko today is a pre-sale against a card nobody can deliver.
+
+**Watch the sealed price instead.** The set's contents are what you can actually buy right now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks, cheapest first, in your own currency.
+
+**When singles do land, check the collector number before the name.** With 167 base cards and Showcase printings numbering above them, "Neeko" will shortly mean several different objects at several different prices. The number is what tells them apart. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
+
+For everything else that is genuinely confirmed about the set — dates, products, prices, the Legends named so far — our [what we know about Radiance](/blog/riftbound-radiance-what-we-know) page is kept current and keeps leaks separate from facts.`,
   },
   // HEARTSTEEL comeback post, written the day "LIVE MY LIFE" landed (18 Sep
   // 2026). THE ANGLE IS THE FACT-CHECK, and it is the one thing on this topic

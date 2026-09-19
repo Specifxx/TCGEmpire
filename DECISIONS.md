@@ -8804,3 +8804,52 @@ block to render after the comparison list closes on both surfaces.
 need "which key is this market's Cardmarket row", and the TCGplayer equivalent
 of that decision was hand-inlined twice and the second copy was wrong for two
 whole markets (`lib/tcg-reference.ts`). Guards in `tests/cardmarket-eu.test.ts`.
+## A photographed Neeko settled Radiance's card count, and both our guesses were wrong — 2026-09-19
+
+A spoiler photo of the first Riftbound: Radiance card to surface in print —
+**Neeko, Blending In** — arrived six days before Preview Season. Adding the card
+was the ask. The collector number on it was the bigger find.
+
+**The card is real data, so it went into the catalogue properly.** It is in
+`prisma/manual-cards.json`, which `scripts/build-db-push.sh` applies on every
+production build, so it gets a real `/card/` page rather than living as a
+picture inside an article. Every field is read off the print. The **rarity was
+verified, not inferred**: Riftbound's bottom-centre rarity gem is shape- and
+colour-coded, and Neeko's orange pentagon was matched against Sett, Brawler
+(OGN-164, Epic) and against the magenta diamond on Kayn, Unleashed (OGN-189,
+Rare), both pulled from `cdn.riftscribe.gg`. The card's own wording is
+"Neutral"; the stored domain is `Colorless`, because that is the value all 65
+existing neutral rows use and what `lib/domains.ts`, the facet pages and the
+`/browse` filters are built on — a second spelling would orphan the card from
+every one of them.
+
+**The count.** The card reads `RAD · 167/167 · EN`. We had been carrying Riot's
+announced "180 cards (66 Showcase)" and hedging its ambiguity in two places at
+once: `setFromTotal()` claimed **both** 114 (the inclusive reading: 180 − 66)
+and 180, with a note to prune the loser once a real card appeared;
+`riftbound-radiance-what-we-know` laid out both readings and said it would not
+pick the flattering one until printed collector numbers settled it.
+
+They settled it on **neither**. 167 is not 114 and not 180, and 167 + 66 is not
+180 either. We have not reconciled that and the prose says so rather than
+picking a story: either the announced figure changed, counted something outside
+the main numbering, or was never exact.
+
+**What moved to 167**, all in one pass because a half-migrated card count is
+worse than either number: `constants.ts` `SETS.totalCards`,
+`release-calendar.ts` `cards` and its note, `radiance-preorders`' FAQ, the
+what-we-know article, and — the one with teeth — **both** copies of
+`setFromTotal()` (`lib/price-import.ts` and `lib/tcgplayer.ts`). That function
+resolves a listing's set from its collector-number denominator, and with no
+entry for 167 a Radiance listing would have fallen through to the `OGN` default
+and priced a brand-new card as a two-year-old Origins one. The disproved 114/180
+cases are deleted, not left as harmless extras: a denominator mapping to a set
+it does not belong to is a misroute waiting for whichever future set prints one
+of those numbers.
+
+`tests/radiance-card-count-accuracy.test.ts` previously asserted `cards === 180`
+on the strength of Riot's rundown. It now asserts 167, pins that **both**
+numbers survive in the calendar note, and adds a test that 167 routes to RAD in
+both `setFromTotal` copies while the two disproved cases stay gone. The file's
+header records the supersession instead of quietly rewriting history — the
+earlier 180 was a correct reading of the best evidence then available.

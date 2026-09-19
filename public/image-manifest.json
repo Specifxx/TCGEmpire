@@ -1023,6 +1023,18 @@
     "avif": "/r2-source.avif",
     "avifBytes": 11241
   },
+  "/radiance-spoilers/neeko-blending-in.jpg": {
+    "src": "/radiance-spoilers/neeko-blending-in.jpg",
+    "width": 744,
+    "height": 1054,
+    "bytes": 118342,
+    "webp": "/radiance-spoilers/neeko-blending-in.webp",
+    "webpBytes": 81908,
+    "avif": "/radiance-spoilers/neeko-blending-in.avif",
+    "avifBytes": 54396,
+    "variants": [],
+    "fingerprint": "0dba457873babae8"
+  },
   "/rune-variants/body-rune-ogn-126b.jpg": {
     "src": "/rune-variants/body-rune-ogn-126b.jpg",
     "width": 300,

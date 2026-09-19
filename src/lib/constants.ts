@@ -294,7 +294,7 @@ export const SETS: SetInfo[] = [
   // a few days ahead of the 31 Jul 2026 official street date — treated as released.
   { code: "VEN", name: "Vendetta", slug: "vendetta", totalCards: 166, recentlyReleased: true, releasedOn: "2026-07-31" },
   // Set 5, announced in Riot's 4 Aug 2026 product rundown (written up in
-  // /blog/riftbound-2027-set-roadmap): 23 Oct 2026, ~180 cards. comingSoon with no
+  // /blog/riftbound-2027-set-roadmap): 23 Oct 2026. comingSoon with no
   // sealedAvailable, so it renders as a disabled "Coming soon" tile on the homepage
   // and under "Upcoming & unreleased" on /sets, and is excluded from the eBay quota,
   // the box-EV calculator, movers and the pack game until cards actually import.
@@ -307,7 +307,17 @@ export const SETS: SetInfo[] = [
     code: "RAD",
     name: "Radiance",
     slug: "radiance",
-    totalCards: 180,
+    // 167, NOT the 180 Riot announced. `totalCards` is the BASE NUMBERED RUN
+    // everywhere else in this list — Vendetta's 166 is the number printed on its
+    // cards as "x/166" — and the first real Radiance card to surface, the Neeko
+    // spoiler (prisma/manual-cards.json), is printed "RAD - 167/167 - EN". A
+    // printed denominator beats an announcement: Riot's "180 cards (66 Showcase)"
+    // is a marketing total, and 167 base + Showcase printings numbered above it
+    // is the same shape every previous set shipped in. lib/price-import.ts's
+    // setFromTotal() was updated in the same pass and is the thing that breaks
+    // loudly if this is wrong — a listing's "x/167" has to route to RAD or it
+    // gets priced as an Origins card.
+    totalCards: 167,
     comingSoon: true,
     releasedOn: "2026-10-23",
     hubReady: true,
