@@ -94,3 +94,39 @@ test("Market Pulse is gone from the homepage, and left nothing dangling behind i
     "toPulseMovers had exactly one caller and must not linger as a helper with none",
   );
 });
+
+test("Recently viewed is the first thing on the homepage, not the last", () => {
+  // Moved from the bottom of HomeSections to the top (2026-09-19, owner
+  // request). Returning visitors were the one group who had to scroll past
+  // every section on the page to reach the single row addressed to them.
+  const code = readCode("src/components/home/HomeSections.tsx");
+  const recent = code.indexOf("<RecentlyViewedRail");
+  assert.ok(recent > 0, "the homepage must still render the rail");
+  // Every other section comes after it.
+  for (const tag of ["<EbayPicks", "<PopularCardsCarousel", "<TodaysTopDeals", "<PartnersStrip"]) {
+    const at = code.indexOf(tag);
+    assert.ok(at > 0, `expected ${tag} on the homepage`);
+    assert.ok(recent < at, `Recently viewed must render above ${tag}`);
+  }
+  // …and it appears exactly once. The old bottom copy has to be gone, not
+  // duplicated — two rails would render the same eight chips twice.
+  assert.equal(code.split("<RecentlyViewedRail").length - 1, 1, "exactly one rail on the homepage");
+});
+
+test("putting Recently viewed first does not change the page a new visitor or a crawler sees", () => {
+  // The whole reason the top slot is free for it: the rail reads localStorage
+  // through useSyncExternalStore, so the server snapshot is empty and it
+  // returns null on a first-ever visit. eBay Picks is still the top slot in
+  // the prerendered HTML — see tests/game-before-money.test.ts, which pins
+  // that decision.
+  const rail = read("src/components/home/RecentlyViewedRail.tsx");
+  assert.match(rail, /useRecentCards\(\)/, "the rail must read from the client-only store");
+  assert.match(rail, /if \(recent\.length === 0\) return null;/, "an empty history must render nothing at all");
+
+  const store = read("src/lib/recently-viewed.ts");
+  assert.match(
+    store,
+    /useSyncExternalStore\(subscribe, getSnapshot, getServerSnapshot\)/,
+    "a server snapshot is what keeps the prerendered homepage rail-free",
+  );
+});

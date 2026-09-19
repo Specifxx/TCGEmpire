@@ -106,6 +106,30 @@ export function HomeSections({
 
   return (
     <>
+      {/* Recently viewed — first thing on the page, moved up from the very
+          bottom (2026-09-19, owner request).
+
+          It reads localStorage through useSyncExternalStore, so it renders
+          NOTHING on the server and NOTHING for a first-ever visitor. That is
+          what makes the top of the page the right home for it rather than a
+          contested slot: a new visitor, a crawler and the prerendered HTML all
+          see exactly the page they saw before, with eBay Picks still leading
+          (the owner-chosen top slot, 2026-09-17 — see below and
+          tests/game-before-money.test.ts). The only person it appears for is
+          someone coming back, and for them "the cards you were just looking at"
+          is the most useful thing on the page — which is the entire argument
+          for putting it above the fold instead of eleven sections down, where
+          returning visitors were the one group who had to scroll past
+          everything to reach the one row addressed to them.
+
+          The cost, stated rather than discovered later: a returning visitor
+          gets one layout shift of about a chip-row's height shortly after
+          hydration, where before it happened off-screen. It cannot be reserved
+          — the height is only knowable once localStorage has been read, and
+          reserving it unconditionally would punch a gap into every first-time
+          visit to avoid a shift only returning visitors ever see. */}
+      <RecentlyViewedRail />
+
       {/* eBay Picks — the newest set's chase cards with their cheapest live
           listing, rather than a generic banner.
           MOVED INTO THE TOP SLOT 2026-09-17, on the owner's explicit
@@ -318,10 +342,6 @@ export function HomeSections({
           twin and hides itself for everyone else. Exactly one renders. */}
       <AccountStrip />
       <WelcomeBack />
-
-      {/* Renders nothing on the server or on a first-ever visit — see
-          RecentlyViewedRail's own comment. */}
-      <RecentlyViewedRail />
 
       {/* Approved partners + affiliate disclosure. Client component (reads
           useCountry() itself) so every visitor's eBay click here is tagged

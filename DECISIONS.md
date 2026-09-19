@@ -8804,6 +8804,9 @@ block to render after the comparison list closes on both surfaces.
 need "which key is this market's Cardmarket row", and the TCGplayer equivalent
 of that decision was hand-inlined twice and the second copy was wrong for two
 whole markets (`lib/tcg-reference.ts`). Guards in `tests/cardmarket-eu.test.ts`.
+
+---
+
 ## A photographed Neeko settled Radiance's card count, and both our guesses were wrong — 2026-09-19
 
 A spoiler photo of the first Riftbound: Radiance card to surface in print —
@@ -8853,3 +8856,33 @@ numbers survive in the calendar note, and adds a test that 167 routes to RAD in
 both `setFromTotal` copies while the two disproved cases stay gone. The file's
 header records the supersession instead of quietly rewriting history — the
 earlier 180 was a correct reading of the best evidence then available.
+
+---
+
+## Recently viewed moved from the last row on the homepage to the first — 2026-09-19
+
+Owner request, and the top of the page turns out to be the one slot it can take
+without contesting anything.
+
+`RecentlyViewedRail` reads localStorage through `useSyncExternalStore` with an
+empty server snapshot, so it renders nothing on the server and nothing for a
+first-ever visitor. A crawler, the prerendered HTML and a new visitor therefore
+see the page exactly as before, with eBay Picks still leading — the owner-chosen
+top slot from 2026-09-17, still pinned by `tests/game-before-money.test.ts`. The
+only person the rail appears for is someone coming back, and returning visitors
+were precisely the group who had to scroll past every section on the page to
+reach the one row addressed to them.
+
+The cost, recorded rather than left to be discovered: a returning visitor now
+gets one layout shift of about a chip row shortly after hydration, where it used
+to happen off-screen at the bottom. It cannot be reserved away — the height is
+only knowable once localStorage has been read, and reserving it unconditionally
+would punch a permanent gap into every first-time visit to avoid a shift only
+returning visitors ever see. That trade is the wrong way round, so the shift
+stays.
+
+Two guards in `tests/homepage-declutter.test.ts`: the rail renders above every
+other homepage section and **exactly once** (a move done by copy-paste would
+leave two rails rendering the same eight chips), and the client-only mechanism
+that makes the placement safe — the null return on an empty history, the server
+snapshot — is pinned too, since the placement argument collapses without it.
