@@ -1337,18 +1337,17 @@ function setFromTotal(total?: string): string | null {
     case 219: return "UNL";
     case 24: return "OGS";
     case 166: return "VEN";
-    // RADIANCE, BOTH CANDIDATE DENOMINATORS — deliberately, because Riot has
-    // published a card COUNT (180, of which 66 are Showcase) but no card has been
-    // seen yet, so we do not know which number is printed on the cards. Vendetta's
-    // 166 was its BASE run with Showcase printings numbered above it, which would
-    // make Radiance's denominator 114; Riot's own "180 cards" phrasing would make
-    // it 180. Neither number collides with any other set's total, so claiming both
-    // costs nothing and either guess being wrong on its own is a silent misroute:
-    // without a match here a bare "042/114" listing falls through to the "OGN"
-    // default at the bottom of resolveCardId and prices an ORIGINS card.
-    // Prune the wrong one the moment a real Radiance card is in the catalogue.
-    case 114:
-    case 180: return "RAD";
+    // RADIANCE — RESOLVED 2026-09-19, and both earlier guesses were wrong. This
+    // used to claim 114 AND 180, hedging between "Riot announced 180 cards" and
+    // "Vendetta's 166 was its base run with Showcase numbered above it, so
+    // 180 - 66 Showcase = 114", with a note to prune the loser once a real card
+    // appeared. One has: the Neeko spoiler (prisma/manual-cards.json) is printed
+    // "RAD - 167/167 - EN", so the denominator is 167 and neither guess was it.
+    // Both are pruned rather than left as free extras — a total that maps to a
+    // set it is not is a silent misroute waiting for whichever future set
+    // actually prints 114 or 180, and this case list is authoritative precisely
+    // because every entry in it is a number seen on a card.
+    case 167: return "RAD";
     default: return null;
   }
 }

@@ -41,7 +41,7 @@ const FAQS = [
   },
   {
     q: "When does Riftbound Radiance release?",
-    a: "23 October 2026. Radiance is the fifth Riftbound set, announced in Riot's product rundown on 4 August 2026, with 180 cards — 66 of them Showcase treatments.",
+    a: "23 October 2026. Radiance is the fifth Riftbound set, announced in Riot's product rundown on 4 August 2026. Riot's announcement said 180 cards, 66 of them Showcase treatments; the first Radiance card to surface is printed \"167/167\", so the base numbered run is 167 with the Showcase printings numbered above it.",
   },
   {
     q: "Is it cheaper to pre-order or to wait until release?",
