@@ -879,8 +879,21 @@ export async function searchEbayLowest(
 // Keyword each sealed product type must appear as in an eBay title.
 const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Booster Box": /booster\s*box|booster\s*display|display\s*box/i,
-  "Booster Case": /\bcase\b/i,
+  // A BARE `\bcase\b` until 2026-09-20, which is how "x1 Riftbound: Origins
+  // Booster Box New & Sealed English FRESHLY FROM A CASE" — one box, at one
+  // box's price — was published as the cheapest OGN Booster CASE on eBay US
+  // (US$469 against a real case at ~US$1,095). Reported as "Its actually just a
+  // single box, not a case". The word has to describe the PRODUCT, not appear
+  // anywhere in the title: a case is a case OF something, or N boxes.
+  "Booster Case": /booster\s*case|display\s*case|box\s*case|sealed\s*case|case\s*of\s*\d|\d\s*x?\s*booster\s*box/i,
   "Booster Pack": /booster\s*pack/i,
+  // Two more types classifySealed() has returned for a while with no keyword —
+  // the same omission the note below this table describes, found by the same
+  // evidence (an OGN|Sleeved Booster row holding a plain "Origins Booster Pack"
+  // listing). `!kw || kw.test(…)` means a missing type is searched with NO title
+  // filter at all.
+  "Sleeved Booster": /sleeved\s*booster/i,
+  "Sleeved Booster (Art Set)": /sleeved\s*booster/i,
   Bundle: /bundle|gift/i,
   "T1 Signature Edition": /t1|worlds\s*champion/i,
   "T1 Player Bundle": /t1|worlds\s*champion/i,
@@ -908,8 +921,28 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
 // so the T1 CN/KR searches can drop ONLY the language exclusion and keep every
 // other guard — see SEALED_EXCLUDE_EBAY_BASE and the `language` param on
 // searchEbaySealed further down.
+//
+// `jumbo` and `slim` (2026-09-20) are NOT accessories — they are DIFFERENT
+// PRODUCTS, and they are here because two wrong-price reports landed on the same
+// day naming them:
+//
+//   "Riftbound League Of Legends Spiritforged Jumbo Booster Box Factory Sealed"
+//     eBay AU A$123.56, against a real AU market of A$215-320. Reported as
+//     "Chinese version".
+//   "Riftbound League of Legends TCG: Unleashed Slim Booster Box (CHN)"
+//     eBay AU A$156.00, against a real AU market of A$199-280.
+//
+// The second is caught by FOREIGN_LANG now that it knows "CHN"; the first says
+// nothing about language at all. What both DO say is that they are a Jumbo or a
+// Slim box — and neither is a SKU this site tracks. Our sealed types are Booster
+// Box / Display / Case / Pack / Sleeved Booster, so a listing that names itself
+// a different box is not the product the search asked for, whatever language it
+// is in. That is the claim being made here, and it is the one the titles
+// support; nothing below asserts which market those boxes come from. Checked
+// against every real sealed title in the database on the day (~200 across six
+// markets): not one legitimate English listing uses either word.
 const SEALED_EXCLUDE_EBAY_BASE =
-  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card/i;
+  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b/i;
 // A listing calling itself Chinese/Japanese/Korean is (almost always) a foreign
 // printing of an English product being searched for — excluded by default. The T1
 // Signature Edition's CN/KR seeds are the one deliberate exception: for those two

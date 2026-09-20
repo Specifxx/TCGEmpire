@@ -8963,3 +8963,97 @@ Guards in `tests/static-image-caching.test.ts`, which run the real
 string-matching them: no rule may match any of ten real page routes, card art
 must come out immutable and nothing else may, and the preload branches must
 mirror the `<picture>` sources.
+
+---
+
+## Working the inbox: one store added, three sealed prices that were the wrong product — 2026-09-20
+
+The whole queue, read with `audit-inbox` and acted on row by row.
+
+### The store
+
+**Quack Opens** (AU), suggested by its owner through `/stores/suggest`. Probed
+before adding rather than after: `/collections/riftbound/products.json` returns
+HTTP 200 with `?country=AU` and **986 products**, robots.txt allows it, and the
+shipping figure comes off their own published policy page ("flat rate shipping:
+Standard bubble mailer: $10"). They ship Australia only and publish no free tier,
+so `freeOverCents` is **0** — `lib/basket.ts`'s documented "no threshold"
+sentinel, not a guess. Inventing a threshold would have routed the Best Basket
+optimiser onto postage the store never waives.
+
+Their Riftbound shelf is ONE mixed collection, singles and sealed together, with
+no `-singles` handle. Left alone deliberately: `resolveCardId` only ever matches
+a real card, so the sealed rows find nothing and are dropped, while `importSealed`
+picks them up through its own path.
+
+### The three sealed reports, and what they actually were
+
+None of them was a missing listing or a broken fetch. In all three the pipeline
+found a REAL listing, passed it through every guard, and published it as a
+product it is not — at a price that looked like a bargain precisely because it
+was a different thing.
+
+Getting to that required a new read-only diagnostic. **A sealed wrong-price
+report names a groupKey and a price and nothing else**: sealed listings have no
+id of their own, so `PriceReport` has no title for them; `/sealed` renders the
+product tile rather than the listing title; and eBay serves 403 to any scripted
+fetch of an `/itm/` page. `SealedListing.title` is the only copy of the one fact
+every fix depended on, and nothing could read it without an admin session.
+`scripts/diagnose-sealed.ts` reads it, and re-runs `classifySealed()` over every
+stored title so a row whose type disagrees with the classifier shows up by itself.
+
+| Reported | The real title | Published | Real market |
+|---|---|---|---|
+| UNL Booster Box, AU | `Unleashed Slim Booster Box (CHN)` | A$156 | A$199-280 |
+| SFD Booster Box, AU | `Spiritforged Jumbo Booster Box Factory Sealed` | A$123.56 | A$215-320 |
+| OGN Booster Case, US | `x1 Origins Booster Box … FRESHLY FROM A CASE` | US$469 | ~US$1,095 |
+
+**`chn`.** `FOREIGN_LANG` already listed `cn`, `chs`, `cht`, `jp`, `jpn`, `kr`,
+`kor` — and `\bcn\b` does not match "CHN". An all-English title from an
+AU-located seller therefore passed every language guard, and A$156 clears both
+the flat floor and half the trusted reference. One word added to one shared
+pattern, which closes the same hole for singles, TCGplayer and ~100 store feeds
+at once; that is exactly why that pattern lives in one file.
+
+**`jumbo` and `slim`.** The SFD listing was reported as "Chinese version" and its
+title says nothing about language at all. So the code makes the claim the title
+supports instead: a *Jumbo* (or *Slim*) box is not a SKU this site tracks — our
+types are Booster Box / Display / Case / Pack / Sleeved Booster — so a listing
+naming itself a different box is not the product searched for, whatever market
+it came from. Checked against every sealed title in the database that day (~200
+across six markets): not one legitimate English listing uses either word.
+
+**The case that was a box** is two defects that had to be fixed together.
+`SEALED_TYPE_KW["Booster Case"]` was a bare `/\bcase\b/i`, so "FRESHLY FROM A
+CASE" satisfied it — and separately, the importer stamped the group's
+`productType` onto whatever the search returned, so nothing downstream could
+disagree. The keyword now requires the word to describe the product, and the
+importer lets **the listing's own title veto the group it was searched for**
+(`SELF_TYPED`), scoped to the four confusable types — box, case, pack, sleeved
+pack — which differ by one word and by an order of magnitude in price.
+
+That veto only works if `classifySealed()` is right, and it was not:
+**the bare phrase "Booster Case" was not in its alternation at all.** Three
+genuine case listings typed as "Sealed" or "Booster Box". Adjacency matters in
+the fix — a bare `/\bcase\b/` there would retype the single box and put the
+original defect straight back.
+
+Two more types had **no keyword at all** (`Sleeved Booster`, `Sleeved Booster
+(Art Set)`), and the filter is `!kw || kw.test(…)`, so they were searched with no
+title filter whatsoever. That is the trap the table's own comment already
+records for two Radiance SKUs, still live for two more, and it is how an "Origins
+Booster Pack" listing ended up filed as a sleeved booster.
+
+### The feedback queue
+
+Nothing to do, and worth saying why rather than quietly closing it. All three
+rows were already HIDDEN, and all three are genuinely actioned — checked in code
+this pass rather than inferred from the status: the missing shipping cost is
+`/portfolio`'s "Replacement cost, delivered" panel; per-copy purchase prices for
+duplicates are `CollectionCard.costBasisIsTotal`; and "Hobby Collectors Australia
+is throwing off card prices" is the `foreignTotal` guard in `resolveCardId`. The
+last two carry the report's own words in their comments.
+
+Guards in `tests/sealed-wrong-product.test.ts`, written against the verbatim
+titles. `scripts/close-inbox-items.ts` carries this pass's rows with the status
+each one earned.

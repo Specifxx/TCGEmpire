@@ -1,5 +1,5 @@
 /**
- * Closes the inbox items worked on 2026-09-15, and ONLY those — every row is
+ * Closes the inbox items worked on 2026-09-20, and ONLY those — every row is
  * named by id, with the status it actually earned.
  *
  * WHY IDS AND NOT A SWEEP. "Mark everything as done" is one query, and it is the
@@ -32,28 +32,56 @@ const APPLY = process.argv.includes("--apply");
 type Close = { id: string; from: string; to: string; what: string; why: string };
 
 // ── Store suggestions ────────────────────────────────────────────────────────
-// None pending this pass.
-const SUGGESTIONS: Close[] = [];
-
-// ── Wrong-price / wrong-card reports ─────────────────────────────────────────
-// cmtx3yed0 (sealed OGN "Booster Case" priced off a single box on eBay US) is
-// STILL OPEN and deliberately absent: nothing has been changed about how sealed
-// listings are classified, so closing it would be a lie about work that has not
-// happened.
-const REPORTS: Close[] = [];
-
-// ── Feedback ─────────────────────────────────────────────────────────────────
-// HIDDEN, not APPROVED: APPROVED publishes the text as a public review, and the
-// submitter did not tick the consent box. It is a feature request anyway.
-const FEEDBACK: Close[] = [
+const SUGGESTIONS: Close[] = [
   {
-    id: "cmu24pck90000tizoma4sqcka",
-    from: "NEW",
-    to: "HIDDEN",
-    what: "portfolio ignores shipping — the cheapest copy is often one far-off store, and $50 of postage never shows",
-    why: "/portfolio now carries a 'Replacement cost, delivered' panel: the Best-Basket optimiser run over the whole collection, postage charged once per store and free over a store's threshold, shown against the item-price headline",
+    id: "cmu98sx8x0000kshf3adwtcdi",
+    from: "pending",
+    to: "added",
+    what: "Quack Opens (AU) — suggested by the owner, 986 Riftbound products on Shopify",
+    why: "live in src/lib/retailers.ts as `quackopens`. Probed before adding: /collections/riftbound/products.json returns 200 with ?country=AU and 986 products, robots.txt allows it, and the $10 flat single-card rate comes off their own published policy page. freeOverCents is 0 — they publish three flat rates and no free tier, and inventing one would route Best Basket onto postage they never waive",
   },
 ];
+
+// ── Wrong-price / wrong-card reports ─────────────────────────────────────────
+// All three sealed reports, each traced to the REAL stored listing title with
+// scripts/diagnose-sealed.ts rather than guessed at. FIXED means the code that
+// admitted the listing has changed and the change was verified against that
+// exact title; the published row itself clears on the next sealed import.
+const REPORTS: Close[] = [
+  {
+    id: "cmu8pg1ad00003tn5ykacg2n9",
+    from: "NEW",
+    to: "FIXED",
+    what: "UNL|Booster Box, eBay AU, A$156 — 'Unleashed Slim Booster Box (CHN)'",
+    why: "FOREIGN_LANG listed `cn` but not `chn`, and \\bcn\\b does not match CHN — so an all-English title from an AU-located seller passed every language guard and cleared the price floor. `chn` added (lib/scrape-http.ts), which closes the same hole for singles and every store feed at once; `slim` is excluded as a SKU we do not track",
+  },
+  {
+    id: "cmu8pgyda00005bdhczg58ije",
+    from: "NEW",
+    to: "FIXED",
+    what: "SFD|Booster Box, eBay AU, A$123.56 — reported as 'Chinese version'",
+    why: "the real title is 'Riftbound League Of Legends Spiritforged Jumbo Booster Box Factory Sealed' — it names no language at all, so the fix is the claim the title does support: a Jumbo box is a different SKU from the Booster Box we price. `jumbo` excluded alongside `slim` (lib/ebay.ts). A$123.56 against a real AU market of A$215-320",
+  },
+  {
+    id: "cmtx3yed00000145e6hae74jy",
+    from: "NEW",
+    to: "FIXED",
+    what: "OGN|Booster Case, eBay US, US$469 — 'Its actually just a single box, not a case'",
+    why: "exactly right. The listing is 'x1 Riftbound: Origins Booster Box New & Sealed English FRESHLY FROM A CASE', and SEALED_TYPE_KW's Booster Case keyword was a bare /\\bcase\\b/. Two fixes: the keyword now requires the word to describe the product, and the importer no longer stamps the searched-for productType onto a listing whose own title classifies as something else (SELF_TYPED in lib/sealed-import.ts). classifySealed also learned the bare phrase 'Booster Case', which it did not recognise at all",
+  },
+];
+
+// ── Feedback ─────────────────────────────────────────────────────────────────
+// Nothing to close: all three rows in the queue are already HIDDEN, and all
+// three were genuinely actioned rather than merely hidden — verified in code
+// this pass, not assumed from the status:
+//   • shipping missing from the portfolio → /portfolio's "Replacement cost,
+//     delivered" panel
+//   • duplicates cannot carry different purchase prices → CollectionCard
+//     .costBasisIsTotal (prisma/schema.prisma), whose comment quotes the report
+//   • "Hobby Collectors Australia is throwing off card prices" → the foreignTotal
+//     guard in resolveCardId (lib/price-import.ts), whose comment quotes it too
+const FEEDBACK: Close[] = [];
 
 async function close(
   label: string,

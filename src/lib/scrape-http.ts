@@ -53,8 +53,17 @@ export function isRateLimited(res: Response): boolean {
 // check ever running (2026-09-03 user report: "the best price often comes back
 // as some Chinese listing for a completely different product"). Every source
 // checking the exact same regex is the only way that stops recurring per source.
+//
+// `chn` ADDED 2026-09-20, from a real leak: "Riftbound League of Legends TCG:
+// Unleashed Slim Booster Box (CHN)" sat on eBay AU at A$156 against a genuine AU
+// market of A$199-280, and was published as the cheapest UNL booster box. Every
+// guard was innocent — no CJK in an all-English title, an AU-located seller, and
+// A$156 clears both the flat floor and half the trusted reference. `cn` was
+// already here; "CHN" is a different word and `\bcn\b` does not match it. The
+// three-letter ISO-ish forms sellers actually type are now all covered, which
+// matters for singles as much as sealed: both paths read this one pattern.
 export const FOREIGN_LANG =
-  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chs|cht|jp|jpn|kr|kor|asia|asian|simplified|traditional|mandarin|cantonese)\b/i;
+  /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]|\b(cn|chn|chs|cht|jp|jpn|kr|kor|asia|asian|simplified|traditional|mandarin|cantonese)\b/i;
 
 // A title indicating a non-English printing — see FOREIGN_LANG above.
 export function isForeignLanguageTitle(title: string | null | undefined): boolean {

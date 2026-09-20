@@ -322,6 +322,28 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. $2.00 · free over $50",
   }, // registry sweep 2026-09-09: 11 in-stock singles, cur=AUD
+  quackopens: {
+    key: "quackopens",
+    name: "Quack Opens",
+    base: "https://www.quackopens.com.au",
+    // The store shelves Riftbound in ONE mixed collection — singles and sealed
+    // together — so there is no `-singles` handle to point at. That is fine and
+    // deliberately not worked around: resolveCardId only ever matches a real
+    // card, so the sealed rows in here simply find no card and are dropped,
+    // while importSealed picks them up through its own path.
+    collections: ["riftbound"],
+    // Verified against the store's own published policy page 2026-09-20 (their
+    // /policies/shipping-policy FAQ): "flat rate shipping: Standard bubble
+    // mailer: $10 (singles orders)". Australia only — they state explicitly
+    // that they do not ship internationally.
+    shippingFlatCents: 1000,
+    // 0 = NO free-shipping threshold (lib/basket.ts's documented sentinel), not
+    // "unknown". Their policy page lists three flat rates and no free tier, so
+    // inventing one would make the Best Basket optimiser route orders to this
+    // store on postage it would never actually waive.
+    freeOverCents: 0,
+    shippingNote: "flat $10 bubble mailer · no free-shipping threshold",
+  }, // suggested by the store owner via /stores/suggest 2026-09-20; probed live the same day: 986 products in /collections/riftbound, products.json 200 with ?country=AU, robots.txt Allow: /
 
   // ---- United States stores (country: "US"; prices in USD; uses eBay US) --------
   // The US market is much deeper — these carry thousands of in-stock singles between
