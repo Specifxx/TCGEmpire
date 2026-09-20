@@ -72,6 +72,7 @@ on:
           - backfill-alert-user-ids # link existing email-keyed price alerts to the accounts that own them (idempotent; honours dry_run)
           - fix-orphan-users # repair FK orphans: delete rows in GameScore/AuthToken/Notification/SellerProfile/CollectionCard whose userId no longer exists in User (they block `prisma db push` from adding the FK, which fails the Vercel build)
           - diagnose-ebay-item # READ-ONLY: why doesn't ONE eBay listing show up? Takes an item id or a full /itm/ URL in the `url` input and asks Browse's getItem for it in EVERY marketplace. Answers what diagnose-card's funnel cannot: when the reported listing was never in the result window at all, this says whether it is even in that marketplace's index (a 404 is a RESULT — an item LISTED on eBay US is often visible on ebay.com.au because it ships there, while being absent from EBAY_AU's Browse index), and prints the title, price, itemLocation, buyingOptions and whether GRADED_SLAB matches — none of which can be read any other way, since eBay serves 403 to any scripted fetch of an /itm/ page.
+          - diagnose-sealed  # READ-ONLY, no eBay quota: what is actually IN a sealed product group? Dumps every SealedListing row (title, price, market, retailer, url) and re-runs classifySealed() over each title, flagging any row whose stored productType disagrees with what the classifier says today. Exists because a wrong-price report against a SEALED product names a groupKey and a price and NOTHING ELSE — PriceReport has no title for sealed (a sealed listing has no id of its own), /sealed renders the product tile rather than the listing title, and eBay 403s any scripted fetch of an /itm/ page. The titles live in exactly one place and this is the only way to read them. `url` input filters by groupKey substring (e.g. 'UNL|Booster Box', or just 'UNL').
           - diagnose-card    # read-only: why does ONE card have no price? dumps its RetailerPrice + eBay carousel rows and re-runs the LIVE eBay search (card input)
           - diagnose-billing # read-only: why does ONE account have (or lack) Premium, per Stripe's own records? Dumps the DB row's billing fields, then every Stripe subscription on the linked customer (ALL statuses, not just entitled ones) with its latest invoice and, if that invoice's payment failed, the actual decline reason (email input)
           - remove-seed-accounts # one-off: delete @riftcompare.seed bot personas (dead since the forum autoseeder was removed)
@@ -6976,6 +6977,16 @@ jobs:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
         run: npx tsx scripts/diagnose-ebay-item.ts
+
+      # The sealed counterpart to diagnose-card, and the only way to read a sealed
+      # listing's TITLE — the one fact a sealed wrong-price report cannot carry
+      # and the one fact any fix to the language filter or the classifier has to
+      # be written against. Read-only; one database query, no eBay calls.
+      - name: Diagnose one sealed product group
+        if: inputs.task == 'diagnose-sealed'
+        env:
+          GROUP: ${{ inputs.url }}
+        run: npx tsx scripts/diagnose-sealed.ts
 
       - name: Diagnose one card's pricing
         if: inputs.task == 'diagnose-card'
