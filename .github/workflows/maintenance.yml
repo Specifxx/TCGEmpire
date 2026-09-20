@@ -29,7 +29,7 @@ on:
           - smoke-pages     # read-only: assert the key pages return real server-rendered content (post-deploy gate; url input overrides the default production origin)
           - adsense-verify   # read-only: the AdSense integration gate against a LIVE origin — /ads.txt (status WITHOUT following redirects, content-type, exact body), robots.txt (Mediapartners-Google / AdsBot-Google must not be disallowed), the CSP allow-list, and the loader + ownership meta on 12 templates. url input overrides the default production origin (use it to test the www host).
           - import-prices    # run the store price importer for this ref's store list
-          - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows
+          - import-sealed     # refresh sealed products (stores + eBay AU + TCGplayer US) + self-heal stale rows. TICK `apply` TO FORCE THE eBAY HALF: without it importSealed skips every eBay search whenever the newest eBay-sealed row is under 20h old, so a run dispatched right after an eBay matching change reports success without re-testing a single listing.
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
           - migrate-history-db # LEGACY (RH6 → RH7 cutover, kept for reference): full pg_dump/restore of the HISTORY database (RH6) into RH7 + row-count verification.
           - migrate-history-db-to-hdu2 # LEGACY (HISTORY_DATABASE_URL → HISTORY_DATABASE_URL_2 cutover, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-hdu3 on 2026-08-19.
@@ -6599,11 +6599,27 @@ jobs:
         run: npx tsx scripts/import-prices.ts
 
       - name: Import sealed products (stores + eBay AU + TCGplayer US)
+        # `apply` forces the eBay half (EBAY_FORCE=1). WITHOUT IT, THIS TASK
+        # SILENTLY DOES NOT REFRESH eBay: importSealed gates that pass on "is the
+        # newest eBay-sealed row older than 20h?" and logs one line —
+        # "eBay sealed: skipped (refreshed within the last 20h)" — among twenty
+        # minutes of store output. The scheduled run wants that gate (sealed
+        # inventory does not move twice a day and every search costs Browse
+        # quota); a dispatch run almost never does, because the reason to
+        # dispatch it by hand is that the eBay MATCHING RULES just changed and
+        # the existing rows were written by the old ones.
+        #
+        # Found the hard way on 2026-09-20: a dispatch immediately after fixing
+        # three sealed mis-matches reported "success" in 20 minutes having never
+        # re-run a single eBay search, so all three bad rows were still in the
+        # database. Tick `apply` whenever the point of the run is new matching
+        # logic.
         if: inputs.task == 'import-sealed'
         env:
           EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
           EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
           EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+          EBAY_FORCE: ${{ inputs.apply && '1' || '' }}
         run: npx tsx scripts/import-sealed.ts
 
       # Read-only. Compares every set's rarity distribution, splitting base prints
