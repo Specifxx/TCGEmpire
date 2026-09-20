@@ -9057,3 +9057,69 @@ last two carry the report's own words in their comments.
 Guards in `tests/sealed-wrong-product.test.ts`, written against the verbatim
 titles. `scripts/close-inbox-items.ts` carries this pass's rows with the status
 each one earned.
+
+---
+
+## The sealed fix's own first run found the hole in it — 2026-09-20 (same day, later)
+
+Two corrections to the entry above, both worth keeping because the second one is
+the case FOR the first.
+
+**The import that was supposed to prove the fix never tested it.** Dispatching
+`import-sealed` right after the matching changes returned success in twenty
+minutes, and the bad rows were still there. One line explains it:
+
+```
+eBay sealed: skipped (refreshed within the last 20h).
+```
+
+`importSealed` gates the eBay pass on the age of the newest eBay-sealed row. The
+rows were 19 hours old, so not a single eBay search ran. That gate is right for
+the SCHEDULED run — sealed stock does not move twice a day and every search
+costs Browse quota — and close to always wrong for a DISPATCHED one, because the
+reason to dispatch it by hand is that the matching rules just changed and the
+existing rows were written by the old ones. `EBAY_FORCE=1` already existed as the
+bypass and simply was not wired to the workflow; `apply` now sets it, and both
+the task description and the step say plainly that an un-ticked run tests no
+eBay change at all.
+
+Worth stating how this was nearly missed: the live `/sealed` page had none of
+the three offending strings in it, and that looked like confirmation. It was not
+— the page renders one market's tiles, not every stored row. The check that
+actually answered the question was `diagnose-sealed`, reading the table.
+
+**Then the forced run dropped a listing it should have kept**, and said so:
+
+```
+eBay sealed AU: dropped "Riftbound: League of Legends TCG Unleashed Case
+(6x Booster Boxes)" from UNL|Booster Case — its own title types as Booster Box.
+```
+
+That is a genuine case, vetoed by the new check because `classifySealed()` still
+could not read it. The earlier fix taught the classifier `booster case` and
+required ADJACENCY, specifically so "Origins Booster Box … FRESHLY FROM A CASE"
+would keep typing as a box. But a case is just as often written with the word
+"case" nowhere near "booster" and a COUNT carrying the meaning instead —
+"Case (6x Booster Boxes)", "SEALED CASE OF 6 BOOSTER BOX". Those matched only
+"Booster Boxes", so they typed as a box.
+
+The count is what makes the new rule safe: a multiplier beside "booster box" is
+required, and the single box that ends "FROM A CASE" has none. Both directions
+are pinned with 20 real titles.
+
+The veto earned its place in the same run, on the other side:
+
+```
+eBay sealed EU: dropped "… UNLEASHED SEALED CASE 6x BOOSTER BOX ENGLISH ENG"
+from unleashedcase6xboosterbox — its own title types as Booster Case.
+```
+
+There the classifier was right and the GROUP was wrong: a store product that is
+a case had been typed as a Booster Box at import time, creating a box-shaped
+group for a case-shaped product. The veto stopped a case being priced as a box.
+With the classifier fixed, that store product now types as a case and the group
+re-forms correctly on its own.
+
+The general lesson, which is why this is a separate entry rather than an edit:
+**a log line that names what it dropped and why is what turned a silent
+regression into a five-minute fix.** The veto could have just `continue`d.

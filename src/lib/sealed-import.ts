@@ -229,7 +229,20 @@ export function classifySealed(title: string): string {
   // ADJACENT WORDS ONLY, deliberately: a bare /\bcase\b/ here would retype
   // "Origins Booster Box … FRESHLY FROM A CASE" — a single box — as a case,
   // which is the exact defect reported against the eBay US OGN case row.
-  if (/booster\s*case|(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case/.test(t)) return "Booster Case";
+  // `case <N> booster box` covers the other half of how a case is written, where
+  // the word "case" is NOT next to "booster": "Unleashed Case (6x Booster
+  // Boxes)", "FACTORY SEALED CASE OF 6 BOOSTER BOX". Adjacency alone typed the
+  // first of those as a Booster Box — it says "Booster Boxes" and nothing else
+  // matched — and the eBay veto then correctly dropped a genuine AU case
+  // listing for disagreeing with its group. Found in the first forced import
+  // after the veto shipped, which is exactly what that log line is for.
+  //
+  // The COUNT is what makes this safe, and it is why the digit is required
+  // rather than a bare /\bcase\b/: "x1 Riftbound: Origins Booster Box … FRESHLY
+  // FROM A CASE" is one box, has no multiplier next to "booster box", and must
+  // keep typing as a Booster Box — that listing is the whole reason this rule is
+  // careful.
+  if (/booster\s*case|(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case|case\s*[([]?\s*(?:of\s*)?\d+\s*x?\s*[)\]]?\s*booster\s*box/.test(t)) return "Booster Case";
   if (/booster\s*box|booster\s*display|display\s*box|\bdisplay\b/.test(t)) return "Booster Box";
   if (/pre-?rift\s*event\s*kit/.test(t)) return "Pre-Rift Event Kit";
   if (/pre-?rift|event\s*kit|pre-?release\s*kit/.test(t)) return "Pre-Rift Kit";

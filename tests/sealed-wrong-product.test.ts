@@ -78,13 +78,37 @@ test("classifySealed knows the plainest way to write 'Booster Case'", () => {
   ]) {
     assert.equal(classifySealed(t), "Booster Case", t);
   }
-  // …and the adjacency is load-bearing. This is ONE BOX whose title happens to
-  // end "FROM A CASE"; a bare /\bcase\b/ would retype it and reintroduce the
-  // very defect that was reported.
+  // The OTHER half of how a case is written, where "case" is not next to
+  // "booster" and a COUNT of boxes carries the meaning instead. Adjacency alone
+  // typed the first of these as a Booster Box — it says "Booster Boxes" and
+  // nothing else matched — and the new eBay veto then dropped a genuine AU case
+  // listing for disagreeing with its own group. Caught by that veto's log line
+  // in the first forced import after it shipped.
+  for (const t of [
+    "Riftbound: League of Legends TCG Unleashed Case (6x Booster Boxes)",
+    "RIFTBOUND LEAGUE OF LEGENDS TCG UNLEASHED SEALED CASE 6x BOOSTER BOX ENGLISH ENG",
+    "RIFTBOUND VENDETTA LEAGUE OF LEGENDS - FACTORY SEALED CASE OF 6 BOOSTER BOX ENG",
+    "Riftbound: League of Legends TCG - Set 04 - Vendetta - Display Case (6x Booster Boxes)",
+    "Riftbound TCG - League of Legends Vendetta Boosterbox Case (6x)",
+  ]) {
+    assert.equal(classifySealed(t), "Booster Case", t);
+  }
+
+  // …and the COUNT is what keeps that safe. This is ONE BOX whose title happens
+  // to end "FROM A CASE": no multiplier beside "booster box", so it must keep
+  // typing as a Booster Box. A bare /\bcase\b/ would retype it and reintroduce
+  // the very defect that was reported.
   assert.equal(
     classifySealed("x1 Riftbound: Origins Booster Box New & Sealed English FRESHLY FROM A CASE"),
     "Booster Box",
   );
+  for (const t of [
+    "Unleashed - Booster Display",
+    "Riftbound Unleashed Booster Box - One Per Customer",
+    "Riftbound: Unleashed Set 3 Booster Box Sealed",
+  ]) {
+    assert.equal(classifySealed(t), "Booster Box", t);
+  }
 });
 
 test("a single box cannot be sold to us as a case", () => {
