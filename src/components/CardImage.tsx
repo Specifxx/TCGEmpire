@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import { CardArt } from "./CardArt";
 import { cardImageAlt } from "@/lib/image-alt";
 import { cardImageSrc } from "@/lib/card-image-url";
@@ -82,6 +83,44 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
   const webpSrcSet = meta?.webp
     ? [...(meta.variants ?? []).map((v) => `${v.src} ${v.w}w`), `${meta.webp} ${meta.width}w`].join(", ")
     : null;
+  // One constant, used by the <source> below AND by the preload above it — a
+  // preload whose `imagesizes` disagrees with the source's `sizes` picks a
+  // different variant and downloads the image twice.
+  const sizes = full ? "(max-width: 640px) 90vw, 420px" : "220px";
+
+  // PRELOAD THE HERO. `loading="eager" fetchPriority="high"` (set below) only
+  // takes effect once the parser REACHES this element, and on the card page
+  // that is 51 KB into a 450 KB document — measured on the live page,
+  // 2026-09-20, while Speed Insights had /card/[id] at 4.42s LCP with this very
+  // element as the culprit. A preload link is hoisted into <head>, so the fetch
+  // starts during head parsing instead.
+  //
+  // Only for `priority` — the one above-the-fold hero. Preloading a grid of
+  // lazy tiles would do the opposite of this.
+  //
+  // The branches exist because a preload MUST resolve to the same file <picture>
+  // picks, or the page downloads two copies of its largest image. `type` gates
+  // each one: a browser that cannot decode AVIF skips that preload entirely
+  // rather than fetching something it will not use.
+  if (priority) {
+    if (meta?.avif) {
+      ReactDOM.preload(meta.avif, { as: "image", type: "image/avif", fetchPriority: "high" });
+    } else if (webpSrcSet && meta?.webp) {
+      ReactDOM.preload(meta.webp, {
+        as: "image",
+        type: "image/webp",
+        fetchPriority: "high",
+        imageSrcSet: webpSrcSet,
+        imageSizes: sizes,
+      });
+    } else {
+      // No manifest entry — the mirrored .webp renders as a bare <img> with no
+      // <source> at all, so the img's own src IS what gets fetched. This is the
+      // common case (879 files in public/card-art against 27 optimised ones)
+      // and it is the case Speed Insights measured.
+      ReactDOM.preload(src, { as: "image", fetchPriority: "high" });
+    }
+  }
 
   return (
     <div
@@ -114,7 +153,7 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
       <picture>
         {meta?.avif && <source type="image/avif" srcSet={meta.avif} />}
         {webpSrcSet && (
-          <source type="image/webp" srcSet={webpSrcSet} sizes={full ? "(max-width: 640px) 90vw, 420px" : "220px"} />
+          <source type="image/webp" srcSet={webpSrcSet} sizes={sizes} />
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

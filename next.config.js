@@ -413,6 +413,55 @@ const nextConfig = {
       // Everything else keeps the clickjacking-protective defaults (negative
       // lookahead so this rule never double-sets headers on /embed/*).
       { source: "/((?!embed/).*)", headers: securityHeaders },
+
+      // ─────────────────────────────────────────────────────────────────────
+      // STATIC IMAGE CACHING. Measured, not assumed.
+      // ─────────────────────────────────────────────────────────────────────
+      // Next.js only sets `immutable` on /_next/static/*. Everything under
+      // public/ gets Vercel's default `public, max-age=0, must-revalidate`,
+      // which is right for a file whose name never changes and wrong for one
+      // whose name contains its own content hash.
+      //
+      // It was measurably wrong for the card page's LCP element. Fetched live
+      // on 2026-09-20, the 104 KB hero of /card/irelia-fervent-sfd-225s-221:
+      //
+      //   cache-control: public, max-age=0, must-revalidate
+      //   x-vercel-cache: MISS
+      //
+      // — so every visit revalidated it over the network and the CDN was not
+      // holding it. Speed Insights had /card/[id] at 4.42s LCP with
+      // `picture>img.relative.z-10…` (CardImage) named as the element.
+      //
+      // MATCHED BY FILE EXTENSION, NOT BY DIRECTORY, and that is the whole
+      // safety argument rather than a style choice. A `/blog/:path*` rule also
+      // matches `/blog/<slug>` — a real page route — and would have put a
+      // day of browser caching on article HTML, making an edit invisible to
+      // anyone who had already read it. Same trap for /sealed and /premium.
+      // An extension-scoped rule cannot match an HTML route at all.
+      {
+        // Every other static image. NOT content-hashed
+        // (`akali-rogue-assassin-ven189-480w.webp`), so replacing one reuses its
+        // URL and `immutable` would pin a stale copy in every browser that had
+        // seen it, for a year, with no way to recall it. A day of browser cache
+        // plus a week of stale-while-revalidate is the conservative version:
+        // still far better than revalidating on every single view, and a
+        // replaced image is stale for at most a day.
+        source: "/:path*.:ext(webp|avif|jpg|jpeg|png|gif)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        // CONTENT-HASHED, and LAST ON PURPOSE. `ogn-001-298-8de89b4b8fb3186d.webp`
+        // in one flat directory: the hash IS the filename, so the bytes behind a
+        // given URL can never change and `immutable` is provably safe — a changed
+        // image is a changed URL. This is where the measured LCP element lives.
+        //
+        // The ORDER is load-bearing and was verified, not assumed: every matching
+        // rule is applied and the LAST one wins for a repeated key, so with this
+        // above the catch-all the card art got the weaker 24h value instead.
+        // tests/static-image-caching.test.ts pins the ordering for that reason.
+        source: "/card-art/:file.webp",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
 };

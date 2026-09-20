@@ -8886,3 +8886,80 @@ other homepage section and **exactly once** (a move done by copy-paste would
 leave two rails rendering the same eight chips), and the client-only mechanism
 that makes the placement safe — the null return on an empty history, the server
 snapshot — is pinned too, since the placement argument collapses without it.
+
+---
+
+## The card page's LCP: an image that could not be cached and could not start early — 2026-09-20
+
+Speed Insights, desktop, P75 LCP 2.77s, three routes over 4s. Taken at face
+value that is three problems; it is really one live one, one already fixed, and
+a sample size worth saying out loud.
+
+**The sample is 1–3 visits per route.** `/` had 2, `/card/[id]` 2, `/games` 1.
+Nothing below is inferred from those numbers — every cause was reproduced
+directly against the live site, and the numbers are only what pointed at where
+to look.
+
+**`/` at 5.93s is stale data.** Its selector was
+`img.absolute.inset-0.h-full.w…`, which is in no current page. `git log -S`
+found it: the Premium pitch panel's character-art background, deleted in
+`53964fc` on **2026-09-15** — the first day of the reporting window. Worth
+keeping the mechanism in mind, because it is a good trap: that panel slides in
+**five seconds** after the page opens, and a large image arriving then *becomes*
+the LCP element. A promo that appears late can wreck a metric it has nothing to
+do with. `PremiumPitchPanel` now uses `BrandLogo` (inline, no raster), so this
+is already gone.
+
+**`/card/[id]` at 4.42s is real, and it is two compounding causes.** Fetched
+live, the 104 KB hero of `/card/irelia-fervent-sfd-225s-221`:
+
+```
+cache-control: public, max-age=0, must-revalidate
+x-vercel-cache: MISS
+```
+
+Next.js only marks `/_next/static/*` immutable; everything in `public/` takes
+Vercel's default. So the site's largest per-page image revalidated over the
+network on every single view and the CDN was not holding it — for files whose
+names already contain their content hash. And `loading="eager"
+fetchPriority="high"`, which CardImage has set for months, does nothing until
+the parser *reaches* the element: on that page it sits 51 KB into a 450 KB
+document.
+
+Two fixes, one per cause.
+
+**Caching, scoped by file extension rather than directory.** That is the safety
+argument, not a style preference: a `/blog/:path*` rule also matches
+`/blog/<slug>`, a real page route, and would have put 24 hours of *browser*
+caching on article HTML — an edit invisible to anyone who had already opened it,
+with no way to recall it. `/sealed` and `/premium` are the same shape. So:
+`/card-art/:file.webp` gets `max-age=31536000, immutable` (the filename IS the
+hash — a changed image is a changed URL), and every other image extension gets
+`max-age=86400, stale-while-revalidate=604800`, because those names are reused
+on replacement and `immutable` would pin a stale copy for a year.
+
+**The rule order is load-bearing and was verified rather than assumed.** Every
+matching rule applies and the last wins for a repeated key; with the immutable
+rule above the catch-all, the card art silently took the weaker 24h value. All
+of it was checked against a running dev server before it shipped, including that
+HTML routes keep their own `Cache-Control` and the security headers still apply.
+
+**Preloading**, via `ReactDOM.preload` from CardImage, gated on `priority` — one
+call site, the card hero. Three branches, because a preload that disagrees with
+what `<picture>` picks downloads the page's largest image twice: AVIF when the
+manifest has one (with `type`, so a browser that cannot decode it skips the
+preload instead of wasting the bytes), else the WebP srcset with the *same*
+`sizes` constant the `<source>` uses, else the bare `src`. Verified by rendering
+CardImage against a throwaway route on a dev server: the link lands at byte 267,
+inside `<head>`, and its href matches the chosen source exactly in both the
+hashed and the manifest cases.
+
+`/games` at 5.73s (one visit) is not separately explained. It is the same ~5s
+shape as the old promo-panel LCP and shares every fix above; if it survives the
+next window it needs its own look.
+
+Guards in `tests/static-image-caching.test.ts`, which run the real
+`next.config.js` rules through Next's own path-to-regexp rather than
+string-matching them: no rule may match any of ten real page routes, card art
+must come out immutable and nothing else may, and the preload branches must
+mirror the `<picture>` sources.
