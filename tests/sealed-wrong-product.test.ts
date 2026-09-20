@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import { classifySealed } from "../src/lib/sealed-import";
 import { isForeignLanguageTitle } from "../src/lib/scrape-http";
+import { buildCardmarketSealedRows } from "../src/lib/cardmarket";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -151,4 +152,56 @@ test("every sealed product type has a title keyword", () => {
   for (const type of ["Booster Box", "Booster Case", "Booster Pack", "Sleeved Booster", "Sleeved Booster (Art Set)", "Vault", "Bundle", "Tin"]) {
     assert.ok(table.includes(`"${type}":`) || table.includes(`${type}:`), `no keyword for ${type}`);
   }
+});
+
+test("Cardmarket's sealed feed does not publish a Chinese box as the English one", () => {
+  // Found while verifying a DIFFERENT fix, by reading the table rather than the
+  // page: VEN|Booster Box carried "Vendetta Booster Box (Chinese, Slim)" at
+  // €42.99 and "(Chinese, Jumbo)" at €65.90 — the cheaper one being the EU
+  // market's headline price for a product that really trades at €143-180.
+  //
+  // Two separate gaps met here. The Cardmarket SEALED path had no language
+  // check at all (the singles matcher and the eBay sealed search each have
+  // one), and FOREIGN_LANG — the pattern it would reach for — covered only the
+  // SHORT codes, because eBay's sealed search kept the full words in a list of
+  // its own. Each half was complete for its own caller and neither was complete
+  // alone.
+  for (const t of [
+    "Vendetta Booster Box (Chinese, Slim)",
+    "Vendetta Booster Box (Chinese, Jumbo)",
+    "Riftbound Japanese Booster Box",
+    "Riftbound Korean Booster Display",
+  ]) {
+    assert.ok(isForeignLanguageTitle(t), t);
+  }
+  // English listings, including ones that say the word "English", are untouched.
+  for (const t of [
+    "Riftbound: League of Legends TCG - Vendetta Booster Box",
+    "League of Legends Riftbound TCG: Origins Booster Case English Sealed",
+    "Vendetta - Booster Display",
+  ]) {
+    assert.ok(!isForeignLanguageTitle(t), t);
+  }
+
+  // …and the builder actually drops them, rather than the pattern merely being
+  // capable of it.
+  const products = [
+    { idProduct: 1, name: "Vendetta Booster Box", idCategory: 1657, categoryName: "Riftbound Display", idExpansion: 9, idMetacard: 1, dateAdded: "2026-01-01" },
+    { idProduct: 2, name: "Vendetta Booster Box (Chinese, Slim)", idCategory: 1657, categoryName: "Riftbound Display", idExpansion: 9, idMetacard: 2, dateAdded: "2026-01-01" },
+  ];
+  const prices = [
+    { idProduct: 1, idCategory: 1657, low: 143, avg: null, trend: null },
+    { idProduct: 2, idCategory: 1657, low: 42.99, avg: null, trend: null },
+  ];
+  // (cardsForMapping, singleProducts, sealedProducts, prices) — the expansion→set
+  // inference needs neither here: with no singles to learn from, setCode comes
+  // back null and the groupKey falls back to a slug. What is under test is which
+  // ROWS survive, which that does not affect.
+  const { rows } = buildCardmarketSealedRows([], [], products, prices);
+  assert.equal(rows.length, 1, "only the English box may be published");
+  assert.equal(rows[0].title, "Vendetta Booster Box");
+  assert.ok(
+    !rows.some((r) => /chinese/i.test(String(r.title))),
+    "no Chinese SKU may reach SealedListing",
+  );
 });

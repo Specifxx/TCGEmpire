@@ -9123,3 +9123,41 @@ re-forms correctly on its own.
 The general lesson, which is why this is a separate entry rather than an edit:
 **a log line that names what it dropped and why is what turned a silent
 regression into a five-minute fix.** The veto could have just `continue`d.
+
+---
+
+## A third leak, found by reading the table instead of the page — 2026-09-20
+
+The verification run for the sealed fixes reported a clean result — zero
+classifier mismatches, both eBay leaks gone — and then, in the same dump, showed
+two rows nobody had reported:
+
+```
+VEN|Booster Box   EU  42.99  in  cardmarket   Vendetta Booster Box (Chinese, Slim)
+VEN|Booster Box   EU  65.90  in  cardmarket   Vendetta Booster Box (Chinese, Jumbo)
+```
+
+The cheaper one was the EU market's headline price for a product that really
+trades at **€143-180**. Not eBay this time: **Cardmarket**, whose sealed path had
+no language check at all, unlike the singles matcher and the eBay sealed search
+which each grew one separately.
+
+The second half is the part worth remembering. The obvious fix — call
+`isForeignLanguageTitle` — would not have worked, because **`FOREIGN_LANG` did
+not match the word "Chinese".** It covered `cn`, `chn`, `chs`, `cht`, `jp`,
+`kr`… and eBay's sealed search kept `chinese|japanese|korean` in a separate list
+of its own. Each half was complete for its own caller and neither was complete
+alone, so any third source reaching for "the language check" got half of one.
+That is a failure mode of the "one canonical pattern" rule the file's own header
+argues for: the rule held, and the pattern was still incomplete, because the
+other half had never been folded in. Both halves now live in the one pattern.
+
+`buildCardmarketSealedRows` drops a foreign-titled product, with a unit test
+that runs the real builder over a two-product fixture rather than only asserting
+the regex.
+
+And the method, which is the transferable bit: three of the four price defects
+found today were invisible on the rendered page and obvious in the table. The
+first one nearly shipped as "fixed" on the strength of a `grep` over
+`/sealed` — which renders one market's tiles, not the rows. `diagnose-sealed`
+found all three, and found this one while looking for something else.

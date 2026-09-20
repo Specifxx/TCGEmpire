@@ -179,6 +179,7 @@ import { gunzipSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER } from "@/lib/constants";
 import { cardmarketProductUrl } from "@/lib/cardmarket-url";
+import { isForeignLanguageTitle } from "@/lib/scrape-http";
 import { classifySealed } from "@/lib/sealed-import";
 import { poolOf, POOL_ORDER, type PoolCard } from "@/lib/box-ev";
 
@@ -735,6 +736,17 @@ export function buildCardmarketSealedRows(
     total++;
     const lowEur = priceByProduct.get(p.idProduct)?.low;
     if (lowEur == null || !(lowEur > 0)) continue;
+    // A NON-ENGLISH PRINTING IS A DIFFERENT PRODUCT AT A DIFFERENT PRICE, and
+    // this path had no language check at all — unlike the singles matcher and
+    // the eBay sealed search, which each learned it separately (see
+    // FOREIGN_LANG's own header for that history). Cardmarket's catalogue lists
+    // the Chinese editions as their own SKUs and names them plainly, so they
+    // sailed in: "Vendetta Booster Box (Chinese, Slim)" at €42.99 and
+    // "(Chinese, Jumbo)" at €65.90 were both filed under VEN|Booster Box and
+    // the cheaper one was the EU market's headline price for a product that
+    // really trades at €143-180. Found 2026-09-20 by reading the table with
+    // diagnose-sealed while checking a different fix.
+    if (isForeignLanguageTitle(p.name)) continue;
     const setCode = expansionSetCode.get(p.idExpansion) ?? null;
     const type = classifySealed(p.name);
     const groupKey = setCode ? `${setCode}|${type}` : normName(p.name).replace(/\s+/g, "").slice(0, 40);
