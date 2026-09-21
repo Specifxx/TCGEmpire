@@ -183,7 +183,7 @@ export const ARTICLES: Article[] = [
     category: "blog",
     title: "Riftbound Secret Garden Bundle: Price, Contents & Where to Find One",
     excerpt:
-      "Riot's US$70 event-exclusive gift box is reselling for double in Europe — and Europe hasn't had a single event yet. The nine remaining shows, and what they should do to the price.",
+      "What's in Riot's US$70 Secret Garden Bundle, every 2026 event where you can still buy one, and the supply map behind its Europe-vs-US price gap.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 8,
@@ -1224,7 +1224,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
     category: "guide",
     title: "Gradient Sleeves for Riftbound Cards: Complete Guide",
     excerpt:
-      "What gradient sleeves are, why they fit Riftbound's card size with no special sizing needed, and how to pick a colour fade that actually matches your deck's domains.",
+      "Match a colour fade to your deck's domains and buy a 100-count pack for a 65-70 card kit. Any standard-size sleeve fits Riftbound, no special sizing.",
     author: "RiftCompare",
     date: "2026-09-08",
     readMins: 6,
@@ -1456,7 +1456,7 @@ We will update this page when any of the following happens, and not before: Riot
     category: "guide",
     title: "Best Riftbound Cards: The Most-Wanted Cards, Priced",
     excerpt:
-      "Which Riftbound cards are actually the best? Not an opinion — the cards players search for most on RiftCompare, ranked by real demand, priced live in your market, and separated honestly from the ones that are merely expensive.",
+      "The Riftbound cards players search for most, ranked by real demand and priced live in your market. Measured, not rated, and refreshed on every visit.",
     author: "RiftCompare",
     date: "2026-08-10",
     // 12 Sep 2026: rebuilt on a signal the site measures itself. This guide used
@@ -2008,7 +2008,7 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
     category: "guide",
     title: "Where to Buy Riftbound Cards (6 Markets, 100+ Stores)",
     excerpt:
-      "The complete guide to buying Riftbound: League of Legends TCG cards — singles and sealed — in Australia, the United States, the United Kingdom, Singapore, Canada and the EU, and how to always find the cheapest price.",
+      "Find the cheapest Riftbound singles and sealed in your own currency: 100+ stores across six markets, ranked on delivered cost, not sticker price.",
     author: "RiftCompare",
     date: "2026-06-08",
     updated: "2026-09-13",
@@ -3534,7 +3534,7 @@ The whole set is out and trading, so this is genuinely the moment to start assem
     category: "guide",
     title: "Best Riftbound Vendetta Decks",
     excerpt:
-      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — with decklists, side decks and where to buy the pieces now singles are trading.",
+      "Three full 40-card Riftbound Vendetta decks — Flow Value, Burn and Empower Midrange — every card and side deck listed, with live prices to build them.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-31",
@@ -3977,7 +3977,7 @@ For the complete, always-current picture — including March's original 7 bans �
     category: "blog",
     title: "Riftbound's September 2026 Bans: Community Reaction and the Meta Shift Ahead",
     excerpt:
-      "Riot banned Ekko, Recurrent and Stacked Deck on 15 September, hitting Standard and 2v2 together. Here's what r/riftboundtcg is actually saying, and its own speculative theories on where the meta shifts next.",
+      "What r/riftboundtcg makes of the Ekko and Stacked Deck bans: the split over whether Riot hit the right card, and where players think the meta goes next.",
     author: "RiftCompare",
     date: "2026-09-15",
     readMins: 6,
@@ -4276,7 +4276,7 @@ For everything else that is genuinely confirmed about the set — dates, product
     category: "blog",
     title: "Riftbound HEARTSTEEL Cards: What the Kayn Tease Actually Is",
     excerpt:
-      "HEARTSTEEL's comeback brought Riftbound card images with it — and the Kayn one is not a new card. It is Kayn, Unleashed from Origins in new art. Here's what our database says about every HEARTSTEEL champion's cards.",
+      "The HEARTSTEEL Kayn card is not new — it's Kayn, Unleashed from Origins in new art. We checked all six members: K'Sante has no Riftbound card at all.",
     author: "RiftCompare",
     date: "2026-09-18",
     // 19 Sep: the owner supplied a labelled still-grab from the video showing
@@ -4906,7 +4906,7 @@ Flow cards are live with real prices on the **[Vendetta set page](/sets/vendetta
     category: "guide",
     title: "Riftbound Burn Explained: How the Burn Mechanic Works",
     excerpt:
-      "A complete guide to Burn — the Riftbound: Vendetta mechanic that sends cards to the trash, both to fuel your own synergies and to attack your opponent's deck.",
+      "Burn your own deck to fuel Flow, or your opponent's to mill them: how Riftbound's Vendetta mechanic works step by step, plus every Burn card in the set.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
@@ -5066,7 +5066,7 @@ The other keyword families are covered the same way: **[timing keywords](/guides
     category: "guide",
     title: "Riftbound Timing Keywords Explained",
     excerpt:
-      "How Action, Reaction, Hidden and Ambush change WHEN a Riftbound card can be played — instant-speed tricks, facedown surprise plays, and dropping a unit into a fight already in progress.",
+      "Play at instant speed, hide a card facedown, drop a unit into a fight already in progress: what Riftbound's Action, Reaction, Hidden and Ambush allow.",
     author: "RiftCompare",
     date: "2026-08-12",
     readMins: 5,
@@ -6243,7 +6243,7 @@ Tap any card below to open its full page: rules text, printings, price history, 
     category: "guide",
     title: "Riftbound Pre-Rift Rules Explained",
     excerpt:
-      "Pre-Rift events let you crack open a new Riftbound set and build a deck before street date — but the deck-building rules are different from Constructed. Here's exactly how Sealed works: deck size, copy limits and domain rules.",
+      "Riftbound Pre-Rift Sealed rules: 25-card minimum, no 3-copy cap, three domains allowed, and why a Legend eats two slots. Deck built before street date.",
     author: "RiftCompare",
     date: "2026-07-26",
     updated: "2026-07-31",
@@ -6476,7 +6476,7 @@ Every Crystal Rose card's cheapest current price, ranked across every store Rift
     category: "guide",
     title: "Why Riftbound Card Prices Change",
     excerpt:
-      "Why one Riftbound set costs more than another, why prices tend to fall after a launch, why a card costs a different amount in Australia than the US, and which events actually move the market. A plain explanation of the forces behind the numbers.",
+      "What actually moves Riftbound prices: print runs, launch-week supply, bans and tournament results — and why a newer set can cost less than an older one.",
     author: "RiftCompare",
     date: "2026-07-31",
     updated: "2026-07-31",
@@ -6699,7 +6699,7 @@ If you take the singles route, **[Best Basket](/guides/best-basket-cheapest-rift
     category: "guide",
     title: "Riftbound Rules Explained",
     excerpt:
-      "A hub for how Riftbound actually works: the keywords introduced in Vendetta, the chase-print numbering, deck construction, the banlist, and the event formats — each linked to a full guide.",
+      "Empower, Flow and Burn explained, plus Overnumbered collector numbers, deck construction and the banlist — Riftbound's rules, each linked to a full guide.",
     author: "RiftCompare",
     date: "2026-07-31",
     updated: "2026-07-31",
@@ -7399,7 +7399,7 @@ Every set gets its own page on RiftCompare the moment its cards are catalogued, 
     category: "guide",
     title: "What's in the Riftbound Origins Set?",
     excerpt:
-      "298 base cards, 54 Showcase alternates, and exactly how they split across rarity, domain and card type — the real numbers from Riftbound's first and biggest set.",
+      "298 base cards, 54 Showcase alternates, 352 printings in all — the full rarity, domain and card-type breakdown of Riftbound's first and biggest set.",
     author: "RiftCompare",
     date: "2026-08-13",
     updated: "2026-09-10",
@@ -7501,7 +7501,7 @@ We've written the same breakdown for the two sets that followed — [what's in S
     category: "guide",
     title: "What's in the Riftbound Spirit Forged Set?",
     excerpt:
-      "221 base cards, 66 Showcase-tier printings and 12 Legends — exactly how Spirit Forged splits by rarity, domain and card type, counted from our own catalogue rather than estimated.",
+      "221 base cards, 66 Showcase printings and 12 Legends: the full Spirit Forged breakdown by rarity, domain and card type, counted from our own catalogue.",
     author: "RiftCompare",
     date: "2026-09-10",
     readMins: 8,
@@ -7849,7 +7849,7 @@ We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origi
     category: "guide",
     title: "Riftbound Card Condition Guide",
     excerpt:
-      "What separates Near Mint from Lightly Played, why grading affects the price you should pay, and the real value multipliers RiftCompare uses for each condition tier.",
+      "Lightly Played is worth roughly 85% of a Near Mint copy, Damaged about 40%. What all five condition grades mean, and why the grade is the seller's call.",
     author: "RiftCompare",
     date: "2026-08-13",
     readMins: 6,
@@ -7941,7 +7941,7 @@ When you're comparing prices — on RiftCompare or anywhere else — the conditi
     category: "guide",
     title: "Is There a League of Legends Card Game?",
     excerpt:
-      "Searching for a League of Legends card game? Riftbound is Riot's real, physical trading card game set in the League universe — official, in stores now, with real LoL champions as playable cards.",
+      "Yes — Riftbound is Riot's official, physical League of Legends card game, in stores now, with Ahri, Jinx, Zed and dozens more champions as playable cards.",
     author: "RiftCompare",
     date: "2026-08-13",
     readMins: 6,
@@ -8038,7 +8038,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
     category: "guide",
     title: "Which League of Legends Champions Are in Riftbound?",
     excerpt:
-      "Ahri, Jinx, Yasuo, Zed and dozens more League of Legends champions already have real Riftbound cards, with more added every set. Here's how the champion system works, and how to check if yours does.",
+      "Ahri, Jinx, Yasuo, Zed and dozens more already have real Riftbound cards, with five more in Radiance. How Legends work, and where to check your main.",
     author: "RiftCompare",
     date: "2026-08-13",
     readMins: 5,

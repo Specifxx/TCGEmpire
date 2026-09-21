@@ -735,7 +735,7 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
     category: "blog",
     title: "The 9 Best Riftbound TCG Marketplaces (2026)",
     excerpt:
-      "Where to actually buy and sell Riftbound cards in 2026: nine marketplaces compared on coverage, fees, buyer protection and true total cost including shipping.",
+      "Nine Riftbound marketplaces compared: what each is genuinely best for, the fees to watch, and why total cost including shipping changes the ranking.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 11,
