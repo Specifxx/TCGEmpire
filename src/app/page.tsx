@@ -79,6 +79,11 @@ export const revalidate = 3600;
 // verbatim coverage via the description's second sentence and the hero
 // subhead, without diluting the title's own exact match.
 export const metadata: Metadata = {
+  // "(US)" ADDED 2026-08-30, REMOVED 2026-09-17. The removal is the owner's
+  // explicit call ("it doesn't need to say US on the Chrome tab header"), and
+  // the 08-30 reasoning is kept below in full rather than deleted, because it
+  // is the case for putting it back if the failure it fixed recurs:
+  //
   // "(US)" ADDED 2026-08-30 — this title used to carry NO market at all, while
   // every region page (/au, /uk, /sg, /ca) explicitly names its own in the exact
   // same slot ("Compare Riftbound Card Prices Across Every Australian Store").
@@ -92,6 +97,20 @@ export const metadata: Metadata = {
   // default. "(US)" restores that keyword match without breaking the "Riftbound"
   // + "prices" adjacency the 2026-08-20 audit fixed (see CinematicHero.tsx's H1
   // comment) — it sits after the phrase, not inside it.
+  //
+  // WHY IT GOES ANYWAY, and what protects the thing it was protecting: the
+  // /au-outranks-root failure above was a TITLE-vs-TITLE loss, but hreflang is
+  // the mechanism actually built for it, and it exists now — alternates below
+  // declare root as the x-default/en-US member of the region-home set
+  // (lib/seo.ts's regionHomeHreflang()), which is the signal Google is
+  // documented to use for exactly this "same page, different market" case. The
+  // description still names US FIRST, and the hero's H1 now names no market at
+  // all on root while each region page's H1 names its own (CinematicHero.tsx),
+  // so the geo split is clearer on the page than it was when "(US)" was added,
+  // not weaker. If Search Console shows /au reclaiming "riftbound card prices
+  // US" impressions from root, put the marker back — that is a measurable
+  // trigger, and this comment is here so a later pass doesn't have to
+  // rediscover the reason from scratch.
   //
   // This does NOT make the page's actual content US-only or US-flavored in any
   // way visitors would notice — the description below still names every market,
@@ -113,14 +132,36 @@ export const metadata: Metadata = {
   // title now covers the higher-volume variant instead of both fields
   // repeating the same one. 62 chars total, inside Bing's 65-char warning
   // threshold (see card/[id]/page.tsx for why that number).
-  title: { absolute: "Riftbound Card Prices (US) — Compare Every Store | RiftCompare" },
+  // 56 chars (was 62 with the marker), well inside Bing's 65-char threshold.
+  title: { absolute: "Riftbound Card Prices — Compare Every Store | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral
   // in substance — every market is still named, just reordered (see the areaServed
   // fix in layout.tsx for the same AU-first leftover, same reasoning: COUNTRY_LIST
   // is US-first because DEFAULT_COUNTRY is "US", and this had never been updated
   // to match). EU added — missing entirely since its 2026-08-23 launch.
+  // "price check" ADDED 2026-09-17, in place of "see every card price" — same
+  // length, so the 25–160 char budget above is unchanged, and the front-loaded
+  // "Riftbound prices" the 2026-08-20 audit fixed is untouched.
+  //
+  // This page is now the declared owner of `riftbound price check`
+  // (docs/seo-keyword-map.md), which had NO owner at all: the only page on the
+  // site whose <title> contained that phrase was /games/price-check — a guess-
+  // the-price MINI-GAME. A searcher wanting to check what a card is worth was
+  // being pointed at a game, which is the exact "whose title already targets
+  // that phrase" cannibalization signal the keyword map's rule 4 describes. The
+  // game's title is differentiated in the same commit; the phrase now lives
+  // here, on the page that actually answers it, plus the hero subhead and a
+  // dedicated FAQ (which is real FAQPage JSON-LD — see faqPage(FAQS) below).
+  //
+  // The TITLE's HEAD TERM is deliberately NOT changed: "Riftbound Card Prices"
+  // is what three separate documented audits (2026-08-20, 08-30, 09-10)
+  // converged on, the last on live SERP evidence. Only the market marker was
+  // dropped on 2026-09-17. Trading the head-term match itself for an adjacent
+  // long-tail — "price check", or the "Buy Riftbound Cards" phrasing the H1
+  // took on the same day — would be a bad swap, and the H1/subhead/FAQ carry
+  // those phrases instead precisely so the title doesn't have to.
   description:
-    "Riftbound prices, compared live: see every card price across US, AU, UK, Singapore, Canada & EU stores and find the cheapest place to buy. Updated daily.",
+    "Riftbound prices, compared live: price check any card across US, AU, UK, Singapore, Canada & EU stores and find the cheapest place to buy. Updated daily.",
   // NO keywords meta — removed 2026-08-20. Google has ignored this tag since 2009
   // (see layout.tsx's own sitewide policy comment, which this page had quietly
   // re-added and contradicted); it carried the exact phrase "Riftbound prices"
@@ -132,7 +173,7 @@ export const metadata: Metadata = {
   // Discord/Slack) showed a different, less specific tagline than the actual
   // <title> — found by the same audit.
   openGraph: pageOpenGraph({
-    title: "Riftbound Card Prices (US) — Compare Every Store",
+    title: "Riftbound Card Prices — Compare Every Store",
     description: "Riftbound card prices compared live across every store we track — find the cheapest place to buy.",
     url: "/",
   }),
@@ -154,6 +195,15 @@ const FAQS: { q: string; a: string }[] = [
   {
     q: "How do I find the cheapest Riftbound prices?",
     a: "Search or browse the card database — every card shows the lowest live price across the stores in your market, ranked by price, with delivered cost shown where a store publishes its shipping. It's the fastest way to find the cheapest Riftbound cards wherever you are.",
+  },
+  // Carries the `riftbound price check` phrase in real FAQPage JSON-LD (see
+  // faqPage(FAQS) below), not just body copy. Every claim here is one this page
+  // and the card template already make elsewhere — store-by-store ranking,
+  // delivered cost, the six markets, and the price-history chart on each card
+  // page — so nothing new is being asserted to fit a keyword.
+  {
+    q: "How do I price check a Riftbound card?",
+    a: "Search the card by name and open it: RiftCompare lists every store that stocks that exact printing with its live price, cheapest first, and shows delivered cost where the store publishes shipping. The same price check runs across US, AU, UK, Singapore, Canada and EU stores plus eBay, and each card page charts its price history so you can see whether today's number is high or low for that card.",
   },
   {
     q: "Does RiftCompare cover Riftbound singles and sealed products?",

@@ -16,6 +16,10 @@ explicit link up/down to the primary).
 |---|---|---|
 | `<card name> riftbound` | `/card/<slug>` | — |
 | `<card name> price` | `/card/<slug>` | — |
+| `<card short name> signature\|overnumbered\|promo\|alt art [riftbound]` (e.g. `shen signature riftbound`, `akali overnumbered`) | `/card/<slug>` **of that exact printing** — every printing is its own row and its own page; the title, subtitle, About opening, Product `additionalProperty` and breadcrumb all name the printing, and only that page does | `/cards/printing/<x>` for the whole shelf; `/guides/riftbound-variant-glossary` for "what is a Signature?" |
+| `<community nickname> [riftbound]` (e.g. `armpit shen`, 711 impr/28d at pos 5.9) | `/card/<slug>` via `lib/content/card-aliases.ts` — the nickname is in the meta description, in visible "Also known as" copy and in Product `alternateName`, and on-site search resolves it | the blog/guide that coined it may still rank; it answers "why is it called that", not "what does it cost" |
+| `<champion> legend [riftbound]` (e.g. `kennen legend riftbound`) | `/card/<slug>` of that champion's **Legend printing** — `type` is a real column and a Legend is the one card a deck is built around, so the title, the card-details table and the About opening all name it | `/cards/type/legend` for the whole shelf; `/champions/<slug>` for every printing of that champion |
+| `<rarity\|domain> <type> riftbound` (e.g. `epic fury spell`) | `/cards/type/<type>` — a shelf query, not a card query. The search box resolves the same phrase to the same filters | the individual `/card/<slug>` pages rank incidentally on their own attributes |
 | `<champion> riftbound`, `<champion> riftbound cards` | `/champions/<slug>` | `/card/<slug>` for each individual printing |
 | `<champion> deck riftbound`, `riftbound <champion> deck` | `/champions/<slug>` — every printing priced; it no longer claims a decklist (the meta-deck dataset was removed 2026-09-12, see DECISIONS.md) | `/deck` (pricer) for a custom build; `/guides/riftbound-deck-archetypes-guide` for "which kind of deck" |
 | `riftbound deck`, `riftbound decks` | `/deck` (deck pricer/builder) — the site's only deck surface; `/decks*` 301 here | `/guides/riftbound-deck-archetypes-guide` (choose an archetype) and `/guides/budget-riftbound-decks` (build cheaply) |
@@ -35,8 +39,12 @@ explicit link up/down to the primary).
 |---|---|---|
 | `riftbound <set name>`, `riftbound <set name> prices` | `/sets/<slug>` | — |
 | `riftbound <set> card list` | `/guides/riftbound-<set>-card-list` (exists for Vendetta only today — `riftbound-vendetta-card-list`). For the older sets the owner is the `whats-in-the-riftbound-<set>-set` breakdown guide instead: Origins, Spirit Forged and Unleashed all exist (backlog item 10, closed 2026-09-10); Proving Grounds is covered inside `riftbound-sets-in-order` | `every-riftbound-<set>-card-revealed` blog gallery post (Vendetta only today) — the two are DIFFERENT angles (checklist guide vs. embedded live gallery), keep both when both exist |
-| `riftbound card list` (no set named) | `/guides/riftbound-card-list` (all-sets hub — **not yet built, backlog item 12**) | — |
+| `riftbound card list` (no set named) | `/browse` — the card database IS the card list. Its `<title>` and H1 both read "Riftbound Card List" as of 2026-09-17 | `/cards` (browse by type/rarity/printing) and `/guides/riftbound-sets-in-order` (which SETS exist) are different questions and must not retitle onto this phrase. **This row previously said `/guides/riftbound-card-list`, "not yet built, backlog item 12"** — stale twice over: item 12 was closed 2026-08-13 by shipping `riftbound-sets-in-order`, and that guide answers set-list intent, not card-list intent, so the query was left genuinely unowned in the meantime |
+| `every riftbound card`, `all riftbound cards`, `riftbound card index`, `full riftbound card list` | `/cards/all` — the flat HTML index of all ~1,431 printings, grouped by set, one anchor per card page. Added 2026-09-17 as a crawl path, not a ranking play: every other surface caps what it renders (facets at 60 tiles, galleries at 500, set pages at 100/page) | `/browse` owns `riftbound card list` (see the row above) and `/cards` owns the facet index, so **this page deliberately titles on "Complete A-Z Index" rather than "Card List"** — the phrase is spoken for. Secondary intent here is the crawler's, not a visitor's |
 | `riftbound roadmap` | `/blog/riftbound-2027-set-roadmap` (exists — corrects the slug this file previously guessed at) | — |
+| `riftbound neeko`, `neeko riftbound card`, `riftbound neeko spoiler`, `neeko blending in` | `/blog/riftbound-neeko-blending-in-spoiler` (added 2026-09-19, the day the card was photographed) — the **reveal** intent: what the card does, and what its 167/167 collector number settles about the set's size | `/card/neeko-blending-in-rad-167-167` keeps `neeko riftbound price` per this file's standing `<card name> price` rule, and `/champions/neeko` keeps `<champion> riftbound` once it has more than one printing. The post links down to both rather than competing with them. **This row is for the reveal, not the card** — when Radiance ships and the card has a real price history, the card page is primary for anything price-shaped and this post must not retitle toward it |
+| `riftbound heartsteel`, `heartsteel riftbound cards`, `riftbound heartsteel kayn`, `ksante riftbound card` | `/blog/riftbound-heartsteel-cards` (added 2026-09-18, the day "LIVE MY LIFE" landed). **Nothing owned any music-skin-line intent** — a repo-wide search for HEARTSTEEL returned zero hits across articles, routes and card content. Deliberately named for the BAND, not the set, so it survives whichever product the cards actually land in | `/sets/radiance` and `/blog/riftbound-radiance-what-we-know` stay primary for the SET; this post targets the skin line and must not retitle onto "Radiance". `/guides/riftbound-variant-glossary` keeps `riftbound alt art`/`showcase`/`signature` — the post links down to it rather than re-explaining the tiers. If True Damage or K/DA cards get their own post later, the same band-not-set rule applies and this row gets siblings, **not** a rewrite into a generic "music cards" page |
+| `riftbound radiance spoilers`, `radiance riftbound spoilers`, `riftbound radiance card reveals`, `radiance revealed cards` | `/blog/riftbound-radiance-spoilers` (added 2026-09-21, four days before Preview Season) — the **official-reveal** intent: a dated reveal log around a `setAll: "RAD"` gallery that fills itself as cards import, the same shape as `every-riftbound-vendetta-card-revealed`. Search Console 28d to 2026-09-21: "riftbound radiance spoilers" 1,152 impr / 163 clicks and "riftbound radiance card list" 817 / 49 were the site's #2 and #5 queries, and every click was landing on the mechanics-LEAK post because nothing owned the reveals | `/blog/riftbound-radiance-leaked-mechanics` keeps `riftbound radiance leaks` / `leak` (857 clicks/28d — do not retitle it toward "spoilers"). `/sets/radiance` keeps `radiance card list`; the tracker links down to it for the list and never claims "card list" in its title |
 | `riftbound radiance`, `riftbound radiance cards`, `radiance card list` | `/sets/radiance` — the set hub. Generic template, so it fills in with real cards through Preview Season (25 Sep – 9 Oct 2026, opening at RQ Los Angeles) and gets live prices on release day with no new page | `/blog/riftbound-radiance-what-we-know` for the confirmed-facts write-up. Do **not** build `/guides/riftbound-radiance-card-list` until cards actually exist — a checklist guide with nothing to check is the thin page AdSense rejected the Vendetta cluster for |
 | `riftbound radiance release date`, `when does radiance come out`, `radiance countdown` | `/release-dates` — names no set in code, leads with whatever is next, and carries the countdown, the Event JSON-LD and an .ics | **Never rebuild a `/<set>-countdown` page.** It has been built and retired twice (`/vendetta-countdown`, `/radiance-countdown`, both now 301s); `lib/release-calendar.ts`'s header is the post-mortem |
 | `riftbound radiance preorder`, `radiance booster box price`, `radiance vault` | `/radiance-preorders` — the only route on the site named for a set, deliberately: pre-order comparison is a real product with a real end date, and the page retires itself on 23 Oct 2026 via `isPreorderSetCode()` | Nothing. Do not write a "should you pre-order Radiance" post next to it — that intent is answered ON the page (the "When to pre-order" section), for exactly the cannibalisation reason this file exists |
@@ -66,6 +74,7 @@ explicit link up/down to the primary).
 | `buy riftbound cards canada` | `/blog/buy-riftbound-cards-canada` | Real: Canada landed as a full sixth market mid-pass (20 CA stores, CAD pricing, end-to-end) — this guide was rewritten to match the AU/NZ/US/UK/SG template with real data, replacing an earlier "honest interim" draft written before CA support existed. |
 | `riftbound singapore/brunei/malaysia` | Existing SG post covers SG. Brunei/Malaysia — **not built**, same zero-infrastructure blocker as Canada (backlog item 6). | |
 | `where to buy riftbound` (no market named) | `/guides/where-to-buy-riftbound-cards` (multi-market umbrella, exists) | Every regional post links back to this |
+| `buy riftbound cards`, `buy riftbound cards online` (no market named) | `/` — the homepage. Its **H1 only**: "Buy Riftbound cards at the best price" as of 2026-09-17. Nothing owned the bare, market-free transactional phrase before; the six rows above all require a market, and the umbrella guide answers the *research* half ("which stores exist"), not "take me to the cheapest one now" | **The homepage `<title>` deliberately does NOT carry this phrase** — it keeps `Riftbound Card Prices` (three audits, see below). That split is what stops root colliding with `/guides/where-to-buy-riftbound-cards`, whose own title leads "Where to Buy Riftbound Cards…", in the field that carries the most weight. Do not "reinforce" the H1 by putting the phrase in the title too. The four region home pages take the same H1 with ` in <place>` appended, which is the geo variant the six regional blog posts already own — so those posts stay primary for `buy riftbound cards <market>` on title strength |
 
 ## Events / competitive intent
 
@@ -105,6 +114,19 @@ explicit link up/down to the primary).
 | `how much is my riftbound collection worth`, `riftbound collection value`, `value my riftbound cards`, `riftbound collection appraisal` | `/blog`-adjacent guide `/guides/how-much-is-your-riftbound-collection-worth` (added 2026-09-12). **Nothing owned this intent before** — a repo-wide search for "collection worth" returned zero hits across articles and routes, despite `/portfolio` and `/bulk-pricer` both existing to answer it | `/bulk-pricer` and `/portfolio` are the TOOLS the guide sends you to — tool intent, not question intent, so no cannibalisation. `/guides/most-valuable-riftbound-cards` stays primary for `most valuable riftbound cards` (which cards), a different question from `what is mine worth` (how much) |
 | `how to sell riftbound cards` | unchanged — `/blog/how-to-sell-riftbound-cards` | The valuation guide stops at the number and hands off to the selling post for the channels |
 
+## Price-check intent
+
+| Query pattern | Primary URL | Secondary (different angle) |
+|---|---|---|
+| `riftbound price check`, `price check riftbound card`, `check riftbound card price` | `/` — the homepage. Its description, hero subhead and a dedicated FAQ (real `FAQPage` JSON-LD) carry the phrase as of 2026-09-17; the search box IS the price check | `/browse` owns the list/database half of this and must not retitle onto "price check". `/bulk-pricer` ("Bulk Riftbound Card Price Checker") keeps the **many cards at once** query, a genuinely different job, and is Premium-gated where this is not |
+| `riftbound price check` — **what it must NOT resolve to** | — | `/games/price-check` is a guess-the-price MINI-GAME. Until 2026-09-17 it was the only page on the site whose `<title>` contained the phrase, i.e. the site's de facto answer to a query about what a card is worth. Retitled "Price Check Game — …" to break the adjacency. **Do not put the bare phrase back in a game title.** |
+
+Note this is a deliberate, scoped exception to the section immediately below:
+`price check` is a distinct job-to-be-done phrase ("what is this worth right
+now"), not one of the `<product> <price-word>` modifier long-tails that section
+retired. The exception is one page and one phrase — it is not licence to
+re-target `riftbound singles`/`riftbound cardmarket` etc.
+
 ## Price-modifier long-tails — deliberately NOT primary-targeted
 
 Per the trend data's own finding: `riftbound singles`, `riftbound card prices`,
@@ -113,6 +135,25 @@ queries for any page — they're served as secondary/incidental phrasing inside
 card, champion, set and regional pages (which target the real-volume queries:
 card names, champion names, mechanics, set names) via the price-comparison
 modules embedded in those pages, never as a page's primary keyword target.
+
+**Partially superseded for `riftbound card prices` specifically**: the homepage
+`<title>` has targeted that exact phrase since 2026-09-10, on live SERP evidence
+(the page sat at #10 and was the only page-one result whose title lacked the
+words — see `src/app/page.tsx`'s own comment). The near-zero-volume finding
+above still stands for the rest of the list; this row is kept because the
+*policy* (don't spray price modifiers across pages) is still right even where
+one specific head term earned an exception.
+
+**Market marker dropped 2026-09-17**: that title read
+`Riftbound Card Prices (US) — Compare Every Store | RiftCompare` between
+2026-08-30 and 2026-09-17 and now reads `Riftbound Card Prices — Compare Every
+Store | RiftCompare`. Owner call ("it doesn't need to say US on the Chrome tab
+header"). The head term is untouched — only the geo marker went, and the geo
+signal it stood in for now rides hreflang (root is the x-default/en-US member of
+the region-home set) plus the per-page H1s: root's names no market, each region
+home's names its own. The failure `(US)` was added to fix — `/au` outranking
+root for `riftbound card prices US` — is a measurable trigger to put it back if
+Search Console shows it recurring.
 
 ## Vendetta-cluster cannibalization audit (backlog item 25)
 

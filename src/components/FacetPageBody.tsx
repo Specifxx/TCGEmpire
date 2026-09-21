@@ -171,7 +171,7 @@ export async function FacetPageBody({
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
             <p className="text-lg font-semibold text-white">No {facet.label.toLowerCase()} cards priced yet</p>
-            <Link href="/browse" className="btn-primary mt-4">Browse all cards</Link>
+            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
           </div>
         </div>
       ) : (
@@ -184,7 +184,7 @@ export async function FacetPageBody({
           {total > RENDER_CAP && (
             <p className="text-center text-sm text-slate-500">
               Showing the {RENDER_CAP} highest-value of {total.toLocaleString()} cards —{" "}
-              <Link href={browseHref} className="text-brand-400 hover:underline">see all {total.toLocaleString()} in Browse →</Link>
+              <Link href={browseHref} className="text-brand-400 hover:underline">see all {total.toLocaleString()} in the database →</Link>
             </p>
           )}
         </>

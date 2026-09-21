@@ -20,7 +20,7 @@ export interface HeroRegion {
 
 // Short, subhead-style place names — deliberately NOT CountryInfo.place (which
 // spells out "the United Kingdom"/"the United States" for prose elsewhere): this
-// sentence already reads "...retailer we track, plus four more markets..." and
+// sentence already reads "...retailer we track, plus five more markets..." and
 // keeping these short is what makes it read as a list rather than a run-on.
 const SHORT_PLACE: Record<Country, string> = {
   AU: "Australia",
@@ -164,22 +164,73 @@ export function CinematicHero({
             phrased in the market-aware way. See DECISIONS.md for the full
             reasoning.
 
-            "Riftbound" + "prices" ADJACENT, not split by "card": an SEO audit
-            (2026-08-20, "riftbound prices" ranking ~13th) found this exact
-            phrase absent from every on-page signal — title, meta description,
-            H1, JSON-LD — always broken up by "Card"/"TCG". This H1 is the
-            single highest-leverage place to fix that (see page.tsx's metadata
-            for the matching title/description/JSON-LD fix). The subhead below
-            now carries the "Riftbound cards" and "Riftbound card prices"
-            variants verbatim instead, so all three of the site's target
-            phrases land in the first ~45 words without stuffing any one of
-            them into the H1 alongside the others. */}
+            REWRITTEN 2026-09-17 FROM COMPARISON INTENT TO BUY INTENT, by
+            explicit owner instruction ("instead of saying compare Riftbound
+            prices across every US store, maybe we can say something like buy
+            Riftbound cards"), with the exact wording delegated. It read
+            "Compare Riftbound prices across every {heroAdjective} store".
+
+            What that costs, stated plainly because it reverses a documented
+            win: "Riftbound" + "prices" ADJACENT, not split by "card", was the
+            2026-08-20 audit's single highest-leverage finding ("riftbound
+            prices" ranking ~13th; the exact phrase appeared in NO on-page
+            signal — title, description, H1, JSON-LD — always broken up by
+            "Card"/"TCG"), and this H1 was where it was fixed.
+
+            What carries it now, so the phrase is not simply dropped:
+              • the About section's H2 further down page.tsx — "Riftbound
+                prices in Australia, the US, …" — real, visible, adjacent;
+              • the FAQ question "How do I find the cheapest Riftbound
+                prices?" (real FAQPage JSON-LD, not just body copy);
+              • metadata.description, which OPENS "Riftbound prices, compared
+                live";
+              • the WebPage JSON-LD name and description.
+            …and the subhead directly below, which gives up its own
+            "Riftbound card prices" wording to say "Riftbound prices" instead
+            — that variant is the one the <title> still owns verbatim, so the
+            hero is not spending two slots on the same phrase.
+
+            The H1's own job is now the transactional query the site had no
+            owner for at all: `buy riftbound cards` with no market named (see
+            docs/seo-keyword-map.md). The nearest neighbour,
+            /guides/where-to-buy-riftbound-cards, owns `where to buy
+            riftbound` — research intent, "which stores exist" — and the
+            homepage <title> deliberately does NOT say "Buy Riftbound Cards",
+            so the two never collide in the field that carries the most
+            weight. Do not put that phrase in the title to "reinforce" the
+            H1; that is the collision this split avoids.
+
+            THE MARKET WORD IS GONE FROM ROOT'S H1 and appears only on the
+            four region pages, as `in Australia` / `in the UK` / … — which
+            serves the US-first reasoning above MORE strongly than the old
+            line did, not less: a root visitor is now greeted with no
+            market at all rather than one, while /au /uk /sg /ca keep an
+            explicit, front-of-page geo signal that their own titles already
+            carry. SHORT_PLACE (not `adjective`) because "in Australia"
+            reads as a place and "in Australian" does not. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Compare <span className="text-brand-400">Riftbound</span> prices across every {heroAdjective} store
+          Buy <span className="text-brand-400">Riftbound</span> cards at the best price{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
         </h1>
+        {/* "Price check" ADDED 2026-09-17 — the homepage is the declared owner of
+            `riftbound price check` (docs/seo-keyword-map.md; see page.tsx's
+            description comment for why that query had no owner but a mini-game).
+            It is at the FRONT of this subhead, and stays there.
+
+            AMENDED 2026-09-17 (same day, second pass): "Riftbound card prices"
+            here became "Riftbound prices". The H1 above was rewritten to buy
+            intent and gave up that adjacency; the <title> still carries
+            "Riftbound Card Prices" verbatim, so the hero repeating the title's
+            variant while the H1's variant went unowned was the wrong split.
+            "five more markets" fixed in the same pass — {otherMarkets} has
+            listed five since the EU launched (2026-08-23) and the sentence
+            still said four.
+
+            The sentence therefore lands all four of this page's target phrases
+            in ~45 words, none of them duplicating the title: "price check",
+            "buy Riftbound cards", "Riftbound prices", and the market list. */}
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Find the cheapest place to buy Riftbound cards — live Riftbound card prices from every {heroAdjective} retailer we track,
-          plus four more markets in their own currency: {otherMarkets}, updated daily.
+          Price check any card and find the cheapest place to buy Riftbound cards — live Riftbound prices from
+          every {heroAdjective} retailer we track, plus five more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 
         {/* The primary action: search, not a row of buttons. Wired to the exact
@@ -294,7 +345,7 @@ export function CinematicHero({
             href="/browse"
             className="tap-link rounded text-sm font-semibold text-slate-300 underline-offset-4 outline-none transition-colors hover:text-brand-400 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
           >
-            Browse all {totalCards.toLocaleString()} cards →
+            All {totalCards.toLocaleString()} cards in the database →
           </Link>
           <CountryHeroToggle />
         </div>

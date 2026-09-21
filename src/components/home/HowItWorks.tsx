@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { Reveal } from "@/components/Reveal";
-import { SearchIcon, ScaleIcon, CartIcon } from "@/components/icons/HomeIcons";
+import { SearchIcon, ScaleIcon, CartIcon, PlayIcon } from "@/components/icons/HomeIcons";
 
-// A first-time-visitor explainer: the search -> compare -> buy mechanic in three
-// scannable steps. The hero says WHAT RiftCompare is; this says HOW to use it, which
-// is the piece a newcomer to a price-comparison tool is missing. Market-neutral copy
-// (no cookie reads) so it stays part of the ISR-cached, one-version-for-all page and
-// doubles as keyword-relevant content for search.
+// A first-time-visitor explainer. The hero says WHAT RiftCompare is; this says HOW
+// to use it, which is the piece a newcomer to a price-comparison tool is missing.
+// Market-neutral copy (no cookie reads) so it stays part of the ISR-cached,
+// one-version-for-all page and doubles as keyword-relevant content for search.
+//
+// STEP 4 EXISTS BECAUSE THE STORY USED TO END AT "BUY" (2026-09-16). Reader
+// feedback: "simply a too greedy/capitalistic/money focused site for a card GAME
+// for me". They were right that the site's own three-word description of itself
+// — search, compare, buy — finished at the till and never mentioned that there
+// is a game at the other end of the purchase. Riftbound is the reason any of
+// this exists, and this site has ten playable things and a rules primer that
+// step 3 used to be the last word over.
 const STEPS = [
   {
     n: 1,
@@ -32,6 +39,17 @@ const STEPS = [
     title: "Buy for the best price",
     body: "Click straight through to the cheapest shop. Free, independent, and no sign-up needed.",
   },
+  {
+    n: 4,
+    Icon: PlayIcon,
+    title: "Then go and play",
+    body: "Build a deck, learn the rules, or take a swing at today's Riftle. The prices are the means, not the point.",
+    links: [
+      { href: "/deck", label: "Deck builder" },
+      { href: "/learn", label: "Learn to play" },
+      { href: "/riftle", label: "Daily Riftle" },
+    ],
+  },
 ];
 
 export function HowItWorks({ totalCards }: { totalCards: number }) {
@@ -42,11 +60,11 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
           How RiftCompare works
         </h2>
         <p className="mt-0.5 text-sm text-slate-400">
-          Find the cheapest place to buy any of {totalCards.toLocaleString()} Riftbound cards in three steps — always free.
+          Find the cheapest place to buy any of {totalCards.toLocaleString()} Riftbound cards — then get back to the game. Always free.
         </p>
       </div>
 
-      <Reveal stagger className="grid gap-3 sm:grid-cols-3">
+      <Reveal stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {STEPS.map((s) => (
           <div key={s.n} className="card-surface relative flex flex-col gap-2 p-5 transition-colors duration-200 hover:border-brand-500/40">
             <div className="flex items-center gap-3">
@@ -57,6 +75,19 @@ export function HowItWorks({ totalCards }: { totalCards: number }) {
             </div>
             <h3 className="text-base font-bold text-white">{s.title}</h3>
             <p className="text-sm leading-relaxed text-slate-400">{s.body}</p>
+            {s.links && (
+              <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
+                {s.links.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className="rounded-md border border-ink-600 bg-ink-900 px-2 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-brand-500 hover:text-white"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </Reveal>

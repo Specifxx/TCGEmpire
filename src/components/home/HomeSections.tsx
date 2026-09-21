@@ -1,7 +1,6 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Reveal } from "@/components/Reveal";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { EbayPicks } from "@/components/EbayPicks";
 import { ReviewsSection } from "@/components/ReviewsSection";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -10,14 +9,15 @@ import { WelcomeBack } from "@/components/home/WelcomeBack";
 import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { NextSetCountdownCard } from "@/components/home/NextSetCountdownCard";
 import { LatestPosts } from "@/components/home/LatestPosts";
+import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
-import { SETS, newestReleasedSet, nextUpcomingSet, domainInfo, DOMAIN_KEYS } from "@/lib/constants";
+import { SETS, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
 import type { TopDeals } from "@/lib/top-deals";
-import { toPulseMovers, type PriceMovers } from "@/lib/price-history";
+import type { PriceMovers } from "@/lib/price-history";
 import type { CardTileData } from "@/components/CardTile";
 import type { RecentUpdate } from "@/lib/price-history";
 
@@ -30,7 +30,6 @@ const TodaysTopDeals = dynamic(() => import("@/components/TodaysTopDeals").then(
 const PopularCardsCarousel = dynamic(() =>
   import("@/components/home/PopularCardsCarousel").then((m) => m.PopularCardsCarousel),
 );
-const MarketPulse = dynamic(() => import("@/components/home/MarketPulse").then((m) => m.MarketPulse));
 const ReturnVisitCards = dynamic(() => import("@/components/home/ReturnVisitCards").then((m) => m.ReturnVisitCards));
 
 export interface HomeSectionsProps {
@@ -87,14 +86,6 @@ export function HomeSections({
   // the `recentlyUpdated` prop) because the JSON-LD ItemList further down
   // still needs the full RecentUpdate list it was passed.
   const recentlyUpdatedCards = recentlyUpdated.map((u) => ({ card: u.card, pct: u.pct }));
-  // MarketPulse renders across all five markets (client-side switching, no
-  // refetch) but only ever reads spiking/plummeting's card/nowCents/pct — see
-  // toPulseMovers' doc comment in lib/price-history.ts for exactly what this
-  // drops (the unused "value" list and every mover's sparkline points) and why
-  // it's safe.
-  const pulseMoversByCountry = Object.fromEntries(
-    COUNTRY_CODES.map((c) => [c, toPulseMovers(moversByCountry[c])])
-  ) as Record<Country, ReturnType<typeof toPulseMovers>>;
   const newestSet = newestReleasedSet();
   // The next announced-but-unreleased set (Radiance today; rolls forward on
   // its own — see nextUpcomingSet's doc comment). undefined hides the card.
@@ -115,14 +106,48 @@ export function HomeSections({
 
   return (
     <>
-      {/* Market pulse — today's top risers/fallers, reusing the Daily Movers
-          data. Sits right after the hero: the single strongest "come back
-          tomorrow" signal a price site can show, so it earns above-the-fold
-          placement. Hides itself if there's nothing to show today. */}
-      <MarketPulse
-        moversByCountry={pulseMoversByCountry}
-        preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
-      />
+      {/* Recently viewed — first thing on the page, moved up from the very
+          bottom (2026-09-19, owner request).
+
+          It reads localStorage through useSyncExternalStore, so it renders
+          NOTHING on the server and NOTHING for a first-ever visitor. That is
+          what makes the top of the page the right home for it rather than a
+          contested slot: a new visitor, a crawler and the prerendered HTML all
+          see exactly the page they saw before, with eBay Picks still leading
+          (the owner-chosen top slot, 2026-09-17 — see below and
+          tests/game-before-money.test.ts). The only person it appears for is
+          someone coming back, and for them "the cards you were just looking at"
+          is the most useful thing on the page — which is the entire argument
+          for putting it above the fold instead of eleven sections down, where
+          returning visitors were the one group who had to scroll past
+          everything to reach the one row addressed to them.
+
+          The cost, stated rather than discovered later: a returning visitor
+          gets one layout shift of about a chip-row's height shortly after
+          hydration, where before it happened off-screen. It cannot be reserved
+          — the height is only knowable once localStorage has been read, and
+          reserving it unconditionally would punch a gap into every first-time
+          visit to avoid a shift only returning visitors ever see. */}
+      <RecentlyViewedRail />
+
+      {/* eBay Picks — the newest set's chase cards with their cheapest live
+          listing, rather than a generic banner.
+          MOVED INTO THE TOP SLOT 2026-09-17, on the owner's explicit
+          instruction, taking the place of Market Pulse (removed in the same
+          pass — see DECISIONS.md).
+
+          THIS IS A DELIBERATE PARTIAL REVERSAL of the 2026-09-16 "game before
+          money" pass, and is flagged rather than buried: that pass moved the
+          playable sections ABOVE the commercial run after repeated feedback
+          that the site read as "too greedy/capitalistic/money focused… for a
+          card GAME", and tests/game-before-money.test.ts pinned eBay Picks
+          below them. An affiliate unit now leads the page instead.
+
+          What that pass won is NOT fully given back, and the test still pins
+          the half that holds: Today's Top Deals — the bigger commercial block —
+          stays BELOW Riftle/the pack simulator. The reversal is one section,
+          not the ordering principle. */}
+      <EbayPicks />
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
           a "Biggest movers" tab and "Recently updated prices" (each once its
@@ -153,6 +178,22 @@ export function HomeSections({
         storeWord={storeWord}
       />
 
+      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
+          BACK ABOVE THE COMMERCIAL RUN (2026-09-16). These sat below Top Deals,
+          eBay Picks and the newsletter, which put five consecutive price
+          sections between the hero and the first thing on this site you can
+          actually play. Reader feedback, more than once: "simply a too
+          greedy/capitalistic/money focused site for a card GAME for me" — and
+          the page order was the evidence for it.
+
+          They are also the site's best "come back tomorrow" mechanics that
+          aren't the price data itself, so earning a slot this high is not
+          charity. Top Deals and eBay Picks still sit inside the first screenful
+          or two; they just no longer come first, second AND third. */}
+      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ReturnVisitCards newestSetName={newestSet?.name} />
+      </Reveal>
+
       {/* Today's Top Deals — the strongest differentiator, and still near the
           top: it was moved up from five sections deep, and now sits one behind
           the popular-cards carousel above (2026-09-12). Hidden if no market
@@ -163,63 +204,11 @@ export function HomeSections({
         </Reveal>
       )}
 
-      {/* Inline email capture with a concrete value prop, right after the deals
-          the reader was just looking at — the footer signup (still there too)
-          is easy to never scroll to. Exact same handler/API as the footer form,
-          just a different `source` for attribution. No popup/exit-intent — the
-          brief is explicit that this stays inline. */}
-      <div className="mx-auto w-full max-w-xl">
-        <NewsletterSignup
-          siteName={SITE_NAME}
-          source="home"
-          variant="card"
-          heading={`Get the weekly ${SITE_NAME} Index — the market summary every collector reads, each Monday. Free.`}
-          cta="Subscribe"
-        />
-      </div>
-
-      {/* Tailored eBay unit — the set's chase cards with their cheapest live
-          listing, rather than a generic banner. Sits after Top Deals so the
-          commercial run reads own-inventory first, affiliate second. */}
-      <EbayPicks />
-
-      {/* Return-visit hooks — Riftle, the pack simulator, and price alerts —
-          after the commercial run above (deals, newsletter, eBay). These are
-          the site's best "come back tomorrow" mechanics that aren't the price
-          data itself, so they get a slot of their own rather than competing
-          with a card-browsing section. They used to sit directly under the
-          popular-cards carousel; that section moved above Top Deals on
-          2026-09-12 and these stayed where they were rather than being
-          dragged up the page with it. */}
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <ReturnVisitCards newestSetName={newestSet?.name} />
-      </Reveal>
-
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. After the commercial sections (deals, popular cards, movers):
           those are the stronger differentiator and shouldn't sit behind an
           explainer. */}
       <HowItWorks totalCards={totalCards} />
-
-      {/* Best Basket promo — the multi-store cart optimiser is the hardest
-          feature in this category to replicate (it needs real per-store
-          shipping data, not just prices) and answers the single highest-intent
-          moment in the hobby: "I have a decklist, what's the cheapest way to
-          buy all of it". Server-rendered real <Link>, so it's crawlable, not a
-          client-only teaser. */}
-      <Link
-        href="/tools/best-basket"
-        className="card-surface group flex flex-wrap items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800 sm:flex-nowrap"
-      >
-        <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-extrabold text-white">Building a decklist? Find the cheapest way to buy it</h2>
-          <p className="mt-0.5 text-sm text-slate-400">
-            Best Basket splits your list across stores — postage included — and finds the lowest total cost, not just
-            the lowest sticker price on each card.
-          </p>
-        </div>
-        <span className="btn-primary shrink-0 text-sm">Try Best Basket →</span>
-      </Link>
 
       {/* Explore — sets + domains consolidated into one entry point */}
       <section>
@@ -273,23 +262,15 @@ export function HomeSections({
           </p>
         )}
 
-        <div className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">By domain</div>
-        <Reveal stagger className="flex flex-wrap gap-2">
-          {DOMAIN_KEYS.map((k) => {
-            const d = domainInfo(k);
-            return (
-              <Link
-                key={k}
-                href={`/domains/${k.toLowerCase()}`}
-                className="chip border border-ink-700 px-3 py-1.5 text-sm transition-colors duration-200 hover:border-brand-500 hover:bg-ink-800"
-                style={{ color: d.color }}
-              >
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                {d.label}
-              </Link>
-            );
-          })}
-        </Reveal>
+        {/* THE "BY DOMAIN" CHIP ROW (Fury/Calm/Mind/Body/Chaos/Order) WAS
+            REMOVED HERE on 2026-09-17, on the owner's instruction.
+
+            The /domains/<slug> pages themselves are untouched and are NOT
+            orphaned by this: /cards renders the same six links from
+            DOMAIN_PAGES (see that route's FacetGrid), and every card page
+            links to its own domain facet. This drops one homepage row, not
+            the domain hubs' path into the index — which is the thing that
+            would actually have cost something. */}
       </section>
 
       {/* Next-set countdown — new-set hype, right after Explore (which already
@@ -300,7 +281,16 @@ export function HomeSections({
           is announced. */}
       {showNextSetCard && (
         <Reveal>
-          <NextSetCountdownCard set={nextSet} />
+          {/* preorders passed down 2026-09-17: Market Pulse used to carry the
+              homepage's ONLY link to /radiance-preorders, and removing it would
+              have silently dropped the pre-order CTA from the homepage six
+              weeks before Radiance ships. This card is already the "next set"
+              slot, so the link belongs here rather than being lost as
+              collateral from a layout change nobody intended that way. */}
+          <NextSetCountdownCard
+            set={nextSet}
+            preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
+          />
         </Reveal>
       )}
 
@@ -333,6 +323,14 @@ export function HomeSections({
         </Reveal>
       )}
 
+      {/* Community directory teaser — RiftCompare isn't the only Riftbound site
+          worth knowing about; this points at /community's curated, unpaid
+          directory of news, wikis, deck builders, tier lists and video. Same
+          "further reading" slot as the blog/guides rows just above. */}
+      <Reveal>
+        <CommunityTeaser />
+      </Reveal>
+
       {/* Real, consented, approved reviews — renders NOTHING until there are at
           least a few genuine ones (see ReviewsSection). No placeholder state on
           purpose: an empty "reviews" block, or a seeded example, would be worse
@@ -344,10 +342,6 @@ export function HomeSections({
           twin and hides itself for everyone else. Exactly one renders. */}
       <AccountStrip />
       <WelcomeBack />
-
-      {/* Renders nothing on the server or on a first-ever visit — see
-          RecentlyViewedRail's own comment. */}
-      <RecentlyViewedRail />
 
       {/* Approved partners + affiliate disclosure. Client component (reads
           useCountry() itself) so every visitor's eBay click here is tagged

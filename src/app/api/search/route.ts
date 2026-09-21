@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { normalizeSearch } from "@/lib/format";
-import { cardTileSelect } from "@/lib/cards";
+import { buildCardWhere, cardTileSelect } from "@/lib/cards";
+import { parseSearchQuery } from "@/lib/search-query";
 import { getSealedGroups } from "@/lib/sealed-import";
 import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
@@ -26,15 +27,19 @@ export async function GET(req: Request) {
   if (q.length < 2) return NextResponse.json({ results: [], sealed: [] });
 
   const country = getCountry();
-  const nq = normalizeSearch(q);
+  // Same parser and the same WHERE the browse grid uses, so "akali overnumbered",
+  // "shen signature riftbound" and "armpit boi" return here exactly what they
+  // return there. This route used to build its own two-clause OR, which meant the
+  // typeahead could only ever match a bare name — and a visitor who arrived from
+  // a Google search for a printing and retyped that phrase got an empty dropdown.
+  const parsed = parseSearchQuery(q);
+  // The prefix re-rank compares against the NAME half only: "shen signature"
+  // should rank Shen at the top, and "shensignature" is a prefix of nothing.
+  const nq = normalizeSearch(parsed.name || q);
+  const aliasHits = new Set(parsed.aliasSlugs);
   const [cards, sealedAll] = await Promise.all([
     prisma.card.findMany({
-      where: {
-        OR: [
-          { nameNormalized: { contains: nq } },
-          { collectorNumber: { contains: q } },
-        ],
-      },
+      where: buildCardWhere({ q }, country),
       // Overfetch, then re-rank below: NAME-PREFIX matches first, then priced.
       // Priced-first alone buried unpriced new reveals (every pre-release Jayce
       // lost its dropdown slot to priced older Jayces) — "not in the database".
@@ -55,11 +60,13 @@ export async function GET(req: Request) {
 
   // Prefix matches beat substring matches regardless of price; within each group
   // the DB's priced-first order is preserved. Cap to the dropdown size after.
-  const ranked = [...cards].sort((a, b) => {
-    const ap = (a as { nameNormalized?: string }).nameNormalized?.startsWith(nq) ? 0 : 1;
-    const bp = (b as { nameNormalized?: string }).nameNormalized?.startsWith(nq) ? 0 : 1;
-    return ap - bp;
-  }).slice(0, 10);
+  // A nickname hit ranks above everything: "armpit boi" names one printing and
+  // nothing else, so it is the answer, not a candidate.
+  const rank = (c: { slug?: string; nameNormalized?: string }) =>
+    c.slug && aliasHits.has(c.slug) ? 0 : c.nameNormalized?.startsWith(nq) ? 1 : 2;
+  const ranked = [...cards]
+    .sort((a, b) => rank(a as { slug?: string; nameNormalized?: string }) - rank(b as { slug?: string; nameNormalized?: string }))
+    .slice(0, 10);
 
   const ql = q.toLowerCase();
   const sealed = sealedAll

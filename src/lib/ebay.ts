@@ -879,8 +879,21 @@ export async function searchEbayLowest(
 // Keyword each sealed product type must appear as in an eBay title.
 const SEALED_TYPE_KW: Record<string, RegExp> = {
   "Booster Box": /booster\s*box|booster\s*display|display\s*box/i,
-  "Booster Case": /\bcase\b/i,
+  // A BARE `\bcase\b` until 2026-09-20, which is how "x1 Riftbound: Origins
+  // Booster Box New & Sealed English FRESHLY FROM A CASE" — one box, at one
+  // box's price — was published as the cheapest OGN Booster CASE on eBay US
+  // (US$469 against a real case at ~US$1,095). Reported as "Its actually just a
+  // single box, not a case". The word has to describe the PRODUCT, not appear
+  // anywhere in the title: a case is a case OF something, or N boxes.
+  "Booster Case": /booster\s*case|display\s*case|box\s*case|sealed\s*case|case\s*of\s*\d|\d\s*x?\s*booster\s*box/i,
   "Booster Pack": /booster\s*pack/i,
+  // Two more types classifySealed() has returned for a while with no keyword —
+  // the same omission the note below this table describes, found by the same
+  // evidence (an OGN|Sleeved Booster row holding a plain "Origins Booster Pack"
+  // listing). `!kw || kw.test(…)` means a missing type is searched with NO title
+  // filter at all.
+  "Sleeved Booster": /sleeved\s*booster/i,
+  "Sleeved Booster (Art Set)": /sleeved\s*booster/i,
   Bundle: /bundle|gift/i,
   "T1 Signature Edition": /t1|worlds\s*champion/i,
   "T1 Player Bundle": /t1|worlds\s*champion/i,
@@ -908,8 +921,28 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
 // so the T1 CN/KR searches can drop ONLY the language exclusion and keep every
 // other guard — see SEALED_EXCLUDE_EBAY_BASE and the `language` param on
 // searchEbaySealed further down.
+//
+// `jumbo` and `slim` (2026-09-20) are NOT accessories — they are DIFFERENT
+// PRODUCTS, and they are here because two wrong-price reports landed on the same
+// day naming them:
+//
+//   "Riftbound League Of Legends Spiritforged Jumbo Booster Box Factory Sealed"
+//     eBay AU A$123.56, against a real AU market of A$215-320. Reported as
+//     "Chinese version".
+//   "Riftbound League of Legends TCG: Unleashed Slim Booster Box (CHN)"
+//     eBay AU A$156.00, against a real AU market of A$199-280.
+//
+// The second is caught by FOREIGN_LANG now that it knows "CHN"; the first says
+// nothing about language at all. What both DO say is that they are a Jumbo or a
+// Slim box — and neither is a SKU this site tracks. Our sealed types are Booster
+// Box / Display / Case / Pack / Sleeved Booster, so a listing that names itself
+// a different box is not the product the search asked for, whatever language it
+// is in. That is the claim being made here, and it is the one the titles
+// support; nothing below asserts which market those boxes come from. Checked
+// against every real sealed title in the database on the day (~200 across six
+// markets): not one legitimate English listing uses either word.
 const SEALED_EXCLUDE_EBAY_BASE =
-  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card/i;
+  /\bsingle\b|proxy|sleeve|playmat|\bempty\b|\bcard\b|\d+\s*\/\s*\d+|toploader|binder|protector|acrylic|magnetic|\bfits\b|storage|box\s*only|no\s*(?:cards?|packs?)|\bopened\b|\bstand\b|\bholder\b|divider|topper|spacer|\binsert\b|figure|plush|keychain|key\s*ring|sticker|lanyard|poster|wallpaper|digital|code\s*card|art\s*card|\bjumbo\b|\bslim\b/i;
 // A listing calling itself Chinese/Japanese/Korean is (almost always) a foreign
 // printing of an English product being searched for — excluded by default. The T1
 // Signature Edition's CN/KR seeds are the one deliberate exception: for those two
@@ -1067,4 +1100,237 @@ export async function searchEbaySealed(
     condition: best.condition,
     imageUrl: best.image?.imageUrl ?? best.thumbnailImages?.[0]?.imageUrl ?? null,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUCTIONS (the /auctions board). Every search above this line sends
+// `buyingOptions:{FIXED_PRICE}`, so auctions have never been in any response
+// this file has paid for — they are not scavengeable the way graded slabs were
+// (see captureGraded), and need their own call with the opposite filter.
+//
+// WHAT MAKES THIS CHEAP, given that a per-card auction pass was deleted on
+// 2026-08-20 for costing ~960 Browse calls/day: it is not per-card. Nothing
+// here names a card. One call asks for "live Riftbound auctions, soonest
+// first" and gets up to `limit` of them — Browse's documented maximum is 200 —
+// so the entire auction pool of a marketplace fits in one or two calls instead
+// of one call per printing. See the header on EbayAuctionListing in
+// prisma/schema.prisma for why the two shapes are not comparable, and
+// AUCTION_PAGE_CAP in lib/ebay-auctions.ts for the arithmetic.
+//
+// Parameters verified against eBay's own Browse API OpenAPI spec (Baseline
+// v1.20.4) rather than assumed, because a silently-wrong sort or filter name
+// here returns a plausible-looking page of the wrong listings:
+//   • sort=endingSoonest  — "Returned items are sorted based on the date/time
+//     on which their listing is scheduled to end."
+//   • filter=buyingOptions:{AUCTION}  — auctions are NOT returned by default.
+//   • limit max 200; offset must be 0 or a multiple of limit.
+//   • currentBidPrice {value,currency}, bidCount, itemEndDate (UTC
+//     yyyy-MM-ddThh:mm:ss.sssZ) are all "returned for auction items" only.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Browse's documented ceiling for `limit` on item_summary/search. */
+export const EBAY_MAX_LIMIT = 200;
+
+// Things that are never a Riftbound collectible, even at auction.
+//
+// DELIBERATELY NOT `NOT_A_SINGLE`: that list exists to protect the PRICE table,
+// where a lot, a booster box or a sealed deck is the wrong product to quote for
+// a single card. On an auctions board they are the opposite of noise — a sealed
+// Origins box or a bulk lot going to the wire is exactly the kind of auction
+// someone opens this page to find. Only genuinely-not-the-hobby items and
+// counterfeits are dropped here.
+// Exported for tests/ebay-auctions.test.ts, which asserts on real titles rather
+// than on this pattern's source — same reason GRADED_SLAB and LANGUAGE_SIGNAL
+// are exported. Grepping the source cannot tell "box" (a booster box, wanted)
+// from "deck box" (an empty accessory, not wanted); running it against titles
+// can.
+export const AUCTION_JUNK =
+  /\b(proxy|proxies|orica|custom made|fan made|fan-made|replica|fake|counterfeit|reprint set|keychain|key ?ring|keyring|sticker|plush|poster|magnet|lanyard|pin badge|sleeves?|toploader|top ?loader|binder|playmat|deck ?box|funko|digital code|code card|download)\b/i;
+
+export interface EbayAuctionResult {
+  itemId: string;
+  title: string;
+  url: string;
+  imageUrl: string | null;
+  /** The live high bid (or the opening price when there are no bids yet). */
+  currentBidCents: number;
+  /** The marketplace's own currency — never converted at import time. */
+  currency: string;
+  bidCount: number;
+  endsAt: Date;
+  /** Set only when the auction also carries a Buy It Now. */
+  buyItNowCents: number | null;
+  condition: string | null;
+  /** From parseGrade on the title — grader with a null grade means "graded, to
+   *  an unstated number", which the board shows as such rather than guessing. */
+  grader: string | null;
+  grade: number | null;
+}
+
+/**
+ * A timestamp in the exact shape eBay's filter reference uses —
+ * `2018-11-14T07:47:48Z`, no milliseconds.
+ *
+ * toISOString() emits `.000Z`, which the documented examples never show. Rather
+ * than find out whether the parser tolerates it on a filter whose failure mode
+ * is "silently returns everything", this trims to the documented form.
+ */
+function ebayInstant(ms: number): string {
+  return `${new Date(ms).toISOString().slice(0, 19)}Z`;
+}
+
+function centsOf(amount: any): number | null {
+  const v = amount?.value;
+  if (v == null) return null;
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? Math.round(n * 100) : null;
+}
+
+/**
+ * One page of live Riftbound auctions on one marketplace, soonest-ending first.
+ *
+ * Returns `ok: false` for anything that is not an answer (no token, budget
+ * spent, network error, 429, 5xx) so the caller can tell "this market has no
+ * auctions" from "we never got to ask" — the same distinction searchEbayLowest's
+ * `status` out-param exists for, and the reason the importer never deletes rows
+ * on a failed sweep.
+ */
+export async function searchEbayAuctions(opts: {
+  marketplace: string;
+  /** Keyword query. One word on purpose — Browse ANDs keywords, and every extra
+   *  token drops real auctions (the same false-negative measured in
+   *  searchEbayLowest's two-query note). */
+  query?: string;
+  offset?: number;
+  limit?: number;
+  /** Only lots scheduled to end within this many hours from now. */
+  endsWithinHours?: number;
+  /** Minimum price, in `currency`'s cents. Requires `currency` — eBay's price
+   *  filter is invalid without priceCurrency alongside it. For an auction the
+   *  filtered `price` is the CURRENT BID, so this asks "already at or above",
+   *  not "will sell for at least". */
+  minPriceCents?: number;
+  /** ISO 4217 code for minPriceCents. Must be the marketplace's own currency —
+   *  the caller converts (see usdCentsToCountry in lib/fx.ts). */
+  currency?: string;
+}): Promise<{ items: EbayAuctionResult[]; ok: boolean }> {
+  const token = await getToken();
+  if (!token) return { items: [], ok: false };
+
+  const limit = Math.min(opts.limit ?? EBAY_MAX_LIMIT, EBAY_MAX_LIMIT);
+  const now = Date.now();
+
+  // Filter syntax verified against eBay's Buy API field-filters reference, not
+  // recalled — each of these three fails differently and quietly when wrong:
+  //   • buyingOptions:{AUCTION}          auctions are not returned without it
+  //   • itemEndDate:[from..to]           "only items scheduled to end within
+  //                                       the specified date-time range"
+  //   • price:[N] + priceCurrency:XXX    "[N]" alone means AT OR ABOVE N, and
+  //                                       the reference states the price filter
+  //                                       "must be used with the priceCurrency
+  //                                       filter" — omitting it is an error,
+  //                                       not a default.
+  // Values are comma-separated in one `filter` parameter. URLSearchParams
+  // percent-encodes them, which is what the reference asks for.
+  const filters = ["buyingOptions:{AUCTION}"];
+  if (opts.endsWithinHours != null) {
+    // Both bounds given explicitly. The reference documents the two-bound form
+    // and an open-ended one; spelling out `now` costs nothing and says exactly
+    // what is meant — lots closing between this instant and the horizon.
+    filters.push(`itemEndDate:[${ebayInstant(now)}..${ebayInstant(now + opts.endsWithinHours * 3600_000)}]`);
+  }
+  if (opts.minPriceCents != null && opts.currency) {
+    // Whole units, not cents: the reference's own examples are `price:[10]`.
+    filters.push(`price:[${(opts.minPriceCents / 100).toFixed(2)}]`);
+    filters.push(`priceCurrency:${opts.currency}`);
+  }
+
+  const params = new URLSearchParams({
+    q: opts.query ?? "Riftbound",
+    filter: filters.join(","),
+    sort: "endingSoonest",
+    limit: String(limit),
+    offset: String(opts.offset ?? 0),
+  });
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    "X-EBAY-C-MARKETPLACE-ID": opts.marketplace,
+  };
+  if (EBAY_CAMPAIGN_ID) {
+    headers["X-EBAY-C-ENDUSERCTX"] = `affiliateCampaignId=${EBAY_CAMPAIGN_ID}`;
+  }
+
+  if (!spend()) return { items: [], ok: false }; // budget exhausted — don't call
+
+  let res: Response;
+  try {
+    res = await fetch(`${SEARCH_URL}?${params}`, { headers });
+  } catch {
+    return { items: [], ok: false };
+  }
+  if (res.status === 429) {
+    rateLimited = true;
+    return { items: [], ok: false };
+  }
+  if (!res.ok) return { items: [], ok: false };
+
+  const data = await res.json();
+  const raw: any[] = data.itemSummaries ?? [];
+
+  // The horizon, re-checked locally as well as sent to eBay. Not belt-and-braces
+  // for its own sake: `itemEndDate` is the one filter here whose failure mode is
+  // "returns everything", and a board whose whole promise is "closing within
+  // N hours" must not quietly become a board of everything if a filter name
+  // drifts. Deliberately NOT done for price — re-comparing money would mean
+  // re-deriving the currency locally, and getting THAT wrong is a worse bug than
+  // the one it guards against.
+  const horizon = opts.endsWithinHours != null ? now + opts.endsWithinHours * 3600_000 : null;
+
+  const items: EbayAuctionResult[] = [];
+  for (const it of raw) {
+    const title: string = it?.title ?? "";
+    if (!it?.itemId || !title) continue;
+    // `q` is keyword-matched rather than title-only, so require the game name in
+    // the title — the same precision guard searchEbaySealed uses. An auction that
+    // omits it would not have come back from this query anyway; what this drops
+    // is the description-matched noise that did.
+    if (!/riftbound/i.test(title)) continue;
+    if (AUCTION_JUNK.test(title)) continue;
+    if (isForeignListing(it)) continue;
+
+    // currentBidPrice is the auction-specific field; `price` carries the same
+    // amount for an auction and is the fallback if eBay omits the former.
+    const bid = centsOf(it.currentBidPrice) ?? centsOf(it.price);
+    if (bid == null) continue;
+    const currency: string | null = it.currentBidPrice?.currency ?? it.price?.currency ?? null;
+    if (!currency) continue;
+
+    // No end date means no countdown, and a countdown is the entire product
+    // here — skip rather than render a lot whose clock we cannot show. Already-
+    // ended lots are dropped too: endingSoonest puts them first if eBay is mid-
+    // close, and a board led by dead auctions is worse than a shorter board.
+    const endsAt = it.itemEndDate ? new Date(it.itemEndDate) : null;
+    if (!endsAt || Number.isNaN(endsAt.getTime()) || endsAt.getTime() <= now) continue;
+    if (horizon != null && endsAt.getTime() > horizon) continue;
+
+    const options: string[] = Array.isArray(it.buyingOptions) ? it.buyingOptions : [];
+    if (!options.includes("AUCTION")) continue; // belt-and-braces against a filter change
+
+    const { grader, grade } = parseGrade(title);
+    items.push({
+      itemId: String(it.itemId),
+      title,
+      url: ebayAffiliateUrl(it.itemAffiliateWebUrl ?? it.itemWebUrl),
+      imageUrl: it.image?.imageUrl ?? it.thumbnailImages?.[0]?.imageUrl ?? null,
+      currentBidCents: bid,
+      currency,
+      bidCount: Number.isFinite(it.bidCount) ? Number(it.bidCount) : 0,
+      endsAt,
+      buyItNowCents: options.includes("FIXED_PRICE") ? centsOf(it.price) : null,
+      condition: it.condition ?? null,
+      grader,
+      grade,
+    });
+  }
+  return { items, ok: true };
 }

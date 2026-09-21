@@ -1,0 +1,86 @@
+name: Refresh auctions
+
+# Sweeps live eBay auctions into EbayAuctionListing for /auctions.
+#
+# WHY THIS IS ITS OWN WORKFLOW rather than another step in refresh-prices.yml:
+# auctions need a much shorter cadence than prices. A price that is 12 hours old
+# is still roughly true; an auction board that is 12 hours old is mostly closed
+# lots. So this runs every 4 hours, while refresh-prices stays on its twice-daily
+# schedule — and keeping them separate means a long price import can never delay
+# the board, and a failed sweep can never fail the price run.
+#
+# QUOTA: 6 eBay Browse calls per sweep — one per market, one page each — so
+# 6 × 6 runs = 36 calls/day against eBay's 5,000/day limit, on top of the price
+# importer's ~2,850. Under 1% of the allowance. The per-card auction pass deleted
+# on 2026-08-20 cost ~960 calls/day by comparison.
+#
+# One page per market is safe because the board is filtered to lots closing
+# within 24h at or above US$500 (AUCTION_WINDOW_HOURS / AUCTION_MIN_USD_CENTS in
+# src/lib/ebay-auctions.ts, both env-overridable): a single marketplace cannot
+# produce 200 such lots, so a second page could only come back empty. Note that
+# the filters themselves save almost nothing — eBay bills per CALL, not per
+# result — the saving is the halved page cap. That module's header has the full
+# arithmetic, and tests/affiliate-priority.test.ts models these calls alongside
+# the rest of the day so a loosened filter cannot quietly outgrow the budget.
+
+on:
+  schedule:
+    # Every 4 hours. Minute 0 is anchored by GitHub's own cron drift (see the note
+    # in refresh-prices.yml — a few hours of drift on a schedule is expected and
+    # is not a fault), which is harmless here: the board's freshness requirement
+    # is "within a few hours", not a wall-clock time.
+    - cron: "0 */4 * * *"
+  workflow_dispatch: # manual "Run workflow" button
+
+# Never run two sweeps at once — they upsert the same rows.
+concurrency:
+  group: refresh-auctions
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # Generous for a job that makes ~12 HTTP calls and a few hundred upserts, but
+    # an eBay backoff or a cold Neon connection can add minutes, and a killed run
+    # loses the sweep.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Sync the schema first, for the same reason refresh-prices.yml does:
+      # EbayAuctionListing is a new table, and until a Vercel build has pushed it
+      # this job would otherwise die with P2021 "table does not exist". Additive
+      # only — no --accept-data-loss, so a destructive change stops the run
+      # instead of dropping a column on a schedule.
+      - name: Sync database schema (additive)
+        env:
+          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          # RM10 is the only operational variable (2026-09-14 cutover — see
+          # src/lib/db-chains.ts). Set explicitly because Actions collapses
+          # everything into one DATABASE_URL before the job starts, so
+          # process.env-based resolution cannot see which secret won.
+          DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::No database URL configured — cannot sync schema."
+            exit 1
+          fi
+          if ! npx prisma db push --skip-generate; then
+            echo "::error::prisma db push failed. If this is a DESTRUCTIVE change, run the \
+          db-push task in maintenance.yml by hand (it passes --accept-data-loss)."
+            exit 1
+          fi
+      - name: Sweep auctions
+        env:
+          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+          # eBay is optional — the sweep exits cleanly if these aren't set.
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_AFFILIATE_CAMPAIGN: ${{ secrets.EBAY_AFFILIATE_CAMPAIGN }}
+        run: npx tsx scripts/import-ebay-auctions.ts

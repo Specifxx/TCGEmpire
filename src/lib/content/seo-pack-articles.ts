@@ -838,7 +838,7 @@ RiftCompare is not a marketplace competing with the nine above — it's the comp
 - Cross-border "deals" are usually erased by [FX and shipping](${L.fx}).
 - Use one comparison across all of them rather than checking each in turn.
 
-Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a seven-point checklist you can apply to any venue, and [Riftbound card price comparison](${L.comparison}) explains what the numbers actually mean.`,
+Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a seven-point checklist you can apply to any venue, and [Riftbound card price comparison](${L.comparison}) explains what the numbers actually mean. If what you want is a ranking of the price-comparison sites themselves rather than the marketplaces, that is **[the best Riftbound price comparison sites, ranked](/blog/best-riftbound-price-comparison-sites)**.`,
   },
 
   {

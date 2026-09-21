@@ -6,8 +6,16 @@ import { pageAlternates } from "@/lib/seo";
 import { PriceCheck } from "@/components/games/PriceCheck";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 
+// "Game" ADDED TO THE TITLE 2026-09-17, as an anti-cannibalization fix rather
+// than a cosmetic one. This was the ONLY page on the site whose <title>
+// contained the phrase "price check", which made a five-round guessing game the
+// site's de facto answer to `riftbound price check` — a query whose searcher
+// wants to know what a card is worth. The homepage now owns that query
+// (docs/seo-keyword-map.md), and "Game" here breaks the "Riftbound … price
+// check" adjacency so the two stop competing, while keeping the game findable
+// by its own name for anyone searching for it directly.
 export const metadata: Metadata = {
-  title: "Price Check — Guess the Riftbound Card Price",
+  title: "Price Check Game — Guess the Riftbound Card Price",
   description:
     "The Price Is Right, for Riftbound: guess each card's live market price and score by how close you land. Five rounds, real store prices, free to play.",
   alternates: pageAlternates("/games/price-check"),

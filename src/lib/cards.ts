@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
+import { parseSearchQuery } from "./search-query";
 import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
@@ -50,17 +51,31 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
   const where: Prisma.CardWhereInput = {};
   const field = priceField(country);
 
-  const domains = csv(query.domain);
+  // A typed phrase can name a printing ("akali overnumbered", "alt art jinx").
+  // Those words become the same filters the browse chips set — but ONLY where the
+  // caller left the filter unset. An explicit URL parameter is a deliberate
+  // choice by someone looking at the chips; a word inferred from free text is a
+  // guess, and a guess must never overrule the choice. `printing=normal` plus a
+  // typed "signature" is the case that matters: the block further down still
+  // wins, and the visitor keeps the base prints they asked for.
+  const parsed = parseSearchQuery(query.q ?? "");
+  const eff: CardQuery = { ...query };
+  for (const [k, v] of Object.entries(parsed.filters)) {
+    const key = k as keyof CardQuery;
+    if (eff[key] === undefined) eff[key] = v;
+  }
+
+  const domains = csv(eff.domain);
   if (domains) where.domain = { in: domains };
-  const rarities = csv(query.rarity);
+  const rarities = csv(eff.rarity);
   if (rarities) where.rarity = { in: rarities };
-  const types = csv(query.type);
+  const types = csv(eff.type);
   if (types) where.type = { in: types };
-  const sets = csv(query.set);
+  const sets = csv(eff.set);
   if (sets) where.setCode = { in: sets };
 
-  if (query.variant === "alt") where.variant = { not: null };
-  else if (query.variant === "base") where.variant = null;
+  if (eff.variant === "alt") where.variant = { not: null };
+  else if (eff.variant === "base") where.variant = null;
 
   // Keyword tag filter (tags is a comma-separated string; substring match is fine for
   // the distinct word-tags we store). Powers the crawlable tag chips on card pages.
@@ -74,9 +89,9 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
     if (query.rulesSet) where.setCode = query.rulesSet;
   }
 
-  if (query.sig === "1") where.collectorNumber = { contains: "*" };
-  if (query.over === "1") where.isOvernumbered = true;
-  if (query.promo === "1") where.isPromo = true;
+  if (eff.sig === "1") where.collectorNumber = { contains: "*" };
+  if (eff.over === "1") where.isOvernumbered = true;
+  if (eff.promo === "1") where.isPromo = true;
 
   // "Normal only" — hide the special prints (alt-art, signature, promo) so players
   // browsing for the standard card aren't shown showcase/promo variants.
@@ -87,12 +102,55 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
     where.collectorNumber = { not: { contains: "*" } };
   }
 
-  if (query.q) {
-    // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number.
-    where.OR = [
-      { nameNormalized: { contains: normalizeSearch(query.q) } },
+  // Facet words that also occur inside card names ("legend", "fury", "epic") —
+  // see ScopedFilters in lib/search-query.ts for the collision counts. A
+  // dimension the caller set explicitly in the URL always wins, so an inferred
+  // word never contradicts a chip the visitor actually clicked.
+  const scopedClauses: Prisma.CardWhereInput[] = [];
+  if (parsed.scoped.type && query.type === undefined) scopedClauses.push({ type: parsed.scoped.type });
+  if (parsed.scoped.domain && query.domain === undefined) scopedClauses.push({ domain: parsed.scoped.domain });
+  if (parsed.scoped.rarity && query.rarity === undefined) scopedClauses.push({ rarity: parsed.scoped.rarity });
+
+  const strippedName = normalizeSearch(parsed.name);
+
+  // THE WHOLE QUERY WAS FACET WORDS ("legend", "epic fury spell"). There is no
+  // name left to protect, so they become ordinary top-level filters and the
+  // visitor gets the whole shelf — which is what they asked for.
+  if (query.q && !strippedName) {
+    for (const clause of scopedClauses) Object.assign(where, clause);
+  }
+
+  if (query.q && strippedName) {
+    // Search the normalised name so "kaisa" matches "Kai'Sa". Also match number —
+    // against the RAW string, which keeps the case and the "*" that a collector
+    // number needs ("193*/166", "SP1"); the name half is normalised instead.
+    const raw = normalizeSearch(query.q);
+    const or: Prisma.CardWhereInput[] = [
+      // ALTERNATIVE ONE, AND IT COMES FIRST ON PURPOSE: the entire typed phrase,
+      // compared against the name as typed. This is the clause that makes the
+      // scoped words safe. "Rune Prison" and "Hall of Legends" are real cards
+      // whose names contain a facet word, and this alternative never consults
+      // the tokeniser, so searching for one by name can never be turned into a
+      // filtered search that misses it.
+      { nameNormalized: { contains: raw } },
       { collectorNumber: { contains: query.q } },
     ];
+    if (scopedClauses.length) {
+      // ALTERNATIVE TWO: what is left of the name, of the kind the phrase named.
+      // "kennen legend" → a card called Kennen that is a Legend. Every column
+      // here is indexed (prisma/schema.prisma), so this is not a scan.
+      or.push({ AND: [{ nameNormalized: { contains: strippedName } }, ...scopedClauses] });
+    } else if (strippedName !== raw) {
+      // No scoped words, but printing words were stripped ("akali overnumbered"):
+      // match the remaining name, narrowed by the top-level printing filters.
+      or.push({ nameNormalized: { contains: strippedName } });
+    }
+    // A community nickname resolves to specific printings by slug — a unique
+    // column, so this is an indexed lookup of a handful of ids, not a scan.
+    if (parsed.aliasSlugs.length) or.push({ slug: { in: parsed.aliasSlugs } });
+    where.OR = or;
+  } else if (query.q && parsed.aliasSlugs.length) {
+    where.OR = [{ slug: { in: parsed.aliasSlugs } }];
   }
 
   const price: Prisma.IntNullableFilter = {};
@@ -190,9 +248,11 @@ export const CARD_TILE_SELECT = cardTileSelect("AU");
  * payload, and are never read: genuinely dead weight, not a legitimately-used
  * field like the five per-market price columns (which stay, because instant
  * currency switching on the client needs all of them). Same "strip what this
- * render never reads" pattern as toPulseMovers() in lib/price-history.ts,
- * applied where a page renders enough tiles for the bytes to matter — see its
- * use in /browse and /sets/[set]/gallery, the two heaviest CardTile grids.
+ * render never reads" pattern lib/price-history.ts's toPulseMovers() used for
+ * the homepage's Market Pulse marquee until both were removed on 2026-09-17 —
+ * this is now the only instance of it, applied where a page renders enough
+ * tiles for the bytes to matter: /browse and /sets/[set]/gallery, the two
+ * heaviest CardTile grids.
  */
 export function trimTileArtFallback<T extends Pick<CardTileData, "imageUrl" | "imageThumbUrl" | "energyCost" | "might" | "artSeed">>(
   card: T

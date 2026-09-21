@@ -42,6 +42,27 @@ export interface MarketView {
   prices: ComputedRow[]; // in stock, cheapest first
   outOfStock: ComputedRow[];
   lowest: number | null; // cheapest in-stock item price
+  /**
+   * THE LAST PRICE WE ACTUALLY SAW, when nothing is in stock right now.
+   *
+   * Null whenever `lowest` is set — this is a fallback, never a competing
+   * figure. It is the cheapest OUT-OF-STOCK listing in this market, which is a
+   * real price a real shop really published, with the date we last saw it, so
+   * any surface showing it must label it as last-seen rather than as a price you
+   * can pay today.
+   *
+   * WHY IT EXISTS. A card whose last copy sells out went from a full comparison
+   * to an em dash, on a page that is otherwise unchanged — and with card pages
+   * now always indexable (see lib/card-price-state.ts), that blank is what a
+   * crawler and a visitor arrive to. The listing is still there, still priced;
+   * we were simply filtering it out of the summary and showing nothing instead.
+   *
+   * NOT A PERMANENT REFERENCE PRICE, and do not describe it as one. The importer
+   * deletes and re-inserts each retailer's rows (price-import.ts), so this
+   * survives only while a store still carries the listing. A price that outlives
+   * the listing needs a column the importer only ever writes forward.
+   */
+  lastSeen: { priceCents: number; at: string | null } | null;
   cheapestStandard: number | null;
   cheapestFoil: number | null;
   hasEbay: boolean; // any in-stock eBay listing in this market
@@ -76,6 +97,12 @@ export function computeMarket(rows: MarketRow[], country: Country): MarketView {
     prices,
     outOfStock,
     lowest: prices[0]?.priceCents ?? null,
+    // Only when there is nothing live to show, and `all` is already sorted by
+    // item price, so `outOfStock[0]` is the cheapest of them.
+    lastSeen:
+      prices.length === 0 && outOfStock[0]
+        ? { priceCents: outOfStock[0].priceCents, at: outOfStock[0].lastSeen ?? null }
+        : null,
     cheapestStandard: minPrice(prices.filter((p) => !p.isFoil)),
     cheapestFoil: minPrice(prices.filter((p) => p.isFoil)),
     hasEbay: prices.some((p) => p.retailer.startsWith("ebay")),

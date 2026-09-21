@@ -228,13 +228,24 @@ test("the marketplace routes are fully removed", () => {
 // Homepage — US-first hero, Best Basket promo section, reconciled stat claims.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the hero H1 leads with the US by default, not an alphabetised six-market list", () => {
+test("the hero never greets a visitor with a list of markets they don't live in", () => {
   const src = read("src/components/home/CinematicHero.tsx");
   // heroAdjective defaults to "US" when no `region` prop is passed — i.e. the
   // real homepage, unchanged. Region pages (/au, /uk, /sg, /ca) override
   // it via the region prop — see components/home/RegionHome.tsx.
   assert.match(src, /heroAdjective = region\?\.adjective \?\? "US"/);
-  assert.match(src, /across every \{heroAdjective\} store/);
+
+  // AMENDED 2026-09-17: this used to also pin the H1's literal "across every
+  // {heroAdjective} store", which was how the US-first fix was implemented.
+  // The H1 was rewritten to buy intent by owner instruction and now names NO
+  // market on root at all (see tests/keyword-ownership.test.ts for the
+  // replacement pins). heroAdjective still drives the SUBHEAD's "every {X}
+  // retailer we track", so the US-first framing this test exists for is
+  // intact — it just isn't the H1 carrying it any more.
+  assert.match(src, /every \{heroAdjective\} retailer we track/);
+
+  // The actual failure this test was written against — the original H1 was a
+  // literal six-market list — is unchanged and still pinned.
   assert.doesNotMatch(
     src,
     /AU, US, UK, SG/,
@@ -254,12 +265,17 @@ test("the hero's primary CTA row still carries only one <Link> (test constraint 
   assert.ok(linkCount <= 2, `the CTA row has ${linkCount} <Link>s — tests/internal-linking.test.ts caps it at 2`);
 });
 
-test("Best Basket has a homepage section with a real crawlable Link", () => {
-  // Moved into HomeSections.tsx (shared with the 5 region home pages) when
-  // the homepage's feature sections were factored out — see that file's own
-  // header comment.
+test("the homepage no longer promotes Best Basket or the inline newsletter card — both removed 2026-09-16", () => {
+  // Owner call: the homepage was carrying a promo <Link> to Best Basket and an
+  // inline NewsletterSignup card, in addition to everything else on the page.
+  // Best Basket stays reachable from the card page, deck builder and /tools
+  // (see the tests right below and access-tiers.test.ts); the newsletter form
+  // stays in the footer. Only the homepage-specific placements are gone, in
+  // favour of the new /community teaser (community.test.ts).
   const src = read("src/components/home/HomeSections.tsx");
-  assert.match(src, /href="\/tools\/best-basket"/);
+  assert.doesNotMatch(src, /href="\/tools\/best-basket"/);
+  assert.doesNotMatch(src, /<NewsletterSignup/);
+  assert.match(src, /<CommunityTeaser \/>/);
 });
 
 test("the /stores pitch page counts real tracked stores (RETAILER_LIST), not every distinct retailer key ever seen", () => {

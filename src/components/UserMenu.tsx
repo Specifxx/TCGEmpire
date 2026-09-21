@@ -115,21 +115,31 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
 
   return (
     <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-label="Account menu"
-        aria-expanded={open}
-        className="tap-icon relative overflow-hidden rounded-full border border-ink-600 bg-ink-800 text-xs font-bold text-white hover:border-brand-500"
-      >
-        {user.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatarUrl} alt="" aria-hidden="true" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-        ) : (
-          initials
-        )}
-        {!user.emailVerified ? (
-          <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-ink-950 bg-gold" title="Email not verified" />
-        ) : null}
+      {/* The button stays a full `.tap-icon` target (44px on phones, bumped to
+          48px on a coarse pointer — the same accessibility floor the bell
+          uses, see globals.css) so the accessible hit area never shrinks.
+          Reported directly: "profile icon should be smaller so it fits for
+          mobile" — the fix shrinks the visible circle drawn INSIDE that
+          target on phones (h-8, back to the full h-9 from sm up, where the
+          request doesn't apply), not the tappable box itself. */}
+      <button onClick={() => setOpen((o) => !o)} aria-label="Account menu" aria-expanded={open} className="tap-icon relative">
+        {/* This inner wrapper is exactly the size of the visible circle (not
+            the tap target) so the "unverified" badge below anchors to the
+            circle's actual corner at both sizes, not the bigger invisible
+            touch box around it. */}
+        <span className="relative grid h-8 w-8 place-items-center sm:h-9 sm:w-9">
+          <span className="grid h-full w-full place-items-center overflow-hidden rounded-full border border-ink-600 bg-ink-800 text-xs font-bold text-white hover:border-brand-500">
+            {user.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.avatarUrl} alt="" aria-hidden="true" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              initials
+            )}
+          </span>
+          {!user.emailVerified ? (
+            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-ink-950 bg-gold" title="Email not verified" />
+          ) : null}
+        </span>
       </button>
 
       {open && (

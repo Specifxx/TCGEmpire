@@ -1,0 +1,64 @@
+name: Bing coverage — is Bing flat, or just small?
+
+# The Bing half of the search monitoring, and it exists because there was none.
+#
+# Google has had `gsc-coverage.yml` (daily impressions/clicks per page) and
+# `gsc-index-coverage.yml` (weekly per-URL index state) for months, and every SEO
+# decision in DECISIONS.md rests on a number from one of them. Bing had no API
+# key, no workflow, no script and not one recorded figure — so when asked on
+# 2026-09-17 why "Google is skyrocketing but Bing is staying the same", the
+# second half of that sentence could not be checked. See scripts/bing-coverage.ts
+# for the full reasoning and for what each reported line is answering.
+#
+# SETUP (one-time, and the order matters):
+#   1. Verify riftcompare.com in Bing Webmaster Tools. The live site serves no
+#      `msvalidate.01` tag — `src/app/layout.tsx` emits one only when
+#      BING_SITE_VERIFICATION is set in the deploy env, and it is not — and
+#      /BingSiteAuth.xml 404s, so unless the property was verified by a Google
+#      Search Console import or by DNS, it is not verified at all.
+#   2. Bing Webmaster Tools → Settings → API access → API key.
+#   3. Store it as the repo secret BING_API_KEY.
+# Until step 3 the workflow no-ops with an explanatory step summary, exactly like
+# gsc-coverage.yml does without GSC_SA_KEY. It does not fail: a red cross for a
+# key nobody has created yet only teaches people to ignore red crosses.
+#
+# READ-ONLY. It reports; it never submits a URL. Bing's URL submission allowance
+# is large enough to be a real lever (the report prints the site's actual figure
+# rather than a remembered one), but spending it belongs to a human decision, not
+# to a daily cron.
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: "Bing Webmaster property (e.g. https://riftcompare.com/)"
+        required: false
+        default: ""
+  schedule:
+    # 07:35 UTC — fifteen minutes after gsc-coverage.yml's 07:20, so the two
+    # reports in one morning's inbox describe the same morning and the /card rows
+    # can be read against each other.
+    - cron: "35 7 * * *"
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Report Bing indexing & search performance
+        env:
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+          BING_SITE: ${{ inputs.site || vars.BING_SITE || 'https://riftcompare.com/' }}
+        run: npx tsx scripts/bing-coverage.ts
+      - name: Upload the raw report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bing-coverage
+          path: docs/bing-coverage.json
+          if-no-files-found: ignore

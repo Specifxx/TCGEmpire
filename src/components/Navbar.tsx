@@ -4,13 +4,14 @@ import { NavbarShell } from "./NavbarShell";
 import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { HeaderSearchSlot } from "./HeaderSearchSlot";
-import { MobileNav } from "./MobileNav";
 import { CountrySwitcher } from "./CountrySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { NavUser } from "./NavUser";
 import { PremiumNavLink } from "./PremiumNavLink";
 import { DISCORD_URL } from "@/lib/site";
 import { BrandLogo } from "./BrandLogo";
+import { HeaderMenuButton } from "./HeaderMenuButton";
+import { HeaderWatchButton } from "./HeaderWatchButton";
 
 // NO server-side session read here: the navbar renders on every route, so a
 // cookies() read would force the whole site dynamic (killing ISR). NavUser
@@ -21,33 +22,114 @@ export function Navbar() {
     <NavbarShell>
       {/* Full-window header (not capped at the content max-width) so the nav fits the
           whole window on wide screens. */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
-       <div className="flex h-16 w-full items-center justify-between gap-2 sm:gap-4">
-        {/* Logo + the primary Database link, kept together on the left. On phones the
-            right-hand inline nav collapses into the hamburger, so the Database tab lives
-            here in the header's open space instead. */}
-        <div className="flex shrink-0 items-center gap-1 sm:gap-3">
+      {/* px-2 below sm (was px-4, then px-3): 16px of what putting "Premium" back as
+          TEXT needed, and the cheapest 8px available — it is whitespace, not a
+          control. sm and up are untouched. */}
+      <div className="mx-auto w-full px-2 sm:px-6 lg:px-8">
+       <div className="flex h-16 w-full items-center justify-between gap-1 sm:gap-4">
+        {/* Logo + the phone Premium link. The below-lg Database link used to live
+            here too and was removed when HeaderMenuButton joined this row — see
+            the tombstone just below. Everything the right-hand inline nav hides
+            at these widths is in the menu overlay that button opens. */}
+        {/* `min-w-0` + shrinkable, NOT `shrink-0`. Measured at 320-390px after the
+            bottom bar's Menu tab moved into this row as HeaderMenuButton: the row
+            needed 390px inside 343 at 375px and the PAGE scrolled sideways (406 in
+            375). A `shrink-0` group cannot give, so the overflow had nowhere to go
+            but the document. Letting this side shrink means the worst case is a
+            truncated label on a very narrow phone rather than a horizontally
+            scrolling site. */}
+        <div className="flex min-w-0 items-center gap-0.5 sm:gap-3">
           <Link href="/" className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home">
             <BrandLogo />
-            <span className="hidden text-lg font-extrabold tracking-tight text-white sm:block">
+            {/* THE WORDMARK WAITS FOR lg (was sm). Measured at 640px: this link is
+                151px with the word, 48px as the mark alone — 103px, and the
+                640-1023px band needed 77px once Database came back. It is the
+                only thing in this row that is decoration rather than a
+                destination: the mark beside it is still the home link, still the
+                brand, and still tappable. The word returns at lg where the row
+                has the width for it. */}
+            <span className="hidden text-lg font-extrabold tracking-tight text-white lg:block">
               Rift<span className="text-brand-400">Compare</span>
             </span>
           </Link>
-          <Link href="/browse" className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-slate-200 hover:bg-ink-800 hover:text-white lg:hidden">
+          {/* BROWSE — ONE LINK, VISIBLE AT EVERY WIDTH. Reported as "the database
+              button is gone on mobile phone, that's the most important one" and
+              then "bring it back completely on desktop as well, this is a big
+              issue".
+              It had been removed below lg to buy ~76px when HeaderMenuButton
+              replaced the deleted bottom bar, on the reasoning that the search box
+              one row down submits to /browse anyway. That reasoning was wrong about
+              what the link is FOR: /browse is the product's primary destination, and
+              a search box is not a substitute for a visible way in. Worse, the
+              surviving copy was gated `lg:block`, so the whole 640-1023px band —
+              every tablet and every narrow laptop window — had no Database link at
+              all, which is the "gone on desktop" half of the report.
+              Now ungated and in the left cluster beside the logo, so there is no
+              width where it can disappear and no second copy to drift.
+
+              LABELLED "Database". This label has now been argued both ways by
+              the same owner within 48 hours, so the history is worth keeping:
+              it said "Database" for its whole life, was renamed to "Browse" on
+              2026-09-19 ("it's meant to be the browse button on the header"),
+              and was renamed back on 2026-09-21 ("reword the browse in the home
+              page and all other areas to database — I think that's better").
+              The destination (/browse) never moved for either rename.
+
+              This time the rename is NOT isolated to the header: the same pass
+              took the word out of every label whose destination is this page,
+              so the header now agrees with the menu overlay, the ⌘K launcher,
+              the side rail and the footer (all of which already said "Card
+              Database") and with the homepage hero link. That was the actual
+              defect behind both complaints — one destination wearing two names
+              depending on which control you reached it from.
+
+              WIDTH NOTE: "Database" is ~15px wider than "Browse", and the
+              640-1023px header row is the tight one (see
+              tests/mobile-header-fit.test.ts and header-mobile-space.test.ts,
+              which measure it). The slack the 09-19 rename banked is spent
+              again here; those tests are the guard. */}
+          <Link
+            href="/browse"
+            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm"
+          >
             Database
           </Link>
           {/* Premium, on phones, sitting next to Database (2026-09-10, owner
               brief). The desktop "✦ Premium" link further down is gated xl:block,
               so before this a phone visitor could only reach Premium through the
-              hamburger overlay — see CinematicNavMenu's spotlight banner, which
+              menu overlay — see CinematicNavMenu's spotlight banner, which
               stays as the in-menu answer. Same lg:hidden band and same shape as
               Database above so the two read as one pair, but gold and shimmering
               because the brief is specifically that this one should stand out.
               The shimmer lives on the inner span, NOT this link: .premium-shimmer
               uses background-clip:text, which would clip the hover background to
               the glyphs if both sat on the same element. */}
-          <PremiumNavLink className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-semibold text-gold hover:bg-ink-800 lg:hidden">
-            <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">✦ Premium</span>
+          {/* `whitespace-nowrap` IS LOAD-BEARING, and the reason is worth keeping.
+              Once the watchlist got its own control, this row carried five
+              targets below lg and the shrinkable left cluster absorbed the extra
+              44px by WRAPPING this label — "✦" on one line, "Premium" on the
+              next, which looks like a broken header. No measurement caught it:
+              scrollWidth/clientWidth are equal when text wraps rather than
+              clips, so it took a screenshot. Nowrap forces the row to find the
+              space instead, which the icon-only band below does.
+
+              ICON-ONLY BELOW sm, full "✦ Premium" from sm up. At 375px the row's
+              budget is 343px and nowrap needed ~367; dropping to the bare gold
+              star saves ~40px and it fits with room. This is also the coherent
+              reading of the row — on a phone every other control here is already
+              an icon (market flag, account, watchlist, menu), so a lone label was
+              the odd one out. The glyph keeps the gold, the shimmer and an
+              accessible name, so the 2026-09-10 brief ("Premium should stand out
+              on phones") still holds; it is prominence by colour and motion
+              rather than by width. */}
+          <PremiumNavLink
+            aria-label="Premium"
+            title="Premium"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
+          >
+            <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">
+              ✦<span className="hidden min-[360px]:inline"> Premium</span>
+            </span>
           </PremiumNavLink>
         </div>
 
@@ -71,15 +153,16 @@ export function Navbar() {
             scripts/mobile-check.ts audits 375px only, which is why it never
             surfaced.
 
-            The fix is what the hamburger exists for, applied in order of how
-            navigational each item is:
-              • below lg — logo, Database, Explore, Marketplace, country, burger.
+            The fix is what the phone Menu overlay exists for, applied in order of
+            how navigational each item is:
+              • below lg — logo, Database, Explore, Marketplace, country.
               • from lg  — everything else at once: the navigation links (Sealed,
                 Decks, Blog), Database moving into this row, the
                 Premium upsell (96px, opens a dialog) and the Discord icon (36px,
                 external).
-            Everything hidden at a given width is in the hamburger via
-            nav-groups.ts, and Discord is in the footer, so no link is lost.
+            Everything hidden at a given width is in the Menu overlay (opened by
+            HeaderMenuButton below lg) via nav-groups.ts, and Discord is in the
+            footer, so no link is lost.
 
             THE NAV LINKS MOVED md → lg, and the reason is worth keeping: `md`
             put them on screen from 768px, but the SEARCH BAR — the only element
@@ -105,16 +188,23 @@ export function Navbar() {
               way to sign in at all. The whole nav is unconditionally visible
               on every route now, homepage included. */}
           {/* Command launcher — every page can reach every page from here (⌘K). */}
-          {/* Inline text/⌘K nav is desktop-only — on phones it overflowed the bar
-              (worse once the logged-in avatar showed). Everything here is reachable
-              from the hamburger pop-up menu, so hide it below sm. */}
-          <span className="hidden sm:inline-flex">
+          {/* ⌘K MOVED sm -> lg, 2026-09-18. It is a KEYBOARD affordance, and below
+              lg the menu button at the end of this row now does the same job for a
+              touch device — CinematicNavMenu opens with its own search box over the
+              same NAV_GROUPS the launcher searches. Two controls for one job is
+              exactly the duplication this header keeps being pruned of, and at
+              640-1023px the row could no longer afford both: with the watchlist
+              split out of the menu button, its intrinsic width was ~641px inside
+              592, which `min-w-0` turned from a scrolling page into the Premium
+              label being overdrawn by the theme toggle. */}
+          <span className="hidden lg:inline-flex">
             <CommandLauncherButton />
           </span>
-          {/* Database is beside the logo on smaller screens; keep it in the right nav on desktop. */}
-          <Link href="/browse" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2.5 lg:block">
-            Database
-          </Link>
+          {/* The desktop-only Database copy that used to sit here is GONE — not the
+              link, the DUPLICATE. It was `lg:block` while the other was
+              `lg:hidden`, so the two never appeared together and the pair left
+              640-1023px with neither. One ungated link in the left cluster now
+              covers every width, which is the only arrangement with no gap. */}
           {/* Sealed products — high-AOV, right after the database. */}
           <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Sealed
@@ -160,6 +250,16 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
             Blog
           </Link>
+          {/* Auctions — the live eBay auction board. At xl, not lg, for the same
+              reason Premium and Discord below are: the lg row is already at the
+              width that overflowed on tablets once (the 640-790px fix, see
+              scripts/mobile-check.ts) and a sixth lg item walks back toward it.
+              Below xl it is one keystroke away in the ⌘K launcher, in the phone
+              Explore overlay, in the side rail and in the footer — it is in the
+              Prices group in nav-groups.ts, so all four get it from one entry. */}
+          <Link href="/auctions" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white xl:block xl:px-2.5">
+            Auctions
+          </Link>
           {/* The P2P marketplace was removed entirely (2026-08) — the site is
               back to pure price comparison — so there is no Marketplace chip
               here, and Premium (below) is the header's only always-visible,
@@ -173,9 +273,16 @@ export function Navbar() {
           <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">
             ✦ Premium
           </PremiumNavLink>
-          {/* Single nav entry point: the ⌘K "Explore" command launcher (above) is the
-              full-nav surface on desktop — it lists the same NAV_GROUPS searchably — so
-              the separate "Menu" mega-dropdown is gone (matches DexCompare's one-tab model). */}
+          {/* Single nav entry point, and it is still exactly one at every width.
+              From lg the ⌘K "Explore" command launcher (above) is the full-nav
+              surface — it lists the same NAV_GROUPS searchably — so there is no
+              separate "Menu" dropdown. Below lg the one control is
+              HeaderMenuButton at the end of this row, which opens the same
+              CinematicNavMenu overlay through the same useMegaMenu()/setOpen.
+              "We have the menu, but we also have the menu on the top right… we
+              only need one of them" was reported directly and still holds; the
+              surviving copy simply moved back up here when the bottom tab bar
+              that had been hosting it was deleted. */}
           {/* Discord, the region switcher and the sign-in control (NavUser) —
               always visible now, see the doc comment above this nav's opening
               tag for why the prior pre-scroll hiding on "/" was reverted. A
@@ -203,13 +310,48 @@ export function Navbar() {
               <path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.249a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.249.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.369a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
             </svg>
           </a>
-          {/* Light/dark switch. sm and up only: the phone header already holds
-              the region switcher, sign-in and hamburger at 375px, so on phones
-              the same control lives as a row inside the menu overlay instead. */}
-          <ThemeToggle className="hidden sm:grid" />
+          {/* Light/dark switch, lg and up (was sm, moved 2026-09-18 for the same
+              width reason as ⌘K above). CinematicNavMenu already carries a
+              "Theme — Dark · tap to switch" row, so below lg this is a second
+              copy of a control the overlay owns, and the overlay's version reads
+              its state in words rather than as an ambiguous glyph. */}
+          <ThemeToggle className="hidden lg:grid" />
           <CountrySwitcher className="ml-0.5 sm:ml-1" />
           <NavUser />
-          <MobileNav />
+          {/* THE PHONE/TABLET MENU, BACK IN THE HEADER. Below lg only — from lg
+              the ⌘K launcher above is the full-nav surface and the SideNav rail
+              takes over, so this would be a third entry point at a width that
+              already has two. Still exactly ONE control opening the overlay at
+              any given width, which is what tests/single-menu-entry.test.ts
+              pins; what changed is that the one control is here rather than in
+              a fixed bottom bar, because that bar could not be kept pinned to
+              the bottom of a phone screen across three attempts (see
+              HeaderMenuButton.tsx). LAST in the row, so it sits at the screen's
+              right edge — the nearest thing to a thumb that a top bar has. */}
+          {/* WATCHLIST, ITS OWN CONTROL — deliberately not a badge on the menu
+              button next to it. A count belongs to the thing it counts: tapping
+              it has to land on /watching, and a menu button that sometimes wears
+              a number reads as unread navigation. "The watchlist and the menu
+              should be separate." Below lg only, like the menu: from lg the
+              SideNav rail already lists "My Watchlist" from NAV_GROUPS (no
+              count there — the rail renders links, not live state) and the
+              launcher finds it, so a third control would be the duplication
+              this header keeps being pruned of. */}
+          {/* WATCHLIST FROM sm UP, not below it. Bringing Database back (the
+              explicit priority: "that's the most important one") put seven
+              controls in this row, and at 320-414px they measurably overlapped —
+              Premium and Database drawn through the market switcher. Removing
+              the notification bell paid for part of it but only from sm up,
+              where that bell already lived.
+              The watchlist is the cheapest of the remaining 48px: below sm it
+              is one tap away in the menu overlay, whereas Database and Premium
+              were both named as must-haves and the market switcher, account and
+              menu are each the only route to something. It stays a SEPARATE
+              control from the menu at every width it appears, which is what
+              "the watchlist and the menu should be separate" actually asked
+              for. */}
+          <HeaderWatchButton className="hidden sm:inline-flex lg:hidden" />
+          <HeaderMenuButton className="lg:hidden" />
         </nav>
        </div>
 

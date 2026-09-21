@@ -63,7 +63,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: checked WITH
   // " | RiftCompare" appended. The previous single fixed string had no length
   // guard at all — computed over all 132 store pages, 97 rendered over 65 chars
-  // and 39 over 70, part of Bing's 397 "Title too long" warnings. `label` itself
+  // and 39 over 70. The two page counts are this repo's own measurement and
+  // stand; the "part of Bing's 397 'Title too long' warnings" that used to
+  // follow them does NOT — that figure is unsourced (nothing in DECISIONS.md or
+  // docs/ records a Bing Webmaster Tools reading, and there was no Bing
+  // monitoring here until bing-coverage.yml). The 60-char budget below is
+  // justified by the repo's own SEO gate regardless of what Bing reports, so
+  // nothing about this code depends on the retracted number. `label` itself
   // can carry a market-disambiguation suffix (e.g. "Danireon Cards & Games
   // (United States)" — see storePageName's own doc comment for why that exists
   // and can't be dropped), so even the shortest candidate here isn't guaranteed

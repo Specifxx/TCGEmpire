@@ -464,8 +464,8 @@ function CostInput({
       className="flex items-center gap-1 rounded-md border border-ink-700 bg-ink-900 px-1.5 py-1 text-xs text-slate-500"
       title={
         total
-          ? "What you paid for ALL copies in this row — used for your portfolio profit/loss"
-          : "What you paid for ONE copy — used for your portfolio profit/loss"
+          ? "What you paid for ALL copies in this row — used for the \u201Csince you bought\u201D panel in your binder"
+          : "What you paid for ONE copy — used for the \u201Csince you bought\u201D panel in your binder"
       }
     >
       paid

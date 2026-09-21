@@ -22,7 +22,7 @@
  * READABLE AT 20px IS THE WHOLE CONSTRAINT. They render at 20px inside a 44px
  * button, so each one is a distinct SILHOUETTE rather than a detailed picture —
  * no two share an outline, because at that size the outline is all a reader
- * gets. That is also why "Browse the database" is a magnifier and "Decks" is a
+ * gets. That is also why "The card database" is a magnifier and "Decks" is a
  * pair of cards: both are card-ish concepts, and two card-shaped icons three
  * rows apart would be indistinguishable in the rail.
  */
@@ -194,7 +194,8 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
     </>
   ),
   // Menu — three lines, the bottom bar's own "everything else" tab (opens the
-  // same full-screen overlay MobileNav's navbar hamburger does).
+  // full-screen CinematicNavMenu overlay — the header no longer has its own
+  // duplicate hamburger for this, see Navbar.tsx).
   menu: (
     <>
       <path d="M4 7h16M4 12h16M4 17h16" />
@@ -207,13 +208,25 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
  * control it sits inside (the rail's button carries aria-label + title), so a
  * <title> here would make a screen reader announce the group name twice.
  */
-export function NavIcon({ name, className = "" }: { name: NavIconName; className?: string }) {
+export function NavIcon({
+  name,
+  className = "",
+  // Almost always "none" — these are stroked glyphs. The exception is a control
+  // whose STATE is legible only as fill: HeaderWatchButton fills the bell when
+  // the watchlist has something in it, which is the same convention
+  // PriceWatchButton uses on every card tile.
+  fill = "none",
+}: {
+  name: NavIconName;
+  className?: string;
+  fill?: string;
+}) {
   return (
     <svg
       aria-hidden="true"
       focusable="false"
       viewBox="0 0 24 24"
-      fill="none"
+      fill={fill}
       stroke="currentColor"
       strokeWidth="1.75"
       strokeLinecap="round"

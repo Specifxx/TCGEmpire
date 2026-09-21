@@ -363,3 +363,95 @@ test("bare mode is only ever used where a parent discloses", () => {
   }
 });
 
+
+test("a market whose only eBay copies are slabs opens on the Graded tab", () => {
+  // 2026-09-19, reported as a matching bug: an eBay AU listing for the SFD 225★
+  // Irelia "doesn't show on AU". It did — the AU search returned exactly three
+  // items (a novelty keychain and two PSA 10s), all three correctly kept out of
+  // the price comparison, and both slabs were already stored as AU graded rows.
+  // What the visitor met was the Listings tab, which for a market with no raw
+  // rows falls back to EbayAdCarouselLive's generic "search eBay" CTA. Opening
+  // on that CTA says "we found nothing" while the copies we found sit behind an
+  // unselected tab. The pipeline was right; the landing tab was wrong.
+  //
+  // Both eBay panels have to make this choice, and both have to make it from a
+  // CONTROLLED active tab: SegmentedTabs' uncontrolled default seeds from
+  // tabs[0] on the first render, which is before `mounted` flips (card page) or
+  // before the /api/card fetch resolves (QuickView) — so the Graded tab does not
+  // exist yet and could never be selected.
+  const panel = read("src/components/EbayCardPanelLive.tsx");
+  assert.match(
+    panel,
+    /const listingsHere = \(listings \?\? \[\]\)\.some\(\(l\) => l\.country === country\);/,
+    "the card panel must know whether THIS market has raw listings",
+  );
+  assert.match(
+    panel,
+    /picked \?\?\s*\(mounted && !listingsHere && gradedHere\.length > 0 \? "graded" : "listings"\)/,
+    "no raw listings here + slabs here must open on Graded",
+  );
+
+  const quick = read("src/components/QuickView.tsx");
+  assert.match(
+    quick,
+    /const adListingsHere = adListings\.some\(\(l\) => l\.country === country\);/,
+    "the popup must know whether THIS market has raw listings",
+  );
+  assert.match(
+    quick,
+    /ebayTab \?\? \(!adListingsHere && gradedHere\.length > 0 \? "graded" : "listings"\)/,
+    "the popup follows the same rule as the card page",
+  );
+});
+
+test("the visitor's own tab pick always beats the automatic one", () => {
+  // The rule above only chooses where the panel OPENS. Once someone clicks a
+  // tab, re-deciding underneath them would make the control feel broken — and
+  // on the card page `mounted` and `country` both settle after first paint, so
+  // an uncontrolled-style recompute really would move the tab under a click.
+  for (const [file, state] of [
+    ["src/components/EbayCardPanelLive.tsx", "setPicked"],
+    ["src/components/QuickView.tsx", "setEbayTab"],
+  ] as const) {
+    const src = read(file);
+    assert.match(src, new RegExp(`onActiveChange=\\{${state}\\}`), `${file} must record the pick`);
+    assert.match(
+      src,
+      new RegExp(`useState<string \\| null>\\(null\\)`),
+      `${file}'s pick starts unset so the automatic choice applies until then`,
+    );
+  }
+  // …and the popup's pick must not survive into a different card.
+  assert.match(
+    read("src/components/QuickView.tsx"),
+    /setEbayTab\(null\);/,
+    "opening another card must clear the previous card's tab pick",
+  );
+});
+
+test("EbayTabs forwards a controlled active tab to the shared implementation", () => {
+  // The wrapper stayed prop-for-prop with SegmentedTabs when the implementation
+  // moved; a caller that needs control must not have to reach past it.
+  const src = read("src/components/EbayTabs.tsx");
+  assert.match(src, /active\?: string;/, "EbayTabs must accept a controlled active tab");
+  assert.match(src, /onActiveChange\?: \(key: string\) => void;/);
+  assert.match(src, /active=\{active\}/, "…and pass it through");
+  assert.match(src, /onActiveChange=\{onActiveChange\}/);
+});
+
+test("the graded tab, its count and its rows all describe the same market", () => {
+  // The tab was gated and counted on the visitor's market but handed every
+  // market's rows. EbayGradedLive re-filters by country so nothing foreign was
+  // ever drawn — but that made the panel's own count silently dependent on a
+  // filter two files away. Both ends now name the market.
+  assert.match(
+    read("src/components/EbayCardPanelLive.tsx"),
+    /content: <EbayGradedLive listings=\{gradedHere\} \/>/,
+    "pass the rows the count was taken from",
+  );
+  assert.match(
+    read("src/components/EbayGradedLive.tsx"),
+    /const rows = listings\.filter\(\(l\) => l\.country === country\);/,
+    "…and keep the defence in depth, since QuickView still passes every market",
+  );
+});

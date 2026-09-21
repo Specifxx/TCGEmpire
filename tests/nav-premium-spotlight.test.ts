@@ -30,9 +30,12 @@ test("unlike the signed-out-excluded slide-in, the spotlight is NOT gated on bei
   assert.doesNotMatch(code, /!premium\s*&&\s*!!user/, "must not require a signed-in user the way PremiumSlideIn does");
 });
 
-test("only shown in the default glance view, never while filtering or showing everything", () => {
+test("only shown in the default (unfiltered) view, not while actively searching", () => {
+  // Used to also gate on `!showAll` (a "Show all features" toggle in front of
+  // the full grid) — that gate is gone (2026-09-16, see nav-menu-full-grid.test.ts),
+  // so the condition simplifies to just "not currently filtering".
   const code = codeOnly(read(SRC));
-  assert.match(code, /!filtering\s*&&\s*!showAll\s*&&\s*!premium\s*&&\s*premiumCheckout/, "must share Popular's own visibility condition");
+  assert.match(code, /!filtering\s*&&\s*!premium\s*&&\s*premiumCheckout/, "must hide only while a search filter is active");
 });
 
 test("the CTA goes straight to /premium and closes the menu, no dialog in between (2026-09-06)", () => {

@@ -49,13 +49,6 @@
      either overlaps un-padded content or leaves a dead gap.
      tests/sidenav.test.ts pins both against the same "1280px" value. */
   --sidenav-w: 0px;
-  /* Reserved height for the mobile bottom tab bar (components/BottomTabBar.tsx)
-     — SideNav's complement, one breakpoint decision mirrored the same way:
-     3.5rem below lg, 0 from 1024px on where the rail takes over. Every fixed
-     bottom-corner element (the three nudges, FeedbackWidget's FAB, ui/Toast)
-     reads it via the .above-bottombar utility below rather than a hard-coded
-     bottom-4, so all of them clear the bar at once. */
-  --bottombar-h: 3.5rem;
   /* Height of the native AdMob banner inside the Capacitor shell — see the
      native-app rule further down. 0 on the web, where there is no banner. */
   --native-banner-h: 0px;
@@ -66,10 +59,6 @@
 @media (min-width: 1024px) {
   :root {
     --sidenav-w: 4rem;
-    /* SideNav takes over navigation at exactly this width — the bottom bar's
-       own BottomTabBar.tsx is lg:hidden, and this is what makes the CSS
-       agree: the two can never both reserve space at the same width. */
-    --bottombar-h: 0px;
   }
 }
 
@@ -380,12 +369,17 @@ html {
    In `utilities` on purpose — Tailwind's own `.min-h-11` lives in that layer, so
    a rule in `components` would lose to it regardless of specificity. */
 @layer utilities {
-  /* Corner-anchored above the bottom bar AND the native banner, wherever
-     either applies — both variables are 0 where they don't, so this collapses
-     to a plain 1rem inset on desktop. Used by the three corner nudges,
-     FeedbackWidget's FAB and ui/Toast instead of a hard-coded bottom-4. */
+  /* Corner-anchored clear of the native AdMob banner and the device's safe
+     area, wherever either applies — both are 0 where they don't, so this
+     collapses to a plain 1rem inset on desktop web. Used by the three corner
+     nudges, FeedbackWidget's FAB and ui/Toast instead of a hard-coded bottom-4.
+     KEPT ITS NAME after the bottom tab bar was deleted: five components anchor
+     off it, the native banner still needs exactly this reservation, and a
+     rename across all of them would be churn for no behaviour. What it no
+     longer carries is --bottombar-h (gone — nothing reserves that space any
+     more) or --chrome-lift (gone with the bar whose position it corrected). */
   .above-bottombar {
-    bottom: calc(var(--bottombar-h) + var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 1rem);
+    bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
   @media (pointer: coarse) {
@@ -451,12 +445,12 @@ html.capacitor-native.has-native-banner {
   --native-banner-h: 64px;
 }
 
-/* Reserve space at the bottom for the bottom tab bar (mobile) and/or the
-   native AdMob banner (the Capacitor shell), so neither ever covers the
-   footer or the last row of content. Both variables are 0 where they don't
-   apply, so this is a no-op on desktop web. */
+/* Reserve space at the bottom for the native AdMob banner (the Capacitor
+   shell) and the device's safe area, so neither ever covers the footer or the
+   last row of content. Both are 0 on desktop web, so this is a no-op there.
+   The mobile bottom tab bar used to be reserved here too and is gone. */
 body {
-  padding-bottom: calc(var(--bottombar-h) + var(--native-banner-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px));
 }
 
 /* ---------------------------------------------------------------------------

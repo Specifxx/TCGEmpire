@@ -6678,6 +6678,2746 @@ on top of this one. No code-side switch exists for it.
 users were redirected away from it). The one guardrail the whole pass is
 judged against: `buy_click` and pages/visitor must not fall.
 
+---
+
+## /auctions: the auction feature, rebuilt at 7% of the cost that killed it — 2026-09-16
+
+The owner asked for a live eBay auction board — "all the hot auctions right
+now, default sorted by ending soonest" — with one explicit constraint: *as
+long as it doesn't go over our credit limits for API usage on eBay*.
+
+**That constraint is the whole entry, because this feature already existed and
+was deleted for exactly that reason.** `refreshEbayAuctions` and an
+`EbayAuction` model were removed on 2026-08-20, described in
+`price-import.ts`'s own value-floor note as "~960 Browse calls/day for a
+countdown widget, the single most expensive line in the whole quota model
+relative to what it returned". Its removal is what funded dropping the singles
+value floor from $10 to $5, and `tests/affiliate-priority.test.ts` has pinned
+its absence ever since. Re-adding it as it was would have quietly undone a
+measured trade.
+
+**What changed is the question being asked, not the budget.** The deleted pass
+was per-card: ~120 chase printings × 2 markets, one Browse call each, to put a
+clock on ~120 card pages. A price for a named card *has* to name that card —
+you cannot find "the cheapest Akali" in a generic response. A *list of live
+auctions* has no such requirement, so one call with
+`filter=buyingOptions:{AUCTION}&sort=endingSoonest&limit=200` returns up to 200
+lots — `limit`'s documented maximum — and the whole auction pool of a
+marketplace fits in one or two calls:
+
+| | deleted per-card pass | this sweep |
+|---|---|---|
+| unit of work | one call per printing | one call per ~200 lots |
+| markets | 2 | 6 (every priced market) |
+| worst case | ~960 calls/day | **72 calls/day** |
+| grows with the catalogue | yes | **no** |
+| covers | ~120 chase printings | every live Riftbound lot |
+
+72 is worst case (6 markets × a 2-page cap × 6 sweeps); pagination stops on a
+short page and the real pool is tens-to-low-hundreds of lots per market, so
+steady state is nearer 36–50. Against 5,000/day less the 600 reserve, with the
+price and sealed importers already taking ~2,850, it is under 2% of the
+allowance — and `dailyCalls()` in `tests/affiliate-priority.test.ts` now
+includes it as `AUCTION_CALLS_PER_DAY`, read from `AUCTION_MARKETS`,
+`AUCTION_PAGE_CAP` and the workflow's own cron rather than copied, so raising
+any of the three has to move the modelled number or fail the budget assertion.
+
+**The old guard was renamed, not deleted.** "auctions are gone" was a test name
+that would now deny a live feature; it is
+"the PER-CARD auction pass stays gone and sealed's eBay pass is gated to once a
+day", asserting the same thing it always did — no `refreshEbayAuctions`, no
+`prisma.ebayAuction` in `price-import.ts`. The sweep deliberately lives in its
+own module (`lib/ebay-auctions.ts`) and its own workflow so that guard stays
+both true and meaningful.
+
+**API field names were verified, not recalled.** Local `.env` has no eBay
+credentials, so a live probe wasn't available; the parameters came from eBay's
+own Browse OpenAPI spec (Baseline v1.20.4) instead. Worth writing down because
+a wrong one here fails silently in the worst way — `buyingOptions:{AUCTION}` is
+*required* (the spec states auctions are not returned by default, so omitting
+it returns a plausible page of fixed-price listings), `sort=endingSoonest` is
+the exact spelling, `limit` maxes at 200, and `currentBidPrice` / `bidCount` /
+`itemEndDate` are documented as returned for auction items only.
+
+**Freshness without egress.** The page is ISR at 1800s and its loader caches at
+exactly 1800s — never lower, per egress rule 5 in `lib/db.ts`, the rule that
+cost five database projects. The countdown people come for ticks client-side in
+`AuctionsBoard`, which is the only place a TTL cannot leak to the route segment,
+and it also means a lot closing while the page is open drops off the board
+instead of sitting there looking live. `now` stays `null` until mounted so the
+first render matches the server's byte for byte; the pre-clock label is
+formatted from the ISO string's own parts, because anything timezone-derived
+hydration-mismatches on every row. The sweep runs every 4h on its own workflow —
+separate from `refresh-prices` so a long price import can't delay the board and
+a failed sweep can't fail the price run.
+
+**Two things deliberately not built.** No `cardId` on `EbayAuctionListing`:
+matching a free-text title *back* to a catalogue card is the inverse of what
+`listingMatchesCard` does and would be guesswork on titles like "Riftbound OGN
+Lot Ahri PSA 10", so every row links to eBay and nothing claims to know which
+card it is — a wrong card link is worse than none. And no `Offer`/
+`AggregateOffer` JSON-LD: the price is a third party's, changes by the minute,
+and would be ours to answer for. An `ItemList` of what is actually rendered is
+all this page claims.
+
+**`NOT_A_SINGLE` is not reused here, on purpose.** That list exists to stop a
+bundle being quoted as one card's price; on an auction board a sealed box or a
+bulk lot is exactly what someone came to find. `AUCTION_JUNK` drops only
+counterfeits and merch (proxy, orica, keychain, playmat, sleeves), and the test
+asserts it against real titles rather than its own source — a source grep
+cannot tell "booster box" from "deck box", because one contains the other.
+
+Not verified in this environment, for the usual reason (no local Postgres, and
+building against RM10 is the burn `CLAUDE.md` exists to prevent): the page has
+never rendered against real rows, and the sweep has never run. The first
+scheduled `refresh-auctions` run is the real test — its log prints
+`eBay auctions <MARKET>: N live lots` per market and the total Browse calls
+spent, which is also the number to check `AUCTION_CALLS_PER_DAY` against.
+
+### Addendum, same day: the 24h window and the $500 floor
+
+The owner asked to narrow the board to lots ending within 24 hours and at or
+above US$500, "so that will probably save some quota right".
+
+**Mostly no, and the reason is worth recording so the next person doesn't
+re-derive it.** eBay bills the Browse API per CALL, not per result. A call that
+returns four lots and a call that returns two hundred cost exactly the same one
+call. Since the sweep was already one-to-two calls per market, filtering the
+results could not save much by construction.
+
+What it did buy is the page cap: **2 → 1**, because with a 24h window and a $500
+floor, 200 qualifying lots in a single marketplace is not a reachable state, so a
+second page could only ever come back empty. That halves the modelled worst case
+from 72 to **36 calls/day** (6 markets × 1 page × 6 sweeps) — real, but a
+handful of calls, not the order-of-magnitude the request assumed. `dailyCalls()`
+picks the change up automatically, since `AUCTION_CALLS_PER_DAY` is derived from
+`AUCTION_PAGE_CAP` rather than written down.
+
+The filters' real value is editorial, and it is the bigger one: the board is now
+the high-stakes end of the market — signatures, over-numbered prints and slabs,
+closing today — which is what the owner actually buys at auction and what no
+other Riftbound site aggregates. A list of two hundred $8 lots was never going to
+be worth opening twice.
+
+**Both filters are pushed to eBay, not applied after the fact**, using the syntax
+in its Buy API field-filters reference: `itemEndDate:[from..to]` (two bounds,
+spelled out) and `price:[500.00]` + `priceCurrency:XXX`. Two details that would
+have failed silently or loudly if guessed: a price filter without
+`priceCurrency` is rejected ("this filter must be used with the priceCurrency
+filter"), and `itemEndDate`'s failure mode is *returning everything* — so the
+horizon is also re-checked locally in `searchEbayAuctions`, and the page query
+carries its own upper bound on `endsAt`. The price is deliberately NOT re-checked
+locally: that would mean re-deriving the currency, and getting that wrong is a
+worse bug than the one it guards against. Timestamps are trimmed to
+`2026-09-16T04:21:00Z` because every documented example omits milliseconds and
+`toISOString()` does not.
+
+**The floor is converted per market** through `lib/fx.ts`'s indicative rates
+(`usdCentsToCountry`), so US$500 is one real threshold rather than five different
+ones — a bare USD number passed to eBay would have meant ~£500 in the UK (a
+third higher in real terms) and ~A$500 in Australia (a third lower). Both
+thresholds are env-overridable (`EBAY_AUCTION_WINDOW_HOURS`,
+`EBAY_AUCTION_MIN_USD_CENTS`), following `EBAY_MIN_VALUE_CENTS`'s precedent:
+these are numbers to tune off a real lot count, which nobody has yet.
+
+**The trade-off the owner should know about**, stated on the page as well as
+here: the bar is the *current bid*, not the expected hammer price. A signature
+card that opens at a dollar does not appear until bidding has already carried it
+past $500. So this is a board of what is already hot, not a way to find something
+nobody has noticed — the opposite of a sniping tool. If that turns out to be the
+wrong half of the market to watch, the fix is the env var, not a rewrite.
+
+Expect empty days outside the US. $500+ Riftbound auctions are a US-and-
+sometimes-AU phenomenon, so the empty state names both filters explicitly rather
+than saying "no auctions", which would be false and would read as a broken page.
+
+## "Too money focused for a card GAME": rebalancing the furniture, not the product, 2026-09-16
+
+Reader feedback, and explicitly not the first time they had said it: *"Think my
+main feedback is still the same: simply a too greedy/capitalistic/money focused
+site for a card GAME for me."*
+
+**They were right, and the site's own structure was the evidence.** Measured on
+production before this pass:
+
+- `/premium` was the **2nd** internal link on the page. The first game was the **34th**.
+- `box-ev` (booster-box expected value) and `selling-fees` both outranked every
+  one of the **ten** playable things this site has.
+- The homepage ran **five consecutive price sections** - Market pulse, Most
+  popular, Biggest movers, Recently updated, Top Deals - before anything playable.
+- "How RiftCompare works" was **Search → Compare → Buy**, full stop. The site's
+  own three-word story about itself ended at the till.
+- All **eleven** `popular` nav links, which are what the phone Explore overlay
+  leads with, were prices, tools, Premium or the blog. Not one game.
+
+**The complication, recorded because it changes how to read the feedback.** The
+whole Feedback table is three rows and they are all from this same person (each
+signed-in, each from the /portfolio widget, one opening "Back again with another
+suggestion"). All three earlier notes asked for BETTER money features - bad
+listings skewing portfolio prices, P&L wrong on duplicate cards, and, the day
+before this one, *"Makes number small, small number makes me sad. Big number on
+portfolio good."*
+
+So the site's loudest critic of its money-focus is also its heaviest portfolio
+user. That is not hypocrisy and it is not a reason to discount them: the honest
+reading is that they like the tools and the site's PERSONALITY makes them feel
+like a mark rather than a player. That is a framing problem, and framing is what
+this pass changes. Not one number, price, ad slot or feature was removed.
+
+**What changed**
+
+- **Nav**: Decks and Games moved above "Deals & value". Prices stays first,
+  because that is the product and what people arrive for. Measured after: first
+  game link went from #34 to #21, and Games now precedes all ten money tools.
+- **Riftle joins `popular`** - the first game ever in the phone overlay's default
+  glance view.
+- **Homepage**: the Riftle / pack-sim / alerts block moved back above Top Deals
+  and eBay Picks. First playable section went from 6th to 3rd.
+- **A fourth step** in How-it-works: "Then go and play", linking the deck
+  builder, /learn and Riftle. Step 3 is untouched - this adds to the story rather
+  than removing the purchase from it.
+- **The binder stopped talking like a trading desk.** "My portfolio" → "My
+  binder"; Profit & Loss → "Since you bought"; Invested / Current value / Profit
+  / Return → "You paid" / "Worth now" / "Up / down" / "Change"; "3 priced
+  holdings" → "3 cards with a live price". The route stays `/portfolio` (noindex,
+  so no SEO rides on it, and every bookmark does) and "portfolio" stays a ⌘K
+  keyword, so the old word still finds the page. "Binder" is what a player calls
+  it and was already this site's own share vocabulary ("<name>'s binder").
+
+**What was deliberately NOT changed, and why.** Premium's nav prominence. It is
+tempting - `✦ Premium` appears twice in the header and again as a `popular` tile
+and again as the gold spotlight banner in the phone overlay. But that spotlight
+exists because a DIFFERENT user reported the opposite problem: Premium was
+"way too hidden" (see tests/nav-premium-spotlight.test.ts). Reversing one user's
+explicit request to satisfy another's inference is not a trade to make quietly.
+Flagged to the owner instead. Ads (two slots), affiliate links and the price
+comparison itself likewise stay: the complaint was about proportion, not about
+those things existing, and `tests/game-before-money.test.ts` asserts every one of
+them is still reachable so a future pass cannot quietly call deletion a fix.
+
+## The phone's Search tab searched the wrong thing, and the bar hid behind Safari, 2026-09-16
+
+Two complaints from the owner, on a real phone, in one message.
+
+### 1. Search searched features, not cards
+
+The bottom bar's Search tab opened the ⌘K command launcher, which searches
+`NAV_GROUPS` - pages and tools. Its own empty state admitted the mismatch:
+*"This searches pages and tools - to look up a card, use the search box in the
+header."* On a phone that is the wrong tool behind the button most likely to be
+pressed, and telling someone to go and find a different box is not an answer.
+
+It now focuses the header's card search, which is the existing, well-tested
+`SearchBar`: cards AND sealed products off one `/api/search` call (verified
+against production - "yasuo" returns 10 cards, "booster" returns 4 sealed
+products). The header is `sticky top-0` and its mobile search row is never
+scroll-gated, so that box is on screen at any scroll position on any route -
+which is what makes focusing it from the bottom of the screen work at all.
+
+**Why a window event and not a context.** There are 2-3 `SearchBar` instances
+mounted at once (nav desktop, nav mobile, hero) and only one is visible; which
+one is a DOM question, not a state question. The existing `"/"` shortcut already
+had to solve exactly this and has a careful `isVisible` check for it, so the new
+listener sits next to it and reuses it rather than growing a second answer.
+`SEARCH_FOCUS_EVENT` lives in its own `lib/search-focus.ts` so `BottomTabBar` -
+which the root layout renders on every page - does not pull the 900-line
+`SearchBar` into its dependency graph just to read a constant.
+
+The feature launcher is not gone: it is still the header's grid button on phones
+and still ⌘K on desktop. The test asserts that, so "fixing" this later by
+deleting it is not available.
+
+### 2. "The bottom should be up all the time"
+
+Not a hydration delay - the bar is in the server HTML, checked with a phone
+user-agent - and not reproducible in a mobile-emulated headless Chromium, which
+pinned it correctly at scroll-top (`bottom: 712`, `innerHeight: 712`). The bug
+only exists on a real phone: a `position: fixed` element is positioned against
+the LAYOUT viewport, which on iOS Safari and Chrome Android is the LARGE
+viewport - the size with the browser chrome retracted. With the URL bar and
+toolbar showing, the bottom of that viewport is behind them, so the bar is
+genuinely off-screen until a scroll collapses the chrome.
+
+`--chrome-lift: calc(100lvh - 100dvh)` is exactly how much chrome is covering at
+any instant: 0 when retracted, the toolbar height when out. Adding it to the
+bar's `bottom` keeps it glued just above the chrome at every scroll position.
+It is declared `0px` first and overridden inside `@supports (height: 100dvh) and
+(height: 100lvh)`, because an unsupported unit inside `calc()` invalidates the
+whole declaration - and a bottom bar with no `bottom` at all would be a worse
+bug than the one being fixed. `.above-bottombar` (the nudges, the feedback FAB,
+Toast) takes the same term, or the bar would slide up over the top of them.
+
+### Noticed while verifying, not changed
+
+The Premium slide-in measures 80px to 640px on a 712px iPhone viewport - it
+covers most of the screen, and it is what Playwright kept hitting instead of the
+tab bar. The bar itself is NOT blocked (`elementFromPoint` at the Search
+button's centre returns a node inside the bar), so this is not a tap bug. But on
+the day after a reader called the site "too greedy/capitalistic/money focused",
+an upsell occupying 79% of a phone screen is worth the owner's attention. Same
+class of call as the Premium nav spotlight flagged in the entry above: it exists
+because a user asked for it, so it is reported rather than quietly reversed.
+
+## The search box had no exit, and the bottom bar juddered on a Z Fold 7, 2026-09-16
+
+Two more phone reports, right after the two above.
+
+### "You also need to be able to close the search bar on phone"
+
+The only ways to dismiss the card-search dropdown were Escape (no such key on a
+touch keyboard) and tapping outside the box — and once the suggestions list and
+the on-screen keyboard are both up, there is often no "outside" left on screen
+to tap. There was also a genuinely stuck state: tapping the bottom bar's Search
+tab focuses the field and raises the keyboard immediately, but the dropdown
+itself stays shut until it has something to show (no recent searches on a first
+visit) — a window with the keyboard up and neither exit available.
+
+A close (×) button now sits in the input's right slot, shown whenever there is
+something to close: the field is focused, the dropdown is open, or there is
+text. Tapping it clears the query, closes the dropdown AND blurs the field —
+dismissing the list but leaving the keyboard up would only be half an exit. The
+"/" keyboard-shortcut hint that lived in the same slot yields to it whenever the
+button is showing, and the input's own padding was widened at both `.tap-icon`
+breakpoints (44px below `sm`, 36px from `sm` up) so typed text never runs under
+the button.
+
+### "The bottom is glitched … should not be able to move or lag"
+
+Reported on a Z Fold 7's cover screen, right after shipping the chrome-lift fix
+for the earlier "bottom hides until you scroll" bug. The chrome-lift fix was
+correct in VALUE — it computes exactly how much of the viewport a phone
+browser's own collapsible toolbar is covering — but wrong in HOW it was applied:
+straight into the `bottom` CSS property. `bottom` is a layout property, and
+`dvh`/`lvh` are deliberately DYNAMIC units that the browser recomputes
+continuously while its own chrome animates. Every one of those recomputations
+forced a full reflow of the bar, plus a `backdrop-blur` repaint at its new
+position — layout thrash stacked on an expensive filter repaint, on every frame
+of the animation. That is a textbook jank source (web.dev's own performance
+guidance: animate `transform`/`opacity` only, never `top`/`bottom`/`margin`),
+and a foldable's chrome is a plausible candidate for showing it worst.
+
+The value is unchanged; only the property carrying it moved. `bottom` is now
+static (`--native-banner-h` alone, which changes once — on native-app detection
+— never mid-scroll), and the lift travels as `translateY(calc(var(--chrome-lift)
+* -1))` instead: a compositor-only operation that repositions the
+already-painted layer on the GPU without touching layout or repainting the page
+underneath. `will-change: transform` promotes the bar to its own layer up front,
+so the browser isn't discovering the need to do that mid-animation, which is
+itself a common cause of a visible hitch.
+
+Also added, defensively: `--chrome-lift` is now `clamp(0px, calc(100lvh -
+100dvh), 200px)` rather than the raw calc. Foldables are exactly the device
+class most likely to report a transient bad viewport reading around a fold
+state change (Chromium has a documented history of dvh/svh/lvh bugs specific to
+foldables) — a negative reading would push the bar UP off-screen, and an
+oversized one would fling it far past any real browser chrome height. Neither
+clamp fires in the ordinary case; both exist so one bad frame reads as "no
+lift" rather than "bar in the wrong place". `.above-bottombar` (the corner
+nudges, the feedback FAB, Toast) still carries the lift via `bottom` — it was
+not the reported bug, and those elements already drive their own `transform`
+for slide-in/out animation, so stacking a second transform source there would
+fight the first rather than help it.
+
+Verified in a mobile-emulated headless browser (which has no chrome to lift
+against, so `--chrome-lift` resolves to 0 and the transform is the identity
+matrix): `bottom: 0px` static, `will-change: transform` applied, bar correctly
+pinned before and after scrolling. The actual jank this fixes only manifests on
+a real phone's chrome-collapse animation, which no available emulator
+reproduces — the fix is verified by removing the mechanism (layout-property
+animation) known to cause exactly this class of stutter, not by reproducing the
+stutter itself.
+---
+
+## The signed-out nudge sells the free account again, and got out of the way — 2026-09-16
+
+Two changes to `SignupPromoPopup`, both the owner's call, both reversing or
+softening something this file already records.
+
+**1. Back to the free account.** On 2026-09-04 an explicit instruction turned
+this popup from a free-account comparison into a Premium pitch, reasoning that a
+visitor who arrived already wanting the pro tools otherwise had to survive a
+whole separate, later nudge before anyone mentioned Premium. Reversed now, with
+the reason stated plainly: asking a stranger to **buy** — before they have an
+account, a watchlist, or any reason to come back — puts the paid ask in front of
+the audience least ready for it. Signed-out visitors get the free account;
+Premium waits for `PremiumSlideIn`, which only fires once someone is signed in
+and has browsed a little. The two audiences remain mutually exclusive, so
+nothing can stack.
+
+What actually moved:
+
+- The pitch is a new `FreeAccountCompare` (no account vs free account, four
+  rows) instead of `PremiumPitchPanel` (free vs Premium). The panel is untouched
+  and remains `PremiumSlideIn`'s.
+- **No price, no trial, no $0-today, no price-increase banner, no gold.**
+  Nothing on the card mentions money, because nothing on it asks for any. Gold
+  is this site's Premium colour on every surface that sells it, and wearing it on
+  a card selling the free tier would promise a paid tier the card never mentions.
+- The CTA returns the visitor **to the page they were on**, not `/premium`.
+  Sending a brand-new free account to a pricing page is a bait-and-switch on what
+  they just agreed to.
+- The four rows are AuthForm's own `PERKS` (watchlist, price alerts, portfolio)
+  plus one deliberately honest row: price comparison, the whole reason anyone is
+  on the site, needs no account and gets a tick in **both** columns. Conceding
+  that up front is what makes the three rows under it believable.
+
+**2. It stopped covering the phone.** Corroborated independently: the entry
+immediately above measured this same popup occupying **79% of a phone screen**
+while flagging the site as reading "too money focused". That entry reported the
+problem; this one is the fix, and the two were written the same day from
+different directions. Reported directly here too: *"the slider is
+actually really, really annoying… on a mobile it covers the full page, but maybe
+it can be a bit transparent and we can have it cover like less than a full
+page."* All three parts are now true. Measured at 393×852: the card is
+**320×414, 49% of viewport height and 40% of its area, with no scrolling** —
+down from a card whose ceiling was `calc(100dvh-6.5rem)`, about 88% of the
+height, which the taller Premium table filled.
+
+- `max-h-[62dvh]`, down from `calc(100dvh-6.5rem)`. Worth being precise about
+  why the old value existed: it was a **safety rail**, added because a card
+  taller than the viewport once hid its own close button on a short phone (a real
+  production incident — see `tests/signup-slidein.test.ts`'s header). A rail set
+  just under the viewport prevents that *and* permits a near-full-screen card.
+  Both the rail and the scroll stay; the content is now short enough not to need
+  them, and "not needed" is not the same guarantee as "cannot happen".
+- Translucent with a blur (`bg-ink-900/85 backdrop-blur-md`), behind
+  `supports-[backdrop-filter]` so a browser without it gets the solid background
+  rather than an unreadable see-through card.
+- `max-w-[20rem]` on phones, returning to `max-w-sm` from `sm` up. This
+  deliberately **diverges** from `PremiumSlideIn`'s width, which a test had
+  pinned as shared. The shared things worth pinning are the corner utility, the
+  z-tier and the `usePresence` primitive; a matching pixel width never was.
+
+**The variant is `free_account_compare_subtle`**, a new name rather than a
+suffix, because the ASK changed and nothing in the `premium_graphic_*` buckets is
+comparable. One measurement warning recorded with it: the number to watch is
+**sign_up per impression**, and a higher rate here is *expected* and is not by
+itself evidence the reversal was right — the Premium buckets were being asked to
+convert a stranger into a purchase, a different funnel with a much lower ceiling.
+The honest comparison is downstream: accounts created, then Premium conversions
+from those accounts via `PremiumSlideIn`, against the Premium-popup era's direct
+rate.
+
+**On the fourteen tests this broke.** That count is the point, not an
+inconvenience: this component's behaviour was pinned by thirteen files, and each
+assertion encoded a real decision. They were re-pointed individually, never
+weakened. The durable guarantees were kept exactly (no automatic Premium grant,
+no fake scarcity, no countdown pressure, no hand-typed duplicate of a shared
+list, and the card still states that signing up is free and needs no card). The
+price-honesty assertions — the unconditional price block, the bare $0-today trial
+branch, the non-trial branch quoting the real recurring price — **moved with the
+pitch** rather than being deleted: `PremiumSlideIn`, `PremiumDialog`,
+`PremiumCta` and `/premium` all still carry them, and all four remain in the
+surface lists in `premium-price-increase.test.ts` and `premium-zero-today.test.ts`.
+Two tests now pin the exact opposite of what they used to, and say so in their
+own comments, which is the honest way to record a reversal.
+
+## The Z Fold 7 fix caused a gap, and took the header down with it: measured, not inferred, 2026-09-16
+
+Two more reports on the same device, minutes after the previous fix shipped: a
+persistent gap under the bottom bar, and the top header "disappearing" during
+scroll — "it needs to always sit there so the site is smooth."
+
+**The gap was the previous fix's own doing.** `--chrome-lift: calc(100lvh -
+100dvh)` computed the right IDEA but trusted two CSS viewport units this
+codebase has no way to verify on this exact browser. A persistent nonzero
+reading with no chrome actually covering anything is exactly what a foldable
+reporting a stuck or wrong `dvh`/`lvh` value would produce, and Chromium has a
+documented history of exactly that bug class on foldables.
+
+**The header was very likely collateral damage, not its own bug.**
+`position: sticky; top: 0` structurally shouldn't be affected by a mobile
+browser's chrome collapsing — the TOP edge of the viewport doesn't move when
+the address bar retracts, only the bottom edge does (which is why the bottom
+bar needed a fix and the header, in principle, shouldn't). Checked and ruled
+out directly: no ancestor of the header carries a `transform`/`filter`/
+`will-change` that would create a new containing block and break `sticky`'s
+reference to the real viewport. The remaining, better-supported theory: `dvh`/
+`lvh` are recalculated by the browser CONTINUOUSLY and UNCONTROLLABLY while its
+own chrome animates, and every recalculation invalidates a `:root` custom
+property, forcing a global style-recalculation pass — landing on the exact
+same frames the browser is already spending on its own chrome animation. On a
+lower-powered chip that is enough main-thread contention to drop a frame
+anywhere, including a sticky header's composite layer, and "the header
+disappeared" is a plausible visible symptom of exactly that kind of dropped
+frame.
+
+**The fix replaces the CSS-unit approach entirely** with a value this codebase
+can actually reason about: `window.visualViewport`, the standards-track API
+MDN's own canonical example uses for pinning a bottom UI element to the real,
+currently-visible screen. `BottomTabBar.tsx`'s new `useChromeLift()` tracks the
+LARGEST `visualViewport.height` observed this session (that is the screen with
+chrome fully retracted) and reports `max - current` — always >= 0 by
+construction, no clamp needed, and using ONLY visualViewport's own numbers so
+there is no risk of two different browser APIs disagreeing about what "the
+viewport" means (the exact ambiguity that made the CSS-unit version
+unverifiable in the first place). It updates rAF-throttled, on THIS file's
+schedule — at most once per animation frame — rather than however often the
+engine's own internal dvh recalculation fires, which was never under this
+codebase's control. No support for `visualViewport`: the effect never runs,
+`--chrome-lift` stays the 0px default, and the bar behaves exactly as it did
+before any of this existed (hidden behind an expanded address bar until the
+first scroll) — a smaller, known failure rather than a wrong nonzero lift.
+Verified with a synthetic `visualViewport` resize in a headless browser (which
+has no real chrome to shrink): growing the reading to a new max reports 0 lift,
+then shrinking it back by 50px reports exactly 50px, applied as
+`translateY(-50px)` with `bottom` unchanged — the running-max arithmetic is
+correct.
+
+**`NavbarShell.tsx`'s own, independent half of the fix**: `scrolled` was React
+state, so its one scroll-position threshold (`window.scrollY > 8`) triggered a
+component re-render — reconciliation, a new class string, a DOM diff — on top
+of whatever the browser was already doing to its own chrome that frame. It is
+now a ref with a direct `classList` toggle: identical classes, identical
+threshold, identical CSS transition, zero React render cost tied to scroll.
+This was a one-time boundary crossing, not a per-frame cost, so it was never
+expensive on its own — removing it anyway costs nothing and directly answers
+"always sit there," on the chance the theory above isn't the whole story.
+
+Both changes ship together because they were reported together, on the same
+device, in the same scroll gesture, and the most defensible single diagnosis
+covers both: uncontrolled `:root` custom-property churn during a native
+chrome-animation window. 1485/1485 tests, typecheck and lint clean.
+
+## Consistency pass: one search destination, one menu, no gated features, 2026-09-16
+
+Reported directly, three related asks in one message:
+
+> "the search bar should... open to like a new page... just like when you
+> click on portfolio, it opens to a new page... we have the menu, but we also
+> have the menu on the top right... we only need one of them... get rid of the
+> duplicates... get rid of any duplicate information... we don't even need the
+> see all features anymore... they can just scroll down and look at all the
+> features."
+
+**1. The phone Search tab is now a real page link.** It used to dispatch
+`focusCardSearch()` — an in-place focus of whichever `SearchBar` instance was
+on screen (`SEARCH_FOCUS_EVENT`, added 2026-09-16 earlier the same day to fix
+the tab opening the wrong search entirely). That was a defensible fix for the
+bug it targeted, but it made Search behave differently from every other tab:
+Watch and Binder are plain `Link`s to real routes. `BottomTabBar.tsx`'s Search
+tab is now `{ href: "/browse" }`, the same full card+sealed database page the
+header's own `SearchBar` already navigates to on submit (`commitSearch()`), so
+the tab and the header box land in the identical place. The now-unused
+`SEARCH_FOCUS_EVENT` plumbing (`src/lib/search-focus.ts`, and its listener in
+`SearchBar.tsx`) was deleted rather than left as dead code; the `"/"` keyboard
+shortcut, which shared the same visibility-detection helper, is untouched.
+
+**2. One menu trigger below `lg`, not two.** `Navbar.tsx` rendered its own
+hamburger (`MobileNav.tsx`) at the top right; `BottomTabBar.tsx` independently
+renders a "Menu" tab. Both called the exact same `useMegaMenu().setOpen(true)`
+and opened the identical `CinematicNavMenu` overlay — confirmed by reading
+both components, not inferred from a comment. `MobileNav.tsx` is deleted. The
+bottom-bar tab is the one that survives: it's the already-established,
+thumb-reachable pattern the same bar uses for Watch and Binder, so every
+phone-only action lives in one place instead of being split across the header
+and the bottom bar.
+
+**3. The overlay's "Popular" subset and its "Show all features" gate are both
+gone.** `POPULAR_LINKS` (`nav-groups.ts`) was a `filter()` over the exact same
+`NAV_GROUPS` links the full category grid renders below it — every visitor who
+tapped "Show all features →" saw each popular link twice, once flat and once
+inside its own category. That curated default was a deliberate answer to an
+earlier, opposite report ("we don't need everything to show up... have a
+subset... and a way to see all features only if they want to") — this reverses
+that call on the same reporter's later feedback that the gate is "kind of
+useless" now that scrolling reaches everything anyway. The fix removes the
+`showAll` state, the Popular block, and the button, and always renders the
+full category grid (still narrowed by the search filter when one is active).
+The now-dead `popular?: boolean` field on `NavGroupLink` and every `popular:
+true` flag across `nav-groups.ts` were removed with it — no lingering
+per-link markers with nothing left to read them.
+
+No destination was removed in any of the three changes — every href reachable
+before is still in `NAV_GROUPS` and still rendered, just without the duplicate
+copy or the extra tap. Not verified against a live per-page render: every page
+in this app is DB-backed (`next dev` needs `DATABASE_URL`, which is
+deliberately absent outside `.env.production`/CI, per this file's own egress
+rules), so verification here is the same regex/structure test style already
+used throughout `tests/mobile-bottom-bar.test.ts` — plus two new files,
+`tests/single-menu-entry.test.ts` and `tests/nav-menu-full-grid.test.ts` — over
+manually confirming the diff hits its target lines. 1492/1492 tests, typecheck
+and lint clean.
+
+## Notification bell hidden on phones; profile icon's tap target does not shrink with it, 2026-09-16
+
+Reported directly: "get rid of the notification icon so we make more space
+for the profile icon. Also profile icon should be smaller so it fits for
+mobile." Two judgment calls, both checked with the reporter before touching
+code, since either one has a real cost attached:
+
+**Scope of the bell removal.** There is no separate `/notifications` page —
+`NotificationBell`'s dropdown is the only surface for price-drop/trial/release
+notifications, so removing it outright would delete a feature, not just
+declutter a header. Confirmed the ask was about mobile space specifically:
+the bell now renders inside a `hidden sm:inline-flex` wrapper in `NavUser.tsx`
+rather than being deleted, so it's still one tap away for anyone with screen
+width to spare. `use-unread.ts`'s poll is a single shared module-level
+interval regardless of how many components read it or whether they're
+visible, so hiding rather than unmounting costs nothing extra.
+
+**"Smaller" without breaking the tap-target floor.** `UserMenu.tsx`'s avatar
+button was already exactly `.tap-icon`-sized — the same 44px-on-phones /
+48px-on-coarse-pointer minimum the bell uses, documented in `globals.css` as a
+deliberate fix for a Lighthouse tap-target audit this codebase failed before
+(537 controls at the time). Shrinking that box on request would silently
+re-fail the same audit. Instead, the button itself keeps `.tap-icon` sizing
+and now wraps the actual circle (avatar image or initials, border, background)
+in an inner `<span>` sized `h-8 w-8` below `sm`, `h-9 w-9` (unchanged) from
+`sm` up — a visibly smaller icon centered inside an unchanged, fully
+accessible touch box. The "email not verified" badge moved with it, nested
+inside the circle-sized wrapper instead of the outer button, so it still
+anchors to the circle's actual corner rather than floating off toward the
+now-bigger invisible tap area around it.
+
+1495/1495 tests (three new, `tests/header-mobile-space.test.ts`), typecheck
+and lint clean.
+
+## Card pages could not be found by the name people call them, 2026-09-17
+
+The owner asked for the card pages to rank for queries naming a specific
+printing — "Shen signature riftbound", "Akali Overnumbered", "moonfall
+riftbound". Six things were in the way, and only one of them was a missing
+feature; the rest were bugs on a page that looked finished.
+
+**The metadata could not see three of the six printings.** `generateMetadata`
+called `printingKind()` on an object built from a query that selected none of
+the fields Signature, Overnumbered and Crystal Rose are derived from. It could
+therefore only ever return promo, alternate-art or base, and the meta
+description of every Signature card on the site described it as an ordinary
+printing. The page BODY got this right, twenty lines of hand-built object
+further down. Two derivations of one fact, and they had drifted.
+`printingFieldsFrom()` in `lib/content/card-narrative.ts` is now the only one,
+and both halves call it.
+
+**The title overflowed for exactly the cards that needed it.** The ladder tried
+three candidates and then shipped the last one whether it fit or not.
+`Shen, Eye of Twilight (Showcase, Signature) — Riftbound VEN 193★/166 |
+RiftCompare` is 82 characters; Google truncates near 60, and the word it cut was
+"Riftbound" — the one word the target query depends on. The fix shortens the two
+redundant parts rather than dropping the collector number: "(Showcase,
+Signature)" becomes "Signature" (Showcase is the rarity of *every* Signature
+print, so the pair says one thing twice), and "Shen, Eye of Twilight" becomes
+"Shen". The short-name rung is load-bearing, not a nicety: even
+`Shen, Eye of Twilight Signature — Riftbound VEN 193★/166` is 70 characters. Only
+`Shen Signature Price — Riftbound VEN 193★/166` fits, at 59 — and it is also what
+people actually type. A sixth rung drops the word "Price" for the long names
+where rung five still overflows (`Akali Overnumbered Price — …` is 62); losing
+"Price" costs less than losing "Riftbound".
+
+`cardTitle` and `cardMetaDescription` moved out of the route into
+`lib/card-seo.ts` to get there. The 60-character guard is the highest-volume SEO
+invariant on the site — ~1,400 pages — and it had no test at all, because
+reaching it meant importing a file that imports Prisma. The first three rungs are
+byte-identical to what shipped, so the ~1,200 base cards do not move, and there
+is now a test that says so.
+
+**The phrase appeared nowhere on the page.** People type the short name plus the
+printing; "Shen Signature" did not occur in any casing anywhere in the markup.
+It now occurs twice, both times as a statement of fact rather than a keyword: the
+subtitle under the H1 leads with "Signature printing · Vendetta (VEN) ·
+193★/166", and the About section opens "Shen Signature is the Signature print of
+Shen, Eye of Twilight — numbered 193★/166, past the end of Vendetta's base run…".
+A name with no comma ("Moonfall") has no champion half, so `shortCardName`
+returns it unchanged and those cards read exactly as they did.
+
+`cardDisplayName` was deliberately not touched. The H1, the Product `name`, the
+QuickView and the eBay search query all ride on it, and shortening it to suit a
+title would have changed all four.
+
+**Structured data now distinguishes the printings.** The last breadcrumb was the
+bare `card.name`, which four different URLs share; it is the display name now.
+Product gains a "Printing" `additionalProperty` (always, "Base" included — rarity
+and printing are independent) and an `alternateName` list of the other real names
+for the same product. The price FAQ asks about the display name, which also stops
+four printings publishing the same question with four different prices in the
+answer. The "is the premium printing worth it?" FAQ keeps the bare name on
+purpose: the display name there would ask whether the Signature is worth it over
+itself.
+
+**Nicknames are a hand-maintained TS map, not a column.** `lib/content/card-aliases.ts`,
+same convention as `creators.ts` and `community.ts`: no schema change, no admin
+UI, a PR edits it. The bar for a row is explicit in the file and has two halves —
+verified community usage, AND one unambiguous printing. Both current entries are
+the same card. "Armpit Shen" is not folklore: Search Console, 28 days to
+2026-09-17, shows 711 impressions at average position 5.9 with a 1.4%
+click-through against roughly 3% typical for that position. We already rank for
+it; what answers it is a blog post, when the page someone typing a card nickname
+wants is the card.
+
+One trap found while writing the matcher. It matched a query against a nickname
+in both directions by substring, and "Armpit Shen" compacts to "armpitshen",
+which CONTAINS "shen". A plain search for "shen" would have resolved to one
+Signature printing and ranked it above every real Shen card on the site. The
+"nickname contains query" direction is a PREFIX test now (someone still typing),
+and only the "query contains nickname" direction is a substring test. There is a
+test asserting `aliasSlugsFor("shen")` is empty.
+
+**"Moonwalk" was a typo.** It was reported as a search term; it is not a card. The
+owner confirmed it meant Moonfall (UNL 198), which is a real card whose own page
+already owns "moonfall riftbound" through the ordinary name path. No alias, no
+special handling — and it is written into `card-aliases.ts` as the worked example
+of the bar: the fix for a reported query is to identify the card first, not to
+guess a mapping.
+
+**On-site search could not answer the same queries the page now ranks for.**
+`normalizeSearch` strips spaces, so "akali overnumbered" became
+"akaliovernumbered" and was compared against `nameNormalized`, which holds the
+name alone. No card has ever matched it. A visitor who arrived from Google and
+retyped their query got nothing. `lib/search-query.ts` now splits the raw string
+into a name and the filters it names, so "akali overnumbered" builds the same
+WHERE as the browse page's Overnumbered chip. Two deliberate limits: an explicit
+URL parameter always beats a word inferred from prose (`printing=normal` plus a
+typed "signature" still shows base prints), and bare "over" and bare "alt" are
+NOT keywords — they are ordinary English and plausible name fragments, and
+mapping them would remove results the visitor asked for while the page still
+looked like it worked. The typeahead route now shares `buildCardWhere` instead of
+building its own weaker name-only query.
+
+**Baseline to measure against** (Search Console, 28 days to 2026-09-17): 1,467
+pages with impressions, 144,101 impressions, 2,479 clicks. The `/card` template
+is 994 of those pages and 24,835 impressions for **103 clicks** — 0.41%, the
+lowest click-through of any template on the site, which is the shape a truncated
+title leaves. No `<name> signature` or `<name> overnumbered` query appears in
+either the top-query list or the twenty content opportunities, so the starting
+point for those is effectively zero. Re-read the `gsc-coverage` report ~28 days
+after this ships.
+
+No local database in this sandbox, so none of the above was verified against real
+rows: the evidence is 1,529 passing tests (30 new, `tests/card-printing-seo.test.ts`),
+a clean typecheck and lint, and the AdSense guard's 22 static checks. The three
+things that need production data to confirm — titles under 60 characters across
+the real catalogue, no new near-duplicate descriptions, and the printing queries
+actually earning impressions — come from the next crawl and the next GSC run.
+
+## The card template's problem was never noindex, and the history join is gone, 2026-09-17
+
+Follow-up to "Card pages could not be found by the name people call them" above.
+The owner asked for two things: indexing coverage for every card in the database,
+and the wider long-tail keyword space captured, naming TCGplayer as the model.
+Their examples were "kennen legend riftbound" and "ahri nine tailed fox
+overnumbered".
+
+**Measure first. The premise was wrong.** The reasoning available at the start was
+"994 of 1,425 card URLs earned an impression in 28 days, so ~431 are not
+indexed". Two measurements killed that:
+
+- I sampled 40 random URLs out of the live `cards.xml` and fetched them. **All 40
+  served `index, follow`.** The sitemap and the pages agree, so there is no
+  "submitted URL marked noindex" contradiction and no mass-noindex event.
+- `maintenance.yml` → `audit-indexability` on the live catalogue: **1,431 cards,
+  1,417 indexable (99.0%), 14 noindexed.** The 14 are promo runes and the like
+  with no in-stock listing anywhere and no history.
+
+So the ~431 zero-impression URLs are submitted, indexable, and carry no defect.
+"No impressions" collapses four states that look identical in the impressions
+report and have mutually exclusive remedies: never discovered, discovered but
+never fetched, crawled and judged not worth indexing, or indexed with nobody
+searching for it. Only Search Console's URL Inspection API tells them apart, so
+`scripts/gsc-url-inspect.ts` exists now and runs before any further work aimed at
+that backlog. It is dispatch-only, never scheduled: the quota is 2,000
+inspections per DAY per site, shared with a human opening the Search Console UI,
+and 1,425 URLs is 71% of it. The endpoint is on `/v1/`, not the `/webmasters/v3/`
+path the neighbouring `searchAnalytics` helper uses — copying that base URL
+returns 404, so a test pins the constant.
+
+**THE FINDING THAT MATTERS MORE THAN ANY OF THIS.** The same census printed:
+
+    distinct cardIds in PriceHistory : 0
+    with >= 2 days of history        : 0
+    with an in-stock listing         : 1,411 of 1,431
+
+and, above it, `[db-history] history DB resolved to DATABASE_URL (no history
+project set …)`. The history project is **missing from the environment**, so
+`PriceHistory` is empty in the operational database and the history half of the
+indexability rule contributes nothing at all. `indexable = hasInStockListing OR
+historyDays >= 2` is currently carried **entirely by live listings**. 1,411 card
+pages are indexable only because something is in stock right now; the moment a
+card's last listing goes out of stock it noindexes immediately, with no history
+fallback, silently. That is a single point of failure under the whole template,
+and it is exactly the scenario `audit-indexability.ts` was written to catch. It
+also means every price chart on the site is blank. Not fixed here — it needs a
+database decision, not a code change. `maintenance.yml` →
+`repair-history-card-ids` is the documented repair.
+
+**Titles: "Price" now outranks the epithet.** The template earns 24,835
+impressions for 103 clicks, a 0.41% click-through rate, the lowest of any
+template on the site. A large part of that is the ladder's third rung
+`${displayName} — Riftbound ${identCode}`, which wins whenever a champion name
+overflows and carries neither a price signal nor any distinguishing word —
+`Ahri, Nine-Tailed Fox — Riftbound OGN 255/298` was the live title of a card that
+costs money. Some titles overflowed 60 outright and shipped truncated via the
+`?? last` fallthrough: `Kennen, Storm of Shuriken — Riftbound VEN 113/166` is 63.
+The ladder now prefers the champion's short name with "Price" over the full name
+without it, so that card reads `Kennen Price — Riftbound VEN 113/166` and Ahri's
+Legend reads `Ahri Legend Price — Riftbound OGN 255/298`. The owner chose this
+trade explicitly, shown a before/after preview.
+
+A card whose name has no comma has no champion half, so its short-name rungs
+collapse into their full-name siblings and are dropped by de-duplication — those
+titles are byte-identical, and a test pins three of them.
+
+**"Legend" is the only type that gets a rung**, because "kennen legend riftbound"
+is a query shape and "ahri unit riftbound" is not. A Legend is the one card a deck
+is built around and there is one per champion per set. Special printings skip the
+type rungs structurally — the type rungs live inside `if (kind === "base")` and
+the printing rungs inside its `else` — because the printing is what separates two
+rows that share a name and the type is not.
+
+**A defect caught in review, worth recording because it nearly shipped.** The
+first version of the short-name rung dropped the credentials parenthetical along
+with the epithet, which turned a base Showcase printing and its plain sibling into
+`Lee Sin Price — Riftbound OGN 151a/298` and `Lee Sin Price — Riftbound OGN
+151/298` — two titles differing by one character sitting next to digits, which is
+the near-duplicate shape Google clusters and leaves one of unindexed. Trading
+truncation for near-duplication is trading down. `CardTitleInput.credentials` is
+required, the shortened rungs re-add it space-joined, and a test strips every
+digit from the pair and asserts they still differ.
+
+**The description said what the card does, never what it is.** `statBit`
+("Calm legend · Rare") was built for every card and used only in the branch for
+cards that print NO rules text — so ~90% of descriptions named no domain, no
+type and no rarity, and a Signature Legend's snippet read like a common spell's.
+Both branches carry it now, positioned early enough to survive truncation, paid
+for by dropping the rules-text clamp from 90 to 70. Measured length-neutral, and
+a test pins that: the tail being clipped was already past Google's cut.
+
+**The About narrative had the same shape of bug.** `kind` (rarity + type) is
+interpolated only by the two base branches, so a Signature, Crystal Rose, promo
+or overnumbered page never said whether it was a Legend or a Spell. All four now
+emit "It is a Legend in the Calm domain". Capitalised and with a hardcoded "a":
+every one of the six types takes "a", and the first-letter vowel test that works
+for rarity would produce "an Unit".
+
+**The visible page was poorer than its own markup.** The card-details list
+carried four cells — Rarity, Printing, Set, a count — while the Product JSON-LD
+was already publishing type, domain, collector number, energy and might. A person
+reads the page and a search engine cross-checks its markup against the page, so
+that is backwards. Eight cells now, each omitted when null, every value one the
+markup already asserts. `Power` was added to the markup as the one attribute the
+page rendered and the markup did not.
+
+**On-site search: facet words are an ALTERNATIVE, never a constraint.** Measured
+across the catalogue, "rune" occurs in 31 card names ("Fury Rune", "Rune
+Prison"), every domain word in 5-6, and "legends" in one ("Hall of Legends"). A
+top-level filter built from a word like that deletes results the visitor asked for
+and leaves a page that looks like it worked. So `buildCardWhere` tries the entire
+typed phrase as a literal name FIRST, and offers the facet reading as an extra OR
+branch — an OR can only add rows, so a literal name match is unloseable
+regardless of what a future set is called. `rune`, `runes` and `legends` are not
+mapped at all: no alternative rescues a word that is one card's whole name. When
+the phrase is nothing but facet words ("epic fury spell") there is no name to
+protect, so they are promoted to ordinary top-level filters and the visitor gets
+the shelf. A test sweeps every facet term alone and in pairs asserting no
+`contains: ""` ever reaches Prisma — that is `LIKE '%%'`, every row in the table.
+
+**Paginated set pages were planned for the sitemap and deliberately dropped.**
+The reasoning was that `/sets/<slug>?page=N` is the only complete crawl path into
+the catalogue. It is not: `/sets/<slug>/gallery` renders up to 500 non-promo cards
+of a set on one ISR-cached, sitemapped page, and I counted the live pages — 352,
+306, 304 and 243 card links for Origins, Spiritforged, Unleashed and Vendetta. So
+every non-promo card already has a durable inbound link at depth 3, and
+submitting ~12 `?page=N` URLs would have invited Googlebot to repeatedly crawl
+force-dynamic pages that fail the `isDefaultView` cache check and run four live
+queries each. On a project that has burned eleven Neon allowances, that is a bad
+trade for a link graph that already exists.
+
+**What the gallery actually left out was promos**: `getGalleryCards` filters
+`isPromo: false`, and **188 of the 1,425 card URLs are promo printings**, whose
+only route in was the "Other printings" rail on a sibling card's page — one click
+deeper than everything else and dependent on Google having indexed the sibling.
+They have their own labelled section on the gallery page now: no new URL, no new
+dynamic surface, one extra cached query. That is the sub-population with a
+structural explanation rather than a "nobody searched for it" one.
+
+**The honest ceiling, stated because the brief named TCGplayer.** TCGplayer ranks
+on two decades of domain authority and on inventory depth as content — hundreds
+of live seller listings per page against our one to six rows. No on-page work buys
+either. What on-page work wins is the specific long tail, one printing plus one
+modifier, where intent is unambiguous and the best answer is a page we have; and
+click-through on the 994 pages already earning impressions, where 0.41% has real
+room. Nothing here will rank above TCGplayer for "ahri riftbound price", and
+"ahri nine tailed fox overnumbered" is a handful of impressions a month. The
+larger prize was always the titles.
+
+**The catalogue audit immediately earned its keep.** Its first run, against the
+real 1,431 rows, reported **0 colliding titles and 0 colliding descriptions** —
+so the near-duplicate worry above is measured, not assumed. It also reported **69
+titles still over 60 characters, and none of them was the case the ladder was
+designed around.** They were special printings whose name has no champion half:
+`Plundering Poro Overnumbered Price — Riftbound UNL 222/219` (72),
+`Red Brambleback Alternate art Price — Riftbound UNL 029a/219` (74). Every rung
+either kept "Price" or kept the full printing word, and with no comma there was
+nothing left to shorten.
+
+**Then the second run reversed the first, and this is the part worth reading.**
+The fix was two last-resort rungs: shed the credential to the abbreviated form
+`cardCredentials` already uses ("Alternate art" → "Alt Art"), then shed it
+entirely. I justified the second rung by arguing that `identCode` keeps every
+title unique because it differs between a printing and its base sibling **by
+construction**. That is false. **A promo shares its base card's collector
+number** — it is the reason `cardSlug()` appends a `-promo` suffix at all — so
+base `Eye of the Herald` SFD 153/221 and its promo both reduced to
+`Eye of the Herald — Riftbound SFD 153/221`, and the audit reported a hard
+duplicate on the next run. The rung is gone.
+
+Uniqueness outranks length, and not narrowly: a duplicate title fails
+`scripts/seo-gate.ts` and can cost a page its place in the index, while an
+over-long one loses a few characters of collector number to truncation. So the
+credential never comes off, and a small residue runs 61-66 characters —
+`Plundering Poro Overnumbered — Riftbound UNL 222/219` is 66 with nothing left to
+shed. Set against the 82-character Signature title that started this work and
+lost the word "Riftbound", that is a different and much smaller harm. A test
+bounds the residue at 70 so it cannot quietly grow back.
+
+**And a third time, on the fallthrough itself.** With duplicates gone the residue
+was 40 titles, and reading the list showed the worst of them were not irreducible
+at all — they were the ladder picking badly:
+
+    Seal of Discord Showcase Overnumbered — Riftbound SFD 234/221   75
+    Seal of Discord Overnumbered — Riftbound SFD 234/221            66
+
+Both were in the candidate list, in that order, and the fallthrough was
+`?? ladder[ladder.length - 1]` — the LAST candidate, not the shortest. So it
+shipped nine extra characters of truncation for the word "Showcase", which is the
+rarity of every overnumbered reprint and therefore adds nothing the next word does
+not already say. The same redundancy the previous pass removed from Signature
+titles, surviving in the population that pass did not reach.
+
+Two fixes. The no-price printing rung is no longer gated on the name having a
+comma, so a comma-less printing can reach it. And the fallthrough now returns the
+SHORTEST candidate: rung order expresses what we would rather keep, which is not a
+claim about length, so it must not decide the overflow case. Ties keep the earlier
+rung, so nothing moves for any card that has a fitting candidate.
+
+**The coverage report's own first run was cancelled at its 30-minute job timeout
+having written nothing**, which is worth recording because the cause was not the
+obvious one. Pacing was fine: 1,425 URLs at 550/minute is a 2.6-minute floor. An
+individual `index:inspect` call just takes SECONDS — Google fetches and evaluates
+the URL rather than reading a counter — so at five requests in flight the run is
+wall-clock bound at roughly 24 minutes before `npm ci`. Concurrency is now 20,
+which cannot breach the quota because every worker still draws from the same
+token bucket, and the report flushes every 250 rows so a cancelled run leaves the
+rows it did collect. The job timeout is 60 minutes.
+
+**THE COVERAGE ANSWER, and it settles the question this pass opened with.** Of
+the card URLs that returned data on the first successful run:
+
+| coverageState | pages |
+|---|---:|
+| Submitted and indexed | 575 |
+| Crawled – currently not indexed | 29 |
+| Discovered – currently not indexed | 12 |
+| URL is unknown to Google | 3 |
+| Excluded by "noindex" tag | 2 |
+
+**92.6% are already indexed.** Forty-six pages across all four not-indexed states,
+and Google picked a different canonical for **zero** — so the near-duplicate
+printing worry that shaped two of this pass's decisions does not exist in the
+index either. The ~431 zero-impression URLs are overwhelmingly the fourth state
+from the list at the top of `scripts/gsc-url-inspect.ts`: indexed, and nobody
+searched for them. There is no indexing backlog to fix. **The click-through rate
+on the 994 pages that DO earn impressions is the whole prize**, which is where
+the title and description work went.
+
+Two caveats on those numbers, both recorded so the next reader does not
+over-trust them. Only 621 of 1,400 inspections returned data: the cancelled run
+described above had already spent most of the day's 2,000-query allowance, so the
+rest came back quota-exhausted. And the first version of this report counted
+"never crawled" and "no referring URLs" across those failed rows, which inflated
+them to 794 and 1,237 — findings that were not findings. Every figure is now a
+share of the rows that actually returned data, and the report says how many did
+not. `INDEXING_STATE_UNSPECIFIED` is likewise no longer counted as "blocked": it
+is what Google returns for a URL it has never crawled, which is the Discovered
+story, not a robots directive, and counting it reported 17 blocked pages when one
+was.
+
+That one is real: `/card/mind-rune-ogn-nn1-promo` is in `cards.xml` and serves a
+noindex. It is a benign race rather than a bug — the sitemap has
+`revalidate = 86400`, so a card that loses its last in-stock listing noindexes
+immediately while yesterday's cached sitemap still lists it, and it self-heals
+within a day. Worth knowing before someone treats a single-digit "Submitted URL
+marked noindex" in Search Console as an incident.
+
+**The audit paid for itself three times in half an hour** — disproving the
+near-duplicate worry, catching a duplicate I had reasoned my way into, and then
+showing that the overflow residue was partly self-inflicted. None of the three was
+reachable from the unit tests; all three needed the real 1,431 rows.
+
+Description lengths across the catalogue after the change: min 87, median 134,
+p90 191, max 262. The median now sits inside Google's render window, which it did
+not before.
+
+No local database in this sandbox, so verification is 1,564 passing tests (35 new,
+`tests/card-type-seo.test.ts`), a clean typecheck and lint, and the AdSense
+guard's 22 checks. The two catalogue-wide facts — that every title fits 60 and
+that no two collide — can only be checked where the data is, so
+`scripts/audit-card-titles.ts` runs as a `maintenance.yml` task and must be run
+before this reaches production.
+
+## The bottom bar floated in mid-air, and pinch-zoom was the reason, 2026-09-17
+
+Third bug on the same few lines of arithmetic, reported with a screenshot of a
+Z Fold 7 cover screen (1080x2520): the bar parked about a third of the way up
+the display with page content scrolling in the gap beneath it, and its fifth
+tab clipped from "Menu" to "M" off the right edge.
+
+**Both symptoms are one cause and only half of it is ours.** A `position: fixed`
+element is sized and placed against the LAYOUT viewport. Pinch-zoom shrinks the
+VISUAL viewport and leaves the layout viewport alone, so the bar is drawn at the
+zoomed scale, comes out wider than the screen, and its right-hand end is simply
+off it. That is the browser behaving correctly and there is nothing to fix. It is
+also what identifies the cause: a `fixed inset-x-0` bar cannot be wider than the
+viewport by any other mechanism, and measured off the screenshot it was rendering
+about 1,228 physical pixels wide on a 1,080-pixel screen — a scale of roughly
+1.14.
+
+The float was ours. `useChromeLift` read `visualViewport.height`, subtracted it
+from the tallest height seen this session, and handed the difference to
+`translateY` as though a URL bar had slid out. Under a 1.14 zoom that is over a
+hundred CSS pixels of lift with no chrome behind it at all.
+`visualViewport.scale` distinguishes the two cases and is now the gate: while the
+visitor is zoomed the lift is zero, and the running maximum is not learned from a
+reading that does not mean what it usually means.
+
+**A second latent bug, found while fixing the first.** The maximum only ever
+grew, which is right while the screen stays the same screen and wrong the moment
+it does not. Unfold a foldable, or rotate, and the tallest height ever recorded
+belongs to a viewport that no longer exists — every later reading sits below it,
+so the bar lifts by the difference between two DEVICES and never comes down.
+Given this is the third report from a foldable, that is not hypothetical.
+`documentElement.clientWidth` is the reset signal: it ignores chrome retracting
+and ignores zoom, and changes exactly when the device's geometry does.
+Deliberately not `window.innerHeight`, which tracks the chrome on iOS Safari and
+would reset the maximum on every scroll, reinstating the original "the bar only
+appears once you scroll" complaint that started this whole thread.
+
+A clamp at a quarter of the screen sits on top of both. Whatever produces a lift
+that large it is a misreading, and the failure it prevents — the bar stranded in
+the middle of the page, which is what was photographed — is far worse than the
+one it risks, a bar sitting a little low under unusually tall chrome.
+
+**The arithmetic moved to `src/lib/chrome-lift.ts` as a pure function**, and that
+is the durable part of this entry. Every test written against these lines so far
+could only read the source and assert that certain words appeared — which catches
+a deletion but cannot catch a wrong number, and every word was present and
+correct in the version that shipped this bug. A `fixed` bar under collapsing
+chrome is also not reproducible in headless Chromium, which has no chrome to
+collapse, so a real browser was never going to be the answer either. Six
+behavioural cases now run the real function over real numbers: chrome out and
+back, three zoom levels, an unfold and re-fold, the clamp, and the rounding.
+
+## History database: HISTORY_DATABASE_URL → HISTORY_DATABASE_URL_2, 2026-09-17
+
+`HISTORY_DATABASE_URL` reached its 5 GB monthly Neon transfer allowance after
+five days live (2026-09-12..09-17) — its longest stint of the whole rotation
+so far, but still the same terminal exhaustion every prior history project has
+shown (RH10 before it lasted two days; RH9 three; the pattern goes back
+eighteen-plus project-terms). Ran the same playbook this repo has now run more
+than a dozen times, in order:
+
+1. **`probe-history` first, not last.** Before touching anything, fixed a real
+   bug this rotation surfaced: `OPERATIONAL_VARS` moved to `["RM10"]` on
+   2026-09-14 (the RM9→RM10 operational cutover, a separate DECISIONS.md
+   entry), and `scripts/probe-history-dbs.ts` correctly imports and iterates
+   it — but the `probe-history` job's own `env:` block in
+   `.github/workflows/maintenance.yml` still only forwarded `RM9`. The exact
+   drift class this file's own header warns about: a script resolves the
+   right variable name, but the workflow never forwards it, so the live
+   catalogue cross-check would have silently read "unreachable" even with
+   `RM10` genuinely configured in Actions. Fixed and merged on its own first
+   (a one-line, obviously-safe change), then dispatched `probe-history`
+   cleanly.
+
+2. **The probe's real numbers, not assumed ones.** `HISTORY_DATABASE_URL_2` —
+   the recycling target, retired since the 2026-08-19
+   `HISTORY_DATABASE_URL_3` cutover — came back live and holding real, if
+   stale, data: `rows=45,067 days=2026-08-04..2026-08-09 distinctCards=1390`,
+   1385/1390 (100%) still joinable against the live RM10 catalogue, and (like
+   every project's pre-cutover term) zero `GLOBAL` rows of its own — not
+   zeroes across the board, the actual signature of a genuinely recycled
+   project rather than a fresh, empty one. The source,
+   `HISTORY_DATABASE_URL`, was confirmed still live and being written to
+   *today* (`rows=423,999 days=2026-06-06..2026-09-17`, latest day
+   2026-09-17, `GLOBAL rows=82,175`) — reachable, not yet hard-capped, so the
+   dump itself was not a race against a dead connection.
+
+3. **The migration task, named with both endpoints.** Added
+   `migrate-history-db-hdu-to-hdu2` (a bare `migrate-history-db-to-hdu2`
+   already exists as the 2026-08-16 LEGACY cutover, so reusing it would have
+   been ambiguous — same naming rule `migrate-main-db-rm9-to-rm10` and
+   `migrate-history-db-rh10-to-hdu` already established). Same shape as every
+   prior pg_dump/restore step: dump `Card` + `ClickEvent` + `PriceHistory`
+   from the source, refuse to run if the target has any `User` rows (proof
+   it's actually a history-only project, not an operational one by
+   accident), refuse if source and target resolve to the same URL, refuse if
+   the target is the live operational database, `TRUNCATE ... CASCADE` the
+   target, restore `Card` first (the FK parent), then `ClickEvent` +
+   `PriceHistory`, then verify every table's row count matches source and
+   target exactly before declaring success. Marked
+   `migrate-history-db-rh10-to-hdu` LEGACY in the same commit, per this
+   file's established rule that only one history task is ever "CURRENT" at a
+   time.
+
+4. **The chain itself, updated everywhere it's duplicated.**
+   `src/lib/db-chains.ts`'s `HISTORY_VARS` is now
+   `["HISTORY_DATABASE_URL_2", "HISTORY_DATABASE_URL", "DATABASE_URL"]` —
+   `RH10` drops out of the chain entirely (it was `HISTORY_DATABASE_URL`'s
+   own rollback for the 2026-09-12..09-17 stint; a chain only ever needs
+   one), same as `RH9` dropped out on the previous rotation. `HISTORY_DATABASE_URL`
+   moves into the rollback slot `RH10` used to hold.
+   `src/lib/db-history.ts` (which imports the chain rather than re-declaring
+   it) had its header narrative and its `HISTORY_URL_SOURCE !== "..."`
+   fallback warning updated to match — the literal string there is what
+   `tests/db-chain.test.ts` cross-checks against the chain's own head, so a
+   drift between the two fails a test instead of silently misnaming the
+   database in a P1001 log. `scripts/build-db-push.sh`'s hand-rolled shell
+   chain (the one consumer that cannot `import` the shared list) was
+   reordered to match, and its `CURRENT_HIST` diagnostic updated. All three
+   were re-verified against `tests/db-chain.test.ts`, which exists
+   specifically to catch exactly this kind of three-way drift.
+
+**What's deliberately NOT done yet.** The code changes make
+`HISTORY_DATABASE_URL_2` what the app *will* resolve to on the next deploy —
+they do not themselves move any traffic, since this session has no access to
+a live database to run the actual `pg_dump`/`pg_restore` (that runs inside
+GitHub Actions, which holds the real Neon connection strings this sandbox
+does not). The `migrate-history-db-hdu-to-hdu2` task was dispatched
+separately, against `main`, immediately after this code merged — see the
+workflow run for the actual before/after row counts. Per this file's own
+standing rule ("RUN THIS BEFORE deploying the ...-first chain"), the data
+copy has to land before a deploy makes the app start reading the new project,
+or a deploy landing in between would have pointed live traffic at a
+five-week-stale snapshot for however long the migration took to catch up.
+
+**Still unaddressed, and worth saying plainly rather than rotating past it
+again**: eighteen-plus history-project terms in under six weeks, plus this
+one, is a read-pattern problem, not a capacity one — the same conclusion
+`db-history.ts`'s own header already draws. `HISTORY_DATABASE_URL` lasting
+five days instead of two or three is a data point in the right direction, not
+proof the burn is fixed. If `HISTORY_DATABASE_URL_2` exhausts in days rather
+than weeks, `audit-egress` (dispatchable the same way) is the next step, not
+another rotation.
+## Card pages are always indexable now: Phase 7a reversed, 2026-09-17
+
+Owner's call, and an urgent one: "we need all cards to be indexable and never
+become non indexable so it has time to aggregate on search console."
+
+**What was there.** Phase 7a (`docs/adsense-remediation.md`) noindexed any card
+with no in-stock listing and no recorded price history, and withheld it from
+`cards.xml`. It was correct when written. Those pages "rendered as a shell: a
+name, a rarity badge, a templated sentence and an empty price table", and a
+reviewer sampling `/card/*` hit one about one time in ten.
+
+**Why it had to go, and it is not mainly the thin-content argument.**
+Indexability was a function of TODAY'S STOCK. A page that had earned its place in
+Google's index left it the day its last listing sold out, taking its accumulated
+Search Console history with it, and had to earn the position back afterwards.
+Ranking accrues over months; a page cannot accrue anything while it is flickering
+in and out of the index. The second half of the OR was meant to absorb exactly
+that — a card with recorded history stays indexable regardless of stock — and
+that half was dead when this was measured: `audit-indexability` reported zero
+distinct cardIds in `PriceHistory` and zero cards clearing the threshold, so in
+practice **1,411 of 1,431 card pages were resting on live stock alone**, one
+failed import run away from a silent mass de-indexing.
+
+A parallel session cut the history database over to `HISTORY_DATABASE_URL_2`
+within the hour (the entry directly above), restoring a joinable
+`PriceHistory` — so that specific reading is already out of date, and this entry
+should not be read as claiming the history half is permanently broken. It does
+not change the conclusion, for two reasons. A card with fewer than
+`MIN_HISTORY_DAYS` days of history — every newly imported card — was noindexed
+regardless. And the rotation entry above is the eighteenth-plus history project
+term, each ending in transfer exhaustion after two to five days and each cutover
+another chance to re-break the `cardId` join. A safety net that has failed that
+often is not a safety net; the page should not be able to fall in the first
+place.
+
+The thin-content premise had also expired on its own. Phase 7b de-templatised the
+card narrative and took the median card page to ~1,021 unique editorial words. A
+priceless card still carries its rules text, its art, a printings rail, a FAQ and
+several paragraphs saying accurately that nothing we track has it in stock — for
+a token or a promo rune that is the most useful page on the web about that card.
+
+**What changed.** `CardPriceState.indexable` is deleted rather than pinned to
+true: a boolean that is always true invites someone to make it conditional again,
+while an absent one is a compile error at every call site. `getEmptyCardIds()` is
+deleted rather than emptied, for the same reason. `generateMetadata` no longer
+calls `getCardPriceState` at all, which takes two database round-trips off every
+metadata render of the highest-volume template, one of them against the history
+project. `isEmpty` survives untouched — it is presentation (the honest
+no-listings explainer, the thin-page ad treatment), never a robots decision.
+
+`getCanonicalTwin` still noindexes duplicate rows, and that stays. It is a "two
+URLs, one card" rule, not a judgement about whether a card deserves an index slot.
+
+**A policy budget was relaxed, deliberately, and it should be said plainly.**
+`scripts/adsense-guard.ts` carried a zero-tolerance budget, "indexable card pages
+with no price data", which was the enforcement arm of the rule being removed —
+leaving it would have failed the build on the very state this change creates. It
+is now counted and printed but no longer blocks a deploy. What actually enforces
+the AdSense "low-value content" policy is untouched and still zero-tolerance:
+pages under 150 unique editorial words, near-duplicate clusters above 90%, and
+pages whose server HTML has no content. "Has no price today" was a proxy for
+thinness that stopped tracking it when Phase 7b landed.
+
+**The owner's premise about a reference price is half true, and the half that is
+false matters.** "Even if it falls out of stock we have a reference price that's
+always there." For a card a shop still lists but has none of, yes — the
+out-of-stock `RetailerPrice` row keeps its real price, and the card page was
+already fetching it and then throwing it away, rendering an em dash. `MarketView`
+now exposes `lastSeen` (the cheapest out-of-stock listing) and the hero tile
+relabels itself "Last seen · <market>" with an "out of stock" subtitle rather
+than showing a blank. A live price always wins; the two are never shown together.
+
+But there is **no durable reference price in the schema**, and nothing here
+creates one. `price-import.ts` does `retailerPrice.deleteMany({ where: {
+retailer } })` and re-inserts, so a row vanishes entirely once a store drops the
+card; the six `lowestPriceCents*` columns are set to `null` in the same pass when
+no listings remain; and `Card.marketPriceCents` is a SYNTHETIC figure derived
+from rarity and type at seed time (`prisma/seed.ts`), which must never be shown
+as a market price. A price that outlives its listing needs a new column the
+importer only ever writes forward. That is a schema plus importer change and was
+not in scope for a same-hour fix.
+
+**Also fixed in passing**: the no-listings explainer told readers "fewer than
+seven days of recorded price history" while `MIN_HISTORY_DAYS` has been 2 since
+snapshots went weekly. Rather than correct the number it now states the fact a
+reader can act on, without quoting an internal threshold that a future change
+would falsify again.
+
+**The old rule had no test of any kind**, which is most of why it went unexamined
+through a change that invalidated its premise. Ten cases pin the new one
+(`tests/card-always-indexable.test.ts`), including the last-seen fallback run
+against the real `computeMarket`.
+
+## Two keywords got an owner, and one of them was being answered by a mini-game — 2026-09-17
+
+Asked to make the site rank for `riftbound card list` and `riftbound price
+check`. Neither was a "put the keyword in more places" job; both had a specific,
+findable reason they weren't ranking, and the interesting part of this pass is
+what was *not* changed.
+
+**`riftbound card list` had no owner, while the map said it merely had no page
+yet.** `docs/seo-keyword-map.md`'s row read `/guides/riftbound-card-list`
+(all-sets hub — **not yet built, backlog item 12**). But item 12 was closed on
+2026-08-13, by shipping `/guides/riftbound-sets-in-order` — a narrative guide
+about which SETS exist, in release order. That is a different question from "show
+me the list of cards", so the query sat unowned for a month behind a row that
+made it look merely pending. The owner is now `/browse`, which has literally
+been the card list all along: `<title>` and `<h1>` both read "Riftbound Card
+List", and the map row is corrected rather than a third page being built (the
+map's own rule 5: publish fewer pages than feels natural).
+
+This **replaces** the exact phrase "Riftbound Cards" that the 2026-08-20 audit
+front-loaded into that title, deliberately and on that audit's own logic — one
+page, one exact-match phrase. "Riftbound Card" survives inside "Card List" for
+the singular query, the H1's subhead and the JSON-LD still say "Riftbound cards"
+verbatim, and `/cards` keeps a title-level exact match on the plural.
+
+**`riftbound price check` was being answered by a guessing game.** It had no row
+in the map at all, and the only page on the site whose `<title>` contained the
+phrase was `/games/price-check` — "Price Check — Guess the Riftbound Card
+Price", a five-round mini-game. Someone searching what a card is worth was being
+pointed at a toy. That is precisely the map's rule-4 cannibalization signal
+("whose visible H1/title/meta-description already targets that phrase"), just
+aimed at the wrong page. The game is now "Price Check **Game** — …", which
+breaks the "Riftbound … price check" adjacency while keeping it findable by
+name, and the homepage takes the query in its description, hero subhead and a
+dedicated FAQ (real `FAQPage` JSON-LD, not body copy).
+
+**The homepage title was deliberately left alone, and that is the main
+judgement call here.** The obvious move — put "price check" in the `<title>` —
+was refused. That string is 62 chars inside Bing's 65-char threshold and carries
+"Riftbound Card Prices (US)", which *three* separate documented audits
+(2026-08-20, 08-30, 09-10) converged on, the last of them on live SERP evidence
+that this page sat at #10 and was the only page-one result whose title lacked
+the words "card prices". Trading a proven head-term match for an adjacent
+long-tail is a bad swap, and `tests/keyword-ownership.test.ts` now refuses it on
+a future pass's behalf too.
+
+**A scoped exception to a standing policy, written down as one.** The map's
+"Price-modifier long-tails — deliberately NOT primary-targeted" section retires
+`riftbound singles`/`riftbound card prices`/`riftbound cardmarket` as near-zero
+volume. `price check` is a distinct job-to-be-done phrase ("what is this worth
+right now"), not a `<product> <price-word>` modifier, so it gets an exception —
+one page, one phrase, stated in the map as an exception rather than quietly
+contradicting it. That section is also now annotated as partially superseded for
+`riftbound card prices`, which the homepage has in fact targeted since
+2026-09-10; the policy stayed on the page while the practice had already moved.
+
+Two stale facts were corrected in passing because this pass was rewriting the
+exact lines that carried them: `/browse`'s description and subhead both still
+named "AU, US, UK & SG" as the tracked markets — the set as it stood before
+Canada and the EU launched in August, and a list the homepage had disagreed with
+for weeks.
+
+Not deployed on its own: SEO copy has no urgency that justifies an extra build
+(see this file's 2026-09-14 entry on the deploy-cadence burn), so it rides the
+daily release.
+
+## Homepage: Market Pulse and the domain chips removed, eBay Picks promoted to the top slot — 2026-09-17
+
+Owner: *"get rid of the market pulse on the homepage, get rid of the domain (e.g.
+fury calm) Move the ad listings on ebay where the market pulse used to be."*
+Done as asked. Three consequences were not asked for and are recorded here
+because two of them are reversals and one was nearly a silent regression.
+
+**This partially reverses yesterday's "game before money" pass, and that is the
+headline.** The 2026-09-16 pass moved the playable sections above the commercial
+run after repeated feedback from the site's most engaged reviewer — *"simply a
+too greedy/capitalistic/money focused site for a card GAME for me"* — and
+`tests/game-before-money.test.ts` pinned eBay Picks below Riftle and the pack
+simulator. An affiliate unit now leads the page instead. The instruction was
+explicit about the slot, so it is followed, but the guard is **narrowed, not
+deleted**: Today's Top Deals — the larger commercial block, and one of the "five
+consecutive price sections" that pass was written against — still has to sit
+below the games, and the test still fails if that changes. The test also now
+asserts `ebay < play` outright, so the reversal reads as a decision in the test
+file rather than as a missing assertion.
+
+**Market Pulse was deleted, not just unmounted.** Nothing else rendered
+`components/home/MarketPulse.tsx`, so leaving it would have meant an unrendered
+component plus ~10 tests guarding it. The component, `tests/market-pulse-
+quickview.test.ts`, and the three Market Pulse cases in
+`tests/homepage-declutter.test.ts` all went; `homepage-declutter` keeps its
+Today's-Top-Deals coverage and gains one test asserting the removal stuck.
+`lib/price-history.ts`'s `toPulseMovers`/`PulseMovers`/`MoverSummary` went with
+it — they existed solely to trim the mover payload at the server/client boundary
+for that one marquee, and with no consumer a trim has nothing to trim for.
+`getPriceMovers()`'s real callers (/movers, /games, the newsletter digest) are
+untouched.
+
+**The pre-order CTA was nearly lost as collateral, and was rewired instead.**
+Market Pulse carried the homepage's *only* link to `/radiance-preorders` — with
+Radiance shipping 23 Oct and that page's own eBay coverage built days ago, losing
+the homepage's only entry point to it would have been an expensive accident from
+a layout change nobody intended that way. `NextSetCountdownCard` now takes an
+optional `preorders` prop and renders the link; it is already the "next set"
+slot, still names no set in code (`preordersHrefForSet` resolves it), and still
+retires itself when the set ships.
+
+**The domain hubs are not orphaned by dropping their homepage chips.** `/cards`
+renders the same six `/domains/<slug>` links from `DOMAIN_PAGES`, and every card
+page links to its own domain facet. One homepage row went; the hubs' path into
+the index did not.
+
+One property worth knowing: `EbayPicksLive` returns null for ad-free members, so
+Premium visitors now open on the popular-cards carousel rather than an empty
+slot, and a listings outage degrades to the generic eBay CTA rather than a blank
+first section.
+
+---
+
+## The homepage sells before it compares, and drops "(US)" from its title — 2026-09-17
+
+Owner instruction, verbatim in substance: *"instead of saying compare Riftbound
+prices across every US store, maybe we can say something like buy Riftbound
+cards … that sounds better than compare prices"*, plus *"it doesn't need to say
+US on the Chrome tab header"*. The exact wording was delegated ("I'll let you
+decide the call for that"). Both changes reverse decisions this file records, so
+the reversals are recorded here rather than left as a silent edit.
+
+**H1: `Compare Riftbound prices across every {market} store` → `Buy Riftbound
+cards at the best price`** (region pages append ` in Australia` / ` in the UK` /
+…). What that gives up is real and was measured: the 2026-08-20 audit found
+`riftbound prices` ranking ~13th with that exact adjacency — "Riftbound" next to
+"prices", not split by "Card"/"TCG" — absent from *every* on-page signal, and
+this H1 was where it was fixed. It is not simply dropped: the hero subhead gave
+up its own "Riftbound card prices" wording to say "Riftbound prices" instead
+(the title still owns the "card prices" variant verbatim, so the hero was
+spending two slots on one phrase), and the About H2 and one FAQ — real FAQPage
+JSON-LD — carried it already.
+
+What it buys is a query the site had **no owner for at all**: bare `buy
+riftbound cards`, no market named. The six regional posts all require a market
+in the phrase, and `/guides/where-to-buy-riftbound-cards` answers the research
+half ("which stores exist"), not "take me to the cheapest one now". The
+homepage is the thing that does it.
+
+**The split is the safety, and it is load-bearing.** `buy riftbound cards` lives
+in the H1 only; `riftbound card prices` lives in the `<title>` only. Putting the
+buy phrase into the title to "reinforce" the H1 would collide root head-on with
+the umbrella guide, whose title leads "Where to Buy Riftbound Cards…" — the
+exact rule-4 cannibalization `docs/seo-keyword-map.md` exists to prevent.
+`tests/keyword-ownership.test.ts` now pins both halves.
+
+**Title: `Riftbound Card Prices (US) — …` → `Riftbound Card Prices — …`** (62 →
+56 chars). The head term stays — three audits converged on it and the last,
+2026-09-10, was live SERP evidence (root at #10, the only page-one result whose
+title lacked "card prices"). Only the geo marker went. That marker was added
+2026-08-30 for a real, found failure: `/au`'s title screamed "Australian" while
+root's named nothing, so `riftbound card prices US` went to `/au`. The geo
+signal now rides the mechanism actually built for it — hreflang, where root is
+the x-default/en-US member of the region-home set — plus the H1s, which are
+*more* explicit than before: root names no market, each region home names its
+own. **If Search Console shows `/au` reclaiming that query from root, put
+`(US)` back.** That is a measurable trigger, not a hunch, and both the code
+comment and the keyword map say so.
+
+Fixed in passing, in the sentence already being edited: the hero subhead said
+"plus four more markets" while listing five. It has listed five since the EU
+launched on 2026-08-23.
+
+## /cards/all: an HTML index of every card page, 2026-09-17
+
+Asked for as "maybe make a page or sitemap contain every single card page so I
+can index them on google search."
+
+**The sitemap half already existed and was already complete.** `cards.xml`
+carries all 1,431 card URLs — verified live immediately before this, right after
+the change that stopped withholding priceless cards from it. There was nothing to
+add there, and saying so mattered more than building something.
+
+**The HTML half did not exist.** A crawler reaches an XML sitemap by being told
+where it is; it reaches an HTML index by following a link, and Google uses both
+paths. Every existing browse surface caps what it renders — facet pages at 60
+tiles, set galleries at 500, set pages at 100 per page — so seeing the whole
+catalogue meant following a paginated chain, and "follow fourteen pages" has a
+real crawl drop-off. `/cards/all` is the flat, complete, one-hop version.
+
+**Grouped by set, with the printing in the anchor text.** Not alphabetical: 31
+cards in the catalogue are called "Fury Rune", so an A-Z list would be hundreds
+of identical anchors pointing at different URLs — and identical anchor text is
+how you tell a crawler that two pages are the same page. Each label runs through
+`cardDisplayName` (so a Signature reads as one) and carries its collector number,
+which makes all 1,431 anchors distinct.
+
+**Cost.** One query, seven short columns, no image or price fields, wrapped in
+`unstable_cache` at the route's own `revalidate` — the same binding is passed to
+both so they cannot diverge, per the egress rule that cost five database projects
+(CLAUDE.md). Comparable to what the sitemap already reads once a day. It fails
+open to an empty list and says so on the page, rather than 500-ing an indexable
+URL.
+
+**It carries 150+ words of real editorial copy, deliberately.** A page of 1,431
+links and nothing else is the textbook case the still-zero-tolerance "indexable
+pages under 150 unique editorial words" budget exists to catch, and this page is
+indexable. A test counts the words rather than trusting that someone will notice.
+
+**Linked from the facet index, site navigation and the sitemap.** An HTML index
+that nothing links to helps nothing — `crawl-check` counts exactly that as a
+sitemap orphan.
+
+**What this does NOT do, recorded because the request implies otherwise.** It does
+not index anything. There is no public Google API to bulk-index ordinary pages
+(the Indexing API covers job postings and livestreams only), and Search Console's
+"Request indexing" is capped at roughly ten URLs a day. The measured position is
+already 92.6% of inspected card URLs indexed, so discovery was not the binding
+constraint; this improves the internal link graph, which is a real but modest
+gain, and the honest lever on the rest is the click-through work in the entries
+above.
+
+**It is titled "Complete A-Z Index", not "card list", and that is a deliberate
+climbdown.** The first draft titled on `Full A-Z Card List`. A parallel session
+landed the entry above this one hours earlier, which gave `riftbound card list`
+a real owner — `/browse`, in both its `<title>` and its H1 — and wrote into
+`docs/seo-keyword-map.md` that other pages "must not retitle onto this phrase".
+Two of our own pages competing for one query is the cannibalisation the keyword
+map exists to prevent, and the newer page is the one with no history to lose, so
+it moved. The page's own body copy already said "complete index"; only the
+title, description and OG blurb needed the word changed.
+
+## Bing was never measured, and two numbers were steering decisions from code comments — 2026-09-17
+
+Asked why "Google SEO is skyrocketing but Bing is staying the same." The honest
+answer turned out to be that **only the first half of that sentence is a
+measurement**, and fixing that is what this entry is about.
+
+**What was already working, recorded because it was misdiagnosed once in this
+same session.** IndexNow is fully wired and has been for 84 days:
+`src/lib/indexnow.ts`, `indexnow-submit.yml` daily at 06:10 UTC, plus targeted
+pings from the price refresh and the card importer. Today's run submitted 1,859
+URLs and got HTTP 200, with the key file verified live at `/indexnow.txt`.
+`bingbot` is not in `BLOCKED_BOTS`. So Bing is told about every page every day —
+**discovery is not the gap**, and an earlier reply in this session that said
+IndexNow was not set up was simply wrong.
+
+**The gap is measurement.** Google has `GSC_SA_KEY` and two workflows pulling
+real figures; every SEO decision in this file rests on one of them. Bing had no
+API key, no workflow, no script, and not one recorded number. "Bing is flat" and
+"Bing is small and growing in proportion" are completely different situations
+with different remedies, and nothing here could tell them apart.
+
+So `scripts/bing-coverage.ts` + `.github/workflows/bing-coverage.yml` now report,
+daily at 07:35 UTC (fifteen minutes after the Google run, so one morning's two
+reports describe the same morning): whether the property is in the account at
+all, the daily impressions/clicks series **with its trend halves printed rather
+than a single total**, a per-template rollup using the *same* path normalisation
+as `gsc-coverage.yml` so the `/card` rows are directly comparable, query
+coverage, the URL-submission allowance, and crawl health against what IndexNow
+submitted. Read-only — it never submits a URL, because Bing's allowance is a real
+lever and spending it is a human decision, not a cron's.
+
+**Verification is probably the actual problem, and it is one env var.** The live
+site serves no `msvalidate.01` tag: `layout.tsx` emits one only when
+`BING_SITE_VERIFICATION` is set, and it is not set in the Vercel production env.
+`/BingSiteAuth.xml` 404s. So unless the property was verified by a Search Console
+import or by DNS, it is not verified by any route this repo provides — which
+would explain a flat, empty Bing picture entirely. The code path already exists;
+it needs the token.
+
+**Two unsourced numbers, retracted rather than deleted.** `layout.tsx` asserted
+that Bing + DuckDuckGo + Brave are "~45% of this site's search referrals", and
+`stores/[slug]/page.tsx` cited "Bing's 397 'Title too long' warnings". Neither
+appears anywhere in this file or in `docs/`, no commit derives either, and the
+repo has never held a measured Bing figure — yet the 45% is exactly the kind of
+claim that reorders a roadmap. Both are now marked as unsourced at their sites,
+the 45% kept explicitly as a *hypothesis* (if true, verifying the property is
+urgent rather than tidy) and the 397 retracted with a note that the 60-char title
+budget stands on the repo's own SEO gate regardless. This is the same failure
+class as the stale `PriceHistory` assertion corrected earlier today: a number
+written into a comment, cited as fact thereafter, sourced nowhere.
+
+**Tested where it can be tested.** There is no Bing key in this sandbox, so the
+network half is unexercised by construction. What *can* be silently wrong is the
+parsing — Bing wraps payloads in a `d` property and returns .NET
+`/Date(1758067200000)/` strings — so all fourteen cases in
+`tests/bing-coverage.test.ts` pin the pure helpers, including that junk dates
+return `null` rather than reaching a report as the literal string "Invalid Date",
+and that `templateOf` agrees with `gsc-coverage.yml`'s `tpl()`, without which the
+comparison the whole script exists for would be wrong rather than absent.
+
+## The TCGplayer reference price reaches the card popup — 2026-09-18
+
+Asked for directly: "add TCGplayer reference price to the actual cards pop ups".
+The full card page has carried this block for months. The QuickView modal — which
+opens from every card tile on the site and is where most visitors actually
+compare prices, without ever loading a card page — showed no TCGplayer figure at
+all.
+
+**It is a reference block below the comparison, NOT a row inside it, and that is
+a standing product rule rather than a layout preference.** `constants.ts`'s "THE
+RULE" section is explicit: TCGplayer's AU/UK/SG/CA prices are its single USD
+market price run through an FX rate. Nobody can buy from "TCGplayer Australia",
+the figure excludes international postage and duty, and admitting it to the
+comparison would let it undercut the real local stores this site exists to
+compare. The popup's `!isFallbackRetailer` filter is untouched; the new block
+sits after the list, carries the "reference" chip and the "may not ship to your
+country" caveat, and renders its own affiliate disclosure rather than leaning on
+the comparison list's — that one is conditional on the list being non-empty, and
+the case where the reference matters most is precisely a card with no local
+listings.
+
+**The selection rule is now shared, and that is the substance of the change
+rather than the forty lines of wiring.** `lib/tcg-reference.ts` holds one
+`tcgReferenceRows(rows, country)`, called by both `CardMarketSection` and
+`QuickView`. A second copy is how this broke the first time: the card page's
+predicate was a hand-listed `tcgplayer | tcgplayer_uk | tcgplayer_sg`, which
+suppressed the block for UK and SG visitors even though their converted row is
+never rendered, so those two markets saw no TCGplayer price anywhere.
+`lib/tcgplayer.ts` carries a scar from the same class of bug
+(`tests/tcgplayer.test.ts`: "The cause was DRIFT between two copies of one
+rule"). The shared predicate asks **"is TCGplayer already a buyable row in this
+market?"** — not any list of retailer keys — so it stays correct for every
+market that exists and any market added later.
+
+**Verified against the live row set, not only against fixtures.** Running the
+selector over the real `/api/card` response for `Vi, Piltover Enforcer` (15 rows,
+production): US suppresses, and AU/UK/SG/CA/EU each quote `retailer="tcgplayer"`
+at US$4,000.00 — the USD row, never a pre-converted `tcgplayer_<market>` row,
+which would double-convert since `TcgMarketPrice` converts what it is handed
+from USD. The EU case is worth recording: the importer writes no `tcgplayer_eu`
+at all (the EU's reference source is Cardmarket), so nothing is suppressed and
+the USD row carries it — which is exactly why the predicate asks about the table
+rather than about the existence of a fallback.
+
+**Costs no request.** The USD row is already in the `/api/card` response the
+modal fetches for its comparison list, so this is a pure render of data that was
+being discarded.
+
+**Not visually verified in a browser, and the reason is worth writing down.**
+There is no database in this sandbox, so the popup cannot be rendered locally —
+it fetches `/api/card`. Driving the live site with Chromium to check the
+equivalent card-page block failed too: `ERR_CERT_AUTHORITY_INVALID`, because the
+sandbox's Chromium does not read the agent proxy's CA, and disabling TLS
+verification to get a screenshot is not a trade worth making. So the evidence
+here is thirteen unit cases plus the live-row probe above, and the visual side
+rests on reusing a component that has been live on the card page for months.
+`TcgMarketPrice` gained one `compact` prop (tighter spacing, smaller headline)
+because the page block's `mt-6 p-4 text-2xl` reads as a different component
+inside a modal whose own rhythm is `mt-3`/`p-3`; the figures, the caveat and the
+disclosure are identical, since a reference price that says less in the popup
+than on the page is how two surfaces start disagreeing.
+
+**Cardmarket's equivalent block is still page-only.** `CardmarketPrice` serves
+UK and EU visitors on the card page and was deliberately left out of this pass —
+the request named TCGplayer, and the same shared-selector treatment should be
+applied to it rather than a second hand-rolled predicate.
+
+**One defect found and fixed in the same pass, caused by this change's own test.**
+`tests/bing-coverage.test.ts` imports `scripts/bing-coverage.ts` to unit-test its
+parsing, and that script called `main()` at the top level — so importing it ran
+the whole report. `npm test` silently wrote a `docs/bing-coverage.json`, which
+got as far as being staged into a commit, and in any environment holding
+`BING_API_KEY` the test run would have fired six live Bing API calls. `main()` is
+now guarded on `import.meta.url === pathToFileURL(process.argv[1]).href` and both
+halves are verified (direct run still writes the report; import writes nothing).
+No other script in `scripts/` needs this guard because no other test imports one
+— this was the first, and since the parsing is precisely what must be tested
+without a key, the import is not going away.
+
+## The mobile bottom tab bar is deleted; navigation is back in the header — 2026-09-18
+
+"The bottom part keeps rising up on the phone I've given up fixing it. Let's get
+rid of it and add the menu bar back to the top and make sure it all fits on a
+mobile phone."
+
+**Three attempts, each a real fix for the previous one's bug, none of them
+enough.** Recorded because the pattern matters more than the code:
+
+1. `calc(100lvh - 100dvh)` in the bar's `bottom:` — a permanent gap on a Z Fold 7
+   and a stutter across the whole page during scroll, because dvh/lvh are
+   recomputed continuously while the browser's own chrome animates and every
+   recomputation invalidated a `:root` custom property, forcing a global style
+   recalculation on exactly those frames.
+2. The same value moved to a compositor-only `translateY` — killed the jank,
+   kept the wrong number.
+3. `lib/chrome-lift.ts`: a measured `visualViewport` value, self-consistent
+   (largest height seen minus current, both from one API), with a pinch-zoom gate
+   on `scale`, a geometry-change reset keyed on `documentElement.clientWidth`,
+   and a 25% clamp. Unit-tested. The most correct of the three. The bar still
+   rode up the screen.
+
+**The diagnosis that ends it is structural, not another patch.** A
+`position: fixed` bottom element is placed against the LAYOUT viewport, whose
+bottom edge sits behind the browser's chrome whenever that chrome is out, and the
+offset between the two is not reliably knowable from inside the page on every
+device. The top edge has no such problem: it does not move when chrome collapses.
+So a header button is not a better fix for this bug — it is a position where the
+bug cannot occur. `position: sticky; top: 0` on NavbarShell needs no
+compensation at all.
+
+**Deleted, not disabled:** `components/BottomTabBar.tsx`, `lib/chrome-lift.ts`,
+`tests/mobile-bottom-bar.test.ts` (24 cases pinning arithmetic that no longer
+exists), the `--bottombar-h` and `--chrome-lift` custom properties, and the
+`body { padding-bottom }` that reserved 3.5rem under every page on every phone.
+`.above-bottombar` keeps its name — five components anchor off it and the native
+AdMob banner still needs exactly that reservation — but now carries only the
+banner and the safe-area inset.
+
+**What the five tabs became.** Home is the logo beside the new button; Search is
+the full-width box on the header's second row; Watch and Binder are in the
+overlay the button opens, one tap further than before. The WATCH COUNT BADGE
+moved onto the button rather than being dropped: it is the only thing in that
+list that was not navigation, being the one ambient signal that a price alert
+has fired.
+
+**"Make sure it all fits" needed measuring, and the first attempt did not fit.**
+Moving the Menu tab into the header cost 46px in a row that had ONE pixel of
+slack at 375px. Measured in Chromium against a real dev server:
+
+| width | header row needed / had | page scrollWidth / viewport |
+|---|---|---|
+| 320px | 390 / 288 | 406 / 320 |
+| 360px | 390 / 328 | 406 / 360 |
+| 375px | 390 / 343 | 406 / 375 |
+| 390px | 390 / 358 | 406 / 390 |
+| 640px | 700 / 592 | 724 / 640 |
+
+Every phone width scrolled sideways. **320px and 640px were already broken before
+this change** — the baseline measured 360/320 and 684/640 with the new button
+hidden — so the header row had been over budget for a while and nothing was
+watching; `scripts/mobile-check.ts` audits 375px, where it fitted by one pixel.
+
+Two changes fixed all of it. The left cluster lost `shrink-0` for `min-w-0`: a
+non-shrinkable group cannot absorb anything, so the overflow had nowhere to go
+but the document, and the worst case is now a truncated label rather than a
+horizontally scrolling site. And the below-lg **"Database" text link was removed**
+(~76px) — the most redundant thing in the header, since the full-width search box
+on the very next row submits to `/browse` and the overlay lists it too. The
+desktop `lg:block` copy is untouched. **Premium stayed**: it is there by an
+explicit 2026-09-10 brief and is the reason the cluster must be able to shrink.
+
+After: 288/288, 328/328, 343/343, 358/358, 592/592, 672/672 — no page-level
+horizontal scroll at any of 320/360/375/390/414/640/720/790/1024/1280, no tap
+target under 44x44 at any phone width, no clipped text, and the overlay opens
+full-width with 59 links. Two sub-44px targets remain at 640px and up (the
+command-launcher button and the country switcher, both `sm:`-gated); both predate
+this change and are untouched by it.
+
+**One entry point, still.** `tests/single-menu-entry.test.ts` has always pinned
+"exactly one control opens CinematicNavMenu below lg", and it still does — it now
+checks the whole component set for a second `setOpen(true)` rather than naming
+the winner, so the invariant survives the next time this moves.
+
+**Verified in a browser this time, which earlier passes could not be.** The
+sandbox has no database, but a dev server with a dummy `DATABASE_URL` serves
+`/privacy` (no data loaders), and that is enough to measure the header — it is
+site chrome, identical on every route.
+
+## The watchlist is its own header control, not a badge on the menu — 2026-09-18
+
+Immediately after the bottom bar was deleted: "the watchlist and the menu should
+be separate."
+
+**The mistake being corrected was mine, made in the same pass.** Folding the
+deleted Watch tab's count badge onto HeaderMenuButton kept the signal alive but
+put two unrelated jobs on one target: "open the navigation" and "N cards are
+tracked, one of which may have moved". A badge belongs to the thing it counts —
+tapping it has to reach `/watching`, not a menu you then navigate — and a menu
+button that sometimes wears a number reads as unread navigation.
+`HeaderWatchButton` is a plain link to `/watching` with the count and the same
+9+ cap; HeaderMenuButton is a menu button and nothing else.
+
+**A STAR, NOT A BELL, and this is not cosmetic.** `NavUser` already renders a
+`NotificationBell` from `sm` up for signed-in visitors. A bell here would have
+put two near-identical bells side by side in a row where every control is
+icon-only. The deleted bottom bar could use a bell for its Watch tab because that
+tab carried the word "Watch" underneath it; a header icon has no label to
+disambiguate it. `NavIcon` gained a `star`.
+
+**Then the row ran out of space, and two of the three failures were invisible to
+measurement.** A fifth below-lg control pushed the intrinsic width past the
+container, and because the left cluster is `min-w-0` (the fix from the previous
+entry) the overflow could no longer escape to the document — so instead of a
+scrolling page it came out as:
+
+1. **`✦ Premium` wrapping onto two lines.** `scrollWidth === clientWidth` when
+   text WRAPS rather than clips, so the overflow audit passed clean. Only a
+   screenshot showed it.
+2. **After adding `whitespace-nowrap`: the label spilling its box, with the
+   theme toggle drawn straight through it** — "P☀mium" at 640px. Also invisible
+   to a scroll check, because nothing overflowed the page. A nowrap label in a
+   shrinkable box does not wrap; it overlaps its neighbour.
+
+The lesson worth keeping: **an overflow audit cannot see a layout that fits by
+wrapping or by overlapping.** Both of these passed `scrollWidth > clientWidth`
+and both were obvious in a 200px-tall screenshot of the header. The audit script
+now has a pairwise bounding-box intersection check in this repo's Chromium
+harness for exactly that reason.
+
+**What actually paid for the space**, rather than squashing something:
+
+- Premium is `shrink-0 whitespace-nowrap` so it can neither wrap nor spill, and
+  **icon-only below `sm`** (the bare gold `✦`, full "✦ Premium" from `sm`). It
+  keeps the gold, the shimmer, an `aria-label` and a `title`, so the 2026-09-10
+  brief holds as prominence-by-colour rather than by width. On a phone every
+  other control in that row is already an icon, so the lone label was the odd
+  one out.
+- **The ⌘K launcher and the theme toggle moved `sm` → `lg`.** Both were
+  duplicating something CinematicNavMenu already carries below lg — its own
+  search box over the same NAV_GROUPS, and a "Theme — Dark · tap to switch" row
+  that states its state in words rather than as an ambiguous glyph. ⌘K is a
+  keyboard affordance and the menu button now does that job for a touch device.
+  That is ~78px at 640-1023px, where the row needed ~641 inside 592.
+
+**Measured after, with overlap and spill checks, not just scroll:** no
+horizontal scroll, no overlapping controls, no spilled text at any of
+320/360/375/390/414/640/720/790/1024/1280, and the watchlist and menu both
+present below lg and both absent from lg. 1,613 tests green.
+
+**The honest residue**: below `sm`, Premium is a bare gold star. It is
+prominent and it is named for assistive tech, but a visitor who has never seen
+it will not know what it is from the glyph alone. The alternative was dropping
+Premium from the phone header entirely — it is in the overlay and the user menu
+— and that is a product call, not a layout one, so it was left as it is and
+flagged rather than decided here.
+
+## The watchlist is the bell everywhere, and Premium gets its letters back — 2026-09-18
+
+Two corrections to the header shipped hours earlier, both reported directly.
+
+**THE STAR WAS THE WRONG CALL, and the reasoning behind it was solving the wrong
+problem.** The watchlist is a BELL everywhere else on the site: `PriceWatchButton`
+draws one on every card tile and card page, and `/watching`'s own heading is
+`<NavIcon name="bell">`. The header control shipped as a star purely because
+`NavUser` renders a `NotificationBell` from `sm` up and two bells seemed
+confusable. "It should be the same icon as the watch has" — and that is right: an
+icon that disagrees with the control it represents is a worse failure than two
+bells that differ in state. The `star` glyph is deleted, not merely unused.
+
+The two-bells case is handled the way `PriceWatchButton` already handles it:
+**filled when there is something in it**, plus a count badge, against
+NotificationBell's outline and unread dot. `NavIcon` gained an optional `fill`
+prop for exactly this. Note the overlap is narrow — the watchlist control is
+`lg:hidden` and NotificationBell is `hidden sm:inline-flex`, so both appear only
+between `sm` and `lg`, and only for a signed-in visitor.
+
+Hiding NotificationBell below `lg` would have removed the overlap outright and
+freed 44px, and it was rejected: there is **no `/notifications` page**, the
+dropdown is the only surface, so that would delete notification access for
+tablet users who never asked for it.
+
+**PREMIUM WAS UNREADABLE AS A BARE GLYPH, which was the flagged residue of the
+previous pass and is now fixed rather than flagged.** "It's just a diamond,
+right? I need the actual premium letters to show up as well. If it means
+adjusting the size of things so it fits in the header, let's do that." The text
+renders from **360px** up — every phone in real use, including the Z Fold 7 cover
+screen this whole thread has been about.
+
+The ~40px came from tightening three things rather than dropping a control:
+
+| change | saved | scope |
+|---|---|---|
+| header side padding `px-4` → `px-3` | 8px | below sm |
+| Premium `text-sm` → `text-xs` | ~16px | below sm |
+| country switcher's chevron hidden | ~14px | below sm |
+
+Below 360px the glyph alone is genuinely all that fits beside five 44px targets,
+and it keeps a 44px target of its own.
+
+**Two defects the harness caught that reading the diff would not have.** Removing
+the chevron took the country switcher to **38px wide** — the tap floor is a width
+rule as well as a height one, and `min-h-11` only covered half of it, which had
+never mattered while the chevron padded it out. And Premium's icon-only form was a
+22px target. Both now carry `min-w-11` below sm. This is the third distinct
+failure mode in this header that a plain overflow check could not see (after
+wrapping and overlap), which is why the Chromium harness now checks scroll,
+pairwise overlap, text spill AND per-control tap size together.
+
+Measured after: no horizontal scroll, no overlap, no spilled text and no tap
+target under 44×44 at 320/360/375/390/414, and none of those at 640/720/790
+either. The one remaining sub-floor control is the country switcher's **height**
+(38px) from `sm` up, which is `sm:min-h-0` by deliberate design so desktop rows
+stay 36px tall — it predates all of this work and is untouched.
+---
+
+## The HEARTSTEEL post is a fact-check, because the card is a reprint — 2026-09-18
+
+HEARTSTEEL released "LIVE MY LIFE" on 18 September 2026 and Riftbound card
+images carrying the band's art started circulating with it. The brief was a
+spoilers post. What the research turned up made it a different post.
+
+**The Kayn card is not a new card.** Its name, 6 cost and rules text are `Kayn,
+Unleashed` — `ogn-189-298` in `prisma/riftbound-cards.json`, a Rare Chaos Unit
+from **Origins**, legal since launch. New art on old rules is a new *printing*,
+and that distinction is the difference between "this changes deckbuilding" (it
+does not) and "this prices separately" (it does). Writing the obvious "new
+Radiance card spoiled" post would have been wrong on the only checkable fact in
+it.
+
+**Two findings came out of the same lookup, and neither appears in any coverage
+this was checked against.** Kayn is the *only* HEARTSTEEL champion with a card
+and no alternate printing of any kind — Ezreal, Sett, Yone and Aphelios all have
+Showcase versions, Sett and Yone have signatures. And K'Sante has **no Riftbound
+card at all**, which is exactly what makes the reports putting him in Radiance
+worth anything: it would be his debut. That is content only this site can write,
+because it needs the card database, and it is why the post embeds the real rows
+(`embeds[]`) instead of describing them.
+
+**Three claims were deliberately NOT made**, all of which the obvious version of
+this post would have made:
+
+1. **That the music video reveals the cards.** No source says so — not Riot, not
+   the trade coverage, not the leak reporting — and the video was hours old.
+   The body says the images surfaced *alongside* the comeback, which is what the
+   evidence supports.
+2. **That the cards are in Radiance.** The leak reporting on music-themed
+   Riftbound cards (True Damage Yasuo, via @LeagueOfLeaks / @RiftboundCN) points
+   at a **Worlds 2026-themed** product. Radiance's roster — Seraphine and
+   Evelynn as legends, a Seraphine vs. Evelynn Showdown Decks — makes it the
+   natural guess, and a natural guess is not a confirmation. The post says so
+   explicitly, because "buy the sealed product this card is in" is the expensive
+   way to be wrong.
+3. **That anything is Riot-confirmed.** Same standing confirmed/not-confirmed
+   split `riftbound-radiance-leaked-mechanics` holds itself to.
+
+**Named for the band, not the set** (`riftbound-heartsteel-cards`), so the URL
+survives whichever product the cards land in. `docs/seo-keyword-map.md` records
+that rule so a True Damage or K/DA post later gets a sibling row rather than
+this one being rewritten into a generic "music cards" page — the
+publish-fewer-pages rule cuts the other way when the pages are genuinely
+different bands.
+
+## RM10 → RM12: the rotation ran out of rested names, so this one is a new project — 2026-09-18
+
+RM10 reached its 5 GB monthly transfer allowance after four days live. The
+thirteenth operational project to die the same way.
+
+**Two projects have now died on the old schedule SINCE the deploy-cadence gate
+landed** (2026-09-11): RM9 in three days, RM10 in four. That gate was the leading
+explanation for the ~2 GB/day burn and this retires it as the cause. The real
+query is still unidentified — `audit-egress` after cutover, and see the
+RetailerPrice note at the top of `src/lib/db.ts`.
+
+**RM12 IS A GENUINELY NEW PROJECT, breaking a six-cutover habit.** RM6 → RM7 →
+RM8 → RM9 → RM10 each recycled a rested name and inherited whatever was left of
+that project's monthly allowance, which is part of why each term kept getting
+shorter. By today the rotation had run out of rested names: a probe found RM11 —
+the obvious candidate — already at its limit from its 2026-08-29..09-03 term, and
+RM8 outright UNREACHABLE. Only a new project starts with the full 5 GB.
+
+**That inverts one of this repo's own safety rules, and the inverse is what got
+asserted.** `db-chains.ts` says "a recycled target must be re-verified each time
+it comes back around, never trusted from old findings" — a rule about a project
+that might still hold real data. RM12 has never been used, so the migration task
+asserts the opposite: the pre-restore inventory expects RM12 to be **empty**, on
+the stated grounds that a "new" project holding rows is not the project you think
+it is. It came back empty. It also makes the closing `prisma db push`
+load-bearing rather than belt-and-braces, since RM12 has only what the dump
+carried.
+
+**Measured, not assumed, at both ends.** `probe-databases` first confirmed RM10
+still REACHABLE and ahead of every other project on every metric (User=370,
+PriceAlert=213, CollectionCard=1823, RetailerPrice=131,599, Card=1431) — a
+planned rotation with the data fully drainable, not a recovery from a dead
+project. The migration then matched **every table exactly**: User 370,
+RetailerPrice 131,599, PriceAlert 213, SealedListing 2,727, StoreHealthSnapshot
+4,661, PremiumClick 277, PremiumWinbackTrial 127, UserDigestOptOut 367, Order 9,
+OrderMessage 1, SellerProfile 3, TrialRedemption 6 … and `prisma db push`
+reported the schema already in sync.
+
+**The cutover touched more than the chain, and the extras are where a rotation
+usually breaks.** Beyond `OPERATIONAL_VARS`, `build-db-push.sh`'s gate/CURRENT_OP/
+export and `db.ts`'s startup warning, three classes of reference had to move
+together or they would have drifted silently:
+
+- **`DB_SOURCE_NAME` (10 of them).** These name which database a job used. Left
+  behind, every workflow would have *reported* "RM10" while *writing* to RM12 —
+  a diagnostic that lies is worse than none.
+- **`OPERATIONAL_URL` (6).** The "did this history variable accidentally get set
+  to the operational database?" guard. Comparing against a retired project would
+  let a genuine misconfiguration through.
+- **The bare `RM10:` env var (2).** The most dangerous: `resolveVar()` looks it
+  up **by name**, so leaving it would have made `migrate-history` and
+  `probe-history-dbs` report "no database is set" with the secret correctly
+  configured. This exact drift was caught once before, on 2026-09-17.
+
+What deliberately did NOT move: the migration tasks' own `SOURCE_DATABASE_URL`/
+`TARGET_DATABASE_URL` (they name real endpoints, and repointing them would make
+a migration silently no-op while reporting every row count as matching) and
+`probe-databases`' `P_RM10`.
+
+**One test caught a real mistake.** `tests/db-migration-guard.test.ts` derives the
+current step's name from `OPERATIONAL_VARS` and looks for it exactly; the new
+step had been named "…to RM12 (RM10 -> RM12 cutover)", so the guard could not
+find it and three assertions about schema re-push and row verification failed
+against a step it thought was missing. The step was renamed to the convention
+rather than the test loosened — the convention is what makes the guard able to
+find the current step at all.
+
+## The Database link is back, ungated, and the notification bell is gone — 2026-09-19
+
+"The database button is gone on mobile phone, that's the most important one, put
+that back, squeeze the premium in there, get rid of the notification bell" — and
+then, mid-change: "bring the database button back completely on desktop as well,
+this is a big issue."
+
+**The desktop half of that report was real, and worse than it looked.** Removing
+the below-lg Database link on 2026-09-18 left one copy gated `lg:block`. The
+other had been `lg:hidden`. Two links with complementary gates read as "covered
+everywhere" and were not: the whole **640-1023px band — every tablet and every
+narrow laptop window — had no Database link at all**. Nobody noticed because the
+two gates looked like a pair.
+
+There is now **one ungated link**, in the left cluster beside the logo. No width
+can hide it and there is no second copy to drift.
+
+**The 2026-09-18 reasoning for removing it was wrong, and worth naming.** It went:
+the search box one row down submits to `/browse`, so the link is redundant. That
+confuses a route with a way in. `/browse` is the product's primary destination;
+a search box is a thing you use when you already know what you want.
+
+**Restoring it cost ~76px in a row with none, so something had to go.** The
+notification bell (asked for) covered it from `sm` up, where that bell already
+lived — it was nothing below `sm`. Two cuts covered the rest:
+
+- **The "RiftCompare" wordmark waits for `lg`** (was `sm`). Measured: the logo
+  link is **151px with the word and 48px without**, and the 640-1023px band
+  needed 77px. It is the only thing in the row that is decoration rather than a
+  destination — the mark is still the home link, still tappable, still the brand.
+  This is the cut to prefer over any nav control, every time.
+- **The watchlist moves to `sm`-and-up.** Below `sm` seven controls measurably
+  overlapped, and it was the cheapest 48px: one tap away in the menu overlay,
+  where Database and Premium were both named must-haves and the market switcher,
+  account control and menu are each the only route to something. It remains a
+  **separate** control from the menu wherever it appears, which is what "the
+  watchlist and the menu should be separate" actually asked for.
+
+**Measured after, at ten widths** (320/360/375/390/414/640/720/790/1024/1280): no
+horizontal scroll, no overlapping controls, no spilled text, no tap target under
+44x44 at any phone width, Database present at **every** width, Premium present
+below lg, and zero notification bells.
+
+**What removing the bell costs, stated rather than dropped.** `NotificationBell`
+was an in-place dropdown with **no page equivalent — there is no `/notifications`
+route** — so unread notifications currently have no surface at all. The component
+and `use-unread.ts` are deliberately left in the tree. If notifications matter,
+the fix is a real page linked from the menu overlay, not squeezing the bell back
+into a row that has now lost this argument twice.
+
+**It is labelled "Browse", not "Database".** Corrected within the same session:
+"as in bring the browse button back sorry, it's meant to be the browse button on
+the header". Worth recording that this was a RENAME rather than a restoration —
+the header link had carried the word "Database" for its entire history and never
+said "Browse" — so the thing that was actually missing was the link, and the
+label was wrong separately. The destination (`/browse`) never changed, and the
+new label matches both the URL and the page's own "Browse & Compare Prices"
+title. It is also ~15px narrower, which the row keeps as slack.
+
+`nav-groups.ts` still calls the same destination **"Card Database"** for the menu
+overlay, the ⌘K launcher, the side rail and the footer. That inconsistency is
+deliberate for now: one label feeds four surfaces, and renaming it is a separate
+decision from what the header button says.
+
+**Two pre-existing things this pass did not touch**, both predating it: the
+market switcher is 38px tall from `sm` up (`sm:min-h-0`, so desktop rows stay
+36px), and there is no Premium link between 1024 and 1279px — the below-lg copy
+is `lg:hidden` and the desktop copy is `xl:block`, leaving `lg` itself bare.
+
+---
+
+## Changing a hero's format silently deleted its own renditions — 2026-09-19
+
+Found wiring a supplied still-grab onto the HEARTSTEEL post. The source was a
+photographic composite, and a quantised PNG of a photograph is the worst of both
+worlds: `optimize-images.ts` got it to 149,053 bytes — **947 bytes under the
+150 KB build gate** — with visible banding. Re-encoding the *original* as JPEG
+q88 gave 85 KB at better quality, so the hero is `.jpg`. Precedent existed
+(`public/blog/astral-heron-ven044.jpg`); PNG is for flat art, not photos.
+
+Swapping the extension is what exposed the bug. Derivative names are the
+source's basename with the extension swapped, so `hero.png` and `hero.jpg` both
+own `/blog/hero.webp`, `/blog/hero.avif` and every `-<w>w.webp`. The optimiser's
+end-of-run cleanup drops derivatives belonging to manifest entries whose source
+file is gone — and the stale `.png` entry's cleanup deleted the derivatives the
+new `.jpg` entry had written **three lines earlier in the same run**. The
+manifest then advertised a `.webp`, an `.avif` and a full srcset that were not on
+disk.
+
+That failure is invisible. `<picture>` ships 404ing `<source>` elements, the
+browser falls back to the original, the page looks right in review, and the only
+consequence is that the renditions this entire build-time pipeline exists to
+produce are never served. `npm run build` does not catch it either:
+`check-images.ts` gates file *size*, and a file that does not exist has no size.
+
+Fix: the cleanup now collects every derivative path claimed by a **surviving**
+entry first, and skips those. `tests/image-manifest.test.ts` is the guard —
+every path the manifest advertises must resolve in `public/`. It would have
+caught this, and nothing else would have.
+
+---
+
+## "You're not catching this eBay listing" was a landing-tab bug — 2026-09-19
+
+Reported against `ebay.com.au/itm/407214784944` and
+`/card/irelia-fervent-sfd-225s-221`: the listing "doesn't show on AU". Every
+instinct here points at the matcher, and every one of them is wrong — so the
+order of the diagnosis is the part worth keeping.
+
+`diagnose-card` (maintenance task, input `url`) printed the AU funnel:
+
+```
+3 kept  0 dropped  eBay returned
+3 kept  0 dropped  has price
+0 kept  3 dropped  not excluded (lots/bundles/etc)
+   Riftbound Spiritforged IRELIA Fervent SIGNATURE 225/221 Novelty Keychain
+   2026 RIFTBOUND LOL SPIRITFORGED SIGNATURE OVERNUMBER #225* IRELIA FERVENT PSA 10
+   PSA 10 Irelia - Fervent 225* Spiritforged Signature Overnumber RIFTBOUND
+```
+
+Three results in the whole AU market: one keychain (`NOT_A_SINGLE`) and two
+slabs (`GRADED_SLAB`). A new `diagnose-ebay-item` task (`scripts/diagnose-ebay-item.ts`,
+Browse `getItem` across all six marketplaces) confirmed the reported item
+directly — `condition=Graded`, `buyingOptions=FIXED_PRICE`,
+`GRADED_SLAB matches title: true`. The live page's payload already carried it as
+an AU graded row at **A$6,500**. Nothing was being missed, and loosening either
+regex would have put a PSA 10 back into the price comparison — the exact failure
+the graded partition exists to prevent.
+
+What the visitor actually met: the panel's **Listings** tab, selected, showing
+EbayAdCarouselLive's generic "search eBay" CTA, because AU has no raw carousel
+row for this card. "We found nothing" in the open tab, the two copies we did
+find behind an unselected one. Read as a matching bug, entirely reasonably.
+
+So the fix is which tab opens, not what matches. When a market has no raw
+listings but does have slabs, **Graded** opens; a tab the visitor clicks wins
+from then on. Both eBay panels needed it (`EbayCardPanelLive`, `QuickView`) and
+both needed the active tab **controlled**: `SegmentedTabs` seeds its
+uncontrolled default from `tabs[0]` on the first render, which is before
+`mounted` flips on the card page and before `/api/card` resolves in the popup —
+the Graded tab does not exist yet, so it could never have been selected. That
+is also why the automatic choice is gated on `mounted`: pre-hydration the
+country is still `DEFAULT_COUNTRY` and the answer would be about the wrong
+market.
+
+Tidied while there: the tab was gated and counted on `gradedHere` but handed
+`graded`. Nothing foreign was ever drawn — `EbayGradedLive` re-filters by
+country — but the count depended on a filter in another file. It now passes the
+rows it counted, and the re-filter stays, because QuickView still passes every
+market's rows.
+
+Guards in `tests/ebay-graded.test.ts`. Verification is tests plus the live page
+payload; there is no database in the sandbox, so both diagnostics ran as
+`maintenance.yml` tasks in CI.
+
+---
+
+## Cardmarket: a link that never reached the card, and a block nobody scrolled to — 2026-09-19
+
+Two things from one user, and they are worth keeping together because one of
+them was invisible to every test we had.
+
+**The link.** Every Cardmarket URL we had ever written was
+`/en/Riftbound/Products/Singles?idProduct=<id>`. `/en/Riftbound/Products/Singles`
+is a **real page** — browse-all singles for the game — so Cardmarket rendered it
+and ignored the unknown query. Nothing 404ed, nothing errored, the button
+"worked", and it never once opened the card. That is the failure mode to
+remember: a wrong URL that resolves is not detectable by checking that it
+resolves.
+
+The resolving form drops the segment: `/en/Riftbound/Products?idProduct=<id>` is
+Cardmarket's id dispatcher. Not a guess — it is the exact shape Scryfall
+publishes as `purchase_uris.cardmarket` for every Magic card
+(`…/en/Magic/Products?idProduct=693418&referrer=scryfall`), pulled live from
+their API while diagnosing this.
+
+The full slug URL (`/Products/Singles/<Expansion>/<Card>`) is not available to
+us: Cardmarket's public download files carry `idExpansion` as a bare number with
+no name anywhere public, so the expansion half of that path cannot be built from
+the data we have. The dispatcher needs neither half.
+
+**Stated plainly: neither form can be verified from here.** `www.cardmarket.com`
+sits behind a Cloudflare WAF that hard-403s every automated client — `curl` and
+the fetch tooling both, confirmed again today. The evidence is Scryfall's live
+production links plus the reporter's own observation of the old form. If the
+dispatcher ever stops redirecting, `src/lib/cardmarket-url.ts` is the one file to
+change.
+
+That file is new and holds both the builder and a repair, because the importer
+fix alone only heals rows on the next price refresh — and a link someone checks
+the minute a fix ships cannot be "correct tomorrow". `affiliateUrl` now
+normalises any Cardmarket URL carrying an `idProduct` under a `/Products/...`
+sub-path, so every row already in the database is right on deploy.
+
+**The ordering.** *"I'd use the app to check faster on CardMarket prices, so I
+would like to have it not as a last option, but between the first ones."*
+
+Correct, and for a market-specific reason rather than a preference: European
+singles trade on Cardmarket, which is exactly why the EU has eleven tracked shop
+websites for a whole continent (see the Cardmarket block in `price-import.ts`).
+To a UK or EU visitor, TCGplayer's USD market price run through an FX rate is
+the *less* relevant of the two reference blocks, and it was the one they reached
+first. Cardmarket now leads on the card page, and — this is the half that
+actually answers "faster" — the **QuickView popup carries it at all**, which it
+never did. The popup is where a browse-page visitor compares without ever
+loading a card page; it had a TCGplayer figure and no Cardmarket one.
+
+What did **not** change: Cardmarket stays a fallback retailer, below the buyable
+comparison, never a row in it. Its figure is a marketplace LOW across every
+seller of the print, not one verified in-stock listing — THE RULE in
+`constants.ts`. Ordering is a preference; that is not, and a test now pins the
+block to render after the comparison list closes on both surfaces.
+
+`cardmarketRetailerFor()` in `constants.ts` because the two surfaces now both
+need "which key is this market's Cardmarket row", and the TCGplayer equivalent
+of that decision was hand-inlined twice and the second copy was wrong for two
+whole markets (`lib/tcg-reference.ts`). Guards in `tests/cardmarket-eu.test.ts`.
+
+---
+
+## A photographed Neeko settled Radiance's card count, and both our guesses were wrong — 2026-09-19
+
+A spoiler photo of the first Riftbound: Radiance card to surface in print —
+**Neeko, Blending In** — arrived six days before Preview Season. Adding the card
+was the ask. The collector number on it was the bigger find.
+
+**The card is real data, so it went into the catalogue properly.** It is in
+`prisma/manual-cards.json`, which `scripts/build-db-push.sh` applies on every
+production build, so it gets a real `/card/` page rather than living as a
+picture inside an article. Every field is read off the print. The **rarity was
+verified, not inferred**: Riftbound's bottom-centre rarity gem is shape- and
+colour-coded, and Neeko's orange pentagon was matched against Sett, Brawler
+(OGN-164, Epic) and against the magenta diamond on Kayn, Unleashed (OGN-189,
+Rare), both pulled from `cdn.riftscribe.gg`. The card's own wording is
+"Neutral"; the stored domain is `Colorless`, because that is the value all 65
+existing neutral rows use and what `lib/domains.ts`, the facet pages and the
+`/browse` filters are built on — a second spelling would orphan the card from
+every one of them.
+
+**The count.** The card reads `RAD · 167/167 · EN`. We had been carrying Riot's
+announced "180 cards (66 Showcase)" and hedging its ambiguity in two places at
+once: `setFromTotal()` claimed **both** 114 (the inclusive reading: 180 − 66)
+and 180, with a note to prune the loser once a real card appeared;
+`riftbound-radiance-what-we-know` laid out both readings and said it would not
+pick the flattering one until printed collector numbers settled it.
+
+They settled it on **neither**. 167 is not 114 and not 180, and 167 + 66 is not
+180 either. We have not reconciled that and the prose says so rather than
+picking a story: either the announced figure changed, counted something outside
+the main numbering, or was never exact.
+
+**What moved to 167**, all in one pass because a half-migrated card count is
+worse than either number: `constants.ts` `SETS.totalCards`,
+`release-calendar.ts` `cards` and its note, `radiance-preorders`' FAQ, the
+what-we-know article, and — the one with teeth — **both** copies of
+`setFromTotal()` (`lib/price-import.ts` and `lib/tcgplayer.ts`). That function
+resolves a listing's set from its collector-number denominator, and with no
+entry for 167 a Radiance listing would have fallen through to the `OGN` default
+and priced a brand-new card as a two-year-old Origins one. The disproved 114/180
+cases are deleted, not left as harmless extras: a denominator mapping to a set
+it does not belong to is a misroute waiting for whichever future set prints one
+of those numbers.
+
+`tests/radiance-card-count-accuracy.test.ts` previously asserted `cards === 180`
+on the strength of Riot's rundown. It now asserts 167, pins that **both**
+numbers survive in the calendar note, and adds a test that 167 routes to RAD in
+both `setFromTotal` copies while the two disproved cases stay gone. The file's
+header records the supersession instead of quietly rewriting history — the
+earlier 180 was a correct reading of the best evidence then available.
+
+---
+
+## Recently viewed moved from the last row on the homepage to the first — 2026-09-19
+
+Owner request, and the top of the page turns out to be the one slot it can take
+without contesting anything.
+
+`RecentlyViewedRail` reads localStorage through `useSyncExternalStore` with an
+empty server snapshot, so it renders nothing on the server and nothing for a
+first-ever visitor. A crawler, the prerendered HTML and a new visitor therefore
+see the page exactly as before, with eBay Picks still leading — the owner-chosen
+top slot from 2026-09-17, still pinned by `tests/game-before-money.test.ts`. The
+only person the rail appears for is someone coming back, and returning visitors
+were precisely the group who had to scroll past every section on the page to
+reach the one row addressed to them.
+
+The cost, recorded rather than left to be discovered: a returning visitor now
+gets one layout shift of about a chip row shortly after hydration, where it used
+to happen off-screen at the bottom. It cannot be reserved away — the height is
+only knowable once localStorage has been read, and reserving it unconditionally
+would punch a permanent gap into every first-time visit to avoid a shift only
+returning visitors ever see. That trade is the wrong way round, so the shift
+stays.
+
+Two guards in `tests/homepage-declutter.test.ts`: the rail renders above every
+other homepage section and **exactly once** (a move done by copy-paste would
+leave two rails rendering the same eight chips), and the client-only mechanism
+that makes the placement safe — the null return on an empty history, the server
+snapshot — is pinned too, since the placement argument collapses without it.
+
+---
+
+## The card page's LCP: an image that could not be cached and could not start early — 2026-09-20
+
+Speed Insights, desktop, P75 LCP 2.77s, three routes over 4s. Taken at face
+value that is three problems; it is really one live one, one already fixed, and
+a sample size worth saying out loud.
+
+**The sample is 1–3 visits per route.** `/` had 2, `/card/[id]` 2, `/games` 1.
+Nothing below is inferred from those numbers — every cause was reproduced
+directly against the live site, and the numbers are only what pointed at where
+to look.
+
+**`/` at 5.93s is stale data.** Its selector was
+`img.absolute.inset-0.h-full.w…`, which is in no current page. `git log -S`
+found it: the Premium pitch panel's character-art background, deleted in
+`53964fc` on **2026-09-15** — the first day of the reporting window. Worth
+keeping the mechanism in mind, because it is a good trap: that panel slides in
+**five seconds** after the page opens, and a large image arriving then *becomes*
+the LCP element. A promo that appears late can wreck a metric it has nothing to
+do with. `PremiumPitchPanel` now uses `BrandLogo` (inline, no raster), so this
+is already gone.
+
+**`/card/[id]` at 4.42s is real, and it is two compounding causes.** Fetched
+live, the 104 KB hero of `/card/irelia-fervent-sfd-225s-221`:
+
+```
+cache-control: public, max-age=0, must-revalidate
+x-vercel-cache: MISS
+```
+
+Next.js only marks `/_next/static/*` immutable; everything in `public/` takes
+Vercel's default. So the site's largest per-page image revalidated over the
+network on every single view and the CDN was not holding it — for files whose
+names already contain their content hash. And `loading="eager"
+fetchPriority="high"`, which CardImage has set for months, does nothing until
+the parser *reaches* the element: on that page it sits 51 KB into a 450 KB
+document.
+
+Two fixes, one per cause.
+
+**Caching, scoped by file extension rather than directory.** That is the safety
+argument, not a style preference: a `/blog/:path*` rule also matches
+`/blog/<slug>`, a real page route, and would have put 24 hours of *browser*
+caching on article HTML — an edit invisible to anyone who had already opened it,
+with no way to recall it. `/sealed` and `/premium` are the same shape. So:
+`/card-art/:file.webp` gets `max-age=31536000, immutable` (the filename IS the
+hash — a changed image is a changed URL), and every other image extension gets
+`max-age=86400, stale-while-revalidate=604800`, because those names are reused
+on replacement and `immutable` would pin a stale copy for a year.
+
+**The rule order is load-bearing and was verified rather than assumed.** Every
+matching rule applies and the last wins for a repeated key; with the immutable
+rule above the catch-all, the card art silently took the weaker 24h value. All
+of it was checked against a running dev server before it shipped, including that
+HTML routes keep their own `Cache-Control` and the security headers still apply.
+
+**Preloading**, via `ReactDOM.preload` from CardImage, gated on `priority` — one
+call site, the card hero. Three branches, because a preload that disagrees with
+what `<picture>` picks downloads the page's largest image twice: AVIF when the
+manifest has one (with `type`, so a browser that cannot decode it skips the
+preload instead of wasting the bytes), else the WebP srcset with the *same*
+`sizes` constant the `<source>` uses, else the bare `src`. Verified by rendering
+CardImage against a throwaway route on a dev server: the link lands at byte 267,
+inside `<head>`, and its href matches the chosen source exactly in both the
+hashed and the manifest cases.
+
+`/games` at 5.73s (one visit) is not separately explained. It is the same ~5s
+shape as the old promo-panel LCP and shares every fix above; if it survives the
+next window it needs its own look.
+
+Guards in `tests/static-image-caching.test.ts`, which run the real
+`next.config.js` rules through Next's own path-to-regexp rather than
+string-matching them: no rule may match any of ten real page routes, card art
+must come out immutable and nothing else may, and the preload branches must
+mirror the `<picture>` sources.
+
+---
+
+## Working the inbox: one store added, three sealed prices that were the wrong product — 2026-09-20
+
+The whole queue, read with `audit-inbox` and acted on row by row.
+
+### The store
+
+**Quack Opens** (AU), suggested by its owner through `/stores/suggest`. Probed
+before adding rather than after: `/collections/riftbound/products.json` returns
+HTTP 200 with `?country=AU` and **986 products**, robots.txt allows it, and the
+shipping figure comes off their own published policy page ("flat rate shipping:
+Standard bubble mailer: $10"). They ship Australia only and publish no free tier,
+so `freeOverCents` is **0** — `lib/basket.ts`'s documented "no threshold"
+sentinel, not a guess. Inventing a threshold would have routed the Best Basket
+optimiser onto postage the store never waives.
+
+Their Riftbound shelf is ONE mixed collection, singles and sealed together, with
+no `-singles` handle. Left alone deliberately: `resolveCardId` only ever matches
+a real card, so the sealed rows find nothing and are dropped, while `importSealed`
+picks them up through its own path.
+
+### The three sealed reports, and what they actually were
+
+None of them was a missing listing or a broken fetch. In all three the pipeline
+found a REAL listing, passed it through every guard, and published it as a
+product it is not — at a price that looked like a bargain precisely because it
+was a different thing.
+
+Getting to that required a new read-only diagnostic. **A sealed wrong-price
+report names a groupKey and a price and nothing else**: sealed listings have no
+id of their own, so `PriceReport` has no title for them; `/sealed` renders the
+product tile rather than the listing title; and eBay serves 403 to any scripted
+fetch of an `/itm/` page. `SealedListing.title` is the only copy of the one fact
+every fix depended on, and nothing could read it without an admin session.
+`scripts/diagnose-sealed.ts` reads it, and re-runs `classifySealed()` over every
+stored title so a row whose type disagrees with the classifier shows up by itself.
+
+| Reported | The real title | Published | Real market |
+|---|---|---|---|
+| UNL Booster Box, AU | `Unleashed Slim Booster Box (CHN)` | A$156 | A$199-280 |
+| SFD Booster Box, AU | `Spiritforged Jumbo Booster Box Factory Sealed` | A$123.56 | A$215-320 |
+| OGN Booster Case, US | `x1 Origins Booster Box … FRESHLY FROM A CASE` | US$469 | ~US$1,095 |
+
+**`chn`.** `FOREIGN_LANG` already listed `cn`, `chs`, `cht`, `jp`, `jpn`, `kr`,
+`kor` — and `\bcn\b` does not match "CHN". An all-English title from an
+AU-located seller therefore passed every language guard, and A$156 clears both
+the flat floor and half the trusted reference. One word added to one shared
+pattern, which closes the same hole for singles, TCGplayer and ~100 store feeds
+at once; that is exactly why that pattern lives in one file.
+
+**`jumbo` and `slim`.** The SFD listing was reported as "Chinese version" and its
+title says nothing about language at all. So the code makes the claim the title
+supports instead: a *Jumbo* (or *Slim*) box is not a SKU this site tracks — our
+types are Booster Box / Display / Case / Pack / Sleeved Booster — so a listing
+naming itself a different box is not the product searched for, whatever market
+it came from. Checked against every sealed title in the database that day (~200
+across six markets): not one legitimate English listing uses either word.
+
+**The case that was a box** is two defects that had to be fixed together.
+`SEALED_TYPE_KW["Booster Case"]` was a bare `/\bcase\b/i`, so "FRESHLY FROM A
+CASE" satisfied it — and separately, the importer stamped the group's
+`productType` onto whatever the search returned, so nothing downstream could
+disagree. The keyword now requires the word to describe the product, and the
+importer lets **the listing's own title veto the group it was searched for**
+(`SELF_TYPED`), scoped to the four confusable types — box, case, pack, sleeved
+pack — which differ by one word and by an order of magnitude in price.
+
+That veto only works if `classifySealed()` is right, and it was not:
+**the bare phrase "Booster Case" was not in its alternation at all.** Three
+genuine case listings typed as "Sealed" or "Booster Box". Adjacency matters in
+the fix — a bare `/\bcase\b/` there would retype the single box and put the
+original defect straight back.
+
+Two more types had **no keyword at all** (`Sleeved Booster`, `Sleeved Booster
+(Art Set)`), and the filter is `!kw || kw.test(…)`, so they were searched with no
+title filter whatsoever. That is the trap the table's own comment already
+records for two Radiance SKUs, still live for two more, and it is how an "Origins
+Booster Pack" listing ended up filed as a sleeved booster.
+
+### The feedback queue
+
+Nothing to do, and worth saying why rather than quietly closing it. All three
+rows were already HIDDEN, and all three are genuinely actioned — checked in code
+this pass rather than inferred from the status: the missing shipping cost is
+`/portfolio`'s "Replacement cost, delivered" panel; per-copy purchase prices for
+duplicates are `CollectionCard.costBasisIsTotal`; and "Hobby Collectors Australia
+is throwing off card prices" is the `foreignTotal` guard in `resolveCardId`. The
+last two carry the report's own words in their comments.
+
+Guards in `tests/sealed-wrong-product.test.ts`, written against the verbatim
+titles. `scripts/close-inbox-items.ts` carries this pass's rows with the status
+each one earned.
+
+---
+
+## The sealed fix's own first run found the hole in it — 2026-09-20 (same day, later)
+
+Two corrections to the entry above, both worth keeping because the second one is
+the case FOR the first.
+
+**The import that was supposed to prove the fix never tested it.** Dispatching
+`import-sealed` right after the matching changes returned success in twenty
+minutes, and the bad rows were still there. One line explains it:
+
+```
+eBay sealed: skipped (refreshed within the last 20h).
+```
+
+`importSealed` gates the eBay pass on the age of the newest eBay-sealed row. The
+rows were 19 hours old, so not a single eBay search ran. That gate is right for
+the SCHEDULED run — sealed stock does not move twice a day and every search
+costs Browse quota — and close to always wrong for a DISPATCHED one, because the
+reason to dispatch it by hand is that the matching rules just changed and the
+existing rows were written by the old ones. `EBAY_FORCE=1` already existed as the
+bypass and simply was not wired to the workflow; `apply` now sets it, and both
+the task description and the step say plainly that an un-ticked run tests no
+eBay change at all.
+
+Worth stating how this was nearly missed: the live `/sealed` page had none of
+the three offending strings in it, and that looked like confirmation. It was not
+— the page renders one market's tiles, not every stored row. The check that
+actually answered the question was `diagnose-sealed`, reading the table.
+
+**Then the forced run dropped a listing it should have kept**, and said so:
+
+```
+eBay sealed AU: dropped "Riftbound: League of Legends TCG Unleashed Case
+(6x Booster Boxes)" from UNL|Booster Case — its own title types as Booster Box.
+```
+
+That is a genuine case, vetoed by the new check because `classifySealed()` still
+could not read it. The earlier fix taught the classifier `booster case` and
+required ADJACENCY, specifically so "Origins Booster Box … FRESHLY FROM A CASE"
+would keep typing as a box. But a case is just as often written with the word
+"case" nowhere near "booster" and a COUNT carrying the meaning instead —
+"Case (6x Booster Boxes)", "SEALED CASE OF 6 BOOSTER BOX". Those matched only
+"Booster Boxes", so they typed as a box.
+
+The count is what makes the new rule safe: a multiplier beside "booster box" is
+required, and the single box that ends "FROM A CASE" has none. Both directions
+are pinned with 20 real titles.
+
+The veto earned its place in the same run, on the other side:
+
+```
+eBay sealed EU: dropped "… UNLEASHED SEALED CASE 6x BOOSTER BOX ENGLISH ENG"
+from unleashedcase6xboosterbox — its own title types as Booster Case.
+```
+
+There the classifier was right and the GROUP was wrong: a store product that is
+a case had been typed as a Booster Box at import time, creating a box-shaped
+group for a case-shaped product. The veto stopped a case being priced as a box.
+With the classifier fixed, that store product now types as a case and the group
+re-forms correctly on its own.
+
+The general lesson, which is why this is a separate entry rather than an edit:
+**a log line that names what it dropped and why is what turned a silent
+regression into a five-minute fix.** The veto could have just `continue`d.
+
+---
+
+## A third leak, found by reading the table instead of the page — 2026-09-20
+
+The verification run for the sealed fixes reported a clean result — zero
+classifier mismatches, both eBay leaks gone — and then, in the same dump, showed
+two rows nobody had reported:
+
+```
+VEN|Booster Box   EU  42.99  in  cardmarket   Vendetta Booster Box (Chinese, Slim)
+VEN|Booster Box   EU  65.90  in  cardmarket   Vendetta Booster Box (Chinese, Jumbo)
+```
+
+The cheaper one was the EU market's headline price for a product that really
+trades at **€143-180**. Not eBay this time: **Cardmarket**, whose sealed path had
+no language check at all, unlike the singles matcher and the eBay sealed search
+which each grew one separately.
+
+The second half is the part worth remembering. The obvious fix — call
+`isForeignLanguageTitle` — would not have worked, because **`FOREIGN_LANG` did
+not match the word "Chinese".** It covered `cn`, `chn`, `chs`, `cht`, `jp`,
+`kr`… and eBay's sealed search kept `chinese|japanese|korean` in a separate list
+of its own. Each half was complete for its own caller and neither was complete
+alone, so any third source reaching for "the language check" got half of one.
+That is a failure mode of the "one canonical pattern" rule the file's own header
+argues for: the rule held, and the pattern was still incomplete, because the
+other half had never been folded in. Both halves now live in the one pattern.
+
+`buildCardmarketSealedRows` drops a foreign-titled product, with a unit test
+that runs the real builder over a two-product fixture rather than only asserting
+the regex.
+
+And the method, which is the transferable bit: three of the four price defects
+found today were invisible on the rendered page and obvious in the table. The
+first one nearly shipped as "fixed" on the strength of a `grep` over
+`/sealed` — which renders one market's tiles, not the rows. `diagnose-sealed`
+found all three, and found this one while looking for something else.
+
+---
+
+## "Visitor counts are going down": not an outage, a news spike fading — 2026-09-21
+
+The owner asked for the drop to be fixed immediately. Before touching anything
+the site was checked for the things that DO cause a step-change: robots.txt,
+the sitemaps, a noindex leak, a 5xx on an indexed template. All clean; the
+indexability audit reported 99.0%. Search Console for the 28 days to 2026-09-21
+then explained it:
+
+| | |
+|---|---|
+| Impressions / clicks | 164,892 / 3,097 (1.88% CTR) |
+| Clicks from `/blog/riftbound-radiance-leaked-mechanics` | 857 — 28% of the total |
+
+More than a quarter of the month's search traffic came from one leak post. A
+news spike decays on its own; nothing on the site broke, and no single change
+brings that curve back. What can move today is click-through on the pages
+that already rank and are not being clicked:
+
+| Page | 28d impressions | clicks | Sample query, position, CTR |
+|---|---|---|---|
+| `/guides/riftbound-banlist-explained` | 8,313 | 16 | "riftbound ban list" 8.9, 0.1% |
+| `/guides/riftbound-empower-explained` | 17,695 (+3,103 anchor) | 85 | "riftbound empower" 4.9, 1.9% |
+
+Both were losing on the snippet. The banlist guide was titled "Riftbound Ban
+List Explained" for queries asking for a **list** ("ban list", "banned cards");
+it is now "Riftbound Ban List 2026: Every Banned Card" (56 with the suffix),
+and the description says what the list covers — Standard and 2v2, the reason
+for each ban, live prices — in 155 characters, the page's `DESCRIPTION_MAX`,
+so nothing is clamped. The old 208-character excerpt shipped with a "…" mid
+sentence.
+
+Empower's title is left alone on purpose: `tests/seo-landing-pages.test.ts`
+pins the "Explained: How the … Mechanic Works" shape as the one that wins for
+the three mechanics guides, and that decision is not mine to undo in a
+same-day pass. Its description moved instead, from "A complete guide to…" to
+the one-sentence answer the body opens with, so the snippet answers "what is
+empower" before the visitor clicks and still gives them a reason to.
+
+Two things worth being honest about, because the request was "bump it up":
+
+- **This is a CTR lever on ~29k monthly impressions**, not a traffic source.
+  If the banlist page goes from 0.2% to a modest 2% that is ~150 clicks a
+  month, which does not replace a fading 857-click post. The durable answer
+  to the decline is more Radiance content while that demand lasts
+  ("riftbound radiance" sits at position 11.7) — a separate pass.
+- **"2026" in the title is a maintenance promise.** The guide is updated on
+  every ban wave anyway (July, September); when it is updated in 2027 the
+  year moves with it. `tests/guide-snippets-ctr.test.ts` pins the shape, not
+  the year.
+
+Shipped with `[deploy]` because the owner said "I need something now"; on the
+daily release it would have gone out at 08:00 UTC tomorrow.
+
+---
+
+## The site's biggest query had no owner: a Radiance spoiler tracker — 2026-09-21
+
+Follow-up to the traffic entry above. With the query-level report in hand the
+picture sharpened: the decline is a fading leak spike, but the demand behind
+that spike has not gone anywhere — it has nowhere on the site to go.
+
+| Query (28d to 2026-09-21) | Impressions | Clicks |
+|---|---|---|
+| `riftbound radiance spoilers` | 1,152 | 163 |
+| `riftbound radiance leaks` | 1,402 | 137 |
+| `riftbound radiance card list` | 817 | 49 |
+| `radiance riftbound spoilers` | 293 | 46 |
+
+Those are the site's #2, #3, #5 and #6 queries after its own name, and every
+click on all of them was landing on `/blog/riftbound-radiance-leaked-mechanics`
+— an 8 September post about one fan photo. Someone searching "spoilers" wants
+the official reveals; the page they got is a hedged leak write-up that does not
+change when a card is revealed. Preview Season opens 25 September, four days
+from now, which is when that mismatch would have started costing the most.
+
+`/blog/riftbound-radiance-spoilers` is the Vendetta shape
+(`every-riftbound-vendetta-card-revealed`): a hand-written, dated reveal log
+around a `setAll: "RAD"` gallery with the filter bar's "most recently added"
+sort. The gallery is drawn from the database, so the page is current the
+morning after each reveal is imported without an edit — the failure mode of a
+checklist post is going stale, and this one cannot. It has one card today
+(Neeko), which is why the log and the schedule carry the page until the 25th;
+1,837 words, all of them facts already recorded in `what-we-know`,
+`lib/sets/radiance.ts` or the Neeko and HEARTSTEEL posts. Nothing new is
+asserted.
+
+Ownership, recorded in `docs/seo-keyword-map.md`:
+
+- **Spoilers / reveals → the tracker.** Title "Riftbound Radiance Spoilers:
+  Live Card Tracker" (60 with the suffix, exactly).
+- **Leaks stay on the leak post.** 857 clicks in 28 days; retitling it toward
+  "spoilers" would trade a page that ranks for one that does not yet. It got
+  one dated line pointing official reveals at the tracker.
+- **Card list stays on `/sets/radiance`.** The tracker never says "card list"
+  in its title, and the test pins that.
+
+Wired into the three surfaces a Radiance visitor actually arrives on: first in
+`/sets/radiance`'s pre-release links, the publish-plan section of
+`what-we-know`, and the leak post's status section.
+
+Rides the daily release rather than `[deploy]`: "push to main" is the ordinary
+case per the gate rules, and the 08:00 UTC build lands it a full three days
+before the first reveal.
+
+---
+
+## An outside SEO review: what was checked, what changed, what was not — 2026-09-21
+
+Darren at Fuelled SEO (Newcastle) reviewed the site and sent four points: keep
+off-page links to three or four a month and brand-only; on-page site speed;
+internal linking; make certain no crawlers are blocked; and patience. The first
+is outreach, not code, and the last is a stance. The middle three were audited
+against the live site before anything was edited.
+
+**Crawlers: nothing is blocked, verified rather than assumed.** Googlebot,
+bingbot, AhrefsBot, GPTBot and a plain curl each fetched `/`, a card page, a
+guide and `/sitemap.xml`: every one 200, byte-identical bodies (611,529 for
+`/`), no challenge page, no UA-dependent response. `robots.txt` allows `/` to
+everyone, disallows only `/api/` (with `/api/v1/` re-allowed) and blocks two
+bulk scrapers by name. Mangled URLs Google has crawled
+(`/blog/riftbound-riftbound-radiance-…`, `/guides/riftcompare.com/guides/…`)
+404 with `noindex`. No change; `tests/critical-path.test.ts` pins the source.
+
+**Internal linking: 19 published articles had no editorial inbound link.**
+Reachable only from the `/blog` and `/guides` indexes and the tag-based
+"recommended reads" module — several already earning impressions (the
+card-size guide 1,413/28d, the Shen Signature post 2,234, Astral Heron 1,042).
+Contextual sentences were written into 26 related articles, each placed where
+the host article actually discusses the topic (the three "switching from
+another game" guides now cross-link; the four keyword-family guides form a
+ring; the two sleeve guides point at each other; the ban/keyword/rules cluster
+is closed). `tests/internal-links.test.ts` resolves article bodies through
+`getArticles()` — so the content-pack's `${L.x}` links count — and fails on
+any published article with zero inbound links from another article or from
+app source.
+
+Noted, not changed: every page carries ~400 anchors of which ~150 are the
+same links repeated (desktop sidenav, mobile drawer, the footer's mobile and
+desktop variants are all in the DOM). `FooterNav.tsx` documents why both
+variants render. Not an SEO defect, but it is a third of the HTML.
+
+**Speed: measured twice, because the first measurement lied.** Lighthouse
+(mobile, simulated) reported FCP 4.5s and LCP 10.6s on the guide page with the
+server-rendered H1 as the LCP element and a 9.9s "render delay", and its
+filmstrip showed a blank white page until ~4.5s. That would have pointed at a
+JS-gated render. It was not: a real mobile Chromium (Playwright, no
+throttling) painted the same page at **828ms** with the H1 as LCP, **440ms**
+with third-party scripts blocked, and DOMContentLoaded at 657ms. The blank
+frames were an artifact of Lighthouse's headless capture in this sandbox, not
+the site. Lesson recorded here so the next pass does not chase it.
+
+What the real numbers did show, and what changed:
+
+- **gtag.js was a high-priority fetch at 176ms** — `next/script`'s
+  `afterInteractive` is `ReactDOM.preinit` in the App Router — 188KB, the
+  largest request on every page, downloading ahead of the render-blocking CSS
+  and the fonts. Now `lazyOnload`: after `load`, on idle. `window.gtag` is a
+  dataLayer push from ConsentDefaults, so events fired before the library
+  arrives are queued, not lost. Visitors who leave before `load` are no longer
+  counted; under the consent-denied default they were cookieless pings anyway.
+- **Three fonts preloaded at high priority in the same window.** JetBrains
+  Mono dresses numbers, never the H1; it now loads with the stylesheet
+  (`preload: false`). Inter and Fraunces stay preloaded — they are the paint.
+- Third-party weight (693KB on `/`: gtag, AdSense, FundingChoices) and the
+  homepage's 596KB HTML (306KB of it the RSC payload for 68 images and 412
+  links) are the remaining costs. Both are product decisions — the AdSense
+  loader is the revenue, the homepage content is the homepage — and are left
+  as they are.
+
+Shipped with `[deploy]` at the owner's explicit instruction to skip the daily
+schedule for this change.
+
+**Addendum, same day.** Verifying the deploy on the live `/sets/radiance`
+found it linking to none of the Radiance posts — not the new tracker, not the
+confirmed-facts post, not the pre-order comparison. The pre-release link list
+was rendered only inside the page's `totalInSet === 0` branch, so the first
+imported card (Neeko, 19 September) had silently removed every link from the
+hub into its own cluster, two days before spoiler season. The has-cards branch
+now renders the same list under its "revealed so far" banner, and the tracker
+test pins that both branches map it. Verification against the live page, not
+the source, is what caught it.
+
+---
+
+## /gallery: the title now makes a claim — 2026-09-21
+
+Search Console, 28 days: "riftbound card gallery" 712 impressions at position
+9.1 with 0.1% CTR; `/gallery` 1,271 impressions for 4 clicks. The title was
+"Riftbound Card Gallery — Every Set, Every Card" — it matched the query and
+gave a searcher nothing to weigh against the other nine results. It is now
+"Riftbound Card Gallery: All 1,431 Cards by Set" (60 with the suffix for any
+four-digit count), and the description and H1 carry the same number.
+
+The number is the database's own count, not a typed figure: `generateMetadata`
+and the page share one `groupBy` through React's `cache()`, so the title costs
+no extra read and cannot drift from the set list underneath it. It fails open —
+a DB blip renders a count-less title, never "All 0 Cards". The description's
+"Origins to Vendetta" span is built from the release list, so it rolls to
+Radiance on 23 October on its own. The builders live in `lib/gallery-seo.ts`
+because a `page.tsx` may export only Next's route fields — `tsc` passes a
+stray export that `next build` rejects.
+## One destination, one name: /browse is "the card database" everywhere — 2026-09-21
+
+"Reword the browse in the home page and all other areas to database — I think
+that's better."
+
+**This label has now been argued both ways by the same owner inside 48 hours**,
+which is worth recording plainly rather than quietly flipping back. The header
+link said **Database** for its entire history; on 2026-09-19 it was renamed to
+**Browse** ("it's meant to be the browse button on the header"); on 2026-09-21
+it went back to **Database**. `/browse` never moved for either rename.
+
+What makes this pass different from a straight revert is that the 09-19 change
+was deliberately isolated to the header, and its own commit message flagged the
+residue: *"nav-groups.ts still calls the same destination 'Card Database' for
+the menu overlay, the ⌘K launcher, the side rail and the footer. Left alone
+deliberately."* So the site was left with **one destination wearing two names**
+depending on which control you reached it from — which is, on both readings, the
+actual defect behind both complaints. This pass removes the split instead of
+moving it: the header, the hero link, the nav group heading, the footer bucket,
+every empty-state button and both digest emails now agree.
+
+**The rule applied**, because a blanket find-and-replace would produce nonsense
+("Database all cards →"):
+
+- **Renamed** — every label where "Browse" was the *name* of the destination
+  `/browse`: the header button, the homepage hero link ("Browse all N cards →" →
+  "All N cards in the database →"), the `NAV_GROUPS` heading, the footer bucket,
+  and the empty-state / secondary CTAs on `/alerts`, `/dashboard`, `/movers`,
+  `/market`, `/singles`, `/not-found`, the domain and facet pages, Riftle,
+  2048, the watchlist, the ad slot and the two digest emails.
+- **Kept** — "browse" as an ordinary verb in a sentence that already names the
+  thing ("Browse the card database →" on articles and the feedback form), and
+  headings for a *different* action or destination ("Browse by topic", "Browse
+  by set", "Browse the gallery by set", "Browse free tools" → `/tools`, "Browse
+  <set> sealed" → `/sealed`).
+- **Untouched on purpose** — the SEO titles, meta descriptions, H1s and
+  breadcrumbs on `/browse`, `/cards`, `/domains`, `/champions` and `layout.tsx`.
+  Those are keyword-ownership decisions (`docs/seo-keyword-map.md`: `/browse`
+  owns `riftbound card list` via its "Riftbound Card List — Browse & Compare
+  Prices" title), not navigation labels, and rewriting them to suit a nav rename
+  would trade documented search ownership for cosmetic consistency. Flagged
+  rather than silently decided.
+
+**Width cost, re-incurred.** "Database" is ~15px wider than "Browse", and the
+640–1023px header row is the tight one — the 09-19 pass explicitly banked that
+15px as slack. It is spent again. `tests/mobile-header-fit.test.ts` and
+`tests/header-mobile-space.test.ts` measure that row and both pass.
+
+Three tests were re-pointed rather than deleted, and the header one's ban is
+**flipped, not dropped**: it now asserts the header must not say "Browse", which
+is worth more than the old direction precisely because every other surface now
+says Database too.
+
 ## Paid store consulting — the first thing a business buys here — 2026-09-21
 
 Every paid thing on this site until now was bought by a PLAYER: Premium, Plus,

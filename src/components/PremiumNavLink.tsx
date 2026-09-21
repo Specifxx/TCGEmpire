@@ -17,16 +17,26 @@ export function PremiumNavLink({
   className,
   children,
   onClick,
+  // Accessible name + tooltip, needed since 2026-09-18: below `sm` the phone
+  // copy of this link renders as a bare gold "✦" with no text (see Navbar's
+  // comment on why), so it needs a name of its own. Both are optional and
+  // unset on every other caller, whose visible "✦ Premium" text is its name.
+  "aria-label": ariaLabel,
+  title,
 }: {
   href?: string;
   className?: string;
   children: React.ReactNode;
   onClick?: () => void;
+  "aria-label"?: string;
+  title?: string;
 }) {
   return (
     <Link
       href={href}
       className={className}
+      aria-label={ariaLabel}
+      title={title}
       onClick={() => {
         firePremiumClickBeacon("button");
         onClick?.();

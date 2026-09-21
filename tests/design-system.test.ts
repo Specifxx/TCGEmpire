@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { DURATION, EASING, Z } from "../src/lib/motion-tokens";
 import tailwindConfig from "../tailwind.config";
 
-const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
+const ROOT = process.cwd();
+const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").replace(/\/\*[\s\S]*?\*\//g, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -181,6 +182,44 @@ test("SegmentedTabs implements the real ARIA tabs pattern and EbayTabs re-export
   assert.match(wrapper, /export type EbayTab/, "existing `import { EbayTab }` call sites must keep compiling");
 });
 
+test("SegmentedTabs' sliding pill is sized to the ACTIVE TAB, never to the whole tablist", () => {
+  // A real phone bug, reported live with a screenshot (2026-09-16). The tablist
+  // is `flex-wrap`, and at 393px the homepage's three tabs wrap to two rows
+  // ("All-time" + "Biggest movers", then "Recently updated"). The indicator was
+  // `inset-y-0` with an x-only translate, so it stretched to the full height of
+  // a two-row tablist: measured 93x96 instead of 93x44, and `rounded-full` on
+  // that box rendered a giant green blob over the first pill that bled into the
+  // second row. A tab on row two also had no y offset to slide to, so the pill
+  // would have marked the wrong tab outright.
+  //
+  // Both halves are pinned because either alone leaves the bug: an explicit
+  // measured height (not inset-y-0) AND a two-axis translate.
+  const src = readCode("src/components/ui/SegmentedTabs.tsx");
+  const indicator = src.slice(src.indexOf("{indicator && ("), src.indexOf("/>", src.indexOf("{indicator && (")));
+  assert.ok(indicator, "expected the sliding indicator span");
+  assert.doesNotMatch(
+    indicator,
+    /inset-y-0/,
+    "inset-y-0 makes the pill as tall as the whole tablist, which is two rows deep once the tabs wrap",
+  );
+  assert.match(indicator, /height: indicator\.h/, "the pill must take the active tab's own height");
+  assert.match(
+    indicator,
+    /translate\(\$\{indicator\.x\}px, \$\{indicator\.y\}px\)/,
+    "a tab on the second row needs a y offset, not just an x one",
+  );
+  // And the measurement itself must record all four numbers.
+  assert.match(src, /y: elRect\.top - listRect\.top/);
+  assert.match(src, /h: elRect\.height/);
+  // One measure() shared by the layout effect and the ResizeObserver: these were
+  // two copies of the same arithmetic, so a fix to one silently missed the other.
+  assert.equal(
+    (src.match(/elRect\.left - listRect\.left/g) ?? []).length,
+    1,
+    "the measuring arithmetic must exist exactly once",
+  );
+});
+
 test("PopularCardsCarousel no longer hand-rolls aria-pressed tabs", () => {
   const src = readCode("src/components/home/PopularCardsCarousel.tsx");
   assert.doesNotMatch(src, /aria-pressed/, "must use SegmentedTabs, not a toggle-button row");
@@ -296,31 +335,97 @@ test("WelcomeChecklist is never a modal and keys eligibility off the rc_welcome_
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// P7 — mobile bottom tab bar.
+// P7's mobile bottom tab bar — REMOVED, 2026-09-18, and these pin the removal.
+//
+// It shipped three attempts at staying pinned to the bottom of a phone screen
+// (a dvh/lvh calc in `bottom:`, the same value as a compositor-only transform,
+// then a measured visualViewport version with a pinch-zoom gate and a geometry
+// reset) and rode up the screen through all three. Reported as "the bottom part
+// keeps rising up on the phone I've given up fixing it. Let's get rid of it and
+// add the menu bar back to the top." Navigation moved to HeaderMenuButton, which
+// cannot have that class of bug: the TOP edge of the layout viewport does not
+// move when a mobile browser's chrome collapses.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("--bottombar-h is 0 inside the exact same 1024px query that sets --sidenav-w, so the two can never disagree", () => {
+test("the bottom bar and its viewport arithmetic are deleted, not merely unmounted", () => {
+  for (const rel of ["src/components/BottomTabBar.tsx", "src/lib/chrome-lift.ts"]) {
+    assert.ok(!existsSync(join(ROOT, rel)), `${rel} must be deleted`);
+  }
+  const layout = readCode("src/app/layout.tsx");
+  assert.doesNotMatch(layout, /BottomTabBar/, "no import and no render may survive");
+});
+
+test("the CSS reservations went with it, and .above-bottombar keeps only what still applies", () => {
   const css = read("src/app/globals.css");
-  assert.match(css, /--bottombar-h:\s*3\.5rem;/, "must default to a real height below lg");
+  // --bottombar-h reserved space for a bar that no longer exists; --chrome-lift
+  // corrected a position that is no longer computed. Both had to go together —
+  // leaving either would silently pad every page by 3.5rem or shift the corner
+  // nudges by a value nothing writes any more.
+  assert.doesNotMatch(css, /--bottombar-h:/, "--bottombar-h must be gone");
+  assert.doesNotMatch(css, /--chrome-lift:/, "--chrome-lift must be gone");
+  assert.doesNotMatch(css, /var\(--bottombar-h\)/, "nothing may still read --bottombar-h");
+  assert.doesNotMatch(css, /var\(--chrome-lift\)/, "nothing may still read --chrome-lift");
+  // The native AdMob banner reservation is a separate, still-live concern, and
+  // the utility keeps its name because five components anchor off it.
   assert.match(
     css,
-    /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;[\s\S]{0,400}?--bottombar-h:\s*0px;/,
-    "--bottombar-h: 0px must live in the SAME :root block as --sidenav-w: 4rem, not a second 1024px query"
+    /\.above-bottombar\s*\{[\s\S]{0,200}var\(--native-banner-h\)[\s\S]{0,120}safe-area-inset-bottom/,
+    "the utility must still clear the native banner and the safe area"
   );
-  assert.match(css, /\.above-bottombar\s*\{[\s\S]{0,200}var\(--bottombar-h\)[\s\S]{0,200}var\(--native-banner-h\)/, "the utility must stack both reservations");
+  assert.match(css, /body\s*\{\s*padding-bottom:\s*calc\(var\(--native-banner-h\)/, "body padding keeps the banner reservation only");
+  // --sidenav-w's own 1024px block must survive the edit that removed its
+  // former neighbour.
+  assert.match(css, /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;/);
 });
 
-test("BottomTabBar is lg:hidden, carries aria-label, and has exactly five targets", () => {
-  const src = readCode("src/components/BottomTabBar.tsx");
-  assert.match(src, /aria-label="Primary"/);
-  assert.match(src, /lg:hidden/);
-  const tabsAt = src.indexOf("const TABS");
-  const tabs = src.slice(tabsAt, src.indexOf("];", tabsAt));
-  const labels = [...tabs.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(labels, ["Home", "Search", "Watch", "Portfolio", "Menu"]);
+test("HeaderMenuButton is the below-lg nav entry point and opens the same overlay", () => {
+  const src = readCode("src/components/HeaderMenuButton.tsx");
+  assert.match(src, /useMegaMenu\(\)/, "same context the deleted tab used");
+  assert.match(src, /setOpen\(true\)/);
+  assert.match(src, /aria-label="Open menu"/);
+  assert.match(src, /aria-haspopup="dialog"/);
+  // A MENU BUTTON AND NOTHING ELSE. The watch count briefly lived here to keep
+  // the deleted bar's signal alive, and that conflated "open the navigation"
+  // with "N cards are being tracked" on one target — "the watchlist and the
+  // menu should be separate."
+  assert.doesNotMatch(src, /useWatchlist/, "the watchlist must not be folded back into the menu button");
+  // Below lg only — from lg the command launcher and SideNav already cover it.
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderMenuButton className="lg:hidden" \/>/);
 });
 
-test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the bar via .above-bottombar", () => {
+test("the watchlist is its own header control, linking to /watching and carrying the count", () => {
+  const src = readCode("src/components/HeaderWatchButton.tsx");
+  assert.match(src, /href="\/watching"/, "it must be a LINK to the watchlist, not a menu trigger");
+  assert.doesNotMatch(src, /useMegaMenu/, "it must not open the menu");
+  // The count is the point: the only ambient signal a price alert fired.
+  assert.match(src, /useWatchlist\(\)/);
+  assert.match(src, /9\+/, "same 9+ cap the deleted bar's badge used");
+  assert.match(src, /aria-current=\{active \? "page" : undefined\}/);
+  // THE BELL, because that is what the watchlist is everywhere else: the watch
+  // toggle on every card tile (PriceWatchButton) draws one, and /watching's own
+  // heading is <NavIcon name="bell">. This shipped as a star for one release and
+  // was reverted — "it should be the same icon as the watch has". An icon that
+  // disagrees with the control it represents is worse than two bells that differ
+  // in state.
+  assert.match(src, /name="bell"/);
+  assert.doesNotMatch(src, /name="star"/, "the star must be gone, not just unused");
+  assert.match(readCode("src/components/PriceWatchButton.tsx"), /const bell = \(/, "the card-tile watch control this matches");
+  assert.match(readCode("src/app/watching/page.tsx"), /<NavIcon name="bell"/, "and the watchlist page's own heading");
+  // Filled when there is something in it — PriceWatchButton's own convention,
+  // and what separates this from the outline NotificationBell in the sm-to-lg
+  // band where a signed-in visitor sees both.
+  assert.match(src, /fill=\{count > 0 \? "currentColor" : "none"\}/);
+  // sm..lg, not 0..lg, as of 2026-09-19: restoring the Database link (the
+  // explicit priority) put seven controls in this row and they measurably
+  // overlapped below sm. The watchlist was the cheapest 48px — one tap away in
+  // the menu overlay — where Database, Premium, the market switcher, the account
+  // control and the menu were each either named a must-have or the only route to
+  // something. It is still a SEPARATE control from the menu wherever it appears,
+  // which is what "the watchlist and the menu should be separate" asked for.
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex lg:hidden" \/>/);
+});
+
+test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {
   for (const rel of [
     "src/components/SignupPromoPopup.tsx",
     "src/components/PremiumSlideIn.tsx",

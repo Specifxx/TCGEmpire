@@ -13,6 +13,7 @@ import { affiliateUrl, affiliateSubId, ebayAffiliateUrl, ebaySearchUrl, ebayLabe
 import { TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA } from "../src/lib/tcgplayer";
 import { computeMarket } from "../src/lib/market-rows";
 import { COUNTRY_LIST } from "../src/lib/country";
+import { AUCTION_MARKETS, AUCTION_PAGE_CAP } from "../src/lib/ebay-auctions";
 
 const TCG_MARKETS = [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA];
 
@@ -556,6 +557,35 @@ const JOB_TIMEOUT_MIN = Number(
 );
 const STORE_IMPORT_MIN = 18; // the store pass that runs before eBay in the same job
 
+// ── The /auctions sweep (added 2026-09-16) ───────────────────────────────────
+// A market-wide auction board, and the reason it is modelled here rather than
+// waved through: an auction pass was removed from this very model on 2026-08-20
+// for costing ~960 calls/day, and the only thing that makes a second attempt
+// defensible is that the arithmetic is different by an order of magnitude. If
+// that stops being true, this is where it should fail.
+//
+// The old shape was PER CARD (always × 120 chase printings × 2 = ~960/day). The
+// new one names no card at all: one Browse call returns up to 200 live auctions
+// (`limit`'s documented maximum), so a market costs one or two calls regardless
+// of catalogue size — and unlike every other term in this model, it does NOT
+// grow as the catalogue grows.
+//
+// Read from the source and the workflow rather than copied, exactly like
+// JOB_TIMEOUT_MIN above: a raised page cap, an added market or a tightened cron
+// must move this number, not silently diverge from it.
+const AUCTION_SWEEPS_PER_DAY = (() => {
+  const cron = /- cron: "0 \*\/(\d+) \* \* \*"/.exec(
+    readFileSync(".github/workflows/refresh-auctions.yml", "utf8"),
+  );
+  assert.ok(cron, "refresh-auctions.yml must keep an every-N-hours cron this model can read");
+  return 24 / Number(cron[1]);
+})();
+// Worst case per sweep: every market paginated to the cap. Real cost is lower —
+// pagination stops on a short page and the Riftbound pool is tens-to-low-
+// hundreds of lots per market — so this overstates, which can only make the
+// budget assertion stricter.
+const AUCTION_CALLS_PER_DAY = AUCTION_MARKETS.length * AUCTION_PAGE_CAP * AUCTION_SWEEPS_PER_DAY;
+
 // Days to exercise. Keyed off the ALWAYS list, never off EBAY_ROTATING_MARKETS:
 // that list is now empty, and `day < EBAY_ROTATING_MARKETS.length` would run
 // every loop below ZERO times and pass vacuously — the tests would still be
@@ -576,6 +606,12 @@ const CYCLE_DAYS = Math.max(EBAY_ALWAYS_MARKETS.length, EBAY_ROTATING_MARKETS.le
  * × 1, not × 2, for the same reason it used to need the ×2: sealed's eBay pass
  * gained its own 20h staleness gate the same day (see "sealed" below) and no
  * longer runs unconditionally on both the 07:00 and 19:00 imports.
+ *
+ * `auctions` is a term again as of 2026-09-16, but a market-wide sweep on its
+ * own workflow rather than the per-card pass that was cut — ~72 calls/day worst
+ * case against the old ~960. See AUCTION_CALLS_PER_DAY above. It is a flat
+ * addition to every day: the sweep does not know or care which markets the
+ * price importer rotated to.
  */
 function dailyCalls(day: number): number {
   const markets = ebayMarketsForDay(day).length;
@@ -589,7 +625,7 @@ function dailyCalls(day: number): number {
   // above says made the old numbers wrong.
   const singles = markets * CATALOGUE + markets * CHASE_PRINTINGS;
   const sealed = SEALED_PER_RUN;
-  return Math.round(singles * (1 + RETRY_RATE)) + sealed;
+  return Math.round(singles * (1 + RETRY_RATE)) + sealed + AUCTION_CALLS_PER_DAY;
 }
 
 test("a whole day of eBay passes fits inside the Browse budget", () => {
@@ -599,12 +635,21 @@ test("a whole day of eBay passes fits inside the Browse budget", () => {
   }
 });
 
-test("auctions are gone and sealed's eBay pass is gated to once a day", () => {
-  // Pins the two 2026-08-20 removals dailyCalls above depends on: no auction
-  // pass left to undercount, and sealed's eBay search now self-gates instead of
-  // running unconditionally on both daily imports (the old failure mode this
-  // test used to guard: a budget that looks comfortable turns out overspent in
-  // production because a twice-daily pass was modelled as once).
+test("the PER-CARD auction pass stays gone and sealed's eBay pass is gated to once a day", () => {
+  // Pins the two 2026-08-20 removals dailyCalls above depends on: no per-card
+  // auction pass left to undercount, and sealed's eBay search now self-gates
+  // instead of running unconditionally on both daily imports (the old failure
+  // mode this test used to guard: a budget that looks comfortable turns out
+  // overspent in production because a twice-daily pass was modelled as once).
+  //
+  // RENAMED 2026-09-16, from "auctions are gone". Auctions are NOT gone — there
+  // is a /auctions board again — and a test whose name denies a live feature is
+  // a test nobody trusts. What it actually pins, and should keep pinning, is
+  // narrower and still valuable: the ~960-calls/day PER-CARD shape must not come
+  // back to price-import.ts. The replacement is a market-wide sweep in
+  // lib/ebay-auctions.ts on its own workflow, deliberately outside this file, and
+  // it is modelled in dailyCalls above as AUCTION_CALLS_PER_DAY rather than
+  // exempted from the budget.
   const priceImport = readFileSync("src/lib/price-import.ts", "utf8");
   // Code patterns only, not prose — this file's own history comments legitimately
   // name the removed function/model when explaining why the quota model changed.

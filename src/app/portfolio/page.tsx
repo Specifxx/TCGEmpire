@@ -21,9 +21,23 @@ import { NavIcon } from "@/components/NavIcon";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "My portfolio — collection value tracker",
+  title: "My binder — track your Riftbound collection",
   robots: { index: false, follow: false }, // personal page, never indexed
 };
+
+// ── Why this page stopped talking like a trading desk (2026-09-16) ───────────
+// It was "My portfolio", with Profit & Loss, Invested, Return and holdings. That
+// is finance vocabulary for a shoebox of cardboard, and a reader told us more
+// than once that the site reads as "too greedy/capitalistic/money focused ... for
+// a card GAME". Every number on this page is unchanged — what changed is that it
+// now says "what you paid" and "worth now" rather than borrowing the language of
+// an asset class. "Binder" is what a player calls the place they keep cards, and
+// it is already the word this site's own share copy uses ("<name>'s binder", see
+// app/c/[token]/opengraph-image.tsx).
+//
+// The ROUTE stays /portfolio: it is noindex, so nothing SEO rides on it, and
+// changing it would break every bookmark for no gain. "portfolio" also stays a
+// ⌘K search keyword in nav-groups.ts, so typing the old word still lands here.
 
 function Delta({ label, pct }: { label: string; pct: number | null }) {
   if (pct == null) return null;
@@ -60,10 +74,10 @@ function PnlView({
   return (
     <div className="mt-3 space-y-4">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="Invested" value={formatMoney(pnl.investedCents, currency)} />
-        <Stat label="Current value" value={formatMoney(pnl.valueCents, currency)} />
-        <Stat label="Profit / loss" value={`${pnl.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(pnl.plCents), currency)}`} cls={pctClass(pnl.plCents)} />
-        <Stat label="Return" value={pctText(pnl.plPct)} cls={pctClass(pnl.plPct)} />
+        <Stat label="You paid" value={formatMoney(pnl.investedCents, currency)} />
+        <Stat label="Worth now" value={formatMoney(pnl.valueCents, currency)} />
+        <Stat label="Up / down" value={`${pnl.plCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(pnl.plCents), currency)}`} cls={pctClass(pnl.plCents)} />
+        <Stat label="Change" value={pctText(pnl.plPct)} cls={pctClass(pnl.plPct)} />
       </div>
       {index && (index.d7 != null || index.d30 != null) && (
         <div className="rounded-lg border border-ink-700 bg-ink-900/60 p-3 text-sm">
@@ -89,7 +103,7 @@ function PnlView({
         </div>
       )}
       <p className="text-[11px] text-slate-600">
-        P&amp;L covers the {pnl.costedRows} holding{pnl.costedRows === 1 ? "" : "s"} you&apos;ve recorded a purchase price for. Add a
+        This covers the {pnl.costedRows} card{pnl.costedRows === 1 ? "" : "s"} you&apos;ve recorded a price for. Add a
         &quot;paid&quot; price on any card in <a href="#collection" className="text-brand-400 hover:underline">My Collection</a> to include it.
       </p>
     </div>
@@ -128,10 +142,10 @@ export default async function PortfolioPage() {
         <div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white">
             <NavIcon name="collection" className="h-6 w-6 text-brand-400" />
-            My portfolio
+            My binder
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            Your collection valued at the live {info.adjective} lowest prices, condition-adjusted.
+            Your cards, and what they&apos;d cost at today&apos;s lowest {info.adjective} prices, adjusted for condition.
           </p>
         </div>
         {premium && (
@@ -159,7 +173,7 @@ export default async function PortfolioPage() {
                   {formatMoney(portfolio.totalCents, info.currency)}
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  {portfolio.pricedCount} priced holding{portfolio.pricedCount === 1 ? "" : "s"}
+                  {portfolio.pricedCount} card{portfolio.pricedCount === 1 ? "" : "s"} with a live price
                   {portfolio.unpricedCount > 0 && <> · {portfolio.unpricedCount} awaiting a live price</>}
                 </p>
               </div>
@@ -231,12 +245,12 @@ export default async function PortfolioPage() {
               in the market and says nothing about getting them to your door. */}
           {pro && <PortfolioReplacementCost currency={info.currency} />}
 
-          {/* Cost-basis P&L + market benchmark — the investor view. */}
+          {/* Cost basis vs. today, and how that tracks the market. */}
           <section className="card-surface p-5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-1.5 text-lg font-extrabold text-white">
                 <NavIcon name="chart" className="h-5 w-5 text-brand-400" />
-                Profit &amp; Loss
+                Since you bought
               </h2>
             </div>
             {pro ? (
@@ -245,14 +259,14 @@ export default async function PortfolioPage() {
               ) : (
                 <p className="mt-2 text-sm text-slate-400">
                   Record what you paid for a card (the <strong className="text-slate-200">paid</strong> field in My Collection below) and
-                  your profit/loss — plus how you&apos;re tracking against the RiftCompare Index — appears here.
+                  how it&apos;s done since — plus how that tracks the wider market — appears here.
                 </p>
               )
             ) : (
               <div className="relative mt-3 overflow-hidden rounded-xl border border-ink-700">
                 <div aria-hidden className="pointer-events-none select-none p-1 opacity-30 blur-[3px]">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {["Invested", "Current value", "Profit / loss", "Return"].map((l) => (
+                    {["You paid", "Worth now", "Up / down", "Change"].map((l) => (
                       <div key={l} className="rounded-lg bg-ink-900 px-3 py-2">
                         <div className="text-[10px] uppercase tracking-wide text-slate-500">{l}</div>
                         <div className="text-base font-extrabold text-white">{formatMoney(12345, info.currency)}</div>
@@ -264,7 +278,7 @@ export default async function PortfolioPage() {
                   <div>
                     <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-white">
                       <NavIcon name="lock" className="h-4 w-4 text-gold" />
-                      Profit &amp; Loss is a Premium feature
+                      Seeing how your cards have done is a Premium feature
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                       Record what you paid, see your real gains, and track your collection against the market.
@@ -286,7 +300,7 @@ export default async function PortfolioPage() {
             <p className="mt-3 text-[11px] text-slate-600">
               Values are the live lowest in-stock store price × the standard condition multiplier
               ({Object.entries({ NM: 1, LP: 0.85, MP: 0.7, HP: 0.55, DMG: 0.4 }).map(([k, v]) => `${k} ${v * 100}%`).join(" · ")}).
-              The green/red chip is your profit/loss where you&apos;ve recorded what you paid.
+              The green/red chip shows how a card has moved since you paid for it, where you&apos;ve recorded that.
             </p>
           </section>
         </>

@@ -361,7 +361,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link href="/movers" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">This week&apos;s movers →</Link>
-          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Browse all cards →</Link>
+          <Link href="/browse" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">The card database →</Link>
           <Link href="/sealed" className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-ink-600">Sealed prices →</Link>
         </div>
       </section>

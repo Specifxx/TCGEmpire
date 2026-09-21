@@ -317,6 +317,8 @@ None of these need an insider. All three are checkable by anyone.
 
 ---
 
+Riot's other limited bundle, the **[Gift of the Rift anniversary bundle](/blog/riftbound-gift-of-the-rift-bundle)**, gets the same treatment — contents, price and whether it holds value.
+
 *Sources: Riot Games' [Secret Garden Bundle Events announcement](https://playriftbound.com/en-us/news/announcements/secret-garden-bundle-events/) of 11 September 2026 for the event list and the stock quote. Bundle contents, the US$70 price and the Gen Con debut are as reported by Riftbound community outlets; secondary-market figures are observed marketplace listings from early September 2026 and move constantly. The regional analysis and every forecast in this article are ours, and are opinion rather than fact.*`,
   },
   {
@@ -430,23 +432,23 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
     category: "blog",
     title: "Riftbound Radiance: Release Date, Products, Prices & What's Confirmed",
     excerpt:
-      "Riftbound: Radiance lands 23 October 2026 with 180 confirmed cards, nine new champion Legends and a new Ultimate Rare. Every confirmed date, product and price, Ekko's revealed Legend, and what's still unrevealed.",
+      "Riftbound: Radiance lands 23 October 2026 with nine new champion Legends and a new Ultimate Rare. Every confirmed date, product and price, the first card seen in print, and what is still unrevealed.",
     author: "RiftCompare",
     date: "2026-08-27",
     // 12 Sep 2026: Riot's own rundown publishes the set code (RAD) and moves
     // Preview Season's start to 25 Sep (RQ Los Angeles); the distributor sheet
     // gives every product's contents and MSRP; Ekko's Legend is revealed; the
     // Ultimate Rare is announced. All folded in below, each with its source.
-    updated: "2026-09-12",
+    updated: "2026-09-19",
     readMins: 11,
     tags: ["radiance", "news", "set", "release date", "seraphine", "prices", "products"],
     hero: {
       src: "/blog/riftbound-radiance-what-we-know.png",
-      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026 with 180 confirmed cards",
+      alt: "Riftbound Radiance — Set 5, releasing 23 October 2026, with nine new champion Legends and a new Ultimate Rare chase tier",
     },
     summary: [
       "**Radiance releases 23 October 2026** — the fifth Riftbound set. **Preview Season opens 25 September** at the Regional Qualifier: Los Angeles and runs to 9 October; Pre-Rift events are 16–22 October.",
-      "**180 cards, confirmed by Riot** — 66 of them Showcase treatments, so the base run is around 114 and the headline number is not comparable to older sets'. The set code is **RAD** (published by Riot, not a guess).",
+      "**The base run is 167 cards.** Riot announced \"180 (66 Showcase)\", but the first Radiance card seen in print — [Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler) — is numbered **167/167**, which is the only card-count figure anyone has actually held. The two do not reconcile yet. The set code is **RAD** (published by Riot, not a guess).",
       "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV are named, four are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
       "**Every product and its price is public**: booster packs (US$4.99), 24-pack displays (US$120), the Vault (six packs, runes, three foil promo tokens — US$34.99), the Evelynn vs Seraphine Showdown Decks, and a Pre-Rift kit that ships a week early. Full table below.",
       "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. It has not been shown. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
@@ -458,7 +460,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       },
       {
         q: "How many cards are in Riftbound Radiance?",
-        a: "180, confirmed by Riot — and, unlike every earlier set's headline figure, that 180 already includes the set's 66 Showcase treatments. Counted the same way as older sets (base run only), Radiance is about 114 cards, the smallest main set so far; counted as a whole card list it sits between Vendetta and Unleashed. Expect Signature, overnumbered and the new Ultimate Rare printings on top, the way every previous set has had chase printings beyond its base count.",
+        a: "The base numbered run is 167. That comes from the first Radiance card to surface in print, Neeko, Blending In, which is numbered 167/167 — and a denominator printed on a card is better evidence than any announcement. Riot's own product rundown said 180 cards including 66 Showcase treatments, and those two figures have not been reconciled: read inclusively, Riot's number implies a 114-card base, which the printed card rules out. What 167 does tell you is that Radiance's base run is slightly larger than Vendetta's 166 and far smaller than Origins' 298, with Showcase, Signature, overnumbered and the new Ultimate Rare printings numbered above it the way every previous set has done.",
       },
       {
         q: "When does Radiance Preview Season start?",
@@ -517,7 +519,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       label: "Compare Radiance pre-order prices →",
       blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, cheapest first, in your currency.",
     },
-    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, it runs to a confirmed **180 cards** (66 of them Showcase treatments), it brings **nine new champion Legends** (five named, four not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — and the distributor sheet has put a price on every product. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (five named, four not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
 ## Radiance at a glance
 
@@ -528,11 +530,11 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
 | **Release date** | 23 October 2026 |
 | **Preview Season** | 25 September – 9 October 2026 |
 | **Pre-Rift events** | 16 – 22 October 2026 |
-| **Card count** | 180 (66 Showcase), confirmed |
+| **Card count** | **167 base run**, from the printed 167/167 on the first card seen. Riot announced 180 including 66 Showcase; unreconciled |
 | **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, and 4 unrevealed |
 | **New chase tier** | Ultimate Rare (announced, not shown) |
 | **Tagline** | "Own the Stage. The World is Watching." |
-| **Card list revealed?** | **No** — one Legend and one T1 promo are the only cards known in full |
+| **Card list revealed?** | **No** — one Legend, one T1 promo and one photographed card (Neeko) are all that is known in full |
 
 ## The Radiance launch schedule
 
@@ -581,9 +583,13 @@ The community credits **Unleashed's Baron Nashor** as Riftbound's first Ultimate
 
 Riftbound has shipped five sets so far — Origins (298 cards), Origins: Proving Grounds (24), Spirit Forged (221), Unleashed (219) and Vendetta (166). Radiance is the sixth release and the fifth mainline set.
 
-Radiance lands at a confirmed **180 cards**, and that number needs one qualification before it means anything: Riot's 180 is **inclusive of the set's 66 Showcase treatments**, while the counts above — 298, 221, 219, 166 — are base runs, with each of those sets' Showcase printings numbered *on top*. Compare like with like and Radiance's base run is roughly **114 cards**, which would make it the smallest mainline Riftbound set rather than the second-largest. Compare total printings instead and 180 sits between Vendetta and Unleashed. We flag this rather than pick the flattering reading, because the two framings point at opposite conclusions about scarcity and we do not yet know which one the printed collector numbers will settle on.
+**A printed collector number has now settled this, and it settled it on neither answer.** This section used to lay out two readings of Riot's "180 (66 Showcase)" — an inclusive one making Radiance's base run about **114 cards** (the smallest mainline set ever) and an exclusive one putting 180 between Vendetta and Unleashed — and said we would not pick the flattering one because we did not yet know which the printed collector numbers would settle on.
 
-What is not ambiguous is the **Showcase density**: 66 of 180 is roughly 37%, the highest share of any Riftbound set so far. A high Showcase share concentrates a box's value in fewer, rarer slots, which is the dynamic that keeps Origins' top cards expensive. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
+They have. The first Radiance card photographed in print, **[Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler)**, reads **RAD · 167/167 · EN**. So the base numbered run is **167**: slightly larger than Vendetta's 166, comfortably smaller than Unleashed's 219, and nothing like the 114 the inclusive reading implied. Showcase printings will be numbered above it, exactly as in every earlier set.
+
+We are not going to pretend that reconciles with Riot's announcement, because it does not. 167 is not 180, and 167 + 66 Showcase is not 180 either. One of three things is true — the announced figure changed, it counted something outside the main numbering, or it was never precise — and we do not know which. What we do know is which number is printed on cardboard, and that is the one this site now uses everywhere, including in how it matches a "x/167" listing to the right set.
+
+The **Showcase density** is the figure still resting on Riot's announcement alone: 66 Showcase cards, which against a 167-card base is a very high share by this game's standards. A high Showcase share concentrates a box's value in fewer, rarer slots, which is the dynamic that keeps Origins' top cards expensive. Treat the 66 as announced-not-verified until a Showcase card is photographed too. The full release calendar, including what follows Radiance, is in our **[set roadmap](/blog/riftbound-2027-set-roadmap)**, and the complete release order is in **[every Riftbound set, in order](/guides/riftbound-sets-in-order)**.
 
 ## The nine champions — and the one Legend Riot has actually shown
 
@@ -594,6 +600,12 @@ All five named champions are League of Legends champions without an existing Rif
 **Ekko is the one Legend revealed in full.** *Ekko, Boy Who Shattered Time* was teased at Gen Con and detailed in Riot's own first-look article in August: a **Fury/Mind Legend** built on **[Empower](/keywords/empower)**, the mechanic Vendetta introduced. As previewed, you may disempower Ekko to make your next unit cost **2 energy and 1 power less**, and that unit is **killed at the end of the turn**. That is a cheat-a-threat-in-then-lose-it design — the kind of ability that wants units with enter-the-board effects, or ways to make the sacrifice not matter. It is also the clearest signal yet that Radiance extends Empower rather than retiring it, which matters for every Empower deck bought during Vendetta. *Ekko, Ingenious* is his Champion Unit, and only its art has been shown.
 
 **Evelynn and Seraphine** headline the Showdown Decks and the box art. Riot has shown the art for *Evelynn, In Control* and reporting from the Vancouver reveal places her in the Chaos domain; her card text has not been published. Seraphine's *Not Alone* is fully known because it is already in print (below). Beyond that, nothing about domains, abilities or which existing champions get new printings has been said — and we are not going to guess, because a wrong domain guess is the kind of thing people build purchase decisions on. When the reveals land, they will appear on the **[Radiance set page](/sets/radiance)** with live prices, exactly as Vendetta's did.
+
+## The first Radiance card seen in print: Neeko
+
+On **19 September 2026**, days before Preview Season opens, a photograph of a physical Radiance card surfaced: **Neeko, Blending In** — a **6-energy, 4-Might Neutral Champion Unit**, numbered **167/167**, art by Luscinia Studio. It is the first Radiance card anyone has held rather than heard about, and it is already in our database with a live price page.
+
+Its text changes deckbuilding rather than the board: if Neeko is in your deck you choose **three extra Legends** alongside your starting one, and playing her adds one of them to your Legend Zone for as long as she is on the board. We have pulled that apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)** — including why a *Neutral* card that touches the Legend Zone is a bigger deal than a 6-drop's stat line suggests.
 
 **On the leaks.** A photo of Riot's own PAX West demo material showed three new mechanics — Deploy, Showoff and Disarm — which we covered in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)**, hedged throughout. Since then, purported card text for several Legends has circulated from anonymous social-media accounts. We are not reproducing it here: a demo table Riot set up in public is a source; a screenshot with no provenance is not. Preview Season, which opens 25 September, is when this stops being a question.
 
@@ -623,13 +635,171 @@ Three things are worth thinking about before release, and none of them require k
 
 ## What we will publish, and when
 
-We are not going to run Radiance speculation. What we will do, from 25 September as the reveals are real:
+We are not going to run Radiance speculation. What we will do, from 25 September as the reveals are real — starting with **[the live Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**, a dated reveal log around a gallery that fills itself as each card is imported:
 
 - **The full card gallery**, filterable by domain, rarity and type, straight from our database.
 - **Live prices on every card**, compared across every store we track in each market's own currency.
 - **The chase tiers** — Signature, overnumbered, alternate-art and promo printings — as they are confirmed.
 
 Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
+  },
+  // ── Radiance spoiler tracker. Search Console (28d to 2026-09-21) put
+  // "riftbound radiance spoilers" (1,152 impr) and "riftbound radiance card list"
+  // (817) among the site's top queries — and every one of those clicks was landing
+  // on the 8 Sep mechanics-leak post, because nothing on the site owned the
+  // OFFICIAL reveals. Preview Season opens 25 Sep. This is the Vendetta pattern
+  // (every-riftbound-vendetta-card-revealed): a hand-written, dated reveal log
+  // around a `setAll` gallery that fills itself as cards import, so the page is
+  // current the morning after each reveal without an edit. Leaks stay on the leak
+  // post; the card LIST stays on /sets/radiance (docs/seo-keyword-map.md).
+  {
+    slug: "riftbound-radiance-spoilers",
+    category: "blog",
+    title: "Riftbound Radiance Spoilers: Live Card Tracker",
+    excerpt:
+      "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
+    author: "RiftCompare",
+    date: "2026-09-21",
+    readMins: 9,
+    tags: ["radiance", "spoilers", "card gallery", "news", "release"],
+    faq: [
+      {
+        q: "When do Riftbound Radiance spoilers start?",
+        a: "Preview Season opens on 25 September 2026 at the Regional Qualifier: Los Angeles and runs to 9 October, with cards revealed a handful at a time. Pre-Rift events follow on 16–22 October and the set releases worldwide on 23 October.",
+      },
+      {
+        q: "How many Radiance cards have been revealed?",
+        a: "The gallery on this page is the live count — it is drawn from our database and updates as each official reveal is imported. Before Preview Season, one Radiance card had been photographed in print (Neeko, Blending In, 167/167) and one was already in circulation through the T1 Worlds collection (Seraphine, Not Alone).",
+      },
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "The base numbered run is 167 — that is the denominator printed on the first card seen, Neeko's 167/167. Riot's announcement said 180 cards including 66 Showcase variants, and the two figures have not been reconciled; Showcase printings are numbered above the base run in every previous set.",
+      },
+      {
+        q: "Which Legends are in Radiance?",
+        a: "Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of Preview Season, for nine new champion Legends in total.",
+      },
+      {
+        q: "Are the Deploy, Showoff and Disarm leaks real?",
+        a: "Unconfirmed. They come from a fan photo of Riot's PAX West demo material, which is a real source but not an announcement. Nothing Riot has published since confirms or contradicts them. This page logs official reveals; the leak coverage is kept separate and hedged.",
+      },
+    ],
+    shop: [
+      { label: "Radiance pre-orders on eBay", query: "Riftbound Radiance booster box" },
+      { label: "Radiance singles on eBay", query: "Riftbound Radiance" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Radiance set page →",
+      blurb: "The full card list as it fills in, with live prices on every card from release day.",
+    },
+    // Self-populating: every non-promo RAD card in the database, collector order,
+    // with the filter bar's "most recently added" sort = newest reveal. One card
+    // today (Neeko); the gallery grows as the official-gallery importer lands
+    // each day's reveals, so the page is never a stale checklist.
+    embeds: [
+      {
+        title: "Every Radiance card revealed so far",
+        note: "Straight from our live database, in collector-number order — filter by domain, rarity or type, or sort by most recently added to see the newest reveals first. Tap any card for its page and, from release day, its live prices across every store we track.",
+        setAll: "RAD",
+        filterable: true,
+        take: 400,
+      },
+    ],
+    body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
+
+**Where things stand today, 21 September 2026:** Preview Season has not opened yet. One Radiance card has been **photographed in print** — *Neeko, Blending In*, numbered 167/167 — one is **already in circulation** through a promo collection, and one Legend's text has been **described in full by Riot** in its own first-look article. Everything else, including the three leaked mechanics, is unconfirmed. The reveals proper begin on **25 September**.
+
+[[embed:0]]
+
+## The Preview Season schedule
+
+Riot has published the whole run-up, not just the street date. These are the dates that decide when this page changes:
+
+| Date | What happens |
+| --- | --- |
+| **25 – 27 September 2026** | **Preview Season opens at the Regional Qualifier: Los Angeles.** The first official reveals land at the event that closes the 2026 qualifier season. Riot's product rundown originally had the window opening on the 28th; its own schedule now starts it three days earlier. |
+| **28 September – 9 October 2026** | **Preview Season continues.** Cards are shown a handful a day, which is when the set stops being a list of facts and becomes a card list. |
+| **16 – 22 October 2026** | **Pre-Rift events.** Stores run sealed events a week before street date. The first singles change hands here, at the most volatile prices a set ever has. |
+| **23 October 2026** | **Worldwide release.** Boosters, displays, the Vault, the Showdown Decks and singles all go on general sale. |
+
+The countdown to each of those lives on **[Riftbound release dates](/release-dates)**, which also offers an add-to-calendar file.
+
+## Reveal log: what has actually been shown
+
+Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
+
+**19 September — the first Radiance card photographed in print.** A photo of a physical *Neeko, Blending In* surfaced: a **6-energy, 4-Might Neutral Champion Unit**, art by Luscinia Studio, and — the detail that matters most — numbered **RAD · 167/167 · EN**. Its text lets a deck that runs Neeko choose **three extra Legends** alongside its starting one, and playing her adds one of them to the Legend Zone while she is on the board. That is a deckbuilding change, not a stat line, and it is pulled apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)**. The card is already in our database, so it is the first tile in the gallery above.
+
+**18 September — the HEARTSTEEL Kayn is a reprint, not a Radiance card.** HEARTSTEEL's comeback video carried Riftbound card images, and the Kayn card in it was widely read as a Radiance reveal. It is *Kayn, Unleashed* from Origins in new art — a printing, not a new card. The full check against the database is in **[our HEARTSTEEL cards post](/blog/riftbound-heartsteel-cards)**. It is logged here precisely because it is the kind of thing this page exists to sort out.
+
+**Early September — a sixth Legend: Orianna.** Riot's original Set 5 announcement named five champions. Orianna was confirmed separately at a PAX West livestream, which takes the confirmed count to **six of nine**. The remaining three are unannounced.
+
+**August — Ekko's Legend, in Riot's own words.** *Ekko, Boy Who Shattered Time* was teased at Gen Con and then detailed in Riot's first-look article: a **Fury/Mind Legend** built on **[Empower](/keywords/empower)**. As previewed, you may disempower Ekko to make your next unit cost **2 energy and 1 power less**, and that unit is **killed at the end of the turn**. It is the one Legend whose ability is public, and the clearest sign that Radiance extends Vendetta's Empower rather than retiring it.
+
+**4 August — the set itself.** Riot's product rundown announced Radiance as Set 5: a **23 October** release, **nine new champion Legends**, a new **Ultimate Rare** chase tier, "180 cards (66 Showcase)", the tagline *"Own the Stage. The World is Watching."*, and four product lines. The set code, **RAD**, was published later in the same rundown. Every confirmed product, its contents and its US list price are laid out in **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)**.
+
+**Already in circulation — Seraphine, Not Alone.** The odd one out: a Radiance card that physically exists months before its set. Seraphine was one of the five cards in the **[Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)**, so anyone who won a T1 box is holding a Radiance card that is not legal for sanctioned play until 23 October.
+
+## The nine Legends
+
+Radiance brings **nine new champion Legends**, pinned down from two directions: Riot's announcement, and the Pre-Rift kit's mini-decks, which come in nine champion variations.
+
+| Champion | Status | What is known |
+| --- | --- | --- |
+| **Ekko** | Confirmed, ability public | Fury/Mind, Empower-based; see the log above |
+| **Seraphine** | Confirmed, card in print | *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
+| **Evelynn** | Confirmed, art shown | *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished |
+| **Ziggs** | Confirmed | Named in the announcement; nothing shown |
+| **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
+| **Orianna** | Confirmed | Added at PAX West; nothing shown |
+| Three more | Unrevealed | — |
+
+All six named champions are League of Legends champions without an existing Riftbound Legend, so each is a debut rather than a reprint. Riot has not said whether that holds for the last three. When a Legend is revealed and imported it appears in the gallery above and on the **[Radiance set page](/sets/radiance)**, where each confirmed champion already has an anchor that resolves to their cards the moment they exist.
+
+## Spoilers versus leaks: how this page treats each
+
+The distinction is the whole reason this page is separate from our leak coverage.
+
+A **spoiler** is a card Riot has revealed, printed or put on a demo table in public. It goes in the log above and, once imported, in the gallery. A **leak** is anything else — and Radiance has had two kinds. The first is the fan photograph of Riot's own PAX West demo reference material, showing three mechanics, **Deploy**, **Showoff** and **Disarm**. That has real provenance, so we covered it, hedged throughout, in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)** and in three per-mechanic pieces: **[Deploy](/guides/riftbound-deploy-explained)**, **[Showoff](/guides/riftbound-showoff-explained)** and **[Disarm](/guides/riftbound-disarm-explained)**. Nothing Riot has published since confirms or contradicts any of it.
+
+The second kind is purported card text from anonymous social-media accounts — Legends for Seraphine and Evelynn, a Neeko card, a Kai'Sa card. We do not reproduce it, here or anywhere, because it has none of the provenance the demo photo has. Worth noting only that the Kai'Sa text used "Disarm" for an effect unrelated to the demo table's wording, so at least one of the two sources is wrong about what Disarm is. Preview Season settles this the honest way.
+
+## Reading a Radiance card: what the numbers tell you
+
+Two things on a Radiance card carry information beyond the rules text.
+
+**The collector number.** Neeko's *167/167* is the first hard evidence of the set's size: a **167-card base run**, slightly larger than Vendetta's 166 and well short of Unleashed's 219. Riot's announced "180 (66 Showcase)" does not reconcile with it — 167 is not 180, and 167 plus 66 is not 180 either — and we do not know which of the announced figure changing, counting something outside the main numbering, or never being precise is the explanation. What is printed on cardboard is what this site uses everywhere, including in how a "x/167" listing is matched to the right set. Showcase printings will be numbered **above** 167, as in every previous set; when the first one is photographed, the 66 stops being announced-only.
+
+**The set code.** *RAD* is Riot's own code, published in its products-and-sets rundown alongside LGC for Legacy and REC for The Reckoning. Until 12 September it was a placeholder guess on this site; it is not any more.
+
+## What the reveals will settle
+
+These are the open questions Preview Season answers, roughly in the order they matter for buyers:
+
+- **The Ultimate Rare.** Announced and not shown. It sits above the overnumbered treatment, it is a single card rather than a tier, and Riot has said Ultimate Rares will not appear in every set. Which card it is decides where a box's value concentrates.
+- **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation; Seraphine's card exists but her Legend does not, publicly.
+- **Whether Deploy, Showoff and Disarm are real**, and if so how the printed wording compares with the demo table's.
+- **Which existing champions get new printings.** Nothing has been said. A Radiance printing of a champion who already has cards changes that champion's price page, which is why it matters beyond the new-Legend list.
+- **The Showcase count**, once a Showcase-numbered card is seen.
+
+## Prices during spoiler season
+
+Two things move during Preview Season, and neither is singles.
+
+**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window and ranks them by delivered cost, and the **[sealed comparison](/sealed)** is where displays and the Vault are comparable long before any single is.
+
+**Older sets move too.** Radiance changes what decks want, which moves Vendetta and Unleashed prices in both directions — up for the cards new archetypes need, down for the ones they replace. **[Price movers](/movers)** shows which is happening rather than predicting it. Singles themselves start trading at Pre-Rift, 16–22 October, when supply is a handful of event boxes and demand is everyone who wants to build immediately; those are almost never the prices a card settles at, and **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** explains the mechanism.
+
+## How to follow along
+
+Three pages, each for a different question:
+
+- **This page** for *what has been revealed* — the gallery and the dated log.
+- **[The Radiance set page](/sets/radiance)** for *the card list* as it fills in, with live prices on every card from release day, exactly as **[Vendetta's](/sets/vendetta)** did.
+- **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** for *the set itself* — every product, price and date, kept current.
+
+We will not run Radiance speculation on any of them. When the reveals land, the gallery above is where they show up first.`,
   },
   // ── Radiance leak: a fan photo of Riot's own PAX West demo reference material,
   // not a Riot announcement. Deliberately category "blog" (news) — this roundup
@@ -756,6 +926,8 @@ The caption also suggests Disarm "can pair well with direct damage spells like F
 We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet.
 
 ## Status, 12 September 2026
+
+*Update, 21 September:* Preview Season opens in four days. Official reveals, as distinct from this leak, are logged card by card on **[the live Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**; this page stays as the record of what the demo photo showed and how it holds up.
 
 Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. It is worth noting, though, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards.
 
@@ -1162,7 +1334,9 @@ One thing worth checking before you buy: **sleeve opacity matters mechanically i
 
 ## Picking a set without overthinking it
 
-If you only take one thing from this: **match your deck's one or two domain colours**, buy a **100-count pack** so you have real spares, and **double-sleeve** anything you'd actually be upset to lose — chase pulls, Signature prints, or cards you might trade or sell down the line. Everything else is preference. For the cards actually going inside those sleeves, **[browse live Riftbound prices across every store we track](/browse)**, or start with **[what's actually in a Riftbound deck](/guides/how-a-riftbound-deck-is-built)** if you're still assembling the list you're about to sleeve up.`,
+If you only take one thing from this: **match your deck's one or two domain colours**, buy a **100-count pack** so you have real spares, and **double-sleeve** anything you'd actually be upset to lose — chase pulls, Signature prints, or cards you might trade or sell down the line. Everything else is preference. For the cards actually going inside those sleeves, **[browse live Riftbound prices across every store we track](/browse)**, or start with **[what's actually in a Riftbound deck](/guides/how-a-riftbound-deck-is-built)** if you're still assembling the list you're about to sleeve up.
+
+The exact card dimensions, the landscape cards, and which deck boxes hold a fully sleeved tournament deck are in **[what size are Riftbound cards?](/guides/riftbound-card-size-sleeves-deck-boxes)**; long-term storage is in **[how to store and protect Riftbound cards](/guides/how-to-store-and-protect-riftbound-cards)**.`,
   },
   // ── Format legality. "Standard format" and "format legal" returned zero matches
   // across the whole corpus before this, despite being the question behind every
@@ -1531,7 +1705,9 @@ Foil cards are more prone to **curving** as the foil layer reacts to humidity. D
 - Acid-free, side-loading binders for sets; cool, dry, dark storage.
 - Keep foils flat and away from humidity.
 
-Looking after your cards keeps them at the condition our prices assume — so when you check a card's value on the **[database](/browse)**, that's the value you'll actually get. New to buying? Start with **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)**.`,
+Looking after your cards keeps them at the condition our prices assume — so when you check a card's value on the **[database](/browse)**, that's the value you'll actually get. New to buying? Start with **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)**.
+
+Not sure which sleeves fit? **[What size are Riftbound cards?](/guides/riftbound-card-size-sleeves-deck-boxes)** has the exact dimensions, why a tournament deck needs 66 sleeves rather than 40, and which boxes hold it; **[gradient sleeves](/guides/gradient-sleeves-for-riftbound-cards)** covers the domain-matched option.`,
   },
   {
     slug: "understanding-riftbound-card-rarity",
@@ -1618,7 +1794,9 @@ The cards that sell fastest are the ones priced at or just under the cheapest co
 - Post quickly and communicate — repeat buyers come from good experiences.
 - Bundle small cards together so postage doesn't eat the value of a cheap sale.
 
-Ready to list? **[Browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
+Ready to list? **[Browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.
+
+Not sure what the whole pile is worth? **[How much is your Riftbound collection worth?](/guides/how-much-is-your-riftbound-collection-worth)** walks through it, and **[finding arbitrage opportunities](/guides/how-to-find-riftbound-arbitrage-opportunities)** covers buying in one market to sell in another.`,
   },
   {
     slug: "beginner-mistakes-buying-riftbound-cards",
@@ -1786,7 +1964,8 @@ see is what you would actually pay locally — no surprise conversion at checkou
 Australian store's AUD price against a US store's USD one as if they were the same figure. That is
 also why the comparison never converts between currencies to declare a winner: we rank within a
 market, on delivered cost.
-`,
+
+Two more reads before a first order: **[the beginner mistakes that cost money](/blog/beginner-mistakes-buying-riftbound-cards)** covers the traps this guide does not, and if a foreign price looks too good, **[are Riftbound cards cheaper in another country?](/blog/are-riftbound-cards-cheaper-in-another-country)** runs the customs-and-postage maths.`,
     faq: [
       { q: "Where is the cheapest place to buy Riftbound cards?", a: "There isn't one shop that's always cheapest — it changes per card and per market. RiftCompare compares every store it tracks at once and ranks them by total delivered cost (price plus postage) rather than sticker price." },
       { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
@@ -2078,7 +2257,9 @@ Want the full rules before you buy anything? The **[interactive learn page](/lea
 - **Price a decklist** in the **[deck builder](/deck)** — paste any list, from a friend or a published tournament report, and see what it costs to build in your market.
 - **Price it before you buy** — drop a decklist into the **[deck pricer](/deck)** to see the full cost across stores before committing.
 
-Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
+Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.
+
+Coming from another game? There is a dedicated switch guide for **[Magic players](/guides/mtg-to-riftbound)**, **[Pokémon collectors](/guides/pokemon-collector-to-riftbound)** and **[One Piece players](/guides/one-piece-tcg-to-riftbound)**. Still deciding? **[Is Riftbound worth getting into?](/blog/is-riftbound-worth-getting-into)** is the honest version, and **[the beginner mistakes that cost money](/blog/beginner-mistakes-buying-riftbound-cards)** is worth five minutes before your first order.`,
   },
   // ── Cross-game onboarding trio (2026-09-02) ─────────────────────────────────
   // Three guides aimed at players/collectors coming FROM another TCG, not total
@@ -2192,7 +2373,9 @@ Prices move daily, the same way a hot Pokémon set's prices do in its first week
 
 ## Where to start
 
-**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from "curious" to "playing" — what to buy first and how much to spend. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. And when you're ready to actually shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, and every store is one you can actually buy from.`,
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from "curious" to "playing" — what to buy first and how much to spend. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. And when you're ready to actually shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, and every store is one you can actually buy from.
+
+Coming from a different game? See **[Magic to Riftbound](/guides/mtg-to-riftbound)** or **[One Piece to Riftbound](/guides/one-piece-tcg-to-riftbound)**, or start from zero with **[Riftbound for beginners](/guides/riftbound-for-beginners)**.`,
   },
   {
     slug: "one-piece-tcg-to-riftbound",
@@ -2292,7 +2475,9 @@ Both games share the same early-life pricing pattern: prices move fast while the
 
 ## Where to start
 
-**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, every store is one you can actually buy from.`,
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, every store is one you can actually buy from.
+
+Coming from a different game? See **[Magic to Riftbound](/guides/mtg-to-riftbound)** or **[Pokémon to Riftbound](/guides/pokemon-collector-to-riftbound)**, or start from zero with **[Riftbound for beginners](/guides/riftbound-for-beginners)**.`,
   },
   {
     slug: "mtg-to-riftbound",
@@ -2391,7 +2576,9 @@ No fabricated numbers here — prices move daily and any figure printed today wo
 
 ## Where to start
 
-**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost, and **[Riftbound deck archetypes](/guides/riftbound-deck-archetypes-guide)** is the deckbuilding-strategy version of this guide once you're past the basics. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live.`,
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost, and **[Riftbound deck archetypes](/guides/riftbound-deck-archetypes-guide)** is the deckbuilding-strategy version of this guide once you're past the basics. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live.
+
+Not coming from Magic? The same guide exists for **[Pokémon collectors](/guides/pokemon-collector-to-riftbound)** and **[One Piece players](/guides/one-piece-tcg-to-riftbound)**, and **[Riftbound for beginners](/guides/riftbound-for-beginners)** is the from-scratch version.`,
   },
   {
     slug: "riftbound-singles-vs-sealed",
@@ -2476,7 +2663,9 @@ Paste any decklist into the **[deck pricer](/deck)** and it matches every card t
 
 Once you've locked a list, **[search the database](/browse)** for each card and buy from whichever store is cheapest — or read our **[where to buy Riftbound cards guide](/guides/where-to-buy-riftbound-cards)** for the best option in your region.
 
-Build smart, compare prices, and you'll have a competitive Riftbound deck without overspending.`,
+Build smart, compare prices, and you'll have a competitive Riftbound deck without overspending.
+
+Once you have a list, **[Best Basket](/guides/best-basket-cheapest-riftbound-deck)** finds the cheapest combination of stores to buy the whole thing from, postage included — usually not the one that is cheapest card by card.`,
     // Placed mid-article: the tips list above is where a budget builder decides
     // WHAT to buy (commons, base printings, singles over boxes), so the buy path
     // belongs there rather than under the FAQ. Bulk lots are deliberately first —
@@ -2665,7 +2854,9 @@ And if you're simply risk-averse - you'd rather know exactly what you're getting
 
 The healthiest way to use box EV is as one input alongside your own goals, not as a green light to rip. Ask what you're actually optimizing for: a specific card, a fun opening experience, or the best expected return on money spent. Each of those has a different right answer, and EV only speaks directly to the last one.
 
-A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
+A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.
+
+For the short, non-mathematical version of the same decision, read **[buying singles vs opening packs](/blog/buying-singles-vs-opening-packs)**.`,
   },
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
@@ -3167,9 +3358,9 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
   {
     slug: "riftbound-banlist-explained",
     category: "guide",
-    title: "Riftbound Ban List Explained",
+    title: "Riftbound Ban List 2026: Every Banned Card",
     excerpt:
-      "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
+      "Every card banned in Riftbound as of September 2026 — Standard and Constructed 2v2 — with the official reason for each ban and live prices for all of them.",
     author: "RiftCompare",
     date: "2026-07-16",
     updated: "2026-09-15",
@@ -3425,6 +3616,396 @@ If you're running either card, both bans take effect **18 September 2026** — s
 
 *Ban facts (cards, effective date, Riot's stated reasoning) are from [Riot Games' 15 September 2026 announcement](https://playriftbound.com/en-us/news/announcements/september-ban-list-updates-effective-september-18-2026/). Community reaction is quoted from the ["New banned cards"](https://www.reddit.com/r/riftboundtcg/comments/1wgkixo/new_banned_cards/) thread on r/riftboundtcg, current as of publication — usernames are as posted publicly on Reddit, and every quoted or paraphrased opinion belongs to its named commenter, not to RiftCompare.*`,
   },
+  // NEEKO SPOILER, 19 Sep 2026 — the first Radiance card anyone has photographed
+  // in print, six days before Preview Season opens. Written from the photograph
+  // itself, not from coverage of it.
+  //
+  // Two things here are this site's own work and are the reason the post exists
+  // rather than restating a leak:
+  //   1. The printed "RAD · 167/167 · EN" settles Radiance's base run at 167,
+  //      which contradicts Riot's announced "180 (66 Showcase)" AND the 114 that
+  //      an inclusive reading of it implied. lib/price-import.ts and
+  //      lib/tcgplayer.ts's twin setFromTotal() switches, lib/constants.ts,
+  //      lib/release-calendar.ts and riftbound-radiance-what-we-know all moved to
+  //      167 in the same pass; tests/radiance-card-count-accuracy.test.ts records
+  //      the supersession rather than pretending 180 was never asserted.
+  //   2. The rarity is VERIFIED, not guessed: the bottom-centre gem is an orange
+  //      pentagon, matched against Sett, Brawler (OGN-164, epic) and against the
+  //      magenta diamond on Kayn, Unleashed (OGN-189, rare) from cdn.riftscribe.gg.
+  //
+  // The card is in prisma/manual-cards.json, so it has a real /card/ page and the
+  // embed below renders it live rather than as a photo.
+  {
+    slug: "riftbound-neeko-blending-in-spoiler",
+    category: "blog",
+    title: "Riftbound Neeko Spoiler: Blending In Breaks the One-Legend Rule",
+    excerpt:
+      "The first Riftbound: Radiance card photographed in print is Neeko, Blending In — a 6-cost Neutral Champion Unit that hands you three extra Legends. Its collector number also settles how big Radiance actually is.",
+    author: "RiftCompare",
+    date: "2026-09-19",
+    readMins: 8,
+    tags: ["radiance", "news", "spoilers", "neeko", "deckbuilding"],
+    hero: {
+      src: "/radiance-spoilers/neeko-blending-in.jpg",
+      alt: "Riftbound Radiance spoiler — Neeko, Blending In, a 6-energy 4-Might Neutral Champion Unit numbered 167/167",
+    },
+    shop: [
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
+    // `embeds` + a positioned [[embed:0]] marker, not the singular `embed`: the
+    // gallery belongs directly under the stat table, and only the indexed marker
+    // form is positionable (tests/article-shop-strip.test.ts pins the split).
+    embeds: [
+      {
+        title: "Neeko, Blending In — in the database, with live prices",
+        note: "Added from the spoiler photo on 19 September 2026. The art is the photograph until Radiance's official card images land; every other field is read off the print.",
+        slugs: ["neeko-blending-in-rad-167-167"],
+      },
+    ],
+    summary: [
+      "**Neeko, Blending In** is the first Riftbound: Radiance card photographed in print — a **6-energy, 4-Might Neutral Champion Unit**, numbered **167/167**, art by Luscinia Studio.",
+      "**It breaks the one-Legend rule.** If Neeko is in your deck you choose **three extra Legends** at deckbuilding, and playing her adds one of them to your Legend Zone for as long as she is on the board.",
+      "**It is Neutral**, so it is not locked to a domain — every Radiance deck can run it, which is what makes a Legend-Zone effect on a single card significant rather than niche.",
+      "**The collector number is the other story.** 167/167 puts Radiance's base run at **167 cards** — contradicting both Riot's announced 180 and the 114 an inclusive reading of that figure implied.",
+      "**Rarity is Epic**, verified against known cards rather than guessed — see how below. [Its price page is live](/card/neeko-blending-in-rad-167-167).",
+    ],
+    faq: [
+      {
+        q: "What is Neeko, Blending In in Riftbound?",
+        a: "A Champion Unit in Riftbound: Radiance, numbered 167/167. It costs 6 energy, has 4 Might, and is Neutral — meaning it can go in a deck of any Domain. Its text: if Neeko is in your deck you choose 3 different Legends in addition to your starting Legend, and when you play her you choose one of those Legends and add it to your Legend Zone while she is on the board.",
+      },
+      {
+        q: "Is the Neeko Riftbound card real?",
+        a: "It is a photograph of a physical card, printed RAD · 167/167 · EN with a Luscinia Studio artist credit and a ©2026 RGI line, and its text matches wording that circulated as an unconfirmed Radiance leak earlier in September. That is strong evidence, but Riot has not officially revealed it — Preview Season opens 25 September 2026, and that is when it becomes official.",
+      },
+      {
+        q: "How many cards are in Riftbound: Radiance?",
+        a: "The base numbered run is 167, because this card is printed 167/167. Riot's own product rundown announced 180 cards including 66 Showcase treatments, and the two figures do not reconcile — 167 is not 180, and 167 plus 66 is not 180 either. A number printed on a card is better evidence than an announcement, so 167 is what we use, with Showcase printings expected to be numbered above it as in every previous set.",
+      },
+      {
+        q: "What rarity is Neeko, Blending In?",
+        a: "Epic. The rarity gem at the bottom centre of a Riftbound card is shape- and colour-coded, and Neeko's is an orange pentagon — the same mark Sett, Brawler (OGN-164, an Epic) carries, and clearly not the magenta diamond on Kayn, Unleashed (OGN-189, a Rare). We compared the three directly rather than inferring from the card's treatment.",
+      },
+      {
+        q: "Can any deck play Neeko in Riftbound?",
+        a: "Yes, as far as Domain goes — the card says outright that Neutral cards can go in decks of any Domain, so no rune commitment is required. The real cost is the deckbuilding one: you have to name three different extra Legends when you build, and those slots are spent whether or not you ever draw her.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026 worldwide. Preview Season runs 25 September to 9 October 2026, opening at the Regional Qualifier in Los Angeles, and Pre-Rift events run 16–22 October.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card as it's revealed →",
+      blurb: "The set hub fills in through Preview Season and switches on live price comparison across every store we track on release day.",
+    },
+    body: `**The first Riftbound: Radiance card anyone has photographed in print is Neeko** — six days before Preview Season was due to show us anything. It is a good one to get first, because it does something no Riftbound card has done before, and because the small print at the bottom of it quietly settles an argument about how big this set actually is.
+
+## What the card says
+
+Read straight off the print:
+
+| | |
+| --- | --- |
+| **Name** | Neeko, Blending In |
+| **Type** | Champion Unit · Neeko · Ixtal |
+| **Energy cost** | 6 |
+| **Might** | 4 |
+| **Domain** | Neutral |
+| **Rarity** | Epic |
+| **Collector number** | RAD · 167/167 · EN |
+| **Artist** | Luscinia Studio (©2026 RGI) |
+
+And the text:
+
+> *(Neutral cards can go in decks of any Domain.)*
+> If Neeko is in your deck, choose 3 different legends in addition to your starting legend. *(Different means none match names.)*
+> When you play me, choose one of those Legends and add it to your Legend Zone while I'm on the board.
+
+[[embed:0]]
+
+## Why this is not just another 6-drop
+
+A 6-energy 4-Might body is, on its own, unremarkable — [Kayn, Unleashed](/card/kayn-unleashed-ogn-189-298) costs the same and hits for 6. Nobody is playing this card for the statline.
+
+They are playing it because of what a Legend is. In Riftbound, **your Legend is the card the whole deck is built around** — it is the closest thing the game has to locking in a champion, and critically it is what fixes your Domains. As our own deckbuilding guidance puts it: stay in your Legend's domains, because you cannot splash a card your runes cannot pay for. One Legend, one identity, decided before the game starts.
+
+Neeko puts a second Legend on the table mid-game. Not permanently — the text is explicit that it lasts *while I'm on the board* — but for as long as she survives, your Legend Zone holds something it could not otherwise hold. That is a category of effect this game has not had, and it is why a card with a modest body is worth more attention than the Legend reveals it will sit alongside.
+
+The deckbuilding half is just as unusual. **You choose the three extra Legends when you build the deck**, not when you play her, and they have to be three *different* ones — the card even defines "different" as "none match names", which is the kind of clause you only write when the obvious abuse is stacking three copies of the same Legend's printings.
+
+## The cost is paid before the game starts
+
+Here is the part that will decide whether this card is a staple or a curiosity, and it is a genuinely open question.
+
+Those three Legend slots are spent whether or not you ever draw Neeko. You commit them at deckbuild. If she is in your opening hand, you have a 6-drop that reshapes what your deck can do. If she is at the bottom of your deck, you have paid a real cost for nothing and you are down a card.
+
+That is a variance trade rather than a power trade, and variance trades are exactly the kind of thing a format takes weeks to price correctly. Expect the first fortnight of Radiance to be loud and wrong about this card in both directions.
+
+## Neutral is doing a lot of work here
+
+If Neeko were a Chaos card, this would be a Chaos-deck card and the conversation would end there. She is **Neutral** — the card says so in its own reminder text, in brackets, before anything else: *Neutral cards can go in decks of any Domain.*
+
+That is what turns a single interesting effect into a format-wide one. Every Radiance deck, in every Domain, can run her without touching its rune base. Riftbound's neutral cards are the closest thing the game has to universal staples precisely because they cost nothing in deck identity to include — and the game has not previously handed the neutral slot an effect that reaches into the Legend Zone.
+
+## The other story: 167/167
+
+Now the small print, which is arguably the bigger news.
+
+The card is numbered **167/167**. That denominator is the size of Radiance's base numbered run, and until this photograph nobody outside Riot had seen one.
+
+It matters because the published figure said something else. Riot's own product rundown announced Radiance at **"180 cards (66 Showcase)"**, and that phrasing is ambiguous in a way that pointed at two very different sets:
+
+- Read **inclusively** — 180 total, of which 66 are Showcase — the base run would be about **114 cards**, which would make Radiance the smallest mainline Riftbound set ever printed.
+- Read **exclusively** — 180 base cards with Showcase on top, the way Origins, Spirit Forged, Unleashed and Vendetta all number their alt-arts — Radiance would be the second-largest.
+
+We wrote both readings up rather than picking the flattering one, and said we would wait for a printed collector number to settle it.
+
+It has settled it, and it settled it on **neither**. 167 is not 114 and it is not 180. It sits just above Vendetta's 166 and well below Unleashed's 219 — a normal-sized mainline set, which is the least dramatic of the three possibilities and probably the correct one.
+
+We are not going to pretend that reconciles with the announcement, because it does not: 167 is not 180, and 167 plus 66 Showcase is not 180 either. Either the figure changed, or it was counting something outside the main numbering, or it was never exact. What is not in doubt is which number is printed on cardboard.
+
+**This has a practical consequence for pricing**, which is why we changed it everywhere the same day. Our price matcher identifies a set from a listing's collector-number denominator — a listing titled "042/166" is unambiguously Vendetta. Radiance was carrying both guesses, 114 and 180, because no card had been seen. Both were wrong, and a Radiance listing reading "x/167" would have matched nothing and fallen through to an Origins default, quietly pricing a brand-new card as a two-year-old one. That is fixed.
+
+## How we checked the rarity
+
+Small thing, but it is the sort of detail that gets guessed and then repeated for months.
+
+Riftbound prints a rarity gem at the bottom centre of the card, and it is both shape- and colour-coded. Rather than infer Epic from the card's treatment — the art bleeds over the text box and the whole thing has a foil sheen, which is suggestive but not proof — we pulled two cards of known rarity from the card database and compared the gems directly:
+
+- **Kayn, Unleashed** (OGN-189), a **Rare**: a magenta **diamond**.
+- **Sett, Brawler** (OGN-164), an **Epic**: an orange **pentagon**.
+- **Neeko**: an orange **pentagon**.
+
+So: Epic. That is what is recorded on [her card page](/card/neeko-blending-in-rad-167-167), and it is checkable rather than asserted.
+
+## What is still unknown
+
+Worth being explicit, because a lot of Radiance "information" currently is not.
+
+**Riot has not revealed this card.** Preview Season opens 25 September at the Regional Qualifier in Los Angeles and runs to 9 October; that is when this stops being a photograph and becomes an announcement. The text does match wording that circulated as an unconfirmed leak earlier in September, which is corroboration of a sort — two independent sightings agreeing — but it is not the same as official.
+
+**Whether there is a Showcase Neeko** is unknown. With 66 Showcase treatments announced and Neeko sitting in the set's final numbered slot as an Epic Champion Unit, a premium printing would be unsurprising. Nobody has seen one.
+
+**How it actually plays** is unknown, and anyone telling you otherwise on day one is guessing. A card that changes deckbuilding rules rather than board states is exactly the type the community consistently misprices early.
+
+## What this means if you are buying
+
+Three things worth holding onto.
+
+**Do not buy a Radiance single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. Anything offered as a Neeko today is a pre-sale against a card nobody can deliver.
+
+**Watch the sealed price instead.** The set's contents are what you can actually buy right now, and we compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks, cheapest first, in your own currency.
+
+**When singles do land, check the collector number before the name.** With 167 base cards and Showcase printings numbering above them, "Neeko" will shortly mean several different objects at several different prices. The number is what tells them apart. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
+
+For everything else that is genuinely confirmed about the set — dates, products, prices, the Legends named so far — our [what we know about Radiance](/blog/riftbound-radiance-what-we-know) page is kept current and keeps leaks separate from facts.`,
+  },
+  // HEARTSTEEL comeback post, written the day "LIVE MY LIFE" landed (18 Sep
+  // 2026). THE ANGLE IS THE FACT-CHECK, and it is the one thing on this topic
+  // only this site can write: the card image circulating with the comeback shows
+  // a name, cost and rules text that belong to Kayn, Unleashed — OGN-189, in the
+  // game since Origins — so it is a new PRINTING, not a new card, and our own
+  // prisma/riftbound-cards.json is the proof. The same lookup produced the two
+  // findings the piece is built on (Kayn is the only HEARTSTEEL champion with a
+  // card and no variant at all; K'Sante has no card whatsoever), neither of
+  // which appears in any of the coverage this was checked against.
+  //
+  // DELIBERATELY NOT CLAIMED: that the music video itself reveals cards. No
+  // source found says so — not Riot, not the trade coverage, not the leak
+  // reporting — and the video was hours old at the time of writing. The body
+  // says the images surfaced "alongside" the comeback and keeps a standing
+  // confirmed/not-confirmed split, the same bar riftbound-radiance-leaked-
+  // mechanics holds itself to. Also flagged, because it cuts against the
+  // obvious assumption: the leak reporting points at a WORLDS-themed Riftbound
+  // product, not necessarily Radiance.
+  {
+    slug: "riftbound-heartsteel-cards",
+    category: "blog",
+    title: "Riftbound HEARTSTEEL Cards: What the Kayn Tease Actually Is",
+    excerpt:
+      "HEARTSTEEL's comeback brought Riftbound card images with it — and the Kayn one is not a new card. It is Kayn, Unleashed from Origins in new art. Here's what our database says about every HEARTSTEEL champion's cards.",
+    author: "RiftCompare",
+    date: "2026-09-18",
+    // 19 Sep: the owner supplied a labelled still-grab from the video showing
+    // FIVE members' cards, which is what promoted "images surfaced alongside the
+    // comeback" to "the video shows them" below. Substantive, so it dates.
+    updated: "2026-09-19",
+    readMins: 8,
+    tags: ["radiance", "news", "spoilers", "heartsteel", "collecting"],
+    hero: {
+      src: "/blog/riftbound-heartsteel-cards.jpg",
+      alt: "Five Riftbound cards in HEARTSTEEL art from the Live My Life music video, labelled Kayn, Ezreal, Aphelios, Sett and K'Sante, each shown on a wooden table",
+    },
+    shop: [
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+    ],
+    summary: [
+      "**HEARTSTEEL released \"LIVE MY LIFE\" on 18 September 2026**, their first track since 2023's \"PARANOIA\" — and the video shows HEARTSTEEL-art Riftbound cards for **five of the six members**: Kayn, Ezreal, Aphelios, Sett and K'Sante. Yone is the one not shown.",
+      "**The Kayn card is not a new card.** Its name, 6 cost and rules text are **Kayn, Unleashed** — collector number 189 in **Origins**, legal since the game launched. What is new is the art, which makes it a new *printing*, not a new card.",
+      "**Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Ezreal, Sett, Yone and Aphelios all already have Showcase versions; Kayn, Unleashed has exactly one print.",
+      "**K'Sante has no Riftbound card whatsoever** — so if the reports putting him in Radiance hold, it is his debut, and his first card would arrive wearing a skin line.",
+      "**Nothing here is Riot-confirmed yet.** Preview Season runs [25 September to 9 October](/release-dates) and [Radiance releases 23 October 2026](/blog/riftbound-radiance-what-we-know).",
+    ],
+    embeds: [
+      {
+        title: "Kayn, Unleashed — the card the tease is actually showing",
+        note: "One card, one printing, in the game since Origins. Click it for the full price comparison across every store we track.",
+        slugs: ["kayn-unleashed-ogn-189-298"],
+      },
+      {
+        title: "Every HEARTSTEEL champion's existing Riftbound cards",
+        note: "Ezreal, Sett, Yone, Aphelios and Kayn all have cards today. K'Sante does not — which is exactly why the Radiance reports about him matter.",
+        slugs: [
+          "ezreal-dashing-sfd-082-221",
+          "ezreal-prodigy-sfd-149-221",
+          "sett-brawler-ogn-164-298",
+          "sett-kingpin-ogn-240-298",
+          "yone-blademaster-sfd-116-221",
+          "aphelios-exalted-sfd-049-221",
+          "kayn-unleashed-ogn-189-298",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Are there HEARTSTEEL cards in Riftbound?",
+        a: "The \"LIVE MY LIFE\" music video, released 18 September 2026, shows Riftbound cards in HEARTSTEEL art for five of the band's six members — Kayn, Ezreal, Aphelios, Sett and K'Sante — with Yone the one not shown. Separate leak reporting has also shown a True Damage Yasuo Riftbound card. Riot has not announced a HEARTSTEEL Riftbound product, print run or set, so treat the cards as sighted rather than released until Preview Season, which runs 25 September to 9 October 2026.",
+      },
+      {
+        q: "Is the HEARTSTEEL Kayn a new Riftbound card?",
+        a: "No. The name, the 6 energy cost and the rules text on the circulating image all belong to Kayn, Unleashed — collector number 189 in Origins, the game's first set. It is a Rare, Chaos-domain Unit with 6 Might and 1 Power, and it has been legal since launch. A HEARTSTEEL version would be a new printing of that existing card, not a new card, so it changes nothing about deckbuilding.",
+      },
+      {
+        q: "How many Riftbound cards does Kayn have?",
+        a: "Exactly one: Kayn, Unleashed (OGN-189). That makes him the only HEARTSTEEL champion whose card has no alternate printing at all — Ezreal, Sett, Yone and Aphelios each already have at least one Showcase version, and Sett and Yone have signature prints on top of that.",
+      },
+      {
+        q: "Does K'Sante have a Riftbound card?",
+        a: "Not as of 18 September 2026 — he has no card in the game at all. He has been reported as coming in Radiance off a Riftbound Championship post, so if that holds, Radiance would be his Riftbound debut and his first card would arrive carrying a skin-line art rather than a base splash.",
+      },
+      {
+        q: "Will the HEARTSTEEL cards be in Riftbound: Radiance?",
+        a: "Unconfirmed, and worth being careful about: the leak reporting on music-themed Riftbound cards points at a Worlds 2026-themed Riftbound product, which is not necessarily Radiance. Radiance does already lean musical — Seraphine and Evelynn are both confirmed legends and the Showdown Decks product is Seraphine vs. Evelynn — but that is a theme, not a confirmation.",
+      },
+      {
+        q: "Does an alternate art change how a card plays?",
+        a: "No. An alternate art, Showcase or signature printing is the same card with the same name, cost and rules text — it is legal wherever the base print is legal and counts toward the same copy limit. The difference is entirely collectability and price.",
+      },
+      {
+        q: "When does Riftbound Radiance come out?",
+        a: "23 October 2026 worldwide, with 180 cards of which 66 are Showcase. Preview Season runs 25 September to 9 October 2026, opening at RQ Los Angeles.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Track every Radiance card as it's revealed →",
+      blurb: "The set hub fills in with real cards through Preview Season and gets live prices across every store we track on release day.",
+    },
+    body: `**HEARTSTEEL are back.** "LIVE MY LIFE" landed on **18 September 2026**, the group's first release in nearly three years — and the video has Riftbound cards in it. Stills doing the rounds show HEARTSTEEL-art cards for five of the six members, laid out on a table between shots. The Kayn one is the image everybody is sharing.
+
+It is also, on inspection, **not a new card**. That is not a criticism of anyone sharing it; it is the sort of thing you only catch if you look the card up. So we did, in our own database, and the answer turns out to be more interesting than "new Kayn spoiled".
+
+## Who HEARTSTEEL are, and why Riftbound is in the conversation
+
+HEARTSTEEL is Riot's boy-band-styled virtual group, assembled from six League champions: **Aphelios, Ezreal, Kayn, K'Sante, Sett and Yone**. They debuted in 2023 with "PARANOIA" and then went quiet for the better part of three years.
+
+"LIVE MY LIFE" ended that on 18 September 2026 at 9:00 AM Pacific, produced by Jon Bellion, with BAEKHYUN returning as Ezreal alongside Anderson .Paak as K'Sante, Connor Price as Sett and Nic D as Kayn. It is not a one-off, either: League's 2026 Season 3, Act 2 is built around music, with several of Riot's virtual bands returning at once.
+
+That matters for this game because Riftbound's next set is, in everything but name, already a music set.
+
+## Radiance was a pop-star set before HEARTSTEEL showed up
+
+**[Riftbound: Radiance](/sets/radiance) releases 23 October 2026**, with 180 cards — **66 of them Showcase prints**, which is a very large proportion and will be relevant in a moment. Of the ten legends the set will carry, six have been named: **Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna**. The set's Showdown Decks product is, literally, *Seraphine vs. Evelynn*.
+
+Seraphine and Evelynn are two thirds of K/DA's front line. Ekko fronted True Damage. Before a single HEARTSTEEL image surfaced, Radiance was already stacked with Riot's music roster. Our full rundown of [what is actually confirmed about Radiance](/blog/riftbound-radiance-what-we-know) tracks the rest, and the separately-sourced [Deploy, Showoff and Disarm leak](/blog/riftbound-radiance-leaked-mechanics) covers the mechanics side.
+
+So HEARTSTEEL art turning up on Riftbound cards in the same month is not a coincidence. It is the whole season's theme arriving.
+
+## The Kayn card: what the database actually says
+
+Here is the check almost nobody doing the rounds on this has run. Look the card up.
+
+**Kayn has exactly one card in Riftbound.** Not one recent card — one, full stop:
+
+[[embed:0]]
+
+**Kayn, Unleashed**, collector number **189** in **Origins**, the game's first set. A **Rare**, **Chaos**-domain Unit costing **6 energy**, with **6 Might** and **1 Power**, carrying the Ganking text players have known since launch: if it has moved twice this turn, it doesn't take damage.
+
+A card image showing the name *Kayn, Unleashed*, a **6** in the cost slot and that same "moved twice this turn" wording is therefore not a reveal of a new card. It is a **new printing of a card that has been legal since the game launched** — new art on old rules.
+
+## Why "printing, not card" is the whole story
+
+This distinction gets waved away constantly, and it changes almost everything about what the card is worth to you.
+
+An **alternate art**, **Showcase** or **signature** printing is the same card. Same name, same cost, same rules text, same copy limit, legal in exactly the same places. If you already run Kayn, Unleashed, a HEARTSTEEL version does not give you a new option, a new line of play, or a new deck — it gives you a different-looking copy of a card you can already run. Our [variant and finish glossary](/guides/riftbound-variant-glossary) covers how to tell these apart on the card itself, and where the collector number and the asterisk live.
+
+What it *does* change is the price, and in two directions at once. The premium printing prices off hype and scarcity rather than playability, which makes its first fortnight the single worst time to buy one. And the **base** print often moves too — a skin-line spotlight sends people looking up a card many of them had never thought about, and demand for the cheap version rises with it.
+
+That second effect is the one worth watching here, because of what the rest of the band looks like.
+
+## Every HEARTSTEEL champion's Riftbound cards right now
+
+[[embed:1]]
+
+Running the whole band through our card database as of 18 September 2026:
+
+| Champion | Cards today | Printings |
+|---|---|---|
+| **Ezreal** | Ezreal, Dashing (Spirit Forged, Mind, 4 cost); Ezreal, Prodigy (Spirit Forged, Chaos, 3 cost) | 4 — both cards already have Showcase versions |
+| **Sett** | Sett, Brawler (Origins, Body, 5 cost); Sett, Kingpin (Origins, Order, 4 cost) | 6 — Showcase prints plus a signature Brawler |
+| **Yone** | Yone, Blademaster (Spirit Forged, Body, 5 cost) | 3 — base, Showcase and signature |
+| **Aphelios** | Aphelios, Exalted (Spirit Forged, Calm, 4 cost) | 3 — base, Showcase and signature |
+| **Kayn** | Kayn, Unleashed (Origins, Chaos, 6 cost) | **1 — no variant of any kind** |
+| **K'Sante** | **None** | **0** |
+
+Two things fall straight out of that table, and neither has shown up in the coverage we checked this against.
+
+**Kayn is the only HEARTSTEEL champion with a card and no alternate printing at all.** Every other member who has a card already has at least one Showcase version; Sett and Yone have signature prints on top. [Kayn, Unleashed](/champions/kayn) has exactly one print and has never had a variant. A HEARTSTEEL Kayn would be the first alternate art this card has ever received — which is precisely the profile that spikes hardest and corrects hardest.
+
+**K'Sante has no Riftbound card whatsoever.** He is not under-printed; he is absent from the game entirely — which makes the gold-bordered K'Sante card in the video stills the most genuinely new thing in them. He is also the one HEARTSTEEL member separately reported as confirmed for Radiance, off a Riftbound Championship post whose Top 8 art the community read as HEARTSTEEL. Put those together and Radiance looks like K'Sante's **Riftbound debut**, with his first card in the game arriving in a skin line rather than a base splash. Seraphine is in the same position — a confirmed Radiance legend with no card in the game today.
+
+[[shop]]
+
+## What is confirmed, and what genuinely is not
+
+We keep this split explicit on every leak story, and this one needs it more than most.
+
+**Confirmed:** HEARTSTEEL's comeback and the 18 September release of "LIVE MY LIFE"; the group's six champions; HEARTSTEEL 2026 skins for all six; that League's Season 3 Act 2 is music-themed with multiple bands returning. On the Riftbound side: Radiance's 23 October 2026 release, its 180 cards and 66 Showcase prints, the Seraphine vs. Evelynn Showdown Decks, and the six legends named so far.
+
+**Shown, but not announced:** the video itself is where the cards appear. Stills from "LIVE MY LIFE" show HEARTSTEEL-art Riftbound cards for **five** of the band's six members — Kayn, Ezreal, Aphelios, Sett and K'Sante — laid out on a table between shots. **Yone is the one member not shown in the stills we have seen.** That is a sighting in official Riot footage, which is a great deal stronger than a leak; it is still not a product announcement, and none of the five has been shown with a legible set code, collector number or rarity.
+
+**Not confirmed:** that any of these cards exists in a specific product you can buy. Riot has not announced a HEARTSTEEL Riftbound release, a print run, or where these sit. A card built as a prop for a music video and a card that ships in a booster are not automatically the same object — and even when they are, the treatment and the set decide the price.
+
+**And one that cuts against the obvious assumption:** the leak reporting on music-themed Riftbound cards (the True Damage Yasuo card shared by @LeagueOfLeaks and @RiftboundCN) points at a **Worlds 2026-themed Riftbound product**, not necessarily Radiance. Radiance's musical roster makes it the natural guess, but a natural guess is not a confirmation, and buying on the assumption that a card lands in a specific set is how people end up holding the wrong sealed product.
+
+## What to do about it if you're buying
+
+A few things worth being deliberate about over the next month.
+
+**Check the set code and collector number before you pay a Radiance price.** If a listing shows Kayn, Unleashed, it is an Origins card — OGN-189 — regardless of what art is on it or what the listing title says. That is the single most likely way to overpay in the next few weeks, and it takes five seconds to check on [the card's own page](/card/kayn-unleashed-ogn-189-298).
+
+**Watch the base prints, not just the premium ones.** The existing Kayn, Unleashed, Sett, Brawler and Yone, Blademaster prints are the cards most likely to drift upward on attention alone, and they are cheap enough that the move is affordable to catch. [Price movers](/movers) tracks that across every store we compare.
+
+**Do not buy a premium printing in its first fortnight.** Alt-art and Showcase prints of a spotlighted card are at their most expensive when the spotlight is brightest. With 66 Showcase cards in a 180-card set, Radiance will not be short of them.
+
+**If you want the set itself, pre-orders are already live.** We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store — booster boxes, packs, the Vault and the Showdown Decks — cheapest first, in your own currency.
+
+## What to watch, and when
+
+**Preview Season runs 25 September to 9 October 2026**, opening at RQ Los Angeles. That is the window in which speculation becomes cards: if HEARTSTEEL printings are in Radiance, this is when they get shown properly, with a collector number and a rarity attached. Our [release calendar](/release-dates) carries the dates and the countdown.
+
+**Radiance itself lands 23 October 2026.** [The set hub](/sets/radiance) fills in with real cards through Preview Season and switches on live price comparison across every store we track the day it releases.
+
+## The bottom line
+
+HEARTSTEEL's return is real, the music theme running through Riot's autumn is real, and Riftbound is visibly part of it. But the specific card everyone is sharing is Kayn, Unleashed from Origins in new clothes — and the genuinely new information sits one lookup further on: Kayn has never had a variant, and K'Sante has never had a card.
+
+Those two facts are what to watch when Preview Season opens. Everything else is theme.`,
+  },
   // IMAGE SLOT (author): under "## How the drawing actually works", a screenshot of
   // the Riot Merch Store entry form once registration opens on 14 August would make
   // the "this is a form, not a checkout" point concrete — and it is OUR screenshot,
@@ -3625,7 +4206,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
     excerpt:
-      "A complete guide to Riftbound's Empower mechanic — a card that gains new abilities after it's already in play. How it works and how to build around it.",
+      "Empower lets a card gain new abilities after it's in play, usually by paying an extra cost on a later turn. Rules, timing, Disempower, every Empower card.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
@@ -4011,7 +4592,9 @@ Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta
 
 None of these six replace deckbuilding fundamentals — a great Tank unit still needs a reasonable body underneath the keyword. But knowing exactly what each one does (and doesn't do) is the difference between reading a card correctly and guessing.
 
-Every combat-keyword card is live with real prices — browse **[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Assault](/keywords/assault)**, **[Backline](/keywords/backline)** and **[Ganking](/keywords/ganking)** on their own reference pages, or see the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game.`,
+Every combat-keyword card is live with real prices — browse **[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Assault](/keywords/assault)**, **[Backline](/keywords/backline)** and **[Ganking](/keywords/ganking)** on their own reference pages, or see the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game.
+
+The other keyword families are covered the same way: **[timing keywords](/guides/riftbound-timing-keywords-explained)**, **[growth keywords](/guides/riftbound-growth-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)**.`,
   },
   {
     slug: "riftbound-timing-keywords-explained",
@@ -4072,7 +4655,9 @@ Every combat-keyword card is live with real prices — browse **[Tank](/keywords
 
 Hidden and Ambush are natural partners: hide a threat one turn, then Ambush a second unit into the same fight the next, and your opponent has to play around two unknowns instead of one visible board. Reaction abilities that Add resources let you hold energy back and still cover a cost you didn't fully plan for. None of these four keywords do anything on their own — their value is entirely in disrupting what an opponent thinks they know about the board, which is exactly why a deck built around them rewards patient, information-heavy play over straightforward curve-outs.
 
-See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, including the set's headline new keywords in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, including the set's headline new keywords in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.
+
+The other keyword families are covered the same way: **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[growth keywords](/guides/riftbound-growth-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)**.`,
   },
   {
     slug: "riftbound-growth-keywords-explained",
@@ -4150,7 +4735,9 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
 
 Hunt feeds Level. Legion rewards a low, wide curve of cheap cards. Equip and Weaponmaster both want a Gear-heavy shell, just on different timings. Accelerate and Vision are both about smoothing out a game plan rather than winning it outright — one skips downtime, the other skips a bad draw. Deathknell is the odd one out: it's the only keyword here that wants a unit gone, not scaled up, which makes it a natural fit alongside sacrifice effects and trades you were happy to make anyway.
 
-See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, or the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides for Vendetta's three headline new mechanics.`,
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, or the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides for Vendetta's three headline new mechanics.
+
+The other keyword families are covered the same way: **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[timing keywords](/guides/riftbound-timing-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)** — and **[Riftbound rules explained](/guides/riftbound-rules-explained)** is the overview they all hang off.`,
   },
   {
     slug: "riftbound-game-actions-explained",
@@ -4208,7 +4795,9 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
 
 Reading a Riftbound card correctly means reading these verbs precisely, not intuitively — "Buff" doesn't stack past one counter the way a generic "+1/+1" might in another game, and "Stun" doesn't kill even though it feels like it should. Getting a Game Action's exact rule wrong is one of the most common ways a new player misreads what a card actually does.
 
-See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game — combat keywords like Tank and Shield are in the **[Combat Keywords guide](/guides/riftbound-combat-keywords-explained)**, and Vendetta's three headline new mechanics are in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game — combat keywords like Tank and Shield are in the **[Combat Keywords guide](/guides/riftbound-combat-keywords-explained)**, and Vendetta's three headline new mechanics are in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.
+
+The keyword families these verbs appear inside are covered in **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[timing keywords](/guides/riftbound-timing-keywords-explained)** and **[growth keywords](/guides/riftbound-growth-keywords-explained)** — and **[Riftbound rules explained](/guides/riftbound-rules-explained)** is the overview they all hang off.`,
   },
   {
     slug: "riftbound-vendetta-overnumbers-explained",
@@ -4408,7 +4997,9 @@ What demand structure tells you, and what the data can confirm as it accumulates
 - **Check stock depth, not just price.** A low headline price at one shop with no stock elsewhere is a thinner market than it looks.
 - **Watch instead of guessing.** Save a card to **[price watch](/browse)** and get told when it moves rather than refreshing manually.
 
-See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**.`,
+See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**.
+
+Two Vendetta cards have their own pieces: **[why Shen, Eye of Twilight's Signature is underrated](/blog/shen-eye-of-twilight-signature-underrated-vendetta)** and **[Astral Heron's climb from a US$4 Epic to a US$34 one](/blog/astral-heron-riftbound-price-rising-how-to-play)**.`,
   },
   {
     slug: "buy-riftbound-cards-europe",
@@ -4479,7 +5070,9 @@ A Spanish shop wrote to us asking to be listed, and said the Spanish market was 
 
 Run a European store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers.
 
-Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** or **[Canada](/blog/buy-riftbound-cards-canada)**? We have a dedicated breakdown for those markets too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** or **[Canada](/blog/buy-riftbound-cards-canada)**? We have a dedicated breakdown for those markets too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.
+
+How the EU market was added, and what changed for European buyers when it was, is in **[RiftCompare is now live in the EU](/blog/riftcompare-launches-in-the-eu)**.`,
   },
   {
     slug: "riftbound-price-comparison-singapore",
@@ -5233,7 +5826,9 @@ On that last point, our position is straightforward: we report what the market i
 
 **Does a ban or errata change card prices?** Yes, usually fast. A card that loses legality in a format loses the demand attached to that format, and cards that replace it in decks tend to rise at the same time.
 
-**Does RiftCompare give investment advice?** No. We report live prices, price history and market movement across every store we track. We don't publish predictions or recommend cards to buy as investments.`,
+**Does RiftCompare give investment advice?** No. We report live prices, price history and market movement across every store we track. We don't publish predictions or recommend cards to buy as investments.
+
+For a worked example of a card that moved on play rather than scarcity — an Epic that went from US$4 to US$34 in five weeks — see **[Astral Heron: why its price is rising](/blog/astral-heron-riftbound-price-rising-how-to-play)**. The tools that catch a move early, Value Finder and Rising Cards, are laid out in **[RiftCompare Premium explained](/blog/riftcompare-premium-explained)**.`,
     faq: [
       { q: "Why are Riftbound cards so expensive?", a: "Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so \"expensive\" can mean something different depending where you're buying." },
       { q: "When do Riftbound prices usually drop?", a: "The most reliable driver of a price fall is new supply — a restock or reprint reaching a market that had run short. Beyond that, the heavy opening that happens around a set's launch is when the most copies enter circulation at once." },
@@ -5349,7 +5944,9 @@ Once you've played a few games, **[Riftbound for beginners](/guides/riftbound-fo
 
 **Do I need a booster box to start?** No. A box is the largest single outlay of any route in and is aimed at people who want to open packs. You can play the game properly without ever buying one.
 
-**Should I buy the newest set or an older one to start?** Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does. Compare the set pages directly before assuming.`,
+**Should I buy the newest set or an older one to start?** Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does. Compare the set pages directly before assuming.
+
+If you take the singles route, **[Best Basket](/guides/best-basket-cheapest-riftbound-deck)** works out the cheapest split of stores for a whole decklist, postage included, rather than pricing card by card — and **[singles vs packs](/blog/buying-singles-vs-opening-packs)** is the short answer on why a booster box is rarely the cheapest way to a deck.`,
     faq: [
       { q: "What is the cheapest way to start playing Riftbound?", a: "A ready-to-play deck product is the cheapest single purchase that gets you playing, and a two-player product like a Showdown Deck covers both sides of a game in one buy. If you already know which deck you want to play, buying singles for that specific list is usually cheaper than opening packs to find the same cards." },
       { q: "Are Riftbound starter and precon decks worth it?", a: "As a way to start, yes — they get you a functioning deck with no missing pieces and no deckbuilding required. They aren't competitive lists out of the box, so treat one as a base to upgrade rather than a finished deck." },
@@ -5428,7 +6025,9 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
 
 **What does Overnumbered mean on a Riftbound card?** It's a collector number that runs past the set's stated total — for example a number higher than the set size — marking a chase printing that sits outside the main numbered run. The Overnumbers guide covers how these differ from signed prints.
 
-**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes.`,
+**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes.
+
+Each keyword family has its own explainer: **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[timing keywords](/guides/riftbound-timing-keywords-explained)**, **[growth keywords](/guides/riftbound-growth-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)** — the verbs inside ability text, straight from the Core Rules.`,
     faq: [
       { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
       { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so your discarded and used cards become a second pool of plays rather than being gone for good." },
@@ -5639,6 +6238,8 @@ Every set gets a page on RiftCompare the moment its cards are catalogued, with l
 
 ---
 
+Each set on this calendar gets its own tracker as Riot shows it: **[the Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** for Set 5, and **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)** for the 346-card January set.
+
 *Source: Riot Games' official announcements of 4 August 2026 — [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/) and the [August 2026 State of the Game](https://playriftbound.com/en-us/news/announcements/august-2026-state-of-the-game/). Set names, dates and card counts are Riot's; the analysis and price commentary are ours. Release dates announced this far ahead are subject to change — check the official post for the current schedule.*`,
   },
 
@@ -5768,6 +6369,8 @@ Honestly: less than the headline suggests, and not immediately.
 None of it is actionable in August 2026. It is actionable in January 2027, and the useful thing to do between now and then is decide which Legacy champions you care about so you are not competing with everyone else on preview day. Set up [a price alert](/alerts) and let it come to you.
 
 ---
+
+Everything else known about Legacy — the 346-card count, the 12 Legends, the regional-identity theme — is in **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)**.
 
 *Source: Riot Games' [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/), published 4 August 2026. The pack composition, draft focus and templating updates are Riot's announcements; the explanations and the price commentary are ours. Card images and diagrams from the original post are not reproduced here — see Riot's article for those.*`,
   },
@@ -6567,7 +7170,7 @@ We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origi
     ],
     browseCta: {
       href: "/browse",
-      label: "Browse Riftbound cards →",
+      label: "Every Riftbound card in the database →",
       blurb: "Every card's live price across every store we track — Near Mint unless a listing says otherwise.",
     },
     body: `Every Riftbound price you see — on RiftCompare or anywhere else — is quoted against a condition grade, whether or not the store says so out loud. Here's what each grade actually means, and why it should change what you're willing to pay.
@@ -6708,7 +7311,9 @@ For the fuller walkthrough — what to buy first, what to skip, and how to budge
 
 ## Where to buy
 
-Once you're ready to buy anything — a starter deck, a booster box, or your first few singles — RiftCompare compares live prices across every store we track in your market, so you're not stuck taking the first price you find. [Browse the card database](/browse) or [compare sealed products](/sealed) to get started.`,
+Once you're ready to buy anything — a starter deck, a booster box, or your first few singles — RiftCompare compares live prices across every store we track in your market, so you're not stuck taking the first price you find. [Browse the card database](/browse) or [compare sealed products](/sealed) to get started.
+
+If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound)** maps the concepts across (there are **[Pokémon](/guides/pokemon-collector-to-riftbound)** and **[One Piece](/guides/one-piece-tcg-to-riftbound)** versions too). Weighing whether to start at all? **[Is Riftbound worth getting into?](/blog/is-riftbound-worth-getting-into)** gives the case both ways.`,
   },
   {
     slug: "league-of-legends-champions-in-riftbound",
@@ -6781,7 +7386,9 @@ Rather than trying to keep a static list current (champions are added with every
 
 ## Start with a champion you already know
 
-If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.`,
+If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.
+
+For one champion in full, **[every Ahri card in Riftbound](/blog/every-ahri-card-in-riftbound)** lists all twelve printings with their prices — including two that look identical except for a signature.`,
   },
   {
     slug: "shen-eye-of-twilight-signature-underrated-vendetta",
@@ -8812,7 +9419,9 @@ If you are doing this regularly, **[price alerts](/alerts)** will watch a card a
 
 For most purchases, in most markets: **buy locally, and spend the effort on comparing local stores rather than on comparing countries.** The spread between the cheapest and dearest store *within* your own market is frequently wider than the spread between markets, and capturing it costs you nothing in postage, tax, transit time or returns risk.
 
-Import when the card is expensive enough that percentages beat fixed costs, or when your market simply does not have the thing. Those two cases are real and worth acting on. The rest of the time the cheaper foreign price is a mirage that resolves at customs.`,
+Import when the card is expensive enough that percentages beat fixed costs, or when your market simply does not have the thing. Those two cases are real and worth acting on. The rest of the time the cheaper foreign price is a mirage that resolves at customs.
+
+If you are on the other side of that gap — buying where it is cheap to sell where it is not — **[how to find Riftbound arbitrage opportunities](/guides/how-to-find-riftbound-arbitrage-opportunities)** is the same calculation run in reverse.`,
   },
   // ── Collection valuation. PRIMARY for "how much is my riftbound collection
   // worth" / "riftbound collection value" / "value my riftbound cards" — an

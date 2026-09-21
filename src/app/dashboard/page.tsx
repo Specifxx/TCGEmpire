@@ -158,7 +158,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap gap-2 text-sm">
         <Link href="/movers" className="btn-ghost">Price movers</Link>
         <Link href="/market" className="btn-ghost">RiftCompare Index</Link>
-        <Link href="/browse" className="btn-ghost">Browse cards</Link>
+        <Link href="/browse" className="btn-ghost">Card database</Link>
         <Link href="/premium" className="btn-ghost">Membership</Link>
       </div>
 

@@ -69,13 +69,27 @@ const isCleanPagination = (searchParams: CardQuery) =>
 export async function generateMetadata({ searchParams }: { searchParams: CardQuery }): Promise<Metadata> {
   const q = (searchParams.q ?? "").trim();
   const page = parsePageNum(searchParams.page);
-  // Title leads with the exact phrase "Riftbound Cards" (2026-08-20 SEO audit):
-  // /browse is the site's card-database/browse-intent page, while "/" targets
-  // the comparison-intent "Riftbound prices" query — deliberately differentiated
-  // now rather than both pages competing with near-identical "Riftbound Card
-  // Database ... Prices"-shaped titles, which the same audit flagged as a real
-  // keyword-cannibalization risk (66 internal article links already send
-  // "card database"/"compare every store" anchor text here, vs. zero to "/").
+  // Title leads with the exact phrase "Riftbound Card List" (2026-09-17). This
+  // page is the OWNER of that query — see docs/seo-keyword-map.md, whose row for
+  // it pointed at `/guides/riftbound-card-list` as "not yet built" for a month
+  // after backlog item 12 had already been closed by shipping
+  // `/guides/riftbound-sets-in-order`. That guide answers a genuinely different
+  // question (which SETS exist, in release order); nobody typing "riftbound card
+  // list" wants a set list, they want the list of cards — which is this page, and
+  // has been all along. The map row is corrected rather than a third page built,
+  // per that file's own rule 5 (publish fewer pages than feels natural).
+  //
+  // It REPLACES the exact phrase "Riftbound Cards" that the 2026-08-20 audit
+  // front-loaded here, deliberately and with the same reasoning that audit used:
+  // one page, one exact-match phrase. "Riftbound Card" survives inside "Card
+  // List" for the singular query, the H1/subhead/JSON-LD below still say
+  // "Riftbound cards" verbatim, and `/cards` ("Browse Riftbound Cards by Type,
+  // Rarity & Printing") keeps a title-level exact match on the plural.
+  //
+  // The /browse-vs-"/" split that audit established is UNCHANGED and is what
+  // makes this safe: /browse owns card-database/list intent, "/" owns
+  // comparison intent ("Riftbound prices", "riftbound price check"). Neither
+  // title now contains the other's phrase.
   // NO manual "| RiftCompare" suffix — title is a plain string here (not
   // wrapped in { absolute: ... }), so layout.tsx's title template ("%s —
   // RiftCompare") already appends it once; adding it by hand doubled the
@@ -93,11 +107,15 @@ export async function generateMetadata({ searchParams }: { searchParams: CardQue
   // canonicalization).
   const pageSuffix = page > 1 ? ` — Page ${page}` : "";
   const base = {
-    title: q ? `${q} — Riftbound cards & prices${pageSuffix}` : `Riftbound Cards — Browse & Compare Prices${pageSuffix}`,
+    title: q ? `${q} — Riftbound cards & prices${pageSuffix}` : `Riftbound Card List — Browse & Compare Prices${pageSuffix}`,
+    // Market list corrected to all six tracked markets while this copy was being
+    // rewritten anyway: it still said "AU, US, UK & SG" — the set of markets as
+    // they stood before Canada (2026-08) and the EU (2026-08-23) launched, both
+    // of which the homepage description has named for weeks.
     description:
       page > 1
-        ? `Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — page ${page}. Updated daily.`
-        : "Every Riftbound card, one database: browse and compare live prices across AU, US, UK & SG stores — find the cheapest place to buy. Updated daily.",
+        ? `The full Riftbound card list — every card in one database, with live prices across US, AU, UK, Singapore, Canada & EU stores. Page ${page}.`
+        : "The full Riftbound card list — every card in one database, with live prices compared across US, AU, UK, Singapore, Canada & EU stores. Updated daily.",
   };
   if (q) return { ...base, alternates: { canonical: "/browse" }, robots: { index: false, follow: true } };
   if (page > 1 && isCleanPagination(searchParams)) {
@@ -217,10 +235,17 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
       <section className="min-w-0 flex-1">
         {!searchParams.q && (
           <div className="mb-4">
-            <h1 className="font-display text-2xl font-extrabold text-white">Buy Riftbound Cards</h1>
+            {/* H1 carries the same exact phrase as the <title> (see
+                generateMetadata's comment for why this page owns "Riftbound card
+                list"). "Buy Riftbound Cards" — the previous H1 — moves into the
+                subhead rather than being dropped, so the buy intent it carried is
+                still on the page in visible copy. Market list corrected here too:
+                it named AU/US/UK only, three launches out of date. */}
+            <h1 className="font-display text-2xl font-extrabold text-white">Riftbound Card List</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-400">
-              Browse every Riftbound TCG single and compare live prices across local stores in AU,
-              US &amp; UK to find the cheapest place to buy.
+              Browse the full list of Riftbound cards and buy Riftbound cards for less — every
+              single, with live prices compared across local stores in the US, AU, UK, Singapore,
+              Canada &amp; the EU to find the cheapest place to buy.
             </p>
             {/* Popular-champion cross-links — /browse had no path into the
                 per-champion hub pages at all (card pages already link to

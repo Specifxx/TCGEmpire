@@ -12,7 +12,8 @@ import { computeMarket, stockElsewhere, type ComputedRow, type MarketRow } from 
 import { AffiliateDisclosure, PaidLinkTag } from "./AffiliateDisclosure";
 import { ReportPriceButton } from "./ReportPriceButton";
 import { COUNTRIES, COUNTRY_LIST, DEFAULT_COUNTRY } from "@/lib/country";
-import { isFallbackRetailer, normaliseCondition, CONDITIONS, CARDMARKET_RETAILER, CARDMARKET_EU_RETAILER } from "@/lib/constants";
+import { normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
+import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { isPaidLink } from "@/lib/affiliate";
 
 // The market-dependent half of the card page. The page itself is ISR-cached with
@@ -217,9 +218,24 @@ export function CardPriceMetrics({
           rows): that only ever applies to a live UK-market-shown-as-EUR
           session, and this tile never shows a market other than the fixed
           US baseline. */}
+      {/* A SOLD-OUT CARD SHOWS ITS LAST PRICE, not an em dash. The listing is
+          still there and still priced; filtering out-of-stock rows out of the
+          summary and rendering nothing threw away the only figure the page had.
+          It matters more now that card pages are always indexable (see
+          lib/card-price-state.ts) — a blank is what a crawler arrives to.
+          Labelled "last seen" because it is not a price anyone can pay today and
+          must never be mistaken for one.
+
+          NO timeAgo() IN THIS TILE. The component has no `mounted` guard — the
+          one further down belongs to CardPriceComparison — and the page is ISR
+          with revalidate=86400, so a relative time baked into HTML up to a day
+          old and recomputed at hydration is a mismatch waiting to happen. The
+          exact date is already on the out-of-stock row lower down, which IS
+          guarded. */}
       <Metric
-        label={`Cheapest price · ${place}`}
-        value={m.lowest != null ? fmt(m.lowest) : "—"}
+        label={m.lowest == null && m.lastSeen ? `Last seen · ${place}` : `Cheapest price · ${place}`}
+        value={m.lowest != null ? fmt(m.lowest) : m.lastSeen ? fmt(m.lastSeen.priceCents) : "—"}
+        sub={m.lowest == null && m.lastSeen ? "out of stock" : undefined}
         highlight
       />
       <Metric
@@ -293,25 +309,24 @@ export function CardPriceComparison({
   // existing row. It's a reference figure regardless: it never feeds `prices`/
   // `storeCount`/the cheapest metrics (those come only from computeMarket).
   const tcg = useMemo(() => {
-    // Suppress this block only where TCGplayer is ALREADY a buyable row in the
-    // table above — in practice the US alone, since every converted variant is a
-    // fallback retailer and computeMarket strips those from the comparison
-    // entirely (see ALL_FALLBACK_RETAILERS).
-    //
-    // The test used to be a hand-listed "tcgplayer | tcgplayer_uk | tcgplayer_sg",
-    // which hid the block from UK/SG visitors even though their converted row is
-    // never rendered — so those markets saw no TCGplayer figure at all. Matching
-    // every tcgplayer* retailer instead would have extended that to AU and CA.
-    // Asking the real question — "is it in the table?" — fixes all four.
-    const shownNatively = rows.some(
-      (r) => r.retailer.startsWith("tcgplayer") && r.country === country && !isFallbackRetailer(r.retailer),
-    );
-    if (shownNatively) return null;
-    const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil);
-    const foil = rows.find((r) => r.retailer === "tcgplayer" && r.isFoil);
-    const src = std ?? foil;
+    // The suppression rule and the row choice now live in lib/tcg-reference.ts,
+    // because the QuickView popup needs the identical decision and a second copy
+    // of this predicate is how it broke the first time: it was a hand-listed
+    // "tcgplayer | tcgplayer_uk | tcgplayer_sg", which hid the block from UK and
+    // SG visitors even though their converted row is never rendered. Read that
+    // file's header before changing the behaviour here.
+    const ref = tcgReferenceRows(rows, country);
+    if (!ref) return null;
+    const src = ref.std ?? ref.foil;
     if (!src) return null;
-    return { usdCents: std?.priceCents ?? null, usdCentsFoil: foil?.priceCents ?? null, href: src.buyHref };
+    return {
+      usdCents: ref.std?.priceCents ?? null,
+      usdCentsFoil: ref.foil?.priceCents ?? null,
+      // MarketRow arrives with its outbound link already affiliate-wrapped;
+      // the QuickView wraps a raw url itself. That difference is why the shared
+      // helper returns rows rather than a finished block.
+      href: src.buyHref,
+    };
   }, [rows, country]);
   // Cardmarket reference price — same shape as the TCGplayer block above, but
   // UK/EU only, and no currency conversion (the UK row is already GBP-converted
@@ -320,7 +335,7 @@ export function CardPriceComparison({
   // above), unlike TCGplayer, so there's no "already shown natively" suppression
   // to check here.
   const cardmarket = useMemo(() => {
-    const retailer = country === "UK" ? CARDMARKET_RETAILER : country === "EU" ? CARDMARKET_EU_RETAILER : null;
+    const retailer = cardmarketRetailerFor(country);
     if (!retailer) return null;
     const row = rows.find((r) => r.retailer === retailer && r.country === country);
     if (!row) return null;
@@ -522,13 +537,24 @@ export function CardPriceComparison({
         </div>
       </div>
 
-      {/* TCGplayer market price (reference, currency-converted) — rendered below the
-          buyable table so it still appears on cards with no local listings.
-          disclosure=false: covered by the canonical disclosure above. */}
-      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
-
       {/* Cardmarket reference price (UK/EU only) — see the `cardmarket` memo above.
-          Not an affiliate link, so no AffiliateDisclosure prop to suppress here. */}
+          Not an affiliate link, so no AffiliateDisclosure prop to suppress here.
+
+          FIRST of the two reference blocks, ABOVE TCGplayer, and only in the two
+          markets it renders in at all. From a user, 2026-09-19: "I'd use the app
+          to check faster on CardMarket prices, so I would like to have it not as
+          a last option, but between the first ones." They are right about the
+          ordering, and the reason is market-specific rather than a preference —
+          European singles trade on Cardmarket, which is why the EU has eleven
+          tracked shop websites for a whole continent (see the Cardmarket block
+          in lib/price-import.ts). To a UK or EU visitor, a USD market price run
+          through an FX rate is the less relevant of the two, so it should not be
+          the one they reach first.
+
+          What does NOT change is that this is a reference, below the buyable
+          comparison, never a row in it — Cardmarket's figure is a marketplace
+          LOW across every seller of the print, not one verified listing. That is
+          THE RULE in lib/constants.ts, and it outranks ordering. */}
       {cardmarket && (
         <CardmarketPrice
           priceCents={cardmarket.priceCents}
@@ -537,6 +563,11 @@ export function CardPriceComparison({
           isEu={cardmarket.isEu}
         />
       )}
+
+      {/* TCGplayer market price (reference, currency-converted) — rendered below the
+          buyable table so it still appears on cards with no local listings.
+          disclosure=false: covered by the canonical disclosure above. */}
+      {tcg && <TcgMarketPrice usdCents={tcg.usdCents} usdCentsFoil={tcg.usdCentsFoil} href={tcg.href} disclosure={false} />}
 
       {/* eBay fallback — shown whenever this market has no live eBay row for the
           card, so a thin market is never a dead end. */}

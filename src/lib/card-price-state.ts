@@ -3,35 +3,51 @@ import { hasNoRetailChannel, NO_RETAIL_CHANNEL_SETS } from "./constants";
 import { dbHistory } from "./db-history";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// "Does this card have enough price data to be worth indexing?"
+// "Does this card have a price to show?" — and NOTHING about whether to index.
 // ─────────────────────────────────────────────────────────────────────────────
-// ONE rule, consumed by three places that must never disagree:
-//   • app/card/[id]/page.tsx  generateMetadata → robots index:false when EMPTY
-//   • lib/sitemap-sections.ts cards()          → EMPTY cards are left out
-//   • scripts/adsense-audit.ts                 → measures the same population
+// A CARD PAGE IS ALWAYS INDEXABLE. There is no longer any price condition on
+// robots or on the sitemap, and this file no longer exposes one. Read on before
+// reinstating it, because it was here for a real reason and the reason expired.
 //
-// Roughly a tenth of the catalogue has no live listing anywhere. Those pages
-// rendered as a shell: a name, a rarity badge, a templated sentence and an empty
-// price table. A reviewer sampling random /card/* URLs lands on one about one
-// time in ten, and that is precisely what "low-value content" means — not that
-// the page is malicious, but that there is nothing on it.
+// WHAT IT USED TO DO (Phase 7a, docs/adsense-remediation.md): a card with no
+// in-stock listing and no price history was noindexed and dropped from
+// cards.xml, because such a page "rendered as a shell: a name, a rarity badge,
+// a templated sentence and an empty price table" — genuinely low-value content
+// for a reviewer sampling /card/* URLs.
 //
-// THE RE-INDEX PATH IS AUTOMATIC AND DATA-DRIVEN. There is no manual list, no
-// allowlist to maintain and nothing to remember. A card becomes indexable again
-// the moment either condition below turns true, because both the metadata and
-// the sitemap re-evaluate this same query on their next regeneration:
-//   • at least one IN-STOCK retailer listing, in any market; or
-//   • at least MIN_HISTORY_DAYS distinct days of recorded price history.
+// WHY THAT PREMISE NO LONGER HOLDS. Phase 7b de-templatised the card narrative
+// and took the median card page to ~1,021 unique editorial words. A card with no
+// price today still carries its rules text, its art, a printings rail, a FAQ,
+// and several paragraphs that say — accurately — that nothing we track has it in
+// stock and why. That is not a shell; for a token or a promo rune it is the most
+// useful page on the web about that card.
 //
-// Why history counts even with no listing today: a card that has traded for a
-// week has a real chart, a real trend paragraph and a real range — genuinely
-// useful, and worth indexing, even while it is briefly out of stock everywhere.
-// COUNTS SNAPSHOT ROWS, AND SNAPSHOTS ARE WEEKLY NOW (see price-import.ts).
-// This was 7, meaning 7 daily rows ~ one week of evidence that a card is real
-// and tracked. Left at 7 it would have silently become SEVEN WEEKS, holding
-// every newly imported card at noindex — and out of sitemaps/cards.xml — for
-// most of a quarter. 2 restores the original intent: about a fortnight of
-// track record before we vouch for a card with no live listing.
+// WHY IT WAS ACTIVELY HARMFUL. Indexability was a FUNCTION OF TODAY'S STOCK, and
+// it swung both ways: a page that had earned its place in Google's index would
+// leave it the day its last listing sold out, taking its accumulated Search
+// Console history with it, and have to earn it all back afterwards. The other
+// half of the OR was supposed to catch that — a card with recorded history stays
+// indexable — and that half keeps failing. When this was measured
+// (audit-indexability, 2026-09-17) PriceHistory held zero joinable rows, so
+// 1,411 of 1,431 pages were resting on live stock alone. That particular outage
+// was fixed hours later by a history-database cutover, which is exactly the
+// point: DECISIONS.md records eighteen-plus history project terms, each ending in
+// transfer exhaustion within days, each cutover another chance to re-break the
+// cardId join. And a card with fewer than MIN_HISTORY_DAYS days of history —
+// every newly imported card — was noindexed regardless of how healthy the
+// history project was. A safety net that fails that often is not one.
+//
+// The owner's call, and the right one: ranking takes months to accumulate and a
+// page cannot accumulate anything while it is dropping in and out of the index.
+// A page that is briefly priceless is worth far less than a page that is
+// permanently unranked.
+//
+// WHAT SURVIVES. `isEmpty` still exists and still means "no price to show" —
+// the honest no-listings explainer and the thin-page ad treatment both key off
+// it. It is PRESENTATION, not indexing. And `getCanonicalTwin`
+// (lib/card-duplicates.ts) still noindexes duplicate rows, which is a
+// duplicate-content rule about two URLs for one card, not a judgement about
+// whether a card deserves an index slot at all.
 export const MIN_HISTORY_DAYS = 2;
 
 // The no-retail-channel exemption itself lives in constants.ts — card-narrative.ts
@@ -53,14 +69,15 @@ export type CardPriceState = {
   /**
    * True when there is no price data to show. STILL TRUE for a no-retail-channel
    * printing — the page genuinely has no price, and the "no live listings"
-   * explainer and the thin-page ad treatment both key off this. Do not
-   * repurpose it as "should we index"; that is `indexable`.
+   * explainer and the thin-page ad treatment both key off this.
+   *
+   * PRESENTATION ONLY. There is deliberately no `indexable` field any more: a
+   * card page is always indexable, and removing the field is what stops this
+   * from being quietly rewired into a robots decision again. See the header.
    */
   isEmpty: boolean;
   /** This printing is never sold at retail, so `isEmpty` carries no signal. */
   noRetailChannel: boolean;
-  /** The actual robots/sitemap decision. */
-  indexable: boolean;
 };
 
 export function priceStateFrom(
@@ -69,17 +86,17 @@ export function priceStateFrom(
   noRetailChannel = false
 ): CardPriceState {
   const isEmpty = !hasListings && historyDays < MIN_HISTORY_DAYS;
-  return { hasListings, historyDays, isEmpty, noRetailChannel, indexable: !isEmpty || noRetailChannel };
+  return { hasListings, historyDays, isEmpty, noRetailChannel };
 }
 
 /**
  * Resolve the state for one card. Cheap: a `findFirst` with `take: 1` semantics
  * and a grouped count, both index-covered.
  *
- * Fails OPEN (treated as "has data", i.e. indexable) if the database is
- * unreachable. A transient DB blip must never noindex the catalogue — losing
- * 1,000 indexed pages to a timeout is far worse than briefly indexing a handful
- * of empty ones.
+ * Fails OPEN (treated as "has data") if the database is unreachable. That used
+ * to be load-bearing, because a blip would otherwise have noindexed the
+ * catalogue; now it only means a blip shows the normal page rather than the
+ * no-listings explainer, which is still the right way round.
  */
 export async function getCardPriceState(card: { id: string; setCode: string }): Promise<CardPriceState> {
   // The substance half of the exemption is looked up HERE rather than taken from
@@ -134,61 +151,8 @@ export async function getCardPriceState(card: { id: string; setCode: string }): 
   }
 }
 
-/**
- * The set of card ids that must NOT be submitted to the sitemap, for the sitemap
- * generator — one pair of grouped queries for the whole catalogue instead of one
- * round-trip per card.
- *
- * "Empty AND not exempt", i.e. the exact complement of `CardPriceState.indexable`
- * above. The two must agree: submitting a URL we simultaneously tell Google not
- * to index is the contradiction this whole file exists to prevent.
- *
- * Fails OPEN too: an empty set means "nothing is excluded", so a database
- * problem degrades to the previous behaviour rather than emptying the sitemap.
- */
-export async function getEmptyCardIds(): Promise<Set<string>> {
-  try {
-    const [allCards, exemptCards, withListings, richHistoryCardIds] = await Promise.all([
-      prisma.card.findMany({ select: { id: true } }),
-      // The no-retail-channel test needs description+imageUrl, which are far too
-      // fat to pull for the whole catalogue (see the egress rules in lib/db.ts).
-      // Scoped to the exempt set codes it is a handful of rows.
-      prisma.card.findMany({
-        where: { setCode: { in: [...NO_RETAIL_CHANNEL_SETS] } },
-        select: { id: true, description: true, imageUrl: true },
-      }),
-      prisma.retailerPrice
-        .groupBy({ by: ["cardId"], where: { inStock: true }, _count: { _all: true } })
-        .then((rows) => new Set(rows.map((r) => r.cardId))),
-      // Was `groupBy({ by: ["cardId", "day"] })` with no threshold — one row PER
-      // (card, day) pair across the WHOLE table, every call. PriceHistory has up
-      // to one row per (card, day, market), so that grouped result still grows
-      // with total card-days recorded FOREVER (this file's caller comment named
-      // it as the prime suspect after three straight Neon transfer-allowance
-      // rotations in two weeks — the 2026-08-21 HISTORY_DATABASE_URL_4 rotation
-      // is the fourth). All this function needs is a boolean per card ("does it
-      // have >= MIN_HISTORY_DAYS distinct days"), never the per-day breakdown,
-      // so HAVING does the counting in Postgres and only the cards that CLEAR
-      // the bar cross the wire — bounded by card count, not by history depth.
-      dbHistory.$queryRaw<{ cardId: string }[]>`
-        SELECT "cardId"
-        FROM "PriceHistory"
-        GROUP BY "cardId"
-        HAVING COUNT(DISTINCT day) >= ${MIN_HISTORY_DAYS}
-      `.catch(() => [] as { cardId: string }[]),
-    ]);
-
-    const richHistory = new Set(richHistoryCardIds.map((r) => r.cardId));
-    const exempt = new Set(exemptCards.filter(cardIsSubstantial).map((c) => c.id));
-
-    const empty = new Set<string>();
-    for (const { id } of allCards) {
-      if (withListings.has(id) || richHistory.has(id)) continue;
-      if (exempt.has(id)) continue;
-      empty.add(id);
-    }
-    return empty;
-  } catch {
-    return new Set();
-  }
-}
+// getEmptyCardIds() USED TO LIVE HERE and has been deleted, not emptied. It
+// returned the card ids to withhold from cards.xml, and with no price condition
+// left there is nothing for it to return. Keeping a function that must always
+// answer "none" is an invitation to wire it back up; the sitemap now submits
+// every card and lib/sitemap-sections.ts says so where the filter used to be.

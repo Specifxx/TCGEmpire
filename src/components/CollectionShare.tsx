@@ -65,7 +65,7 @@ export function CollectionShare() {
       <h2 className="font-bold text-white">Share your collection</h2>
       <p className="mt-1 text-sm text-slate-400">
         A read-only page anyone can open — your cards, their conditions and what they&apos;re worth today. What you paid and
-        your profit/loss are never included.
+        what you paid are never included.
       </p>
 
       {error && <p className="mt-2 text-xs text-rose-300">{error}</p>}

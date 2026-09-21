@@ -45,12 +45,12 @@ export function setFromTotal(total?: string): string | null {
     case 219: return "UNL";
     case 24: return "OGS";
     case 166: return "VEN";
-    // Both candidate Radiance denominators — see the twin switch in
-    // lib/price-import.ts for why we claim 114 AND 180 until a real card is seen.
+    // Radiance — see the twin switch in lib/price-import.ts. This claimed 114 AND
+    // 180 while no Radiance card had been seen; the Neeko spoiler is printed
+    // "167/167", so both guesses are pruned and the printed number stands.
     // isSetlessNumber() is built on this function, so without an entry here every
     // Radiance collector number reads as "setless".
-    case 114:
-    case 180: return "RAD";
+    case 167: return "RAD";
     default: return null;
   }
 }

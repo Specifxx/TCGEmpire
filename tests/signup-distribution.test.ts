@@ -14,7 +14,9 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // Three email lists received regular value from RiftCompare and were never
 // once asked to create an account; the referral program was fully implemented
 // server-side with no UI; and /alerts — the SEO page for the account feature —
-// exited to "Browse cards". These pin the fixes.
+// exited to the card database instead. These pin the fixes. (That secondary
+// link read "Browse cards →" until 2026-09-21, when "browse" was taken out of
+// every label pointing at /browse; the assertion follows the label.)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Email footers ────────────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ test("the referral program finally has a share surface, gated on the program bei
 test("/alerts leads with the watchlist signup, keeping browse as the secondary route", () => {
   const page = read("src/app/alerts/page.tsx");
   assert.match(page, /<AlertsSignupCta \/>/);
-  assert.match(page, /className="btn-ghost">Browse cards/);
+  assert.match(page, /className="btn-ghost">Card database/);
   const cta = read("src/components/AlertsSignupCta.tsx");
   assert.match(cta, /\/login\?next=\/watching/);
   assert.match(cta, /markSignupSource\("alerts_page"\)/);

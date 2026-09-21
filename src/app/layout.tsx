@@ -5,7 +5,6 @@ import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
-import { BottomTabBar } from "@/components/BottomTabBar";
 import { SIDENAV_BOOT_SCRIPT } from "@/lib/sidenav-shared";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
@@ -92,7 +91,14 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
 // swap-in causes negligible layout shift.
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 // Monospace for prices / tabular figures / tickers — the "market terminal" voice.
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+// preload: false (2026-09-21): next/font preloads every family as a HIGH-priority
+// fetch in <head>, so three ~40KB font files were competing with the
+// render-blocking CSS for the first 600ms of every page load. The mono face only
+// dresses numbers — never the H1 that is the LCP on article pages — so it can
+// arrive with the stylesheet and swap in; adjustFontFallback keeps the widths
+// matched, so the swap does not move anything. Inter (body) and Fraunces (the
+// H1) stay preloaded.
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
 // Sharp flared serif for headings only — the Beaufort-style look-alike (see note above).
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -154,8 +160,25 @@ export const metadata: Metadata = {
   // above — nothing renders until BING_SITE_VERIFICATION is set in the deploy
   // env. A fabricated placeholder would just fail Bing's verification check
   // silently; omitting the tag entirely until a real token exists is the
-  // correct failure mode. Bing + DuckDuckGo + Brave (Bing-indexed) are ~45% of
-  // this site's search referrals and were unmonitored before this.
+  // correct failure mode.
+  //
+  // STILL UNSET AS OF 2026-09-17, and the live site therefore serves no
+  // msvalidate.01 tag at all (checked against production HTML).
+  // /BingSiteAuth.xml 404s too, so unless the property was verified by a Search
+  // Console import or by DNS, it is not verified in Bing Webmaster Tools by any
+  // route this repo provides. Setting BING_SITE_VERIFICATION in the Vercel
+  // production env is the whole fix; the code path is already here.
+  //
+  // THIS COMMENT USED TO ASSERT that "Bing + DuckDuckGo + Brave (Bing-indexed)
+  // are ~45% of this site's search referrals". That number is UNSOURCED: it
+  // appears nowhere in DECISIONS.md or docs/, no commit message derives it, and
+  // this repo has never held a single measured Bing figure. It is kept here as a
+  // HYPOTHESIS rather than deleted, because if it is true then Bing matters far
+  // more than its ~3-4% search share suggests and verifying this property is
+  // urgent rather than tidy. Two things can check it: GA4's referral breakdown
+  // (GAPageViewTracker already records the external referrer), and
+  // .github/workflows/bing-coverage.yml once BING_API_KEY exists. Do not cite it
+  // as fact until one of those has run.
   verification: {
     google:
       process.env.GOOGLE_SITE_VERIFICATION ??
@@ -366,9 +389,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     component header for why a second uninvited dialog would be
                     self-defeating here. It hides itself over the ad zone below. */}
                 <FeedbackWidget />
-                {/* SideNav's mobile complement — lg:hidden, one breakpoint
-                    decision either way (see --bottombar-h in globals.css). */}
-                <BottomTabBar />
+                {/* SideNav's mobile complement USED TO BE <BottomTabBar /> here.
+                    Removed outright: three successive attempts to keep a fixed
+                    bottom bar pinned on a phone all failed (see
+                    components/HeaderMenuButton.tsx for the list), and the
+                    navigation it carried is now the header's own menu button —
+                    which cannot have that class of bug, because the TOP edge of
+                    the layout viewport does not move when browser chrome
+                    collapses. --bottombar-h and --chrome-lift went with it. */}
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>

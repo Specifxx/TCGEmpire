@@ -17,7 +17,9 @@ import {
   type CardmarketPriceEntry,
   type CardmarketRankableCard,
 } from "../src/lib/cardmarket";
-import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER, EU_FALLBACK_RETAILERS, isFallbackRetailer } from "../src/lib/constants";
+import { CARDMARKET_EU_RETAILER, CARDMARKET_RETAILER, EU_FALLBACK_RETAILERS, isFallbackRetailer, cardmarketRetailerFor } from "../src/lib/constants";
+import { cardmarketProductUrl, normalizeCardmarketUrl } from "../src/lib/cardmarket-url";
+import { affiliateUrl } from "../src/lib/affiliate";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 
@@ -483,4 +485,105 @@ test("the write path can never again lose a whole run to one duplicate: dedupe b
   const refresh = src.slice(src.indexOf("export async function refreshCardmarketPrices"), src.indexOf("// ---- sealed: SealedListing"));
   assert.match(refresh, /dedupeRetailerPriceRows\(\[\.\.\.m\.rows, \.\.\.rankedRows\]\)/, "strict + ranked rows must be deduped by unique key before the write");
   assert.match(refresh, /retailerPrice\.createMany\(\{ data: allRows, skipDuplicates: true \}\)/, "the insert must skip a duplicate rather than throw after deleteMany has already emptied the table");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The product LINK. Reported by a user, 2026-09-19: "when I clicked it, it just
+// redirected me on card market but not on that card page."
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a Cardmarket product link uses the id dispatcher, not the singles listing", () => {
+  // `/en/Riftbound/Products/Singles` is a REAL page — browse-all singles for the
+  // game — so Cardmarket rendered it happily and ignored the unknown idProduct
+  // query. The link never 404ed and never errored; it simply never went to the
+  // card. `/Products?idProduct=` is the dispatcher that redirects to the product,
+  // which is the form Scryfall publishes for every Magic card it lists.
+  const url = cardmarketProductUrl(845712);
+  assert.equal(url, "https://www.cardmarket.com/en/Riftbound/Products?idProduct=845712");
+  assert.doesNotMatch(url, /\/Products\//, "any path segment after /Products swallows the id");
+});
+
+test("a stale Cardmarket link is repaired on the way out", () => {
+  // Rows are rewritten wholesale on every price refresh, so the importer fix
+  // alone heals the database within a cycle. That is not good enough for a link
+  // someone checks the minute the fix ships, so affiliateUrl repairs it too.
+  const cases: [string, string][] = [
+    [
+      "https://www.cardmarket.com/en/Riftbound/Products/Singles?idProduct=845712",
+      "https://www.cardmarket.com/en/Riftbound/Products?idProduct=845712",
+    ],
+    // A full slug URL with an id: the dispatcher form is still the safe one,
+    // since we cannot verify a slug we did not build.
+    [
+      "https://www.cardmarket.com/en/Riftbound/Products/Singles/Origins/Irelia?idProduct=1",
+      "https://www.cardmarket.com/en/Riftbound/Products?idProduct=1",
+    ],
+    // Already correct — untouched, including the language and game segments.
+    [
+      "https://www.cardmarket.com/de/Riftbound/Products?idProduct=9",
+      "https://www.cardmarket.com/de/Riftbound/Products?idProduct=9",
+    ],
+  ];
+  for (const [from, to] of cases) assert.equal(normalizeCardmarketUrl(from), to, from);
+
+  // Narrow by design: no id to carry, not Cardmarket, or not a URL at all.
+  for (const u of [
+    "https://www.cardmarket.com/en/Riftbound/Products/Singles",
+    "https://www.tcgplayer.com/product/1?idProduct=5",
+    "not a url",
+  ]) {
+    assert.equal(normalizeCardmarketUrl(u), u, u);
+  }
+
+  // …and the repair is actually wired into the outbound path, not just exported.
+  assert.equal(
+    affiliateUrl("https://www.cardmarket.com/en/Riftbound/Products/Singles?idProduct=845712", "cardmarket_eu"),
+    "https://www.cardmarket.com/en/Riftbound/Products?idProduct=845712",
+  );
+});
+
+test("the Cardmarket reference block is not the last thing on either surface", () => {
+  // "I'd use the app to check faster on CardMarket prices, so I would like to
+  // have it not as a last option, but between the first ones." European singles
+  // trade on Cardmarket — it is why the EU has eleven tracked shop websites for
+  // a whole continent — so for a UK or EU visitor a USD market price through an
+  // FX rate is the LESS relevant of the two reference blocks. Cardmarket goes
+  // first, on the card page and in the popup alike.
+  for (const f of ["src/components/CardMarketSection.tsx", "src/components/QuickView.tsx"]) {
+    const src = read(f);
+    const cm = src.indexOf("<CardmarketPrice");
+    const tcg = src.indexOf("<TcgMarketPrice");
+    assert.ok(cm > 0, `${f} must render the Cardmarket reference block`);
+    assert.ok(tcg > 0, `${f} must still render the TCGplayer one`);
+    assert.ok(cm < tcg, `${f} renders Cardmarket AFTER TCGplayer`);
+  }
+});
+
+test("moving Cardmarket up did not move it into the buyable comparison", () => {
+  // THE RULE (lib/constants.ts): Cardmarket's figure is a marketplace LOW across
+  // every seller of the print, not one verified in-stock listing. Ordering is a
+  // preference; this is not.
+  assert.ok(
+    isFallbackRetailer(CARDMARKET_RETAILER) && isFallbackRetailer(CARDMARKET_EU_RETAILER),
+    "both Cardmarket keys must stay fallback-only",
+  );
+  // Both surfaces filter the comparison rows on isFallbackRetailer, and the
+  // reference block renders outside that list.
+  for (const f of ["src/components/CardMarketSection.tsx", "src/components/QuickView.tsx"]) {
+    const src = read(f);
+    const cm = src.indexOf("<CardmarketPrice");
+    const panelEnd = src.lastIndexOf("</ul>", cm);
+    assert.ok(panelEnd > 0 && panelEnd < cm, `${f} must render the block after the comparison list closes`);
+  }
+});
+
+test("which Cardmarket key belongs to which market is decided in one place", () => {
+  assert.equal(cardmarketRetailerFor("UK"), CARDMARKET_RETAILER);
+  assert.equal(cardmarketRetailerFor("EU"), CARDMARKET_EU_RETAILER);
+  for (const c of ["US", "AU", "CA", "SG"]) assert.equal(cardmarketRetailerFor(c), null, c);
+  // The literal keys must not be re-inlined at either call site — that is how
+  // the TCGplayer equivalent broke (see lib/tcg-reference.ts's header).
+  for (const f of ["src/components/CardMarketSection.tsx", "src/components/QuickView.tsx"]) {
+    assert.match(read(f), /cardmarketRetailerFor\(country\)/, `${f} must use the shared selector`);
+  }
 });

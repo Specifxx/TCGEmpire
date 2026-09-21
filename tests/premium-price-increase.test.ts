@@ -116,7 +116,8 @@ test("no surface invents an exact date for an increase that doesn't have one yet
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
     "src/components/PremiumSlideIn.tsx",
-    "src/components/SignupPromoPopup.tsx",
+    // SignupPromoPopup dropped 2026-09-16: it quotes no price, so it has no
+    // price-increase banner to hard-code a date into.
   ]) {
     const src = read(f);
     const banner = /Price increasing soon[\s\S]{0,400}/.exec(src);
@@ -133,7 +134,7 @@ test("every surface that pitches a price shares the ONE lock-in helper, rather t
     ["src/app/premium/page.tsx", "premiumLockInLine"],
     ["src/components/PremiumDialog.tsx", "premiumLockInLine"],
     ["src/components/PremiumSlideIn.tsx", "premiumLockInTail"],
-    ["src/components/SignupPromoPopup.tsx", "premiumLockInTail"],
+    // SignupPromoPopup dropped 2026-09-16: no price pitch, no lock-in copy.
   ] as const) {
     const src = read(file);
     assert.match(src, new RegExp(`\\b${fn}\\b`), `${file} must render its lock-in copy via ${fn}(), not a hand-typed string`);
@@ -278,35 +279,24 @@ test("the premium-interest beacon still fires from every retired dialog entry po
   assert.match(slideIn.slice(acceptAt, acceptAt + 500), /firePremiumClickBeacon/, "PremiumSlideIn's CTA must fire the beacon before navigating");
 });
 
-test("SignupPromoPopup always shows a price; the trial-available branch is a bare $0 today (2026-09-09)", () => {
-  // "we also need to show the prices for non logged in users" (2026-09-06) —
-  // the price used to disappear entirely whenever a trial was configured
-  // (which is the default), so a signed-out visitor almost never saw one.
-  // Fixed then to always show SOME number. 2026-09-09: the trial-available
-  // branch was simplified further, from "$0 today, then from $X/mo" down to
-  // a bare "$0 today" — an explicit product decision to lead this low-
-  // intrusion nudge with the number that's true right now, not the recurring
-  // price. The recurring price is still disclosed before any card is
-  // charged: on /premium (this card's own destination), in the Premium
-  // dialog, and in the checkout page's own "Card required... then $X" line.
+test("SignupPromoPopup shows NO price at all — it sells the free account (2026-09-16)", () => {
+  // THIS TEST USED TO PIN THE OPPOSITE, and the reversal is the point. From
+  // 2026-09-06 the popup always showed a price ("we also need to show the
+  // prices for non logged in users"), simplified on 2026-09-09 to a bare "$0
+  // today". On 2026-09-16 the owner took the Premium pitch off this surface
+  // entirely: it now sells the free account, so there is no price to show
+  // honestly or dishonestly.
+  //
+  // The $0-today honesty guarantee that used to live here is NOT lost — it
+  // moved with the pitch. PremiumSlideIn, PremiumDialog, PremiumCta and
+  // /premium all still carry it, and all four are still in this file's own
+  // surface lists above plus tests/premium-zero-today.test.ts.
   const src = read("src/components/SignupPromoPopup.tsx");
-  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
-  assert.ok(priceBlockAt >= 0, "expected an unconditional price block (not gated on !trialAvailable)");
-  assert.ok(
-    !/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src),
-    "the price block must no longer be hidden while a trial is available",
-  );
-  const block = src.slice(priceBlockAt, priceBlockAt + 600);
-  const trialBranchAt = block.indexOf("trialAvailable ? (");
-  assert.ok(trialBranchAt >= 0, "expected a trialAvailable branch");
-  const elseAt = block.indexOf(") : (", trialBranchAt);
-  assert.ok(elseAt >= 0, "expected the non-trial else branch");
-  const trialBranch = block.slice(trialBranchAt, elseAt);
-  const nonTrialBranch = block.slice(elseAt);
-  assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-available branch must use the shared $0-today helper");
-  assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-available branch must NOT also state the recurring price — bare $0 today, by design");
-  assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
-  assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
+  assert.ok(!/PREMIUM_PRICE_AMOUNT/.test(src), "no price block on a card that asks for no money");
+  assert.ok(!/premiumZeroToday|premiumFromLine|premiumLockInTail/.test(src), "no price helpers");
+  assert.ok(!/Price increasing soon/.test(src), "no price-increase banner");
+  // What it must say instead: signing up is free and needs no card.
+  assert.match(src, /Free, no card needed/, "the free-account ask must state it costs nothing");
 });
 
 test("PremiumSlideIn always shows a price too; the trial-eligible branch is a bare $0 today (2026-09-09)", () => {

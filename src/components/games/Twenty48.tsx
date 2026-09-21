@@ -229,7 +229,7 @@ export function Twenty48() {
         <div className="mx-auto max-w-md">
           <GameResultExtras game="twenty48" score={score} />
           <p className="mt-4 text-center text-xs text-slate-600">
-            Want the real thing? <Link href="/browse" className="text-brand-400 hover:underline">Browse every Riftbound card →</Link>
+            Want the real thing? <Link href="/browse" className="text-brand-400 hover:underline">Every Riftbound card in the database →</Link>
           </p>
         </div>
       )}

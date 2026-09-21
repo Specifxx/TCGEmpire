@@ -42,11 +42,20 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
         // label useful when read aloud on its own.
         aria-label={`Change market — currently ${current.code}, ${current.label}`}
         aria-expanded={open}
-        className="flex min-h-11 items-center gap-1 rounded-lg border border-ink-700 px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-h-0 sm:gap-1.5 sm:px-2.5"
+        // `min-w-11` below sm is load-bearing: dropping the chevron there (see
+        // below) took this control to 38px wide, under the site's own 44px tap
+        // floor. The floor is a width AND a height rule; min-h-11 only covered
+        // half of it, and nothing had needed the other half while the chevron
+        // was padding it out.
+        className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-ink-700 px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-h-0 sm:min-w-0 sm:justify-start sm:gap-1.5 sm:px-2.5"
       >
         <span className="text-base leading-none">{current.flag}</span>
         <span className="hidden sm:inline">{current.code}{isEurDisplay && " · €"}</span>
-        <svg className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        {/* Chevron hidden below sm. The flag alone already reads as "tap to
+            change market", the whole control is one button either way, and this
+            is ~14px of the budget that putting "Premium" back as text needed on
+            a phone. From sm up it returns alongside the country code. */}
+        <svg className={`hidden h-3.5 w-3.5 transition-transform sm:block ${open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>

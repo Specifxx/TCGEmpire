@@ -58,6 +58,7 @@ import { faqPage } from "@/lib/jsonld";
 //     missing link would be.
 const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
   radiance: [
+    { href: "/blog/riftbound-radiance-spoilers", label: "Spoilers: every card revealed so far" },
     { href: "/blog/riftbound-radiance-what-we-know", label: "Release date & what's confirmed" },
     { href: "/radiance-preorders", label: "Pre-order prices, every store" },
     { href: "/release-dates", label: "Countdown & release calendar" },
@@ -490,7 +491,7 @@ export default async function SetPage({
                 </Link>
               )}
               <Link href="/release-dates" className="btn-ghost">When does it release?</Link>
-              <Link href="/browse" className={set.sealedAvailable || preordersHref ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
+              <Link href="/browse" className={set.sealedAvailable || preordersHref ? "btn-ghost" : "btn-primary"}>Card database</Link>
             </div>
 
             {/* Pre-release explainer links — gives the topical set page real routes
@@ -527,6 +528,22 @@ export default async function SetPage({
                   <><strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
                   revealed to date — more land through spoiler season, and live store prices appear here the moment singles
                   go on sale.</>
+                )}
+                {/* The same PRE_RELEASE_LINKS the empty-state branch renders. They used
+                    to live ONLY there, so the moment the first card imported (Neeko,
+                    2026-09-19) the hub silently lost every link into the Radiance
+                    cluster — the spoiler tracker, the confirmed-facts post, the
+                    pre-order comparison — for the whole of spoiler season, which is
+                    exactly when it has the most visitors. Found on the live page after
+                    the tracker deploy (tests/radiance-spoiler-tracker.test.ts). */}
+                {preReleaseLinks.length > 0 && (
+                  <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                    {preReleaseLinks.map((l) => (
+                      <li key={l.href}>
+                        <Link href={l.href} className="text-brand-400 hover:underline">{l.label} →</Link>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             )}

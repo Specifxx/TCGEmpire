@@ -46,3 +46,27 @@ export function cardSearchName(name: string, c: CardCredentialFields): string {
   const creds = cardCredentials(c);
   return creds.length ? `${name} ${creds.join(" ")}` : name;
 }
+
+/**
+ * The champion half of a card name: "Shen, Eye of Twilight" → "Shen".
+ *
+ * Riftbound champion cards are named `<Champion>, <Epithet>`, and that comma is
+ * the whole rule — a card with no comma ("Moonfall", "Discipline") is returned
+ * unchanged, which is correct: its full name IS what people type.
+ *
+ * WHY THIS MATTERS ENOUGH TO EXIST: people search the short name plus the
+ * printing — "Shen signature", not "Shen, Eye of Twilight (Showcase,
+ * Signature)". It is also the only form that fits a 60-character title for
+ * these cards: the full-name variant of that same title is 70 characters and
+ * the current displayName variant is 82, so Google truncates and the word it
+ * cuts is "Riftbound". See lib/card-seo.ts's title ladder.
+ *
+ * It lives here rather than in card-seo.ts because card-narrative.ts needs it
+ * too, and card-narrative → card-seo would be an import cycle.
+ */
+export function shortCardName(name: string): string {
+  const comma = name.indexOf(",");
+  if (comma <= 0) return name;
+  const short = name.slice(0, comma).trim();
+  return short.length > 0 ? short : name;
+}

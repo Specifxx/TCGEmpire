@@ -22,7 +22,18 @@ import type { SetInfo } from "@/lib/constants";
 // day count in the crawled HTML and the day count a visitor sees before any JS
 // runs must be the same number — exactly the reasoning /release-dates documents
 // for its own countdown.
-export function NextSetCountdownCard({ set }: { set: SetInfo | undefined }) {
+export function NextSetCountdownCard({
+  set,
+  preorders = null,
+}: {
+  set: SetInfo | undefined;
+  // The upcoming set's pre-order comparison, when one exists. Inherited from
+  // Market Pulse on 2026-09-17, which was removed from the homepage and had
+  // been carrying the only link to it — see HomeSections.tsx's call site.
+  // Resolved by the caller (preordersHrefForSet), so this component keeps
+  // naming no set, same as everything else about it.
+  preorders?: { href: string; setName: string } | null;
+}) {
   if (!set) return null; // nothing upcoming and announced — nothing to promote
 
   const releaseMs = set.releasedOn ? Date.parse(`${set.releasedOn}T00:00:00Z`) : NaN;
@@ -49,6 +60,14 @@ export function NextSetCountdownCard({ set }: { set: SetInfo | undefined }) {
           Full release details →
         </Link>
       </span>
+      {preorders && (
+        <Link
+          href={preorders.href}
+          className="tap-link font-semibold text-gold underline-offset-2 hover:underline"
+        >
+          Compare {preorders.setName} pre-order prices →
+        </Link>
+      )}
     </p>
   );
 }

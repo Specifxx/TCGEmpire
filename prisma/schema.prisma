@@ -864,6 +864,74 @@ model EbayGradedListing {
   @@index([cardId, country])
 }
 
+// Live eBay AUCTION listings for the whole Riftbound market — the data behind
+// /auctions. One row per eBay auction per marketplace.
+//
+// THIS IS NOT THE PASS THAT WAS DELETED ON 2026-08-20. That one (the
+// `refreshEbayAuctions` function and an `EbayAuction` model, see the long note
+// on EBAY_MIN_VALUE_USD_CENTS in lib/price-import.ts) searched eBay ONCE PER
+// CHASE PRINTING PER MARKET to put a countdown on ~120 card pages: ~960 Browse
+// calls/day, the worst value-per-call in the whole quota model, and its removal
+// is what paid for the $10→$5 value floor. tests/affiliate-priority.test.ts
+// still fails if that per-card shape reappears in price-import.ts, and it
+// should.
+//
+// What makes this affordable is that it asks the opposite question. A PRICE for
+// one specific card needs a query naming that card — you cannot find "the
+// cheapest Akali" in a generic response. A LIST OF LIVE AUCTIONS does not care
+// which cards are in it, so one `q=Riftbound&filter=buyingOptions:{AUCTION}`
+// call returns up to 200 of them (Browse's `limit` maximum) in a single call.
+// Six markets × a 2-page cap ≈ 12 calls a sweep instead of 960 a day — see
+// AUCTION_PAGE_CAP in lib/ebay-auctions.ts, which is also where the quota
+// arithmetic lives.
+//
+// NO cardId, deliberately. Matching a free-text auction title BACK to a card in
+// our catalogue is the inverse of what listingMatchesCard does (it checks a
+// title against a card we already named) and it would be guesswork on titles
+// like "Riftbound OGN Lot Ahri PSA 10 🔥". Every row therefore links to eBay and
+// nothing pretends to know which card it is. A wrong card link is worse than no
+// card link.
+//
+// endsAt IS stored, unlike EbayGradedListing above: an auction genuinely does
+// expire on a clock, and that clock is the whole point of the page. Rows are
+// served only while endsAt is in the future, and the countdown itself ticks
+// client-side so a 30-minute-old ISR render still shows an honest time left.
+model EbayAuctionListing {
+  id       String @id @default(cuid())
+  itemId   String // eBay listing id — stable across sweeps, so a re-seen auction updates
+  country  String // marketplace the sweep ran against (AU, US, UK, SG, CA, EU)
+  title    String
+  url      String // affiliate-tagged (ebayAffiliateUrl)
+  imageUrl String?
+
+  // The live high bid, in the marketplace's own currency. NOT converted here:
+  // every other eBay row on this site stores the marketplace's native amount and
+  // lets the client convert (see RetailerPrice.currency), and a bid converted at
+  // import time would be wrong by the time anyone read it.
+  currentBidCents Int
+  currency        String
+  bidCount        Int
+  endsAt          DateTime
+  // Set only when the auction ALSO carries a Buy It Now price (eBay returns both
+  // buyingOptions on such a listing). Null is the common case and means
+  // "auction only", not "unknown".
+  buyItNowCents Int?
+  condition     String?
+
+  // Parsed from the title by parseGrade (lib/ebay.ts), exactly as
+  // EbayGradedListing does it — same caveat: `grader` set with a null `grade`
+  // means a slab word matched with no number after it, so the UI says "graded"
+  // without inventing a number.
+  grader String?
+  grade  Float?
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([itemId, country])
+  // The page's only query shape: one market, still-live, soonest first.
+  @@index([country, endsAt])
+}
+
 model EbayAdListing {
   id            String   @id @default(cuid())
   cardId        String

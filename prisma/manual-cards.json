@@ -659,5 +659,24 @@
     "isPromo": true,
     "energyCost": 6,
     "might": 6
+  },
+  {
+    "_note": "RADIANCE SPOILER, added 2026-09-19 from a photograph of the physical card. This is the FIRST Radiance card in the catalogue, so it is also the first hard evidence of the set's printed denominator: the card reads 'RAD - 167/167 - EN', which is why setFromTotal() in lib/price-import.ts now maps 167 to RAD and no longer guesses 114/180, and why constants.ts SETS carries totalCards 167 rather than Riot's announced 180. EVERY FIELD IS READ OFF THE CARD except rarity, which was VERIFIED rather than guessed: the bottom-centre rarity gem is an orange pentagon, matched pixel-for-pixel against Sett, Brawler (OGN-164, epic) and against Kayn, Unleashed (OGN-189, rare, a magenta diamond) pulled from cdn.riftscribe.gg. Domain is 'Colorless' — the card's own wording is 'Neutral', but Colorless is the value all 65 existing neutral rows use and what lib/domains.ts, the facet pages and the /browse filters are built on; inventing a second spelling would orphan the card from every one of them. Type tags read 'CHAMPION UNIT - NEEKO - IXTAL'. Artist credit on the card is Luscinia Studio, (c)2026 RGI. REPLACE imageUrl with the RiftScribe CDN art the moment the automated import carries this card — the photo is a stopgap, and `npm run cards:sync` will not overwrite a manual row."
+  },
+  {
+    "externalId": "spoiler-rad-167-neeko-blending-in",
+    "name": "Neeko, Blending In",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "167/167",
+    "domain": "Colorless",
+    "type": "Unit",
+    "rarity": "Epic",
+    "isPromo": false,
+    "energyCost": 6,
+    "might": 4,
+    "description": "(Neutral cards can go in decks of any Domain.) If Neeko is in your deck, choose 3 different legends in addition to your starting legend. (Different means none match names.) When you play me, choose one of those Legends and add it to your Legend Zone while I'm on the board.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg"
   }
 ]

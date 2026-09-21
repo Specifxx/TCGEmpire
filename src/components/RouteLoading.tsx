@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Skeleton, SkeletonText, Spinner } from "./ui/Skeleton";
+import { Skeleton, SkeletonText, SkeletonTile, Spinner } from "./ui/Skeleton";
 
 // The route-transition placeholder, shared by the scoped loading.tsx files
 // (movers, portfolio, singles — see each one's own "SCOPED DELIBERATELY"
@@ -108,6 +108,41 @@ export function PortfolioSkeleton() {
 
 // /singles: an editorial hub, not a card grid — hero block, then the
 // entry-points section's own 2/3-column grid of link cards.
+// /watching: breadcrumb + H1 + intro paragraph, then the SAME tile grid the
+// Watchlist client component shows while its own fetch is in flight.
+//
+// Reported as "the watchlist takes too long to load" (2026-09-16). The list
+// itself was never the problem — Watchlist is a client component that fetches
+// after mount and already renders these very tiles meanwhile. What was slow was
+// the NAVIGATION: /watching is force-dynamic (it reads the session), and the App
+// Router will not swap the view until the server responds, so tapping the link
+// left the visitor on the previous page watching the top loading bar.
+//
+// A loading.tsx gives the segment a Suspense boundary, which is what lets the
+// router commit the navigation immediately and stream the page in behind it.
+//
+// Deliberately the SAME grid and the SAME SkeletonTile as the client state, so
+// the handover from route skeleton to component skeleton is invisible instead of
+// one placeholder shape replacing a different one.
+export function WatchlistSkeleton() {
+  return (
+    <RouteLoading>
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-5">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="mt-3 h-8 w-56 sm:h-9" />
+          <SkeletonText lines={2} className="mt-2 max-w-2xl" />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonTile key={i} />
+          ))}
+        </div>
+      </div>
+    </RouteLoading>
+  );
+}
+
 export function SinglesSkeleton() {
   return (
     <RouteLoading>

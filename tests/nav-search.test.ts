@@ -121,15 +121,56 @@ test("the launcher indexes every nav link exactly once", () => {
   assert.equal(new Set(NAV_INDEX.map((l) => l.href)).size, navCount, "duplicate href in NAV_GROUPS");
 });
 
-test("the phone Explore overlay filters features, it does not search cards", () => {
-  // The other half of the bug. CinematicNavMenu is the ONLY Explore surface on a
-  // phone (the launcher's button is hidden below sm and Cmd-K needs a keyboard),
-  // and its one input sat directly above the feature grid while querying the card
-  // database. Whatever else changes here, that input must drive the grid.
+test("the phone Explore overlay's one input searches BOTH features and the card/sealed database", () => {
+  // CinematicNavMenu is the ONLY Explore surface on a phone (the launcher's
+  // button is hidden below sm and Cmd-K needs a keyboard), so its single input
+  // is the search box phone visitors find. It has been reported broken in BOTH
+  // directions, which is why this test now pins both halves:
+  //
+  //   1. It began as the card SearchBar, reported as "it acts like a normal
+  //      search bar and searches all the cards" — a card search sitting directly
+  //      above a grid of features it did not filter.
+  //   2. Made a pure feature filter, it was then reported as searching "only
+  //      features and pages" when a visitor typed a card name into it.
+  //
+  // Satisfying either report alone re-opens the other. The input must keep
+  // narrowing the feature grid AND return real database matches.
   const src = read("src/components/CinematicNavMenu.tsx");
+
+  // (1) still fixed: the grid narrows via the shared matcher, and the card
+  // SearchBar component (with its own dropdown and focus behaviour) is still
+  // not mounted inside this overlay's focus trap.
   assert.ok(src.includes("searchNav"), "the phone overlay must filter with the shared feature matcher");
   assert.doesNotMatch(src, /<SearchBar\b/, "the card SearchBar must not be the phone Explore overlay's input");
   assert.doesNotMatch(src, /\{NAV_GROUPS\.map\(/, "the overlay must render the FILTERED sections, not NAV_GROUPS directly");
+
+  // (2) now fixed: the same box queries the database and renders both kinds of
+  // hit. /api/search is the existing navbar-dropdown route and returns
+  // { results, sealed } — this is a second consumer, not a second query.
+  assert.match(src, /\/api\/search\?q=/, "the overlay must query the card/sealed search route");
+  assert.match(src, /cardHits/, "card matches must be rendered");
+  assert.match(src, /sealedHits/, "sealed matches must be rendered");
+  assert.match(src, /cardHref\(c\)/, "a card hit must link to that card's page");
+  assert.match(src, /\/sealed\?q=/, "a sealed hit must link to the sealed comparison");
+  // Debounce + abort: without the abort a fast typist's earlier, slower response
+  // can land last and show results for a query they already replaced.
+  assert.match(src, /AbortController/, "in-flight searches must be abortable");
+  assert.match(src, /setTimeout\(/, "keystrokes must be debounced, not fired per character");
+  // Never fetch behind a closed overlay.
+  assert.match(src, /if \(!open \|\| q\.length < 2\)/, "a closed overlay, or a 1-char query, must not hit the route");
+});
+
+test("the overlay's card rows show no price, because it cannot localise one", () => {
+  // /api/search returns cardTileSelect's SIX market price columns and SearchBar
+  // resolves the right one client-side (useCountry). This overlay deliberately
+  // renders name + set + number only: a nav row showing one of those columns
+  // raw would show some visitors another market's currency, which is worse than
+  // showing no price at all. The card page it links to has the localised figure.
+  const src = read("src/components/CinematicNavMenu.tsx");
+  const iface = src.slice(src.indexOf("interface CardHit"), src.indexOf("}", src.indexOf("interface CardHit")));
+  assert.doesNotMatch(iface, /lowestPrice|priceCents/, "no price field on the overlay's card row type");
+  assert.match(iface, /setCode/);
+  assert.match(iface, /collectorNumber/);
 });
 
 test("footer columns stay within a readable spread of each other", () => {

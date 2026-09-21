@@ -98,13 +98,19 @@ test("the popup's Premium pitch never grows its own hand-typed tool list or comp
   // pass reintroduces a tool list here, it must import the shared one rather
   // than hand-type a second copy, which is the "same claim written twice,
   // updated once" drift TierComparisonTable's own header comment warns about.
+  // 2026-09-16: the pitch is a free-account comparison again (owner's
+  // reversal), but the anti-duplication guarantee is unchanged and is still
+  // the whole point of this test. The comparison lives in its OWN component,
+  // FreeAccountCompare, whose rows are AuthForm's PERKS — not a second table
+  // hand-typed into this file to drift away from the three perks /login sells.
   const src = read(POPUP);
   assert.ok(!/const PITCH_TOOLS/.test(src), "must not declare its own PITCH_TOOLS");
-  assert.ok(!/const COMPARISON/.test(src), "the old free-account COMPARISON table must be gone");
-  assert.match(src, /<PremiumPitchPanel/, "the pitch is the designed panel now — see PremiumPitchPanel's own header");
+  assert.ok(!/const COMPARISON|const ROWS/.test(src), "must not hand-type a comparison table inline");
+  assert.match(src, /<FreeAccountCompare \/>/, "the pitch is the shared comparison component");
+  assert.ok(!/<PremiumPitchPanel/.test(src), "the free-vs-Premium panel is PremiumSlideIn's now");
 });
 
-test("the popup is a Premium pitch, but grants nothing automatically", () => {
+test("the popup sells the FREE account, and grants nothing automatically", () => {
   // The removed signup comp (2026-08-23, see lib/premium.ts's "NO PREMIUM ON
   // SIGNUP" note) silently handed new accounts real days of the paid tier for
   // free. This is a different mechanism: a pitch plus a redirect to /premium,
@@ -112,44 +118,33 @@ test("the popup is a Premium pitch, but grants nothing automatically", () => {
   // checkout — the exact same pattern PremiumDialog.tsx already uses for a
   // signed-out visitor ("Create a free account to start →"). What must hold is
   // that NOTHING here grants Premium outright.
+  // The no-automatic-grant guarantee is the durable half of this test and is
+  // UNCHANGED. What changed on 2026-09-16 is the destination: the CTA now
+  // returns the visitor to the page they were on rather than routing them to
+  // /premium, because the card no longer pitches Premium at all. Either way it
+  // is a redirect, never a grant.
   const src = read(POPUP);
   assert.ok(!/signupPremiumDays/.test(src), "the popup must not take or thread a Premium-preview prop");
   assert.ok(!/grantPremiumDays|grantPremiumMonths/.test(src), "the popup must never call a Premium-granting function itself");
-  assert.match(src, /next="\/premium"/, "the CTA must route the OAuth round trip to \/premium (a redirect, not a grant)");
+  assert.match(src, /next=\{pathname \?\? "\/"\}/, "the CTA returns the visitor to where they were (a redirect, not a grant)");
 });
 
-test("the popup's honesty guarantees survive the pitch change: no fake scarcity, price is real and never contradicts the trial", () => {
+test("the popup's honesty guarantees survive the reversal: no fake scarcity, and no price to get wrong", () => {
   const src = read(POPUP);
   // Countdowns, seat counts and "expires in" pressure are exactly what this
-  // popup must never grow, in either its old or new pitch.
+  // popup must never grow, under any pitch. Unchanged since it was written.
   assert.ok(!/only \d+ (left|spots|seats)/i.test(src), "no fake scarcity");
   assert.ok(!/expires? in/i.test(src), "no countdown pressure");
-  // Signing up itself must still cost nothing and need no card — only the
-  // language changed (the old copy said this about a free-account comparison;
-  // the new copy says it about the sign-up step of the Premium pitch).
-  assert.match(src, /free, no card needed/i, "the copy must still say signing up costs nothing and needs no card");
-  // The price line now renders UNCONDITIONALLY (2026-09-06: "we also need to
-  // show the prices for non logged in users" — it used to hide entirely
-  // whenever a trial was configured, which is the default, so most signed-out
-  // visitors never saw a price at all). 2026-09-09: simplified again to a bare
-  // "$0 today" for the trial-available branch — an explicit product decision
-  // to lead this low-intrusion nudge with the number that's true right now
-  // rather than the recurring price (which is still disclosed before any card
-  // is charged: /premium, the Premium dialog, and checkout's own "Card
-  // required... then $X" line). "Real" here means a real, true number for
-  // what happens today — not that every branch must also state the future
-  // price; the non-trial branch (which has no $0 to claim) still does.
-  assert.ok(!/\{!trialAvailable && PREMIUM_PRICE_AMOUNT/.test(src), "the price line must no longer be hidden while a trial is available");
-  assert.match(src, /premiumZeroToday\(\)/, "the trial-available branch must lead with the shared $0-today helper");
-  const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
-  const trialBranchAt = src.indexOf("trialAvailable ? (", priceBlockAt);
-  const elseAt = src.indexOf(") : (", trialBranchAt);
-  assert.ok(priceBlockAt >= 0 && trialBranchAt >= 0 && elseAt >= 0, "expected the price block's trial/non-trial branches");
-  assert.ok(
-    !/premiumFromLine\(\)/.test(src.slice(trialBranchAt, elseAt)),
-    "trial-available branch must NOT also state the recurring price — bare $0 today, by design",
-  );
-  assert.match(src.slice(elseAt), /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
+  // Signing up must still cost nothing and need no card, and must still SAY so.
+  assert.match(src, /free, no card needed/i, "the copy must state that signing up costs nothing and needs no card");
+  // The price-honesty assertions that used to live here (the unconditional
+  // price block, the bare $0-today trial branch, the non-trial branch stating
+  // the real recurring price) moved WITH the pitch on 2026-09-16 — this card
+  // quotes no price at all now. They are still enforced, on the surfaces that
+  // do quote one: see tests/premium-price-increase.test.ts and
+  // tests/premium-zero-today.test.ts, which cover PremiumSlideIn,
+  // PremiumDialog, PremiumCta and /premium.
+  assert.ok(!/PREMIUM_PRICE_AMOUNT|premiumZeroToday|premiumFromLine/.test(src), "a card with no paid ask must quote no price");
 });
 
 test("the promo has no artificial delay — shows the instant it's eligible (2026-09-01)", () => {

@@ -40,17 +40,16 @@ set -uo pipefail
 # probe-databases run found it holding a stale August snapshot behind RM9 on
 # every metric, and migrate-main-db-rm9-to-rm10 then wiped and replaced it with
 # a row-count-verified copy of RM9 (see db-chains.ts).
-CURRENT_OP="RM10"
-# CUT OVER TO HISTORY_DATABASE_URL ON 2026-09-12 (RH10 reached its 5 GB
-# monthly transfer allowance after two days live). HISTORY_DATABASE_URL is a
-# RECYCLED project — the oldest history variable in the whole rotation,
-# retired since 2026-08-16 — not a fresh one — migrate-history-db-rh10-to-hdu
-# (a full pg_dump/restore, row-count verified: Card=1,436, ClickEvent=698,
-# PriceHistory=422,589) moved history onto it. See the long note on
-# HISTORY_URL in src/lib/db-history.ts and on HISTORY_VARS in
-# src/lib/db-chains.ts for the full account. The chains are CURRENT-first,
-# not newest-first.
-CURRENT_HIST="HISTORY_DATABASE_URL"
+CURRENT_OP="RM12"
+# CUT OVER TO HISTORY_DATABASE_URL_2 ON 2026-09-17 (HISTORY_DATABASE_URL
+# reached its 5 GB monthly transfer allowance after five days live).
+# HISTORY_DATABASE_URL_2 is a RECYCLED project — retired since 2026-08-19 —
+# not a fresh one — migrate-history-db-hdu-to-hdu2 (a full pg_dump/restore,
+# row-count verified: rows=423,999, distinctCards=1426, GLOBAL rows=82,175)
+# moved history onto it. See the long note on HISTORY_URL in
+# src/lib/db-history.ts and on HISTORY_VARS in src/lib/db-chains.ts for the
+# full account. The chains are CURRENT-first, not newest-first.
+CURRENT_HIST="HISTORY_DATABASE_URL_2"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
@@ -62,8 +61,8 @@ CURRENT_HIST="HISTORY_DATABASE_URL"
 # single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
 # why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM10:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM10) — skipping schema push."
+   || [ -z "${RM12:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM12) — skipping schema push."
   exit 0
 fi
 
@@ -72,8 +71,8 @@ fi
 # happens to hold while the app (src/lib/db-chains.ts) reads RM10. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM10"
-SOURCE="RM10"
+export DATABASE_URL="$RM12"
+SOURCE="RM12"
 # Name the winner, never the value (it's a credential). There is only one
 # possible value now (the gate above already required RM10 to be set), but this
 # stays as the one line that answers "which database did this build actually
@@ -93,17 +92,17 @@ fi
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${HISTORY_DATABASE_URL:-}" ]; then
-  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
-elif [ -n "${RH10:-}" ]; then
-  # Rollback: holds the same GLOBAL series as HISTORY_DATABASE_URL (via the
+if [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
+elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
+  # Rollback: holds the same GLOBAL series as HISTORY_DATABASE_URL_2 (via the
   # row-count-verified pg_dump/restore that cut it over), so it's a genuinely
   # safe fallback.
-  HIST="$RH10"; HIST_SOURCE="RH10"
+  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
 else
   # No separate history project — history shares the operational database, which
-  # the push above already covered. RH9/RH8/RH7/RH6/RH11 are retired or unset;
-  # HISTORY_DATABASE_URL_4/_3/_2 were all superseded earlier. RH5 is
+  # the push above already covered. RH10/RH9/RH8/RH7/RH6/RH11 are retired or
+  # unset; HISTORY_DATABASE_URL_4/_3 were superseded earlier. RH5 is
   # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { SETS } from "@/lib/constants";
@@ -7,6 +8,7 @@ import { CardTile } from "@/components/CardTile";
 import { HubIntro } from "@/components/HubIntro";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
+import { galleryDescription, galleryTitle } from "@/lib/gallery-seo";
 
 // /gallery — added 2026-08-20 to target the "Riftbound card gallery" query
 // directly. Every set already has its own full-art gallery
@@ -21,27 +23,40 @@ import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 // being a bare link list.
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: { absolute: "Riftbound Card Gallery — Every Set, Every Card | RiftCompare" },
-  description:
-    "The full Riftbound card gallery — every set's cards in one visual browse, with live prices. Origins, Spirit Forged, Unleashed, Vendetta and more.",
-  alternates: pageAlternates("/gallery"),
-  openGraph: pageOpenGraph({
-    title: "Riftbound Card Gallery",
-    description: "Every Riftbound set's cards in one visual browse, with live prices.",
-    url: "/gallery",
-  }),
-};
+// One groupBy per render, shared by generateMetadata and the page through
+// React's request cache — the title needs the same per-set counts the set
+// list renders, and a second query for a number the page already has would be
+// the kind of duplicate read src/lib/db.ts's egress rules are about. Fails
+// open to an empty list so a DB blip renders a link hub (and a count-less
+// title) rather than a 500 on an indexed URL.
+const getSetCounts = cache(async () => {
+  try {
+    const counts = await prisma.card.groupBy({ by: ["setCode"], _count: { _all: true } });
+    const countByCode = new Map(counts.map((c) => [c.setCode, c._count._all]));
+    return SETS.map((s) => ({ ...s, cards: countByCode.get(s.code) ?? 0 })).filter((s) => !s.comingSoon && s.cards > 0);
+  } catch {
+    return [];
+  }
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const released = await getSetCounts();
+  const total = released.reduce((n, s) => n + s.cards, 0);
+  return {
+    title: { absolute: `${galleryTitle(total)} | RiftCompare` },
+    description: galleryDescription(total, released.map((s) => s.name)),
+    alternates: pageAlternates("/gallery"),
+    openGraph: pageOpenGraph({
+      title: galleryTitle(total),
+      description: "Every Riftbound set's cards in one visual browse, with live prices.",
+      url: "/gallery",
+    }),
+  };
+}
 
 export default async function GalleryIndexPage() {
-  const [counts, highlights] = await Promise.all([
-    prisma.card.groupBy({ by: ["setCode"], _count: { _all: true } }),
-    getPopularCards(12),
-  ]);
-  const countByCode = new Map(counts.map((c) => [c.setCode, c._count._all]));
-  const released = SETS.map((s) => ({ ...s, cards: countByCode.get(s.code) ?? 0 })).filter(
-    (s) => !s.comingSoon && s.cards > 0
-  );
+  const [released, highlights] = await Promise.all([getSetCounts(), getPopularCards(12)]);
+  const total = released.reduce((n, s) => n + s.cards, 0);
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -73,7 +88,9 @@ export default async function GalleryIndexPage() {
           <span>/</span>
           <span className="text-slate-300">Gallery</span>
         </nav>
-        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">Riftbound card gallery</h1>
+        <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+          Riftbound card gallery{total > 0 && <> — all {total.toLocaleString("en-US")} cards, every set</>}
+        </h1>
         <HubIntro path="/gallery" />
       </div>
 

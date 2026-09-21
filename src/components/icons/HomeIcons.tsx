@@ -47,6 +47,16 @@ export function CartIcon(props: IconProps) {
   );
 }
 
+/** A d20-ish play token — the "go and play" step in How-it-works. */
+export function PlayIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 2.5 20 7v10l-8 4.5L4 17V7z" />
+      <path d="M12 2.5V12l8 5M12 12 4 17" />
+    </svg>
+  );
+}
+
 export function CardsIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

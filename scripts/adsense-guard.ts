@@ -684,7 +684,6 @@ if (!existsSync(auditPath)) {
   // docs/crawl-report.json sitting there carrying the number.
   const budgets: [string, number | undefined, string][] = [
     ["indexable pages under 150 unique editorial words", t.indexableThin, "Thin content"],
-    ["indexable card pages with no price data", t.indexableEmptyCards, "Low-value content"],
     ["near-duplicate clusters above 90% similarity", t.duplicateClusters, "Scaled content abuse"],
     ["pages whose server HTML contains no content at all", t.emptyServerRender, "No content / low value content"],
     ["soft-404s", t.softFourOhFours, "Site navigation / broken pages"],
@@ -692,6 +691,35 @@ if (!existsSync(auditPath)) {
     ["indexable pages behind a paywall or blur", t.paywalledIndexable, "Behind a login / no content"],
     ["templates with affiliate links but <150 editorial words", t.affiliateWithoutEditorial, "Thin affiliate"],
   ];
+
+  // "indexable card pages with no price data" WAS A ZERO-TOLERANCE BUDGET HERE,
+  // and it has been demoted to the observation below rather than deleted.
+  //
+  // It was the enforcement arm of the Phase 7a rule that noindexed a card with no
+  // live listing, and that rule is gone (lib/card-price-state.ts explains why at
+  // length: indexability was a function of today's stock, so a page left Google's
+  // index the day its last listing sold out and lost its accumulated Search
+  // Console history with it). Leaving the budget would have failed the build on
+  // the very state the change deliberately creates.
+  //
+  // WHAT STILL ENFORCES THE ACTUAL POLICY, unchanged and still zero-tolerance:
+  // "indexable pages under 150 unique editorial words" and "near-duplicate
+  // clusters above 90% similarity". Those measure whether a page is worth
+  // reading, which is what "low-value content" means. A priceless card page is
+  // not thin — the median card page carries ~1,021 unique editorial words, and a
+  // token's page still has its rules text, its art and several paragraphs saying
+  // accurately that nothing tracked has it in stock. "Has no price today" was a
+  // proxy for thinness that stopped tracking it once Phase 7b landed.
+  //
+  // It is still COUNTED and still printed, because the number rising sharply
+  // would say something real about the catalogue — it just no longer blocks a
+  // deploy on its own.
+  if (t.indexableEmptyCards != null) {
+    console.log(
+      `    \x1b[33m·\x1b[0m ${t.indexableEmptyCards} indexable card pages with no price data ` +
+        "(reported, not a budget — see the note in this file)"
+    );
+  }
 
   for (const [label, value, policy] of budgets) {
     if (value == null) {

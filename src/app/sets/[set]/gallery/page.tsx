@@ -7,6 +7,7 @@ import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { FilterableCardGallery } from "@/components/FilterableCardGallery";
+import { CardTile } from "@/components/CardTile";
 import { cardTileSelect, trimTileArtFallback } from "@/lib/cards";
 import type { CardTileData } from "@/components/CardTile";
 import { DEFAULT_COUNTRY } from "@/lib/country";
@@ -45,6 +46,12 @@ export const revalidate = 3600;
 // supposed to be a fast visual browse. Over the cap the page says so and points at
 // the paginated set page rather than silently truncating.
 const MAX_TILES = 500;
+// The promo block's own cap. Far lower than MAX_TILES because the largest promo
+// run in any one set is well under it (114 rows across the whole catalogue in
+// prisma/promos.json), and because this block is additive to a page that already
+// ships up to 500 tiles — LCP on the visual-browse page is the thing MAX_TILES
+// exists to protect.
+const MAX_PROMO_TILES = 120;
 
 // Lean ItemList entries only (position + url + name). The parent set page removed
 // its ItemList precisely because a nested-Product version doubled HTML weight for
@@ -77,6 +84,44 @@ const getGalleryCards = unstable_cache(
     }
   },
   ["set-gallery"],
+  { revalidate: 3600, tags: [CONTENT_TAG] },
+);
+
+// THE PROMO PRINTINGS, which the gallery above deliberately leaves out.
+//
+// WHY THEY GET THEIR OWN BLOCK HERE. `getGalleryCards` filters `isPromo: false`
+// because a promo is not part of the set's own numbering, and that is still the
+// right call for the numbered gallery. But it left 188 of the catalogue's 1,425
+// card pages — 13% — with no inbound link from any list page on the site. A
+// promo's only route in was the "Other printings" rail on a sibling card's page,
+// which is one click deeper than every other card and depends on Google having
+// already indexed the sibling.
+//
+// Measured 2026-09-17: 431 sitemapped card URLs earned zero impressions in 28
+// days while carrying no noindex, and the promos are the sub-population with a
+// structural explanation rather than a "nobody searched for it" one.
+//
+// A separate, clearly-labelled section rather than mixing them into the numbered
+// grid: they trade at their own prices and a collector looking for card 151/298
+// does not want the Nexus Night version in the same run of tiles.
+const getGalleryPromos = unstable_cache(
+  async (setCode: string): Promise<GalleryCard[]> => {
+    try {
+      const rows = await prisma.card.findMany({
+        where: { setCode, isPromo: true },
+        orderBy: [{ collectorNumber: "asc" }],
+        take: MAX_PROMO_TILES,
+        select: { ...cardTileSelect(DEFAULT_COUNTRY), createdAt: true },
+      });
+      return rows.map((r) => {
+        const { createdAt, ...rest } = r as typeof r & { createdAt: Date };
+        return { ...rest, createdAt: createdAt.toISOString() };
+      }) as unknown as GalleryCard[];
+    } catch {
+      return [];
+    }
+  },
+  ["set-gallery-promos"],
   { revalidate: 3600, tags: [CONTENT_TAG] },
 );
 
@@ -148,7 +193,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
   const set = setBySlug(params.set);
   if (!set) notFound();
 
-  const cards = await getGalleryCards(set.code);
+  const [cards, promos] = await Promise.all([getGalleryCards(set.code), getGalleryPromos(set.code)]);
   const total = cards.length;
   const capped = total >= MAX_TILES;
   const priced = cards.filter((c) => c.lowestPriceCents != null).length;
@@ -232,7 +277,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
             <p className="mt-1 text-sm">
               This gallery fills in automatically as {set.name} cards are imported.
             </p>
-            <Link href="/browse" className="btn-primary mt-4">Browse released sets</Link>
+            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
           </div>
         </div>
       ) : (
@@ -249,6 +294,22 @@ export default async function SetGalleryPage({ params }: { params: { set: string
               </Link>
             </p>
           )}
+        </section>
+      )}
+
+      {promos.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-xl font-extrabold text-white">Promo printings from {set.name}</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Prerelease, organised-play and Nexus Night printings. They share a collector number with the card they
+            reprint but are separate products with their own prices, so they are listed apart from the numbered set
+            above.
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {promos.map((c) => (
+              <CardTile key={c.id} card={trimTileArtFallback(c)} />
+            ))}
+          </div>
         </section>
       )}
 

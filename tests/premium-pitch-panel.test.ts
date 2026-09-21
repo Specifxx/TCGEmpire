@@ -54,15 +54,20 @@ test("no character art — the panel uses the site's own brand mark instead", ()
   assert.equal((src.match(/<BrandLogo /g) ?? []).length, 2, "expected exactly two BrandLogo uses (wordmark icon + watermark)");
 });
 
-test("both corner nudges render the graphic instead of a tool-chip row", () => {
-  for (const file of ["src/components/SignupPromoPopup.tsx", "src/components/PremiumSlideIn.tsx"]) {
-    const src = read(file);
-    assert.match(src, /<PremiumPitchPanel/, `${file} must render the shared designed panel`);
-    assert.ok(
-      !/PITCH_TOOLS\.map\(/.test(src),
-      `${file} must no longer render the tool chip row the graphic replaced`,
-    );
-  }
+test("the Premium corner nudge renders the graphic, and the free-account one renders nothing Premium", () => {
+  // WAS "both corner nudges" until 2026-09-16, when SignupPromoPopup stopped
+  // pitching Premium at all (owner's reversal — see that component's header).
+  // PremiumSlideIn is now the only corner nudge carrying the panel, and the
+  // assertion that matters for the popup is the opposite one: it must not
+  // carry it, or the paid pitch is back on the signed-out surface by accident.
+  const slideIn = read("src/components/PremiumSlideIn.tsx");
+  assert.match(slideIn, /<PremiumPitchPanel/, "PremiumSlideIn must render the shared designed panel");
+  assert.ok(!/PITCH_TOOLS\.map\(/.test(slideIn), "must no longer render the tool chip row the graphic replaced");
+
+  const popup = read("src/components/SignupPromoPopup.tsx");
+  assert.ok(!/<PremiumPitchPanel/.test(popup), "the signed-out popup must not render the Premium panel");
+  assert.ok(!/PITCH_TOOLS/.test(popup), "nor name Premium-only tools");
+  assert.match(popup, /<FreeAccountCompare \/>/, "it renders the free-account comparison instead");
 });
 
 test("PITCH_TOOLS survives as the canonical Premium-only tool list even though nothing renders it", () => {
@@ -75,18 +80,32 @@ test("PITCH_TOOLS survives as the canonical Premium-only tool list even though n
   assert.match(src, /CONTEXT_PITCH/, "the contextual per-route pitch must stay — it is more specific than any graphic");
 });
 
-test("the phone header carries a Premium link next to Database, without disturbing the desktop one", () => {
+test("the phone header still carries a gold Premium link, without disturbing the desktop one", () => {
   const src = read("src/components/Navbar.tsx");
-  // The FIRST /browse link in the file is the mobile one in the left cluster
-  // (the desktop twin further down is gated lg:block).
-  const dbAt = src.indexOf('href="/browse"');
-  assert.ok(dbAt >= 0, "expected the mobile Database link");
-
-  // The new link sits in the same left cluster and the same lg-and-below band.
-  const after = src.slice(dbAt, dbAt + 1400);
-  assert.match(after, /<PremiumNavLink/, "Premium must sit immediately after Database in the left cluster");
-  assert.match(after, /lg:hidden/, "the mobile Premium link must be gated to the same band as Database");
-  assert.match(after, /text-gold/, "it must be gold — the Premium identity colour");
+  // THIS TEST ONCE ANCHORED ON THE MOBILE "Database" LINK, which was briefly
+  // removed on 2026-09-18 and restored on 2026-09-19. The history: when the bottom
+  // tab bar was deleted, its Menu tab moved into this row as HeaderMenuButton
+  // and cost 46px in a row with one pixel of slack at 375px. Database was the
+  // most redundant ~76px available — the full-width search box on the next row
+  // submits to /browse — so it went, and the page stopped scrolling sideways on
+  // every phone (tests/mobile-header-fit.test.ts carries the measurements).
+  //
+  // PREMIUM DID NOT GO WITH IT, and that is what this test is really for: it is
+  // there by an explicit 2026-09-10 brief, and it is the reason the left cluster
+  // now has to be shrinkable rather than fixed-width.
+  // Comment-stripped: the tombstone explaining the history names "Database", and
+  // a source-text search would match the explanation rather than a rendered link.
+  const code = src.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+  const leftCluster = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
+  assert.match(leftCluster, /<PremiumNavLink/, "Premium must still be in the header's left cluster on phones");
+  assert.match(leftCluster, /lg:hidden/, "the mobile Premium link must stay in the below-lg band");
+  assert.match(leftCluster, /text-gold/, "it must be gold — the Premium identity colour");
+  // Database is back in this cluster as of 2026-09-19 ("that's the most important
+  // one"), sitting immediately before Premium — the 2026-09-10 pairing restored.
+  // Matched on the LABEL, which was "Browse" between 2026-09-19 and 2026-09-21
+  // and is "Database" either side of that; what this test actually cares about
+  // is that the card-database link and Premium stay paired in this cluster.
+  assert.match(leftCluster, /Database/, "the card-database link sits beside Premium again");
 
   // The header's horizontal budget: nav links may not turn on before lg, and
   // the desktop Premium link must still defer to xl. Both are also pinned by
@@ -133,7 +152,10 @@ test("one tagline, on every surface that carries the Premium headline", () => {
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
     "src/components/PremiumSlideIn.tsx",
-    "src/components/SignupPromoPopup.tsx",
+    // SignupPromoPopup is deliberately NOT here since 2026-09-16: it sells the
+    // free account and names no price, so it carries no Premium headline, no
+    // tagline and no lock-in copy to keep in sync. Premium lives on the three
+    // surfaces below plus PremiumSlideIn for signed-in visitors.
   ]) {
     const src = read(file);
     // 2026-09-14: "Get an unfair edge buying and selling" retired in favour of a

@@ -197,7 +197,7 @@ export default async function MoversPage() {
               We need a few days of price history to spot trends. Check back soon, or browse the full
               database in the meantime.
             </p>
-            <Link href="/browse" className="btn-primary mt-4">Browse all cards</Link>
+            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
           </div>
         </div>
       )}

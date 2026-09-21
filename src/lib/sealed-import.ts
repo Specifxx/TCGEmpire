@@ -196,6 +196,13 @@ function detectSet(title: string): string | null {
 // so "Viktor"/"Vex" win before the short "Vi".
 const CHAMPIONS = /\b(Lee\s*Sin|Viktor|Rumble|Fiora|Garen|Annie|Lux|Master\s*Yi|Jinx|Vex|Vi)\b/i;
 
+// The sealed types whose identity a listing's OWN title can be trusted to
+// state, used by the eBay pass to reject a result that belongs to a different
+// group. Box vs case vs pack vs sleeved pack differ by a single word and by up
+// to an order of magnitude in price, which is what makes a mix-up expensive and
+// what makes this list exactly these four. See the check's own comment.
+const SELF_TYPED = new Set(["Booster Box", "Booster Case", "Booster Pack", "Sleeved Booster"]);
+
 export function classifySealed(title: string): string {
   const t = title.toLowerCase();
   const rawChamp = title.match(/champion\s*deck\s*\(([^)]+)\)/i)?.[1]?.trim() || title.match(CHAMPIONS)?.[1];
@@ -211,7 +218,31 @@ export function classifySealed(title: string): string {
   // "<something> Display" that isn't a booster display needs a rule up here too.
   if (/showdown\s*decks?/.test(t)) return /\bdisplay\b/.test(t) ? "Showdown Decks Display" : "Showdown Decks";
   if (/sleeved\s*booster/.test(t)) return /\[set of|art\s*bundle/.test(t) ? "Sleeved Booster (Art Set)" : "Sleeved Booster";
-  if (/(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case/.test(t)) return "Booster Case";
+  // `booster case` — the plainest way anyone writes it — was NOT in this
+  // alternation until 2026-09-20, so "League of Legends Riftbound TCG: Origins
+  // Booster Case English Sealed" and "Radiance Booster Case (PREORDER-OCTOBER)"
+  // both fell through to the bare "Sealed" catch-all at the bottom, and
+  // "Spiritforged Sealed Booster Case 6x Booster Box ENG" fell to Booster Box on
+  // its second half. Found by running classifySealed() back over every stored
+  // title (scripts/diagnose-sealed.ts).
+  //
+  // ADJACENT WORDS ONLY, deliberately: a bare /\bcase\b/ here would retype
+  // "Origins Booster Box … FRESHLY FROM A CASE" — a single box — as a case,
+  // which is the exact defect reported against the eBay US OGN case row.
+  // `case <N> booster box` covers the other half of how a case is written, where
+  // the word "case" is NOT next to "booster": "Unleashed Case (6x Booster
+  // Boxes)", "FACTORY SEALED CASE OF 6 BOOSTER BOX". Adjacency alone typed the
+  // first of those as a Booster Box — it says "Booster Boxes" and nothing else
+  // matched — and the eBay veto then correctly dropped a genuine AU case
+  // listing for disagreeing with its group. Found in the first forced import
+  // after the veto shipped, which is exactly what that log line is for.
+  //
+  // The COUNT is what makes this safe, and it is why the digit is required
+  // rather than a bare /\bcase\b/: "x1 Riftbound: Origins Booster Box … FRESHLY
+  // FROM A CASE" is one box, has no multiplier next to "booster box", and must
+  // keep typing as a Booster Box — that listing is the whole reason this rule is
+  // careful.
+  if (/booster\s*case|(?:display|booster\s*box|sealed)\s*case|booster\s*display\s*case|case\s*[([]?\s*(?:of\s*)?\d+\s*x?\s*[)\]]?\s*booster\s*box/.test(t)) return "Booster Case";
   if (/booster\s*box|booster\s*display|display\s*box|\bdisplay\b/.test(t)) return "Booster Box";
   if (/pre-?rift\s*event\s*kit/.test(t)) return "Pre-Rift Event Kit";
   if (/pre-?rift|event\s*kit|pre-?release\s*kit/.test(t)) return "Pre-Rift Kit";
@@ -670,6 +701,27 @@ async function refreshEbaySealedMarket(
     }
     const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents, mkt.marketplace, g.language);
     if (!r) continue;
+    // THE LISTING'S OWN TITLE GETS A VOTE (2026-09-20). Until now the group's
+    // productType was simply stamped onto whatever the search returned, so a
+    // result that cleared the keyword filter was filed as the product we asked
+    // for even when its own title said otherwise. That is how a single box
+    // ("x1 Riftbound: Origins Booster Box … FRESHLY FROM A CASE") became the
+    // cheapest OGN Booster Case on eBay US at US$469 against a real case near
+    // US$1,095 — a "half price case" that was never a case.
+    //
+    // Scoped to the four CONFUSABLE types, not applied to everything: box, case,
+    // pack and sleeved pack are the family that differ by one word and by an
+    // order of magnitude in price, and they are the ones classifySealed() types
+    // cleanly. The others (Bundle, Champion Deck (<name>), the T1 seeds, …)
+    // carry group names that do not round-trip through the classifier, and a
+    // blanket equality check would silently empty them.
+    if (SELF_TYPED.has(g.productType) && classifySealed(r.title) !== g.productType) {
+      console.warn(
+        `eBay sealed ${mkt.country}: dropped "${r.title}" from ${g.groupKey} — ` +
+          `its own title types as ${classifySealed(r.title)}.`,
+      );
+      continue;
+    }
     ebayRows.push({
       groupKey: g.groupKey,
       title: r.title,
