@@ -267,6 +267,18 @@ export default async function StorePage({ params }: { params: { slug: string } }
         </p>
       </section>
 
+      {/* The highest-intent B2B placement on the site: someone reading a page
+          ABOUT a shop is far likelier to run one than the average visitor —
+          store owners search their own store name. Quiet by design (one line,
+          no card, no button) because everyone else here is a shopper. */}
+      <p className="text-center text-xs text-slate-500">
+        Work at {store.name}?{" "}
+        <Link href="/stores" className="text-brand-400 hover:underline">
+          See your live pricing position
+        </Link>{" "}
+        — free repricing report for tracked stores.
+      </p>
+
       {siblings.length > 0 && (
         <section>
           <h2 className="mb-3 text-lg font-bold text-white">Other {info.adjective} stores we track</h2>

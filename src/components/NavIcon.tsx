@@ -55,7 +55,12 @@ export type NavIconName =
   // "Portfolio" reuse "browse" and "collection" above rather than drawing
   // near-duplicate glyphs — same concepts, same icons, everywhere on the site.
   | "home"
-  | "menu";
+  | "menu"
+  // Added for the "For stores" nav group (2026-09-21) — the B2B side of the
+  // site (/stores, /stores/consulting). A shopfront, NOT another box: the
+  // `collection` glyph above is already a lidded box, and at 4rem the rail
+  // identifies a group by silhouette alone (tests/nav-icon.test.ts).
+  | "store";
 
 // A Record (not a partial index) so adding a NavIconName without drawing it is
 // a TYPE ERROR here rather than an invisible blank square in the rail.
@@ -199,6 +204,16 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
   menu: (
     <>
       <path d="M4 7h16M4 12h16M4 17h16" />
+    </>
+  ),
+  // For stores — a shopfront. The awning OVERHANGS the building on both sides
+  // and the door is arched; both exist to pull the silhouette away from
+  // `collection`'s lidded box, which is the nearest shape in the set.
+  store: (
+    <>
+      <path d="M2 9.5h20l-1.8-5.1A2 2 0 0 0 18.3 3H5.7a2 2 0 0 0-1.9 1.4L2 9.5Z" />
+      <path d="M4.6 9.5V19a2 2 0 0 0 2 2h10.8a2 2 0 0 0 2-2V9.5" />
+      <path d="M9.4 21v-5.1a2.6 2.6 0 0 1 5.2 0V21" />
     </>
   ),
 };

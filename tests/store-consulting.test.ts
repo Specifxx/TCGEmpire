@@ -10,6 +10,7 @@ import {
   normalizeStoreUrl,
   validateConsultBooking,
 } from "../src/lib/consulting";
+import { NAV_GROUPS, FOOTER_GROUPS } from "../src/components/nav-groups";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -206,4 +207,52 @@ test("the market list matches what /api/stores/suggest already accepts", () => {
 test("the defaults are a real, sane product: $250 AUD", () => {
   assert.equal(CONSULT_PRICE_CENTS, 25_000);
   assert.equal(CONSULT_CURRENCY, "aud");
+});
+
+// ── Reachability (2026-09-21) ────────────────────────────────────────────────
+// Both /stores pages existed for weeks with NOTHING in the navigation pointing
+// at them — a B2B product a store owner could only reach by guessing the URL.
+// These pin the fix, because a nav group is exactly the kind of thing a later
+// re-bucketing quietly drops.
+
+test("the store-facing pages are reachable from the navigation at all", () => {
+  const hrefs = NAV_GROUPS.flatMap((g) => g.links.map((l) => l.href));
+  for (const href of ["/stores", "/stores/consulting"]) {
+    assert.ok(hrefs.includes(href), `${href} must be in NAV_GROUPS — it feeds the rail, phone menu, ⌘K and llms.txt`);
+  }
+  // …and in the footer, which is where a business reader actually looks for a
+  // "for retailers" link. FOOTER_GROUPS is DERIVED from NAV_GROUPS, so a new
+  // group that no column consumes vanishes from the footer silently.
+  const footer = FOOTER_GROUPS.flatMap((g) => g.links.map((l) => l.href));
+  for (const href of ["/stores", "/stores/consulting"]) {
+    assert.ok(footer.includes(href), `${href} must land in a footer column, not be dropped by the derivation`);
+  }
+});
+
+test("the B2B links live in their own group, not buried under Help", () => {
+  const group = NAV_GROUPS.find((g) => g.links.some((l) => l.href === "/stores/consulting"));
+  assert.ok(group, "expected a group carrying the consulting link");
+  assert.equal(group!.title, "For stores", "a shop owner should not have to look under Help or Prices");
+  // The rail identifies a group by silhouette alone, so a shared icon would
+  // make this group unidentifiable at 4rem (tests/nav-icon.test.ts pins the
+  // general rule; this pins that THIS group brought its own).
+  assert.equal(group!.icon, "store");
+});
+
+test("the store pages that a retailer actually lands on point back at the B2B hub", () => {
+  // Someone reading /stores/<their own shop> or the tracked list is the most
+  // qualified B2B visitor the site gets; before this both were dead ends.
+  for (const rel of ["src/app/stores/[slug]/page.tsx", "src/app/stores/tracked/page.tsx"]) {
+    assert.match(readCode(rel), /href="\/stores"/, `${rel} must offer the retailer a way into /stores`);
+  }
+});
+
+test("the player-facing store pages stay where players look for them", () => {
+  // The tidy-looking move is to pull every /stores/* path into the new group.
+  // It would bury the two that PLAYERS read — "which stores do you compare?"
+  // and "you're missing my local" — so this pins them out of it.
+  const forStores = NAV_GROUPS.find((g) => g.title === "For stores");
+  const hrefs = forStores!.links.map((l) => l.href);
+  assert.ok(!hrefs.includes("/stores/tracked"), "/stores/tracked is read by shoppers — it belongs under Prices");
+  assert.ok(!hrefs.includes("/stores/suggest"), "/stores/suggest is mostly shoppers reporting a missing store — it belongs under Help");
 });

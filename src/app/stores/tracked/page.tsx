@@ -157,9 +157,18 @@ export default function TrackedStoresPage() {
           We&apos;re always adding retailers. If there&apos;s a Riftbound store you&apos;d like compared — or you run one —
           suggest it and we&apos;ll look at adding it. Free listing, more customers.
         </p>
-        <Link href="/stores/suggest" className="btn-primary mt-4 inline-flex">
-          Suggest a store →
-        </Link>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <Link href="/stores/suggest" className="btn-primary inline-flex">
+            Suggest a store →
+          </Link>
+          {/* This page's own copy already says "or you run one", and until now
+              the only thing offered to that reader was a free listing. The
+              retailer side of the site lives at /stores; a store owner reading
+              this sentence is the most qualified visitor it gets. */}
+          <Link href="/stores" className="btn-ghost inline-flex">
+            Run a store? See what we do for retailers
+          </Link>
+        </div>
       </section>
     </div>
   );

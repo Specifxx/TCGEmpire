@@ -224,6 +224,35 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // The B2B side, and the only group here aimed at someone SELLING rather
+    // than buying. It exists as its own group instead of being folded into
+    // Help or Prices because both of those are read by players: a shop owner
+    // who lands on the site had no path to /stores from the navigation at all
+    // (2026-09-21 — the pages existed, nothing linked to them), and a store
+    // hunting for "do they have anything for retailers" will not think to
+    // look under Help. One group, one icon, one obvious answer.
+    //
+    // /stores/tracked stays under Prices and /stores/suggest stays under Help
+    // ON PURPOSE. Both are read by PLAYERS ("which stores do you compare?",
+    // "you're missing my local") far more than by retailers, and moving them
+    // here to tidy the URL prefix would bury them for the bigger audience. A
+    // link lives where its READER looks, not where its path says.
+    title: "For stores",
+    icon: "store",
+    links: [
+      {
+        href: "/stores",
+        label: "RiftCompare for Stores",
+        keywords: ["for stores", "retailers", "my store", "i own a store", "b2b", "sell riftbound", "repricing", "repricing report", "store report", "lgs", "game store", "shop owner"],
+      },
+      {
+        href: "/stores/consulting",
+        label: "Book a consulting session",
+        keywords: ["consulting", "consultancy", "consultant", "book a session", "pricing help", "pricing strategy", "advice", "one on one", "paid session", "store pricing", "what should i charge"],
+      },
+    ],
+  },
+  {
     title: "Help",
     icon: "help",
     links: [
@@ -289,10 +318,17 @@ const byTitle = Object.fromEntries(
 // entry lands somewhere real instead of silently vanishing from the footer.
 const miscLinks = byTitle["Miscellaneous"] ?? [];
 
+// "For stores" has no footer column of its own either, for the same reason
+// Miscellaneous doesn't: four columns IS the footer's layout. It folds into
+// Shop, which was the shortest column (9 links against 12/12/16) and is the
+// one already about retailers — and the footer is where a business reader
+// conventionally goes looking for the "for partners" link anyway.
+const storeLinks = byTitle["For stores"] ?? [];
+
 export const FOOTER_GROUPS: NavGroup[] = [
   {
     title: "Shop",
-    links: [...(byTitle["Prices"] ?? []), ...miscLinks],
+    links: [...(byTitle["Prices"] ?? []), ...miscLinks, ...storeLinks],
   },
   {
     title: "Cards & collection",
