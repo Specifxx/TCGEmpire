@@ -21,7 +21,7 @@ import { ARTICLES } from "../src/lib/articles";
 // lower BUDGET in the same commit.
 //
 // The right long-term value of BUDGET is 0.
-const BUDGET = 47;
+const BUDGET = 44;
 const MAX = 155;
 
 test("no new over-length article descriptions", () => {

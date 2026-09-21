@@ -604,9 +604,9 @@ RiftCompare compares live Riftbound prices across US, UK, AU, CA and SG stores p
   {
     slug: "most-expensive-riftbound-cards",
     category: "blog",
-    title: "Most Expensive Riftbound Cards",
+    title: "Most Expensive Riftbound Cards: Live Ranking",
     excerpt:
-      "A ranked look at the most expensive Riftbound TCG cards, why Signature and Metal variants command four figures, and how to track live prices.",
+      "Signature and Metal variants of popular champions top the market. See the live ranking, priced across every store we track, shipping included.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 9,

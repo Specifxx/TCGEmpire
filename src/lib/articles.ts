@@ -430,9 +430,9 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
   {
     slug: "riftbound-radiance-what-we-know",
     category: "blog",
-    title: "Riftbound Radiance: Release Date, Products, Prices & What's Confirmed",
+    title: "Riftbound Radiance Release Date & What's Known",
     excerpt:
-      "Riftbound: Radiance lands 23 October 2026 with nine new champion Legends and a new Ultimate Rare. Every confirmed date, product and price, the first card seen in print, and what is still unrevealed.",
+      "Riftbound: Radiance releases 23 October 2026 with nine new champion Legends and a new Ultimate Rare tier. Every confirmed date, product and price so far.",
     author: "RiftCompare",
     date: "2026-08-27",
     // 12 Sep 2026: Riot's own rundown publishes the set code (RAD) and moves
@@ -4708,7 +4708,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
     excerpt:
-      "Empower lets a card gain new abilities after it's in play, usually by paying an extra cost on a later turn. Rules, timing, Disempower, every Empower card.",
+      "Empower lets a card gain new abilities once it's in play, usually for a cost on a later turn. Empowered is the status that sticks; Disempower strips it.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
