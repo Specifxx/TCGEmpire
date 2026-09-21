@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { NavbarShell } from "./NavbarShell";
-import { CommandLauncherButton } from "./CommandLauncher";
 import { SearchBar } from "./SearchBar";
 import { HeaderSearchSlot } from "./HeaderSearchSlot";
 import { CountrySwitcher } from "./CountrySwitcher";
@@ -39,7 +38,13 @@ export function Navbar() {
             truncated label on a very narrow phone rather than a horizontally
             scrolling site. */}
         <div className="flex min-w-0 items-center gap-0.5 sm:gap-3">
-          <Link href="/" className="tap-link min-w-11 shrink-0 gap-2" aria-label="RiftCompare home">
+          {/* HIDDEN FROM lg UP (2026-09-21): SideNav runs the full page height
+              from that breakpoint and carries the brand in its own top-left
+              block, so drawing it here too put two RiftCompare marks side by
+              side — and cost this row ~150px it no longer had, the rail
+              having taken --sidenav-w out of the header's width. Below lg the
+              rail is not rendered at all and this is still the home link. */}
+          <Link href="/" className="tap-link min-w-11 shrink-0 gap-2 lg:hidden" aria-label="RiftCompare home">
             <BrandLogo />
             {/* THE WORDMARK WAITS FOR lg (was sm). Measured at 640px: this link is
                 151px with the word, 48px as the mark alone — 103px, and the
@@ -88,9 +93,12 @@ export function Navbar() {
               tests/mobile-header-fit.test.ts and header-mobile-space.test.ts,
               which measure it). The slack the 09-19 rename banked is spent
               again here; those tests are the guard. */}
+          {/* lg:hidden from 2026-09-21, same reasoning as the brand above: the
+              full-height rail carries "Cards" (this exact route) as its second
+              primary item from lg up. */}
           <Link
             href="/browse"
-            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm"
+            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm lg:hidden"
           >
             Database
           </Link>
@@ -133,15 +141,13 @@ export function Navbar() {
           </PremiumNavLink>
         </div>
 
-        {/* Search — inline on desktop; on smaller screens it gets its own full-width row below.
-            HeaderSearchSlot hides this specific box until scroll, but ONLY on the
-            homepage (see its own doc comment) — every other route renders it
-            immediately, unchanged from before. */}
-        <HeaderSearchSlot>
-          <Suspense fallback={<div className="input max-w-xl" />}>
-            <SearchBar />
-          </Suspense>
-        </HeaderSearchSlot>
+        {/* THE INLINE DESKTOP SEARCH BOX IS GONE (2026-09-21, owner: "get rid
+            of ... the search bar if it's already on the left"). It only ever
+            rendered from lg up, and from exactly that breakpoint the
+            full-height rail carries its own Search row (which opens the same
+            ⌘K launcher). The phone/tablet search row further down this file is
+            untouched — below lg there is no rail, so that one is the only
+            search affordance and still renders. */}
 
         {/* Nav.
             ── BREAKPOINTS, and why they are what they are ───────────────────
@@ -197,18 +203,16 @@ export function Navbar() {
               split out of the menu button, its intrinsic width was ~641px inside
               592, which `min-w-0` turned from a scrolling page into the Premium
               label being overdrawn by the theme toggle. */}
-          <span className="hidden lg:inline-flex">
-            <CommandLauncherButton />
-          </span>
+          {/* Was `hidden lg:inline-flex` — i.e. lg-and-up only, which is
+              precisely where the rail's own Search row now opens the same
+              launcher. Removed rather than re-gated for that reason. */}
           {/* The desktop-only Database copy that used to sit here is GONE — not the
               link, the DUPLICATE. It was `lg:block` while the other was
               `lg:hidden`, so the two never appeared together and the pair left
               640-1023px with neither. One ungated link in the left cluster now
               covers every width, which is the only arrangement with no gap. */}
           {/* Sealed products — high-AOV, right after the database. */}
-          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
-            Sealed
-          </Link>
+
           {/* Deck builder — the free "paste a list, price every card" tool. This
               slot held "Decks" (/decks, the meta-deck hub) until 2026-09-12; that
               surface was ten hand-typed lists presented as the metagame and was
@@ -225,9 +229,7 @@ export function Navbar() {
               purpose; it is still in the launcher, mega-menu and footer via the
               same "Decks" group in nav-groups.ts, so /trade keeps its internal
               links and does not become an orphan. */}
-          <Link href="/deck" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
-            Deck builder
-          </Link>
+
           {/* Best Basket USED TO sit here (a header link, added when the tool was
               free with any account — see its own git history for why). Removed
               when Best Basket moved back to the Premium tier: a header-level slot
@@ -247,9 +249,7 @@ export function Navbar() {
               meta snapshots — the pages that change weekly) and it carries a
               "Browse the guides" link of its own, so /guides is still one hop
               from the header rather than buried. */}
-          <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
-            Blog
-          </Link>
+
           {/* Auctions — the live eBay auction board. At xl, not lg, for the same
               reason Premium and Discord below are: the lg row is already at the
               width that overflowed on tablets once (the 640-790px fix, see
@@ -257,9 +257,7 @@ export function Navbar() {
               Below xl it is one keystroke away in the ⌘K launcher, in the phone
               Explore overlay, in the side rail and in the footer — it is in the
               Prices group in nav-groups.ts, so all four get it from one entry. */}
-          <Link href="/auctions" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white xl:block xl:px-2.5">
-            Auctions
-          </Link>
+
           {/* The P2P marketplace was removed entirely (2026-08) — the site is
               back to pure price comparison — so there is no Marketplace chip
               here, and Premium (below) is the header's only always-visible,
@@ -270,9 +268,7 @@ export function Navbar() {
               (2026-09-06: the dialog is retired as a navigation entry point —
               see PremiumButton's own header for where it's still used).
               At xl, not lg: see the Discord icon below for the shared reason. */}
-          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 xl:block xl:px-2.5">
-            ✦ Premium
-          </PremiumNavLink>
+
           {/* Single nav entry point, and it is still exactly one at every width.
               From lg the ⌘K "Explore" command launcher (above) is the full-nav
               surface — it lists the same NAV_GROUPS searchably — so there is no

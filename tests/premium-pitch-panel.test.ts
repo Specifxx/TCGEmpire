@@ -96,7 +96,11 @@ test("the phone header still carries a gold Premium link, without disturbing the
   // Comment-stripped: the tombstone explaining the history names "Database", and
   // a source-text search would match the explanation rather than a rendered link.
   const code = src.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
-  const leftCluster = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
+  // Sliced to the opening <nav>, not to <HeaderSearchSlot> — the header's
+  // inline desktop search box was removed on 2026-09-21 (the full-height rail
+  // carries Search from lg up, which is the only range that box ever rendered
+  // in). The left cluster it bounded is otherwise unchanged.
+  const leftCluster = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<nav "));
   assert.match(leftCluster, /<PremiumNavLink/, "Premium must still be in the header's left cluster on phones");
   assert.match(leftCluster, /lg:hidden/, "the mobile Premium link must stay in the below-lg band");
   assert.match(leftCluster, /text-gold/, "it must be gold — the Premium identity colour");
@@ -112,7 +116,15 @@ test("the phone header still carries a gold Premium link, without disturbing the
   // tests/signup-funnel.test.ts; repeated here because this change is what
   // would most plausibly break them.
   assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md");
-  assert.match(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the desktop Premium link must still defer to xl");
+  // The desktop "✦ Premium" link (xl:block) is GONE from this row as of
+  // 2026-09-21: the rail's pinned account block carries "Go Premium" from lg
+  // up, two breakpoints earlier than the header link ever appeared, so the
+  // desktop pitch is strictly better covered than it was. The phone link
+  // above is the one this test exists for and is untouched.
+  assert.doesNotMatch(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the desktop Premium link moved into the rail");
+  const rail = read("src/components/SideNav.tsx");
+  assert.match(rail, /href="\/premium"/, "the rail must carry the desktop Premium pitch");
+  assert.match(rail, /Go Premium/, "…as a labelled call to action, not a bare icon");
 });
 
 test("the shimmer is defined once, guarded for reduced motion, and used on exactly one element", () => {

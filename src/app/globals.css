@@ -91,6 +91,46 @@
   }
 }
 
+/* The rail's CHROME rows (brand, search, the primary action, the account
+   block) follow the same rule, and for the same reason: their layout differs between
+   the two modes is icon-only-and-centred vs icon-plus-label, and deciding that
+   in React state would mean the server renders one and the client's first
+   paint can render the other — a visible flash for anyone whose cookie says
+   "expanded", which is precisely what the display-toggle pattern above exists
+   to avoid. The label spans inside these rows carry `.sidenav-expanded`, so
+   they appear under exactly the same condition the expanded link list does. */
+.sidenav-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+@media (min-width: 1280px) {
+  :root[data-sidenav="expanded"] .sidenav-row {
+    justify-content: flex-start;
+    gap: 0.625rem;
+  }
+  /* The one row that stays right-aligned when expanded: the collapse toggle,
+     which sits in the bottom corner the way the panel control it mirrors does. */
+  :root[data-sidenav="expanded"] .sidenav-row-end {
+    justify-content: flex-end;
+  }
+  /* The search row reads as a FIELD only when there is a label inside it to
+     make it look like one. Collapsed, it is a bare icon button like every
+     other row, so the border and inset background would just draw a box
+     around a magnifier. Tied to the expanded STATE, not to a breakpoint:
+     1280px+ is still collapsed by default. */
+  :root[data-sidenav="expanded"] .sidenav-boxed {
+    /* The themeable tokens, not hexes — this has to follow the light palette
+       the same way every `bg-ink-*` className does. See tailwind.config.ts. */
+    border: 1px solid rgb(var(--c-ink-700));
+    background-color: rgb(var(--c-ink-950) / 0.6);
+  }
+  :root[data-sidenav="expanded"] .sidenav-boxed:hover {
+    border-color: rgb(var(--c-ink-600));
+  }
+}
+
 /* ── Palette: LIGHT ──────────────────────────────────────────────────────
    Opt-in via the header toggle (ThemeToggle.tsx), stamped on <html> before
    first paint by THEME_BOOT_SCRIPT. Same variables, inverted lightness:

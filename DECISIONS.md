@@ -9801,3 +9801,103 @@ is visible in the cron's own output rather than hidden inside `updated`.
 `/alerts`' FAQ and "How it works" copy were updated to state the cap plainly —
 this repo's rule against describing a mechanism the code doesn't run cuts both
 ways, so it isn't left promising instant delivery on every drop anymore either.
+
+## The sidebar became the whole left edge, and the header gave up what it duplicated — 2026-09-21
+
+Asked for with a reference: "make the sidebar for riftcompare like how
+piltover archive does it", with a screenshot of piltoverarchive.com. Then, on
+seeing the first render: "get rid of some of the header like explore, sealed,
+deck builder, auctions and the search bar if it's already on the left." And
+then: "obviously it should be in riftcompare colours and not piltover archive
+colours."
+
+**What the reference layout actually is**, in the order it stacks: brand block
+→ search field with its ⌘K hint → one filled primary action → a short flat
+list of icon-led destinations → collapsible groups for everything else →
+a pinned block at the bottom for membership, session and a panel toggle. The
+rail here had none of that shape. It started *below* the header at `top-16`,
+opened with ten group icons whose links were behind a hover flyout, and ended
+at the bottom of the list. A visitor had to open something before they could
+go anywhere.
+
+**All six moved across, and the first five are the whole change.** The rail is
+`top-0 h-screen` now and owns the brand; `primary-nav.ts` is a new eight-entry
+flat list (Home, Cards, Prices, Sealed, Deals, Decks, Games, News); the search
+row opens the existing ⌘K launcher rather than being a second real input to
+keep in sync with it; the primary action is "Browse cards"; `NAV_GROUPS` still
+renders in full underneath, so not one of the ~60 links became less reachable.
+
+**The palette is NOT borrowed, and that was an explicit correction.** The
+first version used the reference's amber for the primary button. Gold is this
+site's Premium identity colour — the phone Premium link, `PremiumNavLink`, the
+whole `/premium` page — so a gold button that merely browses the catalogue
+reads as a paid feature. It is `bg-brand-500` now, the same fill as
+`.btn-primary` and the signed-out header CTA, and the only gold left in the
+rail is "Go Premium". A test pins exactly that, by counting gold occurrences
+and requiring every one of them to be inside the Premium row.
+
+**The header had to give up what the rail took, and that was not optional.**
+Inserting a 272px rail left the header 272px narrower, and this row has a
+documented history of overflowing (`tests/mobile-header-fit.test.ts`,
+`header-mobile-space.test.ts`, `signup-funnel.test.ts` all carry measurements
+of past clips). The first render proved it immediately: "Database" was drawn
+under the search box, and a second RiftCompare wordmark sat beside the rail's
+own. Gone from the header, all of them `lg`-and-up-only to begin with and all
+of them carried by the rail from exactly that breakpoint: the brand, the
+inline search box, the ⌘K button, the Sealed/Deck builder/Blog/Auctions links
+and the desktop Premium link. What stayed is what the rail does NOT carry —
+the phone search row, the phone menu button, Discord, the theme toggle, the
+country picker and the session control.
+
+**Measured rather than assumed, because a previous version of this row shipped
+a clipped CTA.** Driven in a real browser at 1024/1032/1040/1048/1056/1279/
+1280/1440: "Log in / Sign up" renders in full with 32px of clearance at every
+one, and no width overflows horizontally. `scripts/mobile-check.ts` reports no
+overflow at 640/720/790 either, and the rail is correctly absent below lg.
+
+**Two bugs found by looking at it rather than by reasoning about it**, both
+introduced by this change and both fixed before landing:
+
+- **The collapsed rail overflowed its own viewport.** Adding the eight primary
+  icons took it from 10 icons to 18 (~790px), and the block was deliberately
+  NOT scrollable — the old comment explained why: an `overflow-y: auto`
+  ancestor clips the flyouts that pop out to its right, and ten icons always
+  fit. The first half of that stopped being true. So the second half was fixed
+  instead: `RailGroup`'s flyout is `position: fixed`, placed from the
+  trigger's own `getBoundingClientRect()` and clamped so a group low in the
+  list opens upward. It escapes any scroller now, and the collapsed list
+  scrolls. (There is no "scroll vertically, overflow horizontally" to reach
+  for — CSS computes `overflow-x: visible` to `auto` the moment the other axis
+  scrolls.)
+- **The rail had to outrank the header.** The header's background still spans
+  the top-left corner the rail's brand block occupies, so at `Z.rail = 20` the
+  header painted over it. `Z.rail` is 45 now, deliberately between `header`
+  (40) and `dropdown` (50): the rail outranks page chrome, and every menu and
+  overlay still outranks the rail.
+
+**The mode stays a CSS decision, not a React one**, which is the constraint
+that shaped most of the markup. The chrome rows carry `.sidenav-row` /
+`.sidenav-expanded` and `globals.css` decides; a `railCollapsed ? … : …` in a
+className would mean the server renders one layout and the client's first
+paint can render the other — a visible flash for anyone whose cookie says
+"expanded". `railCollapsed` survives only for the toggle's own `aria-label`.
+The new `.sidenav-boxed` rule uses the `--c-*` tokens rather than hex, so the
+light palette follows; verified by screenshot in both themes.
+
+**Six existing tests were amended, none deleted**, and each one's guarantee
+survives at a different address: /auctions discoverability now points at the
+rail rather than the header; "no width can hide the Database link" is asserted
+across the two surfaces that each own half the range (header below lg, the
+rail's "Cards" from lg); the launcher/menu-duplication rules now name the rail
+as the desktop surface; and the header-slack test asserts the *absence* of the
+items it used to reserve slack for, which is both stronger and the thing that
+would actually re-break it. `tests/sidenav-shell.test.ts` is new and pins the
+rest.
+
+Verified: `npm run typecheck`, `npm run lint` (0 errors), `npm run
+adsense:guard` (22/22), `npm test` (1691/1692 — the one failure, "the seller
+id is the client id with ca- stripped", fails identically on an untouched
+checkout and is a pre-existing sandbox gap), `next build` compiles, and the
+rail was rendered and screenshotted in a real browser in all three modes
+(expanded, collapsed, the 1024-1279 icon band) and in both themes against a
+local dev server.

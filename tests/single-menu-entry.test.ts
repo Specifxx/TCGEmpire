@@ -64,10 +64,16 @@ test("exactly one component in the tree opens the mega menu", () => {
   assert.deepEqual(openers, ["src/components/HeaderMenuButton.tsx"], "exactly one opener, and it is the header button");
 });
 
-test("the header renders it below lg only, so desktop keeps the launcher as its one surface", () => {
+test("the header renders it below lg only, so desktop keeps ONE full-nav surface", () => {
   const nav = readCode("src/components/Navbar.tsx");
   assert.match(nav, /<HeaderMenuButton className="lg:hidden" \/>/);
-  // From lg the ⌘K launcher is the full-nav surface; a menu button there too
-  // would be the exact duplication this file exists to prevent.
-  assert.match(nav, /<CommandLauncherButton \/>/);
+  // From lg that surface is the RAIL, not the header's ⌘K button — which was
+  // removed on 2026-09-21 precisely because the rail carries its own Search
+  // row opening the same launcher, plus every NAV_GROUPS link inline. A menu
+  // button, a launcher button AND a rail would have been three doors into one
+  // index, which is the duplication this file exists to prevent.
+  assert.doesNotMatch(nav, /<CommandLauncherButton \/>/, "the desktop launcher button belongs to the rail now");
+  const rail = readCode("src/components/SideNav.tsx");
+  assert.match(rail, /useCommandLauncher\(\)/, "the rail must own the desktop launcher entry point");
+  assert.match(rail, /NAV_GROUPS\.map/, "…and still render the full index inline");
 });

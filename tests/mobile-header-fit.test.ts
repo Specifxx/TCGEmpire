@@ -71,16 +71,28 @@ test("there is exactly ONE Database link and NO width can hide it", () => {
   // between them.
   //
   // One ungated link is the only arrangement with no gap and nothing to drift.
+  // AMENDED 2026-09-21. The header's copy is now `lg:hidden`, and that is NOT
+  // the gap this test was written to prevent: from exactly that breakpoint the
+  // full-height rail (SideNav) renders "Cards" -> /browse as a permanently
+  // visible primary item, no hover, no menu, no scroll. The invariant is
+  // therefore unchanged in substance — EVERY width shows a link to /browse
+  // without the visitor opening anything — and is now asserted across the two
+  // surfaces that each own half of the range, which is what stops a future
+  // edit from removing one without noticing the other.
   const code = readCode(NAVBAR);
   const links = [...code.matchAll(/<Link\s+href="\/browse"([\s\S]{0,400}?)<\/Link>/g)];
   const headerLinks = links.filter((m) => /Database/.test(m[1]));
   assert.equal(headerLinks.length, 1, "exactly one Database link in the header");
   const cls = /className="([^"]*)"/.exec(headerLinks[0][1])?.[1] ?? "";
-  for (const hide of ["hidden", "lg:block", "lg:hidden", "sm:hidden"]) {
+  for (const hide of ["hidden", "lg:block", "sm:hidden"]) {
     assert.ok(!cls.split(/\s+/).includes(hide), `Database must not be gated by "${hide}" (has: ${cls})`);
   }
-  // It lives in the left cluster, before the search slot.
-  const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
+  assert.ok(cls.split(/\s+/).includes("lg:hidden"), "below lg the header carries it; from lg the rail does");
+  // The other half of the range: the rail's own primary list.
+  const primary = readCode("src/components/primary-nav.ts");
+  assert.match(primary, /href: "\/browse", label: "Cards"/, "the rail must carry /browse as a primary destination from lg up");
+  // It lives in the left cluster, beside the logo.
+  const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<nav "));
   assert.match(row, /Database/, "and it sits in the left cluster beside the logo");
   // LABELLED "Database". Argued both ways by the same owner inside 48 hours:
   // "Database" for its whole life → "Browse" on 2026-09-19 ("it's meant to be
@@ -165,13 +177,20 @@ test("the country switcher keeps a 44px target after losing its chevron below sm
   assert.match(code, /hidden h-3\.5 w-3\.5 transition-transform sm:block/, "chevron returns from sm up");
 });
 
-test("the launcher and the theme toggle wait for lg, because the overlay owns both below it", () => {
+test("the theme toggle waits for lg, because the overlay owns it below that", () => {
   const code = readCode(NAVBAR);
-  // Both were sm-gated and both were duplicating something the menu overlay
-  // already carries (its own search box; its own "Theme" row). At 640-1023px
-  // the row's intrinsic width was ~641px inside 592 with the watchlist split
-  // out, and that is what the overlap above was really telling us.
-  assert.match(code, /<span className="hidden lg:inline-flex">\s*<CommandLauncherButton \/>/);
+  // Both this and the ⌘K launcher button were sm-gated and both duplicated
+  // something the menu overlay already carries (its own search box; its own
+  // "Theme" row). At 640-1023px the row's intrinsic width was ~641px inside
+  // 592 with the watchlist split out, and that is what the overlap was really
+  // telling us.
+  //
+  // THE LAUNCHER BUTTON IS GONE FROM THIS ROW ENTIRELY (2026-09-21). It was
+  // `hidden lg:inline-flex` — lg and up only — which is exactly the range
+  // where the full-height rail now carries its own Search row opening the
+  // same launcher. Asserted as an absence so it cannot quietly come back as a
+  // third way to open one overlay.
+  assert.doesNotMatch(code, /<CommandLauncherButton \/>/, "the rail's Search row is the desktop launcher surface now");
   assert.match(code, /<ThemeToggle className="hidden lg:grid" \/>/);
   assert.doesNotMatch(code, /<ThemeToggle className="hidden sm:grid" \/>/);
   const menu = readCode("src/components/CinematicNavMenu.tsx");

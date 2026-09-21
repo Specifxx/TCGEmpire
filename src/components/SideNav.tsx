@@ -6,6 +6,12 @@ import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
 import type { NavGroup, NavGroupLink } from "./nav-groups";
+import { PRIMARY_NAV } from "./primary-nav";
+import { BrandLogo } from "./BrandLogo";
+import { useCommandLauncher } from "./CommandLauncher";
+import { useCountry } from "./CountryProvider";
+import { useMe } from "@/lib/use-me";
+import { COUNTRIES } from "@/lib/country";
 import { usePresence, DUR } from "@/lib/motion";
 import {
   SIDENAV_COOKIE,
@@ -139,6 +145,30 @@ function RailGroup({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonId = useId();
+  // Viewport coordinates for the flyout. It is `position: fixed`, NOT
+  // `absolute left-full`, because the collapsed list around it has to scroll:
+  // the rail now carries the primary destinations as well as one icon per
+  // group (18 icons, ~790px) and no longer fits a laptop viewport the way ten
+  // did. An `overflow-y: auto` ancestor clips an absolutely-positioned child
+  // that sticks out sideways (and CSS turns `overflow-x: visible` into `auto`
+  // the moment the other axis scrolls), so the panel is measured off the
+  // trigger's own rect instead and escapes the scroller entirely.
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const place = () => {
+      const r = buttonRef.current?.getBoundingClientRect();
+      if (!r) return;
+      // Clamp so a group low in the list opens UPWARD rather than off-screen.
+      const estimated = 44 + group.links.length * 32;
+      const top = Math.max(8, Math.min(r.top, window.innerHeight - estimated - 8));
+      setPos({ top, left: r.right + 8 });
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [isOpen, group.links.length]);
 
   function focusables(): HTMLElement[] {
     return Array.from(panelRef.current?.querySelectorAll<HTMLElement>("a[href]") ?? []);
@@ -213,9 +243,10 @@ function RailGroup({
           role="group"
           aria-labelledby={buttonId}
           onKeyDown={onPanelKeyDown}
-          className={`absolute left-full top-0 z-flyout ml-2 w-60 rounded-lg border border-ink-700 bg-ink-900 p-2 shadow-card transition-[opacity,transform] duration-fast ease-out ${
-            entered ? "translate-x-0 opacity-100" : "motion-safe:-translate-x-1 motion-safe:opacity-0"
-          }`}
+          style={pos ? { top: pos.top, left: pos.left } : undefined}
+          className={`fixed z-flyout max-h-[80vh] w-60 overflow-y-auto rounded-lg border border-ink-700 bg-ink-900 p-2 shadow-card transition-[opacity,transform] duration-fast ease-out ${
+            pos ? "" : "invisible"
+          } ${entered ? "translate-x-0 opacity-100" : "motion-safe:-translate-x-1 motion-safe:opacity-0"}`}
         >
           <div className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             {group.title}
@@ -361,48 +392,147 @@ export function SideNav() {
     );
   };
 
+  // Kept for the toggle button's own aria-expanded/label only — every LAYOUT
+  // decision in the markup below is made by CSS (.sidenav-row /
+  // .sidenav-expanded / .sidenav-collapsed in globals.css), not by this, so
+  // the server's HTML and the client's first paint can never disagree about
+  // how the rail looks.
   const railCollapsed = railMode === "collapsed";
+
+  // ── PA-style chrome: search, primary action, account block ────────────────
+  const launcher = useCommandLauncher();
+  const { country } = useCountry();
+  const { user, premium, loaded: meLoaded } = useMe();
+
+  const primaryActive = (item: (typeof PRIMARY_NAV)[number]) =>
+    item.exact ? pathname === item.href : isActiveLink(pathname, item);
+
+  // One renderer for both blocks: `.sidenav-row` centres the icon when the
+  // rail is collapsed and puts the label beside it when expanded, so neither
+  // copy can drift from the other in where it links.
+  const renderPrimary = (item: (typeof PRIMARY_NAV)[number]) => {
+    const active = primaryActive(item);
+    return (
+      <li key={item.href}>
+        <Link
+          href={item.href}
+          aria-current={active ? "page" : undefined}
+          aria-label={item.label}
+          title={item.label}
+          className={`sidenav-row w-full rounded-lg border-l-2 px-2 py-2 text-sm font-semibold transition-colors ${
+            active
+              ? "border-brand-400 bg-brand-500/10 text-brand-300"
+              : "border-transparent text-slate-300 hover:bg-ink-800 hover:text-white"
+          }`}
+        >
+          <NavIcon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
+          <span className="sidenav-expanded truncate">{item.label}</span>
+        </Link>
+      </li>
+    );
+  };
 
   return (
     <nav
       aria-label="Site navigation"
-      className="fixed left-0 top-16 z-20 hidden h-[calc(100vh-4rem)] w-[var(--sidenav-w)] flex-col border-r border-ink-800 bg-ink-900/95 backdrop-blur lg:flex"
+      className="fixed left-0 top-0 z-rail hidden h-screen w-[var(--sidenav-w)] flex-col border-r border-ink-800 bg-ink-900 lg:flex"
       onMouseLeave={() => setOpenGroup(null)}
     >
-      {/* The rail toggle only exists where both modes do (xl+); 1024–1279px
-          is icon-only and has nothing to toggle to. */}
-      <div className="hidden shrink-0 items-center justify-end px-2 pt-2 xl:flex">
+      {/* ── Brand ─────────────────────────────────────────────────────────
+          The rail owns the brand now that it runs the full page height, the
+          same way the sidebar this follows does. The header keeps its own
+          mark below lg, where this panel isn't rendered at all. */}
+      <Link
+        href="/"
+        aria-label="RiftCompare home"
+        className="sidenav-row h-16 shrink-0 border-b border-ink-800 px-2 transition-colors hover:bg-ink-800/60"
+      >
+        <BrandLogo />
+        <span className="sidenav-expanded min-w-0">
+          <span className="block truncate text-sm font-extrabold tracking-tight text-white">
+            Rift<span className="text-brand-400">Compare</span>
+          </span>
+          {/* The visitor's own market — the piece of context every price on
+              the site is quoted in, and the closest real equivalent to the
+              workspace line this block mirrors. */}
+          <span className="block truncate text-[11px] text-slate-500">{COUNTRIES[country].label}</span>
+        </span>
+      </Link>
+
+      <div className="shrink-0 space-y-2 border-b border-ink-800 px-2 py-3">
+        {/* ── Search ─────────────────────────────────────────────────────
+            A button, not an input: the ⌘K launcher IS the site's search, and
+            a second real input here would be a second thing to keep in sync
+            with it. Same overlay the header's own search button opens. */}
         <button
           type="button"
-          onClick={toggleRail}
-          aria-label={railCollapsed ? "Expand navigation" : "Collapse navigation"}
-          aria-expanded={!railCollapsed}
-          title={`${railCollapsed ? "Expand" : "Collapse"} navigation  [`}
-          className="tap-icon rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white"
+          onClick={launcher.open}
+          aria-label="Search"
+          title="Search  ⌘K"
+          className="sidenav-boxed sidenav-row w-full rounded-lg px-2 py-2 text-sm text-slate-400 transition-colors hover:bg-ink-800 hover:text-white"
         >
-          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {railCollapsed ? <path d="M9 6l6 6-6 6" /> : <path d="M15 6l-6 6 6 6" />}
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-[18px] w-[18px] shrink-0">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
           </svg>
+          <span className="sidenav-expanded flex-1 text-left">Search</span>
+          <kbd className="sidenav-expanded rounded border border-ink-700 bg-ink-900 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">⌘K</kbd>
         </button>
+
+        {/* ── Primary action ─────────────────────────────────────────────
+            The rail's one filled button. Browsing the catalogue is this
+            site's equivalent of "New deck": what a first-time visitor came
+            to do, and the entry point every card page hangs off.
+
+            BRAND GREEN, not the reference design's amber — same fill as
+            .btn-primary and the signed-out header CTA. Gold is not a spare
+            accent here: it is this site's PREMIUM identity colour (see the
+            account block below, and the phone Premium link in Navbar.tsx),
+            so a gold button that merely browses the catalogue would read as
+            a paid feature. */}
+        <Link
+          href="/browse"
+          aria-label="Browse cards"
+          className="sidenav-row w-full rounded-lg bg-brand-500 px-2 py-2 text-sm font-bold text-ink-950 transition-colors hover:bg-brand-400"
+        >
+          <NavIcon name="browse" className="h-[18px] w-[18px] shrink-0" />
+          <span className="sidenav-expanded">Browse cards</span>
+        </Link>
       </div>
 
-      {/* Expanded: the full grouped list, each group a disclosure (display
-          controlled in globals.css). This block is the scroll container, not
-          the nav — an overflow-y:auto nav would clip the icon rail's flyouts. */}
-      <div className="sidenav-expanded min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+      {/* ── The index: primary destinations, then every grouped link ─────
+          TWO separate blocks, one per mode, exactly as this component has
+          always done it — both always in the DOM, CSS picks which shows, so
+          the mode needs no JS state to hydrate.
+
+          BOTH scroll now. The collapsed one used to be deliberately
+          unscrollable, on the reasoning that ten group icons fit any laptop
+          viewport and an `overflow-y: auto` ancestor would clip the flyouts
+          that pop out to its right. The first half of that stopped being true
+          when the primary destinations were added above the groups (18 icons,
+          ~790px, which overflows a 900px viewport once the brand, search,
+          action and account blocks take their share). So the second half was
+          fixed instead: RailGroup's flyout is `position: fixed`, placed from
+          the trigger's own rect, and is not clipped by any scroller. */}
+      <div className="sidenav-expanded min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-2">
+        <ul className="space-y-0.5">{PRIMARY_NAV.map((item) => renderPrimary(item))}</ul>
+
+        <div className="my-2 border-t border-ink-800" />
+
         {NAV_GROUPS.map((group) => {
           const open = !collapsed.has(group.title);
           const panelId = `sidenav-group-${group.title.replace(/\s+/g, "-").toLowerCase()}`;
           return (
-            <div key={group.title} className="border-b border-ink-800/60 py-1 last:border-0">
+            <div key={group.title} className="py-0.5">
               <button
                 type="button"
                 onClick={() => toggleGroup(group.title)}
                 aria-expanded={open}
                 aria-controls={panelId}
-                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:text-slate-300"
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 transition-colors hover:bg-ink-800/60 hover:text-slate-300"
               >
-                {group.title}
+                {group.icon ? <NavIcon name={group.icon} className="h-4 w-4 shrink-0" /> : null}
+                <span className="flex-1 truncate text-left">{group.title}</span>
                 <Chevron open={open} />
               </button>
               {open && (
@@ -415,10 +545,9 @@ export function SideNav() {
         })}
       </div>
 
-      {/* Collapsed: one icon per group, links in a flyout. Deliberately NOT a
-          scroll container — ten 44px icons fit any laptop viewport, and an
-          overflow-y:auto parent would clip the flyout that pops out to the right. */}
-      <ul className="sidenav-collapsed min-h-0 flex-1 px-2 pb-3 pt-1">
+      <ul className="sidenav-collapsed min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-3 pt-2">
+        {PRIMARY_NAV.map((item) => renderPrimary(item))}
+        <li aria-hidden className="!my-2 border-t border-ink-800" />
         {NAV_GROUPS.map((group) => (
           <RailGroup
             key={group.title}
@@ -430,6 +559,62 @@ export function SideNav() {
           />
         ))}
       </ul>
+
+      {/* ── Pinned account block ──────────────────────────────────────────
+          Premium, then the session, then the rail's own collapse control —
+          the bottom-of-sidebar grouping the layout this follows uses for the
+          same three jobs. Pinned (outside the scroller above) so it stays
+          reachable without scrolling past the ~60-link index. */}
+      <div className="shrink-0 space-y-1.5 border-t border-ink-800 px-2 py-2.5">
+        {!premium && (
+          <Link
+            href="/premium"
+            aria-label="Go Premium"
+            className="sidenav-row w-full rounded-lg border border-gold/40 px-2 py-2 text-sm font-bold text-gold transition-colors hover:bg-gold/10"
+          >
+            <NavIcon name="trophy" className="h-[18px] w-[18px] shrink-0" />
+            <span className="sidenav-expanded truncate">Go Premium</span>
+          </Link>
+        )}
+
+        {/* A fixed-height placeholder until /api/me resolves, so a signed-in
+            visitor never sees the signed-out row flash first — the same
+            contract NavUser follows in the header. */}
+        {!meLoaded ? (
+          <div aria-hidden className="h-[38px]" />
+        ) : (
+          <Link
+            href={user ? "/profile" : "/login"}
+            aria-label={user ? "Your account" : "Sign in"}
+            className="sidenav-row w-full rounded-lg px-2 py-2 text-sm font-semibold text-slate-300 transition-colors hover:bg-ink-800 hover:text-white"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-[18px] w-[18px] shrink-0">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+            <span className="sidenav-expanded truncate">{user ? user.displayName : "Sign in"}</span>
+          </Link>
+        )}
+
+        {/* The rail toggle lives down here now (it used to float above the
+            list), matching the bottom-corner panel control this layout uses.
+            xl+ only: 1024-1279px is icon-only and has nothing to toggle to. */}
+        <div className="sidenav-row sidenav-row-end hidden xl:flex">
+          <button
+            type="button"
+            onClick={toggleRail}
+            aria-label={railCollapsed ? "Expand navigation" : "Collapse navigation"}
+            aria-expanded={!railCollapsed}
+            title={`${railCollapsed ? "Expand" : "Collapse"} navigation  [`}
+            className="tap-icon rounded-lg text-slate-500 transition-colors hover:bg-ink-800 hover:text-white"
+          >
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M9 4v16" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </nav>
   );
 }

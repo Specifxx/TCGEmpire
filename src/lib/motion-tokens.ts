@@ -51,7 +51,15 @@ export const EASING = {
 // no visual gain. NextTopLoader also sits at 200 so it always wins over every
 // overlay's backdrop.
 export const Z = {
-  rail: 20,
+  // 45, above `header`, since 2026-09-21: the desktop rail used to start
+  // BELOW the header (top-16) and so correctly sat under it. It now runs the
+  // full page height and owns the brand block in the top-left corner, while
+  // the header is inset by --sidenav-w — so the header's own background and
+  // border still span that corner and would paint over the rail's brand if
+  // the rail stayed under it. Deliberately between `header` and `dropdown`:
+  // the rail outranks the page chrome, and every menu/overlay still outranks
+  // the rail.
+  rail: 45,
   flyout: 30,
   header: 40,
   bottombar: 40,

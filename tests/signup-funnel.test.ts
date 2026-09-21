@@ -238,20 +238,28 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // Two independent reservations of slack, both pinned here because either one
   // silently reverting re-clips the CTA:
   const src = read("src/components/Navbar.tsx");
-  // 1. The nav LINKS turn on at the same breakpoint as the search bar — the only
-  //    element in the row that can flex and absorb the difference.
-  assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md — the flexible search bar is lg-and-up");
-  // Was >= 4 (Sealed, Decks, Best Basket, Blog) — Best Basket lost its header
-  // slot when it moved back to Premium (see lib/premium.ts's tier note and
-  // Navbar.tsx's own comment where the link used to be), leaving three. Only
-  // ever removes slack pressure on this row, so the overflow fix this test
-  // guards still holds; the floor drops to match.
-  const lgLinks = src.match(/lg:block lg:px-2\.5/g) ?? [];
-  assert.ok(lgLinks.length >= 3, `expected the nav links gated at lg, found ${lgLinks.length}`);
-  // 2. The two NON-navigational items defer to xl, which is what buys the
-  //    1024-1056 band its headroom. Premium stays reachable from UserMenu and
-  //    /premium; Discord from the footer.
-  assert.match(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the Premium link must defer to xl");
+  // REWRITTEN 2026-09-21. This used to reserve slack by gating things: the nav
+  // links had to wait for lg (the breakpoint at which the flexible search bar
+  // appeared to absorb them) and Premium/Discord had to wait for xl. Those
+  // reservations are moot now, because from lg up the row no longer CARRIES
+  // the items they were reserving against — the full-height rail took the
+  // brand, the search box, the ⌘K button, Sealed/Decks/Blog/Auctions and the
+  // desktop Premium link, and the header keeps only Discord, the theme
+  // toggle, the country picker and this CTA.
+  //
+  // So the guarantee is asserted as an ABSENCE now, which is both stronger and
+  // the thing that would actually re-break it: putting any of them back into
+  // this row at lg is what would re-create the 1024-1056px clip.
+  //
+  // Re-measured in a real browser after the change, the same way the original
+  // clip was found — "Log in / Sign up" renders in full with 32px to spare at
+  // 1024/1032/1040/1048/1056/1279/1280/1440, and no width overflows.
+  assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md");
+  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 0, "the rail carries the nav links from lg — they must not return to this row");
+  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the rail's Search row is the desktop launcher surface");
+  assert.doesNotMatch(src, /<HeaderSearchSlot>/, "the inline desktop search box moved into the rail");
+  assert.doesNotMatch(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the desktop Premium link moved into the rail");
+  // Discord is the one non-navigational item still here, and still xl-gated.
   assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\bxl:grid\b/, "the Discord icon must defer to xl");
 });
 

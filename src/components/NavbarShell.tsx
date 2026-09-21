@@ -69,10 +69,20 @@ export function NavbarShell({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // pl-[var(--sidenav-w)]: SideNav runs the FULL page height now (it used to
+  // start below this header), so from lg up the header's own content has to
+  // begin where the rail ends or the rail would sit on top of it. 0 below lg,
+  // where SideNav isn't rendered — globals.css owns that breakpoint decision
+  // for every consumer of the custom property.
+  //
+  // The header keeps its own z-header (40); the RAIL was raised above it
+  // instead (Z.rail, src/lib/motion-tokens.ts), so page-level dropdowns that
+  // sit at z-30/z-50 keep the exact relationship to this header they had
+  // before.
   return (
     <header
       ref={ref}
-      className={`sticky top-0 z-40 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${AT_TOP.join(
+      className={`sticky top-0 z-header border-b pl-[var(--sidenav-w)] transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${AT_TOP.join(
         " "
       )}`}
     >
