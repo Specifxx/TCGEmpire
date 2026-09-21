@@ -9746,3 +9746,58 @@ Verified: `npm run typecheck`, `npm run lint`, `npm run adsense:guard` (22/22),
 client id with ca- stripped" sandbox gap, unchanged). Not verified against real
 rows: there is no database in this sandbox, so what the column actually lists
 on a given day comes from the first production render.
+
+---
+
+## Price-drop emails capped at once a week per address — 2026-09-21
+
+Owner report: *"the price drop emails are just coming every single day. I only
+have three cards in my wishlist. This is a huge, huge issue."*
+
+**What was actually happening, and it was not a bug in the sense of broken
+code.** `shouldEmailDrop()` already tracks a real all-time-low watermark per
+alert (`lowestEmailedCents`) and only fires on a genuine new low since the last
+email — which is exactly the mechanism the owner asked for when they described
+the fix they wanted. The likely reason it still fired near-daily: each card's
+"lowest price" is `MIN(priceCents)` across every live listing in that market —
+~19 US stores plus eBay, recomputed from scratch on every price import
+(`lib/price-import.ts`) — and the **minimum of a large, independently-fluctuating
+set** ticks to a new record low on a large share of days from ordinary cross-
+store noise (a sale, a restock, one listing's price moving a few cents), not
+because the card is trending down. Confirmed there is no double-fire: exactly
+one scheduled trigger exists for `/api/cron/price-alerts`
+(`vercel.json`, `30 18 * * *`).
+
+**Not fixed here, and flagged rather than guessed at:** redefining what counts
+as a "real" drop (a minimum cents/percent threshold, requiring the new low to
+hold for N days, etc.) is a genuine product decision with no obvious right
+answer, and picking one without being asked would be a second silent behavior
+change riding on top of the one that was actually requested.
+
+**What shipped instead, per the owner's own instruction ("whilst it's not
+working we should just do weekly"): a hard cap of one price-drop digest per
+address per week**, independent of and layered on top of the existing per-card
+logic:
+
+- `shouldEmailDrop()` — unchanged. Still decides whether a given drop is worth
+  telling someone about at all, per CARD.
+- `addressInCooldown()` — new. Decides whether this ADDRESS may be told
+  anything yet, regardless of how many cards just hit a new low.
+
+A drop that clears `shouldEmailDrop()` but lands inside the cooldown is
+**deferred, not dropped**: its baseline is held back (the same `heldIds`
+mechanism the failed-send path already used), so it keeps re-detecting on every
+subsequent run and lands in the next digest once the week is up — reporting the
+fall from the pre-drop price rather than one day's step. Two cards dropping on
+the same address the same day still share one digest, as before.
+
+The cron still runs daily — it has to, since baselines are tracked daily and a
+weekly-only job would miss drops that fell and recovered within the week — only
+the outbound email is capped. `AlertRunSummary` gained a `deferred` counter,
+kept separate from `suppressed` (a suppressed drop was judged not worth telling
+anyone; a deferred one WILL be told, later) so a growing backlog behind the cap
+is visible in the cron's own output rather than hidden inside `updated`.
+
+`/alerts`' FAQ and "How it works" copy were updated to state the cap plainly —
+this repo's rule against describing a mechanism the code doesn't run cuts both
+ways, so it isn't left promising instant delivery on every drop anymore either.

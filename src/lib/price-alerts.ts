@@ -9,14 +9,41 @@ export interface AlertRunSummary {
   alerts: number; // rows examined
   drops: number; // individual card price drops found
   suppressed: number; // drops NOT emailed (not a new low, and no reminder due) — anti-spam
+  deferred: number; // drops worth sending, held for the weekly cadence cap — they WILL send later
   emails: number; // recipients emailed
   updated: number; // baselines moved (up or down)
-  held: number; // baselines deliberately NOT moved because their digest failed to send
+  held: number; // baselines deliberately NOT moved (failed digest, or deferred above)
 }
 
 // How long after the last email a repeat drop notification is allowed even when
 // the price is NOT a new low — a gentle "still cheap" nudge rather than spam.
 export const REMINDER_INTERVAL_MS = 60 * 24 * 60 * 60 * 1000; // ≈ 2 months
+
+// AT MOST ONE PRICE-DROP DIGEST PER ADDRESS PER WEEK (owner call, 2026-09-21:
+// "can we make price drop emails less frequent? like once every week").
+//
+// This is a SECOND, independent gate, and the distinction matters. shouldEmailDrop()
+// decides whether a drop is worth telling someone about AT ALL, per card. This
+// one decides how often that person may be told ANYTHING, per address. Before
+// this, a new all-time low always sent immediately, so somebody watching a dozen
+// cards in a falling market could get a digest every single day — each one
+// individually justified, collectively spam.
+//
+// WHY A CAP AND NOT A WEEKLY CRON. The run still has to happen daily: it is what
+// tracks baselines, and a weekly-only job would compare against a week-old price
+// and miss everything that fell and recovered in between. A cap also keeps the
+// first email to a new subscriber immediate — their cooldown has not started.
+export const MIN_DIGEST_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+// Is this ADDRESS inside its quiet window? Pure and exported for the same reason
+// shouldEmailDrop() is — the cadence policy is unit-tested directly rather than
+// inferred from what the cron happened to write.
+export function addressInCooldown(opts: { lastEmailedAt: Date | null; now: Date }): boolean {
+  const { lastEmailedAt, now } = opts;
+  // Never emailed → no cooldown. A first drop reaches a new subscriber at once.
+  if (lastEmailedAt == null) return false;
+  return now.getTime() - lastEmailedAt.getTime() < MIN_DIGEST_INTERVAL_MS;
+}
 
 // Given a genuine drop (current < the last-seen baseline), decide whether to
 // actually EMAIL it. Pure and exported so the anti-spam policy is unit-tested
@@ -83,8 +110,30 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
     },
   });
 
-  const summary: AlertRunSummary = { alerts: alerts.length, drops: 0, suppressed: 0, emails: 0, updated: 0, held: 0 };
+  const summary: AlertRunSummary = { alerts: alerts.length, drops: 0, suppressed: 0, deferred: 0, emails: 0, updated: 0, held: 0 };
   const now = new Date();
+
+  // When each ADDRESS was last emailed, across every card it watches — the input
+  // to the weekly cap. lastNotifiedAt is stored per alert row, so the address's
+  // real last-contact time is the newest of them; reading the maximum here costs
+  // no extra query because the column is already selected above.
+  const lastEmailedByAddress = new Map<string, number>();
+  for (const a of alerts) {
+    if (a.lastNotifiedAt == null) continue;
+    const t = a.lastNotifiedAt.getTime();
+    const seen = lastEmailedByAddress.get(a.email);
+    if (seen == null || t > seen) lastEmailedByAddress.set(a.email, t);
+  }
+  const quiet = (email: string) => {
+    const last = lastEmailedByAddress.get(email);
+    return addressInCooldown({ lastEmailedAt: last == null ? null : new Date(last), now });
+  };
+
+  // Drops that deserved an email but hit the weekly cap. Their baselines are held
+  // (see below) so the drop is DEFERRED, not lost: it keeps re-detecting every
+  // run until the window opens, and the digest it eventually lands in reports the
+  // fall from the pre-drop price rather than from one day's step.
+  const deferredIds = new Set<string>();
 
   // email → { token, items[] } for cards that dropped.
   const byEmail = new Map<string, { token: string; items: PriceDropItem[]; anonymous: boolean; userId: string | null }>();
@@ -105,7 +154,18 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
       // A genuine drop from the last price we saw. Whether we actually EMAIL it
       // is a separate, anti-spam decision (see shouldEmailDrop).
       summary.drops++;
-      if (shouldEmailDrop({ current, lowestEmailedCents: a.lowestEmailedCents, lastNotifiedAt: a.lastNotifiedAt, now })) {
+      if (!shouldEmailDrop({ current, lowestEmailedCents: a.lowestEmailedCents, lastNotifiedAt: a.lastNotifiedAt, now })) {
+        // A real drop we deliberately stay quiet about: not a new low, and the
+        // last email is too recent to repeat. Counted so the cron log shows it.
+        // Its baseline still advances — a sawtooth must not queue up forever.
+        summary.suppressed++;
+      } else if (quiet(a.email)) {
+        // Worth sending, but this address has had a digest inside the last week.
+        // Hold everything: no email, no watermark, and (below) no baseline move,
+        // so it resurfaces and accumulates into the next digest instead.
+        summary.deferred++;
+        deferredIds.add(a.id);
+      } else {
         notifiedIds.push(a.id);
         notifiedLowest.set(a.id, a.lowestEmailedCents == null ? current : Math.min(a.lowestEmailedCents, current));
         const item: PriceDropItem = {
@@ -127,10 +187,11 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
         // shares one account once claimAlertsForUser runs.
         if (bucket.userId == null) bucket.userId = a.userId;
         byEmail.set(a.email, bucket);
-      } else {
-        // A real drop we deliberately stay quiet about: not a new low, and the
-        // last email is too recent to repeat. Counted so the cron log shows it.
-        summary.suppressed++;
+        // This address is now inside its quiet window for the rest of THIS run
+        // too — two cards dropping on the same day share one digest (they always
+        // did, via byEmail), and any later row for the same address must not
+        // start a second one.
+        lastEmailedByAddress.set(a.email, now.getTime());
       }
     }
 
@@ -169,9 +230,16 @@ export async function runPriceAlerts(): Promise<AlertRunSummary> {
   // observation, sends no email and still advances — otherwise a single failing
   // address would freeze baselines it has nothing to do with.
   const notifiedSet = new Set(notifiedIds);
-  const heldIds = failedEmails.size
-    ? new Set(alerts.filter((a) => failedEmails.has(a.email) && notifiedSet.has(a.id)).map((a) => a.id))
-    : new Set<string>();
+  // Two reasons a baseline is held back, and they mean the same thing: this drop
+  // has not reached the subscriber yet, so the next run must still see it.
+  //   • its digest failed to send, or
+  //   • the weekly cap deferred it.
+  const heldIds = new Set<string>(deferredIds);
+  if (failedEmails.size) {
+    for (const a of alerts) {
+      if (failedEmails.has(a.email) && notifiedSet.has(a.id)) heldIds.add(a.id);
+    }
+  }
   const dueUpdates = heldIds.size ? updates.filter((u) => !heldIds.has(u.id)) : updates;
   // The emailed-and-sent alerts (notified minus any held for a failed digest).
   // Every one of these is also in dueUpdates — a drop moved its baseline — so its

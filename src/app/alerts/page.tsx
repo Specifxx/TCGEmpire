@@ -51,6 +51,10 @@ const FAQS = [
     a: "A new low: the lowest live in-stock price across every store tracked for your market, including shipping, falling below the lowest we've ever emailed you for that card. If it stays cheap without dropping further, you'll get at most one reminder every couple of months rather than nothing at all.",
   },
   {
+    q: "How often will I actually get emailed?",
+    a: "At most once a week, whatever happens to prices in between. Every card you watch is still checked daily, but if you'd already had a price-drop email in the last 7 days, the next one waits and folds any further drops into it instead of sending a separate email for each. First-time watchers aren't affected — your very first alert on a card arrives as soon as it drops.",
+  },
+  {
     q: "How often are prices checked?",
     a: "Alerts are evaluated after each scheduled price import, so a drop is picked up on the next import rather than instantly. Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
   },
@@ -97,8 +101,9 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     body: (
       <>
         You'll be emailed the first time the lowest live total — shipping included — drops below that baseline, and
-        at most a reminder every couple of months if it stays cheap without dropping further. No refreshing, no
-        five tabs.
+        at most a reminder every couple of months if it stays cheap without dropping further. Emails are capped at
+        once a week either way — further drops in the same week land in that digest instead of a new email. No
+        refreshing, no five tabs.
       </>
     ),
   },
