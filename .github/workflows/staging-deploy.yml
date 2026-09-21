@@ -1,0 +1,121 @@
+name: Staging deploy (production build, NOT promoted)
+
+# Builds any ref with the PRODUCTION environment — the real database, the real
+# keys — and deploys it to its own Vercel URL WITHOUT aliasing riftcompare.com
+# to it. "I want to see it, just not live."
+#
+# WHY THIS EXISTS RATHER THAN A PREVIEW. Vercel's Git integration offers two
+# things and neither is this: a push to `main` is a Production deployment and
+# is promoted to the live domain the moment it succeeds, and a push to any
+# other branch is a Preview deployment built with the PREVIEW environment.
+# This repo's build prerenders ~770 database-backed pages, so a Preview build
+# fails outright unless the Preview environment carries its own database
+# variables (RM12, HISTORY_DATABASE_URL_2) — which is exactly how the
+# 2026-09-21 preview of the sidebar work failed. `vercel pull
+# --environment=production` sidesteps that by building the branch against the
+# production environment, and `--skip-domain` is Vercel's own flag for
+# "create the production deployment but do not promote it".
+#
+# SO THE OUTPUT IS A REAL PRODUCTION BUILD ON A THROWAWAY URL. Nothing about
+# riftcompare.com changes. Promoting it later is a deliberate, separate act:
+# `npx vercel promote <url>`, or just merge the branch to main.
+#
+# ONE-TIME SETUP (repository → Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN       — an account token from vercel.com/account/tokens
+#   VERCEL_ORG_ID      — from .vercel/project.json after `npx vercel link`
+#   VERCEL_PROJECT_ID  — same file
+# Until those exist this workflow is inert: it stops on the first step with a
+# message naming what is missing, rather than failing somewhere confusing.
+#
+# COSTS A REAL BUILD, so it is dispatch-only and never scheduled. It does not
+# touch the `[deploy]` gate in scripts/vercel-ignore-build.sh: that gate exists
+# to stop the GIT INTEGRATION building every push to main, and this path is the
+# CLI, which the gate never sees.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag or SHA to build (default: this workflow's own ref)"
+        type: string
+        required: false
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # The same 90 minutes refresh-prices allows itself: this build prerenders
+    # the whole catalogue and is the slowest thing in the repo.
+    timeout-minutes: 90
+    steps:
+      - name: Check the secrets exist
+        env:
+          TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          ORG: ${{ secrets.VERCEL_ORG_ID }}
+          PROJECT: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          missing=""
+          [ -n "$TOKEN" ]   || missing="$missing VERCEL_TOKEN"
+          [ -n "$ORG" ]     || missing="$missing VERCEL_ORG_ID"
+          [ -n "$PROJECT" ] || missing="$missing VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing — see this workflow's header for where each comes from."
+            exit 1
+          fi
+          echo "All three Vercel secrets are present."
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull the PRODUCTION environment
+        # --environment=production is the whole point: it hands the build the
+        # same database and keys the live site uses, which is what a Preview
+        # build does not have here.
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Build
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+
+      - name: Deploy WITHOUT promoting
+        id: deploy
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          set -o pipefail
+          # --skip-domain: "Disable the automatic promotion (aliasing) of a
+          # production deployment" (vercel deploy --help). Without it this line
+          # would put the build straight onto riftcompare.com, which is the one
+          # thing this workflow exists to avoid.
+          url="$(npx --yes vercel@latest deploy --prebuilt --prod --skip-domain --token="${{ secrets.VERCEL_TOKEN }}" | tail -n 1)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed (not promoted): $url"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Staging deploy"
+            echo
+            echo "**[${{ steps.deploy.outputs.url }}](${{ steps.deploy.outputs.url }})**"
+            echo
+            echo "Ref: \`${{ inputs.ref || github.ref }}\`"
+            echo
+            echo "A real production build — production database, production keys — on its own URL."
+            echo "riftcompare.com is unchanged. To put this live later:"
+            echo '```'
+            echo "npx vercel promote ${{ steps.deploy.outputs.url }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
