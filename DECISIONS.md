@@ -9216,3 +9216,54 @@ Two things worth being honest about, because the request was "bump it up":
 
 Shipped with `[deploy]` because the owner said "I need something now"; on the
 daily release it would have gone out at 08:00 UTC tomorrow.
+
+---
+
+## The site's biggest query had no owner: a Radiance spoiler tracker — 2026-09-21
+
+Follow-up to the traffic entry above. With the query-level report in hand the
+picture sharpened: the decline is a fading leak spike, but the demand behind
+that spike has not gone anywhere — it has nowhere on the site to go.
+
+| Query (28d to 2026-09-21) | Impressions | Clicks |
+|---|---|---|
+| `riftbound radiance spoilers` | 1,152 | 163 |
+| `riftbound radiance leaks` | 1,402 | 137 |
+| `riftbound radiance card list` | 817 | 49 |
+| `radiance riftbound spoilers` | 293 | 46 |
+
+Those are the site's #2, #3, #5 and #6 queries after its own name, and every
+click on all of them was landing on `/blog/riftbound-radiance-leaked-mechanics`
+— an 8 September post about one fan photo. Someone searching "spoilers" wants
+the official reveals; the page they got is a hedged leak write-up that does not
+change when a card is revealed. Preview Season opens 25 September, four days
+from now, which is when that mismatch would have started costing the most.
+
+`/blog/riftbound-radiance-spoilers` is the Vendetta shape
+(`every-riftbound-vendetta-card-revealed`): a hand-written, dated reveal log
+around a `setAll: "RAD"` gallery with the filter bar's "most recently added"
+sort. The gallery is drawn from the database, so the page is current the
+morning after each reveal is imported without an edit — the failure mode of a
+checklist post is going stale, and this one cannot. It has one card today
+(Neeko), which is why the log and the schedule carry the page until the 25th;
+1,837 words, all of them facts already recorded in `what-we-know`,
+`lib/sets/radiance.ts` or the Neeko and HEARTSTEEL posts. Nothing new is
+asserted.
+
+Ownership, recorded in `docs/seo-keyword-map.md`:
+
+- **Spoilers / reveals → the tracker.** Title "Riftbound Radiance Spoilers:
+  Live Card Tracker" (60 with the suffix, exactly).
+- **Leaks stay on the leak post.** 857 clicks in 28 days; retitling it toward
+  "spoilers" would trade a page that ranks for one that does not yet. It got
+  one dated line pointing official reveals at the tracker.
+- **Card list stays on `/sets/radiance`.** The tracker never says "card list"
+  in its title, and the test pins that.
+
+Wired into the three surfaces a Radiance visitor actually arrives on: first in
+`/sets/radiance`'s pre-release links, the publish-plan section of
+`what-we-know`, and the leak post's status section.
+
+Rides the daily release rather than `[deploy]`: "push to main" is the ordinary
+case per the gate rules, and the 08:00 UTC build lands it a full three days
+before the first reveal.

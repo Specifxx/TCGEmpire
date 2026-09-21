@@ -633,13 +633,171 @@ Three things are worth thinking about before release, and none of them require k
 
 ## What we will publish, and when
 
-We are not going to run Radiance speculation. What we will do, from 25 September as the reveals are real:
+We are not going to run Radiance speculation. What we will do, from 25 September as the reveals are real — starting with **[the live Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**, a dated reveal log around a gallery that fills itself as each card is imported:
 
 - **The full card gallery**, filterable by domain, rarity and type, straight from our database.
 - **Live prices on every card**, compared across every store we track in each market's own currency.
 - **The chase tiers** — Signature, overnumbered, alternate-art and promo printings — as they are confirmed.
 
 Until then, the **[release calendar](/release-dates)** has the exact time remaining, and **[the Vendetta set page](/sets/vendetta)** shows what that coverage looks like once a set is actually out.`,
+  },
+  // ── Radiance spoiler tracker. Search Console (28d to 2026-09-21) put
+  // "riftbound radiance spoilers" (1,152 impr) and "riftbound radiance card list"
+  // (817) among the site's top queries — and every one of those clicks was landing
+  // on the 8 Sep mechanics-leak post, because nothing on the site owned the
+  // OFFICIAL reveals. Preview Season opens 25 Sep. This is the Vendetta pattern
+  // (every-riftbound-vendetta-card-revealed): a hand-written, dated reveal log
+  // around a `setAll` gallery that fills itself as cards import, so the page is
+  // current the morning after each reveal without an edit. Leaks stay on the leak
+  // post; the card LIST stays on /sets/radiance (docs/seo-keyword-map.md).
+  {
+    slug: "riftbound-radiance-spoilers",
+    category: "blog",
+    title: "Riftbound Radiance Spoilers: Live Card Tracker",
+    excerpt:
+      "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
+    author: "RiftCompare",
+    date: "2026-09-21",
+    readMins: 9,
+    tags: ["radiance", "spoilers", "card gallery", "news", "release"],
+    faq: [
+      {
+        q: "When do Riftbound Radiance spoilers start?",
+        a: "Preview Season opens on 25 September 2026 at the Regional Qualifier: Los Angeles and runs to 9 October, with cards revealed a handful at a time. Pre-Rift events follow on 16–22 October and the set releases worldwide on 23 October.",
+      },
+      {
+        q: "How many Radiance cards have been revealed?",
+        a: "The gallery on this page is the live count — it is drawn from our database and updates as each official reveal is imported. Before Preview Season, one Radiance card had been photographed in print (Neeko, Blending In, 167/167) and one was already in circulation through the T1 Worlds collection (Seraphine, Not Alone).",
+      },
+      {
+        q: "How many cards are in Riftbound Radiance?",
+        a: "The base numbered run is 167 — that is the denominator printed on the first card seen, Neeko's 167/167. Riot's announcement said 180 cards including 66 Showcase variants, and the two figures have not been reconciled; Showcase printings are numbered above the base run in every previous set.",
+      },
+      {
+        q: "Which Legends are in Radiance?",
+        a: "Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more unrevealed at the start of Preview Season, for nine new champion Legends in total.",
+      },
+      {
+        q: "Are the Deploy, Showoff and Disarm leaks real?",
+        a: "Unconfirmed. They come from a fan photo of Riot's PAX West demo material, which is a real source but not an announcement. Nothing Riot has published since confirms or contradicts them. This page logs official reveals; the leak coverage is kept separate and hedged.",
+      },
+    ],
+    shop: [
+      { label: "Radiance pre-orders on eBay", query: "Riftbound Radiance booster box" },
+      { label: "Radiance singles on eBay", query: "Riftbound Radiance" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Radiance set page →",
+      blurb: "The full card list as it fills in, with live prices on every card from release day.",
+    },
+    // Self-populating: every non-promo RAD card in the database, collector order,
+    // with the filter bar's "most recently added" sort = newest reveal. One card
+    // today (Neeko); the gallery grows as the official-gallery importer lands
+    // each day's reveals, so the page is never a stale checklist.
+    embeds: [
+      {
+        title: "Every Radiance card revealed so far",
+        note: "Straight from our live database, in collector-number order — filter by domain, rarity or type, or sort by most recently added to see the newest reveals first. Tap any card for its page and, from release day, its live prices across every store we track.",
+        setAll: "RAD",
+        filterable: true,
+        take: 400,
+      },
+    ],
+    body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
+
+**Where things stand today, 21 September 2026:** Preview Season has not opened yet. One Radiance card has been **photographed in print** — *Neeko, Blending In*, numbered 167/167 — one is **already in circulation** through a promo collection, and one Legend's text has been **described in full by Riot** in its own first-look article. Everything else, including the three leaked mechanics, is unconfirmed. The reveals proper begin on **25 September**.
+
+[[embed:0]]
+
+## The Preview Season schedule
+
+Riot has published the whole run-up, not just the street date. These are the dates that decide when this page changes:
+
+| Date | What happens |
+| --- | --- |
+| **25 – 27 September 2026** | **Preview Season opens at the Regional Qualifier: Los Angeles.** The first official reveals land at the event that closes the 2026 qualifier season. Riot's product rundown originally had the window opening on the 28th; its own schedule now starts it three days earlier. |
+| **28 September – 9 October 2026** | **Preview Season continues.** Cards are shown a handful a day, which is when the set stops being a list of facts and becomes a card list. |
+| **16 – 22 October 2026** | **Pre-Rift events.** Stores run sealed events a week before street date. The first singles change hands here, at the most volatile prices a set ever has. |
+| **23 October 2026** | **Worldwide release.** Boosters, displays, the Vault, the Showdown Decks and singles all go on general sale. |
+
+The countdown to each of those lives on **[Riftbound release dates](/release-dates)**, which also offers an add-to-calendar file.
+
+## Reveal log: what has actually been shown
+
+Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
+
+**19 September — the first Radiance card photographed in print.** A photo of a physical *Neeko, Blending In* surfaced: a **6-energy, 4-Might Neutral Champion Unit**, art by Luscinia Studio, and — the detail that matters most — numbered **RAD · 167/167 · EN**. Its text lets a deck that runs Neeko choose **three extra Legends** alongside its starting one, and playing her adds one of them to the Legend Zone while she is on the board. That is a deckbuilding change, not a stat line, and it is pulled apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)**. The card is already in our database, so it is the first tile in the gallery above.
+
+**18 September — the HEARTSTEEL Kayn is a reprint, not a Radiance card.** HEARTSTEEL's comeback video carried Riftbound card images, and the Kayn card in it was widely read as a Radiance reveal. It is *Kayn, Unleashed* from Origins in new art — a printing, not a new card. The full check against the database is in **[our HEARTSTEEL cards post](/blog/riftbound-heartsteel-cards)**. It is logged here precisely because it is the kind of thing this page exists to sort out.
+
+**Early September — a sixth Legend: Orianna.** Riot's original Set 5 announcement named five champions. Orianna was confirmed separately at a PAX West livestream, which takes the confirmed count to **six of nine**. The remaining three are unannounced.
+
+**August — Ekko's Legend, in Riot's own words.** *Ekko, Boy Who Shattered Time* was teased at Gen Con and then detailed in Riot's first-look article: a **Fury/Mind Legend** built on **[Empower](/keywords/empower)**. As previewed, you may disempower Ekko to make your next unit cost **2 energy and 1 power less**, and that unit is **killed at the end of the turn**. It is the one Legend whose ability is public, and the clearest sign that Radiance extends Vendetta's Empower rather than retiring it.
+
+**4 August — the set itself.** Riot's product rundown announced Radiance as Set 5: a **23 October** release, **nine new champion Legends**, a new **Ultimate Rare** chase tier, "180 cards (66 Showcase)", the tagline *"Own the Stage. The World is Watching."*, and four product lines. The set code, **RAD**, was published later in the same rundown. Every confirmed product, its contents and its US list price are laid out in **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)**.
+
+**Already in circulation — Seraphine, Not Alone.** The odd one out: a Radiance card that physically exists months before its set. Seraphine was one of the five cards in the **[Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection)**, so anyone who won a T1 box is holding a Radiance card that is not legal for sanctioned play until 23 October.
+
+## The nine Legends
+
+Radiance brings **nine new champion Legends**, pinned down from two directions: Riot's announcement, and the Pre-Rift kit's mini-decks, which come in nine champion variations.
+
+| Champion | Status | What is known |
+| --- | --- | --- |
+| **Ekko** | Confirmed, ability public | Fury/Mind, Empower-based; see the log above |
+| **Seraphine** | Confirmed, card in print | *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
+| **Evelynn** | Confirmed, art shown | *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished |
+| **Ziggs** | Confirmed | Named in the announcement; nothing shown |
+| **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
+| **Orianna** | Confirmed | Added at PAX West; nothing shown |
+| Three more | Unrevealed | — |
+
+All six named champions are League of Legends champions without an existing Riftbound Legend, so each is a debut rather than a reprint. Riot has not said whether that holds for the last three. When a Legend is revealed and imported it appears in the gallery above and on the **[Radiance set page](/sets/radiance)**, where each confirmed champion already has an anchor that resolves to their cards the moment they exist.
+
+## Spoilers versus leaks: how this page treats each
+
+The distinction is the whole reason this page is separate from our leak coverage.
+
+A **spoiler** is a card Riot has revealed, printed or put on a demo table in public. It goes in the log above and, once imported, in the gallery. A **leak** is anything else — and Radiance has had two kinds. The first is the fan photograph of Riot's own PAX West demo reference material, showing three mechanics, **Deploy**, **Showoff** and **Disarm**. That has real provenance, so we covered it, hedged throughout, in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)** and in three per-mechanic pieces: **[Deploy](/guides/riftbound-deploy-explained)**, **[Showoff](/guides/riftbound-showoff-explained)** and **[Disarm](/guides/riftbound-disarm-explained)**. Nothing Riot has published since confirms or contradicts any of it.
+
+The second kind is purported card text from anonymous social-media accounts — Legends for Seraphine and Evelynn, a Neeko card, a Kai'Sa card. We do not reproduce it, here or anywhere, because it has none of the provenance the demo photo has. Worth noting only that the Kai'Sa text used "Disarm" for an effect unrelated to the demo table's wording, so at least one of the two sources is wrong about what Disarm is. Preview Season settles this the honest way.
+
+## Reading a Radiance card: what the numbers tell you
+
+Two things on a Radiance card carry information beyond the rules text.
+
+**The collector number.** Neeko's *167/167* is the first hard evidence of the set's size: a **167-card base run**, slightly larger than Vendetta's 166 and well short of Unleashed's 219. Riot's announced "180 (66 Showcase)" does not reconcile with it — 167 is not 180, and 167 plus 66 is not 180 either — and we do not know which of the announced figure changing, counting something outside the main numbering, or never being precise is the explanation. What is printed on cardboard is what this site uses everywhere, including in how a "x/167" listing is matched to the right set. Showcase printings will be numbered **above** 167, as in every previous set; when the first one is photographed, the 66 stops being announced-only.
+
+**The set code.** *RAD* is Riot's own code, published in its products-and-sets rundown alongside LGC for Legacy and REC for The Reckoning. Until 12 September it was a placeholder guess on this site; it is not any more.
+
+## What the reveals will settle
+
+These are the open questions Preview Season answers, roughly in the order they matter for buyers:
+
+- **The Ultimate Rare.** Announced and not shown. It sits above the overnumbered treatment, it is a single card rather than a tier, and Riot has said Ultimate Rares will not appear in every set. Which card it is decides where a box's value concentrates.
+- **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation; Seraphine's card exists but her Legend does not, publicly.
+- **Whether Deploy, Showoff and Disarm are real**, and if so how the printed wording compares with the demo table's.
+- **Which existing champions get new printings.** Nothing has been said. A Radiance printing of a champion who already has cards changes that champion's price page, which is why it matters beyond the new-Legend list.
+- **The Showcase count**, once a Showcase-numbered card is seen.
+
+## Prices during spoiler season
+
+Two things move during Preview Season, and neither is singles.
+
+**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window and ranks them by delivered cost, and the **[sealed comparison](/sealed)** is where displays and the Vault are comparable long before any single is.
+
+**Older sets move too.** Radiance changes what decks want, which moves Vendetta and Unleashed prices in both directions — up for the cards new archetypes need, down for the ones they replace. **[Price movers](/movers)** shows which is happening rather than predicting it. Singles themselves start trading at Pre-Rift, 16–22 October, when supply is a handful of event boxes and demand is everyone who wants to build immediately; those are almost never the prices a card settles at, and **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** explains the mechanism.
+
+## How to follow along
+
+Three pages, each for a different question:
+
+- **This page** for *what has been revealed* — the gallery and the dated log.
+- **[The Radiance set page](/sets/radiance)** for *the card list* as it fills in, with live prices on every card from release day, exactly as **[Vendetta's](/sets/vendetta)** did.
+- **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** for *the set itself* — every product, price and date, kept current.
+
+We will not run Radiance speculation on any of them. When the reveals land, the gallery above is where they show up first.`,
   },
   // ── Radiance leak: a fan photo of Riot's own PAX West demo reference material,
   // not a Riot announcement. Deliberately category "blog" (news) — this roundup
@@ -766,6 +924,8 @@ The caption also suggests Disarm "can pair well with direct damage spells like F
 We've written a dedicated deep dive for each of the three — **[Deploy explained](/guides/riftbound-deploy-explained)**, **[Showoff explained](/guides/riftbound-showoff-explained)** and **[Disarm explained](/guides/riftbound-disarm-explained)** — but every one of them carries the same caveat this roundup does, all the way through. We add a keyword to our *verified* reference glossary — the way **[Empower](/keywords/empower)**, **[Flow](/keywords/flow)** and **[Burn](/keywords/burn)** got added for Vendetta — only once we can check the exact wording against Riot's own Core Rules PDF or an official card image. None of Deploy, Showoff or Disarm have cleared that bar yet.
 
 ## Status, 12 September 2026
+
+*Update, 21 September:* Preview Season opens in four days. Official reveals, as distinct from this leak, are logged card by card on **[the live Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**; this page stays as the record of what the demo photo showed and how it holds up.
 
 Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. It is worth noting, though, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards.
 
