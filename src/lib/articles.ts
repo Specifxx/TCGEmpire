@@ -958,7 +958,7 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
     category: "guide",
     title: "Riftbound Deploy Explained: The Leaked Radiance Mechanic",
     excerpt:
-      "What Riftbound's leaked Deploy keyword reportedly does, how it's meant to work, and why Riot hasn't confirmed it yet — everything currently known about Radiance's Gear mechanic.",
+      "Lose the battlefield, lose the card outright: the leaked Deploy wording in full, why it's a riskier trade than Equip, and what Riot has yet to confirm.",
     author: "RiftCompare",
     date: "2026-09-08",
     updated: "2026-09-12",
@@ -8196,9 +8196,9 @@ We'd rather show you the real numbers and our actual reasoning than tell you wha
   {
     slug: "astral-heron-riftbound-price-rising-how-to-play",
     category: "blog",
-    title: "Astral Heron: Why Its Price Is Rising and How to Play It",
+    title: "Astral Heron Riftbound: Rules and Live Prices",
     excerpt:
-      "Astral Heron (VEN 044/166) went from a US$4 Epic to a US$34 one in five weeks. What the card does, why Calm decks want it, and how to build around it.",
+      "While it is at a battlefield, your second card each turn costs 2 energy and 2 runes less. Its rules, the Calm cards it works with, and live prices.",
     author: "RiftCompare",
     date: "2026-09-10",
     readMins: 9,

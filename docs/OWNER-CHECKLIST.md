@@ -178,17 +178,21 @@ November or December. That delay is normal and is not a sign it isn't working.
 
 ---
 
-## Part 4 — Two things to send me when you have a minute
+## Part 4 — Things to send me
 
-Neither is urgent.
-
-1. **A Search Console export.** Go to search.google.com/search-console →
-   **Search results** → set the date range to **Last 28 days** → click the
-   **Pages** tab → click **Export** (top right) → **Download CSV**. That lets the
-   next pass rewrite titles on every page that ranks but isn't clicked, not just
-   the nine already done.
+1. ~~**A Search Console export.**~~ **Done — sent 21 September.** It changed the
+   plan in three ways, all written up in `docs/MARKETING-PLAN.md`: the site is
+   growing much faster than the 28-day total suggested (56 clicks/day in the
+   first half of the window, 179 in the second), the guides section has a
+   measurable snippet problem the blog does not, and the ban-list page turned out
+   not to be the opportunity it looked like. **Send a fresh one at the end of
+   October**, the same way, so the Radiance window can be measured against this
+   one. To repeat it: search.google.com/search-console → **Search results** → date
+   range **Last 28 days** → **Export** (top right) → **Download CSV**.
 2. **Anything a store or site replies with.** Especially a "no" and the reason —
    that is worth more than a yes for working out what to send next.
+3. **Anything that looks wrong on the site.** You use it differently from the way
+   I test it.
 
 ---
 
