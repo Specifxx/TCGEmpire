@@ -1,7 +1,11 @@
 # RiftCompare marketing plan — 21 Sep to 20 Dec 2026
 
-The working copy of the plan agreed on 2026-09-21. `docs/OUTREACH-KIT.md` holds
-the email templates it refers to; `docs/PROMO-KIT.md` holds the broadcast copy.
+The working copy of the plan agreed on 2026-09-21.
+
+- `docs/OWNER-CHECKLIST.md` — **every step that needs a human**, in order, written
+  for someone who does not code. Start there.
+- `docs/OUTREACH-KIT.md` — the three email templates, targets and reply handling.
+- `docs/PROMO-KIT.md` — the broadcast copy (posts you publish yourself).
 
 **The constraints it was written under:** under $100/month, under two hours a week
 of owner time, and one number to move — **traffic**. Reddit, Discord, creator
