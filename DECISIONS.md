@@ -9653,6 +9653,22 @@ other, which also catches a duplicate the old form could not see.
 `tests/september-2026-bans.test.ts` located its article by that same heading
 string and now uses the slug, which cannot drift out from under it.
 
+**No store count goes in a page title.** Two independent generation runs were
+made over the same six country buying guides. They proposed different store
+counts for the same pages — one wanted "17 Stores" for Australia, "26" for the
+US, "23" for the UK, "19" for Canada; a direct count of `RETAILER_LIST` gives 28,
+40, 24 and 53; and the counts already sitting in the old titles matched neither,
+which is how the disagreement was noticed at all. The figures differ because
+"stores we track" and "stores with a live listing right now" are different
+numbers, and a title cannot say which one it means.
+
+So the counts are gone from those five titles rather than corrected. A number in
+a title is a claim that has to stay true through every crawl, every delisting and
+every new retailer, and nothing recomputes it. Singapore keeps "11 Stores" as the
+one exception, because three independent sources agree on it — the article's own
+body, `RETAILER_LIST`, and both runs — and `docs/seo-keyword-map.md` already
+records that figure. That is the bar for putting a number in a title.
+
 **What was deliberately not done.** No Radiance article blitz: of ~24 Vendetta
 pre-release articles, 13 were 301'd within eight weeks and every survivor had
 live data in it. No retitling of the leak post toward "spoilers" — it holds the
