@@ -113,8 +113,8 @@ export function HomeSections({
           NOTHING on the server and NOTHING for a first-ever visitor. That is
           what makes the top of the page the right home for it rather than a
           contested slot: a new visitor, a crawler and the prerendered HTML all
-          see exactly the page they saw before, with eBay Picks still leading
-          (the owner-chosen top slot, 2026-09-17 — see below and
+          see exactly the page they saw before, now led by Today's Top Deals
+          (the owner-chosen top content slot, 2026-09-21 — see below and
           tests/game-before-money.test.ts). The only person it appears for is
           someone coming back, and for them "the cards you were just looking at"
           is the most useful thing on the page — which is the entire argument
@@ -130,23 +130,37 @@ export function HomeSections({
           visit to avoid a shift only returning visitors ever see. */}
       <RecentlyViewedRail />
 
+      {/* Today's Top Deals — THE TOP CONTENT SLOT as of 2026-09-21, owner's
+          explicit instruction ("put today's top deals at the very top just
+          under recently viewed"), directly beneath the Recently viewed rail
+          above.
+
+          THIS COMPLETES THE REVERSAL of the 2026-09-16 "game before money"
+          pass, and is flagged rather than buried. That pass moved the playable
+          sections (Riftle, the pack simulator) ABOVE the commercial run after
+          repeated feedback that the site read as "too greedy/capitalistic/
+          money focused… for a card GAME", and tests/game-before-money.test.ts
+          pinned Top Deals below them. 2026-09-17 already reversed half of it
+          by promoting eBay Picks into the top slot; this moves the larger
+          commercial block above the playable ones too, which is the half that
+          test still held. See DECISIONS.md.
+
+          What survives that pass is what does not depend on this page's
+          section order: Games still outrank the money tools in the nav, the
+          "how it works" story still ends past the till at something playable,
+          and nothing was removed to make room — all still pinned by the same
+          test file. Hidden entirely if no market has data. */}
+      {anyDeals && (
+        <Reveal>
+          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
+        </Reveal>
+      )}
+
       {/* eBay Picks — the newest set's chase cards with their cheapest live
-          listing, rather than a generic banner.
-          MOVED INTO THE TOP SLOT 2026-09-17, on the owner's explicit
-          instruction, taking the place of Market Pulse (removed in the same
-          pass — see DECISIONS.md).
-
-          THIS IS A DELIBERATE PARTIAL REVERSAL of the 2026-09-16 "game before
-          money" pass, and is flagged rather than buried: that pass moved the
-          playable sections ABOVE the commercial run after repeated feedback
-          that the site read as "too greedy/capitalistic/money focused… for a
-          card GAME", and tests/game-before-money.test.ts pinned eBay Picks
-          below them. An affiliate unit now leads the page instead.
-
-          What that pass won is NOT fully given back, and the test still pins
-          the half that holds: Today's Top Deals — the bigger commercial block —
-          stays BELOW Riftle/the pack simulator. The reversal is one section,
-          not the ordering principle. */}
+          listing, rather than a generic banner. Held the top slot from
+          2026-09-17 (where it replaced the removed Market Pulse) until
+          2026-09-21, when Today's Top Deals was moved above it on the owner's
+          instruction — see that section's comment and DECISIONS.md. */}
       <EbayPicks />
 
       {/* Unified popular-cards carousel — the all-time most-popular list, with
@@ -166,10 +180,12 @@ export function HomeSections({
           page's ItemList JSON-LD at the bottom of this file has always
           described.
 
-          AND IT NOW SITS ABOVE TODAY'S TOP DEALS. Top Deals answers "what is
-          cheap today"; this answers "what is everyone actually after", which
-          is the broader first question and the section that sends visitors
-          into card pages. */}
+          It sat ABOVE Today's Top Deals from 2026-09-12 until 2026-09-21, on
+          the reasoning that "what is everyone actually after" is the broader
+          first question. Top Deals now leads the page instead (owner's
+          instruction — see its comment above); this keeps the slot directly
+          behind the two commercial units, and is still the section that sends
+          the most visitors into card pages. */}
       <PopularCardsCarousel
         allTime={popularCards}
         movers={biggestMovers}
@@ -179,30 +195,20 @@ export function HomeSections({
       />
 
       {/* Return-visit hooks — Riftle, the pack simulator, and price alerts.
-          BACK ABOVE THE COMMERCIAL RUN (2026-09-16). These sat below Top Deals,
-          eBay Picks and the newsletter, which put five consecutive price
-          sections between the hero and the first thing on this site you can
-          actually play. Reader feedback, more than once: "simply a too
-          greedy/capitalistic/money focused site for a card GAME for me" — and
-          the page order was the evidence for it.
+          These were moved ABOVE the commercial run on 2026-09-16, after
+          repeated reader feedback that the site read as "simply a too
+          greedy/capitalistic/money focused site for a card GAME for me" and
+          the page order was the evidence for it. That ordering was reversed in
+          two steps by owner instruction — eBay Picks on 2026-09-17, Today's
+          Top Deals on 2026-09-21 — so the playable sections now sit behind
+          both, as they did before that pass. See DECISIONS.md.
 
-          They are also the site's best "come back tomorrow" mechanics that
-          aren't the price data itself, so earning a slot this high is not
-          charity. Top Deals and eBay Picks still sit inside the first screenful
-          or two; they just no longer come first, second AND third. */}
+          They remain the site's best "come back tomorrow" mechanics that
+          aren't the price data itself, and they still sit ahead of the
+          explainer, the set/domain grid and the whole editorial run below. */}
       <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <ReturnVisitCards newestSetName={newestSet?.name} />
       </Reveal>
-
-      {/* Today's Top Deals — the strongest differentiator, and still near the
-          top: it was moved up from five sections deep, and now sits one behind
-          the popular-cards carousel above (2026-09-12). Hidden if no market
-          has data. */}
-      {anyDeals && (
-        <Reveal>
-          <TodaysTopDeals dealsByCountry={topDealsByCountry} />
-        </Reveal>
-      )}
 
       {/* How it works — orients first-time visitors to the search → compare → buy
           mechanic. After the commercial sections (deals, popular cards, movers):

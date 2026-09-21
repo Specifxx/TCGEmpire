@@ -9494,3 +9494,61 @@ the buyer is a shop owner who has probably never used this site signed in, and
 a registration wall in front of the highest-value action on the site would be
 the most expensive form validation ever written. Rate limiting does that job
 instead.
+
+## Today's Top Deals takes the top slot, and Recently viewed comes with it — 2026-09-21
+
+Asked for directly: "put today's top deals at the very top just under recently
+viewed on the home page."
+
+**Both sections moved, because the instruction only makes sense if they do.**
+Recently viewed was not near the top — `RecentlyViewedRail` was the
+second-to-last thing on the page, below the reviews and the account strip, so
+"just under recently viewed" could not be satisfied where it stood. It is now
+the first thing in `HomeSections`, with Top Deals directly beneath it. The
+order reads: recently viewed → Today's Top Deals → eBay Picks →
+popular-cards carousel → Riftle/pack-sim → the explainer and everything below.
+
+**A first-time visitor still lands on Top Deals.** `RecentlyViewedRail` is a
+client-only chip row over `localStorage` that returns `null` when the list is
+empty (and renders nothing at all on the server), so it occupies no space for
+anyone arriving fresh — Top Deals is genuinely the top content block for them,
+and the rail only ever pushes it down for someone who has already been here.
+Moving it up is also a real improvement on its own terms: a "where did I leave
+off" rail is worth nothing at the foot of a long page.
+
+**THIS COMPLETES THE REVERSAL OF THE 2026-09-16 "GAME BEFORE MONEY" PASS'S
+PAGE ORDER, and that is worth stating plainly rather than leaving for someone
+to discover from a diff.** That pass moved Riftle and the pack simulator above
+the commercial run after repeated feedback from the site's most engaged
+feedback-giver — "simply a too greedy/capitalistic/money focused site for a
+card GAME for me" — with the homepage's five consecutive price sections as the
+evidence. 2026-09-17 already reversed half of it by promoting eBay Picks into
+the top slot. This moves the larger commercial block above the playable ones
+too, which was the half `tests/game-before-money.test.ts` still pinned. The
+concern was raised with the owner at the time of the instruction; the
+instruction stood, and the page order is the owner's call to make.
+
+**What that pass won is not all given back, and the test still pins the part
+that does not depend on this page's running order**: Games and Decks still
+outrank the money tools in the nav, "how RiftCompare works" still has a fourth
+step past the till that links somewhere playable, the binder still refuses
+trading-desk vocabulary, and nothing was deleted to make room. Riftle and the
+pack simulator also keep a slot above the explainer, the set/domain grid and
+the whole editorial run — "behind the two commercial units" is what was asked
+for; "buried at the bottom" was not, and the test now says so.
+
+The test was **amended, not deleted** — same treatment as the 2026-09-17
+half-reversal. It now asserts the current order positively
+(`recent < deals < ebay < play < HowItWorks`) rather than leaving a gap where
+an assertion used to be, so a later accidental reshuffle still fails, and the
+file's header carries both amendment dates. Three now-false comments in
+`HomeSections.tsx` were rewritten in the same pass: eBay Picks no longer
+claims the top slot, the carousel no longer claims to sit above Top Deals, and
+the return-visit block no longer claims to lead the commercial run. A file that
+contradicts its own render order is how the next reader gets the history wrong.
+
+Verified: `npm run typecheck`, `npm run lint`, `npm run adsense:guard` (22/22)
+and `npm test` (1637/1638 — the one failure, "the seller id is the client id
+with ca- stripped", fails identically on an unmodified checkout and is a
+pre-existing sandbox gap). `scripts/homepage-audit.mjs` needs a running server
+against a database and could not run here, as usual for this sandbox.
