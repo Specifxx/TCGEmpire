@@ -1047,7 +1047,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
     category: "guide",
     title: "Riftbound Showoff Explained: The Leaked Radiance Mechanic",
     excerpt:
-      "What Riftbound's leaked Showoff keyword reportedly does, how the reveal-based effect is meant to work, and why it isn't Riot-confirmed yet — everything currently known.",
+      "Reveal from hand or point at a friendly card: what Riftbound's leaked Showoff keyword reportedly does, how it differs from Vision, and what's unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-08",
     updated: "2026-09-12",

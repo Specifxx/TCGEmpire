@@ -68,11 +68,29 @@ took 911 clicks, 27.5% of the month, and it is a news spike that will fade.
 | `/guides/every-ahri-card-in-riftbound` | 2,398 | 38 | 1.58% | 8.8 |
 | `/blog/riftbound-t1-worlds-champion-collection` | 2,128 | 8 | 0.38% | 8.6 |
 
-The ban-list cluster is the clearest case: seven ban-shaped queries
-(`riftbound ban list` 1,911, `riftbound banlist` 1,644, `riftbound banned cards`
-683, `riftbound bans` 423 and three more) total **5,482 impressions and 8
-clicks** at an average position of 8.5. At that position a normal result takes
-1.5–2%. This one takes 0.15%.
+**The ban-list page is the exception that was investigated and left alone.**
+Seven ban-shaped queries (`riftbound ban list` 1,911, `riftbound banlist` 1,644,
+`riftbound banned cards` 683, `riftbound bans` 423 and three more) total **5,482
+impressions and 8 clicks** at an average position of 8.5 — 0.15% where a normal
+result at that position takes 1.5–2%. It looks like the flagship opportunity in
+this export. It is not, and three checks say so:
+
+- **Its snippet is already right.** The title is "Riftbound Ban List 2026: Every
+  Banned Card" and the description names both formats, Riot's stated reason and
+  live prices. This is the page the intent-matching lesson came from, already
+  fixed in an earlier pass, and three of its strings are test-pinned.
+- **It is not competing with itself.** The guide takes 8,519 of the 8,767
+  ban-query impressions; the two ban blog posts take 192 and 41. Google has
+  cleanly picked one canonical answer, which is what the keyword map wanted.
+- **So what is left is the results above it** — Riot's own announcement, Reddit
+  threads, and very likely an inline answer. "Which cards are banned" is a
+  question Google can answer in the results page without anyone clicking.
+
+The honest read is that these 5,482 impressions will not convert much better
+through snippet work, and promising otherwise would be inventing a win. The page
+already offers the one thing an inline answer cannot — a live price on each
+banned card — and it already says so. Leave it; spend the effort on the
+truncated descriptions below, where the cause is known.
 
 **The guides section has a snippet problem and the blog does not — and position
 rules out every other explanation.** Grouping all 1,000 page rows by section,
