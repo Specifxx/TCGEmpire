@@ -25,14 +25,18 @@ import { useWatchlist } from "@/lib/use-watchlist";
  * 9+ cap the bar's badge used, so nothing about the number changed — only which
  * control carries it.
  *
- * THE BELL, BECAUSE THAT IS WHAT THE WATCHLIST IS EVERYWHERE ELSE.
- * `PriceWatchButton` (the watch toggle on every card tile and card page) draws a
- * bell, and `/watching`'s own heading is `<NavIcon name="bell">`. This shipped
- * as a star for one release on the reasoning that NavUser's NotificationBell
- * also uses a bell and two of them would be confusable — which was solving the
- * wrong problem: "it should be the same icon as the watch has", and an icon that
- * disagrees with the control it represents is worse than two bells that differ
- * in state. The star is gone.
+ * A HEART, AND THE SAME HEART EVERYWHERE ELSE (2026-09-21, owner: "the
+ * wishlist icon should be a heart and not a bell"). It was a bell, and before
+ * that briefly a star — that star shipped in this control ALONE and was
+ * reverted with "it should be the same icon as the watch has", because an icon
+ * that disagrees with the control it represents is worse than any particular
+ * choice of glyph. So the heart was applied in one pass to every surface that
+ * stands for the watchlist: this control, `PriceWatchButton` (the toggle on
+ * every card tile and card page), `/watching`'s own heading, the card page's
+ * "Watch this price" block and the homepage's "Watching a card?" card.
+ *
+ * It also ends the confusion the star was reaching for: a heart cannot be
+ * mistaken for a notification bell.
  *
  * FILLED WHEN THERE IS SOMETHING IN IT, which is `PriceWatchButton`'s own
  * convention ("filled when watching — the state has to be legible at tile size")
@@ -60,7 +64,7 @@ export function HeaderWatchButton({ className = "" }: { className?: string }) {
     >
       {/* Same two paths PriceWatchButton draws, via the shared icon. `fill`
           carries the "you have some" state exactly as it does there. */}
-      <NavIcon name="bell" className="h-5 w-5" fill={count > 0 ? "currentColor" : "none"} />
+      <NavIcon name="heart" className="h-5 w-5" fill={count > 0 ? "currentColor" : "none"} />
       {count > 0 && (
         <span
           aria-hidden="true"

@@ -80,5 +80,5 @@ test("the header renders it below lg only, so desktop keeps ONE full-nav surface
   // field either, which is real card search now.
   const rail = readCode("src/components/SideNav.tsx");
   assert.match(rail, /NAV_GROUPS\.map/, "the rail renders the full index inline");
-  assert.match(rail, /<SearchBar variant="rail" \/>/, "…and its search field searches cards, not navigation");
+  assert.match(rail, /placeholder="Search features"/, "…and its own field searches those features, not cards");
 });

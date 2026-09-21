@@ -93,12 +93,16 @@ export function Navbar() {
               tests/mobile-header-fit.test.ts and header-mobile-space.test.ts,
               which measure it). The slack the 09-19 rename banked is spent
               again here; those tests are the guard. */}
-          {/* lg:hidden from 2026-09-21, same reasoning as the brand above: the
-              full-height rail carries "Cards" (this exact route) as its second
-              primary item from lg up. */}
+          {/* UNGATED AGAIN (2026-09-21, owner: "lets bring back the Database
+              ... on the header"). It was briefly `lg:hidden` on the reasoning
+              that the rail carried the same route; the rail's own search is a
+              FEATURE search now, so the header is where you reach the card
+              database and the card search, side by side. Ungated is also the
+              only arrangement with no gap — see tests/mobile-header-fit.ts,
+              which has caught a complementary-gates hole here once already. */}
           <Link
             href="/browse"
-            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm lg:hidden"
+            className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm"
           >
             Database
           </Link>
@@ -139,15 +143,28 @@ export function Navbar() {
               ✦<span className="hidden min-[360px]:inline"> Premium</span>
             </span>
           </PremiumNavLink>
+
+          {/* CARD SEARCH, BACK IN THE HEADER AND LEFT-ALIGNED (2026-09-21,
+              owner: "bring back ... the search bar 'search for cards' on the
+              header, left aligned"). It sits INSIDE the left cluster, right
+              after Database, rather than as the row's own middle child: the
+              row is `justify-between`, so a middle child is centred, and
+              "left aligned" is the instruction. `w-full max-w-sm` lets it take
+              the slack the cluster has without pushing the right-hand nav.
+
+              The rail's search is a FEATURE search now (SideNav.tsx), so this
+              is the only card search from lg up and there is no duplication
+              to resolve. HeaderSearchSlot still hides it until scroll on the
+              homepage alone — see its own doc comment. */}
+          <div className="hidden min-w-0 flex-1 lg:block">
+            <HeaderSearchSlot>
+              <Suspense fallback={<div className="input max-w-sm" />}>
+                <SearchBar />
+              </Suspense>
+            </HeaderSearchSlot>
+          </div>
         </div>
 
-        {/* THE INLINE DESKTOP SEARCH BOX IS GONE (2026-09-21, owner: "get rid
-            of ... the search bar if it's already on the left"). It only ever
-            rendered from lg up, and from exactly that breakpoint the
-            full-height rail carries its own Search row (which opens the same
-            ⌘K launcher). The phone/tablet search row further down this file is
-            untouched — below lg there is no rail, so that one is the only
-            search affordance and still renders. */}
 
         {/* Nav.
             ── BREAKPOINTS, and why they are what they are ───────────────────

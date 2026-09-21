@@ -264,8 +264,12 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   //
   // Asserted as absences, because putting any of them back is what would
   // re-create the 1024-1056px clip:
-  assert.doesNotMatch(src, /<HeaderSearchSlot>/, "the inline desktop search box lives in the rail");
-  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the ⌘K button lives in the rail");
+  // The desktop card search CAME BACK on 2026-09-21 (the rail's own box
+  // searches features now), as did the Database link — so the row carries two
+  // more things than it did an hour earlier, and the measurement below is the
+  // check that matters rather than any particular absence.
+  assert.match(src, /<HeaderSearchSlot>/, "the desktop card search is in the header");
+  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the ⌘K button stays out; the rail is the nav surface");
   assert.match(src, /className="tap-link min-w-11 shrink-0 gap-2 lg:hidden"/, "the brand is rail-only from lg");
   assert.doesNotMatch(src, /<Link href="\/auctions"/, "Auctions is rail-only (owner, 2026-09-21)");
   assert.doesNotMatch(src, /<Link href="\/deck"/, "Deck builder is rail-only (owner, 2026-09-21)");

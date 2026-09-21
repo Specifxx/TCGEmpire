@@ -23,7 +23,7 @@ export function CardConversionCta({ cardId }: { cardId: string }) {
     <div className="flex flex-col gap-3 rounded-xl border border-ink-700 bg-ink-850 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <div className="flex items-center gap-1.5 text-sm font-bold text-white">
-          <NavIcon name="bell" className="h-4 w-4 text-brand-400" />
+          <NavIcon name="heart" className="h-4 w-4 text-brand-400" />
           Watch this price
         </div>
         <p className="mt-0.5 text-xs text-slate-400">

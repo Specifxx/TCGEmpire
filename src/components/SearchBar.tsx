@@ -142,16 +142,12 @@ export function SearchBar({
   autoFocusDesktop = false,
   trendingCards,
 }: {
-  // "rail" is the desktop sidebar's own copy (SideNav.tsx). It differs from
-  // "nav" in two ways and nothing else: its placeholder names cards outright
-  // ("Search for cards"), and its suggestion list opens to the RIGHT of the
-  // rail instead of below the field — the rail is only ~17rem wide and its
-  // own scroll container would clip a dropdown, so the panel escapes
-  // sideways into the page. Everything else — the /api/search fetch, the
-  // debounce, the abort, the keyboard model, recent searches, QuickView on
-  // click, the analytics — is shared, which is the entire reason this is a
-  // variant and not a second search component.
-  variant?: "nav" | "hero" | "rail";
+  // A "rail" variant existed for a few hours on 2026-09-21, when the desktop
+  // sidebar briefly carried card search. The sidebar searches FEATURES now
+  // (SideNav.tsx) and the card search moved back into the header, so the
+  // variant and its sideways-opening dropdown are gone rather than left
+  // behind unused.
+  variant?: "nav" | "hero";
   autoFocusDesktop?: boolean;
   // Zero-state suggestions (focused + empty box) alongside recent searches.
   // Only ever passed by the hero, which already has this data server-side for
@@ -160,9 +156,6 @@ export function SearchBar({
   // gracefully to "recent searches only" in the zero-state dropdown.
   trendingCards?: CardTileData[];
 }) {
-  // Declared up here, not beside `isHero` further down, because the
-  // dropdown-height effect reads it long before that point.
-  const isRail = variant === "rail";
   const router = useRouter();
   const params = useSearchParams();
   const pathname = usePathname();
@@ -376,14 +369,8 @@ export function SearchBar({
       // up sized to sit flush against the very edge of the viewport.
       const GAP_ABOVE_DROPDOWN = 8; // mt-2
       const DROPDOWN_MARGIN = 24;
-      const rect = boxRef.current.getBoundingClientRect();
-      // The rail's panel opens SIDEWAYS and is top-aligned with the field, so
-      // its budget starts at the field's top edge and there is no gap above
-      // it to pay for. Measuring from `bottom` here (as the stacked variants
-      // must) would throw away the field's own height for no reason.
-      const available = isRail
-        ? window.innerHeight - rect.top - DROPDOWN_MARGIN
-        : window.innerHeight - rect.bottom - GAP_ABOVE_DROPDOWN - DROPDOWN_MARGIN;
+      const available =
+        window.innerHeight - boxRef.current.getBoundingClientRect().bottom - GAP_ABOVE_DROPDOWN - DROPDOWN_MARGIN;
       setDropdownMaxHeight(Math.max(120, Math.min(available, 480)));
     }
     recompute();
@@ -393,7 +380,7 @@ export function SearchBar({
       window.removeEventListener("resize", recompute);
       window.removeEventListener("scroll", recompute, true);
     };
-  }, [open, isRail]);
+  }, [open]);
 
   function trackCardView(card: Result) {
     fetch(`/api/card/${card.slug ?? card.id}/view?source=search`, { method: "POST", keepalive: true }).catch(() => {});
@@ -573,7 +560,7 @@ export function SearchBar({
     // primary CTA (there can be only one, and it moves to the hero the moment
     // the hero is on screen — see HeaderSearchSlot for the desktop scroll gate
     // that keeps the two from ever both claiming the role at once).
-    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : isRail ? "w-full" : "max-w-xl"}`}>
+    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "max-w-sm"}`}>
       <form onSubmit={submit}>
         <svg
           className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 ${
@@ -630,7 +617,7 @@ export function SearchBar({
             clearFocusIntentTimer();
           }}
           onKeyDown={onKeyDown}
-          placeholder={isHero ? "Search any Riftbound card…" : isRail ? "Search for cards" : "Search cards, champions, sets…"}
+          placeholder={isHero ? "Search any Riftbound card…" : "Search for cards"}
           className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 pr-14 text-base shadow-glow sm:pr-11 sm:text-lg" : "input pl-9 pr-12 sm:pr-10"}
           aria-label="Search cards"
           autoComplete="off"
@@ -701,17 +688,7 @@ export function SearchBar({
       </form>
 
       {showDropdown && (
-        <div
-          className={
-            isRail
-              ? // Top-aligned with the field and pushed clear of the rail's
-                // right edge. `left-full` is measured from this wrapper, which
-                // spans the rail's full inner width, so the panel starts just
-                // outside the rail whatever the rail's padding is.
-                "absolute left-full top-0 z-50 ml-3 w-[22rem] overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl"
-              : "absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl"
-          }
-        >
+        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl">
           {isZeroState ? (
             <>
             {/* overflow-y-auto + a measured maxHeight is a safety net, not the
