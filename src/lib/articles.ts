@@ -4815,7 +4815,7 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
     category: "guide",
     title: "Riftbound Flow Explained: How the Flow Mechanic Works",
     excerpt:
-      "Riftbound Flow lets you cast a card straight from your trash instead of your hand — how the mechanic works, deckbuilding tips, and every Flow card in Vendetta.",
+      "Flow lets you play a card from your trash instead of from your hand. Rules step by step, the Flow cost, Burn synergy, and every Flow card in Vendetta.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-08-19",
