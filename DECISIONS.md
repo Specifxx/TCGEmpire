@@ -9345,3 +9345,23 @@ hub into its own cluster, two days before spoiler season. The has-cards branch
 now renders the same list under its "revealed so far" banner, and the tracker
 test pins that both branches map it. Verification against the live page, not
 the source, is what caught it.
+
+---
+
+## /gallery: the title now makes a claim — 2026-09-21
+
+Search Console, 28 days: "riftbound card gallery" 712 impressions at position
+9.1 with 0.1% CTR; `/gallery` 1,271 impressions for 4 clicks. The title was
+"Riftbound Card Gallery — Every Set, Every Card" — it matched the query and
+gave a searcher nothing to weigh against the other nine results. It is now
+"Riftbound Card Gallery: All 1,431 Cards by Set" (60 with the suffix for any
+four-digit count), and the description and H1 carry the same number.
+
+The number is the database's own count, not a typed figure: `generateMetadata`
+and the page share one `groupBy` through React's `cache()`, so the title costs
+no extra read and cannot drift from the set list underneath it. It fails open —
+a DB blip renders a count-less title, never "All 0 Cards". The description's
+"Origins to Vendetta" span is built from the release list, so it rolls to
+Radiance on 23 October on its own. The builders live in `lib/gallery-seo.ts`
+because a `page.tsx` may export only Next's route fields — `tsc` passes a
+stray export that `next build` rejects.
