@@ -89,7 +89,18 @@ The cheapest traffic there is, because the impressions are already there.
 - **Snippet rewrites** on the pages that rank and aren't clicked. The lesson is the
   banlist page: the queries wanted a *list*, the title said *Explained*. Match the
   query intent, not the article's internal framing. Descriptions are hard-capped
-  at 155 characters, because longer ones ship truncated mid-sentence.
+  at 155 characters, because longer ones ship truncated mid-sentence. Nine pages
+  are done — the six country buying guides, the comparison-sites listicle, the
+  banlist guide and singles-vs-sealed. Two of the old titles carried store counts
+  that disagreed with their own article body; those are gone rather than
+  corrected, since an unverifiable number in a title earns nothing.
+- **48 articles still ship a truncated description**, which is a real CTR drag
+  across the catalogue and the largest single piece of work left in this
+  workstream. It is deliberately NOT a bulk edit: which ones to rewrite, and
+  toward what intent, comes from the Search Console "Pages" export (see
+  `docs/OWNER-CHECKLIST.md`, Part 4). `tests/description-length.test.ts` holds
+  the count at 48 as a ratchet so it cannot grow while that waits, and fails if a
+  batch is fixed without lowering the budget. The right value is 0.
 - **Orphan fix** — done 2026-09-21 by the SEO review pass;
   `tests/internal-links.test.ts` now fails on any orphaned article.
 
