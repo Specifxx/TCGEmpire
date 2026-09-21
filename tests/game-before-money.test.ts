@@ -57,27 +57,46 @@ test("the phone Explore overlay has a Games group with something to play", () =>
   assert.ok(games.links.some((l) => l.href === "/riftle"), "the free daily puzzle must be reachable: no account, no purchase");
 });
 
-// AMENDED 2026-09-17, by explicit owner instruction, and narrowed rather than
-// deleted. The eBay unit was moved into the homepage's top slot (vacated by
-// Market Pulse, removed in the same pass), which puts one affiliate section
-// above the playable ones and reverses that half of this pass. See DECISIONS.md.
+// AMENDED TWICE, both times by explicit owner instruction, and each time
+// narrowed rather than deleted — so the current homepage order reads as a
+// decision in this file too, not as a gap where an assertion used to be.
 //
-// The half that still holds is still pinned: Today's Top Deals — the larger
-// commercial block, and the one this file's own header counted among the "FIVE
-// consecutive price sections" — stays BELOW Riftle and the pack simulator. If a
-// later edit pushes the games back under Top Deals too, the original complaint
-// is fully back and this test still fails.
-test("the homepage keeps something playable above Today's Top Deals", () => {
+//   2026-09-17: eBay Picks moved into the top slot (vacated by Market Pulse,
+//               removed the same pass), putting one affiliate section above
+//               the playable ones.
+//   2026-09-21: Today's Top Deals moved above BOTH, to the top content slot,
+//               directly under the Recently viewed rail — which also moved up
+//               from the foot of the page. That is the larger commercial
+//               block, and the one this file's own header counted among the
+//               "FIVE consecutive price sections", so the page-order half of
+//               the 2026-09-16 pass is now fully reversed.
+//
+// See DECISIONS.md for both. What this file still pins is everything that pass
+// won which does NOT depend on this page's section order — the nav ranking,
+// the "how it works" story ending past the till, the binder's vocabulary, and
+// that nothing was deleted to make room. Those are the durable half; the
+// homepage's running order is the owner's to set, and now says so explicitly.
+test("the homepage's commercial-vs-playable order is the owner's, and is asserted rather than assumed", () => {
   const code = readCode("src/components/home/HomeSections.tsx");
-  const play = code.indexOf("<ReturnVisitCards");
+  const recent = code.indexOf("<RecentlyViewedRail");
   const deals = code.indexOf("<TodaysTopDeals");
   const ebay = code.indexOf("<EbayPicks");
-  assert.ok(play > 0 && deals > 0 && ebay > 0, "expected all three homepage sections to render");
-  assert.ok(play < deals, "Riftle/pack-sim must not sit below Today's Top Deals again");
-  // eBay Picks is deliberately ABOVE the games now; asserted explicitly so the
-  // reversal reads as a decision in the test file too, not as a gap where an
-  // assertion used to be.
-  assert.ok(ebay < play, "eBay Picks is the owner-chosen top slot as of 2026-09-17");
+  const play = code.indexOf("<ReturnVisitCards");
+  assert.ok(recent > 0 && deals > 0 && ebay > 0 && play > 0, "expected all four homepage sections to render");
+
+  // The 2026-09-21 order, top down: recently viewed → Top Deals → eBay Picks
+  // → … → the playable cards. Recently viewed is a client-only chip row that
+  // renders null for a first-time visitor, so Top Deals is genuinely the top
+  // content block for anyone arriving fresh.
+  assert.ok(recent < deals, "Recently viewed sits directly above Today's Top Deals (owner, 2026-09-21)");
+  assert.ok(deals < ebay, "Today's Top Deals is the owner-chosen top content slot as of 2026-09-21");
+  assert.ok(ebay < play, "eBay Picks is above the playable sections, as of 2026-09-17");
+
+  // Still pinned, because it is the part nobody has asked to change: the
+  // playable sections keep a slot ABOVE the explainer, the set/domain grid and
+  // the entire editorial run. "Behind the two commercial units" is the
+  // instruction; "buried at the bottom of the page" is not.
+  assert.ok(play < code.indexOf("<HowItWorks"), "Riftle/pack-sim must stay above the explainer and everything below it");
 });
 
 test("the site's story about itself no longer ends at the purchase", () => {
