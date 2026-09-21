@@ -9161,3 +9161,58 @@ found today were invisible on the rendered page and obvious in the table. The
 first one nearly shipped as "fixed" on the strength of a `grep` over
 `/sealed` — which renders one market's tiles, not the rows. `diagnose-sealed`
 found all three, and found this one while looking for something else.
+
+---
+
+## "Visitor counts are going down": not an outage, a news spike fading — 2026-09-21
+
+The owner asked for the drop to be fixed immediately. Before touching anything
+the site was checked for the things that DO cause a step-change: robots.txt,
+the sitemaps, a noindex leak, a 5xx on an indexed template. All clean; the
+indexability audit reported 99.0%. Search Console for the 28 days to 2026-09-21
+then explained it:
+
+| | |
+|---|---|
+| Impressions / clicks | 164,892 / 3,097 (1.88% CTR) |
+| Clicks from `/blog/riftbound-radiance-leaked-mechanics` | 857 — 28% of the total |
+
+More than a quarter of the month's search traffic came from one leak post. A
+news spike decays on its own; nothing on the site broke, and no single change
+brings that curve back. What can move today is click-through on the pages
+that already rank and are not being clicked:
+
+| Page | 28d impressions | clicks | Sample query, position, CTR |
+|---|---|---|---|
+| `/guides/riftbound-banlist-explained` | 8,313 | 16 | "riftbound ban list" 8.9, 0.1% |
+| `/guides/riftbound-empower-explained` | 17,695 (+3,103 anchor) | 85 | "riftbound empower" 4.9, 1.9% |
+
+Both were losing on the snippet. The banlist guide was titled "Riftbound Ban
+List Explained" for queries asking for a **list** ("ban list", "banned cards");
+it is now "Riftbound Ban List 2026: Every Banned Card" (56 with the suffix),
+and the description says what the list covers — Standard and 2v2, the reason
+for each ban, live prices — in 155 characters, the page's `DESCRIPTION_MAX`,
+so nothing is clamped. The old 208-character excerpt shipped with a "…" mid
+sentence.
+
+Empower's title is left alone on purpose: `tests/seo-landing-pages.test.ts`
+pins the "Explained: How the … Mechanic Works" shape as the one that wins for
+the three mechanics guides, and that decision is not mine to undo in a
+same-day pass. Its description moved instead, from "A complete guide to…" to
+the one-sentence answer the body opens with, so the snippet answers "what is
+empower" before the visitor clicks and still gives them a reason to.
+
+Two things worth being honest about, because the request was "bump it up":
+
+- **This is a CTR lever on ~29k monthly impressions**, not a traffic source.
+  If the banlist page goes from 0.2% to a modest 2% that is ~150 clicks a
+  month, which does not replace a fading 857-click post. The durable answer
+  to the decline is more Radiance content while that demand lasts
+  ("riftbound radiance" sits at position 11.7) — a separate pass.
+- **"2026" in the title is a maintenance promise.** The guide is updated on
+  every ban wave anyway (July, September); when it is updated in 2027 the
+  year moves with it. `tests/guide-snippets-ctr.test.ts` pins the shape, not
+  the year.
+
+Shipped with `[deploy]` because the owner said "I need something now"; on the
+daily release it would have gone out at 08:00 UTC tomorrow.

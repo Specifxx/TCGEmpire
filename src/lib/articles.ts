@@ -3177,9 +3177,9 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
   {
     slug: "riftbound-banlist-explained",
     category: "guide",
-    title: "Riftbound Ban List Explained",
+    title: "Riftbound Ban List 2026: Every Banned Card",
     excerpt:
-      "The complete, up-to-date Riftbound banlist — every card currently banned from competitive constructed play, the new Constructed 2v2 ban list, the official reason for each ban, and live prices for all of them.",
+      "Every card banned in Riftbound as of September 2026 — Standard and Constructed 2v2 — with the official reason for each ban and live prices for all of them.",
     author: "RiftCompare",
     date: "2026-07-16",
     updated: "2026-09-15",
@@ -4025,7 +4025,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     category: "guide",
     title: "Riftbound Empower Explained: How the Empower Mechanic Works",
     excerpt:
-      "A complete guide to Riftbound's Empower mechanic — a card that gains new abilities after it's already in play. How it works and how to build around it.",
+      "Empower lets a card gain new abilities after it's in play, usually by paying an extra cost on a later turn. Rules, timing, Disempower, every Empower card.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
