@@ -60,6 +60,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const domainBit = domains.length === 1 ? `a ${domains[0]} champion` : domains.length > 1 ? `spanning ${domains.join(", ")}` : "";
   const setBit = setNames.length === 1 ? ` in ${setNames[0]}` : setNames.length > 1 ? ` across ${setNames.join(", ")}` : "";
   const factBit = domainBit ? `${cardCount} printings — ${domainBit}${setBit}. ` : "";
+  // The SHORT rung: same facts, set list dropped. A champion printed across
+  // three sets spends ~40 characters naming them, which is the first thing worth
+  // losing when the description will not fit.
+  const shortFactBit = domainBit ? `${cardCount} printings — ${domainBit}. ` : "";
   // Stepped down like card/[id]/page.tsx and sets/[set]/page.tsx: the previous
   // single fixed string had no length guard at all — every one of the 87
   // champion pages rendered over 60 chars and 43 over 65, part of Bing's 397
@@ -78,11 +82,31 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   ];
   const title =
     titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
+  // STEPPED DOWN, exactly like the title ladder above and for the same reason —
+  // except this one was missing. The title was capped at 60 after Bing raised
+  // 397 "Title too long" warnings; the description beside it never got the same
+  // treatment and has no guard at all. Both article routes cut `excerpt` at 155
+  // on a word boundary, and Google cuts a <meta name="description"> at about the
+  // same point, so anything longer ships with its last sentence amputated.
+  //
+  // MEASURED, not assumed: only a single-domain, single-set champion fits. Two
+  // sets or two domains and the set list alone pushes it over — Jayce rendered
+  // at 170 characters and Ahri at 182, so the "cheapest way to build <name>"
+  // close, which is the only part that asks for the click, was the half being
+  // cut. The rungs drop the set list first, then the whole fact clause, then the
+  // close; the champion's name and "live prices" survive to the last rung.
+  const descCandidates = [
+    `Every Riftbound ${champ.name} card, priced. ${factBit}Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
+    `Every Riftbound ${champ.name} card, priced. ${shortFactBit}Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
+    `Every Riftbound ${champ.name} card, priced. ${shortFactBit}Compare live prices across every store we track.`,
+    `Every Riftbound ${champ.name} card, priced. Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
+    `Every Riftbound ${champ.name} card with live prices from every store we track.`,
+  ];
+  const description = descCandidates.find((d) => d.length <= 155) ?? descCandidates[descCandidates.length - 1];
+
   return {
     title: { absolute: `${title} | RiftCompare` },
-    description:
-      `Every Riftbound ${champ.name} card, priced. ${factBit}` +
-      `Compare live prices across stores to find the cheapest way to build ${champ.name}.`,
+    description,
     // pageAlternates(), not a bare object — see the identical fix + reasoning
     // on card/[id]/page.tsx (same bug, same lib/seo.ts helper).
     alternates: pageAlternates(`/champions/${champ.slug}`),

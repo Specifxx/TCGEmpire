@@ -368,9 +368,9 @@ Buying often enough that the research time adds up? [RiftCompare Premium](${L.pr
   {
     slug: "tcgplayer-fees",
     category: "blog",
-    title: "TCGplayer Fees: What You Actually Pay",
+    title: "TCGplayer Fees: Commission + Processing",
     excerpt:
-      "Understand every TCGplayer fee — marketplace commission, payment processing, shipping — and how to calculate your true net when selling Riftbound cards.",
+      "Sellers pay two stacked fees: tiered marketplace commission on the item, plus payment processing on item and shipping. Buyers pay no direct platform fee.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 9,
@@ -604,9 +604,9 @@ RiftCompare compares live Riftbound prices across US, UK, AU, CA and SG stores p
   {
     slug: "most-expensive-riftbound-cards",
     category: "blog",
-    title: "Most Expensive Riftbound Cards",
+    title: "Most Expensive Riftbound Cards: Live Ranking",
     excerpt:
-      "A ranked look at the most expensive Riftbound TCG cards, why Signature and Metal variants command four figures, and how to track live prices.",
+      "Signature and Metal variants of popular champions top the market. See the live ranking, priced across every store we track, shipping included.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 9,
@@ -735,7 +735,7 @@ Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets
     category: "blog",
     title: "The 9 Best Riftbound TCG Marketplaces (2026)",
     excerpt:
-      "Where to actually buy and sell Riftbound cards in 2026: nine marketplaces compared on coverage, fees, buyer protection and true total cost including shipping.",
+      "Nine Riftbound marketplaces compared: what each is genuinely best for, the fees to watch, and why total cost including shipping changes the ranking.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 11,
@@ -1131,9 +1131,9 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [Riftbound card
   {
     slug: "riftbound-variant-glossary",
     category: "guide",
-    title: "Riftbound Variant & Finish Glossary",
+    title: "Riftbound Variants: Signature, Metal & Alt Art",
     excerpt:
-      "Every Riftbound card treatment defined in one place — standard, foil, Signature, Metal, Overnumbered and Alternate Art — and how to tell them apart before you buy.",
+      "An asterisk in the collector number means Signature; a number above the set total means Overnumbered. Standard, foil, Metal and alt art defined too.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 6,

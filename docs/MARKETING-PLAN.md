@@ -19,17 +19,134 @@ community sites had never been contacted at all.
 
 ## What the data actually said
 
-Search Console, 28 days to 2026-09-21: **164,892 impressions, 3,097 clicks, 1.88%
-CTR**.
+Rewritten 2026-09-21 against the real Search Console export (28 days to
+2026-09-19, `Pages` / `Queries` / `Countries` / `Chart`), which replaced the
+figures this plan was first drafted from.
 
-- **857 clicks — 28% of the month — came from one page**, the Radiance
-  leaked-mechanics post, and it is a fading news spike.
-- The site's #2, #3, #5 and #6 queries after its own name are all *radiance
-  spoilers / leaks / card list*.
-- Pages that already rank are not being clicked: the banlist guide had **8,313
-  impressions and 16 clicks** (0.2%); the empower guide 17,695 and 85.
-- Google is the traffic engine. Nothing else is close. Reddit's only measurable
-  win was that same spike.
+**177,656 impressions, 3,311 clicks, 1.86% CTR as exported.**
+
+**Read that CTR as 2.03%, not 1.86%.** 50 of the 1,000 page rows are anchor
+URLs — `…#what-is-empower-in-riftbound` and the like — carrying 14,580
+impressions and *exactly zero clicks between them*. Those are Google's
+jump-to-section links: the impression is logged against the fragment, the click
+is attributed to the parent page. They can never show a click, so leaving them
+in the denominator permanently understates the site's CTR. Excluding them:
+3,311 clicks on 163,076 impressions. **Every CTR target in this plan is measured
+with anchor rows excluded.**
+
+**The site is growing fast, and the first draft of this plan did not know it.**
+Splitting the 28 days in half:
+
+| | first 14 days | last 14 days |
+|---|---|---|
+| Clicks/day | 56 | 179 |
+| Impressions/day | 3,171 | 7,658 |
+| CTR | 1.75% | 2.34% |
+| Average position | ~9.5 | ~7.4 |
+
+Clicks more than tripled and average position improved by two places across the
+whole site, not just on one post. The inflection is 9 September. That means the
+28-day total is a *lagging* number: the current run rate is already around
+**5,000 clicks per 28 days**, so the original "6,000 in the launch month, floor
+above 4,000" target was set against a baseline the site had already passed. The
+targets below are restated.
+
+**One page is still a quarter of everything.** `/blog/riftbound-radiance-leaked-mechanics`
+took 911 clicks, 27.5% of the month, and it is a news spike that will fade.
+
+**The pages that rank and are not clicked, in order of what they cost:**
+
+| Page | Impressions | Clicks | CTR | Position |
+|---|---|---|---|---|
+| `/guides/riftbound-empower-explained` | 9,156 | 92 | 1.00% | 6.3 |
+| `/guides/riftbound-banlist-explained` | 8,519 | 16 | 0.19% | 8.6 |
+| `/sets/unleashed` | 4,289 | 51 | 1.19% | 8.2 |
+| `/blog/most-expensive-riftbound-cards` | 3,237 | 55 | 1.70% | 8.6 |
+| `/guides/riftbound-flow-explained` | 3,150 | 43 | 1.37% | 5.9 |
+| `/guides/riftbound-vendetta-crystal-rose-cards` | 2,705 | 31 | 1.15% | 7.3 |
+| `/sets/origins` | 2,604 | 15 | 0.58% | 10.7 |
+| `/guides/every-ahri-card-in-riftbound` | 2,398 | 38 | 1.58% | 8.8 |
+| `/blog/riftbound-t1-worlds-champion-collection` | 2,128 | 8 | 0.38% | 8.6 |
+
+**The ban-list page is the exception that was investigated and left alone.**
+Seven ban-shaped queries (`riftbound ban list` 1,911, `riftbound banlist` 1,644,
+`riftbound banned cards` 683, `riftbound bans` 423 and three more) total **5,482
+impressions and 8 clicks** at an average position of 8.5 — 0.15% where a normal
+result at that position takes 1.5–2%. It looks like the flagship opportunity in
+this export. It is not, and three checks say so:
+
+- **Its snippet is already right.** The title is "Riftbound Ban List 2026: Every
+  Banned Card" and the description names both formats, Riot's stated reason and
+  live prices. This is the page the intent-matching lesson came from, already
+  fixed in an earlier pass, and three of its strings are test-pinned.
+- **It is not competing with itself.** The guide takes 8,519 of the 8,767
+  ban-query impressions; the two ban blog posts take 192 and 41. Google has
+  cleanly picked one canonical answer, which is what the keyword map wanted.
+- **So what is left is the results above it** — Riot's own announcement, Reddit
+  threads, and very likely an inline answer. "Which cards are banned" is a
+  question Google can answer in the results page without anyone clicking.
+
+The honest read is that these 5,482 impressions will not convert much better
+through snippet work, and promising otherwise would be inventing a win. The page
+already offers the one thing an inline answer cannot — a live price on each
+banned card — and it already says so. Leave it; spend the effort on the
+truncated descriptions below, where the cause is known.
+
+**The guides section has a snippet problem and the blog does not — and position
+rules out every other explanation.** Grouping all 1,000 page rows by section,
+with anchor rows separated out:
+
+| Section | Impressions | Clicks | CTR | Avg position |
+|---|---|---|---|---|
+| `/guides` | 42,364 | 498 | **1.18%** | **7.8** |
+| `/blog` | 33,727 | 1,311 | **3.89%** | **7.8** |
+| `/card` | 27,626 | 115 | 0.42% | 7.3 |
+| `/sets` | 13,656 | 245 | 1.79% | 9.1 |
+| `/champions` | 10,096 | 136 | 1.35% | 7.9 |
+| `/keywords` | 6,884 | 20 | 0.29% | 9.4 |
+| `/games` | 2,665 | 215 | 8.07% | 5.4 |
+
+Guides and blog sit at **the same average position, 7.8**, on the same domain,
+with the same authority — and blog converts **3.3 times better**. Ranking does
+not explain it. The snippet does, and the difference is measurable:
+
+| | Guides (1.18%) | Blog (3.89%) |
+|---|---|---|
+| Descriptions over the 155-char cap | **35 of 52 (67%)** | **13 of 50 (26%)** |
+| Average description length | 175 | 160 |
+| Titles containing a number | 2 (4%) | 13 (26%) |
+
+Two-thirds of guide descriptions ship with their last sentence amputated.
+**29,875 impressions — 18% of the site's total — sit on articles whose
+description is cut off mid-sentence in the results page.** That is the largest
+single fixable thing in this data, and it is why
+`tests/description-length.test.ts` exists as a ratchet rather than a suggestion.
+
+**What was checked and needs no fix.** Not every low-CTR page has a snippet
+problem, and four templates were examined before concluding that: `/sets`
+already builds its title longest-first and caps its description at 155 (its low
+CTR is position — Origins sits at 10.7, page two); `/gallery`'s title is
+"Riftbound Card Gallery: All N Cards by Set", an exact match for the query it
+loses, so that too is position at 9.9; `/keywords` descriptions were *suspected*
+of overflowing and do not — the template already truncates the long on-page
+answer to 96 characters before appending the card-list promise, and all 30 land
+under 155; and `/card` is the most heavily tuned template on the site with its
+own title ladder and tests. `/card` converting at 0.42% from position 7.3 is the
+one number in this table with no explanation yet, and it is 27,626 impressions,
+so it is the obvious subject of the next pass — but changing that template on a
+hunch, without knowing what outranks it for card-name queries, would be guessing.
+
+**23% of impressions come from markets the site does not price for.** 35,027
+impressions and 736 clicks from outside the six tracked markets, concentrated in
+South-East Asia — the Philippines alone is 5,483 impressions, then Thailand
+2,399, Malaysia 2,281, Indonesia 1,766, Hong Kong 1,242 — plus New Zealand at
+1,614. This is not in scope for the 90 days and is recorded as a finding, not a
+recommendation: adding a market means real store coverage, not a currency toggle.
+
+**The US is the weakest of the big markets, not the strongest.** It is 32% of
+impressions and converts at 1.62% from position 8.28, against Australia 3.01%,
+Germany 2.80%, Canada 2.66% and Singapore 2.64%. The eurozone markets convert
+well everywhere — France 3.49%, Italy 3.24%, the Netherlands 2.89%.
 
 So there were four findings, and the plan is just those four in order:
 
@@ -182,19 +299,31 @@ advice:
 ## Measurement
 
 Every number is compared against **this site's own before**, never an industry
-benchmark — the rule in `docs/homepage-measurement.md`.
+benchmark — the rule in `docs/homepage-measurement.md`. All CTR figures exclude
+anchor-URL rows, for the reason given at the top.
 
-| Metric | Source | Now | 90-day target |
-|---|---|---|---|
-| Google clicks, 28d | Search Console | 3,097 | 6,000 in the launch month; a floor above 4,000 after |
-| Top page by clicks | Search Console | leak post (857) | tracker / `/sets/radiance` |
-| CTR on the retitled pages | Search Console | 0.2–1.9% | ≥2.5% weighted |
-| Referring domains | Search Console / Bing | — | +6–8, ≥3 Riftbound-specific |
-| Bing clicks | Bing Webmaster | 0 (unverified) | non-zero, then trend |
-| Email deliverability | campaign summaries | 1 of 263 | ≥95% delivered |
-| **Guardrail** | GA4 | — | `buy_click` and pages/visitor must not fall |
+**The baseline moved.** These targets were restated on 2026-09-21 once the real
+export showed the site running at ~179 clicks/day, not the ~110/day the 28-day
+total implies. A target the site has already passed teaches nobody anything.
+
+| Metric | Source | 28d to 19 Sep | Current run rate | 90-day target |
+|---|---|---|---|---|
+| Google clicks, 28d | Search Console | 3,311 | ~5,000 | **9,000 in the Radiance launch month**; a post-launch floor above 6,000 |
+| Site CTR, anchors excluded | Search Console | 2.03% | 2.34% | ≥2.8% |
+| Top page's share of clicks | Search Console | 27.5% (the leak post) | — | under 15%, by the rest growing rather than it falling |
+| Top page by clicks | Search Console | leak post (911) | — | tracker / `/sets/radiance` |
+| CTR on the 14 rewritten pages | Search Console | 0.89% weighted (42,328 impr, 375 clicks) | — | ≥2.5% weighted, i.e. **+683 clicks/month** |
+| Average position | Search Console | 7.4 (last 14d) | — | hold under 8 while impressions grow |
+| Referring domains | Search Console / Bing | — | — | +6–8, ≥3 Riftbound-specific |
+| Bing clicks | Bing Webmaster | 0 (unverified) | — | non-zero, then trend |
+| Email deliverability | campaign summaries | 1 of 263 | — | ≥95% delivered |
+| **Guardrail** | GA4 | — | — | `buy_click` and pages/visitor must not fall |
 
 Reported at the end of each phase: 25 Oct, 25 Nov, 20 Dec, split by page.
 
-**Do not report bounce rate.** It punishes the site's best outcome — a visitor who
-searches, clicks through to a store in seconds and leaves.
+**Do not report bounce rate.** It punishes the site's best outcome — a visitor
+who searches, clicks through to a store in seconds and leaves.
+
+**Do not read the 28-day total as the run rate** while the site is growing this
+fast. Compare the last 14 days to the 14 before them, which is what surfaced the
+tripling in the first place.
