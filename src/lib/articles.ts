@@ -6183,7 +6183,7 @@ The fastest way to judge any of this is to pick a card you already know the pric
     category: "blog",
     title: "Riftbound Vendetta Card List: All 166 Cards",
     excerpt:
-      "The complete Riftbound Vendetta card list and gallery — all 166 main-set cards plus Showcase alt-arts, Overnumbers and promos, with live prices.",
+      "All 166 Vendetta main-set cards in collector-number order, officially confirmed — the set released 31 July 2026. Tap any card for rules text and prices.",
     author: "RiftCompare",
     date: "2026-07-10",
     updated: "2026-08-19",
@@ -8111,9 +8111,9 @@ For one champion in full, **[every Ahri card in Riftbound](/blog/every-ahri-card
   {
     slug: "shen-eye-of-twilight-signature-underrated-vendetta",
     category: "blog",
-    title: "Shen's Underrated Vendetta Signature Card",
+    title: "Armpit Boi: Shen, Eye of Twilight (VEN 193★)",
     excerpt:
-      "Our case for why the Shen, Eye of Twilight Signature — collectors call it \"Armpit Boi\" — deserves more attention. Opinion, with real prices.",
+      "Why collectors call Shen, Eye of Twilight’s hand-signed Vendetta Signature “Armpit Boi”, how the ★ tells it from the unsigned 193/166, plus live prices.",
     author: "RiftCompare",
     date: "2026-08-13",
     readMins: 5,
@@ -8369,9 +8369,9 @@ We've tried to keep the two halves of this article clearly separate: the price h
   {
     slug: "every-ahri-card-in-riftbound",
     category: "blog",
-    title: "Every Ahri Card in Riftbound",
+    title: "Ahri in Riftbound: All 12 Printings & Prices",
     excerpt:
-      "Twelve Ahri printings across three cards, from US$8.95 to US$3,420.28 — including two prints that look identical except for a signature worth US$3,046.",
+      "Ahri is three separate cards, not one, across twelve printings. Which is which, what the asterisk means, and a live price for every printing.",
     author: "RiftCompare",
     date: "2026-08-15",
     readMins: 6,
@@ -9768,9 +9768,9 @@ We will update this post as the price is confirmed and as the first real sales d
   {
     slug: "riftbound-card-size-sleeves-deck-boxes",
     category: "guide",
-    title: "What Size Are Riftbound Cards? Sleeves, Boxes & Binders",
+    title: "Riftbound Card Size: 63 x 88 mm, Standard TCG",
     excerpt:
-      "Riftbound cards are standard trading-card size, so any standard sleeve fits. But a full tournament deck needs 66 sleeves rather than 40, and 56 cards in the game are landscape. The complete accessory guide.",
+      "Standard trading-card size: 63 x 88 mm, the same as Magic and Pokemon, so any standard sleeve fits. Buy 66 sleeves per deck, not 40 — runes count too.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 11,

@@ -19,7 +19,7 @@ import { ARTICLES } from "../src/lib/articles";
 // were over this cap against 26% of blog ones. 29,875 impressions — 18% of the
 // site's total — were sitting on a description cut off mid-sentence.
 //
-// Driven to 23 the same day. What this test does is stop the number going UP,
+// Driven to 21 the same day. What this test does is stop the number going UP,
 // and force it down as pages are fixed: add an over-length excerpt and the count
 // rises and this fails; fix a batch and lower BUDGET in the same commit.
 //
@@ -30,7 +30,7 @@ import { ARTICLES } from "../src/lib/articles";
 // underneath them). Set it once, at the end, from a single count.
 //
 // The right long-term value of BUDGET is 0.
-const BUDGET = 23;
+const BUDGET = 21;
 const MAX = 155;
 
 test("no new over-length article descriptions", () => {

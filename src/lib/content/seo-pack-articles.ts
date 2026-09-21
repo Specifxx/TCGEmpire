@@ -368,9 +368,9 @@ Buying often enough that the research time adds up? [RiftCompare Premium](${L.pr
   {
     slug: "tcgplayer-fees",
     category: "blog",
-    title: "TCGplayer Fees: What You Actually Pay",
+    title: "TCGplayer Fees: Commission + Processing",
     excerpt:
-      "Understand every TCGplayer fee — marketplace commission, payment processing, shipping — and how to calculate your true net when selling Riftbound cards.",
+      "Sellers pay two stacked fees: tiered marketplace commission on the item, plus payment processing on item and shipping. Buyers pay no direct platform fee.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 9,
@@ -1131,9 +1131,9 @@ Related: [the 9 best Riftbound marketplaces](${L.marketplaces}), [Riftbound card
   {
     slug: "riftbound-variant-glossary",
     category: "guide",
-    title: "Riftbound Variant & Finish Glossary",
+    title: "Riftbound Variants: Signature, Metal & Alt Art",
     excerpt:
-      "Every Riftbound card treatment defined in one place — standard, foil, Signature, Metal, Overnumbered and Alternate Art — and how to tell them apart before you buy.",
+      "An asterisk in the collector number means Signature; a number above the set total means Overnumbered. Standard, foil, Metal and alt art defined too.",
     author: AUTHOR,
     date: PUBLISHED,
     readMins: 6,
