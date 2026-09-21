@@ -9677,3 +9677,72 @@ live data in it. No retitling of the leak post toward "spoilers" — it holds th
 the 2026-09-14 freeze stands, and the 78%-dismiss popup already proved a nudge
 can cost traffic. And no paid ads: the budget was never the binding constraint
 here, attention was, and the plan needs $0.
+
+## Biggest savings now means "underpriced vs TCGplayer", on the homepage and in the tool — 2026-09-21
+
+Asked for directly, straight after the homepage reorder above: "the biggest
+savings should also default to underpriced vs tcgplayer." Confirmed with the
+owner which of three possible "defaults" was meant; the answer was two of
+them, and both are done.
+
+**1. The homepage's Biggest savings column changed SIGNAL.** It ran on
+`getEbayCheapest` — "cards eBay is cheapest on versus the best store" — and now
+runs on `getArbitrageVsTcgplayer`, the same signal behind the Deal Finder's
+"Underpriced vs TCGplayer" tab. The buy side is every tracked store, our own
+marketplace and eBay; never TCGplayer itself, which is the reference side here
+and would otherwise be compared against itself. Same buy-key construction as
+the tool's own `tcgBuyKeys`.
+
+**2. The Deal Finder's default view changed** from "Worth more on eBay"
+(`flip`) to "Underpriced vs TCGplayer" (`tcg`). That tab's link is now the bare
+`/tools/deal-finder` and "Worth more on eBay" carries `?view=flip`. Every
+existing bare link to the tool — nav, ⌘K, /premium, /dashboard, /movers,
+/market/records, the blog — therefore lands on the new default without any of
+them being edited, which is the point: the homepage teaser and the page its
+"All opportunities" link opens are now the same board rather than a buying
+signal handing off to a selling one.
+
+**The badge percentage is NOT `ArbItem.marginPct`, and that distinction is the
+one real trap here.** `marginPct` is the gap measured over the BUY price, so a
+card bought at half TCGplayer's figure is a 100% margin — and the homepage
+badge renders `savings-vs-market` as "Save X%". Badging that card "Save 100%"
+would say it was free. The column computes percent BELOW the reference instead
+(`net / sellCents`), which is 50% for the same card, and is what the words on
+the badge actually claim. Hoisted into a named `belowTcgPct` helper rather than
+left inline, both so it reads as a deliberate choice and because
+`tests/homepage-declutter.test.ts` asserts the Deal literal stays compact
+enough to still carry its QuickView `card` payload — a long comment inside the
+object literal pushed that assertion's 500-character window past it, which is a
+slightly silly way to fail but a fair proxy for "this object is getting hard to
+read".
+
+**`savingsVsMarketCents` had to follow the signal, or the Premium pitch would
+have quoted the wrong board.** That field powers the "$X in savings on the
+board" proof line on `/premium`, the slide-in and `/api/premium/proof`. It was
+`getEbayCheapest`'s `savingsTotalCents`, summed over every qualifying row
+rather than the paged slice. `ArbPage` had no equivalent, so it gains an
+optional `savingsTotalCents` with exactly the same semantics, populated by
+`getArbitrageVsTcgplayer` on every return path. Leaving the old number in place
+would have been the drift class this file is full of: a figure that still
+computes cleanly while describing something nobody is being shown.
+
+**One genuine improvement falls out of this.** The old signal needed a local
+eBay market to exist at all, so Biggest savings was naturally empty in markets
+eBay does not cover. The TCGplayer benchmark is a single US market price
+converted through the shared fx table, so the column is now available in every
+market. `price-drops` (PriceHistory, AU-only today) and `cheapest-sealed` are
+still the naturally-empty ones; the file header was corrected, since it named
+eBay coverage as the reason.
+
+**What did NOT change**: `getEbayCheapest` still exists and still backs the
+"Cheapest on eBay" tab, the Premium gate on the column, and the standing rule
+in `constants.ts` that TCGplayer's converted per-market figures never enter the
+buyable price comparison. This uses TCGplayer as a REFERENCE benchmark, which
+is exactly what that rule reserves it for — the note under each row reads "vs
+TCGplayer market" rather than implying a purchasable local price.
+
+Verified: `npm run typecheck`, `npm run lint`, `npm run adsense:guard` (22/22),
+`npm test` (1676/1677 — the one failure is the pre-existing "seller id is the
+client id with ca- stripped" sandbox gap, unchanged). Not verified against real
+rows: there is no database in this sandbox, so what the column actually lists
+on a given day comes from the first production render.

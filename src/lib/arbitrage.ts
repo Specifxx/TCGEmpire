@@ -175,6 +175,13 @@ export interface ArbPage {
   page: number;
   pageSize: number;
   pageCount: number;
+  // Sum of netCents across EVERY qualifying row, not just this page's slice —
+  // same semantics as EbayDealPage.savingsTotalCents, and populated for the
+  // same reason: the homepage feed and the Premium proof line quote "$X on the
+  // board" for the WHOLE board, and deriving it from a paged slice would
+  // understate it by an order of magnitude. Optional because only
+  // getArbitrageVsTcgplayer computes it today; read it with `?? 0`.
+  savingsTotalCents?: number;
 }
 
 // The two ranking aggregates below are full-market groupBys (~1,400 rows each)
@@ -454,7 +461,7 @@ export async function getArbitrageVsTcgplayer(
     const sources = getArbSources(country);
     const valid = new Set(sources.map((s) => s.key));
     const buyKeys = opts.buy.filter((k) => valid.has(k));
-    if (!buyKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
+    if (!buyKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1, savingsTotalCents: 0 };
 
     // eBay gives a REAL per-listing shipping figure (see effectiveShippingCents in
     // lib/retailers.ts), so when eBay is among the buy sources it's ranked by
@@ -515,10 +522,11 @@ export async function getArbitrageVsTcgplayer(
     rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
 
     const total = rows.length;
+    const savingsTotalCents = rows.reduce((sum, r) => sum + r.net, 0);
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
     const p = Math.min(Math.max(1, page), pageCount);
     const slice = rows.slice((p - 1) * pageSize, p * pageSize);
-    if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
+    if (!slice.length) return { items: [], total, page: p, pageSize, pageCount, savingsTotalCents };
 
     const ids = slice.map((r) => r.cardId);
     const storeWinnerIds = slice.filter((r) => !r.buyIsEbay).map((r) => r.cardId);
@@ -564,9 +572,9 @@ export async function getArbitrageVsTcgplayer(
       })
       .filter((x): x is ArbItem => x !== null);
 
-    return { items, total, page: p, pageSize, pageCount };
+    return { items, total, page: p, pageSize, pageCount, savingsTotalCents };
   } catch {
-    return { items: [], total: 0, page, pageSize, pageCount: 1 };
+    return { items: [], total: 0, page, pageSize, pageCount: 1, savingsTotalCents: 0 };
   }
 }
 

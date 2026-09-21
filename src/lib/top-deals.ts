@@ -1,13 +1,18 @@
 // "Today's Top Deals" — one normalized feed blending the live deal signals so
 // the homepage can surface the best opportunities in the viewer's market:
-//   • savings-vs-market  (PREMIUM) — cards eBay is cheapest on vs the best store
+//   • savings-vs-market  (PREMIUM) — cards underpriced vs TCGplayer's US market
+//                                     price (buy side: stores, our marketplace
+//                                     and eBay; never TCGplayer itself)
 //   • price-drops        (free)    — biggest 7-day price falls
 //   • cheapest-sealed    (free)    — lowest in-stock sealed products right now
 //   • rising-cards       (PREMIUM) — the Rising Cards screener's top picks
 //
-// price-drops depends on PriceHistory (AU-only today) and savings needs an eBay
-// market, so some columns are naturally empty in some markets — the homepage
-// hides empty columns. Each source is independently guarded, so one failing never
+// price-drops depends on PriceHistory (AU-only today), and cheapest-sealed on
+// a market having tracked sealed stock, so some columns are naturally empty in
+// some markets — the homepage hides empty columns. savings-vs-market is
+// available in EVERY market as of 2026-09-21: it benchmarks against
+// TCGplayer's single US market price converted through the shared fx table,
+// which needs no local eBay presence (the old eBay-cheapest signal did). Each source is independently guarded, so one failing never
 // sinks the rest. Both PREMIUM columns are gated in the UI (only the single top
 // item is rendered to non-subscribers); the data layer itself is ungated.
 //
@@ -41,7 +46,7 @@
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
-import { getEbayCheapest } from "./arbitrage";
+import { getArbitrageVsTcgplayer, getArbSources, TCGPLAYER_KEY } from "./arbitrage";
 import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
 import { getCachedRisingCards } from "./rise-predictor";
@@ -71,7 +76,7 @@ export type Deal = {
   // "was" price, only the MSRP context folded into `note` below).
   deltaCents: number | null;
   // The OTHER side of the comparison priceCents is being measured against — the
-  // cheapest-store price for savingsVsMarket, the 7-days-ago price for
+  // TCGplayer US market reference for savingsVsMarket, the 7-days-ago price for
   // priceDrops. Null wherever deltaCents is null (cheapest-sealed). Kept for
   // callers that want the full figure (e.g. /tools/deal-finder); the homepage
   // feed's own badge deliberately no longer renders it — see TodaysTopDeals.tsx.
@@ -87,14 +92,14 @@ export type Deal = {
 
 export type TopDeals = {
   savingsVsMarket: Deal[]; // PREMIUM
-  // The REAL count behind the Premium gate — getEbayCheapest's own `total`,
+  // The REAL count behind the Premium gate — getArbitrageVsTcgplayer's own `total`,
   // never derived from savingsVsMarket.length. That array is capped at perType
   // (4) for this feed regardless of how many deals actually exist, so
   // items.length - 1 would silently understate "how many more" to almost
   // every visitor almost every day (there are usually well over 4). The
   // homepage teaser reads this field instead — see TodaysTopDeals.tsx.
   savingsVsMarketTotal: number;
-  // Sum of savingCents across EVERY qualifying deal (getEbayCheapest's own
+  // Sum of the gap across EVERY qualifying deal (getArbitrageVsTcgplayer's own
   // savingsTotalCents), not just this feed's perType-capped slice. Powers the
   // Premium "$X in savings on the board" proof line on /premium and the
   // slide-in (see api/premium/proof/route.ts). `?? 0` at every read site — a
@@ -116,18 +121,42 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
   const [savings, priceDrops, cheapestSealed, rising] = await Promise.all([
     (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
       try {
-        // "pct", not "saving" (raw dollar amount) — sorting this homepage
-        // feed by absolute savings let a four-figure chase card's modest
-        // percentage discount outrank an everyday card's much bigger
-        // percentage-off deal, just because the dollar figure was larger.
-        // TodaysTopDeals' own mixByTier() already tries to interleave a
-        // cheap item to the front of the default view, but it can only work
-        // with what this fetch hands it — a perType=4 dollar-sorted slice
-        // could easily be four uniformly expensive cards with nothing cheap
-        // left to interleave. Sorting by percentage upstream fixes that at
-        // the source: /tools/deal-finder (the "All opportunities" link this
-        // column points to) still defaults to its own sort, unaffected.
-        const { items, total, savingsTotalCents } = await getEbayCheapest(country, "pct", 1, perType);
+        // UNDERPRICED VS TCGPLAYER, not "cheapest on eBay vs the best store"
+        // (2026-09-21, owner's instruction — see DECISIONS.md). This column
+        // now answers "where is this card cheaper than the wider US market
+        // right now", the same signal /tools/deal-finder's default tab shows,
+        // so the homepage teaser and the tool its "All opportunities" link
+        // opens are the same board rather than two different ones.
+        //
+        // The buy side is every tracked store, our own marketplace AND eBay,
+        // but never TCGplayer itself — it is the reference/sell side here, so
+        // buying from it to compare against itself would be circular. Same
+        // buy-key construction as the tool's own tcgBuyKeys; see
+        // app/tools/deal-finder/page.tsx.
+        //
+        // "margin", not "profit" (raw dollar gap), for exactly the reason the
+        // eBay version sorted by "pct": a four-figure chase card's modest
+        // percentage gap would otherwise outrank an everyday card's much
+        // bigger percentage one purely on dollars, and TodaysTopDeals'
+        // mixByTier() can only interleave what this perType=4 slice hands it.
+        const sources = getArbSources(country);
+        const tcgKey = TCGPLAYER_KEY[country];
+        const buyKeys = sources
+          .filter((s) => s.key !== tcgKey)
+          .map((s) => s.key);
+        const { items, total, savingsTotalCents } = await getArbitrageVsTcgplayer(country, {
+          buy: buyKeys,
+          sort: "margin",
+          page: 1,
+          pageSize: perType,
+        });
+        // pctLabel is the percent BELOW the TCGplayer reference, NOT ArbItem's
+        // own marginPct — that one is the gap over the BUY price, so a card
+        // selling at half TCGplayer's figure would badge as 100% rather than
+        // 50%. The badge reads "Save X%", so X has to be measured against the
+        // thing being saved against.
+        const belowTcgPct = (it: (typeof items)[number]) =>
+          it.sellCents > 0 ? Math.round((it.netCents / it.sellCents) * 1000) / 10 : null;
         const deals = items.map((it) => ({
           dealType: "savings-vs-market" as const,
           title: it.card.name,
@@ -136,14 +165,14 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
           outboundUrl: null,
           outboundRetailer: null,
           imageUrl: it.card.imageThumbUrl,
-          priceCents: it.ebayCents,
-          pctLabel: it.savingPct,
-          deltaCents: it.savingCents,
-          refCents: it.storeCents,
-          note: `vs ${it.storeName}`,
+          priceCents: it.buyCents,
+          pctLabel: belowTcgPct(it),
+          deltaCents: it.netCents,
+          refCents: it.sellCents,
+          note: "vs TCGplayer market",
           card: it.card,
         }));
-        return { deals, total, savingsTotalCents };
+        return { deals, total, savingsTotalCents: savingsTotalCents ?? 0 };
       } catch {
         return { deals: [], total: 0, savingsTotalCents: 0 };
       }

@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals | RiftCompare" },
   description:
-    "Find the best Riftbound deals: cards worth more on eBay than in stores (handy if you're selling), cards underpriced vs TCGplayer's US market price, the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
+    "Find the best Riftbound deals: cards underpriced vs TCGplayer's US market price, cards worth more on eBay than in stores (handy if you're selling), the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
   alternates: pageAlternates("/tools/deal-finder"),
   openGraph: { title: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals", url: `${SITE_URL}/tools/deal-finder` },
 };
@@ -75,8 +75,15 @@ export default async function ArbitragePage({
   // TCGplayer itself (it's the fixed sell/reference side there, so it's never a
   // buy option in its own view).
   const tcgSources = sources.filter((s) => s.key !== tcgKey);
+  // DEFAULT IS "tcg" (Underpriced vs TCGplayer) as of 2026-09-21, owner's
+  // instruction — it was "flip" (Worth more on eBay). "Underpriced vs
+  // TCGplayer" is the buying signal: it answers "where is this cheaper than
+  // the wider US market right now", which is what a visitor arriving from the
+  // homepage's Biggest savings column (now fed by the same signal — see
+  // lib/top-deals.ts) is already looking at. "Worth more on eBay" is a
+  // SELLING signal and is still one click away on its own tab.
   const view: "flip" | "deals" | "tcg" | "xregion" =
-    searchParams.view === "deals" ? "deals" : searchParams.view === "tcg" ? "tcg" : searchParams.view === "xregion" ? "xregion" : "flip";
+    searchParams.view === "deals" ? "deals" : searchParams.view === "flip" ? "flip" : searchParams.view === "xregion" ? "xregion" : "tcg";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   return (
@@ -103,7 +110,7 @@ export default async function ArbitragePage({
               operatingSystem: "Web",
               offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
               description:
-                "Find Riftbound cards worth more on eBay than in stores, plus the cards eBay is cheapest to buy.",
+                "Find Riftbound cards underpriced vs TCGplayer's US market price, cards worth more on eBay than in stores, and the cards eBay is cheapest to buy.",
             },
           ]),
         }}
@@ -124,14 +131,14 @@ export default async function ArbitragePage({
       {/* Tabs */}
       <div className="mb-4 flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1" role="tablist" aria-label="Views">
         <Link
-          href="/tools/deal-finder"
+          href="/tools/deal-finder?view=flip"
           aria-current={view === "flip" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "flip" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
         >
           Worth more on eBay
         </Link>
         <Link
-          href="/tools/deal-finder?view=tcg"
+          href="/tools/deal-finder"
           aria-current={view === "tcg" ? "page" : undefined}
           className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "tcg" ? "bg-gold/20 text-gold" : "text-slate-400 hover:text-white"}`}
         >
