@@ -116,15 +116,19 @@ test("the phone header still carries a gold Premium link, without disturbing the
   // tests/signup-funnel.test.ts; repeated here because this change is what
   // would most plausibly break them.
   assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md");
-  // The desktop "✦ Premium" link (xl:block) is GONE from this row as of
-  // 2026-09-21: the rail's pinned account block carries "Go Premium" from lg
-  // up, two breakpoints earlier than the header link ever appeared, so the
-  // desktop pitch is strictly better covered than it was. The phone link
-  // above is the one this test exists for and is untouched.
-  assert.doesNotMatch(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the desktop Premium link moved into the rail");
+  // The desktop "✦ Premium" link is BACK in this row (2026-09-21, after a few
+  // hours out: "I still want ... premium ... on the header"), and at lg
+  // rather than the xl it used to defer to — the row lost the brand, the
+  // search box, the ⌘K button and three nav links to the rail, so the slack
+  // that forced xl is no longer scarce.
+  assert.match(src, /<PremiumNavLink className="[^"]*\blg:block\b/, "the desktop Premium link is in the header");
+  // AND the rail carries its own, at the foot, which the owner asked for
+  // separately ("have premium on the sidebar as well ... like get premium").
+  // Two surfaces on purpose, unlike the session control, which is header-only.
   const rail = read("src/components/SideNav.tsx");
-  assert.match(rail, /href="\/premium"/, "the rail must carry the desktop Premium pitch");
-  assert.match(rail, /Go Premium/, "…as a labelled call to action, not a bare icon");
+  assert.match(rail, /href="\/premium"/, "the rail must carry the Premium pitch too");
+  assert.match(rail, /Get Premium/, "…as a labelled call to action, not a bare icon");
+  assert.doesNotMatch(rail, /"\/login"/, "the session control is the header's — the rail must not duplicate it");
 });
 
 test("the shimmer is defined once, guarded for reduced motion, and used on exactly one element", () => {

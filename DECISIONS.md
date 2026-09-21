@@ -9952,3 +9952,87 @@ count moved. The exact-equality assertion is still right for a human working
 alone — it is what stops a fix being quietly spent on the next long excerpt —
 but anything running several writers at once needs to set that constant once, at
 the end, from a single count. That is how it was finally resolved: 41.
+
+## The rail became a navigation system, and the header came back — 2026-09-21 (same day, correction)
+
+Three corrections to the entry above, all from the owner after seeing it live,
+and together they reverse about half of it.
+
+**"I didn't want to get rid of the header. The header is there to stay."** The
+previous pass stripped the header to Discord, the theme toggle, the country
+picker and the session, on the reasoning that the rail carried everything else.
+That went too far. The header is back as a CURATED SHORTLIST, and the owner
+named its contents: Sealed, Blog, Premium, Discord, the watchlist, light/dark,
+the country picker and the accounts. What stays deleted is also named —
+Explore, Deck builder, Auctions — plus the brand, the inline search box and the
+⌘K button, which the rail genuinely does own now ("I want the search bar to be
+on the sidebar").
+
+Premium and Discord moved back from `xl` to `lg` in the same pass, and the
+watchlist stopped being `lg:hidden`. That is affordable now for a reason worth
+recording: the slack in this row used to be bought by GATING things, and it is
+bought by SUBTRACTION instead — the rail permanently removed four items from
+the row at lg, which is more headroom than any gate ever bought.
+
+**"The collapsible option is actually, there's no point — have the default as
+uncollapsed."** The two-mode rail is gone rather than re-defaulted, and that
+deleted a whole mechanism: the `sidenav` cookie, `src/lib/sidenav-shared.ts`,
+the pre-paint boot script that stamped `data-sidenav` on `<html>`, the `[`
+keybinding, the icon strip, the hover flyouts and their viewport-fixed
+positioning (added only hours earlier), and the `.sidenav-expanded` /
+`.sidenav-collapsed` / `.sidenav-row` / `.sidenav-boxed` CSS that switched
+between the two. `--sidenav-w` is one value at one breakpoint now: 17rem from
+1024px. Everything the previous entry said about keeping the mode "a CSS
+decision, not a React one" is moot — there is no mode.
+
+**"It's just a navigation system."** The flat list of eight primary
+destinations that opened the rail is removed. The complaint names the defect
+exactly: *"when I click prices, it should just expand to all of the different
+features — I'm not going to a single page when I click prices."* Every one of
+those eight was also a link inside a group below it, so the rail listed the
+same destination twice and made a section header look like a page. A group
+header is a disclosure now and never a link; the leaves are the links. The
+"Browse cards" button went with them, for the same reason — it was a second
+route to a link two rows below it.
+
+**One duplication was removed that the owner did not ask about**, and it is
+worth flagging rather than burying: the rail's pinned block briefly carried a
+"Sign in" row as well as Premium. The header owns the session by the owner's
+own list, so a second session control in the rail is precisely the double-up
+this pass was asked to remove elsewhere. Premium is deliberately on BOTH
+surfaces ("have premium on the sidebar as well… like get premium"); the
+session is header-only. `tests/sidenav.test.ts` pins that asymmetry, because
+it looks like an oversight and is not.
+
+**What survived from the previous pass**, because the owner asked for it by
+name: the full-page-height rail, the brand block with the visitor's market
+under it, the search row with its ⌘K hint, the green active highlight (border
+plus tint on the active LINK, and a tint on its group's header so the section
+you are in is findable when its links are scrolled away), and the pinned gold
+Premium call to action at the foot.
+
+**Re-measured, not assumed.** The header row is the one with a history of
+clipping its signed-out CTA between 1024 and 1056px. Driven in a real browser
+at 1024/1032/1040/1048/1056/1279/1280/1440: "Log in / Sign up" renders in full
+at every width, with 72px of clearance at the tightest — more than the 32px
+the stripped-down header had, because the rail's subtraction outweighs the
+three links that came back. No width overflows horizontally, and
+`scripts/mobile-check.ts` reports clean at 640/720/790.
+
+**Tests: one file deleted, one rewritten, six amended.**
+`tests/sidenav-shell.test.ts` (written for the shape that lasted one pass) is
+deleted and folded into `tests/sidenav.test.ts`, which now pins the rail that
+exists: one width, no mode, group headers that are disclosures, no flat
+duplicate list, and the rail/header split above. The five two-mode tests
+(cookie resolution, boot-script/TypeScript agreement, the layout wiring for
+both) are gone with the thing they described. `design-system`, `nav-icon`,
+`mobile-header-fit`, `premium-pitch-panel`, `signup-funnel` and
+`ebay-auctions` were each re-pointed at whichever surface now provides the
+guarantee they were written for.
+
+Verified: `npm run typecheck`, `npm run lint` (0 errors), `npm run
+adsense:guard` (22/22), `npm test` (1689/1690 — the one failure is the
+pre-existing "seller id is the client id with ca- stripped" sandbox gap),
+`next build` compiles, and the result was rendered in a real browser at
+1440/1100/820/375 and in both themes, with the active-link highlight confirmed
+on a live route rather than inferred from the class strings.

@@ -40,94 +40,32 @@
   --scroll-thumb: #2c3650;
   --scroll-thumb-hover: #3a4564;
   /* Reserved width for the persistent desktop SideNav (components/SideNav.tsx),
-     0 by default so every element that pads/positions against it (main, the
-     footer ad zone, the footer itself, CinematicHero's full-bleed breakout) is
-     a no-op below the breakpoint where SideNav actually renders. Read via
-     `var(--sidenav-w)` rather than a Tailwind `xl:` prefix on each consumer so
-     ALL of them share exactly one breakpoint decision — SideNav.tsx's own
-     `hidden xl:flex` and this media query must always agree, or the panel
-     either overlaps un-padded content or leaves a dead gap.
-     tests/sidenav.test.ts pins both against the same "1280px" value. */
+     0 by default so every element that pads/positions against it (the header,
+     main, the footer ad zone, the footer itself, CinematicHero's full-bleed
+     breakout) is a no-op below the breakpoint where SideNav actually renders.
+     Read via `var(--sidenav-w)` rather than a Tailwind `lg:` prefix on each
+     consumer so ALL of them share exactly one breakpoint decision —
+     SideNav.tsx's own `hidden lg:flex` and the media query below must always
+     agree, or the panel either overlaps un-padded content or leaves a dead
+     gap. tests/sidenav.test.ts pins both against the same "1024px" value.
+
+     ONE WIDTH, ONE BREAKPOINT, since 2026-09-21. There used to be two rail
+     modes — a 4rem icon strip and a 17rem list — chosen by a `data-sidenav`
+     attribute stamped before first paint from a cookie, with a chevron and a
+     `[` shortcut to flip between them. That whole mechanism is gone
+     ("the collapsible option is actually, there's no point — have the default
+     as uncollapsed"), and with it the boot script, the cookie, the
+     `.sidenav-expanded`/`.sidenav-collapsed` display toggles and the flyouts
+     the icon mode needed. The rail is simply the list now. */
   --sidenav-w: 0px;
   /* Height of the native AdMob banner inside the Capacitor shell — see the
      native-app rule further down. 0 on the web, where there is no banner. */
   --native-banner-h: 0px;
 }
 
-/* 1024–1279px: the rail is ALWAYS its icon form (4rem) — there isn't room for
-   the full 17rem list without narrowing every page. */
 @media (min-width: 1024px) {
   :root {
-    --sidenav-w: 4rem;
-  }
-}
-
-/* 1280px+: the icon rail by default; the full list only once the visitor has
-   explicitly expanded it. `data-sidenav` is stamped on <html> before first
-   paint by the inline script the root layout emits from
-   src/lib/sidenav-shared.ts (the visitor's cookie, else collapsed), and
-   flipped by SideNav's toggle. A POSITIVE `[data-sidenav="expanded"]` match,
-   not a `:not([...="collapsed"])` one — so if the script never runs at all
-   (blocked, CSP), the fallback is still collapsed, the same as the JS
-   default, rather than silently reverting to the old expanded-by-default. */
-@media (min-width: 1280px) {
-  :root[data-sidenav="expanded"] {
     --sidenav-w: 17rem;
-  }
-}
-
-/* Which of SideNav's two blocks is visible. Both are always in the DOM so the
-   mode needs no JS state to hydrate — CSS decides off the same attribute +
-   breakpoints as --sidenav-w above, and the two can't disagree. */
-.sidenav-expanded {
-  display: none;
-}
-@media (min-width: 1280px) {
-  :root[data-sidenav="expanded"] .sidenav-expanded {
-    display: block;
-  }
-  :root[data-sidenav="expanded"] .sidenav-collapsed {
-    display: none;
-  }
-}
-
-/* The rail's CHROME rows (brand, search, the primary action, the account
-   block) follow the same rule, and for the same reason: their layout differs between
-   the two modes is icon-only-and-centred vs icon-plus-label, and deciding that
-   in React state would mean the server renders one and the client's first
-   paint can render the other — a visible flash for anyone whose cookie says
-   "expanded", which is precisely what the display-toggle pattern above exists
-   to avoid. The label spans inside these rows carry `.sidenav-expanded`, so
-   they appear under exactly the same condition the expanded link list does. */
-.sidenav-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-}
-@media (min-width: 1280px) {
-  :root[data-sidenav="expanded"] .sidenav-row {
-    justify-content: flex-start;
-    gap: 0.625rem;
-  }
-  /* The one row that stays right-aligned when expanded: the collapse toggle,
-     which sits in the bottom corner the way the panel control it mirrors does. */
-  :root[data-sidenav="expanded"] .sidenav-row-end {
-    justify-content: flex-end;
-  }
-  /* The search row reads as a FIELD only when there is a label inside it to
-     make it look like one. Collapsed, it is a bare icon button like every
-     other row, so the border and inset background would just draw a box
-     around a magnifier. Tied to the expanded STATE, not to a breakpoint:
-     1280px+ is still collapsed by default. */
-  :root[data-sidenav="expanded"] .sidenav-boxed {
-    /* The themeable tokens, not hexes — this has to follow the light palette
-       the same way every `bg-ink-*` className does. See tailwind.config.ts. */
-    border: 1px solid rgb(var(--c-ink-700));
-    background-color: rgb(var(--c-ink-950) / 0.6);
-  }
-  :root[data-sidenav="expanded"] .sidenav-boxed:hover {
-    border-color: rgb(var(--c-ink-600));
   }
 }
 

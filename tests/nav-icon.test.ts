@@ -67,8 +67,13 @@ test("icons inherit colour and size from the button, so active/hover states reac
   // Sized by className, never by a baked-in width/height attribute.
   assert.doesNotMatch(src, /<svg[^>]*\swidth=/, "size comes from className, so one icon can't render at a different size");
   const rail = read("src/components/SideNav.tsx");
-  assert.match(rail, /<NavIcon name=\{group\.icon\} className="h-5 w-5"/, "the rail sizes the icon");
-  assert.match(rail, /groupActive\s*\?\s*"bg-brand-500\/15 text-brand-300"/, "the active group must tint its icon, not only its background");
+  assert.match(rail, /<NavIcon name=\{group\.icon\} className="h-4 w-4 shrink-0" \/>/, "the rail sizes the icon");
+  // The active group tints its HEADER (and therefore, via currentColor, its
+  // icon). It used to also carry a background; with the rail always expanded
+  // the tint alone is the cue, and the background moved to the active LINK
+  // inside the group — which is the thing you actually navigated to.
+  assert.match(rail, /groupActive \? "text-brand-300"/, "the active group must tint its icon, not only its background");
+  assert.match(rail, /border-brand-400 bg-brand-500\/10 font-semibold text-brand-300/, "the active LINK carries the border + tint");
 });
 
 test("the icons are decorative — the button carries the accessible name", () => {

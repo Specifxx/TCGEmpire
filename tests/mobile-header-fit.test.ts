@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { NAV_GROUPS } from "../src/components/nav-groups";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -88,9 +89,14 @@ test("there is exactly ONE Database link and NO width can hide it", () => {
     assert.ok(!cls.split(/\s+/).includes(hide), `Database must not be gated by "${hide}" (has: ${cls})`);
   }
   assert.ok(cls.split(/\s+/).includes("lg:hidden"), "below lg the header carries it; from lg the rail does");
-  // The other half of the range: the rail's own primary list.
-  const primary = readCode("src/components/primary-nav.ts");
-  assert.match(primary, /href: "\/browse", label: "Cards"/, "the rail must carry /browse as a primary destination from lg up");
+  // The other half of the range: the rail renders every NAV_GROUPS link, and
+  // /browse is one of them ("Card Database", in the Prices group). The rail's
+  // own flat shortcut list was removed on 2026-09-21 — group headers are
+  // disclosures and the leaves are the links — so this asserts the real
+  // source rather than a second copy of it.
+  const inGroups = NAV_GROUPS.flatMap((g) => g.links).some((l) => l.href === "/browse");
+  assert.ok(inGroups, "/browse must be in NAV_GROUPS, which is what the rail renders");
+  assert.match(readCode("src/components/SideNav.tsx"), /NAV_GROUPS\.map/, "…and the rail must render them");
   // It lives in the left cluster, beside the logo.
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<nav "));
   assert.match(row, /Database/, "and it sits in the left cluster beside the logo");

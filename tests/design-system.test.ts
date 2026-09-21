@@ -375,7 +375,7 @@ test("the CSS reservations went with it, and .above-bottombar keeps only what st
   assert.match(css, /body\s*\{\s*padding-bottom:\s*calc\(var\(--native-banner-h\)/, "body padding keeps the banner reservation only");
   // --sidenav-w's own 1024px block must survive the edit that removed its
   // former neighbour.
-  assert.match(css, /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;/);
+  assert.match(css, /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*17rem;/);
 });
 
 test("HeaderMenuButton is the below-lg nav entry point and opens the same overlay", () => {
@@ -422,7 +422,7 @@ test("the watchlist is its own header control, linking to /watching and carrying
   // control and the menu were each either named a must-have or the only route to
   // something. It is still a SEPARATE control from the menu wherever it appears,
   // which is what "the watchlist and the menu should be separate" asked for.
-  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex lg:hidden" \/>/);
+  assert.match(readCode("src/components/Navbar.tsx"), /<HeaderWatchButton className="hidden sm:inline-flex" \/>/);
 });
 
 test("every fixed bottom-corner surface (the three nudges, the feedback FAB, ui/Toast) clears the banner via .above-bottombar", () => {

@@ -5,7 +5,6 @@ import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
-import { SIDENAV_BOOT_SCRIPT } from "@/lib/sidenav-shared";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
@@ -271,8 +270,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable}`}
-      // The sidenav boot script below stamps data-sidenav on this element
-      // before React hydrates; React must not report that as a mismatch.
+      // The theme boot script below stamps data-theme on this element before
+      // React hydrates; React must not report that as a mismatch. (A second
+      // script used to stamp data-sidenav here too — removed with the rail's
+      // collapsed mode on 2026-09-21; the rail has one width now.)
       suppressHydrationWarning
     >
       <head>
@@ -312,12 +313,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Warm up the image CDN connection so card thumbnails start loading sooner. */}
         <link rel="preconnect" href="https://cdn.riftscribe.gg" crossOrigin="" />
         <link rel="dns-prefetch" href="https://cdn.riftscribe.gg" />
-        {/* Desktop rail mode (expanded / collapsed) — decided BEFORE first paint
-            from the visitor's cookie, else collapsed, so the page never
-            reflows. This layout can't read cookies() itself (see the caching
-            note above RootLayout), which is exactly why it's an inline script.
-            Generated in src/lib/sidenav-shared.ts. */}
-        <script dangerouslySetInnerHTML={{ __html: SIDENAV_BOOT_SCRIPT }} />
         {/* Light/dark theme — same pattern, same reason: decided from the
             `theme` cookie before first paint (dark unless the visitor chose
             light), so the page never flashes the wrong palette. Generated in
