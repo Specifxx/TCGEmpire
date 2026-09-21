@@ -401,16 +401,26 @@ test("the watchlist is its own header control, linking to /watching and carrying
   assert.match(src, /useWatchlist\(\)/);
   assert.match(src, /9\+/, "same 9+ cap the deleted bar's badge used");
   assert.match(src, /aria-current=\{active \? "page" : undefined\}/);
-  // THE BELL, because that is what the watchlist is everywhere else: the watch
-  // toggle on every card tile (PriceWatchButton) draws one, and /watching's own
-  // heading is <NavIcon name="bell">. This shipped as a star for one release and
-  // was reverted — "it should be the same icon as the watch has". An icon that
-  // disagrees with the control it represents is worse than two bells that differ
-  // in state.
-  assert.match(src, /name="bell"/);
-  assert.doesNotMatch(src, /name="star"/, "the star must be gone, not just unused");
-  assert.match(readCode("src/components/PriceWatchButton.tsx"), /const bell = \(/, "the card-tile watch control this matches");
-  assert.match(readCode("src/app/watching/page.tsx"), /<NavIcon name="bell"/, "and the watchlist page's own heading");
+  // A HEART (2026-09-21, owner: "the wishlist icon should be a heart and not a
+  // bell"), and the SAME glyph on every surface that stands for the watchlist.
+  // That second half is the durable rule, not the particular glyph: this
+  // control shipped as a star once, alone, and was reverted with "it should be
+  // the same icon as the watch has". So the heart was applied in one pass to
+  // this control, PriceWatchButton (the toggle on every card tile and card
+  // page), /watching's heading, the card page's "Watch this price" block and
+  // the homepage's "Watching a card?" card — and this asserts all of them, so
+  // a future change to one of them fails here rather than drifting.
+  assert.match(src, /name="heart"/);
+  assert.doesNotMatch(src, /name="star"|name="bell"/, "the star and the bell must both be gone, not just unused");
+  const watchSurfaces: [string, RegExp][] = [
+    ["src/components/PriceWatchButton.tsx", /4\.8 4\.8 0 0 1 6\.8 0/],
+    ["src/app/watching/page.tsx", /<NavIcon name="heart"/],
+    ["src/components/CardConversionCta.tsx", /<NavIcon name="heart"/],
+    ["src/components/home/ReturnVisitCards.tsx", /<NavIcon name="heart"/],
+  ];
+  for (const [file, pattern] of watchSurfaces) {
+    assert.match(readCode(file), pattern, `${file} must draw the same heart`);
+  }
   // Filled when there is something in it — PriceWatchButton's own convention,
   // and what separates this from the outline NotificationBell in the sm-to-lg
   // band where a signed-in visitor sees both.

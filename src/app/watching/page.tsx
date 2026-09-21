@@ -52,7 +52,7 @@ export default async function WatchingPage() {
           <span className="text-slate-300">My watchlist</span>
         </nav>
         <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold text-white sm:text-3xl">
-          <NavIcon name="bell" className="h-6 w-6 shrink-0 text-brand-400" />
+          <NavIcon name="heart" className="h-6 w-6 shrink-0 text-brand-400" />
           My watchlist
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">

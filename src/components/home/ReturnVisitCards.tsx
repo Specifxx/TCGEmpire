@@ -61,7 +61,7 @@ export function ReturnVisitCards({ newestSetName }: { newestSetName?: string }) 
         className="card-surface group flex items-center gap-4 p-5 transition-colors hover:border-brand-500/60 hover:bg-ink-800"
       >
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-500/15 text-brand-400">
-          <NavIcon name="bell" className="h-6 w-6" />
+          <NavIcon name="heart" className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-extrabold text-white">Watching a card?</h2>

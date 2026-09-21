@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
+import { searchNav } from "./nav-search";
 import { BrandLogo } from "./BrandLogo";
-import { SearchBar } from "./SearchBar";
 import { useCountry } from "./CountryProvider";
 import { useMe } from "@/lib/use-me";
 import { COUNTRIES } from "@/lib/country";
@@ -47,6 +47,22 @@ import { COUNTRIES } from "@/lib/country";
 // if this component had no memory at all.
 const STORAGE_KEY = "rc:sidenav:collapsed-groups";
 
+// WHICH GROUP IS OPEN ON A FIRST VISIT (2026-09-21, owner: "lets have the
+// default on the left prices is expanded whilst everything else is rolled
+// up"). Every group used to start open, which made the rail ~60 links long
+// and mostly a scrollbar — you scrolled past Games and Guides to reach Your
+// Collection on every page.
+//
+// Matched by TITLE against NAV_GROUPS, and deliberately not by index: a group
+// added or reordered tomorrow must not silently become "the open one".
+const DEFAULT_OPEN_GROUP = "Prices";
+
+// The default collapsed set, derived rather than written out, so it cannot
+// drift from NAV_GROUPS. Computed once at module load — it is a pure function
+// of a static array, and it must be IDENTICAL on the server and on the
+// client's first render or React reports a hydration mismatch.
+const DEFAULT_COLLAPSED: string[] = NAV_GROUPS.map((g) => g.title).filter((t) => t !== DEFAULT_OPEN_GROUP);
+
 function isActiveLink(pathname: string | null, link: { href: string; external?: boolean }): boolean {
   // Active when the current route IS this link, or is nested under it (e.g.
   // /card/abc under /browse) — but never for "/" itself, which would
@@ -86,11 +102,19 @@ export function SideNav() {
     [pathname],
   );
 
-  // Empty set = every group open, matching SSR and first client paint exactly
-  // (localStorage isn't readable on the server, so starting from anything else
-  // would make the client's first render disagree and React would log a
-  // hydration mismatch). The real state loads in the effect below.
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // Starts at the default above — the same value on the server and on the
+  // client's first render (localStorage isn't readable server-side, so
+  // starting from stored state here would guarantee a hydration mismatch).
+  // A returning visitor's own choices load in the effect below.
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(DEFAULT_COLLAPSED));
+
+  // What the visitor typed into the feature search above. Empty = show the
+  // normal grouped tree; anything else = show flat, ranked matches instead.
+  const [featureQuery, setFeatureQuery] = useState("");
+  const featureResults = useMemo(
+    () => (featureQuery.trim() ? searchNav(featureQuery).slice(0, 24) : null),
+    [featureQuery],
+  );
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -165,30 +189,49 @@ export function SideNav() {
         </span>
       </Link>
 
-      {/* ── Search ────────────────────────────────────────────────────────
-          A REAL CARD SEARCH, not a launcher button. It was a button opening
-          the ⌘K overlay until 2026-09-21; the overlay searches SITE
-          NAVIGATION, so typing a card name into the thing labelled "Search"
-          in a card-price site's sidebar found nothing. Asked for directly:
-          "the search bar on the side should search through all the cards and
-          should say 'search for cards' and the suggestions should pop up on
-          the side next to it stacked vertically."
+      {/* ── Search the FEATURES ────────────────────────────────────────
+          Not card search (2026-09-21, owner: "lets make the search bar on the
+          left a search for features"). Card search is the header's job and
+          says so in its own placeholder; this one answers "where is the thing
+          that does X" over the same NAV_GROUPS index the ⌘K launcher and the
+          phone overlay search, via the shared `searchNav()` — so a word that
+          finds a page in one of them finds it in all three.
 
-          The `rail` variant of the shared SearchBar — the same component the
-          header and the homepage hero use, so the /api/search query, the
-          debounce, the abort-on-retype, the keyboard model, recent searches,
-          QuickView-on-click and the analytics are all the existing ones. The
-          variant changes exactly two things: the placeholder, and the fact
-          that the suggestion list opens to the RIGHT of the rail instead of
-          beneath the field.
-
-          The ⌘K launcher is NOT lost — it still has its own global shortcut
-          and its own button below lg. It simply stops pretending to be card
-          search. */}
+          It filters the list BELOW it in place rather than opening a panel:
+          the rail is a navigation tree, and narrowing the tree you are
+          already looking at is both simpler and less to explain than a
+          dropdown over the top of it. */}
       <div className="shrink-0 border-b border-ink-800 px-3 py-3">
-        <Suspense fallback={<div className="input h-9" />}>
-          <SearchBar variant="rail" />
-        </Suspense>
+        <div className="relative">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-500">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            value={featureQuery}
+            onChange={(e) => setFeatureQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setFeatureQuery("");
+            }}
+            placeholder="Search features"
+            aria-label="Search features"
+            autoComplete="off"
+            className="w-full rounded-lg border border-ink-700 bg-ink-950/60 py-2 pl-9 pr-8 text-sm text-slate-200 placeholder:text-slate-500 transition-colors hover:border-ink-600 focus:border-brand-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+          />
+          {featureQuery && (
+            <button
+              type="button"
+              onClick={() => setFeatureQuery("")}
+              aria-label="Clear"
+              className="absolute right-1.5 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded text-slate-500 transition-colors hover:bg-ink-800 hover:text-white"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-3.5 w-3.5">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── The index ─────────────────────────────────────────────────────
@@ -197,7 +240,54 @@ export function SideNav() {
           footer site-map renders and /llms.txt publishes, so a link added in
           one place appears in all four. */}
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
-        {NAV_GROUPS.map((group) => {
+        {featureResults ? (
+          // SEARCHING: a flat, ranked list, each row naming the group it came
+          // from — that context is the difference between "Movers" meaning
+          // anything and meaning "the one in Prices". No disclosures here:
+          // when you have typed a query, hiding matches behind a collapsed
+          // section is the opposite of what you asked for.
+          featureResults.length === 0 ? (
+            <p className="px-2 py-6 text-center text-sm text-slate-500">
+              No features match “{featureQuery.trim()}”.
+            </p>
+          ) : (
+            <ul className="space-y-0.5">
+              {featureResults.map((link) => {
+                const active = isActiveLink(pathname, link);
+                const className = `block rounded-md border-l-2 py-1.5 pl-3 pr-2 transition-colors ${
+                  active
+                    ? "border-brand-400 bg-brand-500/10 text-brand-300"
+                    : "border-transparent text-slate-300 hover:border-ink-700 hover:bg-ink-800 hover:text-white"
+                }`;
+                const body = (
+                  <>
+                    <span className="block truncate text-sm font-semibold">{link.label}</span>
+                    <span className="block truncate text-[11px] text-slate-500">{link.group}</span>
+                  </>
+                );
+                return (
+                  <li key={`${link.group}-${link.href}`}>
+                    {link.external ? (
+                      <a href={link.href} target="_blank" rel="noopener noreferrer" className={className}>
+                        {body}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className={className}
+                        aria-current={active ? "page" : undefined}
+                        onClick={() => setFeatureQuery("")}
+                      >
+                        {body}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )
+        ) : (
+        NAV_GROUPS.map((group) => {
           const open = !collapsed.has(group.title);
           const panelId = `sidenav-group-${group.title.replace(/\s+/g, "-").toLowerCase()}`;
           const groupActive = group.title === activeGroupTitle;
@@ -247,7 +337,8 @@ export function SideNav() {
               )}
             </div>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* ── Pinned Premium ───────────────────────────────────────────────

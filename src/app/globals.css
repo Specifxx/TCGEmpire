@@ -356,8 +356,32 @@ html {
      rename across all of them would be churn for no behaviour. What it no
      longer carries is --bottombar-h (gone — nothing reserves that space any
      more) or --chrome-lift (gone with the bar whose position it corrected). */
+  /* The shared corner for every bottom-left nudge (SignupPromoPopup,
+     PremiumSlideIn, AnnualSwitchNudge). It clears the phone tab bar's space
+     below lg and, since 2026-09-21, clears the DESKTOP RAIL from lg up:
+     those cards are `left-4`, which from 1024px put them on top of the
+     sidebar ("for any sliders (sign up and premium), it should be shifted to
+     the right so it doesn't overlap with the sidebar").
+
+     Done HERE rather than as an `lg:left-…` on each card, and that is the
+     point: tests/signup-slidein.test.ts pins all three to one identical
+     corner string precisely so a fix applied to two of them cannot leave the
+     third behind — which is exactly what the first attempt at this did.
+     `--sidenav-w` is 0 below lg, so the override is a no-op there and the
+     `left-4` in the shared string still decides. */
   .above-bottombar {
     bottom: calc(var(--native-banner-h) + env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+  /* SCOPED TO THE LEFT-ANCHORED NUDGES, via the `left-4` they all carry. The
+     first version of this put `left` on `.above-bottombar` itself, which also
+     caught FeedbackWidget — that one is `right-4`, and giving a right-anchored
+     fixed element a `left` too stretched it across the whole viewport
+     (measured: 1136px wide instead of 114px). Matching on `.left-4` is what
+     makes "left-anchored" expressible in CSS at all, and the three nudges are
+     pinned to that exact class string by tests/signup-slidein.test.ts, so the
+     set this applies to cannot quietly drift. */
+  .above-bottombar.left-4 {
+    left: calc(var(--sidenav-w) + 1rem);
   }
 
   @media (pointer: coarse) {

@@ -10089,3 +10089,79 @@ typecheck`, `npm run lint` (0 errors), `npm run adsense:guard` (22/22),
 `npm test` (1690/1691 — the one failure is the pre-existing "seller id is the
 client id with ca- stripped" sandbox gap), no horizontal overflow at
 1440/1100/820/375, and `scripts/mobile-check.ts` clean at 640/720/790.
+
+## Six corrections to the rail and header, and a shared-utility bug they exposed — 2026-09-21 (same day)
+
+All owner-directed, after seeing the previous pass live.
+
+**The rail searches FEATURES; the header searches CARDS.** The rail's box was
+card search for a few hours and is now a feature filter over `searchNav()` —
+the same index the ⌘K launcher and the phone overlay search, so a word that
+finds a page in one finds it in all three. It filters the tree in place rather
+than opening a panel: the rail IS the navigation tree, and narrowing what you
+are already looking at needs no explaining. Each result names its group,
+because "Movers" alone is ambiguous and "Movers · Prices" is not. The
+`rail` variant of `SearchBar`, added hours earlier, is deleted rather than
+left unused — with it the sideways-opening dropdown and its top-anchored
+height maths.
+
+**Card search and the Database link are back in the header, left-aligned**, as
+asked. The search box sits INSIDE the left cluster rather than as the row's
+middle child: the row is `justify-between`, so a middle child centres, and
+"left aligned" was the instruction. It is placed after the phone Premium link,
+not before it — putting it directly after Database split the Database/Premium
+pairing that the 2026-09-10 brief put there deliberately, and
+`tests/mobile-header-fit.test.ts` caught exactly that. `SearchBar`'s nav
+placeholder is now "Search for cards" for both the desktop and phone copies.
+Database is ungated again at every width.
+
+**Only Prices is open on a first visit.** `DEFAULT_OPEN_GROUP` names the group
+rather than indexing it, and the collapsed set is DERIVED from `NAV_GROUPS`
+rather than written out, so adding or reordering a group tomorrow cannot
+silently make a different one "the open one". It is the initial React state,
+not an effect, because localStorage is unreadable on the server and anything
+else guarantees a hydration mismatch.
+
+**The watchlist is a heart, everywhere.** Changed in one pass across all five
+surfaces that stand for it — `HeaderWatchButton`, `PriceWatchButton` (the
+toggle on every card tile and card page), `/watching`'s heading, the card
+page's "Watch this price" block and the homepage's "Watching a card?" card.
+Changing only the header is a mistake this repo has already made once: a star
+shipped in that one control and was reverted with "it should be the same icon
+as the watch has". `tests/design-system.test.ts` now asserts all five, so the
+next change to one of them fails rather than drifting. It also ends the
+problem the star was reaching for — a heart cannot be confused with a
+notification bell.
+
+**The corner nudges clear the rail**, and the two wrong turns on the way there
+are the interesting part:
+
+- The first attempt added `lg:left-[calc(var(--sidenav-w)+1rem)]` to
+  `SignupPromoPopup` and `PremiumSlideIn`. `tests/signup-slidein.test.ts`
+  failed, and it was right to: all THREE bottom-left nudges (those two plus
+  `AnnualSwitchNudge`) are pinned to one identical corner string precisely so
+  a fix applied to two cannot leave the third behind. Which is what had just
+  happened — `AnnualSwitchNudge` would still have sat on the sidebar.
+- So it moved into the shared `.above-bottombar` utility — and that broke
+  `FeedbackWidget`, which shares the utility but is `right-4`. Giving a
+  right-anchored fixed element a `left` too stretched it from 114px to 1136px
+  wide, across the whole viewport. Measured, not reasoned: the check that
+  caught it prints the bounding box of every visible nudge.
+- The fix is `.above-bottombar.left-4`, which is what makes "left-anchored"
+  expressible in CSS. `--sidenav-w` is 0 below lg, so it is a no-op there.
+
+**One real accessibility regression, caught by an existing guard and fixed in
+the code rather than the test**: the new feature-search input shipped with
+`focus:outline-none` and no replacement ring. `tests/design-system.test.ts`
+requires every `outline-none` in `src/**/*.tsx` to carry a `focus-visible:`
+ring in the same className, which is a rule worth having and was correct here.
+
+Verified in a real browser at 1440/1100/820/375: Prices open with nine groups
+rolled up; Database at x=304 and the card search at x=400, both immediately
+right of the 272px rail; "deck" in the rail returns Deck Builder and Trade
+Calculator with their groups; the watch control draws the heart path; the
+signup card sits at x=288 and Feedback back at x=1310 at its own 114px. Plus
+typecheck, lint (0 errors), the AdSense guard (22/22), `npm test`
+(1695/1696 — the one failure is the pre-existing "seller id is the client id
+with ca- stripped" sandbox gap) and `scripts/mobile-check.ts` clean at
+640/720/790.
