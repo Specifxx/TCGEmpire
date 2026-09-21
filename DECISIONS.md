@@ -9568,7 +9568,30 @@ not enforceable by reading the output. So every generated pair carries a span
 copied character-for-character out of the article's own body, a second pass
 checks that span really is verbatim and that the answer claims nothing beyond it,
 and a pair that fails is discarded rather than repaired. Editing the evidence to
-match an answer is backwards, and is called out as such in the instructions.
+match an answer is backwards, and is called out as such in the instructions. All
+102 articles now carry one.
+
+**The same pass cleared the duplicate the field exists to end.** Eleven articles
+had BOTH a `faq` field and a hand-written `## … FAQ` section, so the page
+rendered the same questions twice — acknowledged debt, documented on the field
+itself as "being migrated". Stripping those sections is not a delete of
+everything under the heading: each one ended with real editorial content that was
+never a question — closing CTA paragraphs, a sourcing note, and in one case a
+`[[shop]]` marker positioning the affiliate strip — and a first attempt that took
+the whole section removed 17 internal links and broke the body's own template
+literal on three articles where the closing backtick rode on the last FAQ line.
+What ships removes the heading and the `**Question?** answer` paragraphs only.
+No link target was lost. One answer had no structured counterpart, the "do you
+give investment advice?" disclosure, and was moved into `faq` rather than
+dropped; the last article's six markdown questions were converted in place rather
+than replaced with generated ones, because they were better.
+
+Two tests moved with the code. `tests/seo-landing-pages.test.ts` required a
+visible `## … FAQ` section, which after this change would mean *requiring* the
+duplicate — it now asserts the FAQ is visible exactly once by one route or the
+other, which also catches a duplicate the old form could not see.
+`tests/september-2026-bans.test.ts` located its article by that same heading
+string and now uses the slug, which cannot drift out from under it.
 
 **What was deliberately not done.** No Radiance article blitz: of ~24 Vendetta
 pre-release articles, 13 were 301'd within eight weeks and every survivor had
