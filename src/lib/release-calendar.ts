@@ -53,6 +53,16 @@ export interface ReleaseEntry {
   champions?: string[];
   /** Where pre-orders for this set can be compared, while it is still upcoming. */
   preordersHref?: string;
+  /**
+   * The live spoiler/reveal tracker for this set, while it is still upcoming.
+   *
+   * Set-agnostic on purpose, exactly like `preordersHref` above: the homepage and
+   * the set template both want to point at "the tracker for whatever is next"
+   * without either of them naming Radiance. Every set since Vendetta has had one
+   * of these (a dated reveal log around a self-populating gallery), so the field
+   * belongs on the calendar row rather than in a hardcoded branch somewhere.
+   */
+  spoilersHref?: string;
   /** One sourced line on what this release actually is. */
   note: string;
 }
@@ -105,6 +115,7 @@ export const RELEASES: ReleaseEntry[] = [
     // carries 6 rather than the original 5.
     champions: ["Seraphine", "Evelynn", "Ekko", "Ziggs", "Jarvan IV", "Orianna"],
     preordersHref: "/radiance-preorders",
+    spoilersHref: "/blog/riftbound-radiance-spoilers",
     note: "Riot's Set 5 — 167 numbered cards, with Showcase treatments numbered above them (Riot's announcement said 180 including 66 Showcase; the first card to surface is printed 167/167). A step up from Vendetta. Six champion Legends are named so far, with three more still unrevealed.",
   },
   {
@@ -112,6 +123,7 @@ export const RELEASES: ReleaseEntry[] = [
     date: "2027-01-29",
     cards: 346,
     approxCards: true,
+    spoilersHref: "/blog/riftbound-legacy-spoilers-set-6",
     note: "Riot's Set 6 — the largest set announced so far, the first designed specifically for draft, and the one that changes pack composition (a common slot becomes a Legend-or-Battlefield slot).",
   },
   {
@@ -300,4 +312,27 @@ export function preordersHrefForSet(code: string | undefined, now: Date = new Da
   const entry = RELEASES.find((r) => r.code === code);
   if (!entry?.preordersHref) return null;
   return isPreorderSetCode(code, now) ? entry.preordersHref : null;
+}
+
+/**
+ * The live spoiler/reveal tracker for a set code, while that set is still
+ * upcoming — or null once it has shipped (or if it never had one).
+ *
+ * WHY THE GUARD IS THE RELEASE DATE AND NOT isPreorderSetCode(). Pre-orders stop
+ * being a thing the moment a set is on shelves, so preordersHrefForSet() retires
+ * on the pre-order rule. A reveal tracker is useful for the whole run-up —
+ * including the last week, when pre-orders may already have closed — so this one
+ * retires on the street date itself. On release day the tracker either flips to a
+ * past-tense "every card revealed" title or redirects to the set page; either way
+ * the homepage should stop pointing at it, which is what returning null does.
+ *
+ * A row with no `date` (a "Q3 2027" placeholder) has not happened, so its tracker
+ * still counts as upcoming.
+ */
+export function spoilersHrefForSet(code: string | undefined, now: Date = new Date()): string | null {
+  if (!code) return null;
+  const entry = RELEASES.find((r) => r.code === code);
+  if (!entry?.spoilersHref) return null;
+  if (!entry.date) return entry.spoilersHref;
+  return Date.parse(`${entry.date}T00:00:00Z`) > now.getTime() ? entry.spoilersHref : null;
 }

@@ -36,6 +36,8 @@ import { formatMoney } from "../src/lib/format";
 import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "../src/lib/country";
 import { cardHref } from "../src/lib/card-url";
 import { CONTACT_EMAIL, SITE_URL } from "../src/lib/site";
+import { nextUpcomingSet } from "../src/lib/constants";
+import { spoilersHrefForSet } from "../src/lib/release-calendar";
 
 // ── Content model ─────────────────────────────────────────────────────────────
 // The minimal, channel-agnostic shape the formatters need (decoupled from Mover
@@ -74,6 +76,26 @@ const utm = (path: string, source: string) =>
   `${SITE_URL}${path}?utm_source=${source}&utm_medium=social&utm_campaign=weekly-movers`;
 
 const signedPct = (pct: number) => `${pct > 0 ? "+" : ""}${pct}%`;
+
+/**
+ * The next set's live reveal tracker, while that set is still upcoming.
+ *
+ * WHY IT IS IN THE PROMO PACK. The pack's whole job is to give the owner one
+ * paste-ready post a week, and for the ~4 weeks around a preview season the
+ * highest-intent page the site has is the reveal tracker, not the movers table.
+ * Adding it here means the seasonal post writes itself instead of depending on
+ * remembering to hand-edit the pack during the one month it matters.
+ *
+ * Self-retiring, and names no set: spoilersHrefForSet() returns null from the
+ * street date, so the pack goes back to movers-only on its own and picks the
+ * next set up when that one is announced.
+ */
+function spoilerPromo(source: string): { name: string; url: string } | null {
+  const upcoming = nextUpcomingSet();
+  const href = upcoming ? spoilersHrefForSet(upcoming.code) : null;
+  if (!upcoming || !href) return null;
+  return { name: upcoming.name, url: utm(href, source) };
+}
 
 // Reddit tables break on "|" in cell text; card names are the only dynamic text.
 const mdSafe = (s: string) => s.replace(/\|/g, "\\|");
@@ -118,6 +140,14 @@ function redditBody(d: PromoData, market: Country): string {
   sections.push(
     `Interactive version with price-history charts (covers AU / US / UK): [riftcompare.com/movers](${utm("/movers", "reddit")})`
   );
+  // Seasonal: during a preview season the reveal tracker outranks the movers
+  // table as the reason someone clicks, so it gets its own line rather than
+  // being buried in the disclosure paragraph.
+  const revealsR = spoilerPromo("reddit");
+  if (revealsR)
+    sections.push(
+      `Also tracking every official **${revealsR.name}** reveal as it lands, with prices appearing on each card as stores list it: [every ${revealsR.name} card revealed so far](${revealsR.url})`
+    );
   sections.push(
     `*Prices are the ${info.place} market in ${cur}. Disclosure: I run RiftCompare — it's a free price-comparison site; happy to answer questions or take feedback.*`
   );
@@ -132,6 +162,8 @@ function xBlurb(d: PromoData): string {
   if (d.drops[0]) lines.push(`▼ ${trunc(d.drops[0].name)} ${signedPct(d.drops[0].pct)}`);
   if (d.value[0]) lines.push(`💎 ${trunc(d.value[0].name)} ${Math.abs(d.value[0].pct)}% off recent high`);
   lines.push(`Full report → ${utm("/movers", "twitter")}`);
+  const revealsX = spoilerPromo("twitter");
+  if (revealsX) lines.push(`Every ${revealsX.name} card revealed → ${revealsX.url}`);
   lines.push("#Riftbound #LeagueOfLegends #TCG");
   return lines.join("\n");
 }
@@ -155,6 +187,9 @@ function discordEmbed(d: PromoData, market: Country) {
   if (d.drops.length) parts.push(`**📉 Biggest drops**\n${discordLines(d.drops, cur, 5)}`);
   if (d.value.length) parts.push(`**💎 Best value vs recent high**\n${discordLines(d.value, cur, 5)}`);
   parts.push(`[See the full interactive report →](${utm("/movers", "discord")})`);
+  const revealsD = spoilerPromo("discord");
+  if (revealsD)
+    parts.push(`✨ [Every ${revealsD.name} card revealed so far →](${revealsD.url}) — updated as each official reveal lands.`);
   return {
     username: "RiftCompare",
     embeds: [

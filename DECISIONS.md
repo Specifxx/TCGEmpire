@@ -9494,3 +9494,87 @@ the buyer is a shop owner who has probably never used this site signed in, and
 a registration wall in front of the highest-value action on the site would be
 the most expensive form validation ever written. Rate limiting does that job
 instead.
+
+---
+
+## Marketing: build the front doors, not more pages — 2026-09-21
+
+The 90-day marketing plan (`docs/MARKETING-PLAN.md`) was written against Search
+Console rather than against intuition, and the numbers pointed somewhere other
+than "publish more". 164,892 impressions and 3,097 clicks in 28 days, of which
+**857 — 28% of the month — came from one fading news spike**. The site's #2, #3,
+#5 and #6 queries after its own name were all *radiance spoilers / leaks / card
+list*. Meanwhile the banlist guide had 8,313 impressions and 16 clicks.
+
+So the finding was not a traffic problem. It was three doors that were already
+built and had nothing leading to them.
+
+**The tracker was orphaned from the site's own front page.** The Radiance reveal
+tracker was shipped to own the site's best queries, and was linked from the set
+page and nowhere else — not the homepage, not the daily Discord post, and not the
+Friday promo pack, whose entire job is to be paste-ready. Four days before preview
+season the site's best page for its best queries had no path from its front door.
+All three now carry it, and none of them names a set in code: the link resolves
+through `spoilersHrefForSet()` on the release calendar and returns null from the
+street date, so it retires and re-arms by itself. That shape is not stylistic.
+Every one of these surfaces has rotted before by hardcoding the set of the moment
+— `/radiance-countdown` and `/vendetta-countdown` were hand-written pages that
+died on release day, and the daily Discord post spent months featuring a market
+wrap that had been deleted. `tests/set-window-promotion.test.ts` pins the
+plumbing and pins that no set is named in the code of any of the three; it strips
+comments before that check, because the doc comment explaining the roll-forward
+is the opposite of the problem.
+
+**The embed widgets had no public page.** Three widgets — a card price badge, the
+market index, a release countdown — have been live for months. Each route's own
+header calls it "a compounding backlink + brand engine". Nothing on the site, in
+the docs or in any outreach material said they existed, which makes it an engine
+nobody can find. `/embed` is now their directory, with copy-paste snippets, and it
+is a page rather than a docs file for a specific reason: the partnership ask is
+"here is a widget your readers would want", and that only works if a webmaster can
+open a URL, see it running and copy one line.
+
+That required narrowing the headers rule from `/embed/:path*` to `/embed/:path+`.
+`:path*` matches zero or more segments, so it matched the bare `/embed` too — the
+one route under that prefix that is NOT a widget would have received both
+`frame-ancestors *` and the default rule's `X-Frame-Options`. The default rule's
+negative lookahead is `(?!embed/)`, with the slash, so the page falls through to
+the protective defaults, which is what an ordinary page carrying the site nav
+wants. The widget test's pin moved with the code rather than being loosened.
+
+**The B2B report could not be given to anyone without a developer.**
+`/stores/report` renders a store's live "where you're beaten on price" report from
+a capability token, and `/api/admin/store-partners` has always been able to mint
+those tokens. Nothing called it — no page, no script, no admin tile — so the only
+way to create a partner was to hand-craft an authenticated POST. That was
+invisible for as long as nobody used the feature, and became load-bearing the
+moment store outreach was named the plan's one human channel: the free report is
+the entire reason a shop owner opens a cold email, and "ask a developer to mint
+you a token" is not a step the person sending those emails can take.
+`/admin/store-partners` is now a form. Building it surfaced that both handlers on
+that API accepted a logged-in admin only, while every `/admin` *page* also accepts
+`?key=ADMIN_TOKEN` — a mismatch that would have 403'd a form on a page reached the
+second way. Both now carry the same dual gate as `/api/admin/tier-floor`.
+
+**The picker shows listing counts, and that is not decoration.** A report built on
+a store with no live listings is an empty page, and sending an empty report to a
+prospect is worse than sending nothing at all.
+
+**FAQ blocks are held to a verbatim evidence span.** The retrofit adds `faq` to
+articles that lacked it — one source for both the visible section and the
+`FAQPage` JSON-LD, which widens the SERP footprint of a page that already ranks.
+The data-accuracy rule says never invent TCG content, and "don't invent things" is
+not enforceable by reading the output. So every generated pair carries a span
+copied character-for-character out of the article's own body, a second pass
+checks that span really is verbatim and that the answer claims nothing beyond it,
+and a pair that fails is discarded rather than repaired. Editing the evidence to
+match an answer is backwards, and is called out as such in the instructions.
+
+**What was deliberately not done.** No Radiance article blitz: of ~24 Vendetta
+pre-release articles, 13 were 301'd within eight weeks and every survivor had
+live data in it. No retitling of the leak post toward "spoilers" — it holds the
+857 clicks, and the tracker earns that query on its own
+(`docs/seo-keyword-map.md`). No new nudges or pricing changes during the window;
+the 2026-09-14 freeze stands, and the 78%-dismiss popup already proved a nudge
+can cost traffic. And no paid ads: the budget was never the binding constraint
+here, attention was, and the plan needs $0.

@@ -12,7 +12,7 @@ import { LatestPosts } from "@/components/home/LatestPosts";
 import { CommunityTeaser } from "@/components/home/CommunityTeaser";
 import { PartnersStrip } from "@/components/home/PartnersStrip";
 import { SETS, newestReleasedSet, nextUpcomingSet } from "@/lib/constants";
-import { preordersHrefForSet } from "@/lib/release-calendar";
+import { preordersHrefForSet, spoilersHrefForSet } from "@/lib/release-calendar";
 import { SITE_URL } from "@/lib/site";
 import { getArticles } from "@/lib/articles";
 import type { Country } from "@/lib/country";
@@ -95,6 +95,12 @@ export function HomeSections({
   // today and clears itself the moment the set ships (getPreorderGroups() then
   // returns [], see sealed-import.ts) or a future set has no pre-order page yet.
   const preordersHref = nextSet ? preordersHrefForSet(nextSet.code) : null;
+  // The next set's live reveal tracker, for the run-up only (spoilersHrefForSet
+  // returns null from the street date). Added 2026-09-21, four days before
+  // Radiance Preview Season: "riftbound radiance spoilers" and "… card list"
+  // were the site's #2 and #5 Search Console queries and the homepage linked
+  // neither — the front door had no path to the page those searchers wanted.
+  const spoilersHref = nextSet ? spoilersHrefForSet(nextSet.code) : null;
   // Two teaser rows: news/analysis/opinion from the blog, then the evergreen,
   // reference-shaped guides underneath. Same data everywhere this renders,
   // since it's the same in-memory list on every market.
@@ -290,6 +296,7 @@ export function HomeSections({
           <NextSetCountdownCard
             set={nextSet}
             preorders={preordersHref ? { href: preordersHref, setName: nextSet!.name } : null}
+            spoilers={spoilersHref ? { href: spoilersHref, setName: nextSet!.name } : null}
           />
         </Reveal>
       )}

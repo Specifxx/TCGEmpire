@@ -261,7 +261,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/feedback", label: "Suggest a feature", keywords: ["feedback", "suggest", "idea", "feature request", "vote"] },
       { href: "/stores/suggest", label: "Suggest a store", keywords: ["suggest a store", "add a store", "missing store", "list my store"] },
       { href: "/about", label: "About RiftCompare", keywords: ["about", "who we are", "riftcompare", "compare"] },
-      { href: "/creators", label: "Socials & Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok", "embed", "embed widget"] },
+      { href: "/creators", label: "Socials & Creators", keywords: ["socials", "social media", "discord", "instagram", "twitter", "x", "facebook", "follow us", "creators", "content creators", "influencers", "partner", "partnership", "youtube", "twitch", "tiktok"] },
+      // The widget directory. It inherits the "embed" keywords that used to sit
+      // on /creators above, which was the closest thing the launcher had to an
+      // answer for "embed" and was the wrong page to land on: /creators lists
+      // people, this one lists the three widgets and the HTML to paste. The
+      // widgets themselves have been live for months with no public page
+      // describing them.
+      { href: "/embed", label: "Widgets for your site", keywords: ["embed", "embed widget", "widget", "iframe", "badge", "price badge", "countdown widget", "add to my site", "api"] },
       // The header's own Discord icon is desktop-only (Navbar.tsx, lg:grid) —
       // below that breakpoint (everything under 1024px: every phone AND the
       // whole 640-1023px tablet range) it was reachable from NOWHERE, despite

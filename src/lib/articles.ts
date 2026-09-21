@@ -1596,6 +1596,32 @@ What this page deliberately does not do is tell you *why* any of these cards is 
     date: "2026-06-12",
     readMins: 4,
     tags: ["beginners", "opinion", "buying"],
+    faq: [
+      {
+        q: "How much does it cost to start playing Riftbound?",
+        a: "The cheapest way in is a preconstructed or Proving Grounds deck, which is ready to play straight out of the box. To see what a specific list would cost you, drop it into the [deck pricer](/deck) and it totals every card at the cheapest live price.",
+      },
+      {
+        q: "Is it too late to get into Riftbound?",
+        a: "No — Riftbound is still early, so starting now means learning the game as the community grows and the meta is still wide open.",
+      },
+      {
+        q: "What are the domains in Riftbound?",
+        a: "Riftbound has seven domains: Fury, Calm, Mind, Body, Chaos, Order and Colorless. You build a deck around a Legend (your champion) across those domains and battle for control of battlefields.",
+      },
+      {
+        q: "Should I buy Riftbound singles or booster boxes?",
+        a: "Singles are far cheaper than ripping boxes and hoping to pull what you need, so the usual route is a precon deck upgraded card-by-card. You can [compare every store](/browse) before you buy so you start out paying the least.",
+      },
+      {
+        q: "Do you need expensive chase cards to play Riftbound well?",
+        a: "No — you rarely need chase cards to play well. Riftbound can get expensive if you go chasing them, but that is a choice rather than a requirement.",
+      },
+      {
+        q: "Can I try Riftbound for free before buying cards?",
+        a: "Yes. You can get a feel for the cards completely free by playing [Riftle](/riftle), our daily card game, and reading [Riftbound for beginners](/guides/riftbound-for-beginners).",
+      },
+    ],
     body: `Riftbound — the League of Legends Trading Card Game — is one of the newest TCGs around, and "should I get into it?" is the question we hear most. Here's an honest answer, without the hype.
 
 ## What you're actually getting
@@ -1635,6 +1661,32 @@ You can get a feel for the cards completely free: play **[Riftle](/riftle)**, ou
     date: "2026-06-11",
     readMins: 4,
     tags: ["buying", "singles", "sealed", "value"],
+    faq: [
+      {
+        q: "What's the cheapest way to build a Riftbound deck?",
+        a: "Buy the singles you need instead of opening packs. If you want specific cards — to finish a deck, complete a playset, or grab a chase card — buying singles is almost always cheaper than opening packs to find them, and you pay for exactly what you want with zero variance.",
+      },
+      {
+        q: "How do I know if a Riftbound booster box is worth opening?",
+        a: "Run the [Box EV calculator](/tools/box-ev). It works out a box's expected value from live singles prices, so you can see whether opening is +EV before you buy.",
+      },
+      {
+        q: "Do you lose money opening a Riftbound booster box?",
+        a: "On average a box returns less than the sum of the singles inside, because you're paying for the experience. A booster box has a fixed expected value spread across many random cards, so if you only need a few particular cards you'll usually pay less buying those singles directly.",
+      },
+      {
+        q: "Why do people still open Riftbound packs if singles are cheaper?",
+        a: "Because opening packs is fun — the rip, the chase, the surprise. Packs and boxes also make sense if you want to draft, collect sealed product, or you genuinely enjoy the gamble.",
+      },
+      {
+        q: "Where can I compare Riftbound booster box prices?",
+        a: "Use the [sealed price comparison](/sealed) page. If you want the opening experience, want to draft, or want to collect sealed product, compare box prices first rather than buying from the first store you check.",
+      },
+      {
+        q: "How do I find the cheapest place to buy a Riftbound single card?",
+        a: "Look the card up in the [database](/browse) and buy the cheapest copy across stores. Comparing prices before you spend is the whole reason RiftCompare exists.",
+      },
+    ],
     body: `It's the eternal TCG question: do you buy the **singles** you need, or open **packs** and chase them? Here's how to decide — every time.
 
 ## The case for singles
@@ -1667,6 +1719,32 @@ Either way, the smart move is the same: compare prices before you spend. That's 
     date: "2026-06-12",
     readMins: 5,
     tags: ["collecting", "guide", "condition", "storage"],
+    faq: [
+      {
+        q: "What's the difference between penny sleeves and deck sleeves?",
+        a: "Penny sleeves are cheap, thin, soft plastic and work as a first layer for storage and bulk. Deck sleeves are sturdier, often coloured or art-printed, and made for shuffling and play — if you're actually playing with a deck, those are the ones you want.",
+      },
+      {
+        q: "Should I double sleeve my Riftbound cards?",
+        a: "For valuable cards, yes — double-sleeving is the collector standard: a snug \"perfect fit\" inner sleeve, then a standard sleeve over the top, so dust and moisture can't creep in.",
+      },
+      {
+        q: "Can you put a card in a top loader without a sleeve?",
+        a: "No — never put an unsleeved card straight into a top-loader, because the card can rub against the plastic. Sleeve it first; the top-loader is a rigid holder that stops the sleeved card from bending, which is what makes it ideal for posting cards or storing your best singles.",
+      },
+      {
+        q: "Why do my foil cards curl or bend?",
+        a: "Foil cards are more prone to curving because the foil layer reacts to humidity. Double-sleeving helps them lie flat, and storing them under light, even pressure — a packed binder page or a tight box — keeps them straight.",
+      },
+      {
+        q: "Are PVC binders bad for trading cards?",
+        a: "Avoid old PVC binders — they can damage cards over time. Look for acid-free, side-loading pages instead; binders with side-loading pockets are great for sets and for showing off a collection.",
+      },
+      {
+        q: "Does card condition affect Riftbound card prices?",
+        a: "Yes — prices on RiftCompare assume Near Mint (NM) as the benchmark condition. As cards pick up whitening, scratches, dents or bends they drop through Lightly Played, Moderately Played, Heavily Played and Damaged, and each step down means a lower price, so the figure you see in the [database](/browse) is the Near Mint one.",
+      },
+    ],
     body: `A Riftbound card's condition is a big part of its value — a Near Mint copy can be worth far more than a played one. Here's how to protect your cards properly, whether you're holding a chase card or just keeping a deck tidy.
 
 ## Why condition matters
@@ -1719,6 +1797,32 @@ Not sure which sleeves fit? **[What size are Riftbound cards?](/guides/riftbound
     date: "2026-06-11",
     readMins: 5,
     tags: ["collecting", "guide", "rarity", "printings"],
+    faq: [
+      {
+        q: "What does the star mean on a Riftbound card's collector number?",
+        a: "A star (★) in the collector number marks a Signature card — an artist-signed, overnumbered printing, written like 223★/221. These are among the rarest cards in the game.",
+      },
+      {
+        q: "Do alt art Riftbound cards play the same as the normal version?",
+        a: "Yes — an Alt Art card plays identically to the base card and is priced as a collectible rather than as a playable upgrade. You can spot them by collector numbers like 112a.",
+      },
+      {
+        q: "What is the highest rarity in Riftbound?",
+        a: "Showcase sits at the top of the ladder — special alternate-art treatments that are the rarest pulls and usually the priciest. Below it come Epic, Rare, Uncommon and Common.",
+      },
+      {
+        q: "Does a higher rarity Riftbound card always cost more?",
+        a: "No. Higher rarity generally means a higher price, but playability matters too — a Rare that defines the meta can cost more than an Epic nobody plays.",
+      },
+      {
+        q: "Which Riftbound printing should I buy if I just want to play the card?",
+        a: "Buy the cheapest base print — it plays identically to the alt-art, Signature and promo versions. [Browse the database](/browse) and sort by price to find it.",
+      },
+      {
+        q: "Are Riftbound promo cards different from the regular card?",
+        a: "A promo is a limited printing from a prerelease, organised play or an event, and it shares the base card's art and number but trades at its own price. On any card page the printing is spelled out in the title, so you can confirm which version you are buying or listing.",
+      },
+    ],
     body: `Two copies of the "same" Riftbound card can have very different prices — because they're different *printings*. Here's how rarity and special treatments work, so you always know exactly what you're buying.
 
 ## The rarity ladder
@@ -1765,6 +1869,32 @@ Want to see the chase cards in action? Read **[the most valuable Riftbound cards
     date: "2026-06-09",
     readMins: 5,
     tags: ["selling", "prices"],
+    faq: [
+      {
+        q: "Where is the best place to sell Riftbound cards?",
+        a: "eBay and local stores reach the widest audience, which helps for high-value chase cards — just factor in fees and postage when you compare your net. Local trading groups and Discord communities charge lower fees, but you handle buyer trust and shipping protection yourself.",
+      },
+      {
+        q: "How do I find out what my Riftbound cards are worth before selling?",
+        a: "Look each card up in the [card database](/browse), which shows its live price across every store RiftCompare tracks. Match the exact printing and the condition of your copy before you settle on a number.",
+      },
+      {
+        q: "Does condition affect how much a Riftbound card sells for?",
+        a: "Yes — Near Mint (NM) is the benchmark, and lightly to heavily played copies sell for less. Describe condition honestly: it builds trust and avoids returns.",
+      },
+      {
+        q: "Are alt-art Riftbound cards worth more than the base version?",
+        a: "Printings trade at very different prices — base, alt-art, Showcase, Signature, Overnumbered and promo versions are each priced separately. RiftCompare labels the printing in the card name, so you can match your copy precisely before pricing it.",
+      },
+      {
+        q: "What price should I list my Riftbound cards at?",
+        a: "For a fast sale, price at or just under the cheapest comparable listing. If you are not in a hurry, price at market and wait, especially if the card is trending up.",
+      },
+      {
+        q: "How do I sell a whole Riftbound deck at once?",
+        a: "Price the deck as a bundle with the [deck pricer](/deck) so buyers can see the value at a glance, rather than listing each card separately.",
+      },
+    ],
     body: `Got a stack of Riftbound cards gathering dust — duplicates, cards from a deck you've moved on from, or pulls you don't need? Here's how to turn them into cash (or store credit) and get a fair price.
 
 ## 1. Price your cards accurately first
@@ -1808,6 +1938,32 @@ Not sure what the whole pile is worth? **[How much is your Riftbound collection 
     date: "2026-06-09",
     readMins: 5,
     tags: ["beginners", "buying", "tips"],
+    faq: [
+      {
+        q: "Why is the same Riftbound card a different price at every store?",
+        a: "The same Riftbound card can cost wildly different amounts from shop to shop, and stock changes daily, so the first listing you find is rarely the cheapest. Rather than checking shops one by one, [search the card database](/browse) to see the lowest live price across every store we track, sorted cheapest-first.",
+      },
+      {
+        q: "Is it cheaper to buy Riftbound singles or booster boxes?",
+        a: "Singles are almost always cheaper when you need specific cards to finish a deck, rather than chasing those cards in packs. Save sealed for when you want the opening experience or to collect — and if you do, [compare box prices](/sealed) first or read the full [singles vs sealed](/guides/riftbound-singles-vs-sealed) breakdown.",
+      },
+      {
+        q: "Are alt-art Riftbound cards better than the normal version?",
+        a: "No — Alt-art, Showcase, Signature, Overnumbered and promo versions play identically to the base print, they just cost many times more. If you only want the card for your deck, buy the cheap base version; RiftCompare labels each printing right in the card name so you know which one you're adding to cart.",
+      },
+      {
+        q: "Does RiftCompare include shipping in the price?",
+        a: "Yes — RiftCompare shows an estimated shipping figure per shop, so you can compare the delivered cost instead of the sticker price. Buying several cards from one store often unlocks free shipping and beats splitting your order across three.",
+      },
+      {
+        q: "How do I get an email when a Riftbound card drops in price?",
+        a: "Set a price alert by tapping the heart on any card, and you'll get an email when the price drops back down. You can also check the [price movers](/movers) to see whether a card is riding a spike or sitting at a fair price before you buy.",
+      },
+      {
+        q: "When do Riftbound card prices spike?",
+        a: "Prices jump around tournaments and new-set launches. Before paying the first number you see during one of those spikes, check the [price movers](/movers) to see whether a card is riding a spike or sitting at a fair price.",
+      },
+    ],
     body: `Getting into Riftbound: League of Legends TCG is exciting — but it's easy to overspend when you're new. Here are the five mistakes we see most often, and how to dodge every one.
 
 ## 1. Buying from the first store you find
@@ -1986,6 +2142,32 @@ Two more reads before a first order: **[the beginner mistakes that cost money](/
     date: "2026-06-08",
     readMins: 5,
     tags: ["buying", "guide", "sealed", "booster box"],
+    faq: [
+      {
+        q: "Is it cheaper to buy a Riftbound booster box or singles?",
+        a: "If you want specific cards — to finish a deck or grab a chase card — buying singles is almost always cheaper than opening boxes hoping to pull them. A sealed box makes sense when you want the opening experience, cards to draft with, or product to collect. You can [search the singles database](/browse) to price the cards you actually need.",
+      },
+      {
+        q: "When is the best time to buy a Riftbound booster box?",
+        a: "Box prices often spike at launch and settle later, so if you are not in a rush, waiting can save money. Watching the price trend before buying is the main lever you have on a sealed purchase.",
+      },
+      {
+        q: "Do I pay import duty buying a Riftbound booster box from another EU country?",
+        a: "No — EU sealed product is priced in EUR across the single market, so a box listed in the Netherlands is buyable at that price from Spain with no conversion and no import duty. That means you can [compare the whole eurozone at once](/sealed) rather than only your own country's shops.",
+      },
+      {
+        q: "What other sealed Riftbound products can I compare besides booster boxes?",
+        a: "The [sealed products page](/sealed) shows live prices for booster boxes, booster packs, Proving Grounds kits and other sealed Riftbound product across the stores tracked, sorted so the cheapest is easy to spot.",
+      },
+      {
+        q: "How do I see Riftbound prices in my own currency?",
+        a: "Set the country switcher to your region and prices show in your local currency — AUD, USD, GBP, SGD, CAD or EUR. Do that before comparing so you are reading like-for-like figures on the [sealed page](/sealed).",
+      },
+      {
+        q: "Where do you buy Riftbound booster boxes in Singapore?",
+        a: "Singapore has a growing roster of local sellers, several of which trade primarily through Instagram or Carousell rather than a storefront. Comparing SGD prices on the [sealed page](/sealed) catches those sellers alongside the traditional shops.",
+      },
+    ],
     body: `Booster boxes are the most exciting — and most expensive — way to buy into **Riftbound: League of Legends TCG**. But box prices swing a lot between shops and over time, so before you buy, it pays to compare. This guide covers **where to find the cheapest Riftbound booster boxes** and sealed product in **Australia, the United States, the United Kingdom, Singapore, Canada and the EU**.
 
 ## Compare every sealed price in one place
