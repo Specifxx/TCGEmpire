@@ -91,7 +91,14 @@ const ReferralCapture = dynamic(() => import("@/components/ReferralCapture").the
 // swap-in causes negligible layout shift.
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 // Monospace for prices / tabular figures / tickers — the "market terminal" voice.
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
+// preload: false (2026-09-21): next/font preloads every family as a HIGH-priority
+// fetch in <head>, so three ~40KB font files were competing with the
+// render-blocking CSS for the first 600ms of every page load. The mono face only
+// dresses numbers — never the H1 that is the LCP on article pages — so it can
+// arrive with the stylesheet and swap in; adjustFontFallback keeps the widths
+// matched, so the swap does not move anything. Inter (body) and Fraunces (the
+// H1) stay preloaded.
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap", preload: false });
 // Sharp flared serif for headings only — the Beaufort-style look-alike (see note above).
 const fraunces = Fraunces({
   subsets: ["latin"],

@@ -20,10 +20,26 @@ import { GOOGLE_ADS_ENABLED, GOOGLE_ADS_ID } from "@/lib/google-ads";
 //      snippet's `|| []` is idempotent so re-running would be survivable, but
 //      redeclaring the function for no reason is a footgun the next person has
 //      to reason about.
-//   3. next/script with strategy="afterInteractive" rather than a raw <script
-//      async>. Next hoists and dedupes it, and — importantly — guarantees it
-//      runs once per page rather than re-executing on every client-side route
-//      change, which a hand-rolled tag in the App Router does not.
+//   3. next/script rather than a raw <script async>. Next hoists and dedupes
+//      it, and — importantly — guarantees it runs once per page rather than
+//      re-executing on every client-side route change, which a hand-rolled tag
+//      in the App Router does not.
+//
+// STRATEGY IS lazyOnload, NOT afterInteractive (changed 2026-09-21). In the App
+// Router, afterInteractive is implemented with ReactDOM.preinit, which puts
+// gtag.js in the initial HTML as a HIGH-priority fetch: measured on the live
+// guide page it started at 176ms — before the render-blocking CSS and the three
+// preloaded fonts had finished — and it is 188KB, the single largest request on
+// every page. On a slow mobile connection that is bandwidth taken from first
+// paint for a script that contributes nothing to it. lazyOnload defers it to
+// after the load event (requestIdleCallback), off the critical path entirely.
+//
+// Nothing is lost on the way: ConsentDefaults defines window.gtag as a dataLayer
+// push before anything else runs, so GAPageViewTracker's page_view and any Ads
+// conversion fired before the library arrives are queued and replayed the
+// moment it does. The only pageviews that go unrecorded are visitors who leave
+// before `load` — and under the consent-denied default those were cookieless
+// pings anyway. tests/critical-path.test.ts pins the strategy.
 //
 // PAGEVIEWS ON ROUTE CHANGES ARE FIRED EXPLICITLY, by GAPageViewTracker.tsx —
 // not left to GA4's "Enhanced measurement" History API detection. That toggle
@@ -60,9 +76,9 @@ export function GoogleAnalytics() {
     <>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${bootstrapId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Script id="ga4-config" strategy="afterInteractive">
+      <Script id="ga4-config" strategy="lazyOnload">
         {`gtag('js', new Date());` +
           (GA_ENABLED ? `gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });` : "") +
           (GOOGLE_ADS_ENABLED ? `gtag('config', '${GOOGLE_ADS_ID}');` : "")}

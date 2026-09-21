@@ -317,6 +317,8 @@ None of these need an insider. All three are checkable by anyone.
 
 ---
 
+Riot's other limited bundle, the **[Gift of the Rift anniversary bundle](/blog/riftbound-gift-of-the-rift-bundle)**, gets the same treatment — contents, price and whether it holds value.
+
 *Sources: Riot Games' [Secret Garden Bundle Events announcement](https://playriftbound.com/en-us/news/announcements/secret-garden-bundle-events/) of 11 September 2026 for the event list and the stock quote. Bundle contents, the US$70 price and the Gen Con debut are as reported by Riftbound community outlets; secondary-market figures are observed marketplace listings from early September 2026 and move constantly. The regional analysis and every forecast in this article are ours, and are opinion rather than fact.*`,
   },
   {
@@ -1332,7 +1334,9 @@ One thing worth checking before you buy: **sleeve opacity matters mechanically i
 
 ## Picking a set without overthinking it
 
-If you only take one thing from this: **match your deck's one or two domain colours**, buy a **100-count pack** so you have real spares, and **double-sleeve** anything you'd actually be upset to lose — chase pulls, Signature prints, or cards you might trade or sell down the line. Everything else is preference. For the cards actually going inside those sleeves, **[browse live Riftbound prices across every store we track](/browse)**, or start with **[what's actually in a Riftbound deck](/guides/how-a-riftbound-deck-is-built)** if you're still assembling the list you're about to sleeve up.`,
+If you only take one thing from this: **match your deck's one or two domain colours**, buy a **100-count pack** so you have real spares, and **double-sleeve** anything you'd actually be upset to lose — chase pulls, Signature prints, or cards you might trade or sell down the line. Everything else is preference. For the cards actually going inside those sleeves, **[browse live Riftbound prices across every store we track](/browse)**, or start with **[what's actually in a Riftbound deck](/guides/how-a-riftbound-deck-is-built)** if you're still assembling the list you're about to sleeve up.
+
+The exact card dimensions, the landscape cards, and which deck boxes hold a fully sleeved tournament deck are in **[what size are Riftbound cards?](/guides/riftbound-card-size-sleeves-deck-boxes)**; long-term storage is in **[how to store and protect Riftbound cards](/guides/how-to-store-and-protect-riftbound-cards)**.`,
   },
   // ── Format legality. "Standard format" and "format legal" returned zero matches
   // across the whole corpus before this, despite being the question behind every
@@ -1701,7 +1705,9 @@ Foil cards are more prone to **curving** as the foil layer reacts to humidity. D
 - Acid-free, side-loading binders for sets; cool, dry, dark storage.
 - Keep foils flat and away from humidity.
 
-Looking after your cards keeps them at the condition our prices assume — so when you check a card's value on the **[database](/browse)**, that's the value you'll actually get. New to buying? Start with **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)**.`,
+Looking after your cards keeps them at the condition our prices assume — so when you check a card's value on the **[database](/browse)**, that's the value you'll actually get. New to buying? Start with **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)**.
+
+Not sure which sleeves fit? **[What size are Riftbound cards?](/guides/riftbound-card-size-sleeves-deck-boxes)** has the exact dimensions, why a tournament deck needs 66 sleeves rather than 40, and which boxes hold it; **[gradient sleeves](/guides/gradient-sleeves-for-riftbound-cards)** covers the domain-matched option.`,
   },
   {
     slug: "understanding-riftbound-card-rarity",
@@ -1788,7 +1794,9 @@ The cards that sell fastest are the ones priced at or just under the cheapest co
 - Post quickly and communicate — repeat buyers come from good experiences.
 - Bundle small cards together so postage doesn't eat the value of a cheap sale.
 
-Ready to list? **[Browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.`,
+Ready to list? **[Browse the database](/browse)** to price your collection first. Selling to fund your next deck? See **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** to spend it well.
+
+Not sure what the whole pile is worth? **[How much is your Riftbound collection worth?](/guides/how-much-is-your-riftbound-collection-worth)** walks through it, and **[finding arbitrage opportunities](/guides/how-to-find-riftbound-arbitrage-opportunities)** covers buying in one market to sell in another.`,
   },
   {
     slug: "beginner-mistakes-buying-riftbound-cards",
@@ -1956,7 +1964,8 @@ see is what you would actually pay locally — no surprise conversion at checkou
 Australian store's AUD price against a US store's USD one as if they were the same figure. That is
 also why the comparison never converts between currencies to declare a winner: we rank within a
 market, on delivered cost.
-`,
+
+Two more reads before a first order: **[the beginner mistakes that cost money](/blog/beginner-mistakes-buying-riftbound-cards)** covers the traps this guide does not, and if a foreign price looks too good, **[are Riftbound cards cheaper in another country?](/blog/are-riftbound-cards-cheaper-in-another-country)** runs the customs-and-postage maths.`,
     faq: [
       { q: "Where is the cheapest place to buy Riftbound cards?", a: "There isn't one shop that's always cheapest — it changes per card and per market. RiftCompare compares every store it tracks at once and ranks them by total delivered cost (price plus postage) rather than sticker price." },
       { q: "Can I buy Riftbound cards near me?", a: "Local game stores stock sealed product and often singles, and many also sell online. RiftCompare's \"stores we track\" page lists every retailer in the comparison grouped by market, so you can see which are local to you." },
@@ -2248,7 +2257,9 @@ Want the full rules before you buy anything? The **[interactive learn page](/lea
 - **Price a decklist** in the **[deck builder](/deck)** — paste any list, from a friend or a published tournament report, and see what it costs to build in your market.
 - **Price it before you buy** — drop a decklist into the **[deck pricer](/deck)** to see the full cost across stores before committing.
 
-Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.`,
+Ready to dive in? **[Browse the Riftbound card database](/browse)** or **[compare sealed products](/sealed)** to get started.
+
+Coming from another game? There is a dedicated switch guide for **[Magic players](/guides/mtg-to-riftbound)**, **[Pokémon collectors](/guides/pokemon-collector-to-riftbound)** and **[One Piece players](/guides/one-piece-tcg-to-riftbound)**. Still deciding? **[Is Riftbound worth getting into?](/blog/is-riftbound-worth-getting-into)** is the honest version, and **[the beginner mistakes that cost money](/blog/beginner-mistakes-buying-riftbound-cards)** is worth five minutes before your first order.`,
   },
   // ── Cross-game onboarding trio (2026-09-02) ─────────────────────────────────
   // Three guides aimed at players/collectors coming FROM another TCG, not total
@@ -2362,7 +2373,9 @@ Prices move daily, the same way a hot Pokémon set's prices do in its first week
 
 ## Where to start
 
-**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from "curious" to "playing" — what to buy first and how much to spend. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. And when you're ready to actually shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, and every store is one you can actually buy from.`,
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from "curious" to "playing" — what to buy first and how much to spend. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. And when you're ready to actually shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, and every store is one you can actually buy from.
+
+Coming from a different game? See **[Magic to Riftbound](/guides/mtg-to-riftbound)** or **[One Piece to Riftbound](/guides/one-piece-tcg-to-riftbound)**, or start from zero with **[Riftbound for beginners](/guides/riftbound-for-beginners)**.`,
   },
   {
     slug: "one-piece-tcg-to-riftbound",
@@ -2462,7 +2475,9 @@ Both games share the same early-life pricing pattern: prices move fast while the
 
 ## Where to start
 
-**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, every store is one you can actually buy from.`,
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live, every store is one you can actually buy from.
+
+Coming from a different game? See **[Magic to Riftbound](/guides/mtg-to-riftbound)** or **[Pokémon to Riftbound](/guides/pokemon-collector-to-riftbound)**, or start from zero with **[Riftbound for beginners](/guides/riftbound-for-beginners)**.`,
   },
   {
     slug: "mtg-to-riftbound",
@@ -2561,7 +2576,9 @@ No fabricated numbers here — prices move daily and any figure printed today wo
 
 ## Where to start
 
-**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost, and **[Riftbound deck archetypes](/guides/riftbound-deck-archetypes-guide)** is the deckbuilding-strategy version of this guide once you're past the basics. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live.`,
+**[Riftbound for Beginners](/guides/riftbound-for-beginners)** is the fastest path from curious to playing. **[The Cheapest Way to Start Riftbound](/guides/cheapest-way-to-start-riftbound)** compares every realistic entry point on cost, and **[Riftbound deck archetypes](/guides/riftbound-deck-archetypes-guide)** is the deckbuilding-strategy version of this guide once you're past the basics. When you're ready to shop, **[browse the full card database](/browse)** or **[compare sealed products](/sealed)** — every price is live.
+
+Not coming from Magic? The same guide exists for **[Pokémon collectors](/guides/pokemon-collector-to-riftbound)** and **[One Piece players](/guides/one-piece-tcg-to-riftbound)**, and **[Riftbound for beginners](/guides/riftbound-for-beginners)** is the from-scratch version.`,
   },
   {
     slug: "riftbound-singles-vs-sealed",
@@ -2646,7 +2663,9 @@ Paste any decklist into the **[deck pricer](/deck)** and it matches every card t
 
 Once you've locked a list, **[search the database](/browse)** for each card and buy from whichever store is cheapest — or read our **[where to buy Riftbound cards guide](/guides/where-to-buy-riftbound-cards)** for the best option in your region.
 
-Build smart, compare prices, and you'll have a competitive Riftbound deck without overspending.`,
+Build smart, compare prices, and you'll have a competitive Riftbound deck without overspending.
+
+Once you have a list, **[Best Basket](/guides/best-basket-cheapest-riftbound-deck)** finds the cheapest combination of stores to buy the whole thing from, postage included — usually not the one that is cheapest card by card.`,
     // Placed mid-article: the tips list above is where a budget builder decides
     // WHAT to buy (commons, base printings, singles over boxes), so the buy path
     // belongs there rather than under the FAQ. Bulk lots are deliberately first —
@@ -2835,7 +2854,9 @@ And if you're simply risk-averse - you'd rather know exactly what you're getting
 
 The healthiest way to use box EV is as one input alongside your own goals, not as a green light to rip. Ask what you're actually optimizing for: a specific card, a fun opening experience, or the best expected return on money spent. Each of those has a different right answer, and EV only speaks directly to the last one.
 
-A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.`,
+A workable routine: check current EV estimates with the [Box EV calculator](/tools/box-ev), compare that against real box prices on the [sealed page](/sealed), and if you're weighing whether to hold cards or sell into current demand, glance at broader price trends on the [RiftCompare Index](/market) before deciding. If EV clears box price by a comfortable margin and you're fine with variance, ripping is defensible. If it doesn't, or if you already know which cards you want, buying singles is usually the smarter money - even if it's the less exciting choice.
+
+For the short, non-mathematical version of the same decision, read **[buying singles vs opening packs](/blog/buying-singles-vs-opening-packs)**.`,
   },
   {
     slug: "how-to-find-riftbound-arbitrage-opportunities",
@@ -4571,7 +4592,9 @@ Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta
 
 None of these six replace deckbuilding fundamentals — a great Tank unit still needs a reasonable body underneath the keyword. But knowing exactly what each one does (and doesn't do) is the difference between reading a card correctly and guessing.
 
-Every combat-keyword card is live with real prices — browse **[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Assault](/keywords/assault)**, **[Backline](/keywords/backline)** and **[Ganking](/keywords/ganking)** on their own reference pages, or see the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game.`,
+Every combat-keyword card is live with real prices — browse **[Tank](/keywords/tank)**, **[Shield](/keywords/shield)**, **[Deflect](/keywords/deflect)**, **[Assault](/keywords/assault)**, **[Backline](/keywords/backline)** and **[Ganking](/keywords/ganking)** on their own reference pages, or see the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game.
+
+The other keyword families are covered the same way: **[timing keywords](/guides/riftbound-timing-keywords-explained)**, **[growth keywords](/guides/riftbound-growth-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)**.`,
   },
   {
     slug: "riftbound-timing-keywords-explained",
@@ -4632,7 +4655,9 @@ Every combat-keyword card is live with real prices — browse **[Tank](/keywords
 
 Hidden and Ambush are natural partners: hide a threat one turn, then Ambush a second unit into the same fight the next, and your opponent has to play around two unknowns instead of one visible board. Reaction abilities that Add resources let you hold energy back and still cover a cost you didn't fully plan for. None of these four keywords do anything on their own — their value is entirely in disrupting what an opponent thinks they know about the board, which is exactly why a deck built around them rewards patient, information-heavy play over straightforward curve-outs.
 
-See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, including the set's headline new keywords in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, including the set's headline new keywords in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.
+
+The other keyword families are covered the same way: **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[growth keywords](/guides/riftbound-growth-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)**.`,
   },
   {
     slug: "riftbound-growth-keywords-explained",
@@ -4710,7 +4735,9 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
 
 Hunt feeds Level. Legion rewards a low, wide curve of cheap cards. Equip and Weaponmaster both want a Gear-heavy shell, just on different timings. Accelerate and Vision are both about smoothing out a game plan rather than winning it outright — one skips downtime, the other skips a bad draw. Deathknell is the odd one out: it's the only keyword here that wants a unit gone, not scaled up, which makes it a natural fit alongside sacrifice effects and trades you were happy to make anyway.
 
-See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, or the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides for Vendetta's three headline new mechanics.`,
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game, or the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides for Vendetta's three headline new mechanics.
+
+The other keyword families are covered the same way: **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[timing keywords](/guides/riftbound-timing-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)** — and **[Riftbound rules explained](/guides/riftbound-rules-explained)** is the overview they all hang off.`,
   },
   {
     slug: "riftbound-game-actions-explained",
@@ -4768,7 +4795,9 @@ See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in 
 
 Reading a Riftbound card correctly means reading these verbs precisely, not intuitively — "Buff" doesn't stack past one counter the way a generic "+1/+1" might in another game, and "Stun" doesn't kill even though it feels like it should. Getting a Game Action's exact rule wrong is one of the most common ways a new player misreads what a card actually does.
 
-See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game — combat keywords like Tank and Shield are in the **[Combat Keywords guide](/guides/riftbound-combat-keywords-explained)**, and Vendetta's three headline new mechanics are in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.`,
+See the full **[Riftbound keywords glossary](/keywords)** for every mechanic in the game — combat keywords like Tank and Shield are in the **[Combat Keywords guide](/guides/riftbound-combat-keywords-explained)**, and Vendetta's three headline new mechanics are in the **[Empower](/guides/riftbound-empower-explained)**, **[Flow](/guides/riftbound-flow-explained)** and **[Burn](/guides/riftbound-burn-explained)** guides.
+
+The keyword families these verbs appear inside are covered in **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[timing keywords](/guides/riftbound-timing-keywords-explained)** and **[growth keywords](/guides/riftbound-growth-keywords-explained)** — and **[Riftbound rules explained](/guides/riftbound-rules-explained)** is the overview they all hang off.`,
   },
   {
     slug: "riftbound-vendetta-overnumbers-explained",
@@ -4968,7 +4997,9 @@ What demand structure tells you, and what the data can confirm as it accumulates
 - **Check stock depth, not just price.** A low headline price at one shop with no stock elsewhere is a thinner market than it looks.
 - **Watch instead of guessing.** Save a card to **[price watch](/browse)** and get told when it moves rather than refreshing manually.
 
-See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**.`,
+See the full **[Vendetta card gallery](/blog/every-riftbound-vendetta-card-revealed)**, browse **[every card with live prices](/sets/vendetta)**.
+
+Two Vendetta cards have their own pieces: **[why Shen, Eye of Twilight's Signature is underrated](/blog/shen-eye-of-twilight-signature-underrated-vendetta)** and **[Astral Heron's climb from a US$4 Epic to a US$34 one](/blog/astral-heron-riftbound-price-rising-how-to-play)**.`,
   },
   {
     slug: "buy-riftbound-cards-europe",
@@ -5039,7 +5070,9 @@ A Spanish shop wrote to us asking to be listed, and said the Spanish market was 
 
 Run a European store selling Riftbound? **[Get listed free](/stores/suggest)** — free listing, more customers.
 
-Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** or **[Canada](/blog/buy-riftbound-cards-canada)**? We have a dedicated breakdown for those markets too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.`,
+Shopping from **[Australia](/blog/buy-riftbound-cards-australia)**, **[the US](/blog/buy-riftbound-cards-us)**, **[the UK](/blog/buy-riftbound-cards-uk)**, **[Singapore](/blog/riftbound-price-comparison-singapore)** or **[Canada](/blog/buy-riftbound-cards-canada)**? We have a dedicated breakdown for those markets too — or see the **[full multi-market guide](/guides/where-to-buy-riftbound-cards)**.
+
+How the EU market was added, and what changed for European buyers when it was, is in **[RiftCompare is now live in the EU](/blog/riftcompare-launches-in-the-eu)**.`,
   },
   {
     slug: "riftbound-price-comparison-singapore",
@@ -5793,7 +5826,9 @@ On that last point, our position is straightforward: we report what the market i
 
 **Does a ban or errata change card prices?** Yes, usually fast. A card that loses legality in a format loses the demand attached to that format, and cards that replace it in decks tend to rise at the same time.
 
-**Does RiftCompare give investment advice?** No. We report live prices, price history and market movement across every store we track. We don't publish predictions or recommend cards to buy as investments.`,
+**Does RiftCompare give investment advice?** No. We report live prices, price history and market movement across every store we track. We don't publish predictions or recommend cards to buy as investments.
+
+For a worked example of a card that moved on play rather than scarcity — an Epic that went from US$4 to US$34 in five weeks — see **[Astral Heron: why its price is rising](/blog/astral-heron-riftbound-price-rising-how-to-play)**. The tools that catch a move early, Value Finder and Rising Cards, are laid out in **[RiftCompare Premium explained](/blog/riftcompare-premium-explained)**.`,
     faq: [
       { q: "Why are Riftbound cards so expensive?", a: "Usually it's limited supply meeting concentrated demand — a card that's needed in strong decks, or a chase print that appears rarely per box. Price also varies by market depending on local stock and import costs, so \"expensive\" can mean something different depending where you're buying." },
       { q: "When do Riftbound prices usually drop?", a: "The most reliable driver of a price fall is new supply — a restock or reprint reaching a market that had run short. Beyond that, the heavy opening that happens around a set's launch is when the most copies enter circulation at once." },
@@ -5909,7 +5944,9 @@ Once you've played a few games, **[Riftbound for beginners](/guides/riftbound-fo
 
 **Do I need a booster box to start?** No. A box is the largest single outlay of any route in and is aimed at people who want to open packs. You can play the game properly without ever buying one.
 
-**Should I buy the newest set or an older one to start?** Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does. Compare the set pages directly before assuming.`,
+**Should I buy the newest set or an older one to start?** Either works. Newer isn't automatically more expensive and older isn't automatically cheaper — availability drives price more than age does. Compare the set pages directly before assuming.
+
+If you take the singles route, **[Best Basket](/guides/best-basket-cheapest-riftbound-deck)** works out the cheapest split of stores for a whole decklist, postage included, rather than pricing card by card — and **[singles vs packs](/blog/buying-singles-vs-opening-packs)** is the short answer on why a booster box is rarely the cheapest way to a deck.`,
     faq: [
       { q: "What is the cheapest way to start playing Riftbound?", a: "A ready-to-play deck product is the cheapest single purchase that gets you playing, and a two-player product like a Showdown Deck covers both sides of a game in one buy. If you already know which deck you want to play, buying singles for that specific list is usually cheaper than opening packs to find the same cards." },
       { q: "Are Riftbound starter and precon decks worth it?", a: "As a way to start, yes — they get you a functioning deck with no missing pieces and no deckbuilding required. They aren't competitive lists out of the box, so treat one as a base to upgrade rather than a finished deck." },
@@ -5988,7 +6025,9 @@ Start with **[Riftbound for beginners](/guides/riftbound-for-beginners)** for th
 
 **What does Overnumbered mean on a Riftbound card?** It's a collector number that runs past the set's stated total — for example a number higher than the set size — marking a chase printing that sits outside the main numbered run. The Overnumbers guide covers how these differ from signed prints.
 
-**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes.`,
+**Where can I find Riftbound's current banned cards?** The banlist guide explains how bans work and stays current with every wave, and the September 2026 ban reaction piece covers the most recent changes.
+
+Each keyword family has its own explainer: **[combat keywords](/guides/riftbound-combat-keywords-explained)**, **[timing keywords](/guides/riftbound-timing-keywords-explained)**, **[growth keywords](/guides/riftbound-growth-keywords-explained)** and **[game actions](/guides/riftbound-game-actions-explained)** — the verbs inside ability text, straight from the Core Rules.`,
     faq: [
       { q: "What is Empower in Riftbound?", a: "Empower gives a card the potential to gain new abilities once it's already in play, usually by paying an extra cost on a later turn — a cheap play now, a bigger payoff later." },
       { q: "What is Flow in Riftbound?", a: "Flow is a Vendetta keyword that lets you play a card straight from your trash instead of your hand, so your discarded and used cards become a second pool of plays rather than being gone for good." },
@@ -6199,6 +6238,8 @@ Every set gets a page on RiftCompare the moment its cards are catalogued, with l
 
 ---
 
+Each set on this calendar gets its own tracker as Riot shows it: **[the Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** for Set 5, and **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)** for the 346-card January set.
+
 *Source: Riot Games' official announcements of 4 August 2026 — [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/) and the [August 2026 State of the Game](https://playriftbound.com/en-us/news/announcements/august-2026-state-of-the-game/). Set names, dates and card counts are Riot's; the analysis and price commentary are ours. Release dates announced this far ahead are subject to change — check the official post for the current schedule.*`,
   },
 
@@ -6328,6 +6369,8 @@ Honestly: less than the headline suggests, and not immediately.
 None of it is actionable in August 2026. It is actionable in January 2027, and the useful thing to do between now and then is decide which Legacy champions you care about so you are not competing with everyone else on preview day. Set up [a price alert](/alerts) and let it come to you.
 
 ---
+
+Everything else known about Legacy — the 346-card count, the 12 Legends, the regional-identity theme — is in **[Legacy spoilers: Set 6](/blog/riftbound-legacy-spoilers-set-6)**.
 
 *Source: Riot Games' [Products and Sets into 2027](https://playriftbound.com/en-us/news/announcements/products-and-sets-into-2027/), published 4 August 2026. The pack composition, draft focus and templating updates are Riot's announcements; the explanations and the price commentary are ours. Card images and diagrams from the original post are not reproduced here — see Riot's article for those.*`,
   },
@@ -7268,7 +7311,9 @@ For the fuller walkthrough — what to buy first, what to skip, and how to budge
 
 ## Where to buy
 
-Once you're ready to buy anything — a starter deck, a booster box, or your first few singles — RiftCompare compares live prices across every store we track in your market, so you're not stuck taking the first price you find. [Browse the card database](/browse) or [compare sealed products](/sealed) to get started.`,
+Once you're ready to buy anything — a starter deck, a booster box, or your first few singles — RiftCompare compares live prices across every store we track in your market, so you're not stuck taking the first price you find. [Browse the card database](/browse) or [compare sealed products](/sealed) to get started.
+
+If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound)** maps the concepts across (there are **[Pokémon](/guides/pokemon-collector-to-riftbound)** and **[One Piece](/guides/one-piece-tcg-to-riftbound)** versions too). Weighing whether to start at all? **[Is Riftbound worth getting into?](/blog/is-riftbound-worth-getting-into)** gives the case both ways.`,
   },
   {
     slug: "league-of-legends-champions-in-riftbound",
@@ -7341,7 +7386,9 @@ Rather than trying to keep a static list current (champions are added with every
 
 ## Start with a champion you already know
 
-If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.`,
+If you're coming from League of Legends and want the easiest way in, starting with a Legend you already have hours on is a genuinely good approach — you already understand their identity and strengths, which carries over into how they play as a Legend. See [Riftbound for beginners](/guides/riftbound-for-beginners) for how to build your first deck around one, or [what Riftbound actually is](/guides/is-there-a-league-of-legends-card-game) if you're still getting your bearings.
+
+For one champion in full, **[every Ahri card in Riftbound](/blog/every-ahri-card-in-riftbound)** lists all twelve printings with their prices — including two that look identical except for a signature.`,
   },
   {
     slug: "shen-eye-of-twilight-signature-underrated-vendetta",
@@ -9372,7 +9419,9 @@ If you are doing this regularly, **[price alerts](/alerts)** will watch a card a
 
 For most purchases, in most markets: **buy locally, and spend the effort on comparing local stores rather than on comparing countries.** The spread between the cheapest and dearest store *within* your own market is frequently wider than the spread between markets, and capturing it costs you nothing in postage, tax, transit time or returns risk.
 
-Import when the card is expensive enough that percentages beat fixed costs, or when your market simply does not have the thing. Those two cases are real and worth acting on. The rest of the time the cheaper foreign price is a mirage that resolves at customs.`,
+Import when the card is expensive enough that percentages beat fixed costs, or when your market simply does not have the thing. Those two cases are real and worth acting on. The rest of the time the cheaper foreign price is a mirage that resolves at customs.
+
+If you are on the other side of that gap — buying where it is cheap to sell where it is not — **[how to find Riftbound arbitrage opportunities](/guides/how-to-find-riftbound-arbitrage-opportunities)** is the same calculation run in reverse.`,
   },
   // ── Collection valuation. PRIMARY for "how much is my riftbound collection
   // worth" / "riftbound collection value" / "value my riftbound cards" — an

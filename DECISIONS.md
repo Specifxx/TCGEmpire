@@ -9267,3 +9267,71 @@ Wired into the three surfaces a Radiance visitor actually arrives on: first in
 Rides the daily release rather than `[deploy]`: "push to main" is the ordinary
 case per the gate rules, and the 08:00 UTC build lands it a full three days
 before the first reveal.
+
+---
+
+## An outside SEO review: what was checked, what changed, what was not — 2026-09-21
+
+Darren at Fuelled SEO (Newcastle) reviewed the site and sent four points: keep
+off-page links to three or four a month and brand-only; on-page site speed;
+internal linking; make certain no crawlers are blocked; and patience. The first
+is outreach, not code, and the last is a stance. The middle three were audited
+against the live site before anything was edited.
+
+**Crawlers: nothing is blocked, verified rather than assumed.** Googlebot,
+bingbot, AhrefsBot, GPTBot and a plain curl each fetched `/`, a card page, a
+guide and `/sitemap.xml`: every one 200, byte-identical bodies (611,529 for
+`/`), no challenge page, no UA-dependent response. `robots.txt` allows `/` to
+everyone, disallows only `/api/` (with `/api/v1/` re-allowed) and blocks two
+bulk scrapers by name. Mangled URLs Google has crawled
+(`/blog/riftbound-riftbound-radiance-…`, `/guides/riftcompare.com/guides/…`)
+404 with `noindex`. No change; `tests/critical-path.test.ts` pins the source.
+
+**Internal linking: 19 published articles had no editorial inbound link.**
+Reachable only from the `/blog` and `/guides` indexes and the tag-based
+"recommended reads" module — several already earning impressions (the
+card-size guide 1,413/28d, the Shen Signature post 2,234, Astral Heron 1,042).
+Contextual sentences were written into 26 related articles, each placed where
+the host article actually discusses the topic (the three "switching from
+another game" guides now cross-link; the four keyword-family guides form a
+ring; the two sleeve guides point at each other; the ban/keyword/rules cluster
+is closed). `tests/internal-links.test.ts` resolves article bodies through
+`getArticles()` — so the content-pack's `${L.x}` links count — and fails on
+any published article with zero inbound links from another article or from
+app source.
+
+Noted, not changed: every page carries ~400 anchors of which ~150 are the
+same links repeated (desktop sidenav, mobile drawer, the footer's mobile and
+desktop variants are all in the DOM). `FooterNav.tsx` documents why both
+variants render. Not an SEO defect, but it is a third of the HTML.
+
+**Speed: measured twice, because the first measurement lied.** Lighthouse
+(mobile, simulated) reported FCP 4.5s and LCP 10.6s on the guide page with the
+server-rendered H1 as the LCP element and a 9.9s "render delay", and its
+filmstrip showed a blank white page until ~4.5s. That would have pointed at a
+JS-gated render. It was not: a real mobile Chromium (Playwright, no
+throttling) painted the same page at **828ms** with the H1 as LCP, **440ms**
+with third-party scripts blocked, and DOMContentLoaded at 657ms. The blank
+frames were an artifact of Lighthouse's headless capture in this sandbox, not
+the site. Lesson recorded here so the next pass does not chase it.
+
+What the real numbers did show, and what changed:
+
+- **gtag.js was a high-priority fetch at 176ms** — `next/script`'s
+  `afterInteractive` is `ReactDOM.preinit` in the App Router — 188KB, the
+  largest request on every page, downloading ahead of the render-blocking CSS
+  and the fonts. Now `lazyOnload`: after `load`, on idle. `window.gtag` is a
+  dataLayer push from ConsentDefaults, so events fired before the library
+  arrives are queued, not lost. Visitors who leave before `load` are no longer
+  counted; under the consent-denied default they were cookieless pings anyway.
+- **Three fonts preloaded at high priority in the same window.** JetBrains
+  Mono dresses numbers, never the H1; it now loads with the stylesheet
+  (`preload: false`). Inter and Fraunces stay preloaded — they are the paint.
+- Third-party weight (693KB on `/`: gtag, AdSense, FundingChoices) and the
+  homepage's 596KB HTML (306KB of it the RSC payload for 68 images and 412
+  links) are the remaining costs. Both are product decisions — the AdSense
+  loader is the revenue, the homepage content is the homepage — and are left
+  as they are.
+
+Shipped with `[deploy]` at the owner's explicit instruction to skip the daily
+schedule for this change.
