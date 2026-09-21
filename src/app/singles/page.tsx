@@ -112,7 +112,7 @@ export default async function SinglesPage() {
             place to buy the exact cards your deck needs.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link href="/browse" className="btn-primary">Browse all singles →</Link>
+            <Link href="/browse" className="btn-primary">Every single in the database →</Link>
             <Link href="/browse?priced=1&sort=price_asc" className="btn-ghost">Cheapest singles</Link>
           </div>
           {total > 0 && (

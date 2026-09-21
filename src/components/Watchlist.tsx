@@ -64,7 +64,7 @@ export function Watchlist() {
         icon="bell"
         title="Nothing on watch yet"
         body="Tap the bell on any card and we'll email you the moment it gets cheaper — no need to keep checking back."
-        primary={{ href: "/browse", label: "Browse cards →" }}
+        primary={{ href: "/browse", label: "Card database →" }}
       />
     );
   }

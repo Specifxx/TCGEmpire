@@ -67,21 +67,32 @@ export function Navbar() {
               Now ungated and in the left cluster beside the logo, so there is no
               width where it can disappear and no second copy to drift.
 
-              LABELLED "Browse", NOT "Database" — corrected on 2026-09-19: "as in
-              bring the browse button back sorry, it's meant to be the browse
-              button on the header". The header link has carried the word
-              "Database" for its whole history and never said "Browse", so this
-              is a rename rather than a restoration; the destination (/browse) is
-              unchanged. It matches the URL and the page's own "Browse & Compare
-              Prices" title. NOTE the menu overlay and the ⌘K launcher still call
-              the same destination "Card Database" (nav-groups.ts) — deliberately
-              left alone here because that label is shared by the launcher, the
-              side rail and the footer, and renaming it is a separate decision. */}
+              LABELLED "Database". This label has now been argued both ways by
+              the same owner within 48 hours, so the history is worth keeping:
+              it said "Database" for its whole life, was renamed to "Browse" on
+              2026-09-19 ("it's meant to be the browse button on the header"),
+              and was renamed back on 2026-09-21 ("reword the browse in the home
+              page and all other areas to database — I think that's better").
+              The destination (/browse) never moved for either rename.
+
+              This time the rename is NOT isolated to the header: the same pass
+              took the word out of every label whose destination is this page,
+              so the header now agrees with the menu overlay, the ⌘K launcher,
+              the side rail and the footer (all of which already said "Card
+              Database") and with the homepage hero link. That was the actual
+              defect behind both complaints — one destination wearing two names
+              depending on which control you reached it from.
+
+              WIDTH NOTE: "Database" is ~15px wider than "Browse", and the
+              640-1023px header row is the tight one (see
+              tests/mobile-header-fit.test.ts and header-mobile-space.test.ts,
+              which measure it). The slack the 09-19 rename banked is spent
+              again here; those tests are the guard. */}
           <Link
             href="/browse"
             className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold text-slate-100 hover:bg-ink-800 hover:text-white sm:px-2.5 sm:text-sm"
           >
-            Browse
+            Database
           </Link>
           {/* Premium, on phones, sitting next to Database (2026-09-10, owner
               brief). The desktop "✦ Premium" link further down is gated xl:block,

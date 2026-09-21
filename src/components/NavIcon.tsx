@@ -22,7 +22,7 @@
  * READABLE AT 20px IS THE WHOLE CONSTRAINT. They render at 20px inside a 44px
  * button, so each one is a distinct SILHOUETTE rather than a detailed picture —
  * no two share an outline, because at that size the outline is all a reader
- * gets. That is also why "Browse the database" is a magnifier and "Decks" is a
+ * gets. That is also why "The card database" is a magnifier and "Decks" is a
  * pair of cards: both are card-ish concepts, and two card-shaped icons three
  * rows apart would be indistinguishable in the rail.
  */

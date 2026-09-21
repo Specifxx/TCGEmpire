@@ -277,7 +277,7 @@ export default async function SetGalleryPage({ params }: { params: { set: string
             <p className="mt-1 text-sm">
               This gallery fills in automatically as {set.name} cards are imported.
             </p>
-            <Link href="/browse" className="btn-primary mt-4">Browse released sets</Link>
+            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
           </div>
         </div>
       ) : (

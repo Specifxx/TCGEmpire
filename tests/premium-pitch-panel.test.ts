@@ -102,7 +102,10 @@ test("the phone header still carries a gold Premium link, without disturbing the
   assert.match(leftCluster, /text-gold/, "it must be gold — the Premium identity colour");
   // Database is back in this cluster as of 2026-09-19 ("that's the most important
   // one"), sitting immediately before Premium — the 2026-09-10 pairing restored.
-  assert.match(leftCluster, /Browse/, "the Browse link sits beside Premium again");
+  // Matched on the LABEL, which was "Browse" between 2026-09-19 and 2026-09-21
+  // and is "Database" either side of that; what this test actually cares about
+  // is that the card-database link and Premium stay paired in this cluster.
+  assert.match(leftCluster, /Database/, "the card-database link sits beside Premium again");
 
   // The header's horizontal budget: nav links may not turn on before lg, and
   // the desktop Premium link must still defer to xl. Both are also pinned by

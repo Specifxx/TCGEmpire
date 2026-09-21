@@ -488,7 +488,7 @@ export function Riftle() {
               <button onClick={() => switchMode("unlimited")} className="btn-primary">♾️ Play unlimited</button>
             )}
             <button onClick={share} className="btn-ghost text-sm">{copied ? "✓ Copied!" : "Share result"}</button>
-            <Link href="/browse" className="btn-ghost text-sm">Browse all cards →</Link>
+            <Link href="/browse" className="btn-ghost text-sm">The card database →</Link>
           </div>
           <p className="mt-3 text-xs text-slate-500">
             {mode === "unlimited" ? "Keep going — there's always another card." : "New daily card at midnight Sydney time. Come back tomorrow!"}

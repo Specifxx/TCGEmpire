@@ -9365,3 +9365,55 @@ a DB blip renders a count-less title, never "All 0 Cards". The description's
 Radiance on 23 October on its own. The builders live in `lib/gallery-seo.ts`
 because a `page.tsx` may export only Next's route fields — `tsc` passes a
 stray export that `next build` rejects.
+## One destination, one name: /browse is "the card database" everywhere — 2026-09-21
+
+"Reword the browse in the home page and all other areas to database — I think
+that's better."
+
+**This label has now been argued both ways by the same owner inside 48 hours**,
+which is worth recording plainly rather than quietly flipping back. The header
+link said **Database** for its entire history; on 2026-09-19 it was renamed to
+**Browse** ("it's meant to be the browse button on the header"); on 2026-09-21
+it went back to **Database**. `/browse` never moved for either rename.
+
+What makes this pass different from a straight revert is that the 09-19 change
+was deliberately isolated to the header, and its own commit message flagged the
+residue: *"nav-groups.ts still calls the same destination 'Card Database' for
+the menu overlay, the ⌘K launcher, the side rail and the footer. Left alone
+deliberately."* So the site was left with **one destination wearing two names**
+depending on which control you reached it from — which is, on both readings, the
+actual defect behind both complaints. This pass removes the split instead of
+moving it: the header, the hero link, the nav group heading, the footer bucket,
+every empty-state button and both digest emails now agree.
+
+**The rule applied**, because a blanket find-and-replace would produce nonsense
+("Database all cards →"):
+
+- **Renamed** — every label where "Browse" was the *name* of the destination
+  `/browse`: the header button, the homepage hero link ("Browse all N cards →" →
+  "All N cards in the database →"), the `NAV_GROUPS` heading, the footer bucket,
+  and the empty-state / secondary CTAs on `/alerts`, `/dashboard`, `/movers`,
+  `/market`, `/singles`, `/not-found`, the domain and facet pages, Riftle,
+  2048, the watchlist, the ad slot and the two digest emails.
+- **Kept** — "browse" as an ordinary verb in a sentence that already names the
+  thing ("Browse the card database →" on articles and the feedback form), and
+  headings for a *different* action or destination ("Browse by topic", "Browse
+  by set", "Browse the gallery by set", "Browse free tools" → `/tools`, "Browse
+  <set> sealed" → `/sealed`).
+- **Untouched on purpose** — the SEO titles, meta descriptions, H1s and
+  breadcrumbs on `/browse`, `/cards`, `/domains`, `/champions` and `layout.tsx`.
+  Those are keyword-ownership decisions (`docs/seo-keyword-map.md`: `/browse`
+  owns `riftbound card list` via its "Riftbound Card List — Browse & Compare
+  Prices" title), not navigation labels, and rewriting them to suit a nav rename
+  would trade documented search ownership for cosmetic consistency. Flagged
+  rather than silently decided.
+
+**Width cost, re-incurred.** "Database" is ~15px wider than "Browse", and the
+640–1023px header row is the tight one — the 09-19 pass explicitly banked that
+15px as slack. It is spent again. `tests/mobile-header-fit.test.ts` and
+`tests/header-mobile-space.test.ts` measure that row and both pass.
+
+Three tests were re-pointed rather than deleted, and the header one's ban is
+**flipped, not dropped**: it now asserts the header must not say "Browse", which
+is worth more than the old direction precisely because every other surface now
+says Database too.

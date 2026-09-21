@@ -207,7 +207,7 @@ export default function AlertsPage() {
             browsing stays one click away as the secondary route. */}
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <AlertsSignupCta />
-          <Link href="/browse" className="btn-ghost">Browse cards →</Link>
+          <Link href="/browse" className="btn-ghost">Card database →</Link>
         </div>
       </section>
     </div>

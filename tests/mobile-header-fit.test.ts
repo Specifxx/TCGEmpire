@@ -73,7 +73,7 @@ test("there is exactly ONE Database link and NO width can hide it", () => {
   // One ungated link is the only arrangement with no gap and nothing to drift.
   const code = readCode(NAVBAR);
   const links = [...code.matchAll(/<Link\s+href="\/browse"([\s\S]{0,400}?)<\/Link>/g)];
-  const headerLinks = links.filter((m) => /Browse/.test(m[1]));
+  const headerLinks = links.filter((m) => /Database/.test(m[1]));
   assert.equal(headerLinks.length, 1, "exactly one Database link in the header");
   const cls = /className="([^"]*)"/.exec(headerLinks[0][1])?.[1] ?? "";
   for (const hide of ["hidden", "lg:block", "lg:hidden", "sm:hidden"]) {
@@ -81,13 +81,20 @@ test("there is exactly ONE Database link and NO width can hide it", () => {
   }
   // It lives in the left cluster, before the search slot.
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<HeaderSearchSlot>"));
-  assert.match(row, /Browse/, "and it sits in the left cluster beside the logo");
-  // LABELLED "Browse", not "Database" — corrected 2026-09-19 ("it's meant to be
-  // the browse button on the header"). The header link had said "Database" its
-  // whole life, so this was a rename, not a restoration; /browse is unchanged.
-  // nav-groups.ts still calls the same destination "Card Database" for the
-  // launcher, rail and footer — a shared label, and a separate decision.
-  assert.doesNotMatch(row, />\s*Database\s*</, "the header button must not say Database");
+  assert.match(row, /Database/, "and it sits in the left cluster beside the logo");
+  // LABELLED "Database". Argued both ways by the same owner inside 48 hours:
+  // "Database" for its whole life → "Browse" on 2026-09-19 ("it's meant to be
+  // the browse button on the header") → "Database" again on 2026-09-21
+  // ("reword the browse in the home page and all other areas to database").
+  // /browse never moved for either rename.
+  //
+  // The ban is flipped rather than dropped, and it is worth MORE now than it was
+  // pointing the other way: the 09-21 pass took the word out of every label
+  // whose destination is this page — the hero link, the nav group heading, the
+  // empty-state buttons — so the header saying "Browse" again would put the
+  // site back to one destination wearing two names, which is the defect behind
+  // both of the owner's complaints.
+  assert.doesNotMatch(row, />\s*Browse\s*</, "the header button must not say Browse — see above, it is 'Database' sitewide");
   // The mobile search row still submits to /browse — a second route, not a
   // substitute (that substitution is exactly what got this removed once).
   assert.match(code, /<HeaderSearchSlot mobile>/);

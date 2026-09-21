@@ -7170,7 +7170,7 @@ We've done the same breakdown for [Origins](/guides/whats-in-the-riftbound-origi
     ],
     browseCta: {
       href: "/browse",
-      label: "Browse Riftbound cards →",
+      label: "Every Riftbound card in the database →",
       blurb: "Every card's live price across every store we track — Near Mint unless a listing says otherwise.",
     },
     body: `Every Riftbound price you see — on RiftCompare or anywhere else — is quoted against a condition grade, whether or not the store says so out loud. Here's what each grade actually means, and why it should change what you're willing to pay.

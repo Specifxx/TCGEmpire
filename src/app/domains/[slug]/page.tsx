@@ -163,7 +163,7 @@ export default async function DomainPage({ params }: { params: { slug: string } 
         <div className="card-surface grid place-items-center p-16 text-center text-slate-400">
           <div>
             <p className="text-lg font-semibold text-white">No {domain.label} cards yet</p>
-            <Link href="/browse" className="btn-primary mt-4">Browse all cards</Link>
+            <Link href="/browse" className="btn-primary mt-4">Card database</Link>
           </div>
         </div>
       ) : (
