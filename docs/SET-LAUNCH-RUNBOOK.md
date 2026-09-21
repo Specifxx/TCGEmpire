@@ -36,8 +36,17 @@ Do not "prepare" any of these. They read `lib/constants.ts` and the clock.
 | RRP badges suppressed on pre-orders | same |
 | eBay quota priority for the new set (60 days) | `pricePrioritySetCodes()`, window closed at both ends |
 | `/sets/<slug>` pre-order link | `preordersHrefForSet()` |
+| Homepage link to the set's reveal tracker | `spoilersHrefForSet()` — null from the street date |
+| Daily Discord post leading with the tracker | same, via `postDiscordDaily()` |
+| Friday promo pack's tracker line (Reddit / X / Discord) | same, via `spoilerPromo()` in `scripts/weekly-promo.ts` |
 | Set page dropping out of the sitemap while it has 0 cards | `lib/sitemap-sections.ts` |
 | Release-day email's default set | `newestReleasedSet()` |
+
+Adding a new set's tracker to all three promotion surfaces is therefore **one
+line** — a `spoilersHref` on that set's row in `lib/release-calendar.ts`. Do not
+edit the homepage, the Discord poster or the promo script; they read the calendar.
+`tests/set-window-promotion.test.ts` fails if any of them starts naming a set in
+code, and fails if a `spoilersHref` points at an article that does not exist.
 
 The rule those all follow: **a page that names a set in its code will rot.**
 `/vendetta-countdown` and `/radiance-countdown` were both built and both retired;
@@ -196,6 +205,22 @@ Then, in order:
 4. Move the set from `ANNOUNCED_UNPRINTED` into `PRINTED_SET_TOTALS` in
    `tests/set-sizes.test.ts` (that file tells you to).
 5. Prune the wrong `setFromTotal` denominator (§2).
+6. **Decide what happens to the reveal tracker.** Changing `releasedOn` has
+   already pulled it off the homepage, the daily Discord post and the promo pack
+   — `spoilersHrefForSet()` returns null from the street date, so nothing needs
+   switching off. What is left is the article itself, which still ranks for
+   *"<set> spoilers"* and now describes a finished event. Two options, and the
+   call is made from Search Console on the day rather than in advance:
+   - **Flip the title to the past tense** ("every card revealed") and keep the
+     page, if it is still earning clicks. This is the Vendetta survivor pattern —
+     `every-riftbound-vendetta-card-revealed` is that page, still live.
+   - **301 it to `/sets/<slug>`** once the set page carries real prices, if the
+     tracker's own traffic has collapsed.
+
+   Do **not** delete it, and do not leave a present-tense "live tracker" title on
+   a set that shipped last month. Record the decision in `docs/seo-keyword-map.md`
+   either way, because that file is what stops the next set's tracker being given
+   a query this one already owns.
 
 ### The blast
 
