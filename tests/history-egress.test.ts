@@ -12,17 +12,28 @@ const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
 // The history project has run out of its transfer allowance more than once, and
 // the cause was never a single expensive query — it was cheap queries re-run far
 // more often than the data underneath them changed. PriceHistory gains one point
-// per card per market per WEEK; every whole-market read of it was keyed on the
-// DAY and tagged CONTENT_TAG, which a twice-daily price import purges. So the
-// tag bust, not the TTL, set the real read rate.
+// per card per market per DAY (see HISTORY_MIN_INTERVAL_DAYS in
+// price-history.ts); every whole-market Postgres READ of it used to be keyed on
+// the DAY and tagged CONTENT_TAG, which a twice-daily price import purges. So
+// the tag bust, not the TTL, set the real read rate — for the readers still
+// listed below.
 //
-// These tests pin the two rules that keep it down. Both are the kind of thing a
-// later "simplification" undoes without noticing, because nothing breaks — the
-// site keeps working and the bill goes up.
+// src/lib/price-history.ts is DELIBERATELY EXCLUDED from this list, not an
+// oversight: computePriceHistory/computePriceMovers/computeRecentlyUpdated
+// no longer read dbHistory at all (see DECISIONS.md, "History off Neon") —
+// they read src/lib/history-store.ts's CDN-published JSON, so their
+// day-scoped cache keys are correct rather than a week/day mismatch. The
+// file still mentions "dbHistory" in a couple of comments (explaining the
+// writer it no longer reads), which is why a naive substring check would
+// wrongly pull it back into scope here.
+//
+// These tests pin the two rules that keep the REMAINING Postgres readers
+// down. Both are the kind of thing a later "simplification" undoes without
+// noticing, because nothing breaks — the site keeps working and the bill
+// goes up.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const HISTORY_READERS = [
-  "src/lib/price-history.ts",
   "src/lib/screener.ts",
   "src/lib/market-records.ts",
   "src/lib/premium.ts",

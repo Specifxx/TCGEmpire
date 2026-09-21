@@ -2033,20 +2033,23 @@ export async function importPrices(): Promise<ImportSummary> {
       if (usdCandidates.length === 0) continue;
       rows.push({ cardId: c.id, country: GLOBAL_HISTORY_COUNTRY, day, lowestPriceCents: Math.min(...usdCandidates) });
     }
-    // WEEKLY SNAPSHOTS, NOT TWICE-DAILY. This is the history database's cost
-    // control, and it works on both sides of the ledger at once:
+    // AT MOST ONE SNAPSHOT A DAY, NOT TWICE-DAILY (this import runs twice a
+    // day). HISTORY_MIN_INTERVAL_DAYS (src/lib/price-history.ts) was 7 for a
+    // long stretch, purely as a READ-side cost control: every windowed
+    // history query used to run against Postgres at request time, and a
+    // seventh as many rows written meant a seventh as many read there too.
+    // It moved back to 1 once scripts/export-history.ts + src/lib/history-store.ts
+    // took the card/movers/recently-updated readers off Postgres entirely
+    // (DECISIONS.md, "History off Neon") — a write is cheap ingress
+    // regardless of cadence, so once nothing reads this table at request
+    // time the interval only needs to stop the SAME import run writing the
+    // day's row twice, which is what the gate below still does either way.
     //
-    //   • fewer writes — this ran on every import, i.e. twice a day, writing
-    //     ~1,400 cards x 6 markets each time;
-    //   • fewer READS, which is the larger half. Every windowed history query is
-    //     "all cards in this market over N days". At one point per week instead
-    //     of one per day, the same window returns roughly a seventh as many rows,
-    //     for every reader — movers, charts, screener, portfolio, public API.
-    //
-    // Gated on the distance from the newest existing snapshot rather than on a
-    // weekday, so a missed run self-heals on the next import instead of waiting
-    // a full week. Date-only arithmetic (`day` is @db.Date) keeps this immune to
-    // the cron drifting by a few hours either side.
+    // Gated on the distance from the newest existing snapshot rather than on
+    // a fixed schedule, so a missed run self-heals on the next import instead
+    // of waiting out a full interval. Date-only arithmetic (`day` is
+    // @db.Date) keeps this immune to the cron drifting by a few hours either
+    // side.
     const newest = await dbHistory.priceHistory.findFirst({
       orderBy: { day: "desc" },
       select: { day: true },

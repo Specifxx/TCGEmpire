@@ -8336,3 +8336,85 @@ rather than being written and tested for the first time under the pressure of
 are off Neon — writing daily snapshots while still reading them at request
 time would restore exactly the read-rate problem this whole workstream exists
 to fix, seven times over.
+
+## History off Neon, part 2: card charts, movers and recently-updated move off Postgres — 2026-09-21
+
+Follow-up to "History off Neon, part 1" above, now that the `data` branch
+exists and publishes daily. This is the reader half: `computePriceHistory`,
+`computePriceMovers` and `computeRecentlyUpdated` (`src/lib/price-history.ts`)
+no longer query `dbHistory.priceHistory` at all — they read the CDN-published
+JSON through a new `src/lib/history-store.ts`, and `HISTORY_MIN_INTERVAL_DAYS`
+moves from 7 back to 1. Every other history reader
+(`market-records.ts`, `market-index.ts`, `screener.ts`, `rise-predictor.ts`,
+`public-api.ts`, `premium.ts`) is untouched — still reads Postgres directly,
+still expects weekly-ish cadence assumptions where it has them. They're a
+deliberate follow-up (part 3), not because this pass ran out of time but
+because moving them needs their own read-shape decisions (windowed reads,
+per-card batches for the market index) that don't share code with the three
+functions here.
+
+**Why a branch ref, not a SHA-pinned URL.** The original plan (and a Plan
+subagent's design) called for resolving a commit SHA once a day via a
+`Counter` row and using jsDelivr's SHA-pinned, ~1-year-cached URL form. That
+still needs a request-time lookup of "today's SHA" from *somewhere* — and if
+that somewhere is Postgres, it reintroduces exactly the read this whole
+workstream exists to remove, just for one tiny row instead of a big table.
+`src/lib/history-store.ts` instead reads the `@data` branch ref directly.
+jsDelivr caches a branch URL for up to 12h, and the branch is pushed once a
+day, so worst case a chart lags the true daily snapshot by up to ~36h (missed
+a cache refresh right before a push) — a large improvement on the weekly
+cadence this replaces, still bounded, and it costs zero Postgres reads
+instead of one tiny one. `HISTORY_DATA_BASE_URL` / `HISTORY_DATA_REPO` env
+vars override it, for testing against a fork or a future R2 fallback.
+
+**No component changes.** `LocalizedPriceHistory.tsx` and
+`/api/card/[id]/history` are untouched — they already called `getPriceHistory`
+through the normal server function boundary, so swapping what's inside that
+function was enough. The originally-sketched "client-fetch the CDN file
+directly, bypassing the API route" optimization was dropped: it would have
+meant duplicating the currency-conversion and staleness logic on the client
+for a request that's already cheap (one CDN fetch inside an `unstable_cache`
+wrapper, not a database round trip).
+
+**Cache keys moved from `sydneyWeekKey()` to `sydneyDayKey()`** on all three
+functions — they were already commented "day-scoped" in two of the three
+cases, which was aspirational until now. `HISTORY_CACHE_TTL` (8 days) is left
+as generous slack rather than retuned; a day-scoped key rotates daily
+regardless of how large the TTL is, so a bigger number than strictly needed
+costs nothing but a little cache storage.
+
+**`STALE_HISTORY_MS` moves from 10 days back to 3.** It was widened from 3 to
+10 specifically to tolerate a normal week's gap between weekly snapshots;
+with daily writes restored, the freshest point should again routinely be 0-1
+days old, and 3 days is a real outage's worth of grace, not a normal week's.
+
+**`collapseToWeekly` is kept, unused by these three functions.** The JSON
+files `scripts/export-history.ts` publishes are already at most one point per
+day (`PriceHistory.day` is unique per card), so there's nothing left to
+bucket at read time. The function stays exported and tested
+(`tests/price-history-weekly-bucketing.test.ts`) as a utility any future raw
+Postgres reader could still need for legacy dense-daily rows.
+
+**`market-records.ts`'s `MIN_DAYS` floor moved from 3 to 14.** It still reads
+Postgres directly (not migrated this pass) and counts snapshot *rows*, not
+elapsed days. With daily writes restored globally, 3 rows now means 3 real
+days of history before a card can hold an "all-time" record — too thin, the
+same failure mode `MIN_DAYS` exists to prevent. 14 restores a genuine
+two-week floor under the new cadence.
+`tests/market-records.test.ts` asserts `MIN_DAYS × the real interval >= 14`
+elapsed days in either direction, so a future cadence change fails loudly
+here too rather than silently emptying (or over-filling) the records board.
+
+**`SealedPriceHistory` gets its own cadence constant, `SEALED_HISTORY_MIN_INTERVAL_DAYS`
+(= 7, unchanged).** It's a separate table with a separate writer
+(`sealed-import.ts`) and its reader (`sealed-rise-predictor.ts`) hasn't moved
+off Postgres yet, so widening `HISTORY_MIN_INTERVAL_DAYS` for `PriceHistory`
+must not silently widen sealed's write (and therefore read) rate too. Both
+constants still live in the one neutral home (`price-history.ts`, for the
+same import-cycle reason as `sydneyDay`) — "one canonical home" still holds,
+it's just two constants now instead of one shared by both writers.
+
+Verified: `npm run typecheck`, `npm run lint`, `npm run adsense:guard` and
+`npm test` (1637/1638 passing — the one failure, "the seller id is the client
+id with ca- stripped", fails identically on `main` with none of this branch's
+changes applied, and is a pre-existing sandbox gap unrelated to this work).

@@ -71,9 +71,14 @@ const EMPTY: AllTimeRecords = { peaks: [], offPeak: [], atLow: [], asOf: null };
  * the board fills with cards from the newest set every time one is added, which
  * is exactly the failure mode that makes a records page look broken.
  */
-// Snapshot ROWS, not calendar days — and snapshots are weekly now, so 14 would
-// mean fourteen weeks and empty every records table until December.
-const MIN_DAYS = 3;
+// Snapshot ROWS, not calendar days. PriceHistory writes DAILY again now
+// (HISTORY_MIN_INTERVAL_DAYS in src/lib/price-history.ts — see DECISIONS.md,
+// "History off Neon"), so a row now represents roughly one real day, and 3
+// rows would mean a card that has been priced for three days can already
+// hold an "all-time" record. 14 keeps a genuine two-week floor under the new
+// cadence (tests/market-records.test.ts asserts MIN_DAYS × the real interval
+// stays >= 14 elapsed days, in either direction).
+const MIN_DAYS = 14;
 /** Below this, a percentage move is noise on a bulk common. Matches price-history. */
 const MIN_CENTS = 300;
 /**

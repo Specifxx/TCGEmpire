@@ -74,25 +74,26 @@ test("sydneyWeekKey takes an optional date (for bucketing historical rows), defa
   assert.notEqual(a, c, "a date in the following week must produce a different key");
 });
 
-test("computePriceHistory reads a bounded date window, not a row-count take, then buckets and slices", () => {
+test("computePriceHistory reads the CDN-published per-card series and slices to `take` points", () => {
+  // DECISIONS.md, "History off Neon": the old bounded-date-window Postgres
+  // query + collapseToWeekly bucketing is gone. scripts/export-history.ts
+  // already guarantees at most one point per day per card in the published
+  // JSON, so there is nothing left to bucket at read time — a plain
+  // chronological slice of the last `take` points is the whole job now.
   const code = codeOnly(read("src/lib/price-history.ts"));
   const fnStart = code.indexOf("async function computePriceHistory");
   const fn = code.slice(fnStart, code.indexOf("\n}", fnStart) + 2);
 
-  assert.match(fn, /const cutoff = new Date\(Date\.now\(\) - MAX_LOOKBACK_DAYS \* 86400_000\)/, "must bound the read by a generous date window");
-
-  const callStart = fn.indexOf("dbHistory.priceHistory.findMany({");
-  const call = fn.slice(callStart, fn.indexOf("});", callStart) + 3);
-  assert.match(call, /where:\s*\{\s*cardId,\s*country:\s*source,\s*day:\s*\{\s*gte:\s*cutoff\s*\}\s*\}/);
-  assert.match(call, /orderBy:\s*\{\s*day:\s*"asc"\s*\}/);
-  assert.doesNotMatch(call, /\btake\b/, "must not cap by row-count at the query level any more — that's what let dense legacy-daily rows starve out older history");
-
-  assert.match(fn, /collapseToWeekly\(rows\)\.slice\(-take\)/, "must bucket THEN cap to `take` points, not the other way around");
+  assert.match(fn, /getCardSeries\(cardId\)/, "must read the per-card CDN file");
+  assert.doesNotMatch(fn, /dbHistory\./, "must not query Postgres");
+  assert.match(fn, /series\.p\.slice\(-take\)/, "must cap to the last `take` points, chronologically");
 });
 
-test("MAX_LOOKBACK_DAYS is its own constant here, deliberately independent of the Index engines' identical value", () => {
+test("collapseToWeekly stays exported as a tested utility even though computePriceHistory no longer calls it", () => {
+  // Kept for any future raw-Postgres reader that needs to collapse legacy
+  // dense history — see its own comment in price-history.ts.
   const code = codeOnly(read("src/lib/price-history.ts"));
-  assert.match(code, /const MAX_LOOKBACK_DAYS = 730/);
+  assert.match(code, /export function collapseToWeekly/);
 });
 
 test("the chart's empty state no longer claims a daily cadence it doesn't have", () => {

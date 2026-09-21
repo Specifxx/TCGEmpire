@@ -3,7 +3,7 @@
 // singles importer (price-import.ts) deliberately skips these; this complements it.
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
-import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, cachedOrDirect } from "./price-history";
+import { sydneyDay, SEALED_HISTORY_MIN_INTERVAL_DAYS, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
@@ -1174,9 +1174,9 @@ export async function writeSealedPriceHistory(): Promise<void> {
     const daysSince = newest
       ? Math.round((day.getTime() - newest.day.getTime()) / 86400_000)
       : Number.POSITIVE_INFINITY;
-    if (daysSince < HISTORY_MIN_INTERVAL_DAYS) {
+    if (daysSince < SEALED_HISTORY_MIN_INTERVAL_DAYS) {
       console.log(
-        `Sealed price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${HISTORY_MIN_INTERVAL_DAYS}.`
+        `Sealed price history: skipped — last snapshot was ${daysSince} day(s) ago, writing at most every ${SEALED_HISTORY_MIN_INTERVAL_DAYS}.`
       );
       return;
     }
