@@ -6384,9 +6384,9 @@ Regional Qualifiers are also where a lot of early Vendetta singles and promos ch
   {
     slug: "riftbound-vendetta-crystal-rose-cards",
     category: "guide",
-    title: "Riftbound Vendetta's Crystal Rose Cards",
+    title: "Riftbound Crystal Rose: All 6 Cards & Prices",
     excerpt:
-      "Vendetta's Crystal Rose line brings six Wild Rift skins to physical cards for the first time — Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux. Here's every card, what makes them different from a normal alt-art, and live prices across every store we track.",
+      "The six Crystal Rose alt-arts — Kai'Sa, Sona, Ahri, Sett, Ezreal and Lux — numbered SP1–SP6, no rarer than any Vendetta alt-art. Live prices for each.",
     author: "RiftCompare",
     date: "2026-07-26",
     updated: "2026-07-26",
@@ -9227,7 +9227,7 @@ Track it on the [Radiance set page](/sets/radiance), where every card appears as
     category: "blog",
     title: "Why Riftbound Could Be a Top-Two Trading Card Game by 2028",
     excerpt:
-      "Riot has turned one audience into a hit twice, with Valorant and TFT. The brand, audience and mechanics case for Riftbound reaching the TCG top two by 2028.",
+      "The case for Riftbound in the TCG top two by 2028: Riot's record with TFT and Valorant, League's 120M+ audience, the mechanics, and what could break it.",
     author: "RiftCompare",
     date: "2026-09-06",
     readMins: 10,

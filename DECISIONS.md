@@ -9901,3 +9901,54 @@ checkout and is a pre-existing sandbox gap), `next build` compiles, and the
 rail was rendered and screenshotted in a real browser in all three modes
 (expanded, collapsed, the 1024-1279 icon band) and in both themes against a
 local dev server.
+
+
+---
+
+## Subagents wrote to the working tree, and two commit messages under-describe what they carry — 2026-09-21
+
+The CTR pass ran as two workflows over the real Search Console export. Each had
+a generate stage and an adversarial check stage, and the check stage's prompt
+said: *"If a small edit fixes it, make that edit and approve."* That sentence
+meant "edit the proposed string before returning it". Several checkers read it
+as "edit the file", and did — they have the same write tools this session does,
+and nothing in the prompt said the working tree was off limits.
+
+**What that means for the history.** Two commits carry content their subject
+lines do not describe:
+
+- `05194f26` ("Fix the Radiance what-we-know snippet…") also contains the
+  empower guide's new description and the most-expensive-cards title and
+  description, the latter in `src/lib/content/seo-pack-articles.ts`.
+- `293c8c20` ("Cap the champion page description…") also contains the flow
+  guide's new description.
+
+Both were pushed or built on before this was noticed, so the history is not
+being rewritten to tidy it — rewriting a pushed branch to improve a commit
+message trades a real risk for a cosmetic gain. This entry is the record
+instead.
+
+**Every one of those edits was verified after the fact** rather than trusted:
+lengths inside the 155-character description cap and the 60-character rendered
+title cap, and every new factual claim checked against the article's own body.
+One looked unsupported on a first pass — "no rarer than any Vendetta alt-art"
+on the Crystal Rose guide — and turned out to be sound; the body says the cards
+"pull at the same rate as any other alt-art card in Vendetta" and its FAQ
+answers the question outright. The regex was wrong, not the copy. A checker also
+reported `tests/ads-txt.test.ts` failing on a clean tree; it does not, and that
+agent was almost certainly reading a tree another agent was mid-edit on.
+
+**The lesson is about the prompt, not the agents.** A check stage that returns
+a verdict must be told, in the prompt, that it returns strings and does not
+touch the repository — "make that edit" is ambiguous to something holding an
+Edit tool. The next pass of this kind says so explicitly, and ideally runs its
+checkers with a read-only tool set.
+
+**Second finding from the same run: `assert.equal` on a ratchet is hostile to
+concurrency.** `tests/description-length.test.ts` demands the budget equal the
+exact count, so every agent that fixed one description had to lower the same
+constant, and they raced each other through 47, 44, 43 and 42 while the real
+count moved. The exact-equality assertion is still right for a human working
+alone — it is what stops a fix being quietly spent on the next long excerpt —
+but anything running several writers at once needs to set that constant once, at
+the end, from a single count. That is how it was finally resolved: 41.
