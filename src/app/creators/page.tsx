@@ -122,24 +122,23 @@ export default function CreatorsPage() {
             makes sense for what you make. In return we can promote your channel here and across our own
             socials above, and set you up with whatever from the site is useful to your content.
           </p>
+          {/* Was a hand-written copy of two iframe snippets. It had already
+              drifted — the release countdown widget shipped later and was never
+              added here, so this section advertised two of three. /embed is now
+              the one page that documents all of them, with the market and
+              card-slug options spelled out, so this links there instead of
+              keeping a second copy to forget again. */}
           <p>
-            One concrete thing already built for this: live, embeddable price widgets — a chrome-free badge
-            you can drop straight into a blog post, a Discord-linked site or a newsletter as an{" "}
-            <code className="rounded bg-ink-800 px-1 py-0.5 text-xs">&lt;iframe&gt;</code>, no build step on
-            your end. Two are live today — the market index, and any single card&rsquo;s cheapest price —
-            and both stay live and link back to the full comparison on {SITE_NAME}:
+            One concrete thing already built for this: live, embeddable widgets — a chrome-free badge you
+            can drop straight into a blog post, a Discord-linked site or a newsletter as an{" "}
+            <code className="rounded bg-ink-800 px-1 py-0.5 text-xs">&lt;iframe&gt;</code>, with no build
+            step on your end. There is a live card price badge, the market index and a countdown to the next
+            set release. They stay current on their own and link back to the full comparison on {SITE_NAME}.
           </p>
-          <pre className="overflow-x-auto rounded-lg bg-ink-900 p-3 text-[11px] leading-relaxed text-slate-400">
-{`<iframe src="${SITE_URL}/embed/index" width="300" height="150" frameborder="0"></iframe>
-
-<iframe src="${SITE_URL}/embed/card/<card-slug>" width="300" height="150" frameborder="0"></iframe>`}
-          </pre>
-          <p className="text-xs text-slate-500">
-            Swap <code className="rounded bg-ink-800 px-1 py-0.5">&lt;card-slug&gt;</code> for any card&rsquo;s
-            page slug — the part after <code className="rounded bg-ink-800 px-1 py-0.5">/card/</code> on its
-            RiftCompare page, e.g. <code className="rounded bg-ink-800 px-1 py-0.5">jinx-loose-cannon-ogn-251-298</code>
-            — and add <code className="rounded bg-ink-800 px-1 py-0.5">?market=uk</code> (or au/us/sg/ca/eu)
-            to either URL for a market other than the US default.
+          <p>
+            <Link href="/embed" className="text-gold hover:underline">
+              See all three with copy-paste snippets &rarr;
+            </Link>
           </p>
           <p>
             If that sounds like something you&rsquo;d want, email{" "}

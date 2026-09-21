@@ -26,10 +26,10 @@ keep, and none of them costs anything to give:
 |---|---|---|
 | A tracked store | Their private repricing report — every listing of theirs that another shop beats | That when they say "we price match", the words link here |
 | A community site | A live widget (price badge, market index, release countdown) their readers want | Nothing beyond using it |
-| A creator | A listing on `/creators` that already exists before we write | Nothing at all |
+| A creator | Free price research for whatever they're making | Nothing at all |
 
-That last one is not a trick, it's the whole mechanism: people link to pages that
-feature them, and you have not asked them for anything they have to weigh up.
+None of these asks a creator to weigh anything up, which is the part that made
+the earlier round go nowhere.
 
 **Anchor text is always the brand or a plain phrase** — "RiftCompare", "compare
 prices", "price check". Never an exact-match keyword string, never a paid link,
@@ -53,7 +53,7 @@ Rotate in this order, because it runs warmest-first:
    the biggest tracked stores that have never been contacted.
 2. **Weeks 7–9: community sites.** RiftDecks, Piltover Archive, RiftMana. Lead
    with the widget, not with us.
-3. **Weeks 10–12: creators.** List them first, tell them after.
+3. **Weeks 10–12: creators.** Offer the research, not a partnership.
 
 Track it in one spreadsheet with five columns: **Who · Email · Sent · Replied ·
 Outcome**. That is the whole CRM and it does not need to be anything more.
@@ -141,32 +141,44 @@ staff channel, or the site owner's X account.
 
 ## Template 3 — a creator
 
-**Do the work first.** Add them to `/creators` before you write. The email then
-reports something that has already happened rather than proposing something.
+**Read this first.** `/creators` is a list of *confirmed partnerships* — the page
+is headed "Socials & Creator Partners" and the data behind it is typed as such.
+Adding someone unasked so you can tell them they're listed would be claiming a
+relationship that does not exist, on a public page. Don't. It is also the one
+version of this email that could go badly in a community this small.
 
-**Subject:** `Added you to the RiftCompare creator list`
+So the creator email gives something real instead: **free research**. A creator
+making a "most expensive Radiance cards" video, a budget-deck video or a set
+review has a data problem, and that is the thing worth solving for nothing.
+
+**Subject:** `Free Riftbound price data, if it's ever useful to you`
 
 > Hi {Name},
 >
-> Quick note — I run RiftCompare, a free Riftbound price-comparison site, and I've
-> added you to our list of Riftbound creators worth following:
+> I run RiftCompare — a free Riftbound price-comparison site that tracks live
+> prices across {N} stores in six markets.
 >
-> riftcompare.com/creators
+> No pitch, and nothing I want from you. I just wanted you to know that if you're
+> ever making something where the numbers matter — most expensive cards in a set,
+> what a deck actually costs to build, how a card's price moved after an event —
+> I'm happy to pull that data for you and send it over. It takes me minutes and
+> the site is the only place that has some of it.
 >
-> No ask attached, I just wanted you to know it's there. If the link or the
-> description is wrong, or you'd rather not be listed at all, tell me and I'll fix
-> it straight away.
+> There are also embeddable widgets if they're ever useful for a blog post or a
+> description: riftcompare.com/embed
 >
-> If it's ever useful: we have free embeddable widgets (live card prices, a
-> release countdown) at riftcompare.com/embed, and I'm happy to pull price data
-> for anything you're working on.
+> That's it. Good luck with {the thing they're working on}.
 >
 > {Your name}
 > riftcompare.com
 
-**Do not** ask for a shout-out, a video, or a link. The offer to pull data is the
-hook — a creator making a "most expensive Radiance cards" video has a research
-problem, and that is the thing worth solving for free.
+**Fill in that last blank properly.** A specific reference to something they
+actually made is the difference between this and a mail merge, and it is the only
+part of the email that takes real time.
+
+**Do not** ask for a shout-out, a video, or a link. If a creator does want an
+ongoing partnership, `/creators` is where a confirmed one gets listed — and by
+then they will have said yes, which is the whole difference.
 
 ---
 
@@ -220,6 +232,6 @@ target assumes most of these go nowhere.
 | Widget directory | `/embed` | Three widgets, copy-paste snippets |
 | Retailer hub | `/stores` | What we do for stores, free listing |
 | Consulting | `/stores/consulting` | $250 AUD, 60 minutes, tax invoice issued |
-| Creator list | `/creators` | Add them before emailing |
+| Creator list | `/creators` | Confirmed partnerships ONLY. Currently empty. Adding an entry is a code change |
 | Radiance tracker | `/blog/riftbound-radiance-spoilers` | The preview-season hook |
 | Who already earns from us | `/admin/clicks` | Outbound clicks per store — the warmest targets |
