@@ -560,7 +560,7 @@ export function SearchBar({
     // primary CTA (there can be only one, and it moves to the hero the moment
     // the hero is on screen — see HeaderSearchSlot for the desktop scroll gate
     // that keeps the two from ever both claiming the role at once).
-    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "max-w-sm"}`}>
+    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "w-full max-w-xl"}`}>
       <form onSubmit={submit}>
         <svg
           className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 ${

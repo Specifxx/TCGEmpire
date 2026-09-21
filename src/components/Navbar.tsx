@@ -149,16 +149,16 @@ export function Navbar() {
               header, left aligned"). It sits INSIDE the left cluster, right
               after Database, rather than as the row's own middle child: the
               row is `justify-between`, so a middle child is centred, and
-              "left aligned" is the instruction. `w-full max-w-sm` lets it take
+              "left aligned" is the instruction. `w-full max-w-xl` lets it take
               the slack the cluster has without pushing the right-hand nav.
 
               The rail's search is a FEATURE search now (SideNav.tsx), so this
               is the only card search from lg up and there is no duplication
-              to resolve. HeaderSearchSlot still hides it until scroll on the
-              homepage alone — see its own doc comment. */}
+              to resolve. It is ALSO no longer scroll-gated on the homepage —
+              see HeaderSearchSlot's own doc comment. */}
           <div className="hidden min-w-0 flex-1 lg:block">
             <HeaderSearchSlot>
-              <Suspense fallback={<div className="input max-w-sm" />}>
+              <Suspense fallback={<div className="input w-full max-w-xl" />}>
                 <SearchBar />
               </Suspense>
             </HeaderSearchSlot>

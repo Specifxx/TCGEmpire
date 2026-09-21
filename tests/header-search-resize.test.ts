@@ -7,55 +7,52 @@ const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
 const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Reported (foldable phone): "when I open the fold, the search bar kinda goes
-// off" — on the homepage, unfolding mid-session could leave BOTH the header's
-// mobile search row and its desktop search row hidden at once, with nothing
-// left on screen to search from.
+// THE HEADER'S CARD SEARCH IS ALWAYS VISIBLE. Owner, 2026-09-21: "search for
+// cards should be longer/wider, and should always be visible."
 //
-// Root cause: HeaderSearchSlot used to gate the header's own (smaller) search
-// copy behind `window.scrollY > 8`, as a cheap proxy for "the hero — which has
-// its own, much bigger search box — has scrolled out of view". That proxy only
-// holds if the layout doesn't change underneath it. A foldable unfolding mid-
-// session resizes the viewport across the `lg` breakpoint, which reflows the
-// hero (its height AND copy both change there — see CinematicHero) without
-// necessarily changing window.scrollY at all. The mobile search row is hidden
-// purely by a `lg:hidden` parent (breakpoint-driven, immediate); the desktop
-// row only reveals once `scrolled` flips true (scroll-driven, stale after a
-// resize) — so a resize that crosses `lg` while scrollY is still small can
-// leave neither row showing.
+// This file used to pin the MECHANISM of a homepage-only scroll gate:
+// HeaderSearchSlot hid the desktop search row until CinematicHero's #rc-hero
+// left the viewport, watched with an IntersectionObserver because the earlier
+// `window.scrollY > 8` proxy went stale across a resize — a foldable phone
+// unfolding mid-session crossed the `lg` breakpoint, hid the mobile row
+// (`lg:hidden`, immediate) while `scrolled` was still false (so no `lg:block`
+// on the desktop row), and left NO search box on screen at all.
+//
+// The gate is gone, so its mechanism has nothing left to pin. The bug it
+// caused is still worth a test, and now has a far stronger form: with no
+// conditional visibility anywhere in the component, there is no state — stale
+// or otherwise — that can hide a search row. These tests assert that absence,
+// so re-adding a gate without re-reading the reasoning above fails here.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("HeaderSearchSlot tracks the hero's actual visibility (IntersectionObserver), not a scrollY threshold", () => {
+test("HeaderSearchSlot hides its row under no condition at all", () => {
   const code = codeOnly(read("src/components/HeaderSearchSlot.tsx"));
-  assert.match(code, /document\.getElementById\("rc-hero"\)/, "must watch the hero by its stable marker id");
-  assert.match(code, /new IntersectionObserver\(/, "must use IntersectionObserver, not a scroll listener");
-  assert.doesNotMatch(code, /window\.scrollY/, "a scrollY threshold is exactly the stale-across-resize bug — must not come back");
-  assert.doesNotMatch(code, /addEventListener\("scroll"/, "no scroll listener — the observer replaces it entirely");
+  assert.doesNotMatch(code, /\bhidden\b/, "no `hidden` class — that is what made the box disappear");
+  assert.doesNotMatch(code, /useState|useEffect/, "no visibility state: stale state across a resize was the original bug");
+  assert.doesNotMatch(code, /IntersectionObserver/, "the hero observer drove the gate; the gate is gone");
+  assert.doesNotMatch(code, /window\.scrollY|addEventListener\("scroll"/, "a scroll threshold must never come back");
+  assert.doesNotMatch(code, /usePathname/, "visibility must not depend on the route either — the homepage was the gated one");
 });
 
-test("HeaderSearchSlot fails toward a VISIBLE header search, never a silently hidden one", () => {
-  const code = codeOnly(read("src/components/HeaderSearchSlot.tsx"));
-  const fnStart = code.indexOf("export function HeaderSearchSlot");
-  const fn = code.slice(fnStart, code.indexOf("\n}", fnStart) + 2);
-  // Non-home routes: revealed immediately and permanently.
-  assert.match(fn, /if \(!isHome\) \{\s*setScrolled\(true\);\s*return;\s*\}/);
-  // Home route, but no hero element / no observer support (old browser): still
-  // reveal rather than leave the header with no search box at all.
-  assert.match(
-    fn,
-    /if \(!hero \|\| typeof IntersectionObserver === "undefined"\) \{\s*setScrolled\(true\);\s*return;\s*\}/
-  );
+test("both header rows still go through HeaderSearchSlot", () => {
+  // The component is the one place the always-visible rule is written down.
+  // Bypassing it at a call site would put the rule back in two places.
+  const nav = codeOnly(read("src/components/Navbar.tsx"));
+  assert.match(nav, /<HeaderSearchSlot>/, "the desktop row");
+  assert.match(nav, /<HeaderSearchSlot mobile>/, "the phone row");
 });
 
-test("the hero CinematicHero renders still carries the #rc-hero marker HeaderSearchSlot depends on", () => {
+test("the desktop card search is wide, not the old max-w-sm", () => {
+  const search = codeOnly(read("src/components/SearchBar.tsx"));
+  assert.match(search, /isHero \? "mx-auto w-full max-w-2xl" : "w-full max-w-xl"/, "the nav variant fills the slack the left cluster has");
+  const nav = codeOnly(read("src/components/Navbar.tsx"));
+  assert.match(nav, /className="input w-full max-w-xl"/, "the Suspense fallback must be the same width, or the row jumps on hydration");
+});
+
+test("the hero CinematicHero still carries the #rc-hero marker", () => {
+  // No longer used by HeaderSearchSlot, but FeedbackWidget watches the same id
+  // for its own "don't compete with the hero search" check.
   const code = codeOnly(read("src/components/home/CinematicHero.tsx"));
-  assert.match(code, /id="rc-hero"/, "HeaderSearchSlot's IntersectionObserver silently no-ops if this id ever moves/is removed");
-});
-
-test("the mobile search row is still unconditional (never re-coupled to `scrolled`)", () => {
-  // The 2026-08-17 revert this file's own doc comment describes: gating the
-  // mobile row the same way as the desktop row left the mobile homepage header
-  // looking empty pre-scroll. The resize fix must not quietly re-introduce that.
-  const code = codeOnly(read("src/components/HeaderSearchSlot.tsx"));
-  assert.match(code, /mobile \? "block" : /, "the mobile row must stay unconditionally visible, independent of `scrolled`");
+  assert.match(code, /id="rc-hero"/);
+  assert.match(codeOnly(read("src/components/FeedbackWidget.tsx")), /rc-hero/, "the marker's remaining consumer");
 });
