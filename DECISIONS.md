@@ -8256,3 +8256,83 @@ halves are verified (direct run still writes the report; import writes nothing).
 No other script in `scripts/` needs this guard because no other test imports one
 — this was the first, and since the parsing is precisely what must be tested
 without a key, the import is not going away.
+
+## History off Neon, part 1: the export pipeline lands, readers don't move yet — 2026-09-21
+
+Owner asked for a plan to make RiftCompare the reference Riftbound price site,
+staying on Neon's free tier. The history project (`HISTORY_DATABASE_URL_2`
+today) has rotated 18+ times in six weeks, each rotation risking a blank-chart
+incident like 2026-09-17's, and forces price snapshots to be **weekly**
+(`HISTORY_MIN_INTERVAL_DAYS = 7`) because every windowed history read — card
+charts, movers, the market index, records, the screener, the public API — hits
+the same 5 GB/month allowance the snapshot writer does. No competitor site
+checked (magicalmeta.ink, riftboundstats.com, riftdecks.com) shows better than
+hourly-to-daily granularity; RiftCompare's own chart is the worst of the group
+on this one axis despite tracking more markets than any of them.
+
+**The fix has to be architectural, not another rotation**: stop reading
+PriceHistory from Postgres at request time, so the allowance is spent only on
+the daily write. This entry ships the write half only — the plumbing that gets
+today's snapshot out of Neon and onto a CDN. **No app-side reader changes
+yet** — `computePriceHistory`, `computePriceMovers`, `market-records.ts`,
+`market-index.ts`, `screener.ts`, `rise-predictor.ts`, `public-api.ts` and
+`premium.ts` all still read `dbHistory.priceHistory` exactly as before, and
+`HISTORY_MIN_INTERVAL_DAYS` is untouched at 7. Those changes need the
+published data to already exist before anything can be safely pointed at it,
+so they're deliberately a follow-up, not this commit.
+
+**What ships:**
+
+- `scripts/export-history.ts` — reads the GLOBAL PriceHistory series
+  (`historySource`'s `GLOBAL_HISTORY_COUNTRY`, the same series every reader
+  above already reads) and writes flat JSON: one `cards/<cardId>.json` file
+  per card (`[day, usdCents]` points), two rolling windows (35/120 days) for
+  the readers that scan every card over a short range, an all-time
+  `records.json` (first-reached peak/trough per card, matching
+  `market-records.ts`'s existing semantics so a future migration changes
+  nothing about what a record page says), and a `prices.csv` snapshot for a
+  future public-dataset page. Default run reads **only today's Sydney-day
+  rows** (~1,400, one query) and merges into the existing files — the exact
+  entity/day scoping the egress rules at the top of `src/lib/db.ts` ask for.
+  `--full` does a one-off whole-table read (~82k rows today) to seed or
+  rebuild the tree from scratch.
+- `refresh-prices.yml` gains an "Export price history" step after the sealed
+  import: checks out the orphan `data` branch as a worktree, runs the
+  incremental export, commits and pushes if anything changed. Non-fatal by
+  design — a failed export leaves charts one day stale, never blocks the
+  price import or fails the job.
+- `maintenance.yml` gains a dispatch-only `export-history-full` task to seed
+  the `data` branch the first time (or rebuild it after a quarterly squash —
+  the branch is rewritten daily and will need one eventually).
+- **Hosting: jsDelivr's GitHub-backed CDN, not GitHub Pages.** Pages was the
+  obvious first choice and is rejected here: its terms restrict it from
+  sites "primarily directed at facilitating commercial transactions", and
+  this site carries affiliate links, ads and a paid tier — a real risk for
+  zero benefit over the alternative. jsDelivr serves any GitHub ref with no
+  signup and no secret (`cdn.jsdelivr.net/gh/<owner>/<repo>@<sha>/...`,
+  20 MB/file, 150 MB/ref — both far above the ~8 MB tree), and SHA-pinned URLs
+  cache ~1 year on its CDN, so the follow-up reader PR will resolve a SHA once
+  a day (via a `Counter` row) rather than trust a mutable branch URL. Not yet
+  wired up — that's the follow-up.
+- `vercel.json` gets `"data": false` in `deploymentEnabled`, alongside the
+  existing `claude/*` rules, so the daily branch push never costs a Vercel
+  build. `tests/build-cost.test.ts`'s "no pattern but claude/* may be false"
+  guard was widened by name (`data`) rather than loosened generally, with a
+  comment saying why — the same deliberate-exception shape `claude/*` already
+  has, not a weakening of what that test actually guards against (an
+  accidental "main": false).
+- `ci.yml` already only triggers on `pull_request` and `push: branches:
+  [main]`, so the daily push to `data` triggers nothing — verified rather than
+  assumed (`tests/history-export.test.ts`).
+
+**Why this order.** Publishing the data before any reader depends on it means
+the first real day of daily snapshots accumulates while the reader PR is still
+being reviewed, instead of starting the day that PR merges. It also means the
+`export-history-full` backfill can run once, get eyeballed, and be reused —
+rather than being written and tested for the first time under the pressure of
+"the chart is broken on production."
+
+**Still weekly.** `HISTORY_MIN_INTERVAL_DAYS` moves to 1 only once the readers
+are off Neon — writing daily snapshots while still reading them at request
+time would restore exactly the read-rate problem this whole workstream exists
+to fix, seven times over.

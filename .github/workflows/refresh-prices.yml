@@ -48,6 +48,12 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    # contents: write is needed ONLY by the "Export price history" step below,
+    # to push the orphan `data` branch (see src/lib/history-store.ts's header
+    # and DECISIONS.md, "History off Neon"). Nothing else in this job writes
+    # to the repo.
+    permissions:
+      contents: write
     # 90, not 55: the 55-minute limit KILLED the 2026-08-03 run 9 minutes into
     # its third eBay market, discarding that market's work entirely. At the
     # measured ~0.75s/card worst case, a run is ~18 min of store imports plus
@@ -182,6 +188,57 @@ jobs:
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
         run: npx tsx scripts/import-sealed.ts
+
+      - name: Export price history (data branch)
+        # Publishes today's GLOBAL price-history snapshot as flat JSON to the
+        # orphan `data` branch, which jsDelivr serves as a CDN
+        # (cdn.jsdelivr.net/gh/<owner>/<repo>@<sha>/...). This is what lets
+        # every app-side history read (card charts, movers, market index,
+        # records, screener, public API) skip the history Neon project
+        # entirely at request time — see src/lib/history-store.ts and the
+        # egress rules at the top of src/lib/db.ts, rule 4. Runs AFTER the
+        # price import above so today's snapshot (written by price-import.ts,
+        # gated at most once/day by HISTORY_MIN_INTERVAL_DAYS) is already in
+        # Postgres by the time this reads it.
+        #
+        # Non-fatal by design (`if: always()` + swallowed failures): a failed
+        # export means charts stay one day stale (computePriceHistory/
+        # computePriceMovers fail closed to `[]`/last-known data, same as
+        # today), never a broken deploy or a blocked price import.
+        if: always()
+        env:
+          # Same chain as "Import sealed products" above.
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
+          RH10: ${{ secrets.RH10 || vars.RH10 }}
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+        run: |
+          set +e
+          git fetch origin data:data --depth=1 2>/dev/null
+          if [ $? -ne 0 ]; then
+            echo "No 'data' branch yet — run the export-history-full maintenance task once to seed it."
+            exit 0
+          fi
+          git worktree add history-data data
+          set -e
+          npx tsx scripts/export-history.ts --out history-data
+          cd history-data
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No history changes today — nothing to push."
+          else
+            git commit -m "history: $(date -u +%Y-%m-%d)"
+            git push origin HEAD:data
+          fi
 
       - name: Revalidate site pages (on-demand ISR)
         # New prices just landed, so regenerate the ISR pages NOW. This is what lets

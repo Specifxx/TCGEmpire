@@ -3,7 +3,8 @@
   "git": {
     "deploymentEnabled": {
       "claude/*": false,
-      "claude/**": false
+      "claude/**": false,
+      "data": false
     }
   },
   "ignoreCommand": "bash scripts/vercel-ignore-build.sh",

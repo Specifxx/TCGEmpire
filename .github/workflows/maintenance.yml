@@ -65,6 +65,7 @@ on:
           - audit-inbox      # read-only dump of the four /admin/messages queues (contact messages, store suggestions, feedback, wrong-price/card reports). Emails reduced to their domain and IPs never printed — job logs are collaborator-visible and these are the tables where the public typed their own address. ALL=1 via the `apply` input shows every row rather than only open ones.
           - close-inbox-items # THE WRITE half of audit-inbox: sets the status each worked item actually earned (added / rejected / FIXED / HIDDEN), row by named row. Never a blanket "mark all done" — a suggestion that could NOT be added is stamped rejected with the reason, not added. Refuses any row whose status has moved since. Report-only unless `apply` is ticked.
           - audit-clicks     # read-only outbound-click leaderboard per retailer (affiliate-outreach priority)
+          - export-history-full # ONE-OFF backfill: reads EVERY GLOBAL PriceHistory row (~82k today, one bounded read) and writes the full cards/*.json + window/records/meta/csv tree to the orphan `data` branch (creating it if absent). Run once to seed src/lib/history-store.ts's CDN-backed reads (see DECISIONS.md, "History off Neon"); refresh-prices.yml's daily incremental export keeps it current after that. Safe to re-run — it rebuilds every file from the full table rather than merging.
           - audit-egress     # READ-ONLY forensics on the ~2 GB/day Neon transfer burn that has now killed nine projects in a row (each dies 2-3 days after cutover). Reads ONLY statistics views — pg_stat_database, pg_stat_user_tables and, if present, pg_stat_statements — and attributes the churn to a TABLE and then to a QUERY SHAPE, with rows costed into estimated bytes. Run it a few hours after a cutover, not minutes: Neon resets these counters whenever the compute endpoint restarts, so the window is short and one import run inside it dominates the extrapolation.
           - audit-indexability # READ-ONLY census of how many card pages currently noindex themselves AND drop out of the sitemap, and why. Reports the CROSS-DATABASE JOIN HEALTH first (what share of PriceHistory cardIds still resolve against the live Card table), because when that join breaks every card reads as 0 days of history and every out-of-stock card noindexes at once — silently, with no error and no deploy to blame, which looks exactly like an unexplained traffic decline. RUN THIS FIRST when traffic drops after any database rotation, restore or catalogue rebuild.
           - index-coverage    # READ-ONLY. Runs audit-indexability FIRST, then walks cards.xml through Google's URL Inspection API and reports, per card URL, whether Google has it INDEXED and why not. This is the only thing that separates "never discovered" from "crawled and judged not worth indexing" from "indexed but nobody searches for it" — three states that look identical in the impressions report and have three different, mutually exclusive fixes. Spends property quota: 2,000 URL inspections per day, shared with the Search Console UI, so this is dispatch-only and never scheduled.
@@ -158,6 +159,11 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # contents: write is needed ONLY by export-history-full, to push the
+    # orphan `data` branch (see scripts/export-history.ts). Every other task
+    # in this job only reads/writes Postgres.
+    permissions:
+      contents: write
     # import-prices writes the same tables as the scheduled refresh — join its
     # concurrency group so the two can never run at once. Other tasks keep a
     # per-run group (no cross-blocking).
@@ -6103,6 +6109,43 @@ jobs:
         # contradiction so this can gate a deploy.
         if: inputs.task == 'check-cards'
         run: npx tsx scripts/check-card-consistency.ts
+
+      - name: Export full price history to the data branch (one-off backfill)
+        # Seeds (or fully rebuilds) the orphan `data` branch that
+        # src/lib/history-store.ts reads via jsDelivr — see
+        # scripts/export-history.ts's header and DECISIONS.md, "History off
+        # Neon". Reads the WHOLE PriceHistory table once (bounded, one-off,
+        # explicitly the kind of read the egress rules in src/lib/db.ts
+        # reserve for workflows, never request handlers). After this,
+        # refresh-prices.yml's daily step keeps the branch current with a
+        # single-day incremental export.
+        if: inputs.task == 'export-history-full'
+        env:
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
+          RH10: ${{ secrets.RH10 || vars.RH10 }}
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+        run: |
+          if git fetch origin data:data --depth=1 2>/dev/null; then
+            git worktree add history-data data
+          else
+            git worktree add --detach history-data
+            (cd history-data && git checkout --orphan data && git rm -rf . >/dev/null)
+          fi
+          npx tsx scripts/export-history.ts --full --out history-data
+          cd history-data
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "history: full backfill $(date -u +%Y-%m-%d)"
+          git push origin HEAD:data
 
       - name: Sync cards from RiftScribe (fetch + additive upsert)
         if: inputs.task == 'cards-sync'
