@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
 import { BrandLogo } from "./BrandLogo";
-import { useCommandLauncher } from "./CommandLauncher";
+import { SearchBar } from "./SearchBar";
 import { useCountry } from "./CountryProvider";
 import { useMe } from "@/lib/use-me";
 import { COUNTRIES } from "@/lib/country";
@@ -75,7 +75,6 @@ function Chevron({ open }: { open: boolean }) {
 
 export function SideNav() {
   const pathname = usePathname();
-  const launcher = useCommandLauncher();
   const { country } = useCountry();
   const { premium } = useMe();
 
@@ -167,25 +166,29 @@ export function SideNav() {
       </Link>
 
       {/* ── Search ────────────────────────────────────────────────────────
-          A button, not an input: the ⌘K launcher IS the site's search, and a
-          second real input here would be a second thing to keep in sync with
-          it. This is the only search affordance from lg up — the header's
-          inline box was removed when this arrived. */}
+          A REAL CARD SEARCH, not a launcher button. It was a button opening
+          the ⌘K overlay until 2026-09-21; the overlay searches SITE
+          NAVIGATION, so typing a card name into the thing labelled "Search"
+          in a card-price site's sidebar found nothing. Asked for directly:
+          "the search bar on the side should search through all the cards and
+          should say 'search for cards' and the suggestions should pop up on
+          the side next to it stacked vertically."
+
+          The `rail` variant of the shared SearchBar — the same component the
+          header and the homepage hero use, so the /api/search query, the
+          debounce, the abort-on-retype, the keyboard model, recent searches,
+          QuickView-on-click and the analytics are all the existing ones. The
+          variant changes exactly two things: the placeholder, and the fact
+          that the suggestion list opens to the RIGHT of the rail instead of
+          beneath the field.
+
+          The ⌘K launcher is NOT lost — it still has its own global shortcut
+          and its own button below lg. It simply stops pretending to be card
+          search. */}
       <div className="shrink-0 border-b border-ink-800 px-3 py-3">
-        <button
-          type="button"
-          onClick={launcher.open}
-          aria-label="Search"
-          title="Search  ⌘K"
-          className="flex w-full items-center gap-2.5 rounded-lg border border-ink-700 bg-ink-950/60 px-2.5 py-2 text-sm text-slate-400 transition-colors hover:border-ink-600 hover:text-white"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-[18px] w-[18px] shrink-0">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-          <span className="flex-1 text-left">Search</span>
-          <kbd className="rounded border border-ink-700 bg-ink-900 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">⌘K</kbd>
-        </button>
+        <Suspense fallback={<div className="input h-9" />}>
+          <SearchBar variant="rail" />
+        </Suspense>
       </div>
 
       {/* ── The index ─────────────────────────────────────────────────────

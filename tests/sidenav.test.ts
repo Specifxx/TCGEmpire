@@ -233,7 +233,13 @@ test("the rail owns the brand, the search and the whole index; the header owns t
   // Rail-only.
   assert.match(rail, /aria-label="RiftCompare home"/, "the rail carries the brand");
   assert.match(nav, /className="tap-link min-w-11 shrink-0 gap-2 lg:hidden"/, "…and the header hides its copy from lg");
-  assert.match(rail, /useCommandLauncher\(\)/, "the rail carries the only desktop search affordance");
+  // REAL CARD SEARCH, not the ⌘K launcher (2026-09-21). The rail's field was
+  // a button opening the navigation overlay, which does not search cards —
+  // so typing a card name into the box labelled "Search" in a card-price
+  // site's sidebar found nothing. It is the shared SearchBar now, in its
+  // `rail` variant.
+  assert.match(rail, /<SearchBar variant="rail" \/>/, "the rail carries the only desktop search affordance");
+  assert.doesNotMatch(rail, /useCommandLauncher/, "…and it is card search, not the nav launcher");
   assert.doesNotMatch(nav, /<HeaderSearchSlot>/, "…so the header has no inline search box");
   assert.match(nav, /<HeaderSearchSlot mobile>/, "…but the phone search row survives, where there is no rail");
 
@@ -279,4 +285,36 @@ test("every group in the rail is reachable and nothing in NAV_GROUPS was lost to
   assert.ok(NAV_GROUPS.length >= 8, `expected the full grouped index, found ${NAV_GROUPS.length} groups`);
   // External links still branch — the contract every NAV_GROUPS renderer follows.
   assert.match(rail, /link\.external \?/, "external links must open in a new tab, never through next/link");
+});
+
+test("the rail's search is real card search, and its suggestions open beside the rail", () => {
+  // "The search bar on the side should search through all the cards and
+  // should say 'search for cards' and the suggestions should pop up on the
+  // side next to it stacked vertically."
+  const bar = codeOnly(read("src/components/SearchBar.tsx"));
+
+  // One component, three variants — the /api/search query, the debounce, the
+  // abort-on-retype, the keyboard model and the analytics are shared. A
+  // second search component for the rail is exactly what this avoids.
+  assert.match(bar, /variant\?: "nav" \| "hero" \| "rail"/, "the rail is a variant, not a fork");
+  assert.match(bar, /isRail \? "Search for cards"/, "the placeholder must name cards outright");
+
+  // The panel opens to the RIGHT, top-aligned — the rail is ~17rem wide, so a
+  // dropdown beneath the field would be both too narrow to read and inside a
+  // container that scrolls.
+  assert.match(bar, /isRail\s*\n?\s*\?[\s\S]{0,400}?absolute left-full top-0/, "the rail's panel opens sideways");
+  assert.doesNotMatch(
+    /isRail[\s\S]{0,400}?absolute left-full top-0[^"]*/.exec(bar)?.[0] ?? "",
+    /\bmt-2\b/,
+    "a sideways panel must not also carry the stacked variant's top margin",
+  );
+
+  // Its height budget is measured from the field's TOP, because it is
+  // top-aligned rather than sitting below the field.
+  assert.match(bar, /isRail\s*\n?\s*\?\s*window\.innerHeight - rect\.top/, "the side panel's height starts at the field's top edge");
+
+  // And the rail mounts exactly that variant, inside Suspense (SearchBar
+  // reads useSearchParams).
+  const rail = codeOnly(read("src/components/SideNav.tsx"));
+  assert.match(rail, /<Suspense[\s\S]{0,120}?<SearchBar variant="rail" \/>/, "mounted in the rail, under Suspense");
 });

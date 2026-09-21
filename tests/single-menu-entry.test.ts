@@ -73,7 +73,12 @@ test("the header renders it below lg only, so desktop keeps ONE full-nav surface
   // button, a launcher button AND a rail would have been three doors into one
   // index, which is the duplication this file exists to prevent.
   assert.doesNotMatch(nav, /<CommandLauncherButton \/>/, "the desktop launcher button belongs to the rail now");
+  // From lg that surface is the RAIL, which renders the whole NAV_GROUPS
+  // index inline — no button to press, nothing to open. The ⌘K launcher still
+  // exists and still has its global shortcut; it simply has no desktop BUTTON
+  // any more, and (since 2026-09-21) no longer sits behind the rail's search
+  // field either, which is real card search now.
   const rail = readCode("src/components/SideNav.tsx");
-  assert.match(rail, /useCommandLauncher\(\)/, "the rail must own the desktop launcher entry point");
-  assert.match(rail, /NAV_GROUPS\.map/, "…and still render the full index inline");
+  assert.match(rail, /NAV_GROUPS\.map/, "the rail renders the full index inline");
+  assert.match(rail, /<SearchBar variant="rail" \/>/, "…and its search field searches cards, not navigation");
 });
