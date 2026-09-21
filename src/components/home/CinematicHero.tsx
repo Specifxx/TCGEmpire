@@ -345,7 +345,7 @@ export function CinematicHero({
             href="/browse"
             className="tap-link rounded text-sm font-semibold text-slate-300 underline-offset-4 outline-none transition-colors hover:text-brand-400 hover:underline focus-visible:ring-2 focus-visible:ring-brand-400"
           >
-            Browse all {totalCards.toLocaleString()} cards →
+            All {totalCards.toLocaleString()} cards in the database →
           </Link>
           <CountryHeroToggle />
         </div>

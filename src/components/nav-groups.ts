@@ -82,7 +82,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // visitor searching "champions" or "keywords" was getting "No matches" for
     // pages we very much have — so they live here and llms.txt reads them from
     // this one list instead of keeping its own copy.
-    title: "Browse the database",
+    title: "The card database",
     icon: "browse",
     links: [
       { href: "/sets", label: "Sets & card lists", keywords: ["sets", "set list", "card list", "vendetta", "origins", "unleashed", "spirit forged", "proving grounds", "radiance"] },
@@ -205,7 +205,7 @@ export const NAV_GROUPS: NavGroup[] = [
     // the card database, not a tool, not our own writing.
     //
     // /release-dates is the founding member, and the reason the group exists. It
-    // had been filed under "Browse the database" (and under "Prices" before
+    // had been filed under "The card database" (and under "Prices" before
     // that), because a release countdown is adjacent to both and squarely in
     // neither — it was the one entry in a database-views group that shows no
     // cards, exactly as it had been the one entry in a prices group with nothing
@@ -295,8 +295,8 @@ export const FOOTER_GROUPS: NavGroup[] = [
     links: [...(byTitle["Prices"] ?? []), ...miscLinks],
   },
   {
-    title: "Browse & collect",
-    links: [...(byTitle["Browse the database"] ?? []), ...(byTitle["Your collection"] ?? [])],
+    title: "Cards & collection",
+    links: [...(byTitle["The card database"] ?? []), ...(byTitle["Your collection"] ?? [])],
   },
   {
     title: "Deals & decks",

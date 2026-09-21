@@ -89,7 +89,7 @@ export default async function NotFound() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <Link href="/browse" className="btn-primary">Browse every card</Link>
+        <Link href="/browse" className="btn-primary">Card database</Link>
         <Link href="/movers" className="btn-ghost">Today&apos;s price movers</Link>
         <Link href="/sealed" className="btn-ghost">Sealed products</Link>
         <Link href="/guides" className="btn-ghost">Guides &amp; news</Link>

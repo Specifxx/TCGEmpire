@@ -491,7 +491,7 @@ export default async function SetPage({
                 </Link>
               )}
               <Link href="/release-dates" className="btn-ghost">When does it release?</Link>
-              <Link href="/browse" className={set.sealedAvailable || preordersHref ? "btn-ghost" : "btn-primary"}>Browse released sets</Link>
+              <Link href="/browse" className={set.sealedAvailable || preordersHref ? "btn-ghost" : "btn-primary"}>Card database</Link>
             </div>
 
             {/* Pre-release explainer links — gives the topical set page real routes
