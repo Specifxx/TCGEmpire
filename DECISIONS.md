@@ -9335,3 +9335,13 @@ What the real numbers did show, and what changed:
 
 Shipped with `[deploy]` at the owner's explicit instruction to skip the daily
 schedule for this change.
+
+**Addendum, same day.** Verifying the deploy on the live `/sets/radiance`
+found it linking to none of the Radiance posts — not the new tracker, not the
+confirmed-facts post, not the pre-order comparison. The pre-release link list
+was rendered only inside the page's `totalInSet === 0` branch, so the first
+imported card (Neeko, 19 September) had silently removed every link from the
+hub into its own cluster, two days before spoiler season. The has-cards branch
+now renders the same list under its "revealed so far" banner, and the tracker
+test pins that both branches map it. Verification against the live page, not
+the source, is what caught it.
