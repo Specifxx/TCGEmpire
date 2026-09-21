@@ -6677,3 +6677,80 @@ on top of this one. No code-side switch exists for it.
 `/dashboard` sessions (a number that didn't exist before this pass, since free
 users were redirected away from it). The one guardrail the whole pass is
 judged against: `buy_click` and pages/visitor must not fall.
+
+## Paid store consulting — the first thing a business buys here — 2026-09-21
+
+Every paid thing on this site until now was bought by a PLAYER: Premium, Plus,
+the tools. `/stores/consulting` sells a $250 AUD hour to a SHOP. It exists
+because the asset this site has that a store genuinely cannot get anywhere else
+— every competitor's live price in their own market, plus what shoppers search
+for and never find stocked — was only ever pointed at buyers.
+
+**Consulting first, a store tier later, and that order is the point.** The
+obvious B2B product here is recurring: a store dashboard at ~$99/mo, which
+scales and doesn't cost an hour of the owner's evening per sale. Consulting is
+strictly worse on both counts. It ships first anyway because it costs nothing
+to build against the data that already exists, and because the first five
+sessions are the cheapest customer research available — a store paying $250 to
+talk for an hour will say what they actually struggle with, which is not
+reliably what a survey or a guessed feature list would have produced. The
+sessions are the discovery step for the tier, not the destination. If five
+stores book and every one of them asks the same question, that question is the
+product.
+
+**Stripe Checkout in `payment` mode, with `invoice_creation` — seamless AND
+invoiced, not one or the other.** The instinct for a B2B sale is to issue an
+invoice and wait for a transfer, which is where a two-hundred-dollar sale goes
+to die in a shop owner's inbox. The instinct for a consumer sale is a payment
+link with no paperwork, which their bookkeeper rejects. Checkout does both: the
+store pays by card in about a minute, and Stripe generates a numbered tax
+invoice PDF for the one-off payment, with `tax_id_collection` so their ABN/GST/
+VAT prints on it. Two flags, and the false choice disappears.
+
+`customer_creation: "always"` is load-bearing and is the easiest thing here to
+delete by accident: `invoice_creation` with no customer object silently
+produces no invoice at all. The store pays, gets a card receipt, and has
+nothing their accountant accepts — the single most likely way this feature
+quietly disappoints the exact buyer it was built for. `tests/store-consulting.
+test.ts` pins the pair together for that reason.
+
+**The line item is inline `price_data`, not a Dashboard Price.** Every other
+Stripe surface here reads a price id out of an env var, because subscriptions
+genuinely need a Price object. A one-off service fee does not, and requiring
+one would mean this page can't take money until someone logs into the Stripe
+UI and creates a product — with the amount then living half in `lib/consulting.
+ts` and half in Stripe, free to disagree. Inline keeps one number in one file;
+`ConsultBooking.amountCents` records what each store was actually charged, so
+changing the price later can't rewrite history.
+
+**The booking row is written BEFORE Stripe, and abandoned ones are kept.** A
+`pending` row is a store that typed their name, their site, what they're stuck
+on and when they're free — and then didn't finish checkout. While this product
+is new that is the most valuable row in the table: a warm lead with the
+objection already written down. A "record it on success" design throws that
+away and leaves no evidence the interest ever existed. `/admin/consulting`
+shows pending rows deliberately, and counts revenue only from paid ones so the
+two can't blur.
+
+**Neutrality is the thing being risked, so it is stated on the page.** The
+comparison is only worth anything to shoppers because it ranks on price, not on
+who pays us. Taking money from stores we also rank is the first real conflict
+this site has had, and the mitigation is the same discipline `isPaidLink` and
+the affiliate disclosure already apply: the page says in its own "What this
+isn't" section that booking changes nothing about ranking, ever, and a test
+pins that sentence. The refund offer (say so 15 minutes in and it's refunded in
+full) is there for the same reason — a new service with no track record is
+easier to try than to trust, and a bad session costs less than the reputation
+in an industry this small.
+
+**No scheduling widget, and no account required to buy.** `scheduledFor` is a
+nullable timestamp the owner sets once a time is agreed by email; there is one
+consultant and a calendar he already owns, so anything more would be a state
+machine with no second user. `NEXT_PUBLIC_CONSULT_SCHEDULING_URL` is there for
+the day a Cal.com link exists, and until it is set the confirmation page says
+"we'll email you within 24 hours", which is the truth rather than a promise of
+a booking flow that isn't built. Requiring sign-in to book was rejected outright:
+the buyer is a shop owner who has probably never used this site signed in, and
+a registration wall in front of the highest-value action on the site would be
+the most expensive form validation ever written. Rate limiting does that job
+instead.

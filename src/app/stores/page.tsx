@@ -5,6 +5,7 @@ import { SITE_URL, CONTACT_EMAIL } from "@/lib/site";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RETAILER_LIST } from "@/lib/retailers";
 import { pageAlternates } from "@/lib/seo";
+import { CONSULT_DURATION_MIN } from "@/lib/consulting";
 
 export const revalidate = 3600;
 
@@ -105,6 +106,23 @@ export default async function StoresPage() {
           report shows market aggregates, never another store&apos;s private information beyond the
           public prices everyone can already see.
         </p>
+      </div>
+
+      {/* The paid tier above the free report. Deliberately BELOW "how it works":
+          the free thing is the offer this page leads with, and a store that only
+          ever takes the report is still a win — it makes the comparison better. */}
+      <div className="card-surface mt-6 flex flex-wrap items-center justify-between gap-4 border-l-2 border-gold/50 p-5">
+        <div className="min-w-0">
+          <span className="chip bg-gold/15 text-[10px] font-bold uppercase tracking-wide text-gold">Paid</span>
+          <h2 className="mt-1.5 font-bold text-white">Want someone to go through it with you?</h2>
+          <p className="mt-1 text-sm leading-relaxed text-slate-400">
+            Book a one-to-one session on where your store sits in the market — pricing, what to stock,
+            and what the demand data says. {CONSULT_DURATION_MIN} minutes, tax invoice included.
+          </p>
+        </div>
+        <Link href="/stores/consulting" className="btn-ghost shrink-0 whitespace-nowrap text-sm">
+          See what&apos;s covered →
+        </Link>
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-600">

@@ -11,6 +11,9 @@ import {
   subscriptionIdFromInvoice,
   userIdFromSubscription,
 } from "@/lib/stripe-entitlement";
+import { CONSULT_DURATION_MIN, CONSULT_REPLY_HOURS, CONSULT_SCHEDULING_URL } from "@/lib/consulting";
+import { sendConsultConfirmationEmail, sendConsultOwnerAlertEmail } from "@/lib/email";
+import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 // Stripe needs the raw, unparsed body to verify the signature.
@@ -75,8 +78,10 @@ export async function POST(req: Request) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
-        // Premium is the only checkout left; ignore any other session kind.
         if (session.metadata?.kind === "premium") await premiumStarted(session);
+        // The paid store consulting session (/stores/consulting) — the one
+        // non-subscription checkout on the account.
+        else if (session.metadata?.kind === "store_consult") await consultBookingPaid(session, event.id);
         break;
       }
       // Premium renewals — see rule 1 above for why both invoice events.
@@ -290,4 +295,92 @@ async function stampPremium(userId: string, until: Date, customerId: string | nu
       ...(tierChange ? { premiumTier: tier } : {}),
     },
   });
+}
+
+// ── Store consulting (one-off payment, not a subscription) ───────────────────
+
+// A store paid for a consulting session (/stores/consulting). Flip the booking
+// to `paid`, keep the tax invoice link, and tell both sides.
+//
+// PAYMENT MUST ACTUALLY HAVE CLEARED. `checkout.session.completed` fires when
+// the customer finishes the Checkout UI, which is NOT the same as money having
+// moved — the same distinction that cost this codebase the churchless incident
+// on the subscription path above. For a one-off payment the honest test is
+// `payment_status`, and a session still `unpaid` (a delayed method that may yet
+// fail) is left `pending` for its own async_payment_succeeded event to finish.
+//
+// IDEMPOTENT. Both event types can deliver for one session, and Stripe retries.
+// The update is scoped to bookings NOT already paid, so a replay changes zero
+// rows and sends zero duplicate emails.
+async function consultBookingPaid(session: Stripe.Checkout.Session, eventId: string) {
+  const bookingId = session.metadata?.bookingId ?? session.client_reference_id;
+  if (!bookingId) {
+    console.error(`stripe webhook ${eventId}: store_consult session ${session.id} carries no bookingId`);
+    return;
+  }
+  if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
+    // Not an error — an async method just hasn't settled. Its own event follows.
+    console.warn(`stripe webhook ${eventId}: consult booking ${bookingId} not paid yet (${session.payment_status})`);
+    return;
+  }
+
+  // Stripe's hosted tax invoice. `invoice` is an id on the session; the PDF/
+  // hosted URL only exists on the invoice object, so it takes one retrieve.
+  // A failure here must never block the booking being marked paid — the link
+  // is a convenience, the payment is the fact.
+  let invoiceUrl: string | null = null;
+  const invoiceId = typeof session.invoice === "string" ? session.invoice : session.invoice?.id ?? null;
+  if (invoiceId) {
+    try {
+      const inv = await stripe().invoices.retrieve(invoiceId);
+      invoiceUrl = inv.hosted_invoice_url ?? inv.invoice_pdf ?? null;
+    } catch (e) {
+      console.error(`stripe webhook ${eventId}: invoice ${invoiceId} unreadable for booking ${bookingId}:`, e);
+    }
+  }
+
+  // Scoped to `not paid` so a retried event is a no-op rather than a second email.
+  const updated = await prisma.consultBooking.updateMany({
+    where: { id: bookingId, status: { not: "paid" } },
+    data: {
+      status: "paid",
+      paidAt: new Date(),
+      stripeSessionId: session.id,
+      ...(invoiceUrl ? { invoiceUrl } : {}),
+    },
+  });
+  if (updated.count === 0) return; // already handled — nothing to send
+
+  const booking = await prisma.consultBooking.findUnique({ where: { id: bookingId } });
+  if (!booking) {
+    console.error(`stripe webhook ${eventId}: consult booking ${bookingId} vanished after update`);
+    return;
+  }
+
+  // Both sends are best-effort and independent: a failed store receipt must not
+  // stop the owner alert, or the owner never learns a paid session is waiting.
+  await sendConsultConfirmationEmail(booking.email, {
+    storeName: booking.storeName,
+    contactName: booking.contactName,
+    amountCents: booking.amountCents,
+    currency: booking.currency,
+    durationMin: CONSULT_DURATION_MIN,
+    replyHours: CONSULT_REPLY_HOURS,
+    invoiceUrl: booking.invoiceUrl,
+    schedulingUrl: CONSULT_SCHEDULING_URL || null,
+    preferredTimes: booking.preferredTimes,
+  }).catch((e) => console.error(`consult confirmation email failed for ${bookingId}:`, e));
+
+  await sendConsultOwnerAlertEmail(CONTACT_EMAIL, {
+    storeName: booking.storeName,
+    storeUrl: booking.storeUrl,
+    contactName: booking.contactName,
+    email: booking.email,
+    country: booking.country,
+    amountCents: booking.amountCents,
+    currency: booking.currency,
+    goals: booking.goals,
+    preferredTimes: booking.preferredTimes,
+    adminUrl: `${SITE_URL}/admin/consulting`,
+  }).catch((e) => console.error(`consult owner alert failed for ${bookingId}:`, e));
 }

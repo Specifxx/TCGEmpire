@@ -688,6 +688,115 @@ export async function sendPremiumWinbackEmail(to: string, opts: PremiumWinbackEm
   return opts.via === "resend" ? sendEmail(to, subject, html) : sendEmailBrevo(to, subject, html);
 }
 
+// ── Store consulting (/stores/consulting) ────────────────────────────────────
+
+function consultFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you booked a paid consulting session with ${SITE_NAME}.
+    Reply to this email to reach us directly — it's a real inbox.
+  </td></tr>`;
+}
+
+export interface ConsultConfirmationOpts {
+  storeName: string;
+  contactName: string;
+  amountCents: number;
+  currency: string;
+  durationMin: number;
+  replyHours: number;
+  /** Stripe's hosted tax invoice, when the webhook could read one off the session. */
+  invoiceUrl?: string | null;
+  /** Set only when a self-serve scheduling link is configured. */
+  schedulingUrl?: string | null;
+  /** Whatever times they said suited them, echoed back so they can correct us. */
+  preferredTimes?: string | null;
+}
+
+// The store's receipt-and-next-steps email, sent from the webhook once the
+// payment has actually cleared. Says exactly one thing about what happens next,
+// and which thing depends on whether a scheduling link exists — never promises a
+// booking widget that isn't configured.
+export async function sendConsultConfirmationEmail(to: string, opts: ConsultConfirmationOpts): Promise<boolean> {
+  const paid = formatMoney(opts.amountCents, opts.currency.toUpperCase());
+  const next = opts.schedulingUrl
+    ? `<tr><td style="padding:4px 32px 24px"><a href="${opts.schedulingUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Pick your time</a></td></tr>`
+    : `<tr><td style="padding:4px 32px 20px;font-size:14px;line-height:1.6;color:#b8c0cc">
+        We'll reply within ${opts.replyHours} hours with a couple of times that work${
+          opts.preferredTimes ? `, starting from the windows you gave us: <em style="color:#e8eaee">${opts.preferredTimes}</em>` : ""
+        }. If something suits you better, just reply to this email.
+      </td></tr>`;
+
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Thanks ${opts.contactName} — your ${opts.durationMin}-minute session for
+      <strong style="color:#fff">${opts.storeName}</strong> is paid and booked.
+    </td></tr>
+    <tr><td style="padding:0 32px 16px">
+      <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.7;color:#b8c0cc">
+        <div><span style="color:#6b7585">Paid</span> &nbsp;<strong style="color:#fff">${paid} ${opts.currency.toUpperCase()}</strong></div>
+        <div><span style="color:#6b7585">Session</span> &nbsp;${opts.durationMin} minutes, one-to-one, video call</div>
+        ${opts.invoiceUrl ? `<div style="margin-top:8px"><a href="${opts.invoiceUrl}" style="color:#34d17e;text-decoration:underline">Download your tax invoice</a></div>` : ""}
+      </div>
+    </td></tr>
+    <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#fff">Before we talk</strong>, we'll pull your store's live position from the same
+      data the public comparison runs on — where you're cheapest, where you're beaten, and by how much.
+      You don't need to send us a spreadsheet.
+    </td></tr>
+    ${next}`;
+
+  return sendEmail(
+    to,
+    `Your ${SITE_NAME} consulting session is booked — ${opts.storeName}`,
+    emailShell("Booked — here's what happens next", inner, consultFooter())
+  );
+}
+
+// The owner's own "someone just paid" alert. Deliberately plain and dense: it
+// exists to be actioned from a phone, not admired.
+export async function sendConsultOwnerAlertEmail(
+  to: string,
+  opts: {
+    storeName: string;
+    storeUrl?: string | null;
+    contactName: string;
+    email: string;
+    country: string;
+    amountCents: number;
+    currency: string;
+    goals?: string | null;
+    preferredTimes?: string | null;
+    adminUrl: string;
+  }
+): Promise<boolean> {
+  const row = (label: string, value: string) =>
+    `<div><span style="color:#6b7585">${label}</span> &nbsp;<span style="color:#e8eaee">${value}</span></div>`;
+  const inner = `
+    <tr><td style="padding:8px 32px 16px">
+      <div style="border:1px solid #233047;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.8">
+        ${row("Store", opts.storeName)}
+        ${opts.storeUrl ? row("Site", `<a href="${opts.storeUrl}" style="color:#34d17e">${opts.storeUrl}</a>`) : ""}
+        ${row("Contact", `${opts.contactName} &lt;${opts.email}&gt;`)}
+        ${row("Market", opts.country)}
+        ${row("Paid", `${formatMoney(opts.amountCents, opts.currency.toUpperCase())} ${opts.currency.toUpperCase()}`)}
+        ${opts.preferredTimes ? row("Times", opts.preferredTimes) : ""}
+      </div>
+    </td></tr>
+    ${
+      opts.goals
+        ? `<tr><td style="padding:0 32px 16px;font-size:13px;line-height:1.6;color:#b8c0cc">
+            <strong style="color:#fff">What they want:</strong><br/>${opts.goals}
+          </td></tr>`
+        : ""
+    }
+    <tr><td style="padding:4px 32px 24px"><a href="${opts.adminUrl}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Open bookings</a></td></tr>`;
+  return sendEmail(
+    to,
+    `💼 Consulting booked: ${opts.storeName} (${formatMoney(opts.amountCents, opts.currency.toUpperCase())})`,
+    emailShell("New consulting booking", inner, consultFooter())
+  );
+}
+
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
 export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {

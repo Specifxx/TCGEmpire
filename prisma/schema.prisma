@@ -538,6 +538,66 @@ model StoreSuggestion {
   @@index([status, createdAt])
 }
 
+// A paid one-to-one consulting session booked by a store (/stores/consulting).
+// The first thing on this site a BUSINESS pays for rather than a player, and the
+// paid tier above the free partner repricing report (/stores/report).
+//
+// THE ROW IS WRITTEN BEFORE STRIPE, NOT AFTER. It is created `pending` by
+// /api/stores/consulting and only flips to `paid` from the webhook. That
+// ordering is deliberate: a store that fills in the form and then abandons
+// Checkout still leaves a row, which is the only record that a real store was
+// interested enough to get that far — exactly the signal worth having while
+// this is a new product, and one a "write it on success" design throws away.
+// It also means the Stripe session carries a booking id that already exists, so
+// the webhook never has to invent a row from metadata alone.
+//
+// NO SCHEDULING STATE MACHINE. `scheduledFor` is a plain nullable timestamp the
+// owner fills in once a time is agreed by email (or whatever scheduling tool
+// gets bolted on later — see CONSULT_SCHEDULING_URL in lib/consulting.ts). This
+// deliberately does NOT model availability, timezones or reschedules: there is
+// one consultant, and a calendar he already owns.
+model ConsultBooking {
+  id       String  @id @default(cuid())
+  // Who's buying. `storeUrl` is normalised to a bare https://host by the route,
+  // the same shape StoreSuggestion stores, so the two can be matched by eye.
+  storeName   String
+  storeUrl    String?
+  contactName String
+  email       String
+  country     String  @default("AU") // AU | US | UK | SG | CA | EU | OTHER
+  // What they want out of the hour, and when they can make it — both free text.
+  // Read before the session; neither is parsed by anything.
+  goals          String?
+  preferredTimes String?
+
+  // ── Stripe ───────────────────────────────────────────────────────────────
+  // The Checkout Session that paid (or was meant to pay) for this booking.
+  // Unique so a replayed webhook can never create or bill a second booking.
+  stripeSessionId String? @unique
+  // Charged in the smallest currency unit, recorded AT THE TIME OF BOOKING —
+  // never read back from lib/consulting.ts. If the session price ever changes,
+  // historical bookings must still say what that store actually paid.
+  amountCents Int
+  currency    String @default("aud")
+  // Stripe's hosted invoice PDF (invoice_creation on the Checkout Session).
+  // Stores need a real tax invoice for their books; this is that link.
+  invoiceUrl String?
+
+  // pending → paid → scheduled → completed. Plus `refunded` and `cancelled`.
+  status       String    @default("pending")
+  paidAt       DateTime?
+  scheduledFor DateTime?
+  // The owner's own private notes — never shown to the store.
+  notes String?
+
+  ip        String? // best-effort, for abuse triage only
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
 // Daily snapshot of a card's lowest live price, for the price-over-time chart
 // (CSFloat-style). Written by the importer: at most one row per card per
 // Australia/Sydney day — a same-day re-run (e.g. a deploy) replaces that day's

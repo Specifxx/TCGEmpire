@@ -129,6 +129,12 @@ async function core(): Promise<SitemapEntry[]> {
     { url: `${SITE_URL}/gallery`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/champions`, changeFrequency: "daily", priority: 0.8, lastModified: day },
     { url: `${SITE_URL}/stores`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
+    // The paid B2B session. Low volume by nature, but it is the page that
+    // answers "riftbound store pricing" style queries from the shop side, and
+    // the only commercial page on the site aimed at a business rather than a
+    // player. /stores/consulting/confirmed is deliberately absent — it is a
+    // post-payment, noindex page keyed to a Stripe session id.
+    { url: `${SITE_URL}/stores/consulting`, changeFrequency: "monthly", priority: 0.5, lastModified: day },
     { url: `${SITE_URL}/games/higher-lower`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/higher-lower") },
     { url: `${SITE_URL}/games/price-check`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/price-check") },
     { url: `${SITE_URL}/games/zoomed`, changeFrequency: "monthly", priority: 0.6, lastModified: staticPageDate("/games/zoomed") },
