@@ -167,6 +167,16 @@ const CHECKS: Check[] = [
     must: ["data-target=", "RiftCompare"],
     minText: 40,
   },
+  {
+    // The widget DIRECTORY — an ordinary page, unlike the three widgets under
+    // it. This is the URL partnership outreach sends people to, so a webmaster
+    // landing on a broken one is the failure that costs an actual link rather
+    // than a pageview. It must show the snippets a reader is meant to copy.
+    path: "/embed",
+    label: "widget directory (outreach landing page)",
+    must: ["iframe", "/embed/release-countdown", "Card price badge"],
+    minText: 600,
+  },
 
   // ── Retired URLs ─────────────────────────────────────────────────────────
   // /vendetta-countdown carried the "riftbound vendetta release date" query and

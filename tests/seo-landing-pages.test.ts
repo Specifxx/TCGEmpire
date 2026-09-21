@@ -191,12 +191,41 @@ test("empower, flow and burn guides share the winning structure", () => {
 test("every guide FAQ entry is answered in the visible body", () => {
   // FAQPage schema describing answers a reader cannot see is exactly the mismatch
   // Google drops rich results for. Checked across the three mechanics guides.
+  //
+  // RETARGETED 2026-09-21, and the assertion got STRICTER rather than weaker.
+  // This used to demand a hand-written "## … FAQ" markdown section in `body`,
+  // because back then that was the only way a question reached the page. It no
+  // longer is: `faq` is now the single source for both the FAQPage JSON-LD and
+  // the VISIBLE section that components/ArticleFaq.tsx renders, so an article
+  // carrying `faq` is already showing every question to a reader.
+  //
+  // Keeping the old assertion would have meant requiring the duplicate — the
+  // same questions rendered twice on one page, which is what the `faq` field
+  // was introduced to end (see the field's own comment in lib/articles.ts).
+  // So the rule is now "visible exactly once, by one route or the other", which
+  // catches both the original failure (schema with no visible answer) and the
+  // duplicate the original could not see.
   const bySlug = new Map(getArticles().map((a) => [a.slug, a]));
   for (const slug of ["riftbound-empower-explained", "riftbound-flow-explained", "riftbound-burn-explained"]) {
     const a = bySlug.get(slug)!;
-    assert.match(a.body, /##\s+.*FAQ/i, `${slug} needs a visible "## ... FAQ" section`);
-    for (const { q } of a.faq ?? []) {
-      assert.ok(a.body.includes(q), `${slug}: FAQ question not visible in body — ${JSON.stringify(q)}`);
+    const structured = a.faq ?? [];
+    const markdownFaq = /^#{2,3}\s+.*FAQ/im.test(a.body);
+
+    assert.ok(
+      structured.length > 0 || markdownFaq,
+      `${slug} has no FAQ a reader can see — needs a faq field or a "## ... FAQ" section`,
+    );
+    assert.ok(
+      !(structured.length > 0 && markdownFaq),
+      `${slug} has BOTH a faq field and a "## ... FAQ" section — the page renders the questions twice`,
+    );
+
+    // When the questions live in `body` rather than `faq`, every structured
+    // entry must still appear there, or the schema outruns the page.
+    if (markdownFaq) {
+      for (const { q } of structured) {
+        assert.ok(a.body.includes(q), `${slug}: FAQ question not visible in body — ${JSON.stringify(q)}`);
+      }
     }
   }
 });

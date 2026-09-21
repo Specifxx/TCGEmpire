@@ -401,8 +401,17 @@ const nextConfig = {
       // Embeddable price widget (/embed/*): must be frameable on ANY third-party
       // site, so it can't carry X-Frame-Options: SAMEORIGIN. Allow cross-origin
       // framing via CSP frame-ancestors while keeping the other safe defaults.
+      //
+      // `:path+` (one or more segments), NOT `:path*` (zero or more). The bare
+      // /embed path is the human-facing directory of these widgets — an ordinary
+      // page with the site nav on it, added 2026-09-21 as the thing partnership
+      // outreach points at. `:path*` matched it too, which would have handed the
+      // one /embed route that is NOT a widget both this rule's `frame-ancestors *`
+      // and the default rule's X-Frame-Options at once. The default rule's
+      // negative lookahead is `(?!embed/)` — with the slash — so the bare page
+      // already falls through to the protective defaults, which is what it wants.
       {
-        source: "/embed/:path*",
+        source: "/embed/:path+",
         headers: [
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "X-Content-Type-Options", value: "nosniff" },

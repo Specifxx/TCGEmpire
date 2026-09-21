@@ -51,6 +51,12 @@ const TOOLS: Tool[] = [
     desc: "Paid store consulting sessions — who booked, what they want out of the hour, and who filled in the form but never finished checkout.",
   },
   {
+    href: "/admin/store-partners",
+    title: "Store report links",
+    icon: "🔗",
+    desc: "Mint a store's private repricing report link — the thing that gives a cold email to a shop a reason to be opened.",
+  },
+  {
     href: "/admin/clicks",
     title: "Outbound clicks",
     icon: "📈",

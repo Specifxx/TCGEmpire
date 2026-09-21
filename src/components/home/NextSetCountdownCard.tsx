@@ -25,6 +25,7 @@ import type { SetInfo } from "@/lib/constants";
 export function NextSetCountdownCard({
   set,
   preorders = null,
+  spoilers = null,
 }: {
   set: SetInfo | undefined;
   // The upcoming set's pre-order comparison, when one exists. Inherited from
@@ -33,6 +34,15 @@ export function NextSetCountdownCard({
   // Resolved by the caller (preordersHrefForSet), so this component keeps
   // naming no set, same as everything else about it.
   preorders?: { href: string; setName: string } | null;
+  // The set's live reveal tracker, while the set is still upcoming. Same
+  // caller-resolved shape as `preorders` (spoilersHrefForSet), so this component
+  // still names no set and still rolls forward on its own.
+  //
+  // Ordered FIRST among the two links below, ahead of pre-orders, and that is
+  // deliberate: during preview season the tracker is what the site's own top
+  // search queries are asking for, and it is the page that earns the repeat
+  // visit — a pre-order price is checked once, a reveal log is checked daily.
+  spoilers?: { href: string; setName: string } | null;
 }) {
   if (!set) return null; // nothing upcoming and announced — nothing to promote
 
@@ -60,6 +70,14 @@ export function NextSetCountdownCard({
           Full release details →
         </Link>
       </span>
+      {spoilers && (
+        <Link
+          href={spoilers.href}
+          className="tap-link font-semibold text-brand-300 underline-offset-2 hover:underline"
+        >
+          Every {spoilers.setName} card revealed so far →
+        </Link>
+      )}
       {preorders && (
         <Link
           href={preorders.href}

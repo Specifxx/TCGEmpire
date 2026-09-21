@@ -50,10 +50,22 @@ test("the widget's own live-tick script recomputes from the target instant, not 
 
 test("next.config.js's existing /embed/* frame-ancestors allowance actually covers this route's path", () => {
   const config = read("next.config.js");
-  assert.match(config, /source: "\/embed\/:path\*"/, "expected the existing /embed/* headers rule");
-  assert.match(config, /frame-ancestors \*/, "expected cross-origin framing to be allowed for /embed/*");
-  // Confirms /embed/release-countdown is actually under that source pattern.
+  // RETARGETED 2026-09-21 from `:path*` to `:path+`, and the pin moved with the
+  // code rather than being loosened. The rule narrowed because /embed itself
+  // became a real page — the human-facing directory of these widgets — and
+  // `:path*` (zero or more segments) matched that page too, which would have
+  // given the one /embed route that is NOT a widget both this rule's
+  // `frame-ancestors *` and the default rule's X-Frame-Options at once.
+  //
+  // What this test protects is unchanged: the WIDGET routes must stay framable
+  // on any third-party site, or every embed of them breaks.
+  assert.match(config, /source: "\/embed\/:path\+"/, "expected the /embed/<widget> headers rule");
+  assert.match(config, /frame-ancestors \*/, "expected cross-origin framing to be allowed for the widgets");
+  // Confirms /embed/release-countdown is actually under that source pattern —
+  // `:path+` needs at least one segment, and this route has exactly one.
   assert.match("/embed/release-countdown", /^\/embed\/.+/);
+  // …and that the directory page is NOT, so it keeps the protective defaults.
+  assert.doesNotMatch("/embed", /^\/embed\/.+/);
 });
 
 test("the calendar route is all-day, not a fabricated timed instant Riot never announced", () => {
