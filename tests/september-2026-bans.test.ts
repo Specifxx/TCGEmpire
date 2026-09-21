@@ -81,7 +81,14 @@ test("the reaction post frames meta speculation as community opinion, not a Rift
 });
 
 test("the two 'most recent ban' hub references no longer point to July as though it were current", () => {
-  const hub = ARTICLES.find((a) => a.body.includes("## Riftbound rules FAQ"));
+  // Found by SLUG, not by its old "## Riftbound rules FAQ" heading. That heading
+  // was removed on 2026-09-21 when the article's hand-written FAQ section was
+  // folded into its `faq` field — the page had been rendering the same questions
+  // twice, once from the markdown and once from components/ArticleFaq.tsx. The
+  // questions themselves are all still here, and every assertion below still
+  // checks exactly what it always did; only the way the article is located
+  // changed, and a slug cannot drift out from under this the way a heading did.
+  const hub = ARTICLES.find((a) => a.slug === "riftbound-rules-explained");
   assert.ok(hub, "expected the rules hub article");
   assert.doesNotMatch(hub!.body, /July 2026 ban list update.{0,40}most recent/s);
   assert.match(hub!.body, /riftbound-september-2026-bans-meta-shift/);
