@@ -74,6 +74,50 @@ The ban-list cluster is the clearest case: seven ban-shaped queries
 clicks** at an average position of 8.5. At that position a normal result takes
 1.5–2%. This one takes 0.15%.
 
+**The guides section has a snippet problem and the blog does not — and position
+rules out every other explanation.** Grouping all 1,000 page rows by section,
+with anchor rows separated out:
+
+| Section | Impressions | Clicks | CTR | Avg position |
+|---|---|---|---|---|
+| `/guides` | 42,364 | 498 | **1.18%** | **7.8** |
+| `/blog` | 33,727 | 1,311 | **3.89%** | **7.8** |
+| `/card` | 27,626 | 115 | 0.42% | 7.3 |
+| `/sets` | 13,656 | 245 | 1.79% | 9.1 |
+| `/champions` | 10,096 | 136 | 1.35% | 7.9 |
+| `/keywords` | 6,884 | 20 | 0.29% | 9.4 |
+| `/games` | 2,665 | 215 | 8.07% | 5.4 |
+
+Guides and blog sit at **the same average position, 7.8**, on the same domain,
+with the same authority — and blog converts **3.3 times better**. Ranking does
+not explain it. The snippet does, and the difference is measurable:
+
+| | Guides (1.18%) | Blog (3.89%) |
+|---|---|---|
+| Descriptions over the 155-char cap | **35 of 52 (67%)** | **13 of 50 (26%)** |
+| Average description length | 175 | 160 |
+| Titles containing a number | 2 (4%) | 13 (26%) |
+
+Two-thirds of guide descriptions ship with their last sentence amputated.
+**29,875 impressions — 18% of the site's total — sit on articles whose
+description is cut off mid-sentence in the results page.** That is the largest
+single fixable thing in this data, and it is why
+`tests/description-length.test.ts` exists as a ratchet rather than a suggestion.
+
+**What was checked and needs no fix.** Not every low-CTR page has a snippet
+problem, and four templates were examined before concluding that: `/sets`
+already builds its title longest-first and caps its description at 155 (its low
+CTR is position — Origins sits at 10.7, page two); `/gallery`'s title is
+"Riftbound Card Gallery: All N Cards by Set", an exact match for the query it
+loses, so that too is position at 9.9; `/keywords` descriptions were *suspected*
+of overflowing and do not — the template already truncates the long on-page
+answer to 96 characters before appending the card-list promise, and all 30 land
+under 155; and `/card` is the most heavily tuned template on the site with its
+own title ladder and tests. `/card` converting at 0.42% from position 7.3 is the
+one number in this table with no explanation yet, and it is 27,626 impressions,
+so it is the obvious subject of the next pass — but changing that template on a
+hunch, without knowing what outranks it for card-name queries, would be guessing.
+
 **23% of impressions come from markets the site does not price for.** 35,027
 impressions and 736 clicks from outside the six tracked markets, concentrated in
 South-East Asia — the Philippines alone is 5,483 impressions, then Thailand

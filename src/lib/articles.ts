@@ -1346,9 +1346,9 @@ The exact card dimensions, the landscape cards, and which deck boxes hold a full
   {
     slug: "riftbound-format-legality-rotation",
     category: "guide",
-    title: "Does Riftbound Rotate? Card Legality Explained",
+    title: "Riftbound Rotation: Nothing Has Rotated Out",
     excerpt:
-      "Every Riftbound set released so far is still legal, and Riot has not announced a rotation. Here's what that actually means before you spend money on a chase card — and what would change it.",
+      "No Riftbound set has rotated out — all five released sets are legal in Standard. Riot has published no rotation policy; bans remove named cards, not sets.",
     author: "RiftCompare",
     date: "2026-08-27",
     readMins: 6,
@@ -4464,9 +4464,9 @@ Those two facts are what to watch when Preview Season opens. Everything else is 
   {
     slug: "riftbound-t1-worlds-champion-collection",
     category: "blog",
-    title: "Riftbound × T1 Worlds Champion Collection",
+    title: "Riftbound T1 Worlds Collection: All 5 Cards",
     excerpt:
-      "Riot's first single-team Riftbound collab: a signed Signature Edition (US$360) and a US$70 Player Bundle honouring T1's sixth Worlds title.",
+      "Which card each T1 player picked, Signature Edition vs Player Bundle, and why any one champion exists in roughly 2,025 serialised English copies.",
     author: "RiftCompare",
     date: "2026-07-17",
     // Rewritten 9 Aug 2026: the drawing timetable and prices are published, the
