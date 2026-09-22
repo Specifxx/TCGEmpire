@@ -58,7 +58,7 @@ export default async function WatchingPage() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Every card you&apos;re tracking, with the price it was at when you started. We email{" "}
           <strong className="text-slate-200">{user.email}</strong> whenever one of them drops below that
-          figure — tap the bell on any card to stop watching it.
+          figure — tap the heart on any card to stop watching it.
         </p>
       </div>
 

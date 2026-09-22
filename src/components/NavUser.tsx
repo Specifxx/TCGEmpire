@@ -20,7 +20,7 @@ export function NavUser() {
           for directly alongside bringing the Database link back: this row could
           not carry both, and Database is the more valuable of the two.
 
-          It also ends an ambiguity: HeaderWatchButton draws a bell for the
+          It also ends an ambiguity: HeaderWatchButton draws a heart for the
           watchlist, and between sm and lg a signed-in visitor saw two bells
           side by side, distinguishable only by fill and badge.
 

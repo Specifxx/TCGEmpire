@@ -125,12 +125,21 @@ test("the watchlist navigates instantly: a scoped loading boundary, safe on all 
   const skeleton = read("src/components/RouteLoading.tsx");
   const fn = skeleton.slice(skeleton.indexOf("export function WatchlistSkeleton"));
   assert.match(fn, /<SkeletonTile /, "same tile as the client loading state");
-  assert.match(
-    fn,
-    /grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4/,
-    "same grid as Watchlist's own loading state, so the handover is invisible",
+  // COMPARED, not pinned to a literal. This used to assert one hard-coded class
+  // string in both files, which meant changing the breakpoint in one place
+  // failed the test for the right reason with the wrong message — it read as
+  // "the grid is wrong" when what it caught was "the two grids disagree", which
+  // is the thing that actually makes the handover visible. Reading the
+  // component's grid and requiring the skeleton to match says that directly,
+  // and survives the next breakpoint change without needing to be retargeted.
+  const gridOf = (src: string) => src.match(/className="(grid grid-cols-2 gap-4[^"]*)"/)?.[1];
+  const componentGrid = gridOf(read("src/components/Watchlist.tsx"));
+  assert.ok(componentGrid, "Watchlist.tsx must still render a grid-cols-2 card grid");
+  assert.equal(
+    gridOf(fn),
+    componentGrid,
+    "the route skeleton's grid must match Watchlist's own, or the handover swaps one layout for another",
   );
-  assert.match(read("src/components/Watchlist.tsx"), /grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4/);
 });
 
 test("the watchlist page exists as a real route and is reachable from the nav", () => {

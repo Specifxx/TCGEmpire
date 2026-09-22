@@ -7,9 +7,10 @@ import { useWatchlist } from "@/lib/use-watchlist";
 import { EmptyState } from "./ui/EmptyState";
 import { SkeletonTile } from "./ui/Skeleton";
 
-// The body of /watchlist.
+// The body of /watching. (Not /watchlist — that path is a permanent redirect to
+// the price-alerts explainer; see the route's own header for why.)
 //
-// THE REMOVE CONTROL IS THE TILE'S OWN BELL. There is no second "remove" button,
+// THE REMOVE CONTROL IS THE TILE'S OWN HEART. There is no second "remove" button,
 // because CardTile already renders PriceWatchButton and that button is now a real
 // toggle. Clicking it unwatches, which updates the shared watched-Set, which
 // filters the card out of the list below — no refetch, no router refresh, and no
@@ -45,7 +46,7 @@ export function Watchlist() {
 
   if (items === null) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4" role="status" aria-label="Loading your watchlist">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4" role="status" aria-label="Loading your watchlist">
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonTile key={i} />
         ))}
@@ -61,9 +62,9 @@ export function Watchlist() {
   if (visible.length === 0) {
     return (
       <EmptyState
-        icon="bell"
+        icon="heart"
         title="Nothing on watch yet"
-        body="Tap the bell on any card and we'll email you the moment it gets cheaper — no need to keep checking back."
+        body="Tap the heart on any card and we'll email you the moment it gets cheaper — no need to keep checking back."
         primary={{ href: "/browse", label: "Card database →" }}
       />
     );
@@ -76,10 +77,10 @@ export function Watchlist() {
           <span className="num font-semibold text-white">{visible.length}</span>{" "}
           {visible.length === 1 ? "card" : "cards"} · newest first
         </p>
-        <p className="text-xs text-slate-500">Tap a card&apos;s bell to stop watching it</p>
+        <p className="text-xs text-slate-500">Tap a card&apos;s heart to stop watching it</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
         {visible.map((it) => {
           const now = price(it.card);
           const base = it.lastPriceCents;
