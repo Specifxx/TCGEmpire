@@ -10397,3 +10397,57 @@ layout.tsx: those components render nothing until triggered, so keeping them
 out of the server HTML and off the initial bundle is the point. "Fixing"
 them would put JS on the critical path to server-render components that
 display nothing, i.e. make the site slower. Nothing to do.
+
+---
+
+## The homepage title, and the store count that was nearly shipped — 2026-09-22
+
+Last of the four Search Console click-through opportunities. 28 days to
+2026-09-21:
+
+| Query | Impressions | Position | CTR |
+|---|---|---|---|
+| `riftbound card prices` | 924 | 7.5 | 0.8% |
+| `riftbound prices` | 651 | 7.2 | 1.1% |
+| `riftbound card price` | 194 | 7.3 | 1.0% |
+| `riftbound price` | 173 | 8.0 | 0.6% |
+
+Page one on all four, at roughly a quarter of the click-through typical for
+those positions. Unlike the banlist guide, the match was not the problem: three
+audits (2026-08-20, 08-30, 09-10) had already settled "Riftbound Card Prices"
+as the head term, the last on live SERP evidence, and that half is untouched.
+The half after the dash was "Compare Every Store" — the same unfalsifiable
+claim every competing tracker makes. It now reads **"Riftbound Card Prices —
+Cheapest Store & eBay"** (59 with the suffix, three shorter than before).
+"Cheapest" is the job the query is asking to have done; eBay is a source most
+trackers do not carry, named concretely. Both are claims the site already makes
+elsewhere.
+
+**The part worth recording is what did not ship.** The obvious move was a
+count: "Riftbound Card Prices — Compare 168 Stores", the number computed from
+`RETAILER_LIST.length` — the same value `/stores` renders — so it could never
+go stale. It was written, tested, gated and committed. Rebasing onto `main`
+before pushing surfaced the entry above it, from the previous day: **"No store
+count goes in a page title."** Two independent runs over the country guides had
+proposed different counts for the same pages, because "stores we track" and
+"stores with a live listing right now" are different numbers and a title cannot
+say which it means.
+
+Deriving the number answers the staleness half of that objection. It does not
+answer the ambiguity half, and the live-listing figure is not measurable from
+this sandbox — `/stores` publishes "77,004 live listings across 168 stores" but
+nothing says how many of the 168 carry one. So the bar that decision sets —
+independent sources agreeing, as with Singapore's 11 — is not met, and the
+commit was rewritten rather than argued with.
+
+Two things follow. First, the decision was prose, and prose is what let a
+session a day later nearly undo it; `tests/no-store-count-in-titles.test.ts`
+now enforces it across article titles, route titles and the interpolated form
+the near-miss actually used, with Singapore listed as the documented exception.
+Second, the same rebase showed the parallel audit had already examined the
+banlist page and concluded its snippet was right and should be left alone —
+naming the title this session shipped the night before. Independent
+confirmation, which is worth more than either pass alone.
+
+Shipped with `[deploy]` at the owner's instruction, as with the rest of this
+sequence.

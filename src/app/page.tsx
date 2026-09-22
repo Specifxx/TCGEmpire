@@ -133,7 +133,30 @@ export const metadata: Metadata = {
   // repeating the same one. 62 chars total, inside Bing's 65-char warning
   // threshold (see card/[id]/page.tsx for why that number).
   // 56 chars (was 62 with the marker), well inside Bing's 65-char threshold.
-  title: { absolute: "Riftbound Card Prices — Compare Every Store | RiftCompare" },
+  //
+  // "Compare Every Store" BECAME "Cheapest Store & eBay" 2026-09-22, and the
+  // head term above is untouched — this changes only the half that was not
+  // earning anything. Search Console, 28 days to 2026-09-21: `riftbound card
+  // prices` 924 impressions at position 7.5 with 0.8% CTR, `riftbound prices`
+  // 651 at 7.2 with 1.1%, `riftbound card price` 194 at 7.3 with 1.0%. Page one
+  // on all of them, at roughly a quarter of the click-through typical for those
+  // positions. The problem was never the match — three audits settled that —
+  // it was that "Compare Every Store" is the same unfalsifiable claim every
+  // competing tracker makes, so a searcher had nothing to weigh one result
+  // against another with. "Cheapest" is the job the query is asking to have
+  // done, and eBay is a source most trackers do not carry, named concretely.
+  //
+  // A STORE COUNT WAS THE OBVIOUS ALTERNATIVE AND IS DELIBERATELY NOT USED.
+  // "Compare 168 Stores" was written, gated and nearly shipped before the
+  // 2026-09-21 decision "No store count goes in a page title" (DECISIONS.md)
+  // surfaced: "stores we track" and "stores with a live listing right now" are
+  // different numbers and a title cannot say which it means. Computing it from
+  // RETAILER_LIST.length answers the staleness half of that objection but not
+  // the ambiguity half, and the live-listing figure is not measurable from
+  // here — so the bar that decision sets (independent sources agreeing, as with
+  // Singapore's 11) is not met. Both halves of the title below are claims the
+  // site already publishes elsewhere and that no crawl can falsify.
+  title: { absolute: "Riftbound Card Prices — Cheapest Store & eBay | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral
   // in substance — every market is still named, just reordered (see the areaServed
   // fix in layout.tsx for the same AU-first leftover, same reasoning: COUNTRY_LIST
@@ -173,8 +196,8 @@ export const metadata: Metadata = {
   // Discord/Slack) showed a different, less specific tagline than the actual
   // <title> — found by the same audit.
   openGraph: pageOpenGraph({
-    title: "Riftbound Card Prices — Compare Every Store",
-    description: "Riftbound card prices compared live across every store we track — find the cheapest place to buy.",
+    title: "Riftbound Card Prices — Cheapest Store & eBay",
+    description: "Riftbound card prices compared live across every store we track and eBay — find the cheapest place to buy.",
     url: "/",
   }),
   // The homepage is the US/x-default member of the region-home alternate set
