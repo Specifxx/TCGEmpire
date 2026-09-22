@@ -9952,3 +9952,59 @@ count moved. The exact-equality assertion is still right for a human working
 alone — it is what stops a fix being quietly spent on the next long excerpt —
 but anything running several writers at once needs to set that constant once, at
 the end, from a single count. That is how it was finally resolved: 41.
+
+
+---
+
+## The Radiance teaser post, and two Legend counts that disagreed — 2026-09-22
+
+Riot circulated a redacted Radiance contents graphic: six entries legible,
+around ten blurred. The legible ones are HEARTSTEEL, Ekko, Seraphine, Neeko, a
+**Colorless Champion Unit** and a **new set mechanic**.
+
+**Why this is an eighth Radiance page and not a paragraph on one of the seven.**
+The plan's own rule is to publish fewer pages than feels natural, and the
+evidence behind it is that 13 of ~24 Vendetta pre-release articles were 301'd
+within eight weeks. So the bar is a query none of the existing cluster answers.
+This clears it: the tracker owns official reveals, `what-we-know` owns confirmed
+set facts, the leak post owns the unconfirmed mechanic names, and the Neeko post
+owns that one card. None of them answers *"riftbound colorless champion unit"* —
+a query the graphic itself created. The post is also explicitly barred, in its
+own code comment and in the keyword map, from claiming `radiance spoilers`,
+`radiance card list` or `radiance release date` in its title; it links down to
+each owner instead.
+
+**The angle only this site had.** Everyone else reading that graphic has to
+speculate about what a Colorless Champion Unit is. This site already holds the
+card that is almost certainly the answer. *Neeko, Blending In* was photographed
+on 19 September, and its type line prints **Neutral** with the clause "Neutral
+cards can go in decks of any Domain" — which is exactly what Colorless means
+here. `src/lib/domains.ts` settles the vocabulary question: the canonical domain
+key is `Colorless` and its own tagline is "Neutral staples". So the two words
+are one thing, and the teaser line has a strong candidate that is already in the
+database at 167/167. The post says "most likely", not "is", because the graphic
+lists NEEKO and COLORLESS CHAMPION UNIT on separate rows and cannot settle
+whether that is one card named twice or two cards.
+
+**Two real data bugs fell out of writing it**, both found by cross-checking the
+post's claims against the site rather than trusting any one page:
+
+- `riftbound-heartsteel-cards` said Radiance carries **ten** Legends.
+  `src/lib/sets/radiance.ts` — the file whose header calls itself the single
+  source of truth — says nine, and both the tracker and `what-we-know` agree.
+  Corrected to nine.
+- `riftbound-radiance-what-we-know` still said "five named, four not", the split
+  from Riot's original Set 5 announcement. Orianna was confirmed later at a PAX
+  West livestream, which `radiance.ts` records explicitly as the reason it
+  carries six confirmed rather than the brief's stale five. Corrected to six
+  named, three unrevealed, in both the prose and the facts table.
+
+Neither would have been caught by a test: nothing pins prose numbers against
+`radiance.ts`. That is a gap worth closing the next time this cluster is touched.
+
+**What the post refuses to do.** It does not predict a price. A card every deck
+can cast is a card every deck can consider, and that is a claim about how widely
+a card gets played — not about what it will be worth. Radiance has not released,
+there are no Radiance singles, and the post says so in as many words. The same
+discipline the price-change guide states as policy: we report live prices and
+history, we do not publish predictions.

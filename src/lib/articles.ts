@@ -519,7 +519,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       label: "Compare Radiance pre-order prices →",
       blurb: "Every tracked store's price for boxes, the Vault and the Showdown Decks, cheapest first, in your currency.",
     },
-    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (five named, four not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
+    body: `**Riftbound: Radiance releases on 23 October 2026.** It is Set 5, its base run is **167 numbered cards**, it brings **nine new champion Legends** (six named, three not), and it adds a new **Ultimate Rare** chase tier. Since this page was first written Riot has also published the set code, pulled Preview Season's start forward to **25 September**, and revealed the first Legend in full — the distributor sheet has put a price on every product, and, on 19 September, the **first Radiance card was photographed in print**. All of that is below. What is still *not* here is the card list, because it has not been revealed, and the internet is already full of Radiance "leaks" that are nothing of the sort.
 
 ## Radiance at a glance
 
@@ -531,7 +531,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
 | **Preview Season** | 25 September – 9 October 2026 |
 | **Pre-Rift events** | 16 – 22 October 2026 |
 | **Card count** | **167 base run**, from the printed 167/167 on the first card seen. Riot announced 180 including 66 Showcase; unreconciled |
-| **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, and 4 unrevealed |
+| **New champion Legends** | 9 — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV, Orianna, and 3 unrevealed |
 | **New chase tier** | Ultimate Rare (announced, not shown) |
 | **Tagline** | "Own the Stage. The World is Watching." |
 | **Card list revealed?** | **No** — one Legend, one T1 promo and one photographed card (Neeko) are all that is known in full |
@@ -729,6 +729,8 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**22 September — a redacted contents list.** Riot began un-blurring Radiance with a set-contents graphic that leaves six entries legible and around ten redacted. The readable ones: **HEARTSTEEL**, **Ekko**, **Seraphine**, **Neeko**, a **Colorless Champion Unit** and a **new set mechanic**. It places HEARTSTEEL in Radiance for the first time and confirms the set has a mechanic of its own without naming it. Our read on what it settles — and what it does not — is in **[the Colorless Champion Unit write-up](/blog/riftbound-radiance-colorless-champion-unit)**.
+
 **19 September — the first Radiance card photographed in print.** A photo of a physical *Neeko, Blending In* surfaced: a **6-energy, 4-Might Neutral Champion Unit**, art by Luscinia Studio, and — the detail that matters most — numbered **RAD · 167/167 · EN**. Its text lets a deck that runs Neeko choose **three extra Legends** alongside its starting one, and playing her adds one of them to the Legend Zone while she is on the board. That is a deckbuilding change, not a stat line, and it is pulled apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)**. The card is already in our database, so it is the first tile in the gallery above.
 
 **18 September — the HEARTSTEEL Kayn is a reprint, not a Radiance card.** HEARTSTEEL's comeback video carried Riftbound card images, and the Kayn card in it was widely read as a Radiance reveal. It is *Kayn, Unleashed* from Origins in new art — a printing, not a new card. The full check against the database is in **[our HEARTSTEEL cards post](/blog/riftbound-heartsteel-cards)**. It is logged here precisely because it is the kind of thing this page exists to sort out.
@@ -800,6 +802,212 @@ Three pages, each for a different question:
 - **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** for *the set itself* — every product, price and date, kept current.
 
 We will not run Radiance speculation on any of them. When the reveals land, the gallery above is where they show up first.`,
+  },
+  // THE REDACTED CONTENTS GRAPHIC (2026-09-22). Why this is a separate post
+  // rather than a paragraph on one of the seven Radiance pages that already
+  // exist: it owns an intent none of them do. The tracker owns official
+  // reveals, what-we-know owns confirmed set facts, the leak post owns the
+  // unconfirmed mechanic names, and the Neeko post owns that one card. None
+  // of them answers "riftbound colorless champion unit" — a query the teaser
+  // created and that the site can answer better than anyone, because it
+  // already holds the card that almost certainly IS the answer.
+  //
+  // DELIBERATELY DOES NOT claim "radiance spoilers" (tracker), "radiance card
+  // list" (/sets/radiance) or "radiance release date" (/release-dates) in its
+  // title — see docs/seo-keyword-map.md. It links down to each instead.
+  {
+    slug: "riftbound-radiance-colorless-champion-unit",
+    category: "blog",
+    title: "Radiance Teaser: The Colorless Champion Unit",
+    excerpt:
+      "Riot's redacted Radiance contents list leaves six items legible. One is a Colorless Champion Unit — and a card that fits has already been photographed.",
+    author: "RiftCompare",
+    date: "2026-09-22",
+    readMins: 8,
+    tags: ["radiance", "news", "spoilers", "colorless", "deckbuilding", "heartsteel"],
+    faq: [
+      {
+        q: "What is a Colorless Champion Unit in Riftbound?",
+        a: "Colorless is Riftbound's seventh domain, and the one you do not build a deck in — Colorless cards carry no domain allegiance and slot into any list whatever your Legend is. A Colorless champion unit is therefore a champion card every deck can cast, rather than one only its own domain can play.",
+      },
+      {
+        q: "Is the Radiance Colorless Champion Unit Neeko?",
+        a: "Most likely. Neeko, Blending In was photographed in print on 19 September as a Champion Unit whose type line reads Neutral, with the text \"Neutral cards can go in decks of any Domain\" — which is what Colorless means. The graphic lists NEEKO and COLORLESS CHAMPION UNIT on separate lines though, so they could be one card referenced twice or two different cards.",
+      },
+      {
+        q: "What is the new Riftbound Radiance set mechanic?",
+        a: "The teaser confirms Radiance has one and does not name it. Three candidate names — Deploy, Showoff and Disarm — come from a fan photo of Riot's PAX West demo material, which is a real source but not an announcement. Nothing Riot has published confirms them.",
+      },
+      {
+        q: "Is HEARTSTEEL in Riftbound Radiance?",
+        a: "The graphic puts HEARTSTEEL on a Radiance contents list, which is the first thing to place the band in a specific set. One member is worth watching: K'Sante has no Riftbound card at all, so a complete HEARTSTEEL line-up would have to change that.",
+      },
+      {
+        q: "How many champion Legends does Riftbound Radiance have?",
+        a: "Nine. Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — and three are unrevealed. Neeko is not among the confirmed six, and the Neeko card photographed so far is a Champion Unit rather than a Legend.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "23 October 2026, with Preview Season running 25 September to 9 October. Every official reveal is logged on our live Radiance tracker as it lands.",
+      },
+    ],
+    shop: [
+      { label: "Radiance pre-orders on eBay", query: "Riftbound Radiance booster box" },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Radiance set page →",
+      blurb: "Every Radiance card as it is revealed, with live prices on each from release day.",
+    },
+    // Live, and deliberately NOT the tracker's full filterable gallery — that
+    // page owns the browse experience. This is a short "what exists so far"
+    // strip so the post carries real data rather than only prose, which is what
+    // separated the surviving Vendetta pre-release posts from the 13 that were
+    // 301'd (docs/SET-LAUNCH-RUNBOOK.md, section 6).
+    embeds: [
+      {
+        title: "Radiance cards in our database so far",
+        note: "Everything imported to date, in collector-number order. It fills in through Preview Season on its own.",
+        setAll: "RAD",
+        take: 12,
+      },
+    ],
+    body: `Riot has started un-blurring Radiance.
+
+The image going round is a contents list for the set with most of its entries redacted. Six items are legible; roughly ten more are grey bars. The six you can read were *chosen* to be readable, which is the whole point of a graphic like this — so the list is worth reading closely rather than scrolling past.
+
+One of the six is the most interesting thing Riot has said about Radiance so far, and almost nobody is talking about it: **a Colorless Champion Unit**.
+
+## Everything the graphic actually says
+
+| Legible | What it is | Is this new? |
+| --- | --- | --- |
+| **HEARTSTEEL** | Riot's virtual band — Aphelios, Ezreal, Kayn, K'Sante, Sett and Yone | **Yes.** It places HEARTSTEEL in Radiance |
+| **EKKO** | A confirmed Radiance champion Legend | No — announced with the set |
+| **SERAPHINE** | A confirmed Radiance champion Legend | No — announced with the set |
+| **NEEKO** | Champion Unit, card 167/167 | Partly — the card was photographed on 19 September |
+| **COLORLESS CHAMPION UNIT** | A champion card with no domain allegiance | **Yes** |
+| **NEW SET MECHANIC** | A keyword or system unique to Radiance | Confirms one exists; does not name it |
+
+Everything else is redacted. Judging by the gaps, that is around ten more entries — some clearly champion names sitting in the same rows as Ekko, Seraphine and Neeko, others long enough to be feature lines like the two at the bottom.
+
+The redactions are a release schedule, not an accident. Expect them to come off through [Preview Season](/blog/riftbound-radiance-spoilers), which runs 25 September to 9 October.
+
+## The Colorless Champion Unit is the real headline
+
+Riftbound has seven domains — Fury, Calm, Mind, Body, Chaos, Order and Colorless — and six of them are things you build a deck *in*. Colorless is not. Colorless cards have no domain allegiance and slot into any list regardless of what your Legend is, which makes them the format's closest thing to universal staples.
+
+Now apply that to a champion card.
+
+Champion cards are normally the most locked-down cards in the game. Your Legend fixes your domains before the game starts, your twelve Runes have to match those domains, and you cannot splash a card your Runes cannot pay for. That single constraint is why most champion cards are only ever considered by a fraction of the format — a Fury champion is a card that Calm decks simply cannot cast.
+
+A Colorless champion unit has none of that. Every deck can cast it. Every deck can consider it. That is a genuinely different kind of card from anything a champion reveal normally gives you, and it is why one blurred-out line on a marketing graphic is worth more attention than two champion names we already had.
+
+## We have probably already seen it
+
+Here is the part you will not get from the graphic alone.
+
+On 19 September, six days before Preview Season was due to show anything, [the first Radiance card was photographed in print](/blog/riftbound-neeko-blending-in-spoiler): **Neeko, Blending In**. Read straight off that print:
+
+| | |
+| --- | --- |
+| **Type** | Champion Unit · Neeko · Ixtal |
+| **Domain** | Neutral |
+| **Energy cost** | 6 |
+| **Might** | 4 |
+| **Rarity** | Epic |
+| **Collector number** | RAD · 167/167 |
+
+Its rules text opens with the line that matters here: *"(Neutral cards can go in decks of any Domain.)"*
+
+That is the definition of Colorless. Riot's domain list calls the seventh slot Colorless; the card's own type line prints Neutral; our [Colorless domain page](/domains/colorless) carries the tagline "Neutral staples" because they are the same thing described two ways.
+
+So the teaser's "COLORLESS CHAMPION UNIT" is, most likely, Neeko — a card that has already been photographed, that we have already written up, and that is sitting in our database as 167/167.
+
+**It is worth being honest about the alternative.** A champion appearing as a Unit does not stop that champion also getting a Legend card, and the graphic lists NEEKO separately from the COLORLESS CHAMPION UNIT line. Those could be two references to one card, or they could be a Neeko Legend and a different Colorless unit. The graphic cannot settle it and neither can we.
+
+## Why Neeko already looked like a big deal
+
+If the teaser line is Neeko, it is the second unusual thing about that card rather than the first. Neeko, Blending In lets you choose three extra Legends when you build the deck and put one of them into your Legend Zone while she is on the board — the first Riftbound card to break the one-Legend rule.
+
+Stack the two together and the design intent gets clearer. A card that hands you extra Legends is a card that wants to be in as many decks as possible; printing it Colorless is how you make that true. The domain-free type line and the extra-Legend text are the same idea, approached from two directions.
+
+We have the full breakdown of the card, including the deck-building cost you pay before the game starts, in [the Neeko spoiler write-up](/blog/riftbound-neeko-blending-in-spoiler).
+
+## HEARTSTEEL now has a set
+
+The other genuinely new line is the first one. When ["LIVE MY LIFE" landed on 18 September](/blog/riftbound-heartsteel-cards) we deliberately did not claim which product HEARTSTEEL cards would land in, because nothing had said. This graphic says: Radiance.
+
+That matters more than a band cameo. Radiance was already stacked with Riot's music roster before HEARTSTEEL appeared — Seraphine and Evelynn are two thirds of K/DA's front line, and Ekko fronted True Damage. Adding HEARTSTEEL's six champions to that makes the music theme the spine of the set rather than a flourish on it.
+
+One member is still the interesting one: **K'Sante has no Riftbound card at all** — not under-printed, absent from the game entirely. If HEARTSTEEL is in Radiance in any complete form, that has to change.
+
+## The new set mechanic is confirmed, not named
+
+The bottom line of the graphic confirms Radiance has a mechanic of its own. It does not say what it is.
+
+There are three candidate names in circulation — Deploy, Showoff and Disarm — from [a fan photo of Riot's PAX West demo material](/blog/riftbound-radiance-leaked-mechanics). That is a real source, but it is not an announcement, and nothing Riot has published since confirms or contradicts it. We have kept that coverage hedged for a fortnight and this graphic does not change it: a teaser that says "new set mechanic" with no name attached is not corroboration of a leaked name.
+
+If the leak is right, one of those three is what the blurred line says. If it is wrong, the line is something nobody has seen. Preview Season settles it.
+
+## What the graphic does not tell you
+
+Worth stating plainly, because a redacted list invites people to fill in the gaps:
+
+- **It does not name the remaining champions.** Radiance carries nine champion Legends. Six are confirmed — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — and three are unrevealed. Neeko is not among the confirmed six, and her printed card is a Champion Unit, not a Legend.
+- **It does not confirm the leaked mechanic names.**
+- **It says nothing about rarity, print runs or prices.** Radiance has not released. There are no Radiance singles prices to report, because there are no Radiance singles.
+- **It does not change the set's size.** The base run is 167 numbered cards — Neeko's 167/167 settles that — against Riot's announcement figure of 180 including 66 Showcase prints.
+
+## How to read the redactions
+
+The blur pattern is informative even where the text is not.
+
+The legible names sit in rows alongside blurred blocks of similar width, and the blurred blocks in those rows are name-shaped — short, one or two words. The two lines near the bottom are much longer and sit on their own, which is the shape of a feature description rather than a champion name. That is the same layout logic as the two feature lines Riot did leave readable: COLORLESS CHAMPION UNIT and NEW SET MECHANIC both sit alone on their rows.
+
+So the likeliest reading is that this is a single list mixing champion names with set features, and that Riot has revealed one item from each category it intends to tease: one band, three champions, one card-level feature, one set-level feature.
+
+That also tells you something about pacing. A teaser that reveals six of roughly sixteen entries is not a countdown to one announcement; it is the opening frame of a drip that has ten more beats in it. Preview Season runs 25 September to 9 October — fifteen days for ten reveals, which is roughly the cadence Riot ran for Vendetta.
+
+## What Colorless actually does to a deck list
+
+It is worth being concrete about why this is unusual, because "goes in any deck" is easy to say and easy to under-rate.
+
+Every Riftbound deck runs twelve Runes, and those Runes have to match the domains your Legend gives you. That is the constraint the whole format is built on. Commit to Fury and Calm and your twelve Runes are split between Fury and Calm — which means a Mind card in your deck is a card you drew and cannot cast. The rule is blunt on purpose: you cannot splash a card your Runes cannot pay for.
+
+The practical effect is that most cards in any given set are irrelevant to most decks. A Chaos three-drop is a card that Order, Body and Mind players scroll past. That is not a flaw, it is how the game creates identity — but it does mean the audience for any individual card is a slice of the format rather than all of it.
+
+Colorless is the exception. A Colorless card is castable in every deck in the game, whatever the Legend, whatever the Runes. Six domains produce cards for their own decks; the seventh produces cards for everyone.
+
+Champion cards are normally at the far end of that spectrum. They are the most identity-bound cards Riot prints, because a champion belongs to a region and a domain and the whole point of the card is that it feels like that champion. Printing one Colorless is a deliberate decision to cut the card loose from that — to make a champion card that a Fury aggro deck and a Mind control deck are equally entitled to play.
+
+**A note on what we are not saying.** A card every deck can play is a card every deck can consider, and that is a real statement about how widely a card gets used. It is not a price prediction, and we do not publish those. Radiance has not released, there are no Radiance singles to price yet, and what a card is worth on release day depends on the print run and the pull rate, neither of which Riot has published.
+
+## Radiance is a music set, and this confirms it
+
+Step back from the individual lines and the graphic makes an argument about what Radiance is.
+
+Seraphine and Evelynn are two thirds of K/DA's front line. Ekko fronted True Damage. Those three were already confirmed Radiance Legends before this graphic existed. Adding HEARTSTEEL — six more champions from Riot's other band — makes the music roster the organising idea of the set rather than a theme applied to it.
+
+That reframes the tagline Riot shipped with the announcement: *"Own the Stage. The World is Watching."* Read against a set list with two virtual bands in it, that stops being generic hype copy and starts being a description.
+
+It also raises the K'Sante problem again. HEARTSTEEL has six members and K'Sante is the one with no Riftbound card of any kind — not a scarce printing, not an old printing, nothing. If Radiance carries HEARTSTEEL in any complete form, K'Sante's first Riftbound card has to be in it. That is a specific, falsifiable thing to watch for, and it is the single reveal we would most like to see come off this list.
+
+## What to watch during Preview Season
+
+Five things worth checking as the redactions come off, in rough order of how much they would change:
+
+1. **Whether the Colorless Champion Unit line resolves to Neeko** or to a second card. If it is a second card, Radiance has two domain-free champion cards, which would be a much bigger design statement than one.
+2. **Whether K'Sante gets a card.** His absence is the clearest gap in the HEARTSTEEL line-up.
+3. **The name of the new set mechanic**, and whether it matches any of the three leaked candidates.
+4. **The three unrevealed Legends.** Six of nine are named; the remaining three are the last real unknown about the set's shape.
+5. **Whether Neeko turns out to have a Legend card as well as her Champion Unit.** The graphic lists her name separately from the Colorless line, and champions can appear as both.
+
+## What we are doing about it
+
+Every official Radiance reveal lands in [our live tracker](/blog/riftbound-radiance-spoilers) the morning after it is imported, and each card gets prices on [the Radiance set page](/sets/radiance) from release day. If the blurred lines come off during Preview Season, that is where you will see them fill in.
+
+Radiance releases **23 October 2026**.`,
   },
   // ── Radiance leak: a fan photo of Riot's own PAX West demo reference material,
   // not a Riot announcement. Deliberately category "blog" (news) — this roundup
@@ -4369,7 +4577,7 @@ That matters for this game because Riftbound's next set is, in everything but na
 
 ## Radiance was a pop-star set before HEARTSTEEL showed up
 
-**[Riftbound: Radiance](/sets/radiance) releases 23 October 2026**, with 180 cards — **66 of them Showcase prints**, which is a very large proportion and will be relevant in a moment. Of the ten legends the set will carry, six have been named: **Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna**. The set's Showdown Decks product is, literally, *Seraphine vs. Evelynn*.
+**[Riftbound: Radiance](/sets/radiance) releases 23 October 2026**, with 180 cards — **66 of them Showcase prints**, which is a very large proportion and will be relevant in a moment. Of the nine champion Legends the set will carry, six have been named: **Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna**. The set's Showdown Decks product is, literally, *Seraphine vs. Evelynn*. And on 22 September a redacted Radiance contents graphic put **HEARTSTEEL** on the list outright — [what that graphic does and does not settle](/blog/riftbound-radiance-colorless-champion-unit).
 
 Seraphine and Evelynn are two thirds of K/DA's front line. Ekko fronted True Damage. Before a single HEARTSTEEL image surfaced, Radiance was already stacked with Riot's music roster. Our full rundown of [what is actually confirmed about Radiance](/blog/riftbound-radiance-what-we-know) tracks the rest, and the separately-sourced [Deploy, Showoff and Disarm leak](/blog/riftbound-radiance-leaked-mechanics) covers the mechanics side.
 
