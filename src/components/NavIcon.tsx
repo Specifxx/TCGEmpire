@@ -45,6 +45,9 @@ export type NavIconName =
   // (text-only tiles, same call FooterNav already made for every link it
   // renders). These six cover every REPEATED chrome concept.
   | "bell"
+  // Heart — the watchlist / wishlist, everywhere it is represented
+  // (2026-09-21, owner: "the wishlist icon should be a heart and not a bell").
+  | "heart"
   | "lock"
   | "chart"
   | "trophy"
@@ -143,6 +146,13 @@ const ICONS: Record<NavIconName, React.ReactNode> = {
       <path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z" />
       <path d="M10 19.5a2 2 0 0 0 4 0" />
     </>
+  ),
+  // Heart — the watchlist. One path, so `fill="currentColor"` gives a solid
+  // heart and `fill="none"` an outline, which is the filled/empty convention
+  // every watchlist control on this site already uses for "is there anything
+  // in it".
+  heart: (
+    <path d="M12 20.5 4.2 12.9a4.8 4.8 0 0 1 0-6.8 4.8 4.8 0 0 1 6.8 0l1 1 1-1a4.8 4.8 0 0 1 6.8 0 4.8 4.8 0 0 1 0 6.8Z" />
   ),
   // Lock — Premium/locked content. Replaces 🔒.
   lock: (

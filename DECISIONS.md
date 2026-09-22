@@ -9953,6 +9953,221 @@ alone — it is what stops a fix being quietly spent on the next long excerpt �
 but anything running several writers at once needs to set that constant once, at
 the end, from a single count. That is how it was finally resolved: 41.
 
+---
+
+## The rail became a navigation system, and the header came back — 2026-09-21 (same day, correction)
+
+Three corrections to the entry above, all from the owner after seeing it live,
+and together they reverse about half of it.
+
+**"I didn't want to get rid of the header. The header is there to stay."** The
+previous pass stripped the header to Discord, the theme toggle, the country
+picker and the session, on the reasoning that the rail carried everything else.
+That went too far. The header is back as a CURATED SHORTLIST, and the owner
+named its contents: Sealed, Blog, Premium, Discord, the watchlist, light/dark,
+the country picker and the accounts. What stays deleted is also named —
+Explore, Deck builder, Auctions — plus the brand, the inline search box and the
+⌘K button, which the rail genuinely does own now ("I want the search bar to be
+on the sidebar").
+
+Premium and Discord moved back from `xl` to `lg` in the same pass, and the
+watchlist stopped being `lg:hidden`. That is affordable now for a reason worth
+recording: the slack in this row used to be bought by GATING things, and it is
+bought by SUBTRACTION instead — the rail permanently removed four items from
+the row at lg, which is more headroom than any gate ever bought.
+
+**"The collapsible option is actually, there's no point — have the default as
+uncollapsed."** The two-mode rail is gone rather than re-defaulted, and that
+deleted a whole mechanism: the `sidenav` cookie, `src/lib/sidenav-shared.ts`,
+the pre-paint boot script that stamped `data-sidenav` on `<html>`, the `[`
+keybinding, the icon strip, the hover flyouts and their viewport-fixed
+positioning (added only hours earlier), and the `.sidenav-expanded` /
+`.sidenav-collapsed` / `.sidenav-row` / `.sidenav-boxed` CSS that switched
+between the two. `--sidenav-w` is one value at one breakpoint now: 17rem from
+1024px. Everything the previous entry said about keeping the mode "a CSS
+decision, not a React one" is moot — there is no mode.
+
+**"It's just a navigation system."** The flat list of eight primary
+destinations that opened the rail is removed. The complaint names the defect
+exactly: *"when I click prices, it should just expand to all of the different
+features — I'm not going to a single page when I click prices."* Every one of
+those eight was also a link inside a group below it, so the rail listed the
+same destination twice and made a section header look like a page. A group
+header is a disclosure now and never a link; the leaves are the links. The
+"Browse cards" button went with them, for the same reason — it was a second
+route to a link two rows below it.
+
+**One duplication was removed that the owner did not ask about**, and it is
+worth flagging rather than burying: the rail's pinned block briefly carried a
+"Sign in" row as well as Premium. The header owns the session by the owner's
+own list, so a second session control in the rail is precisely the double-up
+this pass was asked to remove elsewhere. Premium is deliberately on BOTH
+surfaces ("have premium on the sidebar as well… like get premium"); the
+session is header-only. `tests/sidenav.test.ts` pins that asymmetry, because
+it looks like an oversight and is not.
+
+**What survived from the previous pass**, because the owner asked for it by
+name: the full-page-height rail, the brand block with the visitor's market
+under it, the search row with its ⌘K hint, the green active highlight (border
+plus tint on the active LINK, and a tint on its group's header so the section
+you are in is findable when its links are scrolled away), and the pinned gold
+Premium call to action at the foot.
+
+**Re-measured, not assumed.** The header row is the one with a history of
+clipping its signed-out CTA between 1024 and 1056px. Driven in a real browser
+at 1024/1032/1040/1048/1056/1279/1280/1440: "Log in / Sign up" renders in full
+at every width, with 72px of clearance at the tightest — more than the 32px
+the stripped-down header had, because the rail's subtraction outweighs the
+three links that came back. No width overflows horizontally, and
+`scripts/mobile-check.ts` reports clean at 640/720/790.
+
+**Tests: one file deleted, one rewritten, six amended.**
+`tests/sidenav-shell.test.ts` (written for the shape that lasted one pass) is
+deleted and folded into `tests/sidenav.test.ts`, which now pins the rail that
+exists: one width, no mode, group headers that are disclosures, no flat
+duplicate list, and the rail/header split above. The five two-mode tests
+(cookie resolution, boot-script/TypeScript agreement, the layout wiring for
+both) are gone with the thing they described. `design-system`, `nav-icon`,
+`mobile-header-fit`, `premium-pitch-panel`, `signup-funnel` and
+`ebay-auctions` were each re-pointed at whichever surface now provides the
+guarantee they were written for.
+
+Verified: `npm run typecheck`, `npm run lint` (0 errors), `npm run
+adsense:guard` (22/22), `npm test` (1689/1690 — the one failure is the
+pre-existing "seller id is the client id with ca- stripped" sandbox gap),
+`next build` compiles, and the result was rendered in a real browser at
+1440/1100/820/375 and in both themes, with the active-link highlight confirmed
+on a live route rather than inferred from the class strings.
+
+## The rail's search box now searches cards — 2026-09-21 (same day, follow-up)
+
+"The search bar on the side should search through all the cards and should say
+'search for cards' and the suggestions should pop up on the side next to it
+stacked vertically."
+
+**The box was a lie, and that is the real defect here.** It was a BUTTON that
+opened the ⌘K command launcher, which searches SITE NAVIGATION — pages,
+tools, sections. So on a card-price site, the field labelled "Search" in the
+sidebar could not find a card. Typing "Vi" offered you the Prices group.
+
+**It is the shared `SearchBar` now, in a new `rail` variant** — not a second
+search component. That matters because `SearchBar` is 900 lines of accumulated
+behaviour that a fresh implementation would have silently dropped: the
+`/api/search` query, the debounce, the abort-on-retype, Baymard's suggestion
+caps, recent searches, the roving keyboard model with `aria-activedescendant`,
+QuickView on click, `search_initiated` analytics and the "See all results"
+fallthrough. The variant changes exactly two things:
+
+- **The placeholder** is "Search for cards", as asked. The other two variants
+  keep theirs ("Search any Riftbound card…" in the hero, "Search cards,
+  champions, sets…" in the header's phone row).
+- **The suggestion panel opens sideways.** `absolute left-full top-0 ml-3
+  w-[22rem]` instead of the stacked `mt-2 w-full`, so it clears the rail's
+  right edge and is top-aligned with the field. Measured live: the field sits
+  at x=12 w=247 inside a 272px rail, and the panel lands at x=272, y within a
+  pixel of the field's own top.
+
+**One thing had to follow the geometry rather than be copied.** The
+dropdown's height budget is computed from the field's rect, and the stacked
+variants measure from its BOTTOM (the list hangs below the box, after an 8px
+gap). A side panel is top-aligned and has no gap to pay for, so it measures
+from `rect.top` instead. Copying the stacked maths would have thrown away the
+field's own height for no reason, and on a short viewport that is the
+difference between a scrollbar appearing inside the list and not.
+
+**The ⌘K launcher is not lost**, which is worth saying because this is the
+second time in a day something was removed from the rail: it keeps its global
+shortcut and its below-lg button. It simply stops being what the sidebar's
+search field opens. `tests/single-menu-entry.test.ts` was re-pointed
+accordingly — from lg the rail IS the full-nav surface, because it renders the
+whole index inline rather than hiding it behind a control.
+
+Verified live in a browser against a stubbed `/api/search` (this sandbox has
+no database): the placeholder reads "Search for cards"; typing "vi" renders
+the results stacked vertically in a panel to the right of the rail; ArrowDown
+sets `aria-activedescendant`; Escape closes it; Enter on a highlighted row
+navigates to `/card/vi-piltover-enforcer-ogn-042-298`. Plus `npm run
+typecheck`, `npm run lint` (0 errors), `npm run adsense:guard` (22/22),
+`npm test` (1690/1691 — the one failure is the pre-existing "seller id is the
+client id with ca- stripped" sandbox gap), no horizontal overflow at
+1440/1100/820/375, and `scripts/mobile-check.ts` clean at 640/720/790.
+
+## Six corrections to the rail and header, and a shared-utility bug they exposed — 2026-09-21 (same day)
+
+All owner-directed, after seeing the previous pass live.
+
+**The rail searches FEATURES; the header searches CARDS.** The rail's box was
+card search for a few hours and is now a feature filter over `searchNav()` —
+the same index the ⌘K launcher and the phone overlay search, so a word that
+finds a page in one finds it in all three. It filters the tree in place rather
+than opening a panel: the rail IS the navigation tree, and narrowing what you
+are already looking at needs no explaining. Each result names its group,
+because "Movers" alone is ambiguous and "Movers · Prices" is not. The
+`rail` variant of `SearchBar`, added hours earlier, is deleted rather than
+left unused — with it the sideways-opening dropdown and its top-anchored
+height maths.
+
+**Card search and the Database link are back in the header, left-aligned**, as
+asked. The search box sits INSIDE the left cluster rather than as the row's
+middle child: the row is `justify-between`, so a middle child centres, and
+"left aligned" was the instruction. It is placed after the phone Premium link,
+not before it — putting it directly after Database split the Database/Premium
+pairing that the 2026-09-10 brief put there deliberately, and
+`tests/mobile-header-fit.test.ts` caught exactly that. `SearchBar`'s nav
+placeholder is now "Search for cards" for both the desktop and phone copies.
+Database is ungated again at every width.
+
+**Only Prices is open on a first visit.** `DEFAULT_OPEN_GROUP` names the group
+rather than indexing it, and the collapsed set is DERIVED from `NAV_GROUPS`
+rather than written out, so adding or reordering a group tomorrow cannot
+silently make a different one "the open one". It is the initial React state,
+not an effect, because localStorage is unreadable on the server and anything
+else guarantees a hydration mismatch.
+
+**The watchlist is a heart, everywhere.** Changed in one pass across all five
+surfaces that stand for it — `HeaderWatchButton`, `PriceWatchButton` (the
+toggle on every card tile and card page), `/watching`'s heading, the card
+page's "Watch this price" block and the homepage's "Watching a card?" card.
+Changing only the header is a mistake this repo has already made once: a star
+shipped in that one control and was reverted with "it should be the same icon
+as the watch has". `tests/design-system.test.ts` now asserts all five, so the
+next change to one of them fails rather than drifting. It also ends the
+problem the star was reaching for — a heart cannot be confused with a
+notification bell.
+
+**The corner nudges clear the rail**, and the two wrong turns on the way there
+are the interesting part:
+
+- The first attempt added `lg:left-[calc(var(--sidenav-w)+1rem)]` to
+  `SignupPromoPopup` and `PremiumSlideIn`. `tests/signup-slidein.test.ts`
+  failed, and it was right to: all THREE bottom-left nudges (those two plus
+  `AnnualSwitchNudge`) are pinned to one identical corner string precisely so
+  a fix applied to two cannot leave the third behind. Which is what had just
+  happened — `AnnualSwitchNudge` would still have sat on the sidebar.
+- So it moved into the shared `.above-bottombar` utility — and that broke
+  `FeedbackWidget`, which shares the utility but is `right-4`. Giving a
+  right-anchored fixed element a `left` too stretched it from 114px to 1136px
+  wide, across the whole viewport. Measured, not reasoned: the check that
+  caught it prints the bounding box of every visible nudge.
+- The fix is `.above-bottombar.left-4`, which is what makes "left-anchored"
+  expressible in CSS. `--sidenav-w` is 0 below lg, so it is a no-op there.
+
+**One real accessibility regression, caught by an existing guard and fixed in
+the code rather than the test**: the new feature-search input shipped with
+`focus:outline-none` and no replacement ring. `tests/design-system.test.ts`
+requires every `outline-none` in `src/**/*.tsx` to carry a `focus-visible:`
+ring in the same className, which is a rule worth having and was correct here.
+
+Verified in a real browser at 1440/1100/820/375: Prices open with nine groups
+rolled up; Database at x=304 and the card search at x=400, both immediately
+right of the 272px rail; "deck" in the rail returns Deck Builder and Trade
+Calculator with their groups; the watch control draws the heart path; the
+signup card sits at x=288 and Feedback back at x=1310 at its own 114px. Plus
+typecheck, lint (0 errors), the AdSense guard (22/22), `npm test`
+(1695/1696 — the one failure is the pre-existing "seller id is the client id
+with ca- stripped" sandbox gap) and `scripts/mobile-check.ts` clean at
+640/720/790.
+
 
 ---
 

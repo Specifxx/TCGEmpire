@@ -2,50 +2,68 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { NAV_GROUPS } from "../src/components/nav-groups";
 
-const ROOT = process.cwd();
+const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
+const codeOnly = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SideNav — the persistent desktop rail (≥1280px, Tailwind's `xl`), always
-// visible from first paint on every page, homepage included. Reported
-// directly: the header's own nav is scroll-gated/translucent at the top of
-// the page, and the site's actual breadth of features (Deal Finder, Best
-// Basket, Riftle, etc.) was hidden a click away behind ⌘K/the hamburger —
-// nothing signaled "this site has a lot to offer" on first landing.
+// THE DESKTOP RAIL. Visible the instant a visitor lands on any page, rendering
+// the same NAV_GROUPS index the ⌘K launcher searches, the footer site-map
+// prints and /llms.txt publishes.
 //
-// `position: fixed`, not a flex/grid participant — verified visually (see the
-// screenshots taken during implementation) at 1440px, exactly at 1280px,
-// exactly below it at 1279px, and on mobile: the breakpoint is exact and the
-// hero's full-bleed background/foreground stay correctly centered in the
-// space to the right of the panel with no gap or overflow, because
-// CinematicHero's breakout math was updated to compensate for the same
-// --sidenav-w custom property SideNav reserves space with everywhere else.
+// IT IS A NAVIGATION SYSTEM AND NOTHING ELSE (2026-09-21). Two shapes were
+// tried and rejected in one day, and the tests below pin what replaced them:
+//
+//   • A flat list of eight "primary destinations" above the grouped index.
+//     Every one was also a link inside a group below it, so the rail showed
+//     the same page twice and a section header read like a destination:
+//     "when I click prices, it should just expand to all of the different
+//     features — I'm not going to a single page when I click prices."
+//   • A two-mode rail (4rem icon strip with hover flyouts / 17rem list),
+//     chosen before first paint from a cookie and flipped with a chevron or
+//     `[`. Removed outright rather than re-defaulted — "the collapsible
+//     option is actually, there's no point" — taking the cookie, the boot
+//     script, the flyout positioning and the mode CSS with it.
+//
+// What remains: one width, always open, group headers are disclosures, the
+// leaves are the links.
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("--sidenav-w: 0 below lg, the 4rem icon rail from 1024px, the 17rem list from 1280px ONLY once explicitly expanded", () => {
-  const css = read("src/app/globals.css");
-  assert.match(css, /--sidenav-w:\s*0px;/, "must default to 0 so every consumer no-ops below lg");
-  assert.match(
-    css,
-    /@media \(min-width:\s*1024px\)\s*\{\s*:root\s*\{\s*--sidenav-w:\s*4rem;/,
-    "1024–1279px is always the icon rail"
-  );
-  // The full list is gated on a POSITIVE match for the SAME attribute the
-  // boot script stamps and SideNav toggles — never a bare :root, and never a
-  // :not([...="collapsed"]) either, since that would make the icon rail's
-  // absence (script blocked, CSP) silently fall back to the OLD
-  // expanded-by-default rather than the current collapsed-by-default.
-  assert.match(
-    css,
-    /@media \(min-width:\s*1280px\)\s*\{\s*:root\[data-sidenav="expanded"\]\s*\{\s*--sidenav-w:\s*17rem;/,
-    "1280px+ only expands when data-sidenav=expanded — collapsed is the fallback, not the exception"
-  );
-  assert.doesNotMatch(css, /:not\(\[data-sidenav="collapsed"\]\)/, "must not revert to the negative-match form");
-  // …and the two content blocks switch on exactly that attribute + breakpoint.
-  assert.match(css, /\.sidenav-expanded\s*\{\s*display:\s*none;/);
-  assert.match(css, /:root\[data-sidenav="expanded"\] \.sidenav-expanded\s*\{\s*display:\s*block;/);
-  assert.match(css, /:root\[data-sidenav="expanded"\] \.sidenav-collapsed\s*\{\s*display:\s*none;/);
+test("--sidenav-w is 0 below lg and 17rem from 1024px, with no second mode", () => {
+  const css = codeOnly(read("src/app/globals.css"));
+  assert.match(css, /--sidenav-w:\s*0px/, "0 by default, so every consumer is a no-op below the breakpoint");
+  const lg = /@media \(min-width: 1024px\) \{\s*:root \{\s*--sidenav-w:\s*17rem;/.exec(css);
+  assert.ok(lg, "expected a single 1024px rule setting the full width");
+  // The mode machinery must stay gone: no attribute, no display toggles.
+  assert.doesNotMatch(css, /data-sidenav/, "the rail has no modes to switch between");
+  assert.doesNotMatch(css, /\.sidenav-(expanded|collapsed|row|boxed)/, "the mode-switching classes went with it");
+  // SideNav's own breakpoint and the media query must always agree.
+  const rail = read("src/components/SideNav.tsx");
+  assert.match(rail, /hidden h-screen w-\[var\(--sidenav-w\)\] flex-col[^"]*lg:flex/, "the component must render at exactly the same breakpoint");
+});
+
+test("nothing is left of the collapsed mode: no cookie, no boot script, no flyouts", () => {
+  const rail = codeOnly(read("src/components/SideNav.tsx"));
+  for (const gone of ["SIDENAV_COOKIE", "data-sidenav", "RailGroup", "getBoundingClientRect", "railMode", "toggleRail"]) {
+    assert.ok(!rail.includes(gone), `${gone} belongs to the removed two-mode rail`);
+  }
+  const layout = read("src/app/layout.tsx");
+  assert.doesNotMatch(layout, /SIDENAV_BOOT_SCRIPT|sidenav-shared/, "the pre-paint boot script is gone");
+  // The theme boot script is a different thing and must NOT have gone with it.
+  assert.match(layout, /THEME_BOOT_SCRIPT/, "the theme script is unrelated and stays");
+  assert.match(layout, /suppressHydrationWarning/, "…and still needs the hydration-warning suppression");
+});
+
+test("a group header is a disclosure, never a link — that was the whole complaint", () => {
+  const rail = codeOnly(read("src/components/SideNav.tsx"));
+  const header = /onClick=\{\(\) => toggleGroup\(group\.title\)\}[\s\S]*?<\/button>/.exec(rail)?.[0] ?? "";
+  assert.ok(header, "expected the group header button");
+  assert.doesNotMatch(header, /<Link/, "a group header must not navigate anywhere");
+  assert.match(header, /aria-expanded=\{open\}/, "it is a disclosure, and must say so");
+  // And no flat duplicate list above the groups.
+  assert.ok(!rail.includes("PRIMARY_NAV"), "the duplicated primary list is gone");
 });
 
 test("SideNav renders the same NAV_GROUPS index the ⌘K launcher searches, hidden below lg", () => {
@@ -57,9 +75,7 @@ test("SideNav renders the same NAV_GROUPS index the ⌘K launcher searches, hidd
   // becomes non-zero in globals.css. The two must agree, or the panel either
   // overlaps un-padded content or leaves a gap.
   assert.match(src, /aria-label="Site navigation"\s*\n\s*className="fixed left-0 [^"]*hidden [^"]*lg:flex/);
-  // Both modes are always rendered; CSS picks one (see the globals.css test).
-  assert.match(src, /className="sidenav-expanded /);
-  assert.match(src, /className="sidenav-collapsed /);
+  // One mode now — the full list. See the globals.css test above.
   // Fixed, not a layout participant — see the file's own doc comment for why
   // (CinematicHero's full-bleed breakout depends on <main> staying centred on
   // the true viewport; a flex/grid sidebar would break that).
@@ -186,83 +202,100 @@ test("SideNav forces the active page's group open even if it was previously coll
   assert.match(src, /if \(!hydrated \|\| !activeGroupTitle \|\| !collapsed\.has\(activeGroupTitle\)\) return;/);
 });
 
-test("SideNav's collapse state starts empty (every group open) so SSR and first client paint agree", () => {
-  // localStorage isn't available during SSR. Seeding `collapsed` from it
-  // synchronously would make the server's render and the client's first
-  // render disagree — a hydration mismatch. Real state loads in an effect,
-  // strictly after mount, same shape as TradeCalculator's own localStorage
-  // restore.
-  const src = read("src/components/SideNav.tsx");
-  assert.match(src, /useState<Set<string>>\(\(\) => new Set\(\)\)/);
-  const effectsAfter = src.slice(src.indexOf("useState<Set<string>>"));
-  assert.match(effectsAfter, /useEffect\(\(\) => \{[\s\S]*?localStorage\.getItem\(STORAGE_KEY\)/);
+test("only Prices is open on a first visit, and the default is identical on the server and the client", () => {
+  // 2026-09-21, owner: "lets have the default on the left prices is expanded
+  // whilst everything else is rolled up." Every group used to start open,
+  // which made the rail ~60 links long and mostly a scrollbar.
+  const code = codeOnly(read("src/components/SideNav.tsx"));
+  assert.match(code, /const DEFAULT_OPEN_GROUP = "Prices"/, "the open group is named, not an index");
+  assert.ok(
+    NAV_GROUPS.some((g) => g.title === "Prices"),
+    "DEFAULT_OPEN_GROUP must name a real group — a typo would roll every group up",
+  );
+  // Derived from NAV_GROUPS rather than written out, so it cannot drift when a
+  // group is added.
+  assert.match(code, /NAV_GROUPS\.map\(\(g\) => g\.title\)\.filter\(\(t\) => t !== DEFAULT_OPEN_GROUP\)/);
+  // And it must be the INITIAL React state, not applied in an effect:
+  // localStorage is unreadable on the server, so anything else would make the
+  // client's first render disagree and React would log a hydration mismatch.
+  assert.match(code, /useState<Set<string>>\(\(\) => new Set\(DEFAULT_COLLAPSED\)\)/);
 });
 
-// ── One mode default: the resolver, the boot script, and the layout wiring ──
-// 2026-09-11: the per-route default (icon rail on pages with their own column
-// or a playfield, full rail on hubs) was replaced by a single site-wide
-// default — the icon rail everywhere, expanding only once the visitor asks.
-import vm from "node:vm";
-import { SIDENAV_BOOT_SCRIPT, readSidenavCookie, resolveSidenavMode } from "../src/lib/sidenav-shared";
-import { NAV_GROUPS } from "../src/components/nav-groups";
+test("the rail owns the brand, the search and the whole index; the header owns the session", () => {
+  const rail = codeOnly(read("src/components/SideNav.tsx"));
+  const nav = codeOnly(read("src/components/Navbar.tsx"));
 
-test("the rail defaults to collapsed everywhere; the visitor's saved choice always wins; garbage falls through to collapsed", () => {
-  assert.equal(resolveSidenavMode(undefined), "collapsed", "no cookie at all — the true default");
-  assert.equal(resolveSidenavMode(null), "collapsed");
-  assert.equal(resolveSidenavMode("expanded"), "expanded", "an explicit choice to expand must stick");
-  assert.equal(resolveSidenavMode("collapsed"), "collapsed");
-  assert.equal(resolveSidenavMode("sideways"), "collapsed", "an unrecognised value must not accidentally expand the rail");
-  assert.equal(readSidenavCookie("country=US; sidenav=collapsed; x=1"), "collapsed");
-  assert.equal(readSidenavCookie("sidenav=expanded"), "expanded");
-  assert.equal(readSidenavCookie("notsidenav=collapsed"), null);
+  // Rail-only.
+  assert.match(rail, /aria-label="RiftCompare home"/, "the rail carries the brand");
+  assert.match(nav, /className="tap-link min-w-11 shrink-0 gap-2 lg:hidden"/, "…and the header hides its copy from lg");
+  // TWO SEARCHES, ONE EACH, and the split is the point (2026-09-21): the rail
+  // searches FEATURES ("where is the thing that does X"), the header searches
+  // CARDS. Each says which it is in its own placeholder, so neither can be
+  // mistaken for the other — which is exactly what went wrong when the rail's
+  // box opened the navigation launcher while being labelled just "Search".
+  assert.match(rail, /placeholder="Search features"/, "the rail searches features");
+  assert.match(rail, /searchNav\(/, "…over the same index the ⌘K launcher uses");
+  assert.doesNotMatch(rail, /<SearchBar/, "…and never mounts the card search");
+  assert.match(nav, /<HeaderSearchSlot>/, "the header carries the desktop card search");
+  assert.match(nav, /<HeaderSearchSlot mobile>/, "…and the phone search row");
+  assert.match(codeOnly(read("src/components/SearchBar.tsx")), /"Search for cards"/, "…labelled for cards");
+
+  // Header-only. The rail must never grow a second session control.
+  assert.match(nav, /<NavUser/, "the header carries the account control");
+  assert.doesNotMatch(rail, /"\/login"|"\/profile"/, "the rail must not duplicate it");
+
+  // Deliberately BOTH: Premium, asked for on each surface separately.
+  assert.match(nav, /<PremiumNavLink className="[^"]*\blg:block\b/);
+  assert.match(rail, /href="\/premium"/);
 });
 
-test("the inline boot script agrees with the TypeScript resolver for every cookie, and defaults to collapsed with no cookie at all", () => {
-  // Run the exact string the layout inlines, in a sandbox with a fake DOM.
-  const run = (cookie: string) => {
-    let stamped: string | null = null;
-    const ctx = vm.createContext({
-      document: { cookie, documentElement: { setAttribute: (_k: string, v: string) => (stamped = v) } },
-    });
-    vm.runInContext(SIDENAV_BOOT_SCRIPT, ctx);
-    return stamped;
-  };
-  const cookies = ["", "sidenav=collapsed", "sidenav=expanded", "a=1; sidenav=expanded; b=2", "sidenav=bogus"];
-  for (const c of cookies) {
-    assert.equal(run(c), resolveSidenavMode(readSidenavCookie(c)), `cookie "${c}"`);
+test("the header's desktop row is the curated shortlist the owner named, and nothing else", () => {
+  const nav = codeOnly(read("src/components/Navbar.tsx"));
+  // Kept: "I still want the sealed, the blog, premium, Discord, the watch
+  // list, the light and dark mode, the country and the accounts."
+  for (const [what, pattern] of [
+    ["Sealed", /<Link href="\/sealed"[^>]*lg:block/],
+    ["Blog", /<Link href="\/blog"[^>]*lg:block/],
+    ["Premium", /<PremiumNavLink className="[^"]*\blg:block\b/],
+    ["Discord", /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/],
+    ["the watchlist", /<HeaderWatchButton className="hidden sm:inline-flex" \/>/],
+    ["the theme toggle", /<ThemeToggle className="hidden lg:grid" \/>/],
+    ["the account control", /<NavUser/],
+  ] as const) {
+    assert.match(nav, pattern, `the header must keep ${what}`);
   }
-  assert.equal(run(""), "collapsed", "the boot script's own fallback, with nothing to read, must be collapsed");
-  // It must survive a hostile environment rather than throw before paint.
-  assert.doesNotThrow(() => vm.runInContext(SIDENAV_BOOT_SCRIPT, vm.createContext({})));
-  // No per-route logic left to generate the script from — it no longer reads
-  // location at all.
-  assert.doesNotMatch(SIDENAV_BOOT_SCRIPT, /location/);
+  // Dropped by name: "you can just get rid of the explore ... deck builder
+  // ... auctions".
+  for (const gone of ["/deck", "/auctions"]) {
+    assert.doesNotMatch(nav, new RegExp(`<Link href="${gone}"`), `${gone} is rail-only now`);
+  }
+  assert.doesNotMatch(nav, /<CommandLauncherButton \/>/, "Explore (the ⌘K button) is rail-only now");
 });
 
-test("the layout inlines the boot script in <head> and suppresses the resulting <html> hydration warning", () => {
-  const layout = read("src/app/layout.tsx");
-  assert.match(layout, /import \{ SIDENAV_BOOT_SCRIPT \} from "@\/lib\/sidenav-shared"/);
-  const head = layout.slice(layout.indexOf("<head>"), layout.indexOf("</head>"));
-  assert.match(head, /<script dangerouslySetInnerHTML=\{\{ __html: SIDENAV_BOOT_SCRIPT \}\} \/>/, "the script must run before <body> paints");
-  const html = layout.slice(layout.indexOf("<html"), layout.indexOf(">", layout.indexOf("<html")));
-  assert.match(html, /suppressHydrationWarning/);
-  // The caching rule still holds: nothing here reads cookies()/headers().
-  assert.doesNotMatch(layout, /from "next\/headers"/);
+test("every group in the rail is reachable and nothing in NAV_GROUPS was lost to the rework", () => {
+  // The rail is the site's full index. Two shapes were removed from it in one
+  // day (a flat primary list, then the icon mode); neither may have taken a
+  // destination with it.
+  const rail = read("src/components/SideNav.tsx");
+  assert.match(rail, /NAV_GROUPS\.map/);
+  assert.match(rail, /group\.links\.map/, "…down to the leaves, not just the group headers");
+  assert.ok(NAV_GROUPS.length >= 8, `expected the full grouped index, found ${NAV_GROUPS.length} groups`);
+  // External links still branch — the contract every NAV_GROUPS renderer follows.
+  assert.match(rail, /link\.external \?/, "external links must open in a new tab, never through next/link");
 });
 
-test("every NAV_GROUPS entry has an icon — the collapsed rail shows nothing else for it", () => {
-  for (const g of NAV_GROUPS) assert.ok(g.icon && g.icon.length > 0, `${g.title} needs an icon`);
-  assert.equal(new Set(NAV_GROUPS.map((g) => g.icon)).size, NAV_GROUPS.length, "icons must be distinct — they are the only signal at 4rem");
-});
-
-test("SideNav toggles + persists the choice and re-syncs on navigation", () => {
-  const src = read("src/components/SideNav.tsx");
-  assert.match(src, /setAttribute\("data-sidenav", mode\)/);
-  assert.match(src, /document\.cookie = `\$\{SIDENAV_COOKIE\}=\$\{next\}; path=\/; max-age=\$\{SIDENAV_COOKIE_MAX_AGE\}; SameSite=Lax`/);
-  assert.match(src, /resolveSidenavMode\(readSidenavCookie\(document\.cookie\)\)/);
-  // The keyboard shortcut must never fire while the visitor is typing.
-  assert.match(src, /isTypingTarget\(e\.target\)/);
-  // Flyouts are keyboard-reachable: focus opens, Escape closes, state exposed.
-  assert.match(src, /onFocus=\{\(\) => setOpenGroup\(group\.title\)\}/);
-  assert.match(src, /aria-expanded=\{isOpen\}/);
+test("the rail's feature search filters the tree in place, and shares the launcher's index", () => {
+  // "Lets make the search bar on the left a search for features." It filters
+  // the list BELOW it rather than opening a panel over it: the rail IS the
+  // navigation tree, so narrowing the tree you are already looking at needs
+  // no explaining.
+  const code = codeOnly(read("src/components/SideNav.tsx"));
+  assert.match(code, /import \{ searchNav \} from "\.\/nav-search"/, "one shared index, not a second matcher");
+  assert.match(code, /featureResults \? \(/, "a query replaces the grouped tree with flat results");
+  assert.match(code, /No features match/, "…and an empty result says so rather than rendering nothing");
+  // Each result names its group: "Movers" alone is ambiguous, "Movers · Prices"
+  // is not.
+  assert.match(code, /\{link\.group\}/, "results must carry the group they came from");
+  // External links still branch, the contract every NAV_GROUPS renderer follows.
+  assert.match(code, /link\.external \?/);
 });

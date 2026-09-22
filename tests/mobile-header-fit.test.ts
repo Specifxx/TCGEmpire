@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { NAV_GROUPS } from "../src/components/nav-groups";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -71,26 +72,25 @@ test("there is exactly ONE Database link and NO width can hide it", () => {
   // between them.
   //
   // One ungated link is the only arrangement with no gap and nothing to drift.
-  // AMENDED 2026-09-21. The header's copy is now `lg:hidden`, and that is NOT
-  // the gap this test was written to prevent: from exactly that breakpoint the
-  // full-height rail (SideNav) renders "Cards" -> /browse as a permanently
-  // visible primary item, no hover, no menu, no scroll. The invariant is
-  // therefore unchanged in substance — EVERY width shows a link to /browse
-  // without the visitor opening anything — and is now asserted across the two
-  // surfaces that each own half of the range, which is what stops a future
-  // edit from removing one without noticing the other.
+  // BACK TO UNGATED (2026-09-21, second amendment the same day). The header's
+  // copy was briefly `lg:hidden`, on the reasoning that the rail carried the
+  // same route. The rail's search is a FEATURE search now and its card links
+  // live inside collapsed groups, so the header is again the one place a
+  // visitor reaches the card database at a glance — at every width, which is
+  // the arrangement with no gap and nothing to drift.
   const code = readCode(NAVBAR);
   const links = [...code.matchAll(/<Link\s+href="\/browse"([\s\S]{0,400}?)<\/Link>/g)];
   const headerLinks = links.filter((m) => /Database/.test(m[1]));
   assert.equal(headerLinks.length, 1, "exactly one Database link in the header");
   const cls = /className="([^"]*)"/.exec(headerLinks[0][1])?.[1] ?? "";
-  for (const hide of ["hidden", "lg:block", "sm:hidden"]) {
+  for (const hide of ["hidden", "lg:block", "lg:hidden", "sm:hidden"]) {
     assert.ok(!cls.split(/\s+/).includes(hide), `Database must not be gated by "${hide}" (has: ${cls})`);
   }
-  assert.ok(cls.split(/\s+/).includes("lg:hidden"), "below lg the header carries it; from lg the rail does");
-  // The other half of the range: the rail's own primary list.
-  const primary = readCode("src/components/primary-nav.ts");
-  assert.match(primary, /href: "\/browse", label: "Cards"/, "the rail must carry /browse as a primary destination from lg up");
+  // It is still in NAV_GROUPS too ("Card Database", in the Prices group), so
+  // the rail and the ⌘K launcher both reach it — but the header's copy is the
+  // one that needs no interaction, which is what this test is about.
+  const inGroups = NAV_GROUPS.flatMap((g) => g.links).some((l) => l.href === "/browse");
+  assert.ok(inGroups, "/browse must also be in NAV_GROUPS");
   // It lives in the left cluster, beside the logo.
   const row = code.slice(code.indexOf("h-16 w-full items-center"), code.indexOf("<nav "));
   assert.match(row, /Database/, "and it sits in the left cluster beside the logo");

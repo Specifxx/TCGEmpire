@@ -142,6 +142,11 @@ export function SearchBar({
   autoFocusDesktop = false,
   trendingCards,
 }: {
+  // A "rail" variant existed for a few hours on 2026-09-21, when the desktop
+  // sidebar briefly carried card search. The sidebar searches FEATURES now
+  // (SideNav.tsx) and the card search moved back into the header, so the
+  // variant and its sideways-opening dropdown are gone rather than left
+  // behind unused.
   variant?: "nav" | "hero";
   autoFocusDesktop?: boolean;
   // Zero-state suggestions (focused + empty box) alongside recent searches.
@@ -555,7 +560,7 @@ export function SearchBar({
     // primary CTA (there can be only one, and it moves to the hero the moment
     // the hero is on screen — see HeaderSearchSlot for the desktop scroll gate
     // that keeps the two from ever both claiming the role at once).
-    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "max-w-xl"}`}>
+    <div ref={boxRef} data-primary-cta={isHero ? "true" : undefined} className={`relative ${isHero ? "mx-auto w-full max-w-2xl" : "w-full max-w-xl"}`}>
       <form onSubmit={submit}>
         <svg
           className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-500 ${
@@ -612,7 +617,7 @@ export function SearchBar({
             clearFocusIntentTimer();
           }}
           onKeyDown={onKeyDown}
-          placeholder={isHero ? "Search any Riftbound card…" : "Search cards, champions, sets…"}
+          placeholder={isHero ? "Search any Riftbound card…" : "Search for cards"}
           className={isHero ? "input border-ink-600 bg-ink-900 py-3.5 pl-11 pr-14 text-base shadow-glow sm:pr-11 sm:text-lg" : "input pl-9 pr-12 sm:pr-10"}
           aria-label="Search cards"
           autoComplete="off"

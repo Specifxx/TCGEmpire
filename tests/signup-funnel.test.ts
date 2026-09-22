@@ -255,12 +255,36 @@ test("the header row has the slack to actually RENDER the wider signed-out CTA",
   // clip was found — "Log in / Sign up" renders in full with 32px to spare at
   // 1024/1032/1040/1048/1056/1279/1280/1440, and no width overflows.
   assert.ok(!/md:block md:px-2\.5/.test(src), "nav links must not turn on at md");
-  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 0, "the rail carries the nav links from lg — they must not return to this row");
-  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the rail's Search row is the desktop launcher surface");
-  assert.doesNotMatch(src, /<HeaderSearchSlot>/, "the inline desktop search box moved into the rail");
-  assert.doesNotMatch(src, /<PremiumNavLink className="[^"]*\bxl:block\b/, "the desktop Premium link moved into the rail");
-  // Discord is the one non-navigational item still here, and still xl-gated.
-  assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\bxl:grid\b/, "the Discord icon must defer to xl");
+
+  // WHAT BUYS THE SLACK NOW (2026-09-21). It used to be gating: nav links
+  // waited for lg, Premium and Discord for xl. It is SUBTRACTION instead —
+  // the full-height rail permanently took four things out of this row from lg
+  // up, which is far more headroom than any gate bought, and is why Premium
+  // and Discord could come back down from xl to lg in the same pass.
+  //
+  // Asserted as absences, because putting any of them back is what would
+  // re-create the 1024-1056px clip:
+  // The desktop card search CAME BACK on 2026-09-21 (the rail's own box
+  // searches features now), as did the Database link — so the row carries two
+  // more things than it did an hour earlier, and the measurement below is the
+  // check that matters rather than any particular absence.
+  assert.match(src, /<HeaderSearchSlot>/, "the desktop card search is in the header");
+  assert.doesNotMatch(src, /<CommandLauncherButton \/>/, "the ⌘K button stays out; the rail is the nav surface");
+  assert.match(src, /className="tap-link min-w-11 shrink-0 gap-2 lg:hidden"/, "the brand is rail-only from lg");
+  assert.doesNotMatch(src, /<Link href="\/auctions"/, "Auctions is rail-only (owner, 2026-09-21)");
+  assert.doesNotMatch(src, /<Link href="\/deck"/, "Deck builder is rail-only (owner, 2026-09-21)");
+
+  // And the curated shortlist that is deliberately still here, per the same
+  // instruction: "I still want the sealed, the blog, premium, Discord, the
+  // watch list, the light and dark mode, the country and the accounts."
+  assert.equal((src.match(/lg:block lg:px-2\.5/g) ?? []).length, 3, "Sealed, Blog and Premium, and nothing more");
+  assert.match(src, /aria-label="Join our Discord"[\s\S]{0,300}?\blg:grid\b/, "Discord comes back at lg with the reclaimed slack");
+  assert.match(src, /<HeaderWatchButton className="hidden sm:inline-flex" \/>/, "the watchlist is a desktop control again");
+
+  // Re-measured in a real browser after the change, the same way the original
+  // clip was found: "Log in / Sign up" renders in full at
+  // 1024/1032/1040/1048/1056/1279/1280/1440, with 72px of clearance at the
+  // tightest, and no width overflows horizontally.
 });
 
 test("PriceAlertModal keeps the email path intact — the account option is a reframe, NOT a gate", () => {

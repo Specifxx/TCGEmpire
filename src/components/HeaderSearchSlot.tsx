@@ -1,94 +1,40 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 // Wraps EITHER of the header's two search rows (the `lg:block` desktop row
 // inline in the main bar, or the full-width `lg:hidden` row underneath it —
-// pass `mobile` for the latter) so it stays hidden until the visitor scrolls,
-// but ONLY on the homepage.
+// pass `mobile` for the latter).
 //
-// Why: the homepage-redesign brief calls for "the search box is the hero" —
-// large, high-contrast, the one dominant element in the first screen. The
-// header already renders its own, smaller SearchBar in the same row on every
-// route (it has to — most routes have no hero search of their own). On "/"
-// specifically, showing BOTH at once during the first screen is exactly the
-// "duplicate search box above the fold" the brief calls out as a defect, even
-// though the two boxes serve different scroll states. Once the visitor
-// scrolls past the hero, the header search reappears — at that point it's no
-// longer a duplicate, it's the only search box left on screen.
+// IT NO LONGER HIDES ANYTHING, and that is the whole current behaviour:
+// the header's card search is visible on every route, at every scroll
+// position, on both rows. Explicit owner instruction, 2026-09-21: "search for
+// cards should be longer/wider, and should always be visible."
 //
-// Every OTHER route has no hero search, so the header box is the only one on
-// the page and must never be hidden there — this component is a no-op
-// (`scrolled` starts and stays `true`) whenever `pathname !== "/"`.
+// WHAT USED TO BE HERE, so nobody reinstates it by accident. On "/" alone this
+// component hid the desktop row until CinematicHero's #rc-hero scrolled out of
+// view (an IntersectionObserver — itself a fix for a scrollY threshold that
+// went stale when a foldable phone unfolded mid-session and left BOTH rows
+// hidden at once). The reason was the homepage-redesign brief's "the search
+// box is the hero": the hero renders its own, much larger search box, so
+// showing the smaller header copy above it during the first screen was a
+// duplicate search box above the fold.
 //
-// The mobile row is ALWAYS visible, never scroll-gated — reverted 2026-08-17.
-// A prior pass gated it the same as the desktop row (below), reasoning that
-// the hero's own full-size search box sits immediately below the header on
-// every viewport, so hiding the smaller header copy pre-scroll cost a visitor
-// nothing on paper. In practice, that made the entire mobile homepage header
-// read as empty before the first scroll: the mobile viewport has no space for
-// the desktop nav's other links (they're all `md:`/`lg:` and up — see
-// Navbar.tsx), so the search field was the only thing HomeHeaderReveal-style
-// gating could actually remove from a phone screen, and removing it left just
-// a bare logo, "Database" and the hamburger. Explicit product call: a visibly
-// present header beats one extra duplicate-search-box audit point. The
-// desktop row below keeps the scroll gate — desktop has plenty else in the
-// header pre-scroll (Premium, the logo, Database), so it doesn't read as
-// empty the same way.
+// That trade is off. The sidebar rail now owns the homepage's left edge and
+// the rail's own box searches FEATURES, not cards (SideNav.tsx), so the header
+// box is the only card search in the chrome — and a search box that is present
+// on every other route but missing on the one page most visitors land on first
+// reads as a bug, not as restraint. The hero box stays; from lg up the two are
+// simply both on screen, one in the chrome and one in the hero.
 //
-// display:none via Tailwind's `hidden` class, never an unmount: the field
-// stays in the DOM at all times (crawlers, and any assistive tech that reads
-// the DOM ahead of a scroll event, can still find it) — only its visual
-// presentation is gated on whether the hero (with its own search box) is
-// still in view. NavbarShell's independent >8px scrollY check drives the
-// header's OWN frosted-background transition and fires much earlier than
-// this — the two were briefly on the same threshold, but that made this
-// component reveal the header's search copy while the hero's own (far
-// taller) search box was still fully on screen, the exact duplicate the
-// scroll-gate exists to prevent. See the effect below for why this now
-// tracks the hero's actual visibility instead.
+// The component is kept (rather than inlined away) because both call sites and
+// several tests reference it by name, and because it is the single place to
+// put this rule back if the duplicate ever proves costly. `mobile` no longer
+// changes anything either; it is retained for the same reason.
+//
+// The IntersectionObserver is gone with the gate, so #rc-hero is no longer
+// load-bearing HERE — FeedbackWidget still watches it, so the marker stays.
 export function HeaderSearchSlot({ children, mobile = false }: { children: ReactNode; mobile?: boolean }) {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-  // Non-home routes start (and stay) revealed — no flash, since usePathname()
-  // already resolves correctly on the very first server-rendered pass.
-  const [scrolled, setScrolled] = useState(!isHome);
-
-  useEffect(() => {
-    if (!isHome) {
-      setScrolled(true);
-      return;
-    }
-    // Same marker + technique as FeedbackWidget's own "don't compete with the
-    // hero search" check (see that file): an IntersectionObserver on
-    // CinematicHero's #rc-hero, NOT a scrollY threshold (the previous
-    // approach here). A scrollY threshold goes stale across a viewport
-    // RESIZE: a foldable phone unfolding mid-session reflows the whole page
-    // (the hero's own height/copy both change at the `lg` breakpoint), which
-    // can move the hero out of view without window.scrollY changing at all.
-    // Left unfixed, that left `scrolled` false (as if the hero were still
-    // in view) right as the wide layout kicked in — hiding the mobile row
-    // (its `lg:hidden` parent) *and* the desktop row (`scrolled` still
-    // false, so no `lg:block` override) at once: the header search box had
-    // no visible copy anywhere on screen. IntersectionObserver has no such
-    // gap — it re-fires on any layout change that moves the hero relative
-    // to the viewport, a resize included, not only on scroll.
-    const hero = document.getElementById("rc-hero");
-    if (!hero || typeof IntersectionObserver === "undefined") {
-      // No hero to watch (shouldn't happen on "/") or no observer support:
-      // fail toward a VISIBLE header search rather than a silently hidden one.
-      setScrolled(true);
-      return;
-    }
-    const io = new IntersectionObserver((entries) => setScrolled(!(entries[0]?.isIntersecting ?? false)));
-    io.observe(hero);
-    return () => io.disconnect();
-  }, [isHome]);
-
-  // mobile: always "block", ignoring `scrolled` entirely — see the doc
-  // comment above. The mobile row's own parent (`<div className="pb-3
-  // lg:hidden">` in Navbar.tsx) already restricts it to <lg widths, so no
-  // breakpoint prefix is needed here either way.
-  return <div className={mobile ? "block" : `hidden flex-1 ${scrolled ? "lg:block" : ""}`}>{children}</div>;
+  void mobile;
+  return <div className="block w-full min-w-0">{children}</div>;
 }
