@@ -56,6 +56,42 @@ export const PREMIUM_ANNUAL_PERIOD = process.env.NEXT_PUBLIC_PREMIUM_ANNUAL_PERI
 export const PLUS_PRICE_AMOUNT = process.env.NEXT_PUBLIC_PLUS_PRICE_AMOUNT || "$4.99";
 export const PLUS_ANNUAL_AMOUNT = process.env.NEXT_PUBLIC_PLUS_ANNUAL_AMOUNT || "$39.99";
 
+// ── The founding-rate message ───────────────────────────────────────────────
+// Owner, 2026-09-22: "for premium, we need to emphasis get premium now before
+// the price increases as the site grows."
+//
+// THIS COPY IS TRUE, and it is true because of the mechanism documented on
+// PREMIUM_PRICE_AMOUNT above, not because it is a nice thing to say. Stripe
+// Price objects are IMMUTABLE: every price change this site has made (up to
+// $14.99 on 2026-09-06, back down on 2026-09-09) repointed
+// STRIPE_PREMIUM_PRICE_ID at a different Price object rather than editing one
+// in place, so an existing subscription keeps billing against whichever Price
+// it was created with, indefinitely, until someone deliberately migrates it.
+// Both earlier eras of subscriber are still on their original rate today.
+//
+// So "your rate never goes up while your membership stays active" is a
+// description of what the billing system already does. It is also now a
+// PROMISE, and the only way to break it is to actively migrate existing
+// subscriptions onto a new Price in the Stripe dashboard. Don't.
+//
+// What this copy deliberately does NOT do:
+//   • No deadline. There is no date on which the price rises, and inventing
+//     one ("offer ends Friday") would be a fabricated scarcity claim that
+//     recurs every Friday forever. "As the site grows" is the real condition.
+//   • No fake future number. We don't claim the price "goes to $19.99" — no
+//     such decision has been made. It says the rate you join at is the rate
+//     you keep, which is the part we can actually guarantee.
+//   • No countdown timer, no "N spots left", no invented member count.
+// A claim here that outruns what Stripe actually does is a refund request and
+// a chargeback, not a conversion — see DECISIONS.md, 2026-09-22.
+export const FOUNDING_RATE_BADGE = "Founding rate";
+export const FOUNDING_RATE_HEADLINE = "Lock in today's price";
+/** One line, for a card/dialog under the price. */
+export const FOUNDING_RATE_LINE =
+  "Prices rise as coverage grows — your rate never does. Join now and you keep this price for as long as your membership stays active.";
+/** The compact version, for a nudge or a sidebar block with no room. */
+export const FOUNDING_RATE_SHORT = "Lock in today's price — your rate never rises while you stay subscribed.";
+
 export type PremiumTierKey = "plus" | "premium";
 export const TIER_NAMES: Record<PremiumTierKey, string> = { plus: "Plus", premium: "Premium" };
 
@@ -180,7 +216,39 @@ export function premiumPriceIncreaseAnnounced(): boolean {
 export function premiumLockInLine(): string {
   return premiumPriceIncreaseAnnounced()
     ? `We're raising Premium's price soon, to ${PREMIUM_NEXT_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}. Subscribe now and keep ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} for as long as you stay subscribed — no action needed when the price changes.`
-    : `Subscribe now and lock in this price for good — it never rises while you stay subscribed.`;
+    : `Premium's price goes up as the site grows — more markets, more stores, deeper history. Your rate doesn't: subscribe at ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} and keep it for as long as you stay subscribed.`;
+}
+
+// The banner's own headline, in BOTH states. The un-announced half of this is
+// the 2026-09-22 change: before it, the strong gold banner appeared only when
+// a specific increase was announced, and with none announced the entire
+// "act now" case shrank to one 11px caption under the pricing cards. Owner:
+// "for premium, we need to emphasis get premium now before the price
+// increases as the site grows" — which is the standing pricing policy, not a
+// one-off announcement, so it gets the banner either way.
+//
+// WHY THIS IS NOT A FABRICATED SCARCITY CLAIM, which is the thing
+// /editorial-policy's "nothing here describes a process we don't actually
+// run" rule would otherwise catch:
+//   • "goes up as the site grows" is the owner's own stated pricing policy
+//     and the site's actual history — $9.99 → $14.99 (2026-09-06) → $9.99
+//     (2026-09-09). It names no date and no future figure, because neither
+//     has been decided; inventing either is what this deliberately avoids.
+//   • "your rate doesn't" is a description of what the billing code already
+//     does. Stripe Price objects are immutable, checkout creates the
+//     subscription against whatever price is configured at that moment
+//     (api/premium/checkout's one-shot line_items), and nothing in this
+//     codebase ever migrates an existing subscription to a different price.
+//     Subscribers from both earlier price eras are still on their original
+//     rate today. The only way to break the promise is to migrate them by
+//     hand in the Stripe dashboard. Don't.
+// The moment a real increase IS decided, setting
+// NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT to it swaps every surface to the
+// stronger, dated-by-implication version with no code change.
+export function premiumLockInHeadline(): string {
+  return premiumPriceIncreaseAnnounced()
+    ? `Price increasing soon — lock in ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} now`
+    : `Lock in ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} before the price goes up`;
 }
 
 // The compact tail for a small inline caption ("$9.99/month · …"), used by the
@@ -189,7 +257,7 @@ export function premiumLockInLine(): string {
 export function premiumLockInTail(): string {
   return premiumPriceIncreaseAnnounced()
     ? `locked in before it rises to ${PREMIUM_NEXT_PRICE_AMOUNT} — cancel anytime`
-    : `locked in for good, cancel anytime`;
+    : `locked in before the price goes up — cancel anytime`;
 }
 
 // Tags the Premium funnel events (slide-in/popup shown, checkout started) with
@@ -200,4 +268,4 @@ export function premiumLockInTail(): string {
 // changes again, including a price-only change like this one: without a bump,
 // events from the $14.99 era and the reverted $9.99 era would share one tag
 // and the before/after comparison this constant exists for would be lost.
-export const PREMIUM_COPY_VERSION = "monthly-default-2026-09-14";
+export const PREMIUM_COPY_VERSION = "lock-in-banner-always-2026-09-22";

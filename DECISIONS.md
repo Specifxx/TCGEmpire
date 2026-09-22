@@ -10256,3 +10256,198 @@ a card gets played — not about what it will be worth. Radiance has not release
 there are no Radiance singles, and the post says so in as many words. The same
 discipline the price-change guide states as policy: we report live prices and
 history, we do not publish predictions.
+
+## The watchlist opens as a side drawer, not a page navigation — 2026-09-22
+
+Owner: "the watchlist button should open a side tab not go to a separate
+page." `HeaderWatchButton` was a plain `<Link href="/watching">` — a full
+navigation for what is really a "check what I'm tracking, then get back to
+what I was doing" action, dropping browse filters or a card page's scroll
+position for a page whose only content is the same grid of `CardTile`s.
+
+Added a `"right"` placement to the shared `Dialog` primitive (`ui/Dialog.tsx`)
+— a full-height panel sliding in from the right edge, translate-based rather
+than the centered shapes' fade+scale, reusing all of Dialog's existing scroll
+lock, focus trap, Escape and focus restore. `WatchlistDrawer` renders the
+existing `<Watchlist>` component inside it (same data, same remove-via-heart
+interaction, no forked copy), gated by `WatchlistDrawerProvider`'s shared
+open state — the same pattern `MegaMenuProvider` already uses for the phone
+nav overlay. `HeaderWatchButton` is now a `<button>` that toggles that state;
+`aria-current` (there is no route to be "on" any more) is replaced by
+`aria-expanded` off the drawer's own open flag.
+
+`/watching` ITSELF IS UNCHANGED and stays. It's the deep-link target — the
+signed-out login redirect (`?next=/watching`), bookmarks, anything crawled
+despite its `noindex` — and deleting it would break every existing link for
+a page that costs nothing to keep. It happens to now be reachable two ways:
+directly, or via the header drawer over whatever page you're on.
+
+## The search input is in the first HTML byte again — 2026-09-22
+
+Owner: "why is the website taking so long to load? Like when I open it?"
+Measured on production before changing anything: TTFB 0.2–0.7 s on every
+route tried, cache HIT or MISS alike; HTML 69 KB gzipped, JS ~190 KB
+Brotli across 26 chunks, CSS 17 KB, fonts 117 KB; in a real browser,
+hydration completed 39 ms after `load` with 73 ms of long-task blocking
+and no errors. Nothing was slow. But the server HTML for every page
+carried twelve `<template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING">`
+holes, and two of them were the search box — the hero's and the header's —
+rendered as bare empty `<div class="input">`s (no icon, no placeholder,
+nothing to type into) until every chunk had arrived and React had
+hydrated. The H1 says "Buy Riftbound cards at the best price" and the one
+control it points at was the last thing on the page to exist. On a slow
+connection that is exactly what "still loading" looks like, however fast
+the text painted.
+
+Cause: `SearchBar` called `useSearchParams()` — for the `?q=` prefill and
+nothing else — and in the App Router a `useSearchParams()` under a static
+route bails its subtree out to client-side rendering. The Suspense
+boundaries around it (added so the bailout would not escalate to
+`app/loading.tsx` and blank the whole homepage — see CinematicHero) were
+correctly containing the damage to the box itself; they were never the
+fix.
+
+Fix: `value` starts empty and a mount-only effect reads
+`new URLSearchParams(window.location.search).get("q")`. The real `<input>`
+is now server-rendered on every route (verified: the dev server's `/login`
+HTML carries `placeholder="Search for cards"` with JavaScript off); the
+prefill lands one effect tick after hydration, which is the first moment
+the field could have taken a keystroke anyway. The Suspense boundaries
+stay as guards. `tests/header-search-resize.test.ts` pins SearchBar off
+`useSearchParams` with the reason.
+
+Not done here, noted for later: the other ten bailouts are page-specific
+controls (`Filters`, `SortSelect`, `PageSizeSelect`, `SealedFilters`,
+`SealedSort`, `ActiveFilters`) and three invisible trackers. The browse
+and sealed pages' filter rows have the same empty-until-hydrated shape;
+same fix applies, one component at a time. Also: PageSpeed Insights'
+anonymous quota was exhausted from this sandbox, and Vercel Speed Insights
+(the field data that would have shown this directly) is currently off in
+the dashboard — turning it back on is worth more than any lab number.
+
+## The lock-in banner shows whether or not a rise is announced — 2026-09-22
+
+Owner: "for premium, we need to emphasis get premium now before the price
+increases as the site grows."
+
+The machinery for this already existed and was dormant. `lib/site.ts` has
+`PREMIUM_NEXT_PRICE_AMOUNT` and a self-retiring
+`premiumPriceIncreaseAnnounced()` (the two amounts disagreeing IS the
+announcement), feeding a gold banner on /premium, in `PremiumDialog` and in
+`PremiumSlideIn`. Since the 2026-09-09 rollback to $9.99 the two constants
+have been equal, so the flag has been false — and with it false, all three
+banners rendered nothing and the entire case for acting today shrank to one
+11px grey caption below the pricing cards, whose copy was the purely
+defensive "Subscribe now and lock in this price for good."
+
+Two changes, no new mechanism:
+
+1. **The banner renders in both states.** The announced branch is untouched.
+   The steady-state branch gets its own headline —
+   `premiumLockInHeadline()`, "Lock in $9.99/month before the price goes up"
+   — and body, "Premium's price goes up as the site grows — more markets,
+   more stores, deeper history. Your rate doesn't."
+2. **The steady-state copy states the pricing policy**, not just the
+   guarantee, in `premiumLockInLine()` and `premiumLockInTail()`.
+
+Why this is not the invented scarcity /editorial-policy rules out. The
+growth claim is the owner's own stated pricing policy and matches this
+site's actual history ($9.99 to $14.99 on 2026-09-06, back to $9.99 on
+2026-09-09). It names no date and no future figure, because neither has been
+decided — that is the whole difference between this and a countdown to a
+deadline that renews itself every week. And "your rate doesn't" describes
+what the billing code already does: Stripe Price objects are immutable,
+checkout creates the subscription against whatever price is configured at
+that moment (`api/premium/checkout`'s one-shot `line_items`), and nothing in
+this codebase migrates an existing subscription to a different price.
+Subscribers from both earlier price eras are still on their original rate.
+
+**This is now a promise, and the only way to break it is by hand** — by
+migrating existing subscriptions onto a new Price in the Stripe dashboard.
+Don't. Raising the price for NEW subscribers is a one-line change
+(`NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT`, then `PREMIUM_PRICE_AMOUNT` at
+cutover) and needs no code edit to swap all three surfaces to the stronger
+"rising to $X" wording.
+
+`tests/premium-price-increase.test.ts` was updated rather than relaxed: it
+still pins no-hard-coded-date (now across both branches of all three
+helpers, checking function BODIES so the comments above them can keep citing
+real historical dates), still pins the banner behind the "not already
+Premium" gate, and still pins one shared helper per surface.
+`PREMIUM_COPY_VERSION` bumped to `lock-in-banner-always-2026-09-22` so GA4
+splits before/after instead of averaging the two pitches.
+
+### Correction to the entry above on the bailouts
+
+That entry said the browse and sealed filter rows "have the same
+empty-until-hydrated shape" as the search box did. **They do not.** Both
+routes are `force-dynamic`, and `useSearchParams()` only bails out of
+rendering under STATIC prerendering — so `Filters`, `SortSelect`,
+`PageSizeSelect`, `SealedFilters`, `SealedSort` and `ActiveFilters` have
+always been in the server HTML (verified: /browse's HTML carries Rarity,
+Domain, the sort control and "per page"). The claim was inferred from the
+list of `useSearchParams` importers without checking where they render.
+
+Measured after the search-box fix: **zero** bailout markers inside `<main>`
+on any route. The remaining nine are one in `<head>` and eight after
+`</main>`, and they are all `dynamic(..., { ssr: false })` — PriceAlertModal,
+SignupPromoPopup, PremiumSlideIn, AnnualSwitchNudge, FeedbackWidget,
+CinematicNavMenu and the trackers. That flag is deliberate and documented in
+layout.tsx: those components render nothing until triggered, so keeping them
+out of the server HTML and off the initial bundle is the point. "Fixing"
+them would put JS on the critical path to server-render components that
+display nothing, i.e. make the site slower. Nothing to do.
+
+---
+
+## The homepage title, and the store count that was nearly shipped — 2026-09-22
+
+Last of the four Search Console click-through opportunities. 28 days to
+2026-09-21:
+
+| Query | Impressions | Position | CTR |
+|---|---|---|---|
+| `riftbound card prices` | 924 | 7.5 | 0.8% |
+| `riftbound prices` | 651 | 7.2 | 1.1% |
+| `riftbound card price` | 194 | 7.3 | 1.0% |
+| `riftbound price` | 173 | 8.0 | 0.6% |
+
+Page one on all four, at roughly a quarter of the click-through typical for
+those positions. Unlike the banlist guide, the match was not the problem: three
+audits (2026-08-20, 08-30, 09-10) had already settled "Riftbound Card Prices"
+as the head term, the last on live SERP evidence, and that half is untouched.
+The half after the dash was "Compare Every Store" — the same unfalsifiable
+claim every competing tracker makes. It now reads **"Riftbound Card Prices —
+Cheapest Store & eBay"** (59 with the suffix, three shorter than before).
+"Cheapest" is the job the query is asking to have done; eBay is a source most
+trackers do not carry, named concretely. Both are claims the site already makes
+elsewhere.
+
+**The part worth recording is what did not ship.** The obvious move was a
+count: "Riftbound Card Prices — Compare 168 Stores", the number computed from
+`RETAILER_LIST.length` — the same value `/stores` renders — so it could never
+go stale. It was written, tested, gated and committed. Rebasing onto `main`
+before pushing surfaced the entry above it, from the previous day: **"No store
+count goes in a page title."** Two independent runs over the country guides had
+proposed different counts for the same pages, because "stores we track" and
+"stores with a live listing right now" are different numbers and a title cannot
+say which it means.
+
+Deriving the number answers the staleness half of that objection. It does not
+answer the ambiguity half, and the live-listing figure is not measurable from
+this sandbox — `/stores` publishes "77,004 live listings across 168 stores" but
+nothing says how many of the 168 carry one. So the bar that decision sets —
+independent sources agreeing, as with Singapore's 11 — is not met, and the
+commit was rewritten rather than argued with.
+
+Two things follow. First, the decision was prose, and prose is what let a
+session a day later nearly undo it; `tests/no-store-count-in-titles.test.ts`
+now enforces it across article titles, route titles and the interpolated form
+the near-miss actually used, with Singapore listed as the documented exception.
+Second, the same rebase showed the parallel audit had already examined the
+banlist page and concluded its snippet was right and should be left alone —
+naming the title this session shipped the night before. Independent
+confirmation, which is worth more than either pass alone.
+
+Shipped with `[deploy]` at the owner's instruction, as with the rest of this
+sequence.

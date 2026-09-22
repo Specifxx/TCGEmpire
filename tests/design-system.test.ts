@@ -393,14 +393,18 @@ test("HeaderMenuButton is the below-lg nav entry point and opens the same overla
   assert.match(readCode("src/components/Navbar.tsx"), /<HeaderMenuButton className="lg:hidden" \/>/);
 });
 
-test("the watchlist is its own header control, linking to /watching and carrying the count", () => {
+test("the watchlist is its own header control, opening a drawer and carrying the count", () => {
   const src = readCode("src/components/HeaderWatchButton.tsx");
-  assert.match(src, /href="\/watching"/, "it must be a LINK to the watchlist, not a menu trigger");
+  // A BUTTON THAT OPENS A DRAWER, NOT A LINK (2026-09-22, owner: "the
+  // watchlist button should open a side tab not go to a separate page").
+  assert.doesNotMatch(src, /href="\/watching"/, "must not navigate away — it opens the drawer in place");
+  assert.match(src, /useWatchlistDrawer\(\)/, "shares the same open state WatchlistDrawer reads");
+  assert.match(src, /setOpen\(!open\)/, "toggles the drawer");
   assert.doesNotMatch(src, /useMegaMenu/, "it must not open the menu");
   // The count is the point: the only ambient signal a price alert fired.
   assert.match(src, /useWatchlist\(\)/);
   assert.match(src, /9\+/, "same 9+ cap the deleted bar's badge used");
-  assert.match(src, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(src, /aria-expanded=\{open\}/, "no route to be \"on\" any more — the drawer's own open state drives this instead of aria-current");
   // A HEART (2026-09-21, owner: "the wishlist icon should be a heart and not a
   // bell"), and the SAME glyph on every surface that stands for the watchlist.
   // That second half is the durable rule, not the particular glyph: this

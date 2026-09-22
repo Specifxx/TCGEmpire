@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
@@ -157,11 +157,25 @@ export function SearchBar({
   trendingCards?: CardTileData[];
 }) {
   const router = useRouter();
-  const params = useSearchParams();
   const pathname = usePathname();
   const { open: openQuickView } = useQuickView();
   const { fmt, price } = useCountry();
-  const [value, setValue] = useState(params.get("q") ?? "");
+  // Starts EMPTY on purpose, and the ?q= prefill arrives in the effect below.
+  //
+  // This used to be useState(useSearchParams().get("q") ?? ""). In the App
+  // Router a useSearchParams() call inside a statically rendered route bails
+  // the whole subtree out to client-side rendering: the server HTML carried a
+  // <template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"> and an EMPTY BOX
+  // where this input should be, on every page, until every JS chunk had
+  // downloaded and React had hydrated. The site's one core control — the
+  // thing the H1 tells you to use — was the last thing on the page to exist,
+  // and on a slow connection that read as "the site is still loading" long
+  // after the text had painted (2026-09-22, owner: "why is the website taking
+  // so long to load"). Reading the query string after mount instead keeps the
+  // real <input> (icon, placeholder, border) in the first HTML byte; the
+  // prefill lands one effect tick after hydration, which is also the first
+  // moment the field could have accepted a keystroke anyway.
+  const [value, setValue] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [sealed, setSealed] = useState<SealedResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -235,6 +249,14 @@ export function SearchBar({
       focusIntentTimerRef.current = null;
     }
   }
+
+  // ?q= prefill — see the `value` declaration for why this is an effect and
+  // not the initial state. Mount-only: a later in-app navigation that changes
+  // ?q= goes through this component's own submit path, which already sets it.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setValue(q);
+  }, []);
 
   useEffect(() => {
     if (autoFocusDesktop && window.matchMedia("(min-width: 1024px)").matches && window.matchMedia("(pointer: fine)").matches) {

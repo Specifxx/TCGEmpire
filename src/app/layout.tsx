@@ -11,6 +11,7 @@ import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
 import { CommandLauncherProvider } from "@/components/CommandLauncher";
 import { MegaMenuProvider } from "@/components/MegaMenuProvider";
+import { WatchlistDrawerProvider } from "@/components/WatchlistDrawerProvider";
 import { CountryProvider } from "@/components/CountryProvider";
 import { PremiumProvider } from "@/components/PremiumProvider";
 import { PremiumDialogProvider } from "@/components/PremiumDialog";
@@ -350,6 +351,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SealedQuickViewProvider>
             <CommandLauncherProvider>
               <MegaMenuProvider>
+              <WatchlistDrawerProvider>
                 <Navbar />
                 <SideNav />
                 {/* No announcement ribbon here any more — the homepage's Vendetta
@@ -392,6 +394,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     which cannot have that class of bug, because the TOP edge of
                     the layout viewport does not move when browser chrome
                     collapses. --bottombar-h and --chrome-lift went with it. */}
+              </WatchlistDrawerProvider>
               </MegaMenuProvider>
             </CommandLauncherProvider>
           </SealedQuickViewProvider>

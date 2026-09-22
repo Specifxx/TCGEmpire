@@ -156,6 +156,10 @@ export function Navbar() {
               is the only card search from lg up and there is no duplication
               to resolve. It is ALSO no longer scroll-gated on the homepage —
               see HeaderSearchSlot's own doc comment. */}
+          {/* The <Suspense> no longer shows its fallback on a normal load —
+              SearchBar stopped calling useSearchParams() on 2026-09-22 (see
+              its `value` state), so the real input is in the server HTML.
+              Kept as the guard CinematicHero's comment describes. */}
           <div className="hidden min-w-0 flex-1 lg:block">
             <HeaderSearchSlot>
               <Suspense fallback={<div className="input w-full max-w-xl" />}>

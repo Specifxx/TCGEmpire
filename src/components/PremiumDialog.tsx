@@ -22,6 +22,7 @@ import {
   annualSavingPct,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
+  premiumLockInHeadline,
   premiumEffectiveMonthly,
   tierMonthlyAmount,
   tierAnnualAmount,
@@ -259,10 +260,23 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
           {/* Only for someone who could still act on it — already-Premium
               visitors are grandfathered regardless, so the urgency has nothing
               left to say to them. */}
-          {!premium && premiumPriceIncreaseAnnounced() && (
+          {/* Shown whether or not a specific rise is announced — same change
+              and same reasoning as /premium's banner (2026-09-22). Still only
+              for someone who could act on it: an already-Premium visitor is
+              grandfathered regardless, so the urgency has nothing to say to
+              them. */}
+          {!premium && (
             <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-center text-xs font-semibold text-gold">
-              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
-              {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD}.
+              {premiumPriceIncreaseAnnounced() ? (
+                <>
+                  Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+                  {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD}.
+                </>
+              ) : (
+                <>
+                  {premiumLockInHeadline()} — the price rises as the site grows, your rate never does.
+                </>
+              )}
             </div>
           )}
 
