@@ -107,7 +107,7 @@ export function CardTile({ card }: { card: CardTileData }) {
       </div>
       <Link href={cardHref(card)} prefetch={false} onPointerDown={onPointerDown} onClick={onClick} className="flex flex-1 flex-col">
         <div
-          className="relative aspect-[5/7] w-full overflow-hidden p-3"
+          className="relative aspect-[5/7] w-full overflow-hidden p-1.5 sm:p-3"
           style={{ backgroundColor: `${r.color}14` }}
         >
           <CardImage
@@ -123,19 +123,30 @@ export function CardTile({ card }: { card: CardTileData }) {
         </div>
 
         <div className="flex flex-1 flex-col gap-1.5 border-t border-ink-700 p-3">
-        <h3 className="line-clamp-1 text-sm font-semibold text-white" title={cardDisplayName(card.name, card)}>
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-white" title={cardDisplayName(card.name, card)}>
           {cardDisplayName(card.name, card)}
         </h3>
         <p className="text-xs text-slate-500">
           {card.setCode} · {card.collectorNumber}
         </p>
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
-          <div className="min-w-0">
+        {/* WRAPS BEFORE IT OVERLAPS. This row used to be a plain
+            justify-between with min-w-0 on the price block and shrink-0 on the
+            store count — and min-w-0 does nothing unless the child actually
+            truncates, so a long price (A$3,113.43 on an Overnumbered chase
+            card) rendered straight THROUGH the count beside it. Two fixes, in
+            order of which one you want to fire: the price block refuses to go
+            below 6.5rem, which is what makes flex-wrap drop the count onto its
+            own line rather than squeezing — flex-1 alone has a basis of 0 and
+            would silently shrink to nothing instead of ever wrapping — and
+            truncate stops the price escaping its column if even that is not
+            enough. */}
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-0.5 pt-1">
+          <div className="min-w-[6.5rem] flex-1">
             {lowest != null ? (
               <>
                 <div className="text-[11px] text-slate-500">from</div>
-                <div className="text-lg font-bold text-accent">
+                <div className="truncate text-base font-bold leading-tight text-accent sm:text-lg">
                   {fmt(lowest)}
                 </div>
               </>

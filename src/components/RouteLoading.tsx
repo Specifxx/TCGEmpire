@@ -133,7 +133,7 @@ export function WatchlistSkeleton() {
           <Skeleton className="mt-3 h-8 w-56 sm:h-9" />
           <SkeletonText lines={2} className="mt-2 max-w-2xl" />
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonTile key={i} />
           ))}
