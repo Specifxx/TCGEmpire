@@ -3223,7 +3223,6 @@ jobs:
         if: inputs.task == 'probe-databases'
         env:
           P_RM12: ${{ secrets.RM12 || vars.RM12 }}
-          P_RM12: ${{ secrets.RM12 || vars.RM12 }}
           P_RM11: ${{ secrets.RM11 || vars.RM11 }}
           P_RM10: ${{ secrets.RM10 || vars.RM10 }}
           P_RM9: ${{ secrets.RM9 || vars.RM9 }}

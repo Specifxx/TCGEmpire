@@ -66,7 +66,11 @@ jobs:
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
-          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          # (A second, identical HISTORY_DATABASE_URL: line sat here until
+          #  2026-09-22 — same copy-paste as db-audit.yml. A duplicate key makes
+          #  GitHub refuse to parse the WHOLE workflow, so this file was
+          #  undispatchable; the copy above is kept. Caught by
+          #  tests/workflow-flag-polarity.test.ts.)
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
