@@ -33,7 +33,8 @@ on:
           - migrate-history  # Prisma-based top-up: copy PriceHistory/ClickEvent from EVERY older source into the newest history DB (tolerates unreadable sources, dedupes). Slower/more transfer than migrate-history-db — prefer that for the bulk copy.
           - migrate-history-db # LEGACY (RH6 → RH7 cutover, kept for reference): full pg_dump/restore of the HISTORY database (RH6) into RH7 + row-count verification.
           - migrate-history-db-to-hdu2 # LEGACY (HISTORY_DATABASE_URL → HISTORY_DATABASE_URL_2 cutover, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-hdu3 on 2026-08-19.
-          - migrate-history-db-to-hdu3 # LEGACY (HISTORY_DATABASE_URL_2 → HISTORY_DATABASE_URL_3 cutover, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-hdu4 on 2026-08-21.
+          - migrate-history-db-hdu2-to-hdu3 # CURRENT history cutover (2026-09-22): full pg_dump/restore of the live HISTORY_DATABASE_URL_2 project into HISTORY_DATABASE_URL_3 + row-count verification. HISTORY_DATABASE_URL_2 is approaching its 5 GB monthly transfer allowance five days into service. HISTORY_DATABASE_URL_3 is a RECYCLED name (last live 2026-08-19..08-21), re-verified live on 2026-09-22 per src/lib/db-chains.ts's rule: REACHABLE, rows=293,094, days=2026-06-06..2026-08-21, GLOBAL rows=0 — behind the source on every metric and predating the GLOBAL migration, i.e. genuinely rested and safe to wipe. Named with BOTH endpoints because the bare migrate-history-db-to-hdu3 below is the LEGACY 2026-08-19 cutover between the same two projects — do NOT run that one: its operational guard still names retired RM6, so it silently does not guard. RUN THIS BEFORE deploying the HISTORY_DATABASE_URL_3-first chain.
+          - migrate-history-db-to-hdu3 # LEGACY (HISTORY_DATABASE_URL_2 → HISTORY_DATABASE_URL_3 cutover, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-hdu4 on 2026-08-21. DO NOT RUN — superseded by migrate-history-db-hdu2-to-hdu3 (2026-09-22); this copy's "is the target actually the operational DB?" guard still names RM6, retired 2026-09-14, and an unset name makes that guard a no-op.
           - migrate-history-db-to-hdu4 # CURRENT history cutover: full pg_dump/restore of HISTORY_DATABASE_URL_3 into HISTORY_DATABASE_URL_4 + row-count verification. Rotates because HISTORY_DATABASE_URL_3 is over its 5 GB monthly transfer allowance. One lean COPY-format pass per table (not compression — Neon bills the pre-compression bytes), so it is the cheapest way to drain a project that is at/over its limit. RUN THIS BEFORE deploying the HISTORY_DATABASE_URL_4-first chain.
           - migrate-history-db-to-rh8 # LEGACY (HISTORY_DATABASE_URL_4 → RH8 cutover, 2026-08-23, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh9 on 2026-08-25.
           - migrate-history-db-to-rh9 # LEGACY (HISTORY RH8 → RH9 cutover, 2026-08-25, kept for reference): full pg_dump/restore + row-count verification. Superseded by migrate-history-db-to-rh10 on 2026-08-28 (RH9 reached its 5 GB monthly transfer allowance).
@@ -81,6 +82,7 @@ on:
           - probe-history    # READ-ONLY survey of PriceHistory across EVERY history project (HISTORY_DATABASE_URL_3 / _2 / HISTORY_DATABASE_URL / RH11 / RH10 / RH9 / RH8 / RH7 / RH6 / RH5 / HISTORY_DATABASE_URL_4): row counts, day ranges, per-country coverage, and — the number that actually matters — how many of each project's cardIds still resolve against the LIVE Card table. A project can be full of rows and still render empty charts if its cardIds belong to a retired operational database. RUN THIS FIRST when price history looks stale or a card's chart is blank.
           - probe-databases  # READ-ONLY survey of EVERY database in both rotations (RM5/RM4/RM3/DATABASE_URL_2/DATABASE_URL + RH7…RH5 + the older history vars): which ones still answer, and how many User/MarketplaceListing/Order/SellerProfile rows each holds. Writes nothing. RUN THIS FIRST when data appears to be missing — it tells you which source is worth restoring from.
           - restore-accounts-into-rm5 # copy ONLY the account/marketplace tables from a chosen source (source input: RM4/RM3/DATABASE_URL_2/DATABASE_URL/RH7/RH6/RH5) into RM5, leaving RM5's freshly-rebuilt Card/RetailerPrice catalogue untouched. Aborts before writing anything if the dump fails or the source holds no rows.
+          - migrate-main-db-rm12-to-rm3 # CURRENT operational cutover (2026-09-22): full pg_dump/restore of the live RM12 project into RM3 + all-table row-count verification + a schema re-push. RM12 is approaching its 5 GB monthly transfer allowance four days into service. RM3 is a RECYCLED project (the third this site used, rested since ~2026-08-04) so its allowance has long reset — run probe-databases first and confirm RM3 answers AND sits BEHIND RM12 on every metric, then this restore's --clean pass safely wipes that stale August snapshot. NOTE the owner first asked for DATABASE_URL as the target; the 2026-08-12 step below records why that name must not be rotated onto again ("THE MOST DANGEROUS NAME IN THIS REPO"), and RM3 was chosen instead. RUN THIS BEFORE deploying the RM3-only chain.
           - migrate-main-db-rm10-to-rm12 # CURRENT operational cutover (2026-09-18): full pg_dump/restore of the live RM10 project into RM12 + all-table row-count verification + a schema re-push. RM10 reached its 5 GB monthly transfer allowance after four days live. UNLIKE every cutover since RM6, RM12 is a genuinely NEW Neon project, not a recycled name — so its monthly allowance is untouched, where RM11 (the obvious rested candidate) is itself already at its limit from its 2026-08-29..09-03 term. A 2026-09-18 probe-databases run confirmed RM10 still REACHABLE and ahead of every other project on every metric (User=370, CollectionCard=1823, PriceAlert=213, RetailerPrice=131,599, Card=1431), so the data is drainable and this is a planned rotation rather than a recovery. Because the target is FRESH, its pre-restore inventory is expected to be empty/absent — that is the one place this differs from the recycled-target cutovers below, and it makes the schema re-push at the end load-bearing rather than belt-and-braces. RUN THIS BEFORE deploying the RM12-only chain.
           - migrate-main-db-to-rm9 # LEGACY (RM8 → RM9 cutover, 2026-08-23, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-to-rm10 on 2026-08-26.
           - migrate-main-db-to-rm10 # LEGACY (RM9 → RM10 cutover, 2026-08-26, kept for reference): full pg_dump/restore + all-table row-count verification + schema re-push. Superseded by migrate-main-db-to-rm11 on 2026-08-29.
@@ -103,7 +105,7 @@ on:
         type: boolean
         default: false
       overwrite_live_db:
-        description: "migrate-main-db-rm10-to-rm12/rm9-to-rm10/rm8-to-rm9/rm7-to-rm8/rm6-to-rm7/rm11-to-rm6/to-rm11/rm10/rm9/rm8/rm7/rm6/du2 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
+        description: "migrate-main-db-rm12-to-rm3/rm10-to-rm12/rm9-to-rm10/rm8-to-rm9/rm7-to-rm8/rm6-to-rm7/rm11-to-rm6/to-rm11/rm10/rm9/rm8/rm7/rm6/du2 and migrate-history-db-hdu2-to-hdu3 only: allow overwriting the database production is CURRENTLY serving (destructive — discards every write since the cutover)"
         type: boolean
         default: false
       ebay_sg:
@@ -660,6 +662,230 @@ jobs:
           echo "     set in Vercel — confirm it is ticked for Production, Preview"
           echo "     AND Development."
           echo "  3. Leave HISTORY_DATABASE_URL set as the rollback fallback; remove"
+          echo "     it only once the new target has been serving cleanly for a while."
+          echo "  4. This buys a fresh monthly allowance, not a fix. The burn rate is"
+          echo "     the real problem — grep the Vercel logs for [egress-guard:history];"
+          echo "     db-history.ts names getEmptyCardIds() as the first suspect."
+
+      - name: Migrate the HISTORY database (HISTORY_DATABASE_URL_2 → HISTORY_DATABASE_URL_3) — 2026-09-22 cutover
+        # CURRENT history cutover (2026-09-22). HISTORY_DATABASE_URL_2 is
+        # approaching its 5 GB monthly transfer allowance five days into
+        # service (cut over 2026-09-17) — the same terminal burn every history
+        # project in this rotation has shown.
+        #
+        # NAMED WITH BOTH ENDPOINTS, because a bare `migrate-history-db-to-hdu3`
+        # already exists below as the LEGACY 2026-08-19 cutover — the same
+        # source and the same target, three rotations ago. That one is kept for
+        # reference and must NOT be re-run: its operational-database guard
+        # still names RM6, retired since 2026-09-14, which means the guard is
+        # skipped entirely by its own `[ -n ... ]` test rather than failing
+        # loudly. This step is that task rebuilt with the guard pointed at the
+        # live project and a live-chain refusal added.
+        #
+        # ROTATING ONTO A RECYCLED PROJECT, AND RE-VERIFIED FRESH TODAY, which
+        # is db-chains.ts's standing rule for any recycled target: never trust
+        # findings from an earlier term. A 2026-09-22 probe-history run found:
+        #
+        #   SOURCE  HISTORY_DATABASE_URL_2  REACHABLE  rows=423,999
+        #           days=2026-06-06..2026-09-17  distinctCards=1426
+        #           GLOBAL rows=82,175  joinable against RM12: 1421/1426 (100%)
+        #
+        #   TARGET  HISTORY_DATABASE_URL_3  REACHABLE  rows=293,094
+        #           days=2026-06-06..2026-08-21  distinctCards=1423
+        #           GLOBAL rows=0   joinable against RM12: 1418/1423 (100%)
+        #
+        # Two things in the target's numbers say "genuinely rested, safe to
+        # wipe" rather than "something still in use". It sits BEHIND the source
+        # on every metric (293,094 vs 423,999 rows; latest day 2026-08-21 vs
+        # 2026-09-17). And it holds ZERO GLOBAL rows — the signature of a
+        # project whose last term predates the 2026-09-05 GLOBAL-history
+        # migration, exactly as every other pre-cutover history term has looked.
+        # The source's 82,175 GLOBAL rows are what this restore carries over.
+        #
+        # THE SOURCE STILL ANSWERS, so this is a planned rotation with the data
+        # fully drainable, not a recovery from a dead project. The DUMP is still
+        # the step most likely to fail (the source is the near-exhausted one);
+        # dump-before-truncate ordering below means every failure path leaves
+        # the target's contents intact.
+        #
+        # RE-RUNNABLE: truncates the target's three tables and re-copies, so
+        # every run is a full re-sync of the source's CURRENT state. Run it once
+        # for the bulk copy, then once more immediately before deploying the new
+        # chain, so anything the price importer wrote in between is included.
+        #
+        # THE TARGET'S SCHEMA IS STALE, not merely empty — _3 predates every
+        # migration since 2026-08-21. `prisma db push` below brings it up to the
+        # current schema before anything is restored, and the TRUNCATE after
+        # that clears the rows left from its previous term.
+        if: inputs.task == 'migrate-history-db-hdu2-to-hdu3'
+        env:
+          # SOURCE deliberately EXCLUDES HISTORY_DATABASE_URL_3 — that's the
+          # project we migrate TO. Resolving it with the _3-first chain used
+          # everywhere else would point source and target at the same database,
+          # and the migration would silently no-op while reporting every row
+          # count as matching. This is not hypothetical: the same trap is
+          # documented on migrate-main-db, and it is the specific reason
+          # db-history.ts tells you to grep the target name before rotating.
+          #
+          # HISTORY_DATABASE_URL_2 is the source because that is where the live
+          # data is: it served from 2026-08-16 until this cutover, so it holds
+          # every row written in that window. Pinned to that ONE variable rather
+          # than a fallback chain, so a missing secret fails loudly below instead
+          # of quietly dumping some older, half-drained project into the new one.
+          SOURCE_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          TARGET_HISTORY_URL: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+          # Only ever used for a "did HISTORY_DATABASE_URL_3 accidentally get set
+          # to the operational database?" guard before this step truncates anything.
+          #
+          # RM12, NOT RM6 (2026-09-22). The 2026-08-19 version of this step
+          # named RM6, which was the live operational project at the time and
+          # has been retired since 2026-09-14. A guard pointed at a retired
+          # name does not merely go stale, it silently stops guarding: RM6 is
+          # no longer set in Actions, so the comparison below was skipped
+          # entirely by its own `[ -n ... ]` test. This is the same class of
+          # drift src/lib/db-chains.ts was created to stop, which is why the
+          # name is pinned to the head of OPERATIONAL_VARS and
+          # tests/db-chain.test.ts now checks it.
+          OPERATIONAL_URL: ${{ secrets.RM12 || vars.RM12 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_HISTORY_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL_3 is not visible to Actions — add it under Settings → Secrets and variables → Actions (exact name HISTORY_DATABASE_URL_3)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_HISTORY_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL_2 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_HISTORY_URL" = "$TARGET_HISTORY_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database — HISTORY_DATABASE_URL_3 must be a different Neon project than HISTORY_DATABASE_URL_2. Aborting before doing anything."
+            exit 1
+          fi
+          if [ -n "${OPERATIONAL_URL:-}" ] && [ "$TARGET_HISTORY_URL" = "$OPERATIONAL_URL" ]; then
+            echo "::error::HISTORY_DATABASE_URL_3 resolves to the OPERATIONAL database. This step TRUNCATES its target — aborting rather than wiping production data."
+            exit 1
+          fi
+
+          # Neon runs a newer Postgres major than ubuntu-latest's stock pg_dump
+          # (16.x), and pg_dump refuses to dump from a server newer than itself.
+          # Install from PGDG's own apt repo rather than guessing a version.
+          # ── SAFETY: never overwrite the history database production is serving ─
+          # The operational migrations have carried this check since 2026-08-23;
+          # the history ones never did, purely because no history rotation had
+          # yet been re-run after its own cutover shipped. Reads db-chains.ts,
+          # the single source of truth, the same way.
+          FIRST_IN_CHAIN=$(sed -n '/^export const HISTORY_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which history database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "HISTORY_DATABASE_URL_3" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — HISTORY_DATABASE_URL_3 is LIVE. src/lib/db-chains.ts resolves it first, so it is the history database production is serving right now. This task TRUNCATES its target and would discard every snapshot written since the cutover. Nothing has been touched. If you truly intend this — a deliberate rollback — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::HISTORY_DATABASE_URL_3 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite."
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # Catalog statistics only — a few rows of metadata, NOT the tables. Tells
+          # us what this migration is about to cost before spending any allowance.
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_HISTORY_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 20;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Bringing the target's schema up to date (it is an OLD project — its schema predates recent migrations) =="
+          DATABASE_URL="$TARGET_HISTORY_URL" npx prisma db push --skip-generate --accept-data-loss
+
+          # LAST-LINE SAFETY GUARD, checked AFTER the schema exists and BEFORE any
+          # destructive statement: a history project holds no accounts. If "User"
+          # has rows, HISTORY_DATABASE_URL_3 is pointed at a real operational
+          # database and the TRUNCATE below would destroy production data.
+          USERS=$(psql "$TARGET_HISTORY_URL" -tAc 'SELECT COUNT(*) FROM public."User"' 2>/dev/null || echo "0")
+          case "$USERS" in ''|*[!0-9]*) USERS=0;; esac
+          if [ "$USERS" -gt 0 ]; then
+            echo "::error::Target has $USERS rows in public.\"User\" — that is an OPERATIONAL database, not a history project. Refusing to truncate. Check what the HISTORY_DATABASE_URL_3 secret is set to."
+            exit 1
+          fi
+          echo "Target public.\"User\" rows: 0 ✓ (confirmed history-only project)"
+
+          # DUMP BEFORE TRUNCATE, always — if the source refuses reads (fully
+          # exhausted), we must not have already destroyed the target's contents.
+          echo "== Dumping Card + ClickEvent + PriceHistory from the source (compressed) =="
+          if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -f history.dump; then
+            echo "::error::Could not read HISTORY_DATABASE_URL_2. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts and the Index rebuild from the next price import onward). Nothing was written to the target."
+            exit 1
+          fi
+          echo "Dump size: $(du -h history.dump | cut -f1)"
+
+          echo "== Clearing the target's history tables for a clean re-sync =="
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+
+          # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
+          # rows must land first or every COPY fails the FK. pg_restore replays
+          # archive entries in the order pg_dump wrote them (alphabetical: Card,
+          # ClickEvent, PriceHistory) which is coincidentally correct — but relying
+          # on alphabetical luck is not a design. Restore Card explicitly first.
+          # The dump file is LOCAL, so this second pass costs zero source transfer.
+          echo "== Restoring Card (the FK parent) =="
+          pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
+          echo "== Restoring ClickEvent + PriceHistory =="
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+
+          echo "== Verifying row counts (source vs target) =="
+          # COUNT(*) transfers a single integer per table rather than re-reading
+          # data — do NOT "verify" by re-reading rows; an earlier version of the
+          # migrate-main-db job did that and burned the allowance it was saving.
+          # set +e so every count is attempted and every error is PRINTED rather
+          # than swallowed into a command substitution.
+          set +e
+          MISMATCH=0
+          for T in 'public."Card"' 'public."ClickEvent"' 'public."PriceHistory"'; do
+            SRC=$(psql "$SOURCE_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_HISTORY_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch — do NOT deploy the HISTORY_DATABASE_URL_3-first chain yet. Re-run this task, or inspect the pg_restore output above."
+            exit 1
+          fi
+          echo "All tables match — HISTORY_DATABASE_URL_3 now holds a full copy of the history data."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything the"
+          echo "     price importer wrote to HISTORY_DATABASE_URL_2 in the meantime"
+          echo "     is included."
+          echo "  2. src/lib/db-history.ts, scripts/build-db-push.sh and the workflow"
+          echo "     chains now put HISTORY_DATABASE_URL_3 FIRST, so a deploy moves"
+          echo "     history reads/writes onto it. Confirm HISTORY_DATABASE_URL_3 is"
+          echo "     set in Vercel for Production, Preview AND Development."
+          echo "  3. Leave HISTORY_DATABASE_URL_2 set as the rollback fallback; remove"
           echo "     it only once the new target has been serving cleanly for a while."
           echo "  4. This buys a fresh monthly allowance, not a fix. The burn rate is"
           echo "     the real problem — grep the Vercel logs for [egress-guard:history];"
@@ -2997,6 +3223,7 @@ jobs:
         if: inputs.task == 'probe-databases'
         env:
           P_RM12: ${{ secrets.RM12 || vars.RM12 }}
+          P_RM12: ${{ secrets.RM12 || vars.RM12 }}
           P_RM11: ${{ secrets.RM11 || vars.RM11 }}
           P_RM10: ${{ secrets.RM10 || vars.RM10 }}
           P_RM9: ${{ secrets.RM9 || vars.RM9 }}
@@ -3080,7 +3307,15 @@ jobs:
 
           echo ""
           echo "===== OPERATIONAL ROTATION (current first) ====="
-          probe "RM10 (current)"       "${P_RM10:-}" || true
+          # LABELS DRIFT, AND A WRONG ONE HERE IS WORSE THAN NONE: this line read
+          # "RM10 (current)" until 2026-09-22, four days after RM10 was retired for
+          # RM12, and RM12 was not probed at all — so the one task whose job is to
+          # answer "which database is live and what does it hold" pointed at the
+          # wrong one. Same class of drift src/lib/db-chains.ts exists to stop.
+          # Which name is current is written down in exactly one place; read it
+          # there rather than hard-coding a guess in this label again.
+          probe "RM12 (current)"       "${P_RM12:-}" || true
+          probe "RM10 (retired)"       "${P_RM10:-}" || true
           probe "RM9 (retired)"        "${P_RM9:-}" || true
           probe "RM8 (retired)"        "${P_RM8:-}" || true
           probe "RM7 (retired)"        "${P_RM7:-}" || true
@@ -3093,7 +3328,8 @@ jobs:
           probe "RM3"                  "${P_RM3:-}" || true
           echo ""
           echo "===== HISTORY ROTATION (may carry a full early copy) ====="
-          probe "HISTORY_DATABASE_URL (current)" "${P_HISTORY_DATABASE_URL:-}" || true
+          # Also drifted: HISTORY_DATABASE_URL was superseded by _2 on 2026-09-17.
+          probe "HISTORY_DATABASE_URL (rollback)" "${P_HISTORY_DATABASE_URL:-}" || true
           probe "RH10 (rollback)"      "${P_RH10:-}" || true
           probe "HISTORY_DATABASE_URL_4" "${P_HISTORY_DATABASE_URL_4:-}" || true
           probe "HISTORY_DATABASE_URL_3" "${P_HISTORY_DATABASE_URL_3:-}" || true
@@ -3463,6 +3699,260 @@ jobs:
           echo "     Production, Preview AND Development."
           echo "  3. Leave RM5 set as the rollback fallback; remove it only once the"
           echo "     original project has been serving cleanly for a while."
+
+      - name: Migrate main (operational) database to RM3
+        # CURRENT operational cutover (2026-09-22). RM12 is approaching its 5 GB
+        # monthly transfer allowance four days into service (cut over
+        # 2026-09-18) — the same ~2 GB/day burn that has ended every project in
+        # this rotation, and the THIRD full project life since the 2026-09-11
+        # deploy-cadence gate. Run audit-egress against RM3 a few hours after
+        # cutover: a rested project buys time, it is not a fix.
+        #
+        # RM3 replaces it, still as a SINGLE name — after this,
+        # src/lib/db-chains.ts's OPERATIONAL_VARS holds RM3 alone. See the long
+        # note there for why the chain shape stays one name.
+        #
+        # WHY RM3 AND NOT "DATABASE_URL", WHICH IS WHAT WAS FIRST ASKED FOR.
+        # The owner's original instruction on 2026-09-22 was to cut over onto
+        # the DATABASE_URL secret. This file already carries the verdict of the
+        # one time that was done (2026-08-12, the "Migrate main (operational)
+        # database to DATABASE_URL (the original project)" step below):
+        # "DATABASE_URL IS THE MOST DANGEROUS NAME IN THIS REPO TO ROTATE ONTO
+        # … If there is a next rotation, give the project a fresh name (RM6)
+        # rather than recycling the generic one." The reason is unchanged:
+        # prisma/schema.prisma reads env("DATABASE_URL") directly, nearly every
+        # script assigns DATABASE_URL=<something> to aim Prisma, and this
+        # workflow's own job-level env assigns it too — so the name would mean
+        # both "whichever database this process should talk to" and "the
+        # specific project at the head of the chain", and in production those
+        # coincide, which is exactly what makes a mistake there silent. Raised
+        # with the owner, who chose RM3 instead. Every rotation since RM6 has
+        # followed that same advice; this one does too.
+        #
+        # RM3 IS A RECYCLED PROJECT — the third operational project this site
+        # ever used, live until ~2026-08-04 and rested ever since, so its
+        # monthly allowance has long reset. That makes db-chains.ts's rule
+        # apply in full: A RECYCLED TARGET MUST BE RE-VERIFIED EACH TIME IT
+        # COMES BACK AROUND, never trusted from findings taken during an
+        # earlier term. Run probe-databases first and confirm RM3 both ANSWERS
+        # and sits BEHIND RM12 on every metric; the pre-restore inventory below
+        # prints its contents for exactly that judgement, and --clean then
+        # safely wipes the stale August snapshot before writing RM12 over it.
+        #
+        # A 2026-09-22 probe-history run established the operational side
+        # indirectly and the history side directly: RM12 answered with 1,432
+        # Card rows, so the source is live and drainable — a planned rotation,
+        # not a recovery from a dead project.
+        #
+        # SOURCE IS RM12, THE CURRENTLY LIVE PROJECT, AND IT IS NEAR ITS LIMIT.
+        # That makes the DUMP the step most likely to fail here, not the
+        # restore. Every failure path below leaves RM3 untouched and a partial
+        # dump is never restored, so a mid-stream death is recoverable: re-run
+        # once the allowance resets, or pick a different rested target. Pinned
+        # by NAME on both ends, deliberately NOT using the job-level
+        # DATABASE_URL default — reusing that default here would point source
+        # and target at the same database once the cutover ships, and the
+        # migration would silently no-op while reporting every row count as
+        # matching.
+        #
+        # RUN THIS BEFORE the commit that flips OPERATIONAL_VARS to ["RM3"]
+        # ships, not after. Deploying that flip while RM3 still holds only its
+        # August snapshot is the 2026-08-22 outage shape: a stale database
+        # serves no error, it serves a site with the wrong catalogue and
+        # missing accounts. A database can only be promoted once it already
+        # holds the data traffic is about to depend on.
+        #
+        # THE SCHEMA RE-PUSH AT THE END IS LOAD-BEARING. RM3's own schema
+        # predates roughly seven weeks of migrations; the restore brings
+        # RM12's, and the push then guarantees it matches the deployed code.
+        #
+        # PriceHistory/ClickEvent DATA is excluded (schema kept): those are
+        # served from the history project, and copying them would spend RM12's
+        # already-strained transfer allowance on rows this database does not
+        # serve.
+        #
+        # Read-only against the source — safe to re-run. Each run fully
+        # re-syncs the target from the source's CURRENT state, so run it once
+        # for the bulk copy and again immediately before cutting traffic over.
+        if: inputs.task == 'migrate-main-db-rm12-to-rm3'
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          TARGET_DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "$TARGET_DATABASE_URL" ]; then
+            echo "::error::RM3 is not visible to Actions — the Neon project may exist and be set in Vercel, but this migration runs in GitHub Actions and needs its OWN secret there. Add it under Settings → Secrets and variables → Actions (exact name RM3)."
+            exit 1
+          fi
+          if [ -z "$SOURCE_DATABASE_URL" ]; then
+            echo "::error::RM12 is not visible to Actions — nothing to migrate FROM."
+            exit 1
+          fi
+          if [ "$SOURCE_DATABASE_URL" = "$TARGET_DATABASE_URL" ]; then
+            echo "::error::SOURCE and TARGET resolve to the SAME database. RM3 must point at a DIFFERENT Neon project than RM12. Aborting before doing anything."
+            exit 1
+          fi
+
+          echo "== Installing PostgreSQL client tools from PGDG (matching Neon's server version) =="
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -sSf -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          export PATH="/usr/lib/postgresql/18/bin:$PATH"
+          pg_dump --version; psql --version
+
+          # ── SAFETY: never overwrite the database production is serving ──────
+          # READS db-chains.ts, NOT db.ts — db.ts delegates to
+          # resolveUrl(OPERATIONAL_VARS) and holds no process.env reference of
+          # its own, so parse the head of OPERATIONAL_VARS straight out of the
+          # single source of truth (tests/db-chain.test.ts keeps it honest).
+          FIRST_IN_CHAIN=$(sed -n '/^export const OPERATIONAL_VARS =/,/;/p' src/lib/db-chains.ts \
+            | grep -oE '"[A-Z_0-9]+"' | head -1 | tr -d '"')
+          if [ -z "${FIRST_IN_CHAIN:-}" ]; then
+            echo "::error::could not determine which database is live from src/lib/db-chains.ts. Refusing to run a destructive migration blind."
+            exit 1
+          fi
+          echo "Chain in src/lib/db-chains.ts resolves first: ${FIRST_IN_CHAIN:-<could not parse>}"
+          if [ "$FIRST_IN_CHAIN" = "RM3" ]; then
+            if [ "${{ inputs.overwrite_live_db }}" != "true" ]; then
+              echo "::error::REFUSING TO RUN — RM3 is LIVE. src/lib/db-chains.ts resolves it first, so it is the database production is serving right now. This task would restore RM12 over it and discard every row written since the cutover. Nothing has been touched. If you truly intend this — a deliberate rollback to the old project — re-run with overwrite_live_db = true."
+              exit 1
+            fi
+            echo "::warning::RM3 is LIVE and overwrite_live_db was set. Proceeding with a DESTRUCTIVE overwrite of production data."
+          fi
+
+          echo "== Can the source still be reached at all? =="
+          if ! psql "$SOURCE_DATABASE_URL" -tAc "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::the SOURCE project is unreachable — most likely its transfer allowance is spent, so there is nothing to dump FROM. RM3 has NOT been touched. Run probe-databases to see which projects still answer."
+            exit 1
+          fi
+          echo "Source answered — proceeding."
+
+          # RM3's pre-restore contents, for the record. RM3 IS A RECYCLED
+          # PROJECT — the third operational project this site ever used,
+          # retired since ~2026-08-04 — so unlike the RM12 cutover this
+          # replaced, real but ancient row counts here are the EXPECTED
+          # answer, not a warning. What matters is that they sit far BEHIND
+          # the source on every metric: that is the signature of a genuinely
+          # rested project rather than something still in use. --clean below
+          # then wipes all of it.
+          #
+          # STOP AND LOOK if any of these comes back AHEAD of RM12's own
+          # numbers (printed by probe-databases, and by the verification
+          # below). A "rested" project holding MORE rows than the live one is
+          # not rested — it is something else, and --clean would destroy it.
+          #
+          # `|| true` per iteration: a target with no schema at all must not
+          # kill this step under `bash -e {0}` before a single byte is restored.
+          echo "== What RM3 (TARGET) holds BEFORE we restore (expected: a stale, far-behind August snapshot — it is a RECYCLED project) =="
+          for T in 'public."User"' 'public."Card"' 'public."MarketplaceListing"' 'public."Order"'; do
+            N=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>/dev/null | tr -d ' \n') || true
+            case "$N" in ''|*[!0-9]*) N="(absent — table missing or unreadable)";; esac
+            echo "  target $T: $N"
+          done
+
+          echo "== Source table sizes (from catalog — negligible transfer) =="
+          psql "$SOURCE_DATABASE_URL" -P pager=off -c "
+            SELECT relname AS table,
+                   to_char(n_live_tup, 'FM999,999,999') AS est_rows,
+                   pg_size_pretty(pg_total_relation_size(relid)) AS total_size
+            FROM pg_stat_user_tables
+            ORDER BY pg_total_relation_size(relid) DESC
+            LIMIT 40;" 2>&1 || echo "(size report unavailable — continuing)"
+
+          echo "== Dumping the operational database (schema + data) =="
+          if ! pg_dump "$SOURCE_DATABASE_URL" --no-owner --no-acl --format=custom \
+            --exclude-table-data='public."PriceHistory"' \
+            --exclude-table-data='public."ClickEvent"' \
+            -f main.dump; then
+            echo "::error::pg_dump FAILED against the SOURCE project — almost certainly RM12's transfer allowance dying mid-stream. RM3 has NOT been touched; a partial dump is never restored."
+            exit 1
+          fi
+          echo "Dump size: $(du -h main.dump | cut -f1)"
+          # Captured into a variable, not piped straight into grep -q: `grep -q`
+          # exits the instant it finds a match, closing its end of the pipe
+          # while pg_restore -l may still be writing — which pg_restore (18.6)
+          # reports as a hard error ("could not close file: Broken pipe") and
+          # a non-zero exit, so `pipefail` failed this check even when the
+          # dump was complete. Non-deterministic: depends on how much of the
+          # listing had been written before grep was satisfied, which is why
+          # this passed on identical code moments earlier and then failed here.
+          DUMP_TOC=$(pg_restore -l main.dump)
+          for T in User Card MarketplaceListing; do
+            if ! grep -qE "TABLE DATA public ${T} " <<<"$DUMP_TOC"; then
+              echo "::error::the dump has no data section for table $T — it is incomplete. RM3 has NOT been touched."
+              exit 1
+            fi
+          done
+          echo "Dump contains a data section for every expected table — proceeding to restore."
+
+          echo "== Restoring into RM3 (a RECYCLED project — --clean/--if-exists DROPS its stale August schema and data first) =="
+          set +e
+          pg_restore --no-owner --no-acl --clean --if-exists --verbose -d "$TARGET_DATABASE_URL" main.dump > restore.log 2>&1
+          RC=$?
+          set -e
+          echo "pg_restore exit code: $RC — non-zero here is often just harmless ownership/extension warnings on managed Postgres; the row-count check below is the real verification."
+          echo "-- restore.log (first 40 lines) --"; head -40 restore.log
+          echo "-- restore.log (last 20 lines) --"; tail -20 restore.log
+
+          echo "== Target inventory after restore =="
+          psql "$TARGET_DATABASE_URL" -c "SELECT current_database(), current_user" -c "\dn" -c "\dt public.*" 2>&1 | head -60
+
+          echo "== Verifying row counts (RM12 source vs RM3 target) =="
+          sleep 3
+          set +e
+          TABLES=$(psql "$SOURCE_DATABASE_URL" -tAc \
+            "SELECT quote_ident(tablename) FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('PriceHistory','ClickEvent') ORDER BY tablename")
+          if [ -z "$TABLES" ]; then
+            echo "::error::could not enumerate source tables — refusing to report an unverified migration as verified."
+            exit 1
+          fi
+          echo "Verifying $(printf '%s\n' "$TABLES" | wc -l) tables."
+          MISMATCH=0
+          for T in $(printf 'public.%s\n' $TABLES); do
+            SRC=$(psql "$SOURCE_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            DST=$(psql "$TARGET_DATABASE_URL" -tAc "SELECT COUNT(*) FROM $T" 2>&1)
+            case "$SRC" in ''|*[!0-9]*) echo "$T source query FAILED: $SRC"; MISMATCH=1; continue;; esac
+            case "$DST" in ''|*[!0-9]*) echo "$T target query FAILED: $DST"; MISMATCH=1; continue;; esac
+            if [ "$SRC" = "$DST" ]; then
+              echo "$T: source=$SRC target=$DST ✓"
+            else
+              echo "$T: source=$SRC target=$DST ✗ MISMATCH"
+              MISMATCH=1
+            fi
+          done
+          set -e
+          echo "(PriceHistory + ClickEvent intentionally not copied — served from the history project.)"
+          if [ "$MISMATCH" = "1" ]; then
+            echo "::error::Row-count mismatch on at least one table — do NOT deploy the RM3-only chain yet."
+            exit 1
+          fi
+          echo "All verified tables match — RM3 now holds a full copy of the operational data."
+
+          # ── RE-ALIGN THE SCHEMA TO THE DEPLOYED CODE ────────────────────────
+          echo ""
+          echo "== Re-aligning TARGET schema to this ref's prisma/schema.prisma =="
+          DIRECT_TARGET_URL="${TARGET_DATABASE_URL/-pooler/}"
+          if ! DATABASE_URL="$DIRECT_TARGET_URL" npx prisma db push --skip-generate --accept-data-loss; then
+            echo "::error::schema push against RM3 FAILED. The data is copied, but its schema may be older than the deployed code (that is how a restore silently drops a just-added column). Do NOT deploy until this succeeds."
+            exit 1
+          fi
+          echo "TARGET schema now matches this ref."
+          echo ""
+          echo "NEXT STEPS:"
+          echo "  1. Re-run this task immediately before deploying, so anything written"
+          echo "     to RM12 in the meantime (signups, orders, price imports) is included."
+          echo "  2. Ship the commit that sets OPERATIONAL_VARS = [\"RM3\"] in"
+          echo "     src/lib/db-chains.ts (and the matching CURRENT_OP in"
+          echo "     scripts/build-db-push.sh, and every workflow's DATABASE_URL"
+          echo "     default) — that is the actual cutover; this task alone does not"
+          echo "     move traffic. Confirm RM3 is set in Vercel for Production,"
+          echo "     Preview AND Development first."
+          echo "  3. THE BURN RATE IS STILL UNEXPLAINED. A new project buys time, not"
+          echo "     a fix — run audit-egress a few hours after cutover and fix the"
+          echo "     query it names (see the note on RetailerPrice in src/lib/db.ts)."
 
       - name: Migrate main (operational) database to RM12
         # CURRENT operational cutover (2026-09-18). RM10 reached its 5 GB
