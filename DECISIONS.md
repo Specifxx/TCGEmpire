@@ -10679,3 +10679,45 @@ covered twelve routes, none of them under `/tools`. Both tool pages carrying
 `RegionToggle` are now in it. That is the same shape as the note already in that
 file about the 640–790px tablet band: the audit missed a regression because of
 where it was not looking, not because of what it was not measuring.
+
+## Seraphine's Radiance Legend: a leak we finally quote, and one we did NOT catalogue — 2026-09-22
+
+A leak surfaced of Seraphine's **Legend** card, *Starry-Eyed Songstress*, in two
+printings (RAD 151/167 promo, art Naifan Zhang; and an over-numbered 174/167,
+art Anna Nikonova, shown in a card-artist feature). New blog post
+`riftbound-seraphine-radiance-spoiler`, plus consistency edits to the tracker and
+the leaked-mechanics post. Two non-obvious calls:
+
+**Why we now quote a Seraphine Legend we spent September refusing to.** The
+tracker and the mechanics-leak post both say, on the record, that we would not
+reproduce the anonymous social-media text for Seraphine's and Evelynn's Legends,
+because it had no provenance. This leak is a *photographed physical card* with a
+collector number, an artist credit and a ©2026 RGI line — the exact provenance
+bar the Neeko-in-print card cleared six days earlier — and its wording *matches*
+the text that leaked, so the two corroborate. Quoting it from the photograph,
+not the post, is consistent with that earlier stance rather than a reversal; the
+stale "we won't reproduce it" lines in both posts were updated to say so, or the
+site would contradict itself.
+
+**Why the leaked cards were NOT added to `manual-cards.json`.** Tempting, because
+Neeko was — but Neeko shipped only because *every field was read or verified*,
+and here two REQUIRED fields cannot be. The Legend's **domain** is a dual gem
+read off a screenshot (this site's standing rule, per
+`riftbound-radiance-what-we-know`, is to never guess a domain — a wrong one drives
+purchase decisions and mis-filters `/browse`), and neither card's **rarity** is
+legible. A wrong `domain`/`rarity` propagates to facet pages, filters and the
+price matcher, so a half-known row is worse than none. The post therefore uses
+the ONE Seraphine card already in the catalogue — *Not Alone*, the T1 printing
+`T1S-005/005` (Order, 5/1), verified — for its single live embed, and presents
+the Legend and the RAD 138/167 *Not Alone* printing in prose/stat-tables only.
+The leak's one new datum on *Not Alone* is its printed Radiance number, 138/167.
+
+**Title deliberately omits "Radiance."** `tests/radiance-spoiler-tracker.test.ts`
+pins exactly one article with both "radiance" and "spoiler" in its title (the
+tracker owns that query per `docs/seo-keyword-map.md`). This post owns the
+*Seraphine-specific* reveal intent instead — the Neeko row's template — so the
+title carries "Seraphine"/"Spoiler"/the card name, and "Radiance" lives in the
+meta description and body, where it still ranks for "seraphine radiance" without
+colliding.
+
+No `[deploy]` marker: ordinary content, rides the daily 08:00 UTC release.
