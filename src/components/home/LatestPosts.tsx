@@ -64,16 +64,33 @@ export function LatestPosts({
                 don't have one yet; see scripts/gen-blog-heroes.ts) gets a plain
                 branded placeholder, never a missing/broken image, and every
                 card in the row stays the same height. */}
+            {/* ABSOLUTELY POSITIONED, AND THAT IS LOAD-BEARING (2026-09-22).
+                Reported as "the website is way too small for phone"; /au
+                measured 608px wide on a 390px phone and Chrome for Android
+                answers content wider than the viewport by widening the LAYOUT
+                viewport and scaling the whole page down — then remembering
+                that zoom per site, so every page looks shrunken afterwards.
+
+                The image was in normal flow at its intrinsic 600px. Its
+                `w-full` resolves against the nearest block box, and the
+                aspect-ratio box's real child is a wrapper with no width of its
+                own, so on a real phone (reproduces at devicePixelRatio 2, not
+                at 1 — which is why a desktop browser at 390px looks fine) the
+                intrinsic width won and the page grew by 218px.
+
+                `absolute inset-0` inside the `relative` aspect box takes the
+                image out of flow completely, so it cannot contribute to any
+                ancestor's width under any srcset, DPR or CSS-timing condition.
+                A width utility can lose; being out of flow cannot. */}
             <div className="relative aspect-[1.91/1] w-full shrink-0 overflow-hidden bg-ink-900">
               {p.hero ? (
                 <Image
                   src={p.hero.src}
                   alt={p.hero.alt}
-                  width={600}
-                  height={314}
+                  fill
                   sizes="(max-width: 640px) 100vw, 33vw"
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-ink-800 to-ink-900" aria-hidden="true">

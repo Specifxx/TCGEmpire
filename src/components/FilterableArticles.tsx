@@ -284,12 +284,19 @@ function ArticleCard({
           the homepage teaser row already uses for consistency. */}
       {a.hero && (
         <div className="relative aspect-[1.91/1] w-full shrink-0 overflow-hidden bg-ink-900">
+          {/* wrapperClassName, not just className: Picture renders
+              <picture><img/></picture>, and it is the PICTURE that is the aspect
+              box's child. Left unstyled it is display:inline with no width of
+              its own, so the img's `w-full` had nothing definite to resolve
+              against and fell back to its intrinsic 744px. Same fault and same
+              fix as LatestPosts — see the note there for the measurement. */}
           <Picture
             src={a.hero.src}
             alt={a.hero.alt}
             width={744}
             height={1039}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            wrapperClassName="absolute inset-0 block h-full w-full"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>

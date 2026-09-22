@@ -10721,3 +10721,44 @@ meta description and body, where it still ranks for "seraphine radiance" without
 colliding.
 
 No `[deploy]` marker: ordinary content, rides the daily 08:00 UTC release.
+
+## The mobile zoom-out had a second cause: hero images sizing themselves — 2026-09-22
+
+The RegionToggle fix earlier today was real but did not clear the report. The
+screenshot that followed was of `/au` — a market landing page never measured,
+and never in `scripts/mobile-check.ts`'s path list either.
+
+`/au` laid out **608px wide at a 390px viewport**, `window.innerWidth` reading
+608 rather than 390: Chrome for Android had widened the layout viewport to fit
+the content and scaled the page down, then persisted that zoom for the site.
+
+Four blog-teaser hero images were sitting in normal flow at their **intrinsic**
+width (600px in `LatestPosts`, 744px in `FilterableArticles`) instead of filling
+their `aspect-[1.91/1]` box. `w-full` on the `<img>` resolves against the nearest
+block box, and the box's actual child is a wrapper with no width of its own —
+`<picture>` is `display: inline`, and next/image emits its own span — so the
+percentage had nothing definite to resolve against and the intrinsic width won.
+
+**It reproduces about one load in three, and only at devicePixelRatio 2.** That
+is why the first sweep of `/` and `/browse` came back clean at exactly 390, why a
+desktop browser resized to phone width never shows it, and why two verification
+runs in a row looked fine before the third caught it. Measuring once and calling
+it clean was not good enough here.
+
+Fixed by taking the image out of flow: `fill` on the next/image, and
+`wrapperClassName="absolute inset-0 block h-full w-full"` on the `Picture` — the
+`<picture>` is the element that needed positioning, not the `<img>` inside it.
+Verified by reproducing the 608px state in a live page and applying exactly this
+change: **608 → 390**, `innerWidth` back to 390.
+
+The durable rule, now pinned by `tests/hero-image-fit.test.ts`: an image inside a
+fixed-aspect box must be OUT OF FLOW. A width utility can fail to resolve;
+`position: absolute` cannot contribute to an ancestor's width under any srcset,
+DPR or CSS-timing condition.
+
+Two process notes worth keeping. An earlier `mobile-check` run in this session
+reported exactly this — "document is 608px wide", four `img.h-full.w-full`
+overflows — and it was dismissed as corrupt because that run had collided with a
+concurrent browser and crashed. The crash was real; the measurement was not
+wrong. And `/au` and its sibling market pages are still absent from the audit's
+path list, which is the same blind-spot pattern as `/tools/*` this morning.
