@@ -319,8 +319,35 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   assert.doesNotMatch(dialog, /const FEATURES\s*:/, "the dialog's hand-written perk list is superseded by the table");
 
   // Rows that are neither a flat yes nor a flat no stay strings — rounding
-  // "Top pick" up to a tick would overstate the free tier.
-  assert.match(shared, /anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list"/);
+  // "Full list" up to a plain tick would lose the Plus-vs-Premium distinction
+  // this table exists to draw.
+  assert.match(shared, /account: false, plus: "Full list", premium: "Full list"/);
+
+  // THE FREE COLUMN ON THESE TWO IS false, NOT "Top pick" (2026-09-22). Deal
+  // Finder and Rising Cards stopped giving a free teaser away — both pages run
+  // no query at all below a paid tier — so a "Top pick" string here would be
+  // advertising something the site no longer does. This is the assertion that
+  // fails if the gate is loosened without the pricing page being told.
+  for (const feature of ["Deal Finder", "Rising Cards"]) {
+    assert.match(
+      shared,
+      new RegExp(`\\{ feature: "${feature}", account: false,`),
+      `${feature} must not advertise a free teaser`,
+    );
+  }
+  // Matched against the ROWS, not the file: the comment above them explains the
+  // removal and necessarily quotes the old string.
+  assert.doesNotMatch(
+    shared.slice(shared.indexOf("TIER_COMPARISON: TierRow[]"), shared.indexOf("export function TierCell")).replace(/\/\/[^\n]*/g, ""),
+    /"Top pick"/,
+    "no row may still promise a free top pick",
+  );
+
+  // The "No account" column was removed on 2026-09-22 — signed-out and free
+  // differ on two rows, which is the signup popup's job (FreeAccountCompare),
+  // not the pricing page's.
+  assert.doesNotMatch(shared, /\banon\b/, "the anon column must stay gone");
+  assert.doesNotMatch(shared, /No account/, "the No account header must stay gone");
 });
 
 test("every dialog-only row override names a row that actually exists", async () => {

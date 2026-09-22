@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { getArticles } from "../src/lib/articles";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deal Finder and Rising Cards give a signed-out visitor and a free account
@@ -82,6 +83,36 @@ test("gating the tables did not leave Deal Finder thin", () => {
   assert.ok(words >= 150, `explainer is ${words} words — under the thin-content floor on its own`);
   assert.match(src, /DEAL_FAQS\.map\(\(f\) => \(/, "the explainer must be rendered visibly");
   assert.match(src, /"@type": "FAQPage"[\s\S]{0,120}mainEntity: DEAL_FAQS\.map\(/, "schema must read the same array");
+});
+
+test("the Premium explainer's tier table matches the gate and drops the anon column", () => {
+  // The article carries its own markdown copy of the tier table. It is the one
+  // place a reader lands from search rather than from the pricing page, and it
+  // had drifted twice: it still promised Deal Finder and Rising Cards "Top
+  // pick" to free accounts after the 2026-09-22 gate change, and its ad-free
+  // row still gave Plus a tick nine days after ad-free became Premium-only.
+  const article = getArticles().find((a) => a.slug === "riftcompare-premium-explained");
+  assert.ok(article, "expected the Premium explainer article");
+  const rows = article!.body.split("\n").filter((l) => l.trim().startsWith("| "));
+  assert.ok(rows.length > 10, `expected the tier table, found ${rows.length} table rows`);
+
+  // "No account" column removed 2026-09-22 — every row is Feature + 3 tiers.
+  assert.ok(!rows[0].includes("No account"), "the No account column must be gone from the header");
+  for (const r of rows) {
+    assert.equal(r.split("|").length - 2, 4, `row has the wrong number of cells: ${r}`);
+  }
+
+  const cellsFor = (feature: string) => {
+    const row = rows.find((r) => r.startsWith(`| ${feature} |`));
+    assert.ok(row, `expected a "${feature}" row`);
+    return row!.split("|").slice(2, -1).map((c) => c.trim());
+  };
+  // [free, plus, premium]
+  for (const feature of ["Deal Finder", "Rising Cards"]) {
+    assert.equal(cellsFor(feature)[0], "—", `${feature} must show nothing for a free account`);
+  }
+  assert.equal(cellsFor("Rising Sealed")[0], "Top pick", "Rising Sealed still gives a free top pick");
+  assert.deepEqual(cellsFor("Ad-free experience"), ["—", "—", "✓"], "ad-free is Premium-only");
 });
 
 test("the Premium page's pitch for each tool matches what it now shows", () => {

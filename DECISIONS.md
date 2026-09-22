@@ -10762,3 +10762,47 @@ overflows — and it was dismissed as corrupt because that run had collided with
 concurrent browser and crashed. The crash was real; the measurement was not
 wrong. And `/au` and its sibling market pages are still absent from the audit's
 path list, which is the same blind-spot pattern as `/tools/*` this morning.
+---
+
+## The pricing page loses the "No account" column, and two rows that had gone stale — 2026-09-22
+
+Follow-up to the gate change above, and a correction of my own making. Cutting
+the free teaser from Deal Finder and Rising Cards left the tier comparison
+advertising something the site no longer does: both tools still read **"Top
+pick"** in the signed-out and free-account columns, on `/premium`, in the
+Premium upsell dialog, and in the Premium explainer article. A pricing page
+promising a teaser that no longer exists is worse than one that promises
+nothing.
+
+Fixed at the source — `TIER_COMPARISON` is the single array both surfaces
+render — and separately in the article, which carries its own markdown copy of
+the same table.
+
+**The "No account" column is gone**, at the owner's call. It had four columns
+doing the work of three: signed-out and free-account differed on exactly two
+rows (price alerts, portfolio), and a reader deciding whether to *pay* does not
+need that distinction spelled out. The signed-out pitch has its own surface —
+`FreeAccountCompare`, in the signup popup, whose entire job is "no account vs
+free account" — and that is where the comparison belongs. The upsell dialog had
+already dropped the column for space, so both surfaces now agree rather than
+showing different tables.
+
+**Two stale claims surfaced while the table was open**, neither caused by this
+week's work:
+
+- The article's ad-free row still gave **Plus** a tick, nine days after ad-free
+  moved to Premium-only (2026-09-14). It also still had five cells after the
+  column was removed, so it would have rendered as a broken row.
+- The article's prose and summary both said Plus "unlocks the full lists **and
+  an ad-free site**". Ad-free is Premium's.
+
+**Not changed: Plus keeps both tools.** The instruction was that no-account and
+free-account lose them, which is what shipped last night; Plus and Premium are
+unaffected, and their columns still read "Full list". Rising Sealed still gives
+a free top pick and every surface still says so.
+
+`tests/premium-no-free-top-pick.test.ts` now parses the article's markdown table
+— column count, the free cell for each tool, Rising Sealed's surviving top pick,
+and the ad-free row — because that table is the one a reader reaches from search
+rather than from the pricing page, and it had drifted twice without anything
+failing.

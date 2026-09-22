@@ -9101,7 +9101,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     summary: [
       "**RiftCompare now has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 14-day free trial and cancel-anytime billing through Stripe.",
-      "**Plus unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed — and an ad-free site. **Premium adds the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
+      "**Plus unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed. **Premium adds an ad-free site and the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -9179,25 +9179,25 @@ Cancellation is genuinely no-friction: cancel anytime, and your benefits simply 
 
 Everything below is real, current, and reflects exactly what each tier gets — not a marketing simplification.
 
-| Feature | No account | Free account | Plus | Premium |
-| --- | --- | --- | --- | --- |
-| Compare prices across every store + eBay | ✓ | ✓ | ✓ | ✓ |
-| Full card database, search & browse | ✓ | ✓ | ✓ | ✓ |
-| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ | ✓ |
-| RiftCompare Index & daily movers | ✓ | ✓ | ✓ | ✓ |
-| Condition Impact Calculator | ✓ | ✓ | ✓ | ✓ |
-| Price alerts | — | ✓ | ✓ | ✓ |
-| Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ | ✓ |
-| Deal Finder | Top pick | Top pick | Full list | Full list |
-| Rising Cards | Top pick | Top pick | Full list | Full list |
-| Rising Sealed | Top pick | Top pick | Full list | Full list |
-| Value Finder screener | — | — | — | ✓ |
-| Bulk Pricer | — | — | — | ✓ |
-| Best Basket — cheapest store split, postage included | — | — | — | ✓ |
-| Demand Finder | — | — | — | ✓ |
-| Ad-free experience | — | — | ✓ | ✓ |
+| Feature | Free account | Plus | Premium |
+| --- | --- | --- | --- |
+| Compare prices across every store + eBay | ✓ | ✓ | ✓ |
+| Full card database, search & browse | ✓ | ✓ | ✓ |
+| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
+| RiftCompare Index & daily movers | ✓ | ✓ | ✓ |
+| Condition Impact Calculator | ✓ | ✓ | ✓ |
+| Price alerts | ✓ | ✓ | ✓ |
+| Portfolio tracker — history, P&L, CSV export | ✓ | ✓ | ✓ |
+| Deal Finder | — | Full list | Full list |
+| Rising Cards | — | Full list | Full list |
+| Rising Sealed | Top pick | Full list | Full list |
+| Value Finder screener | — | — | ✓ |
+| Bulk Pricer | — | — | ✓ |
+| Best Basket — cheapest store split, postage included | — | — | ✓ |
+| Demand Finder | — | — | ✓ |
+| Ad-free experience | — | — | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Plus adds the full lists and an ad-free site; Premium adds the pro screeners on top of everything Plus includes.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Plus adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners and an ad-free site on top of everything Plus includes.
 
 ## The 5 tools you only get with Premium
 

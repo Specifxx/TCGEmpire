@@ -35,7 +35,6 @@ const code = (p: string) =>
 test("the tier table says ad-free is Premium-only", () => {
   const row = TIER_COMPARISON.find((r) => r.feature === "Ad-free experience");
   assert.ok(row, "expected an Ad-free experience row — the feature string is matched verbatim by DIALOG_OMIT_FEATURES and by three other tests");
-  assert.equal(row!.anon, false);
   assert.equal(row!.account, false);
   assert.equal(row!.plus, false, "Plus must no longer include ad-free");
   assert.equal(row!.premium, true);
