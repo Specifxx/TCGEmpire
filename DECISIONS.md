@@ -10281,3 +10281,46 @@ signed-out login redirect (`?next=/watching`), bookmarks, anything crawled
 despite its `noindex` — and deleting it would break every existing link for
 a page that costs nothing to keep. It happens to now be reachable two ways:
 directly, or via the header drawer over whatever page you're on.
+
+## The search input is in the first HTML byte again — 2026-09-22
+
+Owner: "why is the website taking so long to load? Like when I open it?"
+Measured on production before changing anything: TTFB 0.2–0.7 s on every
+route tried, cache HIT or MISS alike; HTML 69 KB gzipped, JS ~190 KB
+Brotli across 26 chunks, CSS 17 KB, fonts 117 KB; in a real browser,
+hydration completed 39 ms after `load` with 73 ms of long-task blocking
+and no errors. Nothing was slow. But the server HTML for every page
+carried twelve `<template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING">`
+holes, and two of them were the search box — the hero's and the header's —
+rendered as bare empty `<div class="input">`s (no icon, no placeholder,
+nothing to type into) until every chunk had arrived and React had
+hydrated. The H1 says "Buy Riftbound cards at the best price" and the one
+control it points at was the last thing on the page to exist. On a slow
+connection that is exactly what "still loading" looks like, however fast
+the text painted.
+
+Cause: `SearchBar` called `useSearchParams()` — for the `?q=` prefill and
+nothing else — and in the App Router a `useSearchParams()` under a static
+route bails its subtree out to client-side rendering. The Suspense
+boundaries around it (added so the bailout would not escalate to
+`app/loading.tsx` and blank the whole homepage — see CinematicHero) were
+correctly containing the damage to the box itself; they were never the
+fix.
+
+Fix: `value` starts empty and a mount-only effect reads
+`new URLSearchParams(window.location.search).get("q")`. The real `<input>`
+is now server-rendered on every route (verified: the dev server's `/login`
+HTML carries `placeholder="Search for cards"` with JavaScript off); the
+prefill lands one effect tick after hydration, which is the first moment
+the field could have taken a keystroke anyway. The Suspense boundaries
+stay as guards. `tests/header-search-resize.test.ts` pins SearchBar off
+`useSearchParams` with the reason.
+
+Not done here, noted for later: the other ten bailouts are page-specific
+controls (`Filters`, `SortSelect`, `PageSizeSelect`, `SealedFilters`,
+`SealedSort`, `ActiveFilters`) and three invisible trackers. The browse
+and sealed pages' filter rows have the same empty-until-hydrated shape;
+same fix applies, one component at a time. Also: PageSpeed Insights'
+anonymous quota was exhausted from this sandbox, and Vercel Speed Insights
+(the field data that would have shown this directly) is currently off in
+the dashboard — turning it back on is worth more than any lab number.

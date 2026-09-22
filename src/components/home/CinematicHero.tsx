@@ -238,12 +238,19 @@ export function CinematicHero({
             Autofocus is desktop-only — SearchBar itself gates on viewport
             width, never on mobile.
 
-            THE <Suspense> IS LOAD-BEARING, not a nicety. SearchBar calls
-            useSearchParams(), and in the App Router an unwrapped
-            useSearchParams() deopts its whole subtree to client-side rendering.
-            Without this boundary the deopt escalated to the nearest Suspense
-            above it — app/loading.tsx — so the ENTIRE homepage was replaced in
-            the server-rendered HTML by the loading spinner:
+            THE <Suspense> STAYS AS A GUARD, though SearchBar no longer trips
+            it. Until 2026-09-22 SearchBar called useSearchParams() (for the
+            ?q= prefill alone), and in the App Router an unwrapped
+            useSearchParams() deopts its whole subtree to client-side
+            rendering — so this boundary rendered an EMPTY BOX in the server
+            HTML and the real input appeared only after every JS chunk had
+            loaded and hydrated, which is what "the site takes so long to load"
+            looked like. SearchBar now reads ?q= after mount and the real
+            <input> is in the first HTML byte; the boundary is kept because
+            without it a future useSearchParams() anywhere under it escalates
+            to the nearest Suspense above — app/loading.tsx — and the ENTIRE
+            homepage is replaced in the server-rendered HTML by the spinner
+            (tests/header-search-resize.test.ts pins SearchBar off the hook):
 
               <main id="main-content">
                 <template data-dgst="BAILOUT_TO_CLIENT_SIDE_RENDERING"></template>

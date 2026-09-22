@@ -56,3 +56,16 @@ test("the hero CinematicHero still carries the #rc-hero marker", () => {
   assert.match(code, /id="rc-hero"/);
   assert.match(codeOnly(read("src/components/FeedbackWidget.tsx")), /rc-hero/, "the marker's remaining consumer");
 });
+
+test("SearchBar never calls useSearchParams() — the real input must be in the server HTML", () => {
+  // 2026-09-22, owner: "why is the website taking so long to load". Measured on
+  // prod: server TTFB 0.2-0.7s, hydration 39ms after load, no errors — but the
+  // search box (hero and header) was a bare empty <div> in the server HTML,
+  // because useSearchParams() in a static route bails its subtree out to
+  // client-side rendering. The site's core control was the LAST thing to
+  // exist on the page, gated on all ~26 JS chunks arriving. The ?q= prefill
+  // now comes from window.location in a mount effect instead.
+  const code = codeOnly(read("src/components/SearchBar.tsx"));
+  assert.doesNotMatch(code, /useSearchParams/, "one useSearchParams() call puts an empty box where the search input should be, on every page, until hydration");
+  assert.match(code, /new URLSearchParams\(window\.location\.search\)\.get\("q"\)/, "the ?q= prefill must still work, via the effect");
+});
