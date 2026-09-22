@@ -10324,3 +10324,76 @@ same fix applies, one component at a time. Also: PageSpeed Insights'
 anonymous quota was exhausted from this sandbox, and Vercel Speed Insights
 (the field data that would have shown this directly) is currently off in
 the dashboard — turning it back on is worth more than any lab number.
+
+## The lock-in banner shows whether or not a rise is announced — 2026-09-22
+
+Owner: "for premium, we need to emphasis get premium now before the price
+increases as the site grows."
+
+The machinery for this already existed and was dormant. `lib/site.ts` has
+`PREMIUM_NEXT_PRICE_AMOUNT` and a self-retiring
+`premiumPriceIncreaseAnnounced()` (the two amounts disagreeing IS the
+announcement), feeding a gold banner on /premium, in `PremiumDialog` and in
+`PremiumSlideIn`. Since the 2026-09-09 rollback to $9.99 the two constants
+have been equal, so the flag has been false — and with it false, all three
+banners rendered nothing and the entire case for acting today shrank to one
+11px grey caption below the pricing cards, whose copy was the purely
+defensive "Subscribe now and lock in this price for good."
+
+Two changes, no new mechanism:
+
+1. **The banner renders in both states.** The announced branch is untouched.
+   The steady-state branch gets its own headline —
+   `premiumLockInHeadline()`, "Lock in $9.99/month before the price goes up"
+   — and body, "Premium's price goes up as the site grows — more markets,
+   more stores, deeper history. Your rate doesn't."
+2. **The steady-state copy states the pricing policy**, not just the
+   guarantee, in `premiumLockInLine()` and `premiumLockInTail()`.
+
+Why this is not the invented scarcity /editorial-policy rules out. The
+growth claim is the owner's own stated pricing policy and matches this
+site's actual history ($9.99 to $14.99 on 2026-09-06, back to $9.99 on
+2026-09-09). It names no date and no future figure, because neither has been
+decided — that is the whole difference between this and a countdown to a
+deadline that renews itself every week. And "your rate doesn't" describes
+what the billing code already does: Stripe Price objects are immutable,
+checkout creates the subscription against whatever price is configured at
+that moment (`api/premium/checkout`'s one-shot `line_items`), and nothing in
+this codebase migrates an existing subscription to a different price.
+Subscribers from both earlier price eras are still on their original rate.
+
+**This is now a promise, and the only way to break it is by hand** — by
+migrating existing subscriptions onto a new Price in the Stripe dashboard.
+Don't. Raising the price for NEW subscribers is a one-line change
+(`NEXT_PUBLIC_PREMIUM_NEXT_PRICE_AMOUNT`, then `PREMIUM_PRICE_AMOUNT` at
+cutover) and needs no code edit to swap all three surfaces to the stronger
+"rising to $X" wording.
+
+`tests/premium-price-increase.test.ts` was updated rather than relaxed: it
+still pins no-hard-coded-date (now across both branches of all three
+helpers, checking function BODIES so the comments above them can keep citing
+real historical dates), still pins the banner behind the "not already
+Premium" gate, and still pins one shared helper per surface.
+`PREMIUM_COPY_VERSION` bumped to `lock-in-banner-always-2026-09-22` so GA4
+splits before/after instead of averaging the two pitches.
+
+### Correction to the entry above on the bailouts
+
+That entry said the browse and sealed filter rows "have the same
+empty-until-hydrated shape" as the search box did. **They do not.** Both
+routes are `force-dynamic`, and `useSearchParams()` only bails out of
+rendering under STATIC prerendering — so `Filters`, `SortSelect`,
+`PageSizeSelect`, `SealedFilters`, `SealedSort` and `ActiveFilters` have
+always been in the server HTML (verified: /browse's HTML carries Rarity,
+Domain, the sort control and "per page"). The claim was inferred from the
+list of `useSearchParams` importers without checking where they render.
+
+Measured after the search-box fix: **zero** bailout markers inside `<main>`
+on any route. The remaining nine are one in `<head>` and eight after
+`</main>`, and they are all `dynamic(..., { ssr: false })` — PriceAlertModal,
+SignupPromoPopup, PremiumSlideIn, AnnualSwitchNudge, FeedbackWidget,
+CinematicNavMenu and the trackers. That flag is deliberate and documented in
+layout.tsx: those components render nothing until triggered, so keeping them
+out of the server HTML and off the initial bundle is the point. "Fixing"
+them would put JS on the critical path to server-render components that
+display nothing, i.e. make the site slower. Nothing to do.

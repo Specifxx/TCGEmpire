@@ -9,6 +9,7 @@ import {
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
   premiumLockInTail,
+  premiumLockInHeadline,
   annualSavingPct,
 } from "../src/lib/site";
 import { ARTICLES } from "../src/lib/articles";
@@ -79,12 +80,33 @@ test("the lock-in guarantee is unconditional: checkout never migrates an existin
   }
 });
 
-test("with no announcement live, the full sentence and the compact tail both say the price is locked in for good", () => {
+test("with no announcement live, both helpers still make the case that the price rises as the site grows", () => {
   // Live constants are currently equal (see the test above) — no increase is
   // announced right now, so both helpers must return their steady-state copy,
   // not the "raising Premium's price soon" branch.
-  assert.equal(premiumLockInLine(), "Subscribe now and lock in this price for good — it never rises while you stay subscribed.");
-  assert.equal(premiumLockInTail(), "locked in for good, cancel anytime");
+  //
+  // REWRITTEN 2026-09-22 (owner: "for premium, we need to emphasis get
+  // premium now before the price increases as the site grows"). The old
+  // steady-state copy was "Subscribe now and lock in this price for good —
+  // it never rises while you stay subscribed": true, but purely defensive,
+  // and it gave a visitor no reason to act TODAY rather than next month. The
+  // new copy states the standing pricing policy (the price goes up as
+  // coverage grows) alongside the guarantee (your rate doesn't).
+  //
+  // What must NOT come back is a specific future number or date in this
+  // branch — see the "no surface invents an exact date" test below, and
+  // premiumLockInHeadline's own comment for why the growth claim is honest
+  // while an invented deadline would not be.
+  assert.equal(
+    premiumLockInLine(),
+    "Premium's price goes up as the site grows — more markets, more stores, deeper history. Your rate doesn't: subscribe at $9.99/month and keep it for as long as you stay subscribed.",
+  );
+  assert.equal(premiumLockInTail(), "locked in before the price goes up — cancel anytime");
+  // The steady-state branch must not SOUND announced: no "rises to $X",
+  // no "soon". (It can't be checked by looking for PREMIUM_NEXT_PRICE_AMOUNT
+  // itself — in the steady state that constant IS today's price by
+  // definition, so it legitimately appears.)
+  assert.ok(!/rises to|increasing soon/i.test(premiumLockInLine()), "steady state must not imply an announced increase");
 });
 
 test("the announced-increase branch, when it DOES fire, names both the current and future price", () => {
@@ -112,6 +134,19 @@ test("no surface invents an exact date for an increase that doesn't have one yet
   const datePattern = /\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|\d{4}-\d{2}-\d{2}/;
   assert.ok(!datePattern.test(premiumLockInLine()), "premiumLockInLine must not name a specific date");
   assert.ok(!datePattern.test(premiumLockInTail()), "premiumLockInTail must not name a specific date");
+  // Both branches of both banner helpers, now that the steady state renders a
+  // banner of its own (2026-09-22) rather than only a caption.
+  assert.ok(!datePattern.test(premiumLockInHeadline()), "premiumLockInHeadline must not name a specific date");
+  const siteSrc = read("src/lib/site.ts");
+  for (const fn of ["premiumLockInLine", "premiumLockInTail", "premiumLockInHeadline"]) {
+    const at = siteSrc.indexOf(`export function ${fn}()`);
+    assert.ok(at >= 0, `expected ${fn} to exist`);
+    // The function BODY only — the comment above it is free to discuss real
+    // historical dates ("$9.99 → $14.99 (2026-09-06)"), which is exactly what
+    // a naive whole-file scan would trip over.
+    const body = siteSrc.slice(at, siteSrc.indexOf("\n}", at));
+    assert.ok(!datePattern.test(body), `${fn}'s returned copy must not hard-code a date`);
+  }
   for (const f of [
     "src/app/premium/page.tsx",
     "src/components/PremiumDialog.tsx",
@@ -120,7 +155,10 @@ test("no surface invents an exact date for an increase that doesn't have one yet
     // price-increase banner to hard-code a date into.
   ]) {
     const src = read(f);
-    const banner = /Price increasing soon[\s\S]{0,400}/.exec(src);
+    // The announced branch still says "Price increasing soon" verbatim in the
+    // slide-in and dialog, and via premiumLockInHeadline() on the page — so
+    // match on the shared helper OR the literal, whichever that surface uses.
+    const banner = /(Price increasing soon|premiumLockInHeadline\(\))[\s\S]{0,500}/.exec(src);
     assert.ok(banner, `${f}: expected the price-increase banner`);
     assert.ok(!datePattern.test(banner![0]), `${f}: the price-increase banner must not hard-code a date`);
   }
@@ -151,11 +189,16 @@ test("the full-banner treatment is gated on NOT already being Premium", () => {
   // earlier (see premium-slidein.test.ts's own "only ever targets a...
   // non-Premium user" test for that), so the banner text just has to exist
   // somewhere after that check, not immediately above it.
+  // 2026-09-22: the page and dialog now render this banner in BOTH states
+  // (announced and steady), so the anchor is the shared headline helper rather
+  // than the announced branch's literal text — but the gate it must sit behind
+  // is unchanged, and that is the whole point of this test.
   for (const file of ["src/app/premium/page.tsx", "src/components/PremiumDialog.tsx"]) {
     const src = read(file);
-    const bannerAt = src.indexOf("Price increasing soon");
+    // The JSX call, not the import line at the top of the file.
+    const bannerAt = src.indexOf("{premiumLockInHeadline()}");
     assert.ok(bannerAt >= 0, `${file}: expected the price-increase banner`);
-    const before = src.slice(Math.max(0, bannerAt - 400), bannerAt);
+    const before = src.slice(Math.max(0, bannerAt - 900), bannerAt);
     assert.match(before, /!already|!premium/, `${file}: the banner must be gated behind a "not already Premium" check`);
   }
 

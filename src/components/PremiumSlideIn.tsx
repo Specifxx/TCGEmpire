@@ -368,12 +368,21 @@ export function PremiumSlideIn() {
               lib/site.ts) — sized down for this card rather than the full
               two-line banner, which would double the slide-in's height and cut
               against its own "low-intrusion" design (see this file's header). */}
-          {premiumPriceIncreaseAnnounced() && (
-            <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
-              Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
-              {PREMIUM_NEXT_PRICE_AMOUNT}
-            </p>
-          )}
+          {/* Shown in both states as of 2026-09-22, same change as /premium
+              and the dialog. Still one line, not the full banner — this card's
+              whole design intent is low intrusion (see this file's header),
+              and doubling its height to make a pricing point would cost more
+              attention than the point is worth. */}
+          <p className="mt-2 rounded-md border border-gold/40 bg-gold/10 px-2 py-1.5 text-[11px] font-semibold text-gold">
+            {premiumPriceIncreaseAnnounced() ? (
+              <>
+                Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} before it rises to{" "}
+                {PREMIUM_NEXT_PRICE_AMOUNT}
+              </>
+            ) : (
+              <>Price rises as the site grows — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for good</>
+            )}
+          </p>
           {/* Same designed panel the signed-out popup leads with, so the two
               nudges read as one offer. showFeatures is back on: the panel's
               old four-row feature list was dropped for exactly this card's

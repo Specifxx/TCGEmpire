@@ -27,6 +27,7 @@ import {
   tierMonthlyAmount,
   premiumPriceIncreaseAnnounced,
   premiumLockInLine,
+  premiumLockInHeadline,
   premiumFromLine,
   type PremiumTierKey,
 } from "@/lib/site";
@@ -259,20 +260,36 @@ export default async function PremiumPage() {
       </div>
 
       {/* Pricing */}
+      {/* THE LOCK-IN BANNER BELOW RENDERS IN BOTH STATES as of 2026-09-22
+          (owner: "we need to emphasis get premium now before the price
+          increases as the site grows"). It used to be gated on
+          premiumPriceIncreaseAnnounced(), so with no specific increase
+          announced — the state this site has been in since 2026-09-09 — the
+          entire reason to act today shrank to one 11px grey caption below the
+          pricing cards, which is where copy goes to be unread. The lock-in
+          guarantee is true whether or not a rise is scheduled (see
+          premiumLockInHeadline's comment for why every word of it is literally
+          what the billing code does), and it is the strongest honest argument
+          this page has. Announcing a real increase still upgrades the wording
+          automatically via one env var — no code change.
+
+          It stays inside the `!already` gate: someone who is already Premium
+          is grandfathered, so "lock in before it rises" has nothing to say to
+          them and reads as a threat to the rate they already hold. */}
       {!already && (
         <>
-          {premiumPriceIncreaseAnnounced() && (
-            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
-              <p className="text-sm font-bold text-gold">
-                Price increasing soon — lock in {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} now
-              </p>
+          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
+            <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
+            {premiumPriceIncreaseAnnounced() ? (
               <p className="mt-1 text-xs text-gold/80">
                 New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
                 effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
                 subscription stays active — no action needed later.
               </p>
-            </div>
-          )}
+            ) : (
+              <p className="mt-1 text-xs text-gold/80">{premiumLockInLine()}</p>
+            )}
+          </div>
 
           {/* Client island, renders nothing until it resolves — see its own comment. */}
           <PremiumProofLine />
