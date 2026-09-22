@@ -197,6 +197,36 @@ model StorePartner {
   @@index([retailer])
 }
 
+// A FROZEN, PUBLIC copy of the Rising Cards screener, minted by an admin.
+//
+// WHY A SNAPSHOT AND NOT A LIVE PUBLIC PAGE. /tools/rising is Premium, and it
+// should stay Premium: it recomputes daily and its value is that it is current.
+// What this model captures is different — one specific run, at one moment, with
+// its numbers frozen — so it can be handed to anyone (a Discord post, a reply to
+// a player, an email) without giving away the live tool or asking them to
+// subscribe. A reader gets the real analysis as it stood; a subscriber gets it
+// every day, which is the thing actually being sold.
+//
+// `data` holds the whole rendered payload (RisingSnapshotData in
+// lib/rising-snapshot.ts), the same trick MarketReport.data uses: the public
+// page must render the numbers AS THEY WERE, so it can never recompute — if it
+// did, "snapshot" would be a lie and the page would also spend a Neon read per
+// view on the heaviest scan in the app (400 cards x price history).
+//
+// `token` is a capability URL, like StorePartner.token. Unguessable, and the
+// page is noindex — sharing the link is the only way in. There is no per-viewer
+// state, so nothing to leak: every holder of the link sees the same frozen page.
+model RisingSnapshot {
+  id        String   @id @default(cuid())
+  token     String   @unique // secret access token (capability URL)
+  scope     String // "GLOBAL" or a country code — the market this run ranked
+  title     String // generated headline (see lib/rising-snapshot.ts)
+  data      Json // frozen RisingSnapshotData — rendered verbatim, never recomputed
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // An auto-generated daily market report (AFR-style "market wrap" for the Riftbound
 // singles market). One per calendar day, written by /api/cron/market-report at
 // Wall St pre-market open and surfaced in the blog alongside the editorial posts.

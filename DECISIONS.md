@@ -10583,3 +10583,59 @@ in the Premium feature article, and `lib/premium.ts`'s tier map.
 the instruction, and their copy still says so, which
 `tests/premium-no-free-top-pick.test.ts` asserts explicitly so the two groups
 cannot be conflated later.
+
+
+## Shareable Rising Cards snapshots, and a title that says something — 2026-09-22
+
+Owner: "get rid of the store report links and outbound clicks from the
+dashboard and also add a new admin feature that generates an actual useful
+title for rising cards, and gives a special link for public users to view a
+snapshot of the rising cards at the time of generation so they don't need
+premium."
+
+**The two tiles are removed from the index, not deleted.** `/admin/clicks` and
+`/admin/store-partners` still exist and still work — a link already sent or
+bookmarked keeps working, and nothing that reads `ClickEvent` or `StorePartner`
+changed. Only the dashboard's list of tiles lost them.
+
+**The snapshot.** `/tools/rising` stays Premium and should: it recomputes daily
+and its value is that it is current. What a snapshot captures is a different
+thing — one run, frozen — so it can be handed to anyone without giving away the
+live tool. A new `RisingSnapshot` row holds a capability token (like
+`StorePartner`) and the whole rendered payload in `data` (like `MarketReport`).
+`/rising/[token]` renders that payload verbatim and is `noindex`.
+
+Two properties do real work here:
+
+- **It never recomputes.** If the public page re-ran the screener, "snapshot"
+  would be a lie — and it would also spend the heaviest scan in the app (400
+  cards × price history) on every view of a link that might be posted to a
+  Discord. Reading the frozen column costs one indexed row read instead.
+- **It withholds nothing except recency.** Every ranked card is in the
+  snapshot. The upsell on the page is the honest one — the live screener
+  re-ranks daily — rather than a truncated list, because a truncated list is
+  what the Premium page already shows a free user.
+
+**The title is derived, not written.** "Rising cards" named every run
+identically, so two links were indistinguishable and neither gave a reader a
+reason to open one. `generateRisingTitle` picks the first angle the data
+supports: a top pick already up ≥5% over 7 days; failing that, a top pick in the
+bottom third of its own range (the screener's actual thesis — "hasn't re-rated
+yet"); failing that, breadth; failing that, a bare count. Every branch states a
+measured quantity.
+
+Nothing predicts. `/editorial-policy`'s "nothing here describes a process we
+don't actually run" applies to a headline as much as to an article, and the tool
+carries its own "a research signal, not advice" disclaimer — which a title
+promising a rise would make worthless on sight. `tests/rising-snapshot.test.ts`
+runs every branch against a banned-word list (will, guaranteed, profit, surge,
+forecast…) and asserts two different runs cannot produce the same title.
+
+The empty run is mintable on purpose: the screener legitimately has nothing
+while price history builds, and a link saying so beats a 400 that leaves the
+operator guessing whether the feature broke.
+
+`RisingSnapshot` reaches the live database through `build-db-push.sh`'s
+`prisma db push`, which runs on every production build — no migration task
+needed. `prisma format` was NOT run: it realigns all ~1,400 lines of the schema
+and its churn broke an unrelated test that pins a column's exact spacing.
