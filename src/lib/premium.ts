@@ -318,8 +318,11 @@ export const PORTFOLIO_FREE = true;
 //   2. ACCOUNT (free, `hasAccount`) — the above PLUS watchlists, price alerts,
 //      and the portfolio.
 //   3. PLUS (paid, `isPremium(user)` — the default `min` of "plus") — the above
-//      plus no ads and the FULL LISTS: Deal Finder, Rising Cards, Rising Sealed
-//      (free/account only ever see the top pick).
+//      plus no ads and the LISTS THEMSELVES: Deal Finder, Rising Cards, Rising
+//      Sealed. Deal Finder and Rising Cards show NOTHING below this tier as of
+//      2026-09-22 (owner instruction) — not a teaser row, and not the data in
+//      the HTML either: those two pages skip the query entirely and render
+//      placeholder bars. Rising Sealed still shows its top pick.
 //   4. PREMIUM (paid, `isPremium(user, "premium")`) — everything in Plus, plus
 //      the four pro tools: Value Finder, Bulk Pricer, Best Basket, Demand
 //      Finder.

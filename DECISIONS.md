@@ -10533,3 +10533,53 @@ used before. tests/db-migration-guard.test.ts finds the current step by that
 derived name and takes the FIRST match, so all three of its guards silently
 began checking a task that has none of them. The legacy step is renamed. Any
 future rotation onto a previously-used name has the same trap waiting.
+---
+
+## Deal Finder and Rising Cards give free visitors nothing — 2026-09-22
+
+Owner instruction: "no account and free account don't even get the top pick for
+deal finder and rising cards." Both tools previously showed the single best row
+free — the #1 ranked pick on Rising Cards, the first table row on Deal Finder —
+with the rest blurred behind the upsell.
+
+**The blur was never a paywall.** Deal Finder fetched six rows and hid five of
+them with a CSS rule (`tbody tr:not(:first-child)`), so all six were real card
+data sitting in the server HTML. Anyone who opened devtools, or read the page
+source, had the "locked" deals for free. So the fix is not to blur the first row
+too: each of the four views now runs its query **only when `premium`**, and
+renders a `LockedPreview` that takes no data at all — placeholder bars and the
+upsell. Rising Cards does the same: the `analysis.picks[0]` lookup is gone and
+the free state renders bars, not a row.
+
+Two things fell out of doing it this way rather than with CSS:
+
+- **Four fewer queries per free page view** on Deal Finder, a tool whose
+  audience is signed-out until it converts. The teaser was costing a read per
+  view tab to render something that was about to be given away.
+- **Rising Cards' empty state now wins over the lock.** The order was reversed
+  so a scope with no ranked picks yet tells the visitor signals are still
+  building, instead of selling a locked preview of a list that does not exist.
+
+**The cost, stated plainly.** Both pages are in the sitemap, and a fully gated
+page is a thin page. Rising Cards was already covered — it carries an intro and
+a "How Rising Cards works" FAQ. Deal Finder was not: with the tables gone its
+only prose is one view's intro, well under the 150-word floor the AdSense audit
+treats as thin content, on a page at sitemap priority 0.7. So it gained a "How
+Deal Finder works" explainer (229 words across five answers, every one a fact
+already stated elsewhere in the page or in `lib/arbitrage.ts`), rendered
+visibly and fed to FAQPage JSON-LD from the same array. That is scope this
+change created, not scope borrowed.
+
+This does sharpen the tension the 2026-08-20 note already settled — gating
+content that a reviewer may see is an AdSense risk, and that note concluded
+"the paywall now takes priority over AdSense approval odds; review mode is
+opt-in for a future submission". `ADSENSE_REVIEW_MODE` still lifts both gates
+in one flag if a submission needs it.
+
+Copy that had become untrue was fixed with it: the Deal Finder meta description,
+the Premium slide-in's Rising Cards line, both tools' entries on `/premium` and
+in the Premium feature article, and `lib/premium.ts`'s tier map.
+**Rising Sealed and Value Finder still show a free top pick** — they were not in
+the instruction, and their copy still says so, which
+`tests/premium-no-free-top-pick.test.ts` asserts explicitly so the two groups
+cannot be conflated later.

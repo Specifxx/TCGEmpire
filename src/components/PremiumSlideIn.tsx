@@ -134,7 +134,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
     heading: "Rising Cards tells you whether to buy it now or leave it",
-    line: "Ranked by demand and price-timing signals, backtested. Not financial advice. Free shows only the top pick.",
+    line: "Ranked by demand and price-timing signals, backtested. Not financial advice. Premium only.",
   },
 ];
 

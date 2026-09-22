@@ -170,7 +170,6 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // The ONE day-keyed cache for this scan lives in rise-predictor.ts, shared
   // with the homepage deals feed and /admin/rising so any of them warms the rest.
   const analysis = await getCachedRisingCards(scope);
-  const top = analysis.picks[0];
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -208,51 +207,26 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </p>
       </div>
 
-      {/* ADSENSE REVIEW MODE: while the review is open the Premium gate is
-          lifted, so no crawler-reachable page carries blurred or locked
-          content — "content behind a paywall or login" is its own AdSense
-          rejection reason, and this page is in the sitemap. The Premium CTA
-          stays; an ordinary upsell link is fine, a blur overlay standing in
-          place of the content is not. Restored by setting
-          NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
-      {!premium && !ADSENSE_REVIEW_MODE ? (
-        <div className="card-surface overflow-hidden">
-          <table className="w-full min-w-[560px] text-sm">
-            <TableHead />
-            <tbody className="divide-y divide-ink-800">
-              {top ? (
-                <RisingRow p={top} rank={1} currency={currency} />
-              ) : (
-                <tr><td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">Not enough data yet — check back once a few days of price history have built up.</td></tr>
-              )}
-            </tbody>
-          </table>
-          <div className="relative border-t border-ink-800">
-            <ul className="divide-y divide-ink-800 blur-[5px]" aria-hidden>
-              {[0, 1, 2, 3].map((i) => (
-                <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-60">
-                  <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
-                  <div className="flex-1 space-y-1.5"><div className="h-2.5 w-2/5 rounded bg-ink-800" /><div className="h-2 w-1/4 rounded bg-ink-800" /></div>
-                  <div className="h-3 w-10 rounded bg-ink-800" />
-                </li>
-              ))}
-            </ul>
-            <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-transparent to-ink-900/60 p-4 text-center">
-              <div>
-                <p className="text-sm font-bold text-white">Unlock the full Rising Cards list</p>
-                <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                  See all {Math.min(40, analysis.picks.length)} ranked picks, every market (or Global), with the full signal
-                  breakdown — not just the top pick.
-                </p>
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
-                  <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : analysis.picks.length === 0 ? (
+      {/* ORDER MATTERS: the "still building" state below is checked FIRST, so a
+          free visitor on a scope with no ranked picks is told the truth rather
+          than shown a locked preview of a list that does not exist yet.
+
+          NOTHING REAL IS RENDERED BELOW PREMIUM (2026-09-22, owner instruction:
+          "no account and free account don't even get the top pick"). This used
+          to render the #1 pick as a live row above the blurred placeholders.
+          The placeholders were always decorative; the row was not, and it was
+          the single most valuable line in the tool.
+
+          ADSENSE REVIEW MODE: while the review is open the gate is lifted, so
+          no crawler-reachable page carries locked content — "content behind a
+          paywall or login" is its own AdSense rejection reason, and this page
+          is in the sitemap. The Premium CTA stays; an ordinary upsell link is
+          fine, a lock standing in place of the content is not. Restored by
+          setting NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. The page keeps its
+          intro, its "How Rising Cards works" FAQ and its FAQPage schema either
+          way, which is what keeps it from being a thin page when gated.
+          See docs/adsense-remediation.md § 9. */}
+      {analysis.picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
           {/* Mirrors the admin page: when history exists but is short, say how
               short and when it unlocks, rather than implying nothing is being
@@ -275,6 +249,37 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
               <p className="mt-1">Signals appear once daily price snapshots have built up.</p>
             </div>
           )}
+        </div>
+      ) : !premium && !ADSENSE_REVIEW_MODE ? (
+        <div className="card-surface relative overflow-hidden">
+          {/* Placeholder bars only — no pick, no card, no score. aria-hidden
+              because they carry no information; the heading and CTA below are
+              the real content of this state. */}
+          <ul className="divide-y divide-ink-800" aria-hidden>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-40">
+                <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-2.5 w-2/5 rounded bg-ink-800" />
+                  <div className="h-2 w-1/4 rounded bg-ink-800" />
+                </div>
+                <div className="h-3 w-10 rounded bg-ink-800" />
+              </li>
+            ))}
+          </ul>
+          <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-ink-900/60 via-ink-900/80 to-ink-900/95 p-4 text-center">
+            <div>
+              <p className="text-sm font-bold text-white">Rising Cards is a Premium tool</p>
+              <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
+                All {Math.min(40, analysis.picks.length)} ranked picks, every market (or Global), with the full signal
+                breakdown behind each score.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
+                <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="card-surface overflow-x-auto">

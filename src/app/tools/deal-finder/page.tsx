@@ -24,20 +24,64 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals | RiftCompare" },
   description:
-    "Find the best Riftbound deals: cards underpriced vs TCGplayer's US market price, cards worth more on eBay than in stores (handy if you're selling), the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market. Sortable, updated daily, with direct links. A Premium tool — the top pick is free to preview.",
+    "Find the best Riftbound deals: cards underpriced vs TCGplayer's US market price, cards worth more on eBay than in stores (handy if you're selling), the cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market. Sortable, updated daily, with direct links. A Premium tool.",
   alternates: pageAlternates("/tools/deal-finder"),
   openGraph: { title: "Riftbound Deal Finder — Cross-Store, eBay & TCGplayer Deals", url: `${SITE_URL}/tools/deal-finder` },
 };
 
 const PAGE_SIZE = 25;
-// Non-Premium visitors get the top opportunity clear + a few blurred rows behind
-// the upsell. We deliberately fetch only this many so the full list never ships
-// to the client to be un-blurred.
-const TEASER_SIZE = 6;
+// NON-PREMIUM FETCHES NOTHING (2026-09-22, owner instruction: "no account and
+// free account don't even get the top pick"). There used to be a TEASER_SIZE of
+// 6 — one row sharp, five blurred behind the upsell. Both halves of that were
+// wrong once the top pick stopped being free:
+//
+//   • A CSS blur is not a paywall. All six rows were real data in the server
+//     HTML, so anyone who opened devtools, or read the page source, had the
+//     "locked" deals for nothing. Removing the fetch is the only way to not
+//     ship them.
+//   • It was four needless queries per free page view, one per view tab, on a
+//     tool whose whole audience is signed-out until it converts.
+//
+// So each view below fetches only when `premium`, and renders <LockedPreview />
+// — placeholder bars, no card data — otherwise. The prose above each table
+// stays: it is what the page is actually about, and it is what keeps an
+// indexable page from being thin (docs/adsense-remediation.md § 9).
 const FLIP_SORTS: { key: ArbSort; label: string }[] = [
   { key: "profit", label: "Biggest gap" },
   { key: "margin", label: "Best % gap" },
 ];
+// Explains the four views in plain words, and — the reason it was added on
+// 2026-09-22 — keeps this page from going thin the moment its tables are gated.
+// Free visitors now see no rows at all, and the four view intros are the only
+// prose on the page; a single view's intro is well under the 150-word floor the
+// AdSense audit treats as thin content, on a page sitting in the sitemap at
+// priority 0.7. Every answer here is a fact already stated elsewhere in this
+// file or in lib/arbitrage.ts, written out for a reader rather than inferred
+// from a table. Rendered visibly AND as FAQPage JSON-LD from the same array,
+// the way /tools/rising does it, so the two can never drift apart.
+const DEAL_FAQS = [
+  {
+    q: "What does Deal Finder actually compare?",
+    a: "Four things, each on its own tab: cards a store or eBay is selling below TCGplayer's US market price; cards worth more on eBay than the cheapest store charges, which matters if you are selling; the cards eBay is currently the cheapest place to buy; and cards priced meaningfully lower in another market we track than in yours.",
+  },
+  {
+    q: "How often do the numbers update?",
+    a: "Daily. Every figure comes from the same store and eBay prices the rest of the site runs on, refreshed on the daily import, so a deal here is a live in-stock price rather than a historical average.",
+  },
+  {
+    q: "Do the gaps include postage and fees?",
+    a: "Partly, and the page says which is which. The eBay resale gap is shown after an estimated eBay fee but before postage. The TCGplayer comparison includes eBay's real quoted shipping on eBay's side; store postage is usually unknown until checkout, so those stay item-price-only. Cross-market gaps ignore international shipping and customs entirely — check both before buying.",
+  },
+  {
+    q: "Is a big gap always a good deal?",
+    a: "No. A thin or one-off listing can move a card's apparent price, and a cross-market gap can vanish once shipping and currency are real rather than an approximate reference rate. Open the card page to see every store's price before acting on any row here.",
+  },
+  {
+    q: "Do I need Premium to use it?",
+    a: "Yes. Deal Finder is a Premium tool. Price comparison, the card database, price movers and the deck builder are free for everyone, and free accounts add watchlists, price alerts and the portfolio.",
+  },
+];
+
 const DEAL_SORTS: { key: DealSort; label: string }[] = [
   { key: "saving", label: "Biggest saving" },
   { key: "pct", label: "Best % off" },
@@ -111,6 +155,15 @@ export default async function ArbitragePage({
               offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
               description:
                 "Find Riftbound cards underpriced vs TCGplayer's US market price, cards worth more on eBay than in stores, and the cards eBay is cheapest to buy.",
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: DEAL_FAQS.map((f) => ({
+                "@type": "Question",
+                name: f.q,
+                acceptedAnswer: { "@type": "Answer", text: f.a },
+              })),
             },
           ]),
         }}
@@ -188,6 +241,18 @@ export default async function ArbitragePage({
       {/* Every buy/sell figure in these tables links out through an affiliate-
           tagged store, eBay or TCGplayer URL. */}
       <AffiliateDisclosure partner="both" className="text-center" />
+
+      <section className="mt-10">
+        <h2 className="mb-3 text-xl font-extrabold text-white">How Deal Finder works</h2>
+        <div className="card-surface divide-y divide-ink-800">
+          {DEAL_FAQS.map((f) => (
+            <div key={f.q} className="px-5 py-4">
+              <h3 className="font-bold text-white">{f.q}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -221,14 +286,8 @@ async function FlipView({
   // a param that's genuinely absent (first visit, no filter touched yet) should.
   const buy = buyParam !== undefined ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : storeKeys;
   const sell = [ebayKey];
-  // Non-Premium: ignore page/source customisation and fetch only the teaser.
-  const data = await getArbitrage(country, {
-    buy,
-    sort,
-    sell,
-    page: premium ? page : 1,
-    pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
-  });
+  // null for everyone below Premium — the query is not run at all.
+  const data = premium ? await getArbitrage(country, { buy, sort, sell, page, pageSize: PAGE_SIZE }) : null;
   const href = (p: number) => `/tools/deal-finder?buy=${buy.join(",")}&sort=${sort}&page=${p}`;
   const sortHref = (s: ArbSort) => `/tools/deal-finder?buy=${buy.join(",")}&sort=${s}&page=1`;
 
@@ -248,23 +307,21 @@ async function FlipView({
         </div>
       )}
 
-      {data.items.length === 0 ? (
+      {data === null ? (
+        <LockedPreview signedIn={signedIn} />
+      ) : data.items.length === 0 ? (
         <Empty>
           {buy.length === 0
             ? "Pick at least one store on the buy side to see results."
             : `No cards worth more on eBay from these sources right now in ${info.place}. Try widening the store side.`}
         </Empty>
-      ) : premium ? (
+      ) : (
         <>
           <div className="card-surface overflow-x-auto">
             <FlipTable items={data.items} country={country} info={info} />
           </div>
           <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="cards" />
         </>
-      ) : (
-        <LockedTable signedIn={signedIn}>
-          <FlipTable items={data.items} country={country} info={info} />
-        </LockedTable>
       )}
     </>
   );
@@ -286,7 +343,7 @@ async function DealsView({
   premium: boolean;
   signedIn: boolean;
 }) {
-  const data = await getEbayCheapest(country, sort, premium ? page : 1, premium ? PAGE_SIZE : TEASER_SIZE);
+  const data = premium ? await getEbayCheapest(country, sort, page, PAGE_SIZE) : null;
   const href = (p: number) => `/tools/deal-finder?view=deals&sort=${sort}&page=${p}`;
   const sortHref = (s: DealSort) => `/tools/deal-finder?view=deals&sort=${s}&page=1`;
 
@@ -303,9 +360,11 @@ async function DealsView({
         </div>
       )}
 
-      {data.items.length === 0 ? (
+      {data === null ? (
+        <LockedPreview signedIn={signedIn} />
+      ) : data.items.length === 0 ? (
         <Empty>No cards are cheaper on eBay than in stores right now in {info.place}.</Empty>
-      ) : premium ? (
+      ) : (
         <>
           <div className="card-surface overflow-x-auto">
             <DealsTable items={data.items} country={country} info={info} />
@@ -316,10 +375,6 @@ async function DealsView({
             can mislead — open the card to see every option before buying.
           </p>
         </>
-      ) : (
-        <LockedTable signedIn={signedIn}>
-          <DealsTable items={data.items} country={country} info={info} />
-        </LockedTable>
       )}
     </>
   );
@@ -343,7 +398,7 @@ async function XRegionView({
   premium: boolean;
   signedIn: boolean;
 }) {
-  const data = await getCrossRegionGaps(country, premium ? page : 1, premium ? PAGE_SIZE : TEASER_SIZE);
+  const data = premium ? await getCrossRegionGaps(country, page, PAGE_SIZE) : null;
   const href = (p: number) => `/tools/deal-finder?view=xregion&page=${p}`;
 
   return (
@@ -358,19 +413,17 @@ async function XRegionView({
         FX quote.
       </p>
 
-      {data.items.length === 0 ? (
+      {data === null ? (
+        <LockedPreview signedIn={signedIn} />
+      ) : data.items.length === 0 ? (
         <Empty>No card is meaningfully cheaper in another tracked market right now.</Empty>
-      ) : premium ? (
+      ) : (
         <>
           <div className="card-surface overflow-x-auto">
             <XRegionTable items={data.items} info={info} />
           </div>
           <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="cards" />
         </>
-      ) : (
-        <LockedTable signedIn={signedIn}>
-          <XRegionTable items={data.items} info={info} />
-        </LockedTable>
       )}
     </>
   );
@@ -405,12 +458,7 @@ async function TcgFlipView({
   // Same !== undefined distinction as the flip view above — an explicit empty
   // selection must stay empty, not silently revert to the default store list.
   const buy = buyParam !== undefined ? buyParam.split(",").map((s) => s.trim()).filter(Boolean) : defaultBuyKeys;
-  const data = await getArbitrageVsTcgplayer(country, {
-    buy,
-    sort,
-    page: premium ? page : 1,
-    pageSize: premium ? PAGE_SIZE : TEASER_SIZE,
-  });
+  const data = premium ? await getArbitrageVsTcgplayer(country, { buy, sort, page, pageSize: PAGE_SIZE }) : null;
   const href = (p: number) => `/tools/deal-finder?view=tcg&buy=${buy.join(",")}&sort=${sort}&page=${p}`;
   const sortHref = (s: ArbSort) => `/tools/deal-finder?view=tcg&buy=${buy.join(",")}&sort=${s}&page=1`;
 
@@ -436,23 +484,21 @@ async function TcgFlipView({
         </div>
       )}
 
-      {data.items.length === 0 ? (
+      {data === null ? (
+        <LockedPreview signedIn={signedIn} />
+      ) : data.items.length === 0 ? (
         <Empty>
           {buy.length === 0
             ? "Pick at least one store on the buy side to see results."
             : `No cards look underpriced vs TCGplayer from these stores right now in ${info.place}.`}
         </Empty>
-      ) : premium ? (
+      ) : (
         <>
           <div className="card-surface overflow-x-auto">
             <FlipTable items={data.items} country={country} info={info} />
           </div>
           <Pager total={data.total} page={data.page} pageCount={data.pageCount} hrefFor={href} unit="cards" />
         </>
-      ) : (
-        <LockedTable signedIn={signedIn}>
-          <FlipTable items={data.items} country={country} info={info} />
-        </LockedTable>
       )}
     </>
   );
@@ -583,17 +629,34 @@ function XRegionTable({ items, info }: { items: Awaited<ReturnType<typeof getCro
 // ── Shared bits ──────────────────────────────────────────────────────────────────
 // Premium gate: the first table row stays sharp and clickable; every row after it
 // is blurred and inert, with the upsell card floating over the fade.
-function LockedTable({ children, signedIn }: { children: React.ReactNode; signedIn: boolean }) {
+// The whole tool, below Premium: placeholder bars where the rows would be, and
+// the upsell. NOTHING REAL IS RENDERED — this takes no data prop, which is the
+// point. Its predecessor (LockedTable) took the real table as a child and
+// blurred every row but the first in CSS, so the "locked" rows were sitting in
+// the server HTML for anyone who looked, and the first row was given away.
+//
+// The bars are decorative and marked aria-hidden; a screen reader gets the
+// heading and the CTA, which is the whole of the real content here.
+function LockedPreview({ signedIn }: { signedIn: boolean }) {
   return (
-    <div className="relative">
-      <div className="card-surface overflow-x-auto [&_tbody_tr:not(:first-child)]:pointer-events-none [&_tbody_tr:not(:first-child)]:select-none [&_tbody_tr:not(:first-child)]:blur-[5px]">
-        {children}
-      </div>
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg bg-gradient-to-b from-transparent via-ink-900/70 to-ink-900/95 p-5">
-        <div className="pointer-events-auto mx-auto max-w-sm rounded-lg border border-ink-700 bg-ink-900/95 p-5 text-center">
-          <h2 className="text-base font-extrabold text-white">The full list is a Premium feature</h2>
+    <div className="card-surface relative overflow-hidden">
+      <ul className="divide-y divide-ink-800" aria-hidden>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-40">
+            <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-2.5 w-2/5 rounded bg-ink-800" />
+              <div className="h-2 w-1/4 rounded bg-ink-800" />
+            </div>
+            <div className="h-3 w-12 rounded bg-ink-800" />
+          </li>
+        ))}
+      </ul>
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-ink-900/60 via-ink-900/80 to-ink-900/95 p-5">
+        <div className="mx-auto max-w-sm rounded-lg border border-ink-700 bg-ink-900/95 p-5 text-center">
+          <h2 className="text-base font-extrabold text-white">Deal Finder is a Premium tool</h2>
           <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-400">
-            The top pick is on us. Unlock every deal — all sources, sortable and paginated, updated daily — with Premium.
+            Every deal across all four sources — sortable, paginated, updated daily, with direct links.
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             {signedIn ? (
@@ -608,7 +671,6 @@ function LockedTable({ children, signedIn }: { children: React.ReactNode; signed
     </div>
   );
 }
-
 function CardCell({ card }: { card: CardTileData }) {
   return (
     <td className="px-4 py-2">
