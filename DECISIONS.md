@@ -10806,3 +10806,48 @@ a free top pick and every surface still says so.
 and the ad-free row — because that table is the one a reader reaches from search
 rather than from the pricing page, and it had drifted twice without anything
 failing.
+
+---
+
+## The snapshot gets a name and a face: RiftCompare Hot 40 — 2026-09-22
+
+Two owner instructions on the shareable Rising Cards snapshot, a day after it
+shipped: "we should call it the riftcompare hot 40", and "the link that we
+generate should have a better thumbnail with the card at #1 featured".
+
+**The name.** "Rising cards snapshot" described the mechanism, and nobody
+forwards a mechanism. The chart-countdown shape does the work instead: a reader
+who has never heard of this site knows what a "Hot 40" is before reading the
+subtitle. It leads every generated headline now — `RiftCompare Hot 40: Astral
+Heron is up 8.2% this week (global, 22 September 2026)` — which also let the
+count clause come out of the sentence, since the name already carries it.
+
+**The number is the real count, not a flat 40.** `rise-predictor` caps the
+ranking at `DISPLAY = 40`, so a healthy run genuinely is the Hot 40 — but a
+market early in its price history ranks fewer, and printing "Hot 40" above
+twelve rows is exactly the kind of claim `lib/rising-snapshot.ts` exists to
+avoid. So forty cards make the Hot 40 and twelve make the Hot 12. The brand
+reads the same; the number stays true. An empty run keeps its old honest title
+and no name at all, because a "Hot 0" would be absurd.
+
+**The thumbnail.** The route had no `opengraph-image` at all, so every forwarded
+link fell through to the site-wide default: the same generic picture in Discord,
+iMessage and X whichever snapshot you sent. A share link whose image never
+changes looks like a link to the site rather than to a list, which is most of
+why a forwarded one gets ignored. It now renders the #1 card's own art at 340
+by 475 beside its real price and 7-day move, with the list name and the frozen
+date.
+
+Everything in the image is read off the **frozen `data` column**, the same
+values the page draws. That is deliberate twice over: the picture and the page
+can never disagree, and a link shared three weeks ago still unfurls with the
+card that actually led it rather than today's leader. It fails open to a
+brand-only composition on a missing token, an empty run or a database blip —
+an unfurl must produce an image, never a 500.
+
+Two smaller things worth recording. `generateMetadata` deliberately does **not**
+set `openGraph.images`: the sibling `opengraph-image.tsx` is picked up by the
+route automatically, and naming an image by hand would override the generated
+one and lose the card. And every flex box in the image holds a single text node,
+because satori is unreliable with sibling text nodes — the price badge builds
+its string in one expression rather than three JSX children.

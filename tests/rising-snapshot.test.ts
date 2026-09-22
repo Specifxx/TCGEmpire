@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   generateRisingTitle,
   generateRisingSubtitle,
+  hotListName,
   snapshotDateLabel,
   type RisingSnapshotData,
   type RisingSnapshotPick,
@@ -48,8 +49,10 @@ function data(picks: RisingSnapshotPick[], over: Partial<RisingSnapshotData> = {
 test("a card already moving leads the title, with its real 7-day figure", () => {
   const t = generateRisingTitle(data([pick({ trend7: 18.4 }), pick({ id: "c2" })]), AT);
   assert.match(t, /Jinx, Loose Cannon is up 18\.4% this week/);
-  assert.match(t, /2 rising Riftbound cards/);
   assert.match(t, /22 September 2026/);
+  // The count moved INTO the list's name on 2026-09-22 ("RiftCompare Hot 2")
+  // rather than being repeated as a clause — see HOT_LIST_BRAND.
+  assert.match(t, /^RiftCompare Hot 2: /);
 });
 
 test("with nothing moving yet, it names the screener's actual thesis instead", () => {
@@ -68,7 +71,23 @@ test("with no single leader, breadth is the finding", () => {
     pick({ id: "c3", trend7: 1 }),
     pick({ id: "c4", trend7: -1 }),
   ];
-  assert.match(generateRisingTitle(data(picks), AT), /3 of 4 ranked Riftbound cards gained ground/);
+  assert.match(generateRisingTitle(data(picks), AT), /^RiftCompare Hot 4: 3 of 4 cards gained ground/);
+});
+
+test("the list is named, and the number in the name is the REAL count", () => {
+  // Owner, 2026-09-22: "we should call it the riftcompare hot 40". The cap in
+  // rise-predictor is DISPLAY = 40, so a healthy run IS the Hot 40 — but a
+  // market early in its price history ranks fewer, and printing "Hot 40" above
+  // twelve rows would be the one kind of claim this file exists to prevent.
+  assert.equal(hotListName(40), "RiftCompare Hot 40");
+  assert.equal(hotListName(12), "RiftCompare Hot 12");
+
+  const forty = generateRisingTitle(data(Array.from({ length: 40 }, (_, i) => pick({ id: `c${i}` }))), AT);
+  assert.match(forty, /^RiftCompare Hot 40: /);
+
+  const thin = generateRisingTitle(data([pick(), pick({ id: "c2" }), pick({ id: "c3" })]), AT);
+  assert.match(thin, /^RiftCompare Hot 3: /, "a three-card run must not call itself the Hot 40");
+  assert.ok(!thin.includes("Hot 40"), thin);
 });
 
 test("an empty run still gets an honest title rather than a crash or a lie", () => {
@@ -153,4 +172,34 @@ test("the dashboard no longer links store report links or outbound clicks, but b
   for (const p of ["src/app/admin/store-partners/page.tsx", "src/app/admin/clicks/page.tsx"]) {
     assert.ok(read(p).length > 0, `${p} must still exist`);
   }
+});
+
+test("a shared link unfurls with the #1 card, drawn from the frozen snapshot", () => {
+  // Owner, 2026-09-22: "the link that we generate should have a better
+  // thumbnail with the card at #1 featured in the thumbnail."
+  //
+  // Before this the route had NO opengraph-image, so every forwarded link fell
+  // through to the site-wide default and each snapshot unfurled identically.
+  // The two things worth pinning are that the image exists on this route, and
+  // that it reads the frozen column rather than recomputing — an old link must
+  // keep showing the card that actually led it, not today's leader.
+  const og = readFileSync(join(process.cwd(), "src/app/rising/[token]/opengraph-image.tsx"), "utf8");
+
+  assert.match(og, /export const runtime = "nodejs"/, "Prisma cannot run on edge");
+  assert.match(og, /export const size = \{ width: 1200, height: 630 \}/);
+  assert.match(og, /prisma\.risingSnapshot[\s\S]{0,160}where: \{ token: params\.token \}/, "must load THIS snapshot");
+  assert.match(og, /const top = picks\[0\]/, "the featured card is rank 1");
+  assert.match(og, /snap\?\.data/, "must read the frozen data column");
+  assert.ok(!/getCachedRisingCards/.test(og), "the image must not recompute the live ranking");
+
+  // Satori cannot fetch a site-relative src, so the art has to be absolute.
+  assert.match(og, /cardImageSrc\(\{ imageThumbUrl: top\.imageThumbUrl \}, \{ full: true, absolute: true \}\)/);
+
+  // A missing token, an empty run or a database blip must still yield an image.
+  assert.match(og, /\.catch\(\(\) => null\)/, "a failed lookup must not 500 the unfurl");
+  assert.match(og, /picks\.length > 0 \? hotListName\(picks\.length\) : "RiftCompare Hot 40"/);
+
+  // Naming it in generateMetadata too would override the generated image.
+  const page = readFileSync(join(process.cwd(), "src/app/rising/[token]/page.tsx"), "utf8");
+  assert.ok(!/openGraph:\s*\{[\s\S]{0,200}images/.test(page), "the page must not set openGraph.images by hand");
 });

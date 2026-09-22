@@ -56,6 +56,24 @@ export interface RisingSnapshotData {
   minPointsRequired: number;
 }
 
+// THE LIST HAS A NAME (owner, 2026-09-22: "we should call it the riftcompare
+// hot 40"). A snapshot is a thing people forward, and "Rising cards snapshot"
+// described the mechanism rather than naming the product — nobody shares a
+// mechanism. The chart-countdown shape is the point: a reader who has never
+// heard of this site still knows what a "Hot 40" is before reading a word of
+// the subtitle.
+//
+// THE NUMBER IS THE REAL COUNT, NOT ALWAYS 40. rise-predictor caps the ranking
+// at DISPLAY = 40, so a healthy run IS the Hot 40 — but a thin run (a market
+// early in its price history) ranks fewer, and printing "Hot 40" above twelve
+// rows would be the one kind of claim this file exists to avoid. So the name
+// takes the count: forty cards make the Hot 40, twelve make the Hot 12. The
+// brand reads the same and the number stays true.
+export const HOT_LIST_BRAND = "RiftCompare Hot";
+export function hotListName(count: number): string {
+  return `${HOT_LIST_BRAND} ${count}`;
+}
+
 const MARKET_LABEL = (scope: RiseScope): string =>
   scope === "GLOBAL" ? "every market we track" : COUNTRIES[scope]?.place ?? scope;
 
@@ -94,29 +112,33 @@ export function generateRisingTitle(data: RisingSnapshotData, now = new Date()):
   const top = data.picks[0];
 
   if (!top || n === 0) {
+    // No list, so no list name — naming a "Hot 0" would be absurd, and this
+    // branch exists precisely to stay honest on a run with nothing in it.
     return `Riftbound rising cards — no ranked cards on ${date}`;
   }
+
+  const name = hotListName(n);
 
   const plural = n === 1 ? "card" : "cards";
 
   // 1. The top pick is already moving.
   if (top.trend7 >= 5) {
-    return `${top.displayName} is up ${top.trend7.toFixed(1)}% this week — ${n} rising Riftbound ${plural} (${market}, ${date})`;
+    return `${name}: ${top.displayName} is up ${top.trend7.toFixed(1)}% this week (${market}, ${date})`;
   }
 
   // 2. The top pick is cheap against its own range — the screener's own thesis.
   if (top.posPct <= 0.33) {
-    return `${top.displayName} leads ${n} Riftbound ${plural} near their range low (${market}, ${date})`;
+    return `${name}: ${top.displayName} leads ${n} Riftbound ${plural} near their range low (${market}, ${date})`;
   }
 
   // 3. No single leader, but breadth.
   const upCount = data.picks.filter((p) => p.trend7 > 0).length;
   if (upCount >= Math.ceil(n / 2) && upCount >= 3) {
-    return `${upCount} of ${n} ranked Riftbound cards gained ground this week (${market}, ${date})`;
+    return `${name}: ${upCount} of ${n} cards gained ground this week (${market}, ${date})`;
   }
 
   // 4. Always-true fallback.
-  return `${n} Riftbound ${plural} to watch — ${top.displayName} tops the ${market} ranking (${date})`;
+  return `${name}: ${top.displayName} tops the ${market} ranking (${date})`;
 }
 
 /** The one-line standfirst under the title. Same honesty rules. */

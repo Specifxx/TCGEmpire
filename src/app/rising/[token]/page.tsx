@@ -7,6 +7,7 @@ import { cardHref } from "@/lib/card-url";
 import { cardImageAlt } from "@/lib/image-alt";
 import {
   generateRisingSubtitle,
+  hotListName,
   snapshotDateLabel,
   type RisingSnapshotData,
   type RisingSnapshotPick,
@@ -14,7 +15,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// The PUBLIC face of a minted Rising Cards snapshot. No account, no Premium, no
+// The PUBLIC face of a minted RiftCompare Hot 40 snapshot. No account, no Premium, no
 // paywall of any kind — that is the entire point of the feature (owner,
 // 2026-09-22: "a special link for public users to view a snapshot of the rising
 // cards at the time of generation so they don't need premium").
@@ -34,8 +35,11 @@ export async function generateMetadata({ params }: { params: { token: string } }
     where: { token: params.token },
     select: { title: true },
   });
+  // No explicit openGraph.images: the sibling opengraph-image.tsx is picked up
+  // by the route automatically, and naming it here as well would override the
+  // generated one with a plain URL and lose the #1 card.
   return {
-    title: snap?.title ?? "Rising cards snapshot",
+    title: snap?.title ?? "RiftCompare Hot 40",
     robots: { index: false, follow: false },
   };
 }
@@ -124,7 +128,12 @@ export default async function RisingSnapshotPage({ params }: { params: { token: 
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-brand-400">Rising cards · snapshot</p>
+      {/* The list has a name as of 2026-09-22 — see lib/rising-snapshot.ts's
+          HOT_LIST_BRAND comment for why, and why the number is the real count
+          rather than a flat 40 on a thin run. */}
+      <p className="text-[11px] font-bold uppercase tracking-wide text-brand-400">
+        {data.picks.length > 0 ? hotListName(data.picks.length) : "RiftCompare Hot 40"} · snapshot
+      </p>
       <h1 className="mt-1 text-2xl font-extrabold leading-tight text-white sm:text-3xl">{snap.title}</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">{generateRisingSubtitle(data)}</p>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-// Mints a public Rising Cards snapshot and lists the ones already minted.
+// Mints a public RiftCompare Hot 40 snapshot and lists the ones already minted.
 //
 // The generated TITLE is the point of the panel, not a label on the button —
 // it is what makes one link distinguishable from another, and the operator
@@ -84,7 +84,7 @@ export function RisingSnapshotPanel({ adminKey, scope }: { adminKey?: string; sc
     <div className="mb-6 rounded-xl border border-ink-700 bg-ink-850 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold text-white">Public snapshot</h2>
+          <h2 className="text-sm font-bold text-white">Public Hot 40 snapshot</h2>
           <p className="mt-0.5 max-w-xl text-xs leading-relaxed text-slate-400">
             Freezes the <strong className="text-slate-300">{scope}</strong> ranking exactly as it is now and mints a
             link anyone can open — no account, no Premium. The numbers never change after this; the live screener
