@@ -593,7 +593,7 @@ The **Showcase density** is the figure still resting on Riot's announcement alon
 
 ## The nine champions — and the one Legend Riot has actually shown
 
-Riot has confirmed five new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV** — and said four more are still to be revealed. The total is nine, and it is now pinned down from a second direction: the Pre-Rift kit's mini-decks come in **nine champion variations**, one per new Legend.
+Riot has confirmed six new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs**, **Jarvan IV** and **Orianna** — and said three more are still to be revealed. The total is nine, and it is now pinned down from a second direction: the Pre-Rift kit's mini-decks come in **nine champion variations**, one per new Legend.
 
 All five named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining four.
 
@@ -7107,7 +7107,7 @@ This post is the buyer's-eye view: what is coming, when, and which of it should 
 
 | Set | # | Release | Cards | The short version |
 | --- | --- | --- | --- | --- |
-| **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, +4 unrevealed; a step up in size from Vendetta |
+| **Radiance** | 5 | 23 Oct 2026 | 180 | Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna, +3 unrevealed; a step up in size from Vendetta |
 | **Legacy** | 6 | 29 Jan 2027 | ~346 | Region-driven themes across six factions; built for draft; new pack composition |
 | *(boxed decks)* | — | Feb 2027 | — | Four new decks built around Legacy champions |
 | **The Reckoning** | 7 | 30 Apr 2027 | ~264 | Centred on League's biggest champions |
@@ -7118,7 +7118,7 @@ Two things stand out before any of the detail. First, the cadence is roughly qua
 
 ## Radiance (Set 5) — 23 October 2026
 
-Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV, plus four more champions still unrevealed, in a confirmed 180-card pool (66 Showcase) — a step up from [Vendetta's](/sets/vendetta) 166.
+Radiance is the near-term one, and the only set on this list you will be buying this year. It brings Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna, plus three more champions still unrevealed, in a confirmed 180-card pool (66 Showcase) — a step up from [Vendetta's](/sets/vendetta) 166.
 
 The pattern we have watched through four launches now is consistent enough to plan around: sealed is at its most expensive in the launch window, chase singles spike hardest in the first fortnight, and the mid-value playables drift down for about a month as supply catches up. [Why Riftbound prices change](/guides/why-riftbound-card-prices-change) sets out the mechanics behind that.
 
@@ -7594,7 +7594,7 @@ Unleashed is the one worth a closer look if you're buying rather than just catal
 
 ## What's next: Radiance and beyond
 
-[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with a confirmed 180 cards (66 Showcase) and five new champion Legends named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more still unrevealed. It's the only future set with a real, Riot-confirmed release date right now.
+[Radiance](/release-dates) — Set 5 — is dated for **23 October 2026** with a confirmed 180 cards (66 Showcase) and six new champion Legends named so far — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more still unrevealed. It's the only future set with a real, Riot-confirmed release date right now.
 
 Beyond Radiance, Riot has mapped out the rest of 2027 — Legacy (Set 6, 29 Jan 2027, its biggest set yet at roughly 346 cards), The Reckoning (Set 7, 30 Apr 2027), and two further unnamed sets pencilled in for Q3 and Q4 2027. Rather than repeat those details here — and risk them drifting out of sync if Riot's dates move — the full breakdown, with what each set means for buyers, lives in the **[2027 set roadmap](/blog/riftbound-2027-set-roadmap)**.
 
@@ -8211,7 +8211,7 @@ That's the whole shape of it. Two players build decks, take turns, and use their
 
 ## How it connects to the game you already know
 
-The connection isn't just cosmetic. Real League of Legends champions are the actual playable Legend cards — **Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn, Jhin** and dozens more already have real, released Riftbound cards, and every new set adds champions who didn't have cards before. Radiance, the next confirmed set, adds five more: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.
+The connection isn't just cosmetic. Real League of Legends champions are the actual playable Legend cards — **Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn, Jhin** and dozens more already have real, released Riftbound cards, and every new set adds champions who didn't have cards before. Radiance, the next confirmed set, adds six more: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.
 
 If you're wondering whether your specific main made the cut, the [champions page](/champions) is a live, always-current list — every League champion with a Riftbound card, how many cards they have, and what those cards cost right now.
 
@@ -8304,7 +8304,7 @@ Dozens of League of Legends champions already have real, released Riftbound card
 
 ## Who's next: Radiance's new champions
 
-The next confirmed set, [Radiance](/release-dates), adds **five** champions who don't have a Riftbound Legend card yet: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs** and **Jarvan IV**. If one of those is your main, Radiance — dated 23 October 2026 — is when you'll be able to build around them.
+The next confirmed set, [Radiance](/release-dates), adds **six** champions who don't have a Riftbound Legend card yet: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs**, **Jarvan IV** and **Orianna**. If one of those is your main, Radiance — dated 23 October 2026 — is when you'll be able to build around them.
 
 ## Check if your main is in Riftbound
 
@@ -9193,7 +9193,7 @@ The mechanics actually deciding those games are Vendetta's own: **[Flow](/guides
 
 Tournament results move the meta round to round. A new set moves it once and doesn't move back. **[Radiance](/blog/riftbound-radiance-what-we-know)** — Riot's fifth Riftbound set — releases **23 October 2026**: 180 confirmed cards, 66 of them Showcase treatments (a ~37% Showcase share, the highest of any set so far). Preview Season opens **25 September, at the Regional Qualifier: Los Angeles itself**, and runs through **9 October**, with Pre-Rift events **16–22 October** immediately before street date. That means the first official reveals land in the same room as the last qualifier of the season — the same weekend the game's most invested players go from "which Vendetta deck do I bring" to "which Radiance deck do I build."
 
-Nine Legend slots, five confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV** and **Ziggs**, with four more to be revealed during Preview Season. The one gameplay detail actually confirmed today is Ekko's Legend, *Ekko, Boy Who Shattered Time*: a **Fury/Mind** Legend whose ability is built on Empower — disempower Ekko to discount your next unit by 2 energy and 1 power, and that unit dies at end of turn. (*Ekko, Ingenious* is his Champion Unit; only its art has been shown.) That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
+Nine Legend slots, six confirmed so far: **Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs** and **Orianna**, with three more to be revealed during Preview Season. The one gameplay detail actually confirmed today is Ekko's Legend, *Ekko, Boy Who Shattered Time*: a **Fury/Mind** Legend whose ability is built on Empower — disempower Ekko to discount your next unit by 2 energy and 1 power, and that unit dies at end of turn. (*Ekko, Ingenious* is his Champion Unit; only its art has been shown.) That's a real design signal in its own right — Radiance is extending Empower rather than retiring it the moment a new set lands, which is one more reason Singapore's Empower-heavy decklists are worth watching now rather than treating as a lame-duck mechanic on its way out.
 
 Radiance isn't the only structural shift on the calendar, either — just the next one. [Legacy](/guides/riftbound-sets-in-order), Riot's Set 6, ships 29 January 2027 as the largest set announced so far and the first designed specifically for draft, changing pack composition itself: a common slot becomes a Legend-or-Battlefield slot. That's a bigger structural change than any single champion reveal, and it's one more reason "the meta" is worth thinking of as something that keeps moving on a schedule, not settling once and staying settled.
 
@@ -9406,7 +9406,7 @@ The full product table, with what each contains, is in **[what's confirmed about
 
 ## What this means if you are buying
 
-- **If you want to play:** the champion debuts are the reason to care — five named, four still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs or Jarvan IV is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
+- **If you want to play:** the champion debuts are the reason to care — five named, four still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV or Orianna is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
 - **If you want to open sealed:** wait for real prices and run [box EV](/tools/box-ev) against the singles market. A 37% Showcase share makes the variance between boxes higher than in any previous set, which is exactly when buying singles beats opening.
 - **If you are tracking the K/DA thesis:** the three existing members are already priced. Set a [price alert](/alerts) on them rather than checking manually — if Radiance does ship a K/DA tier, the existing three are likely to move on the announcement, not on release day.
 - **If you are selling:** the window between reveal season and release is usually when interest in the *previous* set is weakest. [Movers](/movers) will show you whether that is happening to Vendetta.

@@ -10000,7 +10000,40 @@ post's claims against the site rather than trusting any one page:
   named, three unrevealed, in both the prose and the facts table.
 
 Neither would have been caught by a test: nothing pins prose numbers against
-`radiance.ts`. That is a gap worth closing the next time this cluster is touched.
+`radiance.ts`. `tests/radiance-facts-agree.test.ts` now does, and writing it
+turned two bugs into **eight**. The Orianna confirmation of 2026-09-14 had been
+applied to `radiance.ts` and the reveal tracker and to nothing else, so seven
+articles were still telling readers Radiance had five confirmed Legends and four
+unrevealed — `what-we-know` twice, the 2027 roadmap twice, `sets-in-order`,
+`is-there-a-league-of-legends-card-game`,
+`league-of-legends-champions-in-riftbound`, the Singapore meta post and the
+biggest-release post. All corrected.
+
+**The test took four attempts, and the failures are the interesting part.**
+Each early version was over-broad in a different way, and each false positive
+was a lesson about how to pin prose:
+
+- Counting the first number in a 60-character window read "a confirmed 180 cards
+  (66 Showcase) and five new champion Legends" as a claim of 66, and hid the
+  real error two words later. It now takes the LAST number before the phrase and
+  stops at a sentence or table-cell boundary.
+- "N champion Legends" legitimately means two different numbers — the set total,
+  or how many are confirmed so far — so the check reads the words in front of it
+  and expects 9 or 6 accordingly.
+- A 40-character look-ahead for the word "confirmed" scored "nine champion
+  Legends. Six are confirmed" as a confirmed-count claim, using the NEXT
+  sentence. The look-ahead is cut at the sentence end.
+- Filtering to "articles that mention Radiance" pulled in the Legacy spoilers
+  post, whose "call it twelve champion Legends" is correct about Set 6. The
+  claim now has to sit in a sentence that names Radiance.
+- A sliding character window for "does this list omit Orianna" produced both
+  false positives (prose that names two champions is not a list) and false
+  negatives (a window ending two words before Orianna). It is line-based now: a
+  line carrying four or more of the six is a list, and a list may omit none.
+
+The general lesson is that a test which pins prose has to model how the prose is
+actually written, and the cheapest way to learn that is to let the first version
+fail loudly against the real catalogue rather than tune it until it goes quiet.
 
 **What the post refuses to do.** It does not predict a price. A card every deck
 can cast is a card every deck can consider, and that is a claim about how widely
