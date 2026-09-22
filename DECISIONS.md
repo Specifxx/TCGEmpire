@@ -10256,3 +10256,28 @@ a card gets played — not about what it will be worth. Radiance has not release
 there are no Radiance singles, and the post says so in as many words. The same
 discipline the price-change guide states as policy: we report live prices and
 history, we do not publish predictions.
+
+## The watchlist opens as a side drawer, not a page navigation — 2026-09-22
+
+Owner: "the watchlist button should open a side tab not go to a separate
+page." `HeaderWatchButton` was a plain `<Link href="/watching">` — a full
+navigation for what is really a "check what I'm tracking, then get back to
+what I was doing" action, dropping browse filters or a card page's scroll
+position for a page whose only content is the same grid of `CardTile`s.
+
+Added a `"right"` placement to the shared `Dialog` primitive (`ui/Dialog.tsx`)
+— a full-height panel sliding in from the right edge, translate-based rather
+than the centered shapes' fade+scale, reusing all of Dialog's existing scroll
+lock, focus trap, Escape and focus restore. `WatchlistDrawer` renders the
+existing `<Watchlist>` component inside it (same data, same remove-via-heart
+interaction, no forked copy), gated by `WatchlistDrawerProvider`'s shared
+open state — the same pattern `MegaMenuProvider` already uses for the phone
+nav overlay. `HeaderWatchButton` is now a `<button>` that toggles that state;
+`aria-current` (there is no route to be "on" any more) is replaced by
+`aria-expanded` off the drawer's own open flag.
+
+`/watching` ITSELF IS UNCHANGED and stays. It's the deep-link target — the
+signed-out login redirect (`?next=/watching`), bookmarks, anything crawled
+despite its `noindex` — and deleting it would break every existing link for
+a page that costs nothing to keep. It happens to now be reachable two ways:
+directly, or via the header drawer over whatever page you're on.

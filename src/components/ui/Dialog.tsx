@@ -51,7 +51,7 @@ export function useModalFlag(active: boolean) {
 }
 
 export type DialogSize = "md" | "lg" | "xl" | "2xl" | "3xl";
-export type DialogPlacement = "center" | "top" | "sheet";
+export type DialogPlacement = "center" | "top" | "sheet" | "right";
 export type DialogZ = "overlay" | "modal" | "sheet";
 
 // Literal strings, not `max-w-${size}` — Tailwind's content scanner only picks
@@ -174,6 +174,35 @@ export function Dialog({
   if (!mounted) return null;
 
   const ariaProps = labelledBy ? { "aria-labelledby": labelledBy } : { "aria-label": label };
+
+  if (placement === "right") {
+    // A right-edge drawer: full viewport height, slides in from off-screen
+    // rather than fading+scaling like the centered shapes. Introduced for the
+    // watchlist (2026-09-22, owner: "the watchlist button should open a side
+    // tab not go to a separate page") — a list you check and dismiss reads
+    // better as a panel beside the page you were on than as a full navigation.
+    // `sm:max-w-*` still applies (SIZE_CLASS), but below `sm` the panel is the
+    // full viewport width, same reasoning as the bottom sheet's phone case.
+    return (
+      <div className={`fixed inset-0 ${Z_CLASS[z]} h-[100dvh]`} role="dialog" aria-modal="true" {...ariaProps}>
+        <div
+          className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-base ${entered ? "opacity-100" : "motion-safe:opacity-0"}`}
+          onClick={onClose}
+          aria-hidden
+        />
+        <div
+          ref={panelRef}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={onKeyDown}
+          className={`card-surface absolute inset-y-0 right-0 flex w-full ${SIZE_CLASS[size]} flex-col overflow-hidden rounded-none border-l border-ink-800 pb-[env(safe-area-inset-bottom)] transition-transform ease-out ${
+            entered ? "duration-base translate-x-0" : "duration-fast motion-safe:translate-x-full"
+          } ${className}`}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   if (placement === "sheet") {
     return (
