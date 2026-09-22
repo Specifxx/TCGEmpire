@@ -9953,6 +9953,8 @@ alone — it is what stops a fix being quietly spent on the next long excerpt �
 but anything running several writers at once needs to set that constant once, at
 the end, from a single count. That is how it was finally resolved: 41.
 
+---
+
 ## The rail became a navigation system, and the header came back — 2026-09-21 (same day, correction)
 
 Three corrections to the entry above, all from the owner after seeing it live,
@@ -10165,3 +10167,92 @@ typecheck, lint (0 errors), the AdSense guard (22/22), `npm test`
 (1695/1696 — the one failure is the pre-existing "seller id is the client id
 with ca- stripped" sandbox gap) and `scripts/mobile-check.ts` clean at
 640/720/790.
+
+
+---
+
+## The Radiance teaser post, and two Legend counts that disagreed — 2026-09-22
+
+Riot circulated a redacted Radiance contents graphic: six entries legible,
+around ten blurred. The legible ones are HEARTSTEEL, Ekko, Seraphine, Neeko, a
+**Colorless Champion Unit** and a **new set mechanic**.
+
+**Why this is an eighth Radiance page and not a paragraph on one of the seven.**
+The plan's own rule is to publish fewer pages than feels natural, and the
+evidence behind it is that 13 of ~24 Vendetta pre-release articles were 301'd
+within eight weeks. So the bar is a query none of the existing cluster answers.
+This clears it: the tracker owns official reveals, `what-we-know` owns confirmed
+set facts, the leak post owns the unconfirmed mechanic names, and the Neeko post
+owns that one card. None of them answers *"riftbound colorless champion unit"* —
+a query the graphic itself created. The post is also explicitly barred, in its
+own code comment and in the keyword map, from claiming `radiance spoilers`,
+`radiance card list` or `radiance release date` in its title; it links down to
+each owner instead.
+
+**The angle only this site had.** Everyone else reading that graphic has to
+speculate about what a Colorless Champion Unit is. This site already holds the
+card that is almost certainly the answer. *Neeko, Blending In* was photographed
+on 19 September, and its type line prints **Neutral** with the clause "Neutral
+cards can go in decks of any Domain" — which is exactly what Colorless means
+here. `src/lib/domains.ts` settles the vocabulary question: the canonical domain
+key is `Colorless` and its own tagline is "Neutral staples". So the two words
+are one thing, and the teaser line has a strong candidate that is already in the
+database at 167/167. The post says "most likely", not "is", because the graphic
+lists NEEKO and COLORLESS CHAMPION UNIT on separate rows and cannot settle
+whether that is one card named twice or two cards.
+
+**Two real data bugs fell out of writing it**, both found by cross-checking the
+post's claims against the site rather than trusting any one page:
+
+- `riftbound-heartsteel-cards` said Radiance carries **ten** Legends.
+  `src/lib/sets/radiance.ts` — the file whose header calls itself the single
+  source of truth — says nine, and both the tracker and `what-we-know` agree.
+  Corrected to nine.
+- `riftbound-radiance-what-we-know` still said "five named, four not", the split
+  from Riot's original Set 5 announcement. Orianna was confirmed later at a PAX
+  West livestream, which `radiance.ts` records explicitly as the reason it
+  carries six confirmed rather than the brief's stale five. Corrected to six
+  named, three unrevealed, in both the prose and the facts table.
+
+Neither would have been caught by a test: nothing pins prose numbers against
+`radiance.ts`. `tests/radiance-facts-agree.test.ts` now does, and writing it
+turned two bugs into **eight**. The Orianna confirmation of 2026-09-14 had been
+applied to `radiance.ts` and the reveal tracker and to nothing else, so seven
+articles were still telling readers Radiance had five confirmed Legends and four
+unrevealed — `what-we-know` twice, the 2027 roadmap twice, `sets-in-order`,
+`is-there-a-league-of-legends-card-game`,
+`league-of-legends-champions-in-riftbound`, the Singapore meta post and the
+biggest-release post. All corrected.
+
+**The test took four attempts, and the failures are the interesting part.**
+Each early version was over-broad in a different way, and each false positive
+was a lesson about how to pin prose:
+
+- Counting the first number in a 60-character window read "a confirmed 180 cards
+  (66 Showcase) and five new champion Legends" as a claim of 66, and hid the
+  real error two words later. It now takes the LAST number before the phrase and
+  stops at a sentence or table-cell boundary.
+- "N champion Legends" legitimately means two different numbers — the set total,
+  or how many are confirmed so far — so the check reads the words in front of it
+  and expects 9 or 6 accordingly.
+- A 40-character look-ahead for the word "confirmed" scored "nine champion
+  Legends. Six are confirmed" as a confirmed-count claim, using the NEXT
+  sentence. The look-ahead is cut at the sentence end.
+- Filtering to "articles that mention Radiance" pulled in the Legacy spoilers
+  post, whose "call it twelve champion Legends" is correct about Set 6. The
+  claim now has to sit in a sentence that names Radiance.
+- A sliding character window for "does this list omit Orianna" produced both
+  false positives (prose that names two champions is not a list) and false
+  negatives (a window ending two words before Orianna). It is line-based now: a
+  line carrying four or more of the six is a list, and a list may omit none.
+
+The general lesson is that a test which pins prose has to model how the prose is
+actually written, and the cheapest way to learn that is to let the first version
+fail loudly against the real catalogue rather than tune it until it goes quiet.
+
+**What the post refuses to do.** It does not predict a price. A card every deck
+can cast is a card every deck can consider, and that is a claim about how widely
+a card gets played — not about what it will be worth. Radiance has not released,
+there are no Radiance singles, and the post says so in as many words. The same
+discipline the price-change guide states as policy: we report live prices and
+history, we do not publish predictions.
