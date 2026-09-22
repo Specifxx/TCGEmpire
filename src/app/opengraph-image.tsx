@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
-import { cardImageSrc } from "@/lib/card-image-url";
+import { cardImageForOg } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 
 // Default social-share card for the whole site — the image that unfurls in
@@ -82,7 +82,10 @@ async function loadFeatured(): Promise<Featured> {
       return {
         name: card.name,
         setLine: `${card.setCode} · ${card.collectorNumber}`,
-        art: cardImageSrc(card, { full: true, absolute: true }),
+        // cardImageForOg: the mirror is WebP, which satori renders as an empty
+        // bordered box. This slot had been blank in production since the mirror
+        // landed — found 2026-09-22 while building the Hot 40 share image.
+        art: cardImageForOg(card),
         rows,
       };
     }

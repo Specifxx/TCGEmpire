@@ -84,6 +84,43 @@ export function liveCardImage(url: string | null | undefined): string | null {
   return stem ? `${LIVE_LARGE}${stem}.webp` : null;
 }
 
+/**
+ * A card picture an OG image generator can actually decode.
+ *
+ * NOT `cardImageSrc`. That serves our mirror, and the mirror is **WebP** —
+ * which satori (`next/og`'s renderer) cannot decode. The failure is silent and
+ * ugly: satori lays the `<img>` out, draws its border and radius, and fills it
+ * with nothing. That is what the site-wide OG image had been shipping — a
+ * bordered empty rectangle where the featured card should be — and it is why
+ * this helper exists rather than a one-line tweak at a call site.
+ *
+ * So: for a RiftScribe card, hand back the CDN's `originals/<stem>.png`.
+ *
+ * THE `DEAD_ORIGINALS` NAME ABOVE IS HISTORICAL, and this deliberately goes
+ * against it. That constant exists because the importers once found originals
+ * 404ing and rewrote them onto `thumbnails/large/*.webp`. Sampled again on
+ * 2026-09-22, ten random mirrored stems all returned `200 image/png` from
+ * originals. The write path is left exactly as it is — the database should go
+ * on recording a URL known to resolve — and only this read path, which needs a
+ * raster format the mirror does not offer, reaches for the PNG.
+ *
+ * Returns null rather than a URL it cannot vouch for, so a caller draws its
+ * placeholder instead of an invisible broken image. Callers must handle null.
+ */
+export function cardImageForOg(card: CardImageUrls): string | null {
+  for (const raw of [card.imageUrl, card.imageThumbUrl]) {
+    if (!raw) continue;
+    const stem = stemOf(raw);
+    if (stem) {
+      // The 71 cards whose art the CDN dropped entirely have no PNG either.
+      return MISSING_CARD_ART.has(stem) ? null : `${CDN_CARDS}originals/${stem}.png`;
+    }
+    // Art we host ourselves (manual spoiler rows) is already PNG or JPEG.
+    if (/\.(png|jpe?g)$/i.test(raw)) return raw.startsWith("/") ? `${SITE_URL}${raw}` : raw;
+  }
+  return null;
+}
+
 /** Maps a RiftScribe card URL onto our mirrored copy; passes anything else through. */
 function mirrored(url: string | null | undefined): string | null {
   if (!url) return null;

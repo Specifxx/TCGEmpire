@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getSharedCollection } from "@/lib/share";
-import { cardImageSrc } from "@/lib/card-image-url";
+import { cardImageForOg } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 import { DEFAULT_COUNTRY } from "@/lib/country";
 
@@ -25,7 +25,8 @@ export default async function Image({ params }: { params: { token: string } }) {
 
   const owner = shared?.ownerName ?? "A collector";
   const arts = (shared?.holdings ?? [])
-    .map((h) => cardImageSrc(h.card, { full: true, absolute: true }))
+    // cardImageForOg: see its comment — the WebP mirror renders as nothing.
+    .map((h) => cardImageForOg(h.card))
     .filter((a): a is string => Boolean(a))
     .slice(0, 3);
 

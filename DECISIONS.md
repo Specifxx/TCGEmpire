@@ -10851,3 +10851,58 @@ route automatically, and naming an image by hand would override the generated
 one and lose the card. And every flex box in the image holds a single text node,
 because satori is unreliable with sibling text nodes — the price badge builds
 its string in one expression rather than three JSX children.
+
+---
+
+## The Hot 40 thumbnail, and the WebP bug it uncovered — 2026-09-22
+
+Owner: "it should also have #2 and #3 and some delta figures."
+
+**The image now shows a ranking rather than a card.** #1 keeps the large art and
+the headline-size name, and carries its price, its 7-day move and its 30-day
+move; #2 and #3 sit beneath it with their own art and their own 7-day moves.
+A single card said "here is a card"; three ranked cards with their moves say
+"here is a ranking", which is what the link actually is.
+
+**Then the real finding.** The first version of this image shipped unverified —
+the only way to see it was to mint a snapshot in production, which needs admin.
+So this pass built `scripts/render-hot40-og.tsx`, which draws the composition
+from a fixture and writes a PNG. The first render exposed it immediately:
+
+```
+Can't load image .../card-art/<stem>.webp: Unsupported image type: unknown
+```
+
+**satori cannot decode WebP, and our card mirror is WebP-only.** The failure is
+silent: satori lays the `<img>` out, draws its border and radius, and fills it
+with nothing. Checking the live site-wide OG image confirmed it is not a local
+artefact — `riftcompare.com/opengraph-image` has been shipping a bordered empty
+rectangle where the featured card should be, and `app/opengraph-image.tsx`
+renders that `<img>` with no placeholder branch, so the empty bordered box in
+the live PNG is the image element itself failing. Every OG route on the site had
+the same bug: the root image, `card/[id]`, `c/[token]`, and the new Hot 40 one.
+
+`cardImageForOg()` is the fix — one helper, four call sites. It maps a
+RiftScribe card onto the CDN's `originals/<stem>.png` and returns null for
+anything it cannot vouch for, so a caller draws its placeholder instead of an
+invisible broken image.
+
+**That deliberately contradicts `DEAD_ORIGINALS`**, the constant right above it,
+which exists because the importers once found `originals/` 404ing. Re-sampled
+on 2026-09-22: **24 stems spread across the catalogue, all `200 image/png`.**
+The tree is back. The write path is left exactly as it was — the database should
+go on recording a URL known to resolve — and only this read path, which needs a
+raster format the mirror does not offer, reaches for the PNG. If a given
+original ever 404s again the helper's caller degrades to the placeholder, which
+is no worse than the empty box it replaces.
+
+Two things this leaves behind:
+
+- **A way to look at the image without deploying.** `npx tsx
+  scripts/render-hot40-og.tsx out.png` draws both the populated and the
+  brand-only compositions from a fixture whose #1 name is deliberately long and
+  whose #3 is a negative mover.
+- **`lib/hot40-og.tsx` holds the composition, not the route.** A Next image
+  route may export only the names Next recognises, so a helper exported from
+  `opengraph-image.tsx` passes `tsc` and is then rejected by `next build` — the
+  same trap that moved the `/gallery` title builders into `lib/gallery-seo.ts`.

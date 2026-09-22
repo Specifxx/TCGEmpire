@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { cardImageForOg } from "../src/lib/card-image-url";
 import {
   generateRisingTitle,
   generateRisingSubtitle,
@@ -174,32 +175,64 @@ test("the dashboard no longer links store report links or outbound clicks, but b
   }
 });
 
-test("a shared link unfurls with the #1 card, drawn from the frozen snapshot", () => {
-  // Owner, 2026-09-22: "the link that we generate should have a better
-  // thumbnail with the card at #1 featured in the thumbnail."
+test("a shared link unfurls with the top three and their deltas, from the frozen snapshot", () => {
+  // Owner, 2026-09-22, in two passes: "a better thumbnail with the card at #1
+  // featured", then "it should also have #2 and #3 and some delta figures".
   //
-  // Before this the route had NO opengraph-image, so every forwarded link fell
-  // through to the site-wide default and each snapshot unfurled identically.
-  // The two things worth pinning are that the image exists on this route, and
-  // that it reads the frozen column rather than recomputing — an old link must
-  // keep showing the card that actually led it, not today's leader.
-  const og = readFileSync(join(process.cwd(), "src/app/rising/[token]/opengraph-image.tsx"), "utf8");
+  // The composition lives in lib/, not in the route: a Next image route may
+  // only export the names Next recognises, so a helper exported from
+  // opengraph-image.tsx passes tsc and is then rejected by `next build`.
+  const route = readFileSync(join(process.cwd(), "src/app/rising/[token]/opengraph-image.tsx"), "utf8");
+  const art = readFileSync(join(process.cwd(), "src/lib/hot40-og.tsx"), "utf8");
 
-  assert.match(og, /export const runtime = "nodejs"/, "Prisma cannot run on edge");
-  assert.match(og, /export const size = \{ width: 1200, height: 630 \}/);
-  assert.match(og, /prisma\.risingSnapshot[\s\S]{0,160}where: \{ token: params\.token \}/, "must load THIS snapshot");
-  assert.match(og, /const top = picks\[0\]/, "the featured card is rank 1");
-  assert.match(og, /snap\?\.data/, "must read the frozen data column");
-  assert.ok(!/getCachedRisingCards/.test(og), "the image must not recompute the live ranking");
+  assert.match(route, /export const runtime = "nodejs"/, "Prisma cannot run on edge");
+  assert.match(route, /export const size = HOT40_SIZE/);
+  assert.match(route, /prisma\.risingSnapshot[\s\S]{0,160}where: \{ token: params\.token \}/, "must load THIS snapshot");
+  assert.match(route, /\.catch\(\(\) => null\)/, "a failed lookup must not 500 the unfurl");
+  assert.match(route, /picks=\{data\?\.picks \?\? \[\]\}/, "must draw the FROZEN picks");
+  assert.ok(!/getCachedRisingCards/.test(route + art), "the image must never recompute the live ranking");
 
-  // Satori cannot fetch a site-relative src, so the art has to be absolute.
-  assert.match(og, /cardImageSrc\(\{ imageThumbUrl: top\.imageThumbUrl \}, \{ full: true, absolute: true \}\)/);
+  // #1 featured, #2 and #3 beneath it.
+  assert.match(art, /const top = picks\[0\]/, "the featured card is rank 1");
+  assert.match(art, /const runners = picks\.slice\(1, 3\)/, "ranks 2 and 3, and no further");
+  assert.match(art, /rank=\{i \+ 2\}/, "the runners are numbered from 2");
 
-  // A missing token, an empty run or a database blip must still yield an image.
-  assert.match(og, /\.catch\(\(\) => null\)/, "a failed lookup must not 500 the unfurl");
-  assert.match(og, /picks\.length > 0 \? hotListName\(picks\.length\) : "RiftCompare Hot 40"/);
+  // Delta figures: 7d and 30d on the leader, 7d on each runner.
+  assert.match(art, /delta\(top\.trend7\)/);
+  assert.match(art, /delta\(top\.trend30\)/);
+  assert.match(art, /delta\(p\.trend7\)/, "each runner shows its own 7-day move");
+  assert.match(art, /v >= 0 \? "\+" : "−"/, "the sign is explicit, never inferred");
 
-  // Naming it in generateMetadata too would override the generated image.
+  // THE FORMAT TRAP. cardImageSrc serves our WebP mirror, which satori cannot
+  // decode — it lays the <img> out, draws the border, and fills it with
+  // nothing. That is what the site-wide OG image shipped for months. Both OG
+  // surfaces must use cardImageForOg, which hands back a PNG.
+  for (const [file, src] of [["lib/hot40-og.tsx", art], ["app/opengraph-image.tsx", readFileSync(join(process.cwd(), "src/app/opengraph-image.tsx"), "utf8")]] as const) {
+    assert.match(src, /cardImageForOg\(/, `${file} must use the OG-safe image helper`);
+    assert.ok(!/cardImageSrc\(/.test(src), `${file} must not use the WebP mirror in an OG image`);
+  }
+
+  // Naming an image in generateMetadata would override the generated one.
   const page = readFileSync(join(process.cwd(), "src/app/rising/[token]/page.tsx"), "utf8");
   assert.ok(!/openGraph:\s*\{[\s\S]{0,200}images/.test(page), "the page must not set openGraph.images by hand");
+});
+
+test("the OG-safe image helper returns a format satori can actually decode", () => {
+  const stem = "ogn-001-298-8de89b4b8fb3186d";
+  // Any CDN rendition — thumbnail or original — resolves to the PNG original.
+  for (const raw of [
+    `https://cdn.riftscribe.gg/cards/thumbnails/large/${stem}.webp`,
+    `https://cdn.riftscribe.gg/cards/originals/${stem}.png`,
+  ]) {
+    assert.equal(cardImageForOg({ imageThumbUrl: raw }), `https://cdn.riftscribe.gg/cards/originals/${stem}.png`);
+  }
+  // Art we host ourselves is already a raster satori reads.
+  assert.equal(
+    cardImageForOg({ imageThumbUrl: "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg" }),
+    "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg",
+  );
+  // Nothing it can vouch for → null, so the caller draws a placeholder rather
+  // than an invisible broken image.
+  assert.equal(cardImageForOg({ imageThumbUrl: null }), null);
+  assert.equal(cardImageForOg({ imageThumbUrl: "https://example.com/art.webp" }), null);
 });
