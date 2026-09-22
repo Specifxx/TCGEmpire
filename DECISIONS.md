@@ -10451,3 +10451,85 @@ confirmation, which is worth more than either pass alone.
 
 Shipped with `[deploy]` at the owner's instruction, as with the rest of this
 sequence.
+
+## Operational RM12 → RM3, history _2 → _3 — 2026-09-22
+
+Both live projects were approaching their 5 GB monthly Neon transfer
+allowance: RM12 four days into service (cut over 2026-09-18),
+HISTORY_DATABASE_URL_2 five (2026-09-17). Same ~2 GB/day burn that has ended
+every project in both rotations, and the third full operational project life
+since the 2026-09-11 deploy-cadence gate — which retires that gate as the
+explanation for good. **The burn is still unidentified.** Run audit-egress a
+few hours after this cutover; src/lib/db.ts names RetailerPrice as the first
+suspect.
+
+### The operational target is RM3, not DATABASE_URL
+
+The instruction named the DATABASE_URL secret. This repo already contains the
+verdict from the one time that was done (maintenance.yml, 2026-08-12):
+"DATABASE_URL IS THE MOST DANGEROUS NAME IN THIS REPO TO ROTATE ONTO … If
+there is a next rotation, give the project a fresh name rather than recycling
+the generic one." prisma/schema.prisma reads `env("DATABASE_URL")` directly,
+most scripts assign it to aim Prisma, and every workflow's job-level env
+assigns it too — so the name would mean both "whichever database this process
+should talk to" and "the project at the head of the chain", and in production
+those coincide, which is exactly what makes a mistake there silent. Raised;
+the owner chose RM3. Every rotation since RM6 has followed the same advice.
+
+### Both targets are recycled, and both were re-verified live first
+
+db-chains.ts's standing rule is that a recycled target is re-checked on every
+return and never trusted from an earlier term. probe-databases and
+probe-history, 2026-09-22, before anything was written:
+
+| | reachable | holds | verdict |
+|---|---|---|---|
+| RM3 | yes | User=137, Card=1406, RetailerPrice=69,689 | stale early-August snapshot, far behind RM12 — rested |
+| HISTORY_DATABASE_URL_3 | yes | 293,094 rows, to 2026-08-21, **GLOBAL=0** | predates the 2026-09-05 GLOBAL migration — rested |
+
+The zero GLOBAL rows are the tell on the history side: every pre-cutover term
+looks like that, and a project still in service would not. Both sources still
+answered, so this was a planned rotation with the data fully drainable, not a
+recovery from a dead project.
+
+### Verified after, not assumed
+
+Each migration was run twice — once for the bulk copy, once immediately before
+this commit so writes in between were included — and every row count matched
+exactly both times:
+
+- operational: User 379, StoreHealthSnapshot 5,169, UserDigestOptOut 370,
+  TrialRedemption 6, StorePartner 2, and every other table; the closing
+  `prisma db push` reported the schema already in sync.
+- history: Card 1,437, ClickEvent 698, PriceHistory 423,999 — including the
+  82,175 GLOBAL rows the charts are drawn from.
+
+### Four latent faults this turned up, none of them the migration
+
+1. **db-audit.yml and weekly-promo.yml each had a duplicate
+   `HISTORY_DATABASE_URL:` key**, which makes GitHub refuse to parse the WHOLE
+   workflow. Both have been undispatchable — scheduled runs included — for as
+   long as the duplicate existed. Found only because the same mistake in my own
+   edit blocked a dispatch. Every YAML reader used locally (Python, js-yaml,
+   editors) accepts a duplicate key silently, last-one-wins, so the parse check
+   run before pushing is exactly what hid it.
+   `tests/workflow-flag-polarity.test.ts` now checks the raw text the way
+   GitHub does.
+2. **The 2026-08-19 `migrate-history-db-to-hdu3` task's operational guard still
+   named RM6**, retired 2026-09-14. An unset name makes that guard skip itself
+   via its own `[ -n … ]` test — it did not go stale, it stopped guarding. The
+   new task names the chain head and that one is marked DO NOT RUN.
+3. **No history migration ever had the live-chain refusal** the operational
+   ones have carried since 2026-08-23. Added.
+4. **probe-databases, the task you are told to run FIRST, still labelled RM10
+   "current"** four days after RM12 replaced it, and did not probe RM12 at all.
+   The one task whose job is to answer "which database is live and what does it
+   hold" pointed at the wrong one.
+
+A fifth was a name collision this rotation created: the current step and the
+ancient 2026-08-era `migrate-main-db` step were both called "Migrate main
+(operational) database to RM3", because the rotation came back to a name it had
+used before. tests/db-migration-guard.test.ts finds the current step by that
+derived name and takes the FIRST match, so all three of its guards silently
+began checking a task that has none of them. The legacy step is renamed. Any
+future rotation onto a previously-used name has the same trap waiting.

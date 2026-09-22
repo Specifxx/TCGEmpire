@@ -224,7 +224,7 @@ const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM12") {
+if (OPERATIONAL_URL_SOURCE !== "RM3") {
   console.warn(
     `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM10. ` +
       `RM10 is the only operational project as of the 2026-09-14 cutover — there is no fallback ` +

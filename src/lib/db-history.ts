@@ -128,9 +128,9 @@ export const HISTORY_URL_SOURCE =
     ? "DATABASE_URL (no history project set — history shares the operational DB)"
     : resolveVar(HISTORY_VARS)!;
 
-if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_2") {
+if (HISTORY_URL_SOURCE !== "HISTORY_DATABASE_URL_3") {
   console.warn(
-    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_2 — the ` +
+    `[db-history] history DB resolved to ${HISTORY_URL_SOURCE}, not HISTORY_DATABASE_URL_3 — the ` +
       `current history project is missing from this environment. HISTORY_DATABASE_URL is the ` +
       `rollback (holds the same GLOBAL series via a row-count-verified pg_dump/restore); ` +
       `RH10/RH9/RH8/RH7/RH6/RH5/_3/_4 are spent or retired. Expect P1001 or writes landing in ` +
