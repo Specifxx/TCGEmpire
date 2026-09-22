@@ -32,9 +32,17 @@ const argOf = (n: string, d: string) => {
 };
 const BASE = argOf("--url", "http://localhost:3111").replace(/\/$/, "");
 
+// THE TOOL PAGES ARE IN THIS LIST BECAUSE THEY WERE NOT, on 2026-09-22.
+// /tools/deal-finder laid out 457px wide at a 390px viewport — RegionToggle's
+// six-market segmented row could not wrap (see that component) — and Chrome for
+// Android widened the layout viewport to fit and scaled the page down, then
+// remembered the zoom for the whole site. This script is the thing that would
+// have caught it, and it had never once loaded the page. Exactly the same shape
+// as the TABLET_WIDTHS note below: the audit missed a regression because of
+// where it was not looking, not because of what it was not measuring.
 const PATHS = (
   process.env.MOBILE_CHECK_PATHS ??
-  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/market,/marketplace,/cards/rarity/rare"
+  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/market,/marketplace,/cards/rarity/rare,/tools/deal-finder,/tools/value-finder"
 )
   .split(",")
   .map((s) => s.trim())

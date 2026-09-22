@@ -6,6 +6,25 @@ import { useCountry } from "./CountryProvider";
 // Compact segmented market switcher for inline use on tool pages (arbitrage, value
 // finder, etc.). Switching sets the country cookie and refreshes, so the server page
 // re-runs its queries for the chosen market. Optional label; hidden when INTL is off.
+//
+// THE SEGMENTED ROW MUST BE ABLE TO WRAP, and this is not cosmetic — it was
+// zooming the entire site out on phones (2026-09-22, reported as "the website
+// is way too small for phone now and zoomed out").
+//
+// The row was `inline-flex` with no wrapping, so its min-content width was the
+// SUM of all six market buttons: 441px measured at a 390px viewport. A flex
+// item cannot shrink below min-content, and the parent's `flex-wrap` cannot
+// help because it wraps the row as ONE unit — there was nothing to wrap. So
+// /tools/deal-finder and /tools/value-finder laid out 457px wide on a 390px
+// phone, and Chrome for Android responds to content wider than the viewport by
+// WIDENING the layout viewport to fit and scaling the page down. It then
+// remembers that zoom per site, so every other page looks shrunken afterwards
+// too — which is why this read as "the whole site" rather than "two tool pages".
+//
+// Wrapping rather than `overflow-x-auto` on purpose: every market stays visible
+// and tappable instead of some being hidden behind a scroll gesture, and the
+// control stays correct however many markets COUNTRY_LIST grows to (it has
+// already grown once — EU was the sixth, and the sixth is what broke it).
 export function RegionToggle({ label = "Market", className = "" }: { label?: string; className?: string }) {
   const { country, setCountry, currency } = useCountry();
   if (!INTL_ENABLED) return null;
@@ -13,7 +32,7 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
       {label && <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>}
-      <div className="inline-flex items-center gap-0.5 rounded-lg border border-ink-700 bg-ink-900 p-1">
+      <div className="flex max-w-full flex-wrap items-center gap-0.5 rounded-lg border border-ink-700 bg-ink-900 p-1">
         {COUNTRY_LIST.map((c) => {
           const active = c.code === country;
           // aria-labelledby, not aria-label: see the comment on the equivalent

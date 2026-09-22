@@ -10639,3 +10639,43 @@ operator guessing whether the feature broke.
 `prisma db push`, which runs on every production build — no migration task
 needed. `prisma format` was NOT run: it realigns all ~1,400 lines of the schema
 and its churn broke an unrelated test that pins a column's exact spacing.
+
+## One un-wrappable row was zooming the whole site out on phones — 2026-09-22
+
+Reported as "the website is way too small for phone now and zoomed out", with a
+screenshot of the homepage. The homepage was not the problem, and neither was
+font size, the viewport meta (`width=device-width, initial-scale=1`, present and
+singular) or anything else global. Measured at a 390px viewport, `/` and
+`/browse` both had `scrollWidth === 390`: no overflow at all.
+
+`/tools/deal-finder` had `scrollWidth === 457`.
+
+`RegionToggle`'s segmented market row was `inline-flex` with no wrapping, so its
+min-content width was the **sum** of all six market buttons — 441px. A flex item
+cannot shrink below min-content, and the parent's own `flex-wrap` could not help
+because it wraps that row as a single unit: there was nothing inside it allowed
+to break. So the page laid out 457px wide on a 390px phone.
+
+**Why that read as "the whole site".** Chrome for Android, faced with content
+wider than the viewport, widens the *layout viewport* to fit and scales the page
+down — `window.innerWidth` came back as 457, not 390. Chrome then remembers that
+zoom per site. Visiting one tool page once leaves every other page shrunken
+afterwards, which is why the report named no particular page and the screenshot
+was of the homepage.
+
+Fixed by letting the row wrap (`flex max-w-full flex-wrap`). Verified
+empirically rather than by reasoning: applying exactly that class change to the
+live page in a real Chromium took `scrollWidth` 457 → 390, and the screenshot
+shows all six markets still visible on two lines.
+
+Wrapping, not `overflow-x-auto`, on purpose — every market stays visible and
+tappable instead of some hiding behind a scroll gesture, and the control now
+stays correct however long `COUNTRY_LIST` grows. It has already grown once: EU
+was the sixth market, and the sixth is what pushed 441px past the phone.
+
+**The audit that exists to catch this had never loaded the page.**
+`scripts/mobile-check.ts` measures exactly this fault and its default path list
+covered twelve routes, none of them under `/tools`. Both tool pages carrying
+`RegionToggle` are now in it. That is the same shape as the note already in that
+file about the 640–790px tablet band: the audit missed a regression because of
+where it was not looking, not because of what it was not measuring.
