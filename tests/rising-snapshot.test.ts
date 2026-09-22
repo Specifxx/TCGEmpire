@@ -226,6 +226,13 @@ test("the OG-safe image helper returns a format satori can actually decode", () 
   ]) {
     assert.equal(cardImageForOg({ imageThumbUrl: raw }), `https://cdn.riftscribe.gg/cards/originals/${stem}.png`);
   }
+  // OUR OWN MIRROR PATH, both shapes. This is the case that made the first
+  // version of the helper a no-op in production: rows written after the mirror
+  // landed store /card-art/<stem>.webp, which is neither a CDN URL nor a
+  // raster, so the helper returned null and the card slot stayed empty.
+  for (const raw of [`https://riftcompare.com/card-art/${stem}.webp`, `/card-art/${stem}.webp`]) {
+    assert.equal(cardImageForOg({ imageThumbUrl: raw }), `https://cdn.riftscribe.gg/cards/originals/${stem}.png`);
+  }
   // Art we host ourselves is already a raster satori reads.
   assert.equal(
     cardImageForOg({ imageThumbUrl: "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg" }),

@@ -10896,6 +10896,20 @@ raster format the mirror does not offer, reaches for the PNG. If a given
 original ever 404s again the helper's caller degrades to the placeholder, which
 is no worse than the empty box it replaces.
 
+**A second pass was needed, and the first fix was a no-op in production.**
+`cardImageForOg` originally understood only `cdn.riftscribe.gg` URLs and plain
+PNG/JPEG. But rows written since the mirror landed store **our own mirror
+path** — `https://riftcompare.com/card-art/<stem>.webp` — which is neither, so
+the helper returned null and the card slot stayed exactly as empty as before.
+Caught by fetching a real card's OG image after the deploy and finding it still
+blank, then reading the card's stored URLs. The helper now recovers the stem
+from the mirror path too, in both its site-relative and absolute forms, and the
+test pins all three shapes.
+
+The lesson is the same one this session keeps re-learning: a deploy is not a
+verification. The render script proved the composition; only fetching the live
+image proved the URL.
+
 Two things this leaves behind:
 
 - **A way to look at the image without deploying.** `npx tsx

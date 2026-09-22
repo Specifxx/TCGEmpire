@@ -65,6 +65,13 @@ export const MIRROR_PREFIX = "/card-art/";
 const CDN_CARD_RE = /^https:\/\/cdn\.riftscribe\.gg\/cards\/(?:originals|thumbnails\/(?:small|medium|large))\/([a-z0-9][a-z0-9-]*)\.[a-z0-9]+$/i;
 
 /** The CDN's filename stem, which mirror-card-art.ts reuses as our filename. */
+// Our own mirror, in either the site-relative or the absolute form — the two
+// shapes cardImageSrc emits and the database has since started storing.
+const MIRROR_RE = new RegExp(`^(?:${SITE_URL})?${MIRROR_PREFIX}([a-z0-9][a-z0-9-]*)\\.webp$`, "i");
+function mirrorStemOf(url: string): string | null {
+  return MIRROR_RE.exec(url)?.[1] ?? null;
+}
+
 function stemOf(url: string): string | null {
   return CDN_CARD_RE.exec(url)?.[1] ?? null;
 }
@@ -110,7 +117,12 @@ export function liveCardImage(url: string | null | undefined): string | null {
 export function cardImageForOg(card: CardImageUrls): string | null {
   for (const raw of [card.imageUrl, card.imageThumbUrl]) {
     if (!raw) continue;
-    const stem = stemOf(raw);
+    // A CDN rendition, OR one of OUR OWN mirror paths. The second case is not
+    // hypothetical and it is what made the first version of this helper a
+    // no-op: rows written after the mirror landed store
+    // `…/card-art/<stem>.webp` directly, so a stem lookup that only understood
+    // cdn.riftscribe.gg returned null for them and the card slot stayed empty.
+    const stem = stemOf(raw) ?? mirrorStemOf(raw);
     if (stem) {
       // The 71 cards whose art the CDN dropped entirely have no PNG either.
       return MISSING_CARD_ART.has(stem) ? null : `${CDN_CARDS}originals/${stem}.png`;
