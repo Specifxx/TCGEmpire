@@ -11142,3 +11142,56 @@ against RM3 but told the reader to go and tick RM10 in Vercel. It now builds
 both the check and the message from `OPERATIONAL_VARS[0]`, and
 `tests/db-chain.test.ts` accepts that form and forbids a hard-coded name in the
 text.
+
+## Card pages with no picture: the mirror was never re-run — 2026-09-23
+
+Reported from a phone: Irelia, Graceful (SFD 141/221) showed the generated
+placeholder instead of the card, and "quite a few cards" did the same.
+
+**89 of 1,432 sitemapped card pages had no image.** 71 of them were one list:
+`src/lib/card-art-missing.ts`, written by `scripts/mirror-card-art.ts` on
+2026-09-13 when the RiftScribe CDN deleted `originals/` and those cards 404'd
+at every rendition. `cardImageSrc` returns null for a listed stem on purpose,
+so the site draws the placeholder rather than a broken image. That was right
+for that day and never revisited. On 2026-09-22 I found `originals/` serving
+again while fixing the OG image, and did not connect it to this list.
+
+Re-probed all 71 today: **70 answer 200 at both `originals/` and
+`thumbnails/large/`.** Re-running the mirror wrote those 70 files (5
+re-encoded to fit the 150KB budget, which `check-images.ts` confirms) and
+regenerated the list to the one stem the CDN still lacks, Vex UNL 055a. That
+covers 67 of the 89 pages. The other 4 recovered stems belong to printings with
+no page of their own.
+
+**The remaining 22 were never in the mirror**: they are not in RiftScribe's
+catalogue at all. Checked each against Riot's official gallery
+(playriftbound.com, the `__NEXT_DATA__` card objects):
+
+- **Published there under their own id (4)**: the Unleashed tokens Bird,
+  Brush and Reflection, and Vex UNL 055a. `scripts/set-official-art.ts`
+  (maintenance task `set-official-art`) sets them. It matches by slug and never
+  overwrites working art. Brush is written as landscape, since that is how
+  Riot's file is cut.
+- **Not published (18)**: the Vendetta alt-art runes (R01a–R06a; the gallery
+  has only the base `ven-r01` prints), the Nexus Night rune/unit promos, and
+  four organised-play promos. These stay on the placeholder. A different
+  printing's picture would misstate which card is on sale, the same line
+  `set-rune-art.ts` and `fix-cloned-art.ts` already hold.
+
+**The placeholder itself was also wrong.** `CardArt` printed
+`{collectorNumber} · OGN` as a literal, so every Spiritforged, Unleashed and
+Vendetta placeholder claimed to be Origins. That was visible in the report:
+"141/221 · OGN" on a Spiritforged card. It now prints the card's own
+`setCode`.
+
+`tests/card-art-recovery.test.ts` pins the set label, Irelia's recovery, the
+one-entry missing list (so the next time it grows, the first move is to re-run
+the mirror) and the art script's no-overwrite rule.
+
+What this does NOT fix: a card added after the last mirror run whose stored
+URL is a RiftScribe CDN URL is still rewritten to a `/card-art/` file that
+does not exist, and `CardImage` has no `onError` fallback. None of the 1,432
+sitemapped cards is in that state today, because every live CDN-URL card is
+mirrored, but a new set synced from RiftScribe would be. Re-run the mirror in
+the same change as any `fetch-cards.ts` refresh (its header already says so;
+`tests/card-image-url.test.ts` enforces it for the checked-in snapshot only).

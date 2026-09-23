@@ -56,6 +56,7 @@ on:
           - audit-ven        # read-only census of VEN cards (chase-tier fields)
           - audit-runes      # read-only census of every set's Rune printings + which lack real art
           - set-rune-art     # attach real English art to placeholder rune printings (OGN 'b' promos, UNL alt arts, SFD Nexus Night) + clear the Chinese-only VEN alt-art prints
+          - set-official-art # attach Riot's official gallery art to the 4 placeholder printings it publishes (UNL tokens Bird/Brush/Reflection, Vex UNL 055a) — see scripts/set-official-art.ts
           - audit-rarity     # read-only: rarity distribution per set, base prints vs chase prints, + anomalies
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
@@ -4729,6 +4730,12 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
 
+      - name: Set official gallery art (placeholder printings Riot publishes)
+        if: inputs.task == 'set-official-art'
+        run: npx tsx scripts/set-official-art.ts ${{ inputs.dry_run && '--dry' || '' }}
+        env:
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+
       - name: Fix organized-play promo flag (Nexus Night rune cycle)
         if: inputs.task == 'fix-op-promo-flag'
         run: npx tsx scripts/fix-op-promo-flag.ts ${{ inputs.dry_run && '--dry' || '' }}
@@ -4743,7 +4750,7 @@ jobs:
       # TTL. Same non-fatal pattern as refresh-prices.yml's revalidate step: a
       # failed ping only costs freshness, never data.
       - name: Revalidate site pages (on-demand ISR)
-        if: inputs.task == 'fix-kennen-name' && !inputs.dry_run
+        if: (inputs.task == 'fix-kennen-name' || inputs.task == 'set-official-art') && !inputs.dry_run
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"
