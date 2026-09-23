@@ -46,7 +46,9 @@ const EMPTY_ME: Me = {
 
 let mePromise: Promise<Me> | null = null;
 
-function fetchMe(): Promise<Me> {
+// Exported for use-watchlist.ts, which gates on this shared session instead of
+// making its own request (an anonymous visitor then makes no watchlist call).
+export function fetchMe(): Promise<Me> {
   if (!mePromise) {
     mePromise = fetch("/api/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : EMPTY_ME))
