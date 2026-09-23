@@ -10972,3 +10972,61 @@ acquisition — search traffic, the signed-out popup (111 of 253 recent
 accounts, the largest single source) and whether free visitors still see
 enough value to click through after 2026-09-22 removed all free rows from
 Deal Finder and Rising Cards.
+## The US TCGplayer row is now the cheapest English listing, not market price, 2026-09-23
+
+The owner: "TCGPlayer prices are displayed as the market price for each card
+listing, but for the card listing itself it should be the cheapest available
+price in the English version on TCGPlayer." They were right that the two
+numbers answer different questions. Market price is a trailing average of
+recent sales; every other row in a comparison is "what you pay to buy it now".
+Mixing them made TCGplayer the only store on the page quoted on a different
+basis, and — measured on a 200-card live sample — the cheapest in-stock English
+Near Mint listing was **lower than market on 188 of 200, median −24.7%**. The
+comparison was systematically overstating what TCGplayer would charge.
+
+**Two rows per card now, not one.** The same search response already carries
+both numbers, so this costs no new request:
+
+- `tcgplayer` (buyable, US, `basis: "listing"`) — cheapest in-stock listing
+  with `languageId === 1`, Near Mint, and a `printing` that matches the card's
+  finish, with that listing's own `shippingPrice` recorded in `shippingCents`.
+  Falls back to market only when no qualifying listing is in the preview.
+- `tcgplayer_market` (reference, US, `basis: "market"`) — the old number,
+  registered in `US_FALLBACK_RETAILERS` so every comparison, lowest-price
+  column and store count already ignores it.
+
+The printing filter is load-bearing, not tidiness: a product's preview mixes
+Normal and Foil listings, and Scuttle Crab's cheapest listing was a Normal copy
+under the foil product. Without it the foil row would have quoted a non-foil
+price.
+
+**Four consumers keep reading market price, deliberately**: the value floor
+(`price-import.ts`), the Deal Finder "vs TCGplayer" benchmark (`arbitrage.ts`),
+Box EV, and the overseas reference block (`tcg-reference.ts`). Each is valuing a
+card, not buying one, and a single lowball listing is the wrong input to a
+valuation. They read through `preferMarketRows()` over both keys, because the
+value floor runs BEFORE the TCGplayer step on the first refresh after deploy —
+at that moment `tcgplayer_market` does not exist yet and the market figure is
+still sitting on `tcgplayer`. After one refresh the helper is a no-op.
+
+UK/SG/AU/CA converted rows stay on market price: they are references there, not
+stores, and a cheapest-listing figure would be a US seller's price with US
+shipping behind it.
+
+**What this moves, and how it is contained.**
+
+- US lows drop on most cards the day this lands. That is the correction, not a
+  side effect.
+- `PriceHistory` records the global minimum, so the step lands in the weekly
+  series. The RiftCompare Index is chain-linked, and `METHODOLOGY_BREAKS` in
+  `market-index.ts` skips the link across 2026-09-23 → 2026-10-01 so the level
+  carries through instead of printing a one-off market crash. The methodology
+  guide now says this in a section of its own.
+- 7-day movers see the step for about a week and then self-heal; disclosed in
+  the same guide section rather than special-cased.
+
+`tests/tcgplayer-listing-basis.test.ts` pins the listing choice, the printing
+filter (with the Scuttle Crab shape), both bases, the fallback registration,
+that the importer writes both rows, the four consumers going through the
+helper, the card page's store count excluding the reference row, and the index
+break arithmetic.

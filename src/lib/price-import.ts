@@ -12,6 +12,7 @@ import { importSealed } from "./sealed-import";
 import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, GLOBAL_HISTORY_COUNTRY } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
+import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
@@ -503,12 +504,22 @@ export function eBayWorthSearching(
   return !EBAY_SKIP_RARITIES.has(chasePrintRarity(c));
 }
 
-/** TCGplayer US market price per card, in USD cents — the value-floor reference. */
+/**
+ * TCGplayer US market price per card, in USD cents — the value-floor reference.
+ *
+ * MARKET, not the buyable listing, on purpose: the floor decides which cards are
+ * worth an eBay call at all, and one seller's cheap ask must not drop a card below
+ * it. Reads the market reference row, falling back to the legacy row per card —
+ * see lib/tcg-market-rows.ts for why that fallback exists (this very function runs
+ * BEFORE the TCGplayer step in the same import).
+ */
 export async function tcgplayerUsValues(): Promise<Map<string, number>> {
-  const rows = await prisma.retailerPrice.findMany({
-    where: { retailer: "tcgplayer", country: "US" },
-    select: { cardId: true, priceCents: true },
-  });
+  const rows = preferMarketRows(
+    await prisma.retailerPrice.findMany({
+      where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US" },
+      select: { cardId: true, priceCents: true, retailer: true },
+    }),
+  );
   const out = new Map<string, number>();
   // A card can have several TCGplayer rows (foil/condition variants); the
   // cheapest is the right reference, so a card is only skipped when even its

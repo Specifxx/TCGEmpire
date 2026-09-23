@@ -9,6 +9,7 @@ import { BoxEvCalculator, type BoxEvSet, type PullCard } from "@/components/BoxE
 import { poolOf, POOL_ORDER, type PoolKey } from "@/lib/box-ev";
 import { pageAlternates } from "@/lib/seo";
 import { AdSlot } from "@/components/AdSlot";
+import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "@/lib/tcg-market-rows";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // /tools/box-ev — what is a sealed box actually worth if you open it?
@@ -64,14 +65,20 @@ const GRID_PER_POOL = 8;
 function getBoxEvData() {
   return cachedOrDirect(
     async () => {
-      const tcgUs = await prisma.retailerPrice
-        .findMany({
-          // Literals rather than importing TCG_US, so this page doesn't drag the
-          // whole importer module graph into the server bundle.
-          where: { retailer: "tcgplayer", country: "US" },
-          select: { cardId: true, priceCents: true, isFoil: true },
-        })
-        .catch(() => [] as { cardId: string; priceCents: number; isFoil: boolean }[]);
+      // TCGplayer's US MARKET price — what the owner asked Box EV to use for
+      // coverage (tests/tcgplayer.test.ts). Since 2026-09-23 that lives in its own
+      // reference row; the "tcgplayer" row is now the cheapest English listing,
+      // which is one seller's ask and would make set EV jumpy. Falls back per card
+      // to the legacy row — see lib/tcg-market-rows.ts, imported instead of TCG_US
+      // so this page still doesn't drag the importer's module graph into its bundle.
+      const tcgUs = preferMarketRows(
+        await prisma.retailerPrice
+          .findMany({
+            where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US" },
+            select: { cardId: true, priceCents: true, isFoil: true, retailer: true },
+          })
+          .catch(() => [] as { cardId: string; priceCents: number; isFoil: boolean; retailer: string }[]),
+      );
 
       const cards = await prisma.card
         .findMany({

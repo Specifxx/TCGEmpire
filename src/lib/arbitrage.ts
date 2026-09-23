@@ -20,6 +20,7 @@ import { RETAILERS } from "./retailers";
 import { affiliateUrl } from "./affiliate";
 import { cardTileSelect } from "./cards";
 import { TCG_US } from "./tcgplayer";
+import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { usdCentsToCountry, convertCents } from "./fx";
 import { cachedOrDirect, sydneyDayKey } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
@@ -83,15 +84,23 @@ function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow
 // Documented invariant: ONE row per card (US, in USD) — enforced here with a
 // `take` rather than only asserted in prose, so a data bug that broke the
 // invariant would truncate rather than silently balloon this cache entry.
-type TcgRow = { cardId: string; priceCents: number; url: string };
+//
+// MARKET PRICE, since 2026-09-23 read from its own reference row: the "tcgplayer"
+// US row became the cheapest English NM listing, and this benchmark is documented
+// (getArbitrageVsTcgplayer below) as a comparison against TCGplayer's MARKET price.
+// Falls back per card to the legacy row — see lib/tcg-market-rows.ts. The `take`
+// covers both keys (two rows per card during the transition, one after).
+type TcgRow = { cardId: string; priceCents: number; url: string; retailer: string };
 function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
   return cachedOrDirect(
-    () =>
-      prisma.retailerPrice.findMany({
-        where: { retailer: TCG_US.retailer, inStock: true },
-        select: { cardId: true, priceCents: true, url: true },
-        take: 5000, // ~3.5x the current card catalogue — see invariant above
-      }),
+    async () =>
+      preferMarketRows(
+        await prisma.retailerPrice.findMany({
+          where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US", inStock: true },
+          select: { cardId: true, priceCents: true, url: true, retailer: true },
+          take: 10000, // ~3.5x the catalogue across both keys — see invariant above
+        }),
+      ),
     ["arb-tcg-us-rows", sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   );

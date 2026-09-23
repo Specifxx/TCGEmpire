@@ -2255,10 +2255,13 @@ export function deliveredCents(retailerKey: string, priceCents: number): number 
 
 // The shipping cost for a single listing — returned ONLY when we genuinely know it.
 // eBay's Browse API gives a real per-listing figure (including 0 = seller states
-// free post), so those are exact. Everywhere else (Shopify stores, TCGplayer)
-// postage is calculated at checkout and we don't actually know it, so we return
-// `null` = "unknown" rather than a fabricated flat estimate. Accuracy over
-// exhaustiveness — wrong delivery prices erode trust (and drew user complaints).
+// free post), so those are exact. Since 2026-09-23 so does the US TCGplayer row:
+// it quotes one specific listing, and TCGplayer's search preview carries that
+// listing's own US shipping, stored on the row. Everywhere else (Shopify stores,
+// TCGplayer's market-price reference rows) postage is calculated at checkout and
+// we don't actually know it, so we return `null` = "unknown" rather than a
+// fabricated flat estimate. Accuracy over exhaustiveness — wrong delivery prices
+// erode trust (and drew user complaints).
 export function effectiveShippingCents(rowShippingCents: number | null): number | null {
   return rowShippingCents;
 }
