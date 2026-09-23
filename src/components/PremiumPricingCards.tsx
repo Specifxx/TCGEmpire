@@ -87,7 +87,7 @@ export function PremiumPricingCards({
         <div
           role="tablist"
           aria-label="Billing cycle"
-          className="mx-auto mt-6 flex max-w-sm items-stretch gap-1.5 rounded-xl border border-ink-700 bg-ink-900/70 p-1.5"
+          className="mx-auto mt-6 flex max-w-md items-stretch gap-1.5 rounded-xl border border-ink-700 bg-ink-900/70 p-1.5"
         >
           <button
             type="button"
@@ -98,8 +98,8 @@ export function PremiumPricingCards({
               cycle === "annual" ? "bg-ink-800 shadow-sm" : "text-slate-400 hover:bg-ink-800/60"
             }`}
           >
-            <span className="flex items-center justify-center gap-1.5">
-              <span className={`text-sm font-bold ${cycle === "annual" ? "text-white" : "text-slate-300"}`}>Annual billing</span>
+            <span className="flex flex-wrap items-center justify-center gap-1.5 gap-y-0.5">
+              <span className={`whitespace-nowrap text-sm font-bold ${cycle === "annual" ? "text-white" : "text-slate-300"}`}>Annual billing</span>
               {savePct > 0 && (
                 <span className="rounded-full bg-brand-500/15 px-1.5 py-0.5 text-[10px] font-extrabold text-brand-400">
                   Save {savePct}%
@@ -123,7 +123,19 @@ export function PremiumPricingCards({
         </div>
       )}
 
-      <div className={`mx-auto mt-6 grid gap-4 ${plusLive ? "max-w-4xl sm:grid-cols-3" : "max-w-2xl sm:grid-cols-2"}`}>
+      {/* From sm up each card is three subgrid rows (header, list, CTA) sharing
+          tracks across the cards, so every header is one height, every list
+          starts at one y and every button shares one top. Before (2026-09-23)
+          the Free card's button sat ~100px below the paid ones at 1440
+          (1069 vs 968/967) because each card's flex column sized on its own.
+          sm:gap-y-0 because a subgrid inherits the parent's row gap, which
+          would otherwise open gaps inside the cards. Phones keep the stacked
+          flex column: every sm: class below is inert there. Without subgrid
+          support the cards stack header/list/CTA in auto rows: unaligned,
+          not broken. The toggle's "Annual billing" is whitespace-nowrap in a
+          max-w-md bar: in max-w-sm it wrapped to two lines (40px) at every
+          width, and on phones the Save pill now drops under the label. */}
+      <div className={`mx-auto mt-6 grid gap-4 sm:gap-y-0 ${plusLive ? "max-w-4xl sm:grid-cols-3" : "max-w-2xl sm:grid-cols-2"}`}>
         <FreeCard signedIn={signedIn} />
 
         {plusLive && (
@@ -183,7 +195,7 @@ const PREMIUM_FEATURES_STANDALONE = [
 
 function FreeCard({ signedIn }: { signedIn: boolean }) {
   return (
-    <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700">
+    <div className="card-surface flex flex-col overflow-hidden rounded-2xl border border-ink-700 sm:row-span-3 sm:grid sm:grid-rows-subgrid">
       <div className="border-b border-ink-800 bg-ink-900 px-5 py-5 text-center">
         <div className="text-base font-extrabold text-white">Free account</div>
         <p className="mt-0.5 text-[11px] text-slate-500">Price comparison, always</p>
@@ -193,8 +205,8 @@ function FreeCard({ signedIn }: { signedIn: boolean }) {
         </div>
         <p className="mt-1 text-[11px] font-semibold text-brand-400">Free forever</p>
       </div>
-      <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5">
-        <ul className="space-y-2 text-left text-[13px] text-slate-300">
+      <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5 sm:contents">
+        <ul className="space-y-2 text-left text-[13px] text-slate-300 sm:px-5 sm:pt-5">
           {FREE_FEATURES.map((f) => (
             <li key={f} className="flex items-start gap-2">
               <span className="mt-0.5 font-bold text-brand-400">✓</span>
@@ -202,13 +214,15 @@ function FreeCard({ signedIn }: { signedIn: boolean }) {
             </li>
           ))}
         </ul>
-        {signedIn ? (
-          <div className="rounded-lg border border-ink-700 py-3 text-center text-sm text-slate-400">Included with your account</div>
-        ) : (
-          <Link href="/login?next=/premium" className="btn-ghost w-full py-3 text-center text-sm">
-            Create a free account →
-          </Link>
-        )}
+        <div className="sm:self-start sm:px-5 sm:pb-5 sm:pt-4">
+          {signedIn ? (
+            <div className="rounded-lg border border-ink-700 py-3 text-center text-sm text-slate-400">Included with your account</div>
+          ) : (
+            <Link href="/login?next=/premium" className="btn-ghost w-full py-3 text-center text-sm">
+              Create a free account →
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -254,7 +268,7 @@ function PaidTierCard({
 
   return (
     <div
-      className={`card-surface relative flex flex-col overflow-hidden rounded-2xl ${
+      className={`card-surface relative flex flex-col overflow-hidden rounded-2xl sm:row-span-3 sm:grid sm:grid-rows-subgrid ${
         highlight ? "border-2 border-gold/60 shadow-[0_8px_24px_rgba(0,0,0,0.35)]" : "border border-ink-700"
       }`}
     >
@@ -284,8 +298,8 @@ function PaidTierCard({
           <p className="mt-1 text-[11px] text-slate-500">&nbsp;</p>
         )}
       </div>
-      <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5">
-        <ul className="space-y-2 text-left text-[13px] text-slate-300">
+      <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5 sm:contents">
+        <ul className="space-y-2 text-left text-[13px] text-slate-300 sm:px-5 sm:pt-5">
           {features_.map((f) => (
             <li key={f} className="flex items-start gap-2">
               <span className={`mt-0.5 font-bold ${highlight ? "text-gold" : "text-brand-400"}`}>✓</span>
@@ -293,16 +307,18 @@ function PaidTierCard({
             </li>
           ))}
         </ul>
-        <PremiumCta
-          checkoutLive={checkoutLive}
-          signedIn={signedIn}
-          trialEligible={trialEligible}
-          trialAvailable={trialAvailable}
-          priceLabel={priceLabel}
-          trialDays={trialDays}
-          plan={effectiveCycle}
-          tier={tier}
-        />
+        <div className="sm:self-start sm:px-5 sm:pb-5 sm:pt-4">
+          <PremiumCta
+            checkoutLive={checkoutLive}
+            signedIn={signedIn}
+            trialEligible={trialEligible}
+            trialAvailable={trialAvailable}
+            priceLabel={priceLabel}
+            trialDays={trialDays}
+            plan={effectiveCycle}
+            tier={tier}
+          />
+        </div>
       </div>
     </div>
   );

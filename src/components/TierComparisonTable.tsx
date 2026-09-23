@@ -137,7 +137,11 @@ export function TierComparisonTable({
   showPlus?: boolean;
   tinted?: boolean;
 }) {
-  const cell = compact ? "px-2 py-1.5" : "px-3 py-2.5";
+  // The compact (dialog) strings are unchanged; only the /premium table
+  // narrows its tier columns below sm (see the comment on the wrapper).
+  const featureCell = compact ? "px-2 py-1.5" : "px-2.5 py-2.5 text-[13px] sm:px-3 sm:text-sm";
+  const tierHead = compact ? "w-16 px-2 py-1.5" : "w-14 px-1 py-2.5 text-xs sm:w-24 sm:px-3 sm:text-sm";
+  const tierData = compact ? "px-2 py-1.5" : "w-14 px-1 py-2.5 text-xs sm:w-24 sm:px-3 sm:text-sm";
   const rows = compact
     ? TIER_COMPARISON.filter((r) => !DIALOG_OMIT_FEATURES.has(r.feature)).map((r) =>
         DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, plus: true, premium: true } : r
@@ -146,26 +150,34 @@ export function TierComparisonTable({
   const plusWash = tinted ? "bg-slate-500/[0.06]" : "";
   const premiumWash = tinted ? "bg-gold/[0.07]" : "";
   return (
-    // min-w forces the tier columns to stay readable; the wrapper scrolls
-    // horizontally rather than letting them crush together on a phone.
+    // On phones every column fits: a tier cell only ever holds a tick, a dash
+    // or "Full list", so 56px columns at 12px text are enough (2026-09-23).
+    // The old 560px floor put the table in a 348px box at 390, with Free
+    // account 79% visible and Plus and Premium entirely off-screen behind a
+    // sideways scroll (a 22rem floor still clipped Premium at 390 and hid it
+    // completely at 320, so it is min-w-0). The cost is taller rows
+    // at 320. From sm up the min-width keeps the columns roomy and the wrapper
+    // still contains its own scroll; the compact dialog table keeps its floor.
     <div className="overflow-x-auto">
       <table
         className={`w-full border-collapse ${
-          compact ? (showPlus ? "min-w-[440px]" : "min-w-[380px]") + " text-xs" : (showPlus ? "min-w-[560px]" : "min-w-[440px]") + " text-sm"
+          compact
+            ? (showPlus ? "min-w-[440px]" : "min-w-[380px]") + " text-xs"
+            : (showPlus ? "min-w-0 sm:min-w-[560px]" : "min-w-0 sm:min-w-[440px]") + " text-sm"
         }`}
       >
         <thead>
           <tr className="border-b border-ink-700 text-left">
-            <th scope="col" className={`${cell} font-semibold text-slate-400`}>Feature</th>
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-brand-400`}>
+            <th scope="col" className={`${featureCell} font-semibold text-slate-400`}>Feature</th>
+            <th scope="col" className={`${tierHead} text-center font-bold text-brand-400`}>
               Free account
             </th>
             {showPlus && (
-              <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} ${plusWash} text-center font-bold text-slate-200`}>
+              <th scope="col" className={`${tierHead} ${plusWash} text-center font-bold text-slate-200`}>
                 Plus
               </th>
             )}
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} ${premiumWash} text-center font-bold text-gold`}>
+            <th scope="col" className={`${tierHead} ${premiumWash} text-center font-bold text-gold`}>
               Premium
             </th>
           </tr>
@@ -173,10 +185,10 @@ export function TierComparisonTable({
         <tbody>
           {rows.map((r) => (
             <tr key={r.feature} className="border-b border-ink-800 last:border-0">
-              <th scope="row" className={`${cell} text-left font-normal text-slate-200`}>{r.feature}</th>
-              <td className={`${cell} text-center`}><TierCell v={r.account} dialog={compact} /></td>
-              {showPlus && <td className={`${cell} ${plusWash} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
-              <td className={`${cell} ${premiumWash} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
+              <th scope="row" className={`${featureCell} text-left font-normal text-slate-200`}>{r.feature}</th>
+              <td className={`${tierData} text-center`}><TierCell v={r.account} dialog={compact} /></td>
+              {showPlus && <td className={`${tierData} ${plusWash} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
+              <td className={`${tierData} ${premiumWash} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
             </tr>
           ))}
         </tbody>
