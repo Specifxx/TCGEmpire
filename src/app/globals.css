@@ -32,10 +32,30 @@
   --c-up: 63 185 80;
   --c-down: 240 80 110;
   --c-white: 255 255 255;
+  /* Chromatic text shades: Tailwind's stock hexes, so dark is pixel-identical. */
+  --c-rose-200: 254 205 211;
+  --c-rose-300: 253 164 175;
+  --c-rose-400: 251 113 133;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-400: 52 211 153;
+  --c-amber-100: 254 243 199;
+  --c-amber-200: 253 230 138;
+  --c-amber-300: 252 211 77;
+  --c-sky-200: 186 230 253;
+  --c-sky-300: 125 211 252;
+  --c-sky-400: 56 189 248;
+  --c-lime-200: 217 249 157;
+  --c-lime-300: 190 242 100;
+  --c-purple-300: 216 180 254;
+  --c-blue-300: 147 197 253;
   --page-bg: #0b0e14;
   --page-fg: #e8eaee;
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-glow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.45);
+  /* The scrolled header's drop (NavbarShell SCROLLED, tailwind `shadow-header`). */
+  --shadow-header: 0 8px 30px rgba(0, 0, 0, 0.35);
   --scroll-track: #0f131c;
   --scroll-thumb: #2c3650;
   --scroll-thumb-hover: #3a4564;
@@ -76,7 +96,13 @@
    slate text ramp darkens so that every shade the dark theme guarantees at
    4.5:1 still clears it on the light surfaces (pinned in tests/theme.test.ts).
    brand-400 (the link colour) and the gain/loss reds and greens darken for
-   the same reason; brand-500/600 fills and the bg-black overlays don't move. */
+   the same reason; brand-500/600 fills and the bg-black overlays don't move.
+   Since 2026-09-23 the rose/red/emerald/amber/sky/lime/purple/blue TEXT shades
+   darken too (their fills stay Tailwind stock): the stock pastels measured
+   1.02-2.8:1 here (/sealed 'Sold out' rose-300 1.44:1, the Riftle hint
+   amber-100 1.02:1). The values below are 5.5-9.6:1 on white (rose-400 6.29,
+   red-400 6.47, emerald-400 5.48, sky-400 5.93, amber-300 7.09) and at least
+   4.54:1 on each family's own 15-20% tint. */
 :root[data-theme="light"] {
   color-scheme: light;
   --c-ink-950: 244 246 248;
@@ -100,10 +126,30 @@
   --c-up: 22 101 52;
   --c-down: 190 18 60;
   --c-white: 11 15 20;
+  --c-rose-200: 136 19 55;
+  --c-rose-300: 159 18 57;
+  --c-rose-400: 190 18 60;
+  --c-red-300: 153 27 27;
+  --c-red-400: 185 28 28;
+  --c-emerald-300: 6 95 70;
+  --c-emerald-400: 4 120 87;
+  --c-amber-100: 120 53 15;
+  --c-amber-200: 146 64 14;
+  --c-amber-300: 146 64 14;
+  --c-sky-200: 7 89 133;
+  --c-sky-300: 7 89 133;
+  --c-sky-400: 3 105 161;
+  --c-lime-200: 63 98 18;
+  --c-lime-300: 63 98 18;
+  --c-purple-300: 107 33 168;
+  --c-blue-300: 30 64 175;
   --page-bg: #f4f6f8;
   --page-fg: #0b0f14;
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
   --shadow-glow: 0 4px 12px rgba(16, 24, 40, 0.12);
+  /* A soft 12px lift, not the dark theme's 30px black drop: that one measured a
+     grey band ~45px deep under the header on the #f4f6f8 page (202 → 237). */
+  --shadow-header: 0 4px 12px rgba(16, 24, 40, 0.08);
   --scroll-track: #eef1f5;
   --scroll-thumb: #cfd5de;
   --scroll-thumb-hover: #b4bcc8;
@@ -127,6 +173,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* html's clip is PROPAGATED to the viewport, where it acts like `hidden`: the
+   document keeps its scrollable overflow, and Chrome for Android still sizes the
+   layout viewport from it, so one overflowing element zoomed the whole site out
+   (measured 2026-09-23: /movers@390 innerWidth 693). body's own clip stops the
+   overflow at body's box before it reaches the viewport. body's value is not
+   propagated, because html's overflow is no longer `visible`. `clip`, not
+   `hidden`, so there is no scroll container and the sticky header and sidebars
+   keep working. A SAFETY NET ONLY: the per-component overflow fixes still land,
+   and scripts/mobile-check.ts still sees overflow through body.scrollWidth. */
+body {
+  overflow-x: clip;
+}
+
 body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -134,6 +193,19 @@ body {
   /* Terminal numerals everywhere: lining, tabular figures by default so any digit
      that ISN'T wrapped in .num still aligns like a trading desk, not a flyer. */
   font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* …but not in running prose. Inter's "tnum" also swaps U+002D for a tabular-width
+   hyphen (7px → 10px at 15px), so compound words read 'near- mint' and
+   'pre -orders'. Paragraphs, quotes, captions, FAQ summaries, labels, dt, the
+   prose lists inside <article> and nav link lists keep lining figures with
+   proportional spacing. Plain li / dd / td / th keep the inherited tnum on
+   purpose, because some hold unmarked numeric columns (BestBasket.tsx unit
+   prices, games/shared.tsx leaderboard scores). :where() has zero specificity,
+   and .num / tabular-nums set font-variant-numeric, so they still get tabular
+   digits. */
+:where(p, blockquote, figcaption, summary, label, dt, article li, nav li) {
+  font-feature-settings: "lnum" 1;
 }
 
 /* Headings: Fraunces — a sharp, high-contrast, slightly flared serif chosen as a
@@ -170,6 +242,15 @@ h1 {
   /* Tighter than the serif's -0.01em: a heavy grotesque at display sizes needs
      more negative tracking to read as one solid mass rather than loose letters. */
   letter-spacing: -0.025em;
+}
+
+/* The homepage's tracked eyebrows ('Trending', 'Recently viewed') follow its sans
+   titling voice too. Everywhere else .rb-eyebrow keeps the Fraunces serif.
+   (2026-09-23: 'TRENDING' was the one serif label in the sans hero, beside the
+   sans 'SHOPPING FROM'.) Specificity (0,2,0) beats .rb-eyebrow below, and only
+   the face changes: tracking, caps, size and colour stay. */
+.rb-display-sans .rb-eyebrow {
+  font-family: var(--font-riftbound), var(--font-sans), system-ui, sans-serif;
 }
 
 /* "Eyebrow" micro-heading — the tracked, uppercase treatment the official site
@@ -259,6 +340,22 @@ html {
    green instead. */
 :root[data-theme="light"] .btn-primary:hover {
   background-color: #27b868;
+}
+
+/* Data-coloured text: domain, rarity, condition and grader chips. The hex is
+   passed as --data-ink instead of `color` so the theme can reach it. Raw in dark
+   (pixel-identical); mixed 50% toward black in light, where the dark-tuned hexes
+   read 1.3-3.4:1 (Order #cbd5e1 1.37:1, Showcase #f5a524 1.82:1). After the mix
+   the worst case is Order at ~5.0:1 and the rest 5.6-8.6:1. UNLAYERED on purpose:
+   it has to follow @tailwind utilities to beat a `text-white` on the same element
+   (MyCollection's condition select). Where color-mix is unsupported, the light
+   value is invalid at computed-value time and the text inherits the themed
+   parent colour, which is readable. */
+.data-ink {
+  color: var(--data-ink);
+}
+:root[data-theme="light"] .data-ink {
+  color: color-mix(in srgb, var(--data-ink) 50%, #000);
 }
 
 @layer components {
@@ -383,6 +480,20 @@ html {
   .above-bottombar.left-4 {
     left: calc(var(--sidenav-w) + 1rem);
   }
+  /* A nudge that was ALREADY showing yields to any Dialog or nav menu opened after
+     it. z-[70] (Z.nudge) outranks z-overlay (60), which QuickView, SealedQuickView
+     and CommandLauncher use, and the nudges only check the flag before they
+     appear. useModalFlag (ui/Dialog.tsx) sets data-rc-dialog on <body> while any
+     modal is open and deletes it on close, so the nudge comes back untouched.
+     visibility:hidden also takes its ✕ out of the tab order, which keeps the
+     dialog's focus trap clean. `.left-4` matches exactly the three nudges
+     (FeedbackWidget is right-4; Toast is inset-x-0). Pairs with the nudges'
+     own Escape guard. (2026-09-23: at 390×844 the nudge hid ~56% of QuickView,
+     including its price list and 'View full page'.) */
+  body[data-rc-dialog] .above-bottombar.left-4 {
+    visibility: hidden;
+    pointer-events: none;
+  }
 
   @media (pointer: coarse) {
     .tap-link,
@@ -416,6 +527,39 @@ html {
     .tap-icon {
       height: 48px;
       width: 48px;
+    }
+  }
+
+  /* iOS Safari zooms the page when a field under 16px is focused, and does not
+     zoom back out. .input is 16px on phones via text-base, but many fields bypass
+     or override it: text-sm / text-xs, an inherited label text-sm, and .input's
+     own sm:text-sm on a landscape phone wider than 640px. Backstop: every
+     text-entry field is 16px on PHONES in either orientation, meaning a coarse
+     pointer and either narrower than sm or no taller than 500px (a landscape
+     phone). Tablets from sm keep .input's deliberate 14px, and mouse layouts are
+     untouched. Fields already set larger (the hero search's sm:text-lg = 18px)
+     are excluded by the class test rather than shrunk. !important for the same
+     reason as .tap-list: Tailwind's text-sm/text-xs utilities outrank any sane
+     selector written here. (2026-09-23: the footer newsletter input on every
+     page was 14px, the gallery search 12px, the /trade value inputs 11px.) */
+  @media (pointer: coarse) and (max-width: 639.98px), (pointer: coarse) and (max-height: 500px) {
+    :is(input:not([type=checkbox],[type=radio],[type=range]), select, textarea):not([class*="text-lg"],[class*="text-xl"],[class*="text-2xl"],[class*="text-3xl"]) {
+      font-size: 16px !important;
+    }
+  }
+
+  /* In-page anchor landing offset that clears the sticky header. Below xl the
+     header is two rows, about 125px (the logo row plus Navbar's full-width search
+     row), so 9rem = 144px. From 1280px it is one row of about 65px, so 6rem. Put
+     it on the element that CARRIES the id. Do NOT also add html
+     scroll-padding-top: scroll-padding and scroll-margin add together.
+     (2026-09-23: scroll-mt-24 left a guide's h2 at top 96 under a 125px header.) */
+  .scroll-mt-header {
+    scroll-margin-top: 9rem;
+  }
+  @media (min-width: 1280px) {
+    .scroll-mt-header {
+      scroll-margin-top: 6rem;
     }
   }
 }
@@ -493,6 +637,19 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Light theme: the palette darkens gold for TEXT (--c-gold 122 95 20, 5.58:1 on
+   the light header), and the sheen has to follow it. The literal #caa85a and
+   #f6e7bd above measure 2.09:1 and 1.13:1 on the light header, so the label
+   vanished each time the highlight passed. It is still gold, still shimmering
+   and still one element (DECISIONS.md REVERSAL #1 stands). #7a5f14 is the light
+   --c-gold, and the #a07c1c highlight stays at 3.59:1 for the moment it passes. */
+:root[data-theme="light"] .premium-shimmer { color: rgb(var(--c-gold)); }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  :root[data-theme="light"] .premium-shimmer {
+    background-image: linear-gradient(100deg, #7a5f14 0%, #7a5f14 40%, #a07c1c 50%, #7a5f14 60%, #7a5f14 100%);
   }
 }
 
@@ -601,6 +758,10 @@ body {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+    /* Delays too, not just durations: the staggered hero fade-ins
+       (`animate-fade-in [animation-delay:…]`, fill `both`) otherwise sat at
+       opacity 0 for up to 360ms, the LCP h1 included (measured 2026-09-23). */
+    animation-delay: 0s !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
