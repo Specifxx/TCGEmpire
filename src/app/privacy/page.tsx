@@ -82,7 +82,7 @@ export default function PrivacyPage() {
             Policy problem ("Privacy policy disclosures") and a bad look for any
             reviewer who reads both. It now describes what the Site actually does.
             See docs/adsense-remediation.md § Phase 10. */}
-        <section id="advertising" className="scroll-mt-24 space-y-2">
+        <section id="advertising" className="scroll-mt-header space-y-2">
           <h2 className="text-lg font-bold text-white">Advertising &amp; third-party vendors</h2>
           <p>
             <strong className="text-white">

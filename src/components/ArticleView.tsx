@@ -340,7 +340,7 @@ export async function ArticleView({ article }: { article: Article }) {
       : null;
 
   return (
-    <article className="mx-auto max-w-3xl">
+    <article className="mx-auto max-w-3xl min-[1700px]:relative">
       {/* Client island, renders null — covers both /blog/[slug] and
           /guides/[slug], the only two routes that render ArticleView. */}
       <ScrollDepthTracker />

@@ -112,15 +112,20 @@ export function Markdown({ content }: { content: string }) {
     }
     // Headings carry the same anchor id the TOC links to (lib/toc.ts), with the
     // -2/-3 suffix applied identically so a repeated heading text can't collide.
+    // scroll-mt-header (globals.css) is the header-aware anchor offset: the
+    // header is two rows (125px) below xl, so the old scroll-mt-24 (96px) landed
+    // a TOC jump under it on phones and tablets (2026-09-23). The h3 steps up to
+    // text-lg from sm because the body goes to 17px there, and a 16px ### would
+    // read smaller than the paragraphs under it.
     if (trimmed.startsWith("### ")) {
       const text = trimmed.slice(4);
-      blocks.push(<h3 key={key} id={nextHeadingId(text)} className="mb-2 mt-6 scroll-mt-24 text-base font-bold text-white">{inline(text, `h${key++}`)}</h3>);
+      blocks.push(<h3 key={key} id={nextHeadingId(text)} className="mb-2 mt-6 scroll-mt-header text-base font-bold text-white sm:max-w-[40rem] sm:text-lg">{inline(text, `h${key++}`)}</h3>);
       i++;
       continue;
     }
     if (trimmed.startsWith("## ")) {
       const text = trimmed.slice(3);
-      blocks.push(<h2 key={key} id={nextHeadingId(text)} className="mb-3 mt-8 scroll-mt-24 text-xl font-extrabold text-white">{inline(text, `h${key++}`)}</h2>);
+      blocks.push(<h2 key={key} id={nextHeadingId(text)} className="mb-3 mt-8 scroll-mt-header text-xl font-extrabold text-white sm:max-w-[40rem]">{inline(text, `h${key++}`)}</h2>);
       i++;
       continue;
     }
@@ -136,11 +141,26 @@ export function Markdown({ content }: { content: string }) {
         rows.push(cells(lines[i]));
         i++;
       }
+      const scrolls = head.length > 2;
+      const headText = head.map((h) => h.replace(/\*\*|`/g, "")).join(", ");
       blocks.push(
         // Wide tables scroll inside their own container rather than making the
         // whole article scroll sideways on a phone.
-        <div key={key} className="my-5 overflow-x-auto rounded-xl border border-ink-700">
-          <table className="w-full min-w-[32rem] border-collapse text-left text-sm">
+        //  - Tables with 3+ columns keep the 32rem floor and scroll: squeezing
+        //    the 3-column pokemon-collector-to-riftbound table into 356px made
+        //    its rows 357px tall instead of 137 (2026-09-23).
+        //  - 2-column tables drop the floor and fit the phone column. At 390 the
+        //    2-column "Adjustment | Typical effect" table was 512px wide in a
+        //    358px box, which hid 154px mid-sentence; it now fits at 356px.
+        //  - Only the scrolling tables are focusable, labelled regions, so a
+        //    keyboard user can scroll them; a 2-column table that no longer
+        //    scrolls would just be a useless tab stop.
+        <div
+          key={key}
+          className="my-5 overflow-x-auto rounded-xl border border-ink-700"
+          {...(scrolls ? { tabIndex: 0, role: "region", "aria-label": `Table: ${headText}` } : {})}
+        >
+          <table className={`w-full border-collapse text-left text-sm ${scrolls ? "min-w-[32rem]" : ""}`}>
             <thead>
               <tr className="bg-ink-850">
                 {head.map((c, j) => (
@@ -175,7 +195,7 @@ export function Markdown({ content }: { content: string }) {
         i++;
       }
       blocks.push(
-        <blockquote key={key} className="my-5 border-l-2 border-brand-500 bg-ink-900/60 px-4 py-3 text-slate-300">
+        <blockquote key={key} className="my-5 border-l-2 border-brand-500 bg-ink-900/60 px-4 py-3 text-slate-300 sm:max-w-[40rem]">
           {inline(quoted.join(" "), `q${key++}`)}
         </blockquote>
       );
@@ -186,7 +206,7 @@ export function Markdown({ content }: { content: string }) {
       const items: string[] = [];
       while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^[-*]\s+/, "")); i++; }
       blocks.push(
-        <ul key={key} className="my-3 list-disc space-y-1 pl-5 text-slate-300">
+        <ul key={key} className="my-3 list-disc space-y-1 pl-5 text-slate-300 sm:max-w-[40rem]">
           {items.map((it, j) => <li key={j}>{inline(it, `u${key}-${j}`)}</li>)}
         </ul>
       );
@@ -198,7 +218,7 @@ export function Markdown({ content }: { content: string }) {
       const items: string[] = [];
       while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, "")); i++; }
       blocks.push(
-        <ol key={key} className="my-3 list-decimal space-y-1 pl-5 text-slate-300">
+        <ol key={key} className="my-3 list-decimal space-y-1 pl-5 text-slate-300 sm:max-w-[40rem]">
           {items.map((it, j) => <li key={j}>{inline(it, `o${key}-${j}`)}</li>)}
         </ol>
       );
@@ -208,8 +228,13 @@ export function Markdown({ content }: { content: string }) {
 
     const para: string[] = [];
     while (i < lines.length && lines[i].trim() && !isBreak(lines[i])) { para.push(lines[i].trim()); i++; }
-    blocks.push(<p key={key} className="my-3 leading-relaxed text-slate-300">{inline(para.join(" "), `p${key++}`)}</p>);
+    blocks.push(<p key={key} className="my-3 leading-relaxed text-slate-300 sm:max-w-[40rem]">{inline(para.join(" "), `p${key++}`)}</p>);
   }
 
-  return <div className="text-[15px]">{blocks}</div>;
+  // Reading measure (2026-09-23): phones stay at 15px. From sm the body is 17px
+  // and prose (p, lists, blockquotes, headings) is capped at 40rem, which took
+  // the collection-worth guide's longest paragraphs from 92-106 characters per
+  // line at 1440/1920 (82-96 at 768) to 64-73. Tables and figures are not capped
+  // and keep the full 768px column.
+  return <div className="text-[15px] sm:text-[17px]">{blocks}</div>;
 }

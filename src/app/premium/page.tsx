@@ -294,7 +294,10 @@ export default async function PremiumPage() {
           {/* Client island, renders nothing until it resolves — see its own comment. */}
           <PremiumProofLine />
 
-          <div id="top-pricing" className="scroll-mt-20">
+          {/* /dashboard and MoversToolsCta link here. scroll-mt-header is the
+              header-aware anchor offset (globals.css): scroll-mt-20 landed the
+              cards at 104px, under the 125px two-row header on phones. */}
+          <div id="top-pricing" className="scroll-mt-header">
           <PremiumPricingCards
             plusLive={plusLive}
             plusAnnualLive={plusAnnualLive}
@@ -418,8 +421,7 @@ export default async function PremiumPage() {
             <Link href="/login?next=/premium" className="text-brand-400 hover:underline">
               Create a free account
             </Link>{" "}
-            to unlock the middle column — no card required
-            .
+            to unlock the middle column — no card required.
           </p>
         )}
       </div>
@@ -460,10 +462,13 @@ export default async function PremiumPage() {
       <div className="mt-10">
         <h2 className="mb-3 text-center text-lg font-extrabold text-white">Frequently asked questions</h2>
         <div className="mx-auto max-w-2xl space-y-3">
+          {/* p-4 sits on the <summary>, not the <details>, so the whole card is
+              the toggle: a tap in the padding band used to hit the details box
+              and do nothing (2026-09-23). The native marker stays. */}
           {FAQ.map((f) => (
-            <details key={f.q} className="card-surface rounded-xl border border-ink-700 p-4">
-              <summary className="cursor-pointer text-sm font-semibold text-white">{f.q}</summary>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            <details key={f.q} className="card-surface rounded-xl border border-ink-700">
+              <summary className="cursor-pointer p-4 text-sm font-semibold text-white">{f.q}</summary>
+              <p className="px-4 pb-4 text-sm leading-relaxed text-slate-400">{f.a}</p>
             </details>
           ))}
         </div>
