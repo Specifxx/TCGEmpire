@@ -22,11 +22,14 @@ export function MarketSwitcher({
   return (
     <label className="inline-flex items-center gap-2 text-xs text-slate-400">
       <span className="font-semibold uppercase tracking-wide">Market</span>
+      {/* 16px below sm, 14px from sm — the site's `.input` sizing. At 14px on
+          a phone, iOS Safari zooms the page in when the select takes focus and
+          doesn't zoom back out (measured 14px at 390, 2026-09-23). */}
       <select
         value={value}
         onChange={(e) => router.push(`${basePath}?market=${e.target.value}`)}
         aria-label={label}
-        className="min-h-11 rounded-lg border border-ink-700 bg-ink-900 px-2.5 py-1.5 text-sm font-medium text-slate-100 hover:bg-ink-800 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:min-h-0"
+        className="min-h-11 rounded-lg border border-ink-700 bg-ink-900 px-2.5 py-1.5 text-base font-medium text-slate-100 hover:bg-ink-800 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:min-h-0 sm:text-sm"
       >
         {REGION_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>

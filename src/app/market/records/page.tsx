@@ -117,9 +117,17 @@ function CardCell({ card }: { card: RecordRow["card"] }) {
 /**
  * One records board.
  *
- * `metric` is what the board is RANKED by and is always the right-hand column,
- * so the reader can see why a row is where it is. Bilgewater's equivalent page
- * ranks without showing the ranking figure, which makes the order look arbitrary.
+ * `metric` is what the board is RANKED by and is always the right-hand column
+ * (from sm; on phones it drops under the card name, left-aligned, so a long
+ * metric line can't squeeze the name to 0px), so the reader can see why a row
+ * is where it is. Bilgewater's equivalent page ranks without showing the
+ * ranking figure, which makes the order look arbitrary.
+ *
+ * Why phones stack (2026-09-23): the metric column is `shrink-0` and holds a
+ * nowrap line of up to ~230px ('🇬🇧 £125.50 vs US$1,526.25 · −89.6%'), so in
+ * one flex row the `min-w-0` name column took whatever was left — 0px at 320,
+ * ~50px at 390. The rows are a two-column grid below sm instead (rank, then
+ * name over metric) and flex again from sm, where the single row fits.
  */
 function RecordsBoard({
   id,
@@ -138,19 +146,19 @@ function RecordsBoard({
 }) {
   if (rows.length === 0) return null;
   return (
-    <section id={id} className="scroll-mt-24">
+    <section id={id} className="scroll-mt-40 xl:scroll-mt-36">
       <h2 className="text-xl font-extrabold text-white">{heading}</h2>
       <p className="mt-1 text-sm text-slate-400">{blurb}</p>
       <ol className="mt-3 divide-y divide-ink-800 overflow-hidden rounded-xl border border-ink-800 bg-ink-950/60">
         {rows.map((r, i) => {
           const m = metric(r);
           return (
-            <li key={r.card.id} className="flex items-center gap-3 px-3 py-2.5">
+            <li key={r.card.id} className="grid grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-2.5 sm:flex">
               <span className="num w-5 shrink-0 text-center text-xs font-bold text-slate-600">{i + 1}</span>
               <div className="min-w-0 flex-1">
                 <CardCell card={r.card} />
               </div>
-              <div className="shrink-0 text-right">
+              <div className="col-start-2 text-left sm:shrink-0 sm:text-right">
                 <div
                   className={`num text-sm font-extrabold ${
                     m.tone === "up" ? "text-brand-400" : m.tone === "down" ? "text-rose-400" : "text-white"
@@ -181,15 +189,17 @@ function GapsBoard({
   if (gaps.length === 0) return null;
   const home = COUNTRIES[homeCountry];
   return (
-    <section id="gaps" className="scroll-mt-24">
+    <section id="gaps" className="scroll-mt-40 xl:scroll-mt-36">
       <h2 className="text-xl font-extrabold text-white">Biggest cross-market price gaps</h2>
       <p className="mt-1 text-sm text-slate-400">
         Cards that cost meaningfully less in another tracked market than they do in {home.place}, ranked by how much you would
         actually save. Converted at today&apos;s rates so the two figures are comparable.
       </p>
+      {/* Rows stack on phones exactly like RecordsBoard's (see its doc comment):
+          this board's metric line is the long one that zeroed the name. */}
       <ol className="mt-3 divide-y divide-ink-800 overflow-hidden rounded-xl border border-ink-800 bg-ink-950/60">
         {gaps.map(({ gap: g, savingCents }, i) => (
-          <li key={g.card.id} className="flex items-center gap-3 px-3 py-2.5">
+          <li key={g.card.id} className="grid grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 px-3 py-2.5 sm:flex">
             <span className="num w-5 shrink-0 text-center text-xs font-bold text-slate-600">{i + 1}</span>
             <div className="min-w-0 flex-1">
               <CardCell card={g.card} />
@@ -197,7 +207,7 @@ function GapsBoard({
             {/* The saving leads and the percentage is secondary, matching how the
                 board is now ranked. A number that is not what the list is sorted
                 by must not be the biggest thing in the row. */}
-            <div className="shrink-0 text-right">
+            <div className="col-start-2 text-left sm:shrink-0 sm:text-right">
               <div className="num text-sm font-extrabold text-brand-400">
                 {formatMoney(savingCents, g.homeCurrency)} less
               </div>
