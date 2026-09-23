@@ -104,7 +104,10 @@ export function FilterableArticles({
 
   return (
     <div>
-      {/* Search — kept compact; it overrides both the Latest list and any topic. */}
+      {/* Search — kept compact; it overrides both the Latest list and any topic.
+          Its text is 16px below sm (2026-09-23): iOS Safari zooms the page on
+          focus into any field under 16px. Same `text-base sm:…` precedent as
+          `.input`. */}
       <div className="mb-5 flex items-center gap-2">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">⌕</span>
@@ -114,7 +117,7 @@ export function FilterableArticles({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search articles…"
             aria-label="Search articles"
-            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-base text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:text-xs"
           />
         </div>
         {searching && (
@@ -227,7 +230,11 @@ function TopicButtons({
   return (
     <div className={className}>
       <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-300">Browse by topic</h2>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {/* `grid-cols-1` is the phone layout, not a no-op (2026-09-23): with no
+          base template the implicit auto track sized itself to the longest
+          unwrapped topic title + count, so /blog laid out 322px wide at 320.
+          See tests/grid-base-columns.test.ts. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {groups.map((g) => {
           const on = active === g.title;
           return (

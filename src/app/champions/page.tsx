@@ -144,29 +144,40 @@ export default async function ChampionsIndexPage() {
         </AnswerBox>
       </div>
 
+      {/* Fits a phone without sideways scrolling (2026-09-23). At 390 the
+          32rem table sat in a 356px scroller with "Most valuable" starting
+          off-screen at x=367 and no hint it scrolled; four columns cannot fit
+          even with tighter padding (~416px). So below sm the Cards column is
+          hidden and its count moves under the name, INSIDE the link: the whole
+          name cell (~96×60, was 28×17) is one tap target, where a sibling after
+          the `-my-2.5` block link would have overlapped its bottom 10px. From sm
+          the table is exactly as before. */}
       <div className="card-surface overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-sm">
+        <table className="w-full text-sm sm:min-w-[32rem]">
           <thead>
             <tr className="border-b border-ink-800 text-left text-xs uppercase tracking-wide text-slate-500">
-              <th scope="col" className="px-4 py-3 font-semibold">Champion</th>
-              <th scope="col" className="px-4 py-3 text-right font-semibold">Cards</th>
-              <th scope="col" className="px-4 py-3 text-right font-semibold">Cheapest</th>
-              <th scope="col" className="px-4 py-3 text-right font-semibold">Most valuable</th>
+              <th scope="col" className="px-3 py-3 font-semibold sm:px-4">Champion</th>
+              <th scope="col" className="hidden px-3 py-3 text-right font-semibold sm:table-cell sm:px-4">Cards</th>
+              <th scope="col" className="px-3 py-3 text-right font-semibold sm:px-4">Cheapest</th>
+              <th scope="col" className="px-3 py-3 text-right font-semibold sm:px-4">Most valuable</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-800">
             {live.map((r) => (
               <tr key={r.champ.slug} className="transition-colors hover:bg-ink-850">
-                <th scope="row" className="px-4 py-2.5 text-left font-semibold">
-                  <Link href={`/champions/${r.champ.slug}`} className="text-white hover:text-brand-300">
+                <th scope="row" className="px-3 py-2.5 text-left font-semibold sm:px-4">
+                  <Link href={`/champions/${r.champ.slug}`} className="-my-2.5 block py-2.5 text-white hover:text-brand-300">
                     {r.champ.name}
+                    <span className="block text-[11px] font-normal text-slate-500 sm:hidden">
+                      {r.count} {r.count === 1 ? "card" : "cards"}
+                    </span>
                   </Link>
                 </th>
-                <td className="num px-4 py-2.5 text-right text-slate-400">{r.count}</td>
-                <td className="num px-4 py-2.5 text-right text-accent">
+                <td className="num hidden px-3 py-2.5 text-right text-slate-400 sm:table-cell sm:px-4">{r.count}</td>
+                <td className="num px-3 py-2.5 text-right text-accent sm:px-4">
                   {r.cheapest != null ? formatMoney(r.cheapest, currency) : "—"}
                 </td>
-                <td className="num px-4 py-2.5 text-right text-slate-300">
+                <td className="num px-3 py-2.5 text-right text-slate-300 sm:px-4">
                   {r.dearest != null ? formatMoney(r.dearest, currency) : "—"}
                 </td>
               </tr>

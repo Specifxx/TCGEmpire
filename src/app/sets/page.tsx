@@ -136,7 +136,12 @@ export default async function SetsIndexPage() {
       {released.length > 0 && (
         <section>
           <h2 className="mb-3 text-lg font-bold text-white">Released sets</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* `grid-cols-1` is the phone layout, not a no-op (2026-09-23): with
+              no base template the implicit auto track grew to fit the widest
+              unwrapped name + card-count chip, so the `truncate` never clipped
+              and /sets laid out 334px wide at 320. See
+              tests/grid-base-columns.test.ts. */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {released.map((s) => (
               <Link
                 key={s.slug}

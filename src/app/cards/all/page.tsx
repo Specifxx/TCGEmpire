@@ -176,14 +176,17 @@ export default async function AllCardsPage() {
       </div>
 
       {/* Jump links: 1,431 anchors is a long page on a phone, and a set list at
-          the top costs nothing and makes it navigable. */}
+          the top costs nothing and makes it navigable. `tap-link` because they
+          are links, not badges (2026-09-23): as bare `.chip`s they measured
+          89×22 and 188×22 at 390. tap-link is 24px with a mouse and 48×48 on
+          touch; `.chip` itself stays a non-interactive badge class. */}
       {groups.length > 1 && (
         <div className="mt-5 flex flex-wrap gap-2">
           {groups.map((g) => (
             <a
               key={g.code}
               href={`#set-${g.code.toLowerCase()}`}
-              className="chip border border-ink-700 text-slate-300 hover:border-brand-500 hover:bg-ink-800"
+              className="chip tap-link border border-ink-700 text-slate-300 hover:border-brand-500 hover:bg-ink-800"
             >
               {g.name} <span className="num text-slate-500">{g.cards.length}</span>
             </a>
@@ -199,8 +202,12 @@ export default async function AllCardsPage() {
         </p>
       )}
 
+      {/* `scroll-mt-header` (globals.css) tracks the sticky header's real
+          height: below xl it is two rows (~125px), so the old `scroll-mt-24`
+          (96px, sized for the 65px desktop header) landed a set-jump's h2
+          underneath it. */}
       {groups.map((g) => (
-        <section key={g.code} id={`set-${g.code.toLowerCase()}`} className="mt-8 scroll-mt-24">
+        <section key={g.code} id={`set-${g.code.toLowerCase()}`} className="mt-8 scroll-mt-header">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-xl font-extrabold text-white">
               {g.name} <span className="font-mono text-xs font-normal text-slate-500">({g.code})</span>
@@ -217,9 +224,13 @@ export default async function AllCardsPage() {
                 {/* A card with no slug is not linkable — it serves on its raw id
                     and those URLs 308 to the slug once one is backfilled, so
                     linking it here would publish a redirect. Rare enough to be
-                    worth listing as plain text rather than omitting the row. */}
+                    worth listing as plain text rather than omitting the row.
+                    `gap-1.5` is the name/number separator: tap-link is
+                    inline-flex, where the {" "} collapses as trailing space in
+                    an anonymous flex item, so all 1,432 rows read "Blazing
+                    Scorcher001/298" (2026-09-23). */}
                 {c.slug ? (
-                  <Link href={`/card/${c.slug}`} className="tap-link text-slate-300 hover:text-brand-400">
+                  <Link href={`/card/${c.slug}`} className="tap-link gap-1.5 text-slate-300 hover:text-brand-400">
                     {cardDisplayName(c.name, c)}{" "}
                     <span className="font-mono text-xs text-slate-500">{c.collectorNumber}</span>
                   </Link>
