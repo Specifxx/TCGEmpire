@@ -48,14 +48,14 @@ export function CommandLauncherProvider({ children }: { children: ReactNode }) {
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
 
-  // ⌘K / Ctrl+K toggles from anywhere; Esc closes.
+  // ⌘K / Ctrl+K toggles from anywhere. Escape is Dialog's (useEscapeLayer), so
+  // it closes only the topmost overlay; this listener used to close the
+  // launcher on ANY Escape.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setIsOpen((o) => !o);
-      } else if (e.key === "Escape") {
-        setIsOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);

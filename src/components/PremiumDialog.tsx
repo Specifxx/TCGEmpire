@@ -248,7 +248,17 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               Premium
             </span>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-slate-500 transition hover:text-white">✕</button>
+          {/* One close-button shape across every ✕ (2026-09-23): .tap-icon is
+              44px below sm, 36px from sm and 48px under pointer:coarse; the
+              bare glyph measured 13x24. -my-3 (not -my-2) is what keeps this
+              py-3 header bar at 49px on touch — -my-2 still grew it to 57. */}
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="tap-icon -my-3 -mr-2 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+          >
+            ✕
+          </button>
         </div>
 
         <div className="px-5 py-5">

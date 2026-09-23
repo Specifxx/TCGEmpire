@@ -149,11 +149,14 @@ function ReportDialog({
             <h2 id="report-price-title" className="font-bold text-white">Report a wrong price</h2>
             <p className="mt-0.5 truncate text-xs text-slate-500">{subject.name}</p>
           </div>
+          {/* .tap-icon (2026-09-23): the same close-button shape as every other
+              ✕ — the px-2 py-1 glyph was a 29x32 target. -my-2 keeps this
+              two-line header at 75px. */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="shrink-0 rounded-lg px-2 py-1 text-slate-500 transition-colors hover:bg-ink-800 hover:text-white"
+            className="tap-icon -my-2 -mr-2 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             ✕
           </button>
@@ -259,6 +262,7 @@ function ReportDialog({
               </span>
               <input
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-white"
