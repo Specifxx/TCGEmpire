@@ -28,6 +28,16 @@ const SEARCH_URL = "https://api.ebay.com/buy/browse/v1/item_summary/search";
 export const EBAY_MARKETPLACE: Record<string, string> = { AU: "EBAY_AU", US: "EBAY_US", UK: "EBAY_GB", SG: "EBAY_SG", CA: "EBAY_CA", EU: "EBAY_ES" };
 const DEFAULT_MARKETPLACE = "EBAY_AU";
 
+// eBay image renditions (B3-17, 2026-09-23). The Browse API hands back .../s-l225.jpg, and s-lNNN sizes the LONGEST edge,
+// so a portrait card photo is 169px wide - upscaled in every tile and 3x short on a retina phone. Measured live:
+// s-l225 169x225, s-l300 225x300, s-l500 375x500. Widths assume a portrait photo; a landscape one only errs toward a
+// larger file. A URL without the pattern passes through untouched (and gets no srcset).
+// Up here, not at the end: tests/ebay-auctions.test.ts pattern-matches this file from searchEbayAuctions to EOF.
+const EBAY_RENDITION = /\/s-l\d+\.(jpg|jpeg|webp|png)/i;
+export const ebayImg = (u: string, px: 225 | 300 | 500): string => u.replace(EBAY_RENDITION, `/s-l${px}.$1`);
+export const ebaySrcSet = (u: string): string | undefined =>
+  EBAY_RENDITION.test(u) ? `${ebayImg(u, 225)} 169w, ${ebayImg(u, 300)} 225w, ${ebayImg(u, 500)} 375w` : undefined;
+
 export function isEbayEnabled(): boolean {
   return !!(process.env.EBAY_CLIENT_ID && process.env.EBAY_CLIENT_SECRET);
 }

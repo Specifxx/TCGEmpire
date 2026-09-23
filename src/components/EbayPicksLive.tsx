@@ -6,6 +6,7 @@ import { AffiliateDisclosure } from "./AffiliateDisclosure";
 import { usePremium } from "./PremiumProvider";
 import { useCountry } from "./CountryProvider";
 import { formatMoney } from "@/lib/format";
+import { ebayImg, ebaySrcSet } from "@/lib/ebay";
 
 export interface PickListing {
   country: string;
@@ -118,9 +119,14 @@ export function EbayPicksLive({
                   // Arbitrary eBay CDN hosts, so a plain lazy <img> rather than
                   // next/image (every host would need allow-listing). The fixed
                   // aspect box above reserves the space, so CLS stays at zero.
+                  // srcSet (2026-09-23): the API's s-l225 is 169px wide and was
+                  // upscaled to 239px at 844 landscape. sizes: li is 38vw (max
+                  // 150px) on phones, 3 columns from sm, 6 from lg.
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={l.imageUrl}
+                    src={ebayImg(l.imageUrl, 300)}
+                    srcSet={ebaySrcSet(l.imageUrl)}
+                    sizes="(min-width:1024px) 150px, (min-width:640px) 30vw, 38vw"
                     alt={`${l.cardName} — live eBay listing`}
                     loading="lazy"
                     decoding="async"

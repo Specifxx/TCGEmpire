@@ -11,6 +11,8 @@ import {
   domainInfo,
   rarityInfo,
 } from "@/lib/constants";
+import { COUNTRIES } from "@/lib/country";
+import { useCountry } from "./CountryProvider";
 
 function toggleCsv(current: string | null, value: string): string {
   const set = new Set(current ? current.split(",").filter(Boolean) : []);
@@ -27,7 +29,11 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
-export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: string; hideSet?: boolean }) {
+export function Filters({ basePath = "/browse", hideSet = false, currency }: { basePath?: string; hideSet?: boolean; currency?: string }) {
+  // Pages pass their server-side market (which honours /browse's ?market=), so
+  // the SSR label and the hydrated one agree; the hook is only the fallback.
+  const { country } = useCountry();
+  const priceCurrency = currency ?? COUNTRIES[country].currency;
   const router = useRouter();
   const params = useSearchParams();
   const paramsStr = params.toString();
@@ -85,13 +91,19 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
     (sp.get("min") || sp.get("max") ? 1 : 0);
 
   return (
-    <aside className="w-full shrink-0 lg:w-64">
-      {/* Mobile toggle */}
+    <aside className="w-full shrink-0 xl:w-64">
+      {/* Collapsible bar below xl, not just on phones (2026-09-23). Since the
+          2026-09-21 rail change the 17rem SideNav is permanent from 1024px, so a
+          256px sidebar there left the results a 424px column: 4 columns of 94px
+          tiles at 1024, 29-54 clipped names/prices per page and an 8px sideways
+          scroll (the "cost a card column" conflict in DECISIONS, 2026-09-10).
+          From 1280 the sidebar has room again; below it this bar keeps the
+          results at full width (704px at 1024). */}
       <button
         type="button"
         aria-expanded={mobileOpen}
         onClick={() => setMobileOpen((o) => !o)}
-        className="mb-3 flex w-full items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-sm font-semibold text-white lg:hidden"
+        className="mb-3 flex w-full items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-sm font-semibold text-white xl:hidden"
       >
         <span className="flex items-center gap-2">
           Filters
@@ -102,18 +114,30 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
         <Chevron open={mobileOpen} />
       </button>
 
-      <div className={`${mobileOpen ? "block" : "hidden"} lg:block`}>
-        <div className="card-surface lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto p-4">
+      {/* The sticky sits on THIS wrapper, not the card-surface (2026-09-23). On
+          the card-surface it never stuck: its containing block was this div, which
+          is exactly as tall as the panel, so it scrolled away with the page
+          (measured at 1280/1440, and at lg on the base). This div's containing
+          block is the aside, which stretches to the results' height. */}
+      <div className={`${mobileOpen ? "block" : "hidden"} xl:sticky xl:top-20 xl:block`}>
+        <div className="card-surface xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto p-4">
           <div className="mb-1 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
+            {/* Hidden below xl, where the toggle bar right above already says
+                "Filters" (2026-09-23: the open panel read Filters, then FILTERS).
+                ml-auto keeps Clear right-aligned without it. */}
+            <h2 className="hidden text-sm font-bold uppercase tracking-wide text-slate-300 xl:block">Filters</h2>
             {activeCount > 0 && (
-              <button type="button" onClick={clearAll} className="text-xs text-brand-400 hover:underline">
+              <button type="button" onClick={clearAll} className="ml-auto text-xs text-brand-400 hover:underline">
                 Clear ({activeCount})
               </button>
             )}
           </div>
 
-          <Section title="Price (AUD)" defaultOpen>
+          {/* The MARKET column's currency, not a display currency: min/max filter
+              priceField(country) (lib/cards.ts buildCardWhere), so a US visitor
+              typing 5 filters on US$5. This label said "(AUD)" for everyone until
+              2026-09-23. A UK visitor with EUR display still filters GBP. */}
+          <Section title={`Price (${priceCurrency})`} defaultOpen>
             <div className="flex items-center gap-2">
               <input type="number" aria-label="Minimum price" placeholder="Min" value={min} onChange={(e) => setMin(e.target.value)} className="input" />
               <span className="text-slate-500">–</span>
@@ -195,6 +219,21 @@ export function Filters({ basePath = "/browse", hideSet = false }: { basePath?: 
               <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1"); }, "printing:promo")} label="Promo" dot="#06b6d4" />
             </div>
           </Section>
+
+          {/* Below xl this panel is an inline disclosure, so after ticking a filter the results could sit ~1,700px below (390px, 2026-09-23). The footer pins to the viewport bottom while the panel is in view. pr-16 / sm:pr-36 keep the button clear of FeedbackWidget's fixed launcher. */}
+          <div className="sticky bottom-0 -mx-4 -mb-4 mt-3 rounded-b-lg border-t border-ink-700 bg-ink-850/95 p-3 pr-16 backdrop-blur sm:pr-36 xl:hidden">
+            <button
+              type="button"
+              className="btn-primary w-full"
+              onClick={() => {
+                setMobileOpen(false);
+                // Scroll after the collapse has rendered, or the target is measured with the open panel still above it.
+                requestAnimationFrame(() => document.getElementById("results")?.scrollIntoView({ block: "start" }));
+              }}
+            >
+              Show results
+            </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -219,7 +258,9 @@ function Section({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200"
+        // min-h-11: was 40px; 44px with a mouse, 48px on touch via globals.css's
+        // coarse-pointer rule (2026-09-23).
+        className="flex min-h-11 w-full items-center justify-between py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200"
       >
         {title}
         <Chevron open={open} />
@@ -242,8 +283,10 @@ function Check({
   dot?: string;
   className?: string;
 }) {
+  // tap-link-block: 24px rows on a mouse (no change), 48px on touch, where they
+  // measured 324x24 (2026-09-23). The `flex` utility beats its inline-flex.
   return (
-    <label className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-slate-300 hover:bg-ink-800 ${className ?? ""}`}>
+    <label className={`tap-link-block flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-slate-300 hover:bg-ink-800 ${className ?? ""}`}>
       <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded border-ink-600 bg-ink-900 accent-brand-500" />
       {dot && <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: dot }} />}
       <span className="truncate">{label}</span>
