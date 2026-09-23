@@ -312,12 +312,20 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>
-            <div className="mt-2 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 id="quickview-title" className="truncate text-xl font-extrabold text-white">{cardDisplayName(card.name, card)}</h2>
+            {/* The title WRAPS and never ellipsises (2026-09-23; was `truncate`):
+                the part that was cut is the printing qualifier — "(Showcase,
+                Signature)" read "Showcas…" even at 1440 — and that is the only
+                thing telling the Ahri printings apart. The row wraps too: the
+                11rem basis lets the labelled Watch button drop under the title
+                in the 640–767 band, where the details column is only ~346px
+                (the modal goes side by side at sm), instead of squeezing the
+                title to ~150px. Below sm the button is a 48px heart square. */}
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+              <div className="min-w-0 flex-1 basis-44">
+                <h2 id="quickview-title" className="break-words text-lg font-extrabold text-white sm:text-xl">{cardDisplayName(card.name, card)}</h2>
                 <p className="font-mono text-xs text-slate-500">{card.setName} ({card.setCode}) · {card.collectorNumber}</p>
               </div>
-              <PriceWatchButton cardId={card.id} variant="full" />
+              <PriceWatchButton cardId={card.id} variant="responsive" />
             </div>
 
             <div className="mt-3 rounded-lg bg-ink-950/50 p-3">
@@ -398,10 +406,16 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                     {coll === "saving" && <Spinner size="sm" />}
                     {coll === "saving" ? "Adding…" : coll === "error" ? "Try again" : "＋ Add to collection"}
                   </button>
+                  {/* The shared .btn base (2026-09-23) so the toggle gets the
+                      same 44px / 48px-on-touch floor as the "Add to collection"
+                      button beside it — it measured 65x36 next to a 48px one.
+                      Its own px-3 and colour utilities still win over .btn;
+                      aria-pressed says which state it is in. */}
                   <button
                     onClick={() => setCollFoil((f) => !f)}
                     title="Mark as foil"
-                    className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold ${collFoil ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-ink-800 text-slate-400 hover:text-slate-200"}`}
+                    aria-pressed={collFoil}
+                    className={`btn shrink-0 px-3 ${collFoil ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-ink-800 text-slate-400 hover:text-slate-200"}`}
                   >
                     ✦ Foil
                   </button>
@@ -438,9 +452,18 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
               ) : (
                 <ul className="divide-y divide-ink-800">
                   {inStock.slice(0, 6).map((p, i) => (
-                    <li key={p.id} className="flex items-center gap-3 py-2">
+                    <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2 md:flex-nowrap">
+                      {/* Wraps below md, with the buy button on its own
+                          full-width line (2026-09-23): an inline button squeezed
+                          store names to 51px at 390, and eBay's to 0px at 320.
+                          md, not sm: the modal goes side by side at sm, so its
+                          details column is only ~346px at 640–767, narrower
+                          than a phone's, and with sm:flex-nowrap names there
+                          measured 41–124px and truncated. The name row wraps
+                          as well, so the shrink-0 "Cheapest" chip drops under a
+                          long name instead of squeezing it to 0px. */}
                       <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-1.5">
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5 gap-y-0.5">
                           <span className="min-w-0 truncate text-sm font-semibold text-white">{p.retailerName}</span>
                           {i === 0 && inStock.length > 1 && (
                             <span className="chip shrink-0 bg-brand-500/20 text-[9px] font-bold uppercase tracking-wide text-brand-300">
@@ -493,7 +516,7 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
                         variant={p.isFoil ? "foil" : "nonfoil"}
                         condition={p.condition}
                         surface="modal"
-                        className={`${buyButtonClass(p.retailer)} px-3 py-1.5 text-xs`}
+                        className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center px-3 py-1.5 text-xs md:order-none md:w-auto md:basis-auto`}
                       >
                         {buyButtonLabel(p.retailer)}
                       </OutboundLink>

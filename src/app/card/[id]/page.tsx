@@ -937,16 +937,28 @@ export default async function CardPage({ params }: { params: { id: string } }) {
         </ol>
       </nav>
 
-      <div className="grid gap-4 lg:gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-[160px_1fr] xl:grid-cols-[320px_1fr]">
         {/* Card visual. Capped much smaller on phones than desktop (was a flat
             max-w-[320px] at every breakpoint) — at 390px wide, a 320px-wide
             5:7 card image ran ~450px tall and, combined with the header stat
             card below it, pushed the price comparison table's #1 row well
             past a full mobile viewport before this pass. The image is still
             the same picture at the same aspect ratio, just smaller until the
-            desktop two-column layout has room to spare. */}
-        <div className="lg:sticky lg:top-20 lg:self-start">
-          <div className="card-surface mx-auto max-w-[140px] p-3 sm:max-w-[220px] sm:p-4 lg:max-w-[320px]">
+            desktop two-column layout has room to spare.
+
+            160px from lg to xl, 320px from xl (2026-09-23). From lg the
+            permanent 17rem rail leaves main about 704px wide, and a 320px art
+            column left the details column 360px: the cheapest-price tile
+            clipped, comparison rows wrapped a word per line, and
+            CardConversionCta pushed the document to 1093px at 1024. At 160px
+            the details column is ≈520px at 1024. NOT stacked below xl: under
+            the header's search row (121–125px tall below xl) a stacked image
+            pushes the #1 retailer row below a 768px fold, which breaks the
+            above-the-fold rule further down. A 180px or 200px column clips
+            "US$19.65" again. The sticky top is 36 below xl for the same taller
+            header, 20 under the one-row header from xl. */}
+        <div className="lg:sticky lg:top-36 lg:self-start xl:top-20">
+          <div className="card-surface mx-auto max-w-[140px] p-3 sm:max-w-[220px] sm:p-4 lg:max-w-[160px] xl:max-w-[320px]">
             <CardImage card={card} full priority className="aspect-[5/7] w-full" />
           </div>
         </div>
@@ -966,8 +978,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>
-            <div className="mt-2 flex items-start justify-between gap-3 sm:mt-3">
-              <div>
+            <div className="mt-2 flex flex-wrap items-start justify-between gap-3 sm:mt-3">
+              <div className="min-w-0 flex-[1_1_12rem]">
                 <h1 className="text-xl font-extrabold text-white sm:text-2xl">{displayName}</h1>
                 {/* The subtitle names the PRINTING first for anything that is not
                     the base card. The badges above already say "Signature", but
@@ -983,8 +995,16 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                   <p className="mt-1 text-xs text-slate-400">Also known as: {cardAliases.join(", ")}</p>
                 )}
               </div>
-              <PriceWatchButton cardId={card.id} variant="full" />
-              <ShareButton />
+              {/* The row wraps, and the title's basis is 12rem (2026-09-23). The
+                  two buttons are ONE flex item so they wrap together: as loose
+                  siblings they split (at 430 Watch sat beside the title and
+                  Share alone on a second line), and without a wrap at all
+                  Share was pushed out to 347px on a 320 viewport. Below sm both
+                  are 48px icon squares; from sm they carry their labels. */}
+              <div className="flex shrink-0 items-start gap-2">
+                <PriceWatchButton cardId={card.id} variant="responsive" />
+                <ShareButton responsive />
+              </div>
             </div>
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
@@ -1097,7 +1117,10 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               remediation.md § Phase 8. */}
           <section className="card-surface mt-6 p-5">
             <h2 className="font-bold text-white">About {card.name}</h2>
-            <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-300">
+            {/* max-w-3xl (2026-09-23): a measure cap, left-aligned, so the
+                card-surface still fills its row. At 1920 the paragraphs ran
+                ~966px wide, well past a readable line length. */}
+            <div className="mt-3 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-300">
               {about.map((p, i) => (
                 <p key={i}>{p}</p>
               ))}
@@ -1157,7 +1180,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               {faqs.map((f) => (
                 <div key={f.q}>
                   <dt className="font-semibold text-white">{f.q}</dt>
-                  <dd className="mt-1 text-sm leading-relaxed text-slate-400">{f.a}</dd>
+                  {/* Same left-aligned max-w-3xl measure cap as the About prose. */}
+                  <dd className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-400">{f.a}</dd>
                 </div>
               ))}
             </dl>
@@ -1364,9 +1388,13 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
       {/* Other printings — promo/alt-art/Signature versions of this exact card.
           Cross-links the variant cluster (each printing is its own product with its
-          own price) so no printing is an unreferenced near-duplicate. */}
+          own price) so no printing is an unreferenced near-duplicate.
+          scroll-mt-header, not scroll-mt-24 (2026-09-23): the empty state's
+          "See the printings that are in stock ↓" jumps here, and 96px landed
+          the heading under the two-row header (~125px) below xl. The shared
+          utility in globals.css follows the header's own height. */}
       {printings.length > 0 && (
-        <section id="other-printings" className="mt-10 scroll-mt-24">
+        <section id="other-printings" className="mt-10 scroll-mt-header">
           <h2 className="mb-1 text-xl font-extrabold text-white">Other printings of {card.name}</h2>
           <p className="mb-4 text-xs text-slate-500">
             Same card, different printing — promos, alternate arts and premium prints each trade at their own price.

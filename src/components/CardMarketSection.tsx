@@ -46,11 +46,27 @@ export function buyButtonLabel(retailer: string): string {
   return "View deal →";
 }
 
-function Metric({ label, value, highlight, sub }: { label: string; value: string; highlight?: boolean; sub?: string }) {
+function Metric({
+  label,
+  value,
+  highlight,
+  sub,
+  className,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  sub?: string;
+  className?: string;
+}) {
   return (
-    <div className="rounded-lg bg-ink-900 p-2 sm:p-3">
+    <div className={`rounded-lg bg-ink-900 p-2 sm:p-3 ${className ?? ""}`}>
       <div className="text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`num text-lg font-bold ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
+      {/* text-base until 2xl (was text-lg, 2026-09-23): 18px JetBrains Mono is
+          ~10.8px a character, so "US$3,297.87" (≈116px) cannot fit the ~110px
+          content box of a 4-up tile at 1280–~1310. 16px fits at every width,
+          and from 1536 the tiles have at least 175px of content. */}
+      <div className={`num text-base font-bold 2xl:text-lg ${highlight ? "text-accent" : "text-white"}`}>{value}</div>
       {sub && <div className="num text-[11px] text-slate-500">{sub}</div>}
     </div>
   );
@@ -94,7 +110,11 @@ function OutOfStockDisclosure({
   const storeCount = new Set(oosList.map((p) => p.retailer)).size;
   return (
     <details className="group border-t border-ink-800" onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary className="flex cursor-pointer list-none items-center justify-between bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 marker:content-none hover:text-slate-300">
+      {/* 48px on a coarse pointer only (2026-09-23; it measured 32px on a
+          phone). Not a plain min-h-11: the touch floor in globals.css is
+          touch-only by design ("a mouse sees no change at all"), so the mouse
+          summary stays 32px. */}
+      <summary className="flex cursor-pointer list-none items-center justify-between bg-ink-900/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 marker:content-none hover:text-slate-300 [@media(pointer:coarse)]:min-h-12">
         <span>
           {storeCount} out-of-stock {storeCount === 1 ? "store" : "stores"}
         </span>
@@ -203,8 +223,16 @@ export function CardPriceMetrics({
     [rows, m.storeCount],
   );
 
+  // The column count follows the card page's DETAILS column, not the viewport
+  // (2026-09-23; was grid-cols-3 → sm:grid-cols-4, which clipped the price by
+  // 53px at 320 and 69px at 1024). The price gets its own full row where that
+  // column is narrow: phones, 640–767px, and 1024–1279px, where the 17rem rail
+  // plus the 160px art column leave the details column about 520px, so the
+  // strip is ≈478px. It sits in a single 4-up row at md (the single-column
+  // page, strip ≈678px) and from xl (details column ≥616px). The value is 16px
+  // until 2xl — see Metric.
   return (
-    <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:grid-cols-4 sm:gap-3">
+    <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-4 sm:gap-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
       {/* ONE cheapest-price figure, pinned to DEFAULT_COUNTRY (see the note
           above `place`) — this used to split into "Standard from" + a
           separate "✦ Foil from" tile whenever the card had any foil listing,
@@ -237,6 +265,7 @@ export function CardPriceMetrics({
         value={m.lowest != null ? fmt(m.lowest) : m.lastSeen ? fmt(m.lastSeen.priceCents) : "—"}
         sub={m.lowest == null && m.lastSeen ? "out of stock" : undefined}
         highlight
+        className="col-span-3 md:col-span-1 lg:col-span-3 xl:col-span-1"
       />
       <Metric
         label={`In stock at · ${place}`}
@@ -350,7 +379,11 @@ export function CardPriceComparison({
   return (
     <>
       <div className="card-surface mt-4 overflow-hidden sm:mt-6">
-        <div className="flex items-center justify-between border-b border-ink-700 p-3 sm:p-4">
+        {/* flex-wrap + a nowrap stamp (2026-09-23): the stamp used to squeeze
+            beside the H2 as three lines 76px wide at 320 and forced the H2
+            onto two lines at 390. Now the stamp drops to its own single line
+            when both don't fit. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-ink-700 p-3 sm:p-4">
           {/* Named by market, unlike before: this list follows the VISITOR's
               own market (useCountry()) rather than the page's fixed baseline
               — deliberately, since showing a shopper their own real, buyable
@@ -371,7 +404,7 @@ export function CardPriceComparison({
               also carries its own timestamp below (see the per-row meta line), so
               this header line is the panel's worst case, not its best. */}
           {mounted && prices.length > 0 && (
-            <span className="text-xs text-slate-500">
+            <span className="whitespace-nowrap text-xs text-slate-500">
               oldest listing {timeAgo(prices.reduce((old, p) => (p.lastSeen < old ? p.lastSeen : old), prices[0].lastSeen))}
             </span>
           )}
@@ -479,7 +512,13 @@ export function CardPriceComparison({
                     <div className="num text-[11px] text-slate-400">≈ {fmt(p.delivered)} delivered</div>
                   )}
                 </div>
-                {/* Full-width below the row on phones; inline button on sm+. */}
+                {/* Full-width below the row on phones; inline button on sm+.
+                    xl:min-w-[11.25rem] (2026-09-23): the buttons were as wide as
+                    their labels, so the row prices ended at x=1252/1269/1210 at
+                    1440 — a 59px ragged edge where a column should be. 180px
+                    clears the widest label ("Buy on TCGplayer →", 177px). A
+                    min-width, not a fixed width, so a wider fallback font grows
+                    the button instead of wrapping its label. */}
                 <OutboundLink
                   href={p.buyHref}
                   retailer={p.retailer}
@@ -492,7 +531,7 @@ export function CardPriceComparison({
                   variant={p.isFoil ? "foil" : "nonfoil"}
                   condition={p.condition}
                   surface="table"
-                  className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto`}
+                  className={`${buyButtonClass(p.retailer)} order-last w-full basis-full justify-center sm:order-none sm:w-auto sm:basis-auto xl:min-w-[11.25rem]`}
                 >
                   {buyButtonLabel(p.retailer)}
                 </OutboundLink>
@@ -527,9 +566,13 @@ export function CardPriceComparison({
               that doesn't match the shop wants somewhere to say so. Out-of-stock
               rows are reportable too: "you list it as available and it isn't" is
               one of the issue types, and those rows are exactly where it
-              happens. */}
+              happens.
+              tap-link, not inline-block (2026-09-23): the button measured
+              190x16. tap-link gives it the 24px WCAG 2.2 minimum on every
+              pointer and 48px on a coarse one; the dotted underline survives
+              inline-flex. */}
           <ReportPriceButton
-            className="mt-1 inline-block"
+            className="mt-1 tap-link"
             subject={{ kind: "card", cardId, name: displayName }}
             listings={reportable}
           />
