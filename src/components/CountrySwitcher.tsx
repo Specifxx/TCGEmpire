@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { COUNTRY_LIST, INTL_ENABLED } from "@/lib/country";
+import { useDismiss } from "@/lib/use-dismiss";
 import { useCountry } from "./CountryProvider";
 
 // Market chooser: 🇦🇺 Australia / 🇺🇸 United States / 🇬🇧 United Kingdom / 🇸🇬
@@ -14,13 +15,10 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const current = COUNTRY_LIST.find((c) => c.code === country) ?? COUNTRY_LIST[0];
 
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+  // Outside click, Escape (refocusing this trigger) and focus leaving the
+  // wrapper all close the panel — see use-dismiss.ts. Above the early return
+  // below, per the rules of hooks.
+  useDismiss(ref, open, () => setOpen(false));
 
   if (!INTL_ENABLED) return null;
 
@@ -47,7 +45,19 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
         // floor. The floor is a width AND a height rule; min-h-11 only covered
         // half of it, and nothing had needed the other half while the chevron
         // was padding it out.
-        className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-ink-700 px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-h-0 sm:min-w-0 sm:justify-start sm:gap-1.5 sm:px-2.5"
+        //
+        // `sm:[@media(pointer:fine)]:min-h-0`, not `sm:min-h-0` (2026-09-23).
+        // The 38px height from sm with a MOUSE is deliberate (DECISIONS.md,
+        // 2026-09-18 and 2026-09-19: "so desktop rows stay 36px tall"), but a
+        // bare sm:min-h-0 is a responsive utility emitted after globals.css's
+        // coarse `.min-h-11 {min-height:48px}`, so it cancelled the touch floor
+        // too: 87x38 at 768, 844x390 and 1024 on touch, beside 48px
+        // neighbours. Scoped to a fine pointer, touch at >=sm keeps 48px.
+        // `border-transparent` below sm: in the phone icon row this was the
+        // only control with a visible outline (44x48 beside the borderless
+        // 48x48 account and menu icons, worse in the light theme). The border
+        // stays for the box model and turns ink-700 from sm.
+        className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg border border-transparent px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white sm:min-w-0 sm:justify-start sm:gap-1.5 sm:border-ink-700 sm:px-2.5 sm:[@media(pointer:fine)]:min-h-0"
       >
         <span className="text-base leading-none">{current.flag}</span>
         <span className="hidden sm:inline">{current.code}{isEurDisplay && " · €"}</span>
@@ -60,14 +70,23 @@ export function CountrySwitcher({ className = "" }: { className?: string }) {
         </svg>
       </button>
 
+      {/* OPAQUE AND SCROLLABLE (2026-09-23). It was bg-ink-850/95 with
+          backdrop-blur, which let the hero H1 ghost through in both themes, and
+          it had no max-height: at 844x390 it spanned y=57-408, cutting the EU
+          row by 13px and putting UK's "Show UK prices in…" row off-screen with
+          no way to reach it (it lives in the sticky header, so the page cannot
+          scroll it into view). 4.5rem leaves the header row plus the gap. */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-ink-700 bg-ink-850/95 p-1 shadow-2xl backdrop-blur">
+        <div className="absolute right-0 top-full z-50 mt-1.5 max-h-[calc(100dvh-4.5rem)] w-52 overflow-y-auto overscroll-contain rounded-xl border border-ink-700 bg-ink-850 p-1 shadow-2xl">
           <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Shop & prices for
           </div>
           {COUNTRY_LIST.map((c) => (
             <button
               key={c.code}
+              // The check mark below has no text alternative, so the selected
+              // market is announced through aria-current instead.
+              aria-current={c.code === country || undefined}
               onClick={() => {
                 setCountry(c.code);
                 setOpen(false);

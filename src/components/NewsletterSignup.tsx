@@ -69,13 +69,21 @@ export function NewsletterSignup({
             {label}
           </span>
           <div className={variant === "card" ? "flex flex-wrap gap-2" : "contents"}>
+            {/* No `text-sm` here (2026-09-23): it overrode .input's base
+                text-base, so this field was 14px on every phone, and iOS
+                Safari zooms the page into a focused field under 16px and does
+                not zoom back out. .input's own `text-base … sm:text-sm` now
+                applies. autoComplete="email" lets a phone keyboard offer the
+                saved address. The height is unchanged: .input's min-h-11
+                already overrides h-9. */}
             <input
               type="email"
               required
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="input h-9 w-52 flex-1 text-sm"
+              className="input h-9 w-52 flex-1"
               aria-label="Email address"
             />
             <button type="submit" disabled={state === "busy"} className="btn-primary h-9 shrink-0 text-sm disabled:opacity-50">

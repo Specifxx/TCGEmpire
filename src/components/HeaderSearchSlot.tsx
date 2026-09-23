@@ -2,9 +2,11 @@
 
 import type { ReactNode } from "react";
 
-// Wraps EITHER of the header's two search rows (the `lg:block` desktop row
-// inline in the main bar, or the full-width `lg:hidden` row underneath it —
-// pass `mobile` for the latter).
+// Wraps EITHER of the header's two search rows (the `xl:block` desktop row
+// inline in the main bar, or the full-width `xl:hidden` row underneath it —
+// pass `mobile` for the latter). The full-width row serves 1024-1279 too, not
+// just phones and tablets: from 1024 the side rail left the inline slot too
+// narrow to use (2026-09-23, see Navbar.tsx).
 //
 // IT NO LONGER HIDES ANYTHING, and that is the whole current behaviour:
 // the header's card search is visible on every route, at every scroll
@@ -24,8 +26,8 @@ import type { ReactNode } from "react";
 // the rail's own box searches FEATURES, not cards (SideNav.tsx), so the header
 // box is the only card search in the chrome — and a search box that is present
 // on every other route but missing on the one page most visitors land on first
-// reads as a bug, not as restraint. The hero box stays; from lg up the two are
-// simply both on screen, one in the chrome and one in the hero.
+// reads as a bug, not as restraint. The hero box stays; at every width the two
+// are simply both on screen, one in the chrome and one in the hero.
 //
 // The component is kept (rather than inlined away) because both call sites and
 // several tests reference it by name, and because it is the single place to

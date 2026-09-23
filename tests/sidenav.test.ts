@@ -109,11 +109,20 @@ test("layout.tsx mounts SideNav and reserves its width for main, the footer ad z
   // with a px-* utility on the same tag — Tailwind resolves two padding-left
   // declarations of equal specificity by GENERATED CSS order, not by
   // className string order, so combining them is order-dependent and fragile.
+  //
+  // container-app counts too (2026-09-23). Its px-4/sm:px-6 lives in
+  // @layer components, so a pl-[…] utility on the same element ALWAYS wins
+  // and silently deletes the gutter. The footer shipped exactly that
+  // (`container-app pl-[var(--sidenav-w)]`): 0 padding below 1024 with
+  // controls touching x=0 at 390, and the rail's 17rem with no gutter from
+  // 1024. The old /\bpx-/ check could not see it because no literal px-
+  // was on the line.
   const plMatches = [...layout.matchAll(/^.*pl-\[var\(--sidenav-w\)\].*$/gm)];
   assert.ok(plMatches.length >= 3, "expected at least 3 reservations (main wrapper, ad zone, footer)");
   for (const [line] of plMatches) {
-    assert.doesNotMatch(line, /\bpx-/, `pl-[var(--sidenav-w)] must not share a line/element with a px-* utility: ${line}`);
+    assert.doesNotMatch(line, /\bpx-|container-app/, `pl-[var(--sidenav-w)] must not share a line/element with a px-* utility or with container-app, whose px-* it silently overrides: ${line}`);
   }
+  assert.match(layout, /<footer className="[^"]*\bpl-\[var\(--sidenav-w\)\]/, "the footer reserves the rail on the <footer> itself, outside container-app");
 });
 
 test("FooterAds reserves the same width — SideNav is fixed and spans the full page height", () => {
@@ -270,6 +279,16 @@ test("the header's desktop row is the curated shortlist the owner named, and not
     assert.doesNotMatch(nav, new RegExp(`<Link href="${gone}"`), `${gone} is rail-only now`);
   }
   assert.doesNotMatch(nav, /<CommandLauncherButton \/>/, "Explore (the ⌘K button) is rail-only now");
+});
+
+test("the header's inline card search waits for xl, because the rail leaves it no room at lg", () => {
+  // 2026-09-23. From 1024 the 17rem rail takes the header's left edge and the
+  // shrink-0 nav (559px mouse / 595px touch) left the inline slot 13-78px: the
+  // input covered "Sealed" and its "/" hint sat on "Database". Below xl the
+  // full-width second row carries the search instead.
+  const nav = codeOnly(read("src/components/Navbar.tsx"));
+  assert.match(nav, /className="hidden min-w-0 flex-1 xl:block xl:w-\[36rem\]"/, "inline from xl, with a definite width to grow into");
+  assert.match(nav, /className="pb-3 xl:hidden"/, "the full-width row covers everything below xl, including 1024-1279");
 });
 
 test("every group in the rail is reachable and nothing in NAV_GROUPS was lost to the rework", () => {
