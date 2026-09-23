@@ -71,14 +71,22 @@ export function CardMarketsTable({ rows, cardName }: { rows: MarketRow[]; cardNa
       {summary && <p className="mt-2 text-sm leading-relaxed text-slate-400">{summary}</p>}
 
       {/* Wide content scrolls inside its own container rather than pushing the
-          page sideways on a phone. */}
+          page sideways on a phone — kept as a safety net, but the table no
+          longer relies on it (2026-09-23). It had a min-w-[30rem], so at 390
+          the whole ≈ USD and Stores columns, 164px, sat past the edge with
+          nothing to say they were there. Below sm the ≈ figure now folds into
+          the Cheapest cell and its own column is hidden, and the table simply
+          fills its box. No min-width from sm either: the four columns' own
+          minimum measured 305–359px, and the box is never narrower than 478px
+          there (1024, beside the 160px art column), where a 30rem minimum
+          would leave exactly a 2px scroll. */}
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full min-w-[30rem] border-collapse text-left text-sm">
+        <table className="w-full border-collapse text-left text-sm">
           <thead>
             <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <th scope="col" className="py-2 pr-3">Market</th>
               <th scope="col" className="py-2 pr-3">Cheapest</th>
-              <th scope="col" className="py-2 pr-3">≈ {cmp.compareCurrency}</th>
+              <th scope="col" className="hidden py-2 pr-3 sm:table-cell">≈ {cmp.compareCurrency}</th>
               <th scope="col" className="py-2 text-right">Stores</th>
             </tr>
           </thead>
@@ -98,6 +106,14 @@ export function CardMarketsTable({ rows, cardName }: { rows: MarketRow[]; cardNa
                   <th scope="row" className="py-2.5 pr-3 text-left font-semibold text-slate-200">
                     <span className="mr-1.5" aria-hidden>{q.flag}</span>
                     {q.label}
+                    {/* No whitespace-nowrap on these chips, deliberately
+                        (2026-09-23). Once the table can narrow below sm, a
+                        nowrap "YOUR MARKET" (105px) sets the Market column's
+                        minimum at 126px, and at 320 the table overflowed its
+                        246px box by 15px — hiding the right-aligned store
+                        counts behind a scroll. Allowed to wrap, the chip goes
+                        to two lines at 320 only; from 360 the column is
+                        ≥137px and it stays on one. */}
                     {isCheapest && (
                       <span className="ml-2 chip bg-accent/15 text-[10px] font-bold uppercase tracking-wider text-accent">
                         Cheapest
@@ -112,12 +128,20 @@ export function CardMarketsTable({ rows, cardName }: { rows: MarketRow[]; cardNa
                   <td className={`num py-2.5 pr-3 font-semibold ${isCheapest ? "text-accent" : "text-white"}`}>
                     {formatMoney(q.nativeCents, q.currency)}
                     <ShippingNote quote={q} />
+                    {/* The ≈ column, folded in below sm where that column is
+                        hidden. Rows already in the comparison currency get no
+                        line, matching the column's "—". */}
+                    {q.currency !== cmp.compareCurrency && (
+                      <div className="text-[11px] font-normal text-slate-400 sm:hidden">
+                        ≈ {formatMoney(q.comparableCents, cmp.compareCurrency)}
+                      </div>
+                    )}
                   </td>
                   {/* The indicative column. Deliberately the quietest thing in the
                       row: it exists to make the ranking legible, not to be read as
                       a price. Suppressed where it would just restate the native
                       figure in the same currency. */}
-                  <td className="num py-2.5 pr-3 text-slate-400">
+                  <td className="num hidden py-2.5 pr-3 text-slate-400 sm:table-cell">
                     {q.currency === cmp.compareCurrency ? (
                       <span className="text-slate-600">—</span>
                     ) : (
