@@ -82,7 +82,9 @@ export function ConditionCalculator({ country, currency }: { country: Country; c
               <span
                 className={`ml-auto text-sm font-bold ${deltaCents === 0 ? "text-slate-400" : deltaCents > 0 ? "text-brand-400" : "text-rose-400"}`}
               >
-                {deltaCents > 0 ? "+" : ""}{formatMoney(deltaCents, currency)} ({deltaPct > 0 ? "+" : ""}{deltaPct}%)
+                {/* formatMoney leads a negative with U+2212 itself ("−US$190.00"); the
+                    percentage is signed the same way so the pair reads "(−15%)". */}
+                {deltaCents > 0 ? "+" : ""}{formatMoney(deltaCents, currency)} ({deltaPct > 0 ? "+" : deltaPct < 0 ? "−" : ""}{Math.abs(deltaPct)}%)
               </span>
             )}
           </div>

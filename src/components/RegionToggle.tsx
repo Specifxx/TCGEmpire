@@ -43,20 +43,27 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
           const codeId = `rt-${c.code}-code`;
           const currencyId = `rt-${c.code}-currency`;
           const descId = `rt-${c.code}-desc`;
+          // min-h-11 below sm (48px on a coarse pointer, via globals.css): the
+          // buttons measured 28px tall on a phone. From sm up they keep the
+          // compact 28px, the site's `min-h-11 sm:min-h-0` convention (2026-09-23).
           return (
             <button
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
               aria-labelledby={active ? `${flagId} ${codeId} ${currencyId} ${descId}` : `${flagId} ${codeId} ${descId}`}
-              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors ${
+              className={`flex min-h-11 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors sm:min-h-0 ${
                 active ? "bg-brand-500 text-ink-950" : "text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >
               <span id={flagId} className="text-base leading-none">{c.flag}</span>
               <span id={codeId}>{c.code}</span>
+              {/* No colour of its own: it inherits the active button's
+                  text-ink-950, which the light theme keeps dark on the brand
+                  fill. `text-white/80` measured 2.54:1 there; this is ~6.2:1
+                  in both themes (2026-09-23). */}
               {active && (
-                <span id={currencyId} className="text-[10px] font-medium text-white/80">
+                <span id={currencyId} className="text-[10px] font-medium">
                   {currency}
                 </span>
               )}

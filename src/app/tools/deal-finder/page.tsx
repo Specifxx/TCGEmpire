@@ -181,37 +181,40 @@ export default async function ArbitragePage({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-4 flex gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1" role="tablist" aria-label="Views">
+      {/* View switcher: links with aria-current, not an ARIA tablist (its children
+          were never role="tab"). 2x2 below sm so the four labels can't widen the
+          page: as one flex-1 row they summed to ~370px of min-content and laid
+          the page out 386px wide at 320-360 (2026-09-23). Wrap, don't hide. */}
+      <nav aria-label="Deal Finder views" className="mb-4 grid grid-cols-2 gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1 sm:flex">
         <Link
           href="/tools/deal-finder?view=flip"
           aria-current={view === "flip" ? "page" : undefined}
-          className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "flip" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
+          className={`flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-center text-sm font-bold sm:flex-1 ${view === "flip" ? "bg-brand-500/20 text-brand-200" : "text-slate-400 hover:text-white"}`}
         >
           Worth more on eBay
         </Link>
         <Link
           href="/tools/deal-finder"
           aria-current={view === "tcg" ? "page" : undefined}
-          className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "tcg" ? "bg-gold/20 text-gold" : "text-slate-400 hover:text-white"}`}
+          className={`flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-center text-sm font-bold sm:flex-1 ${view === "tcg" ? "bg-gold/20 text-gold" : "text-slate-400 hover:text-white"}`}
         >
           Underpriced vs TCGplayer
         </Link>
         <Link
           href="/tools/deal-finder?view=deals"
           aria-current={view === "deals" ? "page" : undefined}
-          className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "deals" ? "bg-sky-500/20 text-sky-200" : "text-slate-400 hover:text-white"}`}
+          className={`flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-center text-sm font-bold sm:flex-1 ${view === "deals" ? "bg-sky-500/20 text-sky-200" : "text-slate-400 hover:text-white"}`}
         >
           Cheapest on eBay
         </Link>
         <Link
           href="/tools/deal-finder?view=xregion"
           aria-current={view === "xregion" ? "page" : undefined}
-          className={`flex-1 rounded-md px-3 py-2 text-center text-sm font-bold ${view === "xregion" ? "bg-lime-500/20 text-lime-200" : "text-slate-400 hover:text-white"}`}
+          className={`flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-center text-sm font-bold sm:flex-1 ${view === "xregion" ? "bg-lime-500/20 text-lime-200" : "text-slate-400 hover:text-white"}`}
         >
           Cross-region
         </Link>
-      </div>
+      </nav>
 
       {view === "xregion" ? (
         await XRegionView({ country, info, page, premium, signedIn })

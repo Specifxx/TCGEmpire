@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCountry } from "@/components/CountryProvider";
+import { formatMoney } from "@/lib/format";
 
 // A net-proceeds calculator for selling Riftbound singles on a marketplace like
 // TCGplayer or eBay. DELIBERATELY has no baked-in "current" commission or
@@ -79,18 +80,27 @@ export function FeeCalculator() {
     return { price, shipCharged, shipCost, commission, processing, totalCollected, totalFees, net, effectiveFeePct };
   }, [itemPrice, shippingCharged, shippingCost, commissionPct, processingPct, fixedFee]);
 
-  const money = (n: number) => `${currency === "USD" ? "$" : currency + " "}${n.toFixed(2)}`;
+  // Through formatMoney like every other price on the site (2026-09-23). The
+  // hand-rolled `${"$" | "AUD "}${n.toFixed(2)}` printed "$-1.49" for the fee
+  // tiles, "AUD 38.71" where every other page says "A$38.71", and no thousands
+  // separators. formatMoney takes integer cents and leads a negative with U+2212.
+  const money = (n: number) => formatMoney(Math.round(n * 100), currency);
 
   return (
     <div className="space-y-4">
       <div className="card-surface p-5">
-        <div className="mb-4 flex flex-wrap gap-2">
+        {/* Touch-only 48px floor (2026-09-23): the chips measured 20px tall on a
+            phone. Scoped to pointer:coarse so the mouse-desktop chips stay 20px,
+            the same convention as the TodaysTopDeals pills. aria-pressed because
+            the selected marketplace was shown by colour alone. */}
+        <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Marketplace">
           {(Object.keys(PRESETS) as Marketplace[]).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => switchMarketplace(m)}
-              className={`chip transition-colors ${
+              aria-pressed={marketplace === m}
+              className={`chip transition-colors [@media(pointer:coarse)]:min-h-12 [@media(pointer:coarse)]:px-3 ${
                 marketplace === m ? "bg-brand-500 text-ink-950" : "bg-ink-800 text-slate-300 hover:bg-ink-700"
               }`}
             >
@@ -99,6 +109,9 @@ export function FeeCalculator() {
           ))}
         </div>
 
+        {/* The inputs are `.input`: 16px below sm so iOS doesn't zoom the page on
+            focus (they inherited the label's 14px), the 44/48px floor, and the
+            focus ring they lacked (2026-09-23). */}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
             <span className="mb-1 block font-semibold text-slate-300">Sale price</span>
@@ -109,7 +122,7 @@ export function FeeCalculator() {
               step="0.01"
               value={itemPrice}
               onChange={(e) => setItemPrice(e.target.value)}
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-white"
+              className="input"
             />
           </label>
           <label className="block text-sm">
@@ -121,7 +134,7 @@ export function FeeCalculator() {
               step="0.01"
               value={shippingCharged}
               onChange={(e) => setShippingCharged(e.target.value)}
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-white"
+              className="input"
             />
           </label>
           <label className="block text-sm">
@@ -133,7 +146,7 @@ export function FeeCalculator() {
               step="0.01"
               value={shippingCost}
               onChange={(e) => setShippingCost(e.target.value)}
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-white"
+              className="input"
             />
           </label>
           <label className="block text-sm">
@@ -146,7 +159,7 @@ export function FeeCalculator() {
               value={commissionPct}
               onChange={(e) => setCommissionPct(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-white"
+              className="input"
             />
             <span className="mt-1 block text-xs text-slate-500">{preset.commissionHint}</span>
           </label>
@@ -159,7 +172,7 @@ export function FeeCalculator() {
               step="0.01"
               value={processingPct}
               onChange={(e) => setProcessingPct(e.target.value)}
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-white"
+              className="input"
             />
             <span className="mt-1 block text-xs text-slate-500">Applied to item price + shipping charged</span>
           </label>
@@ -172,7 +185,7 @@ export function FeeCalculator() {
               step="0.01"
               value={fixedFee}
               onChange={(e) => setFixedFee(e.target.value)}
-              className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-white"
+              className="input"
             />
           </label>
         </div>
@@ -181,7 +194,10 @@ export function FeeCalculator() {
       <div className="card-surface overflow-hidden">
         <div className="border-b border-ink-800 bg-ink-900/60 p-5">
           <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Your net payout</div>
-          <div className="num font-display text-5xl font-extrabold leading-none text-white">{money(calc.net)}</div>
+          {/* text-4xl below sm: at text-5xl "US$1,443.35" measured 302px against 246px
+              of room at 320 (286 at 360), and this card is overflow-hidden, so the
+              payout was clipped (2026-09-23). text-4xl is ~224px. */}
+          <div className="num font-display text-4xl font-extrabold leading-none text-white sm:text-5xl">{money(calc.net)}</div>
           <div className="mt-1 text-xs text-slate-500">
             {calc.effectiveFeePct.toFixed(1)}% of the sale price went to fees and your own shipping cost
           </div>
@@ -195,7 +211,10 @@ export function FeeCalculator() {
           ].map(([label, value]) => (
             <div key={label as string} className="bg-ink-900 p-4">
               <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</div>
-              <div className="num mt-1 text-lg font-bold text-white">{money(value as number)}</div>
+              {/* text-base until md: "US$1,501.00" is 116px at text-lg, wider than the
+                  111px tile at 320 and the 115px four-column tile at 640. At text-base
+                  it's 106px; from md the tiles are 147px+ (2026-09-23). */}
+              <div className="num mt-1 text-base font-bold text-white md:text-lg">{money(value as number)}</div>
             </div>
           ))}
         </div>

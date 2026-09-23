@@ -67,7 +67,7 @@ export function WelcomeChecklist() {
   }
 
   return (
-    <section id="welcome" className="card-surface mt-5 scroll-mt-20 p-5">
+    <section id="welcome" className="card-surface mt-5 scroll-mt-header p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-bold text-white">Get the most out of your account</h2>
         <button onClick={dismiss} className="text-xs text-slate-500 hover:text-slate-300">
@@ -89,7 +89,7 @@ export function WelcomeChecklist() {
                   setCountry(e.target.value as Country);
                   invalidateMe();
                 }}
-                className="input mt-2 max-w-[14rem] text-sm"
+                className="input mt-2 max-w-[14rem]"
               >
                 <option value="" disabled>
                   Choose a market…
