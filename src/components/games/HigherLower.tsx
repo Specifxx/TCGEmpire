@@ -17,7 +17,9 @@ const REVEAL_MS = 950;
 // 391px is the chrome plus the text and buttons around the cards, and 1.43
 // turns the remaining height into board width. The 16rem floor keeps the cards
 // legible on landscape phones. On portrait phones the width still rules.
-const BOARD = "mx-auto grid max-w-[max(16rem,calc((100svh-391px)*1.43+20px))] grid-cols-2 items-start gap-3 sm:gap-5";
+// 391px assumes the one-row header from xl; from lg to xl the header keeps its
+// search on a second row (~60px taller), so that band subtracts 451px.
+const BOARD = "mx-auto grid max-w-[max(16rem,calc((100svh-391px)*1.43+20px))] lg:max-xl:max-w-[max(16rem,calc((100svh-451px)*1.43+20px))] grid-cols-2 items-start gap-3 sm:gap-5";
 
 // Loading placeholder that mirrors the board: the same BOARD grid, two
 // card-surface panels (5/7 art plus CardPanel's three text lines, invisible),

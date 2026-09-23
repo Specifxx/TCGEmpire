@@ -281,13 +281,13 @@ export default async function PremiumPage() {
           <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
             <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
             {premiumPriceIncreaseAnnounced() ? (
-              <p className="mt-1 text-xs text-gold/80">
+              <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">
                 New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
                 effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
                 subscription stays active — no action needed later.
               </p>
             ) : (
-              <p className="mt-1 text-xs text-gold/80">{premiumLockInLine()}</p>
+              <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
             )}
           </div>
 
@@ -313,7 +313,7 @@ export default async function PremiumPage() {
           <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] text-slate-500">
             Cancel anytime · secure checkout by Stripe
           </p>
-          <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
+          <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
         </>
       )}
 

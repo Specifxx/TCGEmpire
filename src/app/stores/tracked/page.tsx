@@ -87,13 +87,16 @@ export default function TrackedStoresPage() {
             single-column store cards: Canada starts ~12,300px down and the EU
             ~18,400px, and the page had no anchors at all. The reference-sources
             section is deliberately not listed, because it isn't a market.
-            .min-h-11 is 48px on coarse pointers (globals.css). */}
+            .min-h-11 is 48px on coarse pointers (globals.css), and the compact
+            reset from sm up is scoped to a fine pointer so a touch tablet or
+            landscape phone keeps that floor (a bare sm:min-h-0 cancelled it and
+            the chips measured 26px there, 2026-09-23). */}
         <nav aria-label="Jump to a market" className="mt-4 flex flex-wrap gap-2">
           {byMarket.map((m) => (
             <a
               key={m.code}
               href={`#market-${m.code.toLowerCase()}`}
-              className="chip min-h-11 border border-ink-700 px-3 text-sm text-slate-300 hover:border-brand-500 sm:min-h-0"
+              className="chip min-h-11 border border-ink-700 px-3 text-sm text-slate-300 hover:border-brand-500 sm:[@media(pointer:fine)]:min-h-0"
             >
               {m.info.flag} {m.info.label} <span className="num text-slate-500">{m.stores.length}</span>
             </a>

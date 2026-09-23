@@ -11344,3 +11344,58 @@ These were raised and not done, because this file already decides them:
   `.claude/worktrees` checkouts need `--no-ignore`. The main tree's `tsc`
   also sweeps those worktrees in via `**/*.ts`, so run it from a checkout
   outside `.claude/`.
+
+## The UI pass, completed: overlays, and what the integration review caught — 2026-09-23 (same day)
+
+The overlay package and the integration review's fixes land here; both were
+announced in the entry above.
+
+**Overlays.**
+- `ui/Dialog` now portals into `document.body`. An inline Report dialog no
+  longer inherits `text-center`, and the ⌘K launcher no longer paints behind
+  QuickView.
+- Escape closes only the TOPMOST layer, via a module-level stack
+  (`useEscapeLayer`) shared by every Dialog, the nav menu and the launcher.
+  Closing a Report opened from QuickView used to close QuickView too.
+- Focus lands inside every dialog, falling back to a `tabIndex={-1}` panel with
+  `preventScroll`, and returns to whatever opened it.
+- The menu's Close bar is sticky, because it used to scroll away in a 4,000px
+  sheet.
+- Corner nudges hide under `body[data-rc-dialog]`, and they ignore an Escape
+  that belongs to a dialog, so it no longer spends a dismissal.
+
+**The review then measured the merged result as one site**, with a base server
+beside it. Its findings have a pattern worth remembering:
+- **A bare `sm:min-h-0` cancels the coarse-pointer 48px floor.** Responsive
+  utilities are emitted after globals.css's `@media (pointer: coarse)
+  .min-h-11` rule, so the compact reset won on touch tablets and landscape
+  phones: /stores/tracked chips were 26px, RegionToggle 28px. The reset is now
+  `sm:[@media(pointer:fine)]:…`, the CountrySwitcher idiom. That also applies
+  to AuctionsBoard's chips, the gallery toolbar, and the /trade value input's
+  width, which met the forced 16px text on a landscape phone.
+- **The taller 1024–1279 header had more dependants than the sticky offsets.**
+  - the Pairs and Higher/Lower height caps, which get a `lg:max-xl:` term
+    60px larger;
+  - the rail's feature-search block, sized to end on the header's rule;
+  - the rail's own scroll position: 48px touch rows pushed the current page
+    below its fold, and the rail now scrolls it into view itself.
+- **`body { overflow-x: clip }` turns overflow into clipping.** A zoomed-out
+  page used to at least show a too-wide button whole; now the button is cut at
+  the edge. The article-end CTAs therefore drop `shrink-0` for `max-w-full`,
+  and a card's label wraps instead.
+- **The 704px lg band needed three more grids fixed:** the card page's lower
+  tile grids (now 4-up until xl; 6 × 107px tiles clipped every price), the
+  homepage return-visit cards (two across plus one spanning until 1440; their
+  text columns were 16–24px), and the /champions table (px-2 and 13px prices
+  below sm, so it fits at 320).
+- **Pre-existing, found by looking at the whole site again:**
+  - /tools/value-finder's table clipped the vs-avg figure the page ranks by,
+    on every phone. It is now a fixed three-column layout below sm, with the
+    30-day average under Now.
+  - The #book anchor on /stores/consulting landed under the header.
+  - The current page in the pagination was white on bright green; it is now
+    the site's dark-ink-on-brand pair.
+  - The light theme's `text-gold/80` lock-in line, the idle /feedback stars
+    and the collection select's white-on-white options.
+  - Two domain-colour texts still used a raw `color` hex; they now use
+    `.data-ink`.

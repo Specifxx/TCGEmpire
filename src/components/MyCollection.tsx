@@ -206,7 +206,7 @@ export function MyCollection() {
                       aria-label="Condition"
                     >
                       {CONDITION_KEYS.map((k) => (
-                        <option key={k} value={k} style={{ color: "#fff" }}>{CONDITIONS[k].full}</option>
+                        <option key={k} value={k} className="bg-ink-900 text-white">{CONDITIONS[k].full}</option>
                       ))}
                     </select>
                     <button

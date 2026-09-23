@@ -208,7 +208,7 @@ function FreeCard({ signedIn }: { signedIn: boolean }) {
       <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5 sm:contents">
         <ul className="space-y-2 text-left text-[13px] text-slate-300 sm:px-5 sm:pt-5">
           {FREE_FEATURES.map((f) => (
-            <li key={f} className="flex items-start gap-2">
+            <li key={f} className="flex items-start gap-2 [font-feature-settings:'lnum'_1]">
               <span className="mt-0.5 font-bold text-brand-400">✓</span>
               <span>{f}</span>
             </li>
@@ -301,7 +301,7 @@ function PaidTierCard({
       <div className="flex flex-1 flex-col justify-between gap-4 px-5 py-5 sm:contents">
         <ul className="space-y-2 text-left text-[13px] text-slate-300 sm:px-5 sm:pt-5">
           {features_.map((f) => (
-            <li key={f} className="flex items-start gap-2">
+            <li key={f} className="flex items-start gap-2 [font-feature-settings:'lnum'_1]">
               <span className={`mt-0.5 font-bold ${highlight ? "text-gold" : "text-brand-400"}`}>✓</span>
               <span>{f}</span>
             </li>

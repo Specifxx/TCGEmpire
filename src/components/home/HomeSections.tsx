@@ -212,7 +212,13 @@ export function HomeSections({
           They remain the site's best "come back tomorrow" mechanics that
           aren't the price data itself, and they still sit ahead of the
           explainer, the set/domain grid and the whole editorial run below. */}
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Three across only from 1440 (2026-09-23): beside the 17rem rail the
+          three cards were 224px at 1024 and ~300px at 1280, leaving their text
+          columns 16-110px wide next to the shrink-0 CTA, one word per line and
+          running under the button. Below 1440 it is two across with the last
+          card spanning the row, which also ends the half-width orphan at
+          640-1023. grid-cols-1 per tests/grid-base-columns.test.ts. */}
+      <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 min-[1440px]:grid-cols-3 min-[1440px]:[&>*:last-child]:col-span-1">
         <ReturnVisitCards newestSetName={newestSet?.name} />
       </Reveal>
 

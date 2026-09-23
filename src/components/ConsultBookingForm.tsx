@@ -63,7 +63,7 @@ export function ConsultBookingForm({ priceLabel }: { priceLabel: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4" id="book">
+    <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Store name" required>
           <input

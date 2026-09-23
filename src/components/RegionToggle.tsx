@@ -45,14 +45,17 @@ export function RegionToggle({ label = "Market", className = "" }: { label?: str
           const descId = `rt-${c.code}-desc`;
           // min-h-11 below sm (48px on a coarse pointer, via globals.css): the
           // buttons measured 28px tall on a phone. From sm up they keep the
-          // compact 28px, the site's `min-h-11 sm:min-h-0` convention (2026-09-23).
+          // compact 28px with a MOUSE only: the reset is
+          // `sm:[@media(pointer:fine)]:min-h-0`, because a bare `sm:min-h-0` is
+          // emitted after the coarse-pointer 48px rule and cancelled it on touch
+          // tablets and landscape phones (measured 28px there, 2026-09-23).
           return (
             <button
               key={c.code}
               onClick={() => setCountry(c.code)}
               aria-pressed={active}
               aria-labelledby={active ? `${flagId} ${codeId} ${currencyId} ${descId}` : `${flagId} ${codeId} ${descId}`}
-              className={`flex min-h-11 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors sm:min-h-0 ${
+              className={`flex min-h-11 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-semibold transition-colors sm:[@media(pointer:fine)]:min-h-0 ${
                 active ? "bg-brand-500 text-ink-950" : "text-slate-300 hover:bg-ink-800 hover:text-white"
               }`}
             >

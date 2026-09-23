@@ -19,9 +19,11 @@ const BEST_KEY = "rc_game_pairs_best_moves";
 // the cap is wider than the column (358x492 at 390x844, unchanged); only a very
 // short one bites, 288 -> 256 wide at 320x568. Short landscape (<=520px tall)
 // re-lays the 16 tiles as 8 x 2. Browsers without svh drop the cap and get
-// today's width.
+// today's width. 13rem assumes the one-row header from xl; from lg to xl the
+// header keeps its search on a second row (~60px taller), so that band caps at
+// 16.75rem, or the board ran past the fold at 1024x768.
 // ONE string literal, so Tailwind's scanner sees every class.
-const BOARD = "mx-auto grid max-w-[calc((100svh-13rem)*0.71)] grid-cols-4 gap-2 sm:gap-3 [@media(orientation:landscape)_and_(max-height:520px)]:max-w-[calc((100svh-8.5rem)*2.6)] [@media(orientation:landscape)_and_(max-height:520px)]:grid-cols-8";
+const BOARD = "mx-auto grid max-w-[calc((100svh-13rem)*0.71)] lg:max-xl:max-w-[calc((100svh-16.75rem)*0.71)] grid-cols-4 gap-2 sm:gap-3 [@media(orientation:landscape)_and_(max-height:520px)]:max-w-[calc((100svh-8.5rem)*2.6)] [@media(orientation:landscape)_and_(max-height:520px)]:grid-cols-8";
 
 // Loading placeholder with the board's exact geometry: same BOARD classes, 16
 // tiles at 5/7, so it matches at every width, including the 8x2 landscape

@@ -183,7 +183,7 @@ export function SealedFilters({
           )}
 
           {/* Below xl this panel is an inline disclosure, so after ticking a filter the results could sit ~1,700px below (390px, 2026-09-23). The footer pins to the viewport bottom while the panel is in view. pr-16 / sm:pr-36 keep the button clear of FeedbackWidget's fixed launcher. */}
-          <div className="sticky bottom-0 -mx-4 -mb-4 mt-3 rounded-b-lg border-t border-ink-700 bg-ink-850/95 p-3 pr-16 backdrop-blur sm:pr-36 xl:hidden">
+          <div className="sticky bottom-[calc(var(--native-banner-h)+env(safe-area-inset-bottom,0px))] -mx-4 -mb-4 mt-3 rounded-b-lg border-t border-ink-700 bg-ink-850/95 p-3 pr-16 backdrop-blur sm:pr-36 xl:hidden">
             <button
               type="button"
               className="btn-primary w-full"

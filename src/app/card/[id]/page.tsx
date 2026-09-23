@@ -1403,7 +1403,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <p className="mb-4 text-xs text-slate-500">
             Same card, different printing — promos, alternate arts and premium prints each trade at their own price.
           </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {printings.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}
@@ -1422,7 +1422,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <p className="mb-4 text-xs text-slate-500">
             Same set, same domain, same card type — priced below {fmtBaseline(baseline.lowest!)} in {baselinePlace}.
           </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {cheaperAlternatives.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}
@@ -1458,7 +1458,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               View all {card.setName} →
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {similar.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}
@@ -1479,7 +1479,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
               All {championEntry.name} cards →
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {championCards.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}

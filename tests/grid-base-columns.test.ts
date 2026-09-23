@@ -37,11 +37,14 @@ const classNamesOf = (src: string) =>
 // to fit — then remembers that zoom per site, so every other page renders
 // shrunken too. Same mechanism as RegionToggle's un-wrappable market row: see
 // DECISIONS.md 2026-09-22, "One un-wrappable row was zooming the whole site out
-// on phones", and tests/region-toggle-fit.test.ts.
+// on phones", and tests/region-toggle-fit.test.ts. Since 2026-09-23 globals.css
+// also clips on `body`, which stops the layout viewport widening: a grid with
+// no base template now has its row CUT OFF at the screen edge instead. Either
+// way the row is wrong, which is why this pin exists.
 //
 // Why a SOURCE pin rather than trusting the overflow audit: `html` carries
 // `overflow-x: clip`, so an element-overflow scan never sees the offending
-// grid — only `window.innerWidth` growing gives it away — and whether a grid
+// grid — only `document.body.scrollWidth` gives it away — and whether a grid
 // overflows at all depends on today's live card and article name lengths. A
 // quiet day passes any runtime check; the missing template is always wrong.
 //
@@ -64,6 +67,7 @@ const GRIDS: { file: string; anchor: string; what: string }[] = [
   { file: "src/components/RouteLoading.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-3", what: "/sets loading skeleton (mirrors /sets)" },
   { file: "src/app/market/page.tsx", anchor: "gap-4 sm:grid-cols-2", what: "/market movers pair (341px at 320)" },
   { file: "src/components/TradeCalculator.tsx", anchor: "gap-4 md:grid-cols-2", what: "/trade both-sides grid (603px at 390 with two cards added)" },
+  { file: "src/components/home/HomeSections.tsx", anchor: "gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2", what: "homepage return-visit cards (two across below 1440)" },
 ];
 
 for (const { file, anchor, what } of GRIDS) {
@@ -79,8 +83,8 @@ for (const { file, anchor, what } of GRIDS) {
       assert.ok(
         tokens.includes("grid-cols-1"),
         `"${cls}" in ${file} has no base column template: below its first breakpoint the grid gets one implicit auto ` +
-          `track as wide as its widest unwrapped row, and Chrome for Android widens the layout viewport and zooms the ` +
-          `whole site out. Add \`grid-cols-1\` (repeat(1, minmax(0, 1fr))).`,
+          `track as wide as its widest unwrapped row, which is clipped at the screen edge (before body's overflow clip, ` +
+          `Chrome for Android zoomed the whole site out instead). Add \`grid-cols-1\` (repeat(1, minmax(0, 1fr))).`,
       );
     }
   });

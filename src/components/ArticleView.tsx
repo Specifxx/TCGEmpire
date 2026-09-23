@@ -524,7 +524,7 @@ export async function ArticleView({ article }: { article: Article }) {
               Opening prices already differ a lot between stores — see the real spread before you order.
             </p>
           </div>
-          <Link href="/radiance-preorders" className="btn-primary shrink-0">Compare Radiance preorder prices</Link>
+          <Link href="/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices</Link>
         </section>
       )}
 
@@ -538,7 +538,11 @@ export async function ArticleView({ article }: { article: Article }) {
           <h2 className="font-bold text-white">Ready to buy?</h2>
           <p className="mt-1 text-sm text-slate-400">{cta.blurb}</p>
         </div>
-        <Link href={cta.href} className="btn-primary shrink-0">{cta.label}</Link>
+        {/* max-w-full, not shrink-0 (2026-09-23): a shrink-0 button can never
+            be narrower than its one-line label, so on 320-360px phones it ran
+            past the card and body's overflow clip cut the label off. Now the
+            label wraps inside the button instead. */}
+        <Link href={cta.href} className="btn-primary max-w-full text-center">{cta.label}</Link>
       </section>
 
       {/* Explore more — a fixed set of internal links into the site's other main

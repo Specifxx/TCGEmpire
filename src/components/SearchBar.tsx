@@ -287,8 +287,7 @@ export function SearchBar({
   useEffect(() => {
     function isVisible(el: HTMLElement): boolean {
       // offsetParent is null for display:none (and its ancestors) — catches
-      // the Navbar's own `hidden .../xl:block` breakpoint swap and the
-      // homepage-only scroll-gated header search (HeaderSearchSlot) alike.
+      // the Navbar's own `hidden .../xl:block` breakpoint swap.
       if (el.offsetParent === null && getComputedStyle(el).position !== "fixed") return false;
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return false;

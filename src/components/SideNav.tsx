@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
@@ -149,6 +149,25 @@ export function SideNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeGroupTitle, hydrated]);
 
+  // Keep the current page's link inside the rail's own viewport (2026-09-23).
+  // The 48px touch rows made the tree ~1.5x taller, so on a touch tablet the
+  // active link (e.g. Deck Builder at y=708 in a scroller ending at 697) landed
+  // below the fold of the rail with nothing to reveal it. scrollTop on the
+  // rail's scroller, not scrollIntoView, which can also scroll the document.
+  // Keyed on the active group's OPEN state rather than all of `collapsed`, so
+  // collapsing some other group never yanks the rail back.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const activeOpen = activeGroupTitle ? !collapsed.has(activeGroupTitle) : false;
+  useEffect(() => {
+    if (!hydrated) return;
+    const s = scrollerRef.current;
+    const a = s?.querySelector<HTMLElement>('a[aria-current="page"]');
+    if (!s || !a) return;
+    const top = a.offsetTop;
+    const bottom = top + a.offsetHeight;
+    if (top < s.scrollTop || bottom > s.scrollTop + s.clientHeight) s.scrollTop = Math.max(0, top - s.clientHeight / 3);
+  }, [pathname, hydrated, activeOpen]);
+
   function toggleGroup(title: string) {
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -217,8 +236,14 @@ export function SideNav() {
           `[&::-webkit-search-cancel-button]:appearance-none` on THIS input
           only: it is type="search", so WebKit and Chromium drew their native ×
           beside the Clear button below. The site's other type=search inputs
-          rely on the native one and keep it. */}
-      <div className="shrink-0 border-b border-ink-800 px-3 py-3">
+          rely on the native one and keep it.
+          HEIGHT BELOW xl (2026-09-23): from 1024 to 1279 the header keeps its
+          card search on a second row (121px with a mouse, 125px on touch), so
+          this block is sized to end exactly on the header's bottom rule — 56px
+          and 60px below the 65px brand block — instead of leaving a 7-15px step
+          in the divider once the page scrolls. From xl the header is 65px again
+          and the block is back to its natural py-3. */}
+      <div className="flex h-14 shrink-0 flex-col justify-center border-b border-ink-800 px-3 [@media(pointer:coarse)]:h-[3.75rem] xl:block xl:h-auto xl:py-3">
         <div className="relative">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-500">
             <circle cx="11" cy="11" r="7" />
@@ -256,7 +281,7 @@ export function SideNav() {
           navigation system: the same index the ⌘K launcher searches, the
           footer site-map renders and /llms.txt publishes, so a link added in
           one place appears in all four. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
+      <div ref={scrollerRef} className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
         {featureResults ? (
           // SEARCHING: a flat, ranked list, each row naming the group it came
           // from — that context is the difference between "Movers" meaning

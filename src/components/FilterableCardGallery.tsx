@@ -104,7 +104,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className={`flex min-h-11 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none ${
+          className={`flex min-h-11 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors sm:[@media(pointer:fine)]:min-h-0 sm:flex-none ${
             activeCount ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 bg-ink-850 text-slate-300 hover:border-brand-500/50"
           }`}
         >
@@ -117,7 +117,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label="Sort cards"
-            className="min-h-11 flex-1 shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-base font-semibold text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:min-h-0 sm:flex-none sm:text-xs"
+            className="min-h-11 flex-1 shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-base font-semibold text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:[@media(pointer:fine)]:min-h-0 sm:flex-none sm:text-xs"
           >
             <option value="number">Sort: Collector №</option>
             <option value="recent">Sort: Recently added</option>

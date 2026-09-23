@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
@@ -140,7 +141,7 @@ export default async function CardsIndexPage() {
         <h2 className="mb-3 text-lg font-extrabold text-white">By domain</h2>
         <div className="flex flex-wrap gap-2">
           {DOMAIN_PAGES.map((d) => (
-            <Link key={d.slug} href={`/domains/${d.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500" style={{ color: d.color }}>
+            <Link key={d.slug} href={`/domains/${d.slug}`} className="data-ink chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500" style={{ "--data-ink": d.color } as CSSProperties}>
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
               {d.label}
             </Link>

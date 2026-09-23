@@ -139,7 +139,9 @@ export function TierComparisonTable({
 }) {
   // The compact (dialog) strings are unchanged; only the /premium table
   // narrows its tier columns below sm (see the comment on the wrapper).
-  const featureCell = compact ? "px-2 py-1.5" : "px-2.5 py-2.5 text-[13px] sm:px-3 sm:text-sm";
+  // lnum without tnum (2026-09-23): feature names are prose, and body's default
+  // tabular figures gave Inter's hyphen a digit-wide advance ("Ad -free").
+  const featureCell = compact ? "px-2 py-1.5 [font-feature-settings:'lnum'_1]" : "px-2.5 py-2.5 text-[13px] sm:px-3 sm:text-sm [font-feature-settings:'lnum'_1]";
   const tierHead = compact ? "w-16 px-2 py-1.5" : "w-14 px-1 py-2.5 text-xs sm:w-24 sm:px-3 sm:text-sm";
   const tierData = compact ? "px-2 py-1.5" : "w-14 px-1 py-2.5 text-xs sm:w-24 sm:px-3 sm:text-sm";
   const rows = compact

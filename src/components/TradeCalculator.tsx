@@ -217,8 +217,12 @@ export function TradeCalculator() {
           along. With the Gremlin and the disclaimer inside, the bar was 368px (44% of
           an 844px phone) and covered the 'Their cards' search while you edited it
           (2026-09-23). */}
+      {/* sm:pr-36 (2026-09-23): from 640 the FeedbackWidget pill sits at the
+          bottom-right, and once this bar stuck its right-aligned Cash difference
+          ran underneath it on a landscape phone. Same clearance as the Filters
+          "Show results" footer. */}
       <div className="sticky bottom-3 z-20 mt-4">
-        <div className="card-surface border-ink-600 bg-ink-900/95 p-4 shadow-2xl backdrop-blur">
+        <div className="card-surface border-ink-600 bg-ink-900/95 p-4 shadow-2xl backdrop-blur sm:pr-36">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
             <div className="flex items-center gap-4 text-sm">
               <div>
@@ -372,7 +376,10 @@ function TradeColumn({
                     <span>·</span>
                     <span>$</span>
                     {/* 16px below sm so iOS doesn't zoom the page on focus (it was
-                        11px), and w-20 so "1266.68" still shows at that size. The
+                        11px), and w-[5.5rem] so "15300.00" still shows at that
+                        size (w-20 clipped it to "15300.0"). The narrow w-16 is for
+                        a MOUSE only: globals.css forces 16px on a coarse landscape
+                        phone too, where a bare sm:w-16 clipped "1266.68". The
                         set-code span truncates to make room (2026-09-23).
                         sm:leading-4 because text-base also sets a 24px line-height
                         that sm:text-[11px] alone would keep, making the ≥sm input
@@ -387,7 +394,7 @@ function TradeColumn({
                         onOverride(c.id, Number.isFinite(v) && v >= 0 ? Math.round(v * 100) : 0);
                       }}
                       onFocus={(e) => e.target.select()}
-                      className={`w-20 rounded border bg-ink-900 px-1 py-0.5 text-right text-base outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:w-16 sm:text-[11px] sm:leading-4 ${
+                      className={`w-[5.5rem] rounded border bg-ink-900 px-1 py-0.5 text-right text-base outline-none focus:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:[@media(pointer:fine)]:w-16 sm:text-[11px] sm:leading-4 ${
                         ov != null ? "border-brand-500/60 text-brand-300" : "border-ink-700 text-slate-300"
                       }`}
                       aria-label="Card value"

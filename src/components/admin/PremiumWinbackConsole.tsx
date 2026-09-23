@@ -208,7 +208,7 @@ export function PremiumWinbackConsole({
           cap and resume where they left off — if <em>remaining</em> is above zero, press send again tomorrow.
         </p>
         {result && (
-          <div className={`mt-3 rounded-lg border p-3 text-xs ${result.ok ? "border-ink-700 bg-ink-850 text-slate-300" : "border-rose-900 bg-rose-950/40 text-rose-300"}`}>
+          <div className={`mt-3 rounded-lg border p-3 text-xs ${result.ok ? "border-ink-700 bg-ink-850 text-slate-300" : "border-rose-500/40 bg-rose-500/10 text-rose-300"}`}>
             {result.ok ? (
               <>
                 <span className="font-bold text-white">{result.dryRun ? "Preview" : "Sent"}</span> · reachable{" "}
@@ -320,7 +320,7 @@ export function PremiumWinbackConsole({
                   {r.status === "paid" ? (
                     <span className="chip bg-brand-500/15 text-brand-300">Plus/Premium until {fmt(r.premiumUntil)}</span>
                   ) : r.status === "optedOut" ? (
-                    <span className="chip bg-rose-950 text-rose-300">opted out</span>
+                    <span className="chip bg-rose-500/15 text-rose-300">opted out</span>
                   ) : r.status === "claimed" ? (
                     <span className="chip bg-brand-500/15 text-brand-300">claimed</span>
                   ) : r.status === "sent" ? (

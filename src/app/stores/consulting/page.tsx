@@ -225,8 +225,11 @@ export default async function StoreConsultingPage() {
         </ol>
       </div>
 
-      {/* The form */}
-      <div className="card-surface mt-6 p-5 sm:p-6">
+      {/* The form. The #book anchor sits on this card, not the <form>, with the
+          header-aware scroll margin (2026-09-23): on the form it landed the
+          heading, the price line and the first field row under the sticky
+          header at every width. */}
+      <div id="book" className="card-surface mt-6 scroll-mt-header p-5 sm:p-6">
         <h2 className="text-lg font-extrabold text-white">Book your session</h2>
         <p className="mb-4 mt-1 text-sm text-slate-400">
           {PRICE_LABEL} {CONSULT_CURRENCY_DISPLAY}, paid up front. No account needed.

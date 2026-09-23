@@ -132,7 +132,7 @@ export function FeedbackForm({ days }: { days: number }) {
               onClick={() => setRating(n)}
               aria-label={`${n} star${n === 1 ? "" : "s"}`}
               aria-pressed={rating === n}
-              className={`grid min-h-11 min-w-11 place-items-center text-3xl transition ${n <= rating ? "text-gold" : "text-ink-600 hover:text-slate-400"}`}
+              className={`grid min-h-11 min-w-11 place-items-center text-3xl transition ${n <= rating ? "text-gold" : "text-slate-600 hover:text-slate-400"}`}
             >
               ★
             </button>

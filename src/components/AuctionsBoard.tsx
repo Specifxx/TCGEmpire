@@ -90,14 +90,16 @@ function Chip({
       : "border-slate-500 bg-ink-800 text-slate-100";
   // min-h-11 sm:min-h-8 (2026-09-23): 32px was under the phone touch floor on
   // all 11 chips. The site's `min-h-11 sm:min-h-*` convention: 44px, 48px on a
-  // coarse pointer below 640, and the unchanged 32px from sm up.
+  // coarse pointer, and the unchanged 32px from sm up with a MOUSE only: a bare
+  // sm:min-h-8 is emitted after the coarse 48px rule and cancelled it on touch
+  // tablets, so the reset is scoped to pointer:fine (2026-09-23).
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       aria-label={ariaLabel}
-      className={`chip min-h-11 sm:min-h-8 border px-2.5 py-1 text-xs font-semibold transition-colors ${
+      className={`chip min-h-11 sm:[@media(pointer:fine)]:min-h-8 border px-2.5 py-1 text-xs font-semibold transition-colors ${
         active ? on : "border-ink-700 text-slate-400 hover:border-ink-600 hover:text-slate-200"
       }`}
     >
