@@ -89,10 +89,18 @@ async function main() {
     sources.set(k, (sources.get(k) ?? 0) + 1);
   }
 
-  const clicks = await prisma.premiumClick.findMany({
-    where: { createdAt: { gte: since } },
-    select: { createdAt: true, source: true, surface: true },
-  });
+  // PremiumClick.surface (2026-09-23) reaches the database with the first
+  // deploy after it landed on main (build-db-push.sh). A run in between would
+  // otherwise crash on the missing column, so it falls back to reading without
+  // it and says so, rather than printing nothing at all.
+  let surfaceNote = "";
+  const clicks: { createdAt: Date; source: string; surface: string | null }[] = await prisma.premiumClick
+    .findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true, source: true, surface: true } })
+    .catch(async () => {
+      surfaceNote = "PremiumClick.surface is not in this database yet (not deployed) — checkout surfaces are blank.";
+      const rows = await prisma.premiumClick.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true, source: true } });
+      return rows.map((r) => ({ ...r, surface: null }));
+    });
   for (const c of clicks) {
     bump(c.createdAt.getTime(), (r) => {
       r.premiumClicks++;
@@ -207,6 +215,7 @@ async function main() {
   // lib/premium-surface.ts). Before that the slide-in and every nav link were
   // one "button" bucket and every tool gate was "dialog", so rows older than
   // that date can only be read in those two buckets.
+  if (surfaceNote) console.log(`\n${surfaceNote}`);
   printSurfaceTables(clicks, subRows, since.getTime(), now);
 }
 
