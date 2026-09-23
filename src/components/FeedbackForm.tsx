@@ -6,7 +6,10 @@ import { useMe } from "@/lib/use-me";
 import { TIER_NAMES } from "@/lib/site";
 import { ShareRow } from "./ShareRow";
 
-type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; granted?: boolean };
+// `field` marks the client-side validation error, the only one about what the
+// visitor typed. Server and network errors leave it unset, so the textarea is
+// flagged aria-invalid only when its contents are the problem.
+type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; granted?: boolean; field?: "message" };
 
 // The /feedback page's form.
 //
@@ -18,7 +21,7 @@ type State = { kind: "idle" | "loading" | "done" | "error"; msg?: string; grante
 // but it is now an INCENTIVE shown alongside a working form, not a gate in front
 // of one.
 export function FeedbackForm({ days }: { days: number }) {
-  const { user, premium, loaded, tier } = useMe();
+  const { user, premium, tier } = useMe();
   // The reward extends an existing plan at its own tier — see /feedback's hero.
   const rewardName = TIER_NAMES[tier ?? "premium"];
   const dayLabel = `${days} day${days === 1 ? "" : "s"}`;
@@ -36,7 +39,7 @@ export function FeedbackForm({ days }: { days: number }) {
     // A rating on its own is real signal and the API accepts it; only an
     // entirely empty submission is rejected.
     if (!rating && message.trim().length < 10) {
-      setState({ kind: "error", msg: "Add a star rating, or write a little more (at least 10 characters)." });
+      setState({ kind: "error", msg: "Add a star rating, or write a little more (at least 10 characters).", field: "message" });
       return;
     }
     setState({ kind: "loading" });
@@ -66,7 +69,12 @@ export function FeedbackForm({ days }: { days: number }) {
     }
   }
 
-  if (!loaded) return <div className="h-40 animate-pulse rounded-xl bg-ink-800" />;
+  // NO loading placeholder (2026-09-23). The form used to wait for /api/me
+  // behind a 160px pulse box, then swap in a 564-580px form: CLS 0.200 at 768
+  // and 0.190 at 390. Only the email field and the reward footnotes depend on
+  // `user`, and SSR and hydration both start signed out, so signed-out visitors
+  // (the majority) see no shift at all. A signed-in visitor sees the email field
+  // and the "No account needed" line drop out once /api/me lands.
 
   if (state.kind === "done") {
     return (
@@ -111,7 +119,12 @@ export function FeedbackForm({ days }: { days: number }) {
     <form onSubmit={submit} className="card-surface space-y-4 p-6">
       <div>
         <span className="mb-1 block text-sm font-semibold text-slate-200">How are we doing?</span>
-        <div className="flex gap-1" role="radiogroup" aria-label="Rating">
+        {/* A group of toggle buttons (aria-pressed), not a radiogroup: there is
+            no arrow-key or roving-tabindex handling, so role=radio would promise
+            a keyboard model these buttons do not have. The 44px stars
+            (2026-09-23) need flex-wrap: without it, at 320 the five of them
+            plus "optional" ran to x=338, past the viewport. */}
+        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Rating">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
@@ -119,7 +132,7 @@ export function FeedbackForm({ days }: { days: number }) {
               onClick={() => setRating(n)}
               aria-label={`${n} star${n === 1 ? "" : "s"}`}
               aria-pressed={rating === n}
-              className={`text-2xl transition ${n <= rating ? "text-gold" : "text-ink-600 hover:text-slate-400"}`}
+              className={`grid min-h-11 min-w-11 place-items-center text-3xl transition ${n <= rating ? "text-gold" : "text-ink-600 hover:text-slate-400"}`}
             >
               ★
             </button>
@@ -130,13 +143,17 @@ export function FeedbackForm({ days }: { days: number }) {
 
       <label className="block">
         <span className="mb-1 block text-sm font-semibold text-slate-200">Your feedback</span>
+        {/* text-base below sm (2026-09-23): iOS zooms the page on focus into any
+            field under 16px. Same on the email and display-name fields. */}
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
           maxLength={4000}
           placeholder="What do you love? What's missing or frustrating? What would make RiftCompare a must-use for you?"
-          className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
+          aria-invalid={state.kind === "error" && state.field === "message" ? true : undefined}
+          aria-describedby={state.kind === "error" && state.field === "message" ? "feedback-error" : undefined}
+          className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-white sm:text-sm placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
         />
       </label>
 
@@ -160,10 +177,11 @@ export function FeedbackForm({ days }: { days: number }) {
           </span>
           <input
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
+            className="w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2.5 text-base text-white sm:text-sm placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
           />
         </label>
       )}
@@ -190,14 +208,14 @@ export function FeedbackForm({ days }: { days: number }) {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Name to show (optional)"
             maxLength={60}
-            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
+            className="mt-2 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-base text-white sm:text-xs placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40"
             aria-label="Display name for the public review, optional"
           />
         )}
       </div>
 
       {state.kind === "error" && (
-        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{state.msg}</p>
+        <p id="feedback-error" role="alert" className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{state.msg}</p>
       )}
 
       <button type="submit" disabled={state.kind === "loading"} className="btn-primary w-full justify-center">
