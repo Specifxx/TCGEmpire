@@ -143,7 +143,10 @@ export default async function SinglesPage() {
       {/* By set */}
       <section>
         <h2 className="mb-4 text-xl font-extrabold text-white">Riftbound singles by set</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {/* Same 6-set grid as the homepage's "By set": 3 × 2 from sm, one row
+            of 6 at xl. `lg:grid-cols-5` left RAD alone on a second row from
+            1024 (2026-09-23); xl, not lg, because of the 17rem desktop rail. */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {SETS.map((s) => (
             <Link
               key={s.code}
@@ -206,13 +209,17 @@ export default async function SinglesPage() {
       {/* FAQ */}
       <section className="card-surface divide-y divide-ink-800 overflow-hidden">
         <h2 className="px-6 py-4 text-lg font-extrabold text-white">Riftbound singles — FAQ</h2>
+        {/* The padding lives on <summary>, not <details> (2026-09-23): on the
+            details it made only the 20–24px question strip clickable inside a
+            52–80px row, so a tap near the row's edge did nothing. The webkit
+            marker class hides Safari's triangle on a flex summary. */}
         {FAQS.map((f) => (
-          <details key={f.q} className="group px-6 py-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">
+          <details key={f.q} className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-sm font-semibold text-slate-200 hover:text-white [&::-webkit-details-marker]:hidden">
               {f.q}
               <span className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" aria-hidden>▾</span>
             </summary>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            <p className="px-6 pb-4 text-sm leading-relaxed text-slate-400">{f.a}</p>
           </details>
         ))}
       </section>

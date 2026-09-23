@@ -227,7 +227,12 @@ export function HomeSections({
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
 
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">By set</div>
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {/* SETS has 6 entries: 2 × 3 on phones, 3 × 2 from sm, one row of 6 at
+            xl — DECISIONS "Grid density" moved this grid to 6 columns to avoid
+            a lonely second row, and it regressed to `lg:grid-cols-5` ([5,1],
+            RAD alone) when the section moved here. xl rather than lg because
+            from lg the 17rem rail leaves only ~704px of content (2026-09-23). */}
+        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {SETS.map((s) =>
             // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
             // revealed cards + sealed live, so it links through with a green "New"

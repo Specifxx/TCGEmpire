@@ -122,9 +122,17 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
     }
   }
 
+  // `isolate` makes this wrapper its own stacking context (2026-09-23). Without
+  // it the img's `z-10` (it must paint above the dimming overlay below) and the
+  // foil's `z-20` leaked into the PARENT's stacking context — in CardTile that
+  // tied with the watch heart's `absolute right-2 top-2 z-10` wrapper, which
+  // comes earlier in the DOM, so the art painted over the heart and took its
+  // taps: no heart at all at 390, a dark sliver at 1440, and a tap opened
+  // QuickView instead. Contained here, a caller's z-10/z-20 overlays paint
+  // above the whole image, as they were written to.
   return (
     <div
-      className={`relative overflow-hidden rounded-lg ${className ?? ""}`}
+      className={`relative isolate overflow-hidden rounded-lg ${className ?? ""}`}
       style={
         card.blurDataUrl
           ? {
