@@ -16,28 +16,47 @@ export interface QuizLegend {
 const ROUNDS = 5;
 const CHOICES = 4;
 
-function shuffle<T>(arr: T[]): T[] {
+// Deterministic PRNG (mulberry32), 2026-09-23. This quiz renders on the server
+// AND hydrates on the client. An unseeded Math.random() drew one deck for the
+// HTML and another for hydration, so every /learn load logged React
+// #418/#423/#425 and the question swapped after load. The page passes a seed,
+// and both renders draw the same shuffle. Keep Math.random out of this file.
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffle<T>(arr: T[], rng: () => number): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
 
-export function LegendQuiz({ legends, domains }: { legends: QuizLegend[]; domains: string[] }) {
-  const [gameId, setGameId] = useState(0); // bump to reshuffle
-  const deck = useMemo(() => shuffle(legends).slice(0, ROUNDS), [legends, gameId]); // eslint-disable-line react-hooks/exhaustive-deps
+export function LegendQuiz({ legends, domains, seed }: { legends: QuizLegend[]; domains: string[]; seed: number }) {
+  const [gameId, setGameId] = useState(0); // bump to reshuffle (it feeds the seed)
+  const deck = useMemo(() => shuffle(legends, mulberry32(seed + gameId * 7919)).slice(0, ROUNDS), [legends, seed, gameId]);
   const [round, setRound] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [score, setScore] = useState(0);
 
   const q = deck[round];
+  // Seeded too, including the inner `others` draw: a seeded deck with unseeded
+  // options still mismatched the option order between server and client.
   const options = useMemo(() => {
     if (!q) return [];
-    const others = shuffle(domains.filter((d) => d !== q.domain)).slice(0, CHOICES - 1);
-    return shuffle([q.domain, ...others]);
-  }, [q, domains]);
+    const rng = mulberry32(seed + gameId * 7919 + round * 104729 + 1);
+    const others = shuffle(domains.filter((d) => d !== q.domain), rng).slice(0, CHOICES - 1);
+    return shuffle([q.domain, ...others], rng);
+  }, [q, domains, seed, gameId, round]);
 
   if (deck.length < ROUNDS) return null; // not enough data — hide quietly
 
@@ -86,7 +105,10 @@ export function LegendQuiz({ legends, domains }: { legends: QuizLegend[]; domain
           // eslint-disable-next-line @next/next/no-img-element
           <img src={q.img} alt="" aria-hidden="true" className="h-44 w-[126px] shrink-0 rounded-lg object-cover shadow-xl ring-1 ring-white/10" loading="lazy" decoding="async" />
         )}
-        <div className="min-w-0 flex-1">
+        {/* min-w-[12rem] so the row wraps on phones (2026-09-23): with min-w-0
+            the flex-1 column never broke the line, and at 320 it got 100px with
+            four 46px answer buttons. Side by side from ~440px up, as before. */}
+        <div className="min-w-[12rem] flex-1">
           <h3 className="font-extrabold text-white">
             Which domain does <span className="text-brand-300">{q.name}</span> belong to?
           </h3>

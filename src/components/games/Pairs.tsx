@@ -12,6 +12,29 @@ const PAIRS = 8;
 const MISMATCH_MS = 750;
 const BEST_KEY = "rc_game_pairs_best_moves";
 
+// The board is capped by viewport HEIGHT as well as width (2026-09-23). Tiles
+// are 5/7 in four columns, so the board is ~1.38x as tall as it is wide:
+// 672x926 at max-w-2xl, taller than a 1440x900 or 1280x800 laptop and ~3.5x the
+// room on a landscape phone. On portrait phones the width still rules, because
+// the cap is wider than the column (358x492 at 390x844, unchanged); only a very
+// short one bites, 288 -> 256 wide at 320x568. Short landscape (<=520px tall)
+// re-lays the 16 tiles as 8 x 2. Browsers without svh drop the cap and get
+// today's width.
+// ONE string literal, so Tailwind's scanner sees every class.
+const BOARD = "mx-auto grid max-w-[calc((100svh-13rem)*0.71)] grid-cols-4 gap-2 sm:gap-3 [@media(orientation:landscape)_and_(max-height:520px)]:max-w-[calc((100svh-8.5rem)*2.6)] [@media(orientation:landscape)_and_(max-height:520px)]:grid-cols-8";
+
+// Loading placeholder with the board's exact geometry: same BOARD classes, 16
+// tiles at 5/7, so it matches at every width, including the 8x2 landscape
+// layout. A fixed min-height cannot, because the board's height scales with
+// its width (492px at 390, 673px at 1440x900 once capped).
+const SKELETON = (
+  <div className={BOARD} aria-hidden="true">
+    {Array.from({ length: PAIRS * 2 }, (_, i) => (
+      <div key={i} className="aspect-[5/7] animate-pulse rounded-lg bg-ink-800" />
+    ))}
+  </div>
+);
+
 type Tile = { key: number; card: GameCard; state: "down" | "up" | "matched" };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -36,16 +59,26 @@ export function Pairs() {
     ]));
   }, [cards]);
 
-  const [tiles, setTiles] = useState<Tile[]>([]);
+  const [tiles, setTiles] = useState<Tile[]>(deck);
   const [moves, setMoves] = useState(0);
   const [seconds, setSeconds] = useState(0);
   const [best, setBest] = useState<number | null>(null);
   const lock = useRef(false);
 
-  useEffect(() => {
+  // Deal in RENDER, not in an effect (2026-09-23). The effect version committed
+  // one frame with the new cards but no tiles: the board collapsed to 0px and
+  // sprang back (layout shifts of 0.094 + 0.273 at 1440x900), and after 'Play
+  // again' the old all-matched tiles flashed the win card. React re-renders
+  // before committing when state is set during render, so no frame ever shows
+  // the mismatch. The `dealt !== deck` guard is what stops this looping.
+  const [dealt, setDealt] = useState(deck);
+  if (dealt !== deck) {
+    setDealt(deck);
     setTiles(deck);
     setMoves(0);
     setSeconds(0);
+  }
+  useEffect(() => {
     lock.current = false;
   }, [deck]);
 
@@ -76,9 +109,16 @@ export function Pairs() {
     });
   }, [won, moves]);
 
+  const mm = String(Math.floor(seconds / 60));
+  const ss = String(seconds % 60).padStart(2, "0");
+  // Shown while loading too: without it the label arrived with the deal,
+  // wrapped under the title at 320-390 and pushed the board down 24px. The text
+  // is identical either way (moves and seconds are 0 until the first flip).
+  const bestLabel = `moves ${moves} · ⏱ ${mm}:${ss}${best != null ? ` · best ${best}` : ""}`;
+
   if (!cards) return (
-    <GameShell emoji="🧠" title="Pairs" tagline="Match the card art from memory — fewest moves wins.">
-      <GameLoading error={error} retry={reload} />
+    <GameShell emoji="🧠" title="Pairs" tagline="Match the card art from memory — fewest moves wins." bestLabel={bestLabel}>
+      <GameLoading error={error} retry={reload} skeleton={SKELETON} />
     </GameShell>
   );
 
@@ -106,18 +146,15 @@ export function Pairs() {
     }
   }
 
-  const mm = String(Math.floor(seconds / 60));
-  const ss = String(seconds % 60).padStart(2, "0");
-
   return (
     <GameShell
       emoji="🧠"
       title="Pairs"
       tagline="Match the card art from memory — fewest moves wins."
-      bestLabel={`moves ${moves} · ⏱ ${mm}:${ss}${best != null ? ` · best ${best}` : ""}`}
+      bestLabel={bestLabel}
     >
       {!won ? (
-        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <div className={BOARD}>
           {tiles.map((t, i) => {
             const up = t.state !== "down";
             return (

@@ -167,6 +167,16 @@ const nextConfig = {
         destination: "/",
         permanent: true,
       },
+      // The retired wallet/escrow flows: /sell (selling) and /wanted (buy
+      // orders). The peer-to-peer Marketplace that replaced them was removed
+      // too, and RiftCompare has no first-party buying or selling. These used
+      // to be page.tsx stubs calling redirect("/"). Next served them as a
+      // cached static page, a 307 with NO Location header: a blank error
+      // document, then a client-side hop (CLS ~0.8, plus a gtag
+      // ReferenceError). A config redirect is a real edge 308 with no render
+      // (2026-09-23). They exist only to keep old inbound links off a 404.
+      { source: "/sell", destination: "/", permanent: true },
+      { source: "/wanted", destination: "/", permanent: true },
       // These three shipped as guides and were moved to the blog shortly after.
       // Both routes assert the article's category (app/guides/[slug]/page.tsx
       // notFound()s when it isn't "guide"), so the old paths became hard 404s the

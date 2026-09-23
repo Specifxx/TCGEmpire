@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Country } from "./country";
 import { trackEvent } from "./analytics";
+import { fetchMe } from "./use-me";
 
 // Shared client-side view of "which cards am I watching?".
 //
@@ -28,10 +29,23 @@ function publish() {
 
 function load(): Promise<Set<string> | null> {
   if (!inflight) {
-    inflight = fetch("/api/alerts/watchlist", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      // A 401 (signed out) resolves to null and is NOT an error state — the
-      // button just falls back to the anonymous email flow.
+    // Signed-out is known from /api/me (one shared request per page; see
+    // use-me.ts), so an anonymous visitor makes NO watchlist request
+    // (2026-09-23). HeaderWatchButton mounts this on every page, and the old
+    // unconditional fetch 401'd on every anonymous page view: a red console
+    // error on all 69 pages audited, at every device profile (1069 in one
+    // crawl). A signed-in visitor's request now waits one /api/me round trip.
+    // If /api/me fails, fetchMe resolves signed-out and the button takes the
+    // anonymous flow, the same as a 401 did.
+    inflight = fetchMe()
+      .then((me) =>
+        me.user
+          ? fetch("/api/alerts/watchlist", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null))
+          : null,
+      )
+      // null (signed out per /api/me, or a 401 if the session lapsed in
+      // between) is NOT an error state: the button falls back to the
+      // anonymous email flow.
       .then((d: { items?: { cardId: string }[] } | null) =>
         d ? new Set((d.items ?? []).map((i) => i.cardId)) : null,
       )
