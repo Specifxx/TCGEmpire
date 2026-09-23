@@ -59,9 +59,39 @@ test("the article capture rides the radiance tag and never adds a second primary
   // "Compare Radiance preorder prices" stays the block's primary; the capture's
   // submit is the ghost button. "Ready to buy?" below is filled green too.
   assert.match(captureIn(src)!, /button="ghost"/);
-  assert.match(src, /href="\/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices/);
+  // Only "stays btn-primary" matters here, so any other sizing class on that
+  // link may change without failing this.
+  assert.match(src, /href="\/radiance-preorders" className="btn-primary\b[^"]*">Compare Radiance preorder prices/);
   const component = read("src/components/NewsletterSignup.tsx");
   assert.match(component, /button === "ghost" \? "btn-ghost" : "btn-primary"/);
+});
+
+test("the article capture keeps the article's mt-8 rhythm where the pre-order section is suppressed", () => {
+  // mt-4 groups the capture with "Pre-ordering Radiance?" directly above it.
+  // On the what-we-know post (cta.href === "/radiance-preorders") that section
+  // does not render, and at mt-4 the capture sat 16px under the FAQ accordion
+  // and 32px above "Ready to buy?", reading as part of the FAQ (d1440,
+  // 2026-09-23). The two conditions must stay the same expression.
+  const src = read("src/components/ArticleView.tsx");
+  assert.match(src, /article\.tags\.includes\("radiance"\) && cta\.href !== "\/radiance-preorders" && \(/);
+  assert.match(src, /<div className=\{cta\.href !== "\/radiance-preorders" \? "mt-4" : "mt-8"\}>\s*<NewsletterSignup\b[^>]*source="radiance-launch"/);
+});
+
+test("the card's email field leaves room for the ghost button on a 390px phone", () => {
+  // Article card inner width at 390 is 316px: w-52 (208) + gap-2 (8) + the
+  // 102px ghost "Notify me" = 318 wrapped the button onto its own row; w-48
+  // (192) fits it. The footer row keeps w-52. flex-1 still fills wider cards.
+  const component = read("src/components/NewsletterSignup.tsx");
+  assert.match(component, /className=\{`input h-9 \$\{variant === "card" \? "w-48" : "w-52"\} flex-1`\}/);
+});
+
+test("the done and error messages reach keyboard and screen-reader users", () => {
+  // The done message replaces the focused submit button; without these, focus
+  // fell to <body> and nothing was announced (2026-09-23).
+  const component = read("src/components/NewsletterSignup.tsx");
+  assert.match(component, /<p ref=\{doneRef\} tabIndex=\{-1\} role="status"/);
+  assert.match(component, /doneRef\.current\?\.focus\(\)/);
+  assert.match(component, /<span role="alert"[^>]*>\s*Check the email and try again\./);
 });
 
 test("the API whitelists radiance-launch, within the schema's 20-character cap", () => {

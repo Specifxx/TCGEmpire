@@ -537,9 +537,14 @@ export async function ArticleView({ article }: { article: Article }) {
           date). Outside the pre-order section's `cta.href` guard so the
           what-we-know post (whose "Ready to buy?" already IS the pre-order link)
           gets it too. `button="ghost"`: "Compare Radiance preorder prices" above
-          stays the primary, and "Ready to buy?" below is filled green as well. */}
+          stays the primary, and "Ready to buy?" below is filled green as well.
+          mt-4 only under that pre-order section, so the two read as one group;
+          where the section is suppressed, mt-8 like every other block here —
+          at mt-4 the what-we-know post's capture sat 16px under the FAQ
+          accordion and 32px above "Ready to buy?", reading as part of the FAQ
+          (d1440, 2026-09-23). */}
       {article.tags.includes("radiance") && isBeforeRadianceRelease() && (
-        <div className="mt-4">
+        <div className={cta.href !== "/radiance-preorders" ? "mt-4" : "mt-8"}>
           <NewsletterSignup
             siteName="RiftCompare"
             variant="card"
