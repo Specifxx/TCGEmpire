@@ -243,9 +243,12 @@ export function BulkPricer({ initialList }: { initialList?: string }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+    // Same split and sticky offset as DeckBuilder (2026-09-23): a 300px input
+    // column from lg to xl so the results aren't squeezed to 300px beside the
+    // side rail, and top-36 to clear the two-row header below xl.
+    <div className="grid gap-6 lg:grid-cols-[300px_1fr] xl:grid-cols-[380px_1fr]">
       {/* Input */}
-      <div className="lg:sticky lg:top-20 lg:self-start">
+      <div className="lg:sticky lg:top-36 lg:self-start xl:top-20">
         <div className="card-surface p-4">
           <label className="mb-1 block text-sm font-semibold text-white">Search for a card and add it to your list</label>
           <p className="mb-2 text-xs text-slate-500">
@@ -278,6 +281,7 @@ export function BulkPricer({ initialList }: { initialList?: string }) {
                       })()}
                     </div>
                   </div>
+                  {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
                   <input
                     type="number"
                     min={1}
@@ -285,7 +289,7 @@ export function BulkPricer({ initialList }: { initialList?: string }) {
                     value={p.qty}
                     onChange={(e) => setQty(p.card.id, parseInt(e.target.value, 10) || 1)}
                     aria-label={`Quantity for ${p.card.name}`}
-                    className="input w-14 shrink-0 py-1 text-center text-sm"
+                    className="input w-14 shrink-0 py-1 text-center sm:text-sm"
                   />
                   <button
                     onClick={() => removeCard(p.card.id)}
@@ -320,12 +324,13 @@ export function BulkPricer({ initialList }: { initialList?: string }) {
                   add a quantity (<span className="font-mono">2 Jinx, Loose Cannon</span>). Matched cards are added to
                   the list above.
                 </p>
+                {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
                 <textarea
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
                   rows={8}
                   placeholder={"Jinx, Loose Cannon\nKai'Sa, Survivor\n…"}
-                  className="input font-mono text-sm"
+                  className="input font-mono sm:text-sm"
                 />
                 <div className="mt-2 flex gap-2">
                   <button

@@ -144,6 +144,7 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
                     })()}
                   </div>
                 </div>
+                {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
                 <input
                   type="number"
                   min={1}
@@ -151,7 +152,7 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
                   value={p.qty}
                   onChange={(e) => setQty(p.card.id, parseInt(e.target.value, 10) || 1)}
                   aria-label={`Quantity for ${p.card.name}`}
-                  className="input w-14 shrink-0 py-1 text-center text-sm"
+                  className="input w-14 shrink-0 py-1 text-center sm:text-sm"
                 />
                 <button
                   onClick={() => removeCard(p.card.id)}
@@ -182,12 +183,13 @@ export function BestBasket({ currency, initialList }: { currency: string; initia
         {showPaste && (
           <div className="mt-4 border-t border-ink-800 pt-4">
             <label className="mb-1 block text-xs font-medium text-slate-400">Paste a decklist (or any card list)</label>
+            {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
             <textarea
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
               rows={6}
               placeholder={"3 Jinx, Loose Cannon\n2 Vayne, Hunter\n1 Yasuo, the Unforgiven"}
-              className="input font-mono text-sm"
+              className="input font-mono sm:text-sm"
             />
             <div className="mt-3">
               <button

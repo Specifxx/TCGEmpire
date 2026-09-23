@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { CONDITIONS, CONDITION_KEYS } from "@/lib/constants";
@@ -120,7 +120,7 @@ export function MyCollection() {
   }, []);
 
   return (
-    <div id="collection" className="card-surface mt-5 scroll-mt-20 p-5">
+    <div id="collection" className="card-surface mt-5 scroll-mt-header p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-bold text-white">My Collection</h2>
@@ -191,12 +191,18 @@ export function MyCollection() {
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {/* The condition hue goes through .data-ink (globals.css), which
+                        darkens it in the light theme: the raw hex measured ~1.8–3.3:1
+                        on the light select (2026-09-23). The class is only added with
+                        a known condition, because with --data-ink unset the colour
+                        would inherit the row's slate instead of falling back to
+                        text-white. Dark theme is unchanged: var(--data-ink) is the hex. */}
                     <select
                       value={it.condition}
                       onChange={(e) => patch(it.id, { condition: e.target.value })}
                       disabled={busy === it.id}
-                      className="rounded-md border border-ink-700 bg-ink-900 px-1.5 py-1 text-xs text-white"
-                      style={{ color: cond?.color }}
+                      className={`rounded-md border border-ink-700 bg-ink-900 px-1.5 py-1 text-xs text-white${cond ? " data-ink" : ""}`}
+                      style={cond ? ({ "--data-ink": cond.color } as CSSProperties) : undefined}
                       aria-label="Condition"
                     >
                       {CONDITION_KEYS.map((k) => (
@@ -379,12 +385,13 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
       <label className="mb-1 block text-xs font-medium text-slate-400">
         Paste a list — one card per line, e.g. <span className="text-slate-300">3 Jinx, Loose Cannon</span>
       </label>
+      {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={5}
         placeholder={"4 Jinx, Loose Cannon\n2 Vayne, Hunter\n1 Yasuo, the Unforgiven"}
-        className="input font-mono text-sm"
+        className="input font-mono sm:text-sm"
       />
       <div className="mt-2 flex items-center gap-2">
         <button onClick={submit} disabled={busy || !text.trim()} className="btn-primary text-sm disabled:opacity-50">
