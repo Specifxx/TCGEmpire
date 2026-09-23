@@ -1,0 +1,166 @@
+name: CI build
+
+# A real `next build` + `next start`, then scripts/smoke-pages.ts against the
+# rendered HTML — on every pull request and every push to main.
+#
+# WHY THIS EXISTS: ci.yml runs typecheck, lint, the image/AdSense guards and
+# the tests, but never `next build`, so build-only failures went straight to
+# production. Two are on record in DECISIONS.md:
+#   • a route file exporting a name Next doesn't recognise passes `tsc` and is
+#     rejected by `next build` (why the /gallery title builders live in
+#     lib/gallery-seo.ts and the Hot 40 OG composition in lib/hot40-og.tsx);
+#   • a homepage that server-rendered nothing typechecked, built and looked
+#     fine in a browser, and shipped blank — the incident scripts/smoke-pages.ts
+#     was written for ("Nothing in CI could have caught it"). This job is what
+#     finally runs it in CI.
+# ci.yml's old answer, "Vercel's preview deploy covers that", no longer holds:
+# claude/* branches get no preview (vercel.json), and a push to main builds on
+# Vercel only when its subject carries the deploy marker (CLAUDE.md), so most
+# commits met `next build` for the first time in the 08:00 UTC release.
+#
+# ── HARD RULE: NO SECRETS IN THIS FILE, EVER ─────────────────────────────────
+# The build prerenders hundreds of database-backed pages. Against production
+# that is exactly the load CLAUDE.md's deploy gate exists to ration — every
+# unnecessary build burned Neon transfer until a project died every three days
+# (DECISIONS.md, 2026-09-11 and 2026-09-14). So this job talks ONLY to the
+# throwaway Postgres service below, seeded with prisma/seed.ts's synthetic
+# catalogue (~1,064 cards, no Vendetta), and it references no secret or repo
+# variable at all: with no Neon URL in the process, it cannot reach one even by
+# mistake. tests/ci-build-workflow.test.ts fails if a secret reference appears
+# here. Do not "fix" a data-dependent failure by pointing this at a real
+# database — relax the check in smoke-pages.ts's SMOKE_SEED mode instead.
+#
+# WHY `npm run build` AND NOT BARE `next build`: CI should build exactly what
+# Vercel builds, guards included. With only the service URL in env that script
+# stays local — verified by a full local run of these steps on 2026-09-23:
+#   • scripts/build-db-push.sh exits at its first gate (VERCEL_ENV is unset), so
+#     no schema push, no IndexNow ping and no manual-cards upsert run;
+#   • the import-prices step runs only when VERCEL_ENV=preview, so it is
+#     skipped (its `|| true` swallows the gate's exit 1);
+#   • optimize-images.ts finds every committed image already in the manifest
+#     (content-hash keyed) and writes nothing.
+# The job's own `prisma db push` + seed below is what gives the build its
+# schema and data.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # The whole sequence took 3m53s in a local run on 2026-09-23 (npm ci 42s,
+    # `npm run build` 177s prerendering 614 pages, smoke 4s); a hosted runner
+    # is slower. The ceiling is there so a hung `next start` or a prerender
+    # stuck on a connect timeout fails the check instead of holding a runner
+    # for GitHub's six-hour default.
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # Not a secret: a throwaway container that lives for this job only
+          # and is reachable only from this runner.
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: tcg_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tcg_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      # All three names the app and the Prisma CLI can resolve a database from
+      # point at the service: DATABASE_URL is what `prisma db push` and the
+      # seed read; RM3 and HISTORY_DATABASE_URL_3 are the heads of the chains
+      # in src/lib/db-chains.ts, so db.ts and db-history.ts resolve to them
+      # without their "current project missing" warnings, and history shares
+      # the operational database (historyIsSplit=false), as in local dev.
+      DATABASE_URL: postgresql://postgres:ci@localhost:5432/tcg_ci
+      RM3: postgresql://postgres:ci@localhost:5432/tcg_ci
+      HISTORY_DATABASE_URL_3: postgresql://postgres:ci@localhost:5432/tcg_ci
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Create schema in the service database
+        run: npx prisma db push --skip-generate
+
+      - name: Seed synthetic catalogue
+        run: npx tsx prisma/seed.ts
+
+      # `shell: bash` is what turns on pipefail — the default `run` shell is
+      # `bash -e {0}`, under which a failed build piped into tee would pass.
+      - name: Production build (npm run build)
+        shell: bash
+        run: npm run build 2>&1 | tee build.log
+
+      - name: Start the production server
+        shell: bash
+        run: |
+          # Backgrounded processes outlive their step; the runner reaps it at
+          # the end of the job.
+          nohup npx next start -p 3000 > server.log 2>&1 &
+          pid=$!
+          # /api/ping runs `SELECT 1`, so a 200 means the server is up AND
+          # reaching the service database.
+          for i in $(seq 1 60); do
+            if curl -fs --max-time 5 http://localhost:3000/api/ping; then
+              echo; echo "next start answered /api/ping after ~$((i * 2))s"
+              exit 0
+            fi
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "::error::next start exited before answering /api/ping"
+              cat server.log
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "::error::next start did not answer /api/ping within 120s"
+          cat server.log
+          exit 1
+
+      # SMOKE_SEED swaps only the expectations tied to production data (a
+      # Vendetta card, Product/PreOrder JSON-LD, which needs real offers) —
+      # see scripts/smoke-pages.ts's header. Every structural check — 200,
+      # the <h1> count, the text and link floors, the uncontained-bailout
+      # diagnosis, the retired-URL redirects — runs on every page as it does
+      # against production.
+      - name: Smoke the rendered pages
+        env:
+          SMOKE_SEED: 1
+        run: npx tsx scripts/smoke-pages.ts http://localhost:3000
+
+      - name: Upload build and server logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-build-logs
+          path: |
+            build.log
+            server.log
+          if-no-files-found: ignore
+          retention-days: 14
