@@ -1,9 +1,12 @@
 /**
  * Writes docs/DECISIONS-INDEX.md: every `## ` heading of DECISIONS.md, grouped
- * by month (newest first), each linked to its line.
+ * by month (newest first), each linked to its line. Then checks that every
+ * `../DECISIONS.md#L<n>` link in docs/CURRENT-STATE.md still lands on a heading
+ * carrying the date its link text names.
  *
- *   npm run decisions:index            # regenerate the file
+ *   npm run decisions:index            # regenerate the file, check the links
  *   npm run decisions:index -- --check # exit 1 if the committed index is stale
+ *                                      # or a CURRENT-STATE link is broken
  *
  * Why (2026-09-23): DECISIONS.md had reached ~11,400 lines and ~126 entries, and
  * sessions kept re-proposing things an entry had already settled — the UI pass
@@ -21,8 +24,8 @@
  *   "Title (2026-09-10, same day, second pass)"
  *   "Title — 2026-09-11 (same day, follow-up)"
  *   "Phase 1 — Orient & Baseline (2026-08-17)"
- *   "1. Fresh-vs-committed diff"              no date: a numbered sub-section of
- *                                             the entry above it → "Undated"
+ *   "1. Fresh-vs-committed diff"              no date: a sub-section of the
+ *                                             entry above it → "Undated"
  * `## ` lines inside fenced code blocks are not headings and are skipped.
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -31,6 +34,7 @@ import { join } from "node:path";
 const ROOT = process.cwd();
 const SOURCE = "DECISIONS.md";
 const OUTPUT = "docs/DECISIONS-INDEX.md";
+const CURRENT_STATE = "docs/CURRENT-STATE.md";
 // The index lives in docs/, so links climb one level to reach the log.
 const LINK_BASE = "../DECISIONS.md";
 
@@ -132,7 +136,8 @@ function renderIndex(entries: Entry[], sourceLines: number): string {
     "npm run decisions:index",
     "```",
     "",
-    "`npm run decisions:index -- --check` exits non-zero if this file is stale.",
+    "`npm run decisions:index -- --check` exits non-zero if this file is stale,",
+    "or if a link in CURRENT-STATE.md no longer lands on the entry it names.",
     "",
     "Newest month first; within a month, newest entry first. Links point at the",
     "heading's line (`#L<line>`); where a viewer renders the markdown and ignores",
@@ -162,8 +167,8 @@ function renderIndex(entries: Entry[], sourceLines: number): string {
     out.push(
       "## Undated",
       "",
-      "Headings with no date of their own — in practice, numbered sub-sections of",
-      "the dated entry they sit under, which the last column names.",
+      "Headings with no date of their own: sub-sections of the dated entry they",
+      "sit under, which the last column names.",
       "",
       "| Line | Heading | Under |",
       "| ---: | --- | --- |",
@@ -186,11 +191,44 @@ function monthLabel(month: string): string {
 // GitHub's heading slug for the labels this file emits ("September 2026").
 const anchor = (label: string) => label.toLowerCase().replace(/[^a-z0-9 -]/g, "").replace(/ /g, "-");
 
+// CURRENT-STATE.md cites its sources by hand as `[<date>](../DECISIONS.md#L<n>)`.
+// Why this check exists (2026-09-23): the index regenerates, the page does not,
+// and an edit inside an older DECISIONS.md entry shifts every `#L` anchor below
+// it. The page had 171 such links when this was written, checked once by hand.
+// A link passes when line <n> is a `## ` heading and the date in its text is
+// that heading's date (for an undated sub-section, its parent entry's date). A
+// shifted anchor almost always lands on a body line, and fails loudly.
+const CITATION = /\[([^\]]*)\]\(\.\.\/DECISIONS\.md#L(\d+)\)/g;
+
+function checkCurrentState(entries: Entry[]): string[] {
+  let page: string;
+  try {
+    page = readFileSync(join(ROOT, CURRENT_STATE), "utf8");
+  } catch {
+    return [`${CURRENT_STATE} is missing`];
+  }
+  const byLine = new Map(entries.map((e) => [e.line, e]));
+  const problems: string[] = [];
+  for (const m of page.matchAll(CITATION)) {
+    const [, text, n] = m;
+    const where = `${CURRENT_STATE}:${page.slice(0, m.index).split("\n").length}`;
+    const target = byLine.get(Number(n));
+    const named = new RegExp(DATE).exec(text)?.[1];
+    const date = target ? (target.date ?? target.parent?.date) : null;
+    if (!target) problems.push(`${where}: #L${n} is not a heading of ${SOURCE}`);
+    else if (!named) problems.push(`${where}: the link to #L${n} names no date`);
+    else if (date !== named) problems.push(`${where}: #L${n} is "${target.title}" (${date}), not an entry of ${named}`);
+  }
+  return problems;
+}
+
 function main() {
   const src = readFileSync(join(ROOT, SOURCE), "utf8");
   const sourceLines = src.split(/\r?\n/).length - (src.endsWith("\n") ? 1 : 0);
-  const next = renderIndex(parseDecisions(src), sourceLines);
+  const entries = parseDecisions(src);
+  const next = renderIndex(entries, sourceLines);
   const target = join(ROOT, OUTPUT);
+  let failed = false;
 
   if (process.argv.includes("--check")) {
     let current = "";
@@ -201,14 +239,27 @@ function main() {
     }
     if (current !== next) {
       console.error(`${OUTPUT} is stale — run: npm run decisions:index`);
-      process.exit(1);
+      failed = true;
+    } else {
+      console.log(`${OUTPUT} is up to date.`);
     }
-    console.log(`${OUTPUT} is up to date.`);
-    return;
+  } else {
+    writeFileSync(target, next);
+    console.log(`Wrote ${OUTPUT}.`);
   }
 
-  writeFileSync(target, next);
-  console.log(`Wrote ${OUTPUT}.`);
+  const problems = checkCurrentState(entries);
+  if (problems.length) {
+    console.error(
+      `${problems.length} link(s) in ${CURRENT_STATE} no longer land on the entry they name.\n` +
+        `Find each entry's new line in ${OUTPUT} and fix the #L number:\n` +
+        problems.map((p) => `  ${p}`).join("\n"),
+    );
+    failed = true;
+  } else {
+    console.log(`${CURRENT_STATE}: every DECISIONS.md link lands on its entry.`);
+  }
+  if (failed) process.exit(1);
 }
 
 main();

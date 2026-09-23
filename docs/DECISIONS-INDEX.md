@@ -10,7 +10,8 @@ Regenerate after adding an entry:
 npm run decisions:index
 ```
 
-`npm run decisions:index -- --check` exits non-zero if this file is stale.
+`npm run decisions:index -- --check` exits non-zero if this file is stale,
+or if a link in CURRENT-STATE.md no longer lands on the entry it names.
 
 Newest month first; within a month, newest entry first. Links point at the
 heading's line (`#L<line>`); where a viewer renders the markdown and ignores
@@ -155,8 +156,8 @@ Months: [September 2026](#september-2026) · [August 2026](#august-2026) · [Und
 
 ## Undated
 
-Headings with no date of their own — in practice, numbered sub-sections of
-the dated entry they sit under, which the last column names.
+Headings with no date of their own: sub-sections of the dated entry they
+sit under, which the last column names.
 
 | Line | Heading | Under |
 | ---: | --- | --- |
