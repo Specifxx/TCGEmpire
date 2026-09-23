@@ -69,13 +69,16 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">⌕</span>
+          {/* text-base below sm, like the site's own `.input`: iOS Safari zooms
+              the page in on focusing a field under 16px and never zooms back
+              out. This one measured 14px at 390 (2026-09-23). */}
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Filter by card or set…"
             aria-label="Filter constituents"
-            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-2 pl-9 pr-3 text-base text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:text-sm"
           />
         </div>
         <div className="flex items-center gap-1 rounded-lg border border-ink-700 bg-ink-900 p-1">
@@ -94,50 +97,60 @@ export function IndexConstituents({ constituents, currency }: { constituents: In
         </div>
       </div>
 
+      {/* Phones get a fixed three-column table: #, Card, and Price with the
+          7-day move under it (2026-09-23). The old min-w-[620px] table was
+          704px in a 356px box at 390, so only # and Card were in view and
+          every number sat behind an unmarked sideways scroll. `table-fixed`
+          is what makes the name truncate: in auto layout a cell has no
+          definite width, so 0 of 20 names ever did. From sm the full
+          six-column table (and its contained scroll at 640) is unchanged. */}
       <div className="card-surface max-h-[34rem] overflow-auto overscroll-contain">
-        <table className="w-full min-w-[620px] text-sm">
+        <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[620px]">
           <thead>
             <tr className="text-left text-[10px] uppercase tracking-wide text-slate-500 [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:border-b [&>th]:border-ink-700 [&>th]:bg-ink-900">
-              <SortTh label="#" col="rank" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-4" />
+              <SortTh label="#" col="rank" sortKey={sortKey} dir={dir} onSort={toggleSort} className="w-11 pl-3 pr-1 sm:w-auto sm:px-4" />
               <SortTh label="Card" col="name" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" />
-              <SortTh label="Weight" col="weight" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
-              <SortTh label="Price" col="price" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
-              <SortTh label="Latest" col="d1" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-2" align="right" />
-              <SortTh label="7-day" col="d7" sortKey={sortKey} dir={dir} onSort={toggleSort} className="px-4" align="right" />
+              <SortTh label="Weight" col="weight" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-2 sm:table-cell" align="right" />
+              <SortTh label="Price" col="price" sortKey={sortKey} dir={dir} onSort={toggleSort} className="w-[6.75rem] pl-2 pr-3 sm:w-auto sm:px-2" align="right" />
+              <SortTh label="Latest" col="d1" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-2 sm:table-cell" align="right" />
+              <SortTh label="7-day" col="d7" sortKey={sortKey} dir={dir} onSort={toggleSort} className="hidden px-4 sm:table-cell" align="right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-800">
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">No cards match that filter.</td>
+            {rows.map(({ c, rank }) => (
+              <tr key={c.id} className="hover:bg-ink-800">
+                <td className="py-2 pl-3 pr-1 font-bold text-slate-500 sm:px-4">
+                  {rank <= 3 ? <span className="chip bg-gold/20 text-gold">{rank}</span> : rank}
+                </td>
+                <td className="px-2 py-2">
+                  <Link href={cardHref(c)} className="flex min-h-11 items-center gap-2.5">
+                    {c.imageThumbUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold text-white">{c.name}</span>
+                      <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>
+                    </span>
+                  </Link>
+                </td>
+                <td className="num hidden px-2 py-2 text-right text-xs text-slate-400 sm:table-cell">{c.weightPct}%</td>
+                <td className="num py-2 pl-2 pr-3 text-right font-semibold text-white sm:px-2">
+                  {formatMoney(c.priceCents, currency)}
+                  {/* Phones only: the 7-day move rides under the price, since the
+                      Latest/7-day columns are hidden below sm (PriceWatch's pattern). */}
+                  <span className={`block text-[11px] font-semibold sm:hidden ${pctClass(c.d7pct)}`}>{fmtPct(c.d7pct)}</span>
+                </td>
+                <PctCell pct={c.d1pct} className="hidden px-2 sm:table-cell" />
+                <PctCell pct={c.d7pct} className="hidden px-4 sm:table-cell" />
               </tr>
-            ) : (
-              rows.map(({ c, rank }) => (
-                <tr key={c.id} className="hover:bg-ink-800">
-                  <td className="px-4 py-2 font-bold text-slate-500">
-                    {rank <= 3 ? <span className="chip bg-gold/20 text-gold">{rank}</span> : rank}
-                  </td>
-                  <td className="px-2 py-2">
-                    <Link href={cardHref(c)} className="flex min-h-11 items-center gap-2.5">
-                      {c.imageThumbUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.imageThumbUrl} alt={cardImageAlt(c)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block truncate font-semibold text-white">{c.name}</span>
-                        <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="num px-2 py-2 text-right text-xs text-slate-400">{c.weightPct}%</td>
-                  <td className="num px-2 py-2 text-right font-semibold text-white">{formatMoney(c.priceCents, currency)}</td>
-                  <PctCell pct={c.d1pct} className="px-2" />
-                  <PctCell pct={c.d7pct} className="px-4" />
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
+        {/* Outside the table, not a colSpan={6} row: below sm only three columns
+            render, and in table-fixed layout a 6-column span adds a phantom
+            column that squeezes the Card heading (134px -> 34px at 320). */}
+        {rows.length === 0 && <p className="px-4 py-10 text-center text-sm text-slate-500">No cards match that filter.</p>}
       </div>
       <p className="mt-2 text-[11px] text-slate-600">
         Showing {rows.length} of {constituents.length} · click a heading to sort ▲▼.
@@ -166,11 +179,14 @@ function SortTh({
   );
 }
 
+function pctClass(pct: number | null): string {
+  return pct == null ? "text-slate-600" : pct > 0 ? "text-up" : pct < 0 ? "text-down" : "text-slate-400";
+}
+
+function fmtPct(pct: number | null): string {
+  return pct == null ? "—" : `${pct > 0 ? "+" : pct < 0 ? "−" : ""}${Math.abs(pct)}%`;
+}
+
 function PctCell({ pct, className = "" }: { pct: number | null; className?: string }) {
-  const cls = pct == null ? "text-slate-600" : pct > 0 ? "text-up" : pct < 0 ? "text-down" : "text-slate-400";
-  return (
-    <td className={`num py-2 text-right font-semibold ${cls} ${className}`}>
-      {pct == null ? "—" : `${pct > 0 ? "+" : pct < 0 ? "−" : ""}${Math.abs(pct)}%`}
-    </td>
-  );
+  return <td className={`num py-2 text-right font-semibold ${pctClass(pct)} ${className}`}>{fmtPct(pct)}</td>;
 }
