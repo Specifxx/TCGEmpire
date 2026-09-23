@@ -606,16 +606,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.50 · free over US$50",
     country: "US",
   },
-  e4cards: {
-    key: "e4cards",
-    name: "E4 Cards & More",
-    base: "https://e4cards.com",
-    collections: ["riftbound-singles"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.50 · free over US$50",
-    country: "US",
-  },
   foxandfable: {
     key: "foxandfable",
     name: "Fox and Fable Games",
@@ -2233,6 +2223,24 @@ export const RETAILERS: Record<string, RetailerInfo> = {
 };
 
 export const RETAILER_LIST = Object.values(RETAILERS);
+
+// Stores taken OUT of RETAILERS whose rows must also leave the database. The
+// importer only ever visits stores in RETAILER_LIST, so without this a removed
+// store's last prices would stay on card pages indefinitely. Each entry records
+// the evidence it was removed on; a key can be dropped from this list once a
+// price run has logged its purge.
+//
+//   e4cards  2026-09-23 — /collections/riftbound-singles returns 0 products and
+//            the store's collection sitemap has no Riftbound handle at all (it
+//            now lists MTG, Pokémon and events only). store-health had it
+//            "stale: no successful fetch in 202h" with 138 listings still live.
+export const DECOMMISSIONED_RETAILERS: readonly string[] = ["e4cards"];
+
+// Past this age, a store that returns no products has its rows expired rather
+// than kept. One bad run keeps yesterday's prices; three days is a store that
+// has stopped answering, and a price nobody can buy at. Above store-health's 30h
+// "stale" alert on purpose, so the alert fires first.
+export const STORE_ROWS_MAX_AGE_H = 72;
 
 // The market a store serves (defaults to AU for the original stores).
 export function retailerCountry(retailerKey: string): NonNullable<RetailerInfo["country"]> {

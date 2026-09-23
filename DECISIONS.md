@@ -11030,3 +11030,60 @@ filter (with the Scuttle Crab shape), both bases, the fallback registration,
 that the importer writes both rows, the four consumers going through the
 helper, the card page's store count excluding the reference row, and the index
 break arithmetic.
+
+## A store fell off the site because one request failed — 2026-09-23
+
+Asked to make sure every US store "is working and we have the latest prices",
+I probed all 40 US feeds live from the sandbox and read `audit-store-health`
+against RM3. The two disagreed, and the disagreement was the finding.
+
+| Store | Live feed today | Last night's import | Card pages |
+|---|---|---|---|
+| Wolf Den Gaming | 699 in stock | 6 products, 0 priced | **0** (7-day median 640) |
+| Hobbiesville (US) | 517 in stock | 65 products, 1 priced | **1** (median 1,172) |
+| E4 Cards & More | 0 — no Riftbound in its sitemap at all | 0 products | **138, 202h stale** |
+
+**Wolf Den and Hobbiesville were healthy stores that one failed request took
+off every card page.** `fetchCollection` treated a thrown fetch, a 5xx/403
+and a 404 identically — a silent `break` — and returned whatever it had. Wolf
+Den's main singles collection failed; its six-product Vendetta collection did
+not; the importer then ran its usual `deleteMany` for the store and wrote six
+unmatched products. Nothing in the log said a collection had failed. The same
+request, reproduced here with the importer's exact headers and cache-buster,
+returned a full 250-product page.
+
+Now:
+
+- A failed read (network error, non-404 error status, 429, HTML challenge
+  page) is reported as `failed`, distinct from empty. A 404 is still an
+  answer — the conventional BinderPOS handles 404 on most stores and must not
+  veto them.
+- One retry before giving up, logged either way.
+- If a **discovered or configured** collection fails, the store is skipped for
+  the run and keeps yesterday's rows, rather than being replaced by a partial
+  set.
+
+**E4 Cards is the opposite failure: a store that stopped answering kept its
+rows forever.** A store returning no products was skipped with its rows left
+in place, which is right for one bad night and wrong for eight. Two changes:
+
+- `STORE_ROWS_MAX_AGE_H` (72h): when a store returns nothing, rows older than
+  that are expired. Above store-health's 30h "stale" alert on purpose, so the
+  alert fires before anything is deleted.
+- `DECOMMISSIONED_RETAILERS`: removing a store from `RETAILERS` used to strand
+  its rows, since the importer only visits stores in `RETAILER_LIST`. Keys
+  listed there have card AND sealed rows purged at the start of every run.
+  `e4cards` is its first entry, with the evidence recorded beside it.
+
+**Not acted on: the "frozen-prices" alert on ~130 stores in every market.** It
+fires when a store's median listing price is unchanged for seven days. Most
+stores genuinely do not reprice a catalogue weekly, and the refresh workflow
+ran and succeeded on each of those days, with per-store product counts in its
+log. That makes this an alert tuned too tight, not 130 broken stores.
+Recorded so the next audit does not take it at face value.
+
+`tests/store-row-lifecycle.test.ts` pins all three behaviours.
+
+CLAUDE.md still named RM10 as the operational database; it is RM3 since
+yesterday's cutover. The file now points at `db-chains.ts` rather than
+restating a name that rotates every few days.
