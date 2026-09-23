@@ -357,10 +357,19 @@ test("bare mode is only ever used where a parent discloses", () => {
   // AffiliateDisclosure's rule: if an affiliate link renders, its disclosure
   // renders. `bare` suppresses the inner one, so it is only safe under a parent
   // that provides one.
-  for (const f of ["src/components/EbayAdCarouselLive.tsx"]) {
+  for (const f of ["src/components/EbayAdCarouselLive.tsx", "src/components/EbayBuyCta.tsx"]) {
     const src = read(f);
     assert.match(src, /\{!bare && <AffiliateDisclosure|\{!bare && \(\s*<div className="border-t/, `${f} must gate its disclosure on !bare`);
   }
+});
+
+test("the card panel's Listings tab renders bare, so the panel's one disclosure is the only one", () => {
+  // 2026-09-23: two identical EPN disclosures stacked 50px apart on card pages and in QuickView.
+  const panel = read("src/components/EbayCardPanelLive.tsx");
+  assert.match(panel, /<EbayAdCarouselLive listings=\{listings\} query=\{query\} bare \/>/);
+  assert.match(panel, /<EbayBuyCta query=\{query\} bare \/>/);
+  // A bare carousel's no-listings fallback must stay bare (QuickView's path).
+  assert.match(read("src/components/EbayAdCarouselLive.tsx"), /<EbayBuyCta [^>]*bare=\{bare\}/);
 });
 
 

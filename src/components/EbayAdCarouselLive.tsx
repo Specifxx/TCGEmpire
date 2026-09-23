@@ -66,7 +66,10 @@ export function EbayAdCarouselLive({
     .slice(0, compact ? 4 : undefined);
 
   if (items.length === 0) {
-    return <EbayBuyCta query={query} compact={compact} className={className} />;
+    // bare carries through: QuickView renders this bare under its own
+    // disclosure, and dropping the flag here stacked two identical EPN lines
+    // 50px apart (2026-09-23).
+    return <EbayBuyCta query={query} compact={compact} className={className} bare={bare} />;
   }
 
   return (
