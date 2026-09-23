@@ -8,6 +8,9 @@ interface CardArtProps {
   energyCost?: number | null;
   might?: number | null;
   collectorNumber?: string;
+  // The card's own set. This used to be a hard-coded "OGN", so every
+  // Spiritforged/Unleashed/Vendetta placeholder claimed to be from Origins.
+  setCode?: string;
   artSeed?: number;
   isFoil?: boolean;
   className?: string;
@@ -39,6 +42,7 @@ export function CardArt({
   energyCost,
   might,
   collectorNumber,
+  setCode,
   artSeed = 1,
   isFoil = false,
   className,
@@ -210,7 +214,7 @@ export function CardArt({
           fill="#9aa0aa"
           fontFamily="ui-monospace, monospace"
         >
-          {collectorNumber} · OGN
+          {setCode ? `${collectorNumber} · ${setCode}` : collectorNumber}
         </text>
       )}
 

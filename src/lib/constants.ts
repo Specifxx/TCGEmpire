@@ -61,6 +61,26 @@ export const AU_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_AU_RETAILER];
 // not a Canadian retailer, so it must never be counted as a buyable store or
 // undercut a real CAD listing. See computeMarket()'s FALLBACK filter.
 export const TCGPLAYER_CA_RETAILER = "tcgplayer_ca";
+
+// TCGplayer's US MARKET price, as its own reference row (2026-09-23).
+//
+// Until this date the single "tcgplayer" US row carried the market price and
+// was ALSO the buyable TCGplayer row in the US comparison table — one number
+// doing two jobs that want different numbers. Sampled live the day this split
+// landed: across 200 English singles, the cheapest in-stock English Near-Mint
+// listing sat below market price for 188 of them, median 25% below. So the US
+// comparison table was quoting TCGplayer well above what a buyer actually pays
+// there, while every other row beside it was a real current price.
+//
+// Now "tcgplayer" is the cheapest English NM listing of the matching printing
+// (a buyable price, like every other store row), and THIS key carries the
+// market price for the four consumers that want a stable aggregate rather than
+// one seller's ask: the eBay value floor (price-import.ts tcgplayerUsValues),
+// the Deal Finder's "worth more on TCGplayer" benchmark, Box EV, and the
+// overseas "TCGplayer market price · reference" block. It is registered in
+// US_FALLBACK_RETAILERS below, so it can never appear as a store row, set a
+// "from" price, or count toward a store total.
+export const TCGPLAYER_MARKET_RETAILER = "tcgplayer_market";
 export const CA_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_CA_RETAILER];
 
 // eBay CA. For SINGLES this key is written by price-import.ts's US pass (CA rows
@@ -103,12 +123,16 @@ export const EBAY_CA_RETAILER = "ebay_ca";
 // the point — or the very first run would have let a marketplace aggregate
 // set lowestPriceCentsEu and outrank real EU stores.
 export const EU_FALLBACK_RETAILERS: readonly string[] = [CARDMARKET_EU_RETAILER];
+// The US has a real, buyable TCGplayer row ("tcgplayer"), so its only reference
+// row is the separate market-price key — see TCGPLAYER_MARKET_RETAILER.
+export const US_FALLBACK_RETAILERS: readonly string[] = [TCGPLAYER_MARKET_RETAILER];
 export const ALL_FALLBACK_RETAILERS: readonly string[] = [
   ...AU_FALLBACK_RETAILERS,
   ...UK_FALLBACK_RETAILERS,
   ...SG_FALLBACK_RETAILERS,
   ...CA_FALLBACK_RETAILERS,
   ...EU_FALLBACK_RETAILERS,
+  ...US_FALLBACK_RETAILERS,
 ];
 
 /** True when `retailer` is a converted reference price, not a buyable store. */

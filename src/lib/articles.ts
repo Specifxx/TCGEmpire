@@ -3578,6 +3578,7 @@ It also doesn't require a large bankroll to start. Watching a handful of cards y
       "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
     author: "RiftCompare",
     date: "2026-07-01",
+    updated: "2026-09-23",
     readMins: 4,
     tags: ["riftcompare-index", "methodology", "riftbound-tcg", "market-data"],
     faq: [
@@ -3641,6 +3642,12 @@ The fix is called **chain-linking**, and real financial indices use the same ide
 The practical effect: a card that just entered the basket - a brand-new set's card climbing into the top 200 by search, say - has no earlier price to compare against, so it simply sits out the calculation for the snapshot it debuts on. It starts contributing from the *next* charted snapshot onward, once it has two consecutive tracked prices to form a ratio from. The basket can turn over completely over months and the Index still won't move on that account alone - only real price changes do.
 
 This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. The earliest stretch of the chart - back when only a handful of cards had any tracked price yet - is thinner than the rest for exactly that reason: fewer cards means more weight riding on each one. Chain-linking still keeps that stretch honest (a card joining never jumps the level, whether it's card three or card three hundred), it's just a noisier read of the market than a later week with the full basket reporting. The trend across weeks and months is where the signal lives.
+
+### When the way a price is sourced changes
+
+Chain-linking has one weakness worth being open about: a change in *how* a price is measured looks exactly like the market moving, and because every step is multiplied onto the last, a one-off change would stay in the level forever. So when the data source itself changes, the Index is chained across it — the steps inside that window are charted flat and the prices re-base, which is what stock-index providers do over a methodology change.
+
+That has happened once. On **23 September 2026** the US TCGplayer price switched from TCGplayer's market price to the cheapest English Near-Mint listing, which sits noticeably lower for most cards. Steps ending between 23 September and 1 October 2026 are charted flat for that reason, so the Index does not report the change as a market-wide fall. Card price charts and price movers are not re-based: for about a week after the switch, some US prices read lower than a week earlier because of it, and the movers list settles once both ends of its comparison are on the new basis.
 
 ## A Concrete Example: A New Set's Launch
 

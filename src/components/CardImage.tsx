@@ -65,6 +65,7 @@ export function CardImage({ card, isFoil = false, full = false, className, prior
           energyCost={card.energyCost}
           might={card.might}
           collectorNumber={card.collectorNumber}
+          setCode={card.setCode}
           artSeed={card.artSeed ?? 1}
           isFoil={isFoil}
           className="h-full w-full"

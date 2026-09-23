@@ -606,16 +606,6 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     shippingNote: "est. US$2.50 · free over US$50",
     country: "US",
   },
-  e4cards: {
-    key: "e4cards",
-    name: "E4 Cards & More",
-    base: "https://e4cards.com",
-    collections: ["riftbound-singles"],
-    shippingFlatCents: 250,
-    freeOverCents: 5000,
-    shippingNote: "est. US$2.50 · free over US$50",
-    country: "US",
-  },
   foxandfable: {
     key: "foxandfable",
     name: "Fox and Fable Games",
@@ -859,6 +849,73 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     country: "US",
   }, // registry sweep 2026-09-09: 44 in-stock singles, cur=USD
 
+  // ---- Registry sweep, 2026-09-23 (scripts/sweep-registry.ts --markets US) ----
+  // 1,599 US registry domains re-swept two weeks after the first pass; six new
+  // stores cleared MIN_SINGLES_FOR_STORE with a proven USD price, and five are
+  // below. Each was then run through the importer's own resolveCardId() over
+  // the checked-in catalogue snapshot, which has no alt-art, rune or VEN rows,
+  // so these match rates are a floor. The misses read were sealed products,
+  // playmats and alt-art printings, not unparseable titles:
+  //   thewarpgate 400/459 (87%) · wulfgaming 142/158 (90%) · larrysgamestore
+  //   95/101 (94%) · gatorscardden 87/127 · sweetsandgeeks 45/66
+  // Rejected: solacido.com. Its 250 "singles" are bare card names ("Abandon")
+  // with no set or collector number and none in stock, so nothing would match.
+  // A store with no published free-shipping threshold gets freeOverCents 0 (no
+  // threshold) rather than an invented one; see the Quack Opens entry.
+  thewarpgate: {
+    key: "thewarpgate",
+    name: "The Warp Gate",
+    base: "https://thewarpgate.net",
+    collections: ["riftbound-tcg"],
+    shippingFlatCents: 250,
+    freeOverCents: 0,
+    shippingNote: "est. US$2.50 · shipping at checkout",
+    country: "US",
+  },
+  gatorscardden: {
+    key: "gatorscardden",
+    name: "Gator's Card Den",
+    base: "https://gatorscardden.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 150,
+    // Their policy page says free over $200; the live site banner says $350+.
+    // The higher figure, so Best Basket never promises a waiver they won't give.
+    freeOverCents: 35000,
+    shippingNote: "est. US$1.50 PWE · free over US$350",
+    country: "US",
+  },
+  wulfgaming: {
+    key: "wulfgaming",
+    name: "Wulf Gaming",
+    base: "https://wulfgaming.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    // Published: "Free Shipping On All Single Orders Over $50".
+    freeOverCents: 5000,
+    shippingNote: "est. US$2.50 · free singles orders over US$50",
+    country: "US",
+  },
+  larrysgamestore: {
+    key: "larrysgamestore",
+    name: "Larry's Game Store",
+    base: "https://larrysgamestore.com",
+    collections: ["riftbound-singles"],
+    shippingFlatCents: 250,
+    freeOverCents: 0,
+    shippingNote: "est. US$2.50 · shipping at checkout",
+    country: "US",
+  },
+  sweetsandgeeks: {
+    key: "sweetsandgeeks",
+    name: "Sweets and Geeks",
+    base: "https://sweetsandgeeks.com",
+    collections: ["riftbound"],
+    shippingFlatCents: 250,
+    freeOverCents: 0,
+    shippingNote: "est. US$2.50 · shipping at checkout",
+    country: "US",
+  },
+
   // ---- Added 2026-09-13, Radiance pre-order coverage pass ---------------------
   // These two were found ranking for "radiance preorder" queries that
   // /radiance-preorders wasn't answering (only punkouter/manyrealms/TCGplayer
@@ -867,6 +924,13 @@ export const RETAILERS: Record<string, RetailerInfo> = {
   // a real "Riftbound Radiance Booster Box (PREORDER)" + "Radiance Vault
   // (PRE-ORDER)" listing, and a 750-product `riftbound-singles` catalogue (627
   // with a real collector number) — nowhere near a thin directory entry.
+  //
+  // MOVED US -> CA 2026-09-23. Sky Fox is in Oshawa, Ontario; its storefront is
+  // CAD-only (paymentSettings.currencyCode "CAD") and returns the SAME prices for
+  // ?country=US and ?country=CA, so for ten days its CAD prices were published
+  // in the US market as USD. Caught by the registry sweep's currency proof
+  // ("wrong-currency", cur=CAD). Shipping stays an estimate — the policy page
+  // publishes no rates.
   skyfoxgames: {
     key: "skyfoxgames",
     name: "Sky Fox Games",
@@ -874,8 +938,8 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     collections: ["riftbound-singles"],
     shippingFlatCents: 200,
     freeOverCents: 5000,
-    shippingNote: "est. US$2.00 · free over US$50",
-    country: "US",
+    shippingNote: "est. C$2.00 · free over C$50",
+    country: "CA",
   },
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----
@@ -2234,6 +2298,24 @@ export const RETAILERS: Record<string, RetailerInfo> = {
 
 export const RETAILER_LIST = Object.values(RETAILERS);
 
+// Stores taken OUT of RETAILERS whose rows must also leave the database. The
+// importer only ever visits stores in RETAILER_LIST, so without this a removed
+// store's last prices would stay on card pages indefinitely. Each entry records
+// the evidence it was removed on; a key can be dropped from this list once a
+// price run has logged its purge.
+//
+//   e4cards  2026-09-23 — /collections/riftbound-singles returns 0 products and
+//            the store's collection sitemap has no Riftbound handle at all (it
+//            now lists MTG, Pokémon and events only). store-health had it
+//            "stale: no successful fetch in 202h" with 138 listings still live.
+export const DECOMMISSIONED_RETAILERS: readonly string[] = ["e4cards"];
+
+// Past this age, a store that returns no products has its rows expired rather
+// than kept. One bad run keeps yesterday's prices; three days is a store that
+// has stopped answering, and a price nobody can buy at. Above store-health's 30h
+// "stale" alert on purpose, so the alert fires first.
+export const STORE_ROWS_MAX_AGE_H = 72;
+
 // The market a store serves (defaults to AU for the original stores).
 export function retailerCountry(retailerKey: string): NonNullable<RetailerInfo["country"]> {
   return RETAILERS[retailerKey]?.country ?? "AU";
@@ -2255,10 +2337,13 @@ export function deliveredCents(retailerKey: string, priceCents: number): number 
 
 // The shipping cost for a single listing — returned ONLY when we genuinely know it.
 // eBay's Browse API gives a real per-listing figure (including 0 = seller states
-// free post), so those are exact. Everywhere else (Shopify stores, TCGplayer)
-// postage is calculated at checkout and we don't actually know it, so we return
-// `null` = "unknown" rather than a fabricated flat estimate. Accuracy over
-// exhaustiveness — wrong delivery prices erode trust (and drew user complaints).
+// free post), so those are exact. Since 2026-09-23 so does the US TCGplayer row:
+// it quotes one specific listing, and TCGplayer's search preview carries that
+// listing's own US shipping, stored on the row. Everywhere else (Shopify stores,
+// TCGplayer's market-price reference rows) postage is calculated at checkout and
+// we don't actually know it, so we return `null` = "unknown" rather than a
+// fabricated flat estimate. Accuracy over exhaustiveness — wrong delivery prices
+// erode trust (and drew user complaints).
 export function effectiveShippingCents(rowShippingCents: number | null): number | null {
   return rowShippingCents;
 }
@@ -2328,6 +2413,8 @@ const STORES_WITH_POLICY = new Set([
   "vulcancollectibles", "boutiquelechevalier", "legendarycollectables", "carddynasty",
   "cartessportivesrivesud", "boutiqueartefact", "blackrosehobbies", "hpwcards",
   "6ixtcgsmarkham", "eacollectibles", "silvergoblin", "heavenscollectibles",
+  // 2026-09-23 US registry sweep — each serves /policies/shipping-policy.
+  "thewarpgate", "gatorscardden", "wulfgaming", "larrysgamestore",
 ]);
 
 // The store's shipping-policy page URL, or null if it doesn't have one / isn't a store.

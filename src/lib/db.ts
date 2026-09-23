@@ -224,13 +224,17 @@ const RESOLVED_SOURCE = resolveVar(OPERATIONAL_VARS) ?? "NONE";
 // exactly as before.
 export const OPERATIONAL_URL_SOURCE = process.env.DB_SOURCE_NAME || RESOLVED_SOURCE;
 
-if (OPERATIONAL_URL_SOURCE !== "RM3") {
+// The name comes from OPERATIONAL_VARS, not a literal: through the RM12 -> RM3
+// cutover this check was updated and its message was not, so a failing build
+// told the reader to go and tick RM10 — a retired project — in Vercel.
+const CURRENT_OPERATIONAL = OPERATIONAL_VARS[0];
+if (OPERATIONAL_URL_SOURCE !== CURRENT_OPERATIONAL) {
   console.warn(
-    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not RM10. ` +
-      `RM10 is the only operational project as of the 2026-09-14 cutover — there is no fallback ` +
-      `chain anymore, so this means RM10 is simply missing from this environment. If this appears ` +
-      `in a Vercel build log, check Settings -> Environment Variables -> is "Production" (or ` +
-      `"Preview") ticked for RM10.`
+    `[db] operational database resolved from ${OPERATIONAL_URL_SOURCE}, not ${CURRENT_OPERATIONAL}. ` +
+      `${CURRENT_OPERATIONAL} is the only operational project (src/lib/db-chains.ts) — there is no fallback ` +
+      `chain anymore, so this means ${CURRENT_OPERATIONAL} is simply missing from this environment. If this ` +
+      `appears in a Vercel build log, check Settings -> Environment Variables -> is "Production" (or ` +
+      `"Preview") ticked for ${CURRENT_OPERATIONAL}.`
   );
 }
 

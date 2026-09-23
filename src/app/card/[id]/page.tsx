@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
-import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition } from "@/lib/constants";
+import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition, isFallbackRetailer } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
@@ -127,7 +127,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   // so variant printings that share a name + number stop emitting byte-identical
   // titles — duplicate-looking clusters are exactly what Google leaves unindexed.
   const displayName = cardDisplayName(card.name, card);
-  const stores = new Set(card.retailerPrices.map((r) => r.retailer)).size;
+  // Reference rows are not stores. This became reachable on 2026-09-23 when the
+  // US — the baseline market this counts — gained its first one
+  // (TCGPLAYER_MARKET_RETAILER); without the filter every TCGplayer-priced card's
+  // snippet would have claimed one more store than it has.
+  const stores = new Set(card.retailerPrices.filter((r) => !isFallbackRetailer(r.retailer)).map((r) => r.retailer)).size;
   const hasPrice = lowestCents != null && stores > 0;
 
   // TITLE — card name FIRST (the actual query is "<card name> riftbound"), then

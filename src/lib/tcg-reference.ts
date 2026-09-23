@@ -1,4 +1,4 @@
-import { isFallbackRetailer } from "./constants";
+import { isFallbackRetailer, TCGPLAYER_MARKET_RETAILER } from "./constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Should this surface show the TCGplayer reference price, and from which row?"
@@ -60,12 +60,19 @@ export function tcgReferenceRows<T extends TcgRefRow>(
     (r) => r.retailer.startsWith("tcgplayer") && r.country === country && !isFallbackRetailer(r.retailer),
   );
   if (shownNatively) return null;
-  // The single USD market price — retailer key "tcgplayer", which is always the
-  // US row. The converted per-market variants (tcgplayer_au, _uk, _sg, _ca) are
-  // the SAME number after an FX hop, so quoting one of those instead would
-  // double-convert: TcgMarketPrice converts what it is handed from USD.
-  const std = rows.find((r) => r.retailer === "tcgplayer" && !r.isFoil) ?? null;
-  const foil = rows.find((r) => r.retailer === "tcgplayer" && r.isFoil) ?? null;
+  // The single USD market price. Since 2026-09-23 that is the US reference row
+  // TCGPLAYER_MARKET_RETAILER — the "tcgplayer" row became the cheapest English
+  // listing, and this block is labelled "TCGplayer market price". Falls back to
+  // the "tcgplayer" row per printing when no market row is present (see
+  // lib/tcg-market-rows.ts). The converted per-market variants (tcgplayer_au,
+  // _uk, _sg, _ca) are the SAME market number after an FX hop, so quoting one of
+  // those instead would double-convert: TcgMarketPrice converts from USD.
+  const pick = (foil: boolean) =>
+    rows.find((r) => r.retailer === TCGPLAYER_MARKET_RETAILER && r.isFoil === foil) ??
+    rows.find((r) => r.retailer === "tcgplayer" && r.isFoil === foil) ??
+    null;
+  const std = pick(false);
+  const foil = pick(true);
   if (!std && !foil) return null;
   return { std, foil };
 }

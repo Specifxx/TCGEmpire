@@ -131,3 +131,20 @@ test("no workflow defines the same YAML key twice in one block", () => {
     });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GitHub refuses to start a workflow file over 512,000 bytes: every run ends in
+// `startup_failure` before any step executes, with no message in the file's own
+// log. maintenance.yml reached 512,356 on 2026-09-22 and every task in it —
+// imports, probes, audits, migrations — was undispatchable until it was pruned.
+// Fail at 450 KB so the next person gets a warning, not an outage.
+// ─────────────────────────────────────────────────────────────────────────────
+test("no workflow file is within 60 KB of GitHub's 512,000-byte limit", () => {
+  for (const f of FILES) {
+    const bytes = Buffer.byteLength(readFileSync(join(DIR, f), "utf8"));
+    assert.ok(
+      bytes < 450_000,
+      `${f} is ${bytes.toLocaleString()} bytes — GitHub refuses to run workflow files over 512,000 (startup_failure). Prune superseded steps; git history keeps them.`,
+    );
+  }
+});

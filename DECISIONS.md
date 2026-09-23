@@ -10921,6 +10921,283 @@ Two things this leaves behind:
   `opengraph-image.tsx` passes `tsc` and is then rejected by `next build` — the
   same trap that moved the `/gallery` title builders into `lib/gallery-seo.ts`.
 
+## Premium did not die — acquisition did. Funnel read with Stripe for the first time — 2026-09-23
+
+Owner: "there was a significant influx of premium users near the beginning,
+and then it's like completely died off … improve conversion and retention."
+
+**Two outages had to be fixed before any number could be read.**
+`maintenance.yml` had crossed GitHub's 512,000-byte workflow limit with the
+RM12 → RM3 cutover and every task in it failed with `startup_failure` (pruned
+to 352 KB; a test now fails at 450 KB). And `funnel-report` had never been
+given `STRIPE_SECRET_KEY` despite its comment saying it reads Stripe, so every
+run since 2026-09-14 printed blank subscription columns — the retention half
+of the report had never once been seen.
+
+**The data, 2026-09-23** (trials bucketed by the week they began):
+
+| week  | accts | clicks | chkout | trials | paying now |
+|-------|------:|-------:|-------:|-------:|-----------:|
+| 08-17 |    26 |     34 |      1 |      2 |        2/2 |
+| 08-24 |    55 |     88 |      3 |      3 |        3/3 |
+| 08-31 |    56 |     49 |      7 |      5 |        4/5 |
+| 09-07 |    40 |     62 |      7 |      1 |        0/1 |
+| 09-14 |    31 |     39 |      2 |      2 |   in trial |
+| 09-21 |  9 (2 days) | 25 |  2 |      2 |   in trial |
+
+MRR US$63.25. One cancellation ever, in the 09-14 cohort, during its trial.
+
+**Reading it.**
+
+- **Retention is not the problem.** 9 of the 10 trials that have matured
+  became paying, and no paying subscriber has churned. The product keeps the
+  people who try it.
+- **The fall is at the top.** New accounts 56 → 31 a week; Premium clicks
+  88 → 39. Fewer people arrive, so fewer reach the pitch. Traffic and account
+  creation, not the Premium page, are what moved.
+- **The one mid-funnel collapse is already explained and fixed.** The 09-07
+  week started 7 checkouts and produced 1 trial. That is the week /premium
+  defaulted to annual billing (2026-09-11) — "exactly two buy links on the
+  page and both committed to a year". Reverted 2026-09-14.
+- **The 09-14 and 09-21 cohorts have not matured.** Their 14-day trials end
+  from ~09-28. Until then nobody can say whether the 09-14 fixes worked.
+
+**What was deliberately NOT done.** No change to the Premium pitch, pricing,
+trial or paywall. That surface has changed roughly every other day since
+August (see the 2026-09-14 entry, which froze it for two weeks to ~09-28 for
+exactly this reason, and has been broken four times since). On data showing
+90% trial→paid and no churn, a fifteenth rewrite would mainly destroy the one
+clean measurement still in flight. The lever the numbers point at is
+acquisition — search traffic, the signed-out popup (111 of 253 recent
+accounts, the largest single source) and whether free visitors still see
+enough value to click through after 2026-09-22 removed all free rows from
+Deal Finder and Rising Cards.
+## The US TCGplayer row is now the cheapest English listing, not market price, 2026-09-23
+
+The owner: "TCGPlayer prices are displayed as the market price for each card
+listing, but for the card listing itself it should be the cheapest available
+price in the English version on TCGPlayer." They were right that the two
+numbers answer different questions. Market price is a trailing average of
+recent sales; every other row in a comparison is "what you pay to buy it now".
+Mixing them made TCGplayer the only store on the page quoted on a different
+basis, and — measured on a 200-card live sample — the cheapest in-stock English
+Near Mint listing was **lower than market on 188 of 200, median −24.7%**. The
+comparison was systematically overstating what TCGplayer would charge.
+
+**Two rows per card now, not one.** The same search response already carries
+both numbers, so this costs no new request:
+
+- `tcgplayer` (buyable, US, `basis: "listing"`) — cheapest in-stock listing
+  with `languageId === 1`, Near Mint, and a `printing` that matches the card's
+  finish, with that listing's own `shippingPrice` recorded in `shippingCents`.
+  Falls back to market only when no qualifying listing is in the preview.
+- `tcgplayer_market` (reference, US, `basis: "market"`) — the old number,
+  registered in `US_FALLBACK_RETAILERS` so every comparison, lowest-price
+  column and store count already ignores it.
+
+The printing filter is load-bearing, not tidiness: a product's preview mixes
+Normal and Foil listings, and Scuttle Crab's cheapest listing was a Normal copy
+under the foil product. Without it the foil row would have quoted a non-foil
+price.
+
+**Four consumers keep reading market price, deliberately**: the value floor
+(`price-import.ts`), the Deal Finder "vs TCGplayer" benchmark (`arbitrage.ts`),
+Box EV, and the overseas reference block (`tcg-reference.ts`). Each is valuing a
+card, not buying one, and a single lowball listing is the wrong input to a
+valuation. They read through `preferMarketRows()` over both keys, because the
+value floor runs BEFORE the TCGplayer step on the first refresh after deploy —
+at that moment `tcgplayer_market` does not exist yet and the market figure is
+still sitting on `tcgplayer`. After one refresh the helper is a no-op.
+
+UK/SG/AU/CA converted rows stay on market price: they are references there, not
+stores, and a cheapest-listing figure would be a US seller's price with US
+shipping behind it.
+
+**What this moves, and how it is contained.**
+
+- US lows drop on most cards the day this lands. That is the correction, not a
+  side effect.
+- `PriceHistory` records the global minimum, so the step lands in the weekly
+  series. The RiftCompare Index is chain-linked, and `METHODOLOGY_BREAKS` in
+  `market-index.ts` skips the link across 2026-09-23 → 2026-10-01 so the level
+  carries through instead of printing a one-off market crash. The methodology
+  guide now says this in a section of its own.
+- 7-day movers see the step for about a week and then self-heal; disclosed in
+  the same guide section rather than special-cased.
+
+`tests/tcgplayer-listing-basis.test.ts` pins the listing choice, the printing
+filter (with the Scuttle Crab shape), both bases, the fallback registration,
+that the importer writes both rows, the four consumers going through the
+helper, the card page's store count excluding the reference row, and the index
+break arithmetic.
+
+## A store fell off the site because one request failed — 2026-09-23
+
+Asked to make sure every US store "is working and we have the latest prices",
+I probed all 40 US feeds live from the sandbox and read `audit-store-health`
+against RM3. The two disagreed, and the disagreement was the finding.
+
+| Store | Live feed today | Last night's import | Card pages |
+|---|---|---|---|
+| Wolf Den Gaming | 699 in stock | 6 products, 0 priced | **0** (7-day median 640) |
+| Hobbiesville (US) | 517 in stock | 65 products, 1 priced | **1** (median 1,172) |
+| E4 Cards & More | 0 — no Riftbound in its sitemap at all | 0 products | **138, 202h stale** |
+
+**Wolf Den and Hobbiesville were healthy stores that one failed request took
+off every card page.** `fetchCollection` treated a thrown fetch, a 5xx/403
+and a 404 identically — a silent `break` — and returned whatever it had. Wolf
+Den's main singles collection failed; its six-product Vendetta collection did
+not; the importer then ran its usual `deleteMany` for the store and wrote six
+unmatched products. Nothing in the log said a collection had failed. The same
+request, reproduced here with the importer's exact headers and cache-buster,
+returned a full 250-product page.
+
+Now:
+
+- A failed read (network error, non-404 error status, 429, HTML challenge
+  page) is reported as `failed`, distinct from empty. A 404 is still an
+  answer — the conventional BinderPOS handles 404 on most stores and must not
+  veto them.
+- One retry before giving up, logged either way.
+- If a **discovered or configured** collection fails, the store is skipped for
+  the run and keeps yesterday's rows, rather than being replaced by a partial
+  set.
+
+**E4 Cards is the opposite failure: a store that stopped answering kept its
+rows forever.** A store returning no products was skipped with its rows left
+in place, which is right for one bad night and wrong for eight. Two changes:
+
+- `STORE_ROWS_MAX_AGE_H` (72h): when a store returns nothing, rows older than
+  that are expired. Above store-health's 30h "stale" alert on purpose, so the
+  alert fires before anything is deleted.
+- `DECOMMISSIONED_RETAILERS`: removing a store from `RETAILERS` used to strand
+  its rows, since the importer only visits stores in `RETAILER_LIST`. Keys
+  listed there have card AND sealed rows purged at the start of every run.
+  `e4cards` is its first entry, with the evidence recorded beside it.
+
+**Not acted on: the "frozen-prices" alert on ~130 stores in every market.** It
+fires when a store's median listing price is unchanged for seven days. Most
+stores genuinely do not reprice a catalogue weekly, and the refresh workflow
+ran and succeeded on each of those days, with per-store product counts in its
+log. That makes this an alert tuned too tight, not 130 broken stores.
+Recorded so the next audit does not take it at face value.
+
+`tests/store-row-lifecycle.test.ts` pins all three behaviours.
+
+CLAUDE.md still named RM10 as the operational database; it is RM3 since
+yesterday's cutover. The file now points at `db-chains.ts` rather than
+restating a name that rotates every few days.
+
+## US stores: five added, one moved to Canada, one removed — 2026-09-23
+
+Same pass as the entry above. `scripts/sweep-registry.ts --markets US`
+re-swept all 1,599 US domains in the official Riftbound retailer registry, two
+weeks after its first run.
+
+**Added (5)**: The Warp Gate, Gator's Card Den, Wulf Gaming, Larry's Game Store,
+Sweets and Geeks. Clearing the sweep's bar (MIN_SINGLES_FOR_STORE, proven USD)
+was not treated as enough. Each store's live feed was also run through the
+importer's own `resolveCardId()` against the checked-in catalogue snapshot
+before it was added: 87%, 90%, 94%, 69% and 68% of in-stock products in the
+snapshot's sets matched. The misses read were sealed products, playmats and
+alt-art printings the snapshot lacks, so the live rate will be higher. The
+retailers.ts header for the batch has the per-store figures.
+
+Shipping is taken from each store's own page where it publishes one (Wulf
+Gaming: singles free over $50; Gator's: policy page says $200, live banner says
+$350, so $350). Stores with no published threshold get `freeOverCents: 0`
+rather than an invented one, as with Quack Opens.
+
+**Rejected (1)**: Solacido cleared the sweep's count but its "singles" are bare
+card names ("Abandon") with no set or collector number and no stock. The sweep
+counts products; it cannot tell that nothing would match.
+
+**Moved to CA (1): Sky Fox Games was publishing Canadian dollars as US
+dollars.** The sweep flagged it `wrong-currency`, and a direct check confirmed
+it: an Oshawa, Ontario store, `paymentSettings.currencyCode: "CAD"`, and
+byte-identical prices for `?country=US` and `?country=CA`. It had been in the
+US market since the 2026-09-13 Radiance pass. Every price it showed there was
+about 27% too high. Same key, so the next import rewrites its rows as CA.
+
+**Removed (1)**: E4 Cards, above.
+
+US store count: 40 → 43.
+
+**The sweep's own "tracked stores now below the bar" list was not acted on.**
+Seven of its eight entries say `rate-limited`, which is the sweep's
+concurrency tripping Shopify's per-IP limit, not the stores. A one-at-a-time
+probe of every US feed an hour earlier read all seven with hundreds of
+in-stock singles each.
+
+**Why this shipped off-schedule.** A push to `main` touching
+`price-import.ts`/`retailers.ts`/`tcgplayer.ts` starts `refresh-prices.yml` on
+its own. That run writes the new `tcgplayer_market` reference rows, which the
+code still deployed does not know are references: every US card page would
+list TCGplayer twice, once at the market price, until the next 08:00 release.
+The site code has to land with the importer, so a production deploy was
+dispatched with the merge.
+
+`db.ts`'s startup warning had the same staleness as CLAUDE.md: it compared
+against RM3 but told the reader to go and tick RM10 in Vercel. It now builds
+both the check and the message from `OPERATIONAL_VARS[0]`, and
+`tests/db-chain.test.ts` accepts that form and forbids a hard-coded name in the
+text.
+
+## Card pages with no picture: the mirror was never re-run — 2026-09-23
+
+Reported from a phone: Irelia, Graceful (SFD 141/221) showed the generated
+placeholder instead of the card, and "quite a few cards" did the same.
+
+**89 of 1,432 sitemapped card pages had no image.** 71 of them were one list:
+`src/lib/card-art-missing.ts`, written by `scripts/mirror-card-art.ts` on
+2026-09-13 when the RiftScribe CDN deleted `originals/` and those cards 404'd
+at every rendition. `cardImageSrc` returns null for a listed stem on purpose,
+so the site draws the placeholder rather than a broken image. That was right
+for that day and never revisited. On 2026-09-22 I found `originals/` serving
+again while fixing the OG image, and did not connect it to this list.
+
+Re-probed all 71 today: **70 answer 200 at both `originals/` and
+`thumbnails/large/`.** Re-running the mirror wrote those 70 files (5
+re-encoded to fit the 150KB budget, which `check-images.ts` confirms) and
+regenerated the list to the one stem the CDN still lacks, Vex UNL 055a. That
+covers 67 of the 89 pages. The other 4 recovered stems belong to printings with
+no page of their own.
+
+**The remaining 22 were never in the mirror**: they are not in RiftScribe's
+catalogue at all. Checked each against Riot's official gallery
+(playriftbound.com, the `__NEXT_DATA__` card objects):
+
+- **Published there under their own id (4)**: the Unleashed tokens Bird,
+  Brush and Reflection, and Vex UNL 055a. `scripts/set-official-art.ts`
+  (maintenance task `set-official-art`) handles them. It matches by slug and
+  never overwrites working art. Its dry run against RM3 showed the three tokens
+  already store RiftScribe URLs whose stems were on the missing list, so the
+  re-mirror above had already recovered them; it skipped them and wrote only
+  Vex. The tokens stay in the script as a no-op guard.
+- **Not published (18)**: the Vendetta alt-art runes (R01a–R06a; the gallery
+  has only the base `ven-r01` prints), the Nexus Night rune/unit promos, and
+  four organised-play promos. These stay on the placeholder. A different
+  printing's picture would misstate which card is on sale, the same line
+  `set-rune-art.ts` and `fix-cloned-art.ts` already hold.
+
+**The placeholder itself was also wrong.** `CardArt` printed
+`{collectorNumber} · OGN` as a literal, so every Spiritforged, Unleashed and
+Vendetta placeholder claimed to be Origins. That was visible in the report:
+"141/221 · OGN" on a Spiritforged card. It now prints the card's own
+`setCode`.
+
+`tests/card-art-recovery.test.ts` pins the set label, Irelia's recovery, the
+one-entry missing list (so the next time it grows, the first move is to re-run
+the mirror) and the art script's no-overwrite rule.
+
+What this does NOT fix: a card added after the last mirror run whose stored
+URL is a RiftScribe CDN URL is still rewritten to a `/card-art/` file that
+does not exist, and `CardImage` has no `onError` fallback. None of the 1,432
+sitemapped cards is in that state today, because every live CDN-URL card is
+mirrored, but a new set synced from RiftScribe would be. Re-run the mirror in
+the same change as any `fetch-cards.ts` refresh (its header already says so;
+`tests/card-image-url.test.ts` enforces it for the checked-in snapshot only).
+
 ## A multi-device UI pass: 123 verified findings, measured before and after — 2026-09-23
 
 Owner brief: "fix any UI issues you can find and make my UI better in general …

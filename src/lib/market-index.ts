@@ -216,11 +216,37 @@ const pctChange = (now: number, then: number | undefined): number | null =>
 // thin or growing basket from jumping the level; a coverage floor on top of
 // that only decided how much real history to hide, not whether the level was
 // trustworthy.
+// METHODOLOGY BREAKS — windows in which a step's price change is known to come
+// from a change in how prices are SOURCED rather than from the market moving.
+// A step whose END falls inside a window is charted flat: the level carries
+// across unchanged and the prices re-base, exactly as an index provider chains
+// over a methodology change. Chain-linking makes this necessary rather than
+// cosmetic — an unneutralised basis step would be multiplied into every point
+// after it, permanently.
+//
+// 2026-09-23: the US TCGplayer row switched from TCGplayer's market price to
+// the cheapest English Near-Mint listing (lib/tcgplayer.ts), sampled at a median
+// 25% below market. For many cards that row IS the US low, and PriceHistory
+// records each card's low across markets, so the first snapshot on the new
+// basis would otherwise read as a market-wide drop. The window is eight days,
+// not one, because PriceHistory writes at most weekly per card and it cannot be
+// known from the date alone whether a snapshot written on the switch day came
+// before or after the deploy — so every step ending in that span is flattened.
+// The cost is at most about one week of genuine movement shown flat.
+export const METHODOLOGY_BREAKS: readonly { from: number; to: number; why: string }[] = [
+  {
+    from: Date.UTC(2026, 8, 23),
+    to: Date.UTC(2026, 9, 1),
+    why: "US TCGplayer row: market price -> cheapest English NM listing",
+  },
+];
+
 export function chainLinkSeries(
   days: number[],
   byCard: Map<string, Map<number, number>>,
   cardIds: string[],
   weights: number[],
+  breaks: readonly { from: number; to: number }[] = [],
 ): PricePoint[] {
   const totalW = weights.reduce((a, b) => a + b, 0);
   if (totalW <= 0) return [];
@@ -260,7 +286,11 @@ export function chainLinkSeries(
       denominator += weights[i] * prevPrice;
     });
     if (denominator === 0) continue; // nothing overlaps yet — only possible before any two consecutive prices exist
-    level *= numerator / denominator;
+    // Inside a methodology break the step is re-based, not measured: the level
+    // carries across and `lastCharted` advances below, so the NEXT step measures
+    // against new-basis prices on both ends.
+    const inBreak = breaks.some((b) => days[k] >= b.from && days[k] < b.to);
+    if (!inBreak) level *= numerator / denominator;
     points.push({ t: days[k], v: Math.round(level * 10) / 10 });
     lastCharted = new Map(carried);
   }
@@ -329,7 +359,7 @@ async function computeRegionIndex(country: Country): Promise<MarketIndex | null>
   // 4. Chain-linked level (see chainLinkSeries above for the full reasoning —
   //    this is the piece that keeps a new set's cards entering the basket, or
   //    any other constituent reshuffle, from itself moving the Index).
-  const points = chainLinkSeries(days, byCard, cards.map((c) => c.id), weights);
+  const points = chainLinkSeries(days, byCard, cards.map((c) => c.id), weights, METHODOLOGY_BREAKS);
   if (points.length < 2) return null;
 
   const latest = points[points.length - 1].v;
