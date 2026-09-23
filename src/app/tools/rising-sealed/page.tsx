@@ -59,9 +59,14 @@ function Spark({ values, w = 88, h = 26 }: { values: number[]; w?: number; h?: n
   const step = w / (values.length - 1);
   const pts = values.map((v, i) => `${(i * step).toFixed(1)},${(h - ((v - min) / span) * (h - 4) - 2).toFixed(1)}`);
   const up = values[values.length - 1] >= values[0];
+  // Coloured through currentColor from the themed text-brand-400 / text-rose-400
+  // tokens (2026-09-23), the same as PriceChart's Sparkline: the old literal
+  // #34d17e / #fb7185 were the dark theme's values and measured ~2:1 on the light
+  // theme's white rows. Dark is pixel-identical (brand-400 and rose-400 resolve
+  // to exactly those two hexes there).
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-      <polyline points={pts.join(" ")} fill="none" stroke={up ? "#34d17e" : "#fb7185"} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" className={up ? "text-brand-400" : "text-rose-400"}>
+      <polyline points={pts.join(" ")} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
