@@ -11087,3 +11087,58 @@ Recorded so the next audit does not take it at face value.
 CLAUDE.md still named RM10 as the operational database; it is RM3 since
 yesterday's cutover. The file now points at `db-chains.ts` rather than
 restating a name that rotates every few days.
+
+## US stores: five added, one moved to Canada, one removed — 2026-09-23
+
+Same pass as the entry above. `scripts/sweep-registry.ts --markets US`
+re-swept all 1,599 US domains in the official Riftbound retailer registry, two
+weeks after its first run.
+
+**Added (5)**: The Warp Gate, Gator's Card Den, Wulf Gaming, Larry's Game Store,
+Sweets and Geeks. Clearing the sweep's bar (MIN_SINGLES_FOR_STORE, proven USD)
+was not treated as enough. Each store's live feed was also run through the
+importer's own `resolveCardId()` against the checked-in catalogue snapshot
+before it was added: 87%, 90%, 94%, 69% and 68% of in-stock products in the
+snapshot's sets matched. The misses read were sealed products, playmats and
+alt-art printings the snapshot lacks, so the live rate will be higher. The
+retailers.ts header for the batch has the per-store figures.
+
+Shipping is taken from each store's own page where it publishes one (Wulf
+Gaming: singles free over $50; Gator's: policy page says $200, live banner says
+$350, so $350). Stores with no published threshold get `freeOverCents: 0`
+rather than an invented one, as with Quack Opens.
+
+**Rejected (1)**: Solacido cleared the sweep's count but its "singles" are bare
+card names ("Abandon") with no set or collector number and no stock. The sweep
+counts products; it cannot tell that nothing would match.
+
+**Moved to CA (1): Sky Fox Games was publishing Canadian dollars as US
+dollars.** The sweep flagged it `wrong-currency`, and a direct check confirmed
+it: an Oshawa, Ontario store, `paymentSettings.currencyCode: "CAD"`, and
+byte-identical prices for `?country=US` and `?country=CA`. It had been in the
+US market since the 2026-09-13 Radiance pass. Every price it showed there was
+about 27% too high. Same key, so the next import rewrites its rows as CA.
+
+**Removed (1)**: E4 Cards, above.
+
+US store count: 40 → 43.
+
+**The sweep's own "tracked stores now below the bar" list was not acted on.**
+Seven of its eight entries say `rate-limited`, which is the sweep's
+concurrency tripping Shopify's per-IP limit, not the stores. A one-at-a-time
+probe of every US feed an hour earlier read all seven with hundreds of
+in-stock singles each.
+
+**Why this shipped off-schedule.** A push to `main` touching
+`price-import.ts`/`retailers.ts`/`tcgplayer.ts` starts `refresh-prices.yml` on
+its own. That run writes the new `tcgplayer_market` reference rows, which the
+code still deployed does not know are references: every US card page would
+list TCGplayer twice, once at the market price, until the next 08:00 release.
+The site code has to land with the importer, so a production deploy was
+dispatched with the merge.
+
+`db.ts`'s startup warning had the same staleness as CLAUDE.md: it compared
+against RM3 but told the reader to go and tick RM10 in Vercel. It now builds
+both the check and the message from `OPERATIONAL_VARS[0]`, and
+`tests/db-chain.test.ts` accepts that form and forbids a hard-coded name in the
+text.
