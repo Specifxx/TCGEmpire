@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { selectPicks, MAX_TILES, type PickListing } from "../src/components/EbayPicksLive";
+import { ebayImg, ebaySrcSet } from "../src/lib/ebay";
 import { getArticles } from "../src/lib/articles";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -164,4 +165,13 @@ test("mobile gets a snap-scrolling strip and desktop a grid, from one DOM", () =
   assert.equal(src.match(/<OutboundLink/g)?.length, 1, "exactly one tile template");
   assert.match(src, /aspect-\[3\/4\]/, "fixed aspect box reserves space, so CLS stays at zero");
   assert.match(src, /loading="lazy"/);
+});
+
+test("eBay photos are requested at the size they render, not upscaled from s-l225", () => {
+  const u = "https://i.ebayimg.com/images/g/abcAAOSw/s-l225.jpg";
+  assert.equal(ebayImg(u, 500), "https://i.ebayimg.com/images/g/abcAAOSw/s-l500.jpg");
+  assert.equal(ebaySrcSet(u), "https://i.ebayimg.com/images/g/abcAAOSw/s-l225.jpg 169w, https://i.ebayimg.com/images/g/abcAAOSw/s-l300.jpg 225w, https://i.ebayimg.com/images/g/abcAAOSw/s-l500.jpg 375w");
+  assert.equal(ebayImg("https://i.ebayimg.example/x.jpg", 500), "https://i.ebayimg.example/x.jpg", "an unrecognised URL passes through");
+  assert.equal(ebaySrcSet("https://i.ebayimg.example/x.jpg"), undefined);
+  for (const f of ["src/components/EbayPicksLive.tsx", "src/components/AuctionsBoard.tsx"]) assert.match(read(f), /srcSet=\{ebaySrcSet\(/);
 });

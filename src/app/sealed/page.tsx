@@ -249,7 +249,10 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
       {hasVendetta && (
         <div className="card-surface mb-5 flex flex-wrap items-center gap-3 border-l-2 border-brand-500 bg-ink-900 px-5 py-4">
           <span className="chip bg-gold/20 font-semibold text-gold">NEW</span>
-          <p className="min-w-0 flex-1 text-sm text-slate-300">
+          {/* basis-56 (2026-09-23): flex-1 alone is a 0 basis, so this flex-wrap
+              row never wrapped and the copy took all the squeeze (72px, 11 lines
+              at 344). Now the button wraps below once the copy drops under 14rem. */}
+          <p className="min-w-0 flex-1 basis-56 text-sm text-slate-300">
             <span className="font-semibold text-white">Vendetta sealed is here</span> — booster
             boxes &amp; packs available now, priced across stores.
           </p>
@@ -259,10 +262,14 @@ export default async function SealedPage({ searchParams }: { searchParams: Seale
         </div>
       )}
 
-      <div className="flex flex-col gap-6 lg:flex-row">
+      {/* xl, not lg: the filter sidebar sits beside the grid only from 1280
+          (SealedFilters.tsx, 2026-09-23). At 1024 it left 3 columns of 131px. */}
+      <div className="flex flex-col gap-6 xl:flex-row">
         <SealedFilters types={typeOptions} sets={setOptions} currency={displayCurrency} />
         <section className="min-w-0 flex-1">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {/* SealedFilters' "Show results" target; scroll-mt-36 clears the 125px
+              sticky header (2026-09-23). */}
+          <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-slate-400">
               <span className="num font-semibold text-white">{groups.length.toLocaleString()}</span>{" "}
               {groups.length === 1 ? "product" : "products"}

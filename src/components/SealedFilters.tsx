@@ -87,11 +87,15 @@ export function SealedFilters({
     (sp.get("min") || sp.get("max") ? 1 : 0);
 
   return (
-    <aside className="w-full shrink-0 lg:w-64">
+    <aside className="w-full shrink-0 xl:w-64">
+      {/* Collapsible bar below xl, the same boundary as the card database's
+          Filters (2026-09-23). With the 17rem rail permanent from 1024px, a
+          256px sidebar there squeezed /sealed to 3 columns of 131px tiles with
+          46 of 72 clipped. From 1280 the sidebar has room again. */}
       <button
         onClick={() => setMobileOpen((o) => !o)}
         aria-expanded={mobileOpen}
-        className="mb-3 flex w-full items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-sm font-semibold text-white lg:hidden"
+        className="mb-3 flex w-full items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-4 py-2.5 text-sm font-semibold text-white xl:hidden"
       >
         <span className="flex items-center gap-2">
           Filters
@@ -100,12 +104,17 @@ export function SealedFilters({
         <Chevron open={mobileOpen} />
       </button>
 
-      <div className={`${mobileOpen ? "block" : "hidden"} lg:block`}>
-        <div className="card-surface lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto p-4">
+      {/* Sticky on this wrapper, not the card-surface: there it never stuck,
+          because this div was its containing block and is exactly as tall as the
+          panel (2026-09-23; see Filters.tsx). */}
+      <div className={`${mobileOpen ? "block" : "hidden"} xl:sticky xl:top-20 xl:block`}>
+        <div className="card-surface xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto p-4">
           <div className="mb-1 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">Filters</h2>
+            {/* Hidden below xl, where the toggle bar right above already says
+                "Filters" (2026-09-23). ml-auto keeps Clear right-aligned without it. */}
+            <h2 className="hidden text-sm font-bold uppercase tracking-wide text-slate-300 xl:block">Filters</h2>
             {activeCount > 0 && (
-              <button onClick={clearAll} className="text-xs text-brand-400 hover:underline">
+              <button onClick={clearAll} className="ml-auto text-xs text-brand-400 hover:underline">
                 Clear ({activeCount})
               </button>
             )}
@@ -172,6 +181,21 @@ export function SealedFilters({
               </div>
             </Section>
           )}
+
+          {/* Below xl this panel is an inline disclosure, so after ticking a filter the results could sit ~1,700px below (390px, 2026-09-23). The footer pins to the viewport bottom while the panel is in view. pr-16 / sm:pr-36 keep the button clear of FeedbackWidget's fixed launcher. */}
+          <div className="sticky bottom-0 -mx-4 -mb-4 mt-3 rounded-b-lg border-t border-ink-700 bg-ink-850/95 p-3 pr-16 backdrop-blur sm:pr-36 xl:hidden">
+            <button
+              type="button"
+              className="btn-primary w-full"
+              onClick={() => {
+                setMobileOpen(false);
+                // Scroll after the collapse has rendered, or the target is measured with the open panel still above it.
+                requestAnimationFrame(() => document.getElementById("results")?.scrollIntoView({ block: "start" }));
+              }}
+            >
+              Show results
+            </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -194,7 +218,9 @@ function Section({
     <div className={last ? "" : "border-b border-ink-700"}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200"
+        // min-h-11: was 40px; 44px with a mouse, 48px on touch via globals.css's
+        // coarse-pointer rule (2026-09-23).
+        className="flex min-h-11 w-full items-center justify-between py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-200"
       >
         {title}
         <Chevron open={open} />
@@ -215,8 +241,10 @@ function Check({
   label: string;
   className?: string;
 }) {
+  // tap-link-block: 24px rows on a mouse (no change), 48px on touch, where they
+  // measured 324x24 (2026-09-23). The `flex` utility beats its inline-flex.
   return (
-    <label className={`flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-slate-300 hover:bg-ink-800 ${className ?? ""}`}>
+    <label className={`tap-link-block flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-slate-300 hover:bg-ink-800 ${className ?? ""}`}>
       <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 rounded border-ink-600 bg-ink-900 accent-brand-500" />
       <span className="truncate">{label}</span>
     </label>

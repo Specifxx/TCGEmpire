@@ -54,6 +54,7 @@ export function EbayBuyCta({
   heading,
   compact,
   className,
+  bare = false,
 }: {
   // A card name → "Buy <name> on eBay". Omit for the generic "shop all singles" CTA.
   query?: string;
@@ -62,6 +63,11 @@ export function EbayBuyCta({
   // Tighter layout for the QuickView modal.
   compact?: boolean;
   className?: string;
+  // Suppress the built-in disclosure because a PARENT renders one covering this
+  // (EbayCardPanelLive; QuickView via EbayAdCarouselLive's fallback). Never set
+  // this without one above - AffiliateDisclosure's rule is that if an affiliate
+  // link renders, its disclosure renders.
+  bare?: boolean;
 }) {
   const { country } = useCountry();
   const mkt = EBAY_LABEL[country] ?? EBAY_LABEL.US;
@@ -79,25 +85,33 @@ export function EbayBuyCta({
         retailer="ebay"
         country={country}
         kind="single"
-        className={`group relative flex items-center gap-3 overflow-hidden rounded-xl border border-[#0064d2]/40 bg-gradient-to-r from-[#0064d2]/15 via-ink-900 to-ink-900 transition-colors hover:border-[#0064d2]/70 hover:from-[#0064d2]/25 ${compact ? "p-3" : "p-4 sm:p-5"}`}
+        className={`group relative flex flex-wrap items-center gap-3 overflow-hidden rounded-xl border border-[#0064d2]/40 bg-gradient-to-r from-[#0064d2]/15 via-ink-900 to-ink-900 transition-colors hover:border-[#0064d2]/70 hover:from-[#0064d2]/25 ${compact ? "p-3" : "p-4 sm:p-5"}`}
       >
-        <div className="min-w-0 flex-1">
+        {/* flex-wrap + basis-56 (2026-09-23): flex-1 alone is a 0 basis, so the
+            row never wrapped and the copy took all the squeeze beside the 147px
+            button (67px wide, 276px tall box at 344). Below 14rem the button now
+            wraps under the copy instead. */}
+        <div className="min-w-0 flex-1 basis-56">
           <div className="flex items-center gap-2">
             <EbayMark className={compact ? "text-base" : "text-lg"} />
             <span className={`font-extrabold text-white ${compact ? "text-sm" : "text-base sm:text-lg"}`}>{title}</span>
           </div>
           <p className={`mt-0.5 text-slate-400 ${compact ? "text-[11px]" : "text-xs sm:text-sm"}`}>{sub}</p>
         </div>
+        {/* text-[#ffffff], not text-white (2026-09-23): the fill is a fixed brand
+            hex and white-on-eBay-blue is the brand's rule, not the theme's. The
+            themed token is near-black in light: 3.44:1 here, against 5.59:1. */}
         <span
-          className={`shrink-0 rounded-lg bg-[#0064d2] font-bold text-white transition-colors group-hover:bg-[#0079e6] ${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"}`}
+          className={`shrink-0 rounded-lg bg-[#0064d2] font-bold text-[#ffffff] transition-colors group-hover:bg-[#0079e6] ${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"}`}
         >
           Shop on eBay →
         </span>
       </OutboundLink>
       {/* Immediately beneath the CTA. This component is also the fallback the
-          eBay carousel renders when no cached listings exist, so it must carry
-          its own disclosure rather than relying on the carousel's. */}
-      <AffiliateDisclosure partner="ebay" tight />
+          eBay carousel renders when no cached listings exist, so it discloses on
+          its own unless a parent that discloses renders it `bare` (the card
+          panel, and QuickView through the carousel's fallback). */}
+      {!bare && <AffiliateDisclosure partner="ebay" tight />}
     </div>
   );
 }
