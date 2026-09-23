@@ -45,13 +45,18 @@ type ColumnDef = {
   // perType (4) for this feed regardless of how many deals actually exist.
   // Undefined for free columns (nothing gates them).
   totalKey?: "savingsVsMarketTotal" | "risingCardsTotal";
+  // One-line explainer under the heading, for the two columns whose name alone
+  // does not say what is being compared or ranked (2026-09-23, owner request).
+  // "Rising" is phrased as a ranking by our signals, never a promise — the tool
+  // itself is labelled "a research signal, not advice".
+  sub?: string;
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities", totalKey: "savingsVsMarketTotal" },
+  { key: "savingsVsMarket", label: "Biggest savings", sub: "Underpriced cards vs the TCGplayer market price", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities", totalKey: "savingsVsMarketTotal" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
-  { key: "risingCards", label: "Rising cards", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal" },
+  { key: "risingCards", label: "Rising cards", sub: "Cards our signals rank most likely to rise in price", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal" },
 ];
 
 // Budget tiers — "rounded to natural values per market" (not FX-converted at
@@ -366,6 +371,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
                   <span className="chip bg-gold/20 text-gold">{premiumPlus ? "Plus" : "Premium"}</span>
                 )}
               </div>
+              {def.sub && <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">{def.sub}</p>}
 
               <ul className="flex flex-1 flex-col divide-y divide-ink-800">
                 {shown.map((deal, i) => (
