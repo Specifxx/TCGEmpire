@@ -40,9 +40,12 @@ function tagline(country: string): string {
 
 function Banner({ w, h, country }: { w: number; h: number; country: string }) {
   const horizontal = w >= 2.5 * h; // leaderboard / billboard / mobile strip
+  // Themed surface + a translucent brand tint (2026-09-23). The middle stop was a
+  // literal #0d1828, which in light painted a black stripe behind the centred
+  // copy between two white ends. Dark composites to ~#0e1a23, visually the same.
   return (
     <span
-      className="relative inline-block overflow-hidden rounded-lg border border-sky-500/30 bg-gradient-to-r from-ink-900 via-[#0d1828] to-ink-900"
+      className="relative inline-block overflow-hidden rounded-lg border border-sky-500/30 bg-ink-900 bg-gradient-to-r from-transparent via-sky-500/[0.06] to-transparent"
       style={{ width: w, height: h, maxWidth: "100%" }}
     >
       <OutboundLink

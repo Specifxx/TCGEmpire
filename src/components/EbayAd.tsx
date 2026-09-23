@@ -47,9 +47,12 @@ function searchUrl(query: string, country: string): string {
 
 function Banner({ w, h, country, label, href }: { w: number; h: number; country: string; label: string; href: string }) {
   const horizontal = w >= 2.5 * h;
+  // Themed surface + a translucent brand tint (2026-09-23). The middle stop was a
+  // literal #1a1012, which in light painted a black stripe behind the centred
+  // copy between two white ends. Dark composites to ~#19131a, visually the same.
   return (
     <span
-      className="relative inline-block overflow-hidden rounded-lg border border-[#e53238]/30 bg-gradient-to-r from-ink-900 via-[#1a1012] to-ink-900"
+      className="relative inline-block overflow-hidden rounded-lg border border-[#e53238]/30 bg-ink-900 bg-gradient-to-r from-transparent via-[#e53238]/[0.05] to-transparent"
       style={{ width: w, height: h, maxWidth: "100%" }}
     >
       <OutboundLink href={href} retailer="ebay_banner" country={country} className="absolute inset-0 block transition-colors hover:bg-white/[0.03]">
