@@ -11,6 +11,9 @@
  *     in RiftScribe's catalogue so never mirrored;
  *   unl-055a-219 Vex — the one alt art whose CDN art is still 404 at every
  *     rendition (the last entry in src/lib/card-art-missing.ts).
+ * (First run, 2026-09-23: the three tokens turned out to store RiftScribe URLs
+ * whose stems the same day's re-mirror had recovered, so they were SKIPPED as
+ * working art and only Vex was written. They stay listed as a no-op guard.)
  * The other 18 stay on the placeholder on purpose. The gallery has the BASE
  * Vendetta runes (ven-r01 …) but not the "a" alt arts our rows are, and none of
  * the Nexus Night / organised-play promos. Borrowing another printing's picture

@@ -11169,9 +11169,11 @@ catalogue at all. Checked each against Riot's official gallery
 
 - **Published there under their own id (4)**: the Unleashed tokens Bird,
   Brush and Reflection, and Vex UNL 055a. `scripts/set-official-art.ts`
-  (maintenance task `set-official-art`) sets them. It matches by slug and never
-  overwrites working art. Brush is written as landscape, since that is how
-  Riot's file is cut.
+  (maintenance task `set-official-art`) handles them. It matches by slug and
+  never overwrites working art. Its dry run against RM3 showed the three tokens
+  already store RiftScribe URLs whose stems were on the missing list, so the
+  re-mirror above had already recovered them; it skipped them and wrote only
+  Vex. The tokens stay in the script as a no-op guard.
 - **Not published (18)**: the Vendetta alt-art runes (R01a–R06a; the gallery
   has only the base `ven-r01` prints), the Nexus Night rune/unit promos, and
   four organised-play promos. These stay on the placeholder. A different
