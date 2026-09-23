@@ -568,6 +568,78 @@ export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, f
   );
 }
 
+// ─── Welcome email to a new account (one-time) ────────────────────────────────
+// Sent ONCE, within about an hour of an account being created (runWelcomeEmails
+// in lib/welcome-email.ts, 2026-09-23). Before this, a new account got no email
+// at all — the only welcome was a checklist on /profile that nobody who signed
+// up from a card page ever saw.
+//
+// WHAT IT IS FOR: the three things a free account does that a visitor cannot,
+// in the order most people will get value from them, and then — one short
+// block, not the headline — what Premium adds, with its trial stated the way
+// every other surface states it (premiumZeroToday / premiumFromLine, never a
+// typed price; the trial only when the account is actually eligible).
+//
+// Same category as the checkout-recovery email: tied to one action the
+// recipient took, sent once, and the footer says so; no opt-out link because
+// there is nothing further to opt out of.
+export interface WelcomeEmailOpts {
+  displayName: string;
+  trialDays: number; // 0 = no trial available (disabled, or somehow already used)
+  fromLine: string; // premiumFromLine()
+  zeroToday: string; // premiumZeroToday()
+}
+
+const WELCOME_UTM = "utm_source=email&utm_medium=email&utm_campaign=welcome";
+
+export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; heading: string; html: string } {
+  const name = escapeHtml(opts.displayName.trim().split(/\s+/)[0] || "there");
+  const link = (path: string, label: string) =>
+    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_UTM}" style="color:#34d17e;font-weight:700;text-decoration:none">${label}</a>`;
+  const trialLine =
+    opts.trialDays > 0
+      ? `Try it free for ${opts.trialDays} days — ${opts.zeroToday}, then ${opts.fromLine}. Cancel before the trial ends and you pay nothing.`
+      : `Premium is ${opts.fromLine}.`;
+  const step = (n: number, title: string, body: string) =>
+    `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
+    </td></tr>`;
+  const inner = `
+    <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Hi ${name}, your free account is ready. Three things it does that a visitor can't:
+    </td></tr>
+    ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops. ${link("/browse", "Find a card&nbsp;→")}`)}
+    ${step(2, "See today's top 3 deals", `Your account shows the three biggest deals in Deal Finder and the three top-ranked Rising Cards, updated daily. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")} · ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)}
+    ${step(3, "Track your collection", `Add the cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
+    <tr><td style="padding:14px 32px 22px">
+      <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
+        <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
+          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Premium shows the full Deal Finder and
+          Rising Cards lists, plus Best Basket, the Value Finder and the Bulk Pricer. ${trialLine}
+        </div>
+        <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
+      </div>
+    </td></tr>`;
+  const heading = "Welcome to RiftCompare";
+  return {
+    subject: "Welcome to RiftCompare — here's what your account does",
+    heading,
+    html: emailShell(heading, inner, welcomeFooter()),
+  };
+}
+
+function welcomeFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this once because you created a RiftCompare account. We won't send it again.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export async function sendWelcomeEmail(to: string, opts: WelcomeEmailOpts): Promise<boolean> {
+  const { subject, html } = buildWelcomeEmail(opts);
+  return sendEmail(to, subject, html);
+}
+
 // ─── One-off Premium offer to free-tier accounts ──────────────────────────────
 // See lib/premium-offer.ts for the audience, idempotency and the offer itself.
 //

@@ -1,0 +1,47 @@
+name: Welcome email
+
+# One-time welcome email to accounts created in the last 72 hours that have not
+# had it (src/lib/welcome-email.ts). Hourly, so a new account hears from us
+# within about an hour of signing up. Runs via GH Actions rather than Vercel
+# Cron, same reason as premium-checkout-recovery.yml: this project's Vercel
+# cron slots are already spoken for. Minute 23 keeps it clear of the other
+# workflows' :00 slots.
+#
+# SETUP: reuses the CRON_SECRET repository secret the other cron workflows
+# already require — nothing new to provision.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch: {} # manual "Run workflow" button
+
+concurrency:
+  group: welcome-email
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send due welcome emails
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: "https://riftcompare.com"
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::No CRON_SECRET secret set — cannot call the cron endpoint."
+            exit 1
+          fi
+          code=$(curl -s -o response.json -w "%{http_code}" --max-time 90 \
+            "$SITE_URL/api/cron/welcome-email" -H "Authorization: Bearer $CRON_SECRET")
+          echo "welcome-email -> HTTP ${code}"
+          cat response.json || true
+          # 404 = the route is on main but not deployed yet (production builds
+          # once a day). Nothing is lost: the run's 72-hour window picks those
+          # accounts up once it is live.
+          if [ "$code" = "404" ]; then
+            echo "::notice::/api/cron/welcome-email is not deployed yet — skipping this run."
+            exit 0
+          fi
+          [ "$code" = "200" ]
