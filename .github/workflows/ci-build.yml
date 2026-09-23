@@ -87,6 +87,17 @@ jobs:
       # in src/lib/db-chains.ts, so db.ts and db-history.ts resolve to them
       # without their "current project missing" warnings, and history shares
       # the operational database (historyIsSplit=false), as in local dev.
+      # These two names ROTATE: when db-chains.ts moves a head, rename it here
+      # in the same PR. tests/ci-build-workflow.test.ts reads the heads from
+      # db-chains.ts and fails until this block names them, the way
+      # tests/db-chain.test.ts pins build-db-push.sh. A stale name still builds
+      # against the service (db.ts hands Prisma an undefined URL and it falls
+      # back to DATABASE_URL), but logs that warning on every build worker,
+      # and a stale operational head flips historyIsSplit to true (history
+      # gets the service URL, operational gets undefined) — a path neither
+      # production nor dev runs. The same test requires every chain name,
+      # wherever this file assigns it (here, a step-level env, inline in a
+      # script), to be the service.
       DATABASE_URL: postgresql://postgres:ci@localhost:5432/tcg_ci
       RM3: postgresql://postgres:ci@localhost:5432/tcg_ci
       HISTORY_DATABASE_URL_3: postgresql://postgres:ci@localhost:5432/tcg_ci

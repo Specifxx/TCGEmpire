@@ -202,6 +202,14 @@ const CHECKS: Check[] = [
     // spoiled Radiance cards are in the catalogue (checked 2026-09-23). The
     // seed has no Radiance cards, so under SMOKE_SEED the page is guaranteed
     // empty and that state's exits are asserted as well.
+    //
+    // "Get ready for Radiance" needs MORE than an empty seed: the block it
+    // heads renders only while Radiance is `comingSoon: true` in
+    // src/lib/constants.ts (sets/[set]/page.tsx: `preReleaseLinks =
+    // set.comingSoon ? … : []`). The PR that marks Radiance released (due
+    // 2026-10-23) will fail ci-build on this string alone — drop it from the
+    // seed list below in that same PR, rather than reading it as a seed or
+    // build regression.
     must: ["Radiance", "Riftbound Radiance — what"],
     minText: 300,
     seed: { must: ["Radiance", "Riftbound Radiance — what", "Get ready for Radiance"] },
