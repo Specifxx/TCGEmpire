@@ -175,4 +175,7 @@ test("nothing that must stay white in both themes uses the themed `white` token"
   assert.match(read("src/components/AuthForm.tsx"), /bg-\[#ffffff\] py-2\.5 text-sm font-semibold text-\[#0a0c10\]/);
   // Discord's blurple takes white text by Discord's brand rules, not by theme.
   assert.match(read("src/components/AuthForm.tsx"), /bg-\[#5865F2\][^"]*text-\[#ffffff\]/);
+  // "Shop on eBay" sits on eBay blue, a fixed fill in both themes. With the
+  // themed `text-white` it went dark-ink on #0064d2 in light (UI audit B2-08).
+  assert.match(read("src/components/EbayBuyCta.tsx"), /bg-\[#0064d2\][^"`]*text-\[#ffffff\]/);
 });

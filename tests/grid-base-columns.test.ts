@@ -59,6 +59,11 @@ const GRIDS: { file: string; anchor: string; what: string }[] = [
   { file: "src/components/TodaysTopDeals.tsx", anchor: "items-stretch gap-4", what: "homepage Today's Top Deals (372px at 320)" },
   { file: "src/app/sets/page.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-3", what: "/sets released sets (334px at 320)" },
   { file: "src/components/FilterableArticles.tsx", anchor: "gap-2 sm:grid-cols-2 lg:grid-cols-3", what: "/blog and /guides 'Browse by topic' (322px at 320)" },
+  { file: "src/components/PriceWatch.tsx", anchor: "gap-4 xl:grid-cols-3", what: "/movers panels (693px at every phone width)" },
+  { file: "src/components/RouteLoading.tsx", anchor: "gap-4 xl:grid-cols-3", what: "/movers loading skeleton (mirrors PriceWatch)" },
+  { file: "src/components/RouteLoading.tsx", anchor: "gap-3 sm:grid-cols-2 lg:grid-cols-3", what: "/sets loading skeleton (mirrors /sets)" },
+  { file: "src/app/market/page.tsx", anchor: "gap-4 sm:grid-cols-2", what: "/market movers pair (341px at 320)" },
+  { file: "src/components/TradeCalculator.tsx", anchor: "gap-4 md:grid-cols-2", what: "/trade both-sides grid (603px at 390 with two cards added)" },
 ];
 
 for (const { file, anchor, what } of GRIDS) {
