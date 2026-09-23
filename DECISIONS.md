@@ -10920,3 +10920,150 @@ Two things this leaves behind:
   route may export only the names Next recognises, so a helper exported from
   `opengraph-image.tsx` passes `tsc` and is then rejected by `next build` — the
   same trap that moved the `/gallery` title builders into `lib/gallery-seo.ts`.
+
+## A multi-device UI pass: 123 verified findings, measured before and after — 2026-09-23
+
+Owner brief: "fix any UI issues you can find and make my UI better in general …
+for both desktop and mobile phone and any other devices."
+
+**How it was found.** The live site was rendered in a real Chromium at fifteen
+profiles: 320, 344 (Z Fold cover), 360, 390 and 430 phones, 844×390 phone
+landscape, 768/820 tablets, 1024×768 tablet landscape, 1280, 1440, 1920 and
+2560 desktops, and light at 390/1440. That was 69 pages each, 1,035 renders,
+each with measured overflow, tap targets, tiny text, iOS focus-zoom inputs,
+clipped text, CLS and console errors. Ten audit lenses produced 126 findings.
+Every one went to a separate verifier told to refute it: reproduce it live,
+check it against this file and the pinned tests, and try the fix in the page
+before accepting it. **3 were refuted and 123 survived**, many with the fix
+corrected. They were implemented as ten packages with exclusive file
+ownership, each measured on a local server against the synthetic seed database
+(`prisma/seed.ts`, never a production project), then reviewed together.
+
+**Local before/after, same 30 pages × 9 profiles (270 renders):**
+undersized tap targets 3,331 → 1,872; iOS focus-zoom inputs 368 → 239 (the
+remainder are the tablets' deliberate 14px `.input`); summed CLS 2.6 → 0.9. The
+live-only faults (the widened layout viewports below) do not reproduce on the
+seed data and were measured on production DOM instead.
+
+**Landing in two steps.** This commit carries nine of the ten packages. The
+overlay package (ui/Dialog focus, a portal and Escape layering, the menu's
+focus return, popup close-button sizes, and corner nudges yielding to dialogs)
+and the fixes from the integration review follow as separate commits,
+recorded below this entry.
+
+### The decisions worth keeping
+
+- **Every grid gets a base column: `grid-cols-1`.** `grid gap-4 lg:grid-cols-3`
+  has no template below its first breakpoint, so the browser gives it one
+  implicit `auto` track as wide as the widest unwrapped row, and `truncate`
+  inside it never engages. /movers laid out at 693px on every phone, `/` at
+  372px at 320–360, /market at 341, /sets at 334 and /trade at 603. Chrome for
+  Android answers that by widening the layout viewport and zooming the whole
+  site out, which is the same mechanism as the 2026-09-22 RegionToggle entry.
+  `tests/grid-base-columns.test.ts` pins nine grids. `body { overflow-x: clip }`
+  is added as a backstop, because html's own clip propagates to the viewport,
+  where Android still sizes the layout viewport from the overflow. The mobile
+  check still sees overflow through `body.scrollWidth`.
+- **1024–1279 is its own band now.** Since the 17rem rail became permanent from
+  1024 (2026-09-21), `lg:` layouts have had ~704px, not a desktop. The header's
+  inline search was 13–78px there and sat on top of "Sealed"; the filter
+  sidebar left /browse 4 × 94px tiles; the card page's 320px art left a 360px
+  details column that clipped the cheapest price. So:
+  - the header search stays on its own row until **xl** (the header is
+    121/125px there and 65px from 1280), and is 36rem inline from xl;
+  - the filter sidebar and its sticky wait for **xl**. Below that it is the
+    collapsible bar, now with a sticky "Show results" footer;
+  - the card grids size from their own column
+    (`lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]`);
+  - the card art is 160px from lg and 320px from xl.
+  Every sticky below the header carries `lg:top-36 xl:top-20`, and in-page
+  anchors use `.scroll-mt-header` (9rem, 6rem from 1280) or, on /market,
+  `scroll-mt-40 xl:scroll-mt-36`, because Reveal's 26px entrance offset makes a
+  first jump land short.
+- **The light theme is first-class.**
+  - Tailwind's stock pastel TEXT shades (rose/red/emerald/amber/sky/lime/
+    purple/blue 100–400) are palette-backed like the neutrals. Dark keeps the
+    stock hexes (pixel-identical, pinned); light uses 700/800-class shades
+    that clear 4.5:1. /sealed "Sold out" goes 1.55 → 6.58:1 and loss prices
+    2.69 → 6.29:1.
+  - Data-coloured chips (domains, rarities, conditions, grader badges) go
+    through `.data-ink`, which darkens the hex by color-mix in light.
+  - Charts and sparklines stroke `currentColor` from themed tokens.
+  - The scrolled header shadow is a NAMED `shadow-header` token. Tailwind 3.4
+    reads `shadow-[var(--x)]` as a shadow colour and emits no box-shadow.
+  - ThemeToggle re-stamps `<meta name=theme-color>` after every client
+    navigation, because Next re-inserts the layout's dark one.
+  - Brand fills that must stay white (Discord, "Shop on eBay") use
+    `text-[#ffffff]`, not the themed `text-white`.
+- **Touch floors grow on coarse pointers only.** Rail rows, header links, the
+  market switcher, deal pills and fee chips reach 48px under
+  `(pointer: coarse)` and keep their desktop density with a mouse. That
+  honours the 2026-09-18/19 "desktop rows stay 36px" decision, so the switcher
+  keeps its 38px mouse height and only regains the touch floor.
+- **iOS focus-zoom backstop.** Fields render at 16px on coarse pointers under
+  640px wide or 500px tall, which covers phones in both orientations. Tablets
+  keep `.input`'s 14px. It uses `!important` because `text-sm` otherwise wins.
+- **Negative money reads "−US$190.00", not "US$-190.00".** formatMoney puts a
+  leading U+2212 before the symbol. Every consumer is display text; the CSV
+  export formats its own numbers. Pinned in `tests/format-money.test.ts`.
+- **/sell and /wanted are `next.config.js` permanent redirects.** Their
+  `redirect()` stub pages were served as a cached 307 with NO Location header:
+  a blank error document, then a client-side hop, with CLS ~0.8. 308s are
+  browser-cached and cannot be revoked; both pages were already retired.
+- **The watchlist waits for /api/me.** Every anonymous page view fetched
+  /api/alerts/watchlist and logged a 401. A signed-in user now waits one /api/me
+  round trip.
+- **/learn's quiz is seeded per UTC day.** It shuffled with Math.random during
+  render, so the server and client drew different quizzes (React #418/#423 on
+  every load).
+- **Articles:** prose is 17px with a 40rem measure from sm (phones stay 15px).
+  Only tables of 3+ columns keep a scroll floor and become focusable regions.
+  The TOC stays open, as its component records; it becomes a sticky
+  right-gutter aside from 1700px.
+- **Footer:** the rail reservation moves onto `<footer>`. The old
+  `container-app pl-[var(--sidenav-w)]` on one element deleted the gutter:
+  phones had content at x=0, and the footer sat off <main>'s column on wide
+  screens. `tests/sidenav.test.ts` now rejects that pairing. The "·"
+  separators became row gaps.
+
+### Owner-visible changes to be aware of
+
+- At 1024–1279 with a mouse, /browse, /sealed and /sets/[set] show the
+  collapsible Filters bar, not the sidebar, which returns at 1280. /browse at
+  1280 is 3 × 216px tiles, where it was 5 × 123px.
+- /auctions shares /browse's grid: 3 columns at 1024–1039, 4 from 1040 and at
+  ≥1280.
+- Today's Top Deals goes 4-across at xl (1280). At 1280 names are still tight
+  (39–72px). Moving it to 2xl would double the section's height at 1440, so
+  that is left for the owner to call.
+- The header's pre-session placeholder is sized for the signed-OUT control:
+  the 79px jump is gone for visitors, and signed-in users take a one-time shift
+  instead.
+- The eBay affiliate disclosure appears once per panel, not twice.
+- /games' signed-out prompt reads "Create free account" + "Sign in", instead of
+  two identical "Sign in" buttons.
+
+### Declined, deliberately
+
+These were raised and not done, because this file already decides them:
+- a static header in phone landscape ("it needs to always sit there",
+  2026-09-16);
+- a desktop 44px switcher (2026-09-18/19);
+- capping the homepage About paragraph (documented full-width);
+- moving eyebrows off the display serif site-wide (`.rb-eyebrow` is a brand
+  token; only the homepage's sans hero switches, alongside its h1–h3);
+- forcing the Trending chips onto one line (a function of each day's names,
+  and it truncates them worse).
+
+### Harness lessons, for the next pass
+
+- **Overflow can hide from the obvious metric.** html's `overflow-x: clip`
+  hides clipped content from any scan that excuses overflow-hidden ancestors.
+  Some overflow reproduces only at **devicePixelRatio 2**. Audit phones at
+  DPR 2, and read `window.innerWidth`, not just element rects.
+- **The theme is a COOKIE** (`theme=light`, theme-shared.ts). Setting
+  localStorage renders dark while claiming light.
+- **ESLint silently ignores files under a dot-directory**, so
+  `.claude/worktrees` checkouts need `--no-ignore`. The main tree's `tsc`
+  also sweeps those worktrees in via `**/*.ts`, so run it from a checkout
+  outside `.claude/`.
