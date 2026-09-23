@@ -59,6 +59,64 @@ export const REPORT_KINDS: ReadonlySet<string> = new Set<ReportKind>(["card", "s
 export const REPORT_STATUSES = ["NEW", "CONFIRMED", "REJECTED", "FIXED"] as const;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
+/**
+ * Whether moving a report from `prev` to `next` should email the reporter a
+ * thank-you. Before 2026-09-23 a reporter never heard back, and hearing "you
+ * were right, it's fixed" is what turns a one-off reporter into a repeat one.
+ *
+ * FIXED ONLY. Not CONFIRMED — the price is still wrong at that point, so "thanks"
+ * would be premature — and never REJECTED: telling a stranger they were mistaken
+ * invites an argument over email.
+ *
+ * ON THE TRANSITION, not on the state. `prev !== "FIXED"` is what makes a second
+ * click on an already-fixed report (or a re-save) send nothing, so one report is
+ * at most one email. A report reopened and fixed again does send again — that is
+ * a second fix, which is exactly when a second thank-you is true.
+ */
+export function shouldNotifyReporter(prev: ReportStatus, next: ReportStatus): boolean {
+  return next === "FIXED" && prev !== "FIXED";
+}
+
+/**
+ * The name and on-site link a "your report was fixed" email uses for a sealed
+ * product, from one of its SealedListing rows.
+ *
+ * There is no per-product sealed page to link to — a tile on /sealed opens a
+ * quick-view in place (see tools/rising-sealed's ProductCell) — so the link is
+ * /sealed narrowed to the product:
+ *   • set + type when the group has a set. Both are exact-match filters there,
+ *     and a set-coded group's key IS `${setCode}|${type}`, so this lands on that
+ *     one product rather than every booster box on the site.
+ *   • ?q=<title> otherwise, the way SearchBar and Rising Sealed link a product:
+ *     a setless group is keyed and named by its listing title.
+ * `setName` is the display name for `row.setCode` (lib/constants SETS), passed in
+ * so this module stays import-free for the form that shares it.
+ */
+export function sealedReportTarget(
+  row: { title: string; productType: string; setCode: string | null },
+  setName: string | null,
+): { name: string; path: string } {
+  if (row.setCode) {
+    return {
+      name: joinOverlapping(setName ?? row.setCode, row.productType),
+      path: `/sealed?set=${encodeURIComponent(row.setCode)}&type=${encodeURIComponent(row.productType)}`,
+    };
+  }
+  return { name: row.title, path: `/sealed?q=${encodeURIComponent(row.title)}` };
+}
+
+// "Origins: Proving Grounds" + "Proving Grounds Case" → "Origins: Proving Grounds
+// Case", not the words twice: OGS is the one set whose name is also a product
+// type. Merges on whole words only, so "Vendetta" + "Booster Box" is untouched.
+function joinOverlapping(a: string, b: string): string {
+  for (let i = 0; i < a.length; i++) {
+    if (i > 0 && a[i - 1] !== " ") continue;
+    const tail = a.slice(i);
+    if (b.startsWith(tail) && (b.length === tail.length || b[tail.length] === " ")) return a.slice(0, i) + b;
+  }
+  return `${a} ${b}`;
+}
+
 export const MAX_NOTE = 1000;
 export const MAX_EMAIL = 200;
 export const MAX_PAGE = 200;

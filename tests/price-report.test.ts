@@ -2,7 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { ISSUES, ISSUE_CODES, REPORT_KINDS, REPORT_STATUSES, issueLabel, issueWantsPrice } from "../src/lib/price-report";
+import {
+  ISSUES,
+  ISSUE_CODES,
+  REPORT_KINDS,
+  REPORT_STATUSES,
+  issueLabel,
+  issueWantsPrice,
+  sealedReportTarget,
+  shouldNotifyReporter,
+} from "../src/lib/price-report";
+import { sendPriceReportFixedEmail } from "../src/lib/email";
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -196,4 +206,136 @@ test("the report kinds match what the schema stores", () => {
   // evidence about a STORE — it should outlive the row it was filed against.
   assert.ok(!/cardId.*@relation/.test(model![0]), "PriceReport must not cascade away with a card");
   assert.match(model![0], /@@index\(\[retailer, createdAt\]\)/, "the per-store rollup needs its index");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLOSING THE LOOP (2026-09-23). A reporter used to hear nothing back, ever.
+// Marking a report FIXED now emails them once — the one message that makes
+// someone bother reporting the next wrong price too. The tests below pin the
+// three things that keep that email from becoming a liability: it goes on the
+// move to FIXED and nowhere else, it can never fail the triage it rides on, and
+// it only goes to an address someone gave us or has proved they own.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ADMIN_ROUTE = "src/app/api/admin/price-reports/route.ts";
+
+test("a reporter is emailed on the move to FIXED, and on nothing else", () => {
+  // The full 4×4 table, so a status added later has to be decided here rather
+  // than inherit an email by accident. CONFIRMED is "still wrong", REJECTED is
+  // an argument waiting to happen, and FIXED → FIXED is a re-click.
+  for (const prev of REPORT_STATUSES) {
+    for (const next of REPORT_STATUSES) {
+      const want = next === "FIXED" && prev !== "FIXED";
+      assert.equal(shouldNotifyReporter(prev, next), want, `${prev} → ${next} should ${want ? "" : "not "}email`);
+    }
+  }
+});
+
+test("the admin route thanks the reporter without ever putting the status change at risk", () => {
+  // Comments stripped: the route's header talks about the email, and a pin
+  // should match the code that does it, not the prose that explains it.
+  const code = read(ADMIN_ROUTE).replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(
+    code,
+    /shouldNotifyReporter\(report\.status as ReportStatus, next\)/,
+    "the decision must come from the shared rule, applied to the status being left",
+  );
+  assert.match(code, /prisma\.priceReport\.findUnique\(/, "the report must be read before it is changed");
+
+  // One email per report even with two admin tabs open: the write that flips
+  // the row is conditional, and only a write that flipped something sends.
+  assert.match(
+    code,
+    /updateMany\(\{\s*where: \{ id, status: \{ not: "FIXED" \} \}/,
+    "the FIXED write must be scoped to rows not already FIXED",
+  );
+  assert.match(code, /if \(flipped\.count > 0\)/, "only the click that actually flipped the row may send");
+
+  // The send has its own try/catch, so nothing in it can reach the route's 500.
+  const call = /try \{\s*await thankReporter\([^)]*\);\s*\} catch \(e\) \{\s*console\.error/.exec(code);
+  assert.ok(call, "the thank-you must be awaited inside its own try/catch that logs");
+  assert.ok(code.indexOf("updateMany(") < call!.index, "the status is written before the email is attempted");
+  assert.match(
+    code.slice(call!.index),
+    /^try \{[\s\S]*?\}\s*catch \(e\) \{[\s\S]*?\}\s*\}\s*return NextResponse\.json\(\{ ok: true \}\);/,
+    "…and the route still reports success after it, sent or not",
+  );
+
+  // Same guard as the other senders, and nobody is emailed at an address they
+  // haven't shown they own.
+  assert.match(code, /if \(!isEmailEnabled\(\)\)/, "sending must be guarded like the other senders");
+  assert.match(code, /account\?\.emailVerified \? account\.email : null/, "an account address is only used once verified");
+  // PII: a reporter's address must not end up in the function logs.
+  assert.ok(!/console\.\w+\([^;]*\$\{to\}/.test(code), "never log the recipient");
+});
+
+test("a sealed report links to /sealed narrowed to that one product", () => {
+  // There is no per-product sealed page, so the link is a filter — exact set +
+  // type where the group has a set (its groupKey IS `${setCode}|${type}`).
+  assert.deepEqual(
+    sealedReportTarget({ title: "whatever the store wrote", productType: "Booster Box", setCode: "VEN" }, "Vendetta"),
+    { name: "Vendetta Booster Box", path: "/sealed?set=VEN&type=Booster%20Box" },
+  );
+  // OGS's name is also a product type — merged on whole words, not said twice.
+  const ogs = (productType: string) =>
+    sealedReportTarget({ title: "", productType, setCode: "OGS" }, "Origins: Proving Grounds").name;
+  assert.equal(ogs("Proving Grounds"), "Origins: Proving Grounds");
+  assert.equal(ogs("Proving Grounds Case"), "Origins: Proving Grounds Case");
+  // …and only on whole words: a type that merely starts with the set's last
+  // word is not an overlap.
+  assert.equal(sealedReportTarget({ title: "", productType: "Grounded Box", setCode: "OGS" }, "Proving Ground").name, "Proving Ground Grounded Box");
+  // A set code with no display name still reads as something.
+  assert.equal(sealedReportTarget({ title: "", productType: "Booster Box", setCode: "XYZ" }, null).name, "XYZ Booster Box");
+  // A setless group is keyed and named by its title — linked the way SearchBar does.
+  assert.deepEqual(
+    sealedReportTarget({ title: "T1 Signature Edition & Box", productType: "T1 Signature Edition", setCode: null }, null),
+    { name: "T1 Signature Edition & Box", path: "/sealed?q=T1%20Signature%20Edition%20%26%20Box" },
+  );
+});
+
+test("the thank-you email is transactional, on-brand, and escapes what it is given", async (t) => {
+  const originalKey = process.env.RESEND_API_KEY;
+  process.env.RESEND_API_KEY = "test-key";
+  const originalFetch = global.fetch;
+  let sent: { from: string; to: string; subject: string; html: string } | null = null;
+  global.fetch = (async (_url: string, init: RequestInit) => {
+    sent = JSON.parse(String(init.body));
+    return new Response("{}", { status: 200 });
+  }) as typeof fetch;
+  t.after(() => {
+    global.fetch = originalFetch;
+    if (originalKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = originalKey;
+  });
+
+  const ok = await sendPriceReportFixedEmail("reporter@example.com", {
+    itemName: "Jinx <b>",
+    // The store name can fall back to what the form sent, so it is escaped.
+    retailerName: `Shop "<script>"`,
+    url: "https://riftcompare.com/sealed?set=VEN&type=Booster%20Box",
+  });
+  assert.equal(ok, true);
+  const mail = sent!;
+  assert.equal(mail.to, "reporter@example.com");
+  assert.match(mail.from, /RiftCompare/, "the same from-address as every other transactional send");
+  assert.equal(mail.subject, `Fixed: the Shop "<script>" price you reported for Jinx <b>`, "a subject is plain text, not HTML");
+  assert.match(
+    mail.html,
+    /Thanks — the Shop &quot;&lt;script&gt;&quot; price you reported for <strong[^>]*>Jinx &lt;b&gt;<\/strong> has been fixed/,
+  );
+  assert.ok(!/<script>/.test(mail.html), "nothing reporter-supplied may reach the HTML raw");
+  assert.match(mail.html, /href="https:\/\/riftcompare\.com\/sealed\?set=VEN&amp;type=Booster%20Box"/, "links to the item");
+  // The standard shell and footer, and nothing marketing.
+  assert.match(mail.html, /Rift<span style="color:#34d17e">Compare<\/span>/);
+  assert.match(mail.html, /RiftCompare · Riftbound card price comparison\./);
+  assert.ok(
+    !/Unsubscribe|Create your free account|utm_/i.test(mail.html),
+    "transactional: no opt-out list, no account CTA, no campaign tags",
+  );
+});
+
+test("the report form says what the email is for", () => {
+  // The optional address now has a use the reporter can see — say so where it
+  // is asked for, or nobody leaves one.
+  assert.match(read(FORM), /\(optional — we&apos;ll email you once it&apos;s&nbsp;fixed\)/);
 });

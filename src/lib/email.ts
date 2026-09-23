@@ -809,3 +809,46 @@ export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): 
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
   return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)));
 }
+
+// ─── Wrong-price report fixed (one-time thank-you) ───────────────────────────
+
+// Sent once, when an admin moves a PriceReport to FIXED (see
+// app/api/admin/price-reports and shouldNotifyReporter in lib/price-report.ts),
+// to the address the reporter volunteered — or their account's, only if it is
+// verified. Until 2026-09-23 a reporter never heard back, and being told "you
+// were right, it's fixed" is what makes someone report the next one too.
+//
+// TRANSACTIONAL, like the trial and checkout notices above: tied to one thing
+// the recipient did, never repeated, so the footer states that and carries no
+// opt-out link, and there is no account CTA (accountCtaBlock's own header rules
+// it out of transactional sends). The store and item names are escaped — the
+// store name can fall back to what the reporter's form sent (see
+// api/price-report), so it is not a string this template gets to trust.
+function priceReportFixedFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this once because you reported a wrong price on ${SITE_NAME}. We won't email you about this report again.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export interface PriceReportFixedOpts {
+  itemName: string; // the card or sealed product the report was about
+  retailerName: string; // the store whose listing was wrong
+  url: string; // absolute link to that item's page on the site
+}
+
+export async function sendPriceReportFixedEmail(to: string, opts: PriceReportFixedOpts): Promise<boolean> {
+  const store = escapeHtml(opts.retailerName);
+  const item = escapeHtml(opts.itemName);
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Thanks — the ${store} price you reported for <strong style="color:#fff">${item}</strong> has been fixed.
+      We checked it against the store and corrected it at the source, so it's right for everyone comparing prices now.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${escapeHtml(opts.url)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See the corrected price</a></td></tr>`;
+  return sendEmail(
+    to,
+    `Fixed: the ${opts.retailerName} price you reported for ${opts.itemName}`,
+    emailShell("Your price report is fixed", inner, priceReportFixedFooter())
+  );
+}

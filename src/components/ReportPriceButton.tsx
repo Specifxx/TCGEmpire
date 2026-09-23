@@ -256,9 +256,15 @@ function ReportDialog({
               />
             </label>
 
+            {/* The hint states what the address is FOR (2026-09-23): marking a
+                report FIXED now emails the reporter once (see
+                shouldNotifyReporter), so say so — "only if you want a reply"
+                gave a reporter no reason to leave one. It is 303px on one line
+                and a 320px phone's form has 286px, so it wraps there; the nbsp
+                keeps "it's fixed)" together instead of stranding "fixed)". */}
             <label className="block">
               <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Email <span className="font-normal normal-case">(optional — only if you want a reply)</span>
+                Email <span className="font-normal normal-case">(optional — we&apos;ll email you once it&apos;s&nbsp;fixed)</span>
               </span>
               <input
                 type="email"
