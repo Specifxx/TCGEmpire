@@ -63,7 +63,10 @@ export function DomainExplorer({ domains }: { domains: DomainInfoProp[] }) {
               />
             </Link>
           )}
-          <div className="min-w-0 flex-1">
+          {/* min-w-[12rem] so the row wraps on phones (2026-09-23): with min-w-0
+              the flex-1 column never broke the line and was squeezed to 112px at
+              320. Side by side from ~440px up, as before. */}
+          <div className="min-w-[12rem] flex-1">
             <div className="flex items-center gap-2">
               <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: d.color }} />
               <h3 className="text-lg font-extrabold text-white">{d.label}</h3>
