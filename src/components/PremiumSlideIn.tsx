@@ -289,11 +289,14 @@ export function PremiumSlideIn() {
     router.push("/premium"); // straight to the page — no dialog in between (2026-09-06)
   }, [hide, router, trialEligible, contextPitch]);
 
-  // Esc closes it — non-trapping, because this is not a modal.
+  // Esc closes it — non-trapping, because this is not a modal. Ignored while a
+  // real dialog is open (2026-09-23): that Escape belongs to the dialog, and
+  // dismissing here as well would silently burn one of the two permanent
+  // dismissal strikes.
   useEffect(() => {
     if (!shown) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dismiss();
+      if (e.key === "Escape" && document.body.dataset.rcDialog !== "1") dismiss();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -337,10 +340,18 @@ export function PremiumSlideIn() {
             Premium
           </span>
           <span className="min-w-0 flex-1 text-xs font-semibold leading-snug text-slate-200">{heading}</span>
+          {/* .tap-icon (2026-09-23): 48px on touch, up from a px-1 glyph. The
+              -my-3 keeps this py-2.5 header's height; the 48px box overhangs
+              the header padding by ~2px, which the card's overflow clips.
+              -ml-2 -mr-4 lend the box the gap and the header's right padding:
+              with -mr-2 alone the default 210px heading got 200px at 390 and
+              wrapped, growing the header 45 → 54. The glyph lands within 3px
+              of where the old one sat (x≈349 vs 346 at 390). No ml-auto: the
+              heading's flex-1 already pushes this right. */}
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="ml-auto -mr-1 shrink-0 self-start rounded px-1 text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            className="tap-icon -my-3 -ml-2 -mr-4 shrink-0 self-start rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             ✕
           </button>

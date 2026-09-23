@@ -251,6 +251,8 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                 <input
                   type="email"
                   required
+                  autoComplete="email"
+                  aria-label="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"

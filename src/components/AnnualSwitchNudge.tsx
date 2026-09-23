@@ -144,11 +144,13 @@ export function AnnualSwitchNudge() {
     }
   }, [hide]);
 
-  // Esc closes the offer (not while a switch is in flight).
+  // Esc closes the offer (not while a switch is in flight). Ignored while a
+  // real dialog is open (2026-09-23): that Escape belongs to the dialog, and
+  // dismissing here as well would silently burn a frequency-cap strike.
   useEffect(() => {
     if (phase !== "offer") return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dismiss();
+      if (e.key === "Escape" && document.body.dataset.rcDialog !== "1") dismiss();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -173,14 +175,19 @@ export function AnnualSwitchNudge() {
           <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
             {tierName}
           </span>
-          <span className="text-xs font-semibold text-slate-200">
+          <span className="min-w-0 flex-1 text-xs font-semibold text-slate-200">
             {phase === "done" ? "You're on annual 🎉" : "Save on your subscription"}
           </span>
           {phase === "offer" && (
+            // .tap-icon (2026-09-23): the same close-button shape as every
+            // other ✕; -my-3 keeps the py-2.5 header's height, and -ml-2 -mr-4
+            // lend it the gap and the right padding so the 155px title still
+            // fits on one line at 320 (with -mr-2 it got 144px and wrapped,
+            // 45 → 53). flex-1 on the title replaces the old ml-auto here.
             <button
               onClick={dismiss}
               aria-label="Dismiss"
-              className="ml-auto -mr-1 rounded px-1 text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+              className="tap-icon -my-3 -ml-2 -mr-4 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               ✕
             </button>

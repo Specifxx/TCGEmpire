@@ -161,13 +161,22 @@ export function FeedbackWidget() {
           no touch-target minimum to hit; `aria-label` keeps the accessible
           name identical in both states so this is a visual-only change.
           `!overHero` (see the effect above) additionally hides the whole
-          launcher on the homepage for as long as the hero is in view. */}
+          launcher on the homepage for as long as the hero is in view.
+
+          `sm:min-h-11` (2026-09-23), NOT a bare `min-h-11`: the ≥sm pill
+          measured 38px tall. Under pointer:coarse globals.css lifts `.min-h-11`
+          to 48px, which beats h-11 and turned the 44x44 phone circle into a
+          44x48 egg (measured). The `sm:` variant never applies below 640px, so
+          the phone circle is left alone; from sm up the pill is 44px with a
+          mouse and 48px on touch, because Tailwind generates that
+          utilities-layer coarse rule for the variant too (measured 117x44 at
+          1440, 117x48 on an 844x390 phone). */}
       {!open && !overAdZone && !overHero && (
         <button
           type="button"
           onClick={openWidget}
           aria-label="Send feedback"
-          className="above-bottombar fixed right-4 z-40 flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5"
+          className="above-bottombar fixed right-4 z-40 flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-ink-700 bg-ink-900/95 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur transition-colors hover:border-brand-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:h-auto sm:w-auto sm:px-4 sm:py-2.5 sm:min-h-11"
         >
           <span aria-hidden>💬</span>
           <span className="hidden sm:inline">Feedback</span>
@@ -175,11 +184,13 @@ export function FeedbackWidget() {
       )}
 
       <Dialog open={open} onClose={close} placement="sheet" size="md" z="sheet" labelledBy="rc-feedback-title" className="p-5">
+            {/* .tap-icon (2026-09-23): 48px on touch, up from 29x32. Every
+                step's title below carries pr-12 so none runs under it. */}
             <button
               type="button"
               onClick={close}
               aria-label="Close feedback"
-              className="absolute right-3 top-3 rounded-lg px-2 py-1 text-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+              className="tap-icon absolute right-2 top-2 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
             >
               ✕
             </button>
@@ -187,12 +198,15 @@ export function FeedbackWidget() {
             {/* ── Step 1: the rating ─────────────────────────────────────── */}
             {phase === "rating" && (
               <>
-                <h2 id="rc-feedback-title" className="pr-8 text-lg font-extrabold text-white">
+                <h2 id="rc-feedback-title" className="pr-12 text-lg font-extrabold text-white">
                   How&apos;s RiftCompare working for you?
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">
                   One tap. No account needed — we read every one.
                 </p>
+                {/* Stars (2026-09-23): min-h-11/min-w-11 lifts each to the
+                    tap floor (43x38 before), and the idle glyph is slate-600
+                    rather than ink-600, which read ~1.7:1 against the sheet. */}
                 <div className="mt-4 flex justify-center gap-1.5" role="group" aria-label="Rate RiftCompare out of 5">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
@@ -201,7 +215,7 @@ export function FeedbackWidget() {
                       type="button"
                       onClick={() => pickRating(n)}
                       aria-label={`${n} out of 5`}
-                      className="rounded-lg px-2 py-1 text-3xl leading-none text-ink-600 transition-colors hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+                      className="min-h-11 min-w-11 rounded-lg px-2 py-1 text-3xl leading-none text-slate-600 transition-colors hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
                     >
                       ★
                     </button>
@@ -213,7 +227,7 @@ export function FeedbackWidget() {
                     setRating(null);
                     setPhase("detail");
                   }}
-                  className="mx-auto mt-4 block text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline"
+                  className="tap-link mx-auto mt-4 block px-3 text-xs text-slate-500 underline-offset-4 hover:text-slate-300 hover:underline"
                 >
                   Skip — I just want to report something
                 </button>
@@ -223,7 +237,7 @@ export function FeedbackWidget() {
             {/* ── Step 2: the follow-up, routed by sentiment ──────────────── */}
             {(phase === "detail" || phase === "sending") && (
               <>
-                <h2 id="rc-feedback-title" className="pr-8 text-lg font-extrabold text-white">
+                <h2 id="rc-feedback-title" className="pr-12 text-lg font-extrabold text-white">
                   {rating == null
                     ? "What would you like to tell us?"
                     : positive
@@ -265,6 +279,7 @@ export function FeedbackWidget() {
                 {!positive && (
                   <input
                     type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email (optional — only if you want a reply)"
@@ -324,7 +339,7 @@ export function FeedbackWidget() {
             {/* ── Step 3: thanks, and (only if positive) the share offer ──── */}
             {phase === "done" && (
               <>
-                <h2 id="rc-feedback-title" className="pr-8 text-lg font-extrabold text-white">
+                <h2 id="rc-feedback-title" className="pr-12 text-lg font-extrabold text-white">
                   Thanks — that&apos;s genuinely useful.
                 </h2>
                 {positive ? (
