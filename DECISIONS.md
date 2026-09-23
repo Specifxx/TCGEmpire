@@ -10920,3 +10920,55 @@ Two things this leaves behind:
   route may export only the names Next recognises, so a helper exported from
   `opengraph-image.tsx` passes `tsc` and is then rejected by `next build` — the
   same trap that moved the `/gallery` title builders into `lib/gallery-seo.ts`.
+
+## Premium did not die — acquisition did. Funnel read with Stripe for the first time — 2026-09-23
+
+Owner: "there was a significant influx of premium users near the beginning,
+and then it's like completely died off … improve conversion and retention."
+
+**Two outages had to be fixed before any number could be read.**
+`maintenance.yml` had crossed GitHub's 512,000-byte workflow limit with the
+RM12 → RM3 cutover and every task in it failed with `startup_failure` (pruned
+to 352 KB; a test now fails at 450 KB). And `funnel-report` had never been
+given `STRIPE_SECRET_KEY` despite its comment saying it reads Stripe, so every
+run since 2026-09-14 printed blank subscription columns — the retention half
+of the report had never once been seen.
+
+**The data, 2026-09-23** (trials bucketed by the week they began):
+
+| week  | accts | clicks | chkout | trials | paying now |
+|-------|------:|-------:|-------:|-------:|-----------:|
+| 08-17 |    26 |     34 |      1 |      2 |        2/2 |
+| 08-24 |    55 |     88 |      3 |      3 |        3/3 |
+| 08-31 |    56 |     49 |      7 |      5 |        4/5 |
+| 09-07 |    40 |     62 |      7 |      1 |        0/1 |
+| 09-14 |    31 |     39 |      2 |      2 |   in trial |
+| 09-21 |  9 (2 days) | 25 |  2 |      2 |   in trial |
+
+MRR US$63.25. One cancellation ever, in the 09-14 cohort, during its trial.
+
+**Reading it.**
+
+- **Retention is not the problem.** 9 of the 10 trials that have matured
+  became paying, and no paying subscriber has churned. The product keeps the
+  people who try it.
+- **The fall is at the top.** New accounts 56 → 31 a week; Premium clicks
+  88 → 39. Fewer people arrive, so fewer reach the pitch. Traffic and account
+  creation, not the Premium page, are what moved.
+- **The one mid-funnel collapse is already explained and fixed.** The 09-07
+  week started 7 checkouts and produced 1 trial. That is the week /premium
+  defaulted to annual billing (2026-09-11) — "exactly two buy links on the
+  page and both committed to a year". Reverted 2026-09-14.
+- **The 09-14 and 09-21 cohorts have not matured.** Their 14-day trials end
+  from ~09-28. Until then nobody can say whether the 09-14 fixes worked.
+
+**What was deliberately NOT done.** No change to the Premium pitch, pricing,
+trial or paywall. That surface has changed roughly every other day since
+August (see the 2026-09-14 entry, which froze it for two weeks to ~09-28 for
+exactly this reason, and has been broken four times since). On data showing
+90% trial→paid and no churn, a fifteenth rewrite would mainly destroy the one
+clean measurement still in flight. The lever the numbers point at is
+acquisition — search traffic, the signed-out popup (111 of 253 recent
+accounts, the largest single source) and whether free visitors still see
+enough value to click through after 2026-09-22 removed all free rows from
+Deal Finder and Rising Cards.
