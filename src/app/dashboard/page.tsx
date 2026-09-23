@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/format";
 import { TIER_NAMES, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, type PremiumTierKey } from "@/lib/site";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { NavIcon } from "@/components/NavIcon";
+import { PremiumNavLink } from "@/components/PremiumNavLink";
 import { WatchlistSnapshot } from "@/components/WatchlistSnapshot";
 
 export const dynamic = "force-dynamic";
@@ -133,9 +134,9 @@ export default async function DashboardPage() {
           <div className="mb-3 mt-8 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-extrabold text-white">{isFree ? "Member tools" : "Premium tools"}</h2>
             {canUpgrade && (
-              <Link href="/premium#top-pricing" className="text-sm font-semibold text-gold hover:underline">
+              <PremiumNavLink surface="nav:dashboard" href="/premium#top-pricing" className="text-sm font-semibold text-gold hover:underline">
                 {isFree ? "See plans" : `Upgrade to Premium — ${tierMonthlyAmount("premium")}/${PREMIUM_PRICE_PERIOD}`} →
-              </Link>
+              </PremiumNavLink>
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-3">

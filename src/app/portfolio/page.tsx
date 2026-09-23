@@ -210,7 +210,7 @@ export default async function PortfolioPage() {
                         Value-over-time is a Premium feature
                       </p>
                       <p className="mt-1 text-xs text-slate-400">Daily history, CSV export, unlimited price alerts and an ad-free site.</p>
-                      <div className="mt-3"><PremiumButton /></div>
+                      <div className="mt-3"><PremiumButton surface="gate:portfolio" /></div>
                     </div>
                   </div>
                 </div>

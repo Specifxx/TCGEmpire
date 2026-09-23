@@ -6,6 +6,7 @@ import { trackEvent } from "@/lib/analytics";
 import { markSignupSource } from "@/lib/signup-source";
 import { premiumStartHref } from "@/lib/premium-start";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
+import { recallPremiumSurface } from "@/lib/premium-surface";
 
 // GREEN, NOT GOLD, AND BIG — on this page only (2026-09-10, owner brief: "it
 // should just be a big green button... I'm just gonna click that shit without
@@ -78,7 +79,7 @@ export function PremiumCta({
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, tier }),
+        body: JSON.stringify({ plan, tier, surface: recallPremiumSurface() }),
       });
       const d = await res.json();
       if (!res.ok) {

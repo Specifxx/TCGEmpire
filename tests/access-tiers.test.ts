@@ -321,26 +321,26 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   // Rows that are neither a flat yes nor a flat no stay strings — rounding
   // "Full list" up to a plain tick would lose the Plus-vs-Premium distinction
   // this table exists to draw.
-  assert.match(shared, /account: false, plus: "Full list", premium: "Full list"/);
+  assert.match(shared, /account: "Top 3", plus: "Full list", premium: "Full list"/);
 
-  // THE FREE COLUMN ON THESE TWO IS false, NOT "Top pick" (2026-09-22). Deal
-  // Finder and Rising Cards stopped giving a free teaser away — both pages run
-  // no query at all below a paid tier — so a "Top pick" string here would be
-  // advertising something the site no longer does. This is the assertion that
-  // fails if the gate is loosened without the pricing page being told.
+  // THE FREE COLUMN ON THESE TWO IS "Top 3" (2026-09-23). A signed-in free
+  // account sees the top three rows of each — both pages query at that size
+  // for a free account (tests/tool-free-top3.test.ts pins the queries). It was
+  // false from 2026-09-22 and "Top pick" before that. This is the assertion
+  // that fails if the gate moves without the pricing page being told.
   for (const feature of ["Deal Finder", "Rising Cards"]) {
     assert.match(
       shared,
-      new RegExp(`\\{ feature: "${feature}", account: false,`),
-      `${feature} must not advertise a free teaser`,
+      new RegExp(`\\{ feature: "${feature}", account: "Top 3",`),
+      `${feature} must say what a free account actually sees`,
     );
   }
   // Matched against the ROWS, not the file: the comment above them explains the
-  // removal and necessarily quotes the old string.
+  // history and necessarily quotes the old strings.
   assert.doesNotMatch(
-    shared.slice(shared.indexOf("TIER_COMPARISON: TierRow[]"), shared.indexOf("export function TierCell")).replace(/\/\/[^\n]*/g, ""),
+    shared.slice(shared.indexOf("TIER_COMPARISON: TierRow[]"), shared.indexOf("export function TierCell")).replace(/\/\/[^\n]*/g, "").replace(/"Rising Sealed[^\n]*/g, ""),
     /"Top pick"/,
-    "no row may still promise a free top pick",
+    "no row but Rising Sealed's may promise a single free top pick",
   );
 
   // The "No account" column was removed on 2026-09-22 — signed-out and free

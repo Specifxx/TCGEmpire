@@ -28,6 +28,7 @@ import { NOT_SEED_WHERE } from "../src/lib/premium";
 import { tierFromPriceId } from "../src/lib/premium";
 import { stripeEnabled } from "../src/lib/stripe";
 import { fetchAllSubscriptions, isActive, monthlyValueCents } from "../src/lib/subscription-metrics";
+import { surfaceTables, type ClickRow, type SurfaceSub } from "../src/lib/funnel-surfaces";
 
 const WEEKS = Math.max(1, Math.min(52, Number(process.env.WEEKS ?? 8)));
 const DAY = 86_400_000;
@@ -90,7 +91,7 @@ async function main() {
 
   const clicks = await prisma.premiumClick.findMany({
     where: { createdAt: { gte: since } },
-    select: { createdAt: true, source: true },
+    select: { createdAt: true, source: true, surface: true },
   });
   for (const c of clicks) {
     bump(c.createdAt.getTime(), (r) => {
@@ -116,11 +117,13 @@ async function main() {
   let stripeNote = "";
   let mrrNowCents = 0;
   let mrrCurrency = "";
+  let subRows: Awaited<ReturnType<typeof fetchAllSubscriptions>>["rows"] = [];
   if (!stripeEnabled()) {
     stripeNote = "Stripe is not configured in this environment — subscription columns are blank.";
   } else {
     const { rows, capped } = await fetchAllSubscriptions();
     if (capped) stripeNote = "WARNING: hit the subscription page cap — older subscriptions are missing.";
+    subRows = rows;
     for (const s of rows) {
       const tier = tierFromPriceId(s.priceId);
       bump(s.createdMs, (r) => {
@@ -197,6 +200,27 @@ async function main() {
   console.log(`Signup source, last ${WEEKS} week(s) (${total} account${total === 1 ? "" : "s"}):`);
   for (const [k, n] of [...sources.entries()].sort((a, b) => b[1] - a[1])) {
     console.log(`  ${String(n).padStart(5)}  ${k}`);
+  }
+
+  // ── Which surfaces produce Premium interest, checkouts and trials ─────────
+  // Every Premium CTA has recorded its own surface since 2026-09-23 (see
+  // lib/premium-surface.ts). Before that the slide-in and every nav link were
+  // one "button" bucket and every tool gate was "dialog", so rows older than
+  // that date can only be read in those two buckets.
+  printSurfaceTables(clicks, subRows, since.getTime(), now);
+}
+
+function printSurfaceTables(clicks: ClickRow[], subs: SurfaceSub[], sinceMs: number, nowMs: number) {
+  const t = surfaceTables(clicks, subs, sinceMs, nowMs);
+  console.log(`\nPremium clicks by surface, last ${WEEKS} week(s) (checkout starts excluded):`);
+  for (const [k, n] of t.clicks) console.log(`  ${String(n).padStart(5)}  ${k}`);
+  console.log(`\nCheckout starts by the surface that led to them:`);
+  if (!t.checkouts.length) console.log("  (none)");
+  for (const [k, n] of t.checkouts) console.log(`  ${String(n).padStart(5)}  ${k}`);
+  console.log(`\nTrials begun by surface (Stripe metadata) — started / matured / paying now:`);
+  if (!t.trials.length) console.log("  (none, or Stripe not configured)");
+  for (const [k, v] of t.trials) {
+    console.log(`  ${String(v.started).padStart(5)} ${String(v.matured).padStart(5)} ${String(v.converted).padStart(5)}  ${k}`);
   }
 }
 

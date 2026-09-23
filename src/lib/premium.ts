@@ -316,13 +316,14 @@ export const PORTFOLIO_FREE = true;
 //      the deck builder, trade calculator, box EV, sealed prices, the index and
 //      movers. No wall anywhere.
 //   2. ACCOUNT (free, `hasAccount`) — the above PLUS watchlists, price alerts,
-//      and the portfolio.
+//      the portfolio, and the TOP THREE rows of Deal Finder and Rising Cards
+//      (2026-09-23, owner: "even if free accounts get to see the top 3").
+//      Those two pages query at that size for a free account and skip the
+//      query entirely when signed out — the rows past three are never fetched,
+//      so they cannot leak through the HTML.
 //   3. PLUS (paid, `isPremium(user)` — the default `min` of "plus") — the above
-//      plus no ads and the LISTS THEMSELVES: Deal Finder, Rising Cards, Rising
-//      Sealed. Deal Finder and Rising Cards show NOTHING below this tier as of
-//      2026-09-22 (owner instruction) — not a teaser row, and not the data in
-//      the HTML either: those two pages skip the query entirely and render
-//      placeholder bars. Rising Sealed still shows its top pick.
+//      plus no ads and the LISTS THEMSELVES: every row of Deal Finder, Rising
+//      Cards and Rising Sealed (which still shows everyone its top pick).
 //   4. PREMIUM (paid, `isPremium(user, "premium")`) — everything in Plus, plus
 //      the four pro tools: Value Finder, Bulk Pricer, Best Basket, Demand
 //      Finder.

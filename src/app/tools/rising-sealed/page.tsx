@@ -256,7 +256,7 @@ export default async function RisingSealedPage({ searchParams }: { searchParams:
                   See every ranked product in every market, with the full signal breakdown — not just the top pick.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising-sealed" className="btn-primary text-sm">Sign in free</Link>}
+                  {user ? <PremiumButton surface="gate:rising-sealed" /> : <Link href="/login?next=/tools/rising-sealed" className="btn-primary text-sm">Sign in free</Link>}
                   <Link href="/sealed" className="btn-ghost text-sm">Free sealed prices →</Link>
                 </div>
               </div>

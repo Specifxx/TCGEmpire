@@ -134,7 +134,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
     heading: "Rising Cards tells you whether to buy it now or leave it",
-    line: "Ranked by demand and price-timing signals, backtested. Not financial advice. Premium only.",
+    line: "Ranked by demand and price-timing signals, backtested. Your free account shows the top three; Premium shows every pick. Not financial advice.",
   },
 ];
 
@@ -277,7 +277,7 @@ export function PremiumSlideIn() {
       context: contextPitch?.tool ?? undefined,
       copy: PREMIUM_COPY_VERSION,
     });
-    firePremiumClickBeacon("button"); // used to fire inside the dialog's open() — see that helper's own header
+    firePremiumClickBeacon("slidein"); // its own source since 2026-09-23 (was "button", shared with every nav link) — lib/premium-surface.ts
     try {
       // Engaged, not rejected: a long snooze rather than a dismissal strike, so
       // not buying THIS time doesn't burn one of their two permanent no's.

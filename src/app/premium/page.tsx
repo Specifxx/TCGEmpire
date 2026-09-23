@@ -74,7 +74,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Rising Cards",
-    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, backtested, and not financial advice. Premium only.",
+    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, backtested, and not financial advice. Free accounts see the top three; Premium shows every pick.",
     href: "/tools/rising",
     cta: "Open Rising Cards",
     tier: "plus",
@@ -95,7 +95,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Deal Finder",
-    body: "The full list of cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — plus, if you're selling, the cards worth more on eBay than in stores. All sources, sortable, updated daily. Premium only.",
+    body: "The full list of cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — plus, if you're selling, the cards worth more on eBay than in stores. All sources, sortable, updated daily. Free accounts see the top three; Premium shows every deal.",
     href: "/tools/deal-finder",
     cta: "Open Deal Finder",
     tier: "plus",

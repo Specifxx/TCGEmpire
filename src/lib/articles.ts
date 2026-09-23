@@ -9099,7 +9099,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-11",
+    updated: "2026-09-23",
     readMins: 11,
     tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
@@ -9195,8 +9195,8 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Condition Impact Calculator | ✓ | ✓ | ✓ |
 | Price alerts | ✓ | ✓ | ✓ |
 | Portfolio tracker — history, P&L, CSV export | ✓ | ✓ | ✓ |
-| Deal Finder | — | Full list | Full list |
-| Rising Cards | — | Full list | Full list |
+| Deal Finder | Top 3 | Full list | Full list |
+| Rising Cards | Top 3 | Full list | Full list |
 | Rising Sealed | Top pick | Full list | Full list |
 | Value Finder screener | — | — | ✓ |
 | Bulk Pricer | — | — | ✓ |
@@ -9204,7 +9204,7 @@ Everything below is real, current, and reflects exactly what each tier gets — 
 | Demand Finder | — | — | ✓ |
 | Ad-free experience | — | — | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Plus adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners and an ad-free site on top of everything Plus includes.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the top three of Deal Finder and Rising Cards); Plus adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners and an ad-free site on top of everything Plus includes.
 
 ## The 5 tools you only get with Premium
 
@@ -9220,7 +9220,7 @@ This is Premium-only outright — a free account doesn't get even a teaser of it
 
 ![The Rising Cards tool, showing its market toggle and demand/price-timing methodology](/blog/premium/04-rising-cards.png)
 
-Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent (not a black box) and backtested. Free accounts and anonymous visitors can see the #1 pick; Premium unlocks the full ranked list plus the per-market toggle (switch between Global and each country RiftCompare tracks).
+Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent (not a black box) and backtested. A free account sees the top three picks, each with its full signal breakdown; Premium unlocks the full ranked list plus the per-market toggle (switch between Global and each country RiftCompare tracks).
 
 ### 3. Deal Finder — all four views, full list
 
@@ -9233,7 +9233,7 @@ Deal Finder is the one built around price gaps — the same card, priced meaning
 - **Cheapest on eBay** — the reverse: cards where eBay is currently the cheapest place to buy
 - **Cross-region** — cards priced meaningfully cheaper in a different market RiftCompare tracks
 
-Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. Free accounts get the top result only; Premium gets the full, sortable list across all four views.
+Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. A free account sees the top three deals in each view; Premium gets the full, sortable, filterable list across all four views.
 
 ### 4. Bulk Pricer
 

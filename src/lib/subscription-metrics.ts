@@ -29,6 +29,10 @@ export interface SubRow {
   // else in the codebase, so callers that predate Plus (and every existing
   // test row) need no change.
   priceId?: string | null;
+  // Optional — the surface that led to this checkout (subscription metadata
+  // `surface`, stamped by api/premium/checkout since 2026-09-23; see
+  // lib/premium-surface.ts). Null/undefined for everything older.
+  surface?: string | null;
 }
 
 const DAY = 86_400_000;
@@ -47,6 +51,7 @@ export function toSubRow(sub: Stripe.Subscription): SubRow {
     endedAtMs: sub.ended_at ? sub.ended_at * 1000 : null,
     trialEndMs: sub.trial_end ? sub.trial_end * 1000 : null,
     priceId: price?.id ?? null,
+    surface: typeof sub.metadata?.surface === "string" ? sub.metadata.surface : null,
   };
 }
 

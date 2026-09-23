@@ -18,11 +18,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Rising Cards — Riftbound Cards Likely to Go Up | RiftCompare" },
   description:
-    "A Premium screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested, not financial advice.",
+    "A screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Free accounts see the top three; Premium shows every pick. Transparent scoring, backtested, not financial advice.",
   keywords: ["riftbound rising cards", "riftbound price predictions", "riftbound card demand", "riftbound investing", "riftbound cards going up"],
   alternates: pageAlternates("/tools/rising"),
   openGraph: { title: "Rising Cards — Riftbound cards likely to go up", url: `${SITE_URL}/tools/rising` },
 };
+
+// How many ranked picks a signed-in FREE account sees (2026-09-23 — see the
+// access comment in the page body). Premium sees all of them.
+const FREE_PREVIEW_ROWS = 3;
 
 const RISING_FAQS = [
   {
@@ -36,6 +40,10 @@ const RISING_FAQS = [
   {
     q: "Is this financial advice?",
     a: "No. It's a heuristic screen of public price and demand data, validated with a lookahead-free backtest on the price-timing component (demand isn't historically reconstructable, so only part of the score is backtestable). Treat it as a research starting point, not a guarantee — always check a card's own price history before buying.",
+  },
+  {
+    q: "Do I need Premium?",
+    a: "Not to start. A free account shows the top three ranked picks, with their full signal breakdown. Premium shows every ranked pick, in every market or Global, refreshed daily.",
   },
   {
     q: "How often does it update?",
@@ -161,6 +169,14 @@ function TableHead() {
 export default async function RisingPage({ searchParams }: { searchParams: { scope?: string } }) {
   const user = await getCurrentUser();
   const premium = isPremium(user);
+  // THREE LEVELS (2026-09-23; DECISIONS.md, "Premium after sign-up"). Premium
+  // (and ADSENSE_REVIEW_MODE) sees every pick; a signed-in FREE account sees the
+  // top FREE_PREVIEW_ROWS — owner: "even if free accounts get to see the top 3";
+  // signed out sees no pick, only the ask for a free account. The slice happens
+  // HERE, on the server: only the rows a visitor is entitled to are rendered,
+  // and nothing below passes `analysis` to a client component, so the rest of
+  // the ranking never reaches the HTML or the RSC payload.
+  const access: "full" | "top3" | "none" = premium || ADSENSE_REVIEW_MODE ? "full" : user ? "top3" : "none";
   const country = getCountry();
 
   const raw = (searchParams.scope ?? "").toUpperCase();
@@ -175,6 +191,8 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // The ONE day-keyed cache for this scan lives in rise-predictor.ts, shared
   // with the homepage deals feed and /admin/rising so any of them warms the rest.
   const analysis = await getCachedRisingCards(scope);
+  const visible = access === "full" ? analysis.picks : access === "top3" ? analysis.picks.slice(0, FREE_PREVIEW_ROWS) : [];
+  const hiddenCount = Math.min(40, analysis.picks.length) - visible.length;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -216,11 +234,10 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           free visitor on a scope with no ranked picks is told the truth rather
           than shown a locked preview of a list that does not exist yet.
 
-          NOTHING REAL IS RENDERED BELOW PREMIUM (2026-09-22, owner instruction:
-          "no account and free account don't even get the top pick"). This used
-          to render the #1 pick as a live row above the blurred placeholders.
-          The placeholders were always decorative; the row was not, and it was
-          the single most valuable line in the tool.
+          SIGNED OUT, NOTHING REAL IS RENDERED; A FREE ACCOUNT GETS THE TOP
+          THREE (2026-09-23 — see `access` above). From 2026-09-22 to
+          2026-09-23 free accounts got nothing either; before that the #1 pick
+          was a live row above blurred placeholders.
 
           ADSENSE REVIEW MODE: while the review is open the gate is lifted, so
           no crawler-reachable page carries locked content — "content behind a
@@ -255,7 +272,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             </div>
           )}
         </div>
-      ) : !premium && !ADSENSE_REVIEW_MODE ? (
+      ) : access === "none" ? (
         <div className="card-surface relative overflow-hidden">
           {/* Placeholder bars only — no pick, no card, no score. aria-hidden
               because they carry no information; the heading and CTA below are
@@ -274,32 +291,46 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
           </ul>
           <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-ink-900/60 via-ink-900/80 to-ink-900/95 p-4 text-center">
             <div>
-              <p className="text-sm font-bold text-white">Rising Cards is a Premium tool</p>
+              <p className="text-sm font-bold text-white">See the top 3 rising cards, free</p>
               <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                All {Math.min(40, analysis.picks.length)} ranked picks, every market (or Global), with the full signal
-                breakdown behind each score.
+                A free account shows the three highest-ranked picks with their full signal breakdown. Premium shows all{" "}
+                {Math.min(40, analysis.picks.length)}, in every market or Global.
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
+                <Link href="/login?next=/tools/rising&src=tool_preview" className="btn-primary text-sm">Create a free account</Link>
                 <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="card-surface overflow-x-auto">
-          <table className="w-full min-w-[700px] text-sm">
-            <TableHead />
-            <tbody className="divide-y divide-ink-800">
-              {analysis.picks.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} currency={currency} />)}
-            </tbody>
-          </table>
-          <p className="p-3 text-[11px] text-slate-600">
-            Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
-            volatility) across the {analysis.qualifying} most-searched priced cards. Hover a signal bar for its exact
-            z-score. A research signal, not advice — always sanity-check the card&apos;s own price history.
-          </p>
-        </div>
+        <>
+          <div className="card-surface overflow-x-auto">
+            <table className="w-full min-w-[700px] text-sm">
+              <TableHead />
+              <tbody className="divide-y divide-ink-800">
+                {visible.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} currency={currency} />)}
+              </tbody>
+            </table>
+            <p className="p-3 text-[11px] text-slate-600">
+              Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
+              volatility) across the {analysis.qualifying} most-searched priced cards. Hover a signal bar for its exact
+              z-score. A research signal, not advice — always sanity-check the card&apos;s own price history.
+            </p>
+          </div>
+          {access === "top3" && hiddenCount > 0 && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
+              <p className="text-sm text-slate-300">
+                <strong className="text-white">{hiddenCount} more ranked picks</strong>
+                {isGlobal ? "" : ` in ${scope}`} — Premium shows every one, in every market or Global.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <PremiumButton surface="gate:rising" />
+                <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <section className="mt-10">

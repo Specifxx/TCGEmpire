@@ -54,7 +54,7 @@ export function MoversToolsCta() {
         one place than another — the full lists, ranked.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <PremiumButton />
+        <PremiumButton surface="nudge:movers" />
         <Link href="/tools/value-finder" className="btn-ghost text-sm">Preview Value Finder →</Link>
         <Link href="/tools/deal-finder" className="btn-ghost text-sm">Preview Deal Finder →</Link>
       </div>

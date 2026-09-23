@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { buildPremiumOfferEmail, premiumOfferSubject } from "../src/lib/email";
 import { PREMIUM_OFFER_DAYS, formatOfferEnds, parseOfferEnds } from "../src/lib/premium-offer";
 import { PREMIUM_PRICE_AMOUNT, premiumFromLine } from "../src/lib/site";
+import { isPremiumClickSource } from "../src/lib/premium-surface";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -139,10 +140,10 @@ test("the workflow is dispatch-only, defaults dry_run to true, requires the dead
 });
 
 test('"offer" is a valid premium-click source end to end, and the recovery beacon still fires for "recovery"', () => {
-  const analytics = read("src/lib/analytics.ts");
-  assert.match(analytics, /"recovery" \| "offer"/, "the client-side type union must include offer");
+  // One allow-list since 2026-09-23 (lib/premium-surface.ts).
+  assert.ok(isPremiumClickSource("offer"), "offer must be an accepted source");
   const route = read("src/app/api/premium/click/route.ts");
-  assert.match(route, /"offer"/, "the server-side SOURCES allow-list must include offer");
+  assert.match(route, /isPremiumClickSource\(body\?\.source\)/, "the route validates with the shared allow-list");
   const beacon = read("src/components/PremiumRecoveryBeacon.tsx");
   assert.match(beacon, /firePremiumClickBeacon\("offer"\)/);
   assert.match(beacon, /firePremiumClickBeacon\("recovery"\)/, "the existing recovery attribution must keep working");
