@@ -119,12 +119,12 @@ export default function SellingFeesPage() {
       <section className="card-surface mt-6 divide-y divide-ink-800 overflow-hidden">
         <h2 className="px-6 py-4 text-lg font-extrabold text-white">Frequently asked questions</h2>
         {FAQS.map((f) => (
-          <details key={f.q} className="group px-6 py-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">
+          <details key={f.q} className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-sm font-semibold text-slate-200 hover:text-white [&::-webkit-details-marker]:hidden">
               {f.q}
               <span className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" aria-hidden>▾</span>
             </summary>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            <p className="px-6 pb-4 text-sm leading-relaxed text-slate-400">{f.a}</p>
           </details>
         ))}
       </section>

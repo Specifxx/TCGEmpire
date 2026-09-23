@@ -89,7 +89,7 @@ export default async function AboutPage() {
             drifted into selling an advantage over other buyers. This is the
             paragraph that reframe is anchored to, so the tone has somewhere to
             return to rather than drifting again. */}
-        <section id="who-its-for" className="scroll-mt-24 space-y-2">
+        <section id="who-its-for" className="scroll-mt-header space-y-2">
           <h2 className="text-lg font-bold text-white">Who it&rsquo;s for</h2>
           <p>
             {SITE_NAME} is built for people who want to <strong className="text-slate-200">buy the cards
@@ -115,7 +115,7 @@ export default async function AboutPage() {
           </p>
         </section>
 
-        <section id="methodology" className="scroll-mt-24 space-y-2">
+        <section id="methodology" className="scroll-mt-header space-y-2">
           <h2 className="text-lg font-bold text-white">How it works</h2>
           <p>
             Several times a day we collect public price and stock information from store catalogues and

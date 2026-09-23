@@ -113,7 +113,7 @@ export async function RadianceHub({ country }: { country: Country }) {
               key={legend.slug}
               id={legend.slug}
               href={`/sets/radiance?q=${encodeURIComponent(legend.name)}`}
-              className="chip scroll-mt-24 border border-gold/30 bg-gold/10 px-3 py-1.5 text-sm font-semibold text-gold transition-colors hover:border-gold hover:bg-gold/20"
+              className="chip scroll-mt-header border border-gold/30 bg-gold/10 px-3 py-1.5 text-sm font-semibold text-gold transition-colors hover:border-gold hover:bg-gold/20"
             >
               {legend.name}
             </Link>
