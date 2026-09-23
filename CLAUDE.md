@@ -61,3 +61,8 @@ npm test            # node --test over tests/*.test.ts; needs `npx prisma genera
 
 Record non-obvious decisions in `DECISIONS.md` (newest at the bottom), in the
 same style as the entries already there.
+
+Read `docs/CURRENT-STATE.md` first. It lists the rules and decisions still in
+force, each linked to its entry, so check it before proposing something an
+entry already settled. `docs/DECISIONS-INDEX.md` lists every entry by month.
+Regenerate it with `npm run decisions:index` after adding an entry.
