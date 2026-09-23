@@ -164,15 +164,21 @@ export function SegmentedTabs({
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActive(t.key)}
                 onKeyDown={(e) => onKeyDown(e, i)}
+                // The active tab sits on the indicator, which is always the fixed
+                // bg-brand-500 fill (it does not theme), so its ink is fixed too:
+                // #0a0c10 is dark ink-950, the same rule as globals.css's "dark ink
+                // on bright fills" block. text-ink-950 inverted to #f4f6f8 in light,
+                // 2.91:1 on the green (2026-09-23); the fill is on a sibling span,
+                // so that block's .bg-brand-500.text-ink-950 selector never matched.
                 className={`relative inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs font-bold uppercase tracking-wide transition-colors duration-fast ${
-                  isActive ? "text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
+                  isActive ? "text-[#0a0c10]" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-white"
                 }`}
               >
                 {t.label}
                 {t.count != null && (
                   <span
                     className={`num rounded-full px-1.5 text-[10px] font-bold ${
-                      isActive ? "bg-ink-950/20 text-ink-950" : "bg-ink-800 text-slate-500"
+                      isActive ? "bg-[#0a0c10]/20 text-[#0a0c10]" : "bg-ink-800 text-slate-500"
                     }`}
                   >
                     {t.count}

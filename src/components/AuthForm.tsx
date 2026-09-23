@@ -166,7 +166,9 @@ export function AuthForm({
             <a
               href={oauthHref("discord")}
               onClick={onProviderClick}
-              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110"
+              // text-[#ffffff], not text-white: `white` is the themed token (near-black
+              // ink in light, 4.17:1 on the blurple). Same rule as Google's button above.
+              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-[#ffffff] hover:brightness-110"
             >
               <DiscordIcon /> Continue with Discord
             </a>

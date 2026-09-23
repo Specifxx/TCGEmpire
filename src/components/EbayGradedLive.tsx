@@ -23,11 +23,14 @@ export interface GradedRow {
 
 // Grader house colours, so the badge is recognisable at a glance the way the
 // slab label is. Muted to sit inside the site's palette rather than shouting.
+// The text colour rides --data-ink so the light theme can darken it (globals.css
+// .data-ink): these dark-tuned pastels read 1.3-1.8:1 on their own tint over
+// white (2026-09-23). Dark renders the raw hex, as before.
 const GRADER_STYLE: Record<string, string> = {
-  PSA: "bg-[#d4342c]/15 text-[#ff8a84]",
-  BGS: "bg-[#1f6feb]/15 text-[#79b8ff]",
-  CGC: "bg-[#2da44e]/15 text-[#7ee787]",
-  SGC: "bg-[#8957e5]/15 text-[#c9a6ff]",
+  PSA: "bg-[#d4342c]/15 data-ink [--data-ink:#ff8a84]",
+  BGS: "bg-[#1f6feb]/15 data-ink [--data-ink:#79b8ff]",
+  CGC: "bg-[#2da44e]/15 data-ink [--data-ink:#7ee787]",
+  SGC: "bg-[#8957e5]/15 data-ink [--data-ink:#c9a6ff]",
 };
 
 /**

@@ -129,7 +129,9 @@ export default async function RadiancePreordersPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <Breadcrumbs trail={[{ name: "Radiance pre-orders", href: "/radiance-preorders" }]} />
 
-      <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold">
+      {/* lnum only, no tnum: body's tabular figures also widen Inter's hyphen,
+          which rendered this label as 'PRE -ORDER' (globals.css prose rule). */}
+      <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
         Pre-order · releases 23 Oct 2026
       </span>
       <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
@@ -206,7 +208,9 @@ export default async function RadiancePreordersPage() {
             23 October street date, which is when the first singles start changing hands and when sealed stock is at
             its tightest.
           </p>
-          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-slate-400">
+          {/* Prose, not a numeric column: lnum only, like the globals.css prose
+              rule (which leaves plain li alone), so 'Pre-ordering' has no gap. */}
+          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-slate-400 [font-feature-settings:'lnum'_1]">
             <li>
               <strong className="text-slate-200">Want to open product?</strong> Pre-ordering is reasonable, because
               allocation — not price — is what runs out. The spread between the cheapest and dearest tracked store
