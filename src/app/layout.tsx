@@ -362,7 +362,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     SAME element is a well-known Tailwind footgun (both set
                     padding-left; which one wins depends on generated CSS order,
                     not className order). Keeping them on separate elements sidesteps
-                    that entirely. 0 below xl, so a no-op everywhere SideNav is
+                    that entirely. 0 below lg, so a no-op everywhere SideNav is
                     hidden; SideNav itself is `position: fixed`, not a layout
                     participant, so this is what actually reserves its space. */}
                 <div className="pl-[var(--sidenav-w)]">
@@ -413,11 +413,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FooterAds />
         </div>
         </CountryProvider>
-        <footer className="border-t border-ink-800 py-8 text-center text-xs text-slate-500">
-        <div className="container-app pl-[var(--sidenav-w)]">
+        {/* The rail reservation sits on the <footer> ITSELF (2026-09-23), the
+            same pattern as the <main> wrapper above, and the inner box is a
+            plain content container. The reservation used to share that inner
+            box, where the utility always beat the component-layer gutter:
+            padding-left was 0 below 1024 (the newsletter input, the accordion
+            rows and the share buttons touched x=0 at 390) and exactly the
+            rail's 17rem from 1024, and the capped box was centred on the
+            whole window rather than on the area beside the rail. Footer
+            content now lines up with <main> at every width, and border-t
+            still spans the full width under the fixed rail. */}
+        <footer className="border-t border-ink-800 py-8 pl-[var(--sidenav-w)] text-center text-xs text-slate-500">
+        <div className="container-app">
           <NewsletterSignup siteName="RiftCompare" />
           {/* Site-map — surfaced here so every page links to every feature even
-              on mobile/tablet, where the xl-and-up SideNav is hidden. 4 columns
+              on mobile/tablet, where the lg-and-up SideNav is hidden. 4 columns
               on desktop, collapsible accordions on mobile — see FooterNav /
               nav-groups.ts's FOOTER_GROUPS for the re-bucketing. */}
           <FooterNav />
@@ -428,23 +438,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               always reachable, never an interruption. */}
           <div className="mb-5 flex flex-col items-center gap-2 border-y border-ink-800/70 py-4">
             <span className="text-xs text-slate-400">Find RiftCompare useful? Send it to someone who buys Riftbound.</span>
-            <ShareRow source="footer" size="sm" />
+            <ShareRow source="footer" size="sm" className="justify-center" />
           </div>
-          <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
+          {/* NO "·" SEPARATORS (2026-09-23): items are separated by the row's
+              own gap. The eleven "·" spans wrapped independently of their
+              links, so on phones lines ended "Privacy policy ·" or
+              "Methodology ·", one read "· Facebook · Privacy settings ·", it
+              happened at 640 and 1440 too, and screen readers announced each
+              one as "middle dot". sm:gap-x-6 keeps the desktop rhythm. */}
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm sm:gap-x-6">
             <Link href="/about" className="tap-link text-slate-300 hover:text-brand-400">About</Link>
-            <span className="text-ink-700">·</span>
             <Link href="/contact" className="tap-link text-slate-300 hover:text-brand-400">Contact &amp; feedback</Link>
-            <span className="text-ink-700">·</span>
             <Link href="/privacy" className="tap-link text-slate-300 hover:text-brand-400">Privacy policy</Link>
-            <span className="text-ink-700">·</span>
             <Link href="/terms" className="tap-link text-slate-300 hover:text-brand-400">Terms</Link>
-            <span className="text-ink-700">·</span>
             <Link href="/editorial-policy" className="tap-link text-slate-300 hover:text-brand-400">Editorial policy</Link>
-            <span className="text-ink-700">·</span>
             <Link href="/methodology" className="tap-link text-slate-300 hover:text-brand-400">Methodology</Link>
-            <span className="text-ink-700">·</span>
             <Link href="/authors" className="tap-link text-slate-300 hover:text-brand-400">Who writes this</Link>
-            <span className="text-ink-700">·</span>
             {/* Discord was header-only (see Navbar.tsx) plus the Organization
                 JSON-LD's sameAs below — the homepage-redesign brief's footer
                 table explicitly lists it as something the footer itself must
@@ -464,7 +473,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               Discord
             </a>
-            <span className="text-ink-700">·</span>
             {/* Same plain-external-link pattern as Discord above — official
                 social profiles, also listed in the Organization JSON-LD's
                 sameAs for entity-disambiguation SEO (see orgJsonLd below). */}
@@ -476,7 +484,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               Instagram
             </a>
-            <span className="text-ink-700">·</span>
             <a
               href={X_URL}
               target="_blank"
@@ -485,7 +492,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               X
             </a>
-            <span className="text-ink-700">·</span>
             <a
               href={FACEBOOK_URL}
               target="_blank"
@@ -494,7 +500,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               Facebook
             </a>
-            <span className="text-ink-700">·</span>
             {/* Re-opens Google's consent message (EEA/UK/CH only — renders
                 nothing where no message applies). Required for a published
                 GDPR message: consent has to be revocable. */}
