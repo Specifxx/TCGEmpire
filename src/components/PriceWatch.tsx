@@ -47,7 +47,15 @@ export function PriceWatch({
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* `grid-cols-1` is load-bearing (2026-09-23). With no base column the
+          grid gets one implicit `auto` track as wide as its longest UNWRAPPED
+          name ('Rengar, Pridestalker (Showcase, Signature)'), so the rows'
+          `truncate` never engaged and Chrome Android laid /movers out at a
+          693px viewport on every phone, zooming the whole site out.
+          grid-cols-1 is minmax(0,1fr), capped at the container. Three columns
+          from xl, not lg: beside the 17rem rail, main is ~704px at 1024 and
+          three 224px panels left every name 0px wide. */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Panel title="Spiking this week" accent="text-up" subtitle="Up the most (7 days)" movers={spiking} kind="up" currency={currency} empty="No notable risers yet." />
         <Panel title="Biggest drops this week" accent="text-down" subtitle="Down the most (7 days)" movers={plummeting} kind="down" currency={currency} empty="No notable fallers yet." />
         <Panel title="Best value right now" accent="text-gold" subtitle="Largest discount off recent high" movers={value} kind="down" currency={currency} empty="No standout deals yet." />
@@ -59,7 +67,10 @@ export function PriceWatch({
 function Panel({ title, subtitle, accent, movers, kind, currency, empty }: { title: string; subtitle: string; accent: string; movers: Mover[]; kind: "up" | "down"; currency: string; empty: string }) {
   return (
     <div className="card-surface p-4">
-      <div className="mb-2 flex items-baseline justify-between">
+      {/* Title over subtitle, always. Side by side, the longer titles wrapped
+          and the shorter didn't, so the three panels' first rows started at
+          different heights (465/489/489px at 1280, measured 2026-09-23). */}
+      <div className="mb-2 flex flex-col items-start gap-0.5">
         <h3 className={`font-bold ${accent}`}>{title}</h3>
         <span className="text-[10px] uppercase tracking-wide text-slate-600">{subtitle}</span>
       </div>
@@ -104,8 +115,20 @@ function Row({ m, up, currency }: { m: Mover; up: boolean; currency: string }) {
           <div className="truncate text-sm font-semibold text-white">{cardDisplayName(c.name, c)}</div>
           <div className="text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</div>
         </div>
-        <Sparkline points={m.points} up={up} />
-        <div className="w-16 shrink-0 text-right">
+        {/* The sparkline goes wherever it would squeeze the name to a stub
+            (2026-09-23): below 360px (84px price + 80px sparkline left names
+            24px at 320; 114px without it) and in the three-column 1280–1535
+            band (names 45px with it, 135–189px without). The quick view keeps
+            the full chart. `upIsGood`: these panels use the MARKET convention
+            like their titles and the % beside it, so a riser is green here,
+            not the per-card buyer red that drew red lines next to "+170%". */}
+        <div className="hidden shrink-0 min-[360px]:block xl:hidden 2xl:block">
+          <Sparkline points={m.points} up={up} upIsGood />
+        </div>
+        {/* A floor, not a fixed width: the old w-16 (64px) overflowed for 19
+            of 60 prices ('US$1,099.99' is 84px), and a 5-digit price must
+            grow the column rather than spill across the panel edge. */}
+        <div className="min-w-[5.25rem] shrink-0 whitespace-nowrap text-right">
           <div className="num text-sm font-bold text-white">{formatMoney(m.nowCents, currency)}</div>
           <div className={`num text-[11px] font-semibold ${pos ? "text-up" : "text-down"}`}>
             {pos ? "+" : "−"}{Math.abs(m.pct)}%
