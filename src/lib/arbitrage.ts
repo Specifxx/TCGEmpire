@@ -452,6 +452,103 @@ export async function getArbitrage(
   }
 }
 
+// THE "UNDERPRICED VS TCGPLAYER" RANKING, on its own (2026-09-23). Split out of
+// getArbitrageVsTcgplayer so the page and lib/premium-nudge.ts rank from ONE
+// definition — a nudge that says "3 of your cards are in Deal Finder" must
+// count exactly the rows Deal Finder would show. Reads only the day-cached
+// aggregates below (minByCard, the eBay and TCGplayer row caches); no detail
+// query, so ranking the whole set costs no extra database read.
+type TcgRankRow = { cardId: string; buy: number; buyIsEbay: boolean; sellGross: number; net: number; margin: number };
+async function rankVsTcgplayer(country: Country, buyKeys: string[], sort: ArbSort) {
+  // eBay gives a REAL per-listing shipping figure (see effectiveShippingCents in
+  // lib/retailers.ts), so when eBay is among the buy sources it's ranked by
+  // DELIVERED cost (item + actual shipping, 0 if the seller states free post) —
+  // otherwise a cheap item price hiding expensive postage would look like a
+  // bigger "underpriced" gap than it really is. Stores stay item-price-only:
+  // their shipping is usually unknown until checkout, and we never fabricate a
+  // number for them (same reasoning as effectiveShippingCents itself). This means
+  // buyMin can't be one simple groupBy — eBay needs its own per-listing pass.
+  const ebayKey = EBAY_KEY[country];
+  const buyEbayKey = ebayKey && buyKeys.includes(ebayKey) ? ebayKey : null;
+  const storeKeys = buyKeys.filter((k) => k !== buyEbayKey);
+
+  const [storeMin, ebayRows, tcgRows] = await Promise.all([
+    minByCard(country, storeKeys),
+    buyEbayKey ? getEbayRowsMemoized(country, buyEbayKey) : Promise.resolve([]),
+    getTcgUsRowsMemoized(),
+  ]);
+  const tcgByCard = new Map(tcgRows.map((r) => [r.cardId, r]));
+
+  // Cheapest DELIVERED eBay listing per card, and which listing achieved it — we
+  // can't ask the DB to rank by a computed item+shipping sum, so this is a small
+  // in-memory reduction over one market's eBay rows.
+  const ebayDeliveredMin = new Map<string, { cents: number; url: string }>();
+  for (const r of ebayRows) {
+    const delivered = r.priceCents + (r.shippingCents ?? 0);
+    const prev = ebayDeliveredMin.get(r.cardId);
+    if (!prev || delivered < prev.cents) ebayDeliveredMin.set(r.cardId, { cents: delivered, url: r.url });
+  }
+
+  const rows: TcgRankRow[] = [];
+  const cardIds = new Set([...storeMin.keys(), ...ebayDeliveredMin.keys()]);
+  for (const cardId of cardIds) {
+    const storeBuy = storeMin.get(cardId);
+    const ebayBuy = ebayDeliveredMin.get(cardId)?.cents;
+    let buy: number;
+    let buyIsEbay: boolean;
+    if (storeBuy != null && (ebayBuy == null || storeBuy <= ebayBuy)) {
+      buy = storeBuy;
+      buyIsEbay = false;
+    } else if (ebayBuy != null) {
+      buy = ebayBuy;
+      buyIsEbay = true;
+    } else {
+      continue;
+    }
+    if (buy < MIN_BUY_CENTS) continue;
+    const tcg = tcgByCard.get(cardId);
+    if (!tcg) continue;
+    const sellGross = usdCentsToCountry(tcg.priceCents, country);
+    const net = sellGross - buy; // reference price — no marketplace fee modelled
+    if (net < MIN_NET_CENTS) continue;
+    const margin = Math.round((net / buy) * 1000) / 10;
+    if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
+    rows.push({ cardId, buy, buyIsEbay, sellGross, net, margin });
+  }
+  rows.sort((a, b) => (sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
+
+  return { rows, storeKeys, buyEbayKey, ebayDeliveredMin, tcgByCard };
+}
+
+/**
+ * The default BUY side of the "Underpriced vs TCGplayer" view: every store, our
+ * own marketplace and eBay — never TCGplayer itself, which is the reference
+ * side there. One definition for /tools/deal-finder and lib/premium-nudge.ts.
+ */
+export function defaultTcgBuyKeys(country: Country): string[] {
+  const sources = getArbSources(country);
+  const tcgKey = TCGPLAYER_KEY[country];
+  const stores = sources.filter((s) => !s.isEbay).map((s) => s.key).filter((k) => k !== tcgKey);
+  const ebay = sources.find((s) => s.isEbay);
+  return ebay ? [...stores, ebay.key] : stores;
+}
+
+/**
+ * Card id → 1-based rank in Deal Finder's default "Underpriced vs TCGplayer"
+ * view (biggest gap first), for the given buy sources. Empty map on any error.
+ */
+export async function getTcgDealRanks(country: Country, buyKeys: string[]): Promise<Map<string, number>> {
+  try {
+    const valid = new Set(getArbSources(country).map((s) => s.key));
+    const keys = buyKeys.filter((k) => valid.has(k));
+    if (!keys.length) return new Map();
+    const { rows } = await rankVsTcgplayer(country, keys, "profit");
+    return new Map(rows.map((r, i) => [r.cardId, i + 1]));
+  } catch {
+    return new Map();
+  }
+}
+
 // ── Worth more on TCGplayer (US market price, converted) ────────────────────────
 // A second flip benchmark alongside eBay: instead of the cheapest current eBay
 // listing, compare a buy price against TCGplayer's own US MARKET price
@@ -472,63 +569,7 @@ export async function getArbitrageVsTcgplayer(
     const buyKeys = opts.buy.filter((k) => valid.has(k));
     if (!buyKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1, savingsTotalCents: 0 };
 
-    // eBay gives a REAL per-listing shipping figure (see effectiveShippingCents in
-    // lib/retailers.ts), so when eBay is among the buy sources it's ranked by
-    // DELIVERED cost (item + actual shipping, 0 if the seller states free post) —
-    // otherwise a cheap item price hiding expensive postage would look like a
-    // bigger "underpriced" gap than it really is. Stores stay item-price-only:
-    // their shipping is usually unknown until checkout, and we never fabricate a
-    // number for them (same reasoning as effectiveShippingCents itself). This means
-    // buyMin can't be one simple groupBy — eBay needs its own per-listing pass.
-    const ebayKey = EBAY_KEY[country];
-    const buyEbayKey = ebayKey && buyKeys.includes(ebayKey) ? ebayKey : null;
-    const storeKeys = buyKeys.filter((k) => k !== buyEbayKey);
-
-    const [storeMin, ebayRows, tcgRows] = await Promise.all([
-      minByCard(country, storeKeys),
-      buyEbayKey ? getEbayRowsMemoized(country, buyEbayKey) : Promise.resolve([]),
-      getTcgUsRowsMemoized(),
-    ]);
-    const tcgByCard = new Map(tcgRows.map((r) => [r.cardId, r]));
-
-    // Cheapest DELIVERED eBay listing per card, and which listing achieved it — we
-    // can't ask the DB to rank by a computed item+shipping sum, so this is a small
-    // in-memory reduction over one market's eBay rows.
-    const ebayDeliveredMin = new Map<string, { cents: number; url: string }>();
-    for (const r of ebayRows) {
-      const delivered = r.priceCents + (r.shippingCents ?? 0);
-      const prev = ebayDeliveredMin.get(r.cardId);
-      if (!prev || delivered < prev.cents) ebayDeliveredMin.set(r.cardId, { cents: delivered, url: r.url });
-    }
-
-    type Row = { cardId: string; buy: number; buyIsEbay: boolean; sellGross: number; net: number; margin: number };
-    const rows: Row[] = [];
-    const cardIds = new Set([...storeMin.keys(), ...ebayDeliveredMin.keys()]);
-    for (const cardId of cardIds) {
-      const storeBuy = storeMin.get(cardId);
-      const ebayBuy = ebayDeliveredMin.get(cardId)?.cents;
-      let buy: number;
-      let buyIsEbay: boolean;
-      if (storeBuy != null && (ebayBuy == null || storeBuy <= ebayBuy)) {
-        buy = storeBuy;
-        buyIsEbay = false;
-      } else if (ebayBuy != null) {
-        buy = ebayBuy;
-        buyIsEbay = true;
-      } else {
-        continue;
-      }
-      if (buy < MIN_BUY_CENTS) continue;
-      const tcg = tcgByCard.get(cardId);
-      if (!tcg) continue;
-      const sellGross = usdCentsToCountry(tcg.priceCents, country);
-      const net = sellGross - buy; // reference price — no marketplace fee modelled
-      if (net < MIN_NET_CENTS) continue;
-      const margin = Math.round((net / buy) * 1000) / 10;
-      if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
-      rows.push({ cardId, buy, buyIsEbay, sellGross, net, margin });
-    }
-    rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
+    const { rows, storeKeys, buyEbayKey, ebayDeliveredMin, tcgByCard } = await rankVsTcgplayer(country, buyKeys, opts.sort);
 
     const total = rows.length;
     const savingsTotalCents = rows.reduce((sum, r) => sum + r.net, 0);

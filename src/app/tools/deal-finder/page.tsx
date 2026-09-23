@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
-import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getCrossRegionGaps, getArbSources, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
+import { getArbitrage, getArbitrageVsTcgplayer, getEbayCheapest, getCrossRegionGaps, getArbSources, defaultTcgBuyKeys, TCGPLAYER_KEY, EBAY_FEE, type ArbSort, type DealSort } from "@/lib/arbitrage";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -123,7 +123,7 @@ export default async function ArbitragePage({
   // marketplace, AND eBay — but never TCGplayer itself (it's the SELL/reference
   // side there, so buying from it to "flip" against itself would be circular).
   const tcgKey = TCGPLAYER_KEY[country];
-  const tcgBuyKeys = storeKeys.filter((k) => k !== tcgKey).concat(ebay ? [ebay.key] : []);
+  const tcgBuyKeys = defaultTcgBuyKeys(country);
   // Selectable sources for that same view's filter UI — everything except
   // TCGplayer itself (it's the fixed sell/reference side there, so it's never a
   // buy option in its own view).
