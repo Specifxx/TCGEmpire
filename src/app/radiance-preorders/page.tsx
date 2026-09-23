@@ -5,10 +5,12 @@ import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderPriceTable";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
+import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
 import { SITE_URL } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,6 +189,25 @@ export default async function RadiancePreordersPage() {
               .
             </p>
           )}
+        </div>
+      )}
+
+      {/* Launch capture, right under the prices (2026-09-23). A visitor who is
+          not ready to order today, or whose market has no pre-orders tracked
+          yet, otherwise leaves with no way back on release day; this puts them
+          on the list the release-day email (lib/release-day.ts) goes to. Same
+          gate and copy as the hub and the radiance-tagged articles. */}
+      {isBeforeRadianceRelease() && (
+        <div className="mt-6 max-w-lg">
+          <NewsletterSignup
+            siteName="RiftCompare"
+            variant="card"
+            source="radiance-launch"
+            trackEvent="radiance_notify_click"
+            heading="Get an email the day Radiance prices go live"
+            cta="Notify me"
+            done="You're on the list. We'll email you on release day."
+          />
         </div>
       )}
 

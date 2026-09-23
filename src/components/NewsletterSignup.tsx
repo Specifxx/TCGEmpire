@@ -4,9 +4,10 @@ import { useState } from "react";
 import { track } from "@vercel/analytics";
 
 // Email capture for the weekly Index-summary list. Used in the footer (default) and
-// inline on high-intent pages (movers, countdown) via the props — `source` attributes
-// which surface converted, `heading`/`cta`/`done` tailor the copy, and `variant="card"`
-// renders a boxed inline unit instead of the bare footer row.
+// inline on high-intent pages (movers, countdown, the pre-release Radiance surfaces)
+// via the props — `source` attributes which surface converted, `heading`/`cta`/`done`
+// tailor the copy, and `variant="card"` renders a boxed inline unit instead of the
+// bare footer row.
 export function NewsletterSignup({
   siteName,
   source = "footer",
@@ -15,6 +16,7 @@ export function NewsletterSignup({
   done,
   variant = "footer",
   trackEvent = "newsletter_signup",
+  button = "primary",
 }: {
   siteName: string;
   source?: string;
@@ -27,6 +29,11 @@ export function NewsletterSignup({
   // still sharing this exact submit handler/validation/API call — the ask is one
   // handler, not one event name.
   trackEvent?: string;
+  // "ghost" renders the submit as .btn-ghost, for a page where another CTA is
+  // the primary (2026-09-23: radiance-tagged articles, where the capture sits
+  // between "Compare Radiance preorder prices" and "Ready to buy?" — a third
+  // filled green button in one screen would compete with both).
+  button?: "primary" | "ghost";
 }) {
   // May render OUTSIDE CountryProvider (footer) — read the market cookie directly.
   // Falls back to the site default (US) when no market cookie is set yet.
@@ -86,7 +93,11 @@ export function NewsletterSignup({
               className="input h-9 w-52 flex-1"
               aria-label="Email address"
             />
-            <button type="submit" disabled={state === "busy"} className="btn-primary h-9 shrink-0 text-sm disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={state === "busy"}
+              className={`${button === "ghost" ? "btn-ghost" : "btn-primary"} h-9 shrink-0 text-sm disabled:opacity-50`}
+            >
               {state === "busy" ? "…" : cta}
             </button>
           </div>
