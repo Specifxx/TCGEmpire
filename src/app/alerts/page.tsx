@@ -188,14 +188,14 @@ export default function AlertsPage() {
       <h2 className="mt-10 text-xl font-extrabold text-white">Frequently asked questions</h2>
       <div className="mt-3 divide-y divide-ink-800 rounded-xl border border-ink-700">
         {FAQS.map((f) => (
-          <details key={f.q} className="group p-4">
-            <summary className="cursor-pointer list-none font-semibold text-white marker:content-none">
-              <span className="mr-2 inline-block text-brand-400 transition-transform group-open:rotate-90" aria-hidden>
+          <details key={f.q} className="group">
+            <summary className="flex cursor-pointer list-none gap-2 p-4 font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden">
+              <span className="flex-none self-start text-brand-400 transition-transform group-open:rotate-90" aria-hidden>
                 ›
               </span>
               {f.q}
             </summary>
-            <p className="mt-2 pl-5 text-sm leading-relaxed text-slate-300">{f.a}</p>
+            <p className="px-4 pb-4 pl-9 text-sm leading-relaxed text-slate-300">{f.a}</p>
           </details>
         ))}
       </div>
@@ -209,8 +209,13 @@ export default function AlertsPage() {
           </p>
         </div>
         {/* Primary CTA = the account (this page explains the account feature);
-            browsing stays one click away as the secondary route. */}
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+            browsing stays one click away as the secondary route. min-w-0, not
+            shrink-0 (2026-09-23): shrink-0 held the group at its one-line
+            max-content width, so its own flex-wrap never engaged and the page
+            was 425px wide on every phone with "Card database →" half
+            off-screen. Now the group shrinks to the section and the buttons
+            stack; at 1440 the parent's flex-wrap never forces a shrink. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <AlertsSignupCta />
           <Link href="/browse" className="btn-ghost">Card database →</Link>
         </div>
