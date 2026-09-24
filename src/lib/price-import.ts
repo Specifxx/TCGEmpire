@@ -1336,11 +1336,23 @@ export interface CardIndex {
   promoByName: Map<string, string>;
   promoByNum: Map<string, string>;
   promoByNumAny: Map<string, string>;
+  /** Card id → name, for the number-only path's "does the title name a different card?" check. */
+  nameById?: Map<string, string>;
+  /** Every distinct lead name ("jax", "azir", "master yi") as its word list. */
+  leadNames?: string[][];
 }
 
 // Build the lookup structures resolveCardId() needs from a flat card list (base +
 // promo rows together, same shape as `prisma.card.findMany`). Pure function, no DB
 // access — same logic previously inlined at the top of importPrices().
+// A card name's LEAD — the part before the comma, i.e. the champion for a
+// champion card ("Jax, Grandmaster at Arms" → ["jax"]) or the whole name
+// otherwise — as whole words. Words, not a substring of a squashed string, so a
+// two-letter lead like "vi" cannot be "found" inside "vindictive".
+function leadWords(name: string): string[] {
+  return name.split(",")[0].toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 2);
+}
+
 export function buildCardIndex(allCardRows: CardLite[]): CardIndex {
   // Base (non-promo) pool drives the normal matching, unchanged.
   const cards = allCardRows.filter((c) => !c.isPromo);
@@ -1370,7 +1382,9 @@ export function buildCardIndex(allCardRows: CardLite[]): CardIndex {
   // matches can be constrained to the right print type.
   const starIds = new Set<string>();
   const overIds = new Set<string>();
+  const nameById = new Map<string, string>();
   for (const c of cards) {
+    nameById.set(c.id, c.name);
     const nk = numKey(c.collectorNumber.split("/")[0]);
     push(byNum, `${c.setCode}|${nk}`, c.id);
     push(byNumAny, nk, c.id);
@@ -1380,7 +1394,14 @@ export function buildCardIndex(allCardRows: CardLite[]): CardIndex {
     else if (parseInt(d, 10) > parseInt(tt ?? "0", 10)) overIds.add(c.id);
   }
 
-  return { byNum, byNumAny, byName, starIds, overIds, promoByName, promoByNum, promoByNumAny };
+  const leadSeen = new Set<string>();
+  const leadNames: string[][] = [];
+  for (const name of nameById.values()) {
+    const w = leadWords(name);
+    const k = w.join(" ");
+    if (w.length && !leadSeen.has(k)) { leadSeen.add(k); leadNames.push(w); }
+  }
+  return { byNum, byNumAny, byName, starIds, overIds, promoByName, promoByNum, promoByNumAny, nameById, leadNames };
 }
 
 // The collector-number TOTAL uniquely identifies the set, so a title like
@@ -1583,21 +1604,47 @@ export function resolveCardId(p: ShopifyProduct, idx: CardIndex): string | null 
     // The path the Pokémon listings came in through — matching on the numerator
     // alone with `setCode` standing in as "OGN". See foreignTotal above.
     if (foreignTotal) return null;
+    // A TITLE THAT NAMES A DIFFERENT CARD OVERRULES THE NUMBER (2026-09-24).
+    // Reported via the wrong-card form: Azir, Emperor of the Sands (SFD 247/221)
+    // showed Sweets and Geeks at US$60 — and the listing was "Jax - Grandmaster
+    // At Arms (Overnumbered)". The store had put Azir's number on a Jax card
+    // (Jax's overnumbered is 245). The name lookup above missed on the store's
+    // wording, so this path trusted the number alone and filed a Jax price under
+    // Azir.
+    //
+    // POSITIVE EVIDENCE ONLY. A title that names NO card ("134/219",
+    // "[Foil] 134/298 - Riftbound single") still resolves by number — that is
+    // what this path is for, and price-import.test.ts pins it. What is refused
+    // is a title that names some OTHER card in the catalogue while never naming
+    // the one the number points at. Cost of a false positive: one unmatched
+    // listing, against a wrong price on a real card's page.
+    const titleWords = new Set(t.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+    const hasAll = (ws: string[]) => ws.length > 0 && ws.every((w) => titleWords.has(w));
+    const names = (id: string | null | undefined): string | null => {
+      if (!id) return null;
+      const name = idx.nameById?.get(id);
+      if (!name || !idx.leadNames) return id; // index built without names — old behaviour
+      const own = leadWords(name);
+      if (hasAll(own)) return id;
+      const ownKey = own.join(" ");
+      const namesAnother = idx.leadNames.some((ws) => ws.join(" ") !== ownKey && hasAll(ws));
+      return namesAnother ? null : id;
+    };
     const setHit = byNum.get(`${setCode}|${num.key}`) ?? [];
     const anyHit = byNumAny.get(num.key) ?? [];
     const hits = setHit.length ? setHit : anyHit;
     if (titleSig) {
-      return hits.find((id) => starIds.has(id)) ?? null;
+      return names(hits.find((id) => starIds.has(id)));
     }
     if (titleOver) {
-      return hits.find((id) => overIds.has(id)) ?? null;
+      return names(hits.find((id) => overIds.has(id)));
     }
     // Plain listing: prefer a plain (non-special) card of that number.
     const plainSet = setHit.filter((id) => !starIds.has(id) && !overIds.has(id));
-    if (plainSet.length) return plainSet[0];
+    if (plainSet.length) return names(plainSet[0]);
     const plainAny = anyHit.filter((id) => !starIds.has(id) && !overIds.has(id));
-    if (plainAny.length === 1) return plainAny[0];
-    if (setHit.length) return setHit[0];
+    if (plainAny.length === 1) return names(plainAny[0]);
+    if (setHit.length) return names(setHit[0]);
   }
   return null;
 }
