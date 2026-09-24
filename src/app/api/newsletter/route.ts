@@ -37,7 +37,8 @@ export async function POST(req: Request) {
       });
       await sendNewsletterWelcomeEmail(
         email,
-        `${SITE_URL}/newsletter/unsubscribe?token=${encodeURIComponent(unsubToken)}`
+        `${SITE_URL}/newsletter/unsubscribe?token=${encodeURIComponent(unsubToken)}`,
+        source,
       ).catch(() => {});
     }
   } catch (e) {

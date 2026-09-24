@@ -122,10 +122,10 @@ export function shouldNotifyReporter(prev: ReportStatus, next: ReportStatus): bo
  *   3. else the title of `row`, which the CALLER must pick the way
  *      getAllSealedGroups does: the report's market, cheapest first, skipping
  *      rows under sealedFloorCents(productType).
- * ONE deliberate difference: an OGS "Proving Grounds Case" tile reads "Proving
- * Grounds Proving Grounds Case" (the tile only collapses an EXACT set-name ==
- * type match); the email says "Proving Grounds Case". It is still a substring of
- * the tile's name, and the link is set + type, so it lands on that tile anyway.
+ * Tile and email join the set name and type the same way, through
+ * joinOverlapping below: an OGS "Proving Grounds Case" reads once, not
+ * "Proving Grounds Proving Grounds Case" (the tile collapsed only an EXACT
+ * set-name == type match until 2026-09-23).
  */
 export function sealedReportTarget(
   groupKey: string,
@@ -166,8 +166,10 @@ function own(map: Readonly<Record<string, string>>, key: string): string | undef
 
 // "Proving Grounds" + "Proving Grounds Case" → "Proving Grounds Case", not the
 // words twice: OGS is the one set whose name is also a product type. Merges on
-// whole words only, so "Vendetta" + "Booster Box" is untouched.
-function joinOverlapping(a: string, b: string): string {
+// whole words only, so "Vendetta" + "Booster Box" is untouched. Exported
+// because getAllSealedGroups (lib/sealed-import.ts) names the /sealed tiles
+// with it too, so the tile and this email can never disagree.
+export function joinOverlapping(a: string, b: string): string {
   for (let i = 0; i < a.length; i++) {
     if (i > 0 && a[i - 1] !== " ") continue;
     const tail = a.slice(i);

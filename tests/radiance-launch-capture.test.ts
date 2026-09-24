@@ -112,3 +112,15 @@ test("isBeforeRadianceRelease is true before 23 Oct 2026 and false on and after 
   assert.equal(isBeforeRadianceRelease(new Date("2026-11-30T00:00:00Z")), false);
   assert.equal(isBeforeRadianceRelease(new Date("2027-01-01T00:00:00Z")), false);
 });
+
+// A "radiance-launch" signup was promised a release-day email, but the welcome it
+// got only described the weekly summary. The route now passes the stored source
+// to the welcome, which confirms the release-day email first (2026-09-23).
+test("the welcome email confirms the release-day promise for radiance-launch signups", () => {
+  const route = read("src/app/api/newsletter/route.ts");
+  assert.match(route, /sendNewsletterWelcomeEmail\([\s\S]*?source,\s*\)/, "the newsletter route must pass the stored source to the welcome email");
+  const email = read("src/lib/email.ts");
+  assert.match(email, /export async function sendNewsletterWelcomeEmail\(to: string, unsubUrl: string, source\?: string\)/);
+  assert.match(email, /source === "radiance-launch"/);
+  assert.match(email, /RADIANCE_RELEASE_DATE/);
+});

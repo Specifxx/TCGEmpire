@@ -287,9 +287,15 @@ test("a sealed report names and links the product the way its /sealed tile does"
   assert.equal(named("SFD", "Booster Box"), "Spiritforged Booster Box");
   // OGS's name is also a product type. Exactly equal collapses, as on the tile…
   assert.equal(named("OGS", "Proving Grounds"), "Proving Grounds");
-  // …and the case says it once, where the tile stutters "Proving Grounds Proving
-  // Grounds Case" — the one deliberate difference (see sealedReportTarget).
+  // …and the case says it once. The /sealed tile used to stutter "Proving Grounds
+  // Proving Grounds Case"; since 2026-09-23 it names groups with the same
+  // joinOverlapping helper, so the tile and the email cannot disagree.
   assert.equal(named("OGS", "Proving Grounds Case"), "Proving Grounds Case");
+  assert.match(
+    readFileSync(join(process.cwd(), "src/lib/sealed-import.ts"), "utf8"),
+    /joinOverlapping\(setName, r\.productType\)/,
+    "getAllSealedGroups must name tiles with joinOverlapping, the helper the fixed-report email uses",
+  );
   // Whole words only: a type that merely starts with the set's last word is not
   // an overlap.
   assert.equal(named("OGS", "Groundsman Box"), "Proving Grounds Groundsman Box");
@@ -341,12 +347,13 @@ test("the sealed naming mirror still matches getAllSealedGroups", () => {
   assert.deepEqual({ ...SEALED_SET_NAMES }, table("SET_NAMES"), "SEALED_SET_NAMES must equal sealed-import's SET_NAMES");
   assert.deepEqual({ ...SEALED_GROUP_NAME }, table("T1_GROUP_NAME"), "SEALED_GROUP_NAME must equal sealed-import's T1_GROUP_NAME");
 
-  // The naming rule itself: floor first, then set name + type or the title,
-  // then the per-key override.
+  // The naming rule itself: floor first, then set name joined to the type
+  // (joinOverlapping, shared with sealedReportTarget since 2026-09-23) or the
+  // title, then the per-key override.
   assert.match(src, /if \(r\.priceCents < sealedFloorCents\(r\.productType\)\) continue;\s*let g = groups\.get\(r\.groupKey\);/);
   assert.match(
     src,
-    /const setName = r\.setCode \? SET_NAMES\[r\.setCode\] \?\? r\.setCode : null;\s*const name = !setName\s*\? r\.title\s*: setName === r\.productType\s*\? setName\s*: `\$\{setName\} \$\{r\.productType\}`;/,
+    /const setName = r\.setCode \? SET_NAMES\[r\.setCode\] \?\? r\.setCode : null;[\s\S]{0,600}?const name = !setName \? r\.title : joinOverlapping\(setName, r\.productType\);/,
   );
   assert.match(src, /const name = T1_GROUP_NAME\[g\.groupKey\];\s*if \(name\) g\.name = name;/);
   // …which the route feeds the same row: the report's market, cheapest first,

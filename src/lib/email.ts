@@ -2,6 +2,7 @@ import { SITE_NAME, SITE_URL, premiumFromLine } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
+import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -872,11 +873,24 @@ export async function sendConsultOwnerAlertEmail(
 
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
-export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {
-  const inner = `
+// `source` is the NewsletterSubscriber.source the route stored. A "radiance-launch"
+// signup came from a "Get an email the day Radiance prices go live" card, so its
+// welcome confirms THAT promise first — release-day.ts sends the email itself on
+// the day — instead of only describing the weekly summary it also joined
+// (2026-09-23). Every other source gets the unchanged welcome.
+export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string, source?: string): Promise<boolean> {
+  const releaseDay = new Date(`${RADIANCE_RELEASE_DATE}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+  const radianceLine =
+    source === "radiance-launch"
+      ? `
+    <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#e8eaee">
+      <strong>You'll get one email on ${releaseDay}</strong>, the day Riftbound Radiance releases, as soon as its card prices are live.
+    </td></tr>`
+      : "";
+  const inner = `${radianceLine}
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're on the list — every week you'll get the ${SITE_NAME} Index summary: the cards that spiked,
-      the cards that dropped, and where the best value is across AU, US, UK, SG and CA stores.
+      the cards that dropped, and where the best value is across AU, US, UK, SG, CA and EU stores.
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;

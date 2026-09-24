@@ -13,6 +13,7 @@ import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAll
 import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
+import { joinOverlapping } from "./price-report";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -1053,11 +1054,11 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
     let g = groups.get(r.groupKey);
     if (!g) {
       const setName = r.setCode ? SET_NAMES[r.setCode] ?? r.setCode : null;
-      const name = !setName
-        ? r.title
-        : setName === r.productType
-        ? setName
-        : `${setName} ${r.productType}`;
+      // joinOverlapping, not "set + type": OGS's name is also a product type,
+      // and "Proving Grounds" + "Proving Grounds Case" rendered the tile as
+      // "Proving Grounds Proving Grounds Case" (2026-09-23). Whole words only,
+      // and an exact match still collapses to the set name.
+      const name = !setName ? r.title : joinOverlapping(setName, r.productType);
       g = {
         groupKey: r.groupKey,
         name,
