@@ -155,8 +155,12 @@ longer lands on its entry.
   restore it). One control opens `CinematicNavMenu` below lg.
   [2026-09-18](../DECISIONS.md#L8260), [2026-09-19](../DECISIONS.md#L8590)
 - **Watchlist:** a heart on all five surfaces and its own header control
-  from sm, opening a right-side drawer; `/watching` stays.
-  [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260)
+  from sm, opening a right-side drawer; `/watching` stays. The drawer renders
+  rows (`layout="list"`), never the page's grid: its breakpoints read the
+  viewport and gave a 448px drawer four 90px columns. On a tile the heart
+  stacks above the badges, which stop short of it.
+  [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260),
+  [2026-09-24](../DECISIONS.md#L11719)
 - **Gold marks Premium**, so a non-Premium action never wears it. Phones show
   "✦ Premium" beside Database, with text from 360px.
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)

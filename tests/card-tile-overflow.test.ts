@@ -33,8 +33,8 @@ test("the card tile's price row cannot overlap its store count", () => {
 
   assert.match(
     TILE,
-    /<div className="min-w-\[[\d.]+rem\] flex-1">/,
-    "the price block needs a real min-width — min-w-0 or a bare flex-1 lets it shrink to nothing instead of wrapping",
+    /<div className="min-w-\[min\([\d.]+rem,100%\)\] flex-1">/,
+    "the price block needs a real min-width, capped at its container — min-w-0 lets it shrink to nothing, and an uncapped rem minimum is wider than a narrow tile so truncate never engages",
   );
 
   const priceLine = TILE.match(/<div className="[^"]*text-accent[^"]*">/);
@@ -97,4 +97,41 @@ test("the watchlist tells you to tap the control that actually exists", () => {
   }
   assert.match(WATCHING_PAGE, /tap the heart on any card/i, "the page should name the heart");
   assert.match(WATCHLIST, /Tap a card&apos;s heart/i, "the list header should name the heart");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE DRAWER. Reported 2026-09-24 with a screenshot: one card squeezed into a
+// ~90px column of a 448px panel, the name cut, the price clipped, and the heart
+// covered by an "★ Overnumbered" badge so the card could not be unwatched.
+// ─────────────────────────────────────────────────────────────────────────────
+// The previous fix to this file only touched the /watching PAGE's breakpoints.
+// The drawer rendered the same grid, and a grid chosen by VIEWPORT width cannot
+// know it is inside a 448px panel: every desktop is past `xl`, so the drawer got
+// four columns. Checked by server-rendering the real components and hit-testing
+// the heart at its centre, at 448px, at 390px, and in a four-up 90px tile grid.
+const DRAWER = read("src/components/WatchlistDrawer.tsx");
+
+test("the drawer renders the watchlist as rows, not the page's grid", () => {
+  assert.match(DRAWER, /<Watchlist layout="list" onNavigate=\{close\} \/>/, "the drawer must ask for the list layout and close on navigation");
+  assert.match(WATCHLIST, /layout = "grid"/, "grid stays the default, for /watching");
+  assert.match(WATCHLIST, /function WatchRow\(/, "the drawer layout is a row per card");
+});
+
+test("a drawer row's heart is a sibling of its link, never inside or under it", () => {
+  const row = WATCHLIST.slice(WATCHLIST.indexOf("function WatchRow("));
+  const linkClose = row.indexOf("</Link>");
+  const heart = row.indexOf("<PriceWatchButton");
+  assert.ok(linkClose > 0 && heart > linkClose, "PriceWatchButton must come after the row's </Link>, in its own column");
+  assert.match(row, /<div className="shrink-0">\s*<PriceWatchButton/, "the heart's column must not shrink away");
+  // Badges live in the text column, inline — not absolutely positioned over art.
+  assert.doesNotMatch(row, /absolute[^"]*top-2/, "nothing in a row may be absolutely positioned over the card");
+});
+
+test("on a tile, the heart stacks above the badges and the badges stop short of it", () => {
+  const heartZ = Number(TILE.match(/absolute right-2 top-2 z-(\d+)/)?.[1]);
+  const badgeZ = Number(TILE.match(/absolute left-2 [^"]*top-2 z-(\d+) flex flex-col/)?.[1]);
+  assert.ok(heartZ && badgeZ, "expected both the heart and the badge column to be positioned");
+  assert.ok(heartZ > badgeZ, `the heart (z-${heartZ}) must sit above the badge column (z-${badgeZ}), or a wide badge takes its clicks`);
+  assert.match(TILE, /absolute left-2 right-12 top-2 z-\d+ flex flex-col/, "the badge column must end before the heart's corner");
+  assert.match(TILE, /\[&>\*\]:truncate/, "each badge must truncate rather than run under the heart");
 });
