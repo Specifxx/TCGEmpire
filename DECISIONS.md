@@ -11871,3 +11871,19 @@ October.
     Rendering nothing on the server also means no hydration mismatch, and no
     flash for someone who dismissed it.
   - Its copy changes on 25 September and it disappears on release day.
+
+**6. Backlinks.**
+
+- **The embed snippets were iframe-only**, and a link inside an iframe is a
+  link on our document, so embeds earned no credit. Each of the three `/embed`
+  snippets now ends with one plain link under the iframe, named for what it
+  points at and not stuffed with keywords: "{Card name} on RiftCompare",
+  "Riftbound market index on RiftCompare" and "Riftbound release dates on
+  RiftCompare". The page's copy says the link is optional and why it matters.
+- **"Prices tracked on RiftCompare" store badge** (`lib/store-badge.ts`).
+  - It is plain HTML with the R mark drawn as inline SVG: no script, no image
+    request, no iframe. The link therefore sits on the store's own page.
+  - It points to that store's `/stores/[slug]`. The name is HTML-escaped.
+  - `/embed` explains it with a `STORE-SLUG` example. Every store page has an
+    "Add this badge" box with its own slug filled in. The preview and the
+    snippet are the same string.

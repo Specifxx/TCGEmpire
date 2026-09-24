@@ -7,6 +7,7 @@ import { COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
 import { shippingPolicyUrl } from "@/lib/retailers";
 import { STORE_PAGES, storeBySlug, storePageName, STORE_THIN_THRESHOLD } from "@/lib/store-pages";
+import { storeBadgeHtml } from "@/lib/store-badge";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { cardHref } from "@/lib/card-url";
 import { SITE_URL } from "@/lib/site";
@@ -278,6 +279,21 @@ export default async function StorePage({ params }: { params: { slug: string } }
         </Link>{" "}
         — free repricing report for tracked stores.
       </p>
+
+      {/* "Add this badge" (2026-09-24): the store-owner reader above, given
+          something to take away. Plain HTML + inline SVG from lib/store-badge.ts
+          — no iframe, so the link sits on the store's own page — with this
+          store's slug filled in. Preview and snippet are the same string. */}
+      <section aria-labelledby="store-badge-h" className="card-surface p-5">
+        <h2 id="store-badge-h" className="text-base font-bold text-white">Add this badge to {store.name}&apos;s site</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          It links your customers to this page. Plain HTML, logo drawn inline — no script and nothing to host.
+        </p>
+        <div className="mt-3" dangerouslySetInnerHTML={{ __html: storeBadgeHtml(store) }} />
+        <pre className="mt-3 overflow-x-auto rounded-lg border border-ink-800 bg-ink-950 p-3 text-xs leading-relaxed text-slate-300">
+          <code>{storeBadgeHtml(store)}</code>
+        </pre>
+      </section>
 
       {siblings.length > 0 && (
         <section>

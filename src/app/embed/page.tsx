@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { STATIC_PAGE_DATES } from "@/lib/static-page-dates";
 import { pageAlternates } from "@/lib/seo";
+import { embedAttributionHtml, storeBadgeHtml } from "@/lib/store-badge";
 
 export const revalidate = 86400;
 
@@ -59,7 +60,8 @@ const WIDGETS: Widget[] = [
     who:
       "Deck guides and set reviews. Drop one under each card you mention and the page tells readers what that card costs today, without you maintaining a price table.",
     snippet:
-      '<iframe src="https://riftcompare.com/embed/card/CARD-SLUG" width="100%" height="150" style="border:0" loading="lazy" title="Riftbound card price"></iframe>',
+      '<iframe src="https://riftcompare.com/embed/card/CARD-SLUG" width="100%" height="150" style="border:0" loading="lazy" title="Riftbound card price"></iframe>\n' +
+      embedAttributionHtml("https://riftcompare.com/card/CARD-SLUG", "CARD NAME on RiftCompare"),
     height: 150,
     options: [
       {
@@ -69,7 +71,11 @@ const WIDGETS: Widget[] = [
       {
         param: "CARD-SLUG",
         detail:
-          "The last part of any card’s RiftCompare URL. Open the card page and copy what follows /card/.",
+          "The last part of any card’s RiftCompare URL. Open the card page and copy what follows /card/. It appears twice: in the widget and in the link under it.",
+      },
+      {
+        param: "CARD NAME",
+        detail: "The card’s name as you would write it, e.g. “Irelia, Fervent on RiftCompare”.",
       },
     ],
   },
@@ -81,7 +87,8 @@ const WIDGETS: Widget[] = [
     who:
       "News sites, newsletters and sidebars. One line that makes a page feel current every day without anyone updating it.",
     snippet:
-      '<iframe src="https://riftcompare.com/embed/index" width="100%" height="120" style="border:0" loading="lazy" title="Riftbound market index"></iframe>',
+      '<iframe src="https://riftcompare.com/embed/index" width="100%" height="120" style="border:0" loading="lazy" title="Riftbound market index"></iframe>\n' +
+      embedAttributionHtml("https://riftcompare.com/market", "Riftbound market index on RiftCompare"),
     height: 120,
     options: [
       { param: "?market=UK", detail: "AU, US, UK, SG, CA or EU. Unrecognised values fall back to the default market." },
@@ -95,7 +102,8 @@ const WIDGETS: Widget[] = [
     who:
       "Community sites and Discord-linked blogs, especially during a preview season. Names no set in code, so it moves to the next release by itself the day the current one ships.",
     snippet:
-      '<iframe src="https://riftcompare.com/embed/release-countdown" width="100%" height="140" style="border:0" loading="lazy" title="Riftbound set release countdown"></iframe>',
+      '<iframe src="https://riftcompare.com/embed/release-countdown" width="100%" height="140" style="border:0" loading="lazy" title="Riftbound set release countdown"></iframe>\n' +
+      embedAttributionHtml("https://riftcompare.com/release-dates", "Riftbound release dates on RiftCompare"),
     height: 140,
     options: [],
   },
@@ -121,8 +129,9 @@ export default function EmbedDirectoryPage() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
           Three live widgets you can drop into any page with one line of HTML. They pull current data from{" "}
           {SITE_NAME} every time someone loads your page, so they stay right without you touching them.
-          Free, no signup, no account, no tracking pixel &mdash; and no attribution required, though a link is
-          always welcome.
+          Free, no signup, no account, no tracking pixel. Each snippet ends with one plain text link under the
+          widget; it is optional, but it is the only part of the embed a search engine credits, because a link
+          inside an iframe belongs to our page, not yours.
         </p>
       </div>
 
@@ -153,6 +162,23 @@ export default function EmbedDirectoryPage() {
           )}
         </section>
       ))}
+
+      {/* The store badge (2026-09-24): plain HTML + inline SVG, no iframe, so the
+          link is on the store's own page. Each store page carries its own copy
+          with the slug filled in ("Add this badge"). */}
+      <section className="card-surface flex flex-col gap-3 p-6">
+        <h2 className="text-lg font-bold text-white">For stores: &ldquo;Prices tracked on RiftCompare&rdquo;</h2>
+        <p className="text-sm leading-relaxed text-slate-400">
+          If we track your store, a small badge links your customers to your own RiftCompare page, where they can see
+          how your Riftbound prices compare. It is plain HTML with the logo drawn inline &mdash; no script, no image
+          request, nothing to host. Your store&apos;s page has the snippet with your link already filled in; find it
+          under <Link href="/stores" className="text-brand-400 hover:underline">Stores</Link>.
+        </p>
+        <div dangerouslySetInnerHTML={{ __html: storeBadgeHtml({ slug: "STORE-SLUG", name: "Your store" }) }} />
+        <pre className="overflow-x-auto rounded-lg border border-ink-800 bg-ink-950 p-4 text-xs leading-relaxed text-slate-300">
+          <code>{storeBadgeHtml({ slug: "STORE-SLUG", name: "Your store" })}</code>
+        </pre>
+      </section>
 
       <section className="card-surface flex flex-col gap-3 p-6">
         <h2 className="text-lg font-bold text-white">The fine print, such as it is</h2>
