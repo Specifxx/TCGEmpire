@@ -51,7 +51,11 @@ export function WatchlistDrawer() {
               We email <strong className="text-slate-300">{user.email}</strong> when one of these drops below the
               price you started tracking at — tap the heart on any card to stop watching it.
             </p>
-            <Watchlist />
+            {/* `list`, not the page's grid: this panel is 448px wide, and the
+                grid's viewport breakpoints gave it four 90px columns on every
+                desktop. See Watchlist's header. Following a row closes the
+                drawer, so the card page is not opened underneath it. */}
+            <Watchlist layout="list" onNavigate={close} />
           </>
         )}
       </div>
