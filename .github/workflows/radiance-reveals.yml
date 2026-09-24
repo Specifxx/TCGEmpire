@@ -1,0 +1,52 @@
+name: Radiance reveals import
+
+# Imports Riot's official Radiance reveals into the card database on a schedule
+# during Preview Season, so the spoiler tracker (/blog/riftbound-radiance-spoilers)
+# and /sets/radiance are current the same day a card is shown — the tracker's own
+# promise. Until 2026-09-24 the official-gallery import (maintenance.yml
+# `set-pipeline`) only ever ran when someone dispatched it by hand, which during
+# a two-week reveal window means reveals land whenever someone remembers.
+#
+# This DISPATCHES that task rather than copying it: one definition of the
+# scrape, its database env (the operational chain lives in maintenance.yml and
+# src/lib/db-chains.ts, never in a second workflow), its artifact upload, and
+# its sitemap + IndexNow ping for the new cards. A workflow_dispatch made with
+# GITHUB_TOKEN does start a run — it is one of the two documented exceptions to
+# "GITHUB_TOKEN events trigger nothing".
+#
+# SELF-RETIRING: runs only from Preview Season's opening (2026-09-25) through
+# release week (2026-10-25), then every scheduled run exits at the date gate.
+# Twice daily — reveals go out on US daytime, so 18:30 UTC catches the day's
+# cards and 02:30 UTC catches anything shown late in the Pacific evening.
+
+on:
+  schedule:
+    - cron: "30 18 * * *"
+    - cron: "30 2 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: radiance-reveals
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch set-pipeline for Radiance (inside the reveal window only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          today=$(date -u +%F)
+          if [ "${{ github.event_name }}" = "schedule" ] && { [ "$today" \< "2026-09-25" ] || [ "$today" \> "2026-10-25" ]; }; then
+            echo "Outside the Radiance reveal window ($today) — nothing to do."
+            exit 0
+          fi
+          gh workflow run maintenance.yml --repo "$REPO" --ref main -f task=set-pipeline -f set_slug=radiance
+          echo "Dispatched maintenance.yml set-pipeline (radiance) for $today."

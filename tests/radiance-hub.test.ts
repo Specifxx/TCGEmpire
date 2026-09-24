@@ -84,8 +84,16 @@ test("the Showdown Deck fact matches the brief exactly: two 56-card decks, two b
   assert.match(deck!.detail ?? "", /1 rulebook/i);
 });
 
-test("the FAQ has exactly 6 entries, each self-consistent with the data module", () => {
-  assert.equal(RADIANCE_FAQ.length, 6);
+test("the FAQ has exactly 7 entries, each self-consistent with the data module", () => {
+  // 7 since 2026-09-24: "Can I buy Radiance directly from Riot?" (the Merch
+  // Store draw) joined, and the pre-order answer stopped claiming US-only.
+  assert.equal(RADIANCE_FAQ.length, 7);
+  const draw = RADIANCE_FAQ.find((f) => /directly from Riot/i.test(f.q));
+  assert.ok(draw);
+  assert.match(draw!.a, /25 to 30 September 2026/);
+  assert.match(draw!.a, /North America and Europe/);
+  const preorder = RADIANCE_FAQ.find((f) => /preorder Riftbound Radiance the cheapest/i.test(f.q));
+  assert.doesNotMatch(preorder!.a, /every US store|delivered cost/, "the page compares every market, by item price");
   const legendsFaq = RADIANCE_FAQ.find((f) => /which champions/i.test(f.q));
   assert.ok(legendsFaq);
   assert.match(legendsFaq!.a, /Six legends are confirmed/);
