@@ -29,6 +29,8 @@ import { NewsletterSignup } from "./NewsletterSignup";
 import { ArticleSignupCta } from "./ArticleSignupCta";
 import { isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS, RADIANCE_PREORDER_CTA_SLUGS } from "@/lib/sets/radiance";
 import { RadiancePreorderCta } from "./RadiancePreorderCta";
+import { BanListTable } from "./BanListTable";
+import { BANLIST_SLUG } from "@/lib/banlist";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -396,6 +398,10 @@ export async function ArticleView({ article }: { article: Article }) {
           How we research this
         </Link>
       </div>
+
+      {/* The ban list's answer — every banned card — as the first thing under
+          the H1 (lib/banlist.ts). */}
+      {article.slug === BANLIST_SLUG && <BanListTable />}
 
       <div className="mt-3">
         <ArticleShare url={articleUrl} title={article.title} />

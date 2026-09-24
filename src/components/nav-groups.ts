@@ -94,6 +94,9 @@ export const NAV_GROUPS: NavGroup[] = [
       // the Search Console data behind the per-set galleries it links to).
       { href: "/gallery", label: "Card gallery", keywords: ["gallery", "card gallery", "full art", "browse art", "card images"] },
       { href: "/domains", label: "Domains", keywords: ["domains", "colours", "colors", "fury", "calm", "mind", "body", "chaos", "order"] },
+      // 2026-09-24: "riftbound ban list" is 8.7K impressions a month; the guide
+      // now opens with the full banned-card table (lib/banlist.ts).
+      { href: "/guides/riftbound-banlist-explained", label: "Ban list", keywords: ["ban list", "banlist", "banned", "banned cards", "bans", "restricted", "legal cards", "2v2 bans"] },
       { href: "/keywords", label: "Keywords glossary", keywords: ["keywords", "glossary", "mechanics", "rules", "empower", "flow", "burn", "tank", "deflect", "what does"] },
       { href: "/singles", label: "Buy singles", keywords: ["singles", "buy singles", "cheapest single"] },
     ],

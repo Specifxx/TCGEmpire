@@ -1,6 +1,8 @@
 // File-based content for the Blog and Guides sections. Authored by us (not user
 // input), rendered with the lightweight <Markdown> component. To publish a new
 // article, add an entry here.
+import { BANLIST_UPDATED, BANNED_CARDS } from "./banlist";
+import { SITE_URL } from "./site";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
@@ -170,9 +172,9 @@ export interface Article {
   itemList?: { name: string; items: { name: string; description?: string; url?: string }[] };
 }
 
-// The ban list's last wave. Both its `updated` and the "(Sep 2026)" in its title
-// read this, so bumping it when a wave lands updates both together.
-const BANLIST_UPDATED = "2026-09-15";
+// The ban list's last wave lives with the ban data itself (lib/banlist.ts):
+// the guide's `updated`, its title month and the table's "Updated …" line all
+// read it, so one bump when a wave lands updates every one of them.
 
 export const ARTICLES: Article[] = [
   // SERAPHINE'S RADIANCE LEGEND (2026-09-22). The genuinely new thing here is
@@ -4341,7 +4343,7 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
     // CTR pass 2026-09-24 ("riftbound ban list": 5.1k impressions, position
     // 8.5, 0.2%). The month comes from BANLIST_UPDATED, which is also
     // `updated` below.
-    title: `Riftbound Ban List (${monthYear(BANLIST_UPDATED)}): Banned Cards`,
+    title: `Riftbound Ban List (${monthYear(BANLIST_UPDATED)}): ${BANNED_CARDS.length} Banned Cards`,
     excerpt:
       "Which Riftbound cards are banned in Standard and 2v2 right now, what the September 2026 wave added, and why Riot banned each one — with live prices.",
     author: "RiftCompare",
@@ -4349,6 +4351,15 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
     updated: BANLIST_UPDATED,
     readMins: 7,
     tags: ["banlist", "competitive", "rules", "guide"],
+    // ItemList JSON-LD from the same list as the table under the H1.
+    itemList: {
+      name: "Banned Riftbound cards",
+      items: BANNED_CARDS.map((b) => ({
+        name: b.name,
+        description: `Banned in ${b.formats.join(" and ")} since ${b.effective}`,
+        url: `${SITE_URL}/card/${b.slug}`,
+      })),
+    },
     faq: [
       {
         q: "What cards are banned in Riftbound?",
@@ -10356,13 +10367,17 @@ We will update this post as the price is confirmed and as the first real sales d
   {
     slug: "riftbound-card-size-sleeves-deck-boxes",
     category: "guide",
-    // CTR pass 2026-09-24 ("riftbound card size": 1.6k impressions, position
-    // 6.3, 0.4%): the title and description both gave the whole answer away.
-    title: "Riftbound Card Size: Sleeves, Boxes & Binders",
+    // Snippets pass 2026-09-24 ("riftbound card size": 315 impressions, 0
+    // clicks). An earlier pass took the number OUT on the theory that giving
+    // the answer away cost the click; it earned none either way, and a title
+    // without the measurement loses to every result that has it. The answer
+    // leads the title, the description and the body's first sentence.
+    title: "Riftbound Card Size: 63 × 88 mm + Sleeve Guide",
     excerpt:
-      "The exact Riftbound card size, which sleeves fit, why a deck needs more sleeves than its card count suggests, and the boxes and binder pages that hold one.",
+      "Riftbound cards are 63 × 88 mm (2.5 × 3.5 in), standard TCG size. Which sleeves fit (66 × 91 mm), how many a deck needs, and the boxes and binders to use.",
     author: "RiftCompare",
     date: "2026-09-12",
+    updated: "2026-09-24",
     readMins: 11,
     tags: ["sleeves", "accessories", "deck box", "binder", "playmat", "storage", "guide"],
     hero: {
@@ -10370,7 +10385,7 @@ We will update this post as the price is confirmed and as the first real sales d
       alt: "Riftbound card size and accessories — standard-size sleeves, deck boxes and binders, plus the landscape Battlefield exception",
     },
     summary: [
-      "**Riftbound cards are standard trading-card size** — the same as Magic, Pokemon and most modern TCGs. Any sleeve sold as *standard size* fits. There is no Riftbound-specific dimension to hunt for.",
+      "**Riftbound cards are 63 × 88 mm (2.5 × 3.5 in), standard trading-card size** — the same as Magic, Pokemon and most modern TCGs. Any sleeve sold as *standard size* fits. There is no Riftbound-specific dimension to hunt for.",
       "**Buy 66 sleeves per deck, not 40.** A full tournament list is 1 Legend, a 40-card main deck, 12 runes, 3 battlefields and a 10-card side deck.",
       "**56 cards in the game are landscape**, and they are all Battlefields. They take the same sleeve, turned sideways — which changes nothing about sleeving and quite a lot about binders and playmats.",
       "**Deck-box capacity is about thickness, not card count.** A 100-card box will not hold 66 double-sleeved cards.",
@@ -10412,7 +10427,7 @@ We will update this post as the price is confirmed and as the first real sales d
       { label: "Deck boxes", query: "tcg deck box 100 double sleeved" },
       { label: "9-pocket binders", query: "9 pocket trading card binder side loading" },
     ],
-    body: `Sleeves are the cheapest insurance in the hobby and the easiest thing to get slightly wrong. This guide answers the sizing question first, because that is what most people actually came for, then covers the three purchases that follow it — sleeves, a deck box and a binder — with the numbers that come from this game specifically rather than from trading cards in general.
+    body: `Riftbound cards are **63 × 88 mm** (2.5 × 3.5 inches), the standard trading-card size, and they fit standard 66 × 91 mm sleeves. Sleeves are the cheapest insurance in the hobby and the easiest thing to get slightly wrong. This guide answers the sizing question first, because that is what most people actually came for, then covers the three purchases that follow it — sleeves, a deck box and a binder — with the numbers that come from this game specifically rather than from trading cards in general.
 
 ## The short answer on card size
 

@@ -170,7 +170,15 @@ export async function generateMetadata({
   // fits 60 characters for Origins, Unleashed, Vendetta and Radiance; a longer
   // set name, or an unknown/zero count, falls to the uncounted "Price Guide"
   // rung, then to the suffixed ladder above.
+  //
+  // 2026-09-24 (snippets brief): "Riftbound {Set} Card List: All {N} Cards +
+  // Prices" leads. The number is the answer a "card list" searcher checks for
+  // and now sits in the first half of the title instead of trailing in
+  // parentheses where Google's truncation took it ("unleashed card list": 904
+  // impressions at 1.2%). The price-guide rung stays next, for set names too
+  // long for this one.
   const fullTitles = [
+    ...(cardCount > 0 ? [`Riftbound ${set.name} Card List: All ${cardCount} Cards + Prices`] : []),
     ...(cardCount > 0 ? [`Riftbound ${set.name} Card List & Price Guide (All ${cardCount} Cards)`] : []),
     `Riftbound ${set.name} Card List & Price Guide`,
     ...titleCandidates.map((t) => `${t} | RiftCompare`),
@@ -477,13 +485,10 @@ export default async function SetPage({
               value is concentrated, the cards worth knowing about by name, and
               what that means for a buyer. Every figure comes from this set's own
               rows — see the query above. Renders on the default view only. */}
-          {intro.length > 0 && (
-            <div className="mt-3 max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
-              {intro.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-          )}
+          {/* The data-derived intro used to sit here, and at three or four
+              paragraphs it pushed the card grid below the fold on every set
+              page — the grid is what a "card list" searcher came for. It now
+              renders directly under the grid (2026-09-24), unchanged. */}
 
           {totalInSet > 0 && (
             <p className="mt-3 text-sm">
@@ -672,6 +677,20 @@ export default async function SetPage({
           store has stock to compare, so the grid above is a card list rather
           than a shopping surface, and eBay presale/preorder listings are the
           only thing a reader can act on. */}
+      {/* Data-derived intro: scale and price coverage, the range and where the
+          value is concentrated, the cards worth knowing about by name. Every
+          figure comes from this set's own rows. Default view only. Moved below
+          the grid on 2026-09-24 so the grid is above the fold. */}
+      {intro.length > 0 && (
+        <section aria-label={`About ${set.name}`} className="card-surface p-5" data-set-intro>
+          <div className="max-w-3xl space-y-2.5 text-sm leading-relaxed text-slate-400">
+            {intro.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* The set's full price list (2026-09-24). "price guide" queries rank this
           page at 7-9 with no clicks, and the page had a 60-card grid but no
           list of every card's price on it. Default view only — it reads the

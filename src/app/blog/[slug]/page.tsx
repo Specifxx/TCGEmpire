@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { MOST_EXPENSIVE_SLUG, mostExpensiveTitle } from "@/lib/most-expensive-title";
+import { topValueCached } from "@/components/ArticleTopValue";
+import { pickPrice } from "@/lib/country";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import { notFound } from "next/navigation";
 import { getArticle, getArticles } from "@/lib/articles";
@@ -38,6 +41,14 @@ export function generateStaticParams() {
   return getArticles("blog").map((a) => ({ slug: a.slug }));
 }
 
+// The #1 card of the most-expensive post's live table, for its <title>. The
+// same cached read the table itself makes (ArticleTopValue), so no new query.
+async function topMostExpensive(): Promise<{ name: string; priceCents: number } | null> {
+  const top = (await topValueCached("US", 10).catch(() => []))[0];
+  const cents = top ? pickPrice(top, "US") : null;
+  return top && cents != null ? { name: top.name, priceCents: cents } : null;
+}
+
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const a = await getBlogPost(params.slug);
   if (!a) return notFoundMetadata("Post");
@@ -53,7 +64,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     // and the page's own content already make — on a site where article
     // titles are already long, that was enough on its own to push a lot of
     // otherwise-fine titles past Google's ~60-char SERP truncation point.
-    title: { absolute: `${a.title} — RiftCompare` },
+    title: {
+      absolute:
+        a.slug === MOST_EXPENSIVE_SLUG
+          ? mostExpensiveTitle(await topMostExpensive())
+          : `${a.title} — RiftCompare`,
+    },
     description,
     ...(isDraft ? { robots: { index: false, follow: true } } : {}),
     alternates: pageAlternates(`/blog/${a.slug}`, {

@@ -29,7 +29,7 @@ import type { CardTileData } from "./CardTile";
  * SAME country value, so the figures and the symbol can't disagree (the failure
  * mode lib/market-rows.ts documents having already shipped once).
  */
-function topValueCached(country: Country, take: number): Promise<CardTileData[]> {
+export function topValueCached(country: Country, take: number): Promise<CardTileData[]> {
   return unstable_cache(
     async () => {
       try {
