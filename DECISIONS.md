@@ -11584,3 +11584,90 @@ lives. So it follows the egress fix, as its own measured change.
 - **Embed widgets are still offered.** They are listed through the /embed
   directory (DECISIONS 2026-09-21); only the card page's own button was
   retired.
+
+## Radiance pre-orders: the stores we were not reading, and where to buy — 2026-09-24
+
+**The gap.** We checked `/radiance-preorders` in all six markets (the `country`
+cookie) against each store's own site search. Twenty-one stores that we track
+had Radiance pre-orders we were not showing. The importer only read collections
+whose handle named Riftbound. Those stores file pre-orders in a generic
+`preorders` / `pre-orders` / `all-preorders` collection.
+
+**Fix: the importer reads those collections too, with a stricter filter.**
+`collectionKind()` classifies a handle as `riftbound`, `preorder`, or neither.
+Two things limit how much extra it pulls:
+
+- Only anchored generic names count. So do set-named ones
+  (`radiance-…`, `riftbound-radiance-…`). `blooming-radiance-…` is another
+  game and does not match.
+- At most three pre-order handles per store, with set-named handles first.
+
+A product from a pre-order collection must also have "Riftbound" or "League of
+Legends" in its title. A generic pre-order shelf holds every game the store
+sells, so it gets a stricter title check than a Riftbound collection does.
+
+Store listings with a weekday or clock time in the title are **event seats**
+(Pre-Rift entry), not sealed product. They are now dropped as sealed.
+
+**One Vault Bundle.** Stores list the same product as "Radiance Vault" or
+"Vault Bundle". The table showed them as two products, each looking
+under-covered. Both now classify as `Bundle`. For RAD the label is "Vault
+Bundle" via `TYPE_LABELS`, and the case is "Vault Bundle Case".
+
+Also: a "Champion Deck: X vs. Y" title is the Showdown Decks, not a champion
+deck.
+
+**TCGplayer sealed is priced at the cheapest English listing, not the market
+price.** Before release, most Radiance products had no market price, so they
+had no row at all. The ones that did were real presale asks, far above MSRP
+(display around US$227 against US$120).
+
+The row now uses the cheapest in-stock English listing, and falls back to the
+market price. That is the price a buyer can actually pay, and the page can say
+honestly that it is a marketplace ask.
+
+**Reveals import on a schedule.** `set-pipeline` (official gallery scrape,
+import, new-card ping) could only be run by hand. `.github/workflows/radiance-reveals.yml`
+now dispatches it at 02:30 and 18:30 UTC. It only runs between 25 Sep and
+25 Oct 2026, so it goes quiet on its own after release. It is a database write,
+not a deploy, and it does not touch the `[deploy]` gate.
+
+**Facts.** `lib/sets/radiance.ts` now carries:
+
+- each product's contents and US distributor MSRP (UVS retailer sheet, PHD
+  Games), labelled MSRP and never "Riot's price";
+- `RADIANCE_MERCH_DRAW`. Riot is not taking pre-orders. It is running a draw:
+  North America and Europe, sign-ups 25–30 Sep, one display per selected
+  entrant.
+
+`/radiance-preorders` renders both from that file. It also gained FAQs for
+Vault vs Vault Bundle, buying from Riot, and why TCGplayer is above MSRP.
+
+`tests/radiance-facts-agree.test.ts` only read article bodies. It now also
+reads excerpts, summaries and FAQs, and found five articles still saying
+"five named, four unrevealed" (Orianna was missing). All five are fixed.
+
+The list-spelling check now needs a comma-separated run. Otherwise a FAQ
+answer that mentions four champions in prose counts as a list.
+
+**Where to buy Radiance.** New post `/blog/where-to-buy-riftbound-radiance`. It
+answers "which kind of seller, per market": stores, the draw, marketplaces, and
+big-box retailers (none had it on 24 Sep). It sends every price question to
+`/radiance-preorders`.
+
+The store prices it quotes are examples, dated 24 Sep, never current prices.
+Its title says "Store Guide", not "pre-order", because the keyword map gives
+`radiance preorder` to the price page.
+
+The thumbnail comes from `scripts/gen-radiance-buy-hero.ts`: the house hero
+layout plus the two Radiance cards photographed in print, which we already
+host. It is 81 KB.
+
+The spoiler tracker got a thumbnail, an honest "where things stand" date, and
+the reveal schedule. Its claim that the pre-order table ranks "by delivered
+cost" was wrong (it ranks by item price) and is gone.
+
+**Not done.** The importer changes and prices are verified by tests and by
+probing stores from this sandbox. There is no database here, so the first
+real import happens on the next scheduled price run. After that, check
+`/radiance-preorders` in each market.

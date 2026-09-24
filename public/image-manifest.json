@@ -858,6 +858,27 @@
     ],
     "fingerprint": "036be5419dbdeb2d"
   },
+  "/blog/where-to-buy-riftbound-radiance.jpg": {
+    "src": "/blog/where-to-buy-riftbound-radiance.jpg",
+    "width": 1200,
+    "height": 630,
+    "bytes": 82593,
+    "webp": "/blog/where-to-buy-riftbound-radiance.webp",
+    "webpBytes": 62932,
+    "avif": "/blog/where-to-buy-riftbound-radiance.avif",
+    "avifBytes": 42437,
+    "variants": [
+      {
+        "w": 480,
+        "src": "/blog/where-to-buy-riftbound-radiance-480w.webp"
+      },
+      {
+        "w": 768,
+        "src": "/blog/where-to-buy-riftbound-radiance-768w.webp"
+      }
+    ],
+    "fingerprint": "213eef05a1fda4be"
+  },
   "/icon-512.png": {
     "src": "/icon-512.png",
     "width": 512,

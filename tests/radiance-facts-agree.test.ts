@@ -37,6 +37,13 @@ const NUMBER_WORDS: Record<string, number> = {
 const radianceArticles = () =>
   ARTICLES.filter((a) => /radiance/i.test(a.slug) || /Radiance/.test(a.body));
 
+// Every piece of prose an article publishes, not just the body. The summary
+// (AnswerBox, the featured-snippet block) and the FAQ (FAQPage JSON-LD) are
+// where a stale count does the most harm, and the body-only scan let
+// what-we-know keep "five are named, four are not" in both until 2026-09-24.
+const prose = (a: (typeof ARTICLES)[number]) =>
+  [a.excerpt, a.body, ...(a.summary ?? []), ...(a.faq ?? []).flatMap((f) => [f.q, f.a])].join("\n");
+
 const asCount = (raw: string) => NUMBER_WORDS[raw.toLowerCase()] ?? Number(raw);
 
 test("radiance.ts stays internally consistent", () => {
@@ -65,13 +72,14 @@ test("no article states a Radiance Legend count that radiance.ts disagrees with"
   const CONFIRMED_CUE = /\bconfirmed\s+(?:\w+\s+){0,3}$|\bnamed\b|\brevealed\b|\bso far\b/i;
 
   for (const a of radianceArticles()) {
-    for (const m of a.body.matchAll(/champion Legends/g)) {
+    const body = prose(a);
+    for (const m of body.matchAll(/champion Legends/g)) {
       // The claim has to be ABOUT Radiance. Filtering articles by "mentions
       // Radiance somewhere" pulled in the Legacy spoilers post, whose "call it
       // twelve champion Legends" is a correct statement about Set 6.
-      const sentence = a.body.slice(Math.max(0, m.index! - 220), m.index! + 60).split(/(?<=[.|\n])/).slice(-3).join("");
+      const sentence = body.slice(Math.max(0, m.index! - 220), m.index! + 60).split(/(?<=[.|\n])/).slice(-3).join("");
       if (!/Radiance/i.test(sentence)) continue;
-      const before = a.body.slice(Math.max(0, m.index! - 60), m.index!);
+      const before = body.slice(Math.max(0, m.index! - 60), m.index!);
       // Stop at a sentence or table-cell boundary so we never read a number
       // that belongs to a different clause.
       const clause = before.split(/[.|\n]/).pop() ?? "";
@@ -82,7 +90,7 @@ test("no article states a Radiance Legend count that radiance.ts disagrees with"
       // Cut the trailing look-ahead at the sentence end too. Reading 40 raw
       // characters past the phrase let "nine champion Legends. Six are
       // confirmed" be scored as a confirmed-count claim by the NEXT sentence.
-      const after = (a.body.slice(m.index! + m[0].length, m.index! + m[0].length + 40).split(/[.|\n]/)[0] ?? "");
+      const after = (body.slice(m.index! + m[0].length, m.index! + m[0].length + 40).split(/[.|\n]/)[0] ?? "");
       const isConfirmed = CONFIRMED_CUE.test(clause) || /\bnamed so far\b|\bconfirmed\b/i.test(after);
       const expected = isConfirmed ? RADIANCE_LEGENDS_CONFIRMED.length : RADIANCE_LEGENDS_TOTAL;
       assert.equal(
@@ -102,11 +110,11 @@ test("no article states a stale confirmed/unrevealed split", () => {
   const unrevealedCount = /\b(five|four|three|two|one|\d+)\s+unrevealed\b/gi;
 
   for (const a of radianceArticles()) {
-    for (const m of a.body.matchAll(namedSplit)) {
+    for (const m of prose(a).matchAll(namedSplit)) {
       assert.equal(asCount(m[1]), confirmed, `${a.slug}: "${m[0]}" — confirmed is ${confirmed}`);
       assert.equal(asCount(m[2]), unrevealed, `${a.slug}: "${m[0]}" — unrevealed is ${unrevealed}`);
     }
-    for (const m of a.body.matchAll(unrevealedCount)) {
+    for (const m of prose(a).matchAll(unrevealedCount)) {
       assert.equal(
         asCount(m[1]),
         unrevealed,
@@ -127,9 +135,14 @@ test("every Legend radiance.ts confirms is spelled the same way in the articles"
   let checked = 0;
 
   for (const a of ARTICLES) {
-    for (const line of a.body.split("\n")) {
+    // Split at sentence ends as well as lines: a FAQ answer is one "line" of
+    // several sentences, and four names spread across three of them is prose
+    // ("Seraphine and Evelynn headline… Jarvan IV and Ziggs are…"), not a list.
+    for (const line of prose(a).split(/\n|(?<=[.!?])\s+(?=[A-Z*])/)) {
       const present = names.filter((n) => line.includes(n));
       if (present.length < 4) continue;
+      // A list separates its names with commas; prose pairs them with "and".
+      if (present.filter((n) => line.includes(`${n},`)).length < 2) continue;
       checked++;
       const missing = names.filter((n) => !line.includes(n));
       assert.deepEqual(

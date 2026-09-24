@@ -134,7 +134,7 @@ export function sealedReportTarget(
   const override = own(SEALED_GROUP_NAME, groupKey);
   if (row.setCode) {
     return {
-      name: override ?? joinOverlapping(own(SEALED_SET_NAMES, row.setCode) ?? row.setCode, row.productType),
+      name: override ?? joinOverlapping(own(SEALED_SET_NAMES, row.setCode) ?? row.setCode, typeLabel(row.setCode, row.productType)),
       path: `/sealed?set=${encodeURIComponent(row.setCode)}&type=${encodeURIComponent(row.productType)}`,
     };
   }
@@ -169,6 +169,18 @@ function own(map: Readonly<Record<string, string>>, key: string): string | undef
 // whole words only, so "Vendetta" + "Booster Box" is untouched. Exported
 // because getAllSealedGroups (lib/sealed-import.ts) names the /sealed tiles
 // with it too, so the tile and this email can never disagree.
+// What a product type is CALLED for one set, where the generic type name is
+// less clear than the product's own: Radiance's only "Bundle" is the Vault
+// Bundle, which stores list as either "Radiance Vault" or "Vault Bundle". Used
+// by the /sealed tile (sealed-import getAllSealedGroups) and sealedReportTarget
+// alike. The ?type= filter keeps the stored type ("Bundle"); only the name moves.
+const TYPE_LABELS: Record<string, Record<string, string>> = {
+  RAD: { Bundle: "Vault Bundle", "Bundle Case": "Vault Bundle Case" },
+};
+export function typeLabel(setCode: string | null, productType: string): string {
+  return (setCode && TYPE_LABELS[setCode]?.[productType]) || productType;
+}
+
 export function joinOverlapping(a: string, b: string): string {
   for (let i = 0; i < a.length; i++) {
     if (i > 0 && a[i - 1] !== " ") continue;

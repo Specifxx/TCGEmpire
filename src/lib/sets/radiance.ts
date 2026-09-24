@@ -106,7 +106,7 @@ export const RADIANCE_PRODUCTS: RadianceProduct[] = [
 export const RADIANCE_MERCH_DRAW = {
   regions: "North America and Europe",
   signupOpens: "2026-09-25",
-  signupCloses: "2026-09-30", // 9:00 AM PT
+  signupCloses: "2026-09-30", // 9:00 AM PT = 16:00 UTC
   selectionFrom: "2026-10-05",
   limit: "one Radiance Booster Display per selected entrant",
 } as const;

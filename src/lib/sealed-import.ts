@@ -13,7 +13,7 @@ import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAll
 import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
-import { joinOverlapping } from "./price-report";
+import { joinOverlapping, typeLabel } from "./price-report";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -238,15 +238,10 @@ export async function fetchProducts(base: string, handle: string, country: strin
   return all;
 }
 
-// What a product type is CALLED for one set, where the generic type name is
-// less clear than the product's own: Radiance's only "Bundle" is the Vault
-// Bundle, which stores and buyers call the Vault.
-const TYPE_LABELS: Record<string, Record<string, string>> = {
-  RAD: { Bundle: "Vault Bundle", "Bundle Case": "Vault Bundle Case" },
-};
-export function typeLabel(setCode: string | null, productType: string): string {
-  return (setCode && TYPE_LABELS[setCode]?.[productType]) || productType;
-}
+// typeLabel (what a product type is CALLED for one set) lives in price-report.ts
+// beside joinOverlapping, so the /sealed tile and the fixed-report email name a
+// group identically. Re-exported for callers of this module.
+export { typeLabel };
 
 function detectSet(title: string): string | null {
   return SET_FROM_TITLE.find(([re]) => re.test(title))?.[1] ?? null;
