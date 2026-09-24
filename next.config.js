@@ -433,6 +433,15 @@ const nextConfig = {
       // lookahead so this rule never double-sets headers on /embed/*).
       { source: "/((?!embed/).*)", headers: securityHeaders },
 
+      // /llm/* — the markdown mirrors of card, blog, guide and market pages for
+      // AI agents (llms.txt, and each page's rel=alternate). Search Console had
+      // 169 of them "Crawled – currently not indexed" as duplicates of the card
+      // pages they mirror (2026-09-24). noindex by HEADER, because they are
+      // text/markdown and cannot carry a meta tag; NOT a robots.txt Disallow,
+      // which would stop AI bots fetching them at all — and stop Google seeing
+      // the noindex. They stay fetchable; they just stop competing in search.
+      { source: "/llm/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
+
       // ─────────────────────────────────────────────────────────────────────
       // STATIC IMAGE CACHING. Measured, not assumed.
       // ─────────────────────────────────────────────────────────────────────

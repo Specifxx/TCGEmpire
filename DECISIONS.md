@@ -11887,3 +11887,13 @@ October.
   - `/embed` explains it with a `STORE-SLUG` example. Every store page has an
     "Add this badge" box with its own slug filled in. The preview and the
     snippet are the same string.
+
+**7. `/llm/*` leaves the index.** Search Console showed 169 of the markdown
+mirrors "crawled – not indexed" as duplicates of the card pages they mirror.
+
+- **Fix:** `next.config.js` sends `X-Robots-Tag: noindex` on `/llm/:path*`.
+- **Why a header:** the responses are text/markdown, so they cannot carry a
+  meta tag.
+- **Why not robots.txt:** a Disallow would stop AI bots fetching them and would
+  hide the noindex from Google. The mirrors stay fetchable through llms.txt and
+  each page's rel=alternate.
