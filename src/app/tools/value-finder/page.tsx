@@ -164,7 +164,7 @@ export default async function ValueFinderPage() {
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                   {user ? (
-                    <PremiumButton />
+                    <PremiumButton surface="gate:value-finder" />
                   ) : (
                     <Link href="/login?next=/tools/value-finder" className="btn-primary text-sm">Sign in free</Link>
                   )}

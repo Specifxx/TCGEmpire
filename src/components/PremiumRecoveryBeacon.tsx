@@ -23,13 +23,17 @@ function PremiumRecoveryBeaconInner() {
   const fired = useRef(false);
 
   useEffect(() => {
-    // Two email campaigns land here with their own ?src= so the admin can tell
-    // them apart: the abandoned-checkout recovery email and the one-off Premium
-    // offer email (lib/premium-offer.ts). Anything else is not ours to count.
+    // Three emails land here with their own ?src= so the admin can tell them
+    // apart: the abandoned-checkout recovery email, the one-off Premium offer
+    // email (lib/premium-offer.ts), and the new-account welcome email
+    // (2026-09-23). Anything else is not ours to count. Firing the beacon also
+    // remembers the email as this tab's Premium surface, so a checkout started
+    // from here is attributed to the email that brought them.
     const src = searchParams?.get("src");
     if (fired.current) return;
     if (src === "recovery") firePremiumClickBeacon("recovery");
     else if (src === "offer") firePremiumClickBeacon("offer");
+    else if (src === "welcome") firePremiumClickBeacon("welcome-email");
     else return;
     fired.current = true;
     const rest = new URLSearchParams(searchParams.toString());

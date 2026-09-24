@@ -129,7 +129,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
             {user ? (
-              <PremiumButton />
+              <PremiumButton surface="gate:best-basket" />
             ) : (
               <Link
                 href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}`}

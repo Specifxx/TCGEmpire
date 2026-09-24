@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { isPremiumClickSource } from "../src/lib/premium-surface";
 import {
   PREMIUM_PRICE_AMOUNT,
   PREMIUM_ANNUAL_AMOUNT,
@@ -191,10 +192,11 @@ test("premium_checkout_started fires from both checkout entry points, before the
 });
 
 test('"recovery" is a valid premium-click beacon source, both client-side and server-side', () => {
-  const analytics = read("src/lib/analytics.ts");
-  assert.match(analytics, /"dialog" \| "checkout" \| "premium-page" \| "button" \| "recovery"/, "the client-side type union must include recovery");
+  // One allow-list since 2026-09-23 (lib/premium-surface.ts), used by the
+  // client helper's callers and by the route — not two hand-kept copies.
+  assert.ok(isPremiumClickSource("recovery"), "recovery must be an accepted source");
   const route = read("src/app/api/premium/click/route.ts");
-  assert.match(route, /"recovery"/, "the server-side SOURCES allow-list must include recovery");
+  assert.match(route, /isPremiumClickSource\(body\?\.source\)/, "the route validates with the shared allow-list");
 });
 
 test("landing on /premium via the recovery email fires the beacon once, then strips the query param", () => {

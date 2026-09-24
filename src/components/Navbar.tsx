@@ -138,6 +138,7 @@ export function Navbar() {
               on phones") still holds; it is prominence by colour and motion
               rather than by width. */}
           <PremiumNavLink
+            surface="nav:navbar"
             aria-label="Premium"
             title="Premium"
             className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
@@ -280,7 +281,7 @@ export function Navbar() {
           <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Blog
           </Link>
-          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
+          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
             ✦ Premium
           </PremiumNavLink>
 

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPortfolio, isPremium, premiumTierOf, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
+import { getPortfolio, isPremium, premiumCheckoutEnabled, premiumTierOf, PORTFOLIO_FREE, type Portfolio } from "@/lib/premium";
+import { getPremiumNudge, nudgeCopy } from "@/lib/premium-nudge";
+import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
@@ -135,6 +137,13 @@ export default async function PortfolioPage() {
   // read as a paywall wherever they appear. The two blurred Premium previews
   // below render as real content while the flag is on.
   const pro = premium || PORTFOLIO_FREE || ADSENSE_REVIEW_MODE;
+  // Which of the cards they OWN are Rising Cards picks right now — free
+  // accounts with a collection only (lib/premium-nudge.ts). Never fails the page.
+  const nudge =
+    !premium && premiumCheckoutEnabled() && portfolio.holdings.length > 0
+      ? await getPremiumNudge(user.id, country).catch(() => null)
+      : null;
+  const ownedNudge = nudge ? nudgeCopy(nudge, "owned") : null;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -210,7 +219,7 @@ export default async function PortfolioPage() {
                         Value-over-time is a Premium feature
                       </p>
                       <p className="mt-1 text-xs text-slate-400">Daily history, CSV export, unlimited price alerts and an ad-free site.</p>
-                      <div className="mt-3"><PremiumButton /></div>
+                      <div className="mt-3"><PremiumButton surface="gate:portfolio" /></div>
                     </div>
                   </div>
                 </div>
@@ -236,6 +245,8 @@ export default async function PortfolioPage() {
           </div>
         )}
       </section>
+
+      {ownedNudge && <PremiumNudgeCard {...ownedNudge} surface="nudge:portfolio" />}
 
       {portfolio.holdings.length > 0 && (
         <>

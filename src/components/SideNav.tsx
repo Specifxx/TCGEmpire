@@ -10,6 +10,7 @@ import { BrandLogo } from "./BrandLogo";
 import { useCountry } from "./CountryProvider";
 import { useMe } from "@/lib/use-me";
 import { COUNTRIES } from "@/lib/country";
+import { PremiumNavLink } from "./PremiumNavLink";
 
 // The persistent desktop navigation rail: the full left edge of the page from
 // `lg` up, carrying the brand, one search affordance, every link in
@@ -400,13 +401,14 @@ export function SideNav() {
           members got an empty 21px strip at the rail's foot. */}
       {!premium && (
         <div className="shrink-0 border-t border-ink-800 px-3 py-2.5">
-          <Link
+          <PremiumNavLink
             href="/premium"
+            surface="nav:sidebar"
             className="flex w-full items-center gap-2.5 rounded-lg border border-gold/40 px-2.5 py-2 text-sm font-bold text-gold transition-colors hover:bg-gold/10 [@media(pointer:coarse)]:py-3.5"
           >
             <NavIcon name="trophy" className="h-[18px] w-[18px] shrink-0" />
             <span className="truncate">Get Premium</span>
-          </Link>
+          </PremiumNavLink>
         </div>
       )}
     </nav>

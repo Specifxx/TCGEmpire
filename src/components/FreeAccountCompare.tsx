@@ -26,13 +26,18 @@
 // The perks are NOT re-listed anywhere else in the popup — AuthForm is embedded
 // `bare` precisely so its own PERKS line doesn't restate these directly
 // underneath, which is a mistake this dialog has made before.
+//
+// STILL FOUR ROWS (2026-09-23): the free account gained the top three of Deal
+// Finder and Rising Cards — the most concrete thing it now unlocks, and the
+// row a visitor who met either tool's lock is looking for. Watchlist and price
+// alerts share a row to make room rather than growing the card on a phone.
 const ROWS: { label: string; free: boolean }[] = [
   // free: true = available without an account too, so the tick appears in BOTH
   // columns. Only this row qualifies today; if that ever changes, the honest
   // framing changes with it.
   { label: "Compare prices across every store", free: true },
-  { label: "Watchlist", free: false },
-  { label: "Price alerts by email", free: false },
+  { label: "Top 3 in Deal Finder & Rising Cards", free: false },
+  { label: "Watchlist & price alerts by email", free: false },
   { label: "Portfolio tracking", free: false },
 ];
 

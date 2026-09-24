@@ -13,7 +13,18 @@ import { PREMIUM_PRICE_LABEL, premiumZeroToday } from "@/lib/site";
 const GOLD =
   "inline-flex items-center justify-center gap-1.5 rounded-lg bg-gold px-4 py-2 text-sm font-bold text-ink-950 transition hover:brightness-110";
 
-export function PremiumButton({ children, className }: { children?: React.ReactNode; className?: string }) {
+// `surface` names the wall this button sits on ("gate:deal-finder") so the
+// click and any checkout it leads to are attributed to it — see
+// lib/premium-surface.ts. Every gate passes one; omitting it records "dialog".
+export function PremiumButton({
+  children,
+  className,
+  surface,
+}: {
+  children?: React.ReactNode;
+  className?: string;
+  surface?: string;
+}) {
   const { open } = usePremiumDialog();
   const { premium, tier, trialEligible, trialDays } = useMe();
   // A Plus subscriber hitting a Premium-only gate is already paying — the
@@ -21,7 +32,7 @@ export function PremiumButton({ children, className }: { children?: React.ReactN
   // recurring price rather than a trial (they've already had theirs).
   const isPlusUpgrade = premium && tier === "plus";
   return (
-    <button type="button" onClick={open} className={className ?? GOLD}>
+    <button type="button" onClick={() => open(surface)} className={className ?? GOLD}>
       {children ?? (
         isPlusUpgrade ? (
           <>

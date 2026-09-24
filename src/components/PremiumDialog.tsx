@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe, invalidateMe } from "@/lib/use-me";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
+import { recallPremiumSurface } from "@/lib/premium-surface";
 import { AuthForm } from "./AuthForm";
 import { premiumStartHref } from "@/lib/premium-start";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
@@ -34,7 +35,11 @@ import {
 // can trigger it via usePremiumDialog().open(). Styled as a compact market-terminal
 // panel (ink surfaces, gold accent, monospace figures) — deliberately not the green
 // "bubble" look.
-const PremiumDialogContext = createContext<{ open: () => void }>({ open: () => {} });
+// `open(surface)` names WHERE the dialog was opened from — "gate:deal-finder",
+// "gate:portfolio" … (lib/premium-surface.ts) — so the click beacon, and the
+// checkout it may lead to, can be attributed. No argument = "dialog", the
+// pre-2026-09-23 catch-all, kept for any caller that has no better name.
+const PremiumDialogContext = createContext<{ open: (surface?: string) => void }>({ open: () => {} });
 export function usePremiumDialog() {
   return useContext(PremiumDialogContext);
 }
@@ -44,20 +49,12 @@ const GOLD_BTN =
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const open = useCallback(() => {
+  const open = useCallback((surface?: string) => {
     setIsOpen(true);
-    // Fire-and-forget premium-interest beacon (who clicked Premium). keepalive so it
-    // still sends if the click navigates away; failures are ignored.
-    try {
-      fetch("/api/premium/click", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "dialog" }),
-        keepalive: true,
-      }).catch(() => {});
-    } catch {
-      /* never let the beacon break opening the dialog */
-    }
+    // Fire-and-forget premium-interest beacon (who clicked Premium, and from
+    // which surface). The shared helper is keepalive, swallows failures, and
+    // remembers the surface for the tab so checkout can carry it.
+    firePremiumClickBeacon(surface ?? "dialog");
   }, []);
   const close = useCallback(() => setIsOpen(false), []);
   return (
@@ -109,7 +106,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: selected, tier: sellTier }),
+        body: JSON.stringify({ plan: selected, tier: sellTier, surface: recallPremiumSurface() }),
       });
       const d = await res.json();
       if (!res.ok) {

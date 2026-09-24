@@ -18,8 +18,9 @@
 // EVERY ROW IS A REAL ENTITLEMENT, checkable against the code:
 //   account gates       lib/premium.ts — hasAccount() / isPremium()
 //   Best Basket         api/basket 403 + tools/best-basket isPremium()
-//   Deal Finder etc.    tools/deal-finder + tools/rising, which run no query
-//                       at all below a paid tier (2026-09-22)
+//   Deal Finder etc.    tools/deal-finder + tools/rising: no query signed
+//                       out, a three-row query for a free account, the full
+//                       list for a paid tier (2026-09-23)
 //
 // NO "NO ACCOUNT" COLUMN (2026-09-22, owner's call). It had four columns doing
 // the work of three: signed-out and free-account differ on exactly two rows
@@ -52,12 +53,12 @@ export const TIER_COMPARISON: TierRow[] = [
   { feature: "Condition Impact Calculator", account: true, plus: true, premium: true },
   { feature: "Price alerts", account: true, plus: true, premium: true },
   { feature: "Portfolio tracker — history, P&L, CSV export", account: true, plus: true, premium: true },
-  // account: false since 2026-09-22 — these two stopped giving a free teaser
-  // away entirely (both pages run no query below a paid tier), so "Top pick"
-  // here was advertising something the site no longer does. Rising Sealed is
-  // NOT in this pair: it still shows its top pick, and its copy still says so.
-  { feature: "Deal Finder", account: false, plus: "Full list", premium: "Full list" },
-  { feature: "Rising Cards", account: false, plus: "Full list", premium: "Full list" },
+  // "Top 3" since 2026-09-23: a signed-in free account sees the top three rows
+  // of each (queried at that size — see FREE_PREVIEW_ROWS in both pages). They
+  // were a flat "no" from 2026-09-22, and "Top pick" before that. Rising Sealed
+  // is NOT in this pair: it still shows its own top pick, and says so.
+  { feature: "Deal Finder", account: "Top 3", plus: "Full list", premium: "Full list" },
+  { feature: "Rising Cards", account: "Top 3", plus: "Full list", premium: "Full list" },
   { feature: "Value Finder screener", account: false, plus: false, premium: true },
   { feature: "Bulk Pricer — price a whole list at once", account: false, plus: false, premium: true },
   { feature: "Best Basket — cheapest store split, postage included", account: false, plus: false, premium: true },
@@ -109,7 +110,8 @@ export const DIALOG_OMIT_FEATURES = new Set([
 // /premium spells these out as "Full list" for the paid columns, which is the
 // spec-sheet answer. The dialog is a conversion surface rather than a spec
 // sheet, so there they collapse to the same tick/✗ vocabulary as every other
-// row. The free column is a plain ✗ on both since 2026-09-22.
+// row. The free column keeps its "Top 3" string on both surfaces (2026-09-23)
+// — it is the honest answer, and a reason to create the account.
 export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
 
 /**

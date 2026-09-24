@@ -192,7 +192,7 @@ export default async function DemandFinderPage({ searchParams }: { searchParams:
                   See the top 25 by searches and by views, with 7-day, 30-day and all-time windows — not just the top pick.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/demand" className="btn-primary text-sm">Sign in free</Link>}
+                  {user ? <PremiumButton surface="gate:demand" /> : <Link href="/login?next=/tools/demand" className="btn-primary text-sm">Sign in free</Link>}
                   <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
                 </div>
               </div>

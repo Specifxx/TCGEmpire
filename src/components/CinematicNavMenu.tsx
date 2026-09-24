@@ -437,6 +437,7 @@ export function CinematicNavMenu() {
                 checkout itself isn't configured. */}
             {!filtering && !premium && premiumCheckout ? (
               <PremiumNavLink
+                surface="nav:explore"
                 onClick={close}
                 className="mt-7 flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 p-4 text-left transition-colors hover:border-gold/60 hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
               >

@@ -11399,3 +11399,99 @@ beside it. Its findings have a pattern worth remembering:
     and the collection select's white-on-white options.
   - Two domain-colour texts still used a raw `color` hex; they now use
     `.data-ink`.
+
+## Premium after sign-up: the post-signup funnel — 2026-09-23
+
+The owner asked how to bring someone to the Premium button after they sign up,
+and whether "the slider" was enough, since the signed-out slider only sells the
+free account. It was not the only surface, but it was the only one aimed at a
+new account, and nothing could say whether it worked. They then asked for all
+of the recommendations to be built, "even if free accounts get to see the top
+3", and pushed to main.
+
+**What a new free account saw before this.** Sent back to the page they were
+on (or /profile) with a three-step checklist that never mentioned Premium; no
+email of any kind; `PremiumSlideIn` after two page views, once per session,
+gone for good after two dismissals, with a per-page generic pitch; the tool
+gates; and the always-visible nav links. Every one of those surfaces recorded
+its click as either "button" (the slide-in AND every nav link) or "dialog"
+(every tool gate), so the funnel report could count Premium clicks but not
+attribute a single one.
+
+**What shipped, in order of how much it was needed.**
+
+1. **Attribution.** Every Premium CTA names its surface — `slidein`,
+   `nav:navbar|menu|sidebar|explore|dashboard`, `gate:<tool>`,
+   `nudge:watchlist|portfolio|movers`, `checklist`, `welcome-email`
+   (lib/premium-surface.ts is the one vocabulary). The surface is remembered
+   for the tab, sent with the checkout request, stamped on
+   `PremiumClick.surface` for the checkout row AND on the Stripe
+   subscription's metadata, so `funnel-report` now prints clicks, checkouts
+   and trials — with how many became paying — by surface. Purchase steps
+   ("premium-page", "checkout") can never overwrite the surface that sent
+   someone. Everything after this list can be judged against it.
+2. **The top three for free accounts** in Deal Finder and Rising Cards —
+   reversing the 2026-09-22 "free accounts get nothing" for signed-in
+   accounts only, at the owner's call. Signed out still gets no query and a
+   lock that now asks for a free account ("see the top 3 free", attributed as
+   signup source `tool_preview`, with its own /login context line). The rows
+   are limited in the QUERY (`FREE_PREVIEW_ROWS`), never fetched and hidden:
+   the pre-09-22 teaser blurred five real rows in CSS and shipped them in the
+   HTML. Filters, sorting and pagination stay Premium-only. It also gives the
+   free account something concrete to be for: it is now a row in the sign-up
+   popup's comparison and a perk on /login. Every tier table, /premium, the
+   Premium explainer — which was still promising the pre-09-22 "#1 pick" and
+   "top result" — and the slide-in's Rising Cards line were brought in line.
+3. **A welcome email**, once, within about an hour of sign-up: the three things
+   a free account does, then one block on Premium with the trial stated through
+   the shared price helpers. Hourly Actions run over accounts created in the
+   last 72 hours; each account is claimed with a conditional update before
+   sending, and released if the send fails. Existing accounts are outside the
+   window and are never emailed. The workflow treats a 404 as "not deployed
+   yet", because it starts before the route ships.
+4. **A Premium step in the welcome checklist**, not counted in the 3/3, shown
+   only after the account has watched a card. Finishing the three core steps
+   used to hide the checklist, so the quickest users would never have seen it.
+   It now collapses to a "you're set up" card carrying the step.
+5. **Personal nudges.** "4 cards you watch are underpriced right now", computed
+   from the account's own watches against Deal Finder's default ranking, and
+   its owned cards against Rising Cards' Global picks. Shown on /watching and
+   /portfolio, and as the slide-in's copy when there is something specific to
+   say. It reveals counts and one card name, never a price or a gap, which is
+   what Premium sells. The Deal Finder ranking was split out of
+   `getArbitrageVsTcgplayer` so the page and the nudge count from one
+   definition. Two user-scoped, capped queries per call; the rankings come from
+   the existing day caches, called directly.
+
+**What deliberately did not change: the slide-in's timing.** Two page views,
+five seconds, once a session, two dismissals and out — untouched. The only
+change is WHICH copy it shows, when the account's own cards give it something
+true to say (fetched once, raced against 1.5 s, settled before the card
+renders so the text never swaps under the reader). Tuning when it appears was
+the last recommendation precisely because it should follow the attribution
+data, not precede it. Read `funnel-report` in about two weeks: if `slidein`
+converts clicks to trials no worse than `gate:*`, showing it sooner is worth
+testing; if it trails, the gates and the personal nudges are where effort
+belongs.
+
+**Also not built: a toast at the moment of watching a card.** A pitch on every
+watch would be noise; the watchlist page and the slide-in already say the same
+thing about the same cards, at a moment the reader is looking at them.
+
+**The freeze.** The 2026-09-14 entry froze the Premium pitch until about
+09-28 so the 09-14 and 09-21 trial cohorts could be read cleanly. This goes
+ahead on the owner's instruction, and the cost is specific. Those cohorts are
+already in their trials, so their trial→paid result is unaffected. What loses
+a clean before/after is click and checkout volume for accounts created from
+this release on, because several surfaces change at once. The attribution in
+(1) is the partial answer: it cannot separate the changes in time, but it can
+separate them by surface, which the old buckets never could.
+
+**Deploy order.** `PremiumClick.surface` and `User.welcomeEmailSentAt` are
+additive and reach the database through the next build's schema push.
+`funnel-report` falls back to reading without `surface` if run before then.
+Nothing here carries `[deploy]`; it rides the daily release.
+
+Tests: tests/premium-surface.test.ts, tests/tool-free-top3.test.ts (replaces
+premium-no-free-top-pick.test.ts), tests/welcome-email.test.ts,
+tests/premium-post-signup.test.ts.

@@ -74,6 +74,13 @@ model User {
   // cron re-run never double-emails the same abandoned checkout. Same
   // additive/nullable shape as trialReminderSentAt/signupSource above.
   checkoutRecoverySentAt DateTime?
+  // Dedupe stamp for the one-time welcome email to a NEW account (see
+  // runWelcomeEmails in lib/welcome-email.ts, 2026-09-23). Claimed with a
+  // conditional update before sending, so overlapping runs cannot double-send,
+  // and released if the send fails so the next hourly run retries. Additive and
+  // nullable like the stamps above; accounts that existed before it shipped are
+  // outside the run's 72-hour window and are never emailed.
+  welcomeEmailSentAt DateTime?
   // Dedupe stamp for the one-off "a full month of Premium, on us" offer email to
   // free-tier accounts (see runPremiumOfferBlast in lib/premium-offer.ts) — set
   // on a successful send so the batched, resumable blast never double-emails an
@@ -544,7 +551,14 @@ model Feedback {
 model PremiumClick {
   id        String   @id @default(cuid())
   userId    String? // null = not signed in
-  source    String   @default("dialog") // dialog | checkout | premium-page | button | recovery | offer
+  // The surface clicked — see src/lib/premium-surface.ts for the vocabulary.
+  // Historic: dialog | checkout | premium-page | button | recovery | offer.
+  // Since 2026-09-23 also slidein | checklist | welcome-email | nav:* | gate:* | nudge:*.
+  source    String   @default("dialog")
+  // On a source="checkout" row only: the surface that led to this checkout
+  // (remembered client-side for the tab). Null = arrived with no tracked
+  // surface — straight to /premium from search, a bookmark, an old tab.
+  surface   String?
   createdAt DateTime @default(now())
 
   @@index([createdAt])

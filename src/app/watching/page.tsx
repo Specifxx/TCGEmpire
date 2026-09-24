@@ -4,6 +4,10 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Watchlist } from "@/components/Watchlist";
 import { NavIcon } from "@/components/NavIcon";
+import { PremiumNudgeCard } from "@/components/PremiumNudgeCard";
+import { getPremiumNudge, nudgeCopy as watchedNudgeCopy } from "@/lib/premium-nudge";
+import { isPremium, premiumCheckoutEnabled } from "@/lib/premium";
+import { getCountry } from "@/lib/get-country";
 
 // getCurrentUser() reads cookies(), so this route can never be cached. Declared
 // explicitly rather than left to inference — a stray session read is what once
@@ -43,6 +47,13 @@ export default async function WatchingPage() {
   // what the AdSense audit flags as a paywall.
   if (!user) redirect("/login?next=/watching");
 
+  // What Deal Finder and Rising Cards say about THIS account's watched cards —
+  // free accounts only, and only when there is something specific to say
+  // (lib/premium-nudge.ts). Never fails the page.
+  const nudge =
+    !isPremium(user) && premiumCheckoutEnabled() ? await getPremiumNudge(user.id, getCountry()).catch(() => null) : null;
+  const nudgeCopy = nudge ? watchedNudgeCopy(nudge, "watched") : null;
+
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-5">
@@ -61,6 +72,8 @@ export default async function WatchingPage() {
           figure — tap the heart on any card to stop watching it.
         </p>
       </div>
+
+      {nudgeCopy && <PremiumNudgeCard {...nudgeCopy} surface="nudge:watchlist" className="mb-5" />}
 
       <Watchlist />
     </div>
