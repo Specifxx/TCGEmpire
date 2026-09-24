@@ -8,12 +8,12 @@ import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
-import { fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
+import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
 import { SCRAPE_HEADERS as UA, sleep, REQUEST_DELAY_MS, isRateLimited, robotsAllows } from "./scrape-http";
 import { DEFAULT_COUNTRY, currencyOf, type Country } from "./country";
 import { isPreorderSetCode, EBAY_CA_RETAILER } from "./constants";
 import { convertCents } from "./fx";
-import { joinOverlapping } from "./price-report";
+import { joinOverlapping, typeLabel } from "./price-report";
 
 interface ShopifyImg { src?: string }
 interface ShopifyVar { price: string; available: boolean }
@@ -109,8 +109,15 @@ export function isTrackableSealedTitle(title: string): boolean {
 // SEALED_TITLE keyed off product words the T1 collection simply doesn't use, so it
 // gets its own clause here rather than another alternation nobody can read.
 function looksSealed(title: string): boolean {
-  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title)) && !SEALED_EXCLUDE.test(title);
+  return (SEALED_TITLE.test(title) || T1_COLLECTION.test(title)) && !SEALED_EXCLUDE.test(title) && !EVENT_ENTRY.test(title);
 }
+
+// A listing that names a weekday or a clock time is a seat at an event, not a
+// product: "Riftbound - Radiance - Pre-Rift - Tuesday Oct 20th - 6:30 PM". Stores
+// sell Pre-Rift entries that way, one listing per session, and they were typing
+// as "Pre-Rift Kit" — four "kits" from one store, each really a different night.
+// An entry's price is a local event fee, not something another store can beat.
+const EVENT_ENTRY = /\b(?:mon|tues|wednes|thurs|fri|satur|sun)day\b|\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i;
 
 // A sealed product title looks like one of these. "nexus night ... pack" (the real
 // product is titled e.g. "Origins Nexus Night Promo Pack" — night, then an optional
@@ -137,10 +144,49 @@ async function fetchText(url: string): Promise<string | null> {
 
 // Discover ALL riftbound collections (including sealed-only ones, which the singles
 // importer skips) so we can find boxes/packs wherever the store files them.
-async function discoverCollections(base: string): Promise<string[]> {
+// PRE-ORDER COLLECTIONS (2026-09-24; DECISIONS.md "Radiance pre-orders: the
+// stores we were not reading"). Stores file an unreleased set's sealed product
+// in a general pre-order collection — "preorders",
+// "magic-the-gathering-new-releases-and-preorders" — not in their Riftbound
+// one, and discovery only ever kept handles containing "riftbound". A live
+// probe of every tracked store's search found Radiance Pre-Rift Kits, Showdown
+// Decks and boxes at stores in five markets that /radiance-preorders never
+// showed. These collections mix every game, so what they yield is held to the
+// stricter STRICT_RIFTBOUND title test below, not RIFTBOUND_HINT's loose set
+// words ("Origins", "Unleashed" are other games' words too).
+//
+// GENERIC pre-order handles only, anchored. The first, unanchored version also
+// matched "all-non-pre-order-in-stock" and "yugioh-no-preorder" — a store's
+// entire inventory — and seventeen per-game collections at one store; a dry run
+// over all 172 stores showed every Riftbound pre-order sat in one of the
+// generic shapes below, or in a collection named for the set itself
+// ("radiance-pre-order"), which RIFT_ADJACENT_COLLECTION catches.
+const PREORDER_COLLECTION =
+  /^(?:(?:all|tcg|tcgs|card-games?|trading-card-games?)-)?pre-?orders?(?:-(?:products|card-games?|\d+))?$/i;
+// Anchored: "radiance", "radiance-pre-order", "riftbound-radiance…" — not
+// another game's "blooming-radiance-hbp01" or "flash-of-radiance" (seen in the
+// dry run), which only cost a wasted request but crowd the per-store cap.
+const RIFT_ADJACENT_COLLECTION = /^(?:riftbound-)?radiance(?:-|$)|league-of-legends|lol-tcg/i;
+const MAX_PREORDER_HANDLES = 3;
+// Tried when a store's sitemap names no pre-order collection at all. Two 404s
+// at worst, per store per run.
+const CONVENTIONAL_PREORDER_HANDLES = ["preorders", "pre-orders"];
+const STRICT_RIFTBOUND = /riftbound|league\s*of\s*legends/i;
+
+/** Which of a store's collections the sealed importer reads, and how strictly. */
+export function collectionKind(handle: string): "riftbound" | "preorder" | null {
+  if (/\.(jpe?g|png|gif|webp|svg)$/i.test(handle)) return null;
+  if (/riftbound/i.test(handle)) return "riftbound";
+  if (PREORDER_COLLECTION.test(handle)) return "preorder";
+  if (RIFT_ADJACENT_COLLECTION.test(handle) && !/astral/i.test(handle)) return "preorder";
+  return null;
+}
+
+export async function discoverCollections(base: string): Promise<{ riftbound: string[]; preorder: string[] }> {
   const allowed = await robotsAllows(base);
-  if (!allowed("/sitemap.xml")) return [];
+  if (!allowed("/sitemap.xml")) return { riftbound: [], preorder: [] };
   const handles = new Set<string>();
+  const preorder = new Set<string>();
   const index = await fetchText(`${base}/sitemap.xml`);
   let sitemaps = index
     ? Array.from(index.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]).filter((u) => /sitemap_collections/i.test(u))
@@ -152,13 +198,20 @@ async function discoverCollections(base: string): Promise<string[]> {
     if (!xml) continue;
     for (const m of xml.matchAll(/\/collections\/([^<\/?#"]+)/g)) {
       const h = m[1];
-      if (/riftbound/i.test(h) && !/\.(jpe?g|png|gif|webp|svg)$/i.test(h)) handles.add(h);
+      const kind = collectionKind(h);
+      if (kind === "riftbound") handles.add(h);
+      else if (kind === "preorder") preorder.add(h);
     }
   }
-  return Array.from(handles);
+  // Set-named collections first — they are the likeliest to hold the product.
+  const ranked = Array.from(preorder).sort((a, b) => Number(RIFT_ADJACENT_COLLECTION.test(b)) - Number(RIFT_ADJACENT_COLLECTION.test(a)));
+  return {
+    riftbound: Array.from(handles),
+    preorder: ranked.length ? ranked.slice(0, MAX_PREORDER_HANDLES) : CONVENTIONAL_PREORDER_HANDLES,
+  };
 }
 
-async function fetchProducts(base: string, handle: string, country: string): Promise<ShopifyProd[]> {
+export async function fetchProducts(base: string, handle: string, country: string): Promise<ShopifyProd[]> {
   const path = `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(base);
   if (!allowed(path)) return [];
@@ -185,6 +238,11 @@ async function fetchProducts(base: string, handle: string, country: string): Pro
   return all;
 }
 
+// typeLabel (what a product type is CALLED for one set) lives in price-report.ts
+// beside joinOverlapping, so the /sealed tile and the fixed-report email name a
+// group identically. Re-exported for callers of this module.
+export { typeLabel };
+
 function detectSet(title: string): string | null {
   return SET_FROM_TITLE.find(([re]) => re.test(title))?.[1] ?? null;
 }
@@ -210,6 +268,11 @@ export function classifySealed(title: string): string {
   const champ = rawChamp ? rawChamp.toLowerCase().replace(/\s+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
   if (/proving\s*grounds/.test(t)) return /\bcase\b/.test(t) ? "Proving Grounds Case" : "Proving Grounds";
   if (/nexus\s*night\s*(?:\d+\s*)?(?:promo\s*)?pack/.test(t)) return "Nexus Night Pack";
+  // The Radiance Showdown Decks are also sold as "Champion Deck: Evelynn Vs.
+  // Seraphine" (Alt F4, 2026-09-24) — a head-to-head pair is the Showdown Decks
+  // product, never a single Champion Deck, so "<a> vs <b>" wins first. It had
+  // been filing that listing as a one-store "Radiance Champion Deck" group.
+  if (/champion\s*deck/.test(t) && /\bvs\.?\s/.test(t)) return /\bdisplay\b/.test(t) ? "Showdown Decks Display" : "Showdown Decks";
   if (/champion\s*deck/.test(t)) { const n = champ ? ` (${champ})` : ""; return /\bdisplay\b/.test(t) ? `Champion Deck${n} Display` : `Champion Deck${n}`; }
   // MUST stay ahead of the `\bdisplay\b` catch-all below. "Vendetta - Showdown
   // Decks: Zed vs Shen Display" is a display of DECKS, but that catch-all read the
@@ -256,13 +319,17 @@ export function classifySealed(title: string): string {
   // Signature Edition is the serialised/signed one people are actually searching for.
   if (T1_COLLECTION.test(t) && /signature\s*edition|signature\s*set/.test(t)) return "T1 Signature Edition";
   if (T1_COLLECTION.test(t) && /player\s*bundle/.test(t)) return "T1 Player Bundle";
-  if (/vault\s*bundle|worlds\s*bundle|booster\s*bundle|\bbundle\b|gift\s*box/.test(t)) return "Bundle";
-  // AFTER the Bundle rule, never before it: "Vault Bundle" is an existing product
-  // that must keep typing as "Bundle". This catches the BARE "Vault" — a separate
-  // SKU introduced with Radiance ("Riftbound … - Radiance Vault"), which until now
-  // matched no product word at all and so was dropped at the door rather than
-  // mis-typed. Found by testing the gate against real storefront titles.
-  if (/\bvault\b/.test(t)) return "Vault";
+  // A bare "Vault" IS the Vault Bundle (2026-09-24). This rule used to return a
+  // separate "Vault" type on the belief that "Radiance Vault" was its own SKU;
+  // UVS's retailer sheet lists one — the Vault Bundle, UVSRB05VB01, US$34.99 —
+  // and stores title it "Radiance Vault", "Vault Bundle" or "Radiance Bundle" at
+  // the same price. Two types split one product into two half-empty rows in
+  // every market ("Radiance Vault" 5 stores, "Radiance Bundle" 4, in the UK).
+  // A CASE of Vault Bundles (TCGplayer "Radiance - Vault Bundle Case", ~US$1,600)
+  // must not fall into the ~US$35 Bundle row below — it has no "booster" or
+  // "display" beside "case", so the Booster Case rule above does not see it.
+  if (/(?:vault|bundle)\s*(?:bundle\s*)?case\b/.test(t)) return "Bundle Case";
+  if (/vault\s*bundle|\bvault\b|worlds\s*bundle|booster\s*bundle|\bbundle\b|gift\s*box/.test(t)) return "Bundle";
   if (/two[-\s]?player|starter|precon/.test(t)) return "Starter Set";
   if (/\btin\b/.test(t)) return "Tin";
   if (/promo\s*pack/.test(t)) return "Promo Pack";
@@ -344,25 +411,37 @@ export async function importSealed(): Promise<number> {
     //
     // Batched into ONE list rather than per-handle because the Store API is
     // queried by category id, and category discovery already de-duplicates.
-    const batches: ShopifyProd[][] = [];
+    // `strict` marks a batch read from a general pre-order collection, whose
+    // titles must name Riftbound outright (STRICT_RIFTBOUND) — see
+    // PREORDER_COLLECTION.
+    const batches: { products: ShopifyProd[]; strict: boolean }[] = [];
     if (store.platform === "woocommerce") {
-      batches.push(await fetchWooSealedProducts(store));
+      batches.push({ products: await fetchWooSealedProducts(store), strict: false });
     } else {
       // Auto-discover from the sitemap, but fall back to the store's configured
       // collections (some stores' sitemaps don't expose their collection handles —
       // some sealed stores were being skipped). Mirrors price-import.ts.
-      let handles = await discoverCollections(store.base);
-      handles = Array.from(new Set([...handles, ...(store.collections ?? [])]));
+      const found = await discoverCollections(store.base);
+      const handles = Array.from(new Set([...found.riftbound, ...(store.collections ?? [])]));
       if (!handles.length) continue;
-      for (const handle of handles) batches.push(await fetchProducts(store.base, handle, cc));
+      for (const handle of handles) batches.push({ products: await fetchProducts(store.base, handle, cc), strict: false });
+      // Pre-order collections are read AFTER the Riftbound ones, so a product in
+      // both is taken from the Riftbound collection first (`seen` below).
+      for (const handle of found.preorder.filter((h) => !handles.includes(h))) {
+        batches.push({ products: await fetchProducts(store.base, handle, cc), strict: true });
+      }
     }
 
-    for (const products of batches) {
-      if (products.length) scraped = true;
+    for (const { products, strict } of batches) {
+      // A pre-order collection that yields nothing (or 404s) must not count as
+      // a successful read — it would license the delete-and-replace below on a
+      // store whose real collections failed.
+      if (products.length && !strict) scraped = true;
       for (const p of products) {
         if (seen.has(p.handle)) continue;
-        seen.add(p.handle);
         const title = p.title ?? "";
+        if (strict && !STRICT_RIFTBOUND.test(title)) continue; // another game's pre-order
+        seen.add(p.handle);
         if (!looksSealed(title)) continue;
         if (!isRiftboundSealed(title)) continue; // drop non-Riftbound + unreleased sets
         const priced = p.variants.filter((v) => parseFloat(v.price) > 0);
@@ -700,7 +779,10 @@ async function refreshEbaySealedMarket(
       truncated = true;
       break;
     }
-    const r = await searchEbaySealed(g.name, g.productType, g.setCode, g.referenceCents, mkt.marketplace, g.language);
+    // "Radiance Vault Bundle" as an eBay query requires the word "Bundle", which
+    // most listings of it ("Radiance Vault") do not carry; "Vault" matches both.
+    const query = g.name.replace(/\bVault Bundle$/, "Vault");
+    const r = await searchEbaySealed(query, g.productType, g.setCode, g.referenceCents, mkt.marketplace, g.language);
     if (!r) continue;
     // THE LISTING'S OWN TITLE GETS A VOTE (2026-09-20). Until now the group's
     // productType was simply stamped onto whatever the search returned, so a
@@ -787,8 +869,16 @@ export async function refreshTcgplayerSealed(): Promise<number> {
   const rows: any[] = [];
   for (const p of products) {
     const title = (p.productName ?? "").trim();
-    const market = p.marketPrice;
-    if (!title || market == null || market <= 0) continue;
+    // The cheapest in-stock English listing — what a buyer would actually pay —
+    // falling back to market price only when the search preview carries no
+    // listing. Market price alone used to be the whole rule, which priced
+    // Radiance's Showdown Decks off a handful of early presale sales and gave
+    // products with NO market price (Sleeved Booster, Vault Bundle Case,
+    // Showdown Decks Display) no row at all.
+    const listing = cheapestEnglishSealed(p);
+    const market = p.marketPrice != null && p.marketPrice > 0 ? p.marketPrice : null;
+    const price = listing?.price ?? market;
+    if (!title || price == null) continue;
     // Pokémon's Astral Radiance, not Riftbound's Radiance — see FOREIGN_RADIANCE.
     if (FOREIGN_RADIANCE.test(title)) continue;
     const setCode = setCodeFromSetName(p.setName ?? "");
@@ -801,7 +891,7 @@ export async function refreshTcgplayerSealed(): Promise<number> {
       setCode,
       retailer: "tcgplayer",
       retailerName: "TCGplayer",
-      priceCents: Math.round(market * 100),
+      priceCents: Math.round(price * 100),
       url: tcgProductUrl(p),
       imageUrl: imageUrls.get(p.productId) ?? null,
       country: "US",
@@ -1058,7 +1148,7 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
       // and "Proving Grounds" + "Proving Grounds Case" rendered the tile as
       // "Proving Grounds Proving Grounds Case" (2026-09-23). Whole words only,
       // and an exact match still collapses to the set name.
-      const name = !setName ? r.title : joinOverlapping(setName, r.productType);
+      const name = !setName ? r.title : joinOverlapping(setName, typeLabel(r.setCode, r.productType));
       g = {
         groupKey: r.groupKey,
         name,
@@ -1148,7 +1238,7 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
   // Boxes/cases first, then by price.
   const order = [
     "Booster Box", "Booster Case", "Proving Grounds", "Proving Grounds Case", "Box Set",
-    "Pre-Rift Event Kit", "Pre-Rift Kit", "Vault", "Bundle", "Starter Set",
+    "Bundle Case", "Pre-Rift Event Kit", "Pre-Rift Kit", "Vault", "Bundle", "Starter Set",
     "Nexus Night Pack", "Promo Pack", "Sleeved Booster (Art Set)", "Sleeved Booster",
     "Booster Pack", "Bulk Runes Case", "Bulk Runes", "Tin", "Sealed",
   ];

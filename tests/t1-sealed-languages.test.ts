@@ -103,7 +103,9 @@ test("T1_SEEDS defines exactly the three language groups, CN/KR (and only those)
 test("T1_SEEDS are wired into the search list and passed to searchEbaySealed", () => {
   const src = read("src/lib/sealed-import.ts");
   assert.match(src, /\.\.\.T1_SEEDS\.filter\(\(s\) => !haveKeys\.has\(s\.groupKey\)\)/);
-  assert.match(src, /searchEbaySealed\(g\.name, g\.productType, g\.setCode, g\.referenceCents, mkt\.marketplace, g\.language\)/);
+  // The query is the group's name (with Radiance's "Vault Bundle" searched as
+  // "Vault", tests/radiance-sealed-gaps.test.ts); the language must reach eBay.
+  assert.match(src, /const query = g\.name(?:\.replace\([^)]*\))?;\s*const r = await searchEbaySealed\(query, g\.productType, g\.setCode, g\.referenceCents, mkt\.marketplace, g\.language\)/);
 });
 
 test("every T1 group has a curated image AND a clean display name, keyed identically", () => {

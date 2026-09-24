@@ -61,6 +61,7 @@ const PRE_RELEASE_LINKS: Record<string, { href: string; label: string }[]> = {
     { href: "/blog/riftbound-radiance-spoilers", label: "Spoilers: every card revealed so far" },
     { href: "/blog/riftbound-radiance-what-we-know", label: "Release date & what's confirmed" },
     { href: "/radiance-preorders", label: "Pre-order prices, every store" },
+    { href: "/blog/where-to-buy-riftbound-radiance", label: "Where to buy, by country" },
     { href: "/release-dates", label: "Countdown & release calendar" },
     { href: "/blog/riftbound-radiance-biggest-release-since-origins", label: "Why this release matters" },
     { href: "/blog/riftbound-radiance-leaked-mechanics", label: "Leaked mechanics, hedged" },

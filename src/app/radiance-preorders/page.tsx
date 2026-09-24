@@ -10,7 +10,7 @@ import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderP
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
-import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
+import { isBeforeRadianceRelease, RADIANCE_PRODUCTS, RADIANCE_MERCH_DRAW } from "@/lib/sets/radiance";
 import { SITE_URL } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,6 +36,11 @@ export const revalidate = 3600;
 
 const SET_CODE = "RAD";
 
+// "25 September" — the draw's dates are stored once, as ISO, in lib/sets/radiance.ts.
+function dayMonth(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+
 const FAQS = [
   {
     q: "How much does a Riftbound Radiance booster box cost to pre-order?",
@@ -57,12 +62,24 @@ const FAQS = [
     q: "Do you include postage in the pre-order comparison?",
     a: "The prices shown are the store's listed item price. Our per-store postage estimates are documented on each store's own page, and the Best Basket tool factors postage in when you are buying several things at once.",
   },
+  {
+    q: "What is the difference between the Radiance Vault and the Vault Bundle?",
+    a: "There is none — they are the same product. Riot and the distributor call it the Vault Bundle; many stores list it as the \"Radiance Vault\". It holds six booster packs, 36 runes, three foil promo tokens, a storage box and two dividers, at a US$34.99 distributor MSRP, and this page lists every store's copy under one heading.",
+  },
+  {
+    q: "Can I pre-order Radiance from Riot directly?",
+    a: `Not as a pre-order. Riot's Merch Store runs a draw instead: sign-ups from ${dayMonth(RADIANCE_MERCH_DRAW.signupOpens)} to ${dayMonth(RADIANCE_MERCH_DRAW.signupCloses)} 2026, ${RADIANCE_MERCH_DRAW.regions} only, with ${RADIANCE_MERCH_DRAW.limit}. Entrants are picked from about ${dayMonth(RADIANCE_MERCH_DRAW.selectionFrom)}; everyone else buys from a store or a marketplace.`,
+  },
+  {
+    q: "Why are TCGplayer's Radiance prices so much higher than MSRP?",
+    a: "TCGplayer is a marketplace: before release its Radiance prices are individual sellers' asking prices for stock they expect to receive, not a store's pre-order at list price. We show the cheapest English listing, which is often well above the US$120 display MSRP, so a store pre-order is usually the cheaper route before release day.",
+  },
 ];
 
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Radiance Pre-Order Prices Compared — Every Store | RiftCompare" },
   description:
-    "Compare Riftbound: Radiance pre-order prices across every tracked store — booster boxes, packs, the Radiance Vault, Showdown Decks and event kits, cheapest first, in your currency. Releases 23 October 2026.",
+    "Compare Riftbound: Radiance pre-order prices across every tracked store — booster boxes, packs, the Vault Bundle, Showdown Decks and event kits, cheapest first, in your currency. Releases 23 October 2026.",
   keywords: [
     "Riftbound Radiance preorder",
     "Riftbound Radiance pre-order price",
@@ -74,7 +91,7 @@ export const metadata: Metadata = {
   alternates: pageAlternates("/radiance-preorders"),
   openGraph: pageOpenGraph({
     title: "Riftbound Radiance Pre-Order Prices — Compared Across Every Store",
-    description: "Booster boxes, Vaults and Showdown Decks — every tracked store's pre-order price, cheapest first.",
+    description: "Booster boxes, Vault Bundles and Showdown Decks — every tracked store's pre-order price, cheapest first.",
     url: "/radiance-preorders",
   }),
 };
@@ -211,6 +228,45 @@ export default async function RadiancePreordersPage() {
         </div>
       )}
 
+      {/* WHAT each product is (2026-09-24). Stores list the same thing under
+          different names ("Radiance Vault" vs "Vault Bundle"), and a first-time
+          buyer comparing a display with a bundle needs to know what is in each
+          box before the price means anything. Contents and US MSRPs are
+          lib/sets/radiance.ts's, the hub's single source — never typed here. */}
+      <section className="card-surface mt-8 p-6">
+        <h2 className="text-xl font-extrabold text-white">What each Radiance product is</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Contents are from the retailer sheet; list prices are the US distributor MSRP. Riot has not published a price
+          and no MSRP outside the US has been announced — the prices above are what stores are actually asking.
+        </p>
+        <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+          {RADIANCE_PRODUCTS.map((p) => (
+            <div key={p.name} className="rounded-lg border border-white/5 bg-white/[0.02] p-4">
+              <dt className="font-bold text-white">{p.name}</dt>
+              {p.msrp && <dd className="mt-0.5 text-xs font-semibold text-gold">US MSRP {p.msrp}</dd>}
+              {p.detail && <dd className="mt-1.5 text-sm leading-relaxed text-slate-400">{p.detail}.</dd>}
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      {/* Riot's Merch Store DRAW. People search for a Riot-store pre-order and
+          there is none — say what there is, with its dates. */}
+      {stillUpcoming && (
+        <section className="card-surface mt-6 p-6">
+          <h2 className="text-xl font-extrabold text-white">Buying from Riot: the Merch Store draw</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+            Riot is not taking Radiance pre-orders. Its Merch Store runs a draw for{" "}
+            <strong className="text-slate-200">{RADIANCE_MERCH_DRAW.regions}</strong> only: sign-ups open{" "}
+            <strong className="text-slate-200">{dayMonth(RADIANCE_MERCH_DRAW.signupOpens)}</strong> and close{" "}
+            <strong className="text-slate-200">{dayMonth(RADIANCE_MERCH_DRAW.signupCloses)}</strong> (9:00 AM Pacific, 16:00 UTC),
+            selected entrants hear from about {dayMonth(RADIANCE_MERCH_DRAW.selectionFrom)}, and each may buy{" "}
+            {RADIANCE_MERCH_DRAW.limit}, shipping from release day. An entry is not an order, so if you want a display
+            for certain, a store pre-order is the dependable route.
+          </p>
+        </section>
+      )}
+
       {/* WHEN to pre-order, not just what it costs. The prices above answer
           "which store is cheapest today"; this answers the question a buyer
           actually arrives with, and it is the half no comparison page carries.
@@ -262,6 +318,8 @@ export default async function RadiancePreordersPage() {
       )}
 
       <div className="mt-8 flex flex-wrap gap-2 text-sm">
+        <Link href="/blog/where-to-buy-riftbound-radiance" className="btn-ghost">Where to buy Radiance</Link>
+        <Link href="/blog/riftbound-radiance-spoilers" className="btn-ghost">Radiance spoilers so far</Link>
         <Link href="/release-dates" className="btn-ghost">Riftbound release dates</Link>
         <Link href="/blog/riftbound-radiance-what-we-know" className="btn-ghost">What&apos;s confirmed about Radiance</Link>
         <Link href="/sealed" className="btn-ghost">All sealed prices</Link>

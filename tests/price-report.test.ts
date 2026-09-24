@@ -293,12 +293,18 @@ test("a sealed report names and links the product the way its /sealed tile does"
   assert.equal(named("OGS", "Proving Grounds Case"), "Proving Grounds Case");
   assert.match(
     readFileSync(join(process.cwd(), "src/lib/sealed-import.ts"), "utf8"),
-    /joinOverlapping\(setName, r\.productType\)/,
+    /joinOverlapping\(setName, typeLabel\(r\.setCode, r\.productType\)\)/,
     "getAllSealedGroups must name tiles with joinOverlapping, the helper the fixed-report email uses",
   );
   // Whole words only: a type that merely starts with the set's last word is not
   // an overlap.
   assert.equal(named("OGS", "Groundsman Box"), "Proving Grounds Groundsman Box");
+  // The tile's per-set type label too: Radiance's Bundle is the Vault Bundle,
+  // while the ?type= filter keeps the stored type.
+  assert.deepEqual(sealedReportTarget("RAD|Bundle", { title: "Riftbound Radiance Vault", productType: "Bundle", setCode: "RAD" }), {
+    name: "Radiance Vault Bundle",
+    path: "/sealed?set=RAD&type=Bundle",
+  });
   // A set code with no display name reads as the code, as it does on the tile.
   assert.equal(named("XYZ", "Booster Box"), "XYZ Booster Box");
 
@@ -353,7 +359,7 @@ test("the sealed naming mirror still matches getAllSealedGroups", () => {
   assert.match(src, /if \(r\.priceCents < sealedFloorCents\(r\.productType\)\) continue;\s*let g = groups\.get\(r\.groupKey\);/);
   assert.match(
     src,
-    /const setName = r\.setCode \? SET_NAMES\[r\.setCode\] \?\? r\.setCode : null;[\s\S]{0,600}?const name = !setName \? r\.title : joinOverlapping\(setName, r\.productType\);/,
+    /const setName = r\.setCode \? SET_NAMES\[r\.setCode\] \?\? r\.setCode : null;[\s\S]{0,600}?const name = !setName \? r\.title : joinOverlapping\(setName, typeLabel\(r\.setCode, r\.productType\)\);/,
   );
   assert.match(src, /const name = T1_GROUP_NAME\[g\.groupKey\];\s*if \(name\) g\.name = name;/);
   // …which the route feeds the same row: the report's market, cheapest first,

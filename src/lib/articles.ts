@@ -624,7 +624,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
     summary: [
       "**Radiance releases 23 October 2026** — the fifth Riftbound set. **Preview Season opens 25 September** at the Regional Qualifier: Los Angeles and runs to 9 October; Pre-Rift events are 16–22 October.",
       "**The base run is 167 cards.** Riot announced \"180 (66 Showcase)\", but the first Radiance card seen in print — [Neeko, Blending In](/blog/riftbound-neeko-blending-in-spoiler) — is numbered **167/167**, which is the only card-count figure anyone has actually held. The two do not reconcile yet. The set code is **RAD** (published by Riot, not a guess).",
-      "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV are named, four are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
+      "**Nine new champion Legends**: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna are named, three are not. Only one Legend has been fully revealed — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on Empower.",
       "**Every product and its price is public**: booster packs (US$4.99), 24-pack displays (US$120), the Vault (six packs, runes, three foil promo tokens — US$34.99), the Evelynn vs Seraphine Showdown Decks, and a Pre-Rift kit that ships a week early. Full table below.",
       "**Radiance adds a new Ultimate Rare** — a tier above the overnumbered chase prints. It has not been shown. The card list itself has not been revealed either; anyone posting Radiance decklists today is guessing.",
     ],
@@ -647,7 +647,7 @@ Everything above is about *choosing* an archetype. Once you have, the work left 
       },
       {
         q: "Which champions are in Riftbound Radiance?",
-        a: "Nine new champion Legends in total. Five are named — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — and four are still unrevealed. The Pre-Rift kit's mini-decks come in nine champion variations, one per new Legend, which is how the total is known before the last four names are. The full card list has not been published, so which existing champions get new printings is not yet known.",
+        a: "Nine new champion Legends in total. Six are named — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna, the last confirmed at a PAX West livestream — and three are still unrevealed. The Pre-Rift kit's mini-decks come in nine champion variations, one per new Legend, which is how the total is known before the last three names are. The full card list has not been published, so which existing champions get new printings is not yet known.",
       },
       {
         q: "What does Ekko's Radiance Legend do?",
@@ -770,7 +770,7 @@ The **Showcase density** is the figure still resting on Riot's announcement alon
 
 Riot has confirmed six new champion Legends: **Seraphine**, **Evelynn**, **Ekko**, **Ziggs**, **Jarvan IV** and **Orianna** — and said three more are still to be revealed. The total is nine, and it is now pinned down from a second direction: the Pre-Rift kit's mini-decks come in **nine champion variations**, one per new Legend.
 
-All five named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining four.
+All six named champions are League of Legends champions without an existing Riftbound Legend, so each one is a genuine debut rather than a reprint. Riot hasn't said whether the same is true of the remaining three.
 
 **Ekko is the one Legend revealed in full.** *Ekko, Boy Who Shattered Time* was teased at Gen Con and detailed in Riot's own first-look article in August: a **Fury/Mind Legend** built on **[Empower](/keywords/empower)**, the mechanic Vendetta introduced. As previewed, you may disempower Ekko to make your next unit cost **2 energy and 1 power less**, and that unit is **killed at the end of the turn**. That is a cheat-a-threat-in-then-lose-it design — the kind of ability that wants units with enter-the-board effects, or ways to make the sacrifice not matter. It is also the clearest signal yet that Radiance extends Empower rather than retiring it, which matters for every Empower deck bought during Vendetta. *Ekko, Ingenious* is his Champion Unit, and only its art has been shown.
 
@@ -835,8 +835,13 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       "Every Riftbound Radiance card officially revealed so far, in one live gallery — with a dated reveal log, the Preview Season dates and what is unconfirmed.",
     author: "RiftCompare",
     date: "2026-09-21",
+    updated: "2026-09-24",
     readMins: 9,
     tags: ["radiance", "spoilers", "card gallery", "news", "release"],
+    hero: {
+      src: "/radiance-spoilers/neeko-blending-in.jpg",
+      alt: "Riftbound Radiance spoiler — Neeko, Blending In, the first Radiance card photographed in print, numbered RAD 167/167",
+    },
     faq: [
       {
         q: "When do Riftbound Radiance spoilers start?",
@@ -883,7 +888,9 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
     ],
     body: `This is the **live Riftbound: Radiance spoiler tracker**. The gallery below is drawn from our card database and updates as each official reveal is imported, so it is current the morning after a reveal without anyone editing this page. Under it is a **dated log of everything that has actually been revealed**, the Preview Season schedule, and a clear line between what Riot has shown and what has merely circulated.
 
-**Where things stand today, 21 September 2026:** Preview Season has not opened yet. One Radiance card has been **photographed in print** — *Neeko, Blending In*, numbered 167/167 — one is **already in circulation** through a promo collection, and one Legend's text has been **described in full by Riot** in its own first-look article. Everything else, including the three leaked mechanics, is unconfirmed. The reveals proper begin on **25 September**.
+**Where things stand today, 24 September 2026:** Preview Season opens tomorrow. Two Radiance cards have been **photographed in print** — *Neeko, Blending In* (167/167) and Seraphine's Legend, *Starry-Eyed Songstress* (151/167) — one is **already in circulation** through a promo collection, and one Legend's text has been **described in full by Riot** in its own first-look article. Everything else, including the three leaked mechanics, is unconfirmed. The reveals proper begin on **25 September**.
+
+**How this page keeps up:** from 25 September we pull Riot's official card gallery twice a day, at about 02:30 and 18:30 UTC, and every newly revealed card lands in the gallery below on its own. A card revealed in the afternoon in the US is usually here by the next morning in Europe and Australia.
 
 [[embed:0]]
 
@@ -896,7 +903,7 @@ Riot has published the whole run-up, not just the street date. These are the dat
 | **25 – 27 September 2026** | **Preview Season opens at the Regional Qualifier: Los Angeles.** The first official reveals land at the event that closes the 2026 qualifier season. Riot's product rundown originally had the window opening on the 28th; its own schedule now starts it three days earlier. |
 | **28 September – 9 October 2026** | **Preview Season continues.** Cards are shown a handful a day, which is when the set stops being a list of facts and becomes a card list. |
 | **16 – 22 October 2026** | **Pre-Rift events.** Stores run sealed events a week before street date. The first singles change hands here, at the most volatile prices a set ever has. |
-| **23 October 2026** | **Worldwide release.** Boosters, displays, the Vault, the Showdown Decks and singles all go on general sale. |
+| **23 October 2026** | **Worldwide release.** Boosters, displays, the Vault Bundle, the Showdown Decks and singles all go on general sale. |
 
 The countdown to each of those lives on **[Riftbound release dates](/release-dates)**, which also offers an add-to-calendar file.
 
@@ -966,19 +973,197 @@ These are the open questions Preview Season answers, roughly in the order they m
 
 Two things move during Preview Season, and neither is singles.
 
-**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window and ranks them by delivered cost, and the **[sealed comparison](/sealed)** is where displays and the Vault are comparable long before any single is.
+**Pre-order prices move as the chase cards become known.** Stores that priced a display before the reveals adjust once the Ultimate Rare and the headline Legends are public. The **[Radiance pre-order comparison](/radiance-preorders)** tracks every store's price daily through the window, cheapest first in your currency, and **[where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** lists the stores taking pre-orders in each market, plus Riot's own Merch Store draw.
 
 **Older sets move too.** Radiance changes what decks want, which moves Vendetta and Unleashed prices in both directions — up for the cards new archetypes need, down for the ones they replace. **[Price movers](/movers)** shows which is happening rather than predicting it. Singles themselves start trading at Pre-Rift, 16–22 October, when supply is a handful of event boxes and demand is everyone who wants to build immediately; those are almost never the prices a card settles at, and **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** explains the mechanism.
 
 ## How to follow along
 
-Three pages, each for a different question:
+Four pages, each for a different question:
 
 - **This page** for *what has been revealed* — the gallery and the dated log.
 - **[The Radiance set page](/sets/radiance)** for *the card list* as it fills in, with live prices on every card from release day, exactly as **[Vendetta's](/sets/vendetta)** did.
 - **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** for *the set itself* — every product, price and date, kept current.
+- **[Where to buy Radiance](/blog/where-to-buy-riftbound-radiance)** for *getting it* — stores by country, marketplaces and the Riot draw.
 
 We will not run Radiance speculation on any of them. When the reveals land, the gallery above is where they show up first.`,
+  },
+  // Where to buy Radiance (2026-09-24). "Where to buy riftbound radiance" and
+  // "radiance preorder <country>" had no owner: /radiance-preorders answers
+  // "which store is cheapest in MY market today" as a live table, and
+  // /guides/where-to-buy-riftbound-cards is the set-agnostic store directory.
+  // This answers the question in between — which KINDS of seller have
+  // Radiance, per market, what each product is, and Riot's own draw. Store
+  // prices below were read on the stores' own pages on 24 Sep 2026 and are
+  // quoted as that-day examples, never as the current price; the live table is
+  // what stays current. Facts (contents, MSRP, draw dates) mirror
+  // lib/sets/radiance.ts.
+  {
+    slug: "where-to-buy-riftbound-radiance",
+    category: "blog",
+    title: "Where to Buy Riftbound Radiance: Store Guide",
+    excerpt:
+      "Where to pre-order Riftbound Radiance in the US, UK, Europe, Australia, Canada and Singapore: stores, marketplaces and Riot's Merch Store draw.",
+    author: "RiftCompare",
+    date: "2026-09-24",
+    readMins: 10,
+    tags: ["radiance", "where to buy", "preorders", "sealed", "prices", "release"],
+    hero: {
+      src: "/blog/where-to-buy-riftbound-radiance.jpg",
+      alt: "Where to buy Riftbound Radiance — the Neeko, Blending In and Seraphine, Starry-Eyed Songstress cards fanned beside the guide's title, releasing 23 October 2026",
+    },
+    summary: [
+      "**Pre-order from a local game store or online hobby store** — that is where Radiance is actually on sale today, in every market we track. Our **[Radiance pre-order comparison](/radiance-preorders)** lists every tracked store's price in your currency, cheapest first, refreshed daily.",
+      "**Riot is not taking pre-orders.** Its Merch Store runs a **draw** for North America and Europe: sign up 25–30 September 2026, and selected entrants may buy one Booster Display each.",
+      "**US distributor MSRP:** US$4.99 a pack, US$120 a 24-pack display, US$34.99 for the Vault Bundle and US$34.99 for the Seraphine vs. Evelynn Showdown Decks. Stores outside the US set their own prices.",
+      "**Marketplaces cost more before release.** TCGplayer and eBay show sellers' asking prices for stock they have not received yet — on 24 September the cheapest English display on TCGplayer was about US$227 before shipping, against a US$120 MSRP.",
+      "**The big-box retailers do not have it.** As of 24 September we found no Radiance listing at Amazon, Target or Walmart. Radiance releases worldwide on **23 October 2026**.",
+    ],
+    faq: [
+      {
+        q: "Where can I pre-order Riftbound Radiance?",
+        a: "From local game stores and online hobby stores in each market — in the US, UK, eurozone, Australia, Canada and Singapore, independent stores are where Radiance pre-orders are open. RiftCompare's Radiance pre-order page compares every tracked store's price in your market, cheapest first. Marketplaces such as TCGplayer, eBay and Cardmarket also list it, usually above store prices before release.",
+      },
+      {
+        q: "Can I buy Riftbound Radiance from Riot directly?",
+        a: "Only through a draw. Riot's Merch Store takes sign-ups from 25 to 30 September 2026 (closing 9:00 AM Pacific, 16:00 UTC) in North America and Europe; entrants selected from about 5 October may buy one Radiance Booster Display each, shipping from release day. It is not a pre-order and entry does not guarantee a box.",
+      },
+      {
+        q: "How much does a Riftbound Radiance booster box cost?",
+        a: "The US distributor MSRP is US$120 for a 24-pack Booster Display, or US$4.99 a pack. Store pre-order prices vary: on 24 September 2026 we saw US stores from about US$140, UK stores around £150–160, eurozone stores around €125, Canadian stores around C$185–190 and Australian stores around A$240. Marketplace asking prices before release are higher.",
+      },
+      {
+        q: "Is Riftbound Radiance sold at Amazon, Target or Walmart?",
+        a: "Not as of 24 September 2026 — we found no Radiance listing at any of the three. Riftbound's earlier sets reached some big-box shelves after release, so that may change, but for a pre-order today it is a hobby store or a marketplace.",
+      },
+      {
+        q: "Is the Radiance Vault the same as the Vault Bundle?",
+        a: "Yes. The distributor calls it the Vault Bundle and many stores list it as the \"Radiance Vault\". It contains six booster packs, 36 runes, three foil promo tokens, a storage box and two dividers, at a US$34.99 MSRP.",
+      },
+      {
+        q: "When does Riftbound Radiance release?",
+        a: "Worldwide on 23 October 2026. Pre-Rift events run at stores from 16 to 22 October, a week earlier, and card previews run from 25 September to 9 October.",
+      },
+    ],
+    shop: [
+      { label: "Radiance booster displays on eBay", query: "Riftbound Radiance booster display" },
+      { label: "Radiance Vault Bundle on eBay", query: "Riftbound Radiance Vault" },
+      { label: "Seraphine vs Evelynn Showdown Decks", query: "riftbound radiance showdown deck" },
+    ],
+    browseCta: {
+      href: "/radiance-preorders",
+      label: "Compare Radiance pre-order prices →",
+      blurb: "Every tracked store in your market, cheapest first, in your currency — refreshed daily until release day.",
+    },
+    body: `Riftbound: Radiance, the fifth Riftbound set, releases worldwide on **23 October 2026**, and it is already on sale — just not everywhere you would look first. This guide covers **where Radiance can actually be bought today** in each market we track, what each product is, how Riot's own Merch Store draw works, and where the marketplaces fit.
+
+One thing to know before any of it: **stores are the whole market right now.** Riot is not taking pre-orders, Amazon, Target and Walmart had no listing when we checked on 24 September, and the marketplaces are selling stock their sellers have not received yet. The cheapest route to a Radiance box in every market we cover is a store pre-order — and the spread between stores is wide enough that comparing first is worth the minute it takes.
+
+The live version of every price in this guide is on **[the Radiance pre-order comparison](/radiance-preorders)**, which lists each tracked store's current price in your currency, cheapest first, and refreshes daily. The store prices quoted below were read on each store's own page on 24 September 2026. They are examples of the range, not quotes — stores re-price pre-orders often, especially once the chase cards are revealed.
+
+## What you are buying: the Radiance products
+
+Four product lines, per Riot's announcement and the retailer sheet. The prices are the **US distributor MSRP** — Riot has not published a price itself, and no official price outside the US has been announced, so stores elsewhere set their own.
+
+| Product | What is in it | US MSRP |
+| --- | --- | --- |
+| **Booster pack** | 14 cards | US$4.99 |
+| **Booster Display** (the "booster box") | 24 packs; a case is six displays | US$120 |
+| **Vault Bundle** — also listed as the "Radiance Vault" | Six booster packs, 36 runes, three foil promo tokens, a storage box and two dividers | US$34.99 |
+| **Showdown Decks: Seraphine vs. Evelynn** | Two 56-card preconstructed decks, two booster packs, two playmats, two deck boxes and a rulebook | US$34.99 |
+| **Pre-Rift kit** | A store's event kit: 16 player kits (a 15-card mini-deck, five boosters and a promo each) plus a prize display | Sold to stores, not players |
+
+Three naming traps catch buyers every set, and Radiance has all three:
+
+- **"Vault" and "Vault Bundle" are the same product.** Some stores list one name, some the other. We group them together on the comparison page for exactly that reason.
+- **The Showdown Decks are sometimes listed as a "Champion Deck".** At least one store titles them "Champion Deck: Evelynn Vs. Seraphine". It is the two-deck Showdown box, not a single champion deck.
+- **A "Pre-Rift" listing at a store is usually an event seat**, not a sealed kit. Stores sell entry to their Pre-Rift event — you play the kit in store, 16 to 22 October — and some list those seats alongside the sealed product. Check the listing for a date and a time before you add it to a basket expecting a parcel.
+
+If you are unsure what a box is worth opening at all, that is a separate question with an arithmetic answer — the **[box EV calculator](/tools/box-ev)** does it for every released set and will cover Radiance from release day, once real singles prices exist.
+
+## Buying from Riot: the Merch Store draw
+
+Riot is **not** selling Radiance by pre-order. Its Merch Store is running a **draw** instead, the same approach it used for the T1 Worlds Champion Collection:
+
+| Step | Date |
+| --- | --- |
+| Sign-ups open | 25 September 2026 |
+| Sign-ups close | 30 September 2026, 9:00 AM Pacific (16:00 UTC) |
+| Selected entrants contacted | From about 5 October 2026 |
+| What you can buy | One Radiance Booster Display per selected entrant |
+| Shipping | From release day |
+
+It covers **North America and Europe only**, so Australia and Singapore are out. If you are in the UK, check the eligible-country list on Riot's sign-up page before counting on it. Riot did not publish a price on the draw announcement.
+
+Is it worth entering? It costs nothing, and if you are picked you buy direct from the publisher. But an entry is not an order: if you want a display for certain, pre-order from a store as well, and check the store's cancellation terms in case you are selected and no longer need it.
+
+## Where to pre-order Radiance, market by market
+
+Radiance is on sale at independent game stores in every market we track. Below is what we saw in each on 24 September. Your market's live, sorted list is on **[the pre-order comparison](/radiance-preorders)** — it follows the country you browse from, and you can switch it at the top of any page.
+
+### United States
+
+US stores were the closest to MSRP. **Miniature Market** listed the Booster Display at **US$139.99**, with a limit of four per customer; at the other end, **ToyWiz** asked **US$224.99** for the same box. That is a US$85 spread on an identical, unopened product — the whole case for comparing before you order. **TCGplayer** (below) had marketplace listings, and **GameStop** has a page for the Vault Bundle.
+
+Star City Games lists Radiance as **"Preorders begin October 6"**, so it had nothing to sell on the 24th; CoolStuffInc had no listing when we looked. Neither is a reason to wait — just a sign that not every big US hobby retailer has opened yet.
+
+### United Kingdom
+
+UK hobby stores had displays at around **£150–160**: **Unicorn Cards** listed one at £158.58, and **[Zatu Games](/stores/zatugames)**, TierZero and Magic Madhouse all had Radiance pages. **[Dice Saloon](/stores/dicesaloon)** and Seventh City were among the UK stores taking bookings for their **Pre-Rift events** as well as selling packs.
+
+### Eurozone
+
+**[Universe TCG](/stores/universetcg)** had the display at **€125**, with pre-orders open until 15 October. On **Cardmarket**, Europe's main marketplace, displays were listed at roughly **€122–130** and single packs around €5.50–6.00 — unusually close to store prices for a pre-release marketplace, because Cardmarket's sellers are largely stores themselves. Time Twister had Radiance pre-orders up as well.
+
+### Australia
+
+Australian stores were at around **A$240**: Turtle TCG and Let's Play Games both listed the display at **A$239.99**, and **[Ozzie Collectables](/stores/ozzie)** had Radiance pre-orders up too. Australian pricing tends to sit well above a straight currency conversion of the US MSRP because of distribution and freight, so compare Australian stores with each other, not with US prices.
+
+### Canada
+
+Canada had the widest choice of stores we track: **[Hobbiesville](/stores/hobbiesvilleca)** listed the display at **C$189.95** and Skyfox Games at **C$184.99**, with **[401 Games](/stores/games401)**, **[Game 3](/stores/game3)** and **[Red Riot Games](/stores/redriotgames)** also taking pre-orders.
+
+### Singapore
+
+Singapore's allocation looks tight. **Flagship Games** listed the display at **S$160** and had already **sold out** of pre-orders, with a 10% cancellation fee on existing orders — read a store's terms before committing. Utopia Games and **[Chonky Collectibles](/stores/chonkycollectibles)** had Radiance listings too.
+
+## Marketplaces: TCGplayer, eBay and Cardmarket
+
+A marketplace price for an unreleased product is a **seller's asking price for stock they expect to receive**. That makes it a useful signal of demand and a poor place to buy a sealed box before release day. On 24 September, the cheapest English-language listings on **TCGplayer** were:
+
+| Radiance product | Cheapest TCGplayer listing, 24 Sep | US MSRP |
+| --- | --- | --- |
+| Booster Display | about US$227, plus about US$12 shipping | US$120 |
+| Vault Bundle | about US$134 | US$34.99 |
+| Showdown Decks | about US$99 | US$34.99 |
+
+The Vault Bundle is the clearest example: a sealed product with an MSRP under US$35 was listed at nearly four times that, because the only sellers are people who pre-ordered elsewhere and are reselling their allocation. Those prices usually fall once stores deliver and the supply is real. Our comparison page shows TCGplayer's cheapest listing next to the stores' pre-orders, so the gap is visible at a glance rather than something you discover at checkout.
+
+**eBay** has the same dynamic, plus the extra risk of pre-sale listings from sellers with no allocation at all. If you buy there before release, buy from a seller with a track record of shipping sealed product, and read the dispatch date. **Cardmarket** in Europe is the exception above: its display prices were close to store prices, because so many of its sellers are the stores themselves.
+
+## Where not to look (yet)
+
+- **Amazon, Target and Walmart** had no Radiance listing on 24 September. A third-party Amazon listing that appears before release is a marketplace seller, not Amazon, and deserves the same caution as eBay.
+- **Unofficial "early" singles.** A handful of cards reach the market during Pre-Rift week, 16–22 October, from event boxes. They are real, but they trade at the most volatile prices a set ever has — see **[why Riftbound card prices change](/guides/why-riftbound-card-prices-change)** for the mechanism.
+- **Anything claiming to ship before 23 October.** Stores receive stock for Pre-Rift events a week early and for general sale on release day. A listing promising a sealed display in September is either a misprint or a seller without stock.
+
+## Pre-order or wait?
+
+It depends on what you want from the set.
+
+- **You want to open product.** Pre-order. Allocation, not price, is what runs out — Singapore's sell-out is the early sign. Pick the cheapest store in your market with sensible cancellation terms, and put in a Merch Store draw entry too if you are eligible.
+- **You want specific cards.** Wait for singles. They are at their most expensive in Pre-Rift week and usually settle a few weeks after release. Every Radiance card gets a **[card page with live prices](/sets/radiance)** across every store we track as soon as it is imported — the **[Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** lists what has been revealed so far.
+- **You are not sure.** Put a **[price alert](/alerts)** on the product or card and let the price come to you. Singles for the headline Legends move fastest; the price history on each card page shows which way.
+
+## Keeping this current
+
+Three pages stay current so this guide does not have to:
+
+- **[Radiance pre-order prices](/radiance-preorders)** — every tracked store's live price in your market, cheapest first, until release day, after which Radiance products move to **[the sealed comparison](/sealed)**.
+- **[The Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)** — every card revealed so far, updated twice a day through Preview Season.
+- **[Radiance: what's confirmed](/blog/riftbound-radiance-what-we-know)** — the set's dates, products and Legends, with sources.
+
+For stores in general rather than Radiance specifically, **[where to buy Riftbound cards](/guides/where-to-buy-riftbound-cards)** covers every store we track, market by market.`,
   },
   // THE REDACTED CONTENTS GRAPHIC (2026-09-22). Why this is a separate post
   // rather than a paragraph on one of the seven Radiance pages that already
@@ -7731,7 +7916,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
       },
       {
         q: "When is the next Riftbound set?",
-        a: "Radiance, 23 October 2026 — a confirmed 180 cards (66 Showcase), with five new champion Legends confirmed so far and four more still unrevealed: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+        a: "Radiance, 23 October 2026 — a confirmed 180 cards (66 Showcase), with six new champion Legends confirmed so far and three more still unrevealed: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.",
       },
       {
         q: "Which Riftbound set has the most cards?",
@@ -8430,7 +8615,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
     category: "guide",
     title: "League of Legends Champions in Riftbound",
     excerpt:
-      "Ahri, Jinx, Yasuo, Zed and dozens more already have real Riftbound cards, with five more in Radiance. How Legends work, and where to check your main.",
+      "Ahri, Jinx, Yasuo, Zed and dozens more already have real Riftbound cards, with nine new Legends in Radiance. How Legends work and where to check your main.",
     author: "RiftCompare",
     date: "2026-08-13",
     readMins: 5,
@@ -8442,7 +8627,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
     summary: [
       "**Dozens of League of Legends champions already have real Riftbound cards** as Legends — the champion that anchors a deck — with more added in every new set.",
       "**Recognisable names already in the game** include Ahri, Jinx, Yasuo, Zed, Lux, Ezreal, Katarina, Vi, Caitlyn and Jhin.",
-      "**Radiance, the next set, adds five more**: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+      "**Radiance, the next set, adds nine new Legends** — six named so far: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.",
       "The exact, always-current list — every champion with a card, how many, and live prices — is on the [champions page](/champions), not a static list that goes stale.",
     ],
     faq: [
@@ -8464,7 +8649,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
       },
       {
         q: "Do champions get new cards in every Riftbound set?",
-        a: "Existing champions can get additional printings and treatments, and each new set has historically introduced champions who didn't have a Riftbound card before — Radiance, the next set, adds five: Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV.",
+        a: "Existing champions can get additional printings and treatments, and each new set has historically introduced champions who didn't have a Riftbound card before — Radiance, the next set, adds nine, six of them named so far: Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna.",
       },
     ],
     browseCta: {
@@ -9303,7 +9488,7 @@ If neither of those describes how you use the site, the free tier — which stil
       "**Kennen was the most-played legend at the Regional Qualifier: Barcelona** (21–23 Aug, a record 2,224 players) at 12.7% of the field — and still lost the final to Ornn, a legend nobody was building around going in.",
       "**Losing the final doesn't make Kennen a bad deck**: it was the most-played legend in the room and put three copies into the Top 8, which is exactly why every serious Day 2 competitor spent Swiss preparing to beat it specifically — and one of them did.",
       "**The Regional Qualifier: Singapore is running right now** (4–6 Sept) — Southeast Asia's biggest organised Riftbound event so far. Day 1's results aren't final as of writing, and this article doesn't invent ones that don't exist yet.",
-      "**Radiance releases 23 October 2026** with five confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
+      "**Radiance releases 23 October 2026** with six confirmed champions — Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs, Orianna — and real, sourced marketing signals (a shared Showdown Deck, booster box art) already show which two get top billing.",
       "Want to price any of these lists yourself? **[Paste one into the deck builder](/deck)** — every card priced live in your own market, cheapest store first.",
     ],
     faq: [
@@ -9321,7 +9506,7 @@ If neither of those describes how you use the site, the free tier — which stil
       },
       {
         q: "Which Riftbound Radiance champions has Riot confirmed?",
-        a: "Five so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV and Ziggs. Four more are set to be revealed during Preview Season, which opens 25 September 2026 at the Regional Qualifier: Los Angeles and runs through 9 October, ahead of Radiance's 23 October street date.",
+        a: "Six so far, of nine total Legend slots: Seraphine, Evelynn, Ekko, Jarvan IV, Ziggs and Orianna (confirmed later, at a PAX West livestream). Three more are set to be revealed during Preview Season, which opens 25 September 2026 at the Regional Qualifier: Los Angeles and runs through 9 October, ahead of Radiance's 23 October street date.",
       },
       {
         q: "Which Radiance champions is Riot actually promoting hardest?",
@@ -9396,7 +9581,7 @@ Put together, those five aren't a guess at who'll be good — they're simply whe
 We deliberately don't predict what individual cards will do — see [why Riftbound prices actually change](/guides/why-riftbound-card-prices-change) for the real mechanics behind that, instead of a guess dressed up as one. What's actually actionable right now:
 
 - **If you're building for the rest of the Vendetta season**, Kennen is still the deck to beat — one lost final is a data point, not a pattern — and [the deck builder](/deck) prices any published list live, cheapest store first, in your own currency; a Viktor or Master Yi shell comes in at a fraction of Kennen's cost to assemble.
-- **If you're buying into Radiance**, the five confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
+- **If you're buying into Radiance**, the six confirmed champions are the safest early read on where new demand lands first — [compare Radiance preorders](/radiance-preorders) rather than guessing at singles prices for cards that haven't even been revealed yet.
 - **If you just want to know what's shipping and when**, without a hard-coded countdown that goes stale the day it's wrong, [the release calendar](/release-dates) rolls itself forward automatically as each date passes — Radiance, Legacy and everything Riot has announced beyond it.
 
 We'll be watching Singapore's Top 8 the moment it's final — and reading it the same way we read Barcelona: from the actual decklists, not a guess at what they'll say.`,
@@ -9474,7 +9659,7 @@ We'll be watching Singapore's Top 8 the moment it's final — and reading it the
       },
       {
         q: "Which champions debut in Radiance?",
-        a: "Five are named so far — Seraphine, Evelynn, Ekko, Ziggs and Jarvan IV — with four more champion Legends still unrevealed, so nine is the expected total. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
+        a: "Six are named so far — Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV and Orianna — with three more still unrevealed, so nine is the expected total. Origins, Spirit Forged and Unleashed each debuted twelve; Vendetta debuted nine.",
       },
       {
         q: "Will Radiance have K/DA cards?",
@@ -9508,7 +9693,7 @@ For Origins, Spirit Forged and Unleashed, the headline figure is the **base run*
 | [Vendetta](/sets/vendetta) | 166 | not published | — | 9 |
 | **[Radiance](/sets/radiance)** | **~114** | **66** | **180** | **9 expected** |
 
-*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has five named so far with four more unrevealed. The 24-card Proving Grounds starter set is excluded.*
+*Radiance's base run is arithmetic, not a Riot figure: 180 minus 66. Champion debuts are champions receiving their first Riftbound Legend card, counted from our own card database; Radiance has six named so far with three more unrevealed. The 24-card Proving Grounds starter set is excluded.*
 
 So the honest position is that Radiance is the smallest main set to date on base cards, and that it is not bigger than Vendetta once both numbers are counted the same way. If "biggest" means "most cards", this post ends here.
 
@@ -9590,7 +9775,7 @@ The full product table, with what each contains, is in **[what's confirmed about
 
 ## What this means if you are buying
 
-- **If you want to play:** the champion debuts are the reason to care — five named, four still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV or Orianna is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
+- **If you want to play:** the champion debuts are the reason to care — six named, three still unrevealed. If Seraphine, Evelynn, Ekko, Ziggs, Jarvan IV or Orianna is your main, this is your set, and singles will be the cheap way in a few weeks after release rather than on day one.
 - **If you want to open sealed:** wait for real prices and run [box EV](/tools/box-ev) against the singles market. A 37% Showcase share makes the variance between boxes higher than in any previous set, which is exactly when buying singles beats opening.
 - **If you are tracking the K/DA thesis:** the three existing members are already priced. Set a [price alert](/alerts) on them rather than checking manually — if Radiance does ship a K/DA tier, the existing three are likely to move on the announcement, not on release day.
 - **If you are selling:** the window between reveal season and release is usually when interest in the *previous* set is weakest. [Movers](/movers) will show you whether that is happening to Vendetta.

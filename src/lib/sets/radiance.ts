@@ -73,16 +73,43 @@ export interface RadianceProduct {
   msrp?: string;
 }
 
+// CONTENTS AND US PRICES, re-sourced 2026-09-24. Riot's own announcement names
+// the products but gives no prices; the contents below are from UVS's retailer
+// sheet ("Radiance Dates and Details", July 2026) and the US MSRPs from the
+// distributor listing (PHD Games, 15 Jun 2026), which is why they are labelled
+// MSRP and never "Riot's price". No non-USD MSRP has been published.
 export const RADIANCE_PRODUCTS: RadianceProduct[] = [
-  { name: "Booster Packs & Displays" },
+  {
+    name: "Booster Packs & Displays",
+    detail: "14-card packs; a display is 24 packs. A case is six displays",
+    msrp: "$4.99 a pack · $120 a display",
+  },
   {
     name: "Showdown Decks: Seraphine vs. Evelynn",
-    detail: "Two 56-card preconstructed champion decks, two booster packs, two playmats, 1 rulebook",
+    detail: "Two 56-card preconstructed champion decks, two booster packs, two playmats, two deck boxes, 1 rulebook",
     msrp: "$34.99",
   },
-  { name: "Vault Bundle" },
-  { name: "Pre-Rift kits" },
+  {
+    name: "Vault Bundle",
+    detail: "Six booster packs, 36 runes, three foil promo tokens, a storage box and two dividers — sold by many stores as the \"Radiance Vault\"",
+    msrp: "$34.99",
+  },
+  {
+    name: "Pre-Rift kits",
+    detail: "Stores' event kit: 16 player kits (a 15-card mini-precon, five boosters and a promo each) plus a prize display, played as Sealed 16–22 October",
+  },
 ];
+
+// Riot Merch Store DRAW, not pre-orders (playriftbound.com, "Radiance Merch
+// Store Update", 17 Sep 2026). North America and Europe only; each selected
+// entrant may buy one Booster Display. No price published on that page.
+export const RADIANCE_MERCH_DRAW = {
+  regions: "North America and Europe",
+  signupOpens: "2026-09-25",
+  signupCloses: "2026-09-30", // 9:00 AM PT = 16:00 UTC
+  selectionFrom: "2026-10-05",
+  limit: "one Radiance Booster Display per selected entrant",
+} as const;
 
 export interface RadianceFaq {
   q: string;
@@ -110,7 +137,11 @@ export const RADIANCE_FAQ: RadianceFaq[] = [
   },
   {
     q: "Where can I preorder Riftbound Radiance the cheapest?",
-    a: "RiftCompare compares live Radiance preorder prices for the booster display, Showdown Decks and Vault Bundle across every US store it tracks, ranked by total delivered cost.",
+    a: "RiftCompare compares live Radiance preorder prices for the booster display, Showdown Decks, Vault Bundle and Pre-Rift kits across every store it tracks in your market — the US, UK, Australia, Canada, Singapore and the eurozone — cheapest first, in your currency.",
+  },
+  {
+    q: "Can I buy Radiance directly from Riot?",
+    a: "Only through a draw. Riot's Merch Store takes sign-ups from 25 to 30 September 2026 in North America and Europe; entrants selected from about 5 October may buy one Radiance Booster Display each, shipping from release day. Everywhere else, and for every other product, it is a store or a marketplace.",
   },
   {
     q: "How often do Radiance prices update on RiftCompare?",

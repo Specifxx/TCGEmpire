@@ -150,6 +150,22 @@ export function englishNmLowest(p: TcgProduct): number | null {
 // comes from the product (`foilOnly`), so the listing has to agree with it.
 // A listing with no `printing` field is accepted rather than dropped, so an API
 // change that omits it degrades to the old behaviour instead of blanking rows.
+/**
+ * The cheapest in-stock ENGLISH listing of a SEALED product (condition
+ * "Unopened", so no Near Mint filter), or null. Sealed products carry no
+ * printing, so there is nothing to match there either. Used by the sealed
+ * importer for the same reason cheapestEnglishNm() prices singles: the
+ * comparison is "what would I pay", and TCGplayer's market price answers a
+ * different question — for an unreleased set it is a few early presale sales,
+ * and a product with none (a Sleeved Booster, a Vault Bundle Case) had no row
+ * at all. See DECISIONS.md, 2026-09-24.
+ */
+export function cheapestEnglishSealed(p: TcgProduct): TcgListing | null {
+  const ls = (p.listings ?? []).filter((l) => l.languageId === 1 && (l.quantity ?? 0) > 0 && l.price > 0);
+  if (!ls.length) return null;
+  return ls.reduce((a, b) => (b.price < a.price ? b : a));
+}
+
 export function cheapestEnglishNm(p: TcgProduct): TcgListing | null {
   const want = p.foilOnly ? "foil" : "normal";
   const ls = (p.listings ?? []).filter(
