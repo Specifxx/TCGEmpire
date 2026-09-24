@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCountry } from "./CountryProvider";
 import { Dialog } from "./ui/Dialog";
+import { useMe } from "@/lib/use-me";
 import {
   ISSUES,
   MAX_NOTE,
@@ -81,6 +82,7 @@ function ReportDialog({
   onClose: () => void;
 }) {
   const { country } = useCountry();
+  const { user } = useMe();
   const [retailer, setRetailer] = useState(listings[0]?.retailer ?? "");
   const [issue, setIssue] = useState<IssueCode>("PRICE_WRONG");
   const [price, setPrice] = useState("");
@@ -124,7 +126,7 @@ function ReportDialog({
           issue,
           actualPriceCents: cents,
           note: note.trim() || undefined,
-          email: email.trim() || undefined,
+          email: !user && email.trim() ? email.trim() : undefined,
           page: typeof window !== "undefined" ? window.location.pathname : undefined,
           website,
         }),
@@ -256,18 +258,41 @@ function ReportDialog({
               />
             </label>
 
-            <label className="block">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Email <span className="font-normal normal-case">(optional — only if you want a reply)</span>
-              </span>
-              <input
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-white"
-              />
-            </label>
+            {/* The hint states what the address is FOR (2026-09-23): marking a
+                report FIXED now emails the reporter (see shouldNotifyReporter),
+                so say so — "only if you want a reply" gave a reporter no reason
+                to leave one. It is 303px on one line and a 320px phone's form
+                has 286px, so it wraps there; the nbsp keeps "it's fixed)"
+                together instead of stranding "fixed)".
+
+                SIGNED-OUT ONLY, like FeedbackForm's email field. api/price-report
+                stores the typed address for signed-out reporters alone — for a
+                signed-in one it keeps `email: null` and the admin route writes to
+                the ACCOUNT address, and only once it is verified. So a signed-in
+                reporter is told where the email will go, and one with an
+                unverified address is promised nothing rather than an email that
+                never comes. Starts signed out (useMe resolves after mount), so
+                the majority — signed-out visitors — see no shift. */}
+            {user ? (
+              user.emailVerified && (
+                <p className="text-xs leading-relaxed text-slate-400">
+                  We&apos;ll email your account address once it&apos;s fixed.
+                </p>
+              )
+            ) : (
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Email <span className="font-normal normal-case">(optional — we&apos;ll email you once it&apos;s&nbsp;fixed)</span>
+                </span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-ink-700 bg-ink-900 px-3 py-2 text-sm text-white"
+                />
+              </label>
+            )}
 
             {/* Honeypot — hidden from people and from screen readers, visible to
                 a script that fills every input it finds. */}

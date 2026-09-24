@@ -1,6 +1,7 @@
 import { SITE_NAME, SITE_URL, premiumFromLine } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
+import { issueNoun } from "./price-report";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -808,4 +809,64 @@ export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): 
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
   return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)));
+}
+
+// ─── Wrong-price report fixed (thank-you) ────────────────────────────────────
+
+// Sent when an admin moves a PriceReport to FIXED (see
+// app/api/admin/price-reports and shouldNotifyReporter in lib/price-report.ts),
+// to the address the reporter volunteered — or their account's, only if it is
+// verified. Until 2026-09-23 a reporter never heard back, and being told "you
+// were right, it's fixed" is what makes someone report the next one too.
+//
+// TRANSACTIONAL, like the trial and checkout notices above: tied to one thing
+// the recipient did, so no opt-out link and no account CTA (accountCtaBlock's
+// own header rules it out of transactional sends). The footer promises nothing
+// about "again": a report reopened and fixed a second time sends a second one,
+// on purpose (see shouldNotifyReporter), so "we won't email you about this
+// report again" would be false exactly then.
+//
+// IT CLAIMS ONLY WHAT FIXED MEANS (2026-09-23): an admin marked the report
+// fixed. Not that the page already shows it — a card page revalidates daily
+// (revalidate = 86400), sealed groups sit behind a 48h data cache and a
+// 15-minute memo until the next import busts them, and some fixes only land
+// with that import — hence "it can take up to a day", and a button that says
+// "See it on RiftCompare" rather than "See the corrected price", which an
+// out-of-stock or broken-link report never had. The noun follows the report's
+// issue for the same reason (issueNoun): "the <store> link you reported".
+//
+// Nothing the reporter typed reaches it. The route passes a store name only when
+// it is ours (a null storeName drops it), and the item name is our tile or card
+// name. Both are escaped regardless — a setless sealed group's name is a
+// store's listing title.
+function priceReportFixedFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you reported a problem with a listing on ${SITE_NAME} and it has now been fixed.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export interface PriceReportFixedOpts {
+  itemName: string; // the card or sealed product the report was about, as the site names it
+  storeName: string | null; // the store whose listing was wrong — null when we can't vouch for the name
+  issue: string; // the report's issue code (lib/price-report ISSUES), which picks the noun
+  url: string; // absolute link to that item on the site
+}
+
+export async function sendPriceReportFixedEmail(to: string, opts: PriceReportFixedOpts): Promise<boolean> {
+  // "the Cherry Collectables price" / "the link" — the store, when we have one
+  // we trust, qualifies the noun rather than getting a clause of its own.
+  const what = `${opts.storeName ? `${opts.storeName} ` : ""}${issueNoun(opts.issue)}`;
+  const item = escapeHtml(opts.itemName);
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Thanks — the ${escapeHtml(what)} you reported for <strong style="color:#fff">${item}</strong> has been fixed.
+      It can take up to a day to show everywhere on the site.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${escapeHtml(opts.url)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See it on ${SITE_NAME}</a></td></tr>`;
+  return sendEmail(
+    to,
+    `Fixed: the ${what} you reported for ${opts.itemName}`,
+    emailShell("Your report is fixed", inner, priceReportFixedFooter())
+  );
 }
