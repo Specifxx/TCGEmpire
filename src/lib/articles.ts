@@ -9336,7 +9336,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     faq: [
       {
         q: "How much does RiftCompare Premium cost?",
-        a: "Premium is $9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). There's also a cheaper Plus tier at $4.99/month (or $39.99/year) with the full lists and an ad-free site — see below for the split. Both tiers start with a 14-day free trial; a card is required up front and it auto-converts to the paid price unless you cancel first.",
+        a: "Premium is $9.99/month, or $79.99/year if you pay annually (about $6.67/month, a 33% saving versus paying monthly — $119.88 over a year). There's also a cheaper Plus tier at $4.99/month (or $39.99/year) with the full lists and an ad-free site — see below for the split. Both tiers start with a 3-day free trial; a card is required up front and it auto-converts unless you cancel first. On a monthly plan the first 3 months are then half price — $4.99/month for Premium, $2.49/month for Plus — before the normal price.",
       },
       {
         q: "What do you actually get with RiftCompare Premium?",
