@@ -5,6 +5,7 @@ import { cardHref } from "@/lib/card-url";
 import { ldJson } from "@/lib/jsonld";
 import { SITE_URL } from "@/lib/site";
 import type { PriceTableRow } from "@/lib/price-table";
+import { cardImageSrc } from "@/lib/card-image-url";
 
 // "Riftbound card prices today" — a SERVER-RENDERED price list directly under
 // each market homepage's hero (lib/price-table.ts has the why). Rendered in the
@@ -33,7 +34,7 @@ export function PriceTodayTable({
           </h2>
           <p className="mt-1 text-sm text-slate-400">
             The {rows.length} most-searched cards, with the cheapest in-stock price across {adjective} stores in{" "}
-            {currency}. Updated daily.
+            {currency}. Updated daily. <span className="whitespace-nowrap">▼ green = cheaper this week.</span>
           </p>
         </div>
       </div>
@@ -51,8 +52,19 @@ export function PriceTodayTable({
           <tbody className="divide-y divide-ink-800">
             {rows.map((r) => (
               <tr key={r.id} className="hover:bg-ink-900/40">
-                <td className="px-4 py-2">
-                  <Link href={cardHref(r)} className="font-semibold text-slate-100 hover:text-brand-300 hover:underline">
+                <td className="px-4 py-1.5">
+                  <Link href={cardHref(r)} className="flex items-center gap-2.5 font-semibold text-slate-100 hover:text-brand-300 hover:underline">
+                    {/* Row thumbnail (2026-09-24). Decorative: the name beside it
+                        is the link text. Fixed box so rows cannot shift. */}
+                    {(() => {
+                      const img = cardImageSrc(r);
+                      return img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt="" aria-hidden="true" width={28} height={39} loading="lazy" decoding="async" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
+                      ) : (
+                        <span aria-hidden="true" className="h-[39px] w-7 shrink-0 rounded-sm bg-ink-800" />
+                      );
+                    })()}
                     {r.name}
                   </Link>
                 </td>
@@ -66,8 +78,15 @@ export function PriceTodayTable({
                     <span className="text-slate-600">—</span>
                   ) : (
                     // Buyer's-eye colours, as the watchlist and digest email use:
-                    // a price drop is the good news (green), a rise is not.
+                    // a price drop is the good news (green), a rise is not. That
+                    // is the reverse of TCGplayer/PriceCharting, so the meaning
+                    // is never colour-only (2026-09-24): ▲/▼ give the direction
+                    // at a glance and the sr-only text says it in words.
                     <span className={r.change7d < 0 ? "text-up" : r.change7d > 0 ? "text-down" : "text-slate-400"}>
+                      <span aria-hidden="true">{r.change7d > 0 ? "▲ " : r.change7d < 0 ? "▼ " : ""}</span>
+                      <span className="sr-only">
+                        {r.change7d > 0 ? "Price up " : r.change7d < 0 ? "Price down " : "Unchanged "}
+                      </span>
                       {r.change7d > 0 ? "+" : ""}
                       {r.change7d.toFixed(1)}%
                     </span>
@@ -80,7 +99,7 @@ export function PriceTodayTable({
       </div>
       <div className="border-t border-ink-800 p-4 text-right sm:px-5">
         <Link href="/browse" className="font-semibold text-brand-300 underline-offset-2 hover:underline">
-          All {totalPriced.toLocaleString("en-US")} card prices →
+          See all {totalPriced.toLocaleString("en-US")} card prices →
         </Link>
       </div>
       <script

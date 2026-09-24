@@ -32,13 +32,17 @@ export function CountUp({ value, className }: { value: number; className?: strin
     const run = () => {
       const duration = DUR.count;
       // Zero only now that we're definitely animating this frame.
-      setDisplay(0);
+      // Climb from 80% of the value, not from 0 (2026-09-24): the server
+      // already painted the real number, and a count from zero flashed "0"
+      // at the reader before the animation reached it.
+      const from = Math.round(value * 0.8);
+      setDisplay(from);
       let start: number | null = null;
       const step = (t: number) => {
         if (start === null) start = t;
         const p = Math.min((t - start) / duration, 1);
         const eased = easeOutCubic(p);
-        setDisplay(Math.round(value * eased));
+        setDisplay(Math.round(from + (value - from) * eased));
         if (p < 1) raf = requestAnimationFrame(step);
       };
       raf = requestAnimationFrame(step);

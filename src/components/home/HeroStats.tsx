@@ -1,7 +1,6 @@
 "use client";
 
 import { useCountry } from "@/components/CountryProvider";
-import { CountUp } from "@/components/CountUp";
 import type { Country } from "@/lib/country";
 
 // Per-market figures for the hero stat tiles. Serialized for all four markets so the
@@ -75,7 +74,11 @@ export function HeroStats({
           directly inflating LCP. It's real informational content, not
           decoration, so it renders immediately with the rest of the SSR'd hero. */}
       <p className="num text-xs text-slate-500 sm:text-sm">
-        <CountUp value={totalCards} /> cards · <CountUp value={s.stores} /> {country} {storeWord}
+        {/* The final numbers, as rendered on the server — no count-up
+            (2026-09-24). CountUp reset these to 0 on hydration and climbed
+            back, so the first thing a visitor from Reddit read was "0 cards ·
+            0 US stores". A trust line has to be true on first paint. */}
+        {totalCards.toLocaleString("en-US")} cards · {s.stores.toLocaleString("en-US")} {country} {storeWord}
         {freshness && (
           <>
             {" "}

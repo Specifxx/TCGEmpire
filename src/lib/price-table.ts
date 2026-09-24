@@ -31,7 +31,11 @@ import { GLOBAL_HISTORY_COUNTRY, STALE_HISTORY_MS } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { cardDisplayName } from "./card-name";
 
-export const PRICE_TABLE_SIZE = 50;
+// 15, down from 50 (2026-09-24): a 50-row table under the hero was a long
+// scroll between a first-time visitor and everything else on the page. The
+// rest sit one "See all" click away on /browse. Fewer rows is also a smaller
+// read (db.ts rule 3).
+export const PRICE_TABLE_SIZE = 15;
 
 export interface PriceTableRow {
   id: string;
@@ -39,6 +43,9 @@ export interface PriceTableRow {
   name: string;
   setName: string;
   collectorNumber: string;
+  /** Grid-size card image for the row thumbnail (lib/card-image-url.ts resolves it). */
+  imageThumbUrl: string | null;
+  imageUrl: string | null;
   /** Cheapest in-stock price in the market's own currency, in cents. */
   priceCents: number;
   /** Stores with this card in stock in the market (tracked stores, not eBay fallbacks). */
@@ -74,6 +81,7 @@ async function computePriceTable(country: Country): Promise<PriceTableRow[]> {
     type Row = {
       id: string; slug: string | null; name: string; setName: string; collectorNumber: string;
       rarity: string; variant: string | null; isPromo: boolean;
+      imageThumbUrl: string | null; imageUrl: string | null;
     } & Record<string, unknown>;
     const cards = (await prisma.card.findMany({
       where: { [field]: { not: null } } as Prisma.CardWhereInput,
@@ -88,7 +96,7 @@ async function computePriceTable(country: Country): Promise<PriceTableRow[]> {
       take: PRICE_TABLE_SIZE,
       select: {
         id: true, slug: true, name: true, setName: true, collectorNumber: true,
-        rarity: true, variant: true, isPromo: true, [field]: true,
+        rarity: true, variant: true, isPromo: true, imageThumbUrl: true, imageUrl: true, [field]: true,
       } as Prisma.CardSelect,
     })) as unknown as Row[];
     if (!cards.length) return [];
@@ -120,6 +128,8 @@ async function computePriceTable(country: Country): Promise<PriceTableRow[]> {
         name: cardDisplayName(c.name, c),
         setName: c.setName,
         collectorNumber: c.collectorNumber,
+        imageThumbUrl: c.imageThumbUrl,
+        imageUrl: c.imageUrl,
         priceCents: c[field] as number,
         stores: counts.get(c.id)?.[country] ?? 0,
         change7d: sevenDayChange(series.get(c.id) ?? []),
@@ -131,7 +141,7 @@ async function computePriceTable(country: Country): Promise<PriceTableRow[]> {
 }
 
 export function getPriceTable(country: Country): Promise<PriceTableRow[]> {
-  return unstable_cache(() => computePriceTable(country), ["home-price-table-v1", country], {
+  return unstable_cache(() => computePriceTable(country), ["home-price-table-v2", country], {
     revalidate: 3600,
     tags: [CONTENT_TAG],
   })().catch(() => []);

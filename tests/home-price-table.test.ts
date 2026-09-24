@@ -30,7 +30,7 @@ test("no change is invented: too few points, stale data, outliers and zero bases
 
 test("the loader is capped, cached no shorter than the homepages, fails open, and nests no cached loader", () => {
   const src = read("src/lib/price-table.ts");
-  assert.equal(PRICE_TABLE_SIZE, 50);
+  assert.equal(PRICE_TABLE_SIZE, 15, "capped at ~15 rows with a See-all link (2026-09-24)");
   assert.match(src, /take: PRICE_TABLE_SIZE/);
   assert.match(src, /revalidate: 3600/);
   assert.match(src, /cardId: \{ in: ids \}/, "history is read for the table's cards only");
@@ -50,5 +50,5 @@ test("every market homepage renders the table directly under the hero", () => {
   const t = read("src/components/home/PriceTodayTable.tsx");
   assert.match(t, /Riftbound card prices today/);
   for (const col of ["Card", "Set", "Cheapest", "Stores in stock", "7-day change"]) assert.ok(t.includes(`>${col}</th>`), col);
-  assert.match(t, /All \{totalPriced\.toLocaleString\("en-US"\)\} card prices →/);
+  assert.match(t, /See all \{totalPriced\.toLocaleString\("en-US"\)\} card prices →/);
 });

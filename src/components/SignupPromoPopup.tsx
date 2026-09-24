@@ -13,6 +13,7 @@ import { FreeAccountCompare } from "./FreeAccountCompare";
 // this free-account era against the Premium-pitch era is exactly what that tag
 // is for, and dropping it would make the two uncomparable in GA4.
 import { PREMIUM_COPY_VERSION } from "@/lib/site";
+import { ENGAGED_MS, isExternalReferrer, signupPromoEligible } from "@/lib/signup-promo-gate";
 
 // Shows on the first eligible page, then RETURNS every PAGES_BETWEEN_SHOWS
 // pages after each dismissal, for as long as the visitor stays signed out
@@ -63,6 +64,9 @@ const DISMISSED_AT_KEY = "rc_signup_promo_dismissed_at";
 // localStorage, so they survive the new tab that resets the two above.
 const DISMISS_COUNT_KEY = "rc_signup_promo_dismisses"; // lifetime dismissals
 const SNOOZE_UNTIL_KEY = "rc_signup_promo_until"; // epoch ms; don't show before this
+// "1" when this session's first page was reached from another site (Reddit,
+// Discord, a search engine). Written once, on the session's first view.
+const EXTERNAL_ENTRY_KEY = "rc_signup_promo_external_entry";
 
 // IT COMES BACK (owner brief, 2026-09-10: "the slider should show up again
 // every 3 pages a user visits if they're not logged in"). Until now a dismissal
@@ -242,6 +246,9 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
   // gates the unmount), same 250ms exit as PremiumSlideIn shares below.
   const { mounted, entered } = usePresence(shown, 250);
   const lastCountedPath = useRef<string | null>(null);
+  // Visible time on the current page (lib/signup-promo-gate.ts): only a first
+  // page view needs it, and a background tab is not engagement.
+  const [engaged, setEngaged] = useState(false);
 
   // NO trial/premium state is read here any more. The card makes no paid
   // offer, so `trialDays`/`premiumPlus` (which the Premium-pitch version used
@@ -258,15 +265,50 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     if (!pathname || lastCountedPath.current === pathname) return;
     lastCountedPath.current = pathname;
     try {
+      if (readCount(VIEWS_KEY) === 0) {
+        sessionStorage.setItem(EXTERNAL_ENTRY_KEY, isExternalReferrer(document.referrer, location.host) ? "1" : "0");
+      }
       sessionStorage.setItem(VIEWS_KEY, String(readCount(VIEWS_KEY) + 1));
     } catch {
       /* private mode — the promo then just behaves as never-dismissed */
     }
   }, [pathname, loaded, user]);
 
+  // 60 s of visible time on this page, counted in 1 s ticks that skip while
+  // the tab is hidden. Resets per page.
+  useEffect(() => {
+    setEngaged(false);
+    let visibleMs = 0;
+    const tick = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      visibleMs += 1000;
+      if (visibleMs >= ENGAGED_MS) {
+        setEngaged(true);
+        clearInterval(tick);
+      }
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [pathname]);
+
   useEffect(() => {
     if (!loaded || user || shown) return;
     if (SKIP_PATHS.some((p) => pathname?.startsWith(p))) return;
+
+    // The first-visit gate (lib/signup-promo-gate.ts): second page view, or a
+    // minute of reading; never the first page from another site or on a phone.
+    let externalEntry = false;
+    try {
+      externalEntry = sessionStorage.getItem(EXTERNAL_ENTRY_KEY) === "1";
+    } catch {
+      /* private mode — no referrer memory; the page-view rule still applies */
+    }
+    const eligible = signupPromoEligible({
+      views: readCount(VIEWS_KEY),
+      engagedMs: engaged ? ENGAGED_MS : 0,
+      externalEntry,
+      mobile: window.matchMedia("(max-width: 639px)").matches,
+    });
+    if (!eligible) return;
 
     // THE LIFETIME CAP, checked before anything else because it is the cheapest
     // read and the most final. Two dismissals is a no — same rule, same numbers
@@ -312,7 +354,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
     // Navigating away mid-wait must cancel it, or the popup lands on a page the
     // visitor has already left — including one in SKIP_PATHS.
     return () => clearTimeout(t);
-  }, [loaded, user, shown, pathname]);
+  }, [loaded, user, shown, pathname, engaged]);
 
   // usePresence(shown, 250) now owns letting the exit transition finish
   // before actually unmounting — mirrors PremiumSlideIn's own hide(), which
