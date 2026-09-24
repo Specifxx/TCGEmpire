@@ -12116,3 +12116,98 @@ animation. Where `CountUp` remains elsewhere, it climbs from 80% of the value.
 **Also:** `X-Robots-Tag: noindex` on every `opengraph-image` route, at the
 root and under any path, with or without the hash suffix. These are share
 PNGs, not pages.
+
+## Trial model: 3-day trial, then the first 3 months half price — 2026-09-24
+
+The owner: "A lot of people register for the trial and cancel." Then, having
+seen the numbers: "a three day trial, and then the first three months half
+price", for Plus and Premium.
+
+**The numbers first, because yesterday's were wrong.** The 2026-09-23 entry
+read "one cancellation ever" from `funnel-report`, which counts a
+cancellation only when a subscription ENDS. Someone who cancels during a
+trial stays `trialing` with `cancel_at_period_end` until the trial runs out,
+so every one of them read as a healthy trial. The new read-only
+`trial-cancel-report` counts the cancel click (`lib/trial-cancel.ts`,
+tested). Live, 2026-09-24:
+
+- 16 trials ever: 8 converted, 6 cancelled mid-trial, 1 paid then cancelled,
+  1 still running. Five of the six mid-trial cancels are still inside their
+  14 days.
+- **Since 11 Sept, 5 of 6 trials were cancelled**; before that 8 of 10 paid.
+- **Half the cancels came within an hour** of starting (0.0h, 0.3h, 0.6h).
+  All six cancellers created their account that day, and none had an alert
+  or a collection card.
+- Stripe feedback: too_expensive 3, other 2, switched_service 1. Comments:
+  "I prefer to manually renew"; "Great site but i won't be buying alot of
+  cards so i'm not in need of it".
+- None cancelled after the trial-ending email.
+
+**The change.**
+
+- **Trial: 14 → 3 days** (`PREMIUM_TRIAL_DAYS` default). A Vercel value
+  still overrides the default; that is the owner step.
+- **First 3 months half price, monthly plans, for anyone who has never
+  paid** (`hasEverPaid`: any paid invoice). People who cancelled a trial
+  qualify; someone who paid does not, so cancelling and resubscribing is not
+  a way to keep paying half.
+  - **Mechanics:** an amount-off Stripe coupon, `repeating` for 3 months,
+    attached as `discounts` on the Checkout Session. With the 3-day trial it
+    covers the charges at day 3, month 1 and month 2.
+  - **Amount-off, not percent-off:** 50% of 999 cents is 499.5. Stripe would
+    decide the rounding, and the page could end up a cent away from the
+    charge. `introAmountOffCents` halves and rounds the discount up, so
+    $9.99 → $4.99 and $4.99 → $2.49. The display helpers and
+    `ensureIntroCoupon` use the same function on the same price.
+  - **The coupon id encodes tier, amount and currency**
+    (`rc-intro-premium-500usd-3mo`), so a later price change creates a new
+    coupon instead of reusing a mis-sized one.
+- **Annual is unchanged.** It is still the cheapest way to pay for a year:
+  $79.99 against 3 × $4.99 + 9 × $9.99 = $104.88.
+- **Stripe refuses `discounts` with `allow_promotion_codes`.** A checkout
+  carrying the intro takes no second code; everyone else can still enter one.
+- **Failure mode:** if the coupon can't be read or created, checkout opens at
+  full price, which Stripe shows before any charge. The error is logged, and
+  the maintenance task `ensure-intro-coupons` creates and verifies the
+  coupons ahead of time, proving the key may write them.
+- **Where the offer is stated:**
+  - the Premium dialog (`TrialPriceBlock`);
+  - the pricing cards, on a line under the headline — the headline stays the
+    real recurring price, the card's own documented rule;
+  - the small print;
+  - `/premium/start` (signed-in eligibility checked with the same
+    `hasEverPaid`);
+  - the `/premium` hero, pricing note and FAQ (plus a new "What is the
+    half-price offer?" entry, which also feeds the FAQPage JSON-LD);
+  - the slide-in's "$0 today" line;
+  - the Premium explainer article's table.
+- **`PREMIUM_COPY_VERSION` → `trial3-intro-half-3mo-2026-09-24`**, so GA4
+  can split before and after.
+
+**Two changes aimed at the instant-cancel habit itself.**
+
+- `/premium/start` and the FAQ now say "We'll email you the day before
+  you're charged". The reminder already went out within the last 24h; nobody
+  was told it would, so switching renewal off was the only way to feel safe.
+- **The trial-ending email no longer goes to a trial that has already
+  cancelled.** It told them "the card on file will be charged" when it would
+  not be — five people at the time of writing. When a coupon is on the
+  subscription it now quotes the discounted first charge "(then $9.99/month
+  after 3 months)".
+
+**What this supersedes.** The 2026-09-14 freeze on the Premium pitch,
+pricing and trial (to ~09-28) rested on the 09-23 read of "retention is
+fine", which was wrong, and the owner has now made the call. The new model
+is measured the same way. Leave it alone until about 2026-10-15, then read
+`trial-cancel-report`:
+
+- cancels within an hour should fall;
+- the "too_expensive" share should fall;
+- trial → paid should recover towards the August 8-of-10.
+
+Sixteen trials is a small sample. This is a judgment call, and the report is
+how it gets judged.
+
+Owner steps (Vercel `PREMIUM_TRIAL_DAYS`, nothing in the Stripe dashboard)
+are in the session summary. The kill switch is
+`NEXT_PUBLIC_PREMIUM_INTRO_OFFER=0`.

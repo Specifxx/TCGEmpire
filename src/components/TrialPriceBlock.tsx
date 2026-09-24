@@ -8,6 +8,9 @@ import {
   premiumEffectiveMonthly,
   tierMonthlyAmount,
   tierAnnualAmount,
+  tierIntroMonthlyAmount,
+  introOfferEnabled,
+  INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
 
@@ -49,6 +52,8 @@ export function TrialPriceBlock({
   const save = tier === "plus" ? annualSavingPct("plus") : annualSavingPct();
   const monthlyAmount = tier === "plus" ? tierMonthlyAmount("plus") : PREMIUM_PRICE_AMOUNT;
   const annualAmount = tier === "plus" ? tierAnnualAmount("plus") : PREMIUM_ANNUAL_AMOUNT;
+  // Monthly plans open at half price for INTRO_MONTHS months (lib/site.ts).
+  const intro = plan === "monthly" && introOfferEnabled();
 
   return (
     <div className="text-center">
@@ -56,14 +61,24 @@ export function TrialPriceBlock({
         <span className={`num ${big} font-extrabold text-white`}>{premiumZeroAmount()}</span>
         <span className="text-sm text-slate-400">due today</span>
       </div>
-      <p className="mt-1.5 text-xs text-slate-400">
-        then{" "}
-        <span className="font-semibold text-slate-200">
-          {plan === "annual" ? `${annualAmount}/${PREMIUM_ANNUAL_PERIOD}` : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`}
-        </span>{" "}
-        {plan === "annual" && perMonth && <span className="text-slate-400">(≈ {perMonth}/mo) </span>}
-        after your {dayPhrase} free trial
-      </p>
+      {intro ? (
+        <p className="mt-1.5 text-xs text-slate-400">
+          after your {dayPhrase} free trial:{" "}
+          <span className="font-semibold text-slate-200">
+            {tierIntroMonthlyAmount(tier)}/mo for {INTRO_MONTHS} months
+          </span>{" "}
+          <span className="text-slate-400">(half price), then {monthlyAmount}/{PREMIUM_PRICE_PERIOD}</span>
+        </p>
+      ) : (
+        <p className="mt-1.5 text-xs text-slate-400">
+          then{" "}
+          <span className="font-semibold text-slate-200">
+            {plan === "annual" ? `${annualAmount}/${PREMIUM_ANNUAL_PERIOD}` : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`}
+          </span>{" "}
+          {plan === "annual" && perMonth && <span className="text-slate-400">(≈ {perMonth}/mo) </span>}
+          after your {dayPhrase} free trial
+        </p>
+      )}
       {plan === "annual" && save > 0 && (
         <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-brand-500/15 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-brand-400 ring-1 ring-brand-500/40 shadow-[0_0_14px_rgba(52,209,126,0.28)]">
           <span aria-hidden>▼</span> Save {save}%

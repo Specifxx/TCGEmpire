@@ -508,12 +508,15 @@ export async function sendTrialEndingEmail(
   chargeDate: Date,
   amountLabel: string,
   planName = "Premium",
+  /** During the intro offer: the full price the plan moves to afterwards, e.g. "$9.99/month after 3 months". */
+  thenLabel?: string,
 ): Promise<boolean> {
   const dateLabel = chargeDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const charge = thenLabel ? `${amountLabel} (then ${thenLabel})` : amountLabel;
   const inner = `
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       Your RiftCompare ${planName} free trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. Unless you cancel
-      before then, the card on file will be charged ${amountLabel} and your subscription continues automatically.
+      before then, the card on file will be charged ${charge} and your subscription continues automatically.
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Manage subscription</a></td></tr>`;
   return sendEmail(

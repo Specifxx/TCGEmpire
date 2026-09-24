@@ -6,9 +6,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { AuthForm } from "@/components/AuthForm";
 import { CheckoutLauncher } from "@/components/CheckoutLauncher";
 import { enabledProviders } from "@/lib/oauth";
-import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumPlusEnabled, premiumTrialEnabled, PREMIUM_TRIAL_DAYS, hasEverPaid } from "@/lib/premium";
 import { parseCheckoutSelection, parseStartSrc, sanitizeBackPath, PREMIUM_START_PATH } from "@/lib/premium-start";
-import { TIER_NAMES, premiumZeroAmount, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD } from "@/lib/site";
+import { TIER_NAMES, premiumZeroAmount, tierAnnualAmount, tierMonthlyAmount, PREMIUM_PRICE_PERIOD, introOfferEnabled, introPriceLine } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
 
 // SIGN-IN AS A STEP INSIDE CHECKOUT, NOT A GATE IN FRONT OF IT.
@@ -58,19 +58,25 @@ export default async function PremiumStartPage({
   if (isPremium(user)) redirect("/premium");
 
   const tierName = TIER_NAMES[tier];
-  const priceLine =
+  const fullPriceLine =
     plan === "annual"
       ? `${tierAnnualAmount(tier)}/year`
       : `${tierMonthlyAmount(tier)}/${PREMIUM_PRICE_PERIOD}`;
+  // The intro offer (lib/site.ts): monthly plans, never-paid accounts. Signed
+  // out we cannot know, and a brand-new account has never paid, so the offer
+  // is shown; signed in, the same hasEverPaid() rule checkout applies decides.
+  const introShown = (paid: boolean) => plan === "monthly" && introOfferEnabled() && !paid;
+  let priceLine = introShown(false) ? introPriceLine(tier) : fullPriceLine;
 
   if (user) {
     // One free trial per account — the same check checkout itself applies, read
     // here only so the launcher's analytics and the copy above it tell the truth.
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { trialStartedAt: true },
+      select: { trialStartedAt: true, stripeCustomerId: true },
     });
     const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
+    priceLine = introShown(await hasEverPaid(dbUser?.stripeCustomerId)) ? introPriceLine(tier) : fullPriceLine;
     return (
       <div className="mx-auto w-full max-w-lg px-4">
         <p className="pt-10 text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -78,7 +84,10 @@ export default async function PremiumStartPage({
         </p>
         <p className="mt-2 text-center text-sm text-slate-300">
           {trialEligible
-            ? `${premiumZeroAmount()} due today — your ${PREMIUM_TRIAL_DAYS}-day free trial, then ${priceLine}.`
+            ? // The reminder promise answers the instant-cancel habit ("I prefer to
+              // manually renew", 2026-09-24): no need to switch renewal off to be
+              // safe — runPremiumTrialReminders emails within the last 24h.
+              `${premiumZeroAmount()} due today — your ${PREMIUM_TRIAL_DAYS}-day free trial, then ${priceLine}. We'll email you the day before you're charged, and you can cancel in one click.`
             : `${priceLine} · cancel anytime.`}
         </p>
         <CheckoutLauncher tier={tier} plan={plan} back={back} src={src} trialEligible={trialEligible} />

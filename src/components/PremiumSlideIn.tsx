@@ -14,6 +14,9 @@ import {
   premiumLockInTail,
   premiumZeroToday,
   premiumFromLine,
+  introOfferEnabled,
+  tierIntroMonthlyAmount,
+  INTRO_MONTHS,
 } from "@/lib/site";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
@@ -467,7 +470,13 @@ export function PremiumSlideIn() {
           {PREMIUM_PRICE_AMOUNT ? (
             <p className="mt-2 text-center text-[11px] text-slate-500">
               {trialEligible ? (
-                <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
+                <>
+                  <span className="text-sm font-extrabold text-white">{premiumZeroToday()}</span>
+                  {/* The intro offer (lib/site.ts), stated where the $0 is. */}
+                  {introOfferEnabled() && (
+                    <> · then {tierIntroMonthlyAmount()}/mo for {INTRO_MONTHS} months (half price)</>
+                  )}
+                </>
               ) : (
                 <>
                   <span className="font-bold text-white">{premiumFromLine()}</span> · {premiumLockInTail()}

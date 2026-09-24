@@ -29,6 +29,10 @@ import {
   premiumLockInLine,
   premiumLockInHeadline,
   premiumFromLine,
+  introOfferEnabled,
+  introPriceLine,
+  tierIntroMonthlyAmount,
+  INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
 import { pageAlternates } from "@/lib/seo";
@@ -130,8 +134,16 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
-    a: `Start the trial and every Premium tool unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD} (or the annual rate, if you chose that plan) unless you cancel first.`,
+    a: `Start the trial and every Premium tool unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${introOfferEnabled() ? `${introPriceLine()} on the monthly plan` : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`} (or the annual rate, if you chose that plan) unless you cancel first. We email you the day before the first charge.`,
   },
+  ...(introOfferEnabled()
+    ? [
+        {
+          q: `What is the half-price offer?`,
+          a: `New subscribers on a monthly plan pay half price for their first ${INTRO_MONTHS} months — ${tierIntroMonthlyAmount("premium")}/mo for Premium${premiumPlusEnabled() ? ` or ${tierIntroMonthlyAmount("plus")}/mo for Plus` : ""} — after the free trial, then the normal monthly price. It is applied automatically at checkout; there is no code to enter. Annual plans are already the cheapest way to pay for a year, so they keep their normal price.`,
+        },
+      ]
+    : []),
   {
     q: "What happens when the trial ends?",
     a: `If you haven't cancelled, the card on file is charged and your subscription continues automatically at whichever plan you chose — ${premiumFromLine()}. You'll get an email reminder before it converts.`,
@@ -255,7 +267,7 @@ export default async function PremiumPage() {
             ? "Everything you've unlocked is below — jump straight into any of it. Thanks for supporting RiftCompare."
             : `RiftCompare is free to search and free to use. ${plusLive ? "Plus and Premium fund" : "Premium funds"} the servers and the price data behind it. ${plusLive ? "Plus unlocks the full deal lists; Premium adds ad-free browsing and" : "Premium adds ad-free browsing and"} the tools that work out the cheapest way to buy what you want${
                 premiumTrialEnabled() ? ` — every plan starts with a ${PREMIUM_TRIAL_DAYS}-day free trial` : ""
-              }.`}
+              }${introOfferEnabled() ? `, and monthly plans are half price for the first ${INTRO_MONTHS} months` : ""}.`}
         </p>
       </div>
 
@@ -484,7 +496,9 @@ export default async function PremiumPage() {
           <>
             The free trial needs a card and converts to the plan you picked
             {plusLive ? <> — {tierMonthlyAmount("plus")}/{PREMIUM_PRICE_PERIOD} for Plus, {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for Premium</> : <> ({PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD})</>}
-            {" "}after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first.{" "}
+            {" "}after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first
+            {introOfferEnabled() ? <> — at half price for the first {INTRO_MONTHS} months on a monthly plan</> : null}. We email
+            you the day before you&apos;re charged.{" "}
           </>
         ) : (
           <>Cancel anytime — your benefits run to the end of the paid period. </>

@@ -10,6 +10,10 @@ import {
   premiumEffectiveMonthly,
   annualSavingPct,
   PREMIUM_PRICE_PERIOD,
+  tierIntroMonthlyAmount,
+  introOfferEnabled,
+  introPriceLine,
+  INTRO_MONTHS,
   type PremiumTierKey,
 } from "@/lib/site";
 
@@ -262,8 +266,12 @@ function PaidTierCard({
   const monthlyAmount = tierMonthlyAmount(tier);
   const annualAmount = tierAnnualAmount(tier);
   const headline = effectiveCycle === "annual" ? premiumEffectiveMonthly(tier) || monthlyAmount : monthlyAmount;
+  // Intro offer (lib/site.ts): monthly only. The headline stays the REAL
+  // recurring price (rule 2 above); the intro is its own line under it, and
+  // the small print quotes the whole schedule.
+  const intro = effectiveCycle === "monthly" && introOfferEnabled();
   const priceLabel =
-    effectiveCycle === "annual" ? `${annualAmount}/yr` : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`;
+    effectiveCycle === "annual" ? `${annualAmount}/yr` : intro ? introPriceLine(tier) : `${monthlyAmount}/${PREMIUM_PRICE_PERIOD}`;
   const features_ = features.map((f) => f.replace("N-day", `${trialDays}-day`));
 
   return (
@@ -291,6 +299,11 @@ function PaidTierCard({
             what happens today, the billing line is what happens in 14 days. */}
         {effectiveCycle === "annual" && (
           <p className="mt-1 text-[11px] font-semibold text-brand-400">Billed as {annualAmount}/year</p>
+        )}
+        {intro && (
+          <p className="mt-1 text-[11px] font-semibold text-brand-400" data-intro-offer>
+            First {INTRO_MONTHS} months {tierIntroMonthlyAmount(tier)}/mo — half price
+          </p>
         )}
         {trialAvailable && trialDays > 0 ? (
           <p className="mt-1 text-[11px] text-slate-500">{trialDays}-day free trial</p>

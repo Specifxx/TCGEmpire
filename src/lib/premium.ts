@@ -17,7 +17,7 @@ import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendCheckoutRecoveryEmail } from "./email";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine } from "./site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine, INTRO_MONTHS, introAmountOffCents } from "./site";
 
 // The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
@@ -111,17 +111,88 @@ export function tierFromPriceId(priceId: string | null | undefined): PremiumTier
   return "premium";
 }
 
-// Free-trial length (days) for a first-time subscriber. Defaults to 14 — set
-// PREMIUM_TRIAL_DAYS=0 in the environment to switch it back off (immediate charge,
+// Free-trial length (days) for a first-time subscriber. Defaults to 3 (was 14
+// from 2026-08-24; back to 3 on 2026-09-24 alongside the "first 3 months half
+// price" intro offer — DECISIONS.md, "Trial model: 3-day trial, then the first
+// 3 months half price"). An explicit PREMIUM_TRIAL_DAYS in the environment
+// still wins over this default, so a Vercel value of 14 must be removed or
+// changed for 3 to take effect. Set PREMIUM_TRIAL_DAYS=0 to switch it back off (immediate charge,
 // no trial). Card-gated: a card is still required up front (payment_method_collection
 // in the checkout route), so the trial auto-converts to paid unless cancelled.
 // Turning this on requires BOTH the Stripe customer portal (api/premium/portal —
 // done) AND the trial-ending reminder email (runPremiumTrialReminders below — done)
 // so trialists can see the charge coming and cancel before it happens. Abuse is
 // blocked by card fingerprint regardless of trial length (see the webhook).
-export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 14)));
+export const PREMIUM_TRIAL_DAYS = Math.max(0, Math.floor(Number(process.env.PREMIUM_TRIAL_DAYS ?? 3)));
 export function premiumTrialEnabled(): boolean {
   return PREMIUM_TRIAL_DAYS > 0;
+}
+
+// ── Intro offer: the Stripe side ────────────────────────────────────────────
+// The coupon behind "first 3 months half price" (site.ts has the display side
+// and the one rounding rule both use). Amount-off, not percent-off: 50% of
+// 999 cents is 499.5, and a percent coupon would leave the rounding to Stripe;
+// an amount computed by introAmountOffCents() from the Price's own unit_amount
+// makes the charge exactly the figure the page printed.
+//
+// The coupon id ENCODES the amount and currency, so a price change can never
+// reuse a coupon sized for the old price — it simply creates the next one.
+// Created on first use (and pre-created by the maintenance task
+// ensure-intro-coupons, which also proves the key may write coupons), so the
+// owner has nothing to set up in the Stripe dashboard.
+//
+// Duration: `repeating` for INTRO_MONTHS months from the subscription's start.
+// With a 3-day trial that covers the invoices at day 3, month 1 and month 2 —
+// three discounted charges — and the fourth is full price.
+export function introCouponId(tier: PremiumTier, amountOffCents: number, currency: string): string {
+  return `rc-intro-${tier}-${amountOffCents}${currency.toLowerCase()}-${INTRO_MONTHS}mo`;
+}
+
+const introCouponCache = new Map<string, string>();
+
+/** The intro coupon for a monthly price, created if missing. Returns its id. */
+export async function ensureIntroCoupon(tier: PremiumTier, priceId: string): Promise<string> {
+  const cached = introCouponCache.get(priceId);
+  if (cached) return cached;
+  const price = await stripe().prices.retrieve(priceId);
+  if (price.unit_amount == null || price.recurring?.interval !== "month") {
+    throw new Error(`intro coupon: ${priceId} is not a fixed monthly price`);
+  }
+  const amountOff = introAmountOffCents(price.unit_amount);
+  const id = introCouponId(tier, amountOff, price.currency);
+  try {
+    await stripe().coupons.retrieve(id);
+  } catch (e) {
+    if ((e as { code?: string }).code !== "resource_missing") throw e;
+    await stripe().coupons.create({
+      id,
+      name: `${tier === "plus" ? "Plus" : "Premium"}: first ${INTRO_MONTHS} months half price`,
+      amount_off: amountOff,
+      currency: price.currency,
+      duration: "repeating",
+      duration_in_months: INTRO_MONTHS,
+      metadata: { purpose: "intro-offer", tier },
+    });
+  }
+  introCouponCache.set(priceId, id);
+  return id;
+}
+
+/**
+ * Has this Stripe customer ever PAID us anything? The intro offer is for new
+ * subscribers: anyone who never paid — including everyone who cancelled a
+ * trial — gets it; someone who has paid does not, so cancelling and
+ * resubscribing is not a way to keep paying half. Fails OPEN (false): a
+ * lookup error costs one discounted subscription, not a broken promise.
+ */
+export async function hasEverPaid(stripeCustomerId: string | null | undefined): Promise<boolean> {
+  if (!stripeCustomerId || !stripeEnabled()) return false;
+  try {
+    const invoices = await stripe().invoices.list({ customer: stripeCustomerId, status: "paid", limit: 20 });
+    return invoices.data.some((i) => i.amount_paid > 0);
+  } catch {
+    return false;
+  }
 }
 
 // The reminder half of the trial precondition above. Stripe's own
@@ -156,16 +227,28 @@ export async function runPremiumTrialReminders(): Promise<number> {
     try {
       const subs = await stripe().subscriptions.list({ customer: u.stripeCustomerId!, status: "trialing", limit: 1 });
       const sub = subs.data[0];
-      if (sub?.trial_end) {
+      // A trialist who already switched off renewal will not be charged —
+      // "your card will be charged" would be false, so they get no warning.
+      // (Before 2026-09-24 they got one anyway: 5 of the 6 cancelled trials
+      // at the time were exactly this case.)
+      if (sub?.trial_end && !sub.cancel_at_period_end) {
         const price = sub.items.data[0]?.price;
+        // The FIRST charge is what the email must quote: during the intro
+        // offer that is the price less the coupon (lib/site.ts intro block).
+        const off = sub.discount?.coupon?.amount_off ?? 0;
         const amountLabel =
           price?.unit_amount != null
-            ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}`
+            ? `${formatMoney(Math.max(0, price.unit_amount - off), price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}`
             : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
         // Same price object the amount comes from, so the plan name and the
         // figure next to it can never disagree.
         const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium";
-        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel, planName)) {
+        const months = sub.discount?.coupon?.duration_in_months;
+        const thenLabel =
+          off > 0 && price?.unit_amount != null
+            ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}${months ? ` after ${months} months` : ""}`
+            : undefined;
+        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel, planName, thenLabel)) {
           sent++;
           void notify(u.id, "trial_ending", "Your trial ends soon", `${amountLabel} starts once it converts.`, "/premium").catch(() => {});
         }

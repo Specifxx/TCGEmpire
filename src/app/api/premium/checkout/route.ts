@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, type PremiumTier } from "@/lib/premium";
+import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, ensureIntroCoupon, hasEverPaid, type PremiumTier } from "@/lib/premium";
+import { introOfferEnabled } from "@/lib/site";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { SITE_URL } from "@/lib/site";
 import { isPremiumSurface } from "@/lib/premium-surface";
@@ -70,6 +71,19 @@ export async function POST(req: Request) {
   // so this gate can't be bypassed for a free trial by re-hitting the endpoint.
   const trialEligible = premiumTrialEnabled() && !dbUser?.trialStartedAt;
 
+  // First 3 months half price (lib/site.ts intro block), monthly plans only,
+  // for anyone who has never paid — people who cancelled a trial included.
+  // If the coupon cannot be read or created the checkout still opens at full
+  // price rather than failing: Stripe's own page shows the real amount before
+  // anything is charged, and the error is logged for the maintenance check.
+  let introCoupon: string | null = null;
+  if (introOfferEnabled() && plan === "monthly" && !(await hasEverPaid(dbUser?.stripeCustomerId))) {
+    introCoupon = await ensureIntroCoupon(tier, priceId).catch((e) => {
+      console.error("intro coupon unavailable — checkout continues at full price:", e);
+      return null;
+    });
+  }
+
   try {
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
@@ -79,7 +93,7 @@ export async function POST(req: Request) {
         ? { customer: dbUser.stripeCustomerId }
         : { customer_email: dbUser?.email }),
       client_reference_id: user.id,
-      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", tier, ...surfaceMeta },
+      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", intro: introCoupon ? "1" : "0", tier, ...surfaceMeta },
       subscription_data: {
         // Stamped here too (not just on the session) because session metadata
         // does NOT propagate to the subscription object — renewals and the
@@ -87,7 +101,7 @@ export async function POST(req: Request) {
         // `surface` rides on the SUBSCRIPTION too, which is the object the
         // funnel report lists — so a trial, and whether it converted, can be
         // attributed to the surface that started it.
-        metadata: { userId: user.id, tier, ...surfaceMeta },
+        metadata: { userId: user.id, tier, intro: introCoupon ? "1" : "0", ...surfaceMeta },
         // PREMIUM_TRIAL_DAYS free trial for first-timers, same length on both plans
         // (annual just converts to the yearly price after it ends). A card is still
         // required up front (payment_method_collection below), so the trial
@@ -110,7 +124,10 @@ export async function POST(req: Request) {
       // buyer landed on a page that still said they were on the free tier.
       success_url: `${SITE_URL}/premium/welcome?session_id={CHECKOUT_SESSION_ID}${back ? `&back=${encodeURIComponent(back)}` : ""}`,
       cancel_url: `${SITE_URL}${back ?? "/premium"}`,
-      allow_promotion_codes: true,
+      // Stripe refuses `discounts` together with allow_promotion_codes, so a
+      // checkout carrying the intro offer takes no second code; everyone else
+      // can still enter one.
+      ...(introCoupon ? { discounts: [{ coupon: introCoupon }] } : { allow_promotion_codes: true }),
     });
     return NextResponse.json({ url: session.url });
   } catch (e) {

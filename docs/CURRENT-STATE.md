@@ -90,17 +90,20 @@ longer lands on its entry.
 
 ## Premium & monetisation
 
-- **FREEZE until about 2026-09-28:** no change to the Premium pitch, pricing,
-  trial, paywall or nudges, and `PREMIUM_COPY_VERSION` stays put, while the
-  09-14 and 09-21 trial cohorts mature. The 09-23 read found retention fine
-  (9 of 10 matured trials paid), the fall at acquisition, and the freeze
-  already broken four times.
-  [2026-09-14](../DECISIONS.md#L6038), [2026-09-23](../DECISIONS.md#L10924)
+- **Measure the trial model until about 2026-10-15:** the owner replaced the
+  14-day trial on 2026-09-24 with a **3-day card-gated trial, then the first 3
+  months half price on monthly plans** (never-paid accounts; annual unchanged).
+  Leave the pitch, pricing and trial alone while it is measured with
+  `trial-cancel-report`, which counts the cancel click
+  (`cancel_at_period_end`); `funnel-report`'s "canc" counts only ended
+  subscriptions and missed every mid-trial cancel.
+  [2026-09-24](../DECISIONS.md#L12120), [2026-09-23](../DECISIONS.md#L10924)
 - **Tiers:** Plus, $4.99/mo or $39.99/yr, has the full lists (Deal Finder,
   Rising Cards, Rising Sealed). Premium, $9.99/mo or $79.99/yr, adds Value
-  Finder, Bulk Pricer, Best Basket, Demand Finder and **ad-free**. One 14-day
-  card-gated trial. [2026-09-11](../DECISIONS.md#L4428),
-  [2026-09-14](../DECISIONS.md#L6038)
+  Finder, Bulk Pricer, Best Basket, Demand Finder and **ad-free**. The intro
+  price is an amount-off coupon created by `ensureIntroCoupon`; its display
+  and charge share `introAmountOffCents`. [2026-09-11](../DECISIONS.md#L4428),
+  [2026-09-24](../DECISIONS.md#L12120)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (Premium). Tier comes from the Stripe price (`tierFromPriceId`);
   a `premiumTierFloor` only raises a paid tier, never grants one. Never reuse

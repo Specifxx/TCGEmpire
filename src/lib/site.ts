@@ -177,6 +177,41 @@ export function premiumZeroAmount(): string {
   return `${premiumCurrencySymbol()}0`;
 }
 
+// ── Intro offer: first 3 months half price (monthly plans) ─────────────────
+// Owner's call, 2026-09-24, after the trial-cancel report showed 5 of the 6
+// trials started since 11 Sept cancelled — half of them within the first hour,
+// "too expensive" the top Stripe reason. DECISIONS.md, "Trial model: 3-day
+// trial, then the first 3 months half price", 2026-09-24.
+//
+// ONE rule for "half": the discount is the price's cents halved and ROUNDED
+// UP, so the charged amount rounds DOWN — $9.99 → $4.99, $4.99 → $2.49.
+// lib/premium.ts builds the Stripe coupon from the same function applied to
+// the Stripe Price's own unit_amount, so what these helpers print is, to the
+// cent, what Stripe charges (the display amounts already mirror the Price
+// objects — see the header of this block's price constants).
+//
+// Monthly only: annual stays the cheapest way to pay for a year even with the
+// intro ($79.99 vs 3 × $4.99 + 9 × $9.99 = $104.88), so it needs no second
+// discount. NEXT_PUBLIC_ so the checkout route and every client surface read
+// one switch; "0" turns the whole offer off everywhere at once.
+export const INTRO_MONTHS = 3;
+export function introOfferEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_PREMIUM_INTRO_OFFER !== "0";
+}
+/** Cents taken off each of the first INTRO_MONTHS monthly invoices. */
+export function introAmountOffCents(priceCents: number): number {
+  return Math.ceil(priceCents / 2);
+}
+/** "$4.99" for Premium, "$2.49" for Plus — the monthly price during the intro months. */
+export function tierIntroMonthlyAmount(tier: PremiumTierKey = "premium"): string {
+  const cents = Math.round(premiumMoneyNum(monthlyAmountFor(tier)) * 100);
+  return `${premiumCurrencySymbol()}${((cents - introAmountOffCents(cents)) / 100).toFixed(2)}`;
+}
+/** "$4.99/mo for your first 3 months, then $9.99/mo" */
+export function introPriceLine(tier: PremiumTierKey = "premium"): string {
+  return `${tierIntroMonthlyAmount(tier)}/mo for your first ${INTRO_MONTHS} months, then ${monthlyAmountFor(tier)}/mo`;
+}
+
 // ── Announced price increase ────────────────────────────────────────────────
 // History: $9.99/mo → $14.99/mo (2026-09-06, "the decided cutover price"; see
 // this file's git history for the full account of the originally-announced-but-
@@ -268,4 +303,4 @@ export function premiumLockInTail(): string {
 // changes again, including a price-only change like this one: without a bump,
 // events from the $14.99 era and the reverted $9.99 era would share one tag
 // and the before/after comparison this constant exists for would be lost.
-export const PREMIUM_COPY_VERSION = "lock-in-banner-always-2026-09-22";
+export const PREMIUM_COPY_VERSION = "trial3-intro-half-3mo-2026-09-24";

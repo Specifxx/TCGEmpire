@@ -358,7 +358,10 @@ test("PremiumSlideIn always shows a price too; the trial-eligible branch is a ba
   );
   const priceBlockAt = src.indexOf("{PREMIUM_PRICE_AMOUNT ? (");
   assert.ok(priceBlockAt >= 0, "expected an unconditional price block");
-  const block = src.slice(priceBlockAt, priceBlockAt + 600);
+  // 1000, not 600 (2026-09-24): the trial branch now also states the intro
+  // offer ("then $4.99/mo for 3 months (half price)") — still no recurring
+  // premiumFromLine() there, which the assertions below keep pinning.
+  const block = src.slice(priceBlockAt, priceBlockAt + 1000);
   const trialBranchAt = block.indexOf("trialEligible ? (");
   assert.ok(trialBranchAt >= 0, "expected a trialEligible branch");
   const elseAt = block.indexOf(") : (", trialBranchAt);
@@ -366,6 +369,7 @@ test("PremiumSlideIn always shows a price too; the trial-eligible branch is a ba
   const trialBranch = block.slice(trialBranchAt, elseAt);
   const nonTrialBranch = block.slice(elseAt);
   assert.match(trialBranch, /premiumZeroToday\(\)/, "trial-eligible branch must use the shared $0-today helper");
+  assert.match(trialBranch, /introOfferEnabled\(\) &&[\s\S]*tierIntroMonthlyAmount\(\)/, "the intro price is stated beside the $0, from the shared helper");
   assert.ok(!/premiumFromLine\(\)/.test(trialBranch), "trial-eligible branch must NOT also state the recurring price — bare $0 today, by design");
   assert.match(nonTrialBranch, /premiumFromLine\(\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
   assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
