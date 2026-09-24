@@ -110,6 +110,25 @@ export async function generateMetadata({
   // Google's ~60-char truncation with the site suffix attached, instead of getting
   // the important half cut off.
   const titleCandidates = [
+    // "PRICE GUIDE" IS THE TOP RUNG, added 2026-09-24 off the Search Console
+    // export. There is a whole sub-intent using that exact phrase, this page is
+    // what ranks for it, and it converts at nothing: "riftbound origins price
+    // guide" 82 impressions at position 6.3, "riftbound unleashed price guide"
+    // 79 at 7.5, "origins price guide" 72 at 5.9, "riftbound vendetta price
+    // guide" 65 at 8.2 — 789 impressions across 21 such queries, ONE click
+    // between them. The phrase appeared nowhere in any title, description or
+    // heading on the site.
+    //
+    // It is the banlist lesson again: ranking on page one for a phrase the
+    // title does not contain. "Card List" still leads, because that is the
+    // bigger query ("riftbound unleashed card list", 885 impressions) and
+    // tests/seo-landing-pages.test.ts pins list-intent first; "Price Guide"
+    // replaces the weaker "Prices" only where it fits inside 60 characters with
+    // the site suffix — Origins, Unleashed, Vendetta and Radiance all do, and
+    // those are the sets the price-guide queries actually name. Spirit Forged
+    // and Origins: Proving Grounds fall to the rung below, which is what the
+    // ladder is for; their descriptions still carry the phrase.
+    `Riftbound ${set.name} Card List & Price Guide`,
     `Riftbound ${set.name} Card List & Prices`,
     `Riftbound ${set.name} Card List`,
     `${set.name} Card List & Prices`,
@@ -168,6 +187,12 @@ export async function generateMetadata({
             : `Riftbound ${set.name} hasn't released yet — this page will list every card with live prices from launch day.`,
         ]
       : [
+          // Carries "price guide" for the sets whose title could not fit it,
+          // and reinforces it for the ones that could. Both phrasings describe
+          // the same page honestly: a list of every card in the set with what
+          // each one currently costs.
+          `The complete Riftbound ${set.name} card list and price guide — every card with live prices compared across stores to find the cheapest singles. Updated daily.`,
+          `The complete Riftbound ${set.name} card list and price guide — every card with live prices compared across stores. Updated daily.`,
           `The complete Riftbound ${set.name} card list — every card with images, plus live prices compared across stores to find the cheapest singles. Updated daily.`,
           `The complete Riftbound ${set.name} card list — every card, with live prices compared across stores to find the cheapest singles. Updated daily.`,
           `The complete Riftbound ${set.name} card list, with live prices compared across stores to find the cheapest singles. Updated daily.`,
