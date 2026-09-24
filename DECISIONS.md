@@ -11850,3 +11850,24 @@ keeps the old shape; the pinned test accepts both.
 
   All are low-volume, so none is GA4-only. New signup sources: header,
   card_alert, article_intro, article_end.
+
+**5. Radiance preview season.** All three parts switch themselves off on 23
+October.
+
+- **`/sets/radiance`** shows "N of 180 revealed · updated {time}" and a
+  newest-first "Latest reveals" strip of 12, above the hub. The counts and
+  cards are the database's own RAD non-promo rows, so a card appears only
+  because the twice-daily import wrote it. The query is cached for 15 minutes
+  and purged by the import. The route is dynamic, so rule 5 does not apply.
+- **A callout at the top of three Radiance posts** links the reveals
+  (`RADIANCE_CALLOUT_SLUGS`). Only the first, the leaked-mechanics post, is
+  *measured* as the top one. The what-we-know explainer and the Seraphine
+  spoiler were chosen without per-URL figures. Swap them when the export says
+  otherwise.
+- **A slim sitewide banner**, dismissible and stored in localStorage.
+  - The client decides whether to show it, after mount. The root layout is
+    shared by pages cached for up to a day, so a server-rendered date check
+    would keep saying "previews start 25 September" after they had started.
+    Rendering nothing on the server also means no hydration mismatch, and no
+    flash for someone who dismissed it.
+  - Its copy changes on 25 September and it disappears on release day.

@@ -26,6 +26,7 @@ import { ConsentDefaults } from "@/components/ConsentDefaults";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { GAPageViewTracker } from "@/components/GAPageViewTracker";
 import { SignupWelcome } from "@/components/SignupWelcome";
+import { RadianceSeasonBanner } from "@/components/RadianceSeasonBanner";
 import { GoogleAnalyticsUser } from "@/components/GoogleAnalyticsUser";
 import { ConsentGatedAnalytics } from "@/components/ConsentGatedAnalytics";
 import { PrivacySettingsLink } from "@/components/PrivacySettingsLink";
@@ -366,7 +367,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     hidden; SideNav itself is `position: fixed`, not a layout
                     participant, so this is what actually reserves its space. */}
                 <div className="pl-[var(--sidenav-w)]">
-                  <main id="main-content" className="container-app min-w-0 py-6">{children}</main>
+                  <main id="main-content" className="container-app min-w-0 py-6">
+                    {/* Radiance preview season, 2026-09-24 → release day. Client-
+                        decided and dismissible; renders nothing on the server. */}
+                    <RadianceSeasonBanner />
+                    {children}
+                  </main>
                 </div>
                 <PriceAlertModal providers={enabledProviders()} />
                 <SignupPromoPopup providers={enabledProviders()} />

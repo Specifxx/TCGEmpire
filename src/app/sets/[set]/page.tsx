@@ -31,6 +31,8 @@ import { SETS, setBySlug } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
 import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
+import { RadianceReveals } from "@/components/sets/RadianceReveals";
+import { getRadianceReveals } from "@/lib/radiance-reveals";
 import { setPriceGuideRows } from "@/lib/set-price-guide";
 import { storeCountsByCountry } from "@/lib/cards";
 import { RADIANCE_FAQ } from "@/lib/sets/radiance";
@@ -362,6 +364,7 @@ export default async function SetPage({
         })
       : [];
 
+  const radianceReveals = set.slug === "radiance" ? await getRadianceReveals(country) : null;
   const priceGuide = setPriceGuideRows(narrativeMembers as Record<string, unknown>[], priceField(country));
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
@@ -521,6 +524,10 @@ export default async function SetPage({
           Radiance-only for now (see PRE_RELEASE_LINKS's own per-slug pattern
           above); renders regardless of totalInSet, unlike PRE_RELEASE_LINKS
           which is confined to the empty-grid stub below. */}
+      {/* Preview season (switches off on release day): the reveal counter and
+          the newest DB-imported reveals, ABOVE the hub so a returning visitor
+          sees what is new first. */}
+      {set.slug === "radiance" && <RadianceReveals data={radianceReveals} />}
       {set.slug === "radiance" && <RadianceHub country={country} />}
 
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through

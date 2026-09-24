@@ -27,7 +27,7 @@ import { getPopularCards } from "@/lib/cheapest-cards";
 import { ScrollDepthTracker } from "./ScrollDepthTracker";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { ArticleSignupCta } from "./ArticleSignupCta";
-import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
+import { isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS } from "@/lib/sets/radiance";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -416,6 +416,22 @@ export async function ArticleView({ article }: { article: Article }) {
             className="h-auto max-h-[480px] w-full object-contain"
           />
         </div>
+      )}
+
+      {/* Preview-season callout at the TOP of the highest-traffic Radiance
+          posts (RADIANCE_CALLOUT_SLUGS), pointing at the set page's live reveal
+          counter. Switches off on release day with everything else. */}
+      {radianceSeason && (RADIANCE_CALLOUT_SLUGS as readonly string[]).includes(article.slug) && (
+        <Link
+          href="/sets/radiance"
+          className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-slate-200 hover:border-gold/60"
+        >
+          <span>
+            <strong className="text-gold">Radiance preview season:</strong> every card revealed so far, newest first, on the
+            Radiance set page.
+          </span>
+          <span className="shrink-0 font-semibold text-gold">See the reveals →</span>
+        </Link>
       )}
 
       {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine

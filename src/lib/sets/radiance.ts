@@ -148,3 +148,15 @@ export const RADIANCE_FAQ: RadianceFaq[] = [
     a: "Daily through preview season and launch. Singles appear within hours of reveal, each with a full store-by-store breakdown and price history.",
   },
 ];
+
+// The Radiance posts that get a "follow every reveal" callout at the top during
+// preview season (2026-09-24 growth pass: "the top of the three highest-traffic
+// Radiance posts"). Only the first is MEASURED as the top one (Search Console,
+// 975 clicks / 28d, the site's biggest page); the other two are the set's main
+// explainers, chosen without per-URL figures — swap them when the export shows
+// which Radiance posts actually rank second and third.
+export const RADIANCE_CALLOUT_SLUGS = [
+  "riftbound-radiance-leaked-mechanics",
+  "riftbound-radiance-what-we-know",
+  "riftbound-seraphine-radiance-spoiler",
+] as const;
