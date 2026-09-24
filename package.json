@@ -21,6 +21,7 @@
     "smoke": "tsx scripts/smoke-pages.ts",
     "audit:homepage": "node scripts/homepage-audit.mjs",
     "audit:homepage-analytics": "node scripts/homepage-audit-analytics.mjs",
+    "decisions:index": "tsx scripts/decisions-index.ts",
     "start": "next start",
     "cards:sync": "tsx scripts/sync-cards.ts",
     "cards:manual": "tsx scripts/add-manual-cards.ts",
