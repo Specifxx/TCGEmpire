@@ -3,6 +3,7 @@
 // article, add an entry here.
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
+import { monthYear } from "./content/month-year";
 
 
 export type ArticleCategory = "blog" | "guide";
@@ -168,6 +169,10 @@ export interface Article {
   // table, because that is what validation cross-checks.
   itemList?: { name: string; items: { name: string; description?: string; url?: string }[] };
 }
+
+// The ban list's last wave. Both its `updated` and the "(Sep 2026)" in its title
+// read this, so bumping it when a wave lands updates both together.
+const BANLIST_UPDATED = "2026-09-15";
 
 export const ARTICLES: Article[] = [
   // SERAPHINE'S RADIANCE LEGEND (2026-09-22). The genuinely new thing here is
@@ -4333,12 +4338,15 @@ For the full picture, read the **[Empower](/guides/riftbound-empower-explained)*
   {
     slug: "riftbound-banlist-explained",
     category: "guide",
-    title: "Riftbound Ban List 2026: Every Banned Card",
+    // CTR pass 2026-09-24 ("riftbound ban list": 5.1k impressions, position
+    // 8.5, 0.2%). The month comes from BANLIST_UPDATED, which is also
+    // `updated` below.
+    title: `Riftbound Ban List (${monthYear(BANLIST_UPDATED)}): Banned Cards`,
     excerpt:
-      "Every Riftbound card banned in Standard and Constructed 2v2, with Riot's stated reason for each ban and live prices — current to the September 2026 wave.",
+      "Which Riftbound cards are banned in Standard and 2v2 right now, what the September 2026 wave added, and why Riot banned each one — with live prices.",
     author: "RiftCompare",
     date: "2026-07-16",
-    updated: "2026-09-15",
+    updated: BANLIST_UPDATED,
     readMins: 7,
     tags: ["banlist", "competitive", "rules", "guide"],
     faq: [
@@ -5283,9 +5291,11 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     slug: "riftbound-empower-explained",
     ebayPicks: { heading: "Vendetta singles on eBay right now" },
     category: "guide",
-    title: "Riftbound Empower Explained: How It Works",
+    // CTR pass 2026-09-24 (9.1k impressions, position 6.3, 1.0%): the old
+    // description answered the question in full, so the snippet was the page.
+    title: "Riftbound Empower: How It Works & Every Card",
     excerpt:
-      "Empower lets a card gain new abilities once it's in play, usually for a cost on a later turn. Empowered is the status that sticks; Disempower strips it.",
+      "What Empower unlocks, when a card counts as Empowered, how Disempower takes it away again — and every Empower card in Vendetta, with live prices.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-07-31",
@@ -5390,9 +5400,10 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
   {
     slug: "riftbound-flow-explained",
     category: "guide",
-    title: "Riftbound Flow Explained: How It Works",
+    // CTR pass 2026-09-24 (3.2k impressions, position 5.8, 1.4%).
+    title: "Riftbound Flow: How It Works & Every Card",
     excerpt:
-      "Flow lets you play a card from your trash instead of from your hand. Rules step by step, the Flow cost, Burn synergy, and every Flow card in Vendetta.",
+      "Where Flow lets you play cards from, what it costs you, why it pairs with Burn — and every Flow card in Vendetta, with live prices.",
     author: "RiftCompare",
     date: "2026-07-08",
     updated: "2026-08-19",
@@ -10345,9 +10356,11 @@ We will update this post as the price is confirmed and as the first real sales d
   {
     slug: "riftbound-card-size-sleeves-deck-boxes",
     category: "guide",
-    title: "Riftbound Card Size: 63 x 88 mm, Standard TCG",
+    // CTR pass 2026-09-24 ("riftbound card size": 1.6k impressions, position
+    // 6.3, 0.4%): the title and description both gave the whole answer away.
+    title: "Riftbound Card Size: Sleeves, Boxes & Binders",
     excerpt:
-      "Standard trading-card size: 63 x 88 mm, the same as Magic and Pokemon, so any standard sleeve fits. Buy 66 sleeves per deck, not 40 — runes count too.",
+      "The exact Riftbound card size, which sleeves fit, why a deck needs more sleeves than its card count suggests, and the boxes and binder pages that hold one.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 11,

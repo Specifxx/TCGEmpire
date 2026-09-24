@@ -49,8 +49,11 @@ test("the banlist guide's description names both formats and is not clamped", ()
 
 test("the empower guide's description answers the question in its first sentence", () => {
   const a = article("riftbound-empower-explained");
-  // The definition the body opens with, so snippet and page agree.
-  assert.match(a.excerpt, /^Empower lets a card gain new abilities/);
+  // REVERSED 2026-09-24 (growth-pass brief): the answer-first description
+  // WAS the answer — 9.1k impressions at position 6.3 and 1.0% CTR — so it now
+  // names what the page settles without settling it in the snippet.
+  assert.doesNotMatch(a.excerpt, /^Empower lets a card gain new abilities/);
+  assert.match(a.excerpt, /^What Empower unlocks/);
   assert.match(a.excerpt, /Disempower/);
   assert.ok(a.excerpt.length <= DESCRIPTION_MAX, `excerpt is ${a.excerpt.length} chars`);
   // Title shape is owned by tests/seo-landing-pages.test.ts, and this line used

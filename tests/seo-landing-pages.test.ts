@@ -181,7 +181,10 @@ test("empower, flow and burn guides share the winning structure", () => {
     // position. It was not winning. Mirroring it was not the goal worth pinning —
     // a consistent, question-answering title that a searcher can actually READ
     // is, so that is what this now pins, plus the fit the old shape lacked.
-    assert.match(a!.title, /^Riftbound \w+ Explained: How It Works$/, `${slug} title shape`);
+    // Empower and Flow moved to "How It Works & Every Card" on 2026-09-24 (CTR
+    // pass): each page has an every-card gallery, and naming it is the payoff
+    // the old shape left out. Burn keeps the older shape until it is rewritten.
+    assert.match(a!.title, /^Riftbound \w+(?: Explained)?: How It Works(?: & Every Card)?$/, `${slug} title shape`);
     assert.ok(
       a!.title.length + " — RiftCompare".length <= 60,
       `${slug}'s title renders at ${a!.title.length + 14} chars and will be cut in the SERP`,

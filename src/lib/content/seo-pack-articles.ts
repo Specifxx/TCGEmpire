@@ -35,6 +35,7 @@
 // plus processing — precisely because naming a percentage we can't verify is how
 // a page becomes wrong and stays wrong.
 import type { Article } from "../articles";
+import { monthYear } from "./month-year";
 
 // Canonical hrefs for the destinations these articles link to. Centralised so a
 // route rename is one edit rather than forty, and so a link can't quietly rot
@@ -89,6 +90,7 @@ const L = {
 
 const AUTHOR = "Bill";
 const PUBLISHED = "2026-08-03";
+const MOST_EXPENSIVE_UPDATED = "2026-09-24";
 
 export const SEO_PACK_ARTICLES: Article[] = [
   // ───────────────────────────────────────────────────────────────────────────
@@ -604,11 +606,14 @@ RiftCompare compares live Riftbound prices across US, UK, AU, CA and SG stores p
   {
     slug: "most-expensive-riftbound-cards",
     category: "blog",
-    title: "Most Expensive Riftbound Cards: Live Ranking",
+    // CTR pass 2026-09-24: the ranking is live (topValue), so the month is
+    // time-sensitive — and it is derived from `updated`, never typed twice.
+    title: `Most Expensive Riftbound Cards (${monthYear(MOST_EXPENSIVE_UPDATED)})`,
     excerpt:
-      "Signature and Metal variants of popular champions top the market. See the live ranking, priced across every store we track, shipping included.",
+      "The ten priciest Riftbound cards right now, ranked live across every store we track — and the printing detail almost all of them have in common.",
     author: AUTHOR,
     date: PUBLISHED,
+    updated: MOST_EXPENSIVE_UPDATED,
     readMins: 9,
     tags: ["collecting", "chase cards", "prices", "investing", "movers"],
     hero: {

@@ -11779,3 +11779,26 @@ owner's Search Console figures; none is typed in.
     Unleashed, Vendetta and Radiance.
   - Spirit Forged and Proving Grounds, or an unknown count, fall to the
     uncounted "Price Guide" rung, then to the older suffixed ladder.
+
+**3. Click-through on five page-one pages.**
+
+These pages rank on page one and lose the click: the ban list (5.1k
+impressions, 0.2% CTR), Empower (9.1k, 1.0%), card size (1.6k, 0.4%), Flow
+(3.2k, 1.4%) and the most-expensive ranking. Two changes apply to all five:
+
+- The title leads with the query.
+- The description names the payoff without giving it away. The card-size
+  snippet no longer prints "63 x 88 mm", and Empower's no longer defines the
+  mechanic in full. That reverses the answer-first rule
+  `tests/guide-snippets-ctr.test.ts` pinned for Empower, because an
+  answer-first snippet at 1.0% CTR is the snippet doing the page's job.
+
+"(Mon YYYY)" appears only on the two time-sensitive titles, the ban list and
+the live price ranking. It comes from each article's own `updated` date through
+`monthYear()`, so the title and `dateModified` cannot disagree. The ban list's
+date is one constant, `BANLIST_UPDATED`. The ranking's `updated` is today,
+because this rewrite is its first substantive edit.
+
+Empower and Flow now read "How It Works & Every Card". Each page carries an
+every-card gallery, so the title names something the page actually has. Burn
+keeps the old shape; the pinned test accepts both.
