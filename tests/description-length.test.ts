@@ -19,7 +19,10 @@ import { ARTICLES } from "../src/lib/articles";
 // were over this cap against 26% of blog ones. 29,875 impressions — 18% of the
 // site's total — were sitting on a description cut off mid-sentence.
 //
-// Driven to 21 the same day. What this test does is stop the number going UP,
+// Driven to 1 on 2026-09-24. The survivor is the Radiance leak post, left
+// deliberately: it is the site's best page (8,142 impressions at 11.19% CTR)
+// and mid-news-cycle, so editing it to save 44 characters trades a working
+// page for a rule. What this test does is stop the number going UP,
 // and force it down as pages are fixed: add an over-length excerpt and the count
 // rises and this fails; fix a batch and lower BUDGET in the same commit.
 //
@@ -30,7 +33,7 @@ import { ARTICLES } from "../src/lib/articles";
 // underneath them). Set it once, at the end, from a single count.
 //
 // The right long-term value of BUDGET is 0.
-const BUDGET = 21;
+const BUDGET = 1;
 const MAX = 155;
 
 test("no new over-length article descriptions", () => {
@@ -46,6 +49,37 @@ test("no new over-length article descriptions", () => {
     over.length,
     BUDGET,
     `${BUDGET - over.length} over-length excerpt(s) have been fixed — lower BUDGET to ${over.length} in this commit to keep the gain.`,
+  );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A TITLE OVER ~60 RENDERED CHARACTERS IS CUT IN THE RESULT.
+// ─────────────────────────────────────────────────────────────────────────────
+// Both article routes append a site-name suffix (" — RiftCompare", 14 chars), so
+// the budget for the `title` field itself is 46. 36 articles were over it on
+// 2026-09-24, carrying 30,278 impressions — 18% of the site's total shipping a
+// headline with its end chopped off, several of them mid-word.
+//
+// Driven to 1 the same day. The survivor is deliberate: the Radiance leak post
+// is the site's best page by a distance (8,142 impressions at 11.19% CTR, a
+// quarter of all clicks) and it is mid-news-cycle. Editing a title that is
+// working that hard, during the spike that makes it work, to save a few
+// characters is a bad trade and destroys the attribution for it.
+const TITLE_SUFFIX = " — RiftCompare".length;
+const TITLE_RENDERED_MAX = 60;
+const TITLE_BUDGET = 1;
+
+test("no new article titles that get cut in the search result", () => {
+  const over = ARTICLES.filter((a) => a.title.length + TITLE_SUFFIX > TITLE_RENDERED_MAX);
+  assert.ok(
+    over.length <= TITLE_BUDGET,
+    `${over.length} titles render over ${TITLE_RENDERED_MAX} chars, up from the budgeted ${TITLE_BUDGET}: ` +
+      over.map((a) => `${a.slug} (${a.title.length + TITLE_SUFFIX})`).join(", "),
+  );
+  assert.equal(
+    over.length,
+    TITLE_BUDGET,
+    `${TITLE_BUDGET - over.length} over-length title(s) fixed — lower TITLE_BUDGET to ${over.length} in this commit to keep the gain.`,
   );
 });
 

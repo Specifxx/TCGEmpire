@@ -274,6 +274,32 @@ Roughly 60–90 minutes in a normal week, about two hours in a spoiler-season we
 
 ---
 
+## Do the ads hurt search? Checked 2026-09-24 — no.
+
+Asked directly, with an offer to drop ad units if they were costing rankings.
+They are not, and removing revenue to satisfy a hypothesis the evidence does not
+support would be the wrong trade. What was checked:
+
+- **Layout shift.** `AdSlot` is a fixed-height, `overflow-hidden` box and its own
+  header says "zero CLS by construction" — the frame reserves its height whether
+  a unit fills or collapses, so nothing around it moves. Cumulative Layout Shift
+  is the Core Web Vital ads usually damage, and this design cannot produce it.
+- **Render blocking.** The loader is a bare `<script async>`, not a blocking
+  tag, and `AdSenseLoader.tsx` documents why it is written that way rather than
+  through Next's `<Script>`.
+- **Density.** An article carries two units. A card page carries one, 120px, near
+  the end of the page. There is one sitewide footer banner. That is far below
+  anything Google's page-experience guidance treats as ad-heavy, and nothing sits
+  above the fold pushing content down.
+- **Thin pages.** `AdSlot` already declines to render on noindex and thin pages,
+  so the case that actually draws a policy problem is handled.
+
+The real constraints on visibility are the two below: on-page truncation, now
+fixed, and referring domains, which is Workstream D and has not started. If a
+future Core Web Vitals report shows Interaction to Next Paint or Largest
+Contentful Paint regressing and traces it to an ad unit, revisit this — but
+measure first, because the ad setup is more careful than most.
+
 ## What not to do, and why
 
 Each of these is grounded in this site's own measured history, not in general

@@ -53,6 +53,9 @@ test("the empower guide's description answers the question in its first sentence
   assert.match(a.excerpt, /^Empower lets a card gain new abilities/);
   assert.match(a.excerpt, /Disempower/);
   assert.ok(a.excerpt.length <= DESCRIPTION_MAX, `excerpt is ${a.excerpt.length} chars`);
-  // Title shape is owned by tests/seo-landing-pages.test.ts; only the excerpt moved.
-  assert.match(a.title, /Explained: How the .+ Mechanic Works/);
+  // Title shape is owned by tests/seo-landing-pages.test.ts, and this line used
+  // to restate it — so when that shape changed, a test about the DESCRIPTION
+  // failed for a reason that had nothing to do with descriptions. Asserting
+  // someone else's invariant is how a rename turns into two red tests and a
+  // hunt for which one is authoritative. Dropped; the owner still pins it.
 });

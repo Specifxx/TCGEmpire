@@ -166,7 +166,26 @@ test("empower, flow and burn guides share the winning structure", () => {
 
     // Question-shaped title — the single biggest difference between the Empower
     // page and its two siblings when this work started.
-    assert.match(a!.title, /Explained: How the .+ Mechanic Works/, `${slug} title shape`);
+    //
+    // THE SHAPE CHANGED 2026-09-24, and the reason is that the old one could not
+    // fit. It was /Explained: How the .+ Mechanic Works/, which produced
+    // "Riftbound Empower Explained: How the Empower Mechanic Works" — 73
+    // characters with the site suffix, against Google's ~60-character cut. Every
+    // one of the three truncated, and they truncated on a REDUNDANT word: the
+    // mechanic's name appeared twice in the same title.
+    //
+    // The premise underneath it had also expired. The comment above says these
+    // two must mirror "the Empower page that wins"; the Search Console export of
+    // 2026-09-19 says Empower takes 9,156 impressions at position 6.3 and 1.00%
+    // CTR, which is roughly a quarter of the click-through normal for that
+    // position. It was not winning. Mirroring it was not the goal worth pinning —
+    // a consistent, question-answering title that a searcher can actually READ
+    // is, so that is what this now pins, plus the fit the old shape lacked.
+    assert.match(a!.title, /^Riftbound \w+ Explained: How It Works$/, `${slug} title shape`);
+    assert.ok(
+      a!.title.length + " — RiftCompare".length <= 60,
+      `${slug}'s title renders at ${a!.title.length + 14} chars and will be cut in the SERP`,
+    );
 
     // FAQ block backing FAQPage schema.
     assert.ok((a!.faq?.length ?? 0) >= 4, `${slug} needs >=4 FAQ entries`);
