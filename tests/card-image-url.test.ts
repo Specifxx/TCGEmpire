@@ -173,9 +173,6 @@ test("anything that leaves the page asks for an absolute URL", () => {
   // satori can't fetch a site-relative src, and JSON-LD / the sitemap / the
   // public API are read by machines with no page to resolve against.
   for (const rel of [
-    "src/app/opengraph-image.tsx",
-    "src/app/card/[id]/opengraph-image.tsx",
-    "src/app/c/[token]/opengraph-image.tsx",
     "src/app/card/[id]/page.tsx",
     "src/app/api/card/[id]/route.ts",
     "src/lib/sitemap-sections.ts",
@@ -185,6 +182,22 @@ test("anything that leaves the page asks for an absolute URL", () => {
     const calls = src.match(/cardImageSrc\([^)]*\)/g) ?? [];
     assert.ok(calls.length > 0, `${rel} makes no cardImageSrc call`);
     for (const c of calls) assert.match(c, /absolute: true/, `${rel}: ${c} must pass absolute: true`);
+  }
+
+  // THE OG ROUTES ARE A SEPARATE RULE, and a stricter one. They need an
+  // absolute URL too, but they ALSO need a format satori can decode — and
+  // cardImageSrc serves the WebP mirror, which satori lays out, borders, and
+  // fills with nothing. Every OG image on the site was drawing an empty card
+  // box until 2026-09-22. cardImageForOg returns an absolute PNG/JPEG or null.
+  for (const rel of [
+    "src/app/opengraph-image.tsx",
+    "src/app/card/[id]/opengraph-image.tsx",
+    "src/app/c/[token]/opengraph-image.tsx",
+    "src/lib/hot40-og.tsx",
+  ]) {
+    const src = readFileSync(join(ROOT, rel), "utf8");
+    assert.match(src, /cardImageForOg\(/, `${rel} must use the OG-safe image helper`);
+    assert.ok(!/cardImageSrc\(/.test(src), `${rel} must not serve the WebP mirror into an OG image`);
   }
 });
 

@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRY_LIST } from "@/lib/country";
 import { getCachedRisingCards, type RisePick, type RiseComponents, type RiseScope } from "@/lib/rise-predictor";
 import { cardImageAlt } from "@/lib/image-alt";
+import { RisingSnapshotPanel } from "@/components/admin/RisingSnapshotPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -127,6 +128,13 @@ export default async function AdminRisingPage({
           })}
         </div>
       </div>
+
+      {/* Mint a public, frozen copy of exactly this ranking — see the doc
+          comment on model RisingSnapshot in prisma/schema.prisma. Sits ABOVE
+          the tiles because it acts on what the page is showing: an operator
+          reads the table, decides this run is worth sharing, and the control
+          for that should not be at the bottom of a long table. */}
+      <RisingSnapshotPanel adminKey={searchParams.key} scope={scope} />
 
       {/* Validation + status tiles */}
       <div className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">

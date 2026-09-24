@@ -16,9 +16,19 @@
 // client-side dialog without forcing either into the other's model.
 //
 // EVERY ROW IS A REAL ENTITLEMENT, checkable against the code:
-//   anon/account gates  lib/premium.ts — hasAccount() / isPremium()
+//   account gates       lib/premium.ts — hasAccount() / isPremium()
 //   Best Basket         api/basket 403 + tools/best-basket isPremium()
-//   Deal Finder etc.    the "Top pick vs Full list" split is the free teaser
+//   Deal Finder etc.    tools/deal-finder + tools/rising: no query signed
+//                       out, a three-row query for a free account, the full
+//                       list for a paid tier (2026-09-23)
+//
+// NO "NO ACCOUNT" COLUMN (2026-09-22, owner's call). It had four columns doing
+// the work of three: signed-out and free-account differ on exactly two rows
+// (price alerts, portfolio), and a reader deciding whether to PAY does not need
+// that distinction spelled out on the pricing page. The signed-out pitch is its
+// own surface — FreeAccountCompare, in the signup popup — and that is where
+// "what does an account add" belongs. The dialog had already dropped the column
+// for space; this makes both surfaces agree.
 //
 // `false` renders an em dash, `true` a tick, a string renders as-is — the rows
 // that are neither a flat yes nor a flat no are the honest part of the table and
@@ -26,7 +36,6 @@
 
 export type TierRow = {
   feature: string;
-  anon: boolean | string;
   account: boolean | string;
   // Plus (2026-09-11): the cheaper tier. "See everything vs do everything" —
   // Plus matches Premium on ad-free + the full lists (Deal Finder, Rising
@@ -37,26 +46,30 @@ export type TierRow = {
 };
 
 export const TIER_COMPARISON: TierRow[] = [
-  { feature: "Compare prices across every store + eBay", anon: true, account: true, plus: true, premium: true },
-  { feature: "Full card database, search & browse", anon: true, account: true, plus: true, premium: true },
-  { feature: "Deck builder, trade calculator & box EV", anon: true, account: true, plus: true, premium: true },
-  { feature: "RiftCompare Index & daily price movers", anon: true, account: true, plus: true, premium: true },
-  { feature: "Condition Impact Calculator", anon: true, account: true, plus: true, premium: true },
-  { feature: "Price alerts", anon: false, account: true, plus: true, premium: true },
-  { feature: "Portfolio tracker — history, P&L, CSV export", anon: false, account: true, plus: true, premium: true },
-  { feature: "Deal Finder", anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list" },
-  { feature: "Rising Cards", anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list" },
-  { feature: "Value Finder screener", anon: false, account: false, plus: false, premium: true },
-  { feature: "Bulk Pricer — price a whole list at once", anon: false, account: false, plus: false, premium: true },
-  { feature: "Best Basket — cheapest store split, postage included", anon: false, account: false, plus: false, premium: true },
-  { feature: "Demand Finder — most searched & viewed cards", anon: false, account: false, plus: false, premium: true },
+  { feature: "Compare prices across every store + eBay", account: true, plus: true, premium: true },
+  { feature: "Full card database, search & browse", account: true, plus: true, premium: true },
+  { feature: "Deck builder, trade calculator & box EV", account: true, plus: true, premium: true },
+  { feature: "RiftCompare Index & daily price movers", account: true, plus: true, premium: true },
+  { feature: "Condition Impact Calculator", account: true, plus: true, premium: true },
+  { feature: "Price alerts", account: true, plus: true, premium: true },
+  { feature: "Portfolio tracker — history, P&L, CSV export", account: true, plus: true, premium: true },
+  // "Top 3" since 2026-09-23: a signed-in free account sees the top three rows
+  // of each (queried at that size — see FREE_PREVIEW_ROWS in both pages). They
+  // were a flat "no" from 2026-09-22, and "Top pick" before that. Rising Sealed
+  // is NOT in this pair: it still shows its own top pick, and says so.
+  { feature: "Deal Finder", account: "Top 3", plus: "Full list", premium: "Full list" },
+  { feature: "Rising Cards", account: "Top 3", plus: "Full list", premium: "Full list" },
+  { feature: "Value Finder screener", account: false, plus: false, premium: true },
+  { feature: "Bulk Pricer — price a whole list at once", account: false, plus: false, premium: true },
+  { feature: "Best Basket — cheapest store split, postage included", account: false, plus: false, premium: true },
+  { feature: "Demand Finder — most searched & viewed cards", account: false, plus: false, premium: true },
   // Ad-free moved Plus → Premium on 2026-09-14. Plus kept the two things it
   // shares with Premium (the full Deal Finder and Rising Cards lists) AND
   // ad-free, which left Premium differentiated only by four bulk/screener
   // tools most visitors have no use for — a $4.99 card that ticked every
   // broadly-appealing box sitting immediately left of a $9.99 one. Existing
   // Plus subscribers keep ad-free via premiumTierFloor (see DECISIONS.md).
-  { feature: "Ad-free experience", anon: false, account: false, plus: false, premium: true },
+  { feature: "Ad-free experience", account: false, plus: false, premium: true },
 ];
 
 export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: boolean }) {
@@ -77,10 +90,9 @@ export function TierCell({ v, dialog = false }: { v: boolean | string; dialog?: 
 // than the row being unimportant:
 //   • length — the popup caps its own height and scrolls, so every row costs
 //     something (Ad-free experience);
-//   • no signal — with the "No account" column dropped below, a row that is a
-//     tick for BOTH remaining columns tells a reader deciding whether to pay
-//     nothing at all. The five here (the Condition Impact Calculator among them,
-//     now free for everyone) are exactly that shape.
+//   • no signal — a row that is a tick for every column tells a reader deciding
+//     whether to pay nothing at all. The five here (the Condition Impact
+//     Calculator among them, now free for everyone) are exactly that shape.
 // The rows that survive are the ones that differentiate, plus the handful of
 // flat-tick rows that establish what the free tier already covers.
 // Exported for tests/access-tiers.test.ts only: a typo in either of these sets
@@ -95,17 +107,19 @@ export const DIALOG_OMIT_FEATURES = new Set([
   "Portfolio tracker — history, P&L, CSV export",
 ]);
 
-// TIER_COMPARISON keeps "Top pick" as the honest answer for these two rows (a
-// free account isn't shut out, just capped) — that string stays intact above
-// for /premium. The dialog is a conversion surface rather than a spec sheet, so
-// there it collapses to the same tick/✗ vocabulary as every other row.
+// /premium spells these out as "Full list" for the paid columns, which is the
+// spec-sheet answer. The dialog is a conversion surface rather than a spec
+// sheet, so there they collapse to the same tick/✗ vocabulary as every other
+// row. The free column keeps its "Top 3" string on both surfaces (2026-09-23)
+// — it is the honest answer, and a reason to create the account.
 export const DIALOG_BINARY_FEATURES = new Set(["Deal Finder", "Rising Cards"]);
 
 /**
  * `compact` is also "is this the dialog?" — it trims padding/type scale AND
- * switches the popup-specific presentation above (fewer rows, no anon column,
- * red ✗ instead of an em dash). The underlying TIER_COMPARISON rows — and what
- * /premium renders from them — are untouched either way.
+ * switches the popup-specific presentation above (fewer rows, red ✗ instead of
+ * an em dash). Both surfaces now show the same COLUMNS. The underlying
+ * TIER_COMPARISON rows — and what /premium renders from them — are untouched
+ * either way.
  *
  * `showPlus` renders the Plus column between Free account and Premium — pass
  * it only once Plus is actually configured (premiumPlusEnabled()) so a dark
@@ -125,40 +139,49 @@ export function TierComparisonTable({
   showPlus?: boolean;
   tinted?: boolean;
 }) {
-  const cell = compact ? "px-2 py-1.5" : "px-3 py-2.5";
+  // The compact (dialog) strings are unchanged; only the /premium table
+  // narrows its tier columns below sm (see the comment on the wrapper).
+  // lnum without tnum (2026-09-23): feature names are prose, and body's default
+  // tabular figures gave Inter's hyphen a digit-wide advance ("Ad -free").
+  const featureCell = compact ? "px-2 py-1.5 [font-feature-settings:'lnum'_1]" : "px-2.5 py-2.5 text-[13px] sm:px-3 sm:text-sm [font-feature-settings:'lnum'_1]";
+  const tierHead = compact ? "w-16 px-2 py-1.5" : "w-14 px-1 py-2.5 text-xs sm:w-24 sm:px-3 sm:text-sm";
+  const tierData = compact ? "px-2 py-1.5" : "w-14 px-1 py-2.5 text-xs sm:w-24 sm:px-3 sm:text-sm";
   const rows = compact
     ? TIER_COMPARISON.filter((r) => !DIALOG_OMIT_FEATURES.has(r.feature)).map((r) =>
-        DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, account: false, plus: true, premium: true } : r
+        DIALOG_BINARY_FEATURES.has(r.feature) ? { ...r, plus: true, premium: true } : r
       )
     : TIER_COMPARISON;
   const plusWash = tinted ? "bg-slate-500/[0.06]" : "";
   const premiumWash = tinted ? "bg-gold/[0.07]" : "";
   return (
-    // min-w forces the tier columns to stay readable; the wrapper scrolls
-    // horizontally rather than letting them crush together on a phone.
+    // On phones every column fits: a tier cell only ever holds a tick, a dash
+    // or "Full list", so 56px columns at 12px text are enough (2026-09-23).
+    // The old 560px floor put the table in a 348px box at 390, with Free
+    // account 79% visible and Plus and Premium entirely off-screen behind a
+    // sideways scroll (a 22rem floor still clipped Premium at 390 and hid it
+    // completely at 320, so it is min-w-0). The cost is taller rows
+    // at 320. From sm up the min-width keeps the columns roomy and the wrapper
+    // still contains its own scroll; the compact dialog table keeps its floor.
     <div className="overflow-x-auto">
       <table
         className={`w-full border-collapse ${
-          compact ? (showPlus ? "min-w-[440px]" : "min-w-[380px]") + " text-xs" : (showPlus ? "min-w-[680px]" : "min-w-[560px]") + " text-sm"
+          compact
+            ? (showPlus ? "min-w-[440px]" : "min-w-[380px]") + " text-xs"
+            : (showPlus ? "min-w-0 sm:min-w-[560px]" : "min-w-0 sm:min-w-[440px]") + " text-sm"
         }`}
       >
         <thead>
           <tr className="border-b border-ink-700 text-left">
-            <th scope="col" className={`${cell} font-semibold text-slate-400`}>Feature</th>
-            {!compact && (
-              <th scope="col" className={`w-24 ${cell} text-center font-semibold text-slate-400`}>
-                No account
-              </th>
-            )}
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} text-center font-bold text-brand-400`}>
+            <th scope="col" className={`${featureCell} font-semibold text-slate-400`}>Feature</th>
+            <th scope="col" className={`${tierHead} text-center font-bold text-brand-400`}>
               Free account
             </th>
             {showPlus && (
-              <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} ${plusWash} text-center font-bold text-slate-200`}>
+              <th scope="col" className={`${tierHead} ${plusWash} text-center font-bold text-slate-200`}>
                 Plus
               </th>
             )}
-            <th scope="col" className={`${compact ? "w-16" : "w-24"} ${cell} ${premiumWash} text-center font-bold text-gold`}>
+            <th scope="col" className={`${tierHead} ${premiumWash} text-center font-bold text-gold`}>
               Premium
             </th>
           </tr>
@@ -166,11 +189,10 @@ export function TierComparisonTable({
         <tbody>
           {rows.map((r) => (
             <tr key={r.feature} className="border-b border-ink-800 last:border-0">
-              <th scope="row" className={`${cell} text-left font-normal text-slate-200`}>{r.feature}</th>
-              {!compact && <td className={`${cell} text-center`}><TierCell v={r.anon} /></td>}
-              <td className={`${cell} text-center`}><TierCell v={r.account} dialog={compact} /></td>
-              {showPlus && <td className={`${cell} ${plusWash} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
-              <td className={`${cell} ${premiumWash} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
+              <th scope="row" className={`${featureCell} text-left font-normal text-slate-200`}>{r.feature}</th>
+              <td className={`${tierData} text-center`}><TierCell v={r.account} dialog={compact} /></td>
+              {showPlus && <td className={`${tierData} ${plusWash} text-center`}><TierCell v={r.plus} dialog={compact} /></td>}
+              <td className={`${tierData} ${premiumWash} text-center`}><TierCell v={r.premium} dialog={compact} /></td>
             </tr>
           ))}
         </tbody>

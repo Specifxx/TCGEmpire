@@ -18,11 +18,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { absolute: "Rising Cards — Riftbound Cards Likely to Go Up | RiftCompare" },
   description:
-    "A Premium screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Transparent scoring, backtested, not financial advice.",
+    "A screener ranking Riftbound cards by demand and price-timing signals — high or rising search interest that hasn't re-rated yet. Free accounts see the top three; Premium shows every pick. Transparent scoring, backtested, not financial advice.",
   keywords: ["riftbound rising cards", "riftbound price predictions", "riftbound card demand", "riftbound investing", "riftbound cards going up"],
   alternates: pageAlternates("/tools/rising"),
   openGraph: { title: "Rising Cards — Riftbound cards likely to go up", url: `${SITE_URL}/tools/rising` },
 };
+
+// How many ranked picks a signed-in FREE account sees (2026-09-23 — see the
+// access comment in the page body). Premium sees all of them.
+const FREE_PREVIEW_ROWS = 3;
 
 const RISING_FAQS = [
   {
@@ -36,6 +40,10 @@ const RISING_FAQS = [
   {
     q: "Is this financial advice?",
     a: "No. It's a heuristic screen of public price and demand data, validated with a lookahead-free backtest on the price-timing component (demand isn't historically reconstructable, so only part of the score is backtestable). Treat it as a research starting point, not a guarantee — always check a card's own price history before buying.",
+  },
+  {
+    q: "Do I need Premium?",
+    a: "Not to start. A free account shows the top three ranked picks, with their full signal breakdown. Premium shows every ranked pick, in every market or Global, refreshed daily.",
   },
   {
     q: "How often does it update?",
@@ -52,9 +60,14 @@ function Spark({ values, w = 88, h = 26 }: { values: number[]; w?: number; h?: n
   const step = w / (values.length - 1);
   const pts = values.map((v, i) => `${(i * step).toFixed(1)},${(h - ((v - min) / span) * (h - 4) - 2).toFixed(1)}`);
   const up = values[values.length - 1] >= values[0];
+  // Coloured through currentColor from the themed text-brand-400 / text-rose-400
+  // tokens (2026-09-23), the same as PriceChart's Sparkline: the old literal
+  // #34d17e / #fb7185 were the dark theme's values and measured ~2:1 on the light
+  // theme's white rows. Dark is pixel-identical (brand-400 and rose-400 resolve
+  // to exactly those two hexes there).
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-      <polyline points={pts.join(" ")} fill="none" stroke={up ? "#34d17e" : "#fb7185"} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" className={up ? "text-brand-400" : "text-rose-400"}>
+      <polyline points={pts.join(" ")} fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -156,6 +169,14 @@ function TableHead() {
 export default async function RisingPage({ searchParams }: { searchParams: { scope?: string } }) {
   const user = await getCurrentUser();
   const premium = isPremium(user);
+  // THREE LEVELS (2026-09-23; DECISIONS.md, "Premium after sign-up"). Premium
+  // (and ADSENSE_REVIEW_MODE) sees every pick; a signed-in FREE account sees the
+  // top FREE_PREVIEW_ROWS — owner: "even if free accounts get to see the top 3";
+  // signed out sees no pick, only the ask for a free account. The slice happens
+  // HERE, on the server: only the rows a visitor is entitled to are rendered,
+  // and nothing below passes `analysis` to a client component, so the rest of
+  // the ranking never reaches the HTML or the RSC payload.
+  const access: "full" | "top3" | "none" = premium || ADSENSE_REVIEW_MODE ? "full" : user ? "top3" : "none";
   const country = getCountry();
 
   const raw = (searchParams.scope ?? "").toUpperCase();
@@ -170,7 +191,8 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   // The ONE day-keyed cache for this scan lives in rise-predictor.ts, shared
   // with the homepage deals feed and /admin/rising so any of them warms the rest.
   const analysis = await getCachedRisingCards(scope);
-  const top = analysis.picks[0];
+  const visible = access === "full" ? analysis.picks : access === "top3" ? analysis.picks.slice(0, FREE_PREVIEW_ROWS) : [];
+  const hiddenCount = Math.min(40, analysis.picks.length) - visible.length;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -208,51 +230,25 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         </p>
       </div>
 
-      {/* ADSENSE REVIEW MODE: while the review is open the Premium gate is
-          lifted, so no crawler-reachable page carries blurred or locked
-          content — "content behind a paywall or login" is its own AdSense
-          rejection reason, and this page is in the sitemap. The Premium CTA
-          stays; an ordinary upsell link is fine, a blur overlay standing in
-          place of the content is not. Restored by setting
-          NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
-      {!premium && !ADSENSE_REVIEW_MODE ? (
-        <div className="card-surface overflow-hidden">
-          <table className="w-full min-w-[560px] text-sm">
-            <TableHead />
-            <tbody className="divide-y divide-ink-800">
-              {top ? (
-                <RisingRow p={top} rank={1} currency={currency} />
-              ) : (
-                <tr><td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">Not enough data yet — check back once a few days of price history have built up.</td></tr>
-              )}
-            </tbody>
-          </table>
-          <div className="relative border-t border-ink-800">
-            <ul className="divide-y divide-ink-800 blur-[5px]" aria-hidden>
-              {[0, 1, 2, 3].map((i) => (
-                <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-60">
-                  <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
-                  <div className="flex-1 space-y-1.5"><div className="h-2.5 w-2/5 rounded bg-ink-800" /><div className="h-2 w-1/4 rounded bg-ink-800" /></div>
-                  <div className="h-3 w-10 rounded bg-ink-800" />
-                </li>
-              ))}
-            </ul>
-            <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-transparent to-ink-900/60 p-4 text-center">
-              <div>
-                <p className="text-sm font-bold text-white">Unlock the full Rising Cards list</p>
-                <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
-                  See all {Math.min(40, analysis.picks.length)} ranked picks, every market (or Global), with the full signal
-                  breakdown — not just the top pick.
-                </p>
-                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                  {user ? <PremiumButton /> : <Link href="/login?next=/tools/rising" className="btn-primary text-sm">Sign in free</Link>}
-                  <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : analysis.picks.length === 0 ? (
+      {/* ORDER MATTERS: the "still building" state below is checked FIRST, so a
+          free visitor on a scope with no ranked picks is told the truth rather
+          than shown a locked preview of a list that does not exist yet.
+
+          SIGNED OUT, NOTHING REAL IS RENDERED; A FREE ACCOUNT GETS THE TOP
+          THREE (2026-09-23 — see `access` above). From 2026-09-22 to
+          2026-09-23 free accounts got nothing either; before that the #1 pick
+          was a live row above blurred placeholders.
+
+          ADSENSE REVIEW MODE: while the review is open the gate is lifted, so
+          no crawler-reachable page carries locked content — "content behind a
+          paywall or login" is its own AdSense rejection reason, and this page
+          is in the sitemap. The Premium CTA stays; an ordinary upsell link is
+          fine, a lock standing in place of the content is not. Restored by
+          setting NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. The page keeps its
+          intro, its "How Rising Cards works" FAQ and its FAQPage schema either
+          way, which is what keeps it from being a thin page when gated.
+          See docs/adsense-remediation.md § 9. */}
+      {analysis.picks.length === 0 ? (
         <div className="card-surface grid place-items-center p-12 text-center text-sm text-slate-400">
           {/* Mirrors the admin page: when history exists but is short, say how
               short and when it unlocks, rather than implying nothing is being
@@ -276,20 +272,65 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             </div>
           )}
         </div>
-      ) : (
-        <div className="card-surface overflow-x-auto">
-          <table className="w-full min-w-[700px] text-sm">
-            <TableHead />
-            <tbody className="divide-y divide-ink-800">
-              {analysis.picks.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} currency={currency} />)}
-            </tbody>
-          </table>
-          <p className="p-3 text-[11px] text-slate-600">
-            Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
-            volatility) across the {analysis.qualifying} most-searched priced cards. Hover a signal bar for its exact
-            z-score. A research signal, not advice — always sanity-check the card&apos;s own price history.
-          </p>
+      ) : access === "none" ? (
+        <div className="card-surface relative overflow-hidden">
+          {/* Placeholder bars only — no pick, no card, no score. aria-hidden
+              because they carry no information; the heading and CTA below are
+              the real content of this state. */}
+          <ul className="divide-y divide-ink-800" aria-hidden>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li key={i} className="flex items-center gap-2.5 px-4 py-3 opacity-40">
+                <div className="h-10 w-7 shrink-0 rounded-sm bg-ink-800" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-2.5 w-2/5 rounded bg-ink-800" />
+                  <div className="h-2 w-1/4 rounded bg-ink-800" />
+                </div>
+                <div className="h-3 w-10 rounded bg-ink-800" />
+              </li>
+            ))}
+          </ul>
+          <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-ink-900/60 via-ink-900/80 to-ink-900/95 p-4 text-center">
+            <div>
+              <p className="text-sm font-bold text-white">See the top 3 rising cards, free</p>
+              <p className="mx-auto mt-0.5 max-w-sm text-xs text-slate-400">
+                A free account shows the three highest-ranked picks with their full signal breakdown. Premium shows all{" "}
+                {Math.min(40, analysis.picks.length)}, in every market or Global.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <Link href="/login?next=/tools/rising&src=tool_preview" className="btn-primary text-sm">Create a free account</Link>
+                <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+              </div>
+            </div>
+          </div>
         </div>
+      ) : (
+        <>
+          <div className="card-surface overflow-x-auto">
+            <table className="w-full min-w-[700px] text-sm">
+              <TableHead />
+              <tbody className="divide-y divide-ink-800">
+                {visible.map((p, i) => <RisingRow key={p.id} p={p} rank={i + 1} currency={currency} />)}
+              </tbody>
+            </table>
+            <p className="p-3 text-[11px] text-slate-600">
+              Score is a 0–100 percentile of a weighted composite (demand, velocity, room to run, scarcity, momentum,
+              volatility) across the {analysis.qualifying} most-searched priced cards. Hover a signal bar for its exact
+              z-score. A research signal, not advice — always sanity-check the card&apos;s own price history.
+            </p>
+          </div>
+          {access === "top3" && hiddenCount > 0 && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
+              <p className="text-sm text-slate-300">
+                <strong className="text-white">{hiddenCount} more ranked picks</strong>
+                {isGlobal ? "" : ` in ${scope}`} — Premium shows every one, in every market or Global.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <PremiumButton surface="gate:rising" />
+                <Link href="/movers" className="btn-ghost text-sm">Free price movers →</Link>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <section className="mt-10">

@@ -10,12 +10,18 @@
 const SYMBOL: Record<string, string> = { AUD: "A$", USD: "US$", GBP: "£", SGD: "S$", CAD: "C$", EUR: "€" };
 
 // Format integer cents in the given currency (default AUD), e.g. "A$12.50".
+// A negative amount takes a LEADING U+2212 minus before the symbol ("−US$190.00"),
+// like every other signed figure on the site ("−68.8%"). Intl alone produced
+// "US$-190.00" because the symbol was prepended to an already-signed number
+// (2026-09-23). Positive and zero output is unchanged, and neither -0 nor a
+// fractional amount that rounds to 0.00 (-0.4 cents) gets a sign.
 export function formatMoney(cents: number, currency: string = "AUD"): string {
+  const abs = Math.abs(cents);
   const n = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(cents / 100);
-  return `${SYMBOL[currency] ?? "$"}${n}`;
+  }).format(abs / 100);
+  return `${cents < 0 && abs >= 0.5 ? "−" : ""}${SYMBOL[currency] ?? "$"}${n}`;
 }
 
 export function formatAUD(cents: number): string {

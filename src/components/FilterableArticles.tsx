@@ -104,7 +104,10 @@ export function FilterableArticles({
 
   return (
     <div>
-      {/* Search — kept compact; it overrides both the Latest list and any topic. */}
+      {/* Search — kept compact; it overrides both the Latest list and any topic.
+          Its text is 16px below sm (2026-09-23): iOS Safari zooms the page on
+          focus into any field under 16px. Same `text-base sm:…` precedent as
+          `.input`. */}
       <div className="mb-5 flex items-center gap-2">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">⌕</span>
@@ -114,7 +117,7 @@ export function FilterableArticles({
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search articles…"
             aria-label="Search articles"
-            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-base text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:text-xs"
           />
         </div>
         {searching && (
@@ -227,7 +230,11 @@ function TopicButtons({
   return (
     <div className={className}>
       <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-300">Browse by topic</h2>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {/* `grid-cols-1` is the phone layout, not a no-op (2026-09-23): with no
+          base template the implicit auto track sized itself to the longest
+          unwrapped topic title + count, so /blog laid out 322px wide at 320.
+          See tests/grid-base-columns.test.ts. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {groups.map((g) => {
           const on = active === g.title;
           return (
@@ -284,12 +291,19 @@ function ArticleCard({
           the homepage teaser row already uses for consistency. */}
       {a.hero && (
         <div className="relative aspect-[1.91/1] w-full shrink-0 overflow-hidden bg-ink-900">
+          {/* wrapperClassName, not just className: Picture renders
+              <picture><img/></picture>, and it is the PICTURE that is the aspect
+              box's child. Left unstyled it is display:inline with no width of
+              its own, so the img's `w-full` had nothing definite to resolve
+              against and fell back to its intrinsic 744px. Same fault and same
+              fix as LatestPosts — see the note there for the measurement. */}
           <Picture
             src={a.hero.src}
             alt={a.hero.alt}
             width={744}
             height={1039}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            wrapperClassName="absolute inset-0 block h-full w-full"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </div>

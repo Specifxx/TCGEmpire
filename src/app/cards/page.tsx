@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
@@ -20,6 +21,19 @@ export const metadata: Metadata = {
     "Every way to browse the Riftbound card database — by domain, card type, rarity and printing — each with live prices across every store we track.",
   alternates: pageAlternates("/cards"),
   openGraph: { title: "Browse Riftbound Cards | RiftCompare", description: "Browse by domain, type, rarity and printing.", url: `${SITE_URL}/cards` },
+};
+
+// Column classes per facet COUNT, looked up rather than string-built so
+// Tailwind's build-time class scan sees every literal (same pattern as
+// TodaysTopDeals' GRID_COLS). One entry per count so no count leaves an orphan
+// tile (2026-09-23): a single `lg:grid-cols-4` put the 6 types at [4,2] and the
+// 5 rarities at [4,1]. Counts today: TYPE_FACETS 6, RARITY_FACETS 5,
+// PRINTING_FACETS 4; 5 and 6 go single-row only at xl, because from lg the
+// 17rem rail leaves ~704px. Any other count keeps the old classes.
+const FACET_COLS: Record<number, string> = {
+  4: "sm:grid-cols-2 lg:grid-cols-4",
+  5: "sm:grid-cols-3 xl:grid-cols-5",
+  6: "sm:grid-cols-3 xl:grid-cols-6",
 };
 
 export default async function CardsIndexPage() {
@@ -74,7 +88,7 @@ export default async function CardsIndexPage() {
             <Link href={titleLink.href} className="text-sm text-brand-400 hover:underline">{titleLink.label}</Link>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className={`grid grid-cols-2 gap-2 ${FACET_COLS[facets.length] ?? "sm:grid-cols-3 lg:grid-cols-4"}`}>
           {facets.map((f) => {
             const n = counts instanceof Map ? counts.get(f.label) ?? 0 : counts[f.slug] ?? 0;
             const thin = n < FACET_THIN_THRESHOLD;
@@ -127,7 +141,7 @@ export default async function CardsIndexPage() {
         <h2 className="mb-3 text-lg font-extrabold text-white">By domain</h2>
         <div className="flex flex-wrap gap-2">
           {DOMAIN_PAGES.map((d) => (
-            <Link key={d.slug} href={`/domains/${d.slug}`} className="chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500" style={{ color: d.color }}>
+            <Link key={d.slug} href={`/domains/${d.slug}`} className="data-ink chip border border-ink-700 px-3 py-1.5 text-sm hover:border-brand-500" style={{ "--data-ink": d.color } as CSSProperties}>
               <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
               {d.label}
             </Link>

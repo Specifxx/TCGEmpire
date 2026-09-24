@@ -170,13 +170,26 @@ export function Twenty48() {
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="text-sm text-slate-400">
-          Highest tier: <span className="font-bold" style={{ color: topTier.color }}>{topTier.name}</span>
+          {/* Tier names pass their hex as --data-ink, not `color` (2026-09-23):
+              "Uncommon" was 2.91:1 in the light theme. globals.css's .data-ink
+              uses the hex as-is in dark and darkens it in light. The solid
+              tile fills below keep the raw hex. */}
+          Highest tier: <span className="data-ink font-bold" style={{ "--data-ink": topTier.color } as React.CSSProperties}>{topTier.name}</span>
         </div>
         <button onClick={newGame} className="btn-ghost text-sm">↻ New game</button>
       </div>
 
+      {/* Capped by viewport height too (2026-09-23). 9rem is the 125px two-row
+          phone header plus a margin, so on a landscape phone the whole square
+          fits under the sticky header, which must stay (owner decision,
+          DECISIONS 2026-09-16) — and the board is touch-none, so a player
+          cannot drag on it to reach hidden rows. Portrait phones, tablets and
+          desktop keep 448px: the cap only bites when svh < 592px. The
+          supports-[] guard keeps plain max-w-md in a browser without svh,
+          where the unguarded value would be invalid and the board would grow
+          to full width. */}
       <div
-        className="relative mx-auto aspect-square w-full max-w-md touch-none select-none rounded-xl bg-ink-900 p-2"
+        className="relative mx-auto aspect-square w-full max-w-md supports-[height:100svh]:max-w-[min(28rem,calc(100svh-9rem))] touch-none select-none rounded-xl bg-ink-900 p-2"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -205,7 +218,7 @@ export function Twenty48() {
               <h2 className="mt-1 text-xl font-extrabold text-white">Board locked!</h2>
               <p className="mt-1 text-sm text-slate-300">
                 Score <span className="font-bold text-white">{score}</span> · best {best} · reached{" "}
-                <span className="font-bold" style={{ color: topTier.color }}>{topTier.name}</span>
+                <span className="data-ink font-bold" style={{ "--data-ink": topTier.color } as React.CSSProperties}>{topTier.name}</span>
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <button onClick={newGame} className="btn-primary">▶ Play again</button>

@@ -287,8 +287,7 @@ export function SearchBar({
   useEffect(() => {
     function isVisible(el: HTMLElement): boolean {
       // offsetParent is null for display:none (and its ancestors) — catches
-      // the Navbar's own `hidden .../lg:block` breakpoint swap and the
-      // homepage-only scroll-gated header search (HeaderSearchSlot) alike.
+      // the Navbar's own `hidden .../xl:block` breakpoint swap.
       if (el.offsetParent === null && getComputedStyle(el).position !== "fixed") return false;
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) return false;
@@ -391,16 +390,35 @@ export function SearchBar({
       // up sized to sit flush against the very edge of the viewport.
       const GAP_ABOVE_DROPDOWN = 8; // mt-2
       const DROPDOWN_MARGIN = 24;
+      // The VISUAL viewport, not innerHeight (2026-09-23): a phone's on-screen
+      // keyboard shrinks only the visual viewport (iOS Safari, and Chrome
+      // Android >=108 under the default interactive-widget=resizes-visual), so
+      // innerHeight sized this list to run under the keyboard with nothing to
+      // scroll — at 390x844 the 425px list hid its 6th result and "See all
+      // results" behind a ~300-340px keyboard. offsetTop + height is in the
+      // same layout-viewport coordinates getBoundingClientRect() uses. A
+      // one-shot SIZE measurement while the list is open, not the fixed-bar
+      // position tracking HeaderMenuButton.tsx's history warns about.
+      const vv = window.visualViewport;
+      const viewportBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
       const available =
-        window.innerHeight - boxRef.current.getBoundingClientRect().bottom - GAP_ABOVE_DROPDOWN - DROPDOWN_MARGIN;
+        viewportBottom - boxRef.current.getBoundingClientRect().bottom - GAP_ABOVE_DROPDOWN - DROPDOWN_MARGIN;
       setDropdownMaxHeight(Math.max(120, Math.min(available, 480)));
     }
     recompute();
+    // The visualViewport 'scroll' listener is required, not optional: with the
+    // keyboard up, iOS PANS the visual viewport — offsetTop changes and it
+    // fires 'scroll', not 'resize' — and without it the budget goes stale.
+    const vv = window.visualViewport;
     window.addEventListener("resize", recompute);
     window.addEventListener("scroll", recompute, true);
+    vv?.addEventListener("resize", recompute);
+    vv?.addEventListener("scroll", recompute);
     return () => {
       window.removeEventListener("resize", recompute);
       window.removeEventListener("scroll", recompute, true);
+      vv?.removeEventListener("resize", recompute);
+      vv?.removeEventListener("scroll", recompute);
     };
   }, [open]);
 
@@ -710,7 +728,15 @@ export function SearchBar({
       </form>
 
       {showDropdown && (
-        <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl">
+        // xl:min-w-[26rem] (2026-09-23): at 1280 the inline header input is
+        // ~269-285px, and a dropdown that wide truncated the top results to
+        // "Ahri, Nine…" / "Ahri, Inquisi…", so printings of one card could not
+        // be told apart. 416px keeps it left-anchored to the input and over
+        // page content only (right edge ~x=814 at 1280); from 1440 the input
+        // is already wider and the rule does nothing. xl only: below it the
+        // nav search is its own full-width row, and a phone cannot afford
+        // 416px. The hero/not-found boxes (variant="hero") are unaffected.
+        <div className={`absolute z-50 mt-2 w-full ${isHero ? "" : "xl:min-w-[26rem]"} overflow-hidden rounded-xl border border-ink-700 bg-ink-850 shadow-2xl`}>
           {isZeroState ? (
             <>
             {/* overflow-y-auto + a measured maxHeight is a safety net, not the

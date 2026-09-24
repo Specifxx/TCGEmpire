@@ -40,15 +40,31 @@ export function ThemeToggle({ variant = "icon", className = "" }: { variant?: "i
   const [mode, setMode] = useState<ThemeMode>("dark");
 
   useEffect(() => {
-    // The boot script already stamped the attribute; the cookie is the source of
-    // truth if the two ever disagree (e.g. the attribute was stripped by a
-    // client-side navigation that re-rendered <html>).
+    // The cookie is the source of truth. applyTheme runs UNCONDITIONALLY, not only
+    // when attribute and cookie disagree: the boot script stamps data-theme but
+    // never touches <meta name="theme-color">, so a light visitor kept black
+    // browser chrome. Idempotent (a setAttribute plus a meta write).
     const next = resolveThemeMode(readThemeCookie(document.cookie));
-    if (next !== readTheme()) applyTheme(next);
+    applyTheme(next);
     setMode(next);
     const onChange = (e: Event) => setMode((e as CustomEvent<ThemeMode>).detail);
     window.addEventListener(EVENT, onChange);
-    return () => window.removeEventListener(EVENT, onChange);
+    // Next 14 removes and re-inserts <meta name="theme-color"> (the layout's static,
+    // dark viewport.themeColor) on every client navigation, so a one-off write is
+    // undone by the first link click (measured 2026-09-23: /sets → /sets/origins
+    // put it back to #0b0e14). Re-stamp it whenever <head> changes.
+    // childList only, so our own setAttribute cannot re-trigger the observer.
+    const syncMeta = () => {
+      const want = THEME_COLOR[readTheme()];
+      const m = document.querySelector('meta[name="theme-color"]');
+      if (m && m.getAttribute("content") !== want) m.setAttribute("content", want);
+    };
+    const mo = new MutationObserver(syncMeta);
+    mo.observe(document.head, { childList: true, subtree: true });
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      mo.disconnect();
+    };
   }, []);
 
   const toggle = useCallback(() => {

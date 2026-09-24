@@ -4,7 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { CONTENT_TAG } from "@/lib/revalidate-content";
 import { getCountry } from "@/lib/get-country";
-import { normalizeCountry } from "@/lib/country";
+import { COUNTRIES, normalizeCountry } from "@/lib/country";
 import { Filters } from "@/components/Filters";
 import { ActiveFilters } from "@/components/ActiveFilters";
 import { EbayPicks } from "@/components/EbayPicks";
@@ -225,12 +225,16 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
   };
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    // xl:flex-row, not lg: the filter sidebar only sits beside the results from
+    // 1280 (see Filters.tsx). With the permanent 17rem rail a 1024px row left
+    // the results 424px wide (2026-09-23).
+    <div className="flex flex-col gap-6 xl:flex-row">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify([breadcrumbLd, collectionLd]) }}
       />
-      <Filters />
+      {/* The market column's currency, which honours ?market= (country above). */}
+      <Filters currency={COUNTRIES[country].currency} />
 
       <section className="min-w-0 flex-1">
         {!searchParams.q && (
@@ -252,7 +256,11 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
                 them; this was the other half the brief asked for). Only
                 on the default view, matching the H1/subhead above it, so a
                 filtered/searched view (noindexed, canonicalized to plain
-                /browse) doesn't carry a duplicate set of the same links. */}
+                /browse) doesn't carry a duplicate set of the same links.
+
+                tap-link on both (2026-09-23): the chips measured 26px tall and
+                "All champions" 95x16 at 390. `.chip` itself stays a badge (the
+                TrendingChips precedent); tap-link is 24px on a mouse, 48px on touch. */}
             <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
               <span className="text-slate-500">Popular champions:</span>
               {POPULAR_CHAMPION_SLUGS.map((slug) => {
@@ -262,19 +270,22 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
                   <Link
                     key={slug}
                     href={`/champions/${slug}`}
-                    className="chip border border-ink-700 px-2.5 py-1 font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+                    className="chip tap-link border border-ink-700 px-2.5 py-1 font-semibold text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
                   >
                     {champ.name}
                   </Link>
                 );
               })}
-              <Link href="/champions" className="text-brand-400 hover:underline">
+              <Link href="/champions" className="tap-link text-brand-400 hover:underline">
                 All champions →
               </Link>
             </div>
           </div>
         )}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        {/* #results is where Filters' "Show results" lands. On this row, not the
+            section: the section's top is ~750px above the first tile. scroll-mt-36
+            clears the 125px sticky header below xl (2026-09-23). */}
+        <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-400">
             <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
             {total === 1 ? "card" : "cards"}
@@ -308,7 +319,11 @@ export default async function BrowsePage({ searchParams }: { searchParams: CardQ
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {/* Sized from the column's own width from lg (2026-09-23): the rail and
+                the sidebar squeeze it, and the 10.5rem floor keeps CardTile's
+                min-w-[6.5rem] price block inside the tile. Was lg:4 / xl:5 by
+                viewport, i.e. 94px tiles at 1024 and 123px at 1280. */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
               {cards.map((c) => (
                 <CardTile key={c.id} card={trimTileArtFallback(c)} />
               ))}

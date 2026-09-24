@@ -212,7 +212,13 @@ export function HomeSections({
           They remain the site's best "come back tomorrow" mechanics that
           aren't the price data itself, and they still sit ahead of the
           explainer, the set/domain grid and the whole editorial run below. */}
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Three across only from 1440 (2026-09-23): beside the 17rem rail the
+          three cards were 224px at 1024 and ~300px at 1280, leaving their text
+          columns 16-110px wide next to the shrink-0 CTA, one word per line and
+          running under the button. Below 1440 it is two across with the last
+          card spanning the row, which also ends the half-width orphan at
+          640-1023. grid-cols-1 per tests/grid-base-columns.test.ts. */}
+      <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 min-[1440px]:grid-cols-3 min-[1440px]:[&>*:last-child]:col-span-1">
         <ReturnVisitCards newestSetName={newestSet?.name} />
       </Reveal>
 
@@ -227,7 +233,12 @@ export function HomeSections({
         <h2 className="mb-4 text-xl font-extrabold text-white">Explore the database</h2>
 
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">By set</div>
-        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {/* SETS has 6 entries: 2 × 3 on phones, 3 × 2 from sm, one row of 6 at
+            xl — DECISIONS "Grid density" moved this grid to 6 columns to avoid
+            a lonely second row, and it regressed to `lg:grid-cols-5` ([5,1],
+            RAD alone) when the section moved here. xl rather than lg because
+            from lg the 17rem rail leaves only ~704px of content (2026-09-23). */}
+        <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {SETS.map((s) =>
             // Fully unreleased (no cards, no sealed) → disabled tile. Vendetta has
             // revealed cards + sealed live, so it links through with a green "New"

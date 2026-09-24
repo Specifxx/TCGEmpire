@@ -76,20 +76,17 @@ export function PrivacySettingsLink({ className }: { className?: string }) {
 
   const cls = className ?? "tap-link text-slate-300 hover:text-brand-400";
 
-  // The trailing separator lives INSIDE the component so the footer's "·" chain
-  // stays correct whichever variant renders.
-  return (
-    <>
-      {canReopen ? (
-        <button type="button" onClick={() => window.googlefc?.showRevocationMessage?.()} className={cls}>
-          Privacy settings
-        </button>
-      ) : (
-        <Link href="/privacy#advertising" className={cls}>
-          Privacy settings
-        </Link>
-      )}
-      <span className="text-ink-700">·</span>
-    </>
+  // No trailing "·" any more (2026-09-23). The footer row separates its items
+  // with its own gap: the "·" spans wrapped independently of their links and
+  // dangled at line starts and ends, and screen readers read each one out as
+  // "middle dot". Its only consumer is the footer link row in layout.tsx.
+  return canReopen ? (
+    <button type="button" onClick={() => window.googlefc?.showRevocationMessage?.()} className={cls}>
+      Privacy settings
+    </button>
+  ) : (
+    <Link href="/privacy#advertising" className={cls}>
+      Privacy settings
+    </Link>
   );
 }

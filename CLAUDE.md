@@ -44,7 +44,9 @@ So, for automated sessions:
 
 ## Databases
 
-Two Neon projects: operational (`RM10`) and history (`HISTORY_DATABASE_URL`). Both resolve
+Two Neon projects: operational and history. The live names rotate (RM3 and
+`HISTORY_DATABASE_URL_3` as of 2026-09-22) — `OPERATIONAL_VARS` / the history
+chain in `src/lib/db-chains.ts` are the source of truth, not this file. Both resolve
 through `src/lib/db-chains.ts`; never hand-roll a connection chain in a script
 (`tests/db-chain.test.ts` fails if you do). Free-tier transfer is 5 GB/month
 per project; `.github/workflows/egress-audit.yml` measures where it goes.
@@ -59,3 +61,10 @@ npm test            # node --test over tests/*.test.ts; needs `npx prisma genera
 
 Record non-obvious decisions in `DECISIONS.md` (newest at the bottom), in the
 same style as the entries already there.
+
+Read `docs/CURRENT-STATE.md` first. It lists the rules and decisions still in
+force, each linked to its entry, so check it before proposing something an
+entry already settled. If your entry changes or reverses one of its bullets,
+update that bullet too. `docs/DECISIONS-INDEX.md` lists every entry by month.
+Run `npm run decisions:index` after adding or editing an entry: it regenerates
+the index and fails if a CURRENT-STATE link no longer lands on its entry.

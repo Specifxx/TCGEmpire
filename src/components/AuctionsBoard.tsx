@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { OutboundLink } from "@/components/OutboundLink";
 import { AffiliateDisclosure } from "@/components/AffiliateDisclosure";
 import { formatMoney } from "@/lib/format";
+import { ebayImg, ebaySrcSet } from "@/lib/ebay";
 import type { AuctionRow } from "@/lib/ebay-auctions";
 
 // The live auction board. Rendered on the server like any client component, so
@@ -17,9 +18,12 @@ import type { AuctionRow } from "@/lib/ebay-auctions";
 // browser is the only way to be both honest and cheap.
 //
 // TILES, NOT ROWS (2026-09-16, owner's call: "make the auctions a tiled format
-// like the database"). Same grid as /browse — grid-cols-2 on a phone up to
-// xl:grid-cols-5 — so the two surfaces read as one site. See AuctionTile below
-// for the one place it deliberately differs from CardTile.
+// like the database"). Same grid as /browse — grid-cols-2 on a phone,
+// sm:grid-cols-3, then from lg as many 10.5rem-minimum columns as the width
+// holds (auto-fill, 2026-09-23) — so the two surfaces read as one site. Inside
+// this page's max-w-4xl that is 3 columns at 1024-1039 and 4 from 1040 up (was
+// 4, then 5 from 1280). See AuctionTile below for the one place it
+// deliberately differs from CardTile.
 
 /** Bids that mean a lot is genuinely being contested rather than sitting at its
  *  opening price. Five is a judgement call, not a measurement — it is the point
@@ -84,13 +88,18 @@ function Chip({
     tone === "brand"
       ? "border-brand-500 bg-brand-500/15 text-brand-200"
       : "border-slate-500 bg-ink-800 text-slate-100";
+  // min-h-11 sm:min-h-8 (2026-09-23): 32px was under the phone touch floor on
+  // all 11 chips. The site's `min-h-11 sm:min-h-*` convention: 44px, 48px on a
+  // coarse pointer, and the unchanged 32px from sm up with a MOUSE only: a bare
+  // sm:min-h-8 is emitted after the coarse 48px rule and cancelled it on touch
+  // tablets, so the reset is scoped to pointer:fine (2026-09-23).
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       aria-label={ariaLabel}
-      className={`chip min-h-8 border px-2.5 py-1 text-xs font-semibold transition-colors ${
+      className={`chip min-h-11 sm:[@media(pointer:fine)]:min-h-8 border px-2.5 py-1 text-xs font-semibold transition-colors ${
         active ? on : "border-ink-700 text-slate-400 hover:border-ink-600 hover:text-slate-200"
       }`}
     >
@@ -168,9 +177,14 @@ function AuctionTile({
         {row.imageUrl ? (
           // Arbitrary eBay CDN hosts, so a plain lazy <img> rather than
           // next/image — the same call EbayPicksLive makes for the same reason.
+          // srcSet (2026-09-23): the API's s-l225 is 169px wide and was upscaled
+          // to 173-239px. sizes follows the auto-fill grid in the 896px cap, with
+          // the p-2 box: ~vw/2-40 on phones, ~29vw at sm, 208px at most from lg.
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={row.imageUrl}
+            src={ebayImg(row.imageUrl, 300)}
+            srcSet={ebaySrcSet(row.imageUrl)}
+            sizes="(min-width:1024px) 208px, (min-width:640px) 30vw, 45vw"
             alt=""
             aria-hidden="true"
             loading="lazy"
@@ -181,14 +195,17 @@ function AuctionTile({
             <span className="rb-eyebrow text-[9px] text-slate-700">No photo</span>
           </span>
         )}
+        {/* Opaque ink-950/85 backing, matching the clock chip's (2026-09-23): on
+            a 15%-alpha fill a slab's red label struck through "PSA 10" and "HOT"
+            sat on white label print (~1.5:1 in light). The ring keeps the hue. */}
         <span className="absolute left-1.5 top-1.5 z-20 flex flex-col items-start gap-1">
           {grade && (
-            <span className="chip bg-gold/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gold">
+            <span className="chip bg-ink-950/85 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-gold ring-1 ring-gold/40">
               {grade}
             </span>
           )}
           {row.bidCount >= HOT_BID_COUNT && (
-            <span className="chip bg-up/15 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-up">
+            <span className="chip bg-ink-950/85 px-1.5 py-0 text-[10px] font-bold uppercase tracking-wide text-up ring-1 ring-up/40">
               Hot
             </span>
           )}
@@ -381,7 +398,7 @@ export function AuctionsBoard({
       ) : (
         // The database's own grid (src/app/browse/page.tsx), verbatim — the point
         // of the change was that the two surfaces should look like one site.
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
           {visible.map((row, i) => (
             <AuctionTile
               key={row.itemId}

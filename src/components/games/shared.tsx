@@ -135,7 +135,19 @@ export function GameShell({
   );
 }
 
-export function GameLoading({ error, retry }: { error: string | null; retry: () => void }) {
+export function GameLoading({ error, retry, skeleton }: { error: string | null; retry: () => void; skeleton?: React.ReactNode }) {
+  // A game can pass a placeholder with its board's own geometry (2026-09-23).
+  // The generic 280px box stood in for boards of 372-926px, so the deal shifted
+  // everything under the game (CLS 0.38 on /games/pairs at 1440). The error
+  // state keeps the box: it needs the room for its message and retry button.
+  if (skeleton && !error) {
+    return (
+      <div aria-busy="true">
+        <p className="sr-only" role="status">Dealing the cards…</p>
+        {skeleton}
+      </div>
+    );
+  }
   return (
     <div className="card-surface grid min-h-[280px] place-items-center p-8 text-center">
       {error ? (

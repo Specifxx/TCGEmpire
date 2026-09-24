@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 import { PREMIUM_COPY_VERSION, TIER_NAMES, type PremiumTierKey } from "@/lib/site";
 import type { StartSrc } from "@/lib/premium-start";
+import { recallPremiumSurface } from "@/lib/premium-surface";
 
 // The last step of /premium/start for a SIGNED-IN visitor: open Stripe.
 //
@@ -57,7 +58,7 @@ export function CheckoutLauncher({
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, plan, back }),
+        body: JSON.stringify({ tier, plan, back, surface: recallPremiumSurface() }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {

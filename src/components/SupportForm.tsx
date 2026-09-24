@@ -79,12 +79,12 @@ export function SupportForm({
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-slate-400">Email</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={200} className="input" />
+          <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required maxLength={200} className="input" />
         </label>
       </div>
 
       <label className="text-sm">
-        <span className="mb-1 block text-slate-400">What's this about?</span>
+        <span className="mb-1 block text-slate-400">What&apos;s this about?</span>
         <select value={category} onChange={(e) => setCategory(e.target.value)} className="input">
           {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
         </select>

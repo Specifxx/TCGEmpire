@@ -1,6 +1,6 @@
 /**
  * scripts/mobile-check.ts — 375px viewport audit, plus a 640/720/790px tablet
- * horizontal-overflow sweep.
+ * horizontal-overflow sweep and a 320/360px narrow-phone layout-viewport sweep.
  *
  *   npx tsx scripts/mobile-check.ts --url http://localhost:3111
  *
@@ -20,6 +20,15 @@
  * regression is why this second pass exists: horizontal-scroll only, not the
  * full four-fault audit, since tap-target sizing is a phone-specific concern.
  *
+ * A third sweep runs at 320/360px in a mobile context (isMobile + touch) and
+ * fails when the content (body.scrollWidth, window.innerWidth or the document)
+ * grows past the device width. It exists because Today's Top Deals laid `/` out
+ * at 372px: that fits at 375, so the phone pass never saw it, and on 320–360px
+ * phones it zoomed the whole site out (see NARROW_PHONE_WIDTHS and
+ * tests/grid-base-columns.test.ts). Since 2026-09-23 `body { overflow-x: clip }`
+ * stops the layout viewport widening, so such a row is now clipped at the edge
+ * instead — and body.scrollWidth is the term that still reports it.
+ *
  * Uses the pre-installed Chromium via playwright-core; skips cleanly with an
  * explanatory message if neither is present, so it never breaks a build.
  */
@@ -32,9 +41,17 @@ const argOf = (n: string, d: string) => {
 };
 const BASE = argOf("--url", "http://localhost:3111").replace(/\/$/, "");
 
+// THE TOOL PAGES ARE IN THIS LIST BECAUSE THEY WERE NOT, on 2026-09-22.
+// /tools/deal-finder laid out 457px wide at a 390px viewport — RegionToggle's
+// six-market segmented row could not wrap (see that component) — and Chrome for
+// Android widened the layout viewport to fit and scaled the page down, then
+// remembered the zoom for the whole site. This script is the thing that would
+// have caught it, and it had never once loaded the page. Exactly the same shape
+// as the TABLET_WIDTHS note below: the audit missed a regression because of
+// where it was not looking, not because of what it was not measuring.
 const PATHS = (
   process.env.MOBILE_CHECK_PATHS ??
-  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/market,/marketplace,/cards/rarity/rare"
+  "/,/browse,/sets,/guides,/blog,/about,/privacy,/editorial-policy,/movers,/market,/marketplace,/cards/rarity/rare,/tools/deal-finder,/tools/value-finder"
 )
   .split(",")
   .map((s) => s.trim())
@@ -59,6 +76,19 @@ const TABLET_WIDTHS = [640, 720, 790];
 // representative pages are enough — this isn't re-running the whole PATHS
 // sweep at three more widths for no added signal.
 const TABLET_PATHS = (process.env.MOBILE_CHECK_TABLET_PATHS ?? "/,/browse").split(",").map((s) => s.trim()).filter(Boolean);
+
+// 375 is not the narrowest phone that matters: 360 is the most common Android
+// width, and 320 still ships. On 2026-09-23 the homepage's Today's Top Deals
+// grid had no base column template, so its implicit auto track grew to the
+// widest unwrapped deal row. innerWidth measured 372 at 320 and 344, and 373 at
+// 360: 3px short of showing at 375, so the phone pass above never saw a fault
+// that zoomed the site out on most Android phones. This sweep uses a MOBILE
+// context (isMobile + touch) so Chromium sizes the layout viewport exactly as
+// Chrome for Android does. `html { overflow-x: clip }` hides the offending
+// element from an element-overflow scan, and since 2026-09-23 `body` clips too,
+// so the layout viewport no longer widens either: document.body.scrollWidth is
+// the signal that still shows the overflow. Keep it in the Math.max below.
+const NARROW_PHONE_WIDTHS = [320, 360];
 
 // Interactive elements only — a 20px-tall <span> is not a tap target.
 const TAP_SELECTOR = 'a[href], button, [role="button"], input:not([type="hidden"]), select, textarea, summary';
@@ -96,6 +126,11 @@ type ChromiumLike = {
 
 const PLAYWRIGHT = "playwright-core";
 
+// One iPhone UA for every mobile context, so the 375px audit and the narrow-
+// phone sweep below measure the same kind of browser.
+const MOBILE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+
 async function main() {
   let chromium: ChromiumLike;
   try {
@@ -127,8 +162,7 @@ async function main() {
     deviceScaleFactor: 2,
     isMobile: true,
     hasTouch: true,
-    userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+    userAgent: MOBILE_UA,
   });
 
   let failures = 0;
@@ -323,6 +357,48 @@ async function main() {
   }
   console.log(
     `\n${tabletFailures === 0 ? `No horizontal overflow at ${TABLET_WIDTHS.join("/")}px.` : `${tabletFailures} tablet-width overflow${tabletFailures === 1 ? "" : "s"} found.`}\n`,
+  );
+
+  // Narrow-phone sweep — layout-viewport widening only (see NARROW_PHONE_WIDTHS).
+  let narrowFailures = 0;
+  console.log(`Narrow-phone layout-viewport audit at ${NARROW_PHONE_WIDTHS.join("/")}px\n`);
+  for (const width of NARROW_PHONE_WIDTHS) {
+    const phoneContext = await browser.newContext({
+      viewport: { width, height: 740 },
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+      userAgent: MOBILE_UA,
+    });
+    try {
+      for (const path of PATHS) {
+        const page = await phoneContext.newPage();
+        try {
+          await page.goto(`${BASE}${path}`, { waitUntil: "networkidle", timeout: 45000 });
+          await page.waitForTimeout(700);
+          // A string, not a function: see the `__name` note in the 375px pass.
+          const layoutWidth = (await page.evaluate(
+            "Math.max(window.innerWidth, document.documentElement.scrollWidth, document.body.scrollWidth)"
+          )) as number;
+          const wide = layoutWidth > width + 1;
+          if (wide) narrowFailures++;
+          console.log(
+            `${wide ? "\x1b[31m✗\x1b[0m" : "\x1b[32m✓\x1b[0m"} ${width}px ${path}` +
+              (wide ? `   \x1b[90mcontent is ${layoutWidth}px wide\x1b[0m` : ""),
+          );
+        } catch (e) {
+          narrowFailures++;
+          console.log(`\x1b[31m✗\x1b[0m ${width}px ${path} — ${String(e).slice(0, 120)}`);
+        } finally {
+          await page.close();
+        }
+      }
+    } finally {
+      await phoneContext.close();
+    }
+  }
+  console.log(
+    `\n${narrowFailures === 0 ? `No layout-viewport widening at ${NARROW_PHONE_WIDTHS.join("/")}px.` : `${narrowFailures} narrow-phone overflow${narrowFailures === 1 ? "" : "s"} found.`}\n`,
   );
 
   await browser.close();

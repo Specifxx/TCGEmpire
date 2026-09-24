@@ -100,7 +100,7 @@ export default async function NotFound() {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Cards people are looking at
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {popular.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}

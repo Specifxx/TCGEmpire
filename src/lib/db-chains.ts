@@ -42,49 +42,47 @@
 /**
  * Operational database (Card, RetailerPrice, users, marketplace).
  *
- *   RM12 — the ONLY operational variable, in service since 2026-09-18. RM10
- *        (live since 2026-09-14) reached its own 5 GB monthly transfer
+ *   RM3 — the ONLY operational variable, in service since 2026-09-22. RM12
+ *        (live since 2026-09-18) was approaching its own 5 GB monthly transfer
  *        allowance after four days — the same ~2 GB/day burn every project in
- *        this rotation has ended on, and the SECOND full project life since
- *        the 2026-09-11 deploy-cadence gate. That gate was the leading
- *        explanation for the burn; two projects dying on the old schedule
- *        since it landed retires that explanation. The real query is still
- *        unidentified — run audit-egress a few hours after this cutover.
+ *        this rotation has ended on, and the THIRD full project life since the
+ *        2026-09-11 deploy-cadence gate. The real query is still unidentified;
+ *        run audit-egress a few hours after this cutover.
  *
- *        RM12 IS A GENUINELY NEW PROJECT, and that is a deliberate break from
- *        the last six cutovers. Every one of those recycled a rested name
- *        (RM6 → RM7 → RM8 → RM9 → RM10) and inherited whatever was left of
- *        that project's monthly allowance. By 2026-09-18 the rotation had run
- *        out of genuinely rested names: RM11, the obvious candidate, is itself
- *        at its limit from its 2026-08-29..09-03 term, and RM8 probes
- *        UNREACHABLE. A new project is the only thing that starts with a full
- *        5 GB.
+ *        THE TARGET WAS FIRST ASKED TO BE "DATABASE_URL", AND IS NOT.
+ *        The owner's instruction on 2026-09-22 named the DATABASE_URL secret.
+ *        The one time that was done (2026-08-12) left a verdict in
+ *        maintenance.yml that still stands: "DATABASE_URL IS THE MOST
+ *        DANGEROUS NAME IN THIS REPO TO ROTATE ONTO … If there is a next
+ *        rotation, give the project a fresh name rather than recycling the
+ *        generic one." prisma/schema.prisma reads env("DATABASE_URL")
+ *        directly, most scripts assign it to aim Prisma, and the workflows'
+ *        job-level env assigns it too — so the name would mean both "whichever
+ *        database this process should talk to" and "the project at the head of
+ *        this chain", and in production those coincide, which is precisely
+ *        what makes a mistake there silent. Raised with the owner, who chose
+ *        RM3. Every rotation since RM6 has followed the same advice.
  *
- *        THIS FILE'S RECYCLE RULE THEREFORE DOES NOT APPLY, and its inverse
- *        does. "A recycled target must be re-verified each time it comes back
- *        around" is about a project that might still hold real data; RM12 has
- *        never been used, so the check that replaced it was the opposite one —
- *        migrate-main-db-rm10-to-rm12's pre-restore inventory asserts RM12 is
- *        EMPTY, on the grounds that a "new" project holding rows is not the
- *        project you think it is. It came back empty.
+ *        RM3 IS A RECYCLED PROJECT — the third operational project this site
+ *        ever used, live until ~2026-08-04 — so THIS FILE'S RECYCLE RULE
+ *        APPLIES IN FULL: a recycled target is re-verified on every return,
+ *        never trusted from an earlier term. A 2026-09-22 probe-databases run
+ *        found it REACHABLE and far BEHIND RM12 on every metric (User=137,
+ *        Card=1406, RetailerPrice=69,689, CollectionCard=617, PriceAlert=17,
+ *        Order=4) — a stale early-August snapshot, which is what a genuinely
+ *        rested project looks like. migrate-main-db-rm12-to-rm3's `--clean`
+ *        pass then wiped it and restored RM12 over it, with EVERY table's row
+ *        count verified equal (User 379, StoreHealthSnapshot 5,169,
+ *        UserDigestOptOut 370, TrialRedemption 6, StorePartner 2,
+ *        SupportTicket 0, StoreSuggestion 0 …), and the closing
+ *        `prisma db push` reported the schema already in sync.
  *
- *        The cutover itself was verified, not assumed. A 2026-09-18
- *        probe-databases run first confirmed RM10 still REACHABLE and ahead of
- *        every other project on every metric (User=370, PriceAlert=213,
- *        CollectionCard=1823, RetailerPrice=131,599, Card=1431) — so this was a
- *        planned rotation with the data fully drainable, not a recovery from a
- *        dead project. migrate-main-db-rm10-to-rm12 then dumped and restored
- *        it with EVERY table's row count matching exactly (User 370,
- *        RetailerPrice 131,599, PriceAlert 213, SealedListing 2,727,
- *        StoreHealthSnapshot 4,661, PremiumClick 277, Order 9 …), and the
- *        closing `prisma db push` reported the schema already in sync.
- *
- *        Like RM10, RM9, RM8, RM7, RM6 and RM11 before it, RM12 is a SINGLE
- *        name, not a chain — a deliberate departure from the RM3 through RM8
- *        era, when each was a FALLBACK CHAIN (CURRENT-first, falling through
- *        to older, often exhausted projects), and every real outage this
- *        database has had traced back to that shape, not to the database
- *        itself.
+ *        Like RM12, RM10, RM9, RM8, RM7, RM6 and RM11 before it, RM3 is a
+ *        SINGLE name, not a chain — a deliberate departure from the RM3
+ *        through RM8 era, when each was a FALLBACK CHAIN (CURRENT-first,
+ *        falling through to older, often exhausted projects), and every real
+ *        outage this database has had traced back to that shape, not to the
+ *        database itself.
  *
  * ── WHY THIS IS ONE NAME NOW, NOT ANOTHER CHAIN ──────────────────────────────
  * resolveVar() below selects the first variable that is merely SET — precedence,
@@ -100,73 +98,66 @@
  * this project now makes deliberately: no emergency fallback lever, but no more
  * silently-serving-garbage incidents either.
  *
- * RM3 through RM11 (and RM10, as of this cutover) and DATABASE_URL_2 are retired and stay out
+ * RM4 through RM12 (RM12 as of this cutover) and DATABASE_URL_2 are retired and stay out
  * of this chain — available to the migration tasks by explicit name (see
- * migrate-main-db-rm10-to-rm12 and its predecessors in .github/workflows/maintenance.yml).
+ * migrate-main-db-rm12-to-rm3 and its predecessors in .github/workflows/maintenance.yml).
  * DATABASE_URL is ALSO not in this chain anymore: it is read directly by
  * prisma/schema.prisma's env("DATABASE_URL") for local dev and by the Prisma
  * CLI, never by the running app (src/lib/db.ts constructs PrismaClient with an
  * explicit datasourceUrl override), so its presence or absence here has no
  * effect on what the app resolves to.
  */
-export const OPERATIONAL_VARS = ["RM12"] as const;
+export const OPERATIONAL_VARS = ["RM3"] as const;
 
 /**
  * History database (PriceHistory, ClickEvent), CURRENT-first.
  *
- *   HISTORY_DATABASE_URL_2 — in service since 2026-09-17, once
- *                            HISTORY_DATABASE_URL (see below) reached its own
- *                            5 GB monthly transfer allowance after five days
- *                            live — its longest stint yet, but still the same
- *                            terminal burn every prior history project has
- *                            shown. This cutover RECYCLES
- *                            HISTORY_DATABASE_URL_2 — retired since the
- *                            2026-08-19 HISTORY_DATABASE_URL_3 cutover —
- *                            rather than provisioning a new project.
+ *   HISTORY_DATABASE_URL_3 — in service since 2026-09-22, once
+ *                            HISTORY_DATABASE_URL_2 (see below) came within
+ *                            reach of its own 5 GB monthly transfer allowance
+ *                            after five days live — the same terminal burn
+ *                            every history project has shown. This cutover
+ *                            RECYCLES HISTORY_DATABASE_URL_3, retired since
+ *                            the 2026-08-21 _4 cutover, rather than
+ *                            provisioning a new project.
  *
- *                            UNLIKE AN UNCHECKED RECYCLE, its old contents
- *                            were verified fresh, not assumed from that old
- *                            term (this file's own rule: a recycled target
- *                            must be re-verified each time it comes back
- *                            around, never trusted from old findings). A
- *                            2026-09-17 probe-history run found it still
- *                            holding real, outdated numbers from that old
- *                            term (rows=45,067, days=2026-08-04..2026-08-09,
- *                            distinctCards=1390, matching RM10 1385/1390
- *                            (100%) — not zeroes, the signature of a
- *                            genuinely recycled project rather than a fresh
- *                            one, and zero GLOBAL rows on its own, predating
- *                            the 2026-09-05 GLOBAL-history migration just like
- *                            every other project's pre-cutover term has), then
- *                            migrate-history-db-hdu-to-hdu2 did a full
- *                            pg_dump/restore of HISTORY_DATABASE_URL
+ *                            RE-VERIFIED FRESH, not assumed from that old
+ *                            term (this file's own rule: a recycled target is
+ *                            re-checked every time it comes back around). A
+ *                            2026-09-22 probe-history run found it holding
+ *                            real, outdated numbers from that term
+ *                            (rows=293,094, days=2026-08-06..2026-08-21,
+ *                            distinctCards=1423, matching RM12 1418/1423
+ *                            (100%)) and — the tell — ZERO GLOBAL rows of its
+ *                            own, which places its last term before the
+ *                            2026-09-05 GLOBAL-history migration, exactly as
+ *                            every other pre-cutover term has looked. Behind
+ *                            the source on every metric, i.e. genuinely
+ *                            rested. migrate-history-db-hdu2-to-hdu3 then did
+ *                            a full pg_dump/restore of HISTORY_DATABASE_URL_2
  *                            (rows=423,999, days=2026-06-06..2026-09-17,
  *                            distinctCards=1426, GLOBAL rows=82,175) over it,
- *                            `pg_restore` dropping and reloading Card/
- *                            ClickEvent/PriceHistory, every count verified to
- *                            match exactly.
- *   HISTORY_DATABASE_URL   — the rollback: served 2026-09-12..09-17 (five
- *                            days — see git history for the long account of
- *                            ITS OWN cutover, from RH10) — reachable and
- *                            already holds the GLOBAL series, so it remains a
- *                            genuinely safe rollback. Only ever selected if
- *                            HISTORY_DATABASE_URL_2 is UNSET — a safety net
- *                            for a missing secret, not a health check, so a
- *                            near-exhausted-but-present HISTORY_DATABASE_URL_2
- *                            never masks a genuinely missing
- *                            HISTORY_DATABASE_URL (resolveVar is precedence,
- *                            never health; see OPERATIONAL_VARS above for the
- *                            outage that shape caused on the operational
- *                            side).
+ *                            every count verified equal: Card 1,437,
+ *                            ClickEvent 698, PriceHistory 423,999.
+ *   HISTORY_DATABASE_URL_2 — the rollback: served 2026-09-17..09-22, holds the
+ *                            same GLOBAL series (it is what _3 was restored
+ *                            FROM), so it is a genuinely safe rollback. Only
+ *                            ever selected if HISTORY_DATABASE_URL_3 is UNSET
+ *                            — a safety net for a missing secret, not a health
+ *                            check, so a near-exhausted-but-present _3 never
+ *                            masks a genuinely missing _2 (resolveVar is
+ *                            precedence, never health; see OPERATIONAL_VARS
+ *                            above for the outage that shape caused on the
+ *                            operational side).
  *   DATABASE_URL           — the terminal case, meaning "no separate history
  *                            project is configured; history shares the
  *                            operational database". db-history.ts's
  *                            historyIsSplit depends on this staying last.
  *
- * RH10 DROPS OUT OF THIS CUTOVER (it was HISTORY_DATABASE_URL's own rollback
- * for the 2026-09-12..09-17 stint, and a chain only needs one) — still
- * reachable, still holding the GLOBAL series, available to migration tasks by
- * explicit name if ever needed again.
+ * HISTORY_DATABASE_URL DROPS OUT OF THIS CUTOVER (it was _2's own rollback for
+ * the 2026-09-17..09-22 stint, and a chain only needs one) — still reachable,
+ * still holding the GLOBAL series, available to migration tasks by explicit
+ * name if ever needed again.
  *
  * RH5 IS DELIBERATELY ABSENT, and not because it is orphaned. The 2026-08-23
  * probe found it holding User=85, CollectionCard=374, Order=4,
@@ -178,8 +169,8 @@ export const OPERATIONAL_VARS = ["RM12"] as const;
  * is also one of the account-recovery sources probe-databases exists to find, so
  * it should be left intact rather than reused.
  *
- * RH6, RH7, RH8, RH9, RH11 AND HISTORY_DATABASE_URL_3/_4 STAY OUT OF THIS
- * CHAIN — reachable (the 2026-09-17 probe-history run found all of them so,
+ * RH6, RH7, RH8, RH9, RH10, RH11 AND HISTORY_DATABASE_URL/_4 STAY OUT OF THIS
+ * CHAIN — reachable (the 2026-09-22 probe-history run found all of them so,
  * each holding real if outdated data), but nothing has asked to cut over onto
  * any of them, and this file's own "ONLY LIVE PROJECTS BELONG IN A RUNTIME
  * CHAIN" rule means being reachable is not enough on its own to earn a chain
@@ -187,7 +178,7 @@ export const OPERATIONAL_VARS = ["RM12"] as const;
  * requiring the same live guard every recycled target gets — do not assume
  * OLD findings (documented in earlier git history) still hold.
  */
-export const HISTORY_VARS = ["HISTORY_DATABASE_URL_2", "HISTORY_DATABASE_URL", "DATABASE_URL"] as const;
+export const HISTORY_VARS = ["HISTORY_DATABASE_URL_3", "HISTORY_DATABASE_URL_2", "DATABASE_URL"] as const;
 
 /** First variable in `vars` that is actually set, by NAME — never its value. */
 export function resolveVar(vars: readonly string[]): string | null {

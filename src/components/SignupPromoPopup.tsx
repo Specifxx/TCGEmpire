@@ -350,10 +350,15 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
 
   // Esc dismisses it — non-trapping, because this is not a modal (matches
   // PremiumSlideIn exactly: no focus trap, no scroll lock, no aria-modal).
+  // Ignored while a real dialog is open (2026-09-23): that Escape belongs to
+  // the dialog, and dismissing here as well would silently burn a
+  // frequency-cap strike and a week's snooze on a visitor who only meant to
+  // close QuickView. The flag outlives the dialog's exit animation, so it is
+  // still set during the dispatch that closes it.
   useEffect(() => {
     if (!shown) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dismiss();
+      if (e.key === "Escape" && document.body.dataset.rcDialog !== "1") dismiss();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -392,13 +397,22 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             so a browser without it gets the solid background instead of an
             unreadably see-through card.
           • max-w-[20rem] on phones (sm and up keeps the old max-w-sm), so even
-            at its widest it is not edge-to-edge. */}
-      <div className="relative max-h-[62dvh] overflow-y-auto overflow-x-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl supports-[backdrop-filter]:bg-ink-900/85 supports-[backdrop-filter]:backdrop-blur-md sm:max-h-[70dvh]">
-        {/* Dismiss sits over the artwork now that there is no header strip. */}
+            at its widest it is not edge-to-edge.
+          • The cap is also height-relative (2026-09-23): min(…dvh,
+            100dvh-9.5rem), so a landscape phone's card stays below the ~125px
+            sticky header. `sm:` is keyed on WIDTH, so an 844x390 phone got
+            the 70dvh branch and the card started 24px inside the header,
+            covering the whole content area. A no-op on portrait phones and
+            desktops, where the dvh term is the smaller one. */}
+      <div className="relative max-h-[min(62dvh,calc(100dvh-9.5rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl supports-[backdrop-filter]:bg-ink-900/85 supports-[backdrop-filter]:backdrop-blur-md sm:max-h-[min(70dvh,calc(100dvh-9.5rem))]">
+        {/* Dismiss sits over the artwork now that there is no header strip.
+            .tap-icon (2026-09-23): the same glyph, only a bigger hit area —
+            25x28 → 48x48 on touch. Easier to hit, never harder to dismiss
+            (DECISIONS 2026-09-14 declined that). The title's pr-10 clears it. */}
         <button
           onClick={dismiss}
           aria-label="Dismiss"
-          className="absolute right-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-slate-300 transition hover:bg-ink-950/60 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+          className="tap-icon absolute right-0 top-0 z-10 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
         >
           ✕
         </button>
@@ -410,7 +424,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
             mentions. PremiumPitchPanel (free vs Premium) is untouched and
             remains PremiumSlideIn's, for signed-in visitors. */}
         <div className="px-4 pb-1 pt-4">
-          <p className="pr-6 text-sm font-extrabold leading-snug text-white">Create a free account</p>
+          <p className="pr-10 text-sm font-extrabold leading-snug text-white">Create a free account</p>
           <p className="mt-0.5 text-[11px] leading-snug text-slate-400">
             Prices stay free for everyone. An account remembers the cards you care about.
           </p>
@@ -437,7 +451,7 @@ export function SignupPromoPopup({ providers }: { providers: ("google" | "discor
           <button
             type="button"
             onClick={dismiss}
-            className="mt-2 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            className="mt-2 min-h-11 w-full rounded-lg px-3 py-2 text-center text-xs font-semibold text-slate-400 hover:bg-ink-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             Maybe later
           </button>

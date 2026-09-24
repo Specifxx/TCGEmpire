@@ -3,6 +3,7 @@ import { getPreorderGroups } from "@/lib/sealed-import";
 import { getDisplayCurrency } from "@/lib/get-country";
 import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderPriceTable";
 import { HubFaq } from "@/components/HubFaq";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import type { Country } from "@/lib/country";
 import {
   RADIANCE_TAGLINE,
@@ -18,6 +19,7 @@ import {
   RADIANCE_LEGENDS_UNREVEALED,
   RADIANCE_PRODUCTS,
   RADIANCE_FAQ,
+  isBeforeRadianceRelease,
 } from "@/lib/sets/radiance";
 
 // The visible content hub for /sets/radiance while singles are still in
@@ -113,7 +115,7 @@ export async function RadianceHub({ country }: { country: Country }) {
               key={legend.slug}
               id={legend.slug}
               href={`/sets/radiance?q=${encodeURIComponent(legend.name)}`}
-              className="chip scroll-mt-24 border border-gold/30 bg-gold/10 px-3 py-1.5 text-sm font-semibold text-gold transition-colors hover:border-gold hover:bg-gold/20"
+              className="chip scroll-mt-header border border-gold/30 bg-gold/10 px-3 py-1.5 text-sm font-semibold text-gold transition-colors hover:border-gold hover:bg-gold/20"
             >
               {legend.name}
             </Link>
@@ -176,6 +178,26 @@ export async function RadianceHub({ country }: { country: Country }) {
           ))}
         </ol>
       </div>
+
+      {/* Launch capture (2026-09-23): the release-day email (lib/release-day.ts)
+          goes to the newsletter list, and no Radiance surface offered that list,
+          so spoiler-season visitors — the year's biggest traffic — had no way
+          onto it. After the timeline, whose last step is release day, and before
+          the FAQ, where a reader who has what they came for leaves. Retires on
+          release day with the email it promises. */}
+      {isBeforeRadianceRelease() && (
+        <div className="mt-6 max-w-lg">
+          <NewsletterSignup
+            siteName="RiftCompare"
+            variant="card"
+            source="radiance-launch"
+            trackEvent="radiance_notify_click"
+            heading="Get an email the day Radiance prices go live"
+            cta="Notify me"
+            done="You're on the list. We'll email you on release day."
+          />
+        </div>
+      )}
 
       <HubFaq faqs={RADIANCE_FAQ} heading="Radiance — frequently asked questions" className="mt-8" />
     </section>

@@ -170,6 +170,181 @@ export interface Article {
 }
 
 export const ARTICLES: Article[] = [
+  // SERAPHINE'S RADIANCE LEGEND (2026-09-22). The genuinely new thing here is
+  // "Starry-Eyed Songstress" — Seraphine's LEGEND card — pictured in print three
+  // days before Preview Season. This is the one Legend this site explicitly
+  // REFUSED to reproduce while it existed only as anonymous social text (see the
+  // tracker, riftbound-radiance-spoilers, and the leaked-mechanics post): the
+  // provenance upgrade (a photographed physical card + an artist-feature still,
+  // the same bar Neeko cleared) is the whole justification for now quoting it,
+  // and it is the post's spine. Everything is READ OFF THE CARD; the Legend's
+  // DOMAIN and RARITY are deliberately NOT asserted (gems in a screenshot are not
+  // an official domain declaration, and this site does not guess domains — see
+  // riftbound-radiance-what-we-know). Seraphine, Not Alone is a DIFFERENT card
+  // (already catalogued from the T1 collection as T1S-005/005, Order, 5/1); the
+  // leak's only new datum on it is the printed Radiance number, 138/167. Owns the
+  // SERAPHINE-specific reveal intent per docs/seo-keyword-map.md (the Neeko row's
+  // template); it must NOT retitle toward the tracker's "radiance spoilers" or the
+  // leak post's "radiance leak". Inbound link added from the tracker's reveal log.
+  {
+    slug: "riftbound-seraphine-radiance-spoiler",
+    category: "blog",
+    title: "Riftbound Seraphine Spoiler: Starry-Eyed Songstress, the Legend in Print",
+    excerpt:
+      "Seraphine's Riftbound: Radiance Legend, Starry-Eyed Songstress, is pictured in print: a spell-cost engine in a promo and an over-numbered chase.",
+    author: "RiftCompare",
+    date: "2026-09-22",
+    readMins: 11,
+    tags: ["radiance", "news", "spoilers", "seraphine", "deckbuilding"],
+    hero: {
+      src: "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg",
+      alt: "Riftbound Radiance spoiler — Seraphine's Legend, Starry-Eyed Songstress, numbered RAD 151/167, art by Naifan Zhang",
+    },
+    shop: [
+      { label: "Radiance pre-orders", query: "Riftbound Radiance" },
+      { label: "Seraphine vs Evelynn Showdown Decks", query: "riftbound radiance showdown deck" },
+      { label: "Riftbound singles", query: "Riftbound TCG singles" },
+    ],
+    // The T1 printing of Seraphine, Not Alone is the only Seraphine card actually
+    // in the database today (manual-cards.json, T1S-005/005). Embedding it gives
+    // the post one real, clickable card; the RAD 138/167 printing is NOT added,
+    // because its base-run rarity can't be read off the leak photo.
+    embeds: [
+      {
+        title: "Seraphine, Not Alone — the printing that already exists, in our database",
+        note: "This is the T1 Worlds Champion Collection printing (T1S · 005/005). The leak confirms the same card is numbered RAD · 138/167 in Radiance; that printing isn't imported yet, so it isn't the tile here.",
+        slugs: ["seraphine-not-alone-t1s-005-005-promo"],
+      },
+    ],
+    summary: [
+      "**Seraphine's Riftbound: Radiance Legend is Starry-Eyed Songstress** — pictured in print three days before Preview Season opens, in a promo printing numbered 151/167 and an over-numbered 174/167 chase.",
+      "**What it does:** as an additional cost to play a spell, you may exhaust Seraphine and three friendly units to make that spell cost **2 less**. It is a build-around discount engine, not a body on the board.",
+      "**This is the Legend we would not quote from a text leak.** A photographed card and an artist-feature still clear the same provenance bar Neeko did — and the printed wording matches the September social leak it corroborates.",
+      "**Her other card is separate:** *Seraphine, Not Alone* is a Champion Unit — Order, 5 energy, 1 Might — already in circulation via the T1 collection. The leak just confirms its Radiance number, **138/167**.",
+      "**Nothing is buyable yet.** Radiance releases **23 October 2026**; the *Seraphine vs. Evelynn* Showdown Decks are the guaranteed Seraphine source, and [pre-order pricing](/radiance-preorders) is where the money moves until then.",
+    ],
+    faq: [
+      {
+        q: "What is Seraphine's Legend in Riftbound: Radiance?",
+        a: "Starry-Eyed Songstress. It is Seraphine's Legend card — the identity card a Seraphine deck is built around, not a unit you play to the board. Its ability: as an additional cost to play a spell, you may exhaust Seraphine and three friendly units to reduce that spell's cost by 2 energy. It was pictured in print on 22 September 2026, three days before Radiance Preview Season opens.",
+      },
+      {
+        q: "Is the Starry-Eyed Songstress Seraphine card real?",
+        a: "It has been photographed as a physical card — numbered RAD · 151/167 · EN with a Naifan Zhang artist credit and a ©2026 RGI line — and an over-numbered 174/167 printing appeared in a card-artist feature crediting Anna Nikonova. The printed text also matches wording that circulated as an unconfirmed Seraphine leak earlier in September, so two independent sightings now agree. That is strong evidence, but Riot has not officially revealed it: Preview Season opens 25 September 2026, and that is when it becomes official.",
+      },
+      {
+        q: "What does Seraphine, Starry-Eyed Songstress do?",
+        a: "It is a cost-reduction engine. When you play a spell you may pay an optional extra cost — exhaust Seraphine (your Legend) and three friendly units — and in exchange that spell costs 2 energy less. It rewards a wide board and expensive spells: the more units you have to tap and the pricier the spell, the more the discount is worth. It does nothing on an empty board, and the units you exhaust can't block or attack that turn.",
+      },
+      {
+        q: "What is the over-numbered 174/167 Seraphine card?",
+        a: "A premium chase printing. Radiance's base numbered run is 167 cards (the denominator printed on every base card), so a card numbered 174/167 sits above the base set — which is exactly where Showcase and chase treatments are numbered in every previous Riftbound set. The 174/167 Starry-Eyed Songstress carries different art (Anna Nikonova) from the 151/167 printing (Naifan Zhang), marking it as an alternate-art collector variant rather than a different card.",
+      },
+      {
+        q: "Is Seraphine, Not Alone the same card as her Legend?",
+        a: "No — they are two different cards for the same champion. Starry-Eyed Songstress is the Legend (the deck's identity card). Seraphine, Not Alone is a Champion Unit you play to the board: Order domain, 5 energy, 1 Might, and it already exists because it shipped early in the Riftbound x T1 2025 Worlds Champion Collection. A Radiance deck built around Seraphine can run both.",
+      },
+      {
+        q: "When can I buy Seraphine's Radiance cards?",
+        a: "Not yet. Radiance releases worldwide on 23 October 2026, and there is no Radiance secondary market before then — anything sold as a Seraphine single today is a pre-sale against a card nobody can deliver. The Seraphine vs. Evelynn Showdown Decks are the one product guaranteed to contain Seraphine's cards, and sealed and pre-order prices are compared daily on our Radiance pre-order page.",
+      },
+    ],
+    browseCta: {
+      href: "/sets/radiance",
+      label: "Every Radiance card as it's revealed →",
+      blurb: "The set hub fills in through Preview Season and switches on live price comparison across every store we track on release day.",
+    },
+    body: `**Seraphine's Legend has been pictured in print** — and it is a bigger deal than one more spoiler, because this is the exact card this site spent September refusing to quote.
+
+When purported text for Seraphine's and Evelynn's Legends went around anonymous social-media accounts earlier this month, we did not reproduce a word of it, on either the [Radiance spoiler tracker](/blog/riftbound-radiance-spoilers) or the [mechanics leak write-up](/blog/riftbound-radiance-leaked-mechanics). The reason was provenance: text typed into a post by an account with no track record is not evidence, and printing it as fact is how a rumour launders itself into a "leak everyone reported". So we waited.
+
+What surfaced on **22 September** clears that bar. Seraphine's Legend — **Starry-Eyed Songstress** — has been photographed as a physical card, numbered and artist-credited, and a second, over-numbered printing appeared in a card-artist feature. That is the same standard the first [Neeko card](/blog/riftbound-neeko-blending-in-spoiler) met when it was photographed in print six days ago: a real object with a collector number on it, not a claim. And because the printed wording matches the September social leak, the two now corroborate each other. It is still not an official Riot reveal — Preview Season opens **25 September** — but it is finally something worth reading closely.
+
+## What the card says
+
+Read straight off the print:
+
+| | |
+| --- | --- |
+| **Name** | Starry-Eyed Songstress |
+| **Card type** | Legend · Seraphine |
+| **Set** | Radiance (RAD) |
+| **Collector numbers seen** | 151/167 (promo) and 174/167 (over-numbered) |
+| **Artists** | Naifan Zhang (151/167) · Anna Nikonova (174/167) — ©2026 RGI |
+
+And the ability, in full:
+
+> As an additional cost to play a spell, you may exhaust me and three friendly units to reduce the cost of that spell by 2.
+
+That is the whole card. A Legend does not have Might or an energy cost — it sits in your Legend Zone as the deck's identity, and it fixes your domains. What Starry-Eyed Songstress adds to that identity is a single, repeatable discount you can reach for on any turn you are casting a spell.
+
+## Why a discount engine is the interesting kind of Legend
+
+Only one other Radiance Legend has had its ability made public — **Ekko, Boy Who Shattered Time**, a Fury/Mind Legend built on [Empower](/guides/riftbound-empower-explained) that makes your next unit cheaper and then kills it at end of turn. Seraphine is the second, and the two are a study in contrast. Ekko discounts a *unit* and takes it back off you. Seraphine discounts a *spell*, and the price she charges is tempo, not a life-span.
+
+Break the ability into its three moving parts and it tells you exactly what deck wants it:
+
+- **It is an *additional* cost, and it is optional.** You never have to use it. On a turn when you have nothing spare to tap, Seraphine does nothing and costs you nothing. That is the right way to price a build-around: it is upside, never a tax.
+- **It taxes your board, not your hand.** The cost is exhausting Seraphine plus **three friendly units** — which means it only exists if you have gone wide, and it turns three of your units sideways for the turn. Units you exhaust for the discount are not attacking or blocking. So the discount is really a trade: board tempo now, for cheaper spells now.
+- **The payoff scales with the spell.** Two energy off a 3-cost spell is a modest tempo swing. Two energy off a 7- or 8-cost finisher, on a turn you were always going to sit back anyway, can be the difference between casting it a turn early and dying with it in hand.
+
+Put together, this is a **go-wide-into-big-spells** Legend. It does nothing in a lean aggressive shell and nothing in a spell-light board deck. It wants a table full of cheap bodies and a hand with something expensive to point them at — a genuinely distinct archetype, which is what makes it worth a Legend slot rather than a line of reminder text.
+
+## The two printings, and what "174/167" means
+
+Starry-Eyed Songstress has been seen twice, and the difference between the two prints is the collector story of the set in miniature.
+
+The first, art by **Naifan Zhang**, is numbered **151/167** and carries a promo stamp. That number sits inside the base run — Radiance's base numbered set is **167 cards**, the denominator [Neeko's 167/167 first established](/blog/riftbound-neeko-blending-in-spoiler) — so 151 is an ordinary in-set slot wearing a promotional finish.
+
+The second, art by **Anna Nikonova**, is numbered **174/167**. That denominator is the tell: 174 is *above* 167, and cards numbered above a set's base run are where Riftbound puts its premium treatments — the Showcase and chase variants, numbered on top of the base set in every release so far. So the 174/167 Starry-Eyed Songstress is not a different card; it is the **alternate-art chase printing** of the same Legend, and it is the one collectors will actually hunt. If you have followed how Vendetta's [over-numbered cards](/guides/riftbound-vendetta-overnumbers-explained) behaved, you already know the shape of what happens next: the base printing is attainable, the over-number carries the premium, and the gap between them is set by how good the card turns out to be.
+
+[[embed:0]]
+
+## Seraphine's *other* Radiance card is already in people's hands
+
+Here is the part that trips up every "new Seraphine card" headline: Seraphine has **two** cards in Radiance, and one of them has existed for months.
+
+**Seraphine, Not Alone** is a Champion Unit — the version of Seraphine you actually play to the board, as opposed to the Legend that sits in the Legend Zone. It is **Order** domain, **5 energy**, **1 Might**, and its text reads: *when you play her or when she becomes exhausted, play a 1-Might Recruit unit token to your base; and she has +1 Might for each other exhausted unit you control.* It shipped early inside the [Riftbound x T1 2025 Worlds Champion Collection](/blog/riftbound-t1-worlds-champion-collection), so anyone who won a T1 box is already holding a Radiance card — one that is not legal for sanctioned play until the set releases.
+
+What the new leak adds is small but real: it shows Not Alone's **Radiance collector number, 138/167**. The T1 printing is numbered T1S · 005/005; the set printing is 138/167. Same card, same text, a base-set number instead of a collaboration one.
+
+And placed next to the Legend, Not Alone stops looking like a coincidence. Read the two abilities together:
+
+- **Not Alone** makes **Recruit unit tokens** — it goes wide on its own — and it grows **+1 Might for every other exhausted unit you control**. It *wants* your units tapped.
+- **Starry-Eyed Songstress** pays for its discount by **exhausting three friendly units**. It *taps units as a resource*.
+
+Those two halves fit together almost too neatly. Tokens from Not Alone become the fodder Starry-Eyed Songstress exhausts; exhausting them to discount a spell simultaneously feeds Not Alone's own Might. Whether that loop is actually strong or just cute is a question for real cards and a real format — but the design intent is legible, and it says Seraphine in Radiance is being built as a **go-wide, exhaust-matters** champion across both of her cards. That is a much clearer picture than either card gives alone.
+
+## What we are deliberately *not* telling you
+
+This site's whole value on a leak is drawing the line between what is on the card and what we would be guessing at, so:
+
+- **We are not printing a domain for the Legend.** Starry-Eyed Songstress carries two domain gems — one blue, one gold — but a gem read off a screenshot is not an official domain declaration, and a wrong domain is exactly the kind of "fact" people build a purchase around. Riot's reveal settles it. What *is* confirmed is that Seraphine's Champion Unit, Not Alone, is **Order** — that card is catalogued from a printing that physically exists.
+- **We are not assigning it a rarity.** The base run has a rarity, the promo and the over-number are treatments on top of it, and none of that is legible enough on these images to state. When a clean image lands, the [set hub](/sets/radiance) gets it.
+- **We are not reproducing the wider September leak.** The Seraphine Legend text matched; a Kai'Sa card from the same wave used a keyword name in a way that contradicts Riot's own demo material, so at least one source in that batch is wrong. Corroboration for this one card is not a blank cheque for the rest.
+
+## How this changes the Radiance picture
+
+Three things move because of this.
+
+**Seraphine goes from "card exists, Legend doesn't" to a fully sketched champion.** Until now her only concrete card was Not Alone, and her Legend was rumour. Both halves are now visible, and they point the same way. Of the six confirmed Legends, she and Ekko are the two whose game plan you can actually describe.
+
+**The music theme keeps hardening.** Seraphine and Evelynn are two thirds of K/DA's front line; Ekko fronted True Damage; the [22 September contents graphic put HEARTSTEEL in the set](/blog/riftbound-radiance-colorless-champion-unit). A go-wide "sing them into being" engine is exactly the flavour you would expect the K/DA headliner to carry, and it is one more sign the music roster is the spine of Radiance rather than a coat of paint.
+
+**The Showdown Decks get more interesting.** The beginner product is literally *Seraphine vs. Evelynn*, and it is the only place either champion's cards are guaranteed. If Starry-Eyed Songstress is the Legend that ships in that Seraphine deck, the Showdown Decks stop being a pure beginner box and become the cheapest route to a build-around most players will want to try.
+
+## What this means if you are buying
+
+Same three rules as every pre-release card, because they are the ones that save money.
+
+**Do not buy a Radiance single yet.** There is no Radiance secondary market — the set does not release until **23 October 2026**. A Seraphine single offered today is a pre-sale against a card nobody can legally deliver, at a price set by hype rather than supply.
+
+**Watch the sealed and pre-order prices instead.** Those are the only Radiance products you can actually buy right now, and they are what moves as the chase cards become known. We compare [Radiance pre-order prices](/radiance-preorders) across every tracked store, cheapest first, in your own currency — and the [sealed comparison](/sealed) is where displays, the Vault and the Showdown Decks are comparable long before any single is.
+
+**When singles do land, read the number before the name.** "Seraphine" is about to mean at least four different objects at four different prices — the Not Alone Champion Unit at 138/167, the Starry-Eyed Songstress Legend at 151/167, its 174/167 over-numbered chase, and the T1 collection printing that already exists. The collector number is what tells them apart, and it is the first thing our matcher reads off a listing. Every Radiance card will be on [the set hub](/sets/radiance) with live prices from release day, and [price movers](/movers) tracks what actually moves once it does.
+
+For the running list of everything Riot has genuinely shown — kept strictly separate from leaks like this one — the [Radiance spoiler tracker](/blog/riftbound-radiance-spoilers) is updated the morning after each reveal, and [what's confirmed about Radiance](/blog/riftbound-radiance-what-we-know) holds the dates, products and prices.`,
+  },
   // Secret Garden is the first EVENT-EXCLUSIVE product this site has covered, and
   // the distinction drives the whole piece: there is no retail channel, so the
   // stores we price will never list it and /sealed will never show it. The
@@ -669,7 +844,7 @@ Until then, the **[release calendar](/release-dates)** has the exact time remain
       },
       {
         q: "How many Radiance cards have been revealed?",
-        a: "The gallery on this page is the live count — it is drawn from our database and updates as each official reveal is imported. Before Preview Season, one Radiance card had been photographed in print (Neeko, Blending In, 167/167) and one was already in circulation through the T1 Worlds collection (Seraphine, Not Alone).",
+        a: "The gallery on this page is the live count — it is drawn from our database and updates as each official reveal is imported. Before Preview Season, two Radiance cards had been photographed in print (Neeko, Blending In, 167/167, and Seraphine's Legend, Starry-Eyed Songstress) and one was already in circulation through the T1 Worlds collection (Seraphine, Not Alone).",
       },
       {
         q: "How many cards are in Riftbound Radiance?",
@@ -729,6 +904,8 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**22 September — Seraphine's Legend, photographed in print.** *Starry-Eyed Songstress* — Seraphine's Legend card, not her unit — surfaced as a physical card numbered RAD · 151/167, with an over-numbered 174/167 chase printing shown in a card-artist feature. Its ability: as an additional cost to play a spell, exhaust Seraphine and three friendly units to reduce that spell's cost by 2. It is the first Seraphine Legend seen in print, and the printed wording matches the anonymous September text this page declined to quote — so the two now corroborate each other. It is logged here as a photographed card, the same bar Neeko cleared, not as an official reveal. Full breakdown: **[the Seraphine spoiler write-up](/blog/riftbound-seraphine-radiance-spoiler)**.
+
 **22 September — a redacted contents list.** Riot began un-blurring Radiance with a set-contents graphic that leaves six entries legible and around ten redacted. The readable ones: **HEARTSTEEL**, **Ekko**, **Seraphine**, **Neeko**, a **Colorless Champion Unit** and a **new set mechanic**. It places HEARTSTEEL in Radiance for the first time and confirms the set has a mechanic of its own without naming it. Our read on what it settles — and what it does not — is in **[the Colorless Champion Unit write-up](/blog/riftbound-radiance-colorless-champion-unit)**.
 
 **19 September — the first Radiance card photographed in print.** A photo of a physical *Neeko, Blending In* surfaced: a **6-energy, 4-Might Neutral Champion Unit**, art by Luscinia Studio, and — the detail that matters most — numbered **RAD · 167/167 · EN**. Its text lets a deck that runs Neeko choose **three extra Legends** alongside its starting one, and playing her adds one of them to the Legend Zone while she is on the board. That is a deckbuilding change, not a stat line, and it is pulled apart properly in **[the Neeko spoiler breakdown](/blog/riftbound-neeko-blending-in-spoiler)**. The card is already in our database, so it is the first tile in the gallery above.
@@ -750,7 +927,7 @@ Radiance brings **nine new champion Legends**, pinned down from two directions: 
 | Champion | Status | What is known |
 | --- | --- | --- |
 | **Ekko** | Confirmed, ability public | Fury/Mind, Empower-based; see the log above |
-| **Seraphine** | Confirmed, card in print | *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
+| **Seraphine** | Confirmed, Legend + unit seen | *[Starry-Eyed Songstress](/blog/riftbound-seraphine-radiance-spoiler)* photographed in print; *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
 | **Evelynn** | Confirmed, art shown | *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished |
 | **Ziggs** | Confirmed | Named in the announcement; nothing shown |
 | **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
@@ -765,7 +942,7 @@ The distinction is the whole reason this page is separate from our leak coverage
 
 A **spoiler** is a card Riot has revealed, printed or put on a demo table in public. It goes in the log above and, once imported, in the gallery. A **leak** is anything else — and Radiance has had two kinds. The first is the fan photograph of Riot's own PAX West demo reference material, showing three mechanics, **Deploy**, **Showoff** and **Disarm**. That has real provenance, so we covered it, hedged throughout, in **[the Radiance mechanics leak](/blog/riftbound-radiance-leaked-mechanics)** and in three per-mechanic pieces: **[Deploy](/guides/riftbound-deploy-explained)**, **[Showoff](/guides/riftbound-showoff-explained)** and **[Disarm](/guides/riftbound-disarm-explained)**. Nothing Riot has published since confirms or contradicts any of it.
 
-The second kind is purported card text from anonymous social-media accounts — Legends for Seraphine and Evelynn, a Neeko card, a Kai'Sa card. We do not reproduce it, here or anywhere, because it has none of the provenance the demo photo has. Worth noting only that the Kai'Sa text used "Disarm" for an effect unrelated to the demo table's wording, so at least one of the two sources is wrong about what Disarm is. Preview Season settles this the honest way.
+The second kind is purported card text from anonymous social-media accounts — Legends for Seraphine and Evelynn, a Neeko card, a Kai'Sa card. We did not reproduce it, because it had none of the provenance the demo photo has. One entry in that batch has since changed status: Seraphine's Legend, *Starry-Eyed Songstress*, was **photographed in print** on 22 September, and the printed wording matches the leaked text — so we now cover that one card, from the photograph rather than the post (**[the breakdown is here](/blog/riftbound-seraphine-radiance-spoiler)**). The rest stays unquoted, and the Kai'Sa text from the same wave used "Disarm" for an effect unrelated to the demo table's wording, so at least one source in it is wrong about what Disarm is. Preview Season settles the remainder the honest way.
 
 ## Reading a Radiance card: what the numbers tell you
 
@@ -780,7 +957,7 @@ Two things on a Radiance card carry information beyond the rules text.
 These are the open questions Preview Season answers, roughly in the order they matter for buyers:
 
 - **The Ultimate Rare.** Announced and not shown. It sits above the overnumbered treatment, it is a single card rather than a tier, and Riot has said Ultimate Rares will not appear in every set. Which card it is decides where a box's value concentrates.
-- **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation; Seraphine's card exists but her Legend does not, publicly.
+- **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation, and her Legend has not been seen at all. Seraphine's Legend has now been photographed (*Starry-Eyed Songstress*), but its domain stays unconfirmed until the official reveal — a gem read off a screenshot is not a domain declaration.
 - **Whether Deploy, Showoff and Disarm are real**, and if so how the printed wording compares with the demo table's.
 - **Which existing champions get new printings.** Nothing has been said. A Radiance printing of a champion who already has cards changes that champion's price page, which is why it matters beyond the new-Legend list.
 - **The Showcase count**, once a Showcase-numbered card is seen.
@@ -1137,7 +1314,7 @@ We've written a dedicated deep dive for each of the three — **[Deploy explaine
 
 *Update, 21 September:* Preview Season opens in four days. Official reveals, as distinct from this leak, are logged card by card on **[the live Radiance spoiler tracker](/blog/riftbound-radiance-spoilers)**; this page stays as the record of what the demo photo showed and how it holds up.
 
-Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. It is worth noting, though, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards.
+Nothing here has been confirmed or contradicted by Riot since the photo surfaced. Two things have changed around it. First, **Preview Season now opens on 25 September** at the Regional Qualifier: Los Angeles rather than on the 28th — so the first official card images, the only thing that can settle any of this, are closer than this page originally said. Second, a further wave of "leaks" appeared on social media on 9 September: purported card text for Seraphine's and Evelynn's Legends, a Neeko card, and a Kai'Sa card whose text begins with the word *Disarm*. We are not reproducing any of it, because none of it has the one thing the PAX photo has — provenance. One of those has since changed status: Seraphine's Legend, *Starry-Eyed Songstress*, was photographed in print on 22 September, and its printed wording matches what leaked — so we now cover that one card from the photograph rather than the post ([the breakdown is here](/blog/riftbound-seraphine-radiance-spoiler)), while the rest stays unquoted. It is worth noting, too, that the Kai'Sa text uses "Disarm" as a label for an effect that has nothing to do with lowering Might, which is inconsistent with the demo-table wording above. At least one of the two sources is wrong about what Disarm is, and a demo card Riot printed and displayed is the more credible of them. Either way, a mechanic's name being reused for something else is one more reason to wait for the real cards.
 
 ## How to read a leak like this responsibly
 
@@ -3401,6 +3578,7 @@ It also doesn't require a large bankroll to start. Watching a handful of cards y
       "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
     author: "RiftCompare",
     date: "2026-07-01",
+    updated: "2026-09-23",
     readMins: 4,
     tags: ["riftcompare-index", "methodology", "riftbound-tcg", "market-data"],
     faq: [
@@ -3464,6 +3642,12 @@ The fix is called **chain-linking**, and real financial indices use the same ide
 The practical effect: a card that just entered the basket - a brand-new set's card climbing into the top 200 by search, say - has no earlier price to compare against, so it simply sits out the calculation for the snapshot it debuts on. It starts contributing from the *next* charted snapshot onward, once it has two consecutive tracked prices to form a ratio from. The basket can turn over completely over months and the Index still won't move on that account alone - only real price changes do.
 
 This is also why the Index is most useful looked at over stretches of time rather than a single snapshot. The earliest stretch of the chart - back when only a handful of cards had any tracked price yet - is thinner than the rest for exactly that reason: fewer cards means more weight riding on each one. Chain-linking still keeps that stretch honest (a card joining never jumps the level, whether it's card three or card three hundred), it's just a noisier read of the market than a later week with the full basket reporting. The trend across weeks and months is where the signal lives.
+
+### When the way a price is sourced changes
+
+Chain-linking has one weakness worth being open about: a change in *how* a price is measured looks exactly like the market moving, and because every step is multiplied onto the last, a one-off change would stay in the level forever. So when the data source itself changes, the Index is chained across it — the steps inside that window are charted flat and the prices re-base, which is what stock-index providers do over a methodology change.
+
+That has happened once. On **23 September 2026** the US TCGplayer price switched from TCGplayer's market price to the cheapest English Near-Mint listing, which sits noticeably lower for most cards. Steps ending between 23 September and 1 October 2026 are charted flat for that reason, so the Index does not report the change as a market-wide fall. Card price charts and price movers are not re-based: for about a week after the switch, some US prices read lower than a week earlier because of it, and the movers list settles once both ends of its comparison are on the new basis.
 
 ## A Concrete Example: A New Set's Launch
 
@@ -8915,7 +9099,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       "Everything RiftCompare Premium includes — Value Finder, Rising Cards, the full Deal Finder and Bulk Pricer — with pricing, screenshots and honest FAQs.",
     author: "RiftCompare",
     date: "2026-08-20",
-    updated: "2026-09-11",
+    updated: "2026-09-23",
     readMins: 11,
     tags: ["premium", "pricing", "tools", "value finder", "deal finder"],
     hero: {
@@ -8924,7 +9108,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     },
     summary: [
       "**RiftCompare now has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 14-day free trial and cancel-anytime billing through Stripe.",
-      "**Plus unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed — and an ad-free site. **Premium adds the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
+      "**Plus unlocks the full lists** — Deal Finder, Rising Cards and Rising Sealed. **Premium adds an ad-free site and the four pro tools on top**: the Bulk Pricer, Best Basket, Value Finder screener and Demand Finder. The Condition Impact Calculator is free with any account, no subscription needed.",
       "**It also removes every ad sitewide**, automatically, the moment you subscribe.",
       "**Price comparison itself stays free for everyone** — Premium is entirely about the pro tools, never about seeing prices.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
@@ -8974,8 +9158,8 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Bulk Pricer", description: "Price an entire want-list or collection at once, each card matched to its cheapest live store price.", url: "/bulk-pricer" },
         { name: "Best Basket", description: "The cheapest way to actually buy a whole decklist — the store split with the lowest landed cost, postage included.", url: "/tools/best-basket" },
         { name: "Value Finder screener", description: "Every card trading below its own 30-day average right now, ranked by discount.", url: "/tools/value-finder" },
-        { name: "Rising Cards (full list)", description: "Cards ranked by demand and price-timing signals — free accounts see only the top pick.", url: "/tools/rising" },
-        { name: "Deal Finder (full list)", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable — free accounts see only the top pick.", url: "/tools/deal-finder" },
+        { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the full signal breakdown behind each score.", url: "/tools/rising" },
+        { name: "Deal Finder", description: "Every cross-store, cross-region and eBay pricing gap we track, sortable and updated daily.", url: "/tools/deal-finder" },
         { name: "Ad-free site", description: "No ads on any page, sitewide, automatically.", url: "/premium" },
       ],
     },
@@ -9002,25 +9186,25 @@ Cancellation is genuinely no-friction: cancel anytime, and your benefits simply 
 
 Everything below is real, current, and reflects exactly what each tier gets — not a marketing simplification.
 
-| Feature | No account | Free account | Plus | Premium |
-| --- | --- | --- | --- | --- |
-| Compare prices across every store + eBay | ✓ | ✓ | ✓ | ✓ |
-| Full card database, search & browse | ✓ | ✓ | ✓ | ✓ |
-| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ | ✓ |
-| RiftCompare Index & daily movers | ✓ | ✓ | ✓ | ✓ |
-| Condition Impact Calculator | ✓ | ✓ | ✓ | ✓ |
-| Price alerts | — | ✓ | ✓ | ✓ |
-| Portfolio tracker — history, P&L, CSV export | — | ✓ | ✓ | ✓ |
-| Deal Finder | Top pick | Top pick | Full list | Full list |
-| Rising Cards | Top pick | Top pick | Full list | Full list |
-| Rising Sealed | Top pick | Top pick | Full list | Full list |
-| Value Finder screener | — | — | — | ✓ |
-| Bulk Pricer | — | — | — | ✓ |
-| Best Basket — cheapest store split, postage included | — | — | — | ✓ |
-| Demand Finder | — | — | — | ✓ |
-| Ad-free experience | — | — | ✓ | ✓ |
+| Feature | Free account | Plus | Premium |
+| --- | --- | --- | --- |
+| Compare prices across every store + eBay | ✓ | ✓ | ✓ |
+| Full card database, search & browse | ✓ | ✓ | ✓ |
+| Deck builder, trade calculator & box EV | ✓ | ✓ | ✓ |
+| RiftCompare Index & daily movers | ✓ | ✓ | ✓ |
+| Condition Impact Calculator | ✓ | ✓ | ✓ |
+| Price alerts | ✓ | ✓ | ✓ |
+| Portfolio tracker — history, P&L, CSV export | ✓ | ✓ | ✓ |
+| Deal Finder | Top 3 | Full list | Full list |
+| Rising Cards | Top 3 | Full list | Full list |
+| Rising Sealed | Top pick | Full list | Full list |
+| Value Finder screener | — | — | ✓ |
+| Bulk Pricer | — | — | ✓ |
+| Best Basket — cheapest store split, postage included | — | — | ✓ |
+| Demand Finder | — | — | ✓ |
+| Ad-free experience | — | — | ✓ |
 
-The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts and a portfolio); Plus adds the full lists and an ad-free site; Premium adds the pro screeners on top of everything Plus includes.
+The pattern is deliberate: **nothing about seeing a price is ever gated.** A free account adds the things every serious collector eventually wants (alerts, a portfolio, and the top three of Deal Finder and Rising Cards); Plus adds the full Deal Finder, Rising Cards and Rising Sealed lists; Premium adds the pro screeners and an ad-free site on top of everything Plus includes.
 
 ## The 5 tools you only get with Premium
 
@@ -9036,7 +9220,7 @@ This is Premium-only outright — a free account doesn't get even a teaser of it
 
 ![The Rising Cards tool, showing its market toggle and demand/price-timing methodology](/blog/premium/04-rising-cards.png)
 
-Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent (not a black box) and backtested. Free accounts and anonymous visitors can see the #1 pick; Premium unlocks the full ranked list plus the per-market toggle (switch between Global and each country RiftCompare tracks).
+Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent (not a black box) and backtested. A free account sees the top three picks, each with its full signal breakdown; Premium unlocks the full ranked list plus the per-market toggle (switch between Global and each country RiftCompare tracks).
 
 ### 3. Deal Finder — all four views, full list
 
@@ -9049,7 +9233,7 @@ Deal Finder is the one built around price gaps — the same card, priced meaning
 - **Cheapest on eBay** — the reverse: cards where eBay is currently the cheapest place to buy
 - **Cross-region** — cards priced meaningfully cheaper in a different market RiftCompare tracks
 
-Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. Free accounts get the top result only; Premium gets the full, sortable list across all four views.
+Every gap is computed from **live listings, not a reference price**, and ranked by delivered cost (price plus estimated shipping) rather than sticker price alone — a $2 saving that costs $5 more to ship isn't a real saving, and Deal Finder already knows that. A free account sees the top three deals in each view; Premium gets the full, sortable, filterable list across all four views.
 
 ### 4. Bulk Pricer
 

@@ -31,50 +31,52 @@ set -uo pipefail
 # tests/db-chain.test.ts asserts these two values still match the head of each
 # chain, so the next cutover fails a test instead of quietly lying in a log.
 #
-# CUT OVER TO RM10 ON 2026-09-14 (RM9 reached its 5 GB monthly transfer
-# allowance after only three days live — the same three-day burn every project
-# in this rotation has shown): RM10 is the ONLY operational variable now (see
-# the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for why the chain
-# stays a single name, not a fallback chain). RM10 is a RECYCLED project (live
-# once already, 2026-08-26..08-29), not a fresh one — a 2026-09-14
-# probe-databases run found it holding a stale August snapshot behind RM9 on
-# every metric, and migrate-main-db-rm9-to-rm10 then wiped and replaced it with
-# a row-count-verified copy of RM9 (see db-chains.ts).
-CURRENT_OP="RM12"
-# CUT OVER TO HISTORY_DATABASE_URL_2 ON 2026-09-17 (HISTORY_DATABASE_URL
-# reached its 5 GB monthly transfer allowance after five days live).
-# HISTORY_DATABASE_URL_2 is a RECYCLED project — retired since 2026-08-19 —
-# not a fresh one — migrate-history-db-hdu-to-hdu2 (a full pg_dump/restore,
-# row-count verified: rows=423,999, distinctCards=1426, GLOBAL rows=82,175)
-# moved history onto it. See the long note on HISTORY_URL in
-# src/lib/db-history.ts and on HISTORY_VARS in src/lib/db-chains.ts for the
-# full account. The chains are CURRENT-first, not newest-first.
-CURRENT_HIST="HISTORY_DATABASE_URL_2"
+# CUT OVER TO RM3 ON 2026-09-22 (RM12 was approaching its 5 GB monthly
+# transfer allowance four days into service): RM3 is the ONLY operational
+# variable now (see the long note on OPERATIONAL_VARS in src/lib/db-chains.ts
+# for why the chain stays a single name, not a fallback chain, and for why the
+# target is RM3 rather than the DATABASE_URL secret this was first asked to be).
+# RM3 is a RECYCLED project (the third this site ever used, live until
+# ~2026-08-04), not a fresh one — a 2026-09-22 probe-databases run found it
+# holding a stale early-August snapshot far behind RM12 on every metric, and
+# migrate-main-db-rm12-to-rm3 then wiped and replaced it with a
+# row-count-verified copy of RM12 (User 379, every table matching).
+CURRENT_OP="RM3"
+# CUT OVER TO HISTORY_DATABASE_URL_3 ON 2026-09-22 (HISTORY_DATABASE_URL_2 came
+# within reach of its 5 GB monthly transfer allowance five days into service).
+# HISTORY_DATABASE_URL_3 is a RECYCLED project — retired since 2026-08-21 — not
+# a fresh one — migrate-history-db-hdu2-to-hdu3 (a full pg_dump/restore,
+# row-count verified: Card 1,437, ClickEvent 698, PriceHistory 423,999,
+# including the 82,175 GLOBAL rows) moved history onto it. See the long note on
+# HISTORY_URL in src/lib/db-history.ts and on HISTORY_VARS in
+# src/lib/db-chains.ts for the full account. The chains are CURRENT-first, not
+# newest-first.
+CURRENT_HIST="HISTORY_DATABASE_URL_3"
 
 # Only push schema for a real Vercel production/preview build with a database
 # configured. A local `next build` (no database vars) must not try to reach anything.
 #
-# GATES ON RM10, not bare DATABASE_URL. The original check was
+# GATES ON RM3, not bare DATABASE_URL. The original check was
 # `['production','preview'].includes(VERCEL_ENV) && DATABASE_URL`, written when
 # DATABASE_URL was the only operational variable, then widened as the chain grew
 # and narrowed back down here on 2026-08-23 when the chain was replaced by a
 # single name. See the long note on OPERATIONAL_VARS in src/lib/db-chains.ts for
 # why a fallback chain was replaced rather than just rotated this time.
 if ! { [ "${VERCEL_ENV:-}" = "production" ] || [ "${VERCEL_ENV:-}" = "preview" ]; } \
-   || [ -z "${RM12:-}" ]; then
-  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM12) — skipping schema push."
+   || [ -z "${RM3:-}" ]; then
+  echo "[build-db-push] not a Vercel production/preview build with an operational database set (RM3) — skipping schema push."
   exit 0
 fi
 
-# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM10
+# EXPORT, because DATABASE_URL is the only name `prisma db push` reads — RM3
 # must be copied into it or `prisma db push` would migrate whatever DATABASE_URL
-# happens to hold while the app (src/lib/db-chains.ts) reads RM10. A green deploy
+# happens to hold while the app (src/lib/db-chains.ts) reads RM3. A green deploy
 # against an un-migrated database is exactly the failure this script exists to
 # prevent.
-export DATABASE_URL="$RM12"
-SOURCE="RM12"
+export DATABASE_URL="$RM3"
+SOURCE="RM3"
 # Name the winner, never the value (it's a credential). There is only one
-# possible value now (the gate above already required RM10 to be set), but this
+# possible value now (the gate above already required RM3 to be set), but this
 # stays as the one line that answers "which database did this build actually
 # write to?" without anyone having to guess from a bare P1001 host.
 echo "[build-db-push] operational DB source for this build: $SOURCE"
@@ -88,21 +90,21 @@ fi
 #
 # BUG FIXED 2026-07-31 (this chain used to read the two OLDEST, long-dead
 # projects, reversed): fixed again 2026-08-19 for the _2 -> _3 rotation, and
-# again 2026-08-21 for the _3 -> _4 rotation. This chain MIRRORS
+# again 2026-08-21 for the _3 -> _4 rotation, and again 2026-09-22 for the
+# _2 -> _3 rotation. This chain MIRRORS
 # src/lib/db-history.ts exactly, CURRENT-first. Keep the two in sync — if you
 # rotate there, rotate here into the same position.
 # tests/db-chain.test.ts compares the two lists and fails if they drift.
-if [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+if [ -n "${HISTORY_DATABASE_URL_3:-}" ]; then
+  HIST="$HISTORY_DATABASE_URL_3"; HIST_SOURCE="HISTORY_DATABASE_URL_3"
+elif [ -n "${HISTORY_DATABASE_URL_2:-}" ]; then
+  # Rollback: it is what HISTORY_DATABASE_URL_3 was restored FROM, so it holds
+  # the same GLOBAL series — a genuinely safe fallback.
   HIST="$HISTORY_DATABASE_URL_2"; HIST_SOURCE="HISTORY_DATABASE_URL_2"
-elif [ -n "${HISTORY_DATABASE_URL:-}" ]; then
-  # Rollback: holds the same GLOBAL series as HISTORY_DATABASE_URL_2 (via the
-  # row-count-verified pg_dump/restore that cut it over), so it's a genuinely
-  # safe fallback.
-  HIST="$HISTORY_DATABASE_URL"; HIST_SOURCE="HISTORY_DATABASE_URL"
 else
   # No separate history project — history shares the operational database, which
   # the push above already covered. RH10/RH9/RH8/RH7/RH6/RH11 are retired or
-  # unset; HISTORY_DATABASE_URL_4/_3 were superseded earlier. RH5 is
+  # unset; HISTORY_DATABASE_URL and _4 were superseded earlier. RH5 is
   # NOT a history project at all — it holds 85 User rows (see db-chains.ts).
   HIST=""; HIST_SOURCE=""
 fi

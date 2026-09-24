@@ -100,8 +100,10 @@ test("checkout stamps tier on BOTH the session and the subscription metadata", (
   // stamped only in `metadata` would be lost on every renewal and on the
   // reconcile cron, which only ever sees the subscription.
   const src = read("src/app/api/premium/checkout/route.ts");
-  assert.match(src, /metadata:\s*\{\s*kind:\s*"premium",\s*userId:\s*user\.id,\s*trial:[^}]*tier\s*\}/s, "session metadata must carry tier");
-  assert.match(src, /subscription_data:\s*\{[\s\S]{0,400}metadata:\s*\{\s*userId:\s*user\.id,\s*tier\s*\}/, "subscription_data.metadata must ALSO carry tier");
+  // `...surfaceMeta` (2026-09-23) is the attributed Premium surface — see
+  // lib/premium-surface.ts — and rides alongside tier on both objects.
+  assert.match(src, /metadata:\s*\{\s*kind:\s*"premium",\s*userId:\s*user\.id,\s*trial:[^}]*tier(,\s*\.\.\.surfaceMeta)?\s*\}/s, "session metadata must carry tier");
+  assert.match(src, /subscription_data:\s*\{[\s\S]{0,700}metadata:\s*\{\s*userId:\s*user\.id,\s*tier(,\s*\.\.\.surfaceMeta)?\s*\}/, "subscription_data.metadata must ALSO carry tier");
   // The lock-in guarantee test (premium-price-increase.test.ts) already pins
   // `price: priceId` — confirm the tier/plan resolution feeds that same var.
   assert.match(src, /const priceId = priceIdFor\(tier, plan\)/);

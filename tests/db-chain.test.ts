@@ -88,7 +88,17 @@ test("the 'you fell back to a dead project' warnings name the CURRENT project", 
   assert.equal(hist, chainFrom(read("src/lib/db-history.ts"), "HISTORY_URL")[0]);
   // And the app's own startup warnings compare against the same head, so all
   // three diagnostics agree on what "current" means.
-  assert.match(read("src/lib/db.ts"), new RegExp(`OPERATIONAL_URL_SOURCE !== "${op}"`));
+  // db.ts may name the head literally, or derive it from OPERATIONAL_VARS[0] —
+  // the derived form also keeps the warning's TEXT current, which the literal
+  // form did not (it told readers to tick RM10 in Vercel after the RM3 cutover).
+  const dbSrc = read("src/lib/db.ts");
+  assert.ok(
+    new RegExp(`OPERATIONAL_URL_SOURCE !== "${op}"`).test(dbSrc) ||
+      (/const CURRENT_OPERATIONAL = OPERATIONAL_VARS\[0\];/.test(dbSrc) &&
+        /OPERATIONAL_URL_SOURCE !== CURRENT_OPERATIONAL/.test(dbSrc)),
+    `db.ts's startup warning must compare against the current head (${op})`,
+  );
+  assert.doesNotMatch(dbSrc, /not RM\d+\. `/, "the warning text must not hard-code a project name");
   assert.match(read("src/lib/db-history.ts"), new RegExp(`HISTORY_URL_SOURCE !== "${hist}"`));
 });
 

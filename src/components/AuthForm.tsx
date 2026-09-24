@@ -29,11 +29,12 @@ const OAUTH_ERRORS: Record<string, string> = {
   oauth_session: "Something went wrong finishing sign-in. Please try again.",
 };
 
-// What a free account PERMANENTLY unlocks — same three perks the signup popup
-// pitches (its PERKS list), rendered here as the /login page's value prop so
-// the standalone page finally sells the account instead of assuming the
-// visitor already wants one.
-const PERKS = ["Price alerts", "Portfolio tracking", "Watchlist"] as const;
+// What a free account PERMANENTLY unlocks — the same perks the signup popup
+// pitches (FreeAccountCompare), rendered here as the /login page's value prop
+// so the standalone page sells the account instead of assuming the visitor
+// already wants one. "Top 3 deals" since 2026-09-23: a free account sees the
+// top three rows of Deal Finder and Rising Cards.
+const PERKS = ["Price alerts", "Portfolio tracking", "Watchlist", "Top 3 deals"] as const;
 
 export function AuthForm({
   providers,
@@ -166,7 +167,9 @@ export function AuthForm({
             <a
               href={oauthHref("discord")}
               onClick={onProviderClick}
-              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-white hover:brightness-110"
+              // text-[#ffffff], not text-white: `white` is the themed token (near-black
+              // ink in light, 4.17:1 on the blurple). Same rule as Google's button above.
+              className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-[#ffffff] hover:brightness-110"
             >
               <DiscordIcon /> Continue with Discord
             </a>

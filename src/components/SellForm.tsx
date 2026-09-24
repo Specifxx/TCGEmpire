@@ -115,7 +115,8 @@ export function SellForm({ cards }: { cards: SellCard[] }) {
                 <div className="font-semibold text-white">{selected.name}</div>
                 <div className="text-xs text-slate-500">
                   {selected.collectorNumber} · {selected.type} ·{" "}
-                  <span style={{ color: rarityInfo(selected.rarity).color }}>
+                  {/* .data-ink (globals.css) darkens the rarity hue in the light theme. */}
+                  <span className="data-ink" style={{ "--data-ink": rarityInfo(selected.rarity).color } as React.CSSProperties}>
                     {selected.rarity}
                   </span>
                 </div>
@@ -257,8 +258,8 @@ export function SellForm({ cards }: { cards: SellCard[] }) {
         </button>
       </form>
 
-      {/* Live preview */}
-      <div className="lg:sticky lg:top-20 lg:self-start">
+      {/* Live preview. top-36 below xl clears the two-row (121/125px) header. */}
+      <div className="lg:sticky lg:top-36 lg:self-start xl:top-20">
         <div className="card-surface p-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Preview

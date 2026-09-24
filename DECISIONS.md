@@ -10451,3 +10451,1136 @@ confirmation, which is worth more than either pass alone.
 
 Shipped with `[deploy]` at the owner's instruction, as with the rest of this
 sequence.
+
+## Operational RM12 → RM3, history _2 → _3 — 2026-09-22
+
+Both live projects were approaching their 5 GB monthly Neon transfer
+allowance: RM12 four days into service (cut over 2026-09-18),
+HISTORY_DATABASE_URL_2 five (2026-09-17). Same ~2 GB/day burn that has ended
+every project in both rotations, and the third full operational project life
+since the 2026-09-11 deploy-cadence gate — which retires that gate as the
+explanation for good. **The burn is still unidentified.** Run audit-egress a
+few hours after this cutover; src/lib/db.ts names RetailerPrice as the first
+suspect.
+
+### The operational target is RM3, not DATABASE_URL
+
+The instruction named the DATABASE_URL secret. This repo already contains the
+verdict from the one time that was done (maintenance.yml, 2026-08-12):
+"DATABASE_URL IS THE MOST DANGEROUS NAME IN THIS REPO TO ROTATE ONTO … If
+there is a next rotation, give the project a fresh name rather than recycling
+the generic one." prisma/schema.prisma reads `env("DATABASE_URL")` directly,
+most scripts assign it to aim Prisma, and every workflow's job-level env
+assigns it too — so the name would mean both "whichever database this process
+should talk to" and "the project at the head of the chain", and in production
+those coincide, which is exactly what makes a mistake there silent. Raised;
+the owner chose RM3. Every rotation since RM6 has followed the same advice.
+
+### Both targets are recycled, and both were re-verified live first
+
+db-chains.ts's standing rule is that a recycled target is re-checked on every
+return and never trusted from an earlier term. probe-databases and
+probe-history, 2026-09-22, before anything was written:
+
+| | reachable | holds | verdict |
+|---|---|---|---|
+| RM3 | yes | User=137, Card=1406, RetailerPrice=69,689 | stale early-August snapshot, far behind RM12 — rested |
+| HISTORY_DATABASE_URL_3 | yes | 293,094 rows, to 2026-08-21, **GLOBAL=0** | predates the 2026-09-05 GLOBAL migration — rested |
+
+The zero GLOBAL rows are the tell on the history side: every pre-cutover term
+looks like that, and a project still in service would not. Both sources still
+answered, so this was a planned rotation with the data fully drainable, not a
+recovery from a dead project.
+
+### Verified after, not assumed
+
+Each migration was run twice — once for the bulk copy, once immediately before
+this commit so writes in between were included — and every row count matched
+exactly both times:
+
+- operational: User 379, StoreHealthSnapshot 5,169, UserDigestOptOut 370,
+  TrialRedemption 6, StorePartner 2, and every other table; the closing
+  `prisma db push` reported the schema already in sync.
+- history: Card 1,437, ClickEvent 698, PriceHistory 423,999 — including the
+  82,175 GLOBAL rows the charts are drawn from.
+
+### Four latent faults this turned up, none of them the migration
+
+1. **db-audit.yml and weekly-promo.yml each had a duplicate
+   `HISTORY_DATABASE_URL:` key**, which makes GitHub refuse to parse the WHOLE
+   workflow. Both have been undispatchable — scheduled runs included — for as
+   long as the duplicate existed. Found only because the same mistake in my own
+   edit blocked a dispatch. Every YAML reader used locally (Python, js-yaml,
+   editors) accepts a duplicate key silently, last-one-wins, so the parse check
+   run before pushing is exactly what hid it.
+   `tests/workflow-flag-polarity.test.ts` now checks the raw text the way
+   GitHub does.
+2. **The 2026-08-19 `migrate-history-db-to-hdu3` task's operational guard still
+   named RM6**, retired 2026-09-14. An unset name makes that guard skip itself
+   via its own `[ -n … ]` test — it did not go stale, it stopped guarding. The
+   new task names the chain head and that one is marked DO NOT RUN.
+3. **No history migration ever had the live-chain refusal** the operational
+   ones have carried since 2026-08-23. Added.
+4. **probe-databases, the task you are told to run FIRST, still labelled RM10
+   "current"** four days after RM12 replaced it, and did not probe RM12 at all.
+   The one task whose job is to answer "which database is live and what does it
+   hold" pointed at the wrong one.
+
+A fifth was a name collision this rotation created: the current step and the
+ancient 2026-08-era `migrate-main-db` step were both called "Migrate main
+(operational) database to RM3", because the rotation came back to a name it had
+used before. tests/db-migration-guard.test.ts finds the current step by that
+derived name and takes the FIRST match, so all three of its guards silently
+began checking a task that has none of them. The legacy step is renamed. Any
+future rotation onto a previously-used name has the same trap waiting.
+---
+
+## Deal Finder and Rising Cards give free visitors nothing — 2026-09-22
+
+Owner instruction: "no account and free account don't even get the top pick for
+deal finder and rising cards." Both tools previously showed the single best row
+free — the #1 ranked pick on Rising Cards, the first table row on Deal Finder —
+with the rest blurred behind the upsell.
+
+**The blur was never a paywall.** Deal Finder fetched six rows and hid five of
+them with a CSS rule (`tbody tr:not(:first-child)`), so all six were real card
+data sitting in the server HTML. Anyone who opened devtools, or read the page
+source, had the "locked" deals for free. So the fix is not to blur the first row
+too: each of the four views now runs its query **only when `premium`**, and
+renders a `LockedPreview` that takes no data at all — placeholder bars and the
+upsell. Rising Cards does the same: the `analysis.picks[0]` lookup is gone and
+the free state renders bars, not a row.
+
+Two things fell out of doing it this way rather than with CSS:
+
+- **Four fewer queries per free page view** on Deal Finder, a tool whose
+  audience is signed-out until it converts. The teaser was costing a read per
+  view tab to render something that was about to be given away.
+- **Rising Cards' empty state now wins over the lock.** The order was reversed
+  so a scope with no ranked picks yet tells the visitor signals are still
+  building, instead of selling a locked preview of a list that does not exist.
+
+**The cost, stated plainly.** Both pages are in the sitemap, and a fully gated
+page is a thin page. Rising Cards was already covered — it carries an intro and
+a "How Rising Cards works" FAQ. Deal Finder was not: with the tables gone its
+only prose is one view's intro, well under the 150-word floor the AdSense audit
+treats as thin content, on a page at sitemap priority 0.7. So it gained a "How
+Deal Finder works" explainer (229 words across five answers, every one a fact
+already stated elsewhere in the page or in `lib/arbitrage.ts`), rendered
+visibly and fed to FAQPage JSON-LD from the same array. That is scope this
+change created, not scope borrowed.
+
+This does sharpen the tension the 2026-08-20 note already settled — gating
+content that a reviewer may see is an AdSense risk, and that note concluded
+"the paywall now takes priority over AdSense approval odds; review mode is
+opt-in for a future submission". `ADSENSE_REVIEW_MODE` still lifts both gates
+in one flag if a submission needs it.
+
+Copy that had become untrue was fixed with it: the Deal Finder meta description,
+the Premium slide-in's Rising Cards line, both tools' entries on `/premium` and
+in the Premium feature article, and `lib/premium.ts`'s tier map.
+**Rising Sealed and Value Finder still show a free top pick** — they were not in
+the instruction, and their copy still says so, which
+`tests/premium-no-free-top-pick.test.ts` asserts explicitly so the two groups
+cannot be conflated later.
+
+
+## Shareable Rising Cards snapshots, and a title that says something — 2026-09-22
+
+Owner: "get rid of the store report links and outbound clicks from the
+dashboard and also add a new admin feature that generates an actual useful
+title for rising cards, and gives a special link for public users to view a
+snapshot of the rising cards at the time of generation so they don't need
+premium."
+
+**The two tiles are removed from the index, not deleted.** `/admin/clicks` and
+`/admin/store-partners` still exist and still work — a link already sent or
+bookmarked keeps working, and nothing that reads `ClickEvent` or `StorePartner`
+changed. Only the dashboard's list of tiles lost them.
+
+**The snapshot.** `/tools/rising` stays Premium and should: it recomputes daily
+and its value is that it is current. What a snapshot captures is a different
+thing — one run, frozen — so it can be handed to anyone without giving away the
+live tool. A new `RisingSnapshot` row holds a capability token (like
+`StorePartner`) and the whole rendered payload in `data` (like `MarketReport`).
+`/rising/[token]` renders that payload verbatim and is `noindex`.
+
+Two properties do real work here:
+
+- **It never recomputes.** If the public page re-ran the screener, "snapshot"
+  would be a lie — and it would also spend the heaviest scan in the app (400
+  cards × price history) on every view of a link that might be posted to a
+  Discord. Reading the frozen column costs one indexed row read instead.
+- **It withholds nothing except recency.** Every ranked card is in the
+  snapshot. The upsell on the page is the honest one — the live screener
+  re-ranks daily — rather than a truncated list, because a truncated list is
+  what the Premium page already shows a free user.
+
+**The title is derived, not written.** "Rising cards" named every run
+identically, so two links were indistinguishable and neither gave a reader a
+reason to open one. `generateRisingTitle` picks the first angle the data
+supports: a top pick already up ≥5% over 7 days; failing that, a top pick in the
+bottom third of its own range (the screener's actual thesis — "hasn't re-rated
+yet"); failing that, breadth; failing that, a bare count. Every branch states a
+measured quantity.
+
+Nothing predicts. `/editorial-policy`'s "nothing here describes a process we
+don't actually run" applies to a headline as much as to an article, and the tool
+carries its own "a research signal, not advice" disclaimer — which a title
+promising a rise would make worthless on sight. `tests/rising-snapshot.test.ts`
+runs every branch against a banned-word list (will, guaranteed, profit, surge,
+forecast…) and asserts two different runs cannot produce the same title.
+
+The empty run is mintable on purpose: the screener legitimately has nothing
+while price history builds, and a link saying so beats a 400 that leaves the
+operator guessing whether the feature broke.
+
+`RisingSnapshot` reaches the live database through `build-db-push.sh`'s
+`prisma db push`, which runs on every production build — no migration task
+needed. `prisma format` was NOT run: it realigns all ~1,400 lines of the schema
+and its churn broke an unrelated test that pins a column's exact spacing.
+
+## One un-wrappable row was zooming the whole site out on phones — 2026-09-22
+
+Reported as "the website is way too small for phone now and zoomed out", with a
+screenshot of the homepage. The homepage was not the problem, and neither was
+font size, the viewport meta (`width=device-width, initial-scale=1`, present and
+singular) or anything else global. Measured at a 390px viewport, `/` and
+`/browse` both had `scrollWidth === 390`: no overflow at all.
+
+`/tools/deal-finder` had `scrollWidth === 457`.
+
+`RegionToggle`'s segmented market row was `inline-flex` with no wrapping, so its
+min-content width was the **sum** of all six market buttons — 441px. A flex item
+cannot shrink below min-content, and the parent's own `flex-wrap` could not help
+because it wraps that row as a single unit: there was nothing inside it allowed
+to break. So the page laid out 457px wide on a 390px phone.
+
+**Why that read as "the whole site".** Chrome for Android, faced with content
+wider than the viewport, widens the *layout viewport* to fit and scales the page
+down — `window.innerWidth` came back as 457, not 390. Chrome then remembers that
+zoom per site. Visiting one tool page once leaves every other page shrunken
+afterwards, which is why the report named no particular page and the screenshot
+was of the homepage.
+
+Fixed by letting the row wrap (`flex max-w-full flex-wrap`). Verified
+empirically rather than by reasoning: applying exactly that class change to the
+live page in a real Chromium took `scrollWidth` 457 → 390, and the screenshot
+shows all six markets still visible on two lines.
+
+Wrapping, not `overflow-x-auto`, on purpose — every market stays visible and
+tappable instead of some hiding behind a scroll gesture, and the control now
+stays correct however long `COUNTRY_LIST` grows. It has already grown once: EU
+was the sixth market, and the sixth is what pushed 441px past the phone.
+
+**The audit that exists to catch this had never loaded the page.**
+`scripts/mobile-check.ts` measures exactly this fault and its default path list
+covered twelve routes, none of them under `/tools`. Both tool pages carrying
+`RegionToggle` are now in it. That is the same shape as the note already in that
+file about the 640–790px tablet band: the audit missed a regression because of
+where it was not looking, not because of what it was not measuring.
+
+## Seraphine's Radiance Legend: a leak we finally quote, and one we did NOT catalogue — 2026-09-22
+
+A leak surfaced of Seraphine's **Legend** card, *Starry-Eyed Songstress*, in two
+printings (RAD 151/167 promo, art Naifan Zhang; and an over-numbered 174/167,
+art Anna Nikonova, shown in a card-artist feature). New blog post
+`riftbound-seraphine-radiance-spoiler`, plus consistency edits to the tracker and
+the leaked-mechanics post. Two non-obvious calls:
+
+**Why we now quote a Seraphine Legend we spent September refusing to.** The
+tracker and the mechanics-leak post both say, on the record, that we would not
+reproduce the anonymous social-media text for Seraphine's and Evelynn's Legends,
+because it had no provenance. This leak is a *photographed physical card* with a
+collector number, an artist credit and a ©2026 RGI line — the exact provenance
+bar the Neeko-in-print card cleared six days earlier — and its wording *matches*
+the text that leaked, so the two corroborate. Quoting it from the photograph,
+not the post, is consistent with that earlier stance rather than a reversal; the
+stale "we won't reproduce it" lines in both posts were updated to say so, or the
+site would contradict itself.
+
+**Why the leaked cards were NOT added to `manual-cards.json`.** Tempting, because
+Neeko was — but Neeko shipped only because *every field was read or verified*,
+and here two REQUIRED fields cannot be. The Legend's **domain** is a dual gem
+read off a screenshot (this site's standing rule, per
+`riftbound-radiance-what-we-know`, is to never guess a domain — a wrong one drives
+purchase decisions and mis-filters `/browse`), and neither card's **rarity** is
+legible. A wrong `domain`/`rarity` propagates to facet pages, filters and the
+price matcher, so a half-known row is worse than none. The post therefore uses
+the ONE Seraphine card already in the catalogue — *Not Alone*, the T1 printing
+`T1S-005/005` (Order, 5/1), verified — for its single live embed, and presents
+the Legend and the RAD 138/167 *Not Alone* printing in prose/stat-tables only.
+The leak's one new datum on *Not Alone* is its printed Radiance number, 138/167.
+
+**Title deliberately omits "Radiance."** `tests/radiance-spoiler-tracker.test.ts`
+pins exactly one article with both "radiance" and "spoiler" in its title (the
+tracker owns that query per `docs/seo-keyword-map.md`). This post owns the
+*Seraphine-specific* reveal intent instead — the Neeko row's template — so the
+title carries "Seraphine"/"Spoiler"/the card name, and "Radiance" lives in the
+meta description and body, where it still ranks for "seraphine radiance" without
+colliding.
+
+No `[deploy]` marker: ordinary content, rides the daily 08:00 UTC release.
+
+## The mobile zoom-out had a second cause: hero images sizing themselves — 2026-09-22
+
+The RegionToggle fix earlier today was real but did not clear the report. The
+screenshot that followed was of `/au` — a market landing page never measured,
+and never in `scripts/mobile-check.ts`'s path list either.
+
+`/au` laid out **608px wide at a 390px viewport**, `window.innerWidth` reading
+608 rather than 390: Chrome for Android had widened the layout viewport to fit
+the content and scaled the page down, then persisted that zoom for the site.
+
+Four blog-teaser hero images were sitting in normal flow at their **intrinsic**
+width (600px in `LatestPosts`, 744px in `FilterableArticles`) instead of filling
+their `aspect-[1.91/1]` box. `w-full` on the `<img>` resolves against the nearest
+block box, and the box's actual child is a wrapper with no width of its own —
+`<picture>` is `display: inline`, and next/image emits its own span — so the
+percentage had nothing definite to resolve against and the intrinsic width won.
+
+**It reproduces about one load in three, and only at devicePixelRatio 2.** That
+is why the first sweep of `/` and `/browse` came back clean at exactly 390, why a
+desktop browser resized to phone width never shows it, and why two verification
+runs in a row looked fine before the third caught it. Measuring once and calling
+it clean was not good enough here.
+
+Fixed by taking the image out of flow: `fill` on the next/image, and
+`wrapperClassName="absolute inset-0 block h-full w-full"` on the `Picture` — the
+`<picture>` is the element that needed positioning, not the `<img>` inside it.
+Verified by reproducing the 608px state in a live page and applying exactly this
+change: **608 → 390**, `innerWidth` back to 390.
+
+The durable rule, now pinned by `tests/hero-image-fit.test.ts`: an image inside a
+fixed-aspect box must be OUT OF FLOW. A width utility can fail to resolve;
+`position: absolute` cannot contribute to an ancestor's width under any srcset,
+DPR or CSS-timing condition.
+
+Two process notes worth keeping. An earlier `mobile-check` run in this session
+reported exactly this — "document is 608px wide", four `img.h-full.w-full`
+overflows — and it was dismissed as corrupt because that run had collided with a
+concurrent browser and crashed. The crash was real; the measurement was not
+wrong. And `/au` and its sibling market pages are still absent from the audit's
+path list, which is the same blind-spot pattern as `/tools/*` this morning.
+---
+
+## The pricing page loses the "No account" column, and two rows that had gone stale — 2026-09-22
+
+Follow-up to the gate change above, and a correction of my own making. Cutting
+the free teaser from Deal Finder and Rising Cards left the tier comparison
+advertising something the site no longer does: both tools still read **"Top
+pick"** in the signed-out and free-account columns, on `/premium`, in the
+Premium upsell dialog, and in the Premium explainer article. A pricing page
+promising a teaser that no longer exists is worse than one that promises
+nothing.
+
+Fixed at the source — `TIER_COMPARISON` is the single array both surfaces
+render — and separately in the article, which carries its own markdown copy of
+the same table.
+
+**The "No account" column is gone**, at the owner's call. It had four columns
+doing the work of three: signed-out and free-account differed on exactly two
+rows (price alerts, portfolio), and a reader deciding whether to *pay* does not
+need that distinction spelled out. The signed-out pitch has its own surface —
+`FreeAccountCompare`, in the signup popup, whose entire job is "no account vs
+free account" — and that is where the comparison belongs. The upsell dialog had
+already dropped the column for space, so both surfaces now agree rather than
+showing different tables.
+
+**Two stale claims surfaced while the table was open**, neither caused by this
+week's work:
+
+- The article's ad-free row still gave **Plus** a tick, nine days after ad-free
+  moved to Premium-only (2026-09-14). It also still had five cells after the
+  column was removed, so it would have rendered as a broken row.
+- The article's prose and summary both said Plus "unlocks the full lists **and
+  an ad-free site**". Ad-free is Premium's.
+
+**Not changed: Plus keeps both tools.** The instruction was that no-account and
+free-account lose them, which is what shipped last night; Plus and Premium are
+unaffected, and their columns still read "Full list". Rising Sealed still gives
+a free top pick and every surface still says so.
+
+`tests/premium-no-free-top-pick.test.ts` now parses the article's markdown table
+— column count, the free cell for each tool, Rising Sealed's surviving top pick,
+and the ad-free row — because that table is the one a reader reaches from search
+rather than from the pricing page, and it had drifted twice without anything
+failing.
+
+---
+
+## The snapshot gets a name and a face: RiftCompare Hot 40 — 2026-09-22
+
+Two owner instructions on the shareable Rising Cards snapshot, a day after it
+shipped: "we should call it the riftcompare hot 40", and "the link that we
+generate should have a better thumbnail with the card at #1 featured".
+
+**The name.** "Rising cards snapshot" described the mechanism, and nobody
+forwards a mechanism. The chart-countdown shape does the work instead: a reader
+who has never heard of this site knows what a "Hot 40" is before reading the
+subtitle. It leads every generated headline now — `RiftCompare Hot 40: Astral
+Heron is up 8.2% this week (global, 22 September 2026)` — which also let the
+count clause come out of the sentence, since the name already carries it.
+
+**The number is the real count, not a flat 40.** `rise-predictor` caps the
+ranking at `DISPLAY = 40`, so a healthy run genuinely is the Hot 40 — but a
+market early in its price history ranks fewer, and printing "Hot 40" above
+twelve rows is exactly the kind of claim `lib/rising-snapshot.ts` exists to
+avoid. So forty cards make the Hot 40 and twelve make the Hot 12. The brand
+reads the same; the number stays true. An empty run keeps its old honest title
+and no name at all, because a "Hot 0" would be absurd.
+
+**The thumbnail.** The route had no `opengraph-image` at all, so every forwarded
+link fell through to the site-wide default: the same generic picture in Discord,
+iMessage and X whichever snapshot you sent. A share link whose image never
+changes looks like a link to the site rather than to a list, which is most of
+why a forwarded one gets ignored. It now renders the #1 card's own art at 340
+by 475 beside its real price and 7-day move, with the list name and the frozen
+date.
+
+Everything in the image is read off the **frozen `data` column**, the same
+values the page draws. That is deliberate twice over: the picture and the page
+can never disagree, and a link shared three weeks ago still unfurls with the
+card that actually led it rather than today's leader. It fails open to a
+brand-only composition on a missing token, an empty run or a database blip —
+an unfurl must produce an image, never a 500.
+
+Two smaller things worth recording. `generateMetadata` deliberately does **not**
+set `openGraph.images`: the sibling `opengraph-image.tsx` is picked up by the
+route automatically, and naming an image by hand would override the generated
+one and lose the card. And every flex box in the image holds a single text node,
+because satori is unreliable with sibling text nodes — the price badge builds
+its string in one expression rather than three JSX children.
+
+---
+
+## The Hot 40 thumbnail, and the WebP bug it uncovered — 2026-09-22
+
+Owner: "it should also have #2 and #3 and some delta figures."
+
+**The image now shows a ranking rather than a card.** #1 keeps the large art and
+the headline-size name, and carries its price, its 7-day move and its 30-day
+move; #2 and #3 sit beneath it with their own art and their own 7-day moves.
+A single card said "here is a card"; three ranked cards with their moves say
+"here is a ranking", which is what the link actually is.
+
+**Then the real finding.** The first version of this image shipped unverified —
+the only way to see it was to mint a snapshot in production, which needs admin.
+So this pass built `scripts/render-hot40-og.tsx`, which draws the composition
+from a fixture and writes a PNG. The first render exposed it immediately:
+
+```
+Can't load image .../card-art/<stem>.webp: Unsupported image type: unknown
+```
+
+**satori cannot decode WebP, and our card mirror is WebP-only.** The failure is
+silent: satori lays the `<img>` out, draws its border and radius, and fills it
+with nothing. Checking the live site-wide OG image confirmed it is not a local
+artefact — `riftcompare.com/opengraph-image` has been shipping a bordered empty
+rectangle where the featured card should be, and `app/opengraph-image.tsx`
+renders that `<img>` with no placeholder branch, so the empty bordered box in
+the live PNG is the image element itself failing. Every OG route on the site had
+the same bug: the root image, `card/[id]`, `c/[token]`, and the new Hot 40 one.
+
+`cardImageForOg()` is the fix — one helper, four call sites. It maps a
+RiftScribe card onto the CDN's `originals/<stem>.png` and returns null for
+anything it cannot vouch for, so a caller draws its placeholder instead of an
+invisible broken image.
+
+**That deliberately contradicts `DEAD_ORIGINALS`**, the constant right above it,
+which exists because the importers once found `originals/` 404ing. Re-sampled
+on 2026-09-22: **24 stems spread across the catalogue, all `200 image/png`.**
+The tree is back. The write path is left exactly as it was — the database should
+go on recording a URL known to resolve — and only this read path, which needs a
+raster format the mirror does not offer, reaches for the PNG. If a given
+original ever 404s again the helper's caller degrades to the placeholder, which
+is no worse than the empty box it replaces.
+
+**A second pass was needed, and the first fix was a no-op in production.**
+`cardImageForOg` originally understood only `cdn.riftscribe.gg` URLs and plain
+PNG/JPEG. But rows written since the mirror landed store **our own mirror
+path** — `https://riftcompare.com/card-art/<stem>.webp` — which is neither, so
+the helper returned null and the card slot stayed exactly as empty as before.
+Caught by fetching a real card's OG image after the deploy and finding it still
+blank, then reading the card's stored URLs. The helper now recovers the stem
+from the mirror path too, in both its site-relative and absolute forms, and the
+test pins all three shapes.
+
+The lesson is the same one this session keeps re-learning: a deploy is not a
+verification. The render script proved the composition; only fetching the live
+image proved the URL.
+
+Two things this leaves behind:
+
+- **A way to look at the image without deploying.** `npx tsx
+  scripts/render-hot40-og.tsx out.png` draws both the populated and the
+  brand-only compositions from a fixture whose #1 name is deliberately long and
+  whose #3 is a negative mover.
+- **`lib/hot40-og.tsx` holds the composition, not the route.** A Next image
+  route may export only the names Next recognises, so a helper exported from
+  `opengraph-image.tsx` passes `tsc` and is then rejected by `next build` — the
+  same trap that moved the `/gallery` title builders into `lib/gallery-seo.ts`.
+
+## Premium did not die — acquisition did. Funnel read with Stripe for the first time — 2026-09-23
+
+Owner: "there was a significant influx of premium users near the beginning,
+and then it's like completely died off … improve conversion and retention."
+
+**Two outages had to be fixed before any number could be read.**
+`maintenance.yml` had crossed GitHub's 512,000-byte workflow limit with the
+RM12 → RM3 cutover and every task in it failed with `startup_failure` (pruned
+to 352 KB; a test now fails at 450 KB). And `funnel-report` had never been
+given `STRIPE_SECRET_KEY` despite its comment saying it reads Stripe, so every
+run since 2026-09-14 printed blank subscription columns — the retention half
+of the report had never once been seen.
+
+**The data, 2026-09-23** (trials bucketed by the week they began):
+
+| week  | accts | clicks | chkout | trials | paying now |
+|-------|------:|-------:|-------:|-------:|-----------:|
+| 08-17 |    26 |     34 |      1 |      2 |        2/2 |
+| 08-24 |    55 |     88 |      3 |      3 |        3/3 |
+| 08-31 |    56 |     49 |      7 |      5 |        4/5 |
+| 09-07 |    40 |     62 |      7 |      1 |        0/1 |
+| 09-14 |    31 |     39 |      2 |      2 |   in trial |
+| 09-21 |  9 (2 days) | 25 |  2 |      2 |   in trial |
+
+MRR US$63.25. One cancellation ever, in the 09-14 cohort, during its trial.
+
+**Reading it.**
+
+- **Retention is not the problem.** 9 of the 10 trials that have matured
+  became paying, and no paying subscriber has churned. The product keeps the
+  people who try it.
+- **The fall is at the top.** New accounts 56 → 31 a week; Premium clicks
+  88 → 39. Fewer people arrive, so fewer reach the pitch. Traffic and account
+  creation, not the Premium page, are what moved.
+- **The one mid-funnel collapse is already explained and fixed.** The 09-07
+  week started 7 checkouts and produced 1 trial. That is the week /premium
+  defaulted to annual billing (2026-09-11) — "exactly two buy links on the
+  page and both committed to a year". Reverted 2026-09-14.
+- **The 09-14 and 09-21 cohorts have not matured.** Their 14-day trials end
+  from ~09-28. Until then nobody can say whether the 09-14 fixes worked.
+
+**What was deliberately NOT done.** No change to the Premium pitch, pricing,
+trial or paywall. That surface has changed roughly every other day since
+August (see the 2026-09-14 entry, which froze it for two weeks to ~09-28 for
+exactly this reason, and has been broken four times since). On data showing
+90% trial→paid and no churn, a fifteenth rewrite would mainly destroy the one
+clean measurement still in flight. The lever the numbers point at is
+acquisition — search traffic, the signed-out popup (111 of 253 recent
+accounts, the largest single source) and whether free visitors still see
+enough value to click through after 2026-09-22 removed all free rows from
+Deal Finder and Rising Cards.
+## The US TCGplayer row is now the cheapest English listing, not market price, 2026-09-23
+
+The owner: "TCGPlayer prices are displayed as the market price for each card
+listing, but for the card listing itself it should be the cheapest available
+price in the English version on TCGPlayer." They were right that the two
+numbers answer different questions. Market price is a trailing average of
+recent sales; every other row in a comparison is "what you pay to buy it now".
+Mixing them made TCGplayer the only store on the page quoted on a different
+basis, and — measured on a 200-card live sample — the cheapest in-stock English
+Near Mint listing was **lower than market on 188 of 200, median −24.7%**. The
+comparison was systematically overstating what TCGplayer would charge.
+
+**Two rows per card now, not one.** The same search response already carries
+both numbers, so this costs no new request:
+
+- `tcgplayer` (buyable, US, `basis: "listing"`) — cheapest in-stock listing
+  with `languageId === 1`, Near Mint, and a `printing` that matches the card's
+  finish, with that listing's own `shippingPrice` recorded in `shippingCents`.
+  Falls back to market only when no qualifying listing is in the preview.
+- `tcgplayer_market` (reference, US, `basis: "market"`) — the old number,
+  registered in `US_FALLBACK_RETAILERS` so every comparison, lowest-price
+  column and store count already ignores it.
+
+The printing filter is load-bearing, not tidiness: a product's preview mixes
+Normal and Foil listings, and Scuttle Crab's cheapest listing was a Normal copy
+under the foil product. Without it the foil row would have quoted a non-foil
+price.
+
+**Four consumers keep reading market price, deliberately**: the value floor
+(`price-import.ts`), the Deal Finder "vs TCGplayer" benchmark (`arbitrage.ts`),
+Box EV, and the overseas reference block (`tcg-reference.ts`). Each is valuing a
+card, not buying one, and a single lowball listing is the wrong input to a
+valuation. They read through `preferMarketRows()` over both keys, because the
+value floor runs BEFORE the TCGplayer step on the first refresh after deploy —
+at that moment `tcgplayer_market` does not exist yet and the market figure is
+still sitting on `tcgplayer`. After one refresh the helper is a no-op.
+
+UK/SG/AU/CA converted rows stay on market price: they are references there, not
+stores, and a cheapest-listing figure would be a US seller's price with US
+shipping behind it.
+
+**What this moves, and how it is contained.**
+
+- US lows drop on most cards the day this lands. That is the correction, not a
+  side effect.
+- `PriceHistory` records the global minimum, so the step lands in the weekly
+  series. The RiftCompare Index is chain-linked, and `METHODOLOGY_BREAKS` in
+  `market-index.ts` skips the link across 2026-09-23 → 2026-10-01 so the level
+  carries through instead of printing a one-off market crash. The methodology
+  guide now says this in a section of its own.
+- 7-day movers see the step for about a week and then self-heal; disclosed in
+  the same guide section rather than special-cased.
+
+`tests/tcgplayer-listing-basis.test.ts` pins the listing choice, the printing
+filter (with the Scuttle Crab shape), both bases, the fallback registration,
+that the importer writes both rows, the four consumers going through the
+helper, the card page's store count excluding the reference row, and the index
+break arithmetic.
+
+## A store fell off the site because one request failed — 2026-09-23
+
+Asked to make sure every US store "is working and we have the latest prices",
+I probed all 40 US feeds live from the sandbox and read `audit-store-health`
+against RM3. The two disagreed, and the disagreement was the finding.
+
+| Store | Live feed today | Last night's import | Card pages |
+|---|---|---|---|
+| Wolf Den Gaming | 699 in stock | 6 products, 0 priced | **0** (7-day median 640) |
+| Hobbiesville (US) | 517 in stock | 65 products, 1 priced | **1** (median 1,172) |
+| E4 Cards & More | 0 — no Riftbound in its sitemap at all | 0 products | **138, 202h stale** |
+
+**Wolf Den and Hobbiesville were healthy stores that one failed request took
+off every card page.** `fetchCollection` treated a thrown fetch, a 5xx/403
+and a 404 identically — a silent `break` — and returned whatever it had. Wolf
+Den's main singles collection failed; its six-product Vendetta collection did
+not; the importer then ran its usual `deleteMany` for the store and wrote six
+unmatched products. Nothing in the log said a collection had failed. The same
+request, reproduced here with the importer's exact headers and cache-buster,
+returned a full 250-product page.
+
+Now:
+
+- A failed read (network error, non-404 error status, 429, HTML challenge
+  page) is reported as `failed`, distinct from empty. A 404 is still an
+  answer — the conventional BinderPOS handles 404 on most stores and must not
+  veto them.
+- One retry before giving up, logged either way.
+- If a **discovered or configured** collection fails, the store is skipped for
+  the run and keeps yesterday's rows, rather than being replaced by a partial
+  set.
+
+**E4 Cards is the opposite failure: a store that stopped answering kept its
+rows forever.** A store returning no products was skipped with its rows left
+in place, which is right for one bad night and wrong for eight. Two changes:
+
+- `STORE_ROWS_MAX_AGE_H` (72h): when a store returns nothing, rows older than
+  that are expired. Above store-health's 30h "stale" alert on purpose, so the
+  alert fires before anything is deleted.
+- `DECOMMISSIONED_RETAILERS`: removing a store from `RETAILERS` used to strand
+  its rows, since the importer only visits stores in `RETAILER_LIST`. Keys
+  listed there have card AND sealed rows purged at the start of every run.
+  `e4cards` is its first entry, with the evidence recorded beside it.
+
+**Not acted on: the "frozen-prices" alert on ~130 stores in every market.** It
+fires when a store's median listing price is unchanged for seven days. Most
+stores genuinely do not reprice a catalogue weekly, and the refresh workflow
+ran and succeeded on each of those days, with per-store product counts in its
+log. That makes this an alert tuned too tight, not 130 broken stores.
+Recorded so the next audit does not take it at face value.
+
+`tests/store-row-lifecycle.test.ts` pins all three behaviours.
+
+CLAUDE.md still named RM10 as the operational database; it is RM3 since
+yesterday's cutover. The file now points at `db-chains.ts` rather than
+restating a name that rotates every few days.
+
+## US stores: five added, one moved to Canada, one removed — 2026-09-23
+
+Same pass as the entry above. `scripts/sweep-registry.ts --markets US`
+re-swept all 1,599 US domains in the official Riftbound retailer registry, two
+weeks after its first run.
+
+**Added (5)**: The Warp Gate, Gator's Card Den, Wulf Gaming, Larry's Game Store,
+Sweets and Geeks. Clearing the sweep's bar (MIN_SINGLES_FOR_STORE, proven USD)
+was not treated as enough. Each store's live feed was also run through the
+importer's own `resolveCardId()` against the checked-in catalogue snapshot
+before it was added: 87%, 90%, 94%, 69% and 68% of in-stock products in the
+snapshot's sets matched. The misses read were sealed products, playmats and
+alt-art printings the snapshot lacks, so the live rate will be higher. The
+retailers.ts header for the batch has the per-store figures.
+
+Shipping is taken from each store's own page where it publishes one (Wulf
+Gaming: singles free over $50; Gator's: policy page says $200, live banner says
+$350, so $350). Stores with no published threshold get `freeOverCents: 0`
+rather than an invented one, as with Quack Opens.
+
+**Rejected (1)**: Solacido cleared the sweep's count but its "singles" are bare
+card names ("Abandon") with no set or collector number and no stock. The sweep
+counts products; it cannot tell that nothing would match.
+
+**Moved to CA (1): Sky Fox Games was publishing Canadian dollars as US
+dollars.** The sweep flagged it `wrong-currency`, and a direct check confirmed
+it: an Oshawa, Ontario store, `paymentSettings.currencyCode: "CAD"`, and
+byte-identical prices for `?country=US` and `?country=CA`. It had been in the
+US market since the 2026-09-13 Radiance pass. Every price it showed there was
+about 27% too high. Same key, so the next import rewrites its rows as CA.
+
+**Removed (1)**: E4 Cards, above.
+
+US store count: 40 → 43.
+
+**The sweep's own "tracked stores now below the bar" list was not acted on.**
+Seven of its eight entries say `rate-limited`, which is the sweep's
+concurrency tripping Shopify's per-IP limit, not the stores. A one-at-a-time
+probe of every US feed an hour earlier read all seven with hundreds of
+in-stock singles each.
+
+**Why this shipped off-schedule.** A push to `main` touching
+`price-import.ts`/`retailers.ts`/`tcgplayer.ts` starts `refresh-prices.yml` on
+its own. That run writes the new `tcgplayer_market` reference rows, which the
+code still deployed does not know are references: every US card page would
+list TCGplayer twice, once at the market price, until the next 08:00 release.
+The site code has to land with the importer, so a production deploy was
+dispatched with the merge.
+
+`db.ts`'s startup warning had the same staleness as CLAUDE.md: it compared
+against RM3 but told the reader to go and tick RM10 in Vercel. It now builds
+both the check and the message from `OPERATIONAL_VARS[0]`, and
+`tests/db-chain.test.ts` accepts that form and forbids a hard-coded name in the
+text.
+
+## Card pages with no picture: the mirror was never re-run — 2026-09-23
+
+Reported from a phone: Irelia, Graceful (SFD 141/221) showed the generated
+placeholder instead of the card, and "quite a few cards" did the same.
+
+**89 of 1,432 sitemapped card pages had no image.** 71 of them were one list:
+`src/lib/card-art-missing.ts`, written by `scripts/mirror-card-art.ts` on
+2026-09-13 when the RiftScribe CDN deleted `originals/` and those cards 404'd
+at every rendition. `cardImageSrc` returns null for a listed stem on purpose,
+so the site draws the placeholder rather than a broken image. That was right
+for that day and never revisited. On 2026-09-22 I found `originals/` serving
+again while fixing the OG image, and did not connect it to this list.
+
+Re-probed all 71 today: **70 answer 200 at both `originals/` and
+`thumbnails/large/`.** Re-running the mirror wrote those 70 files (5
+re-encoded to fit the 150KB budget, which `check-images.ts` confirms) and
+regenerated the list to the one stem the CDN still lacks, Vex UNL 055a. That
+covers 67 of the 89 pages. The other 4 recovered stems belong to printings with
+no page of their own.
+
+**The remaining 22 were never in the mirror**: they are not in RiftScribe's
+catalogue at all. Checked each against Riot's official gallery
+(playriftbound.com, the `__NEXT_DATA__` card objects):
+
+- **Published there under their own id (4)**: the Unleashed tokens Bird,
+  Brush and Reflection, and Vex UNL 055a. `scripts/set-official-art.ts`
+  (maintenance task `set-official-art`) handles them. It matches by slug and
+  never overwrites working art. Its dry run against RM3 showed the three tokens
+  already store RiftScribe URLs whose stems were on the missing list, so the
+  re-mirror above had already recovered them; it skipped them and wrote only
+  Vex. The tokens stay in the script as a no-op guard.
+- **Not published (18)**: the Vendetta alt-art runes (R01a–R06a; the gallery
+  has only the base `ven-r01` prints), the Nexus Night rune/unit promos, and
+  four organised-play promos. These stay on the placeholder. A different
+  printing's picture would misstate which card is on sale, the same line
+  `set-rune-art.ts` and `fix-cloned-art.ts` already hold.
+
+**The placeholder itself was also wrong.** `CardArt` printed
+`{collectorNumber} · OGN` as a literal, so every Spiritforged, Unleashed and
+Vendetta placeholder claimed to be Origins. That was visible in the report:
+"141/221 · OGN" on a Spiritforged card. It now prints the card's own
+`setCode`.
+
+`tests/card-art-recovery.test.ts` pins the set label, Irelia's recovery, the
+one-entry missing list (so the next time it grows, the first move is to re-run
+the mirror) and the art script's no-overwrite rule.
+
+What this does NOT fix: a card added after the last mirror run whose stored
+URL is a RiftScribe CDN URL is still rewritten to a `/card-art/` file that
+does not exist, and `CardImage` has no `onError` fallback. None of the 1,432
+sitemapped cards is in that state today, because every live CDN-URL card is
+mirrored, but a new set synced from RiftScribe would be. Re-run the mirror in
+the same change as any `fetch-cards.ts` refresh (its header already says so;
+`tests/card-image-url.test.ts` enforces it for the checked-in snapshot only).
+
+## A multi-device UI pass: 123 verified findings, measured before and after — 2026-09-23
+
+Owner brief: "fix any UI issues you can find and make my UI better in general …
+for both desktop and mobile phone and any other devices."
+
+**How it was found.** The live site was rendered in a real Chromium at fifteen
+profiles: 320, 344 (Z Fold cover), 360, 390 and 430 phones, 844×390 phone
+landscape, 768/820 tablets, 1024×768 tablet landscape, 1280, 1440, 1920 and
+2560 desktops, and light at 390/1440. That was 69 pages each, 1,035 renders,
+each with measured overflow, tap targets, tiny text, iOS focus-zoom inputs,
+clipped text, CLS and console errors. Ten audit lenses produced 126 findings.
+Every one went to a separate verifier told to refute it: reproduce it live,
+check it against this file and the pinned tests, and try the fix in the page
+before accepting it. **3 were refuted and 123 survived**, many with the fix
+corrected. They were implemented as ten packages with exclusive file
+ownership, each measured on a local server against the synthetic seed database
+(`prisma/seed.ts`, never a production project), then reviewed together.
+
+**Local before/after, same 30 pages × 9 profiles (270 renders):**
+undersized tap targets 3,331 → 1,872; iOS focus-zoom inputs 368 → 239 (the
+remainder are the tablets' deliberate 14px `.input`); summed CLS 2.6 → 0.9. The
+live-only faults (the widened layout viewports below) do not reproduce on the
+seed data and were measured on production DOM instead.
+
+**Landing in two steps.** This commit carries nine of the ten packages. The
+overlay package (ui/Dialog focus, a portal and Escape layering, the menu's
+focus return, popup close-button sizes, and corner nudges yielding to dialogs)
+and the fixes from the integration review follow as separate commits,
+recorded below this entry.
+
+### The decisions worth keeping
+
+- **Every grid gets a base column: `grid-cols-1`.** `grid gap-4 lg:grid-cols-3`
+  has no template below its first breakpoint, so the browser gives it one
+  implicit `auto` track as wide as the widest unwrapped row, and `truncate`
+  inside it never engages. /movers laid out at 693px on every phone, `/` at
+  372px at 320–360, /market at 341, /sets at 334 and /trade at 603. Chrome for
+  Android answers that by widening the layout viewport and zooming the whole
+  site out, which is the same mechanism as the 2026-09-22 RegionToggle entry.
+  `tests/grid-base-columns.test.ts` pins nine grids. `body { overflow-x: clip }`
+  is added as a backstop, because html's own clip propagates to the viewport,
+  where Android still sizes the layout viewport from the overflow. The mobile
+  check still sees overflow through `body.scrollWidth`.
+- **1024–1279 is its own band now.** Since the 17rem rail became permanent from
+  1024 (2026-09-21), `lg:` layouts have had ~704px, not a desktop. The header's
+  inline search was 13–78px there and sat on top of "Sealed"; the filter
+  sidebar left /browse 4 × 94px tiles; the card page's 320px art left a 360px
+  details column that clipped the cheapest price. So:
+  - the header search stays on its own row until **xl** (the header is
+    121/125px there and 65px from 1280), and is 36rem inline from xl;
+  - the filter sidebar and its sticky wait for **xl**. Below that it is the
+    collapsible bar, now with a sticky "Show results" footer;
+  - the card grids size from their own column
+    (`lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]`);
+  - the card art is 160px from lg and 320px from xl.
+  Every sticky below the header carries `lg:top-36 xl:top-20`, and in-page
+  anchors use `.scroll-mt-header` (9rem, 6rem from 1280) or, on /market,
+  `scroll-mt-40 xl:scroll-mt-36`, because Reveal's 26px entrance offset makes a
+  first jump land short.
+- **The light theme is first-class.**
+  - Tailwind's stock pastel TEXT shades (rose/red/emerald/amber/sky/lime/
+    purple/blue 100–400) are palette-backed like the neutrals. Dark keeps the
+    stock hexes (pixel-identical, pinned); light uses 700/800-class shades
+    that clear 4.5:1. /sealed "Sold out" goes 1.55 → 6.58:1 and loss prices
+    2.69 → 6.29:1.
+  - Data-coloured chips (domains, rarities, conditions, grader badges) go
+    through `.data-ink`, which darkens the hex by color-mix in light.
+  - Charts and sparklines stroke `currentColor` from themed tokens.
+  - The scrolled header shadow is a NAMED `shadow-header` token. Tailwind 3.4
+    reads `shadow-[var(--x)]` as a shadow colour and emits no box-shadow.
+  - ThemeToggle re-stamps `<meta name=theme-color>` after every client
+    navigation, because Next re-inserts the layout's dark one.
+  - Brand fills that must stay white (Discord, "Shop on eBay") use
+    `text-[#ffffff]`, not the themed `text-white`.
+- **Touch floors grow on coarse pointers only.** Rail rows, header links, the
+  market switcher, deal pills and fee chips reach 48px under
+  `(pointer: coarse)` and keep their desktop density with a mouse. That
+  honours the 2026-09-18/19 "desktop rows stay 36px" decision, so the switcher
+  keeps its 38px mouse height and only regains the touch floor.
+- **iOS focus-zoom backstop.** Fields render at 16px on coarse pointers under
+  640px wide or 500px tall, which covers phones in both orientations. Tablets
+  keep `.input`'s 14px. It uses `!important` because `text-sm` otherwise wins.
+- **Negative money reads "−US$190.00", not "US$-190.00".** formatMoney puts a
+  leading U+2212 before the symbol. Every consumer is display text; the CSV
+  export formats its own numbers. Pinned in `tests/format-money.test.ts`.
+- **/sell and /wanted are `next.config.js` permanent redirects.** Their
+  `redirect()` stub pages were served as a cached 307 with NO Location header:
+  a blank error document, then a client-side hop, with CLS ~0.8. 308s are
+  browser-cached and cannot be revoked; both pages were already retired.
+- **The watchlist waits for /api/me.** Every anonymous page view fetched
+  /api/alerts/watchlist and logged a 401. A signed-in user now waits one /api/me
+  round trip.
+- **/learn's quiz is seeded per UTC day.** It shuffled with Math.random during
+  render, so the server and client drew different quizzes (React #418/#423 on
+  every load).
+- **Articles:** prose is 17px with a 40rem measure from sm (phones stay 15px).
+  Only tables of 3+ columns keep a scroll floor and become focusable regions.
+  The TOC stays open, as its component records; it becomes a sticky
+  right-gutter aside from 1700px.
+- **Footer:** the rail reservation moves onto `<footer>`. The old
+  `container-app pl-[var(--sidenav-w)]` on one element deleted the gutter:
+  phones had content at x=0, and the footer sat off <main>'s column on wide
+  screens. `tests/sidenav.test.ts` now rejects that pairing. The "·"
+  separators became row gaps.
+
+### Owner-visible changes to be aware of
+
+- At 1024–1279 with a mouse, /browse, /sealed and /sets/[set] show the
+  collapsible Filters bar, not the sidebar, which returns at 1280. /browse at
+  1280 is 3 × 216px tiles, where it was 5 × 123px.
+- /auctions shares /browse's grid: 3 columns at 1024–1039, 4 from 1040 and at
+  ≥1280.
+- Today's Top Deals goes 4-across at xl (1280). At 1280 names are still tight
+  (39–72px). Moving it to 2xl would double the section's height at 1440, so
+  that is left for the owner to call.
+- The header's pre-session placeholder is sized for the signed-OUT control:
+  the 79px jump is gone for visitors, and signed-in users take a one-time shift
+  instead.
+- The eBay affiliate disclosure appears once per panel, not twice.
+- /games' signed-out prompt reads "Create free account" + "Sign in", instead of
+  two identical "Sign in" buttons.
+
+### Declined, deliberately
+
+These were raised and not done, because this file already decides them:
+- a static header in phone landscape ("it needs to always sit there",
+  2026-09-16);
+- a desktop 44px switcher (2026-09-18/19);
+- capping the homepage About paragraph (documented full-width);
+- moving eyebrows off the display serif site-wide (`.rb-eyebrow` is a brand
+  token; only the homepage's sans hero switches, alongside its h1–h3);
+- forcing the Trending chips onto one line (a function of each day's names,
+  and it truncates them worse).
+
+### Harness lessons, for the next pass
+
+- **Overflow can hide from the obvious metric.** html's `overflow-x: clip`
+  hides clipped content from any scan that excuses overflow-hidden ancestors.
+  Some overflow reproduces only at **devicePixelRatio 2**. Audit phones at
+  DPR 2, and read `window.innerWidth`, not just element rects.
+- **The theme is a COOKIE** (`theme=light`, theme-shared.ts). Setting
+  localStorage renders dark while claiming light.
+- **ESLint silently ignores files under a dot-directory**, so
+  `.claude/worktrees` checkouts need `--no-ignore`. The main tree's `tsc`
+  also sweeps those worktrees in via `**/*.ts`, so run it from a checkout
+  outside `.claude/`.
+
+## The UI pass, completed: overlays, and what the integration review caught — 2026-09-23 (same day)
+
+The overlay package and the integration review's fixes land here; both were
+announced in the entry above.
+
+**Overlays.**
+- `ui/Dialog` now portals into `document.body`. An inline Report dialog no
+  longer inherits `text-center`, and the ⌘K launcher no longer paints behind
+  QuickView.
+- Escape closes only the TOPMOST layer, via a module-level stack
+  (`useEscapeLayer`) shared by every Dialog, the nav menu and the launcher.
+  Closing a Report opened from QuickView used to close QuickView too.
+- Focus lands inside every dialog, falling back to a `tabIndex={-1}` panel with
+  `preventScroll`, and returns to whatever opened it.
+- The menu's Close bar is sticky, because it used to scroll away in a 4,000px
+  sheet.
+- Corner nudges hide under `body[data-rc-dialog]`, and they ignore an Escape
+  that belongs to a dialog, so it no longer spends a dismissal.
+
+**The review then measured the merged result as one site**, with a base server
+beside it. Its findings have a pattern worth remembering:
+- **A bare `sm:min-h-0` cancels the coarse-pointer 48px floor.** Responsive
+  utilities are emitted after globals.css's `@media (pointer: coarse)
+  .min-h-11` rule, so the compact reset won on touch tablets and landscape
+  phones: /stores/tracked chips were 26px, RegionToggle 28px. The reset is now
+  `sm:[@media(pointer:fine)]:…`, the CountrySwitcher idiom. That also applies
+  to AuctionsBoard's chips, the gallery toolbar, and the /trade value input's
+  width, which met the forced 16px text on a landscape phone.
+- **The taller 1024–1279 header had more dependants than the sticky offsets.**
+  - the Pairs and Higher/Lower height caps, which get a `lg:max-xl:` term
+    60px larger;
+  - the rail's feature-search block, sized to end on the header's rule;
+  - the rail's own scroll position: 48px touch rows pushed the current page
+    below its fold, and the rail now scrolls it into view itself.
+- **`body { overflow-x: clip }` turns overflow into clipping.** A zoomed-out
+  page used to at least show a too-wide button whole; now the button is cut at
+  the edge. The article-end CTAs therefore drop `shrink-0` for `max-w-full`,
+  and a card's label wraps instead.
+- **The 704px lg band needed three more grids fixed:** the card page's lower
+  tile grids (now 4-up until xl; 6 × 107px tiles clipped every price), the
+  homepage return-visit cards (two across plus one spanning until 1440; their
+  text columns were 16–24px), and the /champions table (px-2 and 13px prices
+  below sm, so it fits at 320).
+- **Pre-existing, found by looking at the whole site again:**
+  - /tools/value-finder's table clipped the vs-avg figure the page ranks by,
+    on every phone. It is now a fixed three-column layout below sm, with the
+    30-day average under Now.
+  - The #book anchor on /stores/consulting landed under the header.
+  - The current page in the pagination was white on bright green; it is now
+    the site's dark-ink-on-brand pair.
+  - The light theme's `text-gold/80` lock-in line, the idle /feedback stars
+    and the collection select's white-on-white options.
+  - Two domain-colour texts still used a raw `color` hex; they now use
+    `.data-ink`.
+
+## Premium after sign-up: the post-signup funnel — 2026-09-23
+
+The owner asked how to bring someone to the Premium button after they sign up,
+and whether "the slider" was enough, since the signed-out slider only sells the
+free account. It was not the only surface, but it was the only one aimed at a
+new account, and nothing could say whether it worked. They then asked for all
+of the recommendations to be built, "even if free accounts get to see the top
+3", and pushed to main.
+
+**What a new free account saw before this.** Sent back to the page they were
+on (or /profile) with a three-step checklist that never mentioned Premium; no
+email of any kind; `PremiumSlideIn` after two page views, once per session,
+gone for good after two dismissals, with a per-page generic pitch; the tool
+gates; and the always-visible nav links. Every one of those surfaces recorded
+its click as either "button" (the slide-in AND every nav link) or "dialog"
+(every tool gate), so the funnel report could count Premium clicks but not
+attribute a single one.
+
+**What shipped, in order of how much it was needed.**
+
+1. **Attribution.** Every Premium CTA names its surface — `slidein`,
+   `nav:navbar|menu|sidebar|explore|dashboard`, `gate:<tool>`,
+   `nudge:watchlist|portfolio|movers`, `checklist`, `welcome-email`
+   (lib/premium-surface.ts is the one vocabulary). The surface is remembered
+   for the tab, sent with the checkout request, stamped on
+   `PremiumClick.surface` for the checkout row AND on the Stripe
+   subscription's metadata, so `funnel-report` now prints clicks, checkouts
+   and trials — with how many became paying — by surface. Purchase steps
+   ("premium-page", "checkout") can never overwrite the surface that sent
+   someone. Everything after this list can be judged against it.
+2. **The top three for free accounts** in Deal Finder and Rising Cards —
+   reversing the 2026-09-22 "free accounts get nothing" for signed-in
+   accounts only, at the owner's call. Signed out still gets no query and a
+   lock that now asks for a free account ("see the top 3 free", attributed as
+   signup source `tool_preview`, with its own /login context line). The rows
+   are limited in the QUERY (`FREE_PREVIEW_ROWS`), never fetched and hidden:
+   the pre-09-22 teaser blurred five real rows in CSS and shipped them in the
+   HTML. Filters, sorting and pagination stay Premium-only. It also gives the
+   free account something concrete to be for: it is now a row in the sign-up
+   popup's comparison and a perk on /login. Every tier table, /premium, the
+   Premium explainer — which was still promising the pre-09-22 "#1 pick" and
+   "top result" — and the slide-in's Rising Cards line were brought in line.
+3. **A welcome email**, once, within about an hour of sign-up: the three things
+   a free account does, then one block on Premium with the trial stated through
+   the shared price helpers. Hourly Actions run over accounts created in the
+   last 72 hours; each account is claimed with a conditional update before
+   sending, and released if the send fails. Existing accounts are outside the
+   window and are never emailed. The workflow treats a 404 as "not deployed
+   yet", because it starts before the route ships.
+4. **A Premium step in the welcome checklist**, not counted in the 3/3, shown
+   only after the account has watched a card. Finishing the three core steps
+   used to hide the checklist, so the quickest users would never have seen it.
+   It now collapses to a "you're set up" card carrying the step.
+5. **Personal nudges.** "4 cards you watch are underpriced right now", computed
+   from the account's own watches against Deal Finder's default ranking, and
+   its owned cards against Rising Cards' Global picks. Shown on /watching and
+   /portfolio, and as the slide-in's copy when there is something specific to
+   say. It reveals counts and one card name, never a price or a gap, which is
+   what Premium sells. The Deal Finder ranking was split out of
+   `getArbitrageVsTcgplayer` so the page and the nudge count from one
+   definition. Two user-scoped, capped queries per call; the rankings come from
+   the existing day caches, called directly.
+
+**What deliberately did not change: the slide-in's timing.** Two page views,
+five seconds, once a session, two dismissals and out — untouched. The only
+change is WHICH copy it shows, when the account's own cards give it something
+true to say (fetched once, raced against 1.5 s, settled before the card
+renders so the text never swaps under the reader). Tuning when it appears was
+the last recommendation precisely because it should follow the attribution
+data, not precede it. Read `funnel-report` in about two weeks: if `slidein`
+converts clicks to trials no worse than `gate:*`, showing it sooner is worth
+testing; if it trails, the gates and the personal nudges are where effort
+belongs.
+
+**Also not built: a toast at the moment of watching a card.** A pitch on every
+watch would be noise; the watchlist page and the slide-in already say the same
+thing about the same cards, at a moment the reader is looking at them.
+
+**The freeze.** The 2026-09-14 entry froze the Premium pitch until about
+09-28 so the 09-14 and 09-21 trial cohorts could be read cleanly. This goes
+ahead on the owner's instruction, and the cost is specific. Those cohorts are
+already in their trials, so their trial→paid result is unaffected. What loses
+a clean before/after is click and checkout volume for accounts created from
+this release on, because several surfaces change at once. The attribution in
+(1) is the partial answer: it cannot separate the changes in time, but it can
+separate them by surface, which the old buckets never could.
+
+**Deploy order.** `PremiumClick.surface` and `User.welcomeEmailSentAt` are
+additive and reach the database through the next build's schema push.
+`funnel-report` falls back to reading without `surface` if run before then.
+Nothing here carries `[deploy]`; it rides the daily release.
+
+Tests: tests/premium-surface.test.ts, tests/tool-free-top3.test.ts (replaces
+premium-no-free-top-pick.test.ts), tests/welcome-email.test.ts,
+tests/premium-post-signup.test.ts.
+
+## Beyond the UI: CI builds the site, a Radiance launch list, and reporters hear back — 2026-09-24
+
+Owner, after a site-wide improvement plan: "do anything that isn't the database
+issue or monitoring and implement it now." Five packages were built, each
+reviewed adversarially and then fixed.
+
+**CI now builds what Vercel builds** (`.github/workflows/ci-build.yml`).
+- It spins up a throwaway postgres:16 service, loads the synthetic seed, runs
+  `npm run build` and `next start`, then runs `scripts/smoke-pages.ts`.
+- Until now CI stopped at typecheck, lint and tests, so a build-only failure
+  (a route file exporting a non-route name) or a page that renders nothing
+  (the blank-homepage incident smoke-pages was written for) could only be
+  caught in production.
+- The job references **no secrets**; `tests/ci-build-workflow.test.ts` fails if
+  one appears. It can never reach a Neon project, so it costs no transfer.
+- Locally it takes about 4 minutes: a cold build of 614 static pages against
+  the seed. `.next/cache` is deliberately not restored, or prerenders would
+  skip the very queries the job exists to run.
+- `SMOKE_SEED=1` relaxes only the data-dependent strings. The structural
+  floors cannot be relaxed: 200, no client bailout, one h1, text and link
+  floors.
+- Two production smoke checks had never been able to pass and were corrected.
+  React emits `<!-- -->` between text nodes; the embed widget has no h1.
+- Build output also gave a performance lead. The homepage family carries about
+  88 kB of first-load JS above the shared 87.7 kB. That is the heaviest route
+  group and the first target for a bundle pass.
+
+**Radiance launch list.** Radiance releases 2026-10-23, and `lib/release-day.ts`
+already emails the newsletter list that day. Until now no Radiance surface
+offered that list, even though one leak post drove 28% of a month's search
+clicks.
+- The hub, /radiance-preorders and every radiance-tagged article now show
+  "Get an email the day Radiance prices go live" (source `radiance-launch`,
+  event `radiance_notify_click`).
+- One gate, `isBeforeRadianceRelease()`, retires all three at midnight UTC on
+  release day.
+- In articles the button is a ghost, so "Compare Radiance preorder prices"
+  stays the one primary CTA.
+- The welcome email confirms the release-day email first for these signups;
+  before, it described only the weekly summary. It also now names all six
+  markets (EU was missing).
+- The history check found no earlier Radiance notify CTA that had been removed
+  on purpose.
+
+**Price reporters hear back.** When an admin moves a report to FIXED, the
+reporter is emailed: at the address they volunteered, or their account's
+address only if it is verified. `shouldNotifyReporter` fires on the transition
+only, and a send failure can never fail the status change. The copy claims
+only what FIXED means ("it can take up to a day"). The review caught one
+blocking bug: setless sealed groups were named by a raw listing title. Along
+the way the /sealed tile stopped reading "Proving Grounds Proving Grounds
+Case", because the tile and the email now share one whole-word overlap join
+(`joinOverlapping`).
+
+**Dependencies.** `npm audit fix` without `--force` touched the lockfile only.
+The production audit went from 6 findings (1 critical, 3 high) to 2.
+`tests/env-production.test.ts` now enforces the file's own rule: only
+`NEXT_PUBLIC_*` keys, nothing that looks like a credential. A failure never
+prints the value.
+
+**The two findings left are both Next.js, and they need their own session.**
+`next` 14.2.35 is the last 14.x; every fix (two critical RCEs, SSRF, DoS)
+exists only in 15.5.x or 16. Exposure today is limited: no AVIF in
+`images.formats`, no Server Actions, no rewrites, and on Vercel the image
+optimiser is Vercel's own service. The upgrade changes caching semantics
+(async params, fetch defaults), and caching is exactly where the database burn
+lives. So it follows the egress fix, as its own measured change.
+
+**Knowledge.**
+- `docs/DECISIONS-INDEX.md` is generated by `npm run decisions:index`.
+  Regenerate it after adding an entry here.
+- `docs/CURRENT-STATE.md` is a cited summary of the rules still in force.
+  Read it before re-proposing something this file has settled.
+- CLAUDE.md points to both.
+
+**Deliberately not done, and why.**
+- The database burn and monitoring were excluded by the owner.
+- **Deal Finder / Rising free rows.** The owner's separate commit today
+  ("free accounts see the top 3") already moved this.
+- **Per-placement affiliate attribution.** It needs a column on the
+  egress-sensitive history database.
+- **Retention features** (collection value history, personalised digest)
+  need new tables and write paths, which is database work.
+- **Web push, localisation and workflow consolidation** each need their own
+  scoped session.
+- **Embed widgets are still offered.** They are listed through the /embed
+  directory (DECISIONS 2026-09-21); only the card page's own button was
+  retired.

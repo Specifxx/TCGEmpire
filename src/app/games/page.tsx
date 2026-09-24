@@ -192,8 +192,13 @@ export default async function GamesPage() {
           <p className="text-sm text-slate-200">
             <strong className="text-white">Make a free account</strong> to save your scores and climb the global leaderboards.
           </p>
-          <div className="flex shrink-0 gap-2">
-            <Link href="/login?next=/games" className="btn-primary text-sm">Sign in</Link>
+          {/* Two labels for one destination (2026-09-23; it was two identical
+              "Sign in" buttons): the same pair as GameResultExtras, and AuthForm
+              creates the account on the spot either way. flex-wrap, not
+              shrink-0: the 269px row overran the box's padding at 320, so there
+              only "Sign in" drops to a second line. 344px and up is unchanged. */}
+          <div className="flex flex-wrap gap-2">
+            <Link href="/login?next=/games" className="btn-primary text-sm">Create free account</Link>
             <Link href="/login?next=/games" className="btn-ghost text-sm">Sign in</Link>
           </div>
         </div>

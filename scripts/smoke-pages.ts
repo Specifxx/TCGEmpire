@@ -25,6 +25,18 @@
  *   npx tsx scripts/smoke-pages.ts                      # defaults to localhost:3000
  *   npx tsx scripts/smoke-pages.ts https://riftcompare.com
  *   npx tsx scripts/smoke-pages.ts <origin> --allow-404  # new routes not deployed yet
+ *   SMOKE_SEED=1 npx tsx scripts/smoke-pages.ts          # a build serving prisma/seed.ts
+ *
+ * SMOKE_SEED=1 is for .github/workflows/ci-build.yml, which builds and starts
+ * the app against a throwaway Postgres holding prisma/seed.ts's synthetic
+ * catalogue (never a production database — see that workflow's header). The
+ * seed has ~1,064 Origins-to-Unleashed cards and nothing else: no Vendetta or
+ * Radiance printings, no retailer prices, no price history. A few expectations
+ * below are about production DATA (a specific Vendetta card, Product/PreOrder
+ * JSON-LD, which is emitted only when there are offers), so a check may carry
+ * a `seed` override for exactly those. It can change WHICH page or WHICH copy
+ * is asserted — never the floors: 200, the <h1> count, minText, minLinks,
+ * mustNot and the retired-URL assertions apply identically in both modes.
  *
  * Exit code 1 on any failure, so it can gate a deploy.
  */
@@ -38,6 +50,9 @@ const BASE = (process.argv[2] ?? "http://localhost:3000").replace(/\/$/, "");
 // page marked `optional` is reported but doesn't fail the run. Never silences a
 // 404 on an established page.
 const allow404 = process.argv.includes("--allow-404");
+// Strictly "1": anything else runs the production expectations, which fail
+// loudly on a seeded build rather than passing quietly on a real one.
+const SEED = process.env.SMOKE_SEED === "1";
 
 interface Check {
   path: string;
@@ -50,6 +65,19 @@ interface Check {
   minText?: number;
   /** Minimum internal links. Default 10. */
   minLinks?: number;
+  /**
+   * Exact number of <h1> elements. Default 1. Only a chrome-free widget
+   * document (no layout, no heading of its own) should ever set this.
+   */
+  h1?: number;
+  /**
+   * SMOKE_SEED=1 replacements for an expectation that only production DATA
+   * can meet (see the header). Limited to these three fields on purpose: the
+   * floors are read from the check itself in both modes, so a seed override
+   * can point at a page the seed has, or at copy the seed renders, and can
+   * never lower what is asserted about the page it lands on.
+   */
+  seed?: { path?: string; label?: string; must?: string[] };
   /** Route added on a feature branch — a 404 is tolerated with --allow-404. */
   optional?: boolean;
   /**
@@ -115,6 +143,15 @@ const CHECKS: Check[] = [
     label: "card page (Ravenbloom Prefect)",
     must: ['"@type":"Product"'],
     minText: 800,
+    // The seed has no Vendetta, and the card page emits Product JSON-LD only
+    // when it has offers (no retailer prices in the seed). OGN #001 is the
+    // first card of the first set, so it survives any reshuffle of the seed;
+    // its breadcrumb schema is the card template's own, not the layout's.
+    seed: {
+      path: "/card/blazing-scorcher-ogn-001-298",
+      label: "card page (seed: Blazing Scorcher)",
+      must: ['"@type":"BreadcrumbList"', "Blazing Scorcher"],
+    },
   },
 
   // ── The release calendar: always leads with the NEXT set ─────────────────
@@ -148,24 +185,48 @@ const CHECKS: Check[] = [
     must: ["Pre-order", "schema.org/PreOrder", '"@type":"FAQPage"'],
     mustNot: ["schema.org/InStock"],
     minText: 600,
+    // The PreOrder ItemList is emitted only for PRICED pre-order listings,
+    // and the seed has none. The InStock ban above still applies.
+    seed: { must: ["Pre-order", '"@type":"FAQPage"'] },
   },
   {
     path: "/sets/radiance",
     label: "upcoming set hub",
     optional: true,
-    // Renders long before any card exists, and that empty state is the whole
-    // point of checking it: it must still be a real page with real exits, not a
-    // blank grid.
-    must: ["Radiance", "Get ready for Radiance"],
+    // Asserts the hub (RadianceHub), which renders whatever the card count.
+    // This used to demand "Get ready for Radiance", the heading of the
+    // zero-card empty state, which never matched anywhere: it shipped in the
+    // same commit as that heading's JSX, `Get ready for {set.name}`, which
+    // React serves as `Get ready for <!-- -->Radiance` (fixed in the matcher
+    // below). And production no longer renders the empty state at all:
+    // spoiled Radiance cards are in the catalogue (checked 2026-09-23). The
+    // seed has no Radiance cards, so under SMOKE_SEED the page is guaranteed
+    // empty and that state's exits are asserted as well.
+    //
+    // "Get ready for Radiance" needs MORE than an empty seed: the block it
+    // heads renders only while Radiance is `comingSoon: true` in
+    // src/lib/constants.ts (sets/[set]/page.tsx: `preReleaseLinks =
+    // set.comingSoon ? … : []`). The PR that marks Radiance released (due
+    // 2026-10-23) will fail ci-build on this string alone — drop it from the
+    // seed list below in that same PR, rather than reading it as a seed or
+    // build regression.
+    must: ["Radiance", "Riftbound Radiance — what"],
     minText: 300,
+    seed: { must: ["Radiance", "Riftbound Radiance — what", "Get ready for Radiance"] },
   },
   {
     path: "/embed/release-countdown",
     label: "embeddable release countdown",
     optional: true,
-    // Chrome-free route handler, so no layout text — just the widget's own body.
-    must: ["data-target=", "RiftCompare"],
+    // Chrome-free route handler, so no layout text — just the widget's own
+    // body. Hence also no <h1> and no relative links: its one link is
+    // ABSOLUTE (it is served inside other people's pages) and is asserted by
+    // name instead. The default floors of one <h1> and ten links failed this
+    // check against every origin, production included, until 2026-09-23.
+    must: ["data-target=", "RiftCompare", "riftcompare.com/release-dates?utm_source=embed"],
     minText: 40,
+    h1: 0,
+    minLinks: 0,
   },
   {
     // The widget DIRECTORY — an ordinary page, unlike the three widgets under
@@ -224,11 +285,14 @@ function visibleText(html: string): string {
 }
 
 async function run() {
-  console.log(`Smoke-testing ${BASE}\n`);
+  console.log(`Smoke-testing ${BASE}${SEED ? " (SMOKE_SEED: seed-data expectations)" : ""}\n`);
   let failures = 0;
   let skipped = 0;
 
-  for (const c of CHECKS) {
+  for (const base of CHECKS) {
+    // Spread order is the guarantee: only the three fields `seed` may hold can
+    // be replaced, so every floor below is still read from the check itself.
+    const c: Check = SEED && base.seed ? { ...base, ...base.seed } : base;
     const url = `${BASE}${c.path}`;
     const problems: string[] = [];
     let status = 0;
@@ -291,7 +355,8 @@ async function run() {
       const before = problems.length;
 
       const h1s = (html.match(/<h1[\s>]/gi) ?? []).length;
-      if (h1s !== 1) problems.push(`${h1s} <h1> elements, expected exactly 1`);
+      const wantH1 = c.h1 ?? 1;
+      if (h1s !== wantH1) problems.push(`${h1s} <h1> elements, expected exactly ${wantH1}`);
 
       const text = visibleText(html);
       const minText = c.minText ?? 500;
@@ -311,15 +376,22 @@ async function run() {
         );
       }
 
+      // React separates adjacent text nodes with an empty comment, so JSX like
+      // `Get ready for {set.name}` is served as `Get ready for <!-- -->Radiance`
+      // and a phrase spanning an interpolation can never match the raw bytes —
+      // which is how the /sets/radiance check failed from the day it was
+      // written. Matching against the joined text only ever finds MORE, so the
+      // mustNot list is checked against it too.
+      const joined = html.replace(/<!-- -->/g, "");
       for (const s of c.must ?? []) {
         // Compare against whitespace-normalised HTML so a JSON-LD assertion isn't
         // defeated by the serializer's spacing.
-        if (!html.includes(s) && !html.replace(/\s+/g, "").includes(s.replace(/\s+/g, ""))) {
+        if (!joined.includes(s) && !joined.replace(/\s+/g, "").includes(s.replace(/\s+/g, ""))) {
           problems.push(`missing required content: ${JSON.stringify(s)}`);
         }
       }
       for (const s of c.mustNot ?? []) {
-        if (html.includes(s)) problems.push(`contains forbidden content: ${JSON.stringify(s)}`);
+        if (joined.includes(s)) problems.push(`contains forbidden content: ${JSON.stringify(s)}`);
       }
     }
 

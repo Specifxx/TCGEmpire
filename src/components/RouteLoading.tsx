@@ -27,9 +27,10 @@ export function RouteLoading({ children }: { children?: ReactNode }) {
   );
 }
 
-// /movers: breadcrumb + H1 + intro paragraph, then PriceWatch's own 3-column
-// grid of mover panels (title/subtitle header + up to 5 rows: thumb, name +
-// set code, a sparkline-width gap, price + delta).
+// /movers: breadcrumb + H1 + intro paragraph, then PriceWatch's own grid of
+// mover panels (one column, three from xl; title over subtitle + up to 5 rows:
+// thumb, name + set code, the sparkline slot with PriceWatch's own visibility
+// breakpoints, price + delta).
 export function MoversSkeleton() {
   return (
     <RouteLoading>
@@ -39,10 +40,10 @@ export function MoversSkeleton() {
           <Skeleton className="mt-3 h-8 w-3/4 sm:h-9 sm:w-1/2" />
           <SkeletonText lines={2} className="mt-3 max-w-3xl" />
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
           {[0, 1, 2].map((col) => (
             <div key={col} className="card-surface p-4">
-              <div className="mb-2 flex items-baseline justify-between">
+              <div className="mb-2 flex flex-col items-start gap-0.5">
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-3 w-16" />
               </div>
@@ -54,8 +55,8 @@ export function MoversSkeleton() {
                       <Skeleton className="h-3.5 w-4/5" />
                       <Skeleton className="h-3 w-1/2" />
                     </div>
-                    <Skeleton className="h-6 w-16 shrink-0" />
-                    <div className="w-14 shrink-0 space-y-1">
+                    <Skeleton className="hidden h-8 w-20 shrink-0 min-[360px]:block xl:hidden 2xl:block" />
+                    <div className="min-w-[5.25rem] shrink-0 space-y-1">
                       <Skeleton className="ml-auto h-3.5 w-12" />
                       <Skeleton className="ml-auto h-3 w-8" />
                     </div>
@@ -160,7 +161,9 @@ export function SinglesSkeleton() {
         </div>
         <div>
           <Skeleton className="mb-4 h-6 w-56" />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Explicit base column: an implicit `auto` track sizes to its widest
+              item's min-content instead of the container (see PriceWatch). */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="card-surface flex flex-col gap-2 p-5">
                 <Skeleton className="h-4 w-2/3" />

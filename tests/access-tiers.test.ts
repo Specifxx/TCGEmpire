@@ -319,8 +319,35 @@ test("the Premium dialog and /premium show the SAME tier table, from one source"
   assert.doesNotMatch(dialog, /const FEATURES\s*:/, "the dialog's hand-written perk list is superseded by the table");
 
   // Rows that are neither a flat yes nor a flat no stay strings — rounding
-  // "Top pick" up to a tick would overstate the free tier.
-  assert.match(shared, /anon: "Top pick", account: "Top pick", plus: "Full list", premium: "Full list"/);
+  // "Full list" up to a plain tick would lose the Plus-vs-Premium distinction
+  // this table exists to draw.
+  assert.match(shared, /account: "Top 3", plus: "Full list", premium: "Full list"/);
+
+  // THE FREE COLUMN ON THESE TWO IS "Top 3" (2026-09-23). A signed-in free
+  // account sees the top three rows of each — both pages query at that size
+  // for a free account (tests/tool-free-top3.test.ts pins the queries). It was
+  // false from 2026-09-22 and "Top pick" before that. This is the assertion
+  // that fails if the gate moves without the pricing page being told.
+  for (const feature of ["Deal Finder", "Rising Cards"]) {
+    assert.match(
+      shared,
+      new RegExp(`\\{ feature: "${feature}", account: "Top 3",`),
+      `${feature} must say what a free account actually sees`,
+    );
+  }
+  // Matched against the ROWS, not the file: the comment above them explains the
+  // history and necessarily quotes the old strings.
+  assert.doesNotMatch(
+    shared.slice(shared.indexOf("TIER_COMPARISON: TierRow[]"), shared.indexOf("export function TierCell")).replace(/\/\/[^\n]*/g, "").replace(/"Rising Sealed[^\n]*/g, ""),
+    /"Top pick"/,
+    "no row but Rising Sealed's may promise a single free top pick",
+  );
+
+  // The "No account" column was removed on 2026-09-22 — signed-out and free
+  // differ on two rows, which is the signup popup's job (FreeAccountCompare),
+  // not the pricing page's.
+  assert.doesNotMatch(shared, /\banon\b/, "the anon column must stay gone");
+  assert.doesNotMatch(shared, /No account/, "the No account header must stay gone");
 });
 
 test("every dialog-only row override names a row that actually exists", async () => {

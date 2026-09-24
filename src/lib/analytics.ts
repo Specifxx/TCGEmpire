@@ -1,6 +1,7 @@
 "use client";
 
 import { track as vercelTrack } from "@vercel/analytics";
+import { rememberPremiumSurface } from "./premium-surface";
 
 // Shared custom-event helper — the single place a UI handler fires an event to
 // BOTH Vercel Analytics (track()) and GA4 (window.gtag('event', ...)), so the
@@ -79,10 +80,18 @@ export function trackEvent(name: string, params?: Record<string, string | number
 // convert (api/premium/click/route.ts). Was only ever called from inside
 // PremiumDialog's open() — every "Premium" link now navigates straight to
 // /premium instead of opening that dialog (2026-09-06), so each of those links
-// calls this directly to keep the same signal alive. `source` must be one of
-// api/premium/click's own SOURCES allow-list; an unrecognised value is coerced
-// server-side to "dialog" rather than rejected, but pass a real one anyway.
-export function firePremiumClickBeacon(source: "dialog" | "checkout" | "premium-page" | "button" | "recovery" | "offer"): void {
+// calls this directly to keep the same signal alive. `source` must pass
+// isPremiumClickSource (lib/premium-surface.ts, the route's allow-list); an
+// unrecognised value is coerced server-side to "dialog" rather than rejected,
+// but pass a real one anyway.
+//
+// SURFACES (2026-09-23): `source` is now the SURFACE that was clicked —
+// "slidein", "nav:navbar", "gate:deal-finder", "nudge:watchlist" … — not the
+// old catch-all "button". See lib/premium-surface.ts for the vocabulary and
+// why. A surface is also remembered for the tab so checkout can say which one
+// led to it.
+export function firePremiumClickBeacon(source: string): void {
+  rememberPremiumSurface(source);
   try {
     fetch("/api/premium/click", {
       method: "POST",

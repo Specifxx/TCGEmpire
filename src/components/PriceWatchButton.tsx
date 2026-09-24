@@ -19,12 +19,15 @@ import { useCountry } from "./CountryProvider";
 // call sites — CardTile, QuickView, games/shared, and two on the card page —
 // compile untouched. In particular the card page is an ISR route: this component
 // reads the session client-side precisely so that page stays cacheable.
+// "responsive" (2026-09-23) is a 48px heart square below sm and the labelled
+// button from sm; it is one more value of the same `variant` prop, so the
+// { cardId, variant } shape is unchanged and all five call sites still compile.
 export function PriceWatchButton({
   cardId,
   variant = "icon",
 }: {
   cardId: string;
-  variant?: "icon" | "full";
+  variant?: "icon" | "full" | "responsive";
 }) {
   const { user, loaded: meLoaded } = useMe();
   const { watched, watch, unwatch } = useWatchlist();
@@ -79,7 +82,8 @@ export function PriceWatchButton({
     ? "You'll get an email when the price drops — click to stop"
     : "Get an email when the price drops";
 
-  if (variant === "full") {
+  if (variant === "full" || variant === "responsive") {
+    const responsive = variant === "responsive";
     return (
       <button
         onClick={click}
@@ -92,14 +96,24 @@ export function PriceWatchButton({
         // CardMarketSection's buyButtonClass). "Watching" keeps a gold
         // border/tint as its active-state signal, which reads as a distinct
         // state, not a second competing primary colour.
-        className={
+        //
+        // whitespace-nowrap on both labelled variants (2026-09-23): "Watch
+        // price" wrapped onto two lines, a 103x58 button at 390 and 108x58 /
+        // 133x58 at 1280 / 1440, beside a one-line Share. The responsive
+        // square is w-12 px-0 below sm: the utility px-0 beats .btn's px-4
+        // because .btn lives in @layer components, and sm:px-4 restores it
+        // together with the label.
+        className={`${
           watching
             ? "btn border border-gold/50 bg-gold/15 text-gold hover:bg-gold/25"
             : "btn-ghost"
-        }
+        } whitespace-nowrap${responsive ? " w-12 px-0 sm:w-auto sm:px-4" : ""}`}
       >
         {bell}
-        {watching ? "Watching" : "Watch price"}
+        {/* Hidden, not removed, below sm on the responsive variant — the
+            aria-label, title and aria-pressed above still name the icon-only
+            state. */}
+        <span className={responsive ? "hidden sm:inline" : undefined}>{watching ? "Watching" : "Watch price"}</span>
       </button>
     );
   }

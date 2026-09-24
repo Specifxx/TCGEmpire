@@ -481,12 +481,12 @@ export default function ReleaseDatesPage() {
         <h2 className="mb-3 text-lg font-extrabold text-white">Riftbound release date FAQ</h2>
         <div className="card-surface divide-y divide-ink-800 overflow-hidden">
           {faqs.map((f) => (
-            <details key={f.q} className="group px-5 py-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">
+            <details key={f.q} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-semibold text-slate-200 hover:text-white [&::-webkit-details-marker]:hidden">
                 {f.q}
                 <span className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" aria-hidden>▾</span>
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+              <p className="px-5 pb-4 text-sm leading-relaxed text-slate-400">{f.a}</p>
             </details>
           ))}
         </div>

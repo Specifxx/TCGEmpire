@@ -1,15 +1,31 @@
 // TCGplayer as a US price source.
 //
 // TCGplayer is the dominant US marketplace, so its prices belong in the US (and a
-// GBP-converted UK reference) comparison. We record each product's MARKET PRICE — the
-// English fair-market value TCGplayer headlines — NOT the lowest listing. The lowest
-// listing is frequently a foreign-language (Simplified Chinese) copy that a seller
-// listed under the English product; TCGplayer's search preview tags every listing
-// with the product LINE's language (English), so they can't be filtered per-listing,
-// and that cheap Chinese listing was leaking in as our "cheapest" (the Dazzling Aurora
-// bug). Market price sidesteps that entirely. On top of it we drop obviously foreign
-// products and, when an English + Chinese print share a collector number, keep the one
-// with the higher market price (the English print).
+// GBP-converted UK reference) comparison.
+//
+// TWO NUMBERS PER CARD, SINCE 2026-09-23. The US comparison row ("tcgplayer") is
+// the CHEAPEST IN-STOCK ENGLISH NEAR-MINT LISTING of the matching printing, with
+// that listing's real shipping — a price a buyer can actually pay, like every
+// store row beside it. The MARKET PRICE — TCGplayer's own English fair-market
+// aggregate — is written separately under TCGPLAYER_MARKET_RETAILER for the
+// consumers that want a stable value rather than one seller's ask (the eBay value
+// floor, the Deal Finder's TCGplayer benchmark, Box EV, the overseas reference
+// block), and the converted UK/SG/AU/CA reference rows stay on market too.
+//
+// WHY THIS USED TO BE MARKET-ONLY, and why that no longer holds. The lowest
+// listing was once frequently a foreign-language (Simplified Chinese) copy that a
+// seller listed under the English product, and the unfiltered search preview
+// tagged every listing with the product LINE's language — so that cheap Chinese
+// listing leaked in as our "cheapest" (the Dazzling Aurora bug), and market price
+// was adopted to sidestep it. The real fix came later: searchBody() now asks
+// TCGplayer to filter the listing preview itself (`listingSearch` language:
+// ["English"]), so the preview is English-only at the source. Re-checked against
+// live data on 2026-09-23: the largest gaps below market were all bulk commons
+// at pennies from high-volume English sellers, not mislabelled imports.
+//
+// We still drop obviously foreign products and, when an English + Chinese print
+// share a collector number, keep the one with the higher market price (the
+// English print).
 //
 // Data comes from TCGplayer's public search API (the same endpoint the website
 // uses). Products are matched to our cards by collector number + set, reusing
@@ -18,7 +34,7 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { TCGPLAYER_AU_RETAILER,
-  TCGPLAYER_CA_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
+  TCGPLAYER_CA_RETAILER, TCGPLAYER_MARKET_RETAILER, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "@/lib/constants";
 import { USD_TO } from "@/lib/fx";
 import { isForeignLanguageTitle } from "@/lib/scrape-http";
 
@@ -90,6 +106,11 @@ export type TcgListing = {
   languageId: number; // 1 = English
   quantity: number;
   condition?: string;
+  // "Normal" | "Foil". One PRODUCT's preview mixes printings: live on 2026-09-23,
+  // Scuttle Crab's non-foil product returned three listings, all of them Foil.
+  printing?: string;
+  // The listing's own shipping in USD, as TCGplayer quotes it for a US buyer.
+  shippingPrice?: number;
 };
 
 export type TcgProduct = {
@@ -118,6 +139,28 @@ export function englishNmLowest(p: TcgProduct): number | null {
     (l) => l.languageId === 1 && (l.quantity ?? 0) > 0 && /near mint/i.test(l.condition ?? "")
   );
   return ls.length ? Math.min(...ls.map((l) => l.price)) : null;
+}
+
+// The listing the US comparison row quotes: the cheapest in-stock ENGLISH
+// NEAR-MINT copy OF THE MATCHING PRINTING, or null when the preview has none.
+//
+// Printing matters because one TCGplayer product can list both printings, and
+// its preview is sorted by price across them — so an unfiltered minimum can
+// price a regular card at a foil copy (or the reverse). The row's own foil flag
+// comes from the product (`foilOnly`), so the listing has to agree with it.
+// A listing with no `printing` field is accepted rather than dropped, so an API
+// change that omits it degrades to the old behaviour instead of blanking rows.
+export function cheapestEnglishNm(p: TcgProduct): TcgListing | null {
+  const want = p.foilOnly ? "foil" : "normal";
+  const ls = (p.listings ?? []).filter(
+    (l) =>
+      l.languageId === 1 &&
+      (l.quantity ?? 0) > 0 &&
+      /near mint/i.test(l.condition ?? "") &&
+      (l.printing == null || l.printing.toLowerCase() === want),
+  );
+  if (!ls.length) return null;
+  return ls.reduce((a, b) => (b.price < a.price ? b : a));
 }
 
 // Lowest English listing of ANY condition — used only when the preview has no English
@@ -342,21 +385,28 @@ export interface TcgMarket {
   retailer: string;
   country: string;
   currency: string;
-  fx: number; // multiplier applied to the USD market price
+  fx: number; // multiplier applied to the USD figure
+  // "listing": the cheapest English NM listing of the matching printing, falling
+  //   back to market price only when there is none. Used by the ONE buyable row.
+  // "market": TCGplayer's market price, falling back to that listing only for a
+  //   brand-new product with no market price yet. Every reference row.
+  basis: "listing" | "market";
 }
 // Approximate USD→GBP rate for the UK conversion, from the shared FX table
 // (lib/fx.ts). Exact FX isn't critical for a "reference price" comparison.
 export const USD_TO_GBP = USD_TO.GBP;
-export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currency: "USD", fx: 1 };
-export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP };
+export const TCG_US: TcgMarket = { retailer: "tcgplayer", country: "US", currency: "USD", fx: 1, basis: "listing" };
+// The US MARKET price, as a reference row — see TCGPLAYER_MARKET_RETAILER.
+export const TCG_US_MARKET: TcgMarket = { retailer: TCGPLAYER_MARKET_RETAILER, country: "US", currency: "USD", fx: 1, basis: "market" };
+export const TCG_UK: TcgMarket = { retailer: TCGPLAYER_UK_RETAILER, country: "UK", currency: "GBP", fx: USD_TO_GBP, basis: "market" };
 // Singapore reference price (TCGplayer ships internationally; SGD-converted).
-export const TCG_SG: TcgMarket = { retailer: TCGPLAYER_SG_RETAILER, country: "SG", currency: "SGD", fx: USD_TO.SGD };
+export const TCG_SG: TcgMarket = { retailer: TCGPLAYER_SG_RETAILER, country: "SG", currency: "SGD", fx: USD_TO.SGD, basis: "market" };
 // AU reference price (AUD-converted) — a fallback-only source for the main price
 // comparison (see AU_FALLBACK_RETAILERS), but a real buy source for the Deal Finder.
-export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU", currency: "AUD", fx: USD_TO.AUD };
+export const TCG_AU: TcgMarket = { retailer: TCGPLAYER_AU_RETAILER, country: "AU", currency: "AUD", fx: USD_TO.AUD, basis: "market" };
 // Canada reference price (CAD-converted). CA was the only tracked market with no
 // TCGplayer row — see the note on CA_FALLBACK_RETAILERS in constants.ts.
-export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA", currency: "CAD", fx: USD_TO.CAD };
+export const TCG_CA: TcgMarket = { retailer: TCGPLAYER_CA_RETAILER, country: "CA", currency: "CAD", fx: USD_TO.CAD, basis: "market" };
 
 // Match products to cards and build RetailerPrice rows (no DB writes — caller
 // decides). Exported separately so a dry-run can inspect the match quality.
@@ -411,15 +461,13 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
   // Best (English) product per card+printing. Several products can share a collector
   // number — crucially an English print AND a Simplified-Chinese print. We keep the one
   // with the higher MARKET price (the English print — a Chinese print's market is far
-  // lower) and record that MARKET price, NOT the lowest listing.
+  // lower). That tie-break stays on market price whatever this market row quotes:
+  // it is choosing WHICH PRODUCT, and market price is the stable signal for that.
   //
-  // Why market price, not lowest listing: the cheapest listing is frequently a
-  // foreign-language (Chinese) copy that a seller listed UNDER the English product, and
-  // TCGplayer's search preview tags every listing with the product LINE's language
-  // (English), so we cannot filter those out per-listing — `languageId` is 1 for the
-  // Chinese listing too. Market price is the English fair-market value TCGplayer itself
-  // headlines, so it's the only Chinese-proof figure. (This was the Dazzling Aurora bug.)
-  const best = new Map<string, { market: number; price: number; p: TcgProduct }>();
+  // What each row then quotes depends on `mkt.basis` — see TcgMarket. Both numbers
+  // are computed here from the same product so the listing row and the market row
+  // for one card always describe the same TCGplayer product.
+  const best = new Map<string, { market: number; price: number; shippingCents: number | null; p: TcgProduct }>();
 
   for (const p of items) {
     if (isNonEnglishProduct(p)) continue; // drop obvious foreign-language products
@@ -438,10 +486,17 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
       (sc ? byKey.get(`${sc}|${numKey(num)}`) : undefined) ??
       byExternal.get(`tcg-${p.productId}`) ??
       (setlessSet && num ? bySetlessNum.get(`${setlessSet}|${numKey(num)}`) : undefined);
-    // English MARKET price; fall back to lowest English NM listing only when a
-    // (usually brand-new) product has no market price yet.
     const market = p.marketPrice && p.marketPrice > 0 ? p.marketPrice : null;
-    const price = market ?? englishNmLowest(p);
+    const listing = cheapestEnglishNm(p);
+    // basis "listing": the price a buyer pays today, with that listing's own
+    // shipping. basis "market": the aggregate, falling back to the listing only
+    // for a (usually brand-new) product with no market price yet.
+    const useListing = mkt.basis === "listing" ? listing != null : market == null && listing != null;
+    const price = useListing ? listing!.price : market;
+    const shippingCents =
+      useListing && listing!.shippingPrice != null && listing!.shippingPrice >= 0
+        ? Math.round(listing!.shippingPrice * 100 * mkt.fx)
+        : null;
     if (!cardId) {
       if (price && price > 0 && unmatchedSamples.length < 25) {
         unmatchedSamples.push(`${p.productName} ${numStr ?? "?"} $${price}`);
@@ -453,7 +508,7 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
     const prev = best.get(key);
     // When collector numbers collide, the higher market price is the English print.
     const marketForCompare = market ?? price;
-    if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, p });
+    if (!prev || marketForCompare > prev.market) best.set(key, { market: marketForCompare, price, shippingCents, p });
   }
 
   // Best-effort fallback: a promo card that got no price of its own above (no
@@ -491,6 +546,9 @@ export async function buildTcgplayerRows(mkt: TcgMarket = TCG_US, products?: Tcg
       condition: "NM",
       isFoil,
       priceCents: Math.round(b.price * 100 * mkt.fx),
+      // Known only when the row quotes a specific listing; a market aggregate
+      // has no postage of its own, and a fabricated estimate is worse than none.
+      shippingCents: b.shippingCents,
       currency: mkt.currency,
       country: mkt.country,
       inStock: true,
@@ -530,7 +588,7 @@ export async function refreshTcgplayerPrices(): Promise<{ written: number; byCou
   const products = await fetchTcgplayerProducts();
   let written = 0;
   const byCountry: Record<string, number> = {};
-  for (const mkt of [TCG_US, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
+  for (const mkt of [TCG_US, TCG_US_MARKET, TCG_UK, TCG_SG, TCG_AU, TCG_CA]) {
     const { total, matched, rows, unmatchedSamples } = await buildTcgplayerRows(mkt, products);
     console.log(`TCGplayer ${mkt.country}: ${total} products, ${matched} matched, ${rows.length} rows.`);
     if (unmatchedSamples.length && mkt === TCG_US) {
@@ -552,7 +610,10 @@ export async function refreshTcgplayerPrices(): Promise<{ written: number; byCou
     await prisma.retailerPrice.deleteMany({ where: { retailer: mkt.retailer } });
     await prisma.retailerPrice.createMany({ data: rows });
     written += rows.length;
-    byCountry[mkt.country] = rows.length;
+    // byCountry.US is the BUYABLE row's coverage — that is what the importer's
+    // "TCGplayer (US)" summary line reports. The market reference row is also
+    // country US and must not overwrite it with its own count.
+    if (mkt !== TCG_US_MARKET) byCountry[mkt.country] = rows.length;
   }
   return { written, byCountry };
 }

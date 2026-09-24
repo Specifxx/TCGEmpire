@@ -95,7 +95,10 @@ export function DeckAnatomy() {
         <div>
           <div className="flex flex-wrap items-baseline gap-2">
             <h3 className="font-extrabold text-white">{part.label}</h3>
-            <span className="text-xs font-bold" style={{ color: part.color }}>{part.count} {part.n === 1 ? "card" : "cards"}</span>
+            {/* --data-ink, not `color` (2026-09-23): the raw hex is tuned for dark
+                surfaces (1.99:1 on the light panel). globals.css's .data-ink
+                uses it as-is in dark and darkens it in the light theme. */}
+            <span className="data-ink text-xs font-bold" style={{ "--data-ink": part.color } as React.CSSProperties}>{part.count} {part.n === 1 ? "card" : "cards"}</span>
           </div>
           <p className="mt-1 text-sm leading-relaxed text-slate-300">{part.desc}</p>
         </div>

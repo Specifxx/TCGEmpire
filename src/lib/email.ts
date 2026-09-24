@@ -1,6 +1,8 @@
 import { SITE_NAME, SITE_URL, premiumFromLine } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
+import { issueNoun } from "./price-report";
+import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -568,6 +570,78 @@ export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, f
   );
 }
 
+// ─── Welcome email to a new account (one-time) ────────────────────────────────
+// Sent ONCE, within about an hour of an account being created (runWelcomeEmails
+// in lib/welcome-email.ts, 2026-09-23). Before this, a new account got no email
+// at all — the only welcome was a checklist on /profile that nobody who signed
+// up from a card page ever saw.
+//
+// WHAT IT IS FOR: the three things a free account does that a visitor cannot,
+// in the order most people will get value from them, and then — one short
+// block, not the headline — what Premium adds, with its trial stated the way
+// every other surface states it (premiumZeroToday / premiumFromLine, never a
+// typed price; the trial only when the account is actually eligible).
+//
+// Same category as the checkout-recovery email: tied to one action the
+// recipient took, sent once, and the footer says so; no opt-out link because
+// there is nothing further to opt out of.
+export interface WelcomeEmailOpts {
+  displayName: string;
+  trialDays: number; // 0 = no trial available (disabled, or somehow already used)
+  fromLine: string; // premiumFromLine()
+  zeroToday: string; // premiumZeroToday()
+}
+
+const WELCOME_UTM = "utm_source=email&utm_medium=email&utm_campaign=welcome";
+
+export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; heading: string; html: string } {
+  const name = escapeHtml(opts.displayName.trim().split(/\s+/)[0] || "there");
+  const link = (path: string, label: string) =>
+    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_UTM}" style="color:#34d17e;font-weight:700;text-decoration:none">${label}</a>`;
+  const trialLine =
+    opts.trialDays > 0
+      ? `Try it free for ${opts.trialDays} days — ${opts.zeroToday}, then ${opts.fromLine}. Cancel before the trial ends and you pay nothing.`
+      : `Premium is ${opts.fromLine}.`;
+  const step = (n: number, title: string, body: string) =>
+    `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
+    </td></tr>`;
+  const inner = `
+    <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Hi ${name}, your free account is ready. Three things it does that a visitor can't:
+    </td></tr>
+    ${step(1, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when its price drops. ${link("/browse", "Find a card&nbsp;→")}`)}
+    ${step(2, "See today's top 3 deals", `Your account shows the three biggest deals in Deal Finder and the three top-ranked Rising Cards, updated daily. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")} · ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)}
+    ${step(3, "Track your collection", `Add the cards you own and see what they're worth today. ${link("/portfolio", "Your&nbsp;portfolio&nbsp;→")}`)}
+    <tr><td style="padding:14px 32px 22px">
+      <div style="border:1px solid #6b5a1f;border-radius:12px;padding:14px 16px;background:#1a1810">
+        <div style="font-size:13px;line-height:1.55;color:#d8cfa8">
+          <strong style="color:#f3c969">Want every deal, not just the top three?</strong> Premium shows the full Deal Finder and
+          Rising Cards lists, plus Best Basket, the Value Finder and the Bulk Pricer. ${trialLine}
+        </div>
+        <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
+      </div>
+    </td></tr>`;
+  const heading = "Welcome to RiftCompare";
+  return {
+    subject: "Welcome to RiftCompare — here's what your account does",
+    heading,
+    html: emailShell(heading, inner, welcomeFooter()),
+  };
+}
+
+function welcomeFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this once because you created a RiftCompare account. We won't send it again.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export async function sendWelcomeEmail(to: string, opts: WelcomeEmailOpts): Promise<boolean> {
+  const { subject, html } = buildWelcomeEmail(opts);
+  return sendEmail(to, subject, html);
+}
+
 // ─── One-off Premium offer to free-tier accounts ──────────────────────────────
 // See lib/premium-offer.ts for the audience, idempotency and the offer itself.
 //
@@ -799,13 +873,86 @@ export async function sendConsultOwnerAlertEmail(
 
 // Sent once on first signup so subscribers hear from us immediately (and get the
 // unsubscribe link up front) instead of silence until Friday.
-export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string): Promise<boolean> {
-  const inner = `
+// `source` is the NewsletterSubscriber.source the route stored. A "radiance-launch"
+// signup came from a "Get an email the day Radiance prices go live" card, so its
+// welcome confirms THAT promise first — release-day.ts sends the email itself on
+// the day — instead of only describing the weekly summary it also joined
+// (2026-09-23). Every other source gets the unchanged welcome.
+export async function sendNewsletterWelcomeEmail(to: string, unsubUrl: string, source?: string): Promise<boolean> {
+  const releaseDay = new Date(`${RADIANCE_RELEASE_DATE}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+  const radianceLine =
+    source === "radiance-launch"
+      ? `
+    <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#e8eaee">
+      <strong>You'll get one email on ${releaseDay}</strong>, the day Riftbound Radiance releases, as soon as its card prices are live.
+    </td></tr>`
+      : "";
+  const inner = `${radianceLine}
     <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
       You're on the list — every week you'll get the ${SITE_NAME} Index summary: the cards that spiked,
-      the cards that dropped, and where the best value is across AU, US, UK, SG and CA stores.
+      the cards that dropped, and where the best value is across AU, US, UK, SG, CA and EU stores.
       The next edition lands this Saturday morning (Sydney time).
     </td></tr>
     <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/movers?utm_source=newsletter&utm_medium=email&utm_campaign=welcome" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See this week's movers</a></td></tr>`;
   return sendEmail(to, `You're on the ${SITE_NAME} weekly Index summary`, emailShell("Welcome aboard", inner, newsletterFooter(unsubUrl)));
+}
+
+// ─── Wrong-price report fixed (thank-you) ────────────────────────────────────
+
+// Sent when an admin moves a PriceReport to FIXED (see
+// app/api/admin/price-reports and shouldNotifyReporter in lib/price-report.ts),
+// to the address the reporter volunteered — or their account's, only if it is
+// verified. Until 2026-09-23 a reporter never heard back, and being told "you
+// were right, it's fixed" is what makes someone report the next one too.
+//
+// TRANSACTIONAL, like the trial and checkout notices above: tied to one thing
+// the recipient did, so no opt-out link and no account CTA (accountCtaBlock's
+// own header rules it out of transactional sends). The footer promises nothing
+// about "again": a report reopened and fixed a second time sends a second one,
+// on purpose (see shouldNotifyReporter), so "we won't email you about this
+// report again" would be false exactly then.
+//
+// IT CLAIMS ONLY WHAT FIXED MEANS (2026-09-23): an admin marked the report
+// fixed. Not that the page already shows it — a card page revalidates daily
+// (revalidate = 86400), sealed groups sit behind a 48h data cache and a
+// 15-minute memo until the next import busts them, and some fixes only land
+// with that import — hence "it can take up to a day", and a button that says
+// "See it on RiftCompare" rather than "See the corrected price", which an
+// out-of-stock or broken-link report never had. The noun follows the report's
+// issue for the same reason (issueNoun): "the <store> link you reported".
+//
+// Nothing the reporter typed reaches it. The route passes a store name only when
+// it is ours (a null storeName drops it), and the item name is our tile or card
+// name. Both are escaped regardless — a setless sealed group's name is a
+// store's listing title.
+function priceReportFixedFooter(): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this because you reported a problem with a listing on ${SITE_NAME} and it has now been fixed.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+
+export interface PriceReportFixedOpts {
+  itemName: string; // the card or sealed product the report was about, as the site names it
+  storeName: string | null; // the store whose listing was wrong — null when we can't vouch for the name
+  issue: string; // the report's issue code (lib/price-report ISSUES), which picks the noun
+  url: string; // absolute link to that item on the site
+}
+
+export async function sendPriceReportFixedEmail(to: string, opts: PriceReportFixedOpts): Promise<boolean> {
+  // "the Cherry Collectables price" / "the link" — the store, when we have one
+  // we trust, qualifies the noun rather than getting a clause of its own.
+  const what = `${opts.storeName ? `${opts.storeName} ` : ""}${issueNoun(opts.issue)}`;
+  const item = escapeHtml(opts.itemName);
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Thanks — the ${escapeHtml(what)} you reported for <strong style="color:#fff">${item}</strong> has been fixed.
+      It can take up to a day to show everywhere on the site.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${escapeHtml(opts.url)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">See it on ${SITE_NAME}</a></td></tr>`;
+  return sendEmail(
+    to,
+    `Fixed: the ${what} you reported for ${opts.itemName}`,
+    emailShell("Your report is fixed", inner, priceReportFixedFooter())
+  );
 }

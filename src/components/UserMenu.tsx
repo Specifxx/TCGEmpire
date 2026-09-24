@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { PremiumNavLink } from "./PremiumNavLink";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useMe } from "@/lib/use-me";
+import { useDismiss } from "@/lib/use-dismiss";
 import { markSignupSource } from "@/lib/signup-source";
 
 // Auth routes we never want to "return to" after sign-in (would loop).
@@ -45,13 +46,10 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
       ? `/login?next=${encodeURIComponent(pathname)}`
       : "/login";
 
-  useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+  // Outside click, Escape (refocusing "Account menu") and focus leaving the
+  // wrapper all close the menu — the same rule as the market switcher, see
+  // use-dismiss.ts. Above the signed-out early return, per the rules of hooks.
+  useDismiss(ref, open, () => setOpen(false));
 
   if (!user) {
     // A VISIBLE text button on sm+ — the icon-only person glyph was the entire
@@ -170,6 +168,7 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
             </MenuLink>
             {!premium && (
               <PremiumNavLink
+                surface="nav:menu"
                 onClick={() => setOpen(false)}
                 className="block w-full px-4 py-2.5 text-left text-sm font-bold text-gold hover:bg-ink-800"
               >

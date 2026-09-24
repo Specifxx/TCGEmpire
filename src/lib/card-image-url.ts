@@ -65,6 +65,13 @@ export const MIRROR_PREFIX = "/card-art/";
 const CDN_CARD_RE = /^https:\/\/cdn\.riftscribe\.gg\/cards\/(?:originals|thumbnails\/(?:small|medium|large))\/([a-z0-9][a-z0-9-]*)\.[a-z0-9]+$/i;
 
 /** The CDN's filename stem, which mirror-card-art.ts reuses as our filename. */
+// Our own mirror, in either the site-relative or the absolute form — the two
+// shapes cardImageSrc emits and the database has since started storing.
+const MIRROR_RE = new RegExp(`^(?:${SITE_URL})?${MIRROR_PREFIX}([a-z0-9][a-z0-9-]*)\\.webp$`, "i");
+function mirrorStemOf(url: string): string | null {
+  return MIRROR_RE.exec(url)?.[1] ?? null;
+}
+
 function stemOf(url: string): string | null {
   return CDN_CARD_RE.exec(url)?.[1] ?? null;
 }
@@ -82,6 +89,48 @@ export function liveCardImage(url: string | null | undefined): string | null {
   if (!url.startsWith(DEAD_ORIGINALS)) return url;
   const stem = stemOf(url);
   return stem ? `${LIVE_LARGE}${stem}.webp` : null;
+}
+
+/**
+ * A card picture an OG image generator can actually decode.
+ *
+ * NOT `cardImageSrc`. That serves our mirror, and the mirror is **WebP** —
+ * which satori (`next/og`'s renderer) cannot decode. The failure is silent and
+ * ugly: satori lays the `<img>` out, draws its border and radius, and fills it
+ * with nothing. That is what the site-wide OG image had been shipping — a
+ * bordered empty rectangle where the featured card should be — and it is why
+ * this helper exists rather than a one-line tweak at a call site.
+ *
+ * So: for a RiftScribe card, hand back the CDN's `originals/<stem>.png`.
+ *
+ * THE `DEAD_ORIGINALS` NAME ABOVE IS HISTORICAL, and this deliberately goes
+ * against it. That constant exists because the importers once found originals
+ * 404ing and rewrote them onto `thumbnails/large/*.webp`. Sampled again on
+ * 2026-09-22, ten random mirrored stems all returned `200 image/png` from
+ * originals. The write path is left exactly as it is — the database should go
+ * on recording a URL known to resolve — and only this read path, which needs a
+ * raster format the mirror does not offer, reaches for the PNG.
+ *
+ * Returns null rather than a URL it cannot vouch for, so a caller draws its
+ * placeholder instead of an invisible broken image. Callers must handle null.
+ */
+export function cardImageForOg(card: CardImageUrls): string | null {
+  for (const raw of [card.imageUrl, card.imageThumbUrl]) {
+    if (!raw) continue;
+    // A CDN rendition, OR one of OUR OWN mirror paths. The second case is not
+    // hypothetical and it is what made the first version of this helper a
+    // no-op: rows written after the mirror landed store
+    // `…/card-art/<stem>.webp` directly, so a stem lookup that only understood
+    // cdn.riftscribe.gg returned null for them and the card slot stayed empty.
+    const stem = stemOf(raw) ?? mirrorStemOf(raw);
+    if (stem) {
+      // The 71 cards whose art the CDN dropped entirely have no PNG either.
+      return MISSING_CARD_ART.has(stem) ? null : `${CDN_CARDS}originals/${stem}.png`;
+    }
+    // Art we host ourselves (manual spoiler rows) is already PNG or JPEG.
+    if (/\.(png|jpe?g)$/i.test(raw)) return raw.startsWith("/") ? `${SITE_URL}${raw}` : raw;
+  }
+  return null;
 }
 
 /** Maps a RiftScribe card URL onto our mirrored copy; passes anything else through. */

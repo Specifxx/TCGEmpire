@@ -541,8 +541,10 @@ export default async function SetPage({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <Filters basePath={`/sets/${set.slug}`} hideSet />
+        // xl, not lg: the filter sidebar sits beside the grid only from 1280, as
+        // on /browse (Filters.tsx, 2026-09-23). currency is the market column's.
+        <div className="flex flex-col gap-6 xl:flex-row">
+          <Filters basePath={`/sets/${set.slug}`} hideSet currency={COUNTRIES[country].currency} />
 
           <section className="min-w-0 flex-1">
             {set.comingSoon && (
@@ -573,7 +575,9 @@ export default async function SetPage({
               </div>
             )}
 
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            {/* Filters' "Show results" target, on the count row rather than the
+                section; scroll-mt-36 clears the 125px sticky header (2026-09-23). */}
+            <div id="results" className="mb-4 flex scroll-mt-36 flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-slate-400">
                 <span className="font-semibold text-white">{total.toLocaleString()}</span>{" "}
                 {total === 1 ? "card" : "cards"}
@@ -595,7 +599,11 @@ export default async function SetPage({
               </div>
             ) : (
               <>
-                <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+                {/* Sized from the column's own width from lg, as on /browse
+                    (2026-09-23): the rail and the sidebar squeeze it, and the
+                    10.5rem floor keeps CardTile's min-w-[6.5rem] price block
+                    inside the tile. */}
+                <Reveal stagger className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))]">
                   {cards.map((c) => (
                     <CardTile key={c.id} card={c} />
                   ))}

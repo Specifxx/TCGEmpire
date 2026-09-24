@@ -45,13 +45,18 @@ type ColumnDef = {
   // perType (4) for this feed regardless of how many deals actually exist.
   // Undefined for free columns (nothing gates them).
   totalKey?: "savingsVsMarketTotal" | "risingCardsTotal";
+  // One-line explainer under the heading, for the two columns whose name alone
+  // does not say what is being compared or ranked (2026-09-23, owner request).
+  // "Rising" is phrased as a ranking by our signals, never a promise — the tool
+  // itself is labelled "a research signal, not advice".
+  sub?: string;
 };
 
 const COLUMNS: ColumnDef[] = [
-  { key: "savingsVsMarket", label: "Biggest savings", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities", totalKey: "savingsVsMarketTotal" },
+  { key: "savingsVsMarket", label: "Biggest savings", sub: "Underpriced cards vs the TCGplayer market price", premium: true, allHref: "/tools/deal-finder", allLabel: "All opportunities", totalKey: "savingsVsMarketTotal" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
-  { key: "risingCards", label: "Rising cards", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal" },
+  { key: "risingCards", label: "Rising cards", sub: "Cards our signals rank most likely to rise in price", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal" },
 ];
 
 // Budget tiers — "rounded to natural values per market" (not FX-converted at
@@ -221,11 +226,25 @@ function LockedTeaser({ count, href }: { count: number; href: string }) {
 // class scan can see every literal — the grid always matches how many columns
 // actually have data today instead of a fixed count, which used to leave the
 // right half of the row empty on days a signal or two had nothing to show.
+//
+// `1: ""` and every other entry start at sm:, because the grid element itself
+// carries the phone layout (`grid-cols-1`, a shrinkable minmax(0,1fr) track).
+// Without it the implicit auto track grew to ~356px and laid `/` out 372px
+// wide on 320–360px phones. See tests/grid-base-columns.test.ts.
+//
+// 3 and 4 panels wait for xl (2026-09-23): from lg (1024) the 17rem desktop
+// rail leaves main only ~704px wide, and four 164px panels there truncated
+// every card name to 0–8px — a thumbnail and one letter per row. The 3-panel
+// case (the "Under …"/"Big ticket" tabs, or any day a signal is empty) had the
+// same defect from 640: names 0–31px at 640, 40–74 at 768, 35–68 at 1024. From
+// sm to xl it is 2 columns with the LAST panel spanning the row, so no half-row
+// is left empty — the reason this lookup exists. The `[&>*:last-child]`
+// variant relies on the deal panels being the grid's direct children.
 const GRID_COLS: Record<number, string> = {
   1: "",
   2: "sm:grid-cols-2",
-  3: "sm:grid-cols-3",
-  4: "sm:grid-cols-2 lg:grid-cols-4",
+  3: "sm:grid-cols-2 xl:grid-cols-3 sm:[&>*:last-child]:col-span-2 xl:[&>*:last-child]:col-span-1",
+  4: "sm:grid-cols-2 xl:grid-cols-4",
 };
 
 // Reactive to the country switcher: the page serializes all four markets' deals and
@@ -286,6 +305,11 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
         </Link>
       </div>
 
+      {/* Tier pills are 48px tall on TOUCH only (2026-09-23): they measured
+          39/115/123/79 × 24px at 390, far under a thumb. Coarse-pointer-only,
+          not `min-h-11` everywhere, so mouse desktops keep the 24px pill
+          density; `inline-flex items-center` keeps the label centred when the
+          pill grows. */}
       <div className="mb-3 flex flex-wrap gap-1.5" role="tablist" aria-label="Filter deals by price">
         {TIERS.map((t) => (
           <button
@@ -294,7 +318,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
             role="tab"
             aria-selected={tier === t.key}
             onClick={() => changeTier(t.key)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors [@media(pointer:coarse)]:min-h-12 ${
               tier === t.key ? "bg-brand-500 text-ink-950" : "bg-ink-900 text-slate-400 hover:bg-ink-800 hover:text-slate-200"
             }`}
           >
@@ -308,7 +332,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           No {TIERS.find((t) => t.key === tier)?.label(thresholds, fmtT).toLowerCase()} deals in {place} right now — try another filter.
         </div>
       ) : (
-      <div className={`grid items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
+      <div className={`grid grid-cols-1 items-stretch gap-4 ${GRID_COLS[columns.length] ?? GRID_COLS[3]}`}>
         {columns.map(({ def, items }) => {
           // Premium columns normally reveal only the single best deal; the rest is
           // locked — "locked" means how many REAL deals exist behind it (totalKey,
@@ -332,7 +356,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
           const total = def.totalKey ? deals[def.totalKey] : items.length;
           const locked = gated ? Math.max(0, total - shown.length) : 0;
           return (
-            <div key={def.key} className="card-surface flex h-full flex-col p-3 transition-colors duration-base hover:border-brand-500/60 hover:bg-ink-800">
+            <div key={def.key} className="card-surface flex h-full min-w-0 flex-col p-3 transition-colors duration-base hover:border-brand-500/60 hover:bg-ink-800">
               <div className="mb-1 flex items-center justify-between gap-2 px-1">
                 <span className="flex items-center gap-1.5 text-sm font-extrabold text-white">
                   {def.label}
@@ -347,6 +371,7 @@ export function TodaysTopDeals({ dealsByCountry }: { dealsByCountry: Record<Coun
                   <span className="chip bg-gold/20 text-gold">{premiumPlus ? "Plus" : "Premium"}</span>
                 )}
               </div>
+              {def.sub && <p className="mb-1 px-1 text-[11px] leading-snug text-slate-500">{def.sub}</p>}
 
               <ul className="flex flex-1 flex-col divide-y divide-ink-800">
                 {shown.map((deal, i) => (

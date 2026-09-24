@@ -23,7 +23,11 @@ export function PremiumNavLink({
   // unset on every other caller, whose visible "✦ Premium" text is its name.
   "aria-label": ariaLabel,
   title,
+  // Which link this is, for attribution (lib/premium-surface.ts). Every caller
+  // names itself; the default only covers a future caller that forgets.
+  surface = "nav:link",
 }: {
+  surface?: string;
   href?: string;
   className?: string;
   children: React.ReactNode;
@@ -38,7 +42,7 @@ export function PremiumNavLink({
       aria-label={ariaLabel}
       title={title}
       onClick={() => {
-        firePremiumClickBeacon("button");
+        firePremiumClickBeacon(surface);
         onClick?.();
       }}
     >

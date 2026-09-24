@@ -20,18 +20,26 @@ const DEFAULT_HEADING = "Frequently asked questions";
 export function ArticleFaq({ faq, heading = DEFAULT_HEADING }: { faq: { q: string; a: string }[]; heading?: string }) {
   if (!faq.length) return null;
   return (
-    <section className="mt-10" id="faq">
-      <h2 className="mb-3 scroll-mt-24 text-xl font-extrabold text-white">{heading}</h2>
+    // The id is on the <section>, so the header-aware offset goes here; the old
+    // scroll-mt-24 sat on the h2, which isn't the anchor target, and never applied.
+    <section className="mt-10 scroll-mt-header" id="faq">
+      <h2 className="mb-3 text-xl font-extrabold text-white">{heading}</h2>
       <div className="divide-y divide-ink-800 rounded-xl border border-ink-700">
         {faq.map((f, i) => (
-          <details key={i} className="group p-4">
-            <summary className="cursor-pointer list-none font-semibold text-white marker:content-none">
-              <span className="mr-2 text-brand-400 transition-transform group-open:rotate-90 inline-block" aria-hidden>
+          // The padding lives on the <summary>, not the <details>, so the whole
+          // row is the toggle: with p-4 on <details> a tap in the 16px band
+          // round the question hit the details box and did nothing (2026-09-23).
+          // self-start keeps the flex-item chevron one line tall, so rotate-90
+          // pivots beside the first line instead of swinging onto a wrapped
+          // question; pl-9 lines the answer up with the question text.
+          <details key={i} className="group">
+            <summary className="flex cursor-pointer list-none gap-2 p-4 font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden">
+              <span className="flex-none self-start text-brand-400 transition-transform group-open:rotate-90" aria-hidden>
                 ›
               </span>
               {f.q}
             </summary>
-            <p className="mt-2 pl-5 text-sm leading-relaxed text-slate-300">
+            <p className="px-4 pb-4 pl-9 text-sm leading-relaxed text-slate-300">
               <InlineMarkdown content={f.a} />
             </p>
           </details>

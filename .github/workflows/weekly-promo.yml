@@ -45,13 +45,13 @@ jobs:
       - run: npx prisma generate
       - name: Generate and send promo pack
         env:
-          DATABASE_URL: ${{ secrets.RM12 || vars.RM12 }}
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
           # RM10 is the only operational variable now (2026-09-14 cutover — see
           # src/lib/db-chains.ts). This is set explicitly rather than left to
           # lib/db.ts's own resolution because Actions collapses everything into
           # one DATABASE_URL before the job starts, so process.env-based
           # resolution can't see which secret actually won. See src/lib/db.ts.
-          DB_SOURCE_NAME: ${{ (secrets.RM12 || vars.RM12) && 'RM12' || 'UNSET' }}
+          DB_SOURCE_NAME: ${{ (secrets.RM3 || vars.RM3) && 'RM3' || 'UNSET' }}
           # The whole promo is built from price MOVERS, which come from
           # PriceHistory in the separate history project (src/lib/db-history.ts).
           # These were never set here, so that client fell through its entire
@@ -66,7 +66,11 @@ jobs:
           RH7: ${{ secrets.RH7 || vars.RH7 }}
           RH6: ${{ secrets.RH6 || vars.RH6 }}
           RH5: ${{ secrets.RH5 || vars.RH5 }}
-          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          # (A second, identical HISTORY_DATABASE_URL: line sat here until
+          #  2026-09-22 — same copy-paste as db-audit.yml. A duplicate key makes
+          #  GitHub refuse to parse the WHOLE workflow, so this file was
+          #  undispatchable; the copy above is kept. Caught by
+          #  tests/workflow-flag-polarity.test.ts.)
           HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}

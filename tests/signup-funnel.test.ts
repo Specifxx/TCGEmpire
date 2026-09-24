@@ -368,7 +368,9 @@ test("/login leads with account creation, not returning-user framing", () => {
   assert.match(src, /Create your free account/);
   assert.match(src, /Already have one\? The same buttons sign you in\./);
   // The perks row replaced the 12px grey prose as the page's value prop.
-  assert.match(src, /const PERKS = \["Price alerts", "Portfolio tracking", "Watchlist"\]/);
+  // "Top 3 deals" joined 2026-09-23 — the free account's view of Deal Finder
+  // and Rising Cards (DECISIONS.md, "Premium after sign-up").
+  assert.match(src, /const PERKS = \["Price alerts", "Portfolio tracking", "Watchlist", "Top 3 deals"\]/);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

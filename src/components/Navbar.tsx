@@ -23,8 +23,11 @@ export function Navbar() {
           whole window on wide screens. */}
       {/* px-2 below sm (was px-4, then px-3): 16px of what putting "Premium" back as
           TEXT needed, and the cheapest 8px available — it is whitespace, not a
-          control. sm and up are untouched. */}
-      <div className="mx-auto w-full px-2 sm:px-6 lg:px-8">
+          control. sm and up are untouched. No lg:px-8 any more (2026-09-23):
+          at 1024 on touch the nav row needs 699px and px-6 leaves it 704 where
+          px-8 left 688, and it lines the header up with <main>'s content edge
+          (x=296 at 1024-1440). */}
+      <div className="mx-auto w-full px-2 sm:px-6">
        <div className="flex h-16 w-full items-center justify-between gap-1 sm:gap-4">
         {/* Logo + the phone Premium link. The below-lg Database link used to live
             here too and was removed when HeaderMenuButton joined this row — see
@@ -135,6 +138,7 @@ export function Navbar() {
               on phones") still holds; it is prominence by colour and motion
               rather than by width. */}
           <PremiumNavLink
+            surface="nav:navbar"
             aria-label="Premium"
             title="Premium"
             className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
@@ -149,18 +153,29 @@ export function Navbar() {
               header, left aligned"). It sits INSIDE the left cluster, right
               after Database, rather than as the row's own middle child: the
               row is `justify-between`, so a middle child is centred, and
-              "left aligned" is the instruction. `w-full max-w-xl` lets it take
-              the slack the cluster has without pushing the right-hand nav.
+              "left aligned" is the instruction.
+
+              INLINE ONLY FROM xl (2026-09-23). From 1024 the 17rem rail takes
+              the header's left edge, and the shrink-0 nav beside this left the
+              slot 13-78px: the input covered "Sealed" (elementFromPoint at its
+              centre returned the INPUT) and its "/" hint sat on "Database".
+              Below xl the full-width row underneath carries it, at 576px.
+              `xl:w-[36rem]` is what lets it grow: the cluster is flex 0 1 auto,
+              so it sizes to its max-content, and flex-1 alone had nothing to
+              grow into — the input stuck at ~288px with 637px of empty header
+              at 1920. Measured input widths after: 285 at 1280, 445 at 1440,
+              576 at 1920/2560 (SearchBar's own max-w-xl caps it; min-w-0
+              still lets it shrink when the row is tight).
 
               The rail's search is a FEATURE search now (SideNav.tsx), so this
-              is the only card search from lg up and there is no duplication
+              is the only card search in the chrome and there is no duplication
               to resolve. It is ALSO no longer scroll-gated on the homepage —
               see HeaderSearchSlot's own doc comment. */}
           {/* The <Suspense> no longer shows its fallback on a normal load —
               SearchBar stopped calling useSearchParams() on 2026-09-22 (see
               its `value` state), so the real input is in the server HTML.
               Kept as the guard CinematicHero's comment describes. */}
-          <div className="hidden min-w-0 flex-1 lg:block">
+          <div className="hidden min-w-0 flex-1 xl:block xl:w-[36rem]">
             <HeaderSearchSlot>
               <Suspense fallback={<div className="input w-full max-w-xl" />}>
                 <SearchBar />
@@ -175,10 +190,15 @@ export function Navbar() {
             This row overflowed horizontally across roughly 640-790px: measured
             with a real browser, it needed 738px of content in a 720px box at
             768px wide. Nothing here can shrink to absorb it — the search bar,
-            the only flexible element, is itself hidden below lg — so the row had
-            no slack at all and the page scrolled sideways on every tablet.
-            scripts/mobile-check.ts audits 375px only, which is why it never
-            surfaced.
+            the only flexible element, waits for xl before it goes inline — so
+            the row had no slack at all and the page scrolled sideways on every
+            tablet. scripts/mobile-check.ts audits 375px only, which is why it
+            never surfaced.
+
+            FROM lg TO xl THIS ROW HAS NO FLEXIBLE ELEMENT (2026-09-23). The
+            inline search moved to xl, so the left cluster is just Database,
+            and the row is 704px at 1024 against a 559px (mouse) or 595px
+            (touch) nav — it fits, but with only ~5px of slack on touch.
 
             The fix is what the phone Menu overlay exists for, applied in order of
             how navigational each item is:
@@ -199,7 +219,9 @@ export function Navbar() {
             document was 818px wide before the signed-out CTA was widened to
             "Log in / Sign up" and 869px after. Tying the links to the same
             breakpoint as the flexible search bar means the row never carries
-            them without something able to absorb the difference.
+            them without something able to absorb the difference. (Since
+            2026-09-23 the search waits for xl, so from lg to xl the links ride
+            without it — see the note above for why they still fit.)
             Measured after: 691px at 790, no overflow at 640/720/790/1280.
             scripts/mobile-check.ts --url <dev> is the check to re-run after
             touching anything in this row. */}
@@ -247,13 +269,19 @@ export function Navbar() {
               stayed deleted is what the owner named — Explore, Deck builder,
               Auctions — plus the brand, the inline search box and the ⌘K
               button, which the rail now owns outright. */}
-          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
+          {/* `[@media(pointer:coarse)]:py-3.5` on these three (2026-09-23): as
+              plain `py-2` blocks they were 36px tall on a touch tablet at 1024
+              (69/69 pages audited), under the 48px coarse floor globals.css
+              gives every other control. 20px line + 28px padding = 48px on
+              touch; a mouse keeps the 36px row. The row is h-16, so the header
+              height does not change. */}
+          <Link href="/sealed" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Sealed
           </Link>
-          <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5">
+          <Link href="/blog" className="hidden rounded-lg px-2 py-2 text-sm font-medium text-slate-200 hover:bg-ink-800 hover:text-white lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5">
             Blog
           </Link>
-          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5">
+          <PremiumNavLink className="hidden rounded-lg px-2 py-2 text-sm font-semibold text-gold hover:bg-ink-800 lg:block lg:px-2.5 [@media(pointer:coarse)]:py-3.5" surface="nav:navbar">
             ✦ Premium
           </PremiumNavLink>
 
@@ -395,15 +423,16 @@ export function Navbar() {
         </nav>
        </div>
 
-        {/* Search gets its own full-width row below the lg breakpoint (so it's
-            never cramped on phones/tablets). HeaderSearchSlot's `mobile`
-            variant scroll-gates this exactly like the desktop row above,
-            but ONLY on the homepage — see that component's own doc comment
-            for why the hero's own always-visible mobile search box makes
-            this safe (nowhere loses search access) and necessary (the hard
-            target for zero duplicate search boxes above the fold has no
-            mobile carve-out). */}
-        <div className="pb-3 lg:hidden">
+        {/* Search gets its own full-width row below xl (so it's never cramped
+            on phones/tablets). Below xl, not lg (2026-09-23): from 1024 the
+            17rem rail left the inline slot 13-78px, and the input covered
+            "Sealed". The header is therefore 121px (mouse) or 125px (touch)
+            from 1024 to 1279, and 65px from 1280. HeaderSearchSlot's `mobile`
+            variant no longer scroll-gates this row on the homepage (it did,
+            alongside the desktop row, until 2026-09-21) — see that
+            component's own doc comment for why both rows are now always
+            visible. */}
+        <div className="pb-3 xl:hidden">
           <HeaderSearchSlot mobile>
             <Suspense fallback={<div className="input" />}>
               <SearchBar />

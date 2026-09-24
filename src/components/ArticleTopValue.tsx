@@ -63,8 +63,8 @@ export async function ArticleTopValue({
   const title = heading ?? `The most expensive Riftbound cards in ${meta.place} right now`;
 
   return (
-    <section className="mt-10" id="live-most-expensive">
-      <h2 className="scroll-mt-24 text-xl font-extrabold text-white">{title}</h2>
+    <section className="mt-10 scroll-mt-header" id="live-most-expensive">
+      <h2 className="text-xl font-extrabold text-white">{title}</h2>
       <p className="mt-1 text-sm text-slate-400">
         Live from the RiftCompare database — the highest current prices across every {meta.adjective} store we
         track, in {meta.currency}. Updated with each price import, so this list re-ranks itself as the

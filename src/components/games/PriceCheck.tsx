@@ -74,7 +74,12 @@ export function PriceCheck() {
           <div className="mt-3 flex flex-wrap items-center gap-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={card.img} alt={card.name} width={300} height={420} className="h-56 w-40 shrink-0 rounded-lg object-cover shadow-xl ring-1 ring-white/10" />
-            <div className="min-w-0 flex-1">
+            {/* min-w-[12rem], not min-w-0 (2026-09-23). flex-1 is a 0% basis, so
+                with min-w-0 the line never broke and flex-wrap did nothing: the
+                column got what the w-40 art left, 66px at 320 (a 26px guess
+                input), 136px at 390. With a 12rem floor it drops under the art
+                on phones, up to 430, and sits beside it from ~440px up. */}
+            <div className="min-w-[12rem] flex-1">
               <h2 className="text-lg font-extrabold text-white">{card.name}</h2>
               <p className="text-xs text-slate-500">{card.setCode} · {card.collectorNumber}</p>
 
@@ -94,7 +99,9 @@ export function PriceCheck() {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && submit()}
                       placeholder="e.g. 4.50"
-                      className="input max-w-[160px]"
+                      // flex-1 + min-w-0: the input yields to "Lock it in"
+                      // (142px at 320), so the button stays on one line.
+                      className="input min-w-0 max-w-[160px] flex-1"
                       autoFocus
                     />
                     <button onClick={submit} disabled={input.trim() === ""} className="btn-primary disabled:opacity-50">

@@ -26,6 +26,10 @@ const CONTEXT_LINES: Record<string, string> = {
   "/portfolio": "Sign in to track what your collection is worth, live.",
   "/profile": "Sign in to get back to your account.",
   "/dashboard": "Sign in to open your dashboard.",
+  // The two tools whose signed-out preview promises the top three to a free
+  // account (2026-09-23) — the line repeats that promise on the sign-in step.
+  "/tools/deal-finder": "Create a free account to see today's top 3 deals in every Deal Finder view.",
+  "/tools/rising": "Create a free account to see the top 3 rising cards, with their full signal breakdown.",
 };
 
 export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {

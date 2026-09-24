@@ -6,12 +6,13 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory, ensureHistoryCards } from "./db-history";
-import { RETAILER_LIST, RetailerInfo } from "./retailers";
+import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, STORE_ROWS_MAX_AGE_H } from "./retailers";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, GLOBAL_HISTORY_COUNTRY } from "./price-history";
 import { snapshotDemand } from "./demand-snapshot";
 import { refreshTcgplayerPrices } from "./tcgplayer";
+import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { refreshCardmarketPrices } from "./cardmarket";
 import { refreshCardTraderPrices } from "./cardtrader";
 import { ALL_FALLBACK_RETAILERS, pricePrioritySetCodes, PRICE_PRIORITY_WINDOW_DAYS, chasePrintRarity, isSignature, isOvernumbered, EBAY_CA_RETAILER, SETS } from "./constants";
@@ -245,15 +246,26 @@ async function discoverRiftboundCollections(base: string): Promise<string[]> {
   return Array.from(handles);
 }
 
-async function fetchCollection(store: RetailerInfo, handle: string): Promise<ShopifyProduct[]> {
+// `failed` means the collection could NOT be read — a network error or a non-404
+// error status, surviving one retry. It is distinct from "empty": a 404 is a
+// handle the store does not have (the conventional BinderPOS handles 404 on most
+// stores), and an empty page is a store with no stock. fetchShopifyStoreProducts
+// uses it to skip the store for this run rather than replace its rows with
+// whatever the other collections happened to return — see DECISIONS.md, "A store
+// fell off the site because one request failed", 2026-09-23.
+async function fetchCollection(
+  store: RetailerInfo,
+  handle: string,
+): Promise<{ products: ShopifyProduct[]; failed: boolean }> {
   const cc = store.country ?? "AU";
   const path = `/collections/${handle}/products.json`;
   const allowed = await robotsAllows(store.base);
   if (!allowed(path)) {
     console.warn(`${store.name}: robots.txt disallows ${path} — skipping.`);
-    return [];
+    return { products: [], failed: false };
   }
   const all: ShopifyProduct[] = [];
+  let failed = false;
   for (let page = 1; page <= 20; page++) {
     if (page > 1) await sleep(REQUEST_DELAY_MS);
     // country=XX is CRITICAL: Shopify Markets serves a different price per visitor
@@ -261,17 +273,37 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
     // real AU price is $45. Forcing the store's market gives the local shopper price
     // (AUD for AU stores, USD for US stores, etc).
     const url = `${store.base}/collections/${handle}/products.json?limit=250&page=${page}&country=${isoCountry(cc)}&_=${Date.now()}`;
-    let res: Response;
-    try {
-      res = await fetch(url, { headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" }, cache: "no-store" });
-    } catch {
+    const get = () =>
+      fetch(url, { headers: { ...UA, "Cache-Control": "no-cache", Pragma: "no-cache" }, cache: "no-store" });
+    let res: Response | null = null;
+    // One retry for a network error or a 5xx/403 — both have been seen to clear
+    // within seconds from the runner. A 404 or a 429 is never retried: the first
+    // is an answer, the second asks us to back off.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await sleep(REQUEST_DELAY_MS * 4);
+      try {
+        res = await get();
+      } catch (e) {
+        res = null;
+        console.warn(`${store.name}: ${handle} page ${page} fetch threw (${(e as Error).message})${attempt ? "" : " — retrying once"}.`);
+        continue;
+      }
+      if (res.ok || res.status === 404 || isRateLimited(res)) break;
+      console.warn(`${store.name}: ${handle} page ${page} returned HTTP ${res.status}${attempt ? "" : " — retrying once"}.`);
+    }
+    if (!res) {
+      failed = true;
       break;
     }
     if (isRateLimited(res)) {
       console.warn(`${store.name}: rate-limited (429, e.g. Cloudflare 1015) on page ${page} — backing off, not retrying this run.`);
+      failed = true;
       break;
     }
-    if (!res.ok) break;
+    if (!res.ok) {
+      if (res.status !== 404) failed = true;
+      break;
+    }
     // A store can return HTTP 200 with an HTML body — a moved/renamed collection,
     // a WAF/challenge page, a maintenance page — none of which raise on `res.ok`.
     // res.json() throws SyntaxError in that case ("Unexpected token '<'"), and left
@@ -284,13 +316,14 @@ async function fetchCollection(store: RetailerInfo, handle: string): Promise<Sho
       data = (await res.json()) as { products: ShopifyProduct[] };
     } catch {
       console.warn(`${store.name}: non-JSON response on page ${page} (likely an HTML error/challenge page) — skipping rest of this store.`);
+      failed = true;
       break;
     }
     if (!data.products?.length) break;
     all.push(...data.products);
     if (data.products.length < 250) break;
   }
-  return all;
+  return { products: all, failed };
 }
 
 // Best-condition (then cheapest) price among a product's variants. NOTE: the
@@ -503,12 +536,22 @@ export function eBayWorthSearching(
   return !EBAY_SKIP_RARITIES.has(chasePrintRarity(c));
 }
 
-/** TCGplayer US market price per card, in USD cents — the value-floor reference. */
+/**
+ * TCGplayer US market price per card, in USD cents — the value-floor reference.
+ *
+ * MARKET, not the buyable listing, on purpose: the floor decides which cards are
+ * worth an eBay call at all, and one seller's cheap ask must not drop a card below
+ * it. Reads the market reference row, falling back to the legacy row per card —
+ * see lib/tcg-market-rows.ts for why that fallback exists (this very function runs
+ * BEFORE the TCGplayer step in the same import).
+ */
 export async function tcgplayerUsValues(): Promise<Map<string, number>> {
-  const rows = await prisma.retailerPrice.findMany({
-    where: { retailer: "tcgplayer", country: "US" },
-    select: { cardId: true, priceCents: true },
-  });
+  const rows = preferMarketRows(
+    await prisma.retailerPrice.findMany({
+      where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US" },
+      select: { cardId: true, priceCents: true, retailer: true },
+    }),
+  );
   const out = new Map<string, number>();
   // A card can have several TCGplayer rows (foil/condition variants); the
   // cheapest is the right reference, so a card is only skipped when even its
@@ -773,8 +816,21 @@ async function fetchShopifyStoreProducts(store: RetailerInfo): Promise<ShopifyPr
 
   const products: ShopifyProduct[] = [];
   const seen = new Set<string>();
+  const configured = new Set([...discovered, ...(store.collections ?? [])]);
   for (const handle of handles) {
-    for (const p of await fetchCollection(store, handle)) {
+    const { products: got, failed } = await fetchCollection(store, handle);
+    // A collection we KNOW holds this store's singles could not be read. The
+    // caller deletes the store's rows before writing the new ones, so returning
+    // the partial set would publish a store with most of its stock missing —
+    // on 2026-09-22 that took Wolf Den (640 -> 0) and Hobbiesville US
+    // (1,172 -> 1) off every card page for a day while both feeds were healthy.
+    // Returning [] instead keeps yesterday's rows, and store-health's 30h
+    // "stale" alert still fires if it keeps happening.
+    if (failed && configured.has(handle)) {
+      console.warn(`  ⚠ ${store.name}: could not read /collections/${handle} — keeping this store's existing rows for this run.`);
+      return [];
+    }
+    for (const p of got) {
       if (seen.has(p.handle)) continue; // de-dup across overlapping collections
       seen.add(p.handle);
       products.push(p);
@@ -1563,6 +1619,20 @@ export async function importPrices(): Promise<ImportSummary> {
   const onlyCountry = (process.env.IMPORT_ONLY_COUNTRY || "").toUpperCase();
   if (onlyCountry) console.log(`IMPORT_ONLY_COUNTRY=${onlyCountry} — restricting to ${onlyCountry} stores.`);
 
+  // A store removed from RETAILERS is never visited by the loop below, so its
+  // rows would otherwise sit on card pages indefinitely. Idempotent and indexed
+  // on `retailer`; a no-op once the rows are gone.
+  if (DECOMMISSIONED_RETAILERS.length) {
+    const where = { retailer: { in: [...DECOMMISSIONED_RETAILERS] } };
+    const purged = await prisma.retailerPrice.deleteMany({ where });
+    const purgedSealed = await prisma.sealedListing.deleteMany({ where });
+    if (purged.count || purgedSealed.count) {
+      console.log(
+        `Purged ${purged.count} card + ${purgedSealed.count} sealed rows from decommissioned stores (${DECOMMISSIONED_RETAILERS.join(", ")}).`,
+      );
+    }
+  }
+
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
@@ -1571,6 +1641,16 @@ export async function importPrices(): Promise<ImportSummary> {
         ? await fetchWooStoreProducts(store)
         : await fetchShopifyStoreProducts(store);
     if (!products.length) {
+      // Keeping the rows is right for ONE bad run and wrong for a store that has
+      // stopped selling Riftbound: E4 Cards' 138 listings were still on card
+      // pages 202h after their last successful fetch. Past STORE_ROWS_MAX_AGE_H
+      // a price is no longer a price anyone can buy at.
+      const expired = await prisma.retailerPrice.deleteMany({
+        where: { retailer: store.key, lastSeen: { lt: new Date(Date.now() - STORE_ROWS_MAX_AGE_H * 3600_000) } },
+      });
+      if (expired.count) {
+        console.warn(`  ⚠ ${store.name}: no products for ${STORE_ROWS_MAX_AGE_H}h+ — expired ${expired.count} stale rows.`);
+      }
       summary.stores.push({ name: store.name, products: 0, priced: 0, matched: 0, unmatched: 0 });
       continue;
     }

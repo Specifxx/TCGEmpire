@@ -74,7 +74,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Rising Cards",
-    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, backtested, and not financial advice. Free shows only the top pick.",
+    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, backtested, and not financial advice. Free accounts see the top three; Premium shows every pick.",
     href: "/tools/rising",
     cta: "Open Rising Cards",
     tier: "plus",
@@ -95,7 +95,7 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Deal Finder",
-    body: "The full list of cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — plus, if you're selling, the cards worth more on eBay than in stores. All sources, sortable, updated daily. Free shows only the top pick.",
+    body: "The full list of cards eBay is cheapest to buy, and cards priced meaningfully cheaper in another tracked market — plus, if you're selling, the cards worth more on eBay than in stores. All sources, sortable, updated daily. Free accounts see the top three; Premium shows every deal.",
     href: "/tools/deal-finder",
     cta: "Open Deal Finder",
     tier: "plus",
@@ -281,20 +281,23 @@ export default async function PremiumPage() {
           <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-gold/40 bg-gold/10 px-5 py-3 text-center">
             <p className="text-sm font-bold text-gold">{premiumLockInHeadline()}</p>
             {premiumPriceIncreaseAnnounced() ? (
-              <p className="mt-1 text-xs text-gold/80">
+              <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">
                 New subscribers will pay {PREMIUM_NEXT_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} once the change takes
                 effect. Subscribe today and keep {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for as long as your
                 subscription stays active — no action needed later.
               </p>
             ) : (
-              <p className="mt-1 text-xs text-gold/80">{premiumLockInLine()}</p>
+              <p className="mt-1 text-xs text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
             )}
           </div>
 
           {/* Client island, renders nothing until it resolves — see its own comment. */}
           <PremiumProofLine />
 
-          <div id="top-pricing" className="scroll-mt-20">
+          {/* /dashboard and MoversToolsCta link here. scroll-mt-header is the
+              header-aware anchor offset (globals.css): scroll-mt-20 landed the
+              cards at 104px, under the 125px two-row header on phones. */}
+          <div id="top-pricing" className="scroll-mt-header">
           <PremiumPricingCards
             plusLive={plusLive}
             plusAnnualLive={plusAnnualLive}
@@ -310,7 +313,7 @@ export default async function PremiumPage() {
           <p className="mx-auto mt-4 max-w-2xl text-center text-[11px] text-slate-500">
             Cancel anytime · secure checkout by Stripe
           </p>
-          <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
+          <p className="mx-auto mt-1 max-w-2xl text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
         </>
       )}
 
@@ -418,8 +421,7 @@ export default async function PremiumPage() {
             <Link href="/login?next=/premium" className="text-brand-400 hover:underline">
               Create a free account
             </Link>{" "}
-            to unlock the middle column — no card required
-            .
+            to unlock the middle column — no card required.
           </p>
         )}
       </div>
@@ -460,10 +462,13 @@ export default async function PremiumPage() {
       <div className="mt-10">
         <h2 className="mb-3 text-center text-lg font-extrabold text-white">Frequently asked questions</h2>
         <div className="mx-auto max-w-2xl space-y-3">
+          {/* p-4 sits on the <summary>, not the <details>, so the whole card is
+              the toggle: a tap in the padding band used to hit the details box
+              and do nothing (2026-09-23). The native marker stays. */}
           {FAQ.map((f) => (
-            <details key={f.q} className="card-surface rounded-xl border border-ink-700 p-4">
-              <summary className="cursor-pointer text-sm font-semibold text-white">{f.q}</summary>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            <details key={f.q} className="card-surface rounded-xl border border-ink-700">
+              <summary className="cursor-pointer p-4 text-sm font-semibold text-white">{f.q}</summary>
+              <p className="px-4 pb-4 text-sm leading-relaxed text-slate-400">{f.a}</p>
             </details>
           ))}
         </div>

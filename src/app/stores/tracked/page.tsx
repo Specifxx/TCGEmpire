@@ -83,10 +83,31 @@ export default function TrackedStoresPage() {
           by item price, with delivered cost (price + postage) shown alongside so you can compare on it yourself, and
           prices refresh daily.
         </p>
+        {/* Jump index (2026-09-23). At 390 this page is ~22,000px of
+            single-column store cards: Canada starts ~12,300px down and the EU
+            ~18,400px, and the page had no anchors at all. The reference-sources
+            section is deliberately not listed, because it isn't a market.
+            .min-h-11 is 48px on coarse pointers (globals.css), and the compact
+            reset from sm up is scoped to a fine pointer so a touch tablet or
+            landscape phone keeps that floor (a bare sm:min-h-0 cancelled it and
+            the chips measured 26px there, 2026-09-23). */}
+        <nav aria-label="Jump to a market" className="mt-4 flex flex-wrap gap-2">
+          {byMarket.map((m) => (
+            <a
+              key={m.code}
+              href={`#market-${m.code.toLowerCase()}`}
+              className="chip min-h-11 border border-ink-700 px-3 text-sm text-slate-300 hover:border-brand-500 sm:[@media(pointer:fine)]:min-h-0"
+            >
+              {m.info.flag} {m.info.label} <span className="num text-slate-500">{m.stores.length}</span>
+            </a>
+          ))}
+        </nav>
       </div>
 
       {byMarket.map((m) => (
-        <section key={m.code}>
+        // scroll-mt-header: the header-aware anchor offset (globals.css), so a
+        // jump lands the h2 below the 125px two-row header on phones.
+        <section key={m.code} id={`market-${m.code.toLowerCase()}`} className="scroll-mt-header">
           <h2 className="mb-3 text-lg font-bold text-white">
             {m.info.flag} {m.info.label}{" "}
             <span className="num text-sm font-normal text-slate-500">({m.stores.length})</span>
@@ -141,12 +162,12 @@ export default function TrackedStoresPage() {
       <section className="card-surface divide-y divide-ink-800 overflow-hidden">
         <h2 className="px-6 py-4 text-lg font-extrabold text-white">Frequently asked questions</h2>
         {FAQS.map((f) => (
-          <details key={f.q} className="group px-6 py-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-200 hover:text-white">
+          <details key={f.q} className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-sm font-semibold text-slate-200 hover:text-white [&::-webkit-details-marker]:hidden">
               {f.q}
               <span className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" aria-hidden>▾</span>
             </summary>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">{f.a}</p>
+            <p className="px-6 pb-4 text-sm leading-relaxed text-slate-400">{f.a}</p>
           </details>
         ))}
       </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavIcon } from "./NavIcon";
 import { NAV_GROUPS } from "./nav-groups";
@@ -10,6 +10,7 @@ import { BrandLogo } from "./BrandLogo";
 import { useCountry } from "./CountryProvider";
 import { useMe } from "@/lib/use-me";
 import { COUNTRIES } from "@/lib/country";
+import { PremiumNavLink } from "./PremiumNavLink";
 
 // The persistent desktop navigation rail: the full left edge of the page from
 // `lg` up, carrying the brand, one search affordance, every link in
@@ -149,6 +150,25 @@ export function SideNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeGroupTitle, hydrated]);
 
+  // Keep the current page's link inside the rail's own viewport (2026-09-23).
+  // The 48px touch rows made the tree ~1.5x taller, so on a touch tablet the
+  // active link (e.g. Deck Builder at y=708 in a scroller ending at 697) landed
+  // below the fold of the rail with nothing to reveal it. scrollTop on the
+  // rail's scroller, not scrollIntoView, which can also scroll the document.
+  // Keyed on the active group's OPEN state rather than all of `collapsed`, so
+  // collapsing some other group never yanks the rail back.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const activeOpen = activeGroupTitle ? !collapsed.has(activeGroupTitle) : false;
+  useEffect(() => {
+    if (!hydrated) return;
+    const s = scrollerRef.current;
+    const a = s?.querySelector<HTMLElement>('a[aria-current="page"]');
+    if (!s || !a) return;
+    const top = a.offsetTop;
+    const bottom = top + a.offsetHeight;
+    if (top < s.scrollTop || bottom > s.scrollTop + s.clientHeight) s.scrollTop = Math.max(0, top - s.clientHeight / 3);
+  }, [pathname, hydrated, activeOpen]);
+
   function toggleGroup(title: string) {
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -172,11 +192,17 @@ export function SideNav() {
           The rail owns the brand from lg up, because it runs the full page
           height and reaches the top-left corner the header's own mark used to
           occupy. Navbar.tsx hides its copy at exactly this breakpoint rather
-          than drawing a second one beside it. */}
+          than drawing a second one beside it.
+          h-[calc(4rem+1px)], not h-16 (2026-09-23): the header is 65px (its
+          h-16 row plus a 1px border-b outside it) while this block is
+          border-box, so at h-16 the rail's divider sat at y=63 against the
+          header rule at y=64 — a visible 1px step at x=272 once scrolled. The
+          header is taller from 1024 to 1279 (its search row is underneath
+          there), so the alignment matters from 1280; below that it's harmless. */}
       <Link
         href="/"
         aria-label="RiftCompare home"
-        className="flex h-16 shrink-0 items-center gap-2.5 border-b border-ink-800 px-3 transition-colors hover:bg-ink-800/60"
+        className="flex h-[calc(4rem+1px)] shrink-0 items-center gap-2.5 border-b border-ink-800 px-3 transition-colors hover:bg-ink-800/60"
       >
         <BrandLogo />
         <span className="min-w-0">
@@ -201,7 +227,24 @@ export function SideNav() {
           the rail is a navigation tree, and narrowing the tree you are
           already looking at is both simpler and less to explain than a
           dropdown over the top of it. */}
-      <div className="shrink-0 border-b border-ink-800 px-3 py-3">
+      {/* TOUCH TARGETS (2026-09-23). Measured on a 1024x768 touch tablet, 28 of
+          the rail's 29 targets were under 44px (links 32, group toggles 29,
+          this input 38, Get Premium 38): globals.css's coarse 48px floor does
+          not reach these classes. Every `[@media(pointer:coarse)]:py-*` below
+          is touch-only, so the desktop density is unchanged. py-3.5, not py-3,
+          on the input and Get Premium: py-3 measures only 46 there (20 line +
+          24 padding + 2 border).
+          `[&::-webkit-search-cancel-button]:appearance-none` on THIS input
+          only: it is type="search", so WebKit and Chromium drew their native ×
+          beside the Clear button below. The site's other type=search inputs
+          rely on the native one and keep it.
+          HEIGHT BELOW xl (2026-09-23): from 1024 to 1279 the header keeps its
+          card search on a second row (121px with a mouse, 125px on touch), so
+          this block is sized to end exactly on the header's bottom rule — 56px
+          and 60px below the 65px brand block — instead of leaving a 7-15px step
+          in the divider once the page scrolls. From xl the header is 65px again
+          and the block is back to its natural py-3. */}
+      <div className="flex h-14 shrink-0 flex-col justify-center border-b border-ink-800 px-3 [@media(pointer:coarse)]:h-[3.75rem] xl:block xl:h-auto xl:py-3">
         <div className="relative">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="pointer-events-none absolute left-2.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-500">
             <circle cx="11" cy="11" r="7" />
@@ -217,7 +260,7 @@ export function SideNav() {
             placeholder="Search features"
             aria-label="Search features"
             autoComplete="off"
-            className="w-full rounded-lg border border-ink-700 bg-ink-950/60 py-2 pl-9 pr-8 text-sm text-slate-200 placeholder:text-slate-500 transition-colors hover:border-ink-600 focus:border-brand-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            className="w-full rounded-lg border border-ink-700 bg-ink-950/60 py-2 pl-9 pr-8 text-sm text-slate-200 placeholder:text-slate-500 transition-colors hover:border-ink-600 focus:border-brand-500/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 [&::-webkit-search-cancel-button]:appearance-none [@media(pointer:coarse)]:py-3.5"
           />
           {featureQuery && (
             <button
@@ -239,7 +282,7 @@ export function SideNav() {
           navigation system: the same index the ⌘K launcher searches, the
           footer site-map renders and /llms.txt publishes, so a link added in
           one place appears in all four. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
+      <div ref={scrollerRef} className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2">
         {featureResults ? (
           // SEARCHING: a flat, ranked list, each row naming the group it came
           // from — that context is the difference between "Movers" meaning
@@ -302,7 +345,7 @@ export function SideNav() {
                 onClick={() => toggleGroup(group.title)}
                 aria-expanded={open}
                 aria-controls={panelId}
-                className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-ink-800/60 ${
+                className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-ink-800/60 [@media(pointer:coarse)]:py-4 ${
                   groupActive ? "text-brand-300" : "text-slate-500 hover:text-slate-300"
                 }`}
               >
@@ -314,7 +357,7 @@ export function SideNav() {
                 <ul id={panelId} className="space-y-0.5 pb-1.5">
                   {group.links.map((link) => {
                     const active = isActiveLink(pathname, link);
-                    const className = `block truncate rounded-md border-l-2 py-1.5 pl-3 pr-2 text-sm transition-colors ${
+                    const className = `block truncate rounded-md border-l-2 py-1.5 [@media(pointer:coarse)]:py-3.5 pl-3 pr-2 text-sm transition-colors ${
                       active
                         ? "border-brand-400 bg-brand-500/10 font-semibold text-brand-300"
                         : "border-transparent text-slate-300 hover:border-ink-700 hover:bg-ink-800 hover:text-white"
@@ -351,19 +394,23 @@ export function SideNav() {
           owner's split is explicit ("I still want ... the accounts" in the
           header; "have premium on the sidebar as well ... at the bottom"),
           and a second sign-in link is exactly the double-up this pass was
-          asked to remove elsewhere in the rail. */}
-      <div className="shrink-0 space-y-1.5 border-t border-ink-800 px-3 py-2.5">
-        {!premium && (
-          <Link
+          asked to remove elsewhere in the rail.
+
+          The WHOLE block is conditional, not just the link (2026-09-23): the
+          bordered, padded wrapper used to render unconditionally, so Premium
+          members got an empty 21px strip at the rail's foot. */}
+      {!premium && (
+        <div className="shrink-0 border-t border-ink-800 px-3 py-2.5">
+          <PremiumNavLink
             href="/premium"
-            className="flex w-full items-center gap-2.5 rounded-lg border border-gold/40 px-2.5 py-2 text-sm font-bold text-gold transition-colors hover:bg-gold/10"
+            surface="nav:sidebar"
+            className="flex w-full items-center gap-2.5 rounded-lg border border-gold/40 px-2.5 py-2 text-sm font-bold text-gold transition-colors hover:bg-gold/10 [@media(pointer:coarse)]:py-3.5"
           >
             <NavIcon name="trophy" className="h-[18px] w-[18px] shrink-0" />
             <span className="truncate">Get Premium</span>
-          </Link>
-        )}
-
-      </div>
+          </PremiumNavLink>
+        </div>
+      )}
     </nav>
   );
 }

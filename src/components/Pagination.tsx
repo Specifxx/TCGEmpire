@@ -91,7 +91,7 @@ export function Pagination({
             aria-current={it === current ? "page" : undefined}
             className={`${cell} ${
               it === current
-                ? "bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-glow"
+                ? "bg-brand-500 text-ink-950 shadow-glow"
                 : "border border-ink-700 text-slate-300 hover:border-brand-500 hover:text-white"
             }`}
           >

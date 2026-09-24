@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
-import { cardImageSrc } from "@/lib/card-image-url";
+import { cardImageForOg } from "@/lib/card-image-url";
 import { formatMoney } from "@/lib/format";
 
 // Per-card share card: card art + name + lowest live price, so a shared /card link
@@ -35,7 +35,10 @@ export default async function Image({ params }: { params: { id: string } }) {
   const name = card?.name ?? "Riftbound card";
   const setLine = card ? `${card.setCode} · ${card.collectorNumber}` : "RiftCompare";
   const price = card?.lowestPriceCents != null ? formatMoney(card.lowestPriceCents) : null;
-  const art = card ? cardImageSrc(card, { full: true, absolute: true }) : null;
+  // cardImageForOg, not cardImageSrc: the mirror is WebP and satori cannot
+  // decode it — the card slot rendered as an empty bordered box. Found and
+  // fixed sitewide 2026-09-22; see that helper's comment.
+  const art = card ? cardImageForOg(card) : null;
 
   return new ImageResponse(
     (

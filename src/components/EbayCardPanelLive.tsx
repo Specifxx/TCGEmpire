@@ -64,14 +64,17 @@ export function EbayCardPanelLive({
   // the Graded tab exists at all, so it could never land on it.
   const [picked, setPicked] = useState<string | null>(null);
 
+  // Both Listings bodies render `bare`: the panel's own disclosure below covers
+  // them. Without it the tab body added a second, identical EPN line ~50px
+  // above the panel's (Vilemaw, Shen, 2026-09-23).
   const tabs: EbayTab[] = [
     {
       key: "listings",
       label: "Listings",
       content: listings ? (
-        <EbayAdCarouselLive listings={listings} query={query} />
+        <EbayAdCarouselLive listings={listings} query={query} bare />
       ) : (
-        <EbayBuyCta query={query} />
+        <EbayBuyCta query={query} bare />
       ),
     },
   ];

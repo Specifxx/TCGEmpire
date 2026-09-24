@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMe, invalidateMe } from "@/lib/use-me";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, firePremiumClickBeacon } from "@/lib/analytics";
+import { recallPremiumSurface } from "@/lib/premium-surface";
 import { AuthForm } from "./AuthForm";
 import { premiumStartHref } from "@/lib/premium-start";
 import { AnnualPriceBlock } from "./AnnualPriceBlock";
@@ -34,7 +35,11 @@ import {
 // can trigger it via usePremiumDialog().open(). Styled as a compact market-terminal
 // panel (ink surfaces, gold accent, monospace figures) — deliberately not the green
 // "bubble" look.
-const PremiumDialogContext = createContext<{ open: () => void }>({ open: () => {} });
+// `open(surface)` names WHERE the dialog was opened from — "gate:deal-finder",
+// "gate:portfolio" … (lib/premium-surface.ts) — so the click beacon, and the
+// checkout it may lead to, can be attributed. No argument = "dialog", the
+// pre-2026-09-23 catch-all, kept for any caller that has no better name.
+const PremiumDialogContext = createContext<{ open: (surface?: string) => void }>({ open: () => {} });
 export function usePremiumDialog() {
   return useContext(PremiumDialogContext);
 }
@@ -44,20 +49,12 @@ const GOLD_BTN =
 
 export function PremiumDialogProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const open = useCallback(() => {
+  const open = useCallback((surface?: string) => {
     setIsOpen(true);
-    // Fire-and-forget premium-interest beacon (who clicked Premium). keepalive so it
-    // still sends if the click navigates away; failures are ignored.
-    try {
-      fetch("/api/premium/click", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "dialog" }),
-        keepalive: true,
-      }).catch(() => {});
-    } catch {
-      /* never let the beacon break opening the dialog */
-    }
+    // Fire-and-forget premium-interest beacon (who clicked Premium, and from
+    // which surface). The shared helper is keepalive, swallows failures, and
+    // remembers the surface for the tab so checkout can carry it.
+    firePremiumClickBeacon(surface ?? "dialog");
   }, []);
   const close = useCallback(() => setIsOpen(false), []);
   return (
@@ -109,7 +106,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/premium/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: selected, tier: sellTier }),
+        body: JSON.stringify({ plan: selected, tier: sellTier, surface: recallPremiumSurface() }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -248,7 +245,17 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
               Premium
             </span>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-slate-500 transition hover:text-white">✕</button>
+          {/* One close-button shape across every ✕ (2026-09-23): .tap-icon is
+              44px below sm, 36px from sm and 48px under pointer:coarse; the
+              bare glyph measured 13x24. -my-3 (not -my-2) is what keeps this
+              py-3 header bar at 49px on touch — -my-2 still grew it to 57. */}
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="tap-icon -my-3 -mr-2 shrink-0 rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+          >
+            ✕
+          </button>
         </div>
 
         <div className="px-5 py-5">
@@ -395,7 +402,7 @@ function PremiumDialog({ onClose }: { onClose: () => void }) {
           </div>
 
           {!premium && (
-            <p className="mt-3 text-center text-[11px] font-medium text-gold/80">{premiumLockInLine()}</p>
+            <p className="mt-3 text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
           )}
           <p className="mt-3 text-center text-xs text-slate-600">
             <Link href="/premium" onClick={onClose} className="transition hover:text-slate-400 hover:underline">

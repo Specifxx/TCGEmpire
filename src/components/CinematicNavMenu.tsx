@@ -12,7 +12,7 @@ import { cardHref } from "@/lib/card-url";
 import { BrandLogo } from "./BrandLogo";
 import { NavIcon } from "./NavIcon";
 import { useMe } from "@/lib/use-me";
-import { useScrollLock, useModalFlag } from "./ui/Dialog";
+import { useScrollLock, useModalFlag, useEscapeLayer } from "./ui/Dialog";
 
 // How many database matches the overlay shows before deferring to /browse.
 // Small on purpose: this is a phone menu, and the feature grid it sits above
@@ -178,25 +178,42 @@ export function CinematicNavMenu() {
   // refcounted hooks every Dialog-based overlay uses (ui/Dialog.tsx) — this
   // menu never set the flag before, so the corner nudges could slide in over
   // an open phone Explore overlay. It stays mounted and class-toggled rather
-  // than using Dialog itself, so it keeps its own Escape listener and focus
-  // trap below.
+  // than using Dialog itself. Since 2026-09-23 it also shares Dialog's Escape
+  // stack (useEscapeLayer) instead of its own window listener, so a Dialog
+  // opened over the menu takes Escape first; it keeps its own focus trap and
+  // focus restore below.
   useScrollLock(open);
   useModalFlag(open);
+  useEscapeLayer(open, () => setOpen(false));
 
+  // Focus in on open (the Close button), and back to whatever opened the menu
+  // (HeaderMenuButton) on close — the same save/restore ui/Dialog does. Without
+  // it the overlay going `inert` blurs the Close button and focus falls to
+  // <body>, so the next Tab lands in the footer ad zone.
   useEffect(() => {
     if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
+    const returnTo = document.activeElement as HTMLElement | null;
+    // The panel never unmounts (see above), so this is the same node the
+    // cleanup would read from the ref — copied only to satisfy the hooks lint.
+    const panel = dialogRef.current;
     const t = setTimeout(() => {
-      dialogRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+      panel?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     }, 60);
     return () => {
-      window.removeEventListener("keydown", onKey);
       clearTimeout(t);
+      const a = document.activeElement;
+      // Only reclaim focus that is lost (on <body>) or still inside the panel —
+      // never steal it from something a menu link's navigation focused.
+      if (
+        returnTo &&
+        returnTo !== document.body &&
+        returnTo.isConnected &&
+        (!a || a === document.body || panel?.contains(a))
+      ) {
+        returnTo.focus({ preventScroll: true });
+      }
     };
-  }, [open, setOpen]);
+  }, [open]);
 
   // Simple focus trap: loop Tab within the dialog while open.
   function onKeyDown(e: React.KeyboardEvent) {
@@ -258,15 +275,25 @@ export function CinematicNavMenu() {
         // Below sm the panel enters from the bottom (a real sheet feel, matching
         // ui/Dialog's own placement="sheet") rather than the subtle lift+fade
         // larger screens get — translate-y-6, overridden back to -3 at sm:.
-        // pb-[env(...)] keeps the last row clear of a notched phone's home
-        // indicator, same reasoning as ui/Dialog's own safe-area padding.
-        className={`absolute inset-0 overflow-y-auto p-4 pb-[env(safe-area-inset-bottom)] transition-all duration-slow ease-out sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-6 sm:translate-y-3"}`}
+        // pb-[max(1rem,env(...))] keeps both the 16px gutter and the last row
+        // clear of a notched phone's home indicator, same reasoning as
+        // ui/Dialog's own safe-area padding. 2026-09-23: it was a bare
+        // pb-[env(...)], which overrode p-4's bottom and evaluated to 0 on
+        // most phones, so the panel ran flush into the viewport's bottom edge.
+        // overscroll-contain stops a scroll past either end of the menu from
+        // chaining to the (scroll-locked) page behind it.
+        className={`absolute inset-0 overflow-y-auto overscroll-contain p-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-all duration-slow ease-out sm:p-8 ${open ? "cine-open scale-100 opacity-100 translate-y-0" : "scale-[0.98] opacity-0 translate-y-6 sm:translate-y-3"}`}
       >
         {/* The middle panel — flat, bordered. */}
         <div className="relative mx-auto my-auto max-w-5xl">
           <div className="relative rounded-lg border border-ink-800 bg-ink-900 p-5 sm:p-8">
-            {/* Top bar */}
-            <div className="flex items-center justify-between gap-4">
+            {/* Top bar — sticky (2026-09-23). The menu is a ~4,100px sheet on a
+                phone and this bar holds its only Close control, which used to
+                scroll away (y=-3245 at the end of the list on a 390x844).
+                The negative offsets cancel the scroller's p-4/sm:p-8 and this
+                panel's p-5/sm:p-8 so the bar sticks flush at the viewport top;
+                nothing inside the menu sets a z-index, so z-10 is enough. */}
+            <div className="sticky -top-4 z-10 -mx-5 -mt-5 flex items-center justify-between gap-4 rounded-t-lg border-b border-ink-800 bg-ink-900 px-5 pb-3 pt-5 sm:-top-8 sm:-mx-8 sm:-mt-8 sm:px-8 sm:pb-4 sm:pt-8">
               <Link href="/" onClick={close} className="flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                 <BrandLogo />
                 <span className="font-display text-lg font-extrabold text-white">
@@ -294,7 +321,7 @@ export function CinematicNavMenu() {
                 report: it is the search box people find on a phone, and a card
                 name typed into it returned only pages. So it now does both, and
                 neither report is re-opened by fixing the other. */}
-            <div className="mx-auto mt-6 max-w-2xl">
+            <div className="mx-auto mt-4 max-w-2xl">
               <input
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
@@ -410,6 +437,7 @@ export function CinematicNavMenu() {
                 checkout itself isn't configured. */}
             {!filtering && !premium && premiumCheckout ? (
               <PremiumNavLink
+                surface="nav:explore"
                 onClick={close}
                 className="mt-7 flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 p-4 text-left transition-colors hover:border-gold/60 hover:bg-gold/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
               >
@@ -417,7 +445,10 @@ export function CinematicNavMenu() {
                   <span className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-gold">
                     ✦ Premium
                   </span>
-                  <span className="mt-0.5 block truncate text-sm font-semibold text-white">
+                  {/* Wraps rather than truncates (2026-09-23): beside the
+                      shrink-0 CTA a 390px phone left ~185px for a ~230px line,
+                      so the pitch read "Unlock the pro tools, g…". */}
+                  <span className="mt-0.5 block text-sm font-semibold text-white">
                     {trialEligible ? "Try Premium free" : "Unlock the pro tools, go ad-free"}
                   </span>
                 </span>

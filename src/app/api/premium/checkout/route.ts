@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, type PremiumTier } from "@/lib/premium";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { SITE_URL } from "@/lib/site";
+import { isPremiumSurface } from "@/lib/premium-surface";
 
 export const dynamic = "force-dynamic";
 
@@ -54,8 +55,15 @@ export async function POST(req: Request) {
     select: { stripeCustomerId: true, email: true, trialStartedAt: true },
   });
 
-  // Record the strong "started checkout" interest signal (best-effort).
-  prisma.premiumClick.create({ data: { userId: user.id, source: "checkout" } }).catch(() => {});
+  // The surface that led here (lib/premium-surface.ts) — validated, so the body
+  // can't write an arbitrary string into the table or into Stripe metadata.
+  const surface = isPremiumSurface(body?.surface) ? (body.surface as string) : null;
+  const surfaceMeta: { surface?: string } = surface ? { surface } : {};
+
+  // Record the strong "started checkout" interest signal (best-effort), with the
+  // surface it came from, so the funnel report can say which surfaces produce
+  // checkouts and not just clicks.
+  prisma.premiumClick.create({ data: { userId: user.id, source: "checkout", surface } }).catch(() => {});
 
   // One free trial per account, on EITHER plan (annual trials convert to the yearly
   // price after the trial). The webhook independently re-checks by card fingerprint,
@@ -71,12 +79,15 @@ export async function POST(req: Request) {
         ? { customer: dbUser.stripeCustomerId }
         : { customer_email: dbUser?.email }),
       client_reference_id: user.id,
-      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", tier },
+      metadata: { kind: "premium", userId: user.id, trial: trialEligible ? "1" : "0", tier, ...surfaceMeta },
       subscription_data: {
         // Stamped here too (not just on the session) because session metadata
         // does NOT propagate to the subscription object — renewals and the
         // reconcile cron only ever see subscription_data.metadata.
-        metadata: { userId: user.id, tier },
+        // `surface` rides on the SUBSCRIPTION too, which is the object the
+        // funnel report lists — so a trial, and whether it converted, can be
+        // attributed to the surface that started it.
+        metadata: { userId: user.id, tier, ...surfaceMeta },
         // PREMIUM_TRIAL_DAYS free trial for first-timers, same length on both plans
         // (annual just converts to the yearly price after it ends). A card is still
         // required up front (payment_method_collection below), so the trial

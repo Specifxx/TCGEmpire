@@ -7,6 +7,7 @@ import { useWatchlist } from "@/lib/use-watchlist";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import { COUNTRY_LIST, type Country } from "@/lib/country";
 import { trackEvent } from "@/lib/analytics";
+import { PremiumButton } from "./PremiumButton";
 
 const DISMISS_KEY = "rc_welcome_dismissed";
 // Written by SignupWelcome.tsx the moment a ?welcome landing fires — not read
@@ -18,12 +19,20 @@ const WELCOME_KEY = "rc_welcome_at";
 const ELIGIBLE_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Inline, three-step onboarding — never a modal. Eligible for a signed-in
-// account within 7 days of its ?welcome landing and not dismissed; hides
-// itself the moment all three steps are done, same as it does when it was
-// never eligible. Mounted on /profile (id="welcome") and by WelcomeBack on
-// the homepage — same component, same completion state, wherever it renders.
+// account within 7 days of its ?welcome landing and not dismissed. Mounted on
+// /profile (id="welcome") and by WelcomeBack on the homepage — same component,
+// same completion state, wherever it renders.
+//
+// THE PREMIUM STEP (2026-09-23; DECISIONS.md, "Premium after sign-up"). A
+// fourth, optional item: "Try Premium free". It is NOT counted in the 3/3 and
+// it only appears once the account has watched a card — by then they have had
+// something from the free account, so the ask does not read as a bait-and-
+// switch on arrival. Never shown to a paying member, or while checkout is not
+// configured. When the three core steps are done the checklist used to vanish,
+// which meant anyone quick never saw the step at all; it now collapses to one
+// short "you're set up" card carrying it, until dismissed or the week is up.
 export function WelcomeChecklist() {
-  const { user, loaded } = useMe();
+  const { user, loaded, premium, premiumCheckout, trialEligible, trialDays } = useMe();
   const { country, setCountry } = useCountry();
   const { watched, watch } = useWatchlist();
   const [eligible, setEligible] = useState(false);
@@ -55,7 +64,10 @@ export function WelcomeChecklist() {
   const watchDone = (watched?.size ?? 0) > 0;
   const collectionDone = hasCollectionItem === true;
   const doneCount = [marketDone, watchDone, collectionDone].filter(Boolean).length;
-  if (doneCount === 3) return null;
+  // The Premium step: free accounts only, checkout live, and only after a watch.
+  const offerPremium = !premium && premiumCheckout && watchDone;
+  const trialOffer = trialEligible && trialDays > 0;
+  if (doneCount === 3 && !offerPremium) return null;
 
   function dismiss() {
     try {
@@ -66,8 +78,42 @@ export function WelcomeChecklist() {
     setEligible(false);
   }
 
+  const premiumStep = (
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-white">
+        {trialOffer ? `Try Premium free for ${trialDays} days` : "See what Premium adds"}
+      </p>
+      <p className="text-xs text-slate-500">
+        Every deal in Deal Finder and every Rising Cards pick, not just the top three — plus Best Basket and the pro
+        tools.{trialOffer ? " Cancel before the trial ends and you pay nothing." : ""}
+      </p>
+      <div className="mt-2">
+        <PremiumButton surface="checklist" />
+      </div>
+    </div>
+  );
+
+  if (doneCount === 3) {
+    return (
+      <section id="welcome" className="card-surface mt-5 scroll-mt-header p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-bold text-white">You&apos;re set up</h2>
+          <button onClick={dismiss} className="text-xs text-slate-500 hover:text-slate-300">
+            3/3 done · Dismiss
+          </button>
+        </div>
+        <div className="mt-3 flex items-start gap-3">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-gold/15 text-xs font-bold text-gold" aria-hidden="true">
+            ✦
+          </span>
+          {premiumStep}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="welcome" className="card-surface mt-5 scroll-mt-20 p-5">
+    <section id="welcome" className="card-surface mt-5 scroll-mt-header p-5">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-bold text-white">Get the most out of your account</h2>
         <button onClick={dismiss} className="text-xs text-slate-500 hover:text-slate-300">
@@ -89,7 +135,7 @@ export function WelcomeChecklist() {
                   setCountry(e.target.value as Country);
                   invalidateMe();
                 }}
-                className="input mt-2 max-w-[14rem] text-sm"
+                className="input mt-2 max-w-[14rem]"
               >
                 <option value="" disabled>
                   Choose a market…
@@ -145,6 +191,15 @@ export function WelcomeChecklist() {
             )}
           </div>
         </li>
+
+        {offerPremium && (
+          <li className="flex items-start gap-3">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-gold/15 text-xs font-bold text-gold" aria-hidden="true">
+              ✦
+            </span>
+            {premiumStep}
+          </li>
+        )}
       </ul>
     </section>
   );

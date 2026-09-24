@@ -269,7 +269,11 @@ export default async function LearnPage() {
       <section>
         <h2 className="mb-1 text-xl font-extrabold text-white">Quick quiz: guess the domain</h2>
         <p className="mb-3 text-sm text-slate-400">Five real Legends from the database — can you place them?</p>
-        <LegendQuiz legends={data.quizLegends} domains={[...DOMAIN_KEYS.filter((k) => k !== "Colorless")]} />
+        {/* The seed changes once per UTC day and travels in the RSC payload with
+            this ISR render (revalidate 3600), so the server HTML and the
+            hydrating client shuffle identically (an unseeded shuffle logged
+            React #418/#423/#425 on every load, 2026-09-23). */}
+        <LegendQuiz legends={data.quizLegends} domains={[...DOMAIN_KEYS.filter((k) => k !== "Colorless")]} seed={Math.floor(Date.now() / 86_400_000)} />
       </section>
 
       <AdSlot height={100} />

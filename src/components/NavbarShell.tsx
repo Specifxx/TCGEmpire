@@ -37,7 +37,9 @@ import { useEffect, useRef, type ReactNode } from "react";
 // threshold, same CSS transition), with zero React render cost tied to scroll at
 // all. A one-time boundary crossing was never going to be expensive on its own;
 // removing it anyway costs nothing and directly answers "always sit there".
-const SCROLLED = ["border-ink-800/80", "bg-ink-950/70", "shadow-[0_8px_30px_rgba(0,0,0,0.35)]", "backdrop-blur-xl"];
+// The shadow's value lives in --shadow-header (globals.css), so the light theme
+// gets a soft lift instead of the dark theme's 30px black drop.
+const SCROLLED = ["border-ink-800/80", "bg-ink-950/70", "shadow-header", "backdrop-blur-xl"];
 const AT_TOP = ["border-transparent", "bg-ink-950/30", "backdrop-blur-sm"];
 
 export function NavbarShell({ children }: { children: ReactNode }) {

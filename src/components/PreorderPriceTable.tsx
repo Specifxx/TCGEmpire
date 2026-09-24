@@ -85,7 +85,8 @@ export function PreorderPriceTable({
                           retailer={l.retailer}
                           country={country}
                           kind="sealed"
-                          className="btn-ghost px-2.5 py-1 text-xs"
+                          // lnum only: tabular figures widen Inter's hyphen ('Pre -order').
+                          className="btn-ghost px-2.5 py-1 text-xs [font-feature-settings:'lnum'_1]"
                         >
                           Pre-order
                         </OutboundLink>

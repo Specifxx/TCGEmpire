@@ -60,7 +60,14 @@ function TrendingChip({ c }: { c: CardTileData }) {
       // pointer:coarse block, which bumps this exact utility to 48px on
       // touch) — .chip itself stays untouched since most of its other
       // sitewide uses are non-interactive labels/badges, not tap targets.
-      className="chip min-h-11 max-w-[9.5rem] border border-ink-700 bg-ink-900 text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
+      // min-w-0 + justify-center, no width cap (2026-09-23): each chip is an
+      // equal grid cell now (see TrendingChips below), so the cell sets the
+      // width. The old `max-w-[9.5rem]` cut "Thousand-Tailed W…" and "Rengar,
+      // Trophy Hun…". `px-2` (8px, not .chip's 10px) because at 390 the 176px
+      // cell left that name 154px of the 157px it needs; the label is
+      // centred, so the 2px is invisible. The inner `truncate` stays as the
+      // last resort at 320.
+      className="chip min-h-11 min-w-0 justify-center border border-ink-700 bg-ink-900 px-2 text-slate-300 transition-colors hover:border-brand-500 hover:text-white"
     >
       <span className="truncate">{cardDisplayName(c.name, c)}</span>
     </Link>
@@ -69,9 +76,15 @@ function TrendingChip({ c }: { c: CardTileData }) {
 
 export function TrendingChips({ cards }: { cards: CardTileData[] }) {
   if (cards.length === 0) return null;
+  // An even grid, not a centred flex-wrap (2026-09-23). The label plus six
+  // content-width chips always wrapped unevenly — 2/3/1 at 390 with "Falling
+  // Star" alone on the last row, 5 plus a 1-chip orphan at 768 and 1440. Now the
+  // label takes its own row and the chips fill 2 columns (3 × 2) on phones and
+  // 3 (2 × 3) from sm. `animate-fade-in` stays: CinematicHero's search wrapper
+  // is `relative z-20` precisely to stay above this animation-promoted sibling.
   return (
-    <div className="animate-fade-in [animation-delay:320ms] mx-auto mt-3 flex max-w-2xl flex-wrap items-center justify-center gap-1.5">
-      <span className="rb-eyebrow text-slate-600">Trending</span>
+    <div className="animate-fade-in [animation-delay:320ms] mx-auto mt-3 grid max-w-2xl grid-cols-2 gap-1.5 sm:grid-cols-3">
+      <span className="rb-eyebrow col-span-full text-center text-slate-600">Trending</span>
       {cards.slice(0, 6).map((c) => (
         <TrendingChip key={c.id} c={c} />
       ))}

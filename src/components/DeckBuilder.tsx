@@ -137,9 +137,13 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+    // 300px paste column from lg to xl (2026-09-23): at 1024px the side rail
+    // leaves ~704px, and a 380px column squeezed the results to 300px so the
+    // rows' meta wrapped (rows 88–105px tall instead of ~73). The sticky offset clears the two-row header
+    // (121px mouse / 125px touch) below xl; from xl the one-row 65px header is back.
+    <div className="grid gap-6 lg:grid-cols-[300px_1fr] xl:grid-cols-[380px_1fr]">
       {/* Input */}
-      <div className="lg:sticky lg:top-20 lg:self-start">
+      <div className="lg:sticky lg:top-36 lg:self-start xl:top-20">
         <div className="card-surface p-4">
           <label className="mb-1 block text-sm font-semibold text-white">Paste your decklist</label>
           <p className="mb-2 text-xs text-slate-500">
@@ -147,12 +151,13 @@ export function DeckBuilder({ initialList }: { initialList?: string }) {
             <span className="font-mono">3 Jinx, Loose Cannon</span>. Set codes like{" "}
             <span className="font-mono">(OGN-251)</span> are optional. (TCGplayer Mass Entry format.)
           </p>
+          {/* sm:text-sm, not text-sm: .input is 16px below sm so iOS doesn't zoom the page on focus (2026-09-23). */}
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={14}
             placeholder={"3 Jinx, Loose Cannon\n3 Kai'Sa, Survivor\n…"}
-            className="input font-mono text-sm"
+            className="input font-mono sm:text-sm"
           />
           <div className="mt-3 flex gap-2">
             <button onClick={() => price(text, true)} disabled={loading || !text.trim()} className="btn-primary flex-1">

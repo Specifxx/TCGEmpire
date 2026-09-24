@@ -5,10 +5,12 @@ import { getCountry, getDisplayCurrency } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderPriceTable";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
+import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
 import { SITE_URL } from "@/lib/site";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,7 +131,9 @@ export default async function RadiancePreordersPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <Breadcrumbs trail={[{ name: "Radiance pre-orders", href: "/radiance-preorders" }]} />
 
-      <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold">
+      {/* lnum only, no tnum: body's tabular figures also widen Inter's hyphen,
+          which rendered this label as 'PRE -ORDER' (globals.css prose rule). */}
+      <span className="chip mb-3 inline-flex bg-gold/15 text-[11px] font-bold uppercase tracking-wide text-gold [font-feature-settings:'lnum'_1]">
         Pre-order · releases 23 Oct 2026
       </span>
       <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
@@ -188,6 +192,25 @@ export default async function RadiancePreordersPage() {
         </div>
       )}
 
+      {/* Launch capture, right under the prices (2026-09-23). A visitor who is
+          not ready to order today, or whose market has no pre-orders tracked
+          yet, otherwise leaves with no way back on release day; this puts them
+          on the list the release-day email (lib/release-day.ts) goes to. Same
+          gate and copy as the hub and the radiance-tagged articles. */}
+      {isBeforeRadianceRelease() && (
+        <div className="mt-6 max-w-lg">
+          <NewsletterSignup
+            siteName="RiftCompare"
+            variant="card"
+            source="radiance-launch"
+            trackEvent="radiance_notify_click"
+            heading="Get an email the day Radiance prices go live"
+            cta="Notify me"
+            done="You're on the list. We'll email you on release day."
+          />
+        </div>
+      )}
+
       {/* WHEN to pre-order, not just what it costs. The prices above answer
           "which store is cheapest today"; this answers the question a buyer
           actually arrives with, and it is the half no comparison page carries.
@@ -206,7 +229,9 @@ export default async function RadiancePreordersPage() {
             23 October street date, which is when the first singles start changing hands and when sealed stock is at
             its tightest.
           </p>
-          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-slate-400">
+          {/* Prose, not a numeric column: lnum only, like the globals.css prose
+              rule (which leaves plain li alone), so 'Pre-ordering' has no gap. */}
+          <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-slate-400 [font-feature-settings:'lnum'_1]">
             <li>
               <strong className="text-slate-200">Want to open product?</strong> Pre-ordering is reasonable, because
               allocation — not price — is what runs out. The spread between the cheapest and dearest tracked store

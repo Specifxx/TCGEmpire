@@ -76,9 +76,20 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
   return (
     <div className="mt-4">
       {/* Compact control row (mirrors the database filter): search + sort + a
-          collapsed Filters toggle; facet chips appear only when expanded. */}
+          collapsed Filters toggle; facet chips appear only when expanded.
+
+          Below sm the search takes its own full-width row (2026-09-23). As a
+          bare `flex-1` its basis was 0, so the row never wrapped: the search
+          shrank to 98px at 390 and 28–40px at 320, nowhere to type. So it is
+          `basis-full` on phones and `sm:basis-0` from sm, which restores the
+          exact old `flex: 1 1 0%` there. Filters and sort then share row 2 as
+          48px `flex-1` controls on phones and go back to content width at sm.
+          Input and select are 16px below sm, because iOS Safari zooms the page
+          on focus into any field (select included) under 16px. A 16px select
+          cannot shrink below its intrinsic width, so row 2 splits ~144/206 at
+          390, and at 320 each control takes its own row. */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+        <div className="relative min-w-0 flex-1 basis-full sm:basis-0 sm:max-w-xs">
           <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500">⌕</span>
           <input
             type="search"
@@ -86,14 +97,14 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name or number…"
             aria-label="Search cards"
-            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-xs text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0"
+            className="min-h-11 w-full rounded-lg border border-ink-700 bg-ink-900 py-1.5 pl-7 pr-2.5 text-base text-white placeholder:text-slate-500 focus:border-brand-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-500/40 sm:min-h-0 sm:text-xs"
           />
         </div>
         <button
           type="button"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+          className={`flex min-h-11 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors sm:[@media(pointer:fine)]:min-h-0 sm:flex-none ${
             activeCount ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 bg-ink-850 text-slate-300 hover:border-brand-500/50"
           }`}
         >
@@ -106,7 +117,7 @@ export function FilterableCardGallery({ cards }: { cards: GalleryCard[] }) {
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
             aria-label="Sort cards"
-            className="shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-xs font-semibold text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            className="min-h-11 flex-1 shrink-0 rounded-lg border border-ink-700 bg-ink-850 px-2.5 py-1.5 text-base font-semibold text-slate-300 focus:border-brand-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 sm:[@media(pointer:fine)]:min-h-0 sm:flex-none sm:text-xs"
           >
             <option value="number">Sort: Collector №</option>
             <option value="recent">Sort: Recently added</option>
@@ -164,12 +175,14 @@ function FacetRow({
       <span className="w-14 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</span>
       {items.map(([v, n]) => {
         const on = active === v;
+        // `tap-link` (2026-09-23): 48px on touch, where these ~26px chips were
+        // the only way to filter; min-h-6 on a mouse, a no-op at their size.
         return (
           <button
             key={v}
             type="button"
             onClick={() => onPick(on ? null : v)}
-            className={`chip inline-flex items-center gap-1 border px-2 py-1 text-[11px] font-semibold transition-colors ${
+            className={`chip tap-link inline-flex items-center gap-1 border px-2 py-1 text-[11px] font-semibold transition-colors ${
               on ? "border-brand-500 bg-brand-500/15 text-brand-300" : "border-ink-700 text-slate-400 hover:border-brand-500/50 hover:text-slate-200"
             }`}
           >

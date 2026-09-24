@@ -171,7 +171,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
       }
     : null;
 
-  // Jump nav (sticky on desktop) — only the sections that actually render, in DOM order.
+  // Jump nav (sticky from xl) — only the sections that actually render, in DOM order.
   const sections = [
     ...(index ? [{ id: "index", label: "Index" }] : []),
     ...(index ? [{ id: "constituents", label: "Constituents" }] : []),
@@ -227,7 +227,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
         <>
           {/* Headline number + chart */}
           <Reveal>
-            <section id="index" className="card-surface scroll-mt-32 p-5">
+            <section id="index" className="card-surface scroll-mt-40 p-5 xl:scroll-mt-36">
               <div>
                 <div className="flex flex-wrap items-end justify-between gap-4">
                   <div>
@@ -268,7 +268,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
 
           {/* Constituents */}
           <Reveal delayMs={120}>
-          <section id="constituents" className="scroll-mt-32">
+          <section id="constituents" className="scroll-mt-40 xl:scroll-mt-36">
             <h2 className="mb-1 text-xl font-extrabold text-white">What&apos;s in the Index</h2>
             <p className="mb-3 text-sm text-slate-400">
               The {index.constituents.length} most-searched cards with a live price, weighted by
@@ -283,9 +283,12 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
           {/* Biggest movers — stock-index style gainers/losers from the constituents */}
           {(gainers.length > 0 || fallers.length > 0) && (
             <Reveal delayMs={180}>
-              <section id="movers" className="scroll-mt-32">
+              <section id="movers" className="scroll-mt-40 xl:scroll-mt-36">
                 <h2 className="mb-3 text-xl font-extrabold text-white">Biggest movers (7-day)</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* grid-cols-1, not an implicit track: without a base column the
+                    phone track grew to the longest unwrapped name (324.9px in a
+                    288px column at 320, 2026-09-23) and widened the page. */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <MoverCol title="Top gainers" cards={gainers} positive currency={currency} />
                   <MoverCol title="Top fallers" cards={fallers} positive={false} currency={currency} />
                 </div>
@@ -309,7 +312,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
       <AdSlot height={100} />
 
       {/* Methodology — written to be citable */}
-      <section id="cite" className="card-surface scroll-mt-32 p-6">
+      <section id="cite" className="card-surface scroll-mt-40 p-6 xl:scroll-mt-36">
         <h2 className="text-xl font-extrabold text-white">Methodology</h2>
         <div className="mt-2 max-w-3xl space-y-3 text-sm leading-relaxed text-slate-400">
           <p>

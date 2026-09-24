@@ -14,6 +14,8 @@ import { DURATION, EASING, Z } from "./src/lib/motion-tokens";
 // pixel-identical. tests/theme.test.ts pins that every variable named here is
 // defined in both palettes and that the light one clears WCAG AA where the
 // dark one does. See src/lib/theme-shared.ts for how the attribute is set.
+// The chromatic TEXT shades listed under `colors` (rose/red/emerald/amber/sky/
+// lime/purple/blue, since 2026-09-23) are palette-backed the same way.
 const v = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`;
 
 const config: Config = {
@@ -80,6 +82,23 @@ const config: Config = {
         // Market deltas: gains/losses on the terminal. Calm, not neon.
         up: v("up"), // dark #3fb950
         down: v("down"), // dark #f0506e
+        // Chromatic TEXT shades. Tailwind's stock pastels were tuned for dark ink
+        // and read 1.3-2.8:1 on the light theme's white cards, so the shades that
+        // are used as text go through the palette like the neutrals. The dark
+        // values in globals.css are Tailwind's stock hexes (pixel-identical).
+        // `extend` deep-merges, so every shade not listed here (the 50/100 tints
+        // bar amber-100, and the 500-950 fills) stays stock. amber-400 is
+        // deliberately NOT themed: CardImage.tsx's PromoStamp uses from-amber-400
+        // as a bright fill under text-amber-950. The one non-text consumer that
+        // does move is PromoStamp's ring-amber-300/50 (a darker ring in light).
+        rose: { 200: v("rose-200"), 300: v("rose-300"), 400: v("rose-400") },
+        red: { 300: v("red-300"), 400: v("red-400") },
+        emerald: { 300: v("emerald-300"), 400: v("emerald-400") },
+        amber: { 100: v("amber-100"), 200: v("amber-200"), 300: v("amber-300") },
+        sky: { 200: v("sky-200"), 300: v("sky-300"), 400: v("sky-400") },
+        lime: { 200: v("lime-200"), 300: v("lime-300") },
+        purple: { 300: v("purple-300") },
+        blue: { 300: v("blue-300") },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
@@ -106,6 +125,10 @@ const config: Config = {
         card: "var(--shadow-card)", // dark: 0 1px 0 rgba(255,255,255,0.02), 0 1px 2px rgba(0,0,0,0.4)
         // Kept for API compatibility, neutralised to a quiet elevation (no neon).
         glow: "var(--shadow-glow)", // dark: 0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.45)
+        // The scrolled header's drop (NavbarShell SCROLLED). Themed: the dark 30px black drop smeared a grey band across the light page.
+        // A NAMED token on purpose: an arbitrary `shadow-[var(--shadow-header)]` is inferred as a shadow
+        // COLOUR by Tailwind 3.4 and emits no box-shadow at all, in either theme.
+        header: "var(--shadow-header)", // dark: 0 8px 30px rgba(0,0,0,0.35)
       },
       // The site's motion system (src/lib/motion-tokens.ts): named durations,
       // ONE brand ease curve (previously there were zero `ease-*` usages

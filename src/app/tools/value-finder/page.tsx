@@ -96,23 +96,31 @@ export default async function ValueFinderPage() {
           place of the content is not. Restored by setting
           NEXT_PUBLIC_ADSENSE_REVIEW_MODE=false. See docs/adsense-remediation.md § 9. */}
       {!premium && !ADSENSE_REVIEW_MODE ? (
-        <div className="card-surface overflow-hidden">
-          {/* One real pick free, then a locked preview + upsell (arbitrage pattern). */}
-          <table className="w-full min-w-[620px] text-sm">
+        <div className="card-surface overflow-x-auto">
+          {/* One real pick free, then a locked preview + upsell (arbitrage pattern).
+              Below sm both tables are table-fixed with three columns — Card, Now
+              (the 30-day average rides under it) and vs avg — because a
+              min-w-[620px] table in this card was cut off at every phone width,
+              hiding the vs-avg figure the page ranks by (2026-09-23). The card
+              scrolls sideways from sm up instead of clipping. The empty state is
+              a paragraph, not a colSpan row: with columns hidden, a colSpan=5
+              cell adds phantom columns and crushed Card to 39px. */}
+          {teaser ? (
+          <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[620px]">
             <thead>
               <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-2.5 font-semibold">Card</th>
-                <th className="px-2 py-2.5 text-right font-semibold">Now</th>
-                <th className="px-2 py-2.5 text-right font-semibold">30-day avg</th>
-                <th className="px-2 py-2.5 text-right font-semibold">vs avg</th>
-                <th className="px-4 py-2.5 text-right font-semibold">off high</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Card</th>
+                <th className="w-[5.5rem] px-2 py-2.5 text-right font-semibold sm:w-auto">Now</th>
+                <th className="hidden px-2 py-2.5 text-right font-semibold sm:table-cell">30-day avg</th>
+                <th className="w-16 py-2.5 pl-2 pr-3 text-right font-semibold sm:w-auto sm:px-2">vs avg</th>
+                <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">off high</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800">
-              {teaser ? (
+              {teaser && (
                 <tr className="hover:bg-ink-800">
-                  <td className="px-4 py-2">
-                    <CardQuickLink card={teaser.card} className="flex items-center gap-2.5">
+                  <td className="px-3 py-2 sm:px-4">
+                    <CardQuickLink card={teaser.card} className="flex min-w-0 items-center gap-2.5">
                       {teaser.card.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={teaser.card.imageThumbUrl} alt={cardImageAlt(teaser.card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
@@ -123,16 +131,20 @@ export default async function ValueFinderPage() {
                       </span>
                     </CardQuickLink>
                   </td>
-                  <td className="num px-2 py-2 text-right font-semibold text-accent">{formatMoney(teaser.currentCents, info.currency)}</td>
-                  <td className="num px-2 py-2 text-right text-slate-400">{formatMoney(teaser.avgCents, info.currency)}</td>
-                  <td className="num px-2 py-2 text-right font-bold text-brand-400">−{teaser.discountPct}%</td>
-                  <td className="num px-4 py-2 text-right text-slate-300">{teaser.offHighPct}%</td>
+                  <td className="num px-2 py-2 text-right font-semibold text-accent">
+                    {formatMoney(teaser.currentCents, info.currency)}
+                    <span className="block text-[11px] font-normal text-slate-500 sm:hidden">avg {formatMoney(teaser.avgCents, info.currency)}</span>
+                  </td>
+                  <td className="num hidden px-2 py-2 text-right text-slate-400 sm:table-cell">{formatMoney(teaser.avgCents, info.currency)}</td>
+                  <td className="num py-2 pl-2 pr-3 text-right font-bold text-brand-400 sm:px-2">−{teaser.discountPct}%</td>
+                  <td className="num hidden px-4 py-2 text-right text-slate-300 sm:table-cell">{teaser.offHighPct}%</td>
                 </tr>
-              ) : (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-500">The market&apos;s near its averages right now — check back as prices move.</td></tr>
               )}
             </tbody>
           </table>
+          ) : (
+            <p className="px-4 py-6 text-center text-sm text-slate-500">The market&apos;s near its averages right now — check back as prices move.</p>
+          )}
           {/* Locked preview rows + upsell */}
           <div className="relative border-t border-ink-800">
             <ul className="divide-y divide-ink-800 blur-[5px]" aria-hidden>
@@ -152,7 +164,7 @@ export default async function ValueFinderPage() {
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                   {user ? (
-                    <PremiumButton />
+                    <PremiumButton surface="gate:value-finder" />
                   ) : (
                     <Link href="/login?next=/tools/value-finder" className="btn-primary text-sm">Sign in free</Link>
                   )}
@@ -168,21 +180,21 @@ export default async function ValueFinderPage() {
         </div>
       ) : (
         <div className="card-surface overflow-x-auto">
-          <table className="w-full min-w-[620px] text-sm">
+          <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[620px]">
             <thead>
               <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-2.5 font-semibold">Card</th>
-                <th className="px-2 py-2.5 text-right font-semibold">Now</th>
-                <th className="px-2 py-2.5 text-right font-semibold">30-day avg</th>
-                <th className="px-2 py-2.5 text-right font-semibold">vs avg</th>
-                <th className="px-4 py-2.5 text-right font-semibold">off high</th>
+                <th className="px-3 py-2.5 font-semibold sm:px-4">Card</th>
+                <th className="w-[5.5rem] px-2 py-2.5 text-right font-semibold sm:w-auto">Now</th>
+                <th className="hidden px-2 py-2.5 text-right font-semibold sm:table-cell">30-day avg</th>
+                <th className="w-16 py-2.5 pl-2 pr-3 text-right font-semibold sm:w-auto sm:px-2">vs avg</th>
+                <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">off high</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800">
               {picks.map((p) => (
                 <tr key={p.card.id} className="hover:bg-ink-800">
-                  <td className="px-4 py-2">
-                    <CardQuickLink card={p.card} className="flex items-center gap-2.5">
+                  <td className="px-3 py-2 sm:px-4">
+                    <CardQuickLink card={p.card} className="flex min-w-0 items-center gap-2.5">
                       {p.card.imageThumbUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={p.card.imageThumbUrl} alt={cardImageAlt(p.card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
@@ -193,10 +205,13 @@ export default async function ValueFinderPage() {
                       </span>
                     </CardQuickLink>
                   </td>
-                  <td className="num px-2 py-2 text-right font-semibold text-accent">{formatMoney(p.currentCents, info.currency)}</td>
-                  <td className="num px-2 py-2 text-right text-slate-400">{formatMoney(p.avgCents, info.currency)}</td>
-                  <td className="num px-2 py-2 text-right font-bold text-brand-400">−{p.discountPct}%</td>
-                  <td className="num px-4 py-2 text-right text-slate-300">{p.offHighPct}%</td>
+                  <td className="num px-2 py-2 text-right font-semibold text-accent">
+                    {formatMoney(p.currentCents, info.currency)}
+                    <span className="block text-[11px] font-normal text-slate-500 sm:hidden">avg {formatMoney(p.avgCents, info.currency)}</span>
+                  </td>
+                  <td className="num hidden px-2 py-2 text-right text-slate-400 sm:table-cell">{formatMoney(p.avgCents, info.currency)}</td>
+                  <td className="num py-2 pl-2 pr-3 text-right font-bold text-brand-400 sm:px-2">−{p.discountPct}%</td>
+                  <td className="num hidden px-4 py-2 text-right text-slate-300 sm:table-cell">{p.offHighPct}%</td>
                 </tr>
               ))}
             </tbody>

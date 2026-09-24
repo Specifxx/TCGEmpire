@@ -225,8 +225,11 @@ export default async function StoreConsultingPage() {
         </ol>
       </div>
 
-      {/* The form */}
-      <div className="card-surface mt-6 p-5 sm:p-6">
+      {/* The form. The #book anchor sits on this card, not the <form>, with the
+          header-aware scroll margin (2026-09-23): on the form it landed the
+          heading, the price line and the first field row under the sticky
+          header at every width. */}
+      <div id="book" className="card-surface mt-6 scroll-mt-header p-5 sm:p-6">
         <h2 className="text-lg font-extrabold text-white">Book your session</h2>
         <p className="mb-4 mt-1 text-sm text-slate-400">
           {PRICE_LABEL} {CONSULT_CURRENCY_DISPLAY}, paid up front. No account needed.
@@ -238,17 +241,17 @@ export default async function StoreConsultingPage() {
       <h2 className="mb-3 mt-8 text-lg font-extrabold text-white">Questions stores actually ask</h2>
       <div className="divide-y divide-ink-800 rounded-xl border border-ink-700">
         {FAQ.map((f) => (
-          <details key={f.q} className="group p-4">
-            <summary className="cursor-pointer list-none font-semibold text-white marker:content-none">
+          <details key={f.q} className="group">
+            <summary className="flex cursor-pointer list-none gap-2 p-4 font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden">
               <span
-                className="mr-2 inline-block text-brand-400 transition-transform duration-base group-open:rotate-90"
+                className="flex-none self-start text-brand-400 transition-transform duration-base group-open:rotate-90"
                 aria-hidden
               >
                 ›
               </span>
               {f.q}
             </summary>
-            <p className="mt-2 pl-5 text-sm leading-relaxed text-slate-300">{f.a}</p>
+            <p className="px-4 pb-4 pl-9 text-sm leading-relaxed text-slate-300">{f.a}</p>
           </details>
         ))}
       </div>

@@ -13,6 +13,13 @@ export const metadata: Metadata = {
 
 type Tool = { href: string; title: string; icon: string; desc: string };
 
+// STORE REPORT LINKS (/admin/store-partners) AND OUTBOUND CLICKS (/admin/clicks)
+// ARE DELIBERATELY ABSENT (2026-09-22, owner: "get rid of the store report links
+// and outbound clicks from the dashboard"). Both ROUTES still exist and still
+// work — this removes them from the index, it does not delete the tools, so any
+// link already sent or bookmarked keeps working and nothing that reads
+// ClickEvent or StorePartner changed. Re-add a tile here if either comes back
+// into regular use.
 const TOOLS: Tool[] = [
   {
     href: "/admin/accounts",
@@ -49,18 +56,6 @@ const TOOLS: Tool[] = [
     title: "Consulting bookings",
     icon: "💼",
     desc: "Paid store consulting sessions — who booked, what they want out of the hour, and who filled in the form but never finished checkout.",
-  },
-  {
-    href: "/admin/store-partners",
-    title: "Store report links",
-    icon: "🔗",
-    desc: "Mint a store's private repricing report link — the thing that gives a cold email to a shop a reason to be opened.",
-  },
-  {
-    href: "/admin/clicks",
-    title: "Outbound clicks",
-    icon: "📈",
-    desc: "Per-store affiliate click counts (7d / 30d / all-time), by market and type.",
   },
   {
     href: "/admin/messages",

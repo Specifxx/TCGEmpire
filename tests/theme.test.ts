@@ -61,6 +61,11 @@ test("the dark palette is the exact palette the config used to hard-code (dark m
     "c-brand-400": "#34d17e", "c-slate-500": "#8593a6", "c-slate-600": "#76828f",
     "c-slate-400": "#94a3b8", "c-slate-300": "#cbd5e1", "c-slate-200": "#e2e8f0", // Tailwind stock
     "c-accent": "#eef1f5", "c-gold": "#caa85a", "c-up": "#3fb950", "c-down": "#f0506e", "c-white": "#ffffff",
+    // Tailwind stock: the chromatic text shades
+    "c-rose-200": "#fecdd3", "c-rose-300": "#fda4af", "c-rose-400": "#fb7185", "c-red-300": "#fca5a5", "c-red-400": "#f87171",
+    "c-emerald-300": "#6ee7b7", "c-emerald-400": "#34d399", "c-amber-100": "#fef3c7", "c-amber-200": "#fde68a", "c-amber-300": "#fcd34d",
+    "c-sky-200": "#bae6fd", "c-sky-300": "#7dd3fc", "c-sky-400": "#38bdf8", "c-lime-200": "#d9f99d", "c-lime-300": "#bef264",
+    "c-purple-300": "#d8b4fe", "c-blue-300": "#93c5fd",
   };
   for (const [k, hex] of Object.entries(expected)) assert.equal(DARK[k], rgb(hex), `${k} dark`);
   assert.match(block(":root"), /--page-bg:\s*#0b0e14;/);
@@ -88,8 +93,12 @@ test("the light palette keeps the accessibility guarantees the dark one makes (4
         const ratio = contrast(pal[text], pal[surface]);
         assert.ok(ratio >= 4.5, `${name}: ${text} on ${surface} is ${ratio.toFixed(2)}:1, below 4.5:1`);
       }
-      // Gain/loss colours are read as numbers next to prices — same floor.
-      for (const t of ["c-up", "c-down", "c-gold"]) {
+      // Gain/loss colours are read as numbers next to prices — same floor. So are
+      // the error, loss and status text shades (role=alert rose-300/400, loss
+      // prices, "Sold out", "At MSRP", "NN% over MSRP", sky/amber status text),
+      // which went through the palette on 2026-09-23 because Tailwind's stock
+      // pastels read 1.4-2.7:1 on the light theme's white cards.
+      for (const t of ["c-up", "c-down", "c-gold", "c-rose-300", "c-rose-400", "c-red-400", "c-emerald-400", "c-amber-300", "c-sky-300", "c-sky-400"]) {
         const ratio = contrast(pal[t], pal[surface]);
         assert.ok(ratio >= 4.5, `${name}: ${t} on ${surface} is ${ratio.toFixed(2)}:1, below 4.5:1`);
       }
@@ -154,10 +163,19 @@ test("the toggle is reachable at every width: header icon from lg up, a row in t
   assert.match(toggle, /setAttribute\("data-theme", mode\)/);
   assert.match(toggle, /document\.cookie = `\$\{THEME_COOKIE\}=\$\{next\}; path=\/; max-age=\$\{THEME_COOKIE_MAX_AGE\}; SameSite=Lax`/);
   assert.match(toggle, /meta\[name="theme-color"\]/, "the browser-chrome colour must follow the page");
+  // Next re-inserts the layout's dark theme-color meta on every client navigation;
+  // the toggle must re-stamp it, not write it once.
+  assert.match(toggle, /new MutationObserver/);
+  assert.match(toggle, /observe\(document\.head/);
   assert.match(toggle, /useState<ThemeMode>\("dark"\)/, "initial state must match the server render (no hydration mismatch)");
 });
 
 test("nothing that must stay white in both themes uses the themed `white` token", () => {
   // The Google sign-in button is white by Google's brand rules, not by theme.
   assert.match(read("src/components/AuthForm.tsx"), /bg-\[#ffffff\] py-2\.5 text-sm font-semibold text-\[#0a0c10\]/);
+  // Discord's blurple takes white text by Discord's brand rules, not by theme.
+  assert.match(read("src/components/AuthForm.tsx"), /bg-\[#5865F2\][^"]*text-\[#ffffff\]/);
+  // "Shop on eBay" sits on eBay blue, a fixed fill in both themes. With the
+  // themed `text-white` it went dark-ink on #0064d2 in light (UI audit B2-08).
+  assert.match(read("src/components/EbayBuyCta.tsx"), /bg-\[#0064d2\][^"`]*text-\[#ffffff\]/);
 });

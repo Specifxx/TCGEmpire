@@ -12,6 +12,45 @@ import { GameLoading, GameResultExtras, GameShell, RunRecap, cardUrl, useBestSco
 const DECK = 80;
 const REVEAL_MS = 950;
 
+// Capped by viewport height too (2026-09-23). At max-w-2xl the two 5/7 cards
+// put the Higher/Lower buttons at y=831 on a 1280x800 laptop, below the fold.
+// 391px is the chrome plus the text and buttons around the cards, and 1.43
+// turns the remaining height into board width. The 16rem floor keeps the cards
+// legible on landscape phones. On portrait phones the width still rules.
+// 391px assumes the one-row header from xl; from lg to xl the header keeps its
+// search on a second row (~60px taller), so that band subtracts 451px.
+const BOARD = "mx-auto grid max-w-[max(16rem,calc((100svh-391px)*1.43+20px))] lg:max-xl:max-w-[max(16rem,calc((100svh-451px)*1.43+20px))] grid-cols-2 items-start gap-3 sm:gap-5";
+
+// Loading placeholder that mirrors the board: the same BOARD grid, two
+// card-surface panels (5/7 art plus CardPanel's three text lines, invisible),
+// then the question line and a button-height row. The board's height depends
+// on viewport height through BOARD's svh cap (563/595/642px at lg for
+// 1024x768/1280x800/1440x900), so breakpoint min-heights cannot match it.
+// Invisible text, not fixed heights, so it follows the real line heights and
+// the coarse-pointer 48px .btn floor. Keep it in step with CardPanel.
+const SKELETON = (
+  <>
+    <div className={BOARD} aria-hidden="true">
+      {[0, 1].map((i) => (
+        <div key={i} className="card-surface overflow-hidden">
+          <div className="aspect-[5/7] w-full animate-pulse bg-ink-800" />
+          <div className="invisible p-3">
+            <div className="text-sm font-bold">&nbsp;</div>
+            <div className="text-[11px]">&nbsp;</div>
+            <div className="mt-1.5 text-lg font-extrabold">&nbsp;</div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="invisible mt-4 text-center" aria-hidden="true">
+      <p className="text-sm">&nbsp;</p>
+      <div className="mt-3 flex justify-center">
+        <span className="btn-ghost min-w-[130px]">&nbsp;</span>
+      </div>
+    </div>
+  </>
+);
+
 export function HigherLower() {
   const { cards, currency, error, reload } = useGameCards(DECK);
   const { best, record } = useBestScore("rc_game_hl_best");
@@ -29,9 +68,13 @@ export function HigherLower() {
     setPos(1); setStreak(0); setPhase("guess");
   }, [cards]);
 
+  // Shown while loading too, so it does not arrive with the deal and push the
+  // board down (+24px at 390, where it wraps under the title).
+  const bestLabel = `🔥 streak ${streak} · best ${best}`;
+
   if (!cards) return (
-    <GameShell emoji="⚖️" title="Higher or Lower" tagline="Guess which card costs more. One miss ends the run.">
-      <GameLoading error={error} retry={reload} />
+    <GameShell emoji="⚖️" title="Higher or Lower" tagline="Guess which card costs more. One miss ends the run." bestLabel={bestLabel}>
+      <GameLoading error={error} retry={reload} skeleton={SKELETON} />
     </GameShell>
   );
 
@@ -81,11 +124,11 @@ export function HigherLower() {
       emoji="⚖️"
       title="Higher or Lower"
       tagline="Guess which card costs more. One miss ends the run."
-      bestLabel={`🔥 streak ${streak} · best ${best}`}
+      bestLabel={bestLabel}
     >
       {!done ? (
         <>
-          <div className="grid grid-cols-2 items-start gap-3 sm:gap-5">
+          <div className={BOARD}>
             <CardPanel c={known} revealed />
             <CardPanel c={challenger} revealed={phase === "reveal"} accent />
           </div>

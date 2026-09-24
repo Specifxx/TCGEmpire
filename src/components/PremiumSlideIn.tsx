@@ -134,7 +134,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
     heading: "Rising Cards tells you whether to buy it now or leave it",
-    line: "Ranked by demand and price-timing signals, backtested. Not financial advice. Free shows only the top pick.",
+    line: "Ranked by demand and price-timing signals, backtested. Your free account shows the top three; Premium shows every pick. Not financial advice.",
   },
 ];
 
@@ -149,6 +149,18 @@ function readNum(store: Storage | undefined | null, key: string): number {
   } catch {
     return 0;
   }
+}
+
+// The personal line, or null — never throws, never waits longer than
+// PERSONAL_WAIT_MS. 204 (nothing specific to say) and any failure are both null.
+const PERSONAL_WAIT_MS = 1500;
+async function fetchPersonalCopy(): Promise<{ heading: string; line: string } | null> {
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), PERSONAL_WAIT_MS));
+  const request = fetch("/api/premium/nudge")
+    .then((r) => (r.status === 200 ? r.json() : null))
+    .then((d) => (d && typeof d.heading === "string" && typeof d.line === "string" ? { heading: d.heading, line: d.line } : null))
+    .catch(() => null);
+  return Promise.race([request, timeout]);
 }
 
 export function PremiumSlideIn() {
@@ -173,6 +185,14 @@ export function PremiumSlideIn() {
   // proof itself stays null in both cases, but only the first should render
   // a skeleton; the second should render nothing, same as it always did.
   const [proofSettled, setProofSettled] = useState(false);
+  // PERSONAL COPY (2026-09-23; lib/premium-nudge.ts). "4 cards you watch are
+  // underpriced right now" beats any per-page pitch, so when the account's own
+  // cards are in Deal Finder or Rising Cards it REPLACES the heading and line.
+  // Fetched once, at the moment the card is about to appear (never on mount),
+  // and raced against PERSONAL_WAIT_MS so a slow answer costs a generic card,
+  // never a late one; the copy is settled before the card renders, so it never
+  // swaps in front of the reader. The TIMING rules above are untouched.
+  const [personal, setPersonal] = useState<{ heading: string; line: string } | null>(null);
 
   // Count route views once per pathname, on its own key so this component never
   // depends on the signup popup's counter existing.
@@ -211,24 +231,36 @@ export function PremiumSlideIn() {
     }
     if (readNum(ss, PV_KEY) < MIN_PAGEVIEWS) return; // not engaged enough yet
 
-    const t = setTimeout(() => {
+    let cancelled = false;
+    const dialogOpen = () => typeof document !== "undefined" && document.body.dataset.rcDialog === "1";
+    const t = setTimeout(async () => {
       // Never slide in on top of a real modal (signup / feedback / premium dialog).
-      if (typeof document !== "undefined" && document.body.dataset.rcDialog === "1") return;
+      if (dialogOpen()) return;
+      const mine = await fetchPersonalCopy();
+      // Checked AGAIN after the wait: a navigation cancels this run (and the
+      // next page starts its own), and a dialog may have opened meanwhile.
+      // SESSION_SEEN is only written once the card really will appear, so a
+      // cancelled run never burns the session's one showing.
+      if (cancelled || dialogOpen()) return;
       try {
         ss?.setItem(SESSION_SEEN, "1");
       } catch {
         /* ignore */
       }
+      setPersonal(mine);
       setShown(true);
       trackEvent("premium_slidein_shown", {
         path: pathname ?? "/",
         trial_eligible: trialEligible,
-        context: contextPitch?.tool ?? undefined,
+        context: mine ? "personal" : (contextPitch?.tool ?? undefined),
         copy: PREMIUM_COPY_VERSION,
       });
     }, NUDGE_DELAY_MS);
 
-    return () => clearTimeout(t);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, [eligible, shown, pathname, trialEligible, contextPitch]);
 
   // Fetch the live proof numbers only once the card has actually appeared —
@@ -274,10 +306,10 @@ export function PremiumSlideIn() {
   const accept = useCallback(() => {
     trackEvent("premium_slidein_click", {
       trial_eligible: trialEligible,
-      context: contextPitch?.tool ?? undefined,
+      context: personal ? "personal" : (contextPitch?.tool ?? undefined),
       copy: PREMIUM_COPY_VERSION,
     });
-    firePremiumClickBeacon("button"); // used to fire inside the dialog's open() — see that helper's own header
+    firePremiumClickBeacon("slidein"); // its own source since 2026-09-23 (was "button", shared with every nav link) — lib/premium-surface.ts
     try {
       // Engaged, not rejected: a long snooze rather than a dismissal strike, so
       // not buying THIS time doesn't burn one of their two permanent no's.
@@ -287,13 +319,16 @@ export function PremiumSlideIn() {
     }
     hide();
     router.push("/premium"); // straight to the page — no dialog in between (2026-09-06)
-  }, [hide, router, trialEligible, contextPitch]);
+  }, [hide, router, trialEligible, contextPitch, personal]);
 
-  // Esc closes it — non-trapping, because this is not a modal.
+  // Esc closes it — non-trapping, because this is not a modal. Ignored while a
+  // real dialog is open (2026-09-23): that Escape belongs to the dialog, and
+  // dismissing here as well would silently burn one of the two permanent
+  // dismissal strikes.
   useEffect(() => {
     if (!shown) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") dismiss();
+      if (e.key === "Escape" && document.body.dataset.rcDialog !== "1") dismiss();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -302,8 +337,9 @@ export function PremiumSlideIn() {
   if (!mounted) return null;
 
   const heading =
-    contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Never overpay for a Riftbound card");
-  const bodyLine = contextPitch?.line ?? "You've been comparing prices — Premium finds the cheapest way to buy the whole list, and goes ad-free:";
+    personal?.heading ?? contextPitch?.heading ?? (trialEligible ? "Try Premium free" : "Never overpay for a Riftbound card");
+  const bodyLine =
+    personal?.line ?? contextPitch?.line ?? "You've been comparing prices — Premium finds the cheapest way to buy the whole list, and goes ad-free:";
   const cta = trialEligible && trialDays > 0 ? `Start ${trialDays}-day free trial →` : "Unlock Premium →";
 
   return (
@@ -337,10 +373,18 @@ export function PremiumSlideIn() {
             Premium
           </span>
           <span className="min-w-0 flex-1 text-xs font-semibold leading-snug text-slate-200">{heading}</span>
+          {/* .tap-icon (2026-09-23): 48px on touch, up from a px-1 glyph. The
+              -my-3 keeps this py-2.5 header's height; the 48px box overhangs
+              the header padding by ~2px, which the card's overflow clips.
+              -ml-2 -mr-4 lend the box the gap and the header's right padding:
+              with -mr-2 alone the default 210px heading got 200px at 390 and
+              wrapped, growing the header 45 → 54. The glyph lands within 3px
+              of where the old one sat (x≈349 vs 346 at 390). No ml-auto: the
+              heading's flex-1 already pushes this right. */}
           <button
             onClick={dismiss}
             aria-label="Dismiss"
-            className="ml-auto -mr-1 shrink-0 self-start rounded px-1 text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+            className="tap-icon -my-3 -ml-2 -mr-4 shrink-0 self-start rounded-lg text-slate-400 transition-colors hover:bg-ink-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
           >
             ✕
           </button>

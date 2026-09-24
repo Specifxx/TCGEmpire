@@ -1035,6 +1035,18 @@
     "variants": [],
     "fingerprint": "0dba457873babae8"
   },
+  "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg": {
+    "src": "/radiance-spoilers/seraphine-starry-eyed-songstress.jpg",
+    "width": 748,
+    "height": 1040,
+    "bytes": 107858,
+    "webp": "/radiance-spoilers/seraphine-starry-eyed-songstress.webp",
+    "webpBytes": 77080,
+    "avif": "/radiance-spoilers/seraphine-starry-eyed-songstress.avif",
+    "avifBytes": 55363,
+    "variants": [],
+    "fingerprint": "2d30e98e280f7ed1"
+  },
   "/rune-variants/body-rune-ogn-126b.jpg": {
     "src": "/rune-variants/body-rune-ogn-126b.jpg",
     "width": 300,
