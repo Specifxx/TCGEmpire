@@ -155,13 +155,17 @@ longer lands on its entry.
   restore it). One control opens `CinematicNavMenu` below lg.
   [2026-09-18](../DECISIONS.md#L8260), [2026-09-19](../DECISIONS.md#L8590)
 - **Watchlist:** a heart on all five surfaces and its own header control
-  from sm, opening a right-side drawer; `/watching` stays.
-  [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260)
+  from sm, opening a right-side drawer; `/watching` stays. The drawer renders
+  rows (`layout="list"`), never the page's grid: its breakpoints read the
+  viewport and gave a 448px drawer four 90px columns. On a tile the heart
+  stacks above the badges, which stop short of it.
+  [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260),
+  [2026-09-24](../DECISIONS.md#L11719)
 - **Gold marks Premium**, so a non-Premium action never wears it. Phones show
   "✦" beside Database from 360px and the word from 400px (below 360, the
   menu's Premium spotlight). Signed-out visitors see "Log in" and a primary
   "Sign up free" at every width; below sm the market switcher lives in the
-  menu's top bar. [2026-09-24](../DECISIONS.md#L11717)
+  menu's top bar. [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
 - **Homepage order:** Recently viewed (returning visitors), Top Deals, eBay
   Picks, the popular carousel, Riftle/pack-sim, How it works.
@@ -185,7 +189,7 @@ longer lands on its entry.
   with "radiance" + "spoiler". No store count in any OTHER page title
   (Singapore's "11 Stores" excepted). Bare hreflang `en` is the US page; the
   EU pages carry one en-XX per EU country served.
-  [2026-09-24](../DECISIONS.md#L11717)
+  [2026-09-24](../DECISIONS.md#L11756)
   [2026-09-17](../DECISIONS.md#L7894), [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9222), [2026-09-22](../DECISIONS.md#L10403)
 - **Card pages are always indexable** (09-17 reversed Phase 7a); only

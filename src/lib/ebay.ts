@@ -354,7 +354,16 @@ function numberMatches(title: string, number: string, total: string, setCode: st
   if (full) return (full[1] || "").toLowerCase() === letter;
 
   if (setMentioned(title, setCode)) {
-    const tok = title.match(new RegExp(`\\b${numToken}([a-z]?)\\b`, "i"));
+    // A BARE NUMBER MUST NOT BE HALF OF SOMEONE ELSE'S "N/M" (2026-09-24).
+    // Reported via the wrong-card form: Vi, Piltover Enforcer's overnumbered
+    // 229/219 (~US$70) showed eBay at US$1.99. The listing was "Riftbound: League
+    // of Legends Unleashed - Vi - Piltover Enforcer #187/229 - FOIL" — the
+    // ordinary 187, with the seller's denominator mistyped as 229. The full
+    // "229/219" check above correctly failed; this fallback then found "229"
+    // after the slash and, because "Unleashed" names the set, accepted a US$2
+    // base copy as the chase print in six eBay markets. A token touching a
+    // slash is one side of a stated collector number, and not ours.
+    const tok = title.match(new RegExp(`(?<!/\\s*)\\b${numToken}([a-z]?)\\b(?!\\s*/)`, "i"));
     if (tok) return (tok[1] || "").toLowerCase() === letter;
   }
   return false;

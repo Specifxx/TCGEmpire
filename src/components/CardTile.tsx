@@ -102,7 +102,12 @@ export function CardTile({ card }: { card: CardTileData }) {
     // navigation or the top loading bar. h-full + flex so every tile in a row (even
     // one with no price yet) matches its siblings' height.
     <div className="cv-auto group card-surface relative flex h-full flex-col overflow-hidden transition-[transform,box-shadow,border-color] duration-base ease-out motion-safe:hover:-translate-y-0.5 hover:border-ink-600 hover:shadow-glow focus-within:border-brand-500/60 active:translate-y-0">
-      <div className="absolute right-2 top-2 z-10">
+      {/* z-30, ABOVE the badge column (z-20). It used to be z-10, below it, so
+          on a narrow tile a wide chip like "★ Overnumbered" was laid over the
+          heart and took its clicks — reported from the watchlist drawer, where
+          a card could not be unwatched at all. The heart is the only way to
+          stop watching a card from a tile; nothing may sit on top of it. */}
+      <div className="absolute right-2 top-2 z-30">
         <PriceWatchButton cardId={card.id} />
       </div>
       <Link href={cardHref(card)} prefetch={false} onPointerDown={onPointerDown} onClick={onClick} className="flex flex-1 flex-col">
@@ -114,7 +119,12 @@ export function CardTile({ card }: { card: CardTileData }) {
             card={card}
             className="h-full w-full transition-transform duration-slow ease-out motion-safe:group-hover:scale-[1.03]"
           />
-          <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
+          {/* Bounded on the right so the column ends before the heart's corner
+              (right-2 + a 32px button + a gap = right-12), and each chip
+              truncates rather than running under it. Stacking order alone
+              would keep the heart clickable; the bound keeps the badge text
+              from being hidden behind the heart instead. */}
+          <div className="absolute left-2 right-12 top-2 z-20 flex flex-col items-start gap-1 [&>*]:max-w-full [&>*]:truncate">
             <VariantBadge variant={card.variant} />
             <UltimateBadge show={isUltimate(card.setCode, card.collectorNumber)} />
             <SignatureBadge show={isSignature(card.collectorNumber)} />
@@ -141,9 +151,13 @@ export function CardTile({ card }: { card: CardTileData }) {
             own line rather than squeezing — flex-1 alone has a basis of 0 and
             would silently shrink to nothing instead of ever wrapping — and
             truncate stops the price escaping its column if even that is not
-            enough. */}
+            enough. The minimum is min(6.5rem, 100%), not a bare 6.5rem: on a
+            tile narrower than that (a 90px four-up column) a bare minimum is
+            wider than the tile itself, so the block cannot shrink, truncate
+            never engages, and the price runs out to the tile's edge. Rendered
+            and caught that way on 2026-09-24. */}
         <div className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-0.5 pt-1">
-          <div className="min-w-[6.5rem] flex-1">
+          <div className="min-w-[min(6.5rem,100%)] flex-1">
             {lowest != null ? (
               <>
                 <div className="text-[11px] text-slate-500">from</div>

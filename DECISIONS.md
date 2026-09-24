@@ -11714,6 +11714,45 @@ classed it as over-numbered:
 **Also:** the Unleashed set guide now calls 238 an Ultimate, not "a second
 Showcase printing".
 
+---
+
+## The watchlist drawer gets rows, because breakpoints cannot see a drawer — 2026-09-24
+
+Reported twice with screenshots. The second showed one card squeezed into a
+~90px column of the 448px drawer: name cut, price clipped, and the heart
+covered by a "★ Overnumbered" badge, so the card could not be unwatched.
+
+**The first fix went to the wrong surface.** It changed `Watchlist`'s grid from
+`sm:grid-cols-3` to `md:grid-cols-3` for the `/watching` page. The drawer
+renders the same component, and those breakpoints read the VIEWPORT. Every
+desktop is past `xl`, so the drawer got four columns in about 408px of content
+whatever the breakpoint said. The project has no container-query plugin, so the
+grid cannot learn it is inside a panel.
+
+**So the drawer has its own layout, not a smaller grid.** `Watchlist` takes
+`layout="grid" | "list"`; the page keeps the grid, the drawer passes `list`.
+A row puts the art at 96px, the full name on up to three lines, the price at
+full size, badges inline in the text column, and the heart in a flex column of
+its own, a sibling of the row's link. Nothing can be laid over it at any width.
+It is still `PriceWatchButton`, the same control as everywhere else. Following a
+row closes the drawer, so the card page does not open beneath it.
+
+**The tile overlap is fixed at the source too.** In `CardTile` the heart was
+`z-10` and the badge column `z-20` with no width bound, so any tile narrow enough
+for a wide badge put the badge on top of the heart. The heart is now `z-30`, and
+the badge column is bounded at `right-12` with each chip truncating. Stacking
+alone keeps the heart clickable; the bound stops the badge text hiding behind
+it instead.
+
+**Checked by rendering, not by reading.** The real components were
+server-rendered with the compiled Tailwind CSS and screenshotted at 448px, at
+390px and in a four-up 90px tile grid, and at each heart's centre
+`elementFromPoint` had to return the heart itself. The render also caught a bug
+from the previous round: the price block's `min-w-[6.5rem]` is wider than a 90px
+tile's content box, so it could never shrink for `truncate` to engage and the
+price ran to the tile's edge. It is `min-w-[min(6.5rem,100%)]` now. Reading the
+class list had passed it twice.
+
 ## Growth pass: rank for "riftbound card prices" and get more signups — 2026-09-24
 
 The owner's brief, done in one pass with a commit per item. Search Console, 28
