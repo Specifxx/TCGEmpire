@@ -62,6 +62,7 @@ on:
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
           - audit-sealed-history # read-only: why is Rising Sealed "still building"? Per history project: SealedPriceHistory rows, snapshot days, per-market series depth, and how many stored groupKeys still match a live sealed group
+          - consolidate-sealed-history # THE FIX for Rising Sealed "still building": copy SealedPriceHistory from every older history project into the live one (additive, skip duplicates, honours dry_run). Every history cutover dumped only Card/ClickEvent/PriceHistory, so each project held ONE sealed snapshot. Run revalidate-now after.
           - audit-store-health # read-only: prints every tracked store (retailers.ts) with ZERO RetailerPrice rows at all (candidates to remove as stale/dead), plus every other open store-health alert. Same computation /admin/store-health renders, without needing admin auth to see it.
           - backfill-global-history # ONE-TIME (phase 1 of 2): collapses existing per-market PriceHistory rows (AU/US/UK/SG/CA/EU) into one GLOBAL row per card per day, in USD cents — see scripts/backfill-global-history.ts's own header for why this must run BEFORE the GLOBAL-reading code deploys. Additive only, never deletes. Honours dry_run.
           - backfill-global-history-delete-old # ONE-TIME (phase 2 of 2): deletes the per-market rows phase 1 superseded. Only run this AFTER the GLOBAL-reading code has deployed and been prod-verified — see the script's own header for why the ordering matters. Honours dry_run.
@@ -637,7 +638,7 @@ jobs:
           # exhausted), we must not have already destroyed the target's contents.
           echo "== Dumping Card + ClickEvent + PriceHistory from the source (compressed) =="
           if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
-                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' -t 'public."SealedPriceHistory"' \
                  -f history.dump; then
             echo "::error::Could not read HISTORY_DATABASE_URL_2. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts and the Index rebuild from the next price import onward). Nothing was written to the target."
             exit 1
@@ -645,7 +646,7 @@ jobs:
           echo "Dump size: $(du -h history.dump | cut -f1)"
 
           echo "== Clearing the target's history tables for a clean re-sync =="
-          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."SealedPriceHistory", public."Card" CASCADE;'
 
           # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
           # rows must land first or every COPY fails the FK. pg_restore replays
@@ -656,7 +657,7 @@ jobs:
           echo "== Restoring Card (the FK parent) =="
           pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
           echo "== Restoring ClickEvent + PriceHistory =="
-          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -t 'SealedPriceHistory' -d "$TARGET_HISTORY_URL" history.dump
 
           echo "== Verifying row counts (source vs target) =="
           # COUNT(*) transfers a single integer per table rather than re-reading
@@ -2358,7 +2359,7 @@ jobs:
           # exhausted), we must not have already destroyed the target's contents.
           echo "== Dumping Card + ClickEvent + PriceHistory from the source (compressed) =="
           if ! pg_dump "$SOURCE_HISTORY_URL" --no-owner --no-acl --format=custom --data-only \
-                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' \
+                 -t 'public."Card"' -t 'public."ClickEvent"' -t 'public."PriceHistory"' -t 'public."SealedPriceHistory"' \
                  -f history.dump; then
             echo "::error::Could not read HISTORY_DATABASE_URL_3. If it is hard-capped, its history cannot be drained — the site still works on an empty target (charts and the Index rebuild from the next price import onward). Nothing was written to the target."
             exit 1
@@ -2366,7 +2367,7 @@ jobs:
           echo "Dump size: $(du -h history.dump | cut -f1)"
 
           echo "== Clearing the target's history tables for a clean re-sync =="
-          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."Card" CASCADE;'
+          psql "$TARGET_HISTORY_URL" -c 'TRUNCATE public."PriceHistory", public."ClickEvent", public."SealedPriceHistory", public."Card" CASCADE;'
 
           # ORDER IS LOAD-BEARING: PriceHistory.cardId REFERENCES Card(id), so Card
           # rows must land first or every COPY fails the FK. pg_restore replays
@@ -2377,7 +2378,7 @@ jobs:
           echo "== Restoring Card (the FK parent) =="
           pg_restore --no-owner --no-acl --data-only -t 'Card' -d "$TARGET_HISTORY_URL" history.dump
           echo "== Restoring ClickEvent + PriceHistory =="
-          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -d "$TARGET_HISTORY_URL" history.dump
+          pg_restore --no-owner --no-acl --data-only -t 'ClickEvent' -t 'PriceHistory' -t 'SealedPriceHistory' -d "$TARGET_HISTORY_URL" history.dump
 
           echo "== Verifying row counts (source vs target) =="
           # COUNT(*) transfers a single integer per table rather than re-reading
@@ -4793,6 +4794,22 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/audit-sealed-history.ts
+
+      - name: Consolidate sealed price history into the live history project
+        if: inputs.task == 'consolidate-sealed-history'
+        env:
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
+          RH10: ${{ secrets.RH10 || vars.RH10 }}
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          RH5: ${{ secrets.RH5 || vars.RH5 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+        run: npx tsx scripts/consolidate-sealed-history.ts
 
       - name: Backfill existing PriceHistory into GLOBAL rows (phase 1 of 2 — populate)
         if: inputs.task == 'backfill-global-history'

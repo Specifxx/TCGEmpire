@@ -11936,3 +11936,34 @@ mirrors "crawled – not indexed" as duplicates of the card pages they mirror.
 - **Why not robots.txt:** a Disallow would stop AI bots fetching them and would
   hide the noindex from Google. The mirrors stay fetchable through llms.txt and
   each page's rel=alternate.
+
+## Rising Sealed: the history that every rotation dropped — 2026-09-24
+
+The owner: "why is rising sealed signals still building … its been like
+weeks". Rising Sealed needs 5 weekly price points per product
+(`MIN_POINTS`).
+
+**What we found.** A new read-only task, `audit-sealed-history`, surveyed
+every history project. Each held exactly **one** sealed snapshot day, the day
+after it went live: RH11 on 09-02, then RH6 09-03, RH7 09-05, RH8 09-07, RH9
+09-09, RH10 09-11, HISTORY_DATABASE_URL 09-12, `_2` 09-17 and `_3` 09-22.
+
+**Why.** Every history cutover's `pg_dump` named only `Card`, `ClickEvent` and
+`PriceHistory`, so `SealedPriceHistory` was left behind each time. The weekly
+writer then found the new project's table empty and wrote one snapshot. The
+next rotation came within the week, before it could write another. Card
+history survived all this because it was in the dump list.
+
+**The fix, in two parts.**
+
+1. **`consolidate-sealed-history`** copies every older project's sealed rows
+   into the live one. It skips duplicates on (groupKey, country, day), so it
+   is additive and idempotent. That gives about nine points per product, and
+   Rising Sealed ranks as soon as the page cache refreshes.
+2. **The current and next cutovers** (`_2` → `_3`, `_3` → `_4`) now dump,
+   truncate and restore `SealedPriceHistory`. `tests/sealed-history-rotation.test.ts`
+   pins this.
+
+The consolidated series is irregular, with points 1–5 days apart instead of 7.
+That is acceptable: `computeSignals` reads real dated points, and every point
+is a genuine snapshot.
