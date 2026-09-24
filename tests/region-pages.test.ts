@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { REGION_HOME_PATH, regionHomeHreflang, regionHomeMetadata } from "../src/lib/seo";
+import { REGION_HOME_PATH, regionHomeHreflang, regionHomeMetadata, EU_HREFLANG_COUNTRIES } from "../src/lib/seo";
 import { COUNTRY_LIST, DEFAULT_COUNTRY, type Country } from "../src/lib/country";
 
 // Every market that has its OWN region route — i.e. all of them except the
@@ -13,7 +13,9 @@ import { COUNTRY_LIST, DEFAULT_COUNTRY, type Country } from "../src/lib/country"
 // than a message naming the missing page. The count a reader cares about is
 // "one per market, plus x-default", which is what these now assert.
 const REGION_ROUTES = COUNTRY_LIST.map((c) => c.code).filter((c) => c !== DEFAULT_COUNTRY) as Exclude<Country, "US">[];
-const HREFLANG_KEYS = COUNTRY_LIST.length + 1; // every market + x-default
+// Every market's own tag, plus x-default, plus bare `en` on the US page, with the
+// EU's single entry expanded into one en-XX per country it serves (2026-09-24).
+const HREFLANG_KEYS = COUNTRY_LIST.length - 1 + EU_HREFLANG_COUNTRIES.length + 2;
 
 const ROOT = join(__dirname, "..");
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -28,7 +30,9 @@ test("a route file exists for every non-default region", () => {
     const p = `src/app/${dir}/page.tsx`;
     assert.ok(existsSync(join(ROOT, p)), `expected ${p} for ${country}`);
     const src = read(p);
-    assert.match(src, new RegExp(`regionHomeMetadata\\("${country}"\\)`), `${p} must build its metadata from regionHomeMetadata("${country}")`);
+    // Live counts since 2026-09-24: lib/home-metadata.ts regionMetadata() wraps
+    // regionHomeMetadata() with getHomeStats().
+    assert.match(src, new RegExp(`regionMetadata\\("${country}"\\)`), `${p} must build its metadata from regionMetadata("${country}")`);
     assert.match(src, new RegExp(`region="${country}"`), `${p} must render <RegionHome region="${country}" />`);
   }
 });
@@ -48,6 +52,18 @@ test("regionHomeHreflang() is reciprocal — every market's own page is present,
   assert.equal(Object.keys(map).length, HREFLANG_KEYS, "every market + x-default");
   assert.equal(map["en-GB"], `${new URL(map["x-default"]).origin}/uk`, "UK's region subtag must be GB, not UK");
   assert.ok(map["x-default"].endsWith("/") || !map["x-default"].includes("//", 8), "x-default must point at the bare origin (\"/\")");
+  // Bare `en` catches every English searcher with no tag of their own (PH, NZ,
+  // MY, IN…). It points at "/", the default market those visitors are served —
+  // it used to point at /eu and send all of them EUR prices.
+  assert.equal(map.en, map["x-default"]);
+  const origin = new URL(map["x-default"]).origin;
+  for (const c of EU_HREFLANG_COUNTRIES) assert.equal(map[`en-${c}`], `${origin}/eu`, `en-${c}`);
+  assert.equal(map["en-NZ"], undefined, "NZ resolves to the US market, not AU");
+});
+
+test("every EU hreflang country is one the EU market actually serves", async () => {
+  const { normalizeCountry } = await import("../src/lib/country");
+  for (const c of EU_HREFLANG_COUNTRIES) assert.equal(normalizeCountry(c), "EU", c);
 });
 
 test("every region page's metadata self-references its own canonical and carries the full hreflang set", () => {
@@ -61,8 +77,8 @@ test("every region page's metadata self-references its own canonical and carries
 });
 
 test("the homepage itself carries the same reciprocal hreflang set, not just a bare x-default", () => {
-  const src = read("src/app/page.tsx");
-  assert.match(src, /alternates: pageAlternates\("\/", \{ languages: regionHomeHreflang\(\) \}\)/);
+  assert.match(read("src/app/page.tsx"), /return homeMetadata\(\);/);
+  assert.match(read("src/lib/home-metadata.ts"), /alternates: pageAlternates\("\/", \{ languages: regionHomeHreflang\(\) \}\)/);
 });
 
 test("region pages are declared in the sitemap, mapped from REGION_HOME_PATH rather than hand-listed", () => {

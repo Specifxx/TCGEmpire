@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { homeDescription, homeTitle, regionHomeTitle } from "../src/lib/seo";
 import { join } from "node:path";
 
 const read = (p: string) => readFileSync(join(process.cwd(), p), "utf8");
@@ -91,7 +92,9 @@ test("no other card-surface retitles onto 'Riftbound Card List'", () => {
 // ── `riftbound price check` → / ─────────────────────────────────────────────
 
 test("the homepage owns 'price check' in its description, hero subhead and an FAQ", () => {
-  assert.match(read(HOME), /price check any card across/, "meta description must carry the phrase");
+  // The description is built live since 2026-09-24 (lib/seo.ts homeDescription).
+  assert.match(homeDescription(1200, 150), /price check any card across/, "meta description must carry the phrase");
+  assert.match(homeDescription(null, null), /price check any card across/, "including the count-free fallback");
   assert.match(read(HERO), /Price check any card and find the cheapest place to buy/, "hero subhead must carry it");
 
   const home = read(HOME);
@@ -116,34 +119,39 @@ test("the homepage's hard-won title HEAD TERM is NOT traded away for a long-tail
   // head term this test guards, so the assertion is narrowed to the head term
   // rather than deleted — and it now ALSO pins that the marker stays gone,
   // because silently reinstating it is the other half of the same drift.
-  const title = /title: \{ absolute: "([^"]+)" \}/.exec(read(HOME))?.[1] ?? "";
-  assert.ok(title, "expected an absolute title on the homepage");
-  assert.ok(
-    title.startsWith("Riftbound Card Prices"),
-    `homepage title must still front-load 'Riftbound Card Prices' exactly — got "${title}"`,
-  );
-  assert.ok(!/\(US\)|\bUS\b/.test(title), `the market marker was removed on purpose — got "${title}"`);
-  // Bing warns past 65; see card/[id]/page.tsx for why that number.
-  assert.ok(title.length <= 65, `homepage title is ${title.length} chars, over the 65-char budget`);
+  // Built live since 2026-09-24 (lib/seo.ts homeTitle): checked across the
+  // count range and the count-free fallback rather than read from the source.
+  assert.match(read(HOME), /return homeMetadata\(\);/, "the homepage must build its metadata from homeMetadata()");
+  for (const n of [null, 0, 9, 172, 999]) {
+    const title = homeTitle(n);
+    assert.ok(
+      title.startsWith("Riftbound Card Prices"),
+      `homepage title must still front-load 'Riftbound Card Prices' exactly — got "${title}"`,
+    );
+    assert.ok(!/\(US\)|\bUS\b/.test(title), `the market marker was removed on purpose — got "${title}"`);
+    assert.ok(title.length <= 60, `homepage title is ${title.length} chars, over the 60-char budget`);
+  }
 });
 
-test("the homepage H1 owns the market-free BUY query, and the title does not duplicate it", () => {
-  // Owner call, 2026-09-17: the H1 pivoted from comparison intent ("Compare
-  // Riftbound prices across every US store") to transactional intent. The split
-  // that makes this safe is the point — `buy riftbound cards` lives in the H1,
-  // `riftbound card prices` in the <title>, and neither field carries both.
+test("the homepage H1 is the head term; the BUY query moves to the subhead, and the title does not duplicate it", () => {
+  // Owner call, 2026-09-17: the H1 pivoted to transactional intent. REVERSED
+  // 2026-09-24 by the growth-pass brief: the H1 is "Riftbound Card Prices"
+  // (the query every result above us leads with), and the buy line is kept
+  // verbatim as the lead of the subhead. `buy riftbound cards` still has an
+  // on-page home; the title still does not carry it.
   const hero = read(HERO);
   assert.match(
     hero,
-    /Buy <span className="text-brand-400">Riftbound<\/span> cards at the best price/,
-    "the hero H1 must carry the transactional phrase",
+    /<span className="text-brand-400">Riftbound<\/span> Card Prices\{region \?/,
+    "the hero H1 must carry the head term",
   );
+  assert.match(hero, />Buy Riftbound cards at the best price<\/strong>/, "the buy phrase leads the subhead");
   assert.doesNotMatch(hero, /Compare <span[^>]*>Riftbound<\/span> prices across every/, "the old comparison H1 must be gone");
 
   // The nearest neighbour for this phrase is the guide, whose title leads with
   // "Where to" (research intent: which stores exist). The homepage must not
   // claim the bare phrase in the one field that would actually collide.
-  const title = /title: \{ absolute: "([^"]+)" \}/.exec(read(HOME))?.[1] ?? "";
+  const title = homeTitle(172);
   assert.ok(
     !/buy riftbound cards/i.test(title),
     `the homepage title must not compete with /guides/where-to-buy-riftbound-cards — got "${title}"`,

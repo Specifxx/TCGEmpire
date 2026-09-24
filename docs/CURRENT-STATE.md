@@ -174,10 +174,15 @@ longer lands on its entry.
   posts were 301'd, 7 after an AdSense low-value rejection).
   [2026-09-10](../DECISIONS.md#L4094), [2026-09-12](../DECISIONS.md#L5648),
   [2026-09-17](../DECISIONS.md#L7894)
-- **Owners:** the homepage `<title>` is "Riftbound Card Prices — Cheapest
-  Store & eBay"; `/browse` owns "riftbound card list"; the Radiance spoiler
-  tracker is the only title with "radiance" + "spoiler". No store count in
-  any page title (Singapore's "11 Stores" excepted).
+- **Owners:** the six market homepages' titles and H1s lead with "Riftbound
+  Card Prices", and their titles quote a LIVE count of stores with an
+  in-stock listing (`homeTitle` / `regionHomeTitle`, dropped when unknown);
+  each has a "Riftbound card prices today" table under the hero. `/browse`
+  owns "riftbound card list"; the Radiance spoiler tracker is the only title
+  with "radiance" + "spoiler". No store count in any OTHER page title
+  (Singapore's "11 Stores" excepted). Bare hreflang `en` is the US page; the
+  EU pages carry one en-XX per EU country served.
+  [2026-09-24](../DECISIONS.md#L11717)
   [2026-09-17](../DECISIONS.md#L7894), [2026-09-21](../DECISIONS.md#L9560),
   [2026-09-21](../DECISIONS.md#L9222), [2026-09-22](../DECISIONS.md#L10403)
 - **Card pages are always indexable** (09-17 reversed Phase 7a); only

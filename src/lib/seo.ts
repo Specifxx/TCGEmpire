@@ -123,6 +123,28 @@ const HREFLANG: Record<Country, string> = {
   EU: "en",
 };
 
+// ── 2026-09-24: bare `en` moves from the EU page to the US one ──────────────
+// The note above was right that `en` is a legal tag and wrong about who it
+// catches. Bare `en` is the match for every English searcher NOT covered by a
+// more specific tag — the Philippines, New Zealand, Malaysia, India, Ireland —
+// and for all of them it served EUR prices from European stores. The US page is
+// the site's default market (DEFAULT_COUNTRY), the one those visitors are
+// served anyway by normalizeCountry(), so it is the honest `en`.
+//
+// The EU page is instead declared for the countries its market actually serves:
+// every one below is in country.ts's EU_ISO, so a visitor Google sends there
+// with that tag is one normalizeCountry() also routes to EU. New Zealand gets no
+// tag: NZ support was removed 2026-08-20 and an NZ visitor resolves to the US
+// market, not AU, so an en-NZ → /au claim would be false.
+export const EU_HREFLANG_COUNTRIES = ["IE", "DE", "FR", "NL", "BE", "ES", "IT", "AT", "PL", "SE", "DK", "FI", "PT"] as const;
+
+/** The hreflang entries for one market's page: one tag, or the EU's list. */
+function hreflangTags(country: Country): string[] {
+  if (country === "EU") return EU_HREFLANG_COUNTRIES.map((c) => `en-${c}`);
+  if (country === "US") return ["en-US", "en"];
+  return [HREFLANG[country]];
+}
+
 /**
  * hreflang map for one of the country buying guides, or null for any other slug.
  * x-default points at the US guide, which is the site's default market
@@ -133,7 +155,7 @@ export function hreflangForCountryGuide(slug: string): Record<string, string> | 
   if (!isGuide) return null;
   const map: Record<string, string> = {};
   for (const [country, s] of Object.entries(COUNTRY_GUIDE_SLUGS) as [Country, string][]) {
-    map[HREFLANG[country]] = `${SITE_URL}/blog/${s}`;
+    for (const tag of hreflangTags(country)) map[tag] = `${SITE_URL}/blog/${s}`;
   }
   map["x-default"] = `${SITE_URL}/blog/${COUNTRY_GUIDE_SLUGS.US}`;
   return map;
@@ -162,10 +184,64 @@ export const REGION_HOME_PATH: Record<Country, string> = {
 export function regionHomeHreflang(): Record<string, string> {
   const map: Record<string, string> = {};
   for (const [country, path] of Object.entries(REGION_HOME_PATH) as [Country, string][]) {
-    map[HREFLANG[country]] = `${SITE_URL}${path === "/" ? "" : path}`;
+    for (const tag of hreflangTags(country)) map[tag] = `${SITE_URL}${path === "/" ? "" : path}`;
   }
   map["x-default"] = SITE_URL;
   return map;
+}
+
+// ── Market homepage titles (2026-09-24) ──────────────────────────────────────
+// "riftbound card prices": 988 impressions at position 7.4, CTR 0.6% — every
+// result above us is a price list whose title leads with the query. Query first,
+// then a live, specific count. The count is stores with an IN-STOCK listing in
+// that market right now (home-stats liveStoresByCountry), which is the reading
+// that settles the 2026-09-22 objection to store counts in titles ("tracked" and
+// "live" are different numbers): it says which one it means, and it is derived
+// hourly, never typed. Unknown or zero drops the count rather than printing 0.
+//
+// Titles are ABSOLUTE and carry no "| RiftCompare" suffix: 60 characters is the
+// budget and the brand is already in the URL and the site name Google shows.
+
+/** Short market names for titles: "Australia", "UK", "Europe" — no article. */
+const TITLE_PLACE: Record<Exclude<Country, "US">, string> = {
+  AU: "Australia",
+  UK: "UK",
+  SG: "Singapore",
+  CA: "Canada",
+  EU: "Europe",
+};
+const TITLE_MAX = 60;
+
+const firstFit = (candidates: string[]) => candidates.find((t) => t.length <= TITLE_MAX) ?? candidates[candidates.length - 1];
+
+export function homeTitle(liveStores: number | null | undefined): string {
+  const n = liveStores && liveStores > 0 ? liveStores : null;
+  return firstFit([
+    ...(n ? [`Riftbound Card Prices: Live Price Guide, ${n} Stores + eBay`, `Riftbound Card Prices: ${n} Stores + eBay, Updated Daily`] : []),
+    "Riftbound Card Prices: Live Price Guide, Stores + eBay",
+  ]);
+}
+
+export function regionHomeTitle(region: Exclude<Country, "US">, liveStores: number | null | undefined): string {
+  const n = liveStores && liveStores > 0 ? liveStores : null;
+  const place = TITLE_PLACE[region];
+  return firstFit([
+    ...(n ? [`Riftbound Card Prices ${place}: Compare ${n} ${region} Stores`] : []),
+    `Riftbound Card Prices ${place}: Compare ${region} Stores`,
+  ]);
+}
+
+export function homeDescription(cards: number | null | undefined, liveStores: number | null | undefined): string {
+  const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
+  const s = liveStores && liveStores > 0 ? `${liveStores} stores` : "every store we track";
+  return `Riftbound card prices for ${c} across ${s} and eBay in six markets — price check any card across them and find the cheapest place to buy. Updated daily.`;
+}
+
+export function regionHomeDescription(region: Exclude<Country, "US">, cards: number | null | undefined, liveStores: number | null | undefined): string {
+  const info = COUNTRIES[region];
+  const c = cards && cards > 0 ? `${cards.toLocaleString("en-US")} cards` : "every card";
+  const s = liveStores && liveStores > 0 ? `${liveStores} ${info.adjective} stores` : `every ${info.adjective} store we track`;
+  return `Riftbound card prices in ${info.place}: ${c} compared across ${s} in ${info.currency}, with ${info.adjective} delivered cost. Updated daily.`;
 }
 
 /** Full <Metadata> for one of the region home pages (not "/" itself, which
@@ -173,11 +249,13 @@ export function regionHomeHreflang(): Record<string, string> {
  *  region-locked facts here (adjective, currency, canonical path) reads off
  *  COUNTRIES/REGION_HOME_PATH so a page can never describe a market other than
  *  the one it actually renders. */
-export function regionHomeMetadata(region: Exclude<Country, "US">): Metadata {
-  const info = COUNTRIES[region];
+export function regionHomeMetadata(
+  region: Exclude<Country, "US">,
+  live: { cards?: number | null; stores?: number | null } = {},
+): Metadata {
   const path = REGION_HOME_PATH[region];
-  const title = `Compare Riftbound Card Prices Across Every ${info.adjective} Store | RiftCompare`;
-  const description = `Compare live Riftbound TCG card prices across ${info.adjective} stores in ${info.currency} — total delivered cost including ${info.adjective} shipping, updated daily. Free.`;
+  const title = regionHomeTitle(region, live.stores);
+  const description = regionHomeDescription(region, live.cards, live.stores);
   return {
     title: { absolute: title },
     description,

@@ -11713,3 +11713,53 @@ classed it as over-numbered:
 
 **Also:** the Unleashed set guide now calls 238 an Ultimate, not "a second
 Showcase printing".
+
+## Growth pass: rank for "riftbound card prices" and get more signups — 2026-09-24
+
+The owner's brief, done in one pass with a commit per item. Search Console, 28
+days: `riftbound card prices` 988 impressions at position 7.4 and 0.6% CTR;
+`riftbound prices` 727 at 7.3 and 1.1%. The four results above us are all
+price-list pages. Every number below comes from the database or from the
+owner's Search Console figures; none is typed in.
+
+**1. Market homepages.**
+
+- **H1 is the head term again:** "Riftbound Card Prices" on `/`, "…in
+  Australia" and so on per region. This reverses the 2026-09-17 buy-intent H1
+  by the owner's instruction. The buy line is kept verbatim as the bold lead of
+  the subhead, so `buy riftbound cards` still has an on-page home.
+- **Titles quote a live count**, reversing the 2026-09-21/22 "no store count in
+  a title" rule for these six pages only. That rule's objection was
+  ambiguity: "stores we track" and "stores with a live listing" are different
+  numbers. The count is now explicitly the second: stores with an in-stock
+  listing (`home-stats` `liveStoresByCountry` / `liveStoresAll`), recomputed
+  hourly from the cache the pages already read. A zero or failed read drops
+  the number from the title rather than printing one.
+  - Titles are absolute and 60 characters or fewer, with no brand suffix.
+  - Descriptions carry the live card and store counts and "Updated daily".
+  - Articles and every other route stay count-free.
+- **"Riftbound card prices today"** (`lib/price-table.ts`,
+  `PriceTodayTable`) sits directly under the hero on all six pages.
+  - It lists the 50 most-searched cards (searchCount, then viewCount), in the
+    page's own market and currency.
+  - Columns: cheapest in-stock price, in-stock store count (the same
+    definition CardTile uses) and 7-day change from the weekly GLOBAL history.
+    A card with no two recent points shows "—", never 0%.
+  - One capped card read, one grouped count and one history read over those
+    50 ids, cached per market for an hour. That matches the pages'
+    `revalidate` (egress rule 5), and it nests no self-caching loader
+    (rule 6). It fails open.
+  - It replaces the carousel's "All-time" tab, which ranked the same cards by
+    the same signal. The ItemList JSON-LD moved with it.
+- **hreflang.** Bare `en` pointed at `/eu`, which served EUR prices to every
+  English searcher without a tag of their own (PH, NZ, MY, IN…). It now points
+  at `/`, the market those visitors are served anyway.
+  - `/eu` declares en-IE, DE, FR, NL, BE, ES, IT, AT, PL, SE, DK, FI and PT.
+    Each is in `EU_ISO`, and a test checks `normalizeCountry` routes it to EU.
+  - No en-NZ: NZ support was removed on 2026-08-20, and an NZ visitor
+    resolves to the US market, not AU.
+  - The country buying guides use the same tags.
+- **Verified** with a production build against a local Postgres (the CI
+  recipe: `prisma db push`, `prisma/seed.ts`, plus a synthetic local-only
+  price fixture). All six homepages render the table, the new H1 and the full
+  hreflang set, with `revalidate` 3600 in the prerender manifest.

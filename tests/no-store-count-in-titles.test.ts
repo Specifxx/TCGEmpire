@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getArticles } from "../src/lib/articles";
+import { homeTitle, regionHomeTitle } from "../src/lib/seo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "No store count goes in a page title" — DECISIONS.md, 2026-09-21. Two
@@ -56,14 +57,30 @@ test("no route title claims a store count", () => {
   );
 });
 
-test("the homepage title keeps its head term and makes a claim that cannot rot", () => {
-  const title = /title: \{ absolute: "([^"]+)" \}/.exec(read("src/app/page.tsx"))?.[1] ?? "";
-  assert.ok(title, "expected an absolute title on the homepage");
-  // Three audits (2026-08-20, 08-30, 09-10) converged on this phrase, the last
-  // on live SERP evidence. tests/keyword-ownership.test.ts owns that rule; this
-  // asserts what replaced the vague half after it.
-  assert.ok(title.startsWith("Riftbound Card Prices"), title);
-  assert.ok(!/Compare Every Store/.test(title), "the unfalsifiable claim must not come back");
-  assert.match(title, /Cheapest/, "the title must answer the query's actual job");
-  assert.ok(title.length <= 65, `homepage title is ${title.length} chars`);
+test("the market homepage titles quote a LIVE in-stock store count, derived, never typed", () => {
+  // REVERSED 2026-09-24 by the owner's growth-pass brief, which asks for "live
+  // counts" in these six titles. The 2026-09-21/22 objection was ambiguity —
+  // "stores we track" vs "stores with a live listing" — and that is answered by
+  // saying which: the count is stores with an IN-STOCK listing in that market
+  // (home-stats liveStoresByCountry), recomputed hourly, and a zero or failed
+  // read drops the number rather than printing one. Articles and every other
+  // route stay count-free (the tests above).
+  assert.equal(homeTitle(172), "Riftbound Card Prices: Live Price Guide, 172 Stores + eBay");
+  assert.equal(regionHomeTitle("AU", 28), "Riftbound Card Prices Australia: Compare 28 AU Stores");
+  for (const n of [null, 0]) {
+    assert.ok(!STORE_COUNT.test(homeTitle(n)), homeTitle(n));
+    assert.ok(!STORE_COUNT.test(regionHomeTitle("UK", n)), regionHomeTitle("UK", n));
+  }
+  for (const r of ["AU", "UK", "CA", "SG", "EU"] as const) {
+    for (const n of [5, 88, 150]) {
+      const t = regionHomeTitle(r, n);
+      assert.ok(t.startsWith("Riftbound Card Prices"), t);
+      assert.ok(t.length <= 60, `${t} is ${t.length} chars`);
+    }
+  }
+  const meta = read("src/lib/home-metadata.ts");
+  assert.match(meta, /homeTitle\(stats\?\.liveStoresAll\)/);
+  assert.match(meta, /stores: stats\?\.liveStoresByCountry\?\.\[region\]/);
+  assert.doesNotMatch(read("src/lib/seo.ts") + meta, /RETAILER_LIST\.length/, "never the tracked-store count");
+  assert.match(read("src/lib/home-stats.ts"), /where: \{ inStock: true, NOT: \{ retailer: \{ startsWith: "ebay" \} \} \}/);
 });

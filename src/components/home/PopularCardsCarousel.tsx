@@ -62,7 +62,10 @@ export function PopularCardsCarousel({
   storeWord: string;
 }) {
   const tabs: Tab[] = [
-    {
+    // Omitted when the page renders the "Riftbound card prices today" table
+    // instead (components/home/PriceTodayTable.tsx) — the same cards, ranked by
+    // the same demand signal, as a server-rendered price list.
+    ...(allTime.length === 0 ? [] : [{
       key: "alltime",
       label: "All-time",
       heading: "Most popular Riftbound cards",
@@ -70,7 +73,7 @@ export function PopularCardsCarousel({
       allHref: "/browse",
       allLabel: "View all →",
       cards: allTime,
-    },
+    }]),
     ...(movers.length > 0
       ? [
           {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { regionHomeMetadata } from "@/lib/seo";
+import { regionMetadata } from "@/lib/home-metadata";
 import { RegionHome } from "@/components/home/RegionHome";
 
 // Region home page — the eurozone. See app/au/page.tsx for the shared shape.
@@ -10,7 +10,9 @@ import { RegionHome } from "@/components/home/RegionHome";
 // note on why the market is drawn that way).
 export const revalidate = 3600;
 
-export const metadata: Metadata = regionHomeMetadata("EU");
+export function generateMetadata(): Promise<Metadata> {
+  return regionMetadata("EU");
+}
 
 export default function EuHomePage() {
   return <RegionHome region="EU" />;

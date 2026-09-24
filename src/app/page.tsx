@@ -7,7 +7,9 @@ import { getRecentlyUpdated, getPriceMovers, type PriceMovers } from "@/lib/pric
 import { getHomeStats } from "@/lib/home-stats";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { HomeSections } from "@/components/home/HomeSections";
-import { pageAlternates, pageOpenGraph, regionHomeHreflang } from "@/lib/seo";
+import { PriceTodayTable } from "@/components/home/PriceTodayTable";
+import { getPriceTable } from "@/lib/price-table";
+import { homeMetadata } from "@/lib/home-metadata";
 import { webPage, faqPage } from "@/lib/jsonld";
 
 // RESTORED (2026-08-17), overriding a same-day "one job" redesign that had
@@ -78,7 +80,6 @@ export const revalidate = 3600;
 // answer. "Riftbound card prices" (the closest variant query) still gets
 // verbatim coverage via the description's second sentence and the hero
 // subhead, without diluting the title's own exact match.
-export const metadata: Metadata = {
   // "(US)" ADDED 2026-08-30, REMOVED 2026-09-17. The removal is the owner's
   // explicit call ("it doesn't need to say US on the Chrome tab header"), and
   // the 08-30 reasoning is kept below in full rather than deleted, because it
@@ -156,7 +157,6 @@ export const metadata: Metadata = {
   // here — so the bar that decision sets (independent sources agreeing, as with
   // Singapore's 11) is not met. Both halves of the title below are claims the
   // site already publishes elsewhere and that no crawl can falsify.
-  title: { absolute: "Riftbound Card Prices — Cheapest Store & eBay | RiftCompare" },
   // Kept to 25–160 chars (Bing/Google snippet limit) while staying market-neutral
   // in substance — every market is still named, just reordered (see the areaServed
   // fix in layout.tsx for the same AU-first leftover, same reasoning: COUNTRY_LIST
@@ -183,8 +183,6 @@ export const metadata: Metadata = {
   // long-tail — "price check", or the "Buy Riftbound Cards" phrasing the H1
   // took on the same day — would be a bad swap, and the H1/subhead/FAQ carry
   // those phrases instead precisely so the title doesn't have to.
-  description:
-    "Riftbound prices, compared live: price check any card across US, AU, UK, Singapore, Canada & EU stores and find the cheapest place to buy. Updated daily.",
   // NO keywords meta — removed 2026-08-20. Google has ignored this tag since 2009
   // (see layout.tsx's own sitewide policy comment, which this page had quietly
   // re-added and contradicted); it carried the exact phrase "Riftbound prices"
@@ -195,17 +193,19 @@ export const metadata: Metadata = {
   // Database & Price Comparison"), so every social-share unfurl (Facebook/X/
   // Discord/Slack) showed a different, less specific tagline than the actual
   // <title> — found by the same audit.
-  openGraph: pageOpenGraph({
-    title: "Riftbound Card Prices — Cheapest Store & eBay",
-    description: "Riftbound card prices compared live across every store we track and eBay — find the cheapest place to buy.",
-    url: "/",
-  }),
   // The homepage is the US/x-default member of the region-home alternate set
   // (see /au, /uk, /sg, /ca — lib/seo.ts's regionHomeHreflang()). hreflang
   // is reciprocal by spec: every page in the group must declare the full set,
   // not just the other pages pointing back at this one.
-  alternates: pageAlternates("/", { languages: regionHomeHreflang() }),
-};
+//
+// LIVE COUNTS 2026-09-24 (growth pass): the title is now built by
+// lib/seo.ts homeTitle() — "Riftbound Card Prices: Live Price Guide, {N}
+// Stores + eBay", N = stores with an in-stock listing right now across every
+// market — and the description by homeDescription(). Query first, as every
+// competing price list's title is. See DECISIONS.md, 2026-09-24.
+export function generateMetadata(): Promise<Metadata> {
+  return homeMetadata();
+}
 
 // MARKET-NEUTRAL FAQs: this page is cached (real ISR) and Googlebot crawls
 // from US IPs, so exactly one version is ever indexed — copy that names every
@@ -250,6 +250,7 @@ export default async function HomePage() {
     topDealsArr,
     recentlyUpdated,
     moversArr,
+    priceTable,
   ] = await Promise.all([
     // Per-market stat tiles + the "Prices updated Xh ago" freshness signal —
     // shared with the 4 region home pages (see lib/home-stats.ts) so they read
@@ -282,6 +283,7 @@ export default async function HomePage() {
     // six fresh DB scans. moversByCountry[country] (the baseline) also feeds the
     // popular-cards carousel's "Movers" tab below, unchanged from before.
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    getPriceTable(country),
   ]);
   const storeCount = statsByCountry[country].stores;
   const storeWord = storeCount === 1 ? "store" : "stores";
@@ -300,6 +302,11 @@ export default async function HomePage() {
         trendingCards={popularCards.slice(0, 6)}
         freshness={freshness}
       />
+
+      {/* The price list the head term asks for, directly under the hero
+          (lib/price-table.ts). Replaces the carousel's "All-time" tab, which
+          ranked the same cards by the same demand signal. */}
+      <PriceTodayTable rows={priceTable} country={country} totalPriced={statsByCountry[country].priced} />
 
       {/* REMOVED: the "Vendetta — the new set, priced" launch band (cheapest
           booster box, price-since-release, chase cards). It was a launch-window
@@ -323,7 +330,7 @@ export default async function HomePage() {
         totalCards={totalCards}
         storeCount={storeCount}
         storeWord={storeWord}
-        popularCards={popularCards}
+        popularCards={priceTable.length ? [] : popularCards}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

@@ -22,6 +22,17 @@ export interface HomeStats {
   totalCards: number;
   statsByCountry: Record<Country, MarketStat>;
   freshness: string | null;
+  /**
+   * Stores with at least one IN-STOCK listing right now, per market — the count
+   * the homepage titles quote. Distinct from `stores` (every tracked store that
+   * has ever had a row), because "stores we track" and "stores with a live
+   * listing" are different numbers and a title has to mean one of them
+   * (DECISIONS.md, 2026-09-22 and 2026-09-24). Optional so an entry cached
+   * before this field existed reads as "unknown", never as zero.
+   */
+  liveStoresByCountry?: Record<Country, number>;
+  /** The same, counted once per store across every market. */
+  liveStoresAll?: number;
 }
 
 async function computeHomeStats(): Promise<HomeStats> {
@@ -39,6 +50,13 @@ async function computeHomeStats(): Promise<HomeStats> {
     ]).then(([singles, sealed]) => [...singles, ...sealed]),
     prisma.retailerPrice.aggregate({ _max: { lastSeen: true } }),
   ]);
+  // In-stock only. A separate pair of grouped reads (≈ a few hundred
+  // country×retailer rows) rather than a change to the query above, which the
+  // hero's "stores tracked" figure still means.
+  const liveRows = await Promise.all([
+    prisma.retailerPrice.groupBy({ by: ["country", "retailer"], where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } } } }),
+    prisma.sealedListing.groupBy({ by: ["country", "retailer"], where: { inStock: true, NOT: { retailer: { startsWith: "ebay" } } } }),
+  ]).then(([singles, sealed]) => [...singles, ...sealed]);
 
   const inStockByCountry: Record<string, number> = {};
   for (const g of inStockGroups) inStockByCountry[g.country] = g._count._all;
@@ -53,6 +71,14 @@ async function computeHomeStats(): Promise<HomeStats> {
     (storesByCountry[r.country] ??= new Set()).add(r.retailer);
   }
 
+  const liveByCountry: Record<string, Set<string>> = {};
+  const liveAll = new Set<string>();
+  for (const r of liveRows) {
+    if (!validRetailerKeys.has(r.retailer)) continue;
+    (liveByCountry[r.country] ??= new Set()).add(r.retailer);
+    liveAll.add(r.retailer);
+  }
+
   const statsByCountry = Object.fromEntries(
     COUNTRY_CODES.map((c, i) => [c, { priced: pricedCounts[i], inStock: inStockByCountry[c] ?? 0, stores: storesByCountry[c]?.size ?? 0 }]),
   ) as Record<Country, MarketStat>;
@@ -61,6 +87,8 @@ async function computeHomeStats(): Promise<HomeStats> {
     totalCards,
     statsByCountry,
     freshness: lastPriceRefresh._max.lastSeen ? timeAgo(lastPriceRefresh._max.lastSeen) : null,
+    liveStoresByCountry: Object.fromEntries(COUNTRY_CODES.map((c) => [c, liveByCountry[c]?.size ?? 0])) as Record<Country, number>,
+    liveStoresAll: liveAll.size,
   };
 }
 

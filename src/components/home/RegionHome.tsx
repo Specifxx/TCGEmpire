@@ -8,6 +8,8 @@ import { COUNTRY_GUIDE_SLUGS } from "@/lib/seo";
 import { ebayLabel } from "@/lib/affiliate";
 import { CinematicHero } from "./CinematicHero";
 import { HomeSections } from "./HomeSections";
+import { PriceTodayTable } from "./PriceTodayTable";
+import { getPriceTable } from "@/lib/price-table";
 import { webPage, faqPage, breadcrumb, ldJson } from "@/lib/jsonld";
 
 // Every market, so the cross-market strips on a region page show them all.
@@ -48,12 +50,14 @@ export async function RegionHome({ region }: { region: Country }) {
     topDealsArr,
     recentlyUpdated,
     moversArr,
+    priceTable,
   ] = await Promise.all([
     getHomeStats(),
     getPopularCards(12, region),
     Promise.all(COUNTRY_CODES.map((c) => getCachedTopDeals(c))),
     getRecentlyUpdated(region, 24),
     Promise.all(COUNTRY_CODES.map((c) => getPriceMovers(c, 6))),
+    getPriceTable(region),
   ]);
   const trendingCards = popularCards.slice(0, 6);
   const stat = statsByCountry[region];
@@ -83,6 +87,8 @@ export async function RegionHome({ region }: { region: Country }) {
         region={{ code: region, adjective: info.adjective }}
       />
 
+      <PriceTodayTable rows={priceTable} country={region} totalPriced={stat.priced} />
+
       {/* The full "/" feature set — Market Pulse, popular cards, Today's Top
           Deals, How It Works, Explore, reviews, partners — see HomeSections.tsx
           and this file's own header comment for why this exists here now. */}
@@ -91,7 +97,7 @@ export async function RegionHome({ region }: { region: Country }) {
         totalCards={totalCards}
         storeCount={stat.stores}
         storeWord={storeWord}
-        popularCards={popularCards}
+        popularCards={priceTable.length ? [] : popularCards}
         topDealsByCountry={topDealsByCountry}
         moversByCountry={moversByCountry}
         recentlyUpdated={recentlyUpdated}

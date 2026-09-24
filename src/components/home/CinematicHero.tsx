@@ -208,8 +208,13 @@ export function CinematicHero({
             explicit, front-of-page geo signal that their own titles already
             carry. SHORT_PLACE (not `adjective`) because "in Australia"
             reads as a place and "in Australian" does not. */}
+        {/* 2026-09-24 (growth pass): the H1 is the head term again —
+            "Riftbound Card Prices" (+ " in Australia" etc. on a region page),
+            matching the titles and the price lists that outrank us for it.
+            The buy-intent line that held the H1 since 09-17 is kept, verbatim,
+            as the lead of the subhead below. DECISIONS.md, 2026-09-24. */}
         <h1 className="animate-fade-in [animation-delay:160ms] mx-auto mt-4 max-w-4xl text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          Buy <span className="text-brand-400">Riftbound</span> cards at the best price{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
+          <span className="text-brand-400">Riftbound</span> Card Prices{region ? ` in ${SHORT_PLACE[region.code]}` : ""}
         </h1>
         {/* "Price check" ADDED 2026-09-17 — the homepage is the declared owner of
             `riftbound price check` (docs/seo-keyword-map.md; see page.tsx's
@@ -229,7 +234,8 @@ export function CinematicHero({
             in ~45 words, none of them duplicating the title: "price check",
             "buy Riftbound cards", "Riftbound prices", and the market list. */}
         <p className="animate-fade-in [animation-delay:240ms] mx-auto mt-4 max-w-2xl text-base text-slate-300">
-          Price check any card and find the cheapest place to buy Riftbound cards — live Riftbound prices from
+          <strong className="block text-lg font-semibold text-white sm:text-xl">Buy Riftbound cards at the best price</strong>
+          Price check any card and find the cheapest place to buy — live Riftbound prices from
           every {heroAdjective} retailer we track, plus five more markets in their own currency: {otherMarkets}, updated daily.
         </p>
 

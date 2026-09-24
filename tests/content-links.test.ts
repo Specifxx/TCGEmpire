@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { ARTICLES, getArticles } from "../src/lib/articles";
-import { COUNTRY_GUIDE_SLUGS, hreflangForCountryGuide } from "../src/lib/seo";
+import { COUNTRY_GUIDE_SLUGS, EU_HREFLANG_COUNTRIES, hreflangForCountryGuide } from "../src/lib/seo";
 import { extractToc, headingId } from "../src/lib/toc";
 import { cardSlug } from "../src/lib/card-url";
 import { setByCode } from "../src/lib/constants";
@@ -248,8 +248,13 @@ test("every country buying guide forms a complete hreflang cluster", () => {
     // members. Derived from the map itself rather than a hard-coded 6, which
     // failed with "7 !== 6" when the EU market landed instead of naming what
     // was missing.
-    const expected = Object.keys(COUNTRY_GUIDE_SLUGS).length + 1;
-    assert.equal(Object.keys(map!).length, expected, `${slug}: expected one locale per market + x-default`);
+    // Since 2026-09-24 the EU guide carries one en-XX per country the EU market
+    // serves and the US guide also takes bare `en` (lib/seo.ts hreflangTags).
+    const expected = Object.keys(COUNTRY_GUIDE_SLUGS).length - 1 + EU_HREFLANG_COUNTRIES.length + 2;
+    assert.equal(Object.keys(map!).length, expected, `${slug}: expected every market's tags + x-default`);
+    assert.equal(map!.en, map!["en-US"], "bare en is the US guide, not the EU one");
+    const targets = new Set(Object.values(map!));
+    assert.equal(targets.size, Object.keys(COUNTRY_GUIDE_SLUGS).length, "every tag points at a cluster member");
   }
 });
 
