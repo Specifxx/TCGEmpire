@@ -61,6 +61,7 @@ on:
           - fix-op-promo-flag # flip isPromo=true for organized-play promos add-tcg-printings.ts mis-tagged (Nexus Night rune cycle)
           - fix-kennen-name  # one-off: rename VEN 155/166 + 197/166 from RiftScribe's "Yordle, Heart of the Tempest" placeholder to "Kennen, Heart of the Tempest" (matches the manually-corrected 197*/166 Signature)
           - audit-history    # read-only per-day price-history diagnostic
+          - audit-sealed-history # read-only: why is Rising Sealed "still building"? Per history project: SealedPriceHistory rows, snapshot days, per-market series depth, and how many stored groupKeys still match a live sealed group
           - audit-store-health # read-only: prints every tracked store (retailers.ts) with ZERO RetailerPrice rows at all (candidates to remove as stale/dead), plus every other open store-health alert. Same computation /admin/store-health renders, without needing admin auth to see it.
           - backfill-global-history # ONE-TIME (phase 1 of 2): collapses existing per-market PriceHistory rows (AU/US/UK/SG/CA/EU) into one GLOBAL row per card per day, in USD cents — see scripts/backfill-global-history.ts's own header for why this must run BEFORE the GLOBAL-reading code deploys. Additive only, never deletes. Honours dry_run.
           - backfill-global-history-delete-old # ONE-TIME (phase 2 of 2): deletes the per-market rows phase 1 superseded. Only run this AFTER the GLOBAL-reading code has deployed and been prod-verified — see the script's own header for why the ordering matters. Honours dry_run.
@@ -4775,6 +4776,23 @@ jobs:
           HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
           HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
         run: npx tsx scripts/audit-history.ts
+
+      - name: Audit sealed price history (read-only)
+        if: inputs.task == 'audit-sealed-history'
+        env:
+          DATABASE_URL: ${{ secrets.RM3 || vars.RM3 }}
+          DB_SOURCE_NAME: ${{ (secrets.RM3 || vars.RM3) && 'RM3' || 'UNSET' }}
+          RH11: ${{ secrets.RH11 || vars.RH11 }}
+          RH10: ${{ secrets.RH10 || vars.RH10 }}
+          RH9: ${{ secrets.RH9 || vars.RH9 }}
+          RH8: ${{ secrets.RH8 || vars.RH8 }}
+          RH7: ${{ secrets.RH7 || vars.RH7 }}
+          RH6: ${{ secrets.RH6 || vars.RH6 }}
+          HISTORY_DATABASE_URL: ${{ secrets.HISTORY_DATABASE_URL || vars.HISTORY_DATABASE_URL }}
+          HISTORY_DATABASE_URL_4: ${{ secrets.HISTORY_DATABASE_URL_4 || vars.HISTORY_DATABASE_URL_4 }}
+          HISTORY_DATABASE_URL_2: ${{ secrets.HISTORY_DATABASE_URL_2 || vars.HISTORY_DATABASE_URL_2 }}
+          HISTORY_DATABASE_URL_3: ${{ secrets.HISTORY_DATABASE_URL_3 || vars.HISTORY_DATABASE_URL_3 }}
+        run: npx tsx scripts/audit-sealed-history.ts
 
       - name: Backfill existing PriceHistory into GLOBAL rows (phase 1 of 2 — populate)
         if: inputs.task == 'backfill-global-history'
