@@ -7,7 +7,10 @@ import {
   ISSUE_CODES,
   REPORT_KINDS,
   REPORT_STATUSES,
+  SEALED_GROUP_NAME,
+  SEALED_SET_NAMES,
   issueLabel,
+  issueNoun,
   issueWantsPrice,
   sealedReportTarget,
   shouldNotifyReporter,
@@ -269,31 +272,118 @@ test("the admin route thanks the reporter without ever putting the status change
   assert.ok(!/console\.\w+\([^;]*\$\{to\}/.test(code), "never log the recipient");
 });
 
-test("a sealed report links to /sealed narrowed to that one product", () => {
+test("a sealed report names and links the product the way its /sealed tile does", () => {
   // There is no per-product sealed page, so the link is a filter — exact set +
   // type where the group has a set (its groupKey IS `${setCode}|${type}`).
   assert.deepEqual(
-    sealedReportTarget({ title: "whatever the store wrote", productType: "Booster Box", setCode: "VEN" }, "Vendetta"),
+    sealedReportTarget("VEN|Booster Box", { title: "whatever the store wrote", productType: "Booster Box", setCode: "VEN" }),
     { name: "Vendetta Booster Box", path: "/sealed?set=VEN&type=Booster%20Box" },
   );
-  // OGS's name is also a product type — merged on whole words, not said twice.
-  const ogs = (productType: string) =>
-    sealedReportTarget({ title: "", productType, setCode: "OGS" }, "Origins: Proving Grounds").name;
-  assert.equal(ogs("Proving Grounds"), "Origins: Proving Grounds");
-  assert.equal(ogs("Proving Grounds Case"), "Origins: Proving Grounds Case");
-  // …and only on whole words: a type that merely starts with the set's last
-  // word is not an overlap.
-  assert.equal(sealedReportTarget({ title: "", productType: "Grounded Box", setCode: "OGS" }, "Proving Ground").name, "Proving Ground Grounded Box");
-  // A set code with no display name still reads as something.
-  assert.equal(sealedReportTarget({ title: "", productType: "Booster Box", setCode: "XYZ" }, null).name, "XYZ Booster Box");
-  // A setless group is keyed and named by its title — linked the way SearchBar does.
+  // The tile's set names (sealed-import's SET_NAMES), not lib/constants SETS':
+  // no tile says "Spirit Forged" or "Origins: Proving Grounds", so neither may
+  // the email that links to one.
+  const named = (setCode: string, productType: string) =>
+    sealedReportTarget(`${setCode}|${productType}`, { title: "", productType, setCode }).name;
+  assert.equal(named("SFD", "Booster Box"), "Spiritforged Booster Box");
+  // OGS's name is also a product type. Exactly equal collapses, as on the tile…
+  assert.equal(named("OGS", "Proving Grounds"), "Proving Grounds");
+  // …and the case says it once, where the tile stutters "Proving Grounds Proving
+  // Grounds Case" — the one deliberate difference (see sealedReportTarget).
+  assert.equal(named("OGS", "Proving Grounds Case"), "Proving Grounds Case");
+  // Whole words only: a type that merely starts with the set's last word is not
+  // an overlap.
+  assert.equal(named("OGS", "Groundsman Box"), "Proving Grounds Groundsman Box");
+  // A set code with no display name reads as the code, as it does on the tile.
+  assert.equal(named("XYZ", "Booster Box"), "XYZ Booster Box");
+
+  // THE REGRESSION (review, 2026-09-23). The T1 Signature Edition groups are
+  // setless and every row is a reseller's eBay listing, so the tile's name is an
+  // override. This used to name the email after the row's title and link
+  // ?q=<that title> — a page reading "No sealed products match your filters".
+  // Now it is the tile's name, and ?q= of it finds that tile (/sealed's q is a
+  // substring match on the group name — pinned below).
   assert.deepEqual(
-    sealedReportTarget({ title: "T1 Signature Edition & Box", productType: "T1 Signature Edition", setCode: null }, null),
-    { name: "T1 Signature Edition & Box", path: "/sealed?q=T1%20Signature%20Edition%20%26%20Box" },
+    sealedReportTarget("T1S|T1 Signature Edition|CN", {
+      title: "Riftbound T1 Sig Ed CHINESE NEW SEALED Ships Fast!!",
+      productType: "T1 Signature Edition",
+      setCode: null,
+    }),
+    {
+      name: "T1 2025 Worlds Champion Signature Edition (Chinese)",
+      path: "/sealed?q=T1%202025%20Worlds%20Champion%20Signature%20Edition%20(Chinese)",
+    },
+  );
+  // Any other setless group is named by the title of the row the route picked
+  // (the floor-filtered cheapest — pinned below), and linked ?q= that name, the
+  // way SearchBar, Rising Sealed and the nav menu link `g.name`.
+  assert.deepEqual(
+    sealedReportTarget("riftboundgiftbox", { title: "Riftbound Gift Box & Sleeves", productType: "Bundle", setCode: null }),
+    { name: "Riftbound Gift Box & Sleeves", path: "/sealed?q=Riftbound%20Gift%20Box%20%26%20Sleeves" },
+  );
+  // A stored key is data: "constructor" must not resolve to Object's.
+  assert.equal(
+    sealedReportTarget("constructor", { title: "Plain title", productType: "Bundle", setCode: null }).name,
+    "Plain title",
   );
 });
 
-test("the thank-you email is transactional, on-brand, and escapes what it is given", async (t) => {
+test("the sealed naming mirror still matches getAllSealedGroups", () => {
+  // sealedReportTarget mirrors a rule that lives, unexported, in
+  // lib/sealed-import.ts. These pins read that file, so a tile-naming change
+  // there fails HERE rather than silently sending emails that name (and link)
+  // something the page no longer calls that.
+  const src = read("src/lib/sealed-import.ts");
+  const table = (name: string) => {
+    const m = new RegExp(`const ${name}: Record<string, string> = \\{([\\s\\S]*?)\\};`).exec(src);
+    assert.ok(m, `expected ${name} in sealed-import.ts`);
+    return Object.fromEntries([...m![1].matchAll(/(?:"([^"]+)"|(\w+)): "([^"]*)"/g)].map((x) => [x[1] ?? x[2], x[3]]));
+  };
+  assert.deepEqual({ ...SEALED_SET_NAMES }, table("SET_NAMES"), "SEALED_SET_NAMES must equal sealed-import's SET_NAMES");
+  assert.deepEqual({ ...SEALED_GROUP_NAME }, table("T1_GROUP_NAME"), "SEALED_GROUP_NAME must equal sealed-import's T1_GROUP_NAME");
+
+  // The naming rule itself: floor first, then set name + type or the title,
+  // then the per-key override.
+  assert.match(src, /if \(r\.priceCents < sealedFloorCents\(r\.productType\)\) continue;\s*let g = groups\.get\(r\.groupKey\);/);
+  assert.match(
+    src,
+    /const setName = r\.setCode \? SET_NAMES\[r\.setCode\] \?\? r\.setCode : null;\s*const name = !setName\s*\? r\.title\s*: setName === r\.productType\s*\? setName\s*: `\$\{setName\} \$\{r\.productType\}`;/,
+  );
+  assert.match(src, /const name = T1_GROUP_NAME\[g\.groupKey\];\s*if \(name\) g\.name = name;/);
+  // …which the route feeds the same row: the report's market, cheapest first,
+  // past the same floor.
+  const route = read(ADMIN_ROUTE).replace(/\/\/.*$/gm, "");
+  assert.match(route, /where: \{ groupKey: report\.sealedGroupKey, country: report\.country \},\s*orderBy: \{ priceCents: "asc" \}/);
+  assert.match(route, /rows\.find\(\(r\) => r\.priceCents >= sealedFloorCents\(r\.productType\)\)/);
+  assert.match(route, /sealedReportTarget\(report\.sealedGroupKey, row\)/);
+  // And the ?q= link finds a tile by its name.
+  assert.match(read("src/app/sealed/page.tsx"), /g\.name\.toLowerCase\(\)\.includes\(ql\)/);
+});
+
+test("the email never repeats a store name the reporter's form supplied", () => {
+  // api/price-report falls back to the form's retailerName when the listing had
+  // already gone, and a signed-out reporter's address can be anyone's — so
+  // echoing that name would make a thank-you from our domain a relay for
+  // arbitrary text. The name comes from the store registry, or from the stored
+  // name only when our own row supplied it (shownPriceCents set alongside it).
+  const code = read(ADMIN_ROUTE).replace(/\/\/.*$/gm, "");
+  assert.match(code, /storeName: trustedStoreName\(report\)/);
+  assert.ok(!/retailerName: report\.retailerName/.test(code), "the stored name must not be passed through as-is");
+  assert.match(code, /hasOwnProperty\.call\(RETAILERS, report\.retailer\)\) return RETAILERS\[report\.retailer\]\.name;/);
+  assert.match(code, /return report\.shownPriceCents != null \? report\.retailerName : null;/);
+  // Pinned on the other side too: the form's name only lands when the lookup
+  // found nothing, which is exactly when shownPriceCents stays null.
+  assert.match(read(ROUTE), /retailerName: retailerName \|\| str\(body\?\.retailerName, 120\) \|\| retailer/);
+});
+
+test("every issue has a noun, so the email never thanks someone for a price they didn't report", () => {
+  for (const i of ISSUES) assert.ok(issueNoun(i.code).length > 0, `${i.code} needs a noun`);
+  assert.equal(issueNoun("PRICE_WRONG"), "price");
+  assert.equal(issueNoun("LINK_BROKEN"), "link");
+  assert.equal(issueNoun("OUT_OF_STOCK"), "stock status");
+  assert.equal(issueNoun("NOT_A_REAL_CODE"), "listing", "an unknown code reads as something true of every report");
+});
+
+async function captureFixedEmail(t: test.TestContext, opts: Parameters<typeof sendPriceReportFixedEmail>[1]) {
   const originalKey = process.env.RESEND_API_KEY;
   process.env.RESEND_API_KEY = "test-key";
   const originalFetch = global.fetch;
@@ -307,15 +397,19 @@ test("the thank-you email is transactional, on-brand, and escapes what it is giv
     if (originalKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = originalKey;
   });
+  const ok = await sendPriceReportFixedEmail("reporter@example.com", opts);
+  assert.equal(ok, true);
+  return sent! as { from: string; to: string; subject: string; html: string };
+}
 
-  const ok = await sendPriceReportFixedEmail("reporter@example.com", {
+test("the thank-you email is transactional, on-brand, and escapes what it is given", async (t) => {
+  const mail = await captureFixedEmail(t, {
     itemName: "Jinx <b>",
-    // The store name can fall back to what the form sent, so it is escaped.
-    retailerName: `Shop "<script>"`,
+    // Escaped regardless: a setless sealed group's name is a store's listing title.
+    storeName: `Shop "<script>"`,
+    issue: "PRICE_WRONG",
     url: "https://riftcompare.com/sealed?set=VEN&type=Booster%20Box",
   });
-  assert.equal(ok, true);
-  const mail = sent!;
   assert.equal(mail.to, "reporter@example.com");
   assert.match(mail.from, /RiftCompare/, "the same from-address as every other transactional send");
   assert.equal(mail.subject, `Fixed: the Shop "<script>" price you reported for Jinx <b>`, "a subject is plain text, not HTML");
@@ -334,8 +428,40 @@ test("the thank-you email is transactional, on-brand, and escapes what it is giv
   );
 });
 
-test("the report form says what the email is for", () => {
+test("the thank-you claims only what FIXED means", async (t) => {
+  // Review, 2026-09-23. FIXED is an admin's click: the card page revalidates
+  // daily and a sealed group sits behind a 48h data cache until the next import,
+  // so the page may still show the old figure — and a broken link or a stock
+  // status has no "corrected price" at all.
+  const mail = await captureFixedEmail(t, {
+    itemName: "Jinx",
+    storeName: null,
+    issue: "LINK_BROKEN",
+    url: "https://riftcompare.com/card/jinx",
+  });
+  // No trusted store name: the noun stands alone rather than borrowing one.
+  assert.equal(mail.subject, "Fixed: the link you reported for Jinx");
+  assert.match(mail.html, /Thanks — the link you reported for <strong[^>]*>Jinx<\/strong> has been fixed\./);
+  assert.match(mail.html, /It can take up to a day to show everywhere on the site\./);
+  assert.match(mail.html, />See it on RiftCompare<\/a>/, "a neutral button — there may be no corrected price to see");
+  assert.ok(!/corrected price|corrected it at the source|right for everyone/i.test(mail.html), "no claim FIXED can't back");
+  // A report reopened and fixed again sends again (shouldNotifyReporter), so the
+  // footer must not promise otherwise.
+  assert.ok(!/won't email you|email you again|only once|getting this once/i.test(mail.html), "no promise the route breaks");
+  assert.match(mail.html, /because you reported a problem with a listing on RiftCompare and it has now been fixed/);
+});
+
+test("the report form says what the email is for, and only promises one that can arrive", () => {
   // The optional address now has a use the reporter can see — say so where it
   // is asked for, or nobody leaves one.
-  assert.match(read(FORM), /\(optional — we&apos;ll email you once it&apos;s&nbsp;fixed\)/);
+  const form = read(FORM);
+  assert.match(form, /\(optional — we&apos;ll email you once it&apos;s&nbsp;fixed\)/);
+  // But only to signed-out reporters: api/price-report keeps a typed address for
+  // them alone (a signed-in reporter's is dropped for the account's), and the
+  // admin route writes to an account address only once it is verified. Promising
+  // a signed-in, unverified reporter an email was promising one that never comes.
+  assert.match(read(ROUTE), /email: user \? null : email\(body\?\.email\)/, "the premise of the pins below");
+  assert.match(form, /\{user \? \(\s*user\.emailVerified && \(/, "signed in: a promise only when the account address is verified");
+  assert.match(form, /\) : \(\s*<label className="block">\s*<span[^>]*>\s*Email /, "the field is the signed-out branch");
+  assert.match(form, /email: !user && email\.trim\(\) \? email\.trim\(\) : undefined/, "and a signed-in form sends none");
 });

@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { cardHref } from "@/lib/card-url";
-import { SETS } from "@/lib/constants";
+import { sealedFloorCents } from "@/lib/ebay";
 import { getLastEmailError, isEmailEnabled, sendPriceReportFixedEmail } from "@/lib/email";
+import { RETAILERS } from "@/lib/retailers";
 import { SITE_URL } from "@/lib/site";
 import { REPORT_STATUSES, sealedReportTarget, shouldNotifyReporter, type ReportStatus } from "@/lib/price-report";
 
@@ -56,7 +57,10 @@ export async function POST(req: Request) {
           status: true,
           email: true,
           userId: true,
+          retailer: true,
           retailerName: true,
+          shownPriceCents: true,
+          issue: true,
           kind: true,
           cardId: true,
           sealedGroupKey: true,
@@ -95,7 +99,10 @@ export async function POST(req: Request) {
 type FixedReport = {
   email: string | null;
   userId: string | null;
+  retailer: string;
   retailerName: string;
+  shownPriceCents: number | null;
+  issue: string;
   kind: string;
   cardId: string | null;
   sealedGroupKey: string | null;
@@ -114,12 +121,13 @@ async function thankReporter(id: string, report: FixedReport): Promise<void> {
   if (!to) return;
   const item = await reportedItem(report);
   if (!item) {
-    console.warn(`[price-report] ${id}: the reported ${report.kind} no longer resolves — thank-you skipped.`);
+    console.warn(`[price-report] ${id}: the reported ${report.kind} no longer resolves to anything on the site — thank-you skipped.`);
     return;
   }
   const sent = await sendPriceReportFixedEmail(to, {
     itemName: item.name,
-    retailerName: report.retailerName,
+    storeName: trustedStoreName(report),
+    issue: report.issue,
     url: item.url,
   });
   if (!sent) console.warn(`[price-report] ${id}: thank-you not sent — ${getLastEmailError() ?? "unknown error"}`);
@@ -140,8 +148,22 @@ async function reporterAddress(report: FixedReport): Promise<string | null> {
   return account?.emailVerified ? account.email : null;
 }
 
+// The store's name as WE know it, or null. Never the stored retailerName on its
+// own: api/price-report fills that from its own listing lookup, but when the
+// listing had already gone (shownPriceCents null) it falls back to text the
+// reporter's form sent — and this email goes from our domain to whatever
+// address a signed-out reporter typed, so echoing it would make the thank-you a
+// relay for arbitrary text (review, 2026-09-23). The registry's name for a known
+// store comes first; the stored name only when our own row supplied it; else the
+// email just says "the price you reported".
+function trustedStoreName(report: FixedReport): string | null {
+  if (Object.prototype.hasOwnProperty.call(RETAILERS, report.retailer)) return RETAILERS[report.retailer].name;
+  return report.shownPriceCents != null ? report.retailerName : null;
+}
+
 // What the report was about, named and linked the way the site names and links
-// it. One row, by key — never a group loader — per the egress rules in lib/db.ts.
+// it. One group's rows, by key — never a group loader — per the egress rules in
+// lib/db.ts.
 async function reportedItem(report: FixedReport): Promise<{ name: string; url: string } | null> {
   if (report.kind === "card" && report.cardId) {
     const card = await prisma.card.findUnique({
@@ -151,16 +173,20 @@ async function reportedItem(report: FixedReport): Promise<{ name: string; url: s
     return card ? { name: card.name, url: `${SITE_URL}${cardHref(card)}` } : null;
   }
   if (report.kind === "sealed" && report.sealedGroupKey) {
-    // Cheapest row in the reported market: the same row getAllSealedGroups
-    // takes a group's name from.
-    const row = await prisma.sealedListing.findFirst({
+    // The row getAllSealedGroups names a setless group after: the reported
+    // market's cheapest listing that clears the same sealedFloorCents guard (a
+    // mis-priced $1 row is dropped there before it can name anything). Capped —
+    // a group is one row per store plus a few eBay listings, and fifty rows all
+    // under the floor is a group with no tile to link to anyway.
+    const rows = await prisma.sealedListing.findMany({
       where: { groupKey: report.sealedGroupKey, country: report.country },
       orderBy: { priceCents: "asc" },
-      select: { title: true, productType: true, setCode: true },
+      select: { title: true, productType: true, setCode: true, priceCents: true },
+      take: 50,
     });
+    const row = rows.find((r) => r.priceCents >= sealedFloorCents(r.productType));
     if (!row) return null;
-    const setName = SETS.find((s) => s.code === row.setCode)?.name ?? null;
-    const target = sealedReportTarget(row, setName);
+    const target = sealedReportTarget(report.sealedGroupKey, row);
     return { name: target.name, url: `${SITE_URL}${target.path}` };
   }
   return null;
