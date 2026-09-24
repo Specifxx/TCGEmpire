@@ -149,6 +149,19 @@ export const RADIANCE_FAQ: RadianceFaq[] = [
   },
 ];
 
+// The pages that carry the Radiance pre-order CTA (components/
+// RadiancePreorderCta.tsx) near the top and again after their first major
+// section. Search Console, 28 days to 2026-09-24: leaked-mechanics is the
+// site's #1 page (975 clicks, 9.4K impressions, position 5.9) while
+// /radiance-preorders sits at position 13.8 — the traffic is on the articles,
+// the buying intent is on the pre-order page. /sets/radiance carries the same
+// block via RadianceHub.
+export const RADIANCE_PREORDER_CTA_SLUGS = [
+  "riftbound-radiance-leaked-mechanics",
+  "riftbound-radiance-spoilers",
+  "riftbound-radiance-what-we-know",
+] as const;
+
 // The Radiance posts that get a "follow every reveal" callout at the top during
 // preview season (2026-09-24 growth pass: "the top of the three highest-traffic
 // Radiance posts"). Only the first is MEASURED as the top one (Search Console,

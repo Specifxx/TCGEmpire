@@ -27,7 +27,8 @@ import { getPopularCards } from "@/lib/cheapest-cards";
 import { ScrollDepthTracker } from "./ScrollDepthTracker";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { ArticleSignupCta } from "./ArticleSignupCta";
-import { isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS } from "@/lib/sets/radiance";
+import { isBeforeRadianceRelease, RADIANCE_CALLOUT_SLUGS, RADIANCE_PREORDER_CTA_SLUGS } from "@/lib/sets/radiance";
+import { RadiancePreorderCta } from "./RadiancePreorderCta";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -238,6 +239,9 @@ export async function ArticleView({ article }: { article: Article }) {
   const related = relatedArticles(article);
   const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
   const radianceSeason = isBeforeRadianceRelease();
+  // The pre-order CTA pages (lib/sets/radiance.ts). The block itself switches
+  // to "see Radiance prices" on release day, so this list does not expire.
+  const preorderCta = (RADIANCE_PREORDER_CTA_SLUGS as readonly string[]).includes(article.slug);
 
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
   // the legacy single `embed` (always rendered after the body). Close-ups reuse the
@@ -434,6 +438,10 @@ export async function ArticleView({ article }: { article: Article }) {
         </Link>
       )}
 
+      {/* Radiance pre-order CTA, first placement: above the TL;DR, so it is on
+          the first screen of the site's highest-traffic post. */}
+      {preorderCta && <RadiancePreorderCta placement="top" />}
+
       {/* Answer-first TL;DR — the block a featured snippet or an AI answer engine
           lifts. Above the fold, above the first ad. */}
       {article.summary && article.summary.length > 0 && (
@@ -457,11 +465,19 @@ export async function ArticleView({ article }: { article: Article }) {
             const cut = part.search(/\n## /);
             const intro = cut > 0 ? part.slice(0, cut) : part;
             const rest = cut > 0 ? part.slice(cut) : "";
+            // The pre-order CTA's second placement: after the FIRST major
+            // section, i.e. just before the second "## " heading (or at the end
+            // of this chunk when it holds only one section).
+            const second = preorderCta ? rest.slice(1).search(/\n## /) : -1;
+            const firstSection = second >= 0 ? rest.slice(0, second + 1) : rest;
+            const afterFirst = second >= 0 ? rest.slice(second + 1) : "";
             return (
               <Fragment key={i}>
                 {intro.trim() ? <Markdown content={intro} /> : null}
                 <ArticleSignupCta placement="article_intro" radianceSeason={radianceSeason} />
-                {rest.trim() ? <Markdown content={rest} /> : null}
+                {firstSection.trim() ? <Markdown content={firstSection} /> : null}
+                {preorderCta && <RadiancePreorderCta placement="section" withSignup />}
+                {afterFirst.trim() ? <Markdown content={afterFirst} /> : null}
               </Fragment>
             );
           }
@@ -584,7 +600,9 @@ export async function ArticleView({ article }: { article: Article }) {
         <ArticleSignupCta placement="article_end" radianceSeason={radianceSeason} />
       )}
 
-      {article.tags.includes("radiance") && isBeforeRadianceRelease() && (
+      {/* Skipped on the pre-order CTA pages: their mid-article CTA already
+          carries this exact capture. */}
+      {article.tags.includes("radiance") && isBeforeRadianceRelease() && !preorderCta && (
         <div className={cta.href !== "/radiance-preorders" ? "mt-4" : "mt-8"}>
           <NewsletterSignup
             siteName="RiftCompare"

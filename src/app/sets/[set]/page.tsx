@@ -30,6 +30,7 @@ import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
+import { RadiancePreorderCta } from "@/components/RadiancePreorderCta";
 import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
 import { RadianceReveals } from "@/components/sets/RadianceReveals";
 import { getRadianceReveals } from "@/lib/radiance-reveals";
@@ -527,7 +528,12 @@ export default async function SetPage({
       {/* Preview season (switches off on release day): the reveal counter and
           the newest DB-imported reveals, ABOVE the hub so a returning visitor
           sees what is new first. */}
+      {/* Radiance pre-order CTA (components/RadiancePreorderCta.tsx): under the
+          header, and again after the first major section (the reveals strip).
+          No capture here — RadianceHub already carries the release-day form. */}
+      {set.slug === "radiance" && <RadiancePreorderCta placement="top" />}
       {set.slug === "radiance" && <RadianceReveals data={radianceReveals} />}
+      {set.slug === "radiance" && <RadiancePreorderCta placement="section" />}
       {set.slug === "radiance" && <RadianceHub country={country} />}
 
       {/* Card grid — shown whenever cards EXIST, even for a comingSoon set: through

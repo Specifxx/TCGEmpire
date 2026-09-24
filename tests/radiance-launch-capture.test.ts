@@ -48,14 +48,17 @@ test("each placement is gated on the one shared pre-release helper", () => {
     const src = read(file);
     assert.match(src, /import \{[^}]*\bisBeforeRadianceRelease\b[^}]*\} from "@\/lib\/sets\/radiance"/, file);
     // The gate must sit in front of the capture, not somewhere else in the file.
-    const gateAt = src.lastIndexOf("isBeforeRadianceRelease() && (", src.indexOf('source="radiance-launch"'));
+    const gateAt = src.slice(0, src.indexOf('source="radiance-launch"')).search(/isBeforeRadianceRelease\(\)(?: && !preorderCta)? && \(/);
     assert.ok(gateAt > -1, `${file}: the capture must render inside an isBeforeRadianceRelease() gate`);
   }
 });
 
 test("the article capture rides the radiance tag and never adds a second primary button", () => {
   const src = read("src/components/ArticleView.tsx");
-  assert.match(src, /\{article\.tags\.includes\("radiance"\) && isBeforeRadianceRelease\(\) && \(/);
+  // `!preorderCta` (2026-09-24): the pre-order CTA posts carry this same
+  // capture inside their mid-article RadiancePreorderCta instead, so it is not
+  // repeated at the end (tests/radiance-preorder-cta.test.ts).
+  assert.match(src, /\{article\.tags\.includes\("radiance"\) && isBeforeRadianceRelease\(\) && !preorderCta && \(/);
   // "Compare Radiance preorder prices" stays the block's primary; the capture's
   // submit is the ghost button. "Ready to buy?" below is filled green too.
   assert.match(captureIn(src)!, /button="ghost"/);
