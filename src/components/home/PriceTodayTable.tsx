@@ -65,7 +65,9 @@ export function PriceTodayTable({
                   {r.change7d == null ? (
                     <span className="text-slate-600">—</span>
                   ) : (
-                    <span className={r.change7d > 0 ? "text-up" : r.change7d < 0 ? "text-down" : "text-slate-400"}>
+                    // Buyer's-eye colours, as the watchlist and digest email use:
+                    // a price drop is the good news (green), a rise is not.
+                    <span className={r.change7d < 0 ? "text-up" : r.change7d > 0 ? "text-down" : "text-slate-400"}>
                       {r.change7d > 0 ? "+" : ""}
                       {r.change7d.toFixed(1)}%
                     </span>

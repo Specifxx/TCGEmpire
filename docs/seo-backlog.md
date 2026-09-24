@@ -136,3 +136,40 @@ reasons already listed above.
 **Do next (cheap, unblocked):** retrofit visible-FAQ + schema onto the
 remaining ~54 articles, highest-commercial-value first. The validator to check
 it is in this pass's commit message.
+
+## Growth pass — 2026-09-24
+
+The owner's brief: rank for "riftbound card prices" and get more sign-ups. One
+commit per item; the reasoning is in DECISIONS.md, "Growth pass: rank for
+'riftbound card prices' and get more signups", 2026-09-24.
+
+| # | Item | Status | Notes |
+|---|---|---|---|
+| 1 | Market homepages (`/`, `/au`, `/uk`, `/ca`, `/sg`, `/eu`) | ✅ | H1 "Riftbound Card Prices" (+ " in <place>"); live-count titles ≤ 60 characters and descriptions (stores with an **in-stock** listing, dropped when unknown); a server-rendered "Riftbound card prices today" table of the 50 most-searched cards (cheapest in-stock price, stores in stock, 7-day change) replaces the carousel's All-time tab; hreflang: `en` → `/`, `/eu` → en-IE/DE/FR/NL/BE/ES/IT/AT/PL/SE/DK/FI/PT; no en-NZ (NZ resolves to the US market) |
+| 2 | Set pages | ✅ | `#price-guide`: every card, dearest first, under "Riftbound {Set} price guide"; title "Riftbound {Set} Card List & Price Guide (All {N} Cards)" where it fits 60 characters (Origins, Unleashed, Vendetta, Radiance), N from the DB |
+| 3 | CTR rewrites | ✅ | Ban list, Empower, card size, Flow, most-expensive: query first, teasing descriptions; "(Sep 2026)" only on the ban list and the price ranking, derived from `updated` |
+| 4 | Sign-ups | ✅ | Header "Log in" + "Sign up free" at every width (switcher to the menu below sm; Premium's word from 400px); card-page one-click alert (OAuth creates account + alert); article CTAs after intro + at end, Radiance-led until 23 Oct, with the digest now carrying new Radiance reveals so the promise holds; five Vercel events |
+| 5 | Radiance preview season | ✅ | `/sets/radiance` "N of 180 revealed · updated …" + latest reveals (DB only); callout on three Radiance posts (only the first measured as top — swap the other two when the export says); dismissible sitewide banner. All off on 23 Oct |
+| 6 | Backlinks | ✅ | Plain attribution link under every `/embed` iframe snippet; "Prices tracked on RiftCompare" plain-HTML + inline-SVG store badge on `/embed` and every store page |
+| 7 | `/llm/*` | ✅ | `X-Robots-Tag: noindex` by header; not disallowed, so still fetchable |
+
+**Verification.** Production builds against a local Postgres seeded the CI way
+(`prisma db push`, `prisma/seed.ts`), plus a local-only synthetic price fixture
+so the new sections had data to render. The prerender manifest keeps
+`revalidate` 3600 on all six homepages.
+
+`scripts/template-seo-check.ts` passes on every template.
+
+`scripts/content-quality.ts` flags only seed-data gaps, none of them in
+anything this pass touched:
+
+- card-page price-history sections, empty because the seed has no history;
+- links to Vendetta, Radiance and champion cards the synthetic catalogue lacks;
+- `/embed/index` returning 500 with no market-index data.
+
+The header was swept signed out from 320 to 1440px on `/` and `/browse`, with
+no overlaps and no overflow.
+
+**Not verifiable here:** live Search Console movement. Re-read the four
+queries in the owner's brief after ~28 days: "riftbound card prices",
+"riftbound prices", "price guide" and "riftbound ban list".
