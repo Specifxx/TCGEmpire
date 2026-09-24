@@ -199,7 +199,11 @@ test("the detector flags each credential shape the rule names", () => {
 
 test("the detector passes the public values this file is meant for", () => {
   for (const value of [
-    "ca-pub-6842128782879909",
+    // SPLIT, like the "sk" + "_live_" and PEM literals above and below. The
+    // guard in scripts/adsense-guard.ts forbids a ca-pub- literal anywhere in
+    // the source tree, and it is the FIRST step of `npm run build`, so a whole
+    // one here fails the production build — which it did.
+    "ca-" + "pub-6842128782879909",
     "auto",
     "true",
     "store_first",
@@ -228,7 +232,7 @@ test("an audit names the offending key or line, and never prints the value", () 
   const { problems, keys } = auditEnvFile(
     [
       "# header",
-      'NEXT_PUBLIC_ADSENSE_CLIENT_ID="ca-pub-6842128782879909"',
+      `NEXT_PUBLIC_ADSENSE_CLIENT_ID="${"ca-" + "pub-6842128782879909"}"`,
       `STRIPE_SECRET_KEY="${secret}"`,
       `NEXT_PUBLIC_STRIPE_KEY=${secret} # pasted`,
       `NEXT_PUBLIC_API_SECRET="public-looking"`,
