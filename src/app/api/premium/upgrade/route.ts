@@ -16,9 +16,9 @@ export const dynamic = "force-dynamic";
 // hits the webhook's stampFromSubscription, which reads the new price and
 // writes the new tier. Nothing to hand-sync here beyond the Stripe call.
 //
-// No downgrade route exists (Premium → Plus): that's a cancel-and-resubscribe,
-// or the Stripe billing portal if the owner enables plan switching there —
-// either way the webhook already records whatever tier results.
+// The reverse move is api/premium/downgrade. Keep plan switching OFF in the
+// Stripe portal: a portal switch skips introDiscountsForPriceChange, and on
+// this API version a portal switch mid-trial ends the trial and charges.
 export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Sign in first" }, { status: 401 });

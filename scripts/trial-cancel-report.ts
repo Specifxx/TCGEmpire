@@ -7,8 +7,13 @@
  * Cancel in the Stripe portal stays `trialing` with `cancel_at_period_end`
  * until the 14 days run out, so the report counted them as live trials while
  * Stripe's dashboard showed "Cancels <date>". The 2026-09-23 read of "one
- * cancellation ever" was that blind spot. DECISIONS.md, "Trial cancellations:
- * measure the cancel click, not the end date", 2026-09-24.
+ * cancellation ever" was that blind spot. DECISIONS.md, "Trial model: 3-day
+ * trial, then the first 3 months half price", 2026-09-24.
+ *
+ * Also counts SAVES (a cancelled subscription kept via api/premium/resume, or
+ * resumed in the portal — the latter from customer.subscription.updated events,
+ * which Stripe keeps for 30 days), splits 14-day from 3-day trials and the
+ * intro coupon, and takes --since=YYYY-MM-DD to read one cohort alone.
  *
  * Per trial it reads, from Stripe: when the trial started, whether and when it
  * was cancelled (cancel_at_period_end OR canceled_at), Stripe's
@@ -55,13 +60,40 @@ function pct(n: number, d: number): string {
   return d ? `${Math.round((n / d) * 100)}%` : "—";
 }
 
+/** Subscriptions whose renewal went from off back to on in the last 30 days (read-only). */
+async function resumedSubscriptionIds(): Promise<Set<string>> {
+  const out = new Set<string>();
+  let startingAfter: string | undefined;
+  const since = Math.floor(Date.now() / 1000) - 30 * 86_400;
+  for (let i = 0; i < 10; i++) {
+    const page = await stripe().events.list({
+      type: "customer.subscription.updated",
+      created: { gte: since },
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    });
+    for (const ev of page.data) {
+      const prev = ev.data.previous_attributes as { cancel_at_period_end?: boolean } | undefined;
+      const obj = ev.data.object as Stripe.Subscription;
+      if (prev?.cancel_at_period_end === true && obj.cancel_at_period_end === false) out.add(obj.id);
+    }
+    if (!page.has_more || !page.data.length) break;
+    startingAfter = page.data[page.data.length - 1].id;
+  }
+  return out;
+}
+
 async function main() {
+  const sinceArg = process.argv.find((a) => a.startsWith("--since="))?.slice(8) ?? process.env.SINCE;
+  const sinceMs = sinceArg ? Date.parse(`${sinceArg}T00:00:00Z`) : null;
   if (!stripeEnabled()) {
     console.log("Stripe is not configured in this environment — nothing to report.");
     return;
   }
   const now = Date.now();
-  const subs = await fetchTrialSubs();
+  const allSubs = await fetchTrialSubs();
+  const subs = sinceMs ? allSubs.filter((s) => (s.trial_start ?? s.created) * 1000 >= sinceMs) : allSubs;
+  const resumed = await resumedSubscriptionIds().catch(() => new Set<string>());
   const customerIds = [...new Set(subs.map((s) => (typeof s.customer === "string" ? s.customer : s.customer.id)))];
   const users = await prisma.user.findMany({
     where: { stripeCustomerId: { in: customerIds }, ...NOT_SEED_WHERE },
@@ -102,6 +134,11 @@ async function main() {
       alerts: u?._count.priceAlerts ?? null,
       collectionCards: u?._count.collection ?? null,
       reminderSentMs: u?.trialReminderSentAt ? u.trialReminderSentAt.getTime() : null,
+      trialDays: s.trial_start && s.trial_end ? Math.round((s.trial_end - s.trial_start) / 86_400) : null,
+      couponId: s.discount?.coupon?.id ?? null,
+      keptAtMs: typeof s.metadata?.keptAt === "string" ? Date.parse(s.metadata.keptAt) : null,
+      keptVia: typeof s.metadata?.keptVia === "string" ? s.metadata.keptVia : null,
+      resumedByEvent: resumed.has(s.id),
     };
   });
 
@@ -111,7 +148,9 @@ async function main() {
   const cancelled = classified.filter((x) => x.c.outcome === "cancelled_in_trial");
 
   console.log("RiftCompare Premium — trial cancellation report\n");
-  console.log(`Trials ever started: ${total}`);
+  if (sinceMs) console.log(`Cohort: trials started on or after ${sinceArg}\n`);
+  console.log(`Trials ${sinceMs ? "started in the cohort" : "ever started"}: ${total}`);
+  console.log(`  SAVES — cancelled, then kept: ${count("resumed")}  (${classified.filter((x) => x.c.outcome === "resumed" && x.r.keptVia).length} via the Keep button, ${classified.filter((x) => x.c.outcome === "resumed" && !x.r.keptVia).length} in the Stripe portal)`);
   console.log(`  cancelled during the trial:  ${count("cancelled_in_trial")}  (${pct(count("cancelled_in_trial"), total)})`);
   console.log(`    of which still running, set to cancel at trial end: ${cancelled.filter((x) => x.r.cancelAtPeriodEnd && x.r.status === "trialing").length}`);
   console.log(`  converted to paid:            ${count("converted")}  (${pct(count("converted"), total)})`);
@@ -144,6 +183,8 @@ async function main() {
       console.log(`  ${k.padEnd(26)} ${String(g.n).padStart(3)} · ${String(g.cancelled).padStart(3)} (${pct(g.cancelled, g.n)}) · ${String(g.converted).padStart(3)}`);
     }
   };
+  split("TRIAL LENGTH (never pool these)", (r) => (r.trialDays == null ? "(unknown)" : `${r.trialDays}-day`));
+  split("INTRO COUPON", (r) => (r.couponId?.startsWith("rc-intro-") ? "half-price intro" : r.couponId ? "other coupon" : "none"));
   split("PLAN", (r) => `${r.tier}/${r.interval ?? "?"}`);
   split("CHECKOUT SURFACE", (r) => r.surface ?? "(not stamped)");
   split("SIGNUP SOURCE", (r) => r.signupSource ?? "(unknown)");
@@ -165,13 +206,13 @@ async function main() {
   }
 
   console.log("\nPER TRIAL (anonymised; newest first)");
-  console.log("  #   started     plan            outcome              h→cancel  acctAge  actDays alerts coll  surface");
+  console.log("  #   started     days plan            outcome              h→cancel  acctAge  actDays alerts coll  surface");
   classified
     .sort((a, b) => b.r.trialStartMs - a.r.trialStartMs)
     .forEach((x, i) => {
       const r = x.r;
       console.log(
-        `  ${String(i + 1).padStart(2)}  ${new Date(r.trialStartMs).toISOString().slice(0, 10)}  ${`${r.tier}/${r.interval ?? "?"}`.padEnd(15)} ${x.c.outcome.padEnd(20)} ${x.c.hoursToCancel == null ? "—".padStart(8) : x.c.hoursToCancel.toFixed(1).padStart(8)}  ${String(r.accountAgeDaysAtTrial ?? "—").padStart(7)} ${String(r.activeDays ?? "—").padStart(7)} ${String(r.alerts ?? "—").padStart(6)} ${String(r.collectionCards ?? "—").padStart(4)}  ${r.surface ?? ""}`,
+        `  ${String(i + 1).padStart(2)}  ${new Date(r.trialStartMs).toISOString().slice(0, 10)}  ${String(r.trialDays ?? "?").padStart(4)} ${`${r.tier}/${r.interval ?? "?"}`.padEnd(15)} ${x.c.outcome.padEnd(20)} ${x.c.hoursToCancel == null ? "—".padStart(8) : x.c.hoursToCancel.toFixed(1).padStart(8)}  ${String(r.accountAgeDaysAtTrial ?? "—").padStart(7)} ${String(r.activeDays ?? "—").padStart(7)} ${String(r.alerts ?? "—").padStart(6)} ${String(r.collectionCards ?? "—").padStart(4)}  ${r.surface ?? ""}`,
       );
     });
   await prisma.$disconnect();

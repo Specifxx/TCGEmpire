@@ -12211,3 +12211,110 @@ how it gets judged.
 Owner steps (Vercel `PREMIUM_TRIAL_DAYS`, nothing in the Stripe dashboard)
 are in the session summary. The kill switch is
 `NEXT_PUBLIC_PREMIUM_INTRO_OFFER=0`.
+
+## Trial cancellations: keep, remind, tell the truth — 2026-09-24
+
+Second half of the owner's "a lot of people register for the trial and
+cancel". The half-price intro (entry above) is the price answer. This entry
+fixes what the site did to the people who had already cancelled.
+
+**Five of the six mid-trial cancels are not lost yet.** They are still
+`trialing` with renewal off, and keep Premium until 09-25, 09-30, 10-06,
+10-07 and 10-08. Three switched renewal off within 0.6h, before using
+anything. A design workflow (map the lifecycle, research, three competing
+plans, two judges) traced what the site then did to them. Each finding below
+is checked in code:
+
+1. **`/premium` told them the opposite of what they had done.** The status
+   line tested `trialing` before `cancelAtPeriodEnd`, so a cancelled trial
+   read "Converts to $9.99/mo on <date>".
+2. **Nothing could turn renewal back on.** `cancel_at_period_end: false`
+   appeared nowhere in `src`.
+3. **"Switch down to Plus" and "Switch to annual" were shown to trialists but
+   answered 400.** All three plan routes select `status: "active"`. Cancel was
+   the only button that worked, and Plus is the honest answer to
+   "too_expensive".
+4. **The reminder could land minutes before the charge, or not at all.** It
+   used a 24h window; the job is scheduled for 19:00 UTC but has run as late
+   as 22:24.
+5. **Until tonight the reminder told cancelled trialists "the card on file
+   will be charged".** One probably received it on 09-24.
+
+**What changed.**
+
+- **The card:** the cancel test comes first. A cancelled trial now reads
+  "Trial ends <date> — you won't be charged". A renewing one quotes its real
+  first charge from the subscription (`subscriptionChargeLine`, intro-aware).
+  `getPremiumSubscriptionDetails` counts `cancel_at` as well as
+  `cancel_at_period_end` (`subscriptionIsCancelling`), and no longer falls
+  back to a dead subscription, which used to outrank a comp grant.
+- **Keep** (`POST /api/premium/resume`):
+  - one click on the card clears the cancellation; nothing else changes,
+    the trial end included;
+  - POST only, from the signed-in owner, on their own customer, because mail
+    scanners prefetch links;
+  - it stamps `keptAt`/`keptVia`/`keptFrom` so the report can count saves,
+    since Stripe clears the cancel;
+  - it attaches the intro coupon on checkout's exact rule, so keeping is
+    never worse than letting the trial lapse and rebuying at half price;
+  - the button states the amount and the date, beside "Or do nothing and it
+    simply ends then."
+- **Plan switches are hidden during a trial.** The fallback the plan named:
+  a mid-trial switch needs verifying on a Stripe test clock first. On this
+  API version a switch in the Stripe portal mid-trial ends the trial and
+  charges.
+- **Reminders:**
+  - one `TRIAL_REMINDER_WINDOW_MS` of 48h for both branches, since the stamp
+    is unconditional;
+  - a renewing trial gets the charge warning, intro-aware;
+  - a cancelled trial gets `sendTrialEndingNoChargeEmail`: it ends,
+    nothing is charged, what keeping would cost, and a link to
+    `/premium?keep=1`. The link changes nothing by itself.
+  - "the day before" became "a day or two before" everywhere, which is what
+    the window does.
+- **Checkout and welcome:**
+  - Stripe Checkout shows a `custom_text.submit` line: nothing today, the
+    reminder, then the exact price;
+  - `/premium/welcome` shows three dated lines read from the subscription
+    (today, the reminder, the first charge), with Manage still beside them;
+  - its main button goes to `/dashboard`, not the `/tools` hub;
+  - the activation poller says "Trial started ✓ — nothing charged", not
+    "Payment received".
+- **Welcome email:** a trialist now gets an enrolment confirmation (plan,
+  end date, first charge, reminder, manage link, three first steps) instead
+  of the free-account pitch. The free pitch told them "Premium is
+  $9.99/month" and "your account shows the three biggest deals".
+- **`trial-cancel-report`** now counts saves (resume metadata, plus portal
+  resumes from 30 days of `customer.subscription.updated` events), splits
+  trials by length and by intro coupon (a 3-day and a 14-day cohort must
+  never be pooled), and takes `--since`.
+
+**Not done, and why.**
+
+- **A notice 7 days before the first full-price charge** (the $4.99 → $9.99
+  step at month 3). The first comes due in late December. It must be built
+  and live by about 12-15, as a claim-then-send pass beside the trial
+  reminder.
+- **Retention coupons in the cancel flow:** they reward cancelling.
+- **A tool-usage tracker:** it widens `getCurrentUser`'s select (egress
+  rule 3).
+- **A non-renewing pass:** it touches the webhook, where both earlier billing
+  incidents happened.
+- **A pitch rewrite:** it is inside the measurement window.
+
+**Owner decisions put to the owner:**
+
+- the intro coupon for the one renewing 14-day trialist (converts about
+  10-04);
+- the Stripe portal's plan switching (keep it off) and 7-day trial reminder;
+- a personal note to the five cancellers still in trial, including the one
+  who got the false charge email.
+
+**Measure** with `trial-cancel-report --since=<release date>` about 10-08
+and 10-15:
+
+- cancels within an hour should be at most 1 of the first 4–6 new trials
+  (baseline 3 of 5);
+- at least 1 of the 4 cancellers still in trial should be kept (baseline 0,
+  but 0 is the expected base case for a plain "keep" prompt);
+- no cancelling trial should get a "will be charged" email.

@@ -9352,7 +9352,7 @@ We built the price tracking, the price history, and the alerts specifically beca
       },
       {
         q: "Is there a free trial?",
-        a: "Yes — 3 days, on both tiers, on both the monthly and annual plan. It needs a card up front and converts automatically after 3 days unless you cancel before then; we email you the day before the first charge. On a monthly plan the first 3 months are then half price ($2.49/mo for Plus, $4.99/mo for Premium) before the normal price.",
+        a: "Yes — 3 days, on both tiers, on both the monthly and annual plan. It needs a card up front and converts automatically after 3 days unless you cancel before then; we email you a day or two before the first charge. On a monthly plan the first 3 months are then half price ($2.49/mo for Plus, $4.99/mo for Premium) before the normal price.",
       },
       {
         q: "Can I get RiftCompare Premium for free?",
@@ -9393,7 +9393,7 @@ Short version: RiftCompare now has two paid tiers. Plus is $4.99/mo (or $39.99/y
 | Premium, monthly | $9.99/month (**$4.99/month for the first 3 months**) | $9.99/month | 3 days free |
 | Premium, annual | $79.99/year | ≈ $6.67/month (**33% off**, vs $119.88/yr paying monthly) | 3 days free |
 
-Both tiers run through Stripe, need a card up front for the trial, and auto-convert after 3 days unless you cancel first — we email you the day before the first charge. New subscribers on a monthly plan pay half price for their first 3 months, applied automatically at checkout. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added since launch. You can upgrade from Plus to Premium at any time, prorated, from the /premium page.
+Both tiers run through Stripe, need a card up front for the trial, and auto-convert after 3 days unless you cancel first — we email you a day or two before the first charge. New subscribers on a monthly plan pay half price for their first 3 months, applied automatically at checkout. Subscribe once and **your price is locked in for good** — it doesn't rise later even as new tools ship, which is worth knowing given how much has been added since launch. You can upgrade from Plus to Premium at any time, prorated, from the /premium page.
 
 Cancellation is genuinely no-friction: cancel anytime, and your benefits simply run to the end of the period you already paid for.
 

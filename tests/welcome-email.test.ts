@@ -38,7 +38,9 @@ test("the display name cannot inject markup", () => {
 
 test("prices and the trial come from the shared helpers, never typed", () => {
   const src = read("src/lib/welcome-email.ts");
-  assert.match(src, /fromLine: premiumFromLine\(\)/);
+  // Intro-aware since 2026-09-24: the shared intro line while the offer is on,
+  // premiumFromLine() otherwise — still never a typed price.
+  assert.match(src, /fromLine: introOfferEnabled\(\) \? `\$\{introPriceLine\(\)\}, or \$\{PREMIUM_ANNUAL_AMOUNT\}\/yr` : premiumFromLine\(\)/);
   assert.match(src, /zeroToday: premiumZeroToday\(\)/);
   assert.match(src, /trialDays: premiumTrialEnabled\(\) && !u\.trialStartedAt \? PREMIUM_TRIAL_DAYS : 0/);
   const tpl = read("src/lib/email.ts");

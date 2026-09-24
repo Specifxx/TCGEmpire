@@ -526,6 +526,34 @@ export async function sendTrialEndingEmail(
   );
 }
 
+// The trial reminder for a trial whose renewal is already OFF (2026-09-24).
+// It used to get the charge warning above, which was false. This says what is
+// true — it ends on <date> and nothing is charged — and, once, what keeping it
+// would cost, linking to /premium?keep=1, where keeping is a deliberate click
+// (the link itself changes nothing: mail scanners prefetch links).
+export async function sendTrialEndingNoChargeEmail(
+  to: string,
+  endsAt: Date,
+  planName = "Premium",
+  keepLine: string | null = null,
+): Promise<boolean> {
+  const dateLabel = endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your RiftCompare ${planName} free trial ends on <strong style="color:#e6ebf2">${dateLabel}</strong>. You turned off
+      renewal, so <strong style="color:#e6ebf2">nothing will be charged</strong> and ${planName} simply stops then.
+    </td></tr>
+    <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      If you'd like to keep it${keepLine ? `, it's ${keepLine}` : ""} — one click on your account page. Otherwise there's nothing to do.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Keep ${planName}</a></td></tr>`;
+  return sendEmail(
+    to,
+    `Your RiftCompare ${planName} trial ends ${dateLabel} — no charge`,
+    emailShell("Your free trial ends soon", inner, trialReminderFooter(planName)),
+  );
+}
+
 // ─── Premium checkout-recovery (one-time) ────────────────────────────────────
 
 // Sent ONCE, roughly a day after someone opens Stripe checkout for Premium but
@@ -642,6 +670,66 @@ function welcomeFooter(): string {
 
 export async function sendWelcomeEmail(to: string, opts: WelcomeEmailOpts): Promise<boolean> {
   const { subject, html } = buildWelcomeEmail(opts);
+  return sendEmail(to, subject, html);
+}
+
+// The welcome for an account that is ALREADY IN A TRIAL (2026-09-24). Twelve of
+// the first sixteen trialists started their trial the day they signed up, and
+// got the free-account welcome above: a "Premium is $9.99/month" pitch, a "See
+// Premium" button to the page where Cancel lives, and "your account shows the
+// three biggest deals" — false for a trialist, who sees them all. This is the
+// enrolment confirmation instead: the plan, when the trial ends, what the first
+// charge is (read from the subscription, so intro-aware), the reminder, where
+// to manage it — and three first steps into what they now have. A trial whose
+// renewal is already off says so and never says "will convert".
+export interface TrialWelcomeEmailOpts {
+  displayName: string;
+  planName: string;
+  endsAt: Date;
+  chargeLine: string | null;
+  cancelling: boolean;
+}
+
+const WELCOME_TRIAL_UTM = "utm_source=email&utm_medium=email&utm_campaign=welcome-trial";
+
+export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: string; heading: string; html: string } {
+  const name = escapeHtml(opts.displayName.trim().split(/\s+/)[0] || "there");
+  const dateLabel = opts.endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const link = (path: string, label: string) =>
+    `<a href="${SITE_URL}${path}${path.includes("?") ? "&" : "?"}${WELCOME_TRIAL_UTM}" style="color:#34d17e;font-weight:700;text-decoration:none">${label}</a>`;
+  const step = (n: number, title: string, body: string) =>
+    `<tr><td style="padding:6px 32px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      <strong style="color:#e6ebf2">${n}. ${title}</strong><br/>${body}
+    </td></tr>`;
+  const terms = opts.cancelling
+    ? `Your ${opts.planName} trial runs until <strong style="color:#e6ebf2">${dateLabel}</strong>. Renewal is off, so you won't be charged — it simply ends then.`
+    : `Your ${opts.planName} trial runs until <strong style="color:#e6ebf2">${dateLabel}</strong>. Then it's ${opts.chargeLine ?? "your plan's price"} unless you cancel. We'll email you a day or two before.`;
+  const inner = `
+    <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Hi ${name}, everything in ${opts.planName} is unlocked. ${terms}
+    </td></tr>
+    ${step(1, "Every deal, not just three", `The full Deal Finder list: cards selling below what they usually go for. ${link("/tools/deal-finder", "Deal&nbsp;Finder&nbsp;→")}`)}
+    ${step(2, "Watch a card", `Press <em>Watch price</em> on any card and we'll email you when it drops. ${link("/browse", "Find a card&nbsp;→")}`)}
+    ${
+      opts.planName === "Plus"
+        ? step(3, "What's rising", `The full Rising Cards list: the cards our model thinks are about to climb. ${link("/tools/rising", "Rising&nbsp;Cards&nbsp;→")}`)
+        : step(3, "Price a whole list at once", `Paste a decklist or a want list into Best Basket and get the cheapest way to buy all of it. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)
+    }
+    <tr><td style="padding:10px 32px 22px;font-size:13px;line-height:1.55;color:#8b95a5">
+      Manage or cancel any time: ${link("/premium", "your account page")}.
+    </td></tr>`;
+  const heading = `Your ${opts.planName} trial has started`;
+  return {
+    subject: opts.cancelling
+      ? `Your RiftCompare ${opts.planName} trial — runs until ${dateLabel}, no charge`
+      : `Your RiftCompare ${opts.planName} trial — runs until ${dateLabel}`,
+    heading,
+    html: emailShell(heading, inner, welcomeFooter()),
+  };
+}
+
+export async function sendTrialWelcomeEmail(to: string, opts: TrialWelcomeEmailOpts): Promise<boolean> {
+  const { subject, html } = buildTrialWelcomeEmail(opts);
   return sendEmail(to, subject, html);
 }
 

@@ -14,10 +14,10 @@ import { sydneyWeekKey, historySource, cachedOrDirect } from "./price-history";
 import { getMarketIndex } from "./market-index";
 import { HISTORY_TAG } from "./revalidate-content";
 import { stripe, stripeEnabled } from "./stripe";
-import { sendTrialEndingEmail, sendCheckoutRecoveryEmail } from "./email";
+import { sendTrialEndingEmail, sendTrialEndingNoChargeEmail, sendCheckoutRecoveryEmail } from "./email";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine, INTRO_MONTHS, introAmountOffCents } from "./site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, premiumFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled } from "./site";
 
 // The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
@@ -259,10 +259,21 @@ export async function hasEverPaid(stripeCustomerId: string | null | undefined): 
 // and guessing wrong in a billing email is worse than the extra API call), and
 // stamps trialReminderSentAt regardless of send success so a lost email doesn't
 // retry forever (same convention as Order.shipReminderAt).
+/**
+ * How far ahead the trial reminder looks. 48h, not 24h (2026-09-24): the
+ * workflow is scheduled for 19:00 UTC but has started anywhere up to 22:30,
+ * so a 24h window let the email land minutes before the charge, and a trial
+ * ending in the gap between two runs got none. With 48h every trial is caught
+ * once, 24–48h before it ends — which is what "a day or two before" promises.
+ * ONE constant for both branches below: the stamp is unconditional, so a
+ * narrower window on one branch would silently drop that branch's email.
+ */
+export const TRIAL_REMINDER_WINDOW_MS = 48 * 3_600_000;
+
 export async function runPremiumTrialReminders(): Promise<number> {
   if (!stripeEnabled()) return 0;
 
-  const cutoff = new Date(Date.now() + 86_400_000);
+  const cutoff = new Date(Date.now() + TRIAL_REMINDER_WINDOW_MS);
   const candidates = await prisma.user.findMany({
     where: {
       trialStartedAt: { not: null },
@@ -277,37 +288,66 @@ export async function runPremiumTrialReminders(): Promise<number> {
   let sent = 0;
   for (const u of candidates) {
     try {
-      const subs = await stripe().subscriptions.list({ customer: u.stripeCustomerId!, status: "trialing", limit: 1 });
+      const subs = await stripe().subscriptions.list({
+        customer: u.stripeCustomerId!,
+        status: "trialing",
+        limit: 1,
+        expand: ["data.items.data.price"],
+      });
       const sub = subs.data[0];
-      // A trialist who already switched off renewal will not be charged —
-      // "your card will be charged" would be false, so they get no warning.
-      // (Before 2026-09-24 they got one anyway: 5 of the 6 cancelled trials
-      // at the time were exactly this case.)
-      if (sub?.trial_end && !sub.cancel_at_period_end) {
+      if (sub?.trial_end) {
         const price = sub.items.data[0]?.price;
-        // The FIRST charge is what the email must quote: during the intro
-        // offer that is the price less the coupon (lib/site.ts intro block).
-        const off = sub.discount?.coupon?.amount_off ?? 0;
-        const amountLabel =
-          price?.unit_amount != null
-            ? `${formatMoney(Math.max(0, price.unit_amount - off), price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}`
-            : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
-        // Same price object the amount comes from, so the plan name and the
-        // figure next to it can never disagree.
         const planName = tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium";
-        const months = sub.discount?.coupon?.duration_in_months;
-        const thenLabel =
-          off > 0 && price?.unit_amount != null
-            ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}${months ? ` after ${months} months` : ""}`
-            : undefined;
-        if (await sendTrialEndingEmail(u.email, new Date(sub.trial_end * 1000), amountLabel, planName, thenLabel)) {
-          sent++;
-          void notify(u.id, "trial_ending", "Your trial ends soon", `${amountLabel} starts once it converts.`, "/premium").catch(() => {});
+        const endsAt = new Date(sub.trial_end * 1000);
+        const interval = price?.recurring?.interval === "year" ? "year" : price?.recurring?.interval === "month" ? "month" : null;
+        const coupon = sub.discount?.coupon;
+        const introAmountOff = coupon && isIntroCouponId(coupon.id) ? coupon.amount_off ?? 0 : 0;
+        if (subscriptionIsCancelling(sub)) {
+          // RENEWAL ALREADY OFF — nothing will be charged, so no charge
+          // warning (it used to say "the card on file will be charged" to
+          // exactly these people). One plain note instead: it ends, nothing
+          // is charged, and if they want to keep it, here is what that costs
+          // (intro-aware: resume attaches the intro on the same rule as
+          // checkout) and the one page where they can. No countdown, and the
+          // link changes nothing by itself.
+          const introOnKeep =
+            introOfferEnabled() &&
+            interval === "month" &&
+            !sub.discount &&
+            price?.unit_amount != null &&
+            !(await hasEverPaid(u.stripeCustomerId));
+          const keepLine = subscriptionChargeLine({
+            unitAmount: price?.unit_amount ?? null,
+            currency: price?.currency ?? null,
+            interval,
+            introAmountOff: introOnKeep ? introAmountOffCents(price!.unit_amount!) : introAmountOff,
+          });
+          if (await sendTrialEndingNoChargeEmail(u.email, endsAt, planName, keepLine)) {
+            sent++;
+            void notify(u.id, "trial_ending", "Your trial ends soon", "Renewal is off, so you won't be charged.", "/premium?keep=1").catch(() => {});
+          }
+        } else {
+          // RENEWING — the charge warning, quoting the FIRST charge (the
+          // intro price while the coupon lasts) and what follows it.
+          const off = introAmountOff;
+          const amountLabel =
+            price?.unit_amount != null
+              ? `${formatMoney(Math.max(0, price.unit_amount - off), price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}`
+              : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`;
+          const months = coupon?.duration_in_months;
+          const thenLabel =
+            off > 0 && price?.unit_amount != null
+              ? `${formatMoney(price.unit_amount, price.currency.toUpperCase())}/${price.recurring?.interval ?? "mo"}${months ? ` after ${months} months` : ""}`
+              : undefined;
+          if (await sendTrialEndingEmail(u.email, endsAt, amountLabel, planName, thenLabel)) {
+            sent++;
+            void notify(u.id, "trial_ending", "Your trial ends soon", `${amountLabel} starts once it converts.`, "/premium").catch(() => {});
+          }
         }
       }
-      // No active trialing subscription (already converted, cancelled, or a lookup
-      // race) — nothing to warn about, but still stamp below so this account is
-      // never re-checked.
+      // No trialing subscription (already converted, ended, or a lookup race)
+      // — nothing to say, but still stamp below so this account is never
+      // re-checked.
     } catch {
       /* best-effort — one failed lookup must not block the rest of the batch */
     }
@@ -390,9 +430,46 @@ export function premiumAnnualEnabled(): boolean {
 export interface PremiumSubscriptionDetails {
   status: Stripe.Subscription.Status;
   interval: "month" | "year" | null;
+  /** Set to end: cancel_at_period_end OR a cancel_at date (subscriptionIsCancelling). */
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: Date;
   tier: PremiumTier;
+  /** The recurring price in minor units, and its currency — for an intro-aware charge line. */
+  unitAmount: number | null;
+  currency: string | null;
+  /** The intro coupon's amount off per invoice while it lasts (0 when none). */
+  introAmountOff: number;
+}
+
+/**
+ * What the subscription will actually charge, from the subscription itself:
+ * "US$4.99/mo (half price), then US$9.99/mo" while an intro coupon lasts,
+ * else "US$9.99/mo". One wording for the /premium card, the keep buttons and
+ * the trial emails, so none of them can quote a different figure. Pure.
+ */
+export function subscriptionChargeLine(d: {
+  unitAmount: number | null;
+  currency: string | null;
+  introAmountOff: number;
+  interval: "month" | "year" | null;
+}): string | null {
+  if (d.unitAmount == null || !d.currency) return null;
+  const per = d.interval === "year" ? "yr" : "mo";
+  const cur = d.currency.toUpperCase();
+  const full = `${formatMoney(d.unitAmount, cur)}/${per}`;
+  if (d.introAmountOff > 0 && d.introAmountOff < d.unitAmount) {
+    return `${formatMoney(d.unitAmount - d.introAmountOff, cur)}/${per} (half price), then ${full}`;
+  }
+  return full;
+}
+
+/**
+ * Is this subscription set to END rather than renew? cancel_at_period_end is
+ * what the Stripe portal sets; cancel_at is the same intent expressed as a
+ * date (the dashboard, or flexible billing mode). Either means no charge.
+ */
+export function subscriptionIsCancelling(sub: Pick<Stripe.Subscription, "cancel_at_period_end" | "cancel_at">): boolean {
+  return sub.cancel_at_period_end || sub.cancel_at != null;
 }
 
 // Real, live Stripe read for the /premium page's "Your subscription" card —
@@ -417,19 +494,24 @@ export async function getPremiumSubscriptionDetails(stripeCustomerId: string | n
       expand: ["data.items.data.price"],
     });
     // Several subscriptions can exist for one customer over time (a cancelled
-    // one from before a resubscribe, say) — the live one, trialing or paying,
-    // is what the account page is about; fall back to the most recent of
-    // whatever's there rather than showing nothing.
-    const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing") ?? subs.data[0];
+    // one from before a resubscribe, say) — the live one, trialing, paying or
+    // in a payment retry, is what the account page is about. No fallback to a
+    // dead subscription (2026-09-24): an ended one used to outrank a comp
+    // grant and describe a plan the person no longer has.
+    const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing" || s.status === "past_due");
     if (!sub) return null;
     const price = sub.items.data[0]?.price as Stripe.Price | undefined;
     const interval = price?.recurring?.interval;
+    const coupon = sub.discount?.coupon;
     return {
       status: sub.status,
       interval: interval === "month" || interval === "year" ? interval : null,
-      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      cancelAtPeriodEnd: subscriptionIsCancelling(sub),
       currentPeriodEnd: new Date(sub.current_period_end * 1000),
       tier: tierFromPriceId(price?.id),
+      unitAmount: price?.unit_amount ?? null,
+      currency: price?.currency ?? null,
+      introAmountOff: coupon && isIntroCouponId(coupon.id) ? coupon.amount_off ?? 0 : 0,
     };
   } catch (e) {
     console.error("premium subscription detail read failed:", e);

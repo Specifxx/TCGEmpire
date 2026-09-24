@@ -52,8 +52,9 @@ test("checkout: monthly, never-paid accounts get the coupon; codes are not offer
 
 test("the trial-ending email: never to a trial that already cancelled, and it quotes the intro charge", () => {
   const lib = read("src/lib/premium.ts");
-  assert.match(lib, /if \(sub\?\.trial_end && !sub\.cancel_at_period_end\)/);
-  assert.match(lib, /const off = sub\.discount\?\.coupon\?\.amount_off \?\? 0;/);
+  // A cancelling trial gets the no-charge email instead (tests/trial-retention.test.ts).
+  assert.match(lib, /if \(subscriptionIsCancelling\(sub\)\) \{/);
+  assert.match(lib, /const introAmountOff = coupon && isIntroCouponId\(coupon\.id\) \? coupon\.amount_off \?\? 0 : 0;/);
   assert.match(lib, /Math\.max\(0, price\.unit_amount - off\)/);
   assert.match(read("src/lib/email.ts"), /const charge = thenLabel \? `\$\{amountLabel\} \(then \$\{thenLabel\}\)` : amountLabel;/);
 });
@@ -62,7 +63,7 @@ test("every surface that states the post-trial price states the intro too", () =
   assert.match(read("src/components/TrialPriceBlock.tsx"), /tierIntroMonthlyAmount\(tier\)/);
   assert.match(read("src/components/PremiumPricingCards.tsx"), /data-intro-offer/);
   assert.match(read("src/app/premium/start/page.tsx"), /introPriceLine\(tier\)/);
-  assert.match(read("src/app/premium/start/page.tsx"), /We'll email you the day before you're charged/);
+  assert.match(read("src/app/premium/start/page.tsx"), /We'll email you a day or two before you're charged/);
   const page = read("src/app/premium/page.tsx");
   assert.match(page, /What is the half-price offer\?/);
   assert.match(read("src/lib/articles.ts"), /\| Premium, monthly \| \$9\.99\/month \(\*\*\$4\.99\/month for the first 3 months\*\*\)/);

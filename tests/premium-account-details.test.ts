@@ -68,7 +68,9 @@ test("the page states three account states honestly, never blurring one into ano
   const src = codeOnly(read(PAGE));
   const cardAt = src.indexOf("Your subscription");
   assert.ok(cardAt >= 0, "expected the account-detail card");
-  const card = src.slice(cardAt, cardAt + 1800);
+  // 3600, not 1800 (2026-09-24): the card gained the cancelled-trial line
+  // and the Keep props, which pushed the comp branch past the old window.
+  const card = src.slice(cardAt, cardAt + 3600);
 
   // Admin: no billing at all, so no plan/renewal claim of any kind.
   assert.match(card, /isAdmin[\s\S]{0,80}Admin access/, "an admin must be told they're on admin access, not a fabricated plan");

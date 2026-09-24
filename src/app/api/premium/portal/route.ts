@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Open the Stripe Billing customer portal so a Premium member can update their card,
 // see invoices, or cancel (essential for the free trial — people must be able to
-// cancel before the 24h charge). Requires the Customer Portal to be enabled once in
+// cancel before the charge the reminder warns of). Requires the Customer Portal to be enabled once in
 // the Stripe dashboard; until then this returns a clear error and the UI falls back
 // to the "manage via your receipt email / contact us" path.
 export async function POST() {

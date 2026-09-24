@@ -17,7 +17,10 @@ import { invalidateMe } from "@/lib/use-me";
 const POLL_MS = 1500;
 const GIVE_UP_MS = 20_000;
 
-export function PremiumActivationPoller({ children }: { children: React.ReactNode }) {
+export function PremiumActivationPoller({ children, trial = false }: { children: React.ReactNode; trial?: boolean }) {
+  // A trial charges nothing, so "Payment received" was false for every
+  // trialist — at the exact moment they were deciding whether to trust us.
+  const received = trial ? "Trial started ✓ — nothing charged" : "Payment received ✓";
   const [state, setState] = useState<"waiting" | "ready" | "slow">("waiting");
 
   useEffect(() => {
@@ -61,7 +64,7 @@ export function PremiumActivationPoller({ children }: { children: React.ReactNod
   if (state === "slow") {
     return (
       <div className="card-surface p-6 text-center">
-        <p className="text-sm font-semibold text-white">Payment received ✓</p>
+        <p className="text-sm font-semibold text-white">{received}</p>
         <p className="mt-2 text-sm text-slate-300">
           Your access is being switched on. It usually takes a few seconds — refresh this page, or open{" "}
           <a href="/premium" className="text-brand-400 hover:underline">your account page</a>. If it still
@@ -75,7 +78,7 @@ export function PremiumActivationPoller({ children }: { children: React.ReactNod
   return (
     <div className="card-surface p-6 text-center">
       <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-ink-700 border-t-brand-400" aria-hidden />
-      <p className="mt-3 text-sm font-semibold text-white">Payment received ✓</p>
+      <p className="mt-3 text-sm font-semibold text-white">{received}</p>
       <p className="mt-1 text-sm text-slate-400">Switching your account over…</p>
     </div>
   );

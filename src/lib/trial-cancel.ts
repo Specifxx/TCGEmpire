@@ -1,6 +1,7 @@
 // Pure classification of one Premium trial's outcome — shared by
-// scripts/trial-cancel-report.ts and its test. DECISIONS.md, "Trial
-// cancellations: measure the cancel click, not the end date", 2026-09-24.
+// scripts/trial-cancel-report.ts and its test. DECISIONS.md, "Trial model:
+// 3-day trial, then the first 3 months half price" and "Trial cancellations:
+// keep, remind, tell the truth", both 2026-09-24.
 //
 // The rule that matters: a trial is CANCELLED the moment the person clicks
 // Cancel, which Stripe records as cancel_at_period_end=true (and canceled_at)
@@ -28,9 +29,19 @@ export interface TrialRow {
   alerts: number | null;
   collectionCards: number | null;
   reminderSentMs: number | null;
+  /** Trial length in whole days (trial_end − trial_start): 14-day and 3-day cohorts are never pooled. */
+  trialDays?: number | null;
+  /** The subscription's coupon id, if any (rc-intro-* = the half-price intro). */
+  couponId?: string | null;
+  /** Set by api/premium/resume when a cancelled subscription was kept (metadata keptAt). */
+  keptAtMs?: number | null;
+  keptVia?: string | null;
+  /** A cancel_at_period_end true → false event seen in the last 30 days (a portal resume). */
+  resumedByEvent?: boolean;
 }
 
 export type TrialOutcome =
+  | "resumed"
   | "cancelled_in_trial"
   | "converted"
   | "churned_after_paying"
@@ -59,6 +70,12 @@ export function classifyTrial(r: TrialRow, now: number): TrialClassification {
 
   if (r.reason === "payment_failed" || r.status === "incomplete_expired" || r.status === "unpaid") {
     return { outcome: "payment_failed", hoursToCancel: null, afterReminder: null };
+  }
+  // Cancelled, then KEPT (api/premium/resume stamps keptAt; a portal resume
+  // shows up as an event). Stripe clears the cancel on resume, so without
+  // these a save would read as a trial that was never cancelled at all.
+  if ((r.keptAtMs != null || r.resumedByEvent) && !r.cancelAtPeriodEnd && r.status !== "canceled") {
+    return { outcome: "resumed", hoursToCancel, afterReminder };
   }
   if (cancelledBeforeTrialEnd) return { outcome: "cancelled_in_trial", hoursToCancel, afterReminder };
   if (r.status === "trialing") return { outcome: "in_trial", hoursToCancel: null, afterReminder: null };

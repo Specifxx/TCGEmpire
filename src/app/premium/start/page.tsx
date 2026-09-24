@@ -86,8 +86,8 @@ export default async function PremiumStartPage({
           {trialEligible
             ? // The reminder promise answers the instant-cancel habit ("I prefer to
               // manually renew", 2026-09-24): no need to switch renewal off to be
-              // safe — runPremiumTrialReminders emails within the last 24h.
-              `${premiumZeroAmount()} due today — your ${PREMIUM_TRIAL_DAYS}-day free trial, then ${priceLine}. We'll email you the day before you're charged, and you can cancel in one click.`
+              // safe — runPremiumTrialReminders emails 24-48h before the trial ends.
+              `${premiumZeroAmount()} due today — your ${PREMIUM_TRIAL_DAYS}-day free trial, then ${priceLine}. We'll email you a day or two before you're charged, and you can cancel in one click.`
             : `${priceLine} · cancel anytime.`}
         </p>
         <CheckoutLauncher tier={tier} plan={plan} back={back} src={src} trialEligible={trialEligible} />

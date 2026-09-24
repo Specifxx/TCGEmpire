@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { isPremium, premiumCheckoutEnabled, premiumTrialEnabled, premiumPlusEnabled, PREMIUM_TRIAL_DAYS, priceIdFor, ensureIntroCoupon, hasEverPaid, type PremiumTier } from "@/lib/premium";
-import { introOfferEnabled } from "@/lib/site";
+import { introOfferEnabled, introPriceLine, tierMonthlyAmount, tierAnnualAmount } from "@/lib/site";
 import { parseCheckoutSelection, sanitizeBackPath } from "@/lib/premium-start";
 import { SITE_URL } from "@/lib/site";
 import { isPremiumSurface } from "@/lib/premium-surface";
@@ -84,6 +84,15 @@ export async function POST(req: Request) {
     });
   }
 
+  // Beside Stripe's own pay button, for a trial: nothing today, the reminder,
+  // then exactly what it becomes (2026-09-24). Built from the same helpers as
+  // /premium and /premium/start so the three can never disagree. No dates:
+  // trial_end is fixed only when Checkout completes (the welcome page shows
+  // the dated version, read from the subscription).
+  const afterTrial =
+    plan === "annual" ? `${tierAnnualAmount(tier)}/year` : introCoupon ? introPriceLine(tier) : `${tierMonthlyAmount(tier)}/mo`;
+  const trialMessage = `Nothing is charged today. We'll email you a day or two before your ${PREMIUM_TRIAL_DAYS}-day trial ends. Then it's ${afterTrial} unless you cancel from your account page.`;
+
   try {
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
@@ -116,6 +125,7 @@ export async function POST(req: Request) {
       },
       // Force card collection even though $0 is due now during a trial.
       ...(trialEligible ? { payment_method_collection: "always" as const } : {}),
+      ...(trialEligible ? { custom_text: { submit: { message: trialMessage } } } : {}),
       // {CHECKOUT_SESSION_ID} is a Stripe PLACEHOLDER — it must stay literal
       // here; Stripe substitutes the real session id on the redirect. The
       // welcome page re-reads that session and checks it belongs to the viewer

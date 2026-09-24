@@ -96,8 +96,11 @@ longer lands on its entry.
   Leave the pitch, pricing and trial alone while it is measured with
   `trial-cancel-report`, which counts the cancel click
   (`cancel_at_period_end`); `funnel-report`'s "canc" counts only ended
-  subscriptions and missed every mid-trial cancel.
-  [2026-09-24](../DECISIONS.md#L12120), [2026-09-23](../DECISIONS.md#L10924)
+  subscriptions and missed every mid-trial cancel. A trial set to end is told
+  it won't be charged, gets the no-charge reminder 24–48h out and a one-click
+  Keep (`/api/premium/resume`); plan switches stay hidden mid-trial until
+  verified on a Stripe test clock.
+  [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924)
 - **Tiers:** Plus, $4.99/mo or $39.99/yr, has the full lists (Deal Finder,
   Rising Cards, Rising Sealed). Premium, $9.99/mo or $79.99/yr, adds Value
   Finder, Bulk Pricer, Best Basket, Demand Finder and **ad-free**. The intro

@@ -18,9 +18,47 @@
 // runs cannot both send. A failed send releases the claim so the next hour
 // retries; the window caps that at three days of attempts.
 import { prisma } from "./db";
-import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, premiumTrialEnabled } from "./premium";
-import { premiumFromLine, premiumZeroToday } from "./site";
-import { sendWelcomeEmail } from "./email";
+import type Stripe from "stripe";
+import { NOT_SEED_WHERE, PREMIUM_TRIAL_DAYS, premiumTrialEnabled, subscriptionChargeLine, subscriptionIsCancelling, isIntroCouponId, tierFromPriceId } from "./premium";
+import { premiumFromLine, premiumZeroToday, introOfferEnabled, introPriceLine, PREMIUM_ANNUAL_AMOUNT } from "./site";
+import { sendWelcomeEmail, sendTrialWelcomeEmail } from "./email";
+import { stripe, stripeEnabled } from "./stripe";
+
+/**
+ * The live trial behind an account, for the trialist welcome (2026-09-24):
+ * one Stripe read per trialist, of whom there are a handful a day. null when
+ * there is no trialing subscription (it converted, ended, or the lookup
+ * failed) — the caller then sends the ordinary welcome.
+ */
+async function liveTrial(stripeCustomerId: string | null) {
+  if (!stripeCustomerId || !stripeEnabled()) return null;
+  try {
+    const subs = await stripe().subscriptions.list({
+      customer: stripeCustomerId,
+      status: "trialing",
+      limit: 1,
+      expand: ["data.items.data.price"],
+    });
+    const sub = subs.data[0];
+    if (!sub?.trial_end) return null;
+    const price = sub.items.data[0]?.price as Stripe.Price | undefined;
+    const interval = price?.recurring?.interval;
+    const coupon = sub.discount?.coupon;
+    return {
+      planName: tierFromPriceId(price?.id) === "plus" ? "Plus" : "Premium",
+      endsAt: new Date(sub.trial_end * 1000),
+      cancelling: subscriptionIsCancelling(sub),
+      chargeLine: subscriptionChargeLine({
+        unitAmount: price?.unit_amount ?? null,
+        currency: price?.currency ?? null,
+        interval: interval === "month" || interval === "year" ? interval : null,
+        introAmountOff: coupon && isIntroCouponId(coupon.id) ? coupon.amount_off ?? 0 : 0,
+      }),
+    };
+  } catch {
+    return null;
+  }
+}
 
 export const WELCOME_WINDOW_HOURS = 72;
 const MIN_AGE_MINUTES = 10;
@@ -38,7 +76,7 @@ export async function runWelcomeEmails(now = Date.now()): Promise<{ candidates: 
         },
       ],
     },
-    select: { id: true, email: true, displayName: true, trialStartedAt: true },
+    select: { id: true, email: true, displayName: true, trialStartedAt: true, stripeCustomerId: true },
     orderBy: { createdAt: "asc" },
     take: BATCH,
   });
@@ -54,13 +92,19 @@ export async function runWelcomeEmails(now = Date.now()): Promise<{ candidates: 
 
     let ok = false;
     try {
-      ok = await sendWelcomeEmail(u.email, {
+      // Already in a trial: the enrolment confirmation, not the free pitch.
+      const trial = u.trialStartedAt ? await liveTrial(u.stripeCustomerId) : null;
+      ok = trial
+        ? await sendTrialWelcomeEmail(u.email, { displayName: u.displayName, ...trial })
+        : await sendWelcomeEmail(u.email, {
         displayName: u.displayName,
         // A brand-new account has never had a trial, but read it rather than
         // assume it: an account can be created, subscribe and cancel inside the
         // ten-minute wait.
         trialDays: premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0,
-        fromLine: premiumFromLine(),
+        // Intro-aware (lib/site.ts intro block): the monthly half-price months,
+        // or the annual rate.
+        fromLine: introOfferEnabled() ? `${introPriceLine()}, or ${PREMIUM_ANNUAL_AMOUNT}/yr` : premiumFromLine(),
         zeroToday: premiumZeroToday(),
       });
     } catch {

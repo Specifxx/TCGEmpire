@@ -11,6 +11,8 @@ import {
   plusAnnualEnabled,
   premiumTierOf,
   getPremiumSubscriptionDetails,
+  subscriptionChargeLine,
+  hasEverPaid,
   PREMIUM_TRIAL_DAYS,
 } from "@/lib/premium";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
@@ -31,6 +33,7 @@ import {
   premiumFromLine,
   introOfferEnabled,
   introPriceLine,
+  introAmountOffCents,
   tierIntroMonthlyAmount,
   INTRO_MONTHS,
   type PremiumTierKey,
@@ -134,7 +137,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: `How does the ${PREMIUM_TRIAL_DAYS}-day free trial work?`,
-    a: `Start the trial and every Premium tool unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${introOfferEnabled() ? `${introPriceLine()} on the monthly plan` : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`} (or the annual rate, if you chose that plan) unless you cancel first. We email you the day before the first charge.`,
+    a: `Start the trial and every Premium tool unlocks immediately. A card is required to start, and nothing is charged until the trial ends — ${PREMIUM_TRIAL_DAYS} days later you're billed ${introOfferEnabled() ? `${introPriceLine()} on the monthly plan` : `${PREMIUM_PRICE_AMOUNT}/${PREMIUM_PRICE_PERIOD}`} (or the annual rate, if you chose that plan) unless you cancel first. We email you a day or two before the first charge.`,
   },
   ...(introOfferEnabled()
     ? [
@@ -174,7 +177,7 @@ const FAQ: { q: string; a: string }[] = [
     : []),
 ];
 
-export default async function PremiumPage() {
+export default async function PremiumPage({ searchParams }: { searchParams?: { keep?: string } }) {
   const user = await getCurrentUser();
   const already = isPremium(user);
   const checkoutLive = premiumCheckoutEnabled();
@@ -202,6 +205,24 @@ export default async function PremiumPage() {
   // annual-switch nudge's (that one deliberately excludes trialing subs; this
   // one is a Premium user's own account and must show a trial truthfully too).
   const subDetails = already && dbUser?.stripeCustomerId ? await getPremiumSubscriptionDetails(dbUser.stripeCustomerId) : null;
+  // A subscription set to end gets a one-click "Keep" (api/premium/resume).
+  // The price it quotes is what keeping will really charge: the intro price
+  // when resume will attach it (monthly, never paid, no discount yet — the
+  // same rule as checkout), else whatever the subscription already carries.
+  let keepOffer: { line: string; from: string } | null = null;
+  if (subDetails?.cancelAtPeriodEnd) {
+    const introOnKeep =
+      introOfferEnabled() &&
+      subDetails.interval === "month" &&
+      subDetails.introAmountOff === 0 &&
+      subDetails.unitAmount != null &&
+      !(await hasEverPaid(dbUser?.stripeCustomerId));
+    const line = subscriptionChargeLine({
+      ...subDetails,
+      introAmountOff: introOnKeep ? introAmountOffCents(subDetails.unitAmount!) : subDetails.introAmountOff,
+    });
+    if (line) keepOffer = { line, from: fmtDate(subDetails.currentPeriodEnd) };
+  }
   const currentTier = premiumTierOf(user);
 
   return (
@@ -356,14 +377,23 @@ export default async function PremiumPage() {
                   ? "Annual plan"
                   : "Monthly plan"}
               </p>
+              {/* CANCELLING IS CHECKED FIRST (2026-09-24). The trial branch used
+                  to come first, so a trialist who switched renewal off in the
+                  portal came back to "Converts to $9.99/mo on <date>" — the
+                  opposite of what they had just done. 5 of the 6 cancelled
+                  trials at the time were exactly this case. */}
               <p>
-                {subDetails.status === "trialing" ? (
+                {subDetails.cancelAtPeriodEnd ? (
+                  subDetails.status === "trialing" ? (
+                    <>Trial ends {fmtDate(subDetails.currentPeriodEnd)} — you won&apos;t be charged</>
+                  ) : (
+                    <>Access ends {fmtDate(subDetails.currentPeriodEnd)} — won&apos;t renew</>
+                  )
+                ) : subDetails.status === "trialing" ? (
                   <>
-                    Converts to {subDetails.interval === "year" ? annualCompact : compactPrice} on{" "}
+                    Converts to {subscriptionChargeLine(subDetails) ?? (subDetails.interval === "year" ? annualCompact : compactPrice)} on{" "}
                     {fmtDate(subDetails.currentPeriodEnd)}
                   </>
-                ) : subDetails.cancelAtPeriodEnd ? (
-                  <>Access ends {fmtDate(subDetails.currentPeriodEnd)} — won&apos;t renew</>
                 ) : (
                   <>Renews {fmtDate(subDetails.currentPeriodEnd)}</>
                 )}
@@ -379,6 +409,9 @@ export default async function PremiumPage() {
                 plusLive={plusLive && !user.premiumTierFloor}
                 annualAvailable={subDetails.tier === "plus" ? plusAnnualLive : annualLive}
                 canManageBilling={checkoutLive}
+                trialing={subDetails.status === "trialing"}
+                keep={keepOffer}
+                highlightKeep={searchParams?.keep === "1"}
               />
             </div>
           ) : user.premiumUntil ? (
@@ -498,7 +531,7 @@ export default async function PremiumPage() {
             {plusLive ? <> — {tierMonthlyAmount("plus")}/{PREMIUM_PRICE_PERIOD} for Plus, {PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD} for Premium</> : <> ({PREMIUM_PRICE_AMOUNT}/{PREMIUM_PRICE_PERIOD})</>}
             {" "}after {PREMIUM_TRIAL_DAYS} day{PREMIUM_TRIAL_DAYS === 1 ? "" : "s"} unless you cancel first
             {introOfferEnabled() ? <> — at half price for the first {INTRO_MONTHS} months on a monthly plan</> : null}. We email
-            you the day before you&apos;re charged.{" "}
+            you a day or two before you&apos;re charged.{" "}
           </>
         ) : (
           <>Cancel anytime — your benefits run to the end of the paid period. </>

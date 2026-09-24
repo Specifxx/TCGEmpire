@@ -208,7 +208,8 @@ test("the wall dialog signs a visitor in IN PLACE, keeping both the tier choice 
 
 test("/premium/welcome proves the Stripe session belongs to the viewer before it confirms anything", () => {
   const src = code("src/app/premium/welcome/page.tsx");
-  assert.match(src, /checkout\.sessions\.retrieve\(sessionId\)/, "the session must be re-read from Stripe, never trusted from the URL");
+  // (2026-09-24) now with the subscription expanded, for the dated trial timeline.
+  assert.match(src, /checkout\.sessions\.retrieve\(sessionId(, \{ expand: \[[^\]]*\] \})?\)/, "the session must be re-read from Stripe, never trusted from the URL");
   assert.match(src, /s\.metadata\?\.userId \?\? s\.client_reference_id/);
   assert.match(src, /ownerId !== user\.id\) redirect\("\/premium"\)/,
     "anyone can put any cs_ id in this URL — a mismatch must reveal nothing");
@@ -218,7 +219,7 @@ test("/premium/welcome proves the Stripe session belongs to the viewer before it
 
 test("/premium/welcome waits for the webhook instead of lying about the tier", () => {
   const page = code("src/app/premium/welcome/page.tsx");
-  assert.match(page, /<PremiumActivationPoller>/, "entitlement is webhook-async — the page must wait for it");
+  assert.match(page, /<PremiumActivationPoller( trial=\{trial\})?>/, "entitlement is webhook-async — the page must wait for it");
   assert.match(page, /TIER_COMPARISON\.filter/, "what was unlocked must be read off the shared table, not re-typed here");
 
   const poller = code("src/components/PremiumActivationPoller.tsx");

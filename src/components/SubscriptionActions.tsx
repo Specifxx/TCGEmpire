@@ -33,23 +33,38 @@ export function SubscriptionActions({
   plusLive,
   annualAvailable,
   canManageBilling,
+  trialing = false,
+  keep = null,
+  highlightKeep = false,
 }: {
   tier: PremiumTierKey;
   interval: "month" | "year" | null;
   plusLive: boolean;
   annualAvailable: boolean;
   canManageBilling: boolean;
+  /** In a free trial: the plan-change routes only handle paid subscriptions. */
+  trialing?: boolean;
+  /** Set when the subscription is due to END: what keeping it charges, and from when. */
+  keep?: { line: string; from: string } | null;
+  /** Arrived from the trial-ending email's ?keep=1 link. */
+  highlightKeep?: boolean;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<null | "upgrade" | "downgrade" | "annual">(null);
+  const [busy, setBusy] = useState<null | "upgrade" | "downgrade" | "annual" | "resume">(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function act(kind: "upgrade" | "downgrade" | "annual", path: string) {
+  async function act(kind: "upgrade" | "downgrade" | "annual" | "resume", path: string) {
     setBusy(kind);
     setError(null);
     trackEvent("subscription_change_started", { kind, from_tier: tier, source: "premium-page" });
     try {
-      const res = await fetch(path, { method: "POST" });
+      const res = await fetch(path, {
+        method: "POST",
+        // Which door the keep came through, for the trial-cancel report.
+        ...(kind === "resume"
+          ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ from: highlightKeep ? "email" : "card" }) }
+          : {}),
+      });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(d.error ?? "Couldn't change your plan — try again");
@@ -65,14 +80,42 @@ export function SubscriptionActions({
     }
   }
 
-  const canUpgrade = plusLive && tier === "plus";
-  const canDowngrade = plusLive && tier === "premium";
-  const canGoAnnual = annualAvailable && interval === "month";
+  // Plan switches are for PAID subscriptions: the three routes select an
+  // active subscription, so during a free trial each button answered with a
+  // 400 and "Cancel" was the only control that worked (2026-09-24). A trialist
+  // changes plan in the portal-free way — keep or let the trial end — until a
+  // mid-trial switch has been verified against Stripe on a test clock.
+  const canUpgrade = plusLive && tier === "plus" && !trialing && !keep;
+  const canDowngrade = plusLive && tier === "premium" && !trialing && !keep;
+  const canGoAnnual = annualAvailable && interval === "month" && !trialing && !keep;
   const savePct = annualSavingPct(tier);
 
   return (
     <div className="mt-4 border-t border-ink-800 pt-3">
       <div className="flex flex-col gap-2">
+        {/* KEEP (2026-09-24). A subscription set to end — most often a trial
+            whose renewal was switched off in its first hour, "to be safe" —
+            had no way back on in the app. One POST, from its owner, clears the
+            cancellation; nothing is charged until the date shown. The plain
+            "do nothing" line is deliberate: letting it end is a real choice. */}
+        {keep && (
+          <div
+            id="keep"
+            className={`rounded-lg p-2 ${highlightKeep ? "ring-2 ring-brand-500/60" : ""}`}
+            data-keep-offer
+          >
+            <button
+              onClick={() => act("resume", "/api/premium/resume")}
+              disabled={busy !== null}
+              className="btn-primary w-full py-2 text-xs"
+            >
+              {busy === "resume" ? "Keeping…" : `Keep ${TIER_NAMES[tier]} — ${keep.line} from ${keep.from}`}
+            </button>
+            <p className="mt-1 text-[11px] text-slate-500">
+              Nothing is charged before {keep.from}. Or do nothing and it simply ends then.
+            </p>
+          </div>
+        )}
         {canUpgrade && (
           <div>
             <button
