@@ -32,13 +32,14 @@ export async function BanListTable() {
         Every banned Riftbound card
       </h2>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[30rem] text-left text-sm">
+        <table className="w-full text-left text-sm">
           <thead className="border-b border-ink-800 bg-ink-900/60 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              <th scope="col" className="px-3 py-2 font-semibold">Card</th>
-              <th scope="col" className="px-3 py-2 font-semibold">Banned in</th>
-              <th scope="col" className="px-3 py-2 font-semibold">Since</th>
-              <th scope="col" className="px-3 py-2 text-right font-semibold">Price ({currency})</th>
+              <th scope="col" className="px-2 py-2 font-semibold sm:px-3">Card</th>
+              {/* Format and date share a cell so the whole table fits a 360px
+                  phone without a sideways scroll hiding the price. */}
+              <th scope="col" className="px-2 py-2 font-semibold sm:px-3">Banned in · since</th>
+              <th scope="col" className="px-2 py-2 text-right font-semibold sm:px-3">Price ({currency})</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-800">
@@ -48,8 +49,8 @@ export async function BanListTable() {
               const price = r ? (r[field] as number | null) : null;
               return (
                 <tr key={b.slug}>
-                  <td className="px-3 py-1.5">
-                    <Link href={`/card/${b.slug}`} className="flex items-center gap-2.5 font-semibold text-slate-100 hover:text-brand-300">
+                  <td className="px-2 py-1.5 sm:px-3">
+                    <Link href={`/card/${b.slug}`} className="flex items-center gap-2.5 text-[13px] font-semibold sm:text-sm text-slate-100 hover:text-brand-300">
                       {img ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={img} alt="" aria-hidden="true" width={28} height={39} loading="lazy" className="h-[39px] w-7 shrink-0 rounded-sm object-cover" />
@@ -59,11 +60,13 @@ export async function BanListTable() {
                       {b.name}
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-slate-300">
-                    {b.formats.length === 2 ? "Standard + 2v2" : `${b.formats[0]} only`}
+                  <td className="px-2 py-1.5 sm:px-3">
+                    <span className="block whitespace-nowrap text-slate-300">
+                      {b.formats.length === 2 ? "Standard + 2v2" : `${b.formats[0]} only`}
+                    </span>
+                    <span className="block whitespace-nowrap text-xs text-slate-500">{banDate(b.effective)}</span>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-slate-400">{banDate(b.effective)}</td>
-                  <td className="num whitespace-nowrap px-3 py-1.5 text-right font-semibold text-white">
+                  <td className="num whitespace-nowrap px-2 py-1.5 text-right font-semibold text-white sm:px-3">
                     {price != null ? formatMoney(price, currency) : <span className="text-slate-600">—</span>}
                   </td>
                 </tr>

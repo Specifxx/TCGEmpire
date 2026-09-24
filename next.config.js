@@ -441,6 +441,12 @@ const nextConfig = {
       // which would stop AI bots fetching them at all — and stop Google seeing
       // the noindex. They stay fetchable; they just stop competing in search.
       { source: "/llm/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
+      // Generated share images (2026-09-24): an opengraph-image is a PNG for
+      // link previews, not a page, and Google was indexing them as images of
+      // our pages. Next serves them at …/opengraph-image with an optional
+      // "-<hash>" suffix, at the root and under any route.
+      { source: "/opengraph-image:suffix(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
+      { source: "/:path*/opengraph-image:suffix(.*)", headers: [{ key: "X-Robots-Tag", value: "noindex" }] },
 
       // ─────────────────────────────────────────────────────────────────────
       // STATIC IMAGE CACHING. Measured, not assumed.

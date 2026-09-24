@@ -118,10 +118,12 @@ longer lands on its entry.
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
   [2026-09-14](../DECISIONS.md#L6038)
 - **Nudges:** the signed-out popup sells the FREE account (no price, no
-  gold); the signed-in `PremiumSlideIn` carries Premium. The popup stops
-  after 2 dismissals per device, snoozes 3 pages then 7 days, and keeps its
-  5-second delay. [2026-09-16](../DECISIONS.md#L7031),
-  [2026-09-14](../DECISIONS.md#L6134)
+  gold); the signed-in `PremiumSlideIn` carries Premium. The popup waits for
+  a 2nd page view or 60 s of reading, never on the first page from another
+  site or a phone's first view (`lib/signup-promo-gate.ts`). It stops after 2
+  dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
+  delay. [2026-09-16](../DECISIONS.md#L7031),
+  [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089)
 - **Free visitors get nothing from Deal Finder or Rising Cards** (the queries
   run only for paying members); Rising Sealed and Value Finder keep a free
   top pick. [2026-09-22](../DECISIONS.md#L10538)
@@ -218,8 +220,14 @@ longer lands on its entry.
   [2026-09-21](../DECISIONS.md#L9681), [2026-09-17](../DECISIONS.md#L7801)
 - **Stores:** check the match rate before adding one. If a read fails, keep
   yesterday's rows; rows expire after 72h of empty returns, and
-  `DECOMMISSIONED_RETAILERS` purges removed stores.
-  [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034)
+  `DECOMMISSIONED_RETAILERS` purges removed stores. A store's `currency`
+  must match its market or its prices are refused (`lib/offer-currency.ts`).
+  Sealed-only stores go in `lib/sealed-stores.ts`, never `RETAILERS`.
+  [2026-09-23](../DECISIONS.md#L11091), [2026-09-23](../DECISIONS.md#L11034),
+  [2026-09-24](../DECISIONS.md#L11971)
+- **Sealed offers have three states** (open / sold out / unknown past 72h,
+  `lib/sealed-offers.ts`); only open offers set a headline price or a store
+  count. [2026-09-24](../DECISIONS.md#L11971)
 - **Matching:** one `FOREIGN_LANG` pattern and one promo-set regex; a sealed
   listing's own title can veto its group.
   [2026-09-10](../DECISIONS.md#L4284), [2026-09-20](../DECISIONS.md#L8969)

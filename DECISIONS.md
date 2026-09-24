@@ -11967,3 +11967,152 @@ history survived all this because it was in the dump list.
 The consolidated series is irregular, with points 1–5 days apart instead of 7.
 That is acceptable: `computeSignals` reads real dated points, and every point
 is a genuine snapshot.
+
+## Sold-out pre-orders ranked as the cheapest — 2026-09-24
+
+The owner's brief, checked by hand against each store's page: the US
+`/radiance-preorders` headline was **Many Realms at US$119.99**, a Radiance
+Booster Box its own page says is sold out. We were about to promote the page
+on Reddit and Discord.
+
+**Cause.** The stored row was right: `diagnose-sealed` showed Many Realms
+`inStock=false`, read that morning. `PreorderPriceTable` never looked. It
+took `rows[0]` of every listing as "cheapest" and counted every row as
+"taking pre-orders". `computeAllSealedGroups` already priced groups from
+in-stock rows; the table re-derived both numbers itself.
+
+**Fix: one definition of an offer's state** (`lib/sealed-offers.ts`), used by
+the pre-order table, the Radiance hub and the `/sealed` quick view.
+
+- **Three states.** "Pre-order open" (or "In stock" once shipped), "Sold out",
+  and **"Unknown"** for a row not re-read within 72h, the same
+  `STORE_ROWS_MAX_AGE_H` the singles importer expires rows at. A store whose
+  scrape fails keeps its rows, and some EU rows were a month old.
+- **Only open offers** can be the headline or count as a store taking
+  pre-orders. Sold-out rows sort last, greyed, with a plain link and no button.
+- **Each offer shows "checked Xh ago".** It comes from `lastSeen`, now carried
+  on `SealedGroup.listings`, and renders client-only (`CheckedAgo`), like the
+  card page's stamp, because ISR HTML would freeze it.
+- **Products sort by their cheapest open offer.** A product nobody is taking
+  orders on goes last rather than vanishing.
+
+**Vault / Vault Bundle.** The classifier already maps "Vault" to `Bundle`, but
+stored rows from stores not re-scraped since still said `Vault`. The eBay pass
+searches every group that exists, so it kept writing fresh rows into the dead
+group. The same eBay US listing sat in both. `canonicalSealedRow()` merges
+them on read (live page and history writer), and `dedupeStoreListings()`
+keeps one listing per store.
+
+**Currency guard** (`lib/offer-currency.ts`). Sky Fox Games' CAD prices were
+shown as US$ for ten days, because a row's market IS its currency.
+
+- `RetailerInfo.currency` records what a storefront charges. It defaults to
+  the market's currency.
+- A store whose currency differs from the market is refused in three places:
+  when groups are read, by the sealed importer, and by the singles importer.
+- We refuse rather than convert. A store that ignores Shopify Markets gives
+  no guarantee what checkout will charge.
+- `tests/offer-currency.test.ts` fails if any tracked store sits in a market
+  it cannot price in, or if a known-CAD host would render in the US.
+
+**New stores.** They live in `lib/sealed-stores.ts`, not `RETAILERS`: that
+list drives the singles importer, store-health's zero-listings alarm and the
+`/stores` pages, where a sealed-only store would look broken.
+
+| Store | Market | How it is read | Radiance on 2026-09-24 |
+|---|---|---|---|
+| Game Nerdz | US | BigCommerce product page: schema.org price, currency, availability | Box US$129.97, PreOrder |
+| Miniature Market | US | Magento product page, same reader | Box US$139.99, **OutOfStock** (buy button disabled) |
+| Kollect Korner | US | Shopify `preorders` collection (no Riftbound collection) | Display US$159.99, Vault US$49.99 |
+| The Collection Realm | US | Shopify, 15 Riftbound collections via sitemap | Case, Showdown display |
+| Crypt MTG | CA | Shopify, CAD storefront | Showdown Decks |
+
+Both product-page stores ask for `Crawl-delay: 10` and allow product URLs;
+the reader checks robots.txt per URL and waits the delay between requests.
+
+**Skipped:**
+
+- **tradingcardmarket.com:** no Radiance product listed, and its
+  `collections.json` does not answer.
+- **universetcg.com:** already tracked, and it is a EUR store (EU market), not
+  US.
+- **talonsong.net:** Square Online, which has no product feed to read.
+
+**Not verified here.** The sandbox has no production database. The fix is
+checked by tests (including a render of the table with the day's US rows) and
+a local production build over a fixture copied from `diagnose-sealed`. An
+`import-sealed` run on the branch wrote the new stores' live rows.
+
+## Routing Radiance search traffic to /radiance-preorders — 2026-09-24
+
+Search Console, 28 days: `/blog/riftbound-radiance-leaked-mechanics` is the
+site's #1 page (975 clicks, 9.4K impressions, position 5.9).
+`/radiance-preorders` sits at position 13.8. The readers are on the articles;
+the buying intent is on the pre-order page.
+
+**`RadiancePreorderCta`** shows "Radiance booster box pre-orders from
+US$129.97 · Compare every store →". It appears twice per page, near the top
+and again after the first major section, on:
+
+- `/blog/riftbound-radiance-leaked-mechanics`
+- `/blog/riftbound-radiance-spoilers`
+- `/blog/riftbound-radiance-what-we-know`
+- `/sets/radiance`
+
+The article list is `RADIANCE_PREORDER_CTA_SLUGS`; `/sets/radiance` wires the
+component in directly.
+
+- **The price is the cheapest open Booster Box offer**, so it can never be a
+  sold-out store.
+- **Blog posts are ISR with no per-visitor market**, so the server reads every
+  market from `getPreorderGroups` (already cached per market, not re-wrapped)
+  and the client picks the visitor's. A market with no open box gets the link
+  with no number, never another market's price.
+- **The release-day capture** appears in the mid-article block. The
+  end-of-article copy is skipped on those posts, so a reader never sees the
+  same form twice. `/sets/radiance` already has it in the hub.
+- **From 23 Oct** the block links to `/sets/radiance#price-guide`.
+
+## Search snippets: answers in the title, from data — 2026-09-24
+
+| Page | Change |
+|---|---|
+| Ban list (8,720 impr., 0.2%) | Data module `lib/banlist.ts` (13 bans, formats, dates). Compact table first under the H1: thumbnail, card, Standard/2v2, date, live price. "Updated 15 Sep 2026 · 13 cards banned" line. ItemList JSON-LD. Title "Riftbound Ban List (Sep 2026): 13 Banned Cards". "Ban list" in the card-database nav group |
+| Set pages | "Riftbound {Set} Card List: All {N} Cards + Prices" leads the ladder. The data-derived intro moved under the grid, so the grid is above the fold (nothing removed) |
+| Card size (315 impr., 0 clicks) | 63 × 88 mm leads the title, description and first sentence. An earlier pass removed the number to "earn the click"; it earned none either way. `updated` set so dateModified is right |
+| Most expensive (3,349 impr., 1.6%) | The title carries the month, the #1 card and its price, from the article's own cached ranking, on a ladder under 60 characters |
+| Homepage, Empower, Flow | Unchanged: rewritten this morning, and no new data yet to judge a second rewrite by |
+
+The most-expensive title is brand-free, like the set titles: no rung that
+names a card fits 60 characters with " — RiftCompare" on the end.
+
+## First visit from Reddit/Discord: no sign-up prompt on the first page — 2026-09-24
+
+**Sign-up slide-in.** It showed 5 seconds into any page view, including a
+visitor's very first page. It now shows only when both of these hold:
+
+- it is the 2nd page view in the session, **or** 60 seconds of visible time
+  have passed on the page;
+- it is not the first page of a visit from another site, and not a phone's
+  first view (Google's intrusive-interstitial guidance).
+
+The rule is `lib/signup-promo-gate.ts`, pure and tested. The 5-second settle
+delay, the dismissal cap and the snoozes are unchanged.
+
+**Hero stats.** `CountUp` server-rendered the real number, then reset it to 0
+on hydration and climbed back. The first thing a new visitor read was "0
+cards · 0 US stores". The hero now prints the server's numbers with no
+animation. Where `CountUp` remains elsewhere, it climbs from 80% of the value.
+
+**"Riftbound card prices today" table:**
+
+- The buyer-centric colours stay (green = cheaper), since the watchlist and
+  digest use them too.
+- ▲/▼ arrows and a screen-reader label mean direction no longer depends on
+  colour, and a key line explains the colours.
+- Each row has a thumbnail.
+- The table shows 15 rows, down from 50, with "See all N card prices".
+
+**Also:** `X-Robots-Tag: noindex` on every `opengraph-image` route, at the
+root and under any path, with or without the hash suffix. These are share
+PNGs, not pages.
