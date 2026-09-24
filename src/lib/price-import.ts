@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory, ensureHistoryCards } from "./db-history";
 import { DECOMMISSIONED_RETAILERS, RETAILER_LIST, RetailerInfo, STORE_ROWS_MAX_AGE_H } from "./retailers";
+import { offerCurrencyOk, storeCurrency } from "./offer-currency";
 import { isEbayEnabled, isEbayRateLimited, searchEbayLowest, primeEbayBudget, ebaySpentThisRun, parseGrade, type EbayResult } from "./ebay";
 import { importSealed } from "./sealed-import";
 import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, GLOBAL_HISTORY_COUNTRY } from "./price-history";
@@ -1683,6 +1684,13 @@ export async function importPrices(): Promise<ImportSummary> {
   for (const store of RETAILER_LIST) {
     const cc = store.country ?? "AU";
     if (onlyCountry && cc !== onlyCountry) continue;
+    // Currency guard (lib/offer-currency.ts): a store that charges in another
+    // currency than its market's is never written — RetailerPrice has no
+    // currency column, so its market IS its currency.
+    if (!offerCurrencyOk(store.key, cc)) {
+      console.warn(`Skipped ${store.key}: charges ${storeCurrency(store.key)}, not ${cc}'s currency.`);
+      continue;
+    }
     const products =
       store.platform === "woocommerce"
         ? await fetchWooStoreProducts(store)

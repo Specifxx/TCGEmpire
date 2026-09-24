@@ -223,6 +223,6 @@ test("sealed groups are shared across lambdas, not only memoised per instance", 
   // through the per-instance memo. The computed groups (~100 KB per market)
   // now also sit in the shared data cache; the memo stays as the fast path.
   const src = read("src/lib/sealed-import.ts");
-  assert.match(src, /\["sealed-groups-v1"/, "computed sealed groups must go through cachedOrDirect");
+  assert.match(src, /\["sealed-groups-v2"/, "computed sealed groups must go through cachedOrDirect");
   assert.match(src, /firstSeenAt: [^\n]*new Date\(/, "Date fields must be revived after the JSON round-trip through the data cache");
 });

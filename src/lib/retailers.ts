@@ -42,6 +42,14 @@ export interface RetailerInfo {
   // scripts/probe-eu-stores.ts for Shopify, scripts/probe-woocommerce-stores.ts
   // for Woo — rather than inferring it from the domain or the theme.
   platform?: "shopify" | "woocommerce";
+  // The currency the storefront actually CHARGES, when it is not the market's
+  // own. Omitted = currencyOf(country). Shopify Markets converts for most
+  // stores, but not all: Sky Fox Games returned the same CAD prices for
+  // ?country=US and ?country=CA, and they were published as US$ for ten days.
+  // lib/offer-currency.ts refuses any price whose store currency differs from
+  // the market it would be shown in; tests/offer-currency.test.ts fails if a
+  // store is configured into a market it cannot price in.
+  currency?: string;
 }
 
 export const RETAILERS: Record<string, RetailerInfo> = {
@@ -940,6 +948,7 @@ export const RETAILERS: Record<string, RetailerInfo> = {
     freeOverCents: 5000,
     shippingNote: "est. C$2.00 · free over C$50",
     country: "CA",
+    currency: "CAD",
   },
 
   // ---- United Kingdom stores (country: "UK"; prices in GBP via ?country=GB; uses eBay UK) ----

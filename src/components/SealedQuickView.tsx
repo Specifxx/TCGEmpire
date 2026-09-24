@@ -11,6 +11,9 @@ import { affiliateUrl, ebayAffiliateUrl } from "@/lib/affiliate";
 import { formatMoney } from "@/lib/format";
 import { sealedImageAlt } from "@/lib/image-alt";
 import { Dialog } from "./ui/Dialog";
+import { CheckedAgo } from "./CheckedAgo";
+import { headlineOffer, offerStock, offerStockLabel, rankOffers } from "@/lib/sealed-offers";
+import { isPreorderSetCode } from "@/lib/constants";
 
 // Quick-view popup for sealed products — the sealed twin of QuickView.tsx (cards).
 // Clicking a SealedTile opens this instead of expanding the whole /sealed page, so
@@ -64,7 +67,11 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
   const { country } = useCountry();
   const fmt = (cents: number) => formatMoney(cents, currency);
 
-  const listings = group.listings;
+  // Open offers first, then unconfirmed, then sold out (lib/sealed-offers.ts) —
+  // the same order and the same three states as /radiance-preorders.
+  const listings = rankOffers(group.listings);
+  const best = headlineOffer(listings);
+  const preorder = isPreorderSetCode(group.setCode);
   // One entry per STORE, in-stock and out-of-stock alike ("you list it as
   // available and it isn't" is one of the issue types). Deduped defensively —
   // grouping should already give one row per retailer, but the picker must never
@@ -145,29 +152,39 @@ function SealedQuickViewModal({ group, currency, onClose }: { group: SealedGroup
               </div>
             ) : (
               <ul className="divide-y divide-ink-800">
-                {listings.map((l, i) => (
-                  <li key={i} className={`flex items-center gap-3 py-2.5 ${l.inStock ? "" : "opacity-55"}`}>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-white">{l.retailerName}</div>
-                      <div className="text-[11px]">
-                        {l.inStock ? <span className="text-brand-400">● In stock</span> : <span className="text-slate-500">● Out of stock</span>}
+                {listings.map((l, i) => {
+                  const state = offerStock(l);
+                  const isOpen = state === "open";
+                  const isBest = l === best;
+                  return (
+                    <li key={i} data-stock={state} className={`flex items-center gap-3 py-2.5 ${isOpen ? "" : "opacity-55"}`}>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-white">{l.retailerName}</div>
+                        <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
+                          <span className={isOpen ? "text-brand-400" : "text-slate-500"}>● {offerStockLabel(state, preorder)}</span>
+                          <CheckedAgo iso={l.lastSeen} className="text-slate-500" />
+                        </div>
                       </div>
-                    </div>
-                    {i === 0 && l.inStock && <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span>}
-                    <div className={`num text-right text-sm font-bold ${i === 0 && l.inStock ? "text-accent" : "text-white"} ${!l.inStock ? "text-slate-500 line-through" : ""}`}>
-                      {fmt(l.priceCents)}
-                    </div>
-                    <OutboundLink
-                      href={affiliateUrl(l.url, l.retailer)}
-                      retailer={l.retailer}
-                      country={country}
-                      kind="sealed"
-                      className={`px-3 py-1.5 text-xs ${i === 0 && l.inStock ? "btn-accent" : "btn-primary"}`}
-                    >
-                      View →
-                    </OutboundLink>
-                  </li>
-                ))}
+                      {isBest && <span className="chip shrink-0 bg-gold/20 text-gold">Best price</span>}
+                      <div className={`num text-right text-sm font-bold ${isBest ? "text-accent" : "text-white"} ${!isOpen ? "text-slate-500 line-through" : ""}`}>
+                        {fmt(l.priceCents)}
+                      </div>
+                      <OutboundLink
+                        href={affiliateUrl(l.url, l.retailer)}
+                        retailer={l.retailer}
+                        country={country}
+                        kind="sealed"
+                        className={
+                          isOpen
+                            ? `px-3 py-1.5 text-xs ${isBest ? "btn-accent" : "btn-primary"}`
+                            : "px-3 py-1.5 text-xs text-slate-500 underline-offset-2 hover:underline"
+                        }
+                      >
+                        View →
+                      </OutboundLink>
+                    </li>
+                  );
+                })}
               </ul>
             )}
 

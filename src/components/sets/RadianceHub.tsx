@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getPreorderGroups } from "@/lib/sealed-import";
 import { getDisplayCurrency } from "@/lib/get-country";
-import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderPriceTable";
+import { PreorderPriceTable, preorderTableGroups } from "@/components/PreorderPriceTable";
 import { HubFaq } from "@/components/HubFaq";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import type { Country } from "@/lib/country";
@@ -53,7 +53,7 @@ const TIMELINE = [
 export async function RadianceHub({ country }: { country: Country }) {
   const currency = getDisplayCurrency(country);
   const groups = await getPreorderGroups(country).catch(() => []);
-  const priced = pricedPreorderGroups(groups);
+  const listed = preorderTableGroups(groups);
 
   // Which timeline step is "next" from today, so it can carry the gold accent
   // — server-computed like every other date-driven state on this site (the
@@ -141,11 +141,11 @@ export async function RadianceHub({ country }: { country: Country }) {
           ))}
         </ul>
 
-        {priced.length > 0 ? (
+        {listed.length > 0 ? (
           <div className="mt-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Pre-order prices, every store</h4>
             <div className="mt-2">
-              <PreorderPriceTable groups={priced} country={country} currency={currency} />
+              <PreorderPriceTable groups={listed} country={country} currency={currency} />
             </div>
           </div>
         ) : (

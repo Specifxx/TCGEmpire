@@ -6,7 +6,7 @@ import { COUNTRIES } from "@/lib/country";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { HubFaq } from "@/components/HubFaq";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { PreorderPriceTable, pricedPreorderGroups } from "@/components/PreorderPriceTable";
+import { PreorderPriceTable, pricedPreorderGroups, preorderTableGroups } from "@/components/PreorderPriceTable";
 import { faqPage, ldJson, webPage } from "@/lib/jsonld";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { setByCode, isPreorderSetCode } from "@/lib/constants";
@@ -103,7 +103,10 @@ export default async function RadiancePreordersPage() {
   const set = setByCode(SET_CODE);
   const stillUpcoming = isPreorderSetCode(SET_CODE);
   const groups = stillUpcoming ? await getPreorderGroups(country) : [];
+  // `priced` (an open offer exists) feeds the structured data; `listed` (any
+  // offer at all) feeds the visible table, which shows sold-out stores too.
   const priced = pricedPreorderGroups(groups);
+  const listed = preorderTableGroups(groups);
 
   const ld = ldJson(
     webPage({
@@ -134,7 +137,8 @@ export default async function RadiancePreordersPage() {
                 availability: "https://schema.org/PreOrder",
                 priceCurrency: currency,
                 lowPrice: ((g.lowestPriceCents ?? 0) / 100).toFixed(2),
-                offerCount: g.listings.length,
+                // Stores with an OPEN offer — a sold-out listing is not an offer.
+                offerCount: g.storeCount,
               },
             },
           })),
@@ -162,13 +166,13 @@ export default async function RadiancePreordersPage() {
         cheapest first, in {currency}. Prices refresh daily.
       </p>
 
-      {priced.length > 0 ? (
+      {listed.length > 0 ? (
         <div className="mt-4">
           {/* PreorderPriceTable's own product headings are <h3> (it also renders
               inside RadianceHub's "Products & preorders" <h2>), so this page needs
               its own enclosing <h2> or h1 -> h3 skips a level. */}
           <h2 className="sr-only">Radiance pre-order prices by product</h2>
-          <PreorderPriceTable groups={priced} country={country} currency={currency} />
+          <PreorderPriceTable groups={listed} country={country} currency={currency} />
         </div>
       ) : (
         <div className="card-surface mt-5 p-6">

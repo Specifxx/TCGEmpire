@@ -167,14 +167,16 @@ test("RadianceHub is wired into the set page and renders regardless of card coun
 // ── Pre-order table extraction (task 3: reuse an existing component) ───────
 test("the pre-order price table is a single shared component, used by both /radiance-preorders and the hub", () => {
   const preordersPage = read("src/app/radiance-preorders/page.tsx");
-  assert.match(preordersPage, /import \{ PreorderPriceTable, pricedPreorderGroups \} from "@\/components\/PreorderPriceTable"/);
-  assert.match(preordersPage, /<PreorderPriceTable groups=\{priced\} country=\{country\} currency=\{currency\} \/>/);
+  assert.match(preordersPage, /import \{ PreorderPriceTable, pricedPreorderGroups, preorderTableGroups \} from "@\/components\/PreorderPriceTable"/);
+  // Every listed group, sold-out ones included (2026-09-24): the table badges
+  // stock itself, so the caller no longer pre-filters to priced groups.
+  assert.match(preordersPage, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} \/>/);
   // The old inline per-store <li> markup must be gone from the page now that
   // it lives in the shared component — otherwise there are two copies to drift.
   assert.doesNotMatch(preordersPage, /rows\.map\(\(l\) => \{/);
 
   const hub = read("src/components/sets/RadianceHub.tsx");
-  assert.match(hub, /<PreorderPriceTable groups=\{priced\} country=\{country\} currency=\{currency\} \/>/);
+  assert.match(hub, /<PreorderPriceTable groups=\{listed\} country=\{country\} currency=\{currency\} \/>/);
 });
 
 test("PreorderPriceTable never claims InStock — every listing here is unshipped", () => {

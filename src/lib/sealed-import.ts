@@ -1,11 +1,15 @@
 // Imports SEALED / non-single Riftbound products (booster boxes, packs, Proving
 // Grounds, bundles, …) from the same AU Shopify stores, into SealedListing. The
 // singles importer (price-import.ts) deliberately skips these; this complements it.
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { dbHistory } from "./db-history";
 import { sydneyDay, HISTORY_MIN_INTERVAL_DAYS, cachedOrDirect } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
 import { RETAILER_LIST, type RetailerInfo } from "./retailers";
+import { SEALED_ONLY_SHOPIFY, PRODUCT_PAGE_STORES, parseProductPage } from "./sealed-stores";
+import { offerCurrencyOk, storeCurrency } from "./offer-currency";
+import { headlineOffer, openStoreCount, rankOffers } from "./sealed-offers";
 import { decodeEntities, discoverWooRiftboundCategories, fetchWooCategory, productUrl, wooVariants } from "./woocommerce";
 import { isEbayEnabled, isEbayRateLimited, searchEbaySealed, primeEbayBudget, sealedFloorCents } from "./ebay";
 import { cheapestEnglishSealed, fetchTcgplayerSealed, tcgProductUrl, tcgImageUrl, setCodeFromSetName } from "./tcgplayer";
@@ -140,6 +144,64 @@ async function fetchText(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// Stores with no product feed, read one product page at a time
+// (lib/sealed-stores.ts). robots.txt is checked per URL and the store's own
+// Crawl-delay is honoured between requests. A page that fails, or that states
+// a different currency from the store's, keeps that store's existing rows —
+// the same "one bad run keeps yesterday's rows" rule as the Shopify path.
+async function importProductPageStores(): Promise<number> {
+  let count = 0;
+  for (const store of PRODUCT_PAGE_STORES) {
+    const allowed = await robotsAllows(store.base);
+    const rows = new Map<string, Prisma.SealedListingCreateManyInput>();
+    let failed = false;
+    for (const [i, url] of store.productUrls.entries()) {
+      if (!allowed(new URL(url).pathname)) {
+        console.warn(`Sealed: ${store.key} robots.txt disallows ${url} — skipped.`);
+        continue;
+      }
+      if (i > 0) await sleep(store.crawlDelayMs);
+      const html = await fetchText(url);
+      const page = html ? parseProductPage(html) : null;
+      if (!page) {
+        failed = true;
+        console.warn(`Sealed: ${store.key} — no price read from ${url}.`);
+        continue;
+      }
+      if (page.currency && page.currency !== store.currency) {
+        failed = true;
+        console.warn(`Sealed: ${store.key} quoted ${page.currency}, expected ${store.currency} — not written.`);
+        continue;
+      }
+      if (!isRiftboundSealed(page.title) && !/riftbound/i.test(url)) continue;
+      const setCode = detectSet(page.title) ?? detectSet(url.replace(/[-/]/g, " "));
+      const type = classifySealed(page.title);
+      if (page.priceCents < sealedFloorCents(type)) continue;
+      const groupKey = setCode ? `${setCode}|${type}` : page.title.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 40);
+      rows.set(groupKey, {
+        groupKey,
+        title: page.title,
+        productType: type,
+        setCode,
+        retailer: store.key,
+        retailerName: store.name,
+        priceCents: page.priceCents,
+        url,
+        imageUrl: page.imageUrl,
+        country: store.country,
+        // A page that states no availability is not evidence of stock.
+        inStock: page.available === true,
+      });
+    }
+    if (failed || !rows.size) continue;
+    await prisma.sealedListing.deleteMany({ where: { retailer: store.key } });
+    await prisma.sealedListing.createMany({ data: Array.from(rows.values()) });
+    count += rows.size;
+    console.log(`Sealed: ${store.key} — ${rows.size} product page(s) read.`);
+  }
+  return count;
 }
 
 // Discover ALL riftbound collections (including sealed-only ones, which the singles
@@ -396,8 +458,17 @@ async function fetchWooSealedProducts(store: RetailerInfo): Promise<ShopifyProd[
 
 export async function importSealed(): Promise<number> {
   let count = 0;
-  for (const store of RETAILER_LIST) {
+  // Sealed-only stores (lib/sealed-stores.ts) are read exactly like the
+  // registry's Shopify stores; they are just kept out of RETAILERS.
+  for (const store of [...RETAILER_LIST, ...SEALED_ONLY_SHOPIFY] as RetailerInfo[]) {
     const cc = store.country ?? "AU";
+    // Currency guard at the source too (lib/offer-currency.ts): never write a
+    // row a market would have to refuse. Logged, so a misconfigured store is
+    // visible in the import log rather than silently empty.
+    if (storeCurrency(store.key) !== currencyOf(cc)) {
+      console.warn(`Sealed: skipped ${store.key} — charges ${storeCurrency(store.key)}, market ${cc} is ${currencyOf(cc)}.`);
+      continue;
+    }
     const seen = new Set<string>();
     const rows = new Map<string, any>(); // groupKey+store -> row (cheapest per store/product)
     let scraped = false; // did we actually read products (vs an empty/failed fetch)?
@@ -488,6 +559,8 @@ export async function importSealed(): Promise<number> {
       count += rows.size;
     }
   }
+
+  count += await importProductPageStores();
 
   // eBay sealed prices per market (best-effort; skips when rate-limited).
   //
@@ -959,7 +1032,41 @@ export interface SealedGroup {
     priceCents: number;
     url: string;
     inStock: boolean;
+    /** ISO time of the importer's last successful read of this row ("checked Xh ago"). */
+    lastSeen: string;
   }[];
+}
+
+// Product types an EARLIER classifier wrote that now mean another type. Rows
+// are only rewritten when their store is scraped again, and a store whose
+// scrape keeps failing never is — so a month-old "RAD|Vault" row kept a second
+// "Radiance Vault" group alive beside "Radiance Vault Bundle" on
+// /radiance-preorders. Worse, the eBay pass searches every group that exists,
+// so it kept writing fresh eBay rows into the dead group too. Normalising on
+// READ merges them whatever the table holds. (DECISIONS.md, 2026-09-24.)
+const LEGACY_SEALED_TYPE: Record<string, string> = { Vault: "Bundle" };
+
+/** A stored row with its legacy product type (and so its group) brought up to date. Pure. */
+export function canonicalSealedRow<T extends { groupKey: string; productType: string; setCode: string | null }>(r: T): T {
+  const type = LEGACY_SEALED_TYPE[r.productType];
+  if (!type) return r;
+  return { ...r, productType: type, groupKey: r.setCode ? `${r.setCode}|${type}` : r.groupKey };
+}
+
+/**
+ * One listing per store in a group — the best one (open before unknown before
+ * sold out, then cheapest). Merging a legacy group into its canonical one can
+ * leave a store in both: eBay US had the same Vault Bundle listing in
+ * "RAD|Vault" and "RAD|Bundle". Pure.
+ */
+export function dedupeStoreListings<T extends { retailer: string; priceCents: number; inStock: boolean; lastSeen?: string | null }>(
+  listings: T[],
+  now: number = Date.now(),
+): T[] {
+  const seen = new Set<string>();
+  return rankOffers(listings, now)
+    .filter((l) => (seen.has(l.retailer) ? false : (seen.add(l.retailer), true)))
+    .sort((a, b) => a.priceCents - b.priceCents);
 }
 
 // Group sealed listings by product for the /sealed page, for one market (AU/US).
@@ -1110,7 +1217,7 @@ const T1_GROUP_NAME: Record<string, string> = {
 async function getAllSealedGroups(country: Country = DEFAULT_COUNTRY): Promise<SealedGroup[]> {
   const hit = sealedMemo.get(country);
   if (hit && Date.now() - hit.at < SEALED_MEMO_TTL_MS) return hit.data;
-  const cached = await cachedOrDirect(() => computeAllSealedGroups(country), ["sealed-groups-v1", country], {
+  const cached = await cachedOrDirect(() => computeAllSealedGroups(country), ["sealed-groups-v2", country], {
     revalidate: 172800,
     tags: [CONTENT_TAG],
   });
@@ -1129,14 +1236,18 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
     orderBy: { priceCents: "asc" },
     select: {
       groupKey: true, title: true, productType: true, setCode: true, imageUrl: true,
-      retailer: true, retailerName: true, priceCents: true, url: true, inStock: true,
+      retailer: true, retailerName: true, priceCents: true, url: true, inStock: true, lastSeen: true,
     },
   });
   const canonicalImg = await getCanonicalSealedImages();
   const firstSeen = await getSealedFirstSeen();
   const groups = new Map<string, SealedGroup>();
   const imgRank = new Map<string, number>(); // groupKey -> source rank of the chosen image
-  for (const r of rows) {
+  for (const stored of rows) {
+    const r = canonicalSealedRow(stored);
+    // Currency guard (lib/offer-currency.ts): a store that charges in another
+    // currency never renders in this market, whatever market its rows claim.
+    if (!offerCurrencyOk(r.retailer, country)) continue;
     // Price-sanity guard: drop any listing priced implausibly low for its type (e.g. a
     // $1 "Booster Case"). Defends the live site against mis-priced rows already in the
     // DB — takes effect on the next memo refresh, before the importer re-cleans them.
@@ -1176,7 +1287,14 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
         imgRank.set(r.groupKey, rank);
       }
     }
-    g.listings.push({ retailer: r.retailer, retailerName: r.retailerName, priceCents: r.priceCents, url: r.url, inStock: r.inStock });
+    g.listings.push({
+      retailer: r.retailer,
+      retailerName: r.retailerName,
+      priceCents: r.priceCents,
+      url: r.url,
+      inStock: r.inStock,
+      lastSeen: r.lastSeen.toISOString(),
+    });
   }
   // Override with the official TCGplayer catalogue image where we have one — correct
   // per-product art, market-agnostic, so it fixes markets (AU/UK) whose only
@@ -1217,11 +1335,11 @@ async function computeAllSealedGroups(country: Country): Promise<SealedGroup[]> 
     }
   }
   const out = Array.from(groups.values()).map((g) => {
-    g.listings.sort((a, b) => a.priceCents - b.priceCents);
-    const inStock = g.listings.filter((l) => l.inStock);
-    // Headline price comes from IN-STOCK listings only (null = sold out everywhere).
-    g.lowestPriceCents = inStock[0]?.priceCents ?? null;
-    g.storeCount = new Set(inStock.map((l) => l.retailerName)).size;
+    g.listings = dedupeStoreListings(g.listings);
+    // Headline price comes from OPEN listings only — in stock AND read within
+    // the staleness window (lib/sealed-offers.ts). null = nothing orderable.
+    g.lowestPriceCents = headlineOffer(g.listings)?.priceCents ?? null;
+    g.storeCount = openStoreCount(g.listings);
     // Availability-at-MSRP for this market — but NEVER for a set that hasn't
     // shipped. lib/msrp.ts is keyed by productType alone, so an unreleased set's
     // Booster Box would silently inherit the CURRENT set's published RRP and render
@@ -1326,7 +1444,7 @@ export async function writeSealedPriceHistory(): Promise<void> {
 
     const rows = await prisma.sealedListing.findMany({
       where: { inStock: true },
-      select: { groupKey: true, country: true, priceCents: true, productType: true },
+      select: { groupKey: true, country: true, priceCents: true, productType: true, setCode: true, retailer: true },
     });
     // Lowest in-stock price per (groupKey, country) — same "cheapest listing
     // wins" rule getAllSealedGroups uses for the live page, plus the same
@@ -1336,7 +1454,10 @@ export async function writeSealedPriceHistory(): Promise<void> {
     // "|" (see the T1 Signature Edition groups above), so concatenating with
     // the same delimiter would be ambiguous to split back apart.
     const lowest = new Map<string, Map<string, number>>(); // groupKey -> country -> cents
-    for (const r of rows) {
+    for (const stored of rows) {
+      // Same read-side corrections the live page applies (see canonicalSealedRow).
+      const r = canonicalSealedRow(stored);
+      if (!offerCurrencyOk(r.retailer, r.country as Country)) continue;
       if (r.priceCents < sealedFloorCents(r.productType)) continue;
       const byCountry = lowest.get(r.groupKey) ?? new Map<string, number>();
       const cur = byCountry.get(r.country);
