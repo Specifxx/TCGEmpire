@@ -158,6 +158,13 @@ home's names its own. The failure `(US)` was added to fix — `/au` outranking
 root for `riftbound card prices US` — is a measurable trigger to put it back if
 Search Console shows it recurring.
 
+**Checked 2026-09-24 against the real export (28 days to 2026-09-19): it has
+not recurred.** `riftbound card prices US` does not appear in the query set at
+all, and geo-qualified commercial queries as a whole total three queries and
+eleven impressions. The marker stays off. Re-run the check the same way — filter
+the Queries export for a country word beside a price/buy word — before anyone
+argues for putting it back.
+
 ## Vendetta-cluster cannibalization audit (backlog item 25)
 
 20 articles reference Vendetta in slug/title/tags (14 blog + 6 guide). Real
