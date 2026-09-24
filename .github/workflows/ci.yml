@@ -10,7 +10,11 @@ name: CI
 # Deliberately DB-free and network-free: every job below runs against source
 # files only, so this needs no secrets and can't be flaky because Neon is asleep.
 # `next build` is NOT run here — it prerenders pages that query the database, so
-# it genuinely cannot succeed without one. Vercel's preview deploy covers that.
+# it genuinely cannot succeed without one. It runs in ci-build.yml instead
+# (2026-09-23), against a throwaway seeded Postgres service, followed by
+# scripts/smoke-pages.ts. "Vercel's preview deploy covers that", which this
+# comment used to say, stopped being true when claude/* previews were switched
+# off and production builds became once a day (see ci-build.yml's header).
 on:
   pull_request:
   push:
