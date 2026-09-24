@@ -11763,3 +11763,19 @@ owner's Search Console figures; none is typed in.
   recipe: `prisma db push`, `prisma/seed.ts`, plus a synthetic local-only
   price fixture). All six homepages render the table, the new H1 and the full
   hreflang set, with `revalidate` 3600 in the prerender manifest.
+
+**2. Set pages: a full price list.**
+
+- **`#price-guide`** sits under the H2 "Riftbound {Set} price guide" on every
+  set page's default view. It lists every card in the set, dearest first, with
+  its displayed rarity, cheapest in-stock price in the visitor's market and
+  in-stock store count. Unpriced cards come last, by collector number.
+- **No new query.** It reads the intro narrative's cached all-cards query,
+  widened by five scalar fields, plus one grouped in-stock count over the
+  set's ids. The cache key became `set-narrative-guide`.
+- **The title leads with a counted rung:** "Riftbound {Set} Card List & Price
+  Guide (All {N} Cards)". N is `generateMetadata`'s existing guarded count.
+  - It is absolute and brand-free, so it fits in 60 characters for Origins,
+    Unleashed, Vendetta and Radiance.
+  - Spirit Forged and Proving Grounds, or an unknown count, fall to the
+    uncounted "Price Guide" rung, then to the older suffixed ladder.

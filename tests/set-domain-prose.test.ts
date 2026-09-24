@@ -68,10 +68,12 @@ test("the domain page adds no extra query — it reuses the cards it already has
 test("the set page's narrative query is lean, cached and default-view only", () => {
   const src = read("src/app/sets/[set]/page.tsx");
   // Four scalar fields, not a tile payload — see the egress rules in lib/db.ts.
-  assert.match(src, /\["set-narrative", set\.code, country\]/, "the narrative query must be cached per set+market");
+  // Renamed set-narrative-guide on 2026-09-24, when it also became the source
+  // of the #price-guide table (four more scalar fields and one grouped count).
+  assert.match(src, /\["set-narrative-guide", set\.code, country\]/, "the narrative query must be cached per set+market");
   assert.match(src, /tags: \[CONTENT_TAG\]/, "and purged by the price import");
   assert.match(src, /const narrativeMembers = isDefaultView/, "filtered and paged views must not pay for it");
-  assert.ok(!/select: cardTileSelect\(country\),\s*\}\),\s*\["set-narrative"/.test(src), "must not reuse the heavy tile select");
+  assert.ok(!/select: cardTileSelect\(country\),\s*\}\),\s*\["set-narrative/.test(src), "must not reuse the heavy tile select");
   // A failed narrative query must degrade to no intro, never take the page down.
   assert.match(src, /narrative query failed/, "the narrative query must fail open");
 });

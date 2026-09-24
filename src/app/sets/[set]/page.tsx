@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { notFoundMetadata } from "@/lib/not-found-metadata";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -29,6 +30,9 @@ import { getSiteMedianCents } from "@/lib/content/site-median";
 import { SETS, setBySlug } from "@/lib/constants";
 import { preordersHrefForSet } from "@/lib/release-calendar";
 import { RadianceHub } from "@/components/sets/RadianceHub";
+import { SetPriceGuide } from "@/components/sets/SetPriceGuide";
+import { setPriceGuideRows } from "@/lib/set-price-guide";
+import { storeCountsByCountry } from "@/lib/cards";
 import { RADIANCE_FAQ } from "@/lib/sets/radiance";
 import { faqPage } from "@/lib/jsonld";
 
@@ -133,7 +137,6 @@ export async function generateMetadata({
     `Riftbound ${set.name} Card List`,
     `${set.name} Card List & Prices`,
   ];
-  const title = titleCandidates.find((t) => `${t} | RiftCompare`.length <= 60) ?? titleCandidates[titleCandidates.length - 1];
   // A set with no imported cards yet (pre-release, or a data gap where a released
   // set was registered before its cards were imported) renders only a placeholder —
   // thin content. Noindex it so Google doesn't sink crawl budget into a soft-thin
@@ -158,6 +161,18 @@ export async function generateMetadata({
   // Moved ABOVE the description below (it used to run after) so the description
   // can branch on it: see the cardCount === 0 case there.
   const cardCount = await prisma.card.count({ where: { setCode: set.code } }).catch(() => -1);
+  // THE COUNTED RUNG LEADS (2026-09-24, growth-pass brief): "Riftbound {Set}
+  // Card List & Price Guide (All {N} Cards)", N the live count above — the
+  // same number the page's own price guide lists. Absolute and brand-free so it
+  // fits 60 characters for Origins, Unleashed, Vendetta and Radiance; a longer
+  // set name, or an unknown/zero count, falls to the uncounted "Price Guide"
+  // rung, then to the suffixed ladder above.
+  const fullTitles = [
+    ...(cardCount > 0 ? [`Riftbound ${set.name} Card List & Price Guide (All ${cardCount} Cards)`] : []),
+    `Riftbound ${set.name} Card List & Price Guide`,
+    ...titleCandidates.map((t) => `${t} | RiftCompare`),
+  ];
+  const fullTitle = fullTitles.find((t) => t.length <= 60) ?? fullTitles[fullTitles.length - 1];
   // PRE-RELEASE BRANCH: cardCount === 0 (not < 1 — a -1 lookup failure keeps the
   // normal "complete card list" copy, matching the fail-open bias above, rather
   // than switching every set to pre-release wording on a transient DB blip).
@@ -214,7 +229,7 @@ export async function generateMetadata({
   const canonicalPath = selfCanonical ? `/sets/${set.slug}?page=${page}` : `/sets/${set.slug}`;
 
   return {
-    title: { absolute: `${title} | RiftCompare` },
+    title: { absolute: fullTitle },
     description,
     keywords: [
       `Riftbound ${set.name}`,
@@ -233,7 +248,7 @@ export async function generateMetadata({
     // keeps the default noindex until it earns hubReady the same way, so this
     // can never flip a genuinely empty future-set stub to indexable by accident.
     ...((cardCount === 0 && !set.hubReady) || filtered ? { robots: { index: false, follow: true } } : {}),
-    openGraph: pageOpenGraph({ title: `${title} | RiftCompare`, description, url: canonicalPath }),
+    openGraph: pageOpenGraph({ title: fullTitle, description, url: canonicalPath }),
   };
 }
 
@@ -300,14 +315,25 @@ export default async function SetPage({
   // Filtered and paged views skip it entirely: they canonicalise elsewhere, so
   // they are not the indexed page this prose exists for, and they must not pay
   // for a query they don't render.
+  // ALSO THE PRICE GUIDE's source (2026-09-24): the same one read, widened by
+  // the four fields the "#price-guide" table needs (id/slug to link, variant/
+  // isPromo to name the printing), plus ONE grouped in-stock count over the
+  // set's ids. Still ~100 bytes a row for a set of ~300, far under the 1.2 MB
+  // unstable_cache ceiling (lib/db.ts rule 2).
   const narrativeMembers = isDefaultView
     ? await unstable_cache(
-        () =>
-          prisma.card.findMany({
+        async () => {
+          const rows = (await prisma.card.findMany({
             where: { setCode: set.code },
-            select: { name: true, rarity: true, collectorNumber: true, [priceField(country)]: true },
-          }),
-        ["set-narrative", set.code, country],
+            select: {
+              id: true, slug: true, name: true, rarity: true, collectorNumber: true, setCode: true,
+              variant: true, isPromo: true, [priceField(country)]: true,
+            } as Prisma.CardSelect,
+          })) as unknown as ({ id: string } & Record<string, unknown>)[];
+          const counts = await storeCountsByCountry(rows.map((r) => r.id));
+          return rows.map((r) => ({ ...r, stores: counts.get(r.id)?.[country] ?? 0 }));
+        },
+        ["set-narrative-guide", set.code, country],
         { revalidate: 3600, tags: [CONTENT_TAG] },
       )().catch((e) => {
         // A narrative is worth less than the page. Degrade to no intro.
@@ -335,6 +361,8 @@ export default async function SetPage({
           siteMedianCents,
         })
       : [];
+
+  const priceGuide = setPriceGuideRows(narrativeMembers as Record<string, unknown>[], priceField(country));
 
   const otherSets = SETS.filter((s) => s.slug !== set.slug && !s.comingSoon);
   // A comingSoon set (singles not on sale yet) can still be FULLY revealed —
@@ -631,6 +659,12 @@ export default async function SetPage({
           store has stock to compare, so the grid above is a card list rather
           than a shopping surface, and eBay presale/preorder listings are the
           only thing a reader can act on. */}
+      {/* The set's full price list (2026-09-24). "price guide" queries rank this
+          page at 7-9 with no clicks, and the page had a 60-card grid but no
+          list of every card's price on it. Default view only — it reads the
+          same cached query as the intro above. */}
+      <SetPriceGuide setName={set.name} rows={priceGuide} currency={COUNTRIES[country].currency} adjective={COUNTRIES[country].adjective} />
+
       <EbayPicks
         setCode={set.code}
         heading={`${set.name} singles on eBay right now`}
