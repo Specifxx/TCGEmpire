@@ -39,7 +39,10 @@ const SUGGESTIONS: Close[] = [];
 // listing title (diagnose-card for the store row, diagnose-ebay-item for the
 // eBay one) rather than guessed at. FIXED means the matcher that admitted the
 // listing changed, tests/wrong-card-reports.test.ts fails on that exact title
-// without the change, and a re-import with the fixed matcher was run.
+// without the change, and a re-import with the fixed matcher was run AND the
+// card page was checked afterwards. The Vi eBay report (cmueqk03f0001nq05zyyoonim)
+// is fixed in code but not yet closed: its row only clears on the next eBay
+// chase pass (19:00 UTC), so it is not verified yet.
 const REPORTS: Close[] = [
   {
     id: "cmueqkjcl0000cye63y1ithku",
@@ -47,13 +50,6 @@ const REPORTS: Close[] = [
     to: "FIXED",
     what: "Azir, Emperor of the Sands (SFD 247/221), Sweets and Geeks US$60",
     why: "the row was a Jax, Grandmaster At Arms (Overnumbered) listing carrying Azir's collector number. resolveCardId's number-only path trusted 247 alone; it now refuses a title that names a different catalogue card and never names the one the number points at",
-  },
-  {
-    id: "cmueqk03f0001nq05zyyoonim",
-    from: "NEW",
-    to: "FIXED",
-    what: "Vi, Piltover Enforcer (UNL 229/219 overnumbered), eBay US US$1.99",
-    why: "the listing was 'Vi - Piltover Enforcer #187/229 - FOIL' — the ordinary 187 with a mistyped denominator, live in six eBay markets. numberMatches' bare-number fallback counted the 229 after the slash; a token touching a slash is no longer counted",
   },
 ];
 
