@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumPlusEnabled, tierFromPriceId, priceIdFor } from "@/lib/premium";
+import { premiumPlusEnabled, tierFromPriceId, priceIdFor, introDiscountsForPriceChange } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -61,8 +61,12 @@ export async function POST() {
     const interval = price.recurring?.interval === "year" ? "annual" : "monthly";
     const targetPriceId = priceIdFor("plus", interval);
 
+    const introDiscounts = await introDiscountsForPriceChange(sub, "plus", targetPriceId);
     await stripe().subscriptions.update(sub.id, {
       items: [{ id: item.id, price: targetPriceId }],
+      // The intro coupon is sized for the OLD tier; swap it for the new tier's
+      // for the months left (lib/premium.ts introDiscountsForPriceChange).
+      ...(introDiscounts !== undefined ? { discounts: introDiscounts } : {}),
       proration_behavior: "create_prorations",
     });
 

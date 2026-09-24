@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
-import { premiumAnnualEnabled, plusAnnualEnabled, tierFromPriceId, priceIdFor } from "@/lib/premium";
+import { premiumAnnualEnabled, plusAnnualEnabled, tierFromPriceId, priceIdFor, introDiscountsForPriceChange } from "@/lib/premium";
 
 export const dynamic = "force-dynamic";
 
@@ -62,8 +62,12 @@ export async function POST() {
       return NextResponse.json({ ok: true, already: true });
     }
 
+    const introDiscounts = await introDiscountsForPriceChange(sub, tier, targetPriceId);
     await stripe().subscriptions.update(sub.id, {
       items: [{ id: item.id, price: targetPriceId }],
+      // Annual has no intro price: clear a half-price coupon so it cannot
+      // take $5 off the yearly charge (lib/premium.ts introDiscountsForPriceChange).
+      ...(introDiscounts !== undefined ? { discounts: introDiscounts } : {}),
       // Bill the annual now (crediting the unused part of the current month) and
       // start the yearly term today, rather than deferring the charge.
       proration_behavior: "always_invoice",

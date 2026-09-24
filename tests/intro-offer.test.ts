@@ -9,7 +9,7 @@ import {
   introPriceLine,
   introOfferEnabled,
 } from "../src/lib/site";
-import { introCouponId, PREMIUM_TRIAL_DAYS } from "../src/lib/premium";
+import { introCouponId, PREMIUM_TRIAL_DAYS, introMonthsRemaining, isIntroCouponId } from "../src/lib/premium";
 
 // Owner's call, 2026-09-24: a 3-day trial, then the first 3 months half price,
 // for Plus and Premium. DECISIONS.md, "Trial model: 3-day trial, then the
@@ -37,7 +37,8 @@ test("the coupon id encodes tier, amount and currency, so a price change can nev
   assert.equal(introCouponId("premium", 500, "USD"), "rc-intro-premium-500usd-3mo");
   assert.notEqual(introCouponId("premium", 500, "usd"), introCouponId("premium", 750, "usd"));
   const lib = read("src/lib/premium.ts");
-  assert.match(lib, /amount_off: amountOff,[\s\S]{0,80}duration: "repeating",\s*duration_in_months: INTRO_MONTHS/);
+  assert.match(lib, /amount_off: amountOff,[\s\S]{0,80}duration: "repeating",\s*duration_in_months: months,/);
+  assert.match(lib, /months: number = INTRO_MONTHS\): Promise<string>/, "checkout gets the full three");
   assert.match(lib, /price\.recurring\?\.interval !== "month"/, "only ever sized against a monthly price");
 });
 
@@ -65,4 +66,24 @@ test("every surface that states the post-trial price states the intro too", () =
   const page = read("src/app/premium/page.tsx");
   assert.match(page, /What is the half-price offer\?/);
   assert.match(read("src/lib/articles.ts"), /\| Premium, monthly \| \$9\.99\/month \(\*\*\$4\.99\/month for the first 3 months\*\*\)/);
+});
+
+test("a price change mid-intro swaps the coupon for the months left, and annual clears it", () => {
+  // Stripe keeps a subscription's discount through a price change: Premium's
+  // $5.00-off coupon on the $4.99 Plus price would bill $0.
+  const now = Date.parse("2026-10-01T00:00:00Z");
+  const sec = (iso: string) => Date.parse(iso) / 1000;
+  assert.equal(introMonthsRemaining(sec("2026-12-28T00:00:00Z"), now), 3);
+  assert.equal(introMonthsRemaining(sec("2026-11-15T00:00:00Z"), now), 2, "rounded up, never a fresh three");
+  assert.equal(introMonthsRemaining(sec("2026-09-30T00:00:00Z"), now), 0, "window over");
+  assert.equal(introMonthsRemaining(null, now), 0);
+  assert.equal(isIntroCouponId("rc-intro-plus-250usd-3mo"), true);
+  assert.equal(isIntroCouponId("SPRING25"), false, "someone else's promo code is left alone");
+  const lib = read("src/lib/premium.ts");
+  assert.match(lib, /if \(price\.recurring\?\.interval !== "month"\) return "";/, "annual target clears the intro");
+  for (const [route, tier] of [["upgrade", '"premium"'], ["downgrade", '"plus"'], ["switch-to-annual", "tier"]]) {
+    const src = read(`src/app/api/premium/${route}/route.ts`);
+    assert.match(src, new RegExp(`const introDiscounts = await introDiscountsForPriceChange\\(sub, ${tier}, targetPriceId\\);`), route);
+    assert.match(src, /\.\.\.\(introDiscounts !== undefined \? \{ discounts: introDiscounts \} : \{\}\)/, `${route}: in the same update call`);
+  }
 });

@@ -144,38 +144,90 @@ export function premiumTrialEnabled(): boolean {
 // Duration: `repeating` for INTRO_MONTHS months from the subscription's start.
 // With a 3-day trial that covers the invoices at day 3, month 1 and month 2 —
 // three discounted charges — and the fourth is full price.
-export function introCouponId(tier: PremiumTier, amountOffCents: number, currency: string): string {
-  return `rc-intro-${tier}-${amountOffCents}${currency.toLowerCase()}-${INTRO_MONTHS}mo`;
+export function introCouponId(tier: PremiumTier, amountOffCents: number, currency: string, months: number = INTRO_MONTHS): string {
+  return `rc-intro-${tier}-${amountOffCents}${currency.toLowerCase()}-${months}mo`;
+}
+
+export function isIntroCouponId(id: string | null | undefined): boolean {
+  return !!id && id.startsWith("rc-intro-");
 }
 
 const introCouponCache = new Map<string, string>();
 
-/** The intro coupon for a monthly price, created if missing. Returns its id. */
-export async function ensureIntroCoupon(tier: PremiumTier, priceId: string): Promise<string> {
-  const cached = introCouponCache.get(priceId);
+/**
+ * The intro coupon for a monthly price, created if missing. Returns its id.
+ * `months` is INTRO_MONTHS at checkout; a tier switch mid-intro asks for the
+ * months REMAINING (introDiscountsForPriceChange), so switching never restarts
+ * the half-price window.
+ */
+export async function ensureIntroCoupon(tier: PremiumTier, priceId: string, months: number = INTRO_MONTHS): Promise<string> {
+  const cacheKey = `${priceId}:${months}`;
+  const cached = introCouponCache.get(cacheKey);
   if (cached) return cached;
   const price = await stripe().prices.retrieve(priceId);
   if (price.unit_amount == null || price.recurring?.interval !== "month") {
     throw new Error(`intro coupon: ${priceId} is not a fixed monthly price`);
   }
   const amountOff = introAmountOffCents(price.unit_amount);
-  const id = introCouponId(tier, amountOff, price.currency);
+  const id = introCouponId(tier, amountOff, price.currency, months);
   try {
     await stripe().coupons.retrieve(id);
   } catch (e) {
     if ((e as { code?: string }).code !== "resource_missing") throw e;
-    await stripe().coupons.create({
-      id,
-      name: `${tier === "plus" ? "Plus" : "Premium"}: first ${INTRO_MONTHS} months half price`,
-      amount_off: amountOff,
-      currency: price.currency,
-      duration: "repeating",
-      duration_in_months: INTRO_MONTHS,
-      metadata: { purpose: "intro-offer", tier },
-    });
+    try {
+      await stripe().coupons.create({
+        id,
+        name: `${tier === "plus" ? "Plus" : "Premium"}: half price, ${months === INTRO_MONTHS ? `first ${months} months` : `${months} more month${months === 1 ? "" : "s"}`}`,
+        amount_off: amountOff,
+        currency: price.currency,
+        duration: "repeating",
+        duration_in_months: months,
+        metadata: { purpose: "intro-offer", tier },
+      });
+    } catch (createErr) {
+      // Two first-ever checkouts racing to create the same id: the loser's
+      // create fails, but the coupon now exists — confirm and carry on.
+      await stripe().coupons.retrieve(id).catch(() => {
+        throw createErr;
+      });
+    }
   }
-  introCouponCache.set(priceId, id);
+  introCouponCache.set(cacheKey, id);
   return id;
+}
+
+/**
+ * What to pass as `discounts` when a subscription changes PRICE (tier switch,
+ * switch to annual). undefined = leave discounts alone (no intro coupon on
+ * it). Stripe keeps a subscription's discount through a price change, and an
+ * amount-off coupon sized for one tier is wrong on another: Premium's $5.00
+ * off on the $4.99 Plus price bills $0. Stripe computes the change's prorations
+ * against the discounts passed in the SAME call, so the swap and the price
+ * change go together.
+ *   - monthly target: the target tier's intro coupon for the months REMAINING
+ *     in the window (never a fresh three);
+ *   - annual target, or a window already over: no intro — cleared.
+ */
+export async function introDiscountsForPriceChange(
+  sub: Stripe.Subscription,
+  targetTier: PremiumTier,
+  targetPriceId: string,
+  now: number = Date.now(),
+): Promise<Stripe.Emptyable<Stripe.SubscriptionUpdateParams.Discount[]> | undefined> {
+  const d = sub.discount;
+  if (!d || !isIntroCouponId(d.coupon?.id)) return undefined;
+  const months = introMonthsRemaining(d.end, now);
+  if (months <= 0) return "";
+  const price = await stripe().prices.retrieve(targetPriceId);
+  if (price.recurring?.interval !== "month") return "";
+  return [{ coupon: await ensureIntroCoupon(targetTier, targetPriceId, months) }];
+}
+
+/** Whole months left in an intro window ending at `endSec` (unix seconds), rounded up. Pure. */
+export function introMonthsRemaining(endSec: number | null | undefined, now: number = Date.now()): number {
+  if (!endSec) return 0;
+  const left = endSec * 1000 - now;
+  return left <= 0 ? 0 : Math.min(INTRO_MONTHS, Math.ceil(left / (30.44 * 86_400_000)));
 }
 
 /**
