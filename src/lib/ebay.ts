@@ -904,7 +904,9 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   // filter at all.
   "Sleeved Booster": /sleeved\s*booster/i,
   "Sleeved Booster (Art Set)": /sleeved\s*booster/i,
-  Bundle: /bundle|gift/i,
+  // `vault` since 2026-09-24: bare "Radiance Vault" titles are the Vault Bundle
+  // and now group under Bundle (classifySealed), so they must pass its filter.
+  Bundle: /bundle|gift|\bvault\b/i,
   "T1 Signature Edition": /t1|worlds\s*champion/i,
   "T1 Player Bundle": /t1|worlds\s*champion/i,
   "Proving Grounds": /proving\s*grounds/i,
@@ -919,6 +921,7 @@ const SEALED_TYPE_KW: Record<string, RegExp> = {
   // headline SKUs ("Radiance Vault", "Showdown Deck - Radiance Evelynn vs
   // Seraphine"), so this would have bitten on launch week.
   Vault: /\bvault\b/i,
+  "Bundle Case": /(?:vault|bundle)\s*(?:bundle\s*)?case/i,
   "Showdown Decks": /showdown\s*decks?/i,
   "Showdown Decks Display": /showdown\s*decks?/i,
 };
@@ -1001,6 +1004,8 @@ const SEALED_MIN_CENTS: Record<string, number> = {
   // reference, and pre-order stores already give us that reference — see
   // sealedFloorCents() below and trustedRef in lib/sealed-import.ts.
   Vault: 2000,
+  // Six Vault Bundles; the half-of-reference rule does the real work.
+  "Bundle Case": 10000,
   "Showdown Decks": 800,
   "Showdown Decks Display": 4000,
 };
