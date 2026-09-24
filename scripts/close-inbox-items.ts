@@ -1,5 +1,5 @@
 /**
- * Closes the inbox items worked on 2026-09-20, and ONLY those — every row is
+ * Closes the inbox items worked on 2026-09-24, and ONLY those — every row is
  * named by id, with the status it actually earned.
  *
  * WHY IDS AND NOT A SWEEP. "Mark everything as done" is one query, and it is the
@@ -32,42 +32,28 @@ const APPLY = process.argv.includes("--apply");
 type Close = { id: string; from: string; to: string; what: string; why: string };
 
 // ── Store suggestions ────────────────────────────────────────────────────────
-const SUGGESTIONS: Close[] = [
-  {
-    id: "cmu98sx8x0000kshf3adwtcdi",
-    from: "pending",
-    to: "added",
-    what: "Quack Opens (AU) — suggested by the owner, 986 Riftbound products on Shopify",
-    why: "live in src/lib/retailers.ts as `quackopens`. Probed before adding: /collections/riftbound/products.json returns 200 with ?country=AU and 986 products, robots.txt allows it, and the $10 flat single-card rate comes off their own published policy page. freeOverCents is 0 — they publish three flat rates and no free tier, and inventing one would route Best Basket onto postage they never waive",
-  },
-];
+const SUGGESTIONS: Close[] = [];
 
 // ── Wrong-price / wrong-card reports ─────────────────────────────────────────
-// All three sealed reports, each traced to the REAL stored listing title with
-// scripts/diagnose-sealed.ts rather than guessed at. FIXED means the code that
-// admitted the listing has changed and the change was verified against that
-// exact title; the published row itself clears on the next sealed import.
+// Both 2026-09-23 "wrong card or product" reports, each traced to the REAL
+// listing title (diagnose-card for the store row, diagnose-ebay-item for the
+// eBay one) rather than guessed at. FIXED means the matcher that admitted the
+// listing changed, tests/wrong-card-reports.test.ts fails on that exact title
+// without the change, and a re-import with the fixed matcher was run.
 const REPORTS: Close[] = [
   {
-    id: "cmu8pg1ad00003tn5ykacg2n9",
+    id: "cmueqkjcl0000cye63y1ithku",
     from: "NEW",
     to: "FIXED",
-    what: "UNL|Booster Box, eBay AU, A$156 — 'Unleashed Slim Booster Box (CHN)'",
-    why: "FOREIGN_LANG listed `cn` but not `chn`, and \\bcn\\b does not match CHN — so an all-English title from an AU-located seller passed every language guard and cleared the price floor. `chn` added (lib/scrape-http.ts), which closes the same hole for singles and every store feed at once; `slim` is excluded as a SKU we do not track",
+    what: "Azir, Emperor of the Sands (SFD 247/221), Sweets and Geeks US$60",
+    why: "the row was a Jax, Grandmaster At Arms (Overnumbered) listing carrying Azir's collector number. resolveCardId's number-only path trusted 247 alone; it now refuses a title that names a different catalogue card and never names the one the number points at",
   },
   {
-    id: "cmu8pgyda00005bdhczg58ije",
+    id: "cmueqk03f0001nq05zyyoonim",
     from: "NEW",
     to: "FIXED",
-    what: "SFD|Booster Box, eBay AU, A$123.56 — reported as 'Chinese version'",
-    why: "the real title is 'Riftbound League Of Legends Spiritforged Jumbo Booster Box Factory Sealed' — it names no language at all, so the fix is the claim the title does support: a Jumbo box is a different SKU from the Booster Box we price. `jumbo` excluded alongside `slim` (lib/ebay.ts). A$123.56 against a real AU market of A$215-320",
-  },
-  {
-    id: "cmtx3yed00000145e6hae74jy",
-    from: "NEW",
-    to: "FIXED",
-    what: "OGN|Booster Case, eBay US, US$469 — 'Its actually just a single box, not a case'",
-    why: "exactly right. The listing is 'x1 Riftbound: Origins Booster Box New & Sealed English FRESHLY FROM A CASE', and SEALED_TYPE_KW's Booster Case keyword was a bare /\\bcase\\b/. Two fixes: the keyword now requires the word to describe the product, and the importer no longer stamps the searched-for productType onto a listing whose own title classifies as something else (SELF_TYPED in lib/sealed-import.ts). classifySealed also learned the bare phrase 'Booster Case', which it did not recognise at all",
+    what: "Vi, Piltover Enforcer (UNL 229/219 overnumbered), eBay US US$1.99",
+    why: "the listing was 'Vi - Piltover Enforcer #187/229 - FOIL' — the ordinary 187 with a mistyped denominator, live in six eBay markets. numberMatches' bare-number fallback counted the 229 after the slash; a token touching a slash is no longer counted",
   },
 ];
 
