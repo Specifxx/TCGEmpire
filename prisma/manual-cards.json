@@ -678,5 +678,40 @@
     "description": "(Neutral cards can go in decks of any Domain.) If Neeko is in your deck, choose 3 different legends in addition to your starting legend. (Different means none match names.) When you play me, choose one of those Legends and add it to your Legend Zone while I'm on the board.",
     "imageUrl": "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg",
     "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/neeko-blending-in.jpg"
+  },
+  {
+    "_note": "RADIANCE, officially revealed 2026-09-24 by Riot on the playriftbound Instagram (the Legend and its over-numbered printing), after the 22 Sept photo leak our spoiler post covered. READ OFF THE CARD (public/radiance-spoilers/seraphine-starry-eyed-songstress.jpg, the RAD · 151/167 · EN · P photograph): name, 'LEGEND · SERAPHINE' type line, rules text verbatim (the circled 2 is an energy symbol, written '2'), artist Naifan Zhang, (c)2026 RGI. Domains are Mind (blue crescent, top) and Order (yellow, second); `domain` holds the FIRST, the same one-domain convention every two-domain Legend in the catalogue uses (e.g. Ahri, Nine-Tailed Fox = Calm). RARITY IS FROM DATA, not the photo: the pictured copy is the promo-stamped printing, whose PROMO mark sits where the rarity gem would be, so the gem cannot be read — but all 40 base-run Legends across OGN, SFD, UNL and OGS are Rare, 40 of 40. This row is the ordinary in-set 151/167 printing stores will sell; the photo is its art with a promo stamp, a stopgap image until the automated import carries the card. The over-numbered 174/167 row below is the Anna Nikonova alt-art chase; chasePrintRarity() makes any over-number Showcase, and it has NO image yet (no clean copy of the Instagram render), so it shows generated card art until one lands. Seraphine, Not Alone's RAD 138/167 printing is still NOT added: its Radiance rarity has not been shown. `npm run cards:sync` never overwrites a manual row."
+  },
+  {
+    "externalId": "spoiler-rad-151-seraphine-starry-eyed-songstress",
+    "name": "Seraphine, Starry-Eyed Songstress",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "151/167",
+    "domain": "Mind",
+    "type": "Legend",
+    "rarity": "Rare",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "As an additional cost to play a spell, you may exhaust me and three friendly units to reduce the cost of that spell by 2.",
+    "imageUrl": "https://riftcompare.com/radiance-spoilers/seraphine-starry-eyed-songstress.jpg",
+    "imageThumbUrl": "https://riftcompare.com/radiance-spoilers/seraphine-starry-eyed-songstress.jpg"
+  },
+  {
+    "externalId": "spoiler-rad-174-seraphine-starry-eyed-songstress",
+    "name": "Seraphine, Starry-Eyed Songstress",
+    "setCode": "RAD",
+    "setName": "Radiance",
+    "collectorNumber": "174/167",
+    "domain": "Mind",
+    "type": "Legend",
+    "rarity": "Showcase",
+    "isPromo": false,
+    "energyCost": null,
+    "might": null,
+    "description": "As an additional cost to play a spell, you may exhaust me and three friendly units to reduce the cost of that spell by 2.",
+    "imageUrl": null,
+    "imageThumbUrl": null
   }
 ]

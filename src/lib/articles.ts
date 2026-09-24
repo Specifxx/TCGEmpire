@@ -201,6 +201,7 @@ export const ARTICLES: Article[] = [
       "Seraphine's Riftbound: Radiance Legend, Starry-Eyed Songstress, is pictured in print: a spell-cost engine in a promo and an over-numbered chase.",
     author: "RiftCompare",
     date: "2026-09-22",
+    updated: "2026-09-24",
     readMins: 11,
     tags: ["radiance", "news", "spoilers", "seraphine", "deckbuilding"],
     hero: {
@@ -212,11 +213,16 @@ export const ARTICLES: Article[] = [
       { label: "Seraphine vs Evelynn Showdown Decks", query: "riftbound radiance showdown deck" },
       { label: "Riftbound singles", query: "Riftbound TCG singles" },
     ],
-    // The T1 printing of Seraphine, Not Alone is the only Seraphine card actually
-    // in the database today (manual-cards.json, T1S-005/005). Embedding it gives
-    // the post one real, clickable card; the RAD 138/167 printing is NOT added,
-    // because its base-run rarity can't be read off the leak photo.
+    // Riot revealed the Legend officially on 24 Sept, so both of its printings
+    // are now in the catalogue (manual-cards.json: RAD 151/167 and the 174/167
+    // over-number). The RAD 138/167 Not Alone printing is still NOT added: its
+    // Radiance rarity has not been shown.
     embeds: [
+      {
+        title: "Starry-Eyed Songstress — both printings, in our database",
+        note: "The 151/167 Legend and its 174/167 over-numbered chase. Prices land from release day; until then these pages collect the listings as stores publish them.",
+        slugs: ["seraphine-starry-eyed-songstress-rad-151-167", "seraphine-starry-eyed-songstress-rad-174-167"],
+      },
       {
         title: "Seraphine, Not Alone — the printing that already exists, in our database",
         note: "This is the T1 Worlds Champion Collection printing (T1S · 005/005). The leak confirms the same card is numbered RAD · 138/167 in Radiance; that printing isn't imported yet, so it isn't the tile here.",
@@ -224,7 +230,7 @@ export const ARTICLES: Article[] = [
       },
     ],
     summary: [
-      "**Seraphine's Riftbound: Radiance Legend is Starry-Eyed Songstress** — pictured in print three days before Preview Season opens, in a promo printing numbered 151/167 and an over-numbered 174/167 chase.",
+      "**Seraphine's Riftbound: Radiance Legend is Starry-Eyed Songstress** — photographed in print on 22 September and **officially revealed by Riot on 24 September**, as a Legend numbered 151/167 and an over-numbered 174/167 chase.",
       "**What it does:** as an additional cost to play a spell, you may exhaust Seraphine and three friendly units to make that spell cost **2 less**. It is a build-around discount engine, not a body on the board.",
       "**This is the Legend we would not quote from a text leak.** A photographed card and an artist-feature still clear the same provenance bar Neeko did — and the printed wording matches the September social leak it corroborates.",
       "**Her other card is separate:** *Seraphine, Not Alone* is a Champion Unit — Order, 5 energy, 1 Might — already in circulation via the T1 collection. The leak just confirms its Radiance number, **138/167**.",
@@ -237,7 +243,7 @@ export const ARTICLES: Article[] = [
       },
       {
         q: "Is the Starry-Eyed Songstress Seraphine card real?",
-        a: "It has been photographed as a physical card — numbered RAD · 151/167 · EN with a Naifan Zhang artist credit and a ©2026 RGI line — and an over-numbered 174/167 printing appeared in a card-artist feature crediting Anna Nikonova. The printed text also matches wording that circulated as an unconfirmed Seraphine leak earlier in September, so two independent sightings now agree. That is strong evidence, but Riot has not officially revealed it: Preview Season opens 25 September 2026, and that is when it becomes official.",
+        a: "It has been photographed as a physical card — numbered RAD · 151/167 · EN with a Naifan Zhang artist credit and a ©2026 RGI line — and an over-numbered 174/167 printing appeared in a card-artist feature crediting Anna Nikonova. The printed text also matches wording that circulated as an unconfirmed Seraphine leak earlier in September. On 24 September Riot made it official, revealing the Legend and its over-numbered printing on the Riftbound Instagram.",
       },
       {
         q: "What does Seraphine, Starry-Eyed Songstress do?",
@@ -918,6 +924,8 @@ The countdown to each of those lives on **[Riftbound release dates](/release-dat
 
 Newest first. Every entry here is something Riot published, printed or displayed — not a screenshot with no provenance. The leaks have their own section further down.
 
+**24 September — Seraphine's Legend, officially revealed.** Riot posted *Starry-Eyed Songstress* and its over-numbered 174/167 printing on the Riftbound Instagram, confirming the photographed card below. It is Mind and Order. Both printings are now on the site: [151/167](/card/seraphine-starry-eyed-songstress-rad-151-167) and [174/167](/card/seraphine-starry-eyed-songstress-rad-174-167).
+
 **22 September — Seraphine's Legend, photographed in print.** *Starry-Eyed Songstress* — Seraphine's Legend card, not her unit — surfaced as a physical card numbered RAD · 151/167, with an over-numbered 174/167 chase printing shown in a card-artist feature. Its ability: as an additional cost to play a spell, exhaust Seraphine and three friendly units to reduce that spell's cost by 2. It is the first Seraphine Legend seen in print, and the printed wording matches the anonymous September text this page declined to quote — so the two now corroborate each other. It is logged here as a photographed card, the same bar Neeko cleared, not as an official reveal. Full breakdown: **[the Seraphine spoiler write-up](/blog/riftbound-seraphine-radiance-spoiler)**.
 
 **22 September — a redacted contents list.** Riot began un-blurring Radiance with a set-contents graphic that leaves six entries legible and around ten redacted. The readable ones: **HEARTSTEEL**, **Ekko**, **Seraphine**, **Neeko**, a **Colorless Champion Unit** and a **new set mechanic**. It places HEARTSTEEL in Radiance for the first time and confirms the set has a mechanic of its own without naming it. Our read on what it settles — and what it does not — is in **[the Colorless Champion Unit write-up](/blog/riftbound-radiance-colorless-champion-unit)**.
@@ -941,7 +949,7 @@ Radiance brings **nine new champion Legends**, pinned down from two directions: 
 | Champion | Status | What is known |
 | --- | --- | --- |
 | **Ekko** | Confirmed, ability public | Fury/Mind, Empower-based; see the log above |
-| **Seraphine** | Confirmed, Legend + unit seen | *[Starry-Eyed Songstress](/blog/riftbound-seraphine-radiance-spoiler)* photographed in print; *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
+| **Seraphine** | Confirmed, Legend officially revealed | *[Starry-Eyed Songstress](/card/seraphine-starry-eyed-songstress-rad-151-167)* (Mind/Order) revealed by Riot on 24 September, with a [174/167 over-number](/card/seraphine-starry-eyed-songstress-rad-174-167); *Not Alone* exists via the T1 collection; headlines the Showdown Decks |
 | **Evelynn** | Confirmed, art shown | *Evelynn, In Control*; reporting from the Vancouver reveal places her in Chaos, text unpublished |
 | **Ziggs** | Confirmed | Named in the announcement; nothing shown |
 | **Jarvan IV** | Confirmed | Named in the announcement; nothing shown |
@@ -971,7 +979,7 @@ Two things on a Radiance card carry information beyond the rules text.
 These are the open questions Preview Season answers, roughly in the order they matter for buyers:
 
 - **The Ultimate Rare.** Announced and not shown. It sits above the overnumbered treatment, it is a single card rather than a tier, and Riot has said Ultimate Rares will not appear in every set. Which card it is decides where a box's value concentrates.
-- **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation, and her Legend has not been seen at all. Seraphine's Legend has now been photographed (*Starry-Eyed Songstress*), but its domain stays unconfirmed until the official reveal — a gem read off a screenshot is not a domain declaration.
+- **Evelynn's and Seraphine's text and domains.** The two headline champions of the Showdown Decks and the box art. Evelynn's Chaos placement is reporting, not confirmation, and her Legend has not been seen at all. Seraphine's Legend is now officially revealed (*Starry-Eyed Songstress*, Mind and Order).
 - **Whether Deploy, Showoff and Disarm are real**, and if so how the printed wording compares with the demo table's.
 - **Which existing champions get new printings.** Nothing has been said. A Radiance printing of a champion who already has cards changes that champion's price page, which is why it matters beyond the new-Legend list.
 - **The Showcase count**, once a Showcase-numbered card is seen.
