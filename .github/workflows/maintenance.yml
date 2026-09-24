@@ -70,6 +70,7 @@ on:
           - grant-premium # restore/extend Premium on ONE account by email to an explicit end date, AND re-link its Stripe subscription (metadata.userId + User.stripeCustomerId) so renewals resume. Use after a restore has rolled back a paid period.
           - revoke-premium   # remove Premium from ONE account (email input): clears premiumUntil + the retired early-adopter comp flag, and REPORTS the account's full premium state before/after. Honours dry_run. Does NOT touch isAdmin (admins read as Premium regardless — it says so loudly) and does not cancel a live Stripe subscription. Set reset_trial to also clear trialStartedAt so the account can trial again.
           - audit-users      # read-only user/Premium census (no PII printed)
+          - apply-intro-to-trialists  # report unless apply=true: attaches the half-price intro to renewing, never-paid monthly trials that began before 2026-09-25 (owner-approved for the one 14-day trialist).
           - ensure-intro-coupons  # WRITES to Stripe (idempotent): creates the "first 3 months half price" coupon for each monthly price if missing, and prints what it will charge.
           - trial-cancel-report  # read-only: Premium trials cancelled mid-trial (cancel_at_period_end), hours to cancel, Stripe feedback, activity before cancelling. Anonymised.
           - funnel-report    # read-only WEEKLY PREMIUM FUNNEL: accounts, signup sources, PremiumClick, trial stamps and entitlement expiries from Postgres, joined to Stripe subscriptions/trials/conversions/churn, bucketed by ISO week for the last 8 (WEEKS= to change). Exists because neither admin page can answer "were more people signing up before?" — /admin/subscriptions' trial->paid is an ALL-TIME ratio with no time dimension, and /admin/accounts only looks back 30 days. Aggregate only, no PII. Writes nothing.
@@ -126,7 +127,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
+        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / apply-intro-to-trialists: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -4923,6 +4924,14 @@ jobs:
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: npx tsx scripts/trial-cancel-report.ts
+
+      - name: Give the intro to pre-offer renewing trials (report unless apply)
+        # Owner-approved 2026-09-24 for the one 14-day trialist still set to
+        # renew. See scripts/apply-intro-to-trialists.ts for the exact filter.
+        if: inputs.task == 'apply-intro-to-trialists'
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: npx tsx scripts/apply-intro-to-trialists.ts ${{ inputs.apply && '--apply' || '' }}
 
       - name: Create/verify the intro-offer coupons (Stripe write, idempotent)
         # "First 3 months half price": one amount-off coupon per monthly price,
