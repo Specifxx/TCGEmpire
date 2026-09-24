@@ -49,6 +49,21 @@ export const RADIANCE_PREVIEW_END = "2026-10-09";
 export const RADIANCE_PRERIFT_START = "2026-10-16";
 export const RADIANCE_PRERIFT_END = "2026-10-22";
 
+/**
+ * Is it still before Radiance's release day? Gates the launch email capture
+ * ("email me the day Radiance prices go live") on the hub, /radiance-preorders
+ * and every radiance-tagged article — one rule, so the three surfaces retire
+ * together. After release the release-day email (lib/release-day.ts) has already
+ * gone out and the promise would be moot.
+ *
+ * Midnight UTC on the release date, the same boundary isPreorderSetCode() uses
+ * (lib/constants.ts). The callers are ISR / dynamic pages, so this runs at
+ * render time; a page cached a day either side of the boundary is acceptable.
+ */
+export function isBeforeRadianceRelease(now: Date = new Date()): boolean {
+  return now.getTime() < Date.parse(`${RADIANCE_RELEASE_DATE}T00:00:00Z`);
+}
+
 export const RADIANCE_TOTAL_CARDS = 180;
 export const RADIANCE_SHOWCASE_COUNT = 66;
 

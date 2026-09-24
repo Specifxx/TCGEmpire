@@ -6,7 +6,11 @@ import { sendNewsletterWelcomeEmail } from "@/lib/email";
 import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 import { SITE_URL } from "@/lib/site";
 
-const SOURCES = new Set(["footer", "movers", "countdown", "blog", "market", "home"]);
+// Any value not listed here is stored as "footer", so a new call site must be
+// added here or its signups are silently misattributed. "radiance-launch"
+// (2026-09-23): the pre-release capture on /sets/radiance, /radiance-preorders
+// and radiance-tagged articles, feeding the release-day email (lib/release-day.ts).
+const SOURCES = new Set(["footer", "movers", "countdown", "blog", "market", "home", "radiance-launch"]);
 const schema = z.object({
   email: z.string().email().max(200),
   market: z.string().max(2).optional(),

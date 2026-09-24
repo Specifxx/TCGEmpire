@@ -24,6 +24,8 @@ import { ArticleTopValue } from "./ArticleTopValue";
 import { Picture } from "./Picture";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { ScrollDepthTracker } from "./ScrollDepthTracker";
+import { NewsletterSignup } from "./NewsletterSignup";
+import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
 // number — the "overnumbered" chase class. Signature "*" prints are their own thing
@@ -192,7 +194,7 @@ function EmbedGallery({ embed, cards }: { embed: ArticleEmbed; cards: CardTileDa
   if (embed.chaseSet || embed.setAll) {
     return (
       <p className="mt-8 rounded-xl border border-ink-700 bg-ink-850 p-4 text-sm text-slate-400">
-        🃏 {embed.title}: cards appear here as they're revealed and added to the database — check back through
+        🃏 {embed.title}: cards appear here as they&apos;re revealed and added to the database — check back through
         spoiler season.
       </p>
     );
@@ -526,6 +528,34 @@ export async function ArticleView({ article }: { article: Article }) {
           </div>
           <Link href="/radiance-preorders" className="btn-primary max-w-full text-center">Compare Radiance preorder prices</Link>
         </section>
+      )}
+
+      {/* Radiance launch capture (2026-09-23) — the release-day email
+          (lib/release-day.ts) goes to the newsletter list, and the Radiance posts
+          offered no way onto it — though one leak post alone drew 28% of the
+          site's search clicks in the 28 days to 2026-09-21 (DECISIONS.md, that
+          date). Outside the pre-order section's `cta.href` guard so the
+          what-we-know post (whose "Ready to buy?" already IS the pre-order link)
+          gets it too. `button="ghost"`: "Compare Radiance preorder prices" above
+          stays the primary, and "Ready to buy?" below is filled green as well.
+          mt-4 only under that pre-order section, so the two read as one group;
+          where the section is suppressed, mt-8 like every other block here —
+          at mt-4 the what-we-know post's capture sat 16px under the FAQ
+          accordion and 32px above "Ready to buy?", reading as part of the FAQ
+          (d1440, 2026-09-23). */}
+      {article.tags.includes("radiance") && isBeforeRadianceRelease() && (
+        <div className={cta.href !== "/radiance-preorders" ? "mt-4" : "mt-8"}>
+          <NewsletterSignup
+            siteName="RiftCompare"
+            variant="card"
+            source="radiance-launch"
+            trackEvent="radiance_notify_click"
+            heading="Get an email the day Radiance prices go live"
+            cta="Notify me"
+            done="You're on the list. We'll email you on release day."
+            button="ghost"
+          />
+        </div>
       )}
 
       {/* "Ready to buy?" — every article is fundamentally about Riftbound cards, so
