@@ -128,6 +128,8 @@ now"), not one of the `<product> <price-word>` modifier long-tails that section
 retired. The exception is one page and one phrase — it is not licence to
 re-target `riftbound singles`/`riftbound cardmarket` etc.
 
+| `riftbound <set> price guide`, `<set> price guide`, `riftbound price list`, `riftbound <set> price list` | `/sets/<slug>` — the set hub, whose top title rung became `Riftbound <Set> Card List & Price Guide` on 2026-09-24. Search Console 28d to 2026-09-19: 21 "price guide"/"price list" queries, **789 impressions and one click**, most of them set-scoped and sitting at positions 5.5–10. The phrase appeared in no title, description or heading anywhere in the app, so this is the ban-list failure again — page one for words the title does not contain | `Card List` still LEADS the title: it is the bigger query (`riftbound unleashed card list` alone is 885 impressions) and `tests/seo-landing-pages.test.ts` pins list-intent first. "Price Guide" replaced the weaker "Prices" only where it fits 60 chars — Spirit Forged and Origins: Proving Grounds fall to a shorter rung and carry the phrase in their description instead. Do **not** put "price guide" in the homepage title: that slot is the `riftbound card prices` head term, settled across three audits |
+
 ## Price-modifier long-tails — deliberately NOT primary-targeted
 
 Per the trend data's own finding: `riftbound singles`, `riftbound card prices`,
@@ -155,6 +157,13 @@ the region-home set) plus the per-page H1s: root's names no market, each region
 home's names its own. The failure `(US)` was added to fix — `/au` outranking
 root for `riftbound card prices US` — is a measurable trigger to put it back if
 Search Console shows it recurring.
+
+**Checked 2026-09-24 against the real export (28 days to 2026-09-19): it has
+not recurred.** `riftbound card prices US` does not appear in the query set at
+all, and geo-qualified commercial queries as a whole total three queries and
+eleven impressions. The marker stays off. Re-run the check the same way — filter
+the Queries export for a country word beside a price/buy word — before anyone
+argues for putting it back.
 
 ## Vendetta-cluster cannibalization audit (backlog item 25)
 
