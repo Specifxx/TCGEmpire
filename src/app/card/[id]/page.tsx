@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
-import { isOvernumbered, isSignature, isCrystalRose, normaliseCondition, isFallbackRetailer } from "@/lib/constants";
+import { displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, isFallbackRetailer } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
@@ -974,11 +974,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
           <div className="card-surface p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
               <DomainBadge domain={card.domain} href={`/domains/${domainSlug(card.domain)}`} />
-              <RarityBadge rarity={card.rarity} />
+              <RarityBadge rarity={displayRarity(card)} />
               <span className="chip bg-ink-800 text-slate-300">{card.type}</span>
               <VariantBadge variant={card.variant} />
               <SignatureBadge show={isSignature(card.collectorNumber)} />
-              <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+              <OvernumberedBadge show={isOvernumbered(card.collectorNumber) && !isUltimate(card.setCode, card.collectorNumber)} />
               <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>

@@ -134,7 +134,19 @@ export const PULL_RATES: PullRate[] = [
     frequency: "≈1 in 10 over-numbers, so ≈1 per 30 boxes",
     onePerPacks: 720,
     sourced: true,
-    note: "An over-number carrying the artist's foil signature. The rarest thing a pack can produce.",
+    note: "An over-number carrying the artist's foil signature. Tied with the Ultimate as the rarest thing a pack can produce.",
+  },
+  {
+    // A set's single Ultimate-rarity card (lib/constants.ts isUltimate —
+    // Unleashed's Baron Nashor, 238/219). Riot's collectability post predates
+    // the tier, so the source is the site owner's correction of 2026-09-24:
+    // "has the same odds as a signature card". Same number, not a new estimate.
+    key: "ultimate",
+    label: "Ultimate",
+    frequency: "Same odds as a Signature, so ≈1 per 30 boxes",
+    onePerPacks: 720,
+    sourced: true,
+    note: "One card per set, a tier above the over-numbers (Unleashed: Baron Nashor, 238/219). Only sets that have one can pull it.",
   },
 ];
 

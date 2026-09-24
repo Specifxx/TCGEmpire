@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { dollarsToCents, normalizeSearch } from "./format";
 import { parseSearchQuery } from "./search-query";
 import { DEFAULT_COUNTRY, priceField, type Country } from "./country";
-import { ALL_FALLBACK_RETAILERS } from "./constants";
+import { ALL_FALLBACK_RETAILERS, ULTIMATE_PRINTS } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
 export interface CardQuery {
@@ -17,6 +17,7 @@ export interface CardQuery {
   rulesSet?: string; // optional set-code scope for `rules` (e.g. "VEN")
   sig?: string; // "1" = signature ("*") cards only
   over?: string; // "1" = overnumbered printings only (number beyond the set total)
+  ult?: string; // "1" = Ultimate-rarity prints only (constants.ts ULTIMATE_PRINTS)
   promo?: string; // "1" = promo printings only
   printing?: string; // "normal" = base prints only (no alt-art / signature / promo)
   priced?: string; // "1" = only cards with a live price
@@ -92,6 +93,15 @@ export function buildCardWhere(query: CardQuery, country: Country = DEFAULT_COUN
   if (eff.sig === "1") where.collectorNumber = { contains: "*" };
   if (eff.over === "1") where.isOvernumbered = true;
   if (eff.promo === "1") where.isPromo = true;
+  // Ultimate is a curated list, not a column: one clause per listed print,
+  // matched on set code plus the number before the slash. AND-ed so it narrows
+  // alongside the name search's own OR further down rather than replacing it.
+  if (eff.ult === "1") {
+    const prints = Object.entries(ULTIMATE_PRINTS).flatMap(([setCode, nums]) =>
+      nums.map((n) => ({ setCode, collectorNumber: { startsWith: `${n}/` } })),
+    );
+    where.AND = [{ OR: prints.length ? prints : [{ id: "__none__" }] }];
+  }
 
   // "Normal only" — hide the special prints (alt-art, signature, promo) so players
   // browsing for the standard card aren't shown showcase/promo variants.

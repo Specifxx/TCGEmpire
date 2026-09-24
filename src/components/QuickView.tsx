@@ -6,7 +6,7 @@ import { CardTileData } from "./CardTile";
 import { CardImage } from "./CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
-import { isFallbackRetailer, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
+import { isFallbackRetailer, displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, CONDITIONS, cardmarketRetailerFor } from "@/lib/constants";
 import { COUNTRIES } from "@/lib/country";
 import { tcgReferenceRows } from "@/lib/tcg-reference";
 import { TcgMarketPrice } from "./TcgMarketPrice";
@@ -304,11 +304,11 @@ function QuickViewModal({ card, onClose }: { card: CardTileData; onClose: () => 
           <div className="min-w-0 p-5">
             <div className="flex flex-wrap items-center gap-1.5">
               <DomainBadge domain={card.domain} />
-              <RarityBadge rarity={card.rarity} />
+              <RarityBadge rarity={displayRarity(card)} />
               <span className="chip bg-ink-800 text-slate-300">{card.type}</span>
               <VariantBadge variant={card.variant} />
               <SignatureBadge show={isSignature(card.collectorNumber)} />
-              <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+              <OvernumberedBadge show={isOvernumbered(card.collectorNumber) && !isUltimate(card.setCode, card.collectorNumber)} />
               <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
               <PromoBadge show={card.isPromo} />
             </div>

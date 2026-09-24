@@ -31,6 +31,7 @@ export function ActiveFilters({ basePath = "/browse" }: { basePath?: string }) {
   if (params.get("variant") === "alt") chips.push({ key: "variant", value: "", label: "Alt art" });
   if (params.get("sig") === "1") chips.push({ key: "sig", value: "", label: "Signature" });
   if (params.get("over") === "1") chips.push({ key: "over", value: "", label: "Overnumbered" });
+  if (params.get("ult") === "1") chips.push({ key: "ult", value: "", label: "Ultimate" });
   if (params.get("promo") === "1") chips.push({ key: "promo", value: "", label: "Promo" });
   const rules = params.get("rules");
   if (rules) chips.push({ key: "rules", value: "", label: rules.replace(/[[\]]/g, "") });

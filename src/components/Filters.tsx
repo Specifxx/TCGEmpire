@@ -207,7 +207,7 @@ export function Filters({ basePath = "/browse", hideSet = false, currency }: { b
                 onChange={() =>
                   update((p) => {
                     if (p.get("printing") === "normal") p.delete("printing");
-                    else { p.set("printing", "normal"); p.delete("variant"); p.delete("sig"); p.delete("promo"); p.delete("over"); }
+                    else { p.set("printing", "normal"); p.delete("variant"); p.delete("sig"); p.delete("promo"); p.delete("over"); p.delete("ult"); }
                   }, "printing:normal")
                 }
                 label="Normal only"
@@ -216,6 +216,7 @@ export function Filters({ basePath = "/browse", hideSet = false, currency }: { b
               <Check checked={sp.get("variant") === "alt"} onChange={() => update((p) => { p.delete("printing"); p.get("variant") === "alt" ? p.delete("variant") : p.set("variant", "alt"); }, "printing:alt")} label="Alternate art" dot="#f5a524" />
               <Check checked={sp.get("sig") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("sig") === "1" ? p.delete("sig") : p.set("sig", "1"); }, "printing:sig")} label="Signature" dot="#f59e0b" />
               <Check checked={sp.get("over") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("over") === "1" ? p.delete("over") : p.set("over", "1"); }, "printing:over")} label="Overnumbered" dot="#a855f7" />
+              <Check checked={sp.get("ult") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("ult") === "1" ? p.delete("ult") : p.set("ult", "1"); }, "printing:ult")} label="Ultimate" dot="#ef4444" />
               <Check checked={sp.get("promo") === "1"} onChange={() => update((p) => { p.delete("printing"); p.get("promo") === "1" ? p.delete("promo") : p.set("promo", "1"); }, "printing:promo")} label="Promo" dot="#06b6d4" />
             </div>
           </Section>

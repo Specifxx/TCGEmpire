@@ -286,7 +286,8 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
             <p className="text-[11px] leading-relaxed text-slate-500">
               The base rarity rates come from a community pull-rate guide built on observed box and case data.{" "}
               <strong className="text-gold">Alt Art, Over-numbered and Signature are Riot&apos;s own published
-              rates</strong> — from the same pull-rate table the{" "}
+              rates</strong>, and a set&apos;s <strong className="text-gold">Ultimate</strong> (Unleashed: Baron
+              Nashor) pulls at the Signature rate — all from the same pull-rate table the{" "}
               <Link href="/games/pack-sim" className="text-brand-400 hover:underline">pack simulator</Link> deals
               from, not an estimate. Only <strong className="text-gold">Showcase</strong> has no published rate:
               you set how many Showcase prints a box yields below. Every rate stays individually editable
@@ -303,8 +304,8 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
                 className="input max-w-[12rem]"
               />
               <span className="mt-1 block text-[11px] text-slate-600">
-                Default 0.33 ≈ one every three boxes. Applies to Showcase only — Alt Art, Over-numbered and
-                Signature use the published rate below and don&apos;t draw from this number.
+                Default 0.33 ≈ one every three boxes. Applies to Showcase only — Alt Art, Over-numbered,
+                Signature and Ultimate use the published rate below and don&apos;t draw from this number.
               </span>
             </label>
 
@@ -406,7 +407,8 @@ export function BoxEvCalculator({ sets }: { sets: BoxEvSet[] }) {
         </p>
         <p className="mt-2">
           Base rarity and Showcase rates are <strong className="text-slate-500">estimates you control</strong>;
-          Alt Art, Over-numbered and Signature use Riot&apos;s own published odds. Every rate stays editable
+          Alt Art, Over-numbered and Signature use Riot&apos;s own published odds, and an Ultimate pulls at the
+          Signature rate. Every rate stays editable
           either way. EV is an average across many boxes: the distribution is heavily skewed by the chase tiers, so most
           boxes come in under it. It also assumes every card could be sold at market price, and bulk commons
           effectively cannot be. Want a specific card?{" "}

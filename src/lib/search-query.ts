@@ -32,6 +32,7 @@ import { aliasSlugsFor } from "@/lib/content/card-aliases";
 export interface SearchQueryFilters {
   sig?: string;
   over?: string;
+  ult?: string;
   promo?: string;
   variant?: string;
   rarity?: string;
@@ -87,6 +88,8 @@ const TOKENS: Record<string, SearchQueryFilters | null> = {
   signature: { sig: "1" },
   sig: { sig: "1" },
   overnumbered: { over: "1" },
+  // No card name contains "ultimate" (checked 2026-09-24), so it is a safe filter.
+  ultimate: { ult: "1" },
   promo: { promo: "1" },
   promos: { promo: "1" },
   showcase: { rarity: "Showcase" },

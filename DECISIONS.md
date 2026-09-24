@@ -11671,3 +11671,45 @@ cost" was wrong (it ranks by item price) and is gone.
 probing stores from this sandbox. There is no database here, so the first
 real import happens on the next scheduled price run. After that, check
 `/radiance-preorders` in each market.
+
+## Ultimate rarity: Unleashed's Baron Nashor — 2026-09-24
+
+**The report.** The site owner: Baron Nashor, UNL 238/219, is Ultimate rarity,
+not an ordinary over-number. It pulls at the same odds as a Signature.
+
+**What was wrong.** 238/219 is numbered above the set total, so every rule
+classed it as over-numbered:
+
+- tiles and pages showed an "Overnumbered" badge and a "Showcase" rarity chip;
+- the box EV put it in Unleashed's Overnumbered pool at 1 in 72 packs, ten
+  times too often. Averaged into a seven-card pool, the set's most valuable
+  card inflated every Unleashed box's EV.
+
+**Decisions.**
+
+- **A curated list, not a number rule.** `ULTIMATE_PRINTS` in `constants.ts`
+  (UNL: 238) and `isUltimate()`. Nothing in the collector number marks an
+  Ultimate, so no pattern could find one. Radiance's announced Ultimate Rare is
+  one line to add once it is revealed.
+- **A displayed rarity, not a stored one.** `displayRarity()` and
+  `ULTIMATE_RARITY` feed the rarity chips and the tile colour. "Ultimate" stays
+  out of `RARITIES` / `RARITY_KEYS`, because those drive the database rarity
+  filter, the `/cards/rarity/*` facet pages (a one-card page would be thin) and
+  the importer's accepted values. The stored rarity stays "Showcase"
+  (`chasePrintRarity`), so no data migration is needed.
+- **Printing kind `ultimate`**, ahead of over-numbered in `printingKind()`. It
+  drives the card page's Printing cell, subtitle, title ladder and About prose.
+  The display name's credentials stay "(Showcase, Overnumbered)": they build
+  the eBay search query, and sellers list the card that way.
+- **Its own box-EV pool at the Signature rate.** `PULL_RATES` gains `ultimate`
+  with the same `onePerPacks` as the signature row (720). Sourced to the owner,
+  since Riot's collectability post predates the tier. The box EV reads it
+  through `CHASE_RATES`, and the pack simulator rolls it rarest-first beside
+  Signature.
+- **Findable.** Browse gains an "Ultimate" filter (`ult=1`, a set-plus-number
+  clause, AND-ed with the name search) and a matching chip. Search maps
+  "ultimate" to it; no card name contains the word. The tile badge replaces
+  the Overnumbered one, never both.
+
+**Also:** the Unleashed set guide now calls 238 an Ultimate, not "a second
+Showcase printing".

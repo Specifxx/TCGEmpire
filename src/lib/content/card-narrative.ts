@@ -6,6 +6,7 @@ import {
   isSignature,
   isOvernumbered,
   isCrystalRose,
+  isUltimate,
 } from "@/lib/constants";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -145,9 +146,11 @@ export function variantLabel(variant: string | null | undefined): string {
 // label has to come from the printing alone, and the page's "Printing" cell and
 // the generated prose have to be the SAME decision — hence printingKind() below,
 // which both now call. Two casings of one answer, not two answers.
-export type PrintingKind = "crystal-rose" | "signature" | "overnumbered" | "promo" | "alternate-art" | "base";
+export type PrintingKind = "ultimate" | "crystal-rose" | "signature" | "overnumbered" | "promo" | "alternate-art" | "base";
 
 export interface PrintingFields {
+  /** A set's single Ultimate-rarity print (constants.ts isUltimate). */
+  isUltimate?: boolean;
   isSignature?: boolean;
   isCrystalRose?: boolean;
   isOvernumbered?: boolean;
@@ -188,6 +191,7 @@ export function printingFieldsFrom(c: {
   variant?: string | null;
 }): PrintingFields {
   return {
+    isUltimate: isUltimate(c.setCode, c.collectorNumber),
     isSignature: isSignature(c.collectorNumber),
     isOvernumbered: isOvernumbered(c.collectorNumber),
     isCrystalRose: isCrystalRose(c.setCode, c.collectorNumber),
@@ -197,6 +201,9 @@ export function printingFieldsFrom(c: {
 }
 
 export function printingKind(c: PrintingFields): PrintingKind {
+  // Ultimate first: its number is an ordinary over-number (UNL 238/219), so
+  // without this it would read as "overnumbered".
+  if (c.isUltimate) return "ultimate";
   if (c.isCrystalRose) return "crystal-rose";
   if (c.isSignature) return "signature";
   if (c.isOvernumbered) return "overnumbered";
@@ -207,6 +214,7 @@ export function printingKind(c: PrintingFields): PrintingKind {
 
 /** Running-prose casing: "…covers the alternate-art printing of Vi, Destructive". */
 export const PRINTING_PROSE: Record<PrintingKind, string> = {
+  ultimate: "Ultimate",
   "crystal-rose": "Crystal Rose alt-art",
   signature: "Signature",
   overnumbered: "overnumbered",
@@ -217,6 +225,7 @@ export const PRINTING_PROSE: Record<PrintingKind, string> = {
 
 /** Standalone-value casing, for the card page's "Printing" data cell. */
 export const PRINTING_DISPLAY: Record<PrintingKind, string> = {
+  ultimate: "Ultimate",
   "crystal-rose": "Crystal Rose alt-art",
   signature: "Signature",
   overnumbered: "Overnumbered",
@@ -353,6 +362,13 @@ function identity(c: NarrativeInput): string {
   // Four openings, chosen by what makes this printing distinctive — a Signature
   // print leads with its scarcity, a promo with its origin, a statted unit with
   // its cost, everything else with its set.
+  if (printKind === "ultimate") {
+    return (
+      `${queryName} is the Ultimate print of ${c.name}, numbered ${c.collectorNumber} — ${c.setName}'s single ` +
+      `Ultimate-rarity card, a tier above the over-numbered prints, pulled at the same odds as a Signature. ` +
+      `${typedDomainClause}${stats.length ? `, at ${stats.join(" and ")}` : ""}.`
+    );
+  }
   if (c.isSignature) {
     // "Past the end of the base run" is true of the usual Signature print
     // (223*/221 in a 221-card set) and FALSE of one numbered inside its run —

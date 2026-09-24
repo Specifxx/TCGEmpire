@@ -25,7 +25,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: { absolute: "Riftbound Booster Box EV Calculator | RiftCompare" },
   description:
-    "Expected value of a Riftbound booster box, from real TCGplayer prices — including signature, over-numbered and alt-art chase pulls. Tune the pull rates yourself.",
+    "Expected value of a Riftbound booster box, from real TCGplayer prices — including Ultimate, signature, over-numbered and alt-art chase pulls. Tune the pull rates yourself.",
   keywords: [
     "Riftbound box EV",
     "Riftbound booster box value",

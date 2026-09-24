@@ -98,6 +98,22 @@ export function SignatureBadge({ show }: { show?: boolean }) {
   );
 }
 
+// A set's single Ultimate-rarity card (constants.ts isUltimate) — shown INSTEAD
+// of the Overnumbered badge its number would otherwise earn. Colour matches
+// ULTIMATE_RARITY so the tile chip and the rarity chip agree.
+export function UltimateBadge({ show }: { show?: boolean }) {
+  if (!show) return null;
+  return (
+    <span
+      className="chip font-semibold uppercase"
+      style={{ backgroundColor: "#dc2626", color: "#fff" }}
+      title="Ultimate — the set's rarest card, pulled at the same odds as a Signature"
+    >
+      ◆ Ultimate
+    </span>
+  );
+}
+
 export function OvernumberedBadge({ show }: { show?: boolean }) {
   if (!show) return null;
   return (

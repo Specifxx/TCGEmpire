@@ -28,7 +28,7 @@
 //    converted USD figure, so this reads low against what you would actually pay
 //    at a local store. It is a consistent yardstick, not a local quote.
 
-import { isCrystalRose, isOvernumbered, isSignature, RARITY_KEYS } from "./constants";
+import { isCrystalRose, isOvernumbered, isSignature, isUltimate, RARITY_KEYS } from "./constants";
 import { printingKind } from "./content/card-narrative";
 import { PACKS_PER_BOX, PULL_RATES } from "./pack-composition";
 
@@ -39,7 +39,7 @@ import { PACKS_PER_BOX, PULL_RATES } from "./pack-composition";
 // signature together with an alt-art would reproduce the exact distortion that
 // made excluding them necessary in the first place.
 export const BASE_POOLS = ["Common", "Uncommon", "Rare", "Epic", "Showcase"] as const;
-export const CHASE_POOLS = ["AltArt", "Overnumbered", "Signature"] as const;
+export const CHASE_POOLS = ["AltArt", "Overnumbered", "Signature", "Ultimate"] as const;
 export const POOL_ORDER = [...BASE_POOLS, ...CHASE_POOLS] as const;
 export type PoolKey = (typeof POOL_ORDER)[number];
 
@@ -52,6 +52,7 @@ export const POOL_LABEL: Record<PoolKey, string> = {
   AltArt: "Alt art",
   Overnumbered: "Over-numbered",
   Signature: "Signature",
+  Ultimate: "Ultimate",
 };
 
 export const isChasePool = (k: PoolKey): boolean => (CHASE_POOLS as readonly string[]).includes(k);
@@ -106,6 +107,7 @@ export function poolOf(card: PoolCard): PoolKey | null {
   if (card.isPromo) return null;
 
   const kind = printingKind({
+    isUltimate: isUltimate(card.setCode, card.collectorNumber),
     isCrystalRose: isCrystalRose(card.setCode, card.collectorNumber),
     isSignature: isSignature(card.collectorNumber),
     isOvernumbered: card.isOvernumbered || isOvernumbered(card.collectorNumber),
@@ -115,6 +117,11 @@ export function poolOf(card: PoolCard): PoolKey | null {
   switch (kind) {
     case "promo":
       return null; // event/box-topper distribution, not a pack pull
+    // Ultimate is its own pool, NOT over-numbered: Baron Nashor 238/219 used to
+    // be averaged into Unleashed's Overnumbered pool at 1 in 72 packs, ten times
+    // too often for a card pulled at Signature odds (site owner, 2026-09-24).
+    case "ultimate":
+      return "Ultimate";
     case "signature":
       return "Signature";
     case "overnumbered":
@@ -242,6 +249,7 @@ const CHASE_PULL_RATE_KEY: Record<(typeof CHASE_POOLS)[number], string> = {
   AltArt: "altart",
   Overnumbered: "overnumbered",
   Signature: "signature",
+  Ultimate: "ultimate",
 };
 
 function sourcedChaseRate(pool: (typeof CHASE_POOLS)[number]): number {
@@ -254,6 +262,7 @@ export const CHASE_RATES: Record<(typeof CHASE_POOLS)[number], number> = {
   AltArt: sourcedChaseRate("AltArt"),
   Overnumbered: sourcedChaseRate("Overnumbered"),
   Signature: sourcedChaseRate("Signature"),
+  Ultimate: sourcedChaseRate("Ultimate"),
 };
 
 // ── The one remaining estimate: Showcase ─────────────────────────────────────

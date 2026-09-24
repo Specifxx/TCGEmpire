@@ -126,7 +126,7 @@ export async function GET(req: Request) {
     // Riot's "and very rarely, a special alt-art basic rune". They publish no
     // figure for "very rarely", so rather than invent one the alt-art rune is
     // simply not simulated — and the page says so.
-    const runePool = allRunes.filter((c) => poolOf(c) != null && !["AltArt", "Overnumbered", "Signature"].includes(poolOf(c)!));
+    const runePool = allRunes.filter((c) => poolOf(c) != null && !["AltArt", "Overnumbered", "Signature", "Ultimate"].includes(poolOf(c)!));
 
     const byPool = new Map<string, typeof rows>();
     for (const c of rows) {
@@ -197,11 +197,13 @@ export async function GET(req: Request) {
     const chaseRoll = Math.random();
     let chased = false;
     let cumulative = 0;
-    for (const key of ["signature", "overnumbered", "altart"] as const) {
+    for (const key of ["ultimate", "signature", "overnumbered", "altart"] as const) {
       const rate = PULL_RATES.find((r) => r.key === key);
       if (!rate?.onePerPacks) continue;
       cumulative += 1 / rate.onePerPacks;
-      const pool = poolFor(key === "altart" ? "AltArt" : key === "overnumbered" ? "Overnumbered" : "Signature");
+      const pool = poolFor(
+        key === "altart" ? "AltArt" : key === "overnumbered" ? "Overnumbered" : key === "ultimate" ? "Ultimate" : "Signature",
+      );
       if (chaseRoll < cumulative && pool.length) {
         take(pool);
         chased = true;

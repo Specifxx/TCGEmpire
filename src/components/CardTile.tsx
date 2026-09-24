@@ -3,12 +3,12 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { CardImage } from "./CardImage";
-import { VariantBadge, OvernumberedBadge, SignatureBadge, CrystalRoseBadge } from "./Badge";
+import { VariantBadge, OvernumberedBadge, SignatureBadge, CrystalRoseBadge, UltimateBadge } from "./Badge";
 import { PriceWatchButton } from "./PriceWatchButton";
 import { useQuickView } from "./QuickView";
 import { useCountry } from "./CountryProvider";
 import { cardHref } from "@/lib/card-url";
-import { rarityInfo, isOvernumbered, isSignature, isCrystalRose } from "@/lib/constants";
+import { rarityInfo, displayRarity, isOvernumbered, isSignature, isCrystalRose, isUltimate } from "@/lib/constants";
 import { cardDisplayName } from "@/lib/card-name";
 import { tileStock } from "@/lib/market-rows";
 import type { Country } from "@/lib/country";
@@ -52,7 +52,7 @@ export interface CardTileData {
 }
 
 export function CardTile({ card }: { card: CardTileData }) {
-  const r = rarityInfo(card.rarity);
+  const r = rarityInfo(displayRarity(card));
   const { open } = useQuickView();
   const { fmt, price, country } = useCountry();
   const lowest = price(card);
@@ -116,8 +116,9 @@ export function CardTile({ card }: { card: CardTileData }) {
           />
           <div className="absolute left-2 top-2 z-20 flex flex-col items-start gap-1">
             <VariantBadge variant={card.variant} />
+            <UltimateBadge show={isUltimate(card.setCode, card.collectorNumber)} />
             <SignatureBadge show={isSignature(card.collectorNumber)} />
-            <OvernumberedBadge show={isOvernumbered(card.collectorNumber)} />
+            <OvernumberedBadge show={isOvernumbered(card.collectorNumber) && !isUltimate(card.setCode, card.collectorNumber)} />
             <CrystalRoseBadge show={isCrystalRose(card.setCode, card.collectorNumber)} />
           </div>
         </div>

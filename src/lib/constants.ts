@@ -555,8 +555,21 @@ export function titleCase(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
+// ULTIMATE is a chase TIER above over-numbered, not a base rarity: it is kept
+// out of RARITIES / RARITY_KEYS on purpose, because those drive the rarity
+// filter (a database column), the /cards/rarity/* facet pages and the importer's
+// accepted values, and the stored rarity of an Ultimate print stays "Showcase"
+// (chasePrintRarity). It is a DISPLAYED rarity — see displayRarity().
+export const ULTIMATE_RARITY: RarityInfo = { key: "Ultimate", label: "Ultimate", color: "#ef4444" };
+
 export function rarityInfo(key: string): RarityInfo {
+  if (key === ULTIMATE_RARITY.key) return ULTIMATE_RARITY;
   return RARITIES[key] ?? RARITIES.Common;
+}
+
+/** The rarity to SHOW for a card: its stored rarity, except an Ultimate print. */
+export function displayRarity(c: { setCode: string; collectorNumber: string; rarity: string }): string {
+  return isUltimate(c.setCode, c.collectorNumber) ? ULTIMATE_RARITY.key : c.rarity;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -611,6 +624,22 @@ export function isOvernumbered(collectorNumber: string): boolean {
   if (collectorNumber.includes("*")) return false;
   const m = collectorNumber.match(/^(\d+)[a-z]?\/(\d+)/i);
   return m ? parseInt(m[1], 10) > parseInt(m[2], 10) : false;
+}
+
+// ULTIMATE = a set's single Ultimate-rarity card: a chase tier ABOVE the
+// over-numbered prints, pulled at the same odds as a Signature (site owner,
+// 2026-09-24: "Baron Nashor overnumbered is actually ultimate rarity and has
+// the same odds as a signature card"). Its number is an ordinary over-number
+// (238/219), so nothing in the collector number distinguishes it — hence an
+// explicit list, keyed by set code and the number before the slash.
+// Radiance announces an Ultimate Rare of its own; add it here when revealed.
+export const ULTIMATE_PRINTS: Record<string, readonly string[]> = {
+  UNL: ["238"], // Baron Nashor, 238/219
+};
+
+export function isUltimate(setCode: string, collectorNumber: string): boolean {
+  const n = collectorNumber.split("/")[0]?.trim().toLowerCase();
+  return !!n && (ULTIMATE_PRINTS[setCode] ?? []).includes(n);
 }
 
 // Crystal Rose = Vendetta's 6 Wild Rift crossover alt-arts (Kai'Sa, Sona, Ahri,
