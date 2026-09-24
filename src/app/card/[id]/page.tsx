@@ -8,6 +8,9 @@ import { CardImage } from "@/components/CardImage";
 import { DomainBadge, RarityBadge, VariantBadge, OvernumberedBadge, PromoBadge, SignatureBadge, CrystalRoseBadge } from "@/components/Badge";
 import { displayRarity, isUltimate, isOvernumbered, isSignature, isCrystalRose, normaliseCondition, isFallbackRetailer } from "@/lib/constants";
 import { PriceWatchButton } from "@/components/PriceWatchButton";
+import { PriceDropAlertCta } from "@/components/PriceDropAlertCta";
+import { cardHref } from "@/lib/card-url";
+import { enabledProviders } from "@/lib/oauth";
 import { ShareButton } from "@/components/ShareButton";
 import { CardViewBeacon } from "@/components/CardViewBeacon";
 import { clampText, formatMoney, normalizeSearch } from "@/lib/format";
@@ -1013,6 +1016,11 @@ export default async function CardPage({ params }: { params: { id: string } }) {
 
             {/* Market-localised metrics (SSR = AU baseline; client reconciles). */}
             <CardPriceMetrics rows={rows} energyCost={card.energyCost} might={card.might} power={card.power} />
+
+            {/* The page's primary conversion, next to the cheapest price
+                (2026-09-24 growth pass): one-click OAuth that creates the
+                account and the alert together; email-only stays secondary. */}
+            <PriceDropAlertCta cardId={card.id} cardPath={cardHref(card)} providers={enabledProviders()} />
           </div>
 
           {/* ── PRICE COMPARISON LEADS, ABOVE THE FOLD ─────────────────────────

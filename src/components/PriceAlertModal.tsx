@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { trackAlertCreated } from "@/lib/growth-events";
 import { markSignupSource } from "@/lib/signup-source";
 import { PENDING_WATCH_KEY } from "@/lib/signup-source-shared";
 import { useMe } from "@/lib/use-me";
@@ -152,6 +153,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
       // the site's highest-volume conversion event and GA4 couldn't see it,
       // which made any GA4 funnel around alerts/signup silently incomplete.
       trackEvent("price_alert_subscribed", { card: pendingCardId });
+      trackAlertCreated(false);
       setPhase("success");
     } else {
       setPhase("error");

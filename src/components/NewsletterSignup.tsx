@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
+import { trackNewsletterSignup } from "@/lib/growth-events";
 
 // Email capture for the weekly Index-summary list. Used in the footer (default) and
 // inline on high-intent pages (movers, countdown, the pre-release Radiance surfaces)
@@ -67,7 +68,12 @@ export function NewsletterSignup({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), market: country, source }),
       });
-      if (r.ok) track(trackEvent, { source });
+      // newsletter_signup{placement} on every successful signup (2026-09-24),
+      // plus the surface's own named event where it has one.
+      if (r.ok) {
+        trackNewsletterSignup(source);
+        if (trackEvent !== "newsletter_signup") track(trackEvent, { source });
+      }
       setState(r.ok ? "done" : "error");
     } catch {
       setState("error");

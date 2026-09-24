@@ -25,7 +25,7 @@ import { getPriceMovers } from "./price-history";
 import { sendUserDigestEmail, isBrevoEnabled, isEmailEnabled, getLastEmailError } from "./email";
 import { normalizeCountry, type Country } from "./country";
 import { SITE_URL } from "./site";
-import { editionKey, buildDigest, type Digest } from "./newsletter";
+import { editionKey, buildDigest, recentRadianceReveals, type Digest } from "./newsletter";
 
 export type UserDigestProvider = "brevo" | "resend";
 
@@ -111,6 +111,7 @@ export async function runUserDigest(opts?: { limit?: number; via?: UserDigestPro
 
   // One digest per market, computed once and reused for every recipient in it.
   const digests = new Map<Country, Digest | null>();
+  const reveals = await recentRadianceReveals();
   const batch = due.slice(0, limit);
   const errors = new Set<string>();
   const noteError = (reason: string) => {
@@ -119,7 +120,7 @@ export async function runUserDigest(opts?: { limit?: number; via?: UserDigestPro
   for (const r of batch) {
     if (!digests.has(r.market)) {
       const movers = await getPriceMovers(r.market, 8);
-      digests.set(r.market, buildDigest(movers, r.market));
+      digests.set(r.market, buildDigest(movers, r.market, reveals));
       if (!digests.get(r.market)) summary.quietMarkets.push(r.market);
     }
     const digest = digests.get(r.market);

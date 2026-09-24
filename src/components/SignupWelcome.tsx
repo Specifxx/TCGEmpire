@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { trackEvent } from "@/lib/analytics";
+import { trackSignupComplete } from "@/lib/growth-events";
 import { useMe } from "@/lib/use-me";
 import { useWatchlist } from "@/lib/use-watchlist";
 import type { Country } from "@/lib/country";
@@ -44,6 +45,9 @@ function SignupWelcomeInner() {
     if (!welcome || fired.current) return;
     fired.current = true;
     trackEvent("sign_up", { method: welcome });
+    // ?welcome= is set by the OAuth callback for a NEW account only, so this
+    // is first-login-only by construction.
+    trackSignupComplete(welcome);
     // A localStorage stamp, not a server field — /api/me has no createdAt.
     // This is the only code that knows a sign-in just created an account, so
     // it's the natural place to mark it; WelcomeChecklist (P6) reads this to

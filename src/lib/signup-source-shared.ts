@@ -39,6 +39,12 @@ export const SIGNUP_SOURCES = new Set([
   // which promises the top three (2026-09-23). Separate from "gate", which is
   // retired, so the two can never be read as one series.
   "tool_preview",
+  // 2026-09-24 growth pass: the header's "Sign up free", the card page's
+  // one-click price-drop alert, and the two article-template CTAs.
+  "header",
+  "card_alert",
+  "article_intro",
+  "article_end",
   "other",
 ]);
 

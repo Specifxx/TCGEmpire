@@ -169,11 +169,14 @@ test("AuthForm's provider buttons attribute their clicks, defaulting to the logi
   const src = read("src/components/AuthForm.tsx");
   // Since Phase 2 a ?src= landing (urlSrc) outranks the generic default but
   // never outranks an explicit source prop from the mounting surface.
-  assert.match(src, /markSignupSource\(source \?\? urlSrc \?\? "login"\)/);
+  assert.match(src, /const placement = source \?\? urlSrc \?\? "login";\s*markSignupSource\(placement\);/);
+  // …and auth_start{provider,placement} (2026-09-24), which is why the handler
+  // now takes the provider.
+  assert.match(src, /trackAuthStart\(provider, placement\)/);
   // Both provider anchors carry the click handler — one instrumented button
   // and one silent one would skew every per-provider comparison.
-  const clicks = src.match(/onClick=\{onProviderClick\}/g) ?? [];
-  assert.equal(clicks.length, 2, "both provider anchors must fire the source click");
+  assert.match(src, /onClick=\{\(\) => onProviderClick\("google"\)\}/);
+  assert.match(src, /onClick=\{\(\) => onProviderClick\("discord"\)\}/);
 });
 
 // ── Schema + admin visibility ────────────────────────────────────────────────
@@ -213,16 +216,17 @@ test("the signed-out navbar names BOTH logging in and signing up, not just an ic
   // A lone "Sign in" reads as a door for people who already have an account, so
   // a first-time visitor has no reason to think it's for them. Both halves must
   // be named — that's what makes the header an entry point, not a return path.
-  assert.match(src, />\s*Log in \/ Sign up\s*<\/Link>/, "the sm+ pill must name both halves");
-  // Below sm the glyph can't carry text, so its accessible name must.
-  assert.match(src, /aria-label="Log in or sign up"/, "the mobile icon needs both halves in its label");
-  // ONE control, not two: both words open the same OAuth screen (there is no
-  // separate registration flow), so two links would imply a distinction the
-  // auth system doesn't have.
+  // REVISED 2026-09-24 (growth-pass brief): TWO visible controls at every
+  // width — a quiet "Log in" and a primary "Sign up free". The old single pill
+  // hid below sm behind an unlabeled glyph, so phones were never asked to sign
+  // up. Both still open the same OAuth screen; the split names two audiences.
+  assert.match(src, />\s*Log in\s*<\/Link>/, "a visible Log in link");
+  assert.match(src, /Sign up<span className="hidden min-\[420px\]:inline">&nbsp;free<\/span>/, "a visible Sign up free button");
+  assert.match(src, /className="btn-primary whitespace-nowrap px-2\.5 py-1\.5 text-xs"/, "sign-up is the primary");
+  assert.doesNotMatch(src, /sm:hidden|hidden whitespace-nowrap px-3/, "neither control hides at any width");
   const links = src.match(/href=\{loginHref\}/g) ?? [];
-  assert.equal(links.length, 2, "expected exactly the sm+ pill and the below-sm icon, both to /login");
-  assert.match(src, /hidden whitespace-nowrap px-3 py-1\.5 text-xs sm:inline-flex/);
-  assert.match(src, /sm:hidden/);
+  assert.equal(links.length, 2, "both go to /login with the return path");
+  assert.match(src, /trackSignupCta\("header"\)/);
   const nofollow = src.match(/rel="nofollow"/g) ?? [];
   assert.ok(nofollow.length >= 2, "both signed-out links must keep rel=nofollow");
 });

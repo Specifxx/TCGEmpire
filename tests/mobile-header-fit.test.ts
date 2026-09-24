@@ -138,13 +138,21 @@ test("Premium keeps its phone slot — it was an explicit brief, not incidental"
   for (const t of ["shrink-0", "whitespace-nowrap", "min-h-11", "min-w-11", "lg:hidden"]) {
     assert.ok(premClass.split(/\s+/).includes(t), `Premium must keep "${t}" (has: ${premClass})`);
   }
+  // 2026-09-24 (growth pass): the row now carries "Log in" + "Sign up" at every
+  // width, which costs ~70px on a phone. Measured: logo, Database, "✦ Premium",
+  // Log in, Sign up and the menu need ~374px with their 44px targets, so the
+  // word moves to 400px, the glyph shows from 360px, and below 360px Premium is
+  // reached from the menu's Premium spotlight. The market switcher moved into
+  // the menu below sm in the same change.
+  assert.match(premClass, /\bhidden\b/);
+  assert.match(premClass, /min-\[360px\]:inline-flex/);
   // THE WORD IS BACK. It shipped icon-only below sm for one release and was
   // rejected: "for the premium rides, it's gone now… it's just a diamond. I need
   // the actual premium letters to show up." The text now renders from 360px up —
   // every phone in real use — and the ~40px it needed was paid for by tightening
   // three things rather than dropping a control: px-4 -> px-3 below sm, text-sm
   // -> text-xs below sm, and the country switcher's chevron (see below).
-  assert.match(row, /✦<span className="hidden min-\[360px\]:inline"> Premium<\/span>/);
+  assert.match(row, /✦<span className="hidden min-\[400px\]:inline"> Premium<\/span>/);
   // Under 360px the glyph alone is all that fits beside five 44px targets; it
   // must still BE a 44px target.
   assert.match(row, /min-w-11/);

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { markSignupSource, stashSignupSource } from "@/lib/signup-source";
+import { trackAuthStart } from "@/lib/growth-events";
 
 // Sign-in is OAUTH ONLY — Google and Discord. The email/password form, /register,
 // /forgot and /reset were removed along with their API routes.
@@ -90,8 +91,10 @@ export function AuthForm({
   // so the provider click below attributes to the CAMPAIGN, not the generic
   // "login" default that would otherwise clobber it.
   const [urlSrc, setUrlSrc] = useState<string | null>(null);
-  const onProviderClick = () => {
-    markSignupSource(source ?? urlSrc ?? "login");
+  const onProviderClick = (provider: "google" | "discord") => {
+    const placement = source ?? urlSrc ?? "login";
+    markSignupSource(placement);
+    trackAuthStart(provider, placement);
     onProviderClickProp?.();
   };
   const oauthHref = (provider: "google" | "discord") =>
@@ -157,7 +160,7 @@ export function AuthForm({
           {providers.includes("google") && (
             <a
               href={oauthHref("google")}
-              onClick={onProviderClick}
+              onClick={() => onProviderClick("google")}
               className="flex items-center justify-center gap-2.5 rounded-xl border border-ink-600 bg-[#ffffff] py-2.5 text-sm font-semibold text-[#0a0c10] hover:brightness-95"
             >
               <GoogleIcon /> Continue with Google
@@ -166,7 +169,7 @@ export function AuthForm({
           {providers.includes("discord") && (
             <a
               href={oauthHref("discord")}
-              onClick={onProviderClick}
+              onClick={() => onProviderClick("discord")}
               // text-[#ffffff], not text-white: `white` is the themed token (near-black
               // ink in light, 4.17:1 on the blurple). Same rule as Google's button above.
               className="flex items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] py-2.5 text-sm font-semibold text-[#ffffff] hover:brightness-110"

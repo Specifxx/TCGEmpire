@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Country } from "./country";
 import { trackEvent } from "./analytics";
+import { trackAlertCreated } from "./growth-events";
 import { fetchMe } from "./use-me";
 
 // Shared client-side view of "which cards am I watching?".
@@ -116,6 +117,10 @@ export function useWatchlist(): WatchlistApi {
         publish();
         return false;
       }
+      // Every account alert goes through here — the bell, the card page's
+      // one-click alert, and the pending watch SignupWelcome completes after
+      // an OAuth sign-up — so one event covers all of them.
+      trackAlertCreated(true);
       return true;
     },
     async unwatch(cardId) {

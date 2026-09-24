@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import type { Article, ArticleCloseUp, ArticleEmbed } from "@/lib/articles";
 import { ARTICLES } from "@/lib/articles";
@@ -25,6 +26,7 @@ import { Picture } from "./Picture";
 import { getPopularCards } from "@/lib/cheapest-cards";
 import { ScrollDepthTracker } from "./ScrollDepthTracker";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { ArticleSignupCta } from "./ArticleSignupCta";
 import { isBeforeRadianceRelease } from "@/lib/sets/radiance";
 
 // A card printed beyond the set's total (e.g. 167/166) or carrying an SP special
@@ -235,6 +237,7 @@ const DEFAULT_BROWSE_CTA = {
 export async function ArticleView({ article }: { article: Article }) {
   const related = relatedArticles(article);
   const cta = article.browseCta ?? DEFAULT_BROWSE_CTA;
+  const radianceSeason = isBeforeRadianceRelease();
 
   // All galleries: `embeds` (positioned in the body via [[embed:N]] markers) plus
   // the legacy single `embed` (always rendered after the body). Close-ups reuse the
@@ -431,6 +434,21 @@ export async function ArticleView({ article }: { article: Article }) {
             instead of piling up at the end. Split stride is 3: text, marker kind,
             marker index (undefined for `shop`, which takes no index). */}
         {bodyParts.map((part, i) => {
+          // The intro CTA sits at the end of the article's intro: the text
+          // before its first "## " heading, inside the first body chunk. A body
+          // with no H2 before its first marker gets it after that chunk.
+          if (i === 0) {
+            const cut = part.search(/\n## /);
+            const intro = cut > 0 ? part.slice(0, cut) : part;
+            const rest = cut > 0 ? part.slice(cut) : "";
+            return (
+              <Fragment key={i}>
+                {intro.trim() ? <Markdown content={intro} /> : null}
+                <ArticleSignupCta placement="article_intro" radianceSeason={radianceSeason} />
+                {rest.trim() ? <Markdown content={rest} /> : null}
+              </Fragment>
+            );
+          }
           if (i % 3 === 0) return part.trim() ? <Markdown key={i} content={part} /> : null;
           if (i % 3 === 2) return null; // the index token — consumed with its kind below
           const n = parseInt(bodyParts[i + 1], 10);
@@ -543,6 +561,13 @@ export async function ArticleView({ article }: { article: Article }) {
           at mt-4 the what-we-know post's capture sat 16px under the FAQ
           accordion and 32px above "Ready to buy?", reading as part of the FAQ
           (d1440, 2026-09-23). */}
+      {/* The end-of-article sign-up CTA (2026-09-24). A radiance-tagged post
+          before release already ends on the release-day capture just below,
+          so it gets that one instead of two stacked email forms. */}
+      {!(article.tags.includes("radiance") && radianceSeason) && (
+        <ArticleSignupCta placement="article_end" radianceSeason={radianceSeason} />
+      )}
+
       {article.tags.includes("radiance") && isBeforeRadianceRelease() && (
         <div className={cta.href !== "/radiance-preorders" ? "mt-4" : "mt-8"}>
           <NewsletterSignup

@@ -11802,3 +11802,51 @@ because this rewrite is its first substantive edit.
 Empower and Flow now read "How It Works & Every Card". Each page carries an
 every-card gallery, so the title names something the page actually has. Burn
 keeps the old shape; the pinned test accepts both.
+
+**4. Sign-ups.**
+
+- **Header.** Signed-out visitors see a quiet "Log in" and a primary "Sign up
+  free" at every width. Both go to `/login` with the return path and
+  rel=nofollow. Before this, phones got only an unlabeled person glyph.
+  - Room came from moving the market switcher into the menu overlay's top bar
+    below sm. It is auto-detected from IP, so it is the least-used control in
+    the row.
+  - At 360px, the logo, Database, "✦ Premium", Log in, Sign up and the menu
+    need about 374px with 44px targets. So "Premium" now reads as ✦ from 360px
+    and as a word from 400px (it was a word from 360px); below 360px it is
+    reached through the menu's Premium spotlight. "free" shows from 420px.
+    This trades against the owner's earlier "I need the actual premium
+    letters" and is noted here so it can be reversed.
+  - Verified in Chromium, signed out, on `/` and `/browse` from 320 to 1440px:
+    no overlapping controls and nothing past the viewport. The existing
+    `mobile-check` sweep missed the overlap because it only measures overflow.
+- **Card pages.** "Get a price-drop alert" is the primary CTA directly under
+  the cheapest price.
+  - Signed in, one click creates the alert.
+  - Signed out, "Continue with Google/Discord" creates the account and the
+    alert together. The pending watch is stashed before the redirect, `?next=`
+    returns to the card, and `SignupWelcome` completes the watch on return.
+    That is the existing `PriceAlertModal` mechanism.
+  - Email-only stays as the secondary option. It becomes the primary when no
+    OAuth provider is configured.
+- **Articles.** Every blog and guide gets an inline CTA after its intro (before
+  the first `##`) and another at the end. A Radiance post before release keeps
+  its release-day capture instead of a second end form.
+  - Until 23 October the heading reads "Get Radiance spoilers + price moves by
+    email". **That promise needed a change to the email to be true:** the
+    weekly digest, for subscribers and accounts alike, now carries a "New
+    Radiance reveals this week" section (DB cards imported in the last 7 days,
+    linking the tracker). A reveals-only week still sends. Both switch off on
+    `isBeforeRadianceRelease()`.
+- **Events** (`lib/growth-events.ts`, via `trackEvent`, so Vercel and GA4):
+  - `signup_cta_click{placement}`
+  - `auth_start{provider,placement}`
+  - `signup_complete{provider,placement}`: first login only, because the
+    callback sets `?welcome=` only for new accounts. The placement is carried
+    across the OAuth round trip in localStorage.
+  - `alert_created{logged_in}`: from `use-watchlist` for every account alert,
+    and from the email modal.
+  - `newsletter_signup{placement}`
+
+  All are low-volume, so none is GA4-only. New signup sources: header,
+  card_alert, article_intro, article_end.

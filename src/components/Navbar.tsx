@@ -141,10 +141,10 @@ export function Navbar() {
             surface="nav:navbar"
             aria-label="Premium"
             title="Premium"
-            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
+            className="hidden min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-gold hover:bg-ink-800 min-[360px]:inline-flex sm:min-w-0 sm:px-2.5 sm:text-sm lg:hidden"
           >
             <span className="premium-shimmer animate-premium-shimmer motion-reduce:animate-none">
-              ✦<span className="hidden min-[360px]:inline"> Premium</span>
+              ✦<span className="hidden min-[400px]:inline"> Premium</span>
             </span>
           </PremiumNavLink>
 
@@ -384,7 +384,12 @@ export function Navbar() {
               copy of a control the overlay owns, and the overlay's version reads
               its state in words rather than as an ambiguous glyph. */}
           <ThemeToggle className="hidden lg:grid" />
-          <CountrySwitcher className="ml-0.5 sm:ml-1" />
+          {/* Below sm the market switcher lives in the menu overlay's top bar
+              (CinematicNavMenu), 2026-09-24: the signed-out row now carries
+              "Log in" + "Sign up free" at every width, and the market is
+              auto-detected from the visitor's IP, which makes the switcher the
+              least-used control in the row. */}
+          <CountrySwitcher className="hidden sm:ml-1 sm:block" />
           <NavUser />
           {/* THE PHONE/TABLET MENU, BACK IN THE HEADER. Below lg only — from lg
               the ⌘K launcher above is the full-nav surface and the SideNav rail

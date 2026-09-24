@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { useMe } from "@/lib/use-me";
 import { useDismiss } from "@/lib/use-dismiss";
 import { markSignupSource } from "@/lib/signup-source";
+import { trackSignupCta } from "@/lib/growth-events";
 
 // Auth routes we never want to "return to" after sign-in (would loop).
 const AUTH_PATHS = ["/login", "/verify"];
@@ -70,28 +71,37 @@ export function UserMenu({ user }: { user: MenuUser | null }) {
     // `sm` the icon still stays — its label carries both words for screen
     // readers even though the glyph can't. Both keep rel="nofollow" and the
     // ?next= carry (see the SEO note above).
+    // 2026-09-24 (growth pass): TWO controls at every width — "Log in" as a
+    // quiet text link and "Sign up free" as the primary button. The earlier
+    // single "Log in / Sign up" button hid below sm behind an unlabeled person
+    // glyph, so a phone visitor was never actually asked to sign up. Both still
+    // go to the same OAuth screen with the ?next= return path and rel=nofollow;
+    // the split names the two audiences, not two flows. Room was made by moving
+    // the Discord icon into the menu below xl (Navbar.tsx).
     return (
       <>
         <Link
           href={loginHref}
           rel="nofollow"
           onClick={() => markSignupSource("navbar")}
-          className="btn-primary hidden whitespace-nowrap px-3 py-1.5 text-xs sm:inline-flex"
+          className="tap-link whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold text-slate-200 hover:bg-ink-800 hover:text-white sm:px-2"
         >
-          Log in / Sign up
+          Log in
         </Link>
         <Link
           href={loginHref}
           rel="nofollow"
-          aria-label="Log in or sign up"
-          title="Log in or sign up"
-          onClick={() => markSignupSource("navbar")}
-          className="tap-icon rounded-lg text-slate-200 hover:bg-ink-800 hover:text-white sm:hidden"
+          onClick={() => {
+            markSignupSource("header");
+            trackSignupCta("header");
+          }}
+          className="btn-primary whitespace-nowrap px-2.5 py-1.5 text-xs"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
-          </svg>
+          {/* One flex child: .btn is a gapped flex row, so a loose "free"
+              span would sit a whole gap away from "Sign up". */}
+          <span>
+            Sign up<span className="hidden min-[420px]:inline">&nbsp;free</span>
+          </span>
         </Link>
       </>
     );

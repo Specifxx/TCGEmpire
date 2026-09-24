@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PremiumNavLink } from "./PremiumNavLink";
+import { CountrySwitcher } from "./CountrySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
@@ -300,6 +301,9 @@ export function CinematicNavMenu() {
                   Rift<span className="text-brand-400">Compare</span>
                 </span>
               </Link>
+              {/* The market switcher, phones only — it leaves the header row
+                  below sm (Navbar.tsx) and lands here, one tap away. */}
+              <CountrySwitcher className="ml-auto sm:hidden" />
               <button
                 type="button"
                 data-autofocus

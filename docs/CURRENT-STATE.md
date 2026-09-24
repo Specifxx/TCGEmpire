@@ -158,7 +158,10 @@ longer lands on its entry.
   from sm, opening a right-side drawer; `/watching` stays.
   [2026-09-18](../DECISIONS.md#L8349), [2026-09-22](../DECISIONS.md#L10260)
 - **Gold marks Premium**, so a non-Premium action never wears it. Phones show
-  "✦ Premium" beside Database, with text from 360px.
+  "✦" beside Database from 360px and the word from 400px (below 360, the
+  menu's Premium spotlight). Signed-out visitors see "Log in" and a primary
+  "Sign up free" at every width; below sm the market switcher lives in the
+  menu's top bar. [2026-09-24](../DECISIONS.md#L11717)
   [2026-09-16](../DECISIONS.md#L7031), [2026-09-18](../DECISIONS.md#L8417)
 - **Homepage order:** Recently viewed (returning visitors), Top Deals, eBay
   Picks, the popular carousel, Riftle/pack-sim, How it works.

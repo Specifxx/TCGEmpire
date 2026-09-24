@@ -7,6 +7,48 @@ import { currencyOf, normalizeCountry, COUNTRIES, type Country } from "./country
 import { cardHref } from "./card-url";
 import { SITE_URL } from "./site";
 import { ebaySearchUrl } from "./affiliate";
+import { isBeforeRadianceRelease } from "./sets/radiance";
+
+/** A newly imported card for the digest's "new reveals" section. */
+export interface RevealRow {
+  id: string;
+  slug: string | null;
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+}
+
+// "New Radiance reveals this week" (2026-09-24 growth pass). The article CTAs
+// now say "Get Radiance spoilers + price moves by email" until release day, and
+// this is what makes that sentence true: the weekly digest lists every Radiance
+// card our database imported in the last 7 days — official reveals only, the
+// same rows the spoiler tracker's gallery shows — and links the tracker.
+// Switches itself off on release day (isBeforeRadianceRelease).
+function revealsSection(reveals: RevealRow[]): string {
+  if (!reveals.length) return "";
+  return `<tr><td style="padding:14px 32px 0;font-size:13px;font-weight:700;color:#34d17e">✨ New Radiance reveals this week</td></tr>
+    <tr><td style="padding:0 32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${reveals
+      .map(
+        (c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #233047">
+      <a href="${utm(cardHref(c))}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${c.name}</a>
+      <div style="font-size:12px;color:#6b7585;margin-top:2px">${c.setCode} · ${c.collectorNumber}</div></td></tr>`,
+      )
+      .join("")}</table></td></tr>
+    <tr><td style="padding:8px 32px 0;font-size:13px"><a href="${utm("/blog/riftbound-radiance-spoilers")}" style="color:#34d17e;font-weight:700;text-decoration:none">Every Radiance card revealed so far →</a></td></tr>`;
+}
+
+/** Radiance cards imported in the last 7 days, while the set is unreleased. */
+export async function recentRadianceReveals(now = new Date()): Promise<RevealRow[]> {
+  if (!isBeforeRadianceRelease(now)) return [];
+  return prisma.card
+    .findMany({
+      where: { setCode: "RAD", isPromo: false, createdAt: { gte: new Date(now.getTime() - 7 * 86400_000) } },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+      select: { id: true, slug: true, name: true, setCode: true, collectorNumber: true },
+    })
+    .catch(() => []);
+}
 
 export interface NewsletterRunSummary {
   edition: string; // e.g. "2026-W24"
@@ -74,8 +116,9 @@ export interface Digest {
 // permanently-ageing legacy row — i.e. mailing subscribers a months-old,
 // noindexed page as though it were this week's. The digest now points at /movers
 // (live, always current) instead.
-export function buildDigest(movers: PriceMovers, market: Country): Digest | null {
-  if (!movers.spiking.length && !movers.plummeting.length && !movers.value.length) return null;
+export function buildDigest(movers: PriceMovers, market: Country, reveals: RevealRow[] = []): Digest | null {
+  const quietMarket = !movers.spiking.length && !movers.plummeting.length && !movers.value.length;
+  if (quietMarket && !reveals.length) return null;
 
   const info = COUNTRIES[market];
   const currency = currencyOf(market);
@@ -86,12 +129,15 @@ export function buildDigest(movers: PriceMovers, market: Country): Digest | null
   if (topDrop) bits.push(`${topDrop.card.name} ${signedPct(topDrop.pct)}`);
   const subject = bits.length
     ? `📊 Riftbound this week: ${bits.join(", ")}`
-    : "📊 Your weekly Riftbound Index summary";
+    : reveals.length
+      ? `✨ ${reveals.length} new Radiance ${reveals.length === 1 ? "reveal" : "reveals"} this week`
+      : "📊 Your weekly Riftbound Index summary";
 
   const inner = `
     <tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">
       The week's biggest Riftbound price moves, from live lowest in-stock prices compared across ${info.adjective} stores.
     </td></tr>
+    ${revealsSection(reveals)}
     ${section("📈 Spiking this week", movers.spiking, currency, 5, market)}
     ${section("📉 Biggest drops", movers.plummeting, currency, 5, market)}
     ${section("💎 Best value vs recent high", movers.value, currency, 3, market)}
@@ -121,11 +167,12 @@ export async function runNewsletterDigest(): Promise<NewsletterRunSummary> {
 
   // One digest per market, computed once and reused for every subscriber in it.
   const digests = new Map<Country, Digest | null>();
+  const reveals = await recentRadianceReveals();
   for (const sub of due) {
     const market = normalizeCountry(sub.market);
     if (!digests.has(market)) {
       const movers = await getPriceMovers(market, 8);
-      digests.set(market, buildDigest(movers, market));
+      digests.set(market, buildDigest(movers, market, reveals));
       if (!digests.get(market)) summary.quietMarkets.push(market);
     }
     const digest = digests.get(market);
