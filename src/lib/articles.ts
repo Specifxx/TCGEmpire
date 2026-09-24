@@ -501,7 +501,7 @@ Riot's other limited bundle, the **[Gift of the Rift anniversary bundle](/blog/r
     category: "guide",
     title: "Riftbound Deck Archetypes: A Complete Guide",
     excerpt:
-      "Aggro, Tempo, Midrange and six more specific tags on top of them — what each Riftbound deck archetype is actually trying to do, how to recognise one from its list, which to build first, and how to price it once you have chosen.",
+      "Aggro, Tempo, Midrange and six more tags — what each Riftbound archetype is trying to do, how to spot one from its list, and which to build first.",
     author: "RiftCompare",
     date: "2026-08-30",
     // 12 Sep 2026: made evergreen. This guide used to quote counts, tiers and
@@ -2509,7 +2509,7 @@ Two more reads before a first order: **[the beginner mistakes that cost money](/
     category: "guide",
     title: "Cheapest Riftbound Booster Boxes & Sealed",
     excerpt:
-      "How to find the cheapest Riftbound: League of Legends TCG booster boxes and sealed product across Australia, the US, the UK, Singapore, Canada and the EU — and whether boxes or singles are better value.",
+      "Where Riftbound booster boxes and sealed product are cheapest across six markets, and whether boxes or singles are the better value.",
     author: "RiftCompare",
     date: "2026-06-08",
     readMins: 5,
@@ -2599,7 +2599,7 @@ Ready to buy? **[Compare Riftbound booster box prices now](/sealed)**, or if you
     category: "guide",
     title: "Most Valuable Riftbound Cards",
     excerpt:
-      "What makes a Riftbound: League of Legends TCG card valuable — the chase rares, alt-arts, Showcase, Signature and promo printings — and how to check any card's live price.",
+      "What makes a Riftbound card valuable — chase rares, alt-arts, Showcase, Signature and promo printings — and how to check any card's live price.",
     author: "RiftCompare",
     date: "2026-06-08",
     readMins: 5,
@@ -3346,7 +3346,7 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
     category: "guide",
     title: "Best Basket: Cheapest Way to Buy a Deck",
     excerpt:
-      "Pricing every card at its own cheapest store usually means paying postage a dozen times over. Best Basket finds the store split that's actually cheapest delivered — here's exactly how it works.",
+      "Buying each card at its own cheapest store means paying postage a dozen times. Best Basket finds the store split that is cheapest delivered.",
     author: "RiftCompare",
     date: "2026-08-24",
     readMins: 6,
@@ -3424,7 +3424,7 @@ It matters least for a single chase card or a short shopping list of two or thre
     category: "guide",
     title: "Riftbound Box EV: Rip or Buy Singles?",
     excerpt:
-      "Booster box \"EV\" gets thrown around a lot, but most explanations skip the part that actually matters: when the math tells you to stop ripping and start buying singles.",
+      "Booster box EV gets thrown around a lot. Here is the part most explanations skip: when the maths says stop ripping and start buying singles.",
     author: "RiftCompare",
     date: "2026-07-01",
     readMins: 5,
@@ -3575,7 +3575,7 @@ It also doesn't require a large bankroll to start. Watching a handful of cards y
     category: "guide",
     title: "What Is the RiftCompare Index?",
     excerpt:
-      "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
+      "What the RiftCompare Index tracks, how it is built from a basket of cards, and why it beats any single card's price as a health check.",
     author: "RiftCompare",
     date: "2026-07-01",
     updated: "2026-09-23",
@@ -3833,7 +3833,7 @@ Both card types feed Vendetta's rivalry identity — Domains pitted against thei
     category: "guide",
     title: "Building for Riftbound Vendetta",
     excerpt:
-      "How Vendetta's new mechanics and domain pairings point toward fresh Riftbound archetypes — plus the champions, chase cards and value to watch as early singles start trading.",
+      "How Vendetta's mechanics and domain pairings point toward new archetypes, plus the champions and chase cards to watch as singles start trading.",
     author: "RiftCompare",
     date: "2026-07-07",
     updated: "2026-07-31",
@@ -4482,7 +4482,7 @@ If you're running either card, both bans take effect **18 September 2026** — s
     category: "blog",
     title: "Riftbound Neeko Spoiler: Blending In",
     excerpt:
-      "The first Riftbound: Radiance card photographed in print is Neeko, Blending In — a 6-cost Neutral Champion Unit that hands you three extra Legends. Its collector number also settles how big Radiance actually is.",
+      "The first Radiance card photographed in print: Neeko, Blending In, a 6-cost Neutral Champion Unit that hands you three extra Legends.",
     author: "RiftCompare",
     date: "2026-09-19",
     readMins: 8,
@@ -5384,7 +5384,7 @@ Burn cards are live with real prices on the **[Vendetta set page](/sets/vendetta
     category: "guide",
     title: "Riftbound Combat Keywords Explained",
     excerpt:
-      "A plain-English guide to Riftbound's six combat keywords — Tank, Shield, Deflect, Assault, Backline and Ganking — how each one changes damage assignment or movement, and how to build a defensive (or aggressive) shell around them.",
+      "Riftbound's six combat keywords — Tank, Shield, Deflect, Assault, Backline and Ganking — and how each one changes damage or movement.",
     author: "RiftCompare",
     date: "2026-08-12",
     readMins: 6,
@@ -5521,7 +5521,7 @@ The other keyword families are covered the same way: **[combat keywords](/guides
     category: "guide",
     title: "Riftbound Growth Keywords Explained",
     excerpt:
-      "Eight Riftbound keywords built around scaling up over the course of a game — XP thresholds, playing multiple cards a turn, equipping gear, card selection and death triggers, all explained in plain English.",
+      "Eight Riftbound keywords built on scaling up — XP thresholds, extra plays a turn, equipping gear, card selection and death triggers.",
     author: "RiftCompare",
     date: "2026-08-12",
     readMins: 7,
@@ -5601,7 +5601,7 @@ The other keyword families are covered the same way: **[combat keywords](/guides
     category: "guide",
     title: "Riftbound Game Actions Explained",
     excerpt:
-      "The verbs Riftbound cards actually use inside their ability text — Buff, Stun, Predict, Add, Repeat, Temporary, Unique and Mighty — explained precisely, straight from the Core Rules.",
+      "The verbs inside Riftbound ability text — Buff, Stun, Predict, Add, Repeat, Temporary, Unique and Mighty — straight from the Core Rules.",
     author: "RiftCompare",
     date: "2026-08-12",
     readMins: 6,
@@ -5661,7 +5661,7 @@ The keyword families these verbs appear inside are covered in **[combat keywords
     category: "guide",
     title: "Riftbound Vendetta Overnumbers Explained",
     excerpt:
-      "What are Overnumbered and Rival Overnumber cards in Riftbound: Vendetta? A guide to the set's premium chase cards — the signed Legend variants and the 22 rivalry diptychs — and why collectors want them.",
+      "Overnumbered and Rival Overnumber cards are Vendetta's premium chase: signed Legend variants and 22 rivalry diptychs. What they are, and why.",
     author: "RiftCompare",
     date: "2026-07-09",
     updated: "2026-07-31",
@@ -6987,7 +6987,7 @@ For a worked example of a card that moved on play rather than scarcity — an Ep
     category: "guide",
     title: "The Cheapest Way to Start Riftbound",
     excerpt:
-      "Every realistic way into Riftbound compared on cost: a ready-to-play deck, a starter product, singles for one deck, or a booster box. What each actually gets you, what to skip first, and how to check live prices in your own market.",
+      "Every realistic way into Riftbound compared on cost: a ready-to-play deck, a starter, singles, or a booster box. What to buy and what to skip.",
     author: "RiftCompare",
     date: "2026-07-31",
     updated: "2026-07-31",
@@ -8068,7 +8068,7 @@ For the sets on either side of it, we've written the same breakdown for [Origins
     category: "guide",
     title: "What's in the Riftbound Unleashed Set?",
     excerpt:
-      "219 base cards, 61 Showcase-tier printings and 12 Legends — the real rarity, domain and card-type breakdown of Riftbound's Unleashed set, counted from our own catalogue.",
+      "219 base cards, 61 Showcase printings and 12 Legends — the real rarity, domain and card-type breakdown of Unleashed, from our own catalogue.",
     author: "RiftCompare",
     date: "2026-09-10",
     readMins: 8,
@@ -9277,7 +9277,7 @@ If neither of those describes how you use the site, the free tier — which stil
     category: "blog",
     title: "Riftbound Meta Shift: Singapore & Radiance",
     excerpt:
-      "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final to Ornn. Singapore is deciding round two live, and Radiance's five confirmed champions show where Riot's marketing already went.",
+      "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final. What Singapore and Radiance change next.",
     author: "RiftCompare",
     date: "2026-09-05",
     // 12 Sep 2026: Radiance facts corrected — Ekko's revealed card is his LEGEND
@@ -9406,7 +9406,7 @@ We'll be watching Singapore's Top 8 the moment it's final — and reading it the
     category: "blog",
     title: "Why Radiance Is Riftbound's Biggest Set Yet",
     excerpt:
-      "Radiance is the smallest main Riftbound set yet by base cards — and by some distance the most Showcase-dense. Why 23 October is still the game's biggest release since Origins: it completes K/DA and unlocks a Seraphine that already trades.",
+      "Radiance is the smallest main Riftbound set by base cards and the most Showcase-dense. Why 23 October is still the biggest release since Origins.",
     author: "RiftCompare Markets Desk",
     date: "2026-09-05",
     // 12 Sep 2026: product MSRPs (distributor sheet), the Ultimate Rare and the
@@ -9742,7 +9742,7 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
     category: "blog",
     title: "Riftbound Legacy Spoilers: Set 6's 346 Cards",
     excerpt:
-      "Legacy lands 29 January 2027 with 346 cards, 93 Showcase, a regional-identity theme and the first pack-composition change Riftbound has made. Our read on the size claim, the draft pivot, and how big the game will be by then.",
+      "Legacy lands 29 January 2027 with 346 cards, 93 Showcase and the first pack-composition change Riftbound has made. Our read on the claims.",
     author: "RiftCompare Markets Desk",
     date: "2026-09-12",
     readMins: 14,
@@ -9983,7 +9983,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
     category: "blog",
     title: "Riftbound Gift of the Rift Bundle: Contents",
     excerpt:
-      "What is in the Gift of the Rift anniversary bundle, when and where to buy it, and an honest read on where the price goes — including why the usual “limited promo moons” argument does not apply cleanly here.",
+      "What is in the Gift of the Rift anniversary bundle, where to buy it, and an honest read on why the usual limited-promo argument does not fit.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 9,
@@ -10369,7 +10369,7 @@ Then store the rest properly and stop thinking about it: **[how to store and pro
     category: "blog",
     title: "Are Riftbound Cards Cheaper Abroad?",
     excerpt:
-      "Sometimes — but the currency gap is rarely the reason, and shipping plus import tax undoes most of it. How to work out whether importing Riftbound singles or sealed actually saves you money, using live prices in six markets.",
+      "Sometimes, but shipping and import tax undo most of it. How to work out whether importing Riftbound singles or sealed actually saves you money.",
     author: "RiftCompare Markets Desk",
     date: "2026-09-12",
     readMins: 10,
@@ -10548,7 +10548,7 @@ If you are on the other side of that gap — buying where it is cheap to sell wh
     category: "guide",
     title: "How Much Is Your Riftbound Collection Worth?",
     excerpt:
-      "Your collection has three different values, and only one of them is the number you would actually receive. How to value Riftbound cards properly — bulk pricing, condition, market choice and the traps that inflate the total.",
+      "Your collection has three values and only one is what you would receive. Bulk pricing, condition, market choice, and the traps that inflate it.",
     author: "RiftCompare",
     date: "2026-09-12",
     readMins: 10,

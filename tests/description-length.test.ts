@@ -19,7 +19,10 @@ import { ARTICLES } from "../src/lib/articles";
 // were over this cap against 26% of blog ones. 29,875 impressions — 18% of the
 // site's total — were sitting on a description cut off mid-sentence.
 //
-// Driven to 21 the same day. What this test does is stop the number going UP,
+// Driven to 1 on 2026-09-24. The survivor is the Radiance leak post, left
+// deliberately: it is the site's best page (8,142 impressions at 11.19% CTR)
+// and mid-news-cycle, so editing it to save 44 characters trades a working
+// page for a rule. What this test does is stop the number going UP,
 // and force it down as pages are fixed: add an over-length excerpt and the count
 // rises and this fails; fix a batch and lower BUDGET in the same commit.
 //
@@ -30,7 +33,7 @@ import { ARTICLES } from "../src/lib/articles";
 // underneath them). Set it once, at the end, from a single count.
 //
 // The right long-term value of BUDGET is 0.
-const BUDGET = 21;
+const BUDGET = 1;
 const MAX = 155;
 
 test("no new over-length article descriptions", () => {
