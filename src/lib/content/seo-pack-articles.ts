@@ -97,7 +97,7 @@ export const SEO_PACK_ARTICLES: Article[] = [
   {
     slug: "riftbound-card-values",
     category: "blog",
-    title: "Riftbound Card Values: Live US Prices & Top Movers",
+    title: "Riftbound Card Values: Live Prices & Movers",
     excerpt:
       "Discover real-time Riftbound card values with our live price tracker. Get accurate prices before you buy, sell or grade.",
     author: AUTHOR,

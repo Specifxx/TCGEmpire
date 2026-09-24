@@ -189,7 +189,7 @@ export const ARTICLES: Article[] = [
   {
     slug: "riftbound-seraphine-radiance-spoiler",
     category: "blog",
-    title: "Riftbound Seraphine Spoiler: Starry-Eyed Songstress, the Legend in Print",
+    title: "Riftbound Seraphine Spoiler: Her Legend Card",
     excerpt:
       "Seraphine's Riftbound: Radiance Legend, Starry-Eyed Songstress, is pictured in print: a spell-cost engine in a promo and an over-numbered chase.",
     author: "RiftCompare",
@@ -356,7 +356,7 @@ For the running list of everything Riot has genuinely shown — kept strictly se
   {
     slug: "riftbound-secret-garden-bundle",
     category: "blog",
-    title: "Riftbound Secret Garden Bundle: Price, Contents & Where to Find One",
+    title: "Riftbound Secret Garden Bundle: What's In It",
     excerpt:
       "What's in Riot's US$70 Secret Garden Bundle, every 2026 event where you can still buy one, and the supply map behind its Europe-vs-US price gap.",
     author: "RiftCompare",
@@ -1341,7 +1341,7 @@ Nothing here is buyable yet — Radiance doesn't release until 23 October 2026, 
   {
     slug: "riftbound-deploy-explained",
     category: "guide",
-    title: "Riftbound Deploy Explained: The Leaked Radiance Mechanic",
+    title: "Riftbound Deploy Explained: Leaked Mechanic",
     excerpt:
       "Lose the battlefield, lose the card outright: the leaked Deploy wording in full, why it's a riskier trade than Equip, and what Riot has yet to confirm.",
     author: "RiftCompare",
@@ -1430,7 +1430,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
   {
     slug: "riftbound-showoff-explained",
     category: "guide",
-    title: "Riftbound Showoff Explained: The Leaked Radiance Mechanic",
+    title: "Riftbound Showoff Explained: Leaked Mechanic",
     excerpt:
       "Reveal from hand or point at a friendly card: what Riftbound's leaked Showoff keyword reportedly does, how it differs from Vision, and what's unconfirmed.",
     author: "RiftCompare",
@@ -1516,7 +1516,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
   {
     slug: "riftbound-disarm-explained",
     category: "guide",
-    title: "Riftbound Disarm Explained: The Leaked Radiance Mechanic",
+    title: "Riftbound Disarm Explained: Leaked Mechanic",
     excerpt:
       "What Riftbound's leaked Disarm keyword reportedly does, how it compares to the existing Assault keyword, and why it isn't Riot-confirmed yet.",
     author: "RiftCompare",
@@ -1607,7 +1607,7 @@ No. This is reported from a fan photo of Riot's own physical demo reference mate
   {
     slug: "gradient-sleeves-for-riftbound-cards",
     category: "guide",
-    title: "Gradient Sleeves for Riftbound Cards: Complete Guide",
+    title: "Gradient Sleeves for Riftbound Cards",
     excerpt:
       "Match a colour fade to your deck's domains and buy a 100-count pack for a 65-70 card kit. Any standard-size sleeve fits Riftbound, no special sizing.",
     author: "RiftCompare",
@@ -1839,7 +1839,7 @@ We will update this page when any of the following happens, and not before: Riot
   {
     slug: "best-riftbound-cards",
     category: "guide",
-    title: "Best Riftbound Cards: The Most-Wanted Cards, Priced",
+    title: "Best Riftbound Cards: Most-Wanted, Priced",
     excerpt:
       "The Riftbound cards players search for most, ranked by real demand and priced live in your market. Measured, not rated, and refreshed on every visit.",
     author: "RiftCompare",
@@ -1974,7 +1974,7 @@ What this page deliberately does not do is tell you *why* any of these cards is 
   {
     slug: "is-riftbound-worth-getting-into",
     category: "blog",
-    title: "Is Riftbound Worth Getting Into? An Honest Look",
+    title: "Is Riftbound Worth Getting Into?",
     excerpt:
       "Thinking about picking up Riftbound: League of Legends TCG? An honest, hype-free look at what the game is, what it costs to start, and who it's for.",
     author: "RiftCompare",
@@ -2039,7 +2039,7 @@ You can get a feel for the cards completely free: play **[Riftle](/riftle)**, ou
   {
     slug: "buying-singles-vs-opening-packs",
     category: "blog",
-    title: "Buying Singles vs Opening Packs: Smart-Money Guide",
+    title: "Buying Singles vs Opening Packs",
     excerpt:
       "Should you buy the exact Riftbound cards you want, or open packs and hope? The maths, the fun factor, and how to decide every time.",
     author: "RiftCompare",
@@ -2175,7 +2175,7 @@ Not sure which sleeves fit? **[What size are Riftbound cards?](/guides/riftbound
   {
     slug: "understanding-riftbound-card-rarity",
     category: "guide",
-    title: "Understanding Riftbound Card Rarity & Printings",
+    title: "Riftbound Card Rarity & Printings",
     excerpt:
       "Common to Showcase, alt-arts, Signatures, Overnumbered and promos — what every Riftbound rarity and special printing means, and why it changes the price.",
     author: "RiftCompare",
@@ -2391,7 +2391,7 @@ New to the game entirely? Start with **[Riftbound for beginners](/guides/riftbou
       { label: "Vendetta singles & sealed", query: "Riftbound Vendetta" },
     ],
     category: "guide",
-    title: "Where to Buy Riftbound Cards (6 Markets, 100+ Stores)",
+    title: "Where to Buy Riftbound Cards: 6 Markets",
     excerpt:
       "Find the cheapest Riftbound singles and sealed in your own currency: 100+ stores across six markets, ranked on delivered cost, not sticker price.",
     author: "RiftCompare",
@@ -2597,7 +2597,7 @@ Ready to buy? **[Compare Riftbound booster box prices now](/sealed)**, or if you
     // actual chase cards with live listings rather than a generic search box.
     ebayPicks: true,
     category: "guide",
-    title: "The Most Valuable Riftbound Cards & Chase Cards",
+    title: "Most Valuable Riftbound Cards",
     excerpt:
       "What makes a Riftbound: League of Legends TCG card valuable — the chase rares, alt-arts, Showcase, Signature and promo printings — and how to check any card's live price.",
     author: "RiftCompare",
@@ -2915,7 +2915,7 @@ Coming from a different game? See **[Magic to Riftbound](/guides/mtg-to-riftboun
   {
     slug: "one-piece-tcg-to-riftbound",
     category: "guide",
-    title: "From One Piece TCG to Riftbound: A Collector's Guide",
+    title: "From One Piece TCG to Riftbound",
     excerpt:
       "New to Riftbound from the One Piece Card Game? How the two compare, where to buy real Riftbound cards, and what to expect on price.",
     author: "RiftCompare",
@@ -3017,7 +3017,7 @@ Coming from a different game? See **[Magic to Riftbound](/guides/mtg-to-riftboun
   {
     slug: "mtg-to-riftbound",
     category: "guide",
-    title: "From Magic: The Gathering to Riftbound: A Player's Guide",
+    title: "From Magic: The Gathering to Riftbound",
     excerpt:
       "New to Riftbound from Magic: The Gathering? How the two compare, where to buy singles, and what live Riftbound prices actually look like.",
     author: "RiftCompare",
@@ -3189,7 +3189,7 @@ Either way, **compare prices first** — see **[where to buy Riftbound cards](/g
   {
     slug: "budget-riftbound-decks",
     category: "guide",
-    title: "Best Budget Riftbound Decks & How to Build Cheap",
+    title: "Budget Riftbound Decks: Build One Cheap",
     excerpt:
       "How to build a competitive Riftbound: League of Legends TCG deck on a budget — and price every card before you buy.",
     author: "RiftCompare",
@@ -3344,7 +3344,7 @@ Want to try these ideas out before committing? **[Price the final deck](/deck)**
   {
     slug: "best-basket-cheapest-riftbound-deck",
     category: "guide",
-    title: "Best Basket: The Cheapest Way to Buy a Riftbound Deck",
+    title: "Best Basket: Cheapest Way to Buy a Deck",
     excerpt:
       "Pricing every card at its own cheapest store usually means paying postage a dozen times over. Best Basket finds the store split that's actually cheapest delivered — here's exactly how it works.",
     author: "RiftCompare",
@@ -3422,7 +3422,7 @@ It matters least for a single chase card or a short shopping list of two or thre
       { label: "Riftbound singles", query: "Riftbound TCG singles" },
     ],
     category: "guide",
-    title: "Riftbound Box EV Explained: Should You Rip or Buy Singles?",
+    title: "Riftbound Box EV: Rip or Buy Singles?",
     excerpt:
       "Booster box \"EV\" gets thrown around a lot, but most explanations skip the part that actually matters: when the math tells you to stop ripping and start buying singles.",
     author: "RiftCompare",
@@ -3573,7 +3573,7 @@ It also doesn't require a large bankroll to start. Watching a handful of cards y
   {
     slug: "understanding-the-riftcompare-index-methodology",
     category: "guide",
-    title: "What Is the RiftCompare Index? How It's Calculated",
+    title: "What Is the RiftCompare Index?",
     excerpt:
       "A plain-English breakdown of what the RiftCompare Index tracks, how it's built from a basket of cards, and why it's a better health check than any single card's price.",
     author: "RiftCompare",
@@ -4367,7 +4367,7 @@ For the complete, always-current picture — including March's original 7 bans �
   {
     slug: "riftbound-september-2026-bans-meta-shift",
     category: "blog",
-    title: "Riftbound's September 2026 Bans: Community Reaction and the Meta Shift Ahead",
+    title: "Riftbound September 2026 Bans: The Reaction",
     excerpt:
       "What r/riftboundtcg makes of the Ekko and Stacked Deck bans: the split over whether Riot hit the right card, and where players think the meta goes next.",
     author: "RiftCompare",
@@ -4480,7 +4480,7 @@ If you're running either card, both bans take effect **18 September 2026** — s
   {
     slug: "riftbound-neeko-blending-in-spoiler",
     category: "blog",
-    title: "Riftbound Neeko Spoiler: Blending In Breaks the One-Legend Rule",
+    title: "Riftbound Neeko Spoiler: Blending In",
     excerpt:
       "The first Riftbound: Radiance card photographed in print is Neeko, Blending In — a 6-cost Neutral Champion Unit that hands you three extra Legends. Its collector number also settles how big Radiance actually is.",
     author: "RiftCompare",
@@ -4666,7 +4666,7 @@ For everything else that is genuinely confirmed about the set — dates, product
   {
     slug: "riftbound-heartsteel-cards",
     category: "blog",
-    title: "Riftbound HEARTSTEEL Cards: What the Kayn Tease Actually Is",
+    title: "Riftbound HEARTSTEEL Cards: The Kayn Tease",
     excerpt:
       "The HEARTSTEEL Kayn card is not new — it's Kayn, Unleashed from Origins in new art. We checked all six members: K'Sante has no Riftbound card at all.",
     author: "RiftCompare",
@@ -5098,7 +5098,7 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     slug: "riftbound-empower-explained",
     ebayPicks: { heading: "Vendetta singles on eBay right now" },
     category: "guide",
-    title: "Riftbound Empower Explained: How the Empower Mechanic Works",
+    title: "Riftbound Empower Explained: How It Works",
     excerpt:
       "Empower lets a card gain new abilities once it's in play, usually for a cost on a later turn. Empowered is the status that sticks; Disempower strips it.",
     author: "RiftCompare",
@@ -5205,7 +5205,7 @@ Empower cards are live with real prices on the **[Vendetta set page](/sets/vende
   {
     slug: "riftbound-flow-explained",
     category: "guide",
-    title: "Riftbound Flow Explained: How the Flow Mechanic Works",
+    title: "Riftbound Flow Explained: How It Works",
     excerpt:
       "Flow lets you play a card from your trash instead of from your hand. Rules step by step, the Flow cost, Burn synergy, and every Flow card in Vendetta.",
     author: "RiftCompare",
@@ -5296,7 +5296,7 @@ Flow cards are live with real prices on the **[Vendetta set page](/sets/vendetta
   {
     slug: "riftbound-burn-explained",
     category: "guide",
-    title: "Riftbound Burn Explained: How the Burn Mechanic Works",
+    title: "Riftbound Burn Explained: How It Works",
     excerpt:
       "Burn your own deck to fuel Flow, or your opponent's to mill them: how Riftbound's Vendetta mechanic works step by step, plus every Burn card in the set.",
     author: "RiftCompare",
@@ -7158,7 +7158,7 @@ Each keyword family has its own explainer: **[combat keywords](/guides/riftbound
   {
     slug: "riftbound-vendetta-nexus-night-promo-cards",
     category: "blog",
-    title: "Vendetta Nexus Night Promo Cards: All 7 Confirmed",
+    title: "Vendetta Nexus Night Promos: All 7 Cards",
     excerpt:
       "Vendetta's weekly Nexus Night events hand out a 25-card promo cycle led by Mel, Newly Awakened. 7 of 25 confirmed so far, with live prices.",
     author: "RiftCompare",
@@ -7593,7 +7593,7 @@ Everything else — the collector product philosophy, the language pause — is 
     slug: "riftbound-vendetta-vault-endless-riches",
     draft: true,
     category: "blog",
-    title: "Riftbound Vendetta Vault & Endless Riches Explained",
+    title: "Riftbound Vendetta Vault & Endless Riches",
     excerpt:
       "What the Riftbound Vendetta Vault is, what the Endless Riches card does, and how both fit with Unleashed boosters — plus whether the Vault is worth it.",
     author: "RiftCompare",
@@ -7698,7 +7698,7 @@ Once it is on sale, the Vault will be price-compared the same way as every other
   {
     slug: "riftbound-sets-in-order",
     category: "guide",
-    title: "Every Riftbound Set, In Order (And What's Next)",
+    title: "Every Riftbound Set, In Order",
     excerpt:
       "Origins through Vendetta, in release order, with the real card count for each — plus Radiance's confirmed date and where to check what's beyond it.",
     author: "RiftCompare",
@@ -8428,7 +8428,7 @@ If you already play a card game, **[Magic to Riftbound](/guides/mtg-to-riftbound
   {
     slug: "league-of-legends-champions-in-riftbound",
     category: "guide",
-    title: "Which League of Legends Champions Are in Riftbound?",
+    title: "League of Legends Champions in Riftbound",
     excerpt:
       "Ahri, Jinx, Yasuo, Zed and dozens more already have real Riftbound cards, with five more in Radiance. How Legends work, and where to check your main.",
     author: "RiftCompare",
@@ -9275,7 +9275,7 @@ If neither of those describes how you use the site, the free tier — which stil
   {
     slug: "riftbound-meta-shift-radiance-singapore",
     category: "blog",
-    title: "Riftbound Meta Shift: Singapore, Radiance & What's Next",
+    title: "Riftbound Meta Shift: Singapore & Radiance",
     excerpt:
       "Kennen was the most-played legend at Barcelona's record 2,224-player field — and still lost the final to Ornn. Singapore is deciding round two live, and Radiance's five confirmed champions show where Riot's marketing already went.",
     author: "RiftCompare",
@@ -9404,7 +9404,7 @@ We'll be watching Singapore's Top 8 the moment it's final — and reading it the
   {
     slug: "riftbound-radiance-biggest-release-since-origins",
     category: "blog",
-    title: "Why Radiance Will Be Riftbound's Biggest Release Since Origins",
+    title: "Why Radiance Is Riftbound's Biggest Set Yet",
     excerpt:
       "Radiance is the smallest main Riftbound set yet by base cards — and by some distance the most Showcase-dense. Why 23 October is still the game's biggest release since Origins: it completes K/DA and unlocks a Seraphine that already trades.",
     author: "RiftCompare Markets Desk",
@@ -9617,7 +9617,7 @@ Track it on the [Radiance set page](/sets/radiance), where every card appears as
   {
     slug: "why-riftbound-could-become-a-top-two-tcg",
     category: "blog",
-    title: "Why Riftbound Could Be a Top-Two Trading Card Game by 2028",
+    title: "Could Riftbound Be a Top-Two TCG by 2028?",
     excerpt:
       "The case for Riftbound in the TCG top two by 2028: Riot's record with TFT and Valorant, League's 120M+ audience, the mechanics, and what could break it.",
     author: "RiftCompare",
@@ -9740,7 +9740,7 @@ That doesn't make top-two by 2028 a sure thing, and it's genuinely possible to b
   {
     slug: "riftbound-legacy-spoilers-set-6",
     category: "blog",
-    title: "Riftbound Legacy Spoilers: Set 6's 346 Cards, 12 Legends and the Pack Change",
+    title: "Riftbound Legacy Spoilers: Set 6's 346 Cards",
     excerpt:
       "Legacy lands 29 January 2027 with 346 cards, 93 Showcase, a regional-identity theme and the first pack-composition change Riftbound has made. Our read on the size claim, the draft pivot, and how big the game will be by then.",
     author: "RiftCompare Markets Desk",
@@ -9981,7 +9981,7 @@ We will update this page as previews land from Convergence Fest onward. Until th
   {
     slug: "riftbound-gift-of-the-rift-bundle",
     category: "blog",
-    title: "Riftbound Gift of the Rift Bundle: Contents, Price, and Whether It Holds Value",
+    title: "Riftbound Gift of the Rift Bundle: Contents",
     excerpt:
       "What is in the Gift of the Rift anniversary bundle, when and where to buy it, and an honest read on where the price goes — including why the usual “limited promo moons” argument does not apply cleanly here.",
     author: "RiftCompare",
@@ -10367,7 +10367,7 @@ Then store the rest properly and stop thinking about it: **[how to store and pro
   {
     slug: "are-riftbound-cards-cheaper-in-another-country",
     category: "blog",
-    title: "Are Riftbound Cards Cheaper in Another Country?",
+    title: "Are Riftbound Cards Cheaper Abroad?",
     excerpt:
       "Sometimes — but the currency gap is rarely the reason, and shipping plus import tax undoes most of it. How to work out whether importing Riftbound singles or sealed actually saves you money, using live prices in six markets.",
     author: "RiftCompare Markets Desk",
