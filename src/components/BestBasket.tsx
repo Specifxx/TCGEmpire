@@ -619,7 +619,7 @@ function FullResultView({
 const TWO_STORES_NONE: Record<TwoStoresNone, string> = {
   "no-pair": "No two stores between them stock every card.",
   "one-card": "There's only one card on this list, so there's nothing to split.",
-  "one-store-cheaper": "No two-store split beats buying the whole list from one store — see Best single store.",
+  "one-store-cheaper": "No two-store split we found beats buying the whole list from one store — see Best single store.",
 };
 
 function PlanCard({

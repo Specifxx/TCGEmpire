@@ -81,7 +81,7 @@ export function EbayAdCarouselLive({
   }
 
   return (
-    <div className={className}>
+    <div data-ad-placement="" className={className}>
       <div className={`mb-1.5 flex items-center gap-2 ${compact ? "" : "mb-2"}`}>
         <EbayMark className="text-sm" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Ad · live listings on eBay</span>

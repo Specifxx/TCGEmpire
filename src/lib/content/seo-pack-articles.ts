@@ -114,7 +114,7 @@ export const SEO_PACK_ARTICLES: Article[] = [
       `Confirm the exact variant and collector number first; a Signature and a standard printing of the same champion can differ by thousands. [Variant glossary →](${L.glossary})`,
       `Run the card through [RiftCompare](${L.browse}) for live cross-store prices including shipping, then cross-check recent sold listings on eBay or TCGplayer.`,
       "Subtract marketplace fees and shipping before you decide a number — they take 15–20% off your net.",
-      `Riftbound reprices daily, so use [the daily movers dashboard](${L.movers}) and [price alerts](${L.alerts}) rather than checking weekly.`,
+      `Riftbound reprices often, so watch [the weekly movers](${L.movers}) and set [price alerts](${L.alerts}) rather than checking stores by hand.`,
     ],
     faq: [
       {
@@ -184,7 +184,7 @@ Price differences between two cards with similar names often come down to four f
 
 Riftbound is a young, actively growing TCG, and that means its card market moves faster than most.
 
-The main triggers for big moves: tournament results, meta shifts, new set releases, OP and prize announcements, and influencer/content coverage. To stay ahead, watch [the daily movers dashboard](${L.movers}) for top gainers and losers, track the set release calendar, and monitor graded-auction results for high-value variants.
+The main triggers for big moves: tournament results, meta shifts, new set releases, OP and prize announcements, and influencer/content coverage. To stay ahead, watch [the weekly movers dashboard](${L.movers}) for top gainers and losers, track the set release calendar, and monitor graded-auction results for high-value variants.
 
 ## How to read a price entry on a tracker
 
@@ -218,7 +218,7 @@ Trading rather than selling? The [trade calculator](${L.trade}) values both side
 
 Useful tools for daily monitoring: live market aggregators ([RiftCompare](${L.browse})) for cross-store median and last-sale data; sold-listing alerts on eBay; [watchlists](${L.alerts}) for cards you own or plan to buy; [price-mover dashboards](${L.movers}); grading-price lookups.
 
-Setting up a practical alert workflow: search the exact card on RiftCompare and add it to your watchlist; on eBay, save a completed-listings search with email notifications; on TCGplayer, use price alerts; check [the daily movers dashboard](${L.movers}) each morning. If you're bidding rather than buying at a fixed price, [our eBay bidding guide](${L.bidding}) covers how to set a maximum you can actually defend.
+Setting up a practical alert workflow: search the exact card on RiftCompare and add it to your watchlist; on eBay, save a completed-listings search with email notifications; on TCGplayer, use price alerts; check [the weekly movers dashboard](${L.movers}) each week. If you're bidding rather than buying at a fixed price, [our eBay bidding guide](${L.bidding}) covers how to set a maximum you can actually defend.
 
 ## Key takeaways
 
@@ -704,7 +704,7 @@ For each grail, the price gap between a raw Near Mint copy and a PSA 10 copy is 
 
 Riftbound is early in its lifecycle. Single tournament results, set announcements, reprints, and influencer coverage can reprice a top card overnight. A grail that's climbing this week may cool next week once the meta adjusts or a reprint is announced.
 
-Before paying a premium, check whether a spike reflects durable demand (sustained competitive play, genuine scarcity) or a short-term tournament bump. [The daily movers dashboard](${L.movers}) is the fastest way to tell the difference.
+Before paying a premium, check whether a spike reflects durable demand (sustained competitive play, genuine scarcity) or a short-term tournament bump. [The weekly movers dashboard](${L.movers}) is the fastest way to tell the difference.
 
 ## How to buy a grail without overpaying
 
@@ -712,7 +712,7 @@ Before paying a premium, check whether a spike reflects durable demand (sustaine
 - **Use sold comps, not ask prices.** Active listings run well above what cards actually clear for — [how to value a Riftbound card](${L.values}) walks through the comp workflow.
 - **Decide on grading math up front.** For a four-figure card, a PSA 10 premium often justifies grading; for a $30 card it rarely does.
 - **Compare total cost across stores.** The lowest sticker isn't always the lowest landed price once shipping (and, for overseas stores, [currency conversion](${L.fx})) is included.
-- **Watch the daily movers.** Buying into a spike often means buying at the top.
+- **Watch the weekly movers.** Buying into a spike often means buying at the top.
 
 RiftCompare pulls live prices for these cards across US, UK, AU, CA and SG stores plus eBay and TCGplayer, with shipping included — so you can see the real all-in price of a grail before you commit.
 
@@ -726,7 +726,7 @@ RiftCompare pulls live prices for these cards across US, UK, AU, CA and SG store
 
 ## Track every grail's live price
 
-Don't rely on a stale list. RiftCompare shows real-time prices for the most expensive Riftbound cards across every tracked store, with shipping included and a [daily movers dashboard](${L.movers}) so you know whether a grail is rising or cooling.
+Don't rely on a stale list. RiftCompare shows real-time prices for the most expensive Riftbound cards across every tracked store, with shipping included and a [weekly movers dashboard](${L.movers}) so you know whether a grail is rising or cooling.
 
 Browse [the full card database](${L.browse}), dig into [a specific set](${L.sets}) — [Origins](${L.origins}) included — or [search by champion](${L.champions}), then set your [watchlist alerts](${L.alerts}) so the next move finds you instead of the other way round.`,
   },
@@ -886,7 +886,7 @@ Next: [how to choose a Riftbound marketplace](${L.choosing}) turns this into a s
       },
       {
         q: "How often do the prices update?",
-        a: "Prices are re-imported from tracked stores on a regular schedule, and the daily movers dashboard shows what changed. Riftbound reprices fast, so daily data matters more here than in older TCGs.",
+        a: "Prices are re-imported from tracked stores daily, and the weekly movers dashboard shows what moved over the last week. Riftbound reprices fast, so daily store data matters more here than in older TCGs.",
       },
     ],
     browseCta: {
@@ -999,7 +999,7 @@ This is our own tool, so treat this page as a spec sheet with the limitations in
 | Cross-store price comparison | Every tracked store's live price for one printing, ranked by total cost | [Card database](${L.browse}) |
 | Shipping included | Totals, not stickers, so the ranking is honest | Every price surface |
 | Five markets | US, UK, AU, CA, SG, each in its own currency | [Guides per market](${L.us}) |
-| Daily movers | What went up and down, and by how much | [Movers](${L.movers}) |
+| Weekly movers | What went up and down this week, and by how much | [Movers](${L.movers}) |
 | Deal finder | Where the same card is meaningfully cheaper than the market | [Deal Finder](${L.dealFinder}) |
 | Basket optimisation | Cheapest split of a wantlist across stores | [Best Basket](${L.bestBasket}) |
 | Sealed EV | What a box is worth against singles | [Box EV](${L.boxEv}) |

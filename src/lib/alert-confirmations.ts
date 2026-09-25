@@ -8,6 +8,10 @@ import type { prisma } from "./db";
 // cannot be the cap — it is per serverless instance — so the database keeps
 // the count.
 //
+// This bounds the CONFIRMATIONS only. The drop digests those posted addresses
+// would get on the next daily run are bounded separately, by
+// FIRST_CONTACT_SEND_CAP in lib/price-alerts.ts (review, 2026-09-25).
+//
 // WHAT IS COUNTED: confirmations sent, one per call, and nothing else. The
 // first version counted anonymous PriceAlert rows created in the last 24h,
 // which is a different number. A returning anonymous watcher adds a row on

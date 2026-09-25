@@ -35,6 +35,16 @@ export function isBotUserAgent(ua: string | null | undefined): boolean {
 export const VIEW_RATE_LIMIT = 4;
 export const VIEW_RATE_WINDOW_MS = 6 * 60 * 60 * 1000;
 
+// A coarse per-IP ceiling checked BEFORE the per-card one (review,
+// 2026-09-25). The per-card key embeds the path segment, so without this one IP
+// could post endless made-up ids, each adding a 6-hour bucket to the in-memory
+// map every rate-limited route shares — and once that map passes 10,000
+// entries every rateLimit() call sweeps all of it. 300 an hour is far above a
+// person (a browser sends each card at most once a day per kind) and bounds one
+// IP to ~1,800 live per-card buckets.
+export const VIEW_IP_RATE_LIMIT = 300;
+export const VIEW_IP_RATE_WINDOW_MS = 60 * 60 * 1000;
+
 const STORAGE_KEY = "rc_card_views";
 
 type Seen = { day: string; keys: string[] };

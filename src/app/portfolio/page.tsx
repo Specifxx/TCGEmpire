@@ -10,6 +10,7 @@ import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { formatMoney } from "@/lib/format";
+import { CONDITION_MULTIPLIER } from "@/lib/constants";
 import { PriceChart } from "@/components/PriceChart";
 import { MyCollection } from "@/components/MyCollection";
 import { CollectionShare } from "@/components/CollectionShare";
@@ -281,7 +282,7 @@ export default async function PortfolioPage() {
             <HoldingsGrid holdings={portfolio.holdings} currency={info.currency} />
             <p className="mt-3 text-[11px] text-slate-600">
               Values are the live lowest in-stock store price × the standard condition multiplier
-              ({Object.entries({ NM: 1, LP: 0.85, MP: 0.7, HP: 0.55, DMG: 0.4 }).map(([k, v]) => `${k} ${v * 100}%`).join(" · ")}).
+              ({Object.entries(CONDITION_MULTIPLIER).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(" · ")}).
               The green/red chip shows how a card has moved since you paid for it, where you&apos;ve recorded that.
             </p>
           </section>

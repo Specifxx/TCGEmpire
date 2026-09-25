@@ -280,6 +280,19 @@ test("the gate sells Plus, and the structured data no longer calls the list free
   assert.doesNotMatch(src, /Premium shows every/, "Plus unlocks the list; the copy says Plus");
   assert.doesNotMatch(src, /price: "0"|"@type": "Offer"/, "no WebApplication offer at price 0");
   assert.match(src, /no ads on any page|removes ads/i, "a surface that describes Plus says it is ad-free");
+  // …and so does the gate line itself, not only the FAQ (QA, 2026-09-25).
+  const gate = src.slice(src.indexOf("more ranked picks"), src.indexOf('surface="gate:rising"'));
+  assert.match(gate, /no ads/i, "the Rising gate line says Plus is ad-free");
+});
+
+test("every Plus gate line and free nudge says Plus is ad-free", async () => {
+  const nudge = await import("../src/lib/premium-nudge");
+  assert.match(nudge.PLUS_GATE_LINE, /no ads/i, "Deal Finder's gate and teaser line");
+  const n = { watched: { deals: 0, dealsFree: 0, rising: 3, risingFree: 1 }, owned: { deals: 0, dealsFree: 0, rising: 0, risingFree: 0 }, example: null };
+  assert.match(nudge.nudgeCopy(n, "watched")!.line, /Plus shows every pick, with no ads\./, "the Rising nudge");
+  const df = code("src/app/tools/deal-finder/page.tsx");
+  const faq = df.slice(df.indexOf('q: "Do I need to pay to use it?"'));
+  assert.match(faq.slice(0, 600), /ads off every page/, "Deal Finder's pricing FAQ");
 });
 
 test("a failed load reads 'temporarily unavailable', never 'no price history yet'", () => {

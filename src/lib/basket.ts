@@ -25,8 +25,10 @@
 // store and SWAP one open store for a closed one, taking the best improving move
 // until none helps, from several starts: the naive split, and single stores
 // ranked by how much of the list they stock. The old single-card move survives
-// as the final polish, which is what crosses free-shipping thresholds. With ten
-// or fewer candidate stores every open set is also tried outright.
+// as the final polish, with a threshold fill beside it that moves several cards
+// onto a store at once — together they are what cross free-shipping
+// thresholds. With ten or fewer candidate stores every open set is also tried
+// outright.
 //
 // How many single-store starts: EVERY candidate store for a deck-sized list,
 // and a work budget's worth — never fewer than ten, best-covering first — for
@@ -37,10 +39,11 @@
 //
 // Exact minimisation is NP-hard, so the answer is the best this search finds,
 // not a proof. What it guarantees: the plan is never dearer than the naive
-// split, the best single-store order or the best two-store order, and the last
-// two are returned beside it so the page can show them. Against brute force on
-// 3,000 random lists of up to 6 cards and 5 stores it found the optimum every
-// time. Pure CPU and deterministic: tens to a couple of hundred milliseconds
+// split, the best single-store order (exact) or the two-store order returned
+// beside it (the best split the search finds — also not a proof). Against
+// brute force on 3,000 random lists of up to 6 cards and 5 stores it found the
+// optimum every time; on threshold-heavy lists over more than ten stores it
+// can still miss it (review, 2026-09-25). Pure CPU and deterministic: tens to a couple of hundred milliseconds
 // for a deck, about half a second in a synthetic worst case (200 cards, each
 // stocked by half of 55 stores).
 
@@ -120,17 +123,18 @@ export interface BasketAlternatives {
   // The cheapest order from ONE store that stocks every buyable card; null
   // when no single store does.
   singleStore: BasketPlan | null;
-  // The cheapest order split across exactly TWO stores that between them stock
-  // every buyable card. Null in three different situations, which the page
-  // words differently — see twoStoresNone.
+  // The cheapest order split across exactly TWO stores (both used) that the
+  // search finds — a heuristic, not a proof, when free-postage thresholds are
+  // in play — shown only when it beats singleStore. Null in three different
+  // situations, which the page words differently — see twoStoresNone.
   twoStores: BasketPlan | null;
   // Why twoStores is null (null when it isn't, or when alternatives weren't
   // asked for):
   //   "no-pair"           no two stores between them stock every card;
   //   "one-card"          the list is a single card, so there is nothing to split;
-  //   "one-store-cheaper" pairs do stock it all, but for every pair, moving the
-  //                       whole order onto one of the two was cheaper than any
-  //                       split — so singleStore (never null here) is the answer.
+  //   "one-store-cheaper" pairs do stock it all, but the best one-store order
+  //                       costs no more than the best split found — so
+  //                       singleStore (never null here) is the answer.
   // Telling these apart matters: "no two stores stock every card" was once
   // shown for a one-card list stocked everywhere (review, 2026-09-25).
   twoStoresNone: TwoStoresNone | null;
@@ -402,16 +406,20 @@ function localSearch(M: Model, st: State, visited: Map<string, number>, run: num
 }
 
 // The old hill-climb, kept as the polish: move ONE card to any store that
-// stocks it when that lowers the total — which is what pushes a store over its
-// free-shipping threshold. `allowed` restricts the target stores.
-function polish(M: Model, st: State, allowed?: Uint8Array): void {
+// stocks it when that lowers the total. When no single move helps, the
+// threshold fill below gets a turn. `allowed` restricts the target stores;
+// `keep` names two stores neither of which may be emptied (the two-store
+// order has to stay a two-store order).
+function polish(M: Model, st: State, allowed?: Uint8Array, keep?: readonly [number, number]): void {
   for (let iter = 0; iter < 400; iter++) {
     let bestD = 0;
     let bestI = -1;
     let bestS = -1;
     for (let i = 0; i < M.n; i++) {
+      const from = st.assign[i];
+      if (keep && (from === keep[0] || from === keep[1]) && st.cnt[from] === 1) continue;
       for (const s of M.opts[i]) {
-        if (s === st.assign[i] || (allowed && !allowed[s])) continue;
+        if (s === from || (allowed && !allowed[s])) continue;
         const d = singleDelta(M, st, i, s);
         if (d < bestD - 1e-9) {
           bestD = d;
@@ -420,9 +428,73 @@ function polish(M: Model, st: State, allowed?: Uint8Array): void {
         }
       }
     }
-    if (bestI < 0) return;
-    changeDelta(M, st, [bestI, bestS], true);
+    if (bestI >= 0) {
+      changeDelta(M, st, [bestI, bestS], true);
+      continue;
+    }
+    const fill = fillMove(M, st, allowed, keep);
+    if (!fill) return;
+    changeDelta(M, st, fill, true);
   }
+}
+
+// The threshold fill: a store short of its free-postage threshold pulls in
+// the cards that cost least extra for the subtotal they bring, until it
+// crosses. That is a move of two or more cards at once, which the one-card
+// polish can never make when no single card clears the threshold on its own
+// (review, 2026-09-25: four stores, $78.75 returned where the same two stores
+// sold the list for $77.54 by moving two cards together). A store qualifies
+// when it is open, or — inside a restricted search — when it is allowed at
+// all, so an empty store in the set can be filled. Returns the best improving
+// move as [card, store, card, store, …], or null. Still a heuristic: which
+// cards to pull is a knapsack, and this takes them greedily by extra cost per
+// cent of subtotal, then drops any the threshold no longer needs.
+function fillMove(M: Model, st: State, allowed?: Uint8Array, keep?: readonly [number, number]): number[] | null {
+  let bestD = -1e-9;
+  let best: number[] | null = null;
+  const taken = new Map<number, number>();
+  for (let s = 0; s < M.m; s++) {
+    const need = M.freeOver[s] - st.sub[s];
+    if (M.freeOver[s] <= 0 || need <= 0) continue;
+    if (allowed ? !allowed[s] : st.cnt[s] === 0) continue;
+    const cand: { i: number; extra: number; gain: number }[] = [];
+    for (const i of M.cardsAt[s]) {
+      const from = st.assign[i];
+      if (from === s) continue;
+      const gain = M.unit[i * M.m + s] * M.qty[i];
+      if (!(gain > 0)) continue;
+      cand.push({ i, extra: gain - M.unit[i * M.m + from] * M.qty[i], gain });
+    }
+    cand.sort((x, y) => x.extra / x.gain - y.extra / y.gain || x.i - y.i);
+    taken.clear();
+    const picks: { i: number; extra: number; gain: number }[] = [];
+    let got = 0;
+    for (const c of cand) {
+      if (got >= need) break;
+      const from = st.assign[c.i];
+      if (keep && (from === keep[0] || from === keep[1]) && st.cnt[from] - (taken.get(from) ?? 0) <= 1) continue;
+      taken.set(from, (taken.get(from) ?? 0) + 1);
+      picks.push(c);
+      got += c.gain;
+    }
+    if (got < need || picks.length < 2) continue; // one card alone is the polish's move
+    // Drop picks the threshold no longer needs, dearest first.
+    const keepPick = new Set(picks);
+    for (const c of [...picks].sort((x, y) => y.extra - x.extra || y.i - x.i)) {
+      if (got - c.gain >= need) {
+        keepPick.delete(c);
+        got -= c.gain;
+      }
+    }
+    const ch: number[] = [];
+    for (const c of keepPick) ch.push(c.i, s);
+    const d = changeDelta(M, st, ch, false);
+    if (d < bestD) {
+      bestD = d;
+      best = ch;
+    }
+  }
+  return best;
 }
 
 function storesUsed(st: State): number {
@@ -529,10 +601,20 @@ function bestSingleStore(M: Model): State | null {
   return best;
 }
 
-// The best genuine two-store order, or why there is none.
-function bestTwoStores(M: Model): { best: State | null; none: TwoStoresNone | null } {
+// The best two-store order the search finds, or why none is shown. Every
+// covering pair is searched for its cheapest assignment that really USES both
+// stores (the polish may not empty either one); a pair whose cheapest-store
+// start lands on one store first moves onto the other the card it costs least
+// to move. The best split is then shown only when it beats the best
+// single-store order — otherwise "one-store-cheaper", one rule for every pair.
+// (Until 2026-09-25 a pair whose polish collapsed onto one store was dropped
+// outright, taking its real splits with it, so the card could show a split
+// $5.84 dearer than one it had thrown away.) Not exact: with free-postage
+// thresholds each pair is a knapsack, and this is the polish's answer.
+function bestTwoStores(M: Model, single: State | null): { best: State | null; none: TwoStoresNone | null } {
   let best: State | null = null;
   let anyPair = false;
+  const allowed = new Uint8Array(M.m);
   for (let a = 0; a < M.m; a++) {
     for (let b = a + 1; b < M.m; b++) {
       const assign = new Int32Array(M.n);
@@ -548,19 +630,33 @@ function bestTwoStores(M: Model): { best: State | null; none: TwoStoresNone | nu
       }
       if (!covers) continue;
       anyPair = true;
+      if (M.n < 2) continue; // one card: nothing to split
       const st = stateFrom(M, assign);
-      const allowed = new Uint8Array(M.m);
+      for (const y of [a, b]) {
+        if (st.cnt[y] > 0) continue;
+        let pick = -1;
+        let pickD = Infinity;
+        for (const i of M.cardsAt[y]) {
+          const d = singleDelta(M, st, i, y);
+          if (d < pickD) {
+            pickD = d;
+            pick = i;
+          }
+        }
+        if (pick >= 0) changeDelta(M, st, [pick, y], true);
+      }
+      if (st.cnt[a] === 0 || st.cnt[b] === 0) continue;
+      allowed.fill(0);
       allowed[a] = 1;
       allowed[b] = 1;
-      polish(M, st, allowed);
-      // Collapsed onto one store: that's a one-store order (singleStore's
-      // territory), not a two-store one.
-      if (st.cnt[a] === 0 || st.cnt[b] === 0) continue;
+      polish(M, st, allowed, [a, b]);
       if (better(st, best)) best = st;
     }
   }
-  if (best) return { best, none: null };
-  return { best: null, none: !anyPair ? "no-pair" : M.n === 1 ? "one-card" : "one-store-cheaper" };
+  if (!anyPair) return { best: null, none: "no-pair" };
+  if (M.n < 2) return { best: null, none: "one-card" };
+  if (best && (!single || best.cost < single.cost - 1e-9)) return { best, none: null };
+  return { best: null, none: "one-store-cheaper" };
 }
 
 // The full answer: the cheapest plan found plus the one- and two-store orders.
@@ -687,10 +783,11 @@ function solveBasket(cards: BasketCard[], stores: BasketStores, opts: BasketOpti
   }
 
   let best = solve(M, naive);
-  // The alternatives are exact within their own shape, so the headline plan
-  // must never be dearer than either — take the cheapest of them all.
+  // The single-store order is exact; the two-store order is the best split the
+  // search finds. The headline plan is never dearer than either one shown
+  // beside it — take the cheapest of them all.
   const single = bestSingleStore(M);
-  const two = withAlternatives || M.m <= 60 ? bestTwoStores(M) : null;
+  const two = withAlternatives || M.m <= 60 ? bestTwoStores(M, single) : null;
   for (const alt of [single, two?.best ?? null]) if (alt && better(alt, best)) best = alt;
 
   return {

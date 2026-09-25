@@ -199,7 +199,7 @@ test("TIER_COMPARISON is exactly the 2026-09-25 lineup, in order, with Ad-free l
       "Rising Cards",
       "Target-price alerts after every price update",
       "Best Basket — cheapest delivered order for a list",
-      "Buy this list — deck, watchlist or binder, skipping cards you own",
+      "Buy this list — deck or watchlist, skipping cards you own",
       "Ad-free experience",
     ],
   );
@@ -243,14 +243,22 @@ test("TIER_COMPARISON's paid columns agree with the real gates", () => {
   assert.equal(targetAlertLimit("plus"), PLUS_TARGET_ALERT_LIMIT);
   assert.equal(targetAlertLimit("premium"), Number.POSITIVE_INFINITY);
 
-  // Best Basket and Buy this list: the per-store plan and the deck/watchlist/
-  // binder hand-off are Premium's, gated on the premium minimum in the API.
+  // Best Basket and Buy this list: the per-store plan is Premium's, gated on
+  // the premium minimum in the API. Sending a deck or the watchlist in with
+  // "skip copies I own" is open to every signed-in account — the request
+  // parser takes no tier (behavioural check in best-basket-redesign) — so a
+  // free or Plus account's cell is its own total, not a dash.
   const basket = row("Best Basket — cheapest delivered order for a list");
   assert.equal(basket.plus, basket.account, "Plus sees the same own-list total as a free account");
   assert.equal(basket.premium, "Store-by-store plan");
-  const buy = row("Buy this list — deck, watchlist or binder, skipping cards you own");
-  assert.deepEqual([buy.account, buy.plus, buy.premium], [false, false, true]);
-  assert.match(read("src/app/api/basket/route.ts"), /isPremium\(user,\s*"premium"\)/, "the Best Basket API must require the premium minimum for the plan");
+  const buy = row("Buy this list — deck or watchlist, skipping cards you own");
+  assert.equal(buy.account, "Your total");
+  assert.equal(buy.plus, buy.account);
+  assert.equal(buy.premium, "Store-by-store plan");
+  const route = read("src/app/api/basket/route.ts");
+  assert.match(route, /const full = isPremium\(user,\s*"premium"\)/, "the Best Basket API must require the premium minimum for the plan");
+  assert.match(route, /if \(!full\) \{\s*const preview = basketPreview\(/, "…and everyone else gets the preview");
+  assert.doesNotMatch(read("src/lib/basket-request.ts"), /isPremium|premiumTierOf|user/, "what may be sent never depends on the tier");
 
   // Ad-free: every paid tier, exactly what /api/me publishes.
   assert.deepEqual(

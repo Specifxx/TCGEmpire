@@ -1,4 +1,4 @@
-import { SITE_NAME, SITE_URL, premiumFromLine } from "./site";
+import { SITE_NAME, SITE_URL, TIER_NAMES, premiumFromLine, type PremiumTierKey } from "./site";
 import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
@@ -711,35 +711,48 @@ const CHECKOUT_RECOVERY_TOOLS = [
   "Premium: Best Basket, the cheapest delivered order for your whole deck, watchlist or binder",
 ];
 
-function checkoutRecoveryFooter(): string {
+function checkoutRecoveryFooter(name: string): string {
   return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
-    You're getting this once because you started RiftCompare Premium checkout. We won't send it again.<br/>
+    You're getting this once because you started RiftCompare ${name} checkout. We won't send it again.<br/>
     RiftCompare · Riftbound card price comparison.
   </td></tr>`;
 }
 
-export async function sendCheckoutRecoveryEmail(to: string, trialDays: number, fromLine: string): Promise<boolean> {
+// `tier` is the plan the abandoned checkout was for (PremiumClick.tier, read by
+// runCheckoutRecovery) — the email names that plan and quotes ITS price. A Plus
+// abandoner used to be told they had started Premium, at Premium's price.
+export async function sendCheckoutRecoveryEmail(
+  to: string,
+  trialDays: number,
+  fromLine: string,
+  tier: PremiumTierKey = "premium",
+): Promise<boolean> {
+  const name = TIER_NAMES[tier];
   const toolList = CHECKOUT_RECOVERY_TOOLS.map(
     (t) => `<li style="margin:4px 0">${t}</li>`
   ).join("");
   const trialLine =
     trialDays > 0
       ? `Your ${trialDays}-day free trial is still available — $0 today, then ${fromLine}.`
-      : `Premium is ${fromLine}.`;
+      : `${name} is ${fromLine}.`;
+  const otherPlan =
+    tier === "premium"
+      ? "Prefer something lighter? Plus is the cheaper plan, on the same page."
+      : "Buying a whole deck? Premium adds Best Basket's store-by-store plan, on the same page.";
   const inner = `
     <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You started signing up for RiftCompare Premium but didn't finish checkout. ${trialLine} Plus and Premium are
+      You started signing up for RiftCompare ${name} but didn't finish checkout. ${trialLine} Plus and Premium are
       both ad-free and show every deal; Premium also works out the cheapest way to buy a whole want-list or decklist,
-      postage included. Prefer something lighter? Plus is the cheaper plan, on the same page.
+      postage included. ${otherPlan}
     </td></tr>
     <tr><td style="padding:4px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">
       <ul style="margin:8px 0;padding-left:20px;color:#e6ebf2">${toolList}</ul>
     </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up Premium</a></td></tr>`;
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?src=recovery" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Finish setting up ${name}</a></td></tr>`;
   return sendEmail(
     to,
-    "Your RiftCompare Premium free trial is still waiting",
-    emailShell("Still want Premium?", inner, checkoutRecoveryFooter())
+    trialDays > 0 ? `Your RiftCompare ${name} free trial is still waiting` : `Your RiftCompare ${name} checkout is still waiting`,
+    emailShell(`Still want ${name}?`, inner, checkoutRecoveryFooter(name))
   );
 }
 
@@ -795,7 +808,7 @@ export function buildWelcomeEmail(opts: WelcomeEmailOpts): { subject: string; he
             <li>Every deal: the full Deal Finder and Rising Cards lists</li>
             <li>An email naming the store when a card you watch hits your target price</li>
           </ul>
-          Premium adds Best Basket: the cheapest delivered order for your whole deck, watchlist or binder, skipping the
+          Premium adds Best Basket: the cheapest delivered order for your whole deck or watchlist, skipping the
           cards you already own. ${trialLine}
         </div>
         <a href="${SITE_URL}/premium?src=welcome" style="display:inline-block;margin-top:10px;background:#f3c969;color:#1a1405;font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:8px">See Premium</a>
@@ -862,7 +875,7 @@ export function buildTrialWelcomeEmail(opts: TrialWelcomeEmailOpts): { subject: 
     ${
       opts.planName === "Plus"
         ? ""
-        : step(4, "Buy a whole list for less", `Send a decklist, your watchlist or your binder to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)
+        : step(4, "Buy a whole list for less", `Send a decklist or your watchlist to Best Basket, skip the copies you own, and get the cheapest delivered order. ${link("/tools/best-basket", "Best&nbsp;Basket&nbsp;→")}`)
     }
     <tr><td style="padding:10px 32px 22px;font-size:13px;line-height:1.55;color:#8b95a5">
       Manage or cancel any time: ${link("/premium", "your account page")}.

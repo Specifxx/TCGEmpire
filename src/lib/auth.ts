@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./db";
 import { touchActivity } from "./activity";
+import { isAdminEmail } from "./admin-emails";
 
 const SESSION_COOKIE = "tcge_session";
 
@@ -34,16 +35,9 @@ function getSecret(): Uint8Array {
   return cachedSecret;
 }
 
-// Moderator emails (override via ADMIN_EMAILS env, comma-separated). These accounts
-// get delete-any privileges. Not surfaced anywhere in the UI.
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "mastermisclick@gmail.com,bill.jyang101@gmail.com")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
-
-export function isAdminEmail(email: string): boolean {
-  return ADMIN_EMAILS.includes(email.toLowerCase());
-}
+// Moderator emails: the list lives in lib/admin-emails.ts so the alert cron
+// reads the same one (re-exported here for the existing import sites).
+export { isAdminEmail };
 
 export interface SessionUser {
   id: string;

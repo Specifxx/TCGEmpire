@@ -658,7 +658,7 @@ function QuickViewModal({
                     cheapest price" fix as the full card page — history is a
                     daily import snapshot, inStock[0] is this modal's own
                     live cheapest row, already sorted price-ascending above. */}
-                <PriceChart points={history} currency={currency} compact nowOverrideCents={inStock[0]?.priceCents ?? null} />
+                <PriceChart points={history} currency={currency} compact nowOverrideCents={inStock[0]?.priceCents ?? null} rawCardHistory />
               </div>
             )}
 

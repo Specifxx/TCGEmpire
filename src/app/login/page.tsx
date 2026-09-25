@@ -29,7 +29,7 @@ const CONTEXT_LINES: Record<string, string> = {
   // The two tools whose signed-out preview promises the top three to a free
   // account (2026-09-23) — the line repeats that promise on the sign-in step.
   "/tools/deal-finder": "Create a free account to see today's top 3 Deal Finder deals.",
-  "/tools/rising": "Create a free account to see the top 3 rising cards, with their full signal breakdown.",
+  "/tools/rising": "Create a free account to see the top 3 rising cards and why each one ranks.",
   // Best Basket (2026-09-25 lineup): a free account sees its OWN list's
   // delivered total; which store to buy each card from is Premium's. The line
   // says exactly that and no more. Value Finder, Demand Finder, Rising Sealed

@@ -126,6 +126,15 @@ That restores the homepage Premium teaser and the AI Tips module. Then choose an
 strategy — `NEXT_PUBLIC_AD_STRATEGY=auto` (default; enable Auto ads in the console) or
 `manual` (turn Auto ads **off** in the console first). Never both.
 
+Paid members (Plus and Premium) are promised no ads on any page. The loader still
+ships to them (it must never be gated), so Auto ads are held back for them by
+`adsbygoogle.pauseAdRequests = 1`, set before the loader runs by the `rc_adfree`
+boot script (`src/lib/ad-free-boot.ts`; the cookie is written once `/api/me` says
+the viewer is ad-free). **Before turning Auto ads on, confirm on a Plus test account
+that no Auto ad, anchor or vignette fills** — on its second page view, after the
+cookie exists. If any does, use `manual` with Auto ads off until it is fixed:
+`AdSlot` renders nothing for ad-free viewers, so manual mode keeps the promise.
+
 ---
 
 # PART ONE — INTEGRATION FAULTS

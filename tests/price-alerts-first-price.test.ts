@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { FIRST_PRICE_SEND_CAP, isFirstPrice, runPriceAlerts, type AlertRunDeps } from "../src/lib/price-alerts";
+import { FIRST_CONTACT_SEND_CAP, FIRST_PRICE_SEND_CAP, isFirstPrice, runPriceAlerts, type AlertRunDeps } from "../src/lib/price-alerts";
 import { dropRow, priceDropCopy, type PriceDropItem } from "../src/lib/email";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -248,4 +248,31 @@ test("the card page and CTA say 'in stock' for an unpriced card, never 'first'",
   assert.match(page, /unpriced=\{priceState\.isEmpty && !priceState\.noRetailChannel\}/);
   assert.match(read("src/components/PriceAlertModal.tsx"), /when this card is in stock or gets cheaper/);
   assert.match(read("src/app/alerts/page.tsx"), /Can I watch a card with no price yet\?/);
+});
+
+test("first-contact drop digests are capped per run; the overflow is deferred with its baseline held", async () => {
+  // Review, 2026-09-25: /api/alerts/subscribe enrols any posted address, and
+  // each one's first drop used to send at once — ~100 of them would spend the
+  // Resend quota verification and password reset share.
+  const rows = Array.from({ length: FIRST_CONTACT_SEND_CAP + 5 }, (_, i) => row(`n${i}`, { lastPriceCents: 1000, us: 800 }));
+  // An address emailed before (outside its week) is not first contact, and is not counted.
+  rows.push(row("known", { lastPriceCents: 1000, us: 800, lastNotifiedAt: daysAgo(30), lowestEmailedCents: 900 }));
+  const h = harness(rows);
+  const summary = await h.run();
+  assert.equal(summary.drops, FIRST_CONTACT_SEND_CAP + 6);
+  assert.equal(h.sent.length, FIRST_CONTACT_SEND_CAP + 1, "the cap's worth of new addresses, plus the known one");
+  assert.ok(h.sent.some((m) => m.to === "known@example.com"), "an address emailed before is never held by this cap");
+  assert.equal(summary.deferred, 5);
+  assert.equal(summary.held, 5);
+  const written = new Set(h.writes.map((w) => w.id));
+  for (let i = FIRST_CONTACT_SEND_CAP; i < FIRST_CONTACT_SEND_CAP + 5; i++) assert.ok(!written.has(`n${i}`), `n${i} keeps its baseline, so the drop re-detects next run`);
+});
+
+test("a second card joining a first-contact digest already opened is not counted", async () => {
+  const rows = Array.from({ length: FIRST_CONTACT_SEND_CAP }, (_, i) => row(`n${i}`, { lastPriceCents: 1000, us: 800 }));
+  rows.push(row("second", { email: "n0@example.com", lastPriceCents: 700, us: 600 }));
+  const h = harness(rows);
+  const summary = await h.run();
+  assert.equal(h.sent.length, FIRST_CONTACT_SEND_CAP);
+  assert.equal(summary.deferred, 0);
 });

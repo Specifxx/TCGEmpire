@@ -230,7 +230,7 @@ export function CardSmash() {
           <GameResultExtras game="card-smash" score={score} />
           <RunRecap cards={smashed} currency={currency} title="🛒 The cards you smashed" />
           <p className="mt-4 text-center text-xs text-slate-600">
-            Real cards, real prices. <Link href="/movers" className="text-brand-400 hover:underline">See today&apos;s movers →</Link>
+            Real cards, real prices. <Link href="/movers" className="text-brand-400 hover:underline">See this week&apos;s movers →</Link>
           </p>
         </div>
       )}

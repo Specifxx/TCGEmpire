@@ -25,10 +25,12 @@
 //                        for a paid tier.
 //   Target-price alerts  lib/alert-limits.ts targetAlertLimit(tier) — the
 //                        same constant the route that sets a target enforces
-//   Best Basket,         api/basket: a signed-in account gets its own total;
-//   Buy this list        the store-by-store plan, and sending a deck /
-//                        watchlist / binder in with "skip copies I own", need
-//                        isPremium(user, "premium")
+//   Best Basket,         api/basket: any signed-in account can send a pasted
+//   Buy this list        list, its watchlist or its binder, with "skip copies
+//                        I own" (not for the binder, which prices
+//                        replacement), and gets back its own total. The
+//                        store-by-store plan for any of them needs
+//                        isPremium(user, "premium").
 //   Ad-free              /api/me adFree = isPremium(user) — any paid tier
 //
 // THE 2026-09-25 LINEUP (owner: fewer tools, each one worth paying for). Value
@@ -87,7 +89,11 @@ export const TIER_COMPARISON: TierRow[] = [
   // saving; which store to buy each card from is Premium's, withheld in the
   // API response rather than merely hidden.
   { feature: "Best Basket — cheapest delivered order for a list", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
-  { feature: "Buy this list — deck, watchlist or binder, skipping cards you own", account: false, plus: false, premium: true },
+  // Sending a deck or the watchlist in, skipping owned copies, is open to every
+  // account (lib/basket-request.ts takes no tier); what Premium adds is the
+  // plan for it. The binder is a source too, but it prices replacement, so it
+  // is not named here beside "skipping cards you own".
+  { feature: "Buy this list — deck or watchlist, skipping cards you own", account: "Your total", plus: "Your total", premium: "Store-by-store plan" },
   // Ad-free moved Plus → Premium on 2026-09-14 and back to every paid tier on
   // 2026-09-25 (owner's call — DECISIONS.md, "Plus is ad-free again"): with
   // the half-price intro, $2.49/mo Plus is the entry tier, and "no ads" is

@@ -211,7 +211,7 @@ const PLUS_FEATURES = [
 const PREMIUM_FEATURES_ON_PLUS = [
   "Everything in Plus, including no ads",
   "Best Basket: the cheapest delivered order, beside the best one-store and two-store orders",
-  "Buy straight from your deck, watchlist or binder, skipping what you own",
+  "The store-by-store plan for your deck or watchlist, skipping what you own",
   "Unlimited target-price alerts",
   "The store-by-store plan behind your binder's replacement cost",
   "N-day free trial",

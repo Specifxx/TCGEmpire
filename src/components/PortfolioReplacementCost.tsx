@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { trackEvent } from "@/lib/analytics";
 import type { BasketPlan, BasketPreview } from "@/lib/basket";
+import { PremiumButton } from "./PremiumButton";
 
 // "What would it cost to buy this collection again?" — the delivered answer.
 //
@@ -16,8 +17,11 @@ import type { BasketPlan, BasketPreview } from "@/lib/basket";
 // threshold — and shows the gap against the headline.
 //
 // The TOTAL is free; the store-by-store plan behind it is Premium (2026-09-25).
-// The route returns `plan` only to Premium, and everyone else gets a link to
-// Best Basket's binder source, which shows it.
+// The route returns `plan` only to Premium, whose panel links on to Best
+// Basket's binder source. Everyone else gets the Premium button (default tier:
+// the replacement plan is a Premium-only wall) — never a link named after a
+// plan the destination won't show them, which for a Plus member led a paying
+// member into a wall (QA, 2026-09-25).
 //
 // BEHIND A BUTTON, not computed on load: the route it calls reads every in-stock
 // listing for every card held, which is a much heavier query than the page's own
@@ -145,9 +149,18 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
 
           {result.covered > 0 && (
             <p className="text-sm">
-              <Link href="/tools/best-basket?source=binder" className="font-semibold text-brand-400 hover:underline">
-                {plan ? "Open it in Best Basket, with every card and its store link →" : "See the store-by-store plan →"}
-              </Link>
+              {plan ? (
+                <Link href="/tools/best-basket?source=binder" className="font-semibold text-brand-400 hover:underline">
+                  Open it in Best Basket, with every card and its store link →
+                </Link>
+              ) : (
+                <>
+                  <span className="text-slate-400">Which store to buy each card from is part of Premium. </span>
+                  <PremiumButton surface="gate:replacement-plan" className="font-semibold text-gold underline-offset-2 hover:underline">
+                    See the store-by-store plan with Premium →
+                  </PremiumButton>
+                </>
+              )}
             </p>
           )}
 

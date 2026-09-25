@@ -305,7 +305,7 @@ export default async function IndexPage({ searchParams }: { searchParams: { mark
             <p className="text-lg font-semibold text-white">The Index is warming up</p>
             <p className="mt-1 text-sm">
               We need a few days of price history in this market before the chart means anything.
-              Check back soon, or see what&apos;s moving today.
+              Check back soon, or see what&apos;s moving this week.
             </p>
             <Link href="/movers" className="btn-primary mt-4">Price movers →</Link>
           </div>

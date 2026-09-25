@@ -305,7 +305,10 @@ test("the eBay section does not claim its listings include graded copies", () =>
   const page = read("src/app/card/[id]/page.tsx");
   const at = page.indexOf("Also available on eBay");
   assert.ok(at > 0, "could not locate the eBay section");
-  const section = page.slice(at, at + 1200);
+  // The line itself moved into a client island on 2026-09-25 so it can follow
+  // the viewer's ad-free state (EbayPanelIntro); both variants are checked.
+  assert.match(page.slice(at, at + 1200), /<EbayPanelIntro \/>/);
+  const section = read("src/components/EbayPanelIntro.tsx");
   assert.doesNotMatch(
     section,
     /listings including used, graded/,

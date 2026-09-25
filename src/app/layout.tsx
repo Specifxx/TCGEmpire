@@ -6,6 +6,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { SideNav } from "@/components/SideNav";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme-shared";
+import { AD_FREE_BOOT_SCRIPT } from "@/lib/ad-free-boot";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { QuickViewProvider } from "@/components/QuickView";
 import { SealedQuickViewProvider } from "@/components/SealedQuickView";
@@ -305,6 +306,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             belonging to no account under review, is the fault that most likely
             voided the last two applications. See docs/adsense-remediation.md. */}
         {ADSENSE_CONFIGURED && <meta name="google-adsense-account" content={ADSENSE_CLIENT_ID} />}
+        {/* A returning paid member: pause AdSense requests (Auto ads included)
+            and hide the site's own placements before anything paints. Inline
+            and BEFORE the loader, which is async and so cannot run first. The
+            loader itself stays ungated. See lib/ad-free-boot.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: AD_FREE_BOOT_SCRIPT }} />
         {/* The AdSense loader: ownership verification + Auto ads + the EEA/UK/CH
             consent message, on every page, ungated. See the component header. */}
         <AdSenseLoader />

@@ -180,7 +180,8 @@ export function memberNudgeHref(kind: "deal" | "rising"): string {
   return kind === "deal" ? hrefFor({ buy: null, sort: "saving", page: 1, mine: "watch" }) : "/tools/rising";
 }
 
-export const PLUS_GATE_LINE = "Plus shows every one, and can email you when one hits your price.";
+// Plus is ad-free, and every surface that describes Plus says so (lineup spec).
+export const PLUS_GATE_LINE = "Plus shows every one with no ads, and can email you when one hits your price.";
 
 export function nudgeCopy(
   nudge: PremiumNudge,
@@ -208,7 +209,7 @@ export function nudgeCopy(
       `Ranked by demand and price-timing signals${ex?.kind === "rising" ? ` — including ${ex.name}` : ""}.`,
     ];
     if (free && c.risingFree > 0) parts.push(`${c.risingFree === c.rising ? (c.rising === 1 ? "It's" : "All are") : n(c.risingFree, "is", "are")} in your free top 3.`);
-    if (free) parts.push("Plus shows every pick and the signals behind each score.");
+    if (free) parts.push("Plus shows every pick, with no ads.");
     return { heading, line: parts.join(" "), kind: "rising" };
   }
   return null;

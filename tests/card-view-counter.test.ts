@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { isBotUserAgent, shouldCountCardView, VIEW_RATE_LIMIT, VIEW_RATE_WINDOW_MS } from "../src/lib/card-views";
+import { isBotUserAgent, shouldCountCardView, VIEW_IP_RATE_LIMIT, VIEW_IP_RATE_WINDOW_MS, VIEW_RATE_LIMIT, VIEW_RATE_WINDOW_MS } from "../src/lib/card-views";
 import { rateLimit } from "../src/lib/rate-limit";
 import { POST } from "../src/app/api/card/[id]/view/route";
 
@@ -96,6 +96,20 @@ test("the view route rate-limits per IP and card", async () => {
   assert.ok(src.indexOf("isBotUserAgent(") < src.indexOf("rateLimit("), "bots are turned away before they touch the limiter");
   assert.ok(src.indexOf("rateLimit(") < src.indexOf("prisma.card.updateMany"), "the limit is checked before the write");
   assert.ok(VIEW_RATE_LIMIT >= 2, "one search pick plus one view of the same card must both count");
+});
+
+test("one IP can't grow the shared limiter with made-up ids: a per-IP cap runs first, and non-card ids are refused", async () => {
+  // Review, 2026-09-25: every POST with a new id added a 6-hour bucket.
+  const ip = "198.51.100.77";
+  for (let i = 0; i < VIEW_IP_RATE_LIMIT; i++) rateLimit(`view-ip:${ip}`, VIEW_IP_RATE_LIMIT, VIEW_IP_RATE_WINDOW_MS);
+  const res = await POST(req("never-seen-before", CHROME, ip, true), { params: { id: "never-seen-before" } });
+  assert.equal(res.status, 429, "over the per-IP cap: refused before a per-card bucket is made");
+  const src = code("src/app/api/card/[id]/view/route.ts");
+  assert.ok(src.indexOf("`view-ip:${clientIp(req)}`") < src.indexOf("`view:${clientIp(req)}:${params.id}`"), "per-IP first");
+  assert.ok(VIEW_IP_RATE_LIMIT * (VIEW_RATE_WINDOW_MS / VIEW_IP_RATE_WINDOW_MS) <= 2_000, "bounded per-card buckets per IP");
+  // An id with characters no card id or slug has is a no-op 204.
+  const odd = await POST(req("x", CHROME, "198.51.100.78", true), { params: { id: "../../etc" } });
+  assert.equal(odd.status, 204);
 });
 
 test("every client beacon goes through the once-a-day guard", () => {

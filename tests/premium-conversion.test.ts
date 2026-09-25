@@ -133,7 +133,9 @@ test("runCheckoutRecovery targets abandoned checkouts only, excludes current Pre
   const src = read("src/lib/premium.ts");
   const fnAt = src.indexOf("export async function runCheckoutRecovery");
   assert.ok(fnAt >= 0, "expected runCheckoutRecovery to exist");
-  const body = src.slice(fnAt, fnAt + 2600);
+  // To the next export, not a fixed length: the tier bookkeeping (2026-09-25)
+  // pushed the stamp past the old 2,600-character window.
+  const body = src.slice(fnAt, src.indexOf("\nexport ", fnAt + 10));
   assert.match(body, /source: "checkout"/, "must select on the real checkout-click signal");
   assert.match(body, /checkoutRecoverySentAt: null/, "must exclude accounts already emailed");
   assert.match(body, /OR: \[\{ premiumUntil: null \}, \{ premiumUntil: \{ lt: new Date\(\) \} \}\]/, "must exclude anyone currently Premium");
@@ -175,6 +177,31 @@ test("the checkout-recovery workflow exists, is scheduled, and fails loudly with
 test("User.checkoutRecoverySentAt is additive — nullable, no default", () => {
   const src = read("prisma/schema.prisma");
   assert.match(src, /checkoutRecoverySentAt\s+DateTime\?/, "must be nullable so `prisma db push` can add it with no backfill");
+});
+
+test("PremiumClick.tier is additive — nullable, no default", () => {
+  const src = read("prisma/schema.prisma");
+  const model = src.slice(src.indexOf("model PremiumClick {"), src.indexOf("}", src.indexOf("model PremiumClick {")));
+  assert.match(model, /\n\s*tier\s+String\?\n/, "nullable with no @default, so `prisma db push` adds it with no backfill");
+});
+
+test("the recovery email names the plan that was abandoned, at that plan's price", async () => {
+  // Review, 2026-09-25: most walls open a Plus checkout, and every abandoner
+  // was told they had started Premium, at Premium's price.
+  assert.match(read("src/app/api/premium/checkout/route.ts"), /source: "checkout", surface, tier \}/, "the checkout row records its tier");
+  const lib = read("src/lib/premium.ts");
+  const fn = lib.slice(lib.indexOf("export async function runCheckoutRecovery"), lib.indexOf("export const PREMIUM_ANNUAL_PRICE_ID"));
+  assert.match(fn, /by: \["userId", "tier"\]/, "grouped by tier in the database — never a client-side distinct");
+  assert.doesNotMatch(fn, /introFromLine\("premium"/, "the price line follows the tier, not a hard-coded Premium");
+  assert.match(fn, /introFromLine\(tier, /);
+  assert.match(fn, /sendCheckoutRecoveryEmail\(u\.email, trialDays, fromLine, tier\)/);
+  assert.match(fn, /Your \$\{TIER_NAMES\[tier\]\} checkout is right where you left it\./);
+  const email = read("src/lib/email.ts");
+  const send = email.slice(email.indexOf("export async function sendCheckoutRecoveryEmail"), email.indexOf("// ─── Welcome email"));
+  for (const hard of [/signing up for RiftCompare Premium/, /Finish setting up Premium/, /"Still want Premium\?"/, /"Your RiftCompare Premium free trial/]) {
+    assert.doesNotMatch(send, hard, "the plan name comes from the tier");
+  }
+  assert.match(send, /trialDays > 0 \? `Your RiftCompare \$\{name\} free trial is still waiting` : `Your RiftCompare \$\{name\} checkout is still waiting`/, "no trial promised in the subject when none applies");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

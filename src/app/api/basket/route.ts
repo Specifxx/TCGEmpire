@@ -6,6 +6,7 @@ import { isPremium } from "@/lib/premium";
 import { getCountry } from "@/lib/get-country";
 import { priceField } from "@/lib/country";
 import { parseDeckList, resolveDeckLines, DECK_LINE_CAP } from "@/lib/deck";
+import { clampQty, parseBasketRequest, type BasketRequest } from "@/lib/basket-request";
 import { rateLimit, refundRateLimit, tooManyRequests } from "@/lib/rate-limit";
 import type { Country } from "@/lib/country";
 import { basketPreview, optimizeBasket, planBasket, type BasketCard } from "@/lib/basket";
@@ -34,7 +35,8 @@ export const dynamic = "force-dynamic";
 // { source: "binder" } — the cards it holds (replacement: the binder has no
 // notion of missing cards, see lib/basket-server.ts). `skipOwned` subtracts
 // the copies the account already holds (meaningless for the binder itself,
-// so ignored there).
+// so ignored there). Parsing lives in lib/basket-request.ts and never looks
+// at the tier: sending any of these is open to every signed-in account.
 //
 // LIST SIZE. At most DECK_LINE_CAP (200) lines: cards added one by one first,
 // then the pasted lines, in order. The page counts lines the same way and says
@@ -49,18 +51,6 @@ export const dynamic = "force-dynamic";
 // is the second, never-refunded limit on attempts (20 an hour). Both are
 // in-memory per instance (lib/rate-limit.ts), so they are soft; the 200-line
 // cap and the click-only UI bound them too.
-
-interface PickedLine {
-  cardId: string;
-  qty: number;
-}
-
-type Source = "deck" | "watchlist" | "binder";
-
-// A pasted or picked quantity. The binder's own quantities are NOT clamped:
-// they are the copies held, priced in full exactly as the portfolio's
-// replacement panel prices them, so "Open it in Best Basket" shows its number.
-const clampQty = (q: number) => Math.max(1, Math.min(99, Math.round(q)));
 
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -93,33 +83,13 @@ export async function POST(req: Request) {
     );
   }
 
-  const out = await buildBasket(user.id, full, parseRequest(await req.json().catch(() => null)), getCountry());
+  const out = await buildBasket(user.id, full, parseBasketRequest(await req.json().catch(() => null)), getCountry());
   // Only a run that came back with a total counts against the free five.
   if (!full && !out.priced) refundRateLimit(`basket:${user.id}`);
   return out.res;
 }
 
 const fail = (error: string, status: number): Outcome => ({ res: NextResponse.json({ error }, { status }), priced: false });
-
-interface BasketRequest {
-  source: Source;
-  skipOwned: boolean;
-  text: string;
-  picked: PickedLine[];
-}
-
-function parseRequest(raw: unknown): BasketRequest {
-  const body = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  const source: Source = body.source === "watchlist" || body.source === "binder" ? body.source : "deck";
-  const skipOwned = body.skipOwned === true && source !== "binder";
-  const text = typeof body.text === "string" ? body.text.slice(0, 20_000) : "";
-  const picked: PickedLine[] = Array.isArray(body.lines)
-    ? body.lines
-        .filter((l: unknown): l is PickedLine => !!l && typeof (l as PickedLine).cardId === "string" && Number.isFinite((l as PickedLine).qty))
-        .slice(0, DECK_LINE_CAP)
-    : [];
-  return { source, skipOwned, text, picked };
-}
 
 async function buildBasket(userId: string, full: boolean, { source, skipOwned, text, picked }: BasketRequest, country: Country): Promise<Outcome> {
   try {

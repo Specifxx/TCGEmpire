@@ -18,7 +18,7 @@ import { stripe, stripeEnabled } from "./stripe";
 import { sendTrialEndingEmail, sendTrialEndingNoChargeEmail, sendCheckoutRecoveryEmail } from "./email";
 import { notify } from "./notifications";
 import { formatMoney } from "./format";
-import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, introFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled } from "./site";
+import { PREMIUM_PRICE_AMOUNT, PREMIUM_PRICE_PERIOD, TIER_NAMES, introFromLine, INTRO_MONTHS, introAmountOffCents, introOfferEnabled, type PremiumTierKey } from "./site";
 
 // The portfolio's PriceHistory read, day-scoped per (exact card set, market). The
 // wishlist itself is fetched fresh above (edits reflect instantly); only the heavy
@@ -398,8 +398,8 @@ export async function runPremiumTrialReminders(): Promise<number> {
 }
 
 // The highest-intent, still-unconverted signal on the site: someone who opened
-// Stripe checkout for Premium (recorded server-side the moment checkout starts
-// — see api/premium/checkout's PremiumClick write) but never came back with a
+// Stripe checkout for Plus or Premium (recorded server-side, with its tier, the
+// moment checkout starts — see api/premium/checkout's PremiumClick write) but never came back with a
 // paid or trialing subscription. Runs as a daily cron (see
 // api/cron/premium-checkout-recovery), same idempotent-stamp shape as
 // runPremiumTrialReminders above: the stamp is written unconditionally after
@@ -421,11 +421,25 @@ export async function runCheckoutRecovery(): Promise<number> {
   // real GROUP BY pushes the dedup into Postgres. See
   // tests/prisma-client-side-distinct.test.ts for the incident this rule
   // exists to prevent.
+  //
+  // Grouped by tier too, so each account's LATEST checkout in the window says
+  // which plan it abandoned — most walls open a Plus checkout, and a Plus
+  // abandoner used to be told they had started Premium, at Premium's price. A
+  // row from before the tier column (null) reads as Premium, as it did then.
   const clicks = await prisma.premiumClick.groupBy({
-    by: ["userId"],
+    by: ["userId", "tier"],
     where: { source: "checkout", userId: { not: null }, createdAt: { gte: windowStart, lte: windowEnd } },
+    _max: { createdAt: true },
   });
-  const userIds = clicks.map((c) => c.userId).filter((id): id is string => id != null);
+  const latestTier = new Map<string, { tier: PremiumTierKey; at: number }>();
+  for (const c of clicks) {
+    if (c.userId == null) continue;
+    const at = c._max.createdAt?.getTime() ?? 0;
+    const tier: PremiumTierKey = c.tier === "plus" && premiumPlusEnabled() ? "plus" : "premium";
+    const seen = latestTier.get(c.userId);
+    if (!seen || at > seen.at) latestTier.set(c.userId, { tier, at });
+  }
+  const userIds = [...latestTier.keys()];
   if (!userIds.length) return 0;
 
   const candidates = await prisma.user.findMany({
@@ -448,12 +462,14 @@ export async function runCheckoutRecovery(): Promise<number> {
       // Only offer the trial framing if this account genuinely hasn't used one
       // yet — otherwise state the plain price, never a trial that no longer applies.
       const trialDays = premiumTrialEnabled() && !u.trialStartedAt ? PREMIUM_TRIAL_DAYS : 0;
-      // The price line checkout would really charge: the half-price intro for
-      // anyone who has never paid (almost every abandoner), else the list price.
-      const fromLine = introFromLine("premium", await introEligibleFor(u));
-      if (await sendCheckoutRecoveryEmail(u.email, trialDays, fromLine)) {
+      // The plan they abandoned, and the price line its checkout would really
+      // charge: the half-price intro for anyone who has never paid (almost
+      // every abandoner), else the list price.
+      const tier = latestTier.get(u.id)?.tier ?? "premium";
+      const fromLine = introFromLine(tier, await introEligibleFor(u));
+      if (await sendCheckoutRecoveryEmail(u.email, trialDays, fromLine, tier)) {
         sent++;
-        void notify(u.id, "checkout_recovery", "Still thinking it over?", "Your Premium checkout is right where you left it.", "/premium").catch(() => {});
+        void notify(u.id, "checkout_recovery", "Still thinking it over?", `Your ${TIER_NAMES[tier]} checkout is right where you left it.`, "/premium").catch(() => {});
       }
     } catch {
       /* best-effort — one failed send must not block the rest of the batch */

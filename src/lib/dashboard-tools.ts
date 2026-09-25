@@ -28,7 +28,7 @@ export const DASHBOARD_TOOLS: DashTool[] = [
   },
   {
     title: "Rising Cards",
-    desc: "Cards ranked by demand and price-timing signals — buy now, or leave it.",
+    desc: "Cards with high or rising demand whose price hasn't moved up yet, each with the reason it ranks.",
     href: "/tools/rising",
     tier: "plus",
     freeTaste: "Top 3 free",

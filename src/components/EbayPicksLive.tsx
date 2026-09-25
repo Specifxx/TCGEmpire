@@ -92,7 +92,7 @@ export function EbayPicksLive({
   }
 
   return (
-    <section className={className} aria-label={heading}>
+    <section data-ad-placement="" className={className} aria-label={heading}>
       <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
         <EbayMark className="text-sm" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">

@@ -310,7 +310,7 @@ export function RunRecap({ cards, currency, title = "💸 The cards from this ru
       </ul>
       <div className="border-t border-ink-800 px-4 py-2.5 text-center text-xs text-slate-500">
         Every price is the cheapest live store we track.{" "}
-        <Link href="/movers" className="font-semibold text-brand-400 hover:underline">See today&apos;s biggest price moves →</Link>
+        <Link href="/movers" className="font-semibold text-brand-400 hover:underline">See this week&apos;s biggest price moves →</Link>
       </div>
     </div>
   );

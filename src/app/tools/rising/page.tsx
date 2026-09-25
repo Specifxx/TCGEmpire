@@ -353,7 +353,7 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
               <p className="text-sm text-slate-300">
                 <strong className="text-white">{hiddenCount} more ranked picks</strong>
-                {where} — Plus shows every one, and can email you when one hits your price.
+                {where} — Plus shows every one with no ads, and can email you when one hits your price.
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <PremiumButton tier="plus" surface="gate:rising" />

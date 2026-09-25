@@ -64,8 +64,9 @@ export async function POST(req: Request) {
 
   // Record the strong "started checkout" interest signal (best-effort), with the
   // surface it came from, so the funnel report can say which surfaces produce
-  // checkouts and not just clicks.
-  prisma.premiumClick.create({ data: { userId: user.id, source: "checkout", surface } }).catch(() => {});
+  // checkouts and not just clicks — and the tier, so the recovery email names
+  // the plan that was abandoned (lib/premium.ts runCheckoutRecovery).
+  prisma.premiumClick.create({ data: { userId: user.id, source: "checkout", surface, tier } }).catch(() => {});
 
   // One free trial per account, on EITHER plan (annual trials convert to the yearly
   // price after the trial). The webhook independently re-checks by card fingerprint,

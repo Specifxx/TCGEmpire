@@ -36,6 +36,11 @@ export interface Me {
   // Which OAuth sign-in buttons are configured — for client components that
   // render AuthForm themselves (PremiumDialog's signed-out state).
   providers: ("google" | "discord")[];
+  // /api/me really answered (2xx). False for the EMPTY_ME a failed request
+  // falls back to — which reads as "signed out", and must not be acted on as
+  // one by anything that would undo a member's state (PremiumProvider's
+  // ad-free hint cookie).
+  answered?: boolean;
 }
 
 const EMPTY_ME: Me = {
@@ -63,8 +68,9 @@ let mePromise: Promise<Me> | null = null;
 export function fetchMe(): Promise<Me> {
   if (!mePromise) {
     mePromise = fetch("/api/me", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : EMPTY_ME))
+      .then((r) => (r.ok ? r.json().then((d) => ({ ...d, answered: true })) : EMPTY_ME))
       .then((d) => ({
+        answered: d.answered === true,
         user: d.user ?? null,
         analyticsId: typeof d.analyticsId === "string" ? d.analyticsId : null,
         premium: !!d.premium,

@@ -10,6 +10,7 @@ import { defaultTcgBuyKeys, getTcgDealRanks } from "./arbitrage";
 import { ALL_FALLBACK_RETAILERS } from "./constants";
 import { honouredTargetIds } from "./target-price";
 import { affiliateUrl } from "./affiliate";
+import { ADMIN_EMAILS, isAdminEmail } from "./admin-emails";
 
 export interface AlertRunSummary {
   alerts: number; // rows examined
@@ -106,6 +107,22 @@ export const FIRST_PRICE_SEND_CAP = 40;
 // for a paid watch is at most ~12 hours away. Joining a digest already queued
 // for that address costs nothing and is not counted.
 export const PAID_SEND_CAP = 30;
+
+// Most NEW drop digests one run may open to an address we have NEVER emailed
+// (review, 2026-09-25). /api/alerts/subscribe enrols any posted address with no
+// double opt-in, and alert-confirmations.ts caps only the confirmation mail it
+// sends: the next "all" run would then send every one of those never-emailed
+// addresses a drop digest on its first drop, through the same ~100/day Resend
+// quota that verification and password-reset mail rely on — and a failed send
+// holds the baseline, so a flood would keep spending it day after day. Keyed on
+// "never emailed", not on userId (tests/watchlist.test.ts: rows are never
+// filtered by account), because that is exactly the posted-address case. The
+// overflow is deferred with its baseline held and re-detects next run, so a
+// burst is spread over days instead of starving transactional mail; an address
+// we have emailed before, or one already getting a digest this run, is not
+// counted. (The durable fix, double opt-in for anonymous rows, changes the
+// account-free product and needs an owner decision.)
+export const FIRST_CONTACT_SEND_CAP = 20;
 
 // Given a genuine drop (current < the last-seen baseline), decide whether to
 // actually EMAIL it. Pure and exported so the anti-spam policy is unit-tested
@@ -213,10 +230,23 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
 
   // "all" reads EVERY row, unfiltered — anonymous watchers are emailed exactly
   // like account-owned ones (tests/watchlist.test.ts). "paid" narrows the read
-  // to rows whose account is inside a paid period, or is an admin; isPremium()
-  // below stays the real check (a tier floor etc.), this only trims the read.
+  // to rows whose account is inside a paid period, or is an admin — by the DB
+  // flag OR by address (ADMIN_EMAILS, the same list the session honours, so an
+  // env-listed admin's targets are not shown live and then never sent);
+  // isPremium() below stays the real check (a tier floor etc.), this only
+  // trims the read.
   const paidOnly = scope === "paid"
-    ? { user: { is: { OR: [{ isAdmin: true }, { premiumUntil: { gt: now } }] } } }
+    ? {
+        user: {
+          is: {
+            OR: [
+              { isAdmin: true },
+              { premiumUntil: { gt: now } },
+              ...(ADMIN_EMAILS.length ? [{ email: { in: ADMIN_EMAILS, mode: "insensitive" as const } }] : []),
+            ],
+          },
+        },
+      }
     : undefined;
   const alerts = await db.priceAlert.findMany({
     where: paidOnly,
@@ -245,7 +275,9 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       // carries the "create a free account" block (anonymous watchers only).
       userId: true,
       // Entitlement, for the paid triggers: the fields isPremium() reads.
-      user: { select: { isAdmin: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true } },
+      // email: an ADMIN_EMAILS address is an admin here exactly as in the
+      // session (lib/auth.ts), whatever its DB isAdmin column says.
+      user: { select: { email: true, isAdmin: true, premiumUntil: true, premiumTier: true, premiumTierFloor: true } },
       card: {
         select: {
           id: true,
@@ -293,7 +325,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   for (const a of alerts) {
     // Through the PriceAlert → User relation; an anonymous row has no user and
     // is never paid.
-    const user: EntitlementUser | null = a.user ?? null;
+    const user: EntitlementUser | null = a.user ? { ...a.user, isAdmin: a.user.isAdmin || isAdminEmail(a.user.email) } : null;
     const ok = a.userId != null && user != null && isPremium(user);
     entitled.set(a.id, ok);
     if (!ok || a.targetCents == null) continue;
@@ -363,6 +395,12 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   let listedDigests = 0;
   // New digests opened by the paid triggers this run (PAID_SEND_CAP).
   let paidDigests = 0;
+  // Addresses emailed before this run — snapshotted now, because queue()
+  // stamps lastEmailedByAddress — and the first-contact drop digests opened
+  // this run (FIRST_CONTACT_SEND_CAP).
+  const everEmailed = new Set(lastEmailedByAddress.keys());
+  let firstContactDigests = 0;
+  const firstContact = (email: string) => !byEmail.has(email) && !everEmailed.has(email);
 
   const queue = (a: (typeof alerts)[number], item: PriceDropItem) => {
     const bucket = byEmail.get(a.email) ?? { token: a.unsubToken, items: [], anonymous: true, userId: null };
@@ -477,7 +515,13 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
         // so it resurfaces and accumulates into the next digest instead.
         summary.deferred++;
         deferredIds.add(a.id);
+      } else if (firstContact(a.email) && firstContactDigests >= FIRST_CONTACT_SEND_CAP) {
+        // Never emailed before, and this run has opened its share of those:
+        // held for the next run like any deferral (FIRST_CONTACT_SEND_CAP).
+        summary.deferred++;
+        deferredIds.add(a.id);
       } else {
+        if (firstContact(a.email)) firstContactDigests++;
         notifiedIds.push(a.id);
         notifiedLowest.set(a.id, a.lowestEmailedCents == null ? current : Math.min(a.lowestEmailedCents, current));
         queue(a, itemFor(a, market, "drop", prev, current));

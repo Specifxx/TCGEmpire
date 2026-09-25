@@ -91,7 +91,7 @@ export function LocalizedPriceHistory({
         </span>
       </h2>
       <div className="mt-3">
-        <PriceChart points={chartPoints} currency={currency} nowOverrideCents={liveLowestCents} />
+        <PriceChart points={chartPoints} currency={currency} nowOverrideCents={liveLowestCents} rawCardHistory />
       </div>
     </section>
   );

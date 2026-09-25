@@ -85,14 +85,14 @@ const FEATURES: { title: string; body: string; href: string | null; cta: string 
   },
   {
     title: "Rising Cards",
-    body: "Cards ranked by demand and price-timing signals, so you know whether the one on your want-list is better bought now than left for later. Transparent scoring, and not financial advice. Free accounts see the top three.",
+    body: "Cards with high or rising search demand and few stores in stock, ranked with the reason for each pick — and, once a card has enough weekly prices, where its price sits in its own recent range. A screen, not a prediction, and not financial advice. Free accounts see the top three.",
     href: "/tools/rising",
     cta: "Open Rising Cards",
     tier: "plus",
   },
   {
     title: "Best Basket and Buy this list",
-    body: "Send a decklist, your watchlist or your binder, tick “skip copies I already own”, and get the cheapest delivered order across your country's stores, with postage and free-shipping thresholds counted, shown beside the best one-store and two-store orders. Every signed-in account sees its own total first; Premium shows which store to buy each card from.",
+    body: "Send a decklist or your watchlist, tick “skip copies I already own”, and get the cheapest delivered order across your country's stores, with postage and free-shipping thresholds counted, shown beside the best one-store and two-store orders — or send your binder to see what replacing it would cost. Every signed-in account sees its own total first; Premium shows which store to buy each card from.",
     href: "/tools/best-basket",
     cta: "Open Best Basket",
     tier: "premium",
@@ -180,7 +180,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which plan is worth it?",
-    a: "Depends entirely on how you buy. Plus is for someone who buys singles regularly: it takes the ads away, shows every card below TCGplayer market, and emails you the store when a card you watch reaches the price you set. Premium is for buying a whole deck or filling a binder: Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
+    a: "Depends entirely on how you buy. Plus is for someone who buys singles regularly: it takes the ads away, shows every card below TCGplayer market, and emails you the store when a card you watch reaches the price you set. Premium is for buying a whole deck or list: Best Basket shows the cheapest delivered order next to the best single-store order, so the saving on your own list is a number you can check (every signed-in account sees its own total before paying) rather than a claim we make. If you only buy the occasional single card, the free account is genuinely all you need — that's deliberate.",
   },
   ...(premiumPlusEnabled()
     ? [

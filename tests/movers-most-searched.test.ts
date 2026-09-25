@@ -71,17 +71,41 @@ test("the demand ranking is narrow and computed once for every market", () => {
   assert.match(demand, /\["rc-demand-v2", String\(days\), sydneyDayKey\(\)\]/, "the key carries no market");
   // "Most searched" never lists a card nobody searched for.
   assert.match(demand, /win\.rows\.filter\(\(r\) => r\.searches > 0\)/);
-  assert.match(demand, /win\.rows\.filter\(\(r\) => r\.views > 0\)/);
 });
 
-test("a failed demand read is never cached as an empty strip", () => {
+// The DATA cache never stores a failure. The page render that caught one is
+// an ISR render like any other, so the strip stays hidden until the next
+// /movers regeneration (the import's revalidatePath, ~12 h, or the 24 h TTL) —
+// accepted rather than shortening the page's TTL or throwing (a throw after a
+// tag purge has no stale page to fall back on and would 500). The anchor the
+// /tools/demand redirect lands on is always there.
+test("a failed demand read is never cached in the data cache, and the page keeps its anchor", () => {
   const demand = code(read(DEMAND));
   const compute = demand.slice(demand.indexOf("async function computeTopDemand"), demand.indexOf("function getTopDemandCached"));
   assert.match(compute, /catch \(err\) \{[\s\S]{0,160}throw err;/, "the cached callback rethrows");
   const outer = demand.slice(demand.indexOf("export async function getTopDemand"));
-  assert.match(outer, /catch \{[\s\S]{0,200}bySearch: \[\], byView: \[\]/, "…and the caller degrades outside the cache");
+  assert.match(outer, /catch \{[\s\S]{0,200}bySearch: \[\], windowUsable: false[^}]*failed: true/, "…and the caller degrades outside the cache");
+  const strip = code(read("src/components/MostSearchedStrip.tsx"));
+  const empty = strip.slice(strip.indexOf("if (!rows.length)"), strip.indexOf("const days"));
+  assert.match(empty, /id="most-searched"/, "the #most-searched anchor renders with no rows too");
   // The page renders the strip only from a real 7-day window.
   assert.match(code(read(PAGE)), /const mostSearched = demand\.windowUsable \?/);
+});
+
+test("nothing that links to /movers calls it daily or today's", () => {
+  // Review, 2026-09-25: /movers was relabelled weekly (its data always was),
+  // but a house ad, the games, 404, /alerts and a dozen articles still sold
+  // "the daily movers" and "today's biggest price moves".
+  const walk = (d: string): string[] =>
+    readdirSync(join(process.cwd(), d)).flatMap((n) => {
+      const p = `${d}/${n}`;
+      return statSync(join(process.cwd(), p)).isDirectory() ? walk(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
+    });
+  const stale = /\bdaily (price )?movers\b|today(?:'|&apos;|’)s (biggest )?(price )?mov(?:ers|es)\b/i;
+  for (const f of walk("src")) assert.doesNotMatch(code(read(f)), stale, `${f} calls /movers daily`);
+  const adSlot = read("src/components/AdSlot.tsx");
+  const moversAd = adSlot.slice(adSlot.indexOf("const HOUSE_ADS"), adSlot.indexOf('href: "/movers"'));
+  assert.doesNotMatch(moversAd, /updated daily/i, "the /movers house ad says weekly");
 });
 
 test("/movers says weekly, and says what its price is", () => {

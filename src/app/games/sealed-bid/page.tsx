@@ -164,7 +164,7 @@ export default function SealedBidPage() {
           <p className="mt-2 text-sm leading-relaxed text-slate-400">
             The single-player games are the training ground: <Link href="/games/higher-lower" className="text-brand-300 hover:underline">Higher or Lower</Link> and{" "}
             <Link href="/games/price-check" className="text-brand-300 hover:underline">Price Check</Link> drill the same price instincts Sealed Bid rewards, and{" "}
-            <Link href="/movers" className="text-brand-300 hover:underline">today&apos;s price movers</Link> shows which cards are spiking right now. Or browse the{" "}
+            <Link href="/movers" className="text-brand-300 hover:underline">this week&apos;s price movers</Link> shows which cards are rising. Or browse the{" "}
             <Link href="/games" className="text-brand-300 hover:underline">whole arcade</Link>.
           </p>
         </section>

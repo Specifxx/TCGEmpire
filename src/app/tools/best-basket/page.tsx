@@ -38,11 +38,11 @@ const FAQS = [
   },
   {
     q: "What can I paste in?",
-    a: "Any decklist or card list, one card per line — with quantities (\"3 Jinx, Loose Cannon\") or plain names. A set code like (OGN-251) picks that exact printing. Section headers are skipped, and any line we can't match is listed back to you rather than dropped. A list is priced up to its first 200 lines, and the page tells you when yours runs past that. Signed in, you can also price your watchlist or your binder, and tick \"Skip copies I already own\".",
+    a: "Any decklist or card list, one card per line — with quantities (\"3 Jinx, Loose Cannon\") or plain names. A set code like (OGN-251) picks that exact printing. Section headers are skipped, and any line we can't match is listed back to you rather than dropped. A list is priced up to its first 200 lines, and the page tells you when yours runs past that. Signed in, you can also send your watchlist and tick \"Skip copies I already own\", or price what replacing your binder would cost.",
   },
   {
     q: "Is the cheapest split guaranteed to be the cheapest possible?",
-    a: "It's the cheapest the search finds, not a proof — with free-shipping thresholds there's no fast exact answer. It is never dearer than buying each card's cheapest copy separately, or than the best single-store or two-store order, which are shown beside it so you can compare.",
+    a: "It's the cheapest the search finds, not a proof — with free-shipping thresholds there's no fast exact answer. It is never dearer than buying each card's cheapest copy separately, or than the single-store and two-store orders shown beside it so you can compare. The single-store order is the cheapest one store offers; the two-store order is the cheapest split the search finds, shown only when it beats buying everything from one store.",
   },
   {
     q: "Do I need Premium just to price a list, not buy it?",

@@ -47,7 +47,8 @@ test("the ad components gate on adFree, which is computed at the plus minimum", 
   assert.match(useMe, /adFree: !!d\.adFree/, "fetchMe must map it");
 
   const provider = code("src/components/PremiumProvider.tsx");
-  assert.match(provider, /const \{ adFree \} = useMe\(\)/, "the ad provider must read adFree, not premium");
+  assert.match(provider, /const \{ adFree(, [a-z]+)* \} = useMe\(\)/, "the ad provider must read adFree, not premium");
+  assert.doesNotMatch(provider, /\bpremium\b[^,}]*\} = useMe/, "…and not premium");
   assert.ok(!/const \{ premium \} = useMe\(\)/.test(provider), "reading `premium` here would give ad-free back to every Plus account");
 });
 
@@ -156,4 +157,44 @@ test("both maintenance tasks are registered and runnable", () => {
   // other writing task uses, not run unconditionally.
   const grandfatherStep = wf.slice(wf.indexOf("if: inputs.task == 'grandfather-plus-adfree'"));
   assert.match(grandfatherStep.slice(0, 400), /inputs\.dry_run/, "the write half must respect the dry_run input");
+});
+
+// ── Ad-free from the first byte (review + QA, 2026-09-25) ────────────────────
+// The AdSense loader must stay ungated, so Auto ads — once switched on after
+// approval — would fill for paid members; and adFree resolves only after
+// /api/me, so the HTML a member got carried the site's own placements. The
+// rc_adfree hint cookie + an inline boot script close both (lib/ad-free-boot.ts).
+
+test("the ad-free boot script pauses AdSense and marks <html> for a hinted member, and does nothing otherwise", async () => {
+  const { AD_FREE_BOOT_SCRIPT, AD_FREE_ATTR } = await import("../src/lib/ad-free-boot");
+  const run = (cookie: string) => {
+    const attrs: Record<string, string> = {};
+    const window: { adsbygoogle?: unknown[] & { pauseAdRequests?: number } } = {};
+    const document = { cookie, documentElement: { setAttribute: (k: string, v: string) => (attrs[k] = v) } };
+    new Function("window", "document", AD_FREE_BOOT_SCRIPT)(window, document);
+    return { attrs, paused: window.adsbygoogle?.pauseAdRequests };
+  };
+  assert.deepEqual(run("theme=light; rc_adfree=1"), { attrs: { [AD_FREE_ATTR]: "1" }, paused: 1 });
+  assert.deepEqual(run("rc_adfree=1"), { attrs: { [AD_FREE_ATTR]: "1" }, paused: 1 });
+  assert.deepEqual(run("theme=dark"), { attrs: {}, paused: undefined }, "no hint: the loader runs untouched");
+  assert.deepEqual(run("xrc_adfree=1; rc_adfree=0"), { attrs: {}, paused: undefined });
+});
+
+test("the boot script runs before the (still ungated) AdSense loader, and the hint follows adFree", () => {
+  const layout = code("src/app/layout.tsx");
+  const boot = layout.indexOf("__html: AD_FREE_BOOT_SCRIPT");
+  const loader = layout.indexOf("<AdSenseLoader />");
+  assert.ok(boot > 0 && loader > boot, "inline boot script before the loader");
+  assert.match(code("src/components/AdSenseLoader.tsx"), /return <script async src=\{ADSENSE_LOADER_SRC\}/, "the loader itself is not gated");
+  const provider = code("src/components/PremiumProvider.tsx");
+  assert.match(provider, /const \{ adFree, loaded, answered \} = useMe\(\);/, "reads adFree, not premium");
+  assert.match(provider, /if \(loaded && answered\) syncAdFree\(adFree\);/, "only a real /api/me answer writes or clears the hint");
+  assert.match(read("src/lib/use-me.ts"), /r\.ok \? r\.json\(\)\.then\(\(d\) => \(\{ \.\.\.d, answered: true \}\)\) : EMPTY_ME/);
+});
+
+test("every site ad placement is hidden under the hint until React takes over", () => {
+  assert.match(read("src/app/globals.css"), /:root\[data-adfree\] \[data-ad-placement\] \{\s*display: none !important;/);
+  for (const f of ["AdSlot", "EbayAd", "TcgplayerAd", "EbayPicksLive", "FooterAds", "EbayAdCarouselLive"]) {
+    assert.match(read(`src/components/${f}.tsx`), /data-ad-placement=""/, `${f} is marked`);
+  }
 });

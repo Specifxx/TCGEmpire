@@ -268,8 +268,9 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
         <div className="flex items-center justify-between border-b border-ink-700 bg-ink-950/60 px-5 py-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">RiftCompare</span>
+            {/* The plan being sold: a Plus gate opens on Plus (QA, 2026-09-25). */}
             <span className="rounded border border-gold/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
-              Premium
+              {TIER_NAMES[sellTier]}
             </span>
           </div>
           {/* One close-button shape across every ✕ (2026-09-23): .tap-icon is
@@ -300,8 +301,11 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
               and same reasoning as /premium's banner (2026-09-22). Still only
               for someone who could act on it: an already-Premium visitor is
               grandfathered regardless, so the urgency has nothing to say to
-              them. */}
-          {!premium && (
+              them. And only while PREMIUM is the plan selected: the lock-in
+              is Premium's price policy, and a Plus gate opens this dialog on
+              Plus — "lock in $9.99/month" over a $4.99 Plus checkout was the
+              wrong price on the main conversion surface (QA, 2026-09-25). */}
+          {!premium && sellTier === "premium" && (
             <div className="mt-3 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-center text-xs font-semibold text-gold">
               {premiumPriceIncreaseAnnounced() ? (
                 <>
@@ -449,7 +453,7 @@ function PremiumDialog({ onClose, initialTier }: { onClose: () => void; initialT
             )}
           </div>
 
-          {!premium && (
+          {!premium && sellTier === "premium" && (
             <p className="mt-3 text-center text-[11px] font-medium text-gold/80 [[data-theme=light]_&]:text-gold">{premiumLockInLine()}</p>
           )}
           <p className="mt-3 text-center text-xs text-slate-600">

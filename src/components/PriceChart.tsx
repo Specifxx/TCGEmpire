@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { formatMoney } from "@/lib/format";
+import { dropBreakWindow } from "@/lib/methodology-breaks";
 import type { PricePoint } from "@/lib/price-history";
 
 // Interactive price-history chart (Steam / CSFloat style): scatter-line with a
@@ -35,6 +36,7 @@ export function PriceChart({
   fmt,
   upIsGood = false,
   nowOverrideCents,
+  rawCardHistory = false,
 }: {
   points: PricePoint[];
   currency?: string;
@@ -56,9 +58,21 @@ export function PriceChart({
    * never contradict each other. The plotted line/dots stay the genuine
    * historical series either way — only the "Now" stat text changes; the
    * "▲/▼ X%" trend arrow still describes real tracked history, not a
-   * fabricated data point.
+   * fabricated data point — on the current pricing basis only, for a raw
+   * card series (see rawCardHistory).
    */
   nowOverrideCents?: number | null;
+  /**
+   * The points are a card's RAW PriceHistory series (the card page and
+   * QuickView). Its "▲/▼ X%" arrow then never reaches back across a
+   * METHODOLOGY_BREAKS window (dropBreakWindow — the same rule /movers, the
+   * verdict and the Index apply): across 2026-09-23 it showed the US sourcing
+   * change as a ~25% drop. The line itself is still drawn in full. Off for the
+   * Index and the portfolio, whose series already hold a break flat by
+   * chain-linking — cutting their arrows to post-break points would hide real
+   * movement for weeks.
+   */
+  rawCardHistory?: boolean;
 }) {
   const label = fmt ?? ((v: number) => formatMoney(v, currency));
   const [range, setRange] = useState<RangeKey>("ALL");
@@ -128,8 +142,12 @@ export function PriceChart({
   // against `last`, the real last tracked snapshot: that arrow describes
   // history, not today's live price.
   const nowValue = nowOverrideCents ?? last;
-  const delta = last - first;
-  const pct = first > 0 ? Math.round((delta / first) * 100) : 0;
+  const trend = rawCardHistory ? dropBreakWindow(data) : data;
+  const hasTrend = trend.length >= 2;
+  const tFirst = hasTrend ? trend[0].v : first;
+  const tLast = hasTrend ? trend[trend.length - 1].v : first;
+  const delta = tLast - tFirst;
+  const pct = tFirst > 0 ? Math.round((delta / tFirst) * 100) : 0;
   const up = delta > 0;
   const flat = delta === 0;
 

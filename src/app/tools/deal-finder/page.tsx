@@ -108,7 +108,7 @@ const DEAL_FAQS = [
   },
   {
     q: "Do I need to pay to use it?",
-    a: "Not to start. A free account shows the top three cards on the list, updated daily. Plus shows every one, with the store filter, the eBay-only view, sorting and a filter for just the cards you watch or own, and can email you when a watched card hits your price. Price comparison, the card database, price movers and the deck builder are free for everyone.",
+    a: "Not to start. A free account shows the top three cards on the list, updated daily. Plus shows every one, with the store filter, the eBay-only view, sorting and a filter for just the cards you watch or own, takes the ads off every page, and can email you when a watched card hits your price. Price comparison, the card database, price movers and the deck builder are free for everyone.",
   },
 ];
 
@@ -356,16 +356,22 @@ function formatAsOf(iso: string): string {
 // a green "+ Net profit" and a "Margin" measured over the BUY price — which
 // disagreed with the homepage's "Save X%" for the same card. "% below" is
 // belowTcgPct, the one definition the homepage badge uses too.
+//
+// Below sm it is three columns — Card · Best price · Below market, with the %
+// folded under the amount — instead of a 640px-wide table scrolled sideways
+// inside its card, which cut Best price mid-number at 390px and hid the
+// saving off-screen (QA, 2026-09-25). The TCGplayer market figure is the one
+// column dropped there; Below market is measured against it.
 function BuyerTable({ items, country, currency }: { items: ArbItem[]; country: Country; currency: string }) {
   return (
-    <table className="w-full min-w-[640px] text-sm">
+    <table className="w-full text-sm sm:min-w-[640px]">
       <thead>
         <tr className="border-b border-ink-700 text-left text-[10px] uppercase tracking-wide text-slate-500">
-          <th className="px-4 py-2.5 font-semibold">Card</th>
+          <th className="px-3 py-2.5 font-semibold sm:px-4">Card</th>
           <th className="px-2 py-2.5 text-right font-semibold">Best price</th>
-          <th className="px-2 py-2.5 text-right font-semibold">TCGplayer market</th>
-          <th className="px-2 py-2.5 text-right font-semibold">Below market</th>
-          <th className="px-4 py-2.5 text-right font-semibold">% below</th>
+          <th className="hidden px-2 py-2.5 text-right font-semibold sm:table-cell">TCGplayer market</th>
+          <th className="px-3 py-2.5 text-right font-semibold sm:px-2">Below market</th>
+          <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">% below</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-ink-800">
@@ -376,9 +382,9 @@ function BuyerTable({ items, country, currency }: { items: ArbItem[]; country: C
               <OutboundLink href={it.buyUrl} retailer={it.buyStore} country={country} className="num font-semibold text-white hover:text-brand-400">
                 {formatMoney(it.buyCents, currency)}
               </OutboundLink>
-              <div className="truncate text-[10px] text-slate-500" title={it.buyStoreName}>{it.buyStoreName}</div>
+              <div className="ml-auto max-w-[5.5rem] truncate text-[10px] text-slate-500 sm:max-w-none" title={it.buyStoreName}>{it.buyStoreName}</div>
             </td>
-            <td className="px-2 py-2 text-right">
+            <td className="hidden px-2 py-2 text-right sm:table-cell">
               <OutboundLink href={it.marketUrl} retailer="tcgplayer" country={country} className="num text-slate-300 hover:text-brand-400">
                 {formatMoney(it.marketCents, currency)}
               </OutboundLink>
@@ -386,8 +392,11 @@ function BuyerTable({ items, country, currency }: { items: ArbItem[]; country: C
                 {it.tcgLowCents != null ? `TCGplayer low ${formatMoney(it.tcgLowCents, "USD")}` : country === "US" ? "US market" : "US market, converted"}
               </div>
             </td>
-            <td className="num px-2 py-2 text-right font-bold text-up">{formatMoney(it.belowCents, currency)}</td>
-            <td className="num px-4 py-2 text-right font-semibold text-up">{it.belowPct}%</td>
+            <td className="num px-3 py-2 text-right font-bold text-up sm:px-2">
+              {formatMoney(it.belowCents, currency)}
+              <div className="text-[10px] font-semibold sm:hidden">{it.belowPct}% below</div>
+            </td>
+            <td className="num hidden px-4 py-2 text-right font-semibold text-up sm:table-cell">{it.belowPct}%</td>
           </tr>
         ))}
       </tbody>
@@ -517,7 +526,7 @@ function MorePremium({ more, unit }: { more: number; unit: string }) {
     <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3">
       <p className="text-sm text-slate-300">
         <strong className="text-white">
-          {more.toLocaleString()} more {unit}
+          {more.toLocaleString()} more {more === 1 ? unit.replace(/s$/, "") : unit}
         </strong>{" "}
         on this list. {PLUS_GATE_LINE}
       </p>
@@ -527,13 +536,15 @@ function MorePremium({ more, unit }: { more: number; unit: string }) {
 }
 function CardCell({ card }: { card: CardTileData }) {
   return (
-    <td className="px-4 py-2">
+    <td className="px-3 py-2 sm:px-4">
       <CardQuickLink card={card} className="flex items-center gap-2.5">
         {card.imageThumbUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="h-10 w-7 shrink-0 rounded-sm object-cover" />
+          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="hidden h-10 w-7 shrink-0 rounded-sm object-cover sm:block" />
         )}
-        <span className="min-w-0">
+        {/* Capped below sm so a long name truncates instead of widening the
+            table past a phone (the thumbnail is dropped there too). */}
+        <span className="min-w-0 max-w-[7.5rem] sm:max-w-none">
           <span className="block truncate font-semibold text-white">{card.name}</span>
           <span className="block text-[11px] text-slate-500">{card.setCode} · {card.collectorNumber}</span>
         </span>
@@ -569,7 +580,9 @@ function Empty({ children }: { children: React.ReactNode }) {
 function Pager({ total, page, pageCount, linkFor, unit }: { total: number; page: number; pageCount: number; linkFor: (p: number) => string; unit: string }) {
   return (
     <div className="mt-4 flex items-center justify-between text-sm">
-      <span className="text-xs text-slate-500">{total} {unit} · page {page} of {pageCount}</span>
+      <span className="text-xs text-slate-500">
+        {total.toLocaleString()} {total === 1 ? unit.replace(/s$/, "") : unit} · page {page} of {pageCount}
+      </span>
       <div className="flex gap-2">
         {page > 1 && <Link href={linkFor(page - 1)} className="btn-ghost text-sm">← Prev</Link>}
         {page < pageCount && <Link href={linkFor(page + 1)} className="btn-ghost text-sm">Next →</Link>}

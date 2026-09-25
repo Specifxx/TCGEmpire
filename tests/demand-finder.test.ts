@@ -47,7 +47,8 @@ test("no tier surface still sells the Demand Finder", () => {
 
 test("lib/demand.ts never throws — every path degrades to an empty result", () => {
   const src = read(LIB);
-  assert.match(src, /catch \{[\s\S]{0,200}bySearch: \[\], byView: \[\]/, "computeTopDemand must catch and return an empty, well-shaped result rather than throw into the page");
+  assert.match(src, /catch \{[\s\S]{0,200}bySearch: \[\], windowUsable: false/, "getTopDemand must catch and return an empty, well-shaped result rather than throw into the page");
+  assert.match(src, /catch \{[\s\S]{0,200}failed: true/, "…and say it failed, which a short window never does");
 });
 
 test("lib/demand.ts computes once at a generous cap and slices for every caller", () => {
@@ -60,12 +61,17 @@ test("lib/demand.ts computes once at a generous cap and slices for every caller"
   assert.match(src, /full\.bySearch\.slice\(0, limit\)/, "getTopDemand must slice the cached full result down to the caller's limit");
 });
 
-test("lib/demand.ts's all-time queries are bounded and never scan the whole table", () => {
+test("lib/demand.ts computes only what the /movers strip reads: no all-time scan, no view ranking", () => {
+  // Review, 2026-09-25: the most-viewed ranking, the days=null all-time mode
+  // and the 50-row scan were read only by the retired Demand Finder page.
   const src = read(LIB);
-  const fn = src.slice(src.indexOf("async function computeAllTime"), src.indexOf("async function computeTopDemand"));
-  assert.match(fn, /searchCount: \{ gt: 0 \}/, "the search ranking must filter to cards with real search activity, not scan every card");
-  assert.match(fn, /viewCount: \{ gt: 0 \}/, "the view ranking must filter to cards with real view activity");
-  assert.match(fn, /take: limit/g, "both all-time queries must be capped with take, not fetched unbounded and sliced in Node");
+  const live = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  assert.doesNotMatch(live, /computeAllTime|byView|allTimeSearches|allTimeViews/);
+  assert.match(src, /const SCAN_LIMIT = 10;/, "the strip shows ten");
+  const fn = src.slice(src.indexOf("async function computeTopDemand"), src.indexOf("function getTopDemandCached"));
+  const unusable = fn.slice(fn.indexOf("if (!usable)"), fn.indexOf("const bySearchIds"));
+  assert.match(unusable, /windowUsable: false/);
+  assert.doesNotMatch(unusable, /prisma|fetchTiles/, "a short window hides the strip, so it queries no cards");
 });
 
 test("lib/demand.ts's windowed query fetches tile data only for the ranked ids, not the whole window", () => {
@@ -77,5 +83,5 @@ test("lib/demand.ts's windowed query fetches tile data only for the ranked ids, 
   const fn = src.slice(src.indexOf("async function computeTopDemand"), src.length);
   // No country argument since 2026-09-25: the select is narrow and market-free,
   // so one cached ranking serves every market (lib/demand.ts DEMAND_CARD_SELECT).
-  assert.match(fn, /fetchTiles\(unionIds\)/, "tile data must be fetched only for the union of ranked ids");
+  assert.match(fn, /fetchTiles\(bySearchIds\)/, "tile data must be fetched only for the ranked ids");
 });

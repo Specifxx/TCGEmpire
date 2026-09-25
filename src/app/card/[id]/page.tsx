@@ -35,6 +35,7 @@ import { RecentlyViewedRail } from "@/components/home/RecentlyViewedRail";
 import { CardPriceMetrics, CardPriceComparison, type EbaySearchMap } from "@/components/CardMarketSection";
 import { CardMarketsTable } from "@/components/CardMarketsTable";
 import { EbayCardPanel } from "@/components/EbayCardPanel";
+import { EbayPanelIntro } from "@/components/EbayPanelIntro";
 import { computeMarket, type MarketRow } from "@/lib/market-rows";
 import { compareMarkets, marketPriceListSentence, marketSpreadSentence } from "@/lib/market-comparison";
 import { KeywordText } from "@/components/KeywordTooltip";
@@ -1435,11 +1436,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
                 Listings is a graded copy. Describing the panel as mixing them
                 was the one place the site still implied a slab could be sitting
                 in the price comparison. */}
-            <p className="mt-1 text-xs text-slate-500">
-              Live raw listings, including used and international sellers — a useful cross-check on
-              the store prices above, and often the only source for older printings. Graded slabs
-              and live auctions each get their own tab, so neither distorts the raw price.
-            </p>
+            <EbayPanelIntro />
             {/* Listings / Graded. The Graded tab appears only when this card
                 has slabs in the visitor's market, so an ordinary card still
                 shows exactly the single carousel it always did, with no tab

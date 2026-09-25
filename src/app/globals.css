@@ -740,6 +740,14 @@ body {
    animated must be declared before it. Keep that ordering for whatever lands
    here next. */
 
+/* A returning paid member (the rc_adfree hint, stamped on <html> before first
+   paint by lib/ad-free-boot.ts): the site's own ad placements are hidden from
+   the first byte instead of showing until /api/me answers. Each placement also
+   renders nothing once React knows the viewer is ad-free. */
+:root[data-adfree] [data-ad-placement] {
+  display: none !important;
+}
+
 /* ── The `motion-safe:` convention (P0 motion pass, 2026-09-16) ──────────────
    Every hidden/entering state introduced from here on is written with a
    `motion-safe:` prefix — e.g. `motion-safe:opacity-0 motion-safe:translate-y-2`

@@ -559,6 +559,12 @@ model PremiumClick {
   // (remembered client-side for the tab). Null = arrived with no tracked
   // surface — straight to /premium from search, a bookmark, an old tab.
   surface   String?
+  // On a source="checkout" row only: the tier that checkout was for — "plus"
+  // or "premium" (2026-09-25), so the checkout-recovery email names the plan
+  // and price the person actually abandoned. Null on every other row and on
+  // checkout rows written before the column existed (read as "premium").
+  // Additive and nullable: `prisma db push` adds it with no backfill.
+  tier      String?
   createdAt DateTime @default(now())
 
   @@index([createdAt])

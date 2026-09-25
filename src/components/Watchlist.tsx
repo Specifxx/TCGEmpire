@@ -180,7 +180,13 @@ export function Watchlist({
         {visible.map((it) => {
           const { label, text, delta } = watchBaseline(it, country, price(it.card));
           return (
-            <div key={it.id}>
+            // A three-row grid, not a plain block: CardTile's root is h-full
+            // (so a row's tiles match heights), and in a plain block it took
+            // the whole grid cell, pushing the baseline line and the "Notify me
+            // at" field out of the cell and under the next row, the ad block
+            // or the footer (QA, 2026-09-25). Here the tile fills only the
+            // first, 1fr track; the two lines below keep their own space.
+            <div key={it.id} className="grid grid-rows-[1fr_auto_auto]">
               <CardTile card={it.card} />
               <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
                 {text != null ? (

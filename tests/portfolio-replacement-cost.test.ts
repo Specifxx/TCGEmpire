@@ -160,8 +160,15 @@ test("the total is free; the store-by-store plan is Premium", () => {
   assert.match(route, /\.\.\.basketPreview\(plan\)/, "everyone gets the aggregate");
   assert.match(route, /\.\.\.\(full \? \{ plan \} : \{\}\)/, "only Premium gets the plan itself");
   const panel = readCode(PANEL);
-  assert.match(panel, /href="\/tools\/best-basket\?source=binder"/, "the panel links to the plan in Best Basket");
-  assert.match(panel, /See the store-by-store plan/);
+  // Premium's panel links on to the plan in Best Basket…
+  const premiumBranch = panel.slice(panel.indexOf("{plan ? ("), panel.indexOf(") : (", panel.indexOf("{plan ? (")));
+  assert.match(premiumBranch, /href="\/tools\/best-basket\?source=binder"/, "Premium opens the plan in Best Basket");
+  // …everyone else gets the Premium button, never a link promising a plan
+  // Best Basket won't show them (QA, 2026-09-25: it led Plus members to a wall).
+  const otherBranch = panel.slice(panel.indexOf(") : (", panel.indexOf("{plan ? (")));
+  assert.match(otherBranch.slice(0, 600), /<PremiumButton surface="gate:replacement-plan"/);
+  assert.doesNotMatch(otherBranch.slice(0, 600), /tier="plus"/, "the replacement plan is a Premium wall: default tier");
+  assert.doesNotMatch(otherBranch.slice(0, 600), /\/tools\/best-basket/, "no Best Basket link for a viewer without the plan");
 });
 
 test("a capped run prices the dearest holdings and says so, instead of silently pricing some of them", () => {

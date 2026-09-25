@@ -14,6 +14,7 @@ import {
 } from "../src/lib/price-alerts";
 import { dropRow, postageNote, priceDropCopy, type PriceDropItem } from "../src/lib/email";
 import { PLUS_TARGET_ALERT_LIMIT } from "../src/lib/alert-limits";
+import { ADMIN_EMAILS } from "../src/lib/admin-emails";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TARGET-PRICE AND BELOW-MARKET ALERTS (Plus/Premium, 2026-09-25 lineup).
@@ -37,7 +38,7 @@ const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000)
 const PAID_UNTIL = new Date("2099-01-01T00:00:00Z");
 const LAPSED = new Date("2020-01-01T00:00:00Z");
 
-type User = { isAdmin: boolean; premiumUntil: Date | null; premiumTier: string; premiumTierFloor: string | null };
+type User = { isAdmin: boolean; premiumUntil: Date | null; premiumTier: string; premiumTierFloor: string | null; email?: string };
 const plus: User = { isAdmin: false, premiumUntil: PAID_UNTIL, premiumTier: "plus", premiumTierFloor: null };
 const premium: User = { isAdmin: false, premiumUntil: PAID_UNTIL, premiumTier: "premium", premiumTierFloor: null };
 const lapsed: User = { isAdmin: false, premiumUntil: LAPSED, premiumTier: "plus", premiumTierFloor: null };
@@ -309,6 +310,31 @@ test("free and anonymous cadence is unchanged, and a paid run never touches thos
   assert.equal(paid.writes.length, 0, "no free or anonymous baseline moves in a paid run");
   assert.equal(p.drops + p.listed + p.deferred, 0);
   assert.ok(paid.findManyArgs[0]!.where, "the paid run narrows its read to entitled accounts");
+});
+
+test("an ADMIN_EMAILS account is entitled in the cron exactly as in the session (review, 2026-09-25)", async () => {
+  // The session makes an env-listed address an admin (lib/auth.ts), so the
+  // watchlist shows its unlimited targets as live; the cron read only the DB
+  // column, so with isAdmin=false and no paid period they were never sent.
+  const adminEmail = ADMIN_EMAILS[0];
+  assert.ok(adminEmail, "fixture: at least one admin address");
+  const admin: User = { isAdmin: false, premiumUntil: null, premiumTier: "plus", premiumTierFloor: null, email: adminEmail.toUpperCase() };
+  const n = PLUS_TARGET_ALERT_LIMIT + 2;
+  const rows = Array.from({ length: n }, (_, i) =>
+    row(`adm${i}`, { userId: "u-admin", user: admin, email: adminEmail, cardId: `c-adm${i}`, targetCents: 1000, lastPriceCents: 1200, us: 950 }),
+  );
+  for (const scope of ["all", "paid"] as const) {
+    const h = harness(rows);
+    const s = await h.run(scope);
+    assert.equal(s.targets, n, `${scope}: every target honoured — an admin reads as Premium, unlimited`);
+    assert.equal(h.sent.length, 1, `${scope}: one digest for the address`);
+  }
+  const paid = harness(rows);
+  await paid.run("paid");
+  assert.ok(JSON.stringify(paid.findManyArgs[0]!.where).includes(adminEmail), "the paid read fetches ADMIN_EMAILS accounts too");
+  // A non-admin address with the same row shape stays unentitled.
+  const other = harness([owned("x", { ...admin, email: "someone@example.com" }, { targetCents: 1000, lastPriceCents: 1200, us: 950 })]);
+  assert.equal((await other.run()).targets, 0);
 });
 
 test("a paid run still applies the weekly cap to an entitled watch's plain drops", async () => {

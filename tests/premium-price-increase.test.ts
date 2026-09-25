@@ -378,3 +378,14 @@ test("PremiumSlideIn always shows a price too; the trial-eligible branch is a ba
   assert.match(nonTrialBranch, /introFromLine\("premium", introEligible\)/, "non-trial branch (no $0 to claim) must still state the real recurring price");
   assert.match(nonTrialBranch, /premiumLockInTail\(\)/, "non-trial branch must still use the shared lock-in helper");
 });
+
+test("the dialog's Premium lock-in copy shows only while Premium is the plan selected", () => {
+  // QA, 2026-09-25: every Plus gate opens the dialog on Plus, which then led
+  // with "Lock in $9.99/month" over a $4.99 Plus checkout, under a PREMIUM badge.
+  const src = read("src/components/PremiumDialog.tsx");
+  const bannerAt = src.indexOf("{premiumLockInHeadline()}");
+  assert.match(src.slice(Math.max(0, bannerAt - 900), bannerAt), /!premium && sellTier === "premium"/);
+  const lineAt = src.indexOf("{premiumLockInLine()}");
+  assert.match(src.slice(Math.max(0, lineAt - 300), lineAt), /!premium && sellTier === "premium"/);
+  assert.match(src, /\{TIER_NAMES\[sellTier\]\}\s*<\/span>/, "the header badge names the plan being sold");
+});

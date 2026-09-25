@@ -75,10 +75,10 @@ function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
 // First-party units: links to our own tools, no third-party network and no
 // tracking. This is what a slot shows before — and instead of — real ads.
 const HOUSE_ADS = [
-  { title: "Today's biggest price moves", sub: "Risers, drops and best-value buys — updated daily", cta: "See the movers", href: "/movers" },
+  { title: "This week's biggest price moves", sub: "Risers, drops and best-value buys — updated weekly", cta: "See the movers", href: "/movers" },
   { title: "Is that booster box worth opening?", sub: "Run the numbers against live singles prices", cta: "Box EV calculator", href: "/tools/box-ev" },
   { title: "The RiftCompare Index", sub: "The whole Riftbound market in one number", cta: "View the index", href: "/market" },
-  { title: "Never overpay for a card again", sub: "Free price alerts the moment a card hits a new low", cta: "Open the database & start watching", href: "/browse" },
+  { title: "Never overpay for a card again", sub: "Free new-low price alerts, at most one email a week", cta: "Open the database & start watching", href: "/browse" },
 ];
 
 // Deterministic pick so server render === hydration (no Math.random) and each
@@ -180,7 +180,7 @@ export function AdSlot({
   const showRealUnit = canServeUnit && near;
 
   return (
-    <div ref={ref} className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>
+    <div ref={ref} data-ad-placement="" className={`relative overflow-hidden ${className ?? ""}`} style={{ height }}>
       {showRealUnit ? (
         <>
           {/* Google requires ad units to be distinguishable from content. */}

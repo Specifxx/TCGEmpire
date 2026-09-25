@@ -3,8 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // The audit's last thin cohort: index hubs and interactive tools whose value is
 // the thing they DO, not the words on them. /deck scored 79 unique editorial
-// words, /trade 91, /bulk-pricer 110 — each a genuinely useful tool sitting
-// under a heading and nothing else.
+// words, /trade 91, the since-retired Bulk Pricer 110 — each a genuinely
+// useful tool sitting under a heading and nothing else.
 //
 // That is a real problem for an ad review, which judges the page rather than the
 // product, and it is a real problem for a visitor who lands from search and
@@ -49,7 +49,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   "/champions": {
     paragraphs: [
       "Riftbound cards are built around champions, and a champion's cards are spread across every set they have appeared in. These hubs pull them back together: every printing of every card featuring a champion, in one place, priced live.",
-      "That matters because deckbuilding around a champion means buying across sets, and the cheapest market for one card is frequently not the cheapest for the next. Each hub shows what the whole pool costs, which printings carry a premium, and which of our tracked meta decks actually run them.",
+      "That matters because deckbuilding around a champion means buying across sets, and the cheapest market for one card is frequently not the cheapest for the next. Each hub shows what the whole pool costs and which printings carry a premium.",
       "Champions with only a few tracked printings are kept out of search — there is not enough on the page to be worth a search result yet — but every one is listed and linked here, and they enter the index automatically as more of their cards are imported and priced.",
     ],
   },
@@ -57,7 +57,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
     paragraphs: [
       "Build a Riftbound deck and price it as you go. Add cards from the full database and the total updates live, using the cheapest listing we have recorded for each card in your selected market — so the number at the bottom is what the deck would actually cost to buy today, not a reference price from one shop.",
       "The build cost is the point. A decklist from a tournament report or a content creator tells you what to play; it does not tell you that one card in it is 60% of the budget, or that the same list is materially cheaper bought from UK stores than local ones. This does.",
-      "Decks are shareable by URL, so a list you build here can be sent to someone else and re-priced in their market. If you want a starting point rather than a blank page, the meta decks section has tracked lists with their build costs already computed.",
+      "Decks are shareable by URL, so a list you build here can be sent to someone else and re-priced in their market. When you are ready to buy, \"Buy this deck for less\" hands the list to Best Basket to find the cheapest delivered order across stores.",
     ],
   },
   "/trade": {
@@ -67,25 +67,11 @@ export const HUB_INTROS: Record<string, HubIntro> = {
       "The valuation is a market snapshot, not an appraisal. Condition, sentiment and how much either of you wants the card are real factors it cannot see, and prices move. Treat the number as the starting point for the conversation rather than the end of it.",
     ],
   },
-  "/bulk-pricer": {
-    paragraphs: [
-      "Paste a list of cards — one per line, in whatever form you already have it — and get every one priced at once, with a total. Card names, set codes with collector numbers, and the usual deck-list formats all work; anything we cannot match is listed separately rather than silently dropped, so the total is never quietly wrong.",
-      "This is the tool for the jobs that are painful one card at a time: valuing a collection you are about to sell, costing a decklist someone sent you, checking a trade binder, or working out what a box of bulk is actually worth before you spend an evening sorting it.",
-      "Every price is the cheapest live listing we have recorded in your selected market, refreshed daily. Cards with no live listing are shown as unpriced rather than assigned an estimate — an invented number in a total you are about to act on is worse than a gap.",
-    ],
-  },
   "/tools/best-basket": {
     paragraphs: [
       "The cheapest card is rarely the cheapest order. Postage is charged per store, so a shopping list split across five shops to save a few cents on each card routinely costs more delivered than buying the whole list from two. This works out which combination of stores actually costs least.",
-      "Give it the cards you want and it searches store combinations for the lowest total including postage, and shows the best one-store and two-store orders beside it, so you can see what splitting the order actually saves. Usually the answer is not the split with the cheapest individual cards.",
+      "Give it the cards you want and it searches store combinations for the lowest total including postage. Any signed-in account sees its own delivered total; with Premium it also shows the best one-store and two-store orders beside it, so you can see what splitting the order actually saves. Usually the answer is not the split with the cheapest individual cards.",
       "Postage figures are our own per-store estimates for a single-card order, documented on each store's page, not rates quoted by the shop. Confirm at checkout — a store running free shipping over a threshold can change the answer.",
-    ],
-  },
-  "/tools/demand": {
-    paragraphs: [
-      "Two numbers, tracked per card since the day it was added: how many times it's been searched for, and how many times its page has been opened. Search is the purest read on intent — someone typed the card's name because they wanted it. Views are broader, catching browsing as well as buying.",
-      "Both are cumulative counters, so 'trending' has to mean 'accrued the most in a window', not just 'has the biggest running total' — a card that's been on the site since launch would always win that comparison. This ranks by what actually happened inside the window you pick, measured against a daily snapshot.",
-      "This is deliberately not a price prediction. High demand can mean a card is about to move, or it can mean everyone already owns one and is just checking its current value. Rising Cards folds demand into a scored, backtested signal built for that question — this page is the unblended number underneath it.",
     ],
   },
   "/tools/deal-finder": {

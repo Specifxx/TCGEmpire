@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "How do I set a price alert for a Riftbound card?",
-    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We remember the lowest live price at the moment you start watching, and email you the first time it drops below that. If no store has the card yet, there's nothing to drop below — we email you when it's first in stock instead. Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).`,
+    a: `Open the card's page or its quick view and tap the watch button — a free alert needs no price. We check the lowest live price once a day. Your first email comes the first time it falls from one check to the next; after that, you only hear when it falls below the lowest price we've already emailed you. If no store has the card yet, there's nothing to drop — we email you when it's first in stock instead. Plus members can also type their own price on up to ${PLUS_TARGET_ALERT_LIMIT} watched cards (every card on Premium).`,
   },
   {
     q: "Can I watch a card with no price yet?",
@@ -60,7 +60,7 @@ const FAQS = [
   },
   {
     q: "Which price triggers the alert?",
-    a: "A new low: the lowest live in-stock price across every store tracked for your market falling below the lowest we've ever emailed you for that card. That is the item price — postage is on top, and differs by store — so every alert names the store and links the listing, where you can see the delivered total before you buy. If it stays cheap without dropping further, you'll get at most one reminder every couple of months rather than nothing at all.",
+    a: "A new low: the lowest live in-stock price across every store tracked for your market falling since our last daily check and, once we've emailed you about that card, below the lowest price we've emailed you. That is the item price — postage is on top, and differs by store — so every alert names the store and links the listing, where you can see the delivered total before you buy. If it stays cheap without dropping further, you'll get at most one reminder every couple of months rather than nothing at all.",
   },
   {
     q: "How often will I actually get emailed?",
@@ -99,9 +99,9 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     title: "No number to set",
     body: (
       <>
-        We remember the lowest live price the moment you start watching — that&apos;s the baseline for free alerts. Check{" "}
+        We check the lowest live price every day, so there&apos;s nothing to set. Check{" "}
         <Link href="/movers" className="text-brand-400 underline">
-          the daily movers
+          the weekly movers
         </Link>{" "}
         if you want to know whether now is a spike before you start. (Plus members can also set a price of their
         own — see below.)
@@ -112,7 +112,8 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     title: "Let it come to you",
     body: (
       <>
-        You&apos;ll be emailed the first time the lowest live price drops below that baseline — the item price, with
+        You&apos;ll be emailed when it hits a new low — a drop since our last check, and below anything we&apos;ve
+        already emailed you — the item price, with
         the cheapest store named and linked so you can check postage — and at most a reminder every couple of
         months if it stays cheap without dropping further. At most one email a week, only when a card hits a new
         low: further drops in the same week land in that digest instead of a new email. No refreshing, no five tabs.
@@ -141,8 +142,8 @@ export default function AlertsPage() {
 
       <AnswerBox>
         <p>
-          A watchlist is a list of Riftbound cards you want; a price alert is an email the first time one drops to a
-          new low since you started watching — at most one email a week. Both are free, with no price to set. The
+          A watchlist is a list of Riftbound cards you want; a price alert is an email when one drops to a new low — at
+          most one email a week. Both are free, with no price to set. The
           trigger is the lowest live in-stock price across every store we track for your market. That is the item
           price, before postage, so every alert names the store and links the listing: you see the delivered
           total there before you buy.
@@ -249,7 +250,7 @@ export default function AlertsPage() {
           <h2 className="font-bold text-white">Start watching a card</h2>
           <p className="mt-1 text-sm text-slate-400">
             Search the database, tap watch — no price to set. Or see{" "}
-            <Link href="/movers" className="text-brand-400 underline">what&apos;s moving today</Link> first.
+            <Link href="/movers" className="text-brand-400 underline">what&apos;s moving this week</Link> first.
           </p>
         </div>
         {/* Primary CTA = the account (this page explains the account feature);

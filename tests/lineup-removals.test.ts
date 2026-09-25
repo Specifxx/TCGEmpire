@@ -4,6 +4,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NAV_GROUPS } from "../src/components/nav-groups";
 import { TIER_COMPARISON } from "../src/components/TierComparisonTable";
+import { HUB_INTROS } from "../src/lib/content/hub-intros";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(join(ROOT, p), "utf8");
@@ -73,20 +74,10 @@ function sourceFiles(dir: string): string[] {
   return out;
 }
 
-// Files NOT scanned, each for a stated reason:
-//   • BulkPricer.tsx builds a /bulk-pricer?list= share URL; the Bulk Pricer's
-//     paste handling is being folded into /deck and the component deleted by
-//     the Best Basket & list-pricing workstream (D). The redirect carries the
-//     ?list= through to /deck meanwhile.
-//   • content/hub-intros.ts keys its intros by path; its "/bulk-pricer" and
-//     "/tools/demand" entries are now unused data (no page renders them), not
-//     links, and the file belongs to the Deal Finder workstream (B).
-const NOT_SCANNED = new Set(["src/components/BulkPricer.tsx", "src/lib/content/hub-intros.ts"]);
-
 test("nothing on the site still links to a retired tool", () => {
-  const files = [...sourceFiles("src"), ...sourceFiles("public").filter((f) => !f.endsWith(".json"))].filter(
-    (f) => !NOT_SCANNED.has(f),
-  );
+  // Every file is scanned — hub-intros.ts included, now that its dead
+  // "/bulk-pricer" and "/tools/demand" entries are gone (review, 2026-09-25).
+  const files = [...sourceFiles("src"), ...sourceFiles("public").filter((f) => !f.endsWith(".json"))];
   assert.ok(files.length > 200, `fixture check: expected the whole tree, found ${files.length} files`);
   const offenders: string[] = [];
   for (const f of files) {
@@ -119,7 +110,7 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   const src = read("src/app/tools/page.tsx");
   const groups = src.slice(src.indexOf("const GROUPS"), src.indexOf("export default function"));
   const hrefs = [...groups.matchAll(/href: "([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/box-ev", "/sealed", "/deck", "/trade"]);
+  assert.deepEqual(hrefs, ["/tools/deal-finder", "/tools/rising", "/tools/best-basket", "/tools/box-ev", "/sealed", "/deck", "/trade", "/tools/selling-fees"]);
   const badgeFor = (href: string) => {
     const at = groups.indexOf(`href: "${href}"`);
     return /badge: ([^,\n]+),/.exec(groups.slice(at, groups.indexOf("}", at)))?.[1];
@@ -136,4 +127,16 @@ test("the tools index lists only the kept tools, with the badges their gates ear
   assert.doesNotMatch(faq, /single best result|top pick|value finder|bulk pricer|demand finder|rising sealed/i);
   assert.match(faq, /show nothing when you're signed out, the top 3 with a free account, and every row with \$\{LIST_BADGE\}, which is also ad-free/);
   assert.match(faq, /Best Basket shows your own list's delivered total with a free account; the store-by-store plan is part of Premium/);
+});
+
+test("hub intros: no retired tool keeps an intro, and none carries banned or stale claims", () => {
+  for (const r of RETIRED) assert.ok(!(r.path in HUB_INTROS), `${r.path} still has a hub intro`);
+  for (const [p, { paragraphs }] of Object.entries(HUB_INTROS)) {
+    const text = paragraphs.join(" ");
+    assert.doesNotMatch(text, /backtest|validated/i, `${p} intro: no track record is published`);
+    assert.doesNotMatch(text, /meta decks?/i, `${p} intro: the meta decks were removed on 2026-09-12`);
+  }
+  // Best Basket's intro is shown signed out too: the one- and two-store orders
+  // are Premium's, and it says so.
+  assert.match(HUB_INTROS["/tools/best-basket"].paragraphs.join(" "), /with Premium it also shows the best one-store and two-store orders/);
 });

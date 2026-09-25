@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { PREMIUM_COPY_VERSION } from "../src/lib/site";
 
@@ -30,12 +30,13 @@ const code = (p: string) =>
 // SAVING THE READER MAKES OR A FACT ABOUT WHAT A TOOL COMPUTES. Never a gain
 // made at someone else's expense.
 //
-// This is deliberately NOT a ban on the underlying tools. Rising Cards, Rising
-// Sealed and Demand Finder genuinely are prediction and attention signals, and
-// they keep describing themselves accurately on their own pages, disclaimers
-// and all. Re-describing them as savings tools would be the invented claim this
-// repo fails builds over. What is banned is the advantage FRAMING wrapped
-// around them in the pitch.
+// This is deliberately NOT a ban on the underlying tools. Rising Cards is a
+// demand-and-stock screen — since 2026-09-25 its own FAQ says "not a
+// prediction" — and it keeps describing itself accurately on its own page,
+// disclaimers and all. Re-describing it as a savings tool would be the
+// invented claim this repo fails builds over; so would selling it as a
+// buy-now-or-wait answer (tested below). What is banned is the advantage
+// FRAMING wrapped around it in the pitch.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Every surface that sells Premium to someone who hasn't bought it.
@@ -166,5 +167,25 @@ test("the reframe did not smuggle in scarcity or invented numbers", () => {
   ]) {
     assert.ok(!/only \d+ (left|spots|seats)/i.test(src), `${label} must not invent scarcity`);
     assert.ok(!/expires? in/i.test(src), `${label} must not invent a countdown`);
+  }
+});
+
+test("Rising Cards is never sold as a buy-now-or-wait answer, and no copy promises a signal breakdown it doesn't show", () => {
+  // Review, 2026-09-25: the tool's own FAQ says "a screen … not a prediction",
+  // and until its price signals rebuild after the 2026-09-23 re-basing every
+  // pick is ranked on demand and stock alone — while five pitch surfaces sold
+  // it as "whether to buy one now or wait". The per-signal breakdown those
+  // lines promised was removed from the page in the same change.
+  for (const f of [...PITCH_SURFACES, "src/app/llms.txt/route.ts", "src/lib/dashboard-tools.ts", "src/components/TodaysTopDeals.tsx"]) {
+    assert.doesNotMatch(code(f), /buy (it|one) now|bought now|or leave it|most likely to rise/i, `${f} sells Rising Cards as a timing answer`);
+  }
+  const walk = (d: string): string[] =>
+    readdirSync(join(ROOT, d)).flatMap((n) => {
+      const p = `${d}/${n}`;
+      return statSync(join(ROOT, p)).isDirectory() ? walk(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
+    });
+  // The admin page genuinely shows each pick's per-signal breakdown.
+  for (const f of walk("src").filter((f) => !f.startsWith("src/app/admin/"))) {
+    assert.doesNotMatch(code(f), /signal breakdown|signals behind each score/i, `${f} promises a breakdown the page no longer shows`);
   }
 });

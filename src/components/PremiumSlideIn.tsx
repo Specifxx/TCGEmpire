@@ -20,8 +20,6 @@ import {
 } from "@/lib/site";
 import { PremiumPitchPanel } from "./PremiumPitchPanel";
 import { MAX_NUDGE_DISMISSALS, NUDGE_DELAY_MS, SNOOZE_AFTER_CLICK_MS, SNOOZE_AFTER_DISMISS_MS } from "@/lib/nudge-timing";
-import { formatMoneyCompact } from "@/lib/format";
-import { currencyOf } from "@/lib/country";
 import { usePresence } from "@/lib/motion";
 import { Skeleton } from "./ui/Skeleton";
 
@@ -115,10 +113,12 @@ export const PITCH_TOOLS: { label: string }[] = [
 // compelling nowhere.
 //
 // EVERY HEADING IS ABOUT WHAT THE READER SAVES OR LEARNS BEFORE BUYING
-// (2026-09-14 reframe, see DECISIONS.md). Rising Cards genuinely is a
-// prediction screen, so its heading promises a buy-now-or-wait ANSWER rather
-// than pretending it finds a discount — describing it as a savings tool would
-// be the invented claim this repo fails builds over.
+// (2026-09-14 reframe, see DECISIONS.md). Rising Cards now calls itself a
+// screen, not a prediction (tools/rising FAQ, 2026-09-25), and until its price
+// signals rebuild after the 2026-09-23 re-basing every pick is ranked on
+// demand and stock alone — so its pitch says what it shows (which cards
+// players are searching for, and why each ranks), never a buy-now-or-wait
+// answer, and never a discount.
 // First matching prefix wins; no match falls back to the original generic copy.
 //
 // Every `tool` here MUST be a real PITCH_TOOLS label (tests/premium-slidein.test.ts
@@ -130,7 +130,7 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
     prefixes: ["/deck"],
     tool: "Best Basket",
     heading: "Best Basket finds the cheapest way to buy this whole deck",
-    line: "Send this deck to Best Basket and see its delivered total across your country's stores, free. Premium skips the copies you own and shows which store to buy each card from.",
+    line: "Send this deck to Best Basket and see its delivered total across your country's stores, skipping the copies you own, free. Premium shows which store to buy each card from.",
   },
   {
     prefixes: ["/card/"],
@@ -147,8 +147,8 @@ const CONTEXT_PITCH: { prefixes: string[]; tool: string; heading: string; line: 
   {
     prefixes: ["/movers", "/market"],
     tool: "Rising Cards",
-    heading: "Rising Cards tells you whether to buy it now or leave it",
-    line: "Ranked by demand and price-timing signals. Your free account shows the top three; Plus shows every pick, and goes ad-free. Not financial advice.",
+    heading: "Rising Cards shows which cards players are searching for, and why each one ranks",
+    line: "Ranked by search demand and stores in stock, with the reason for each pick. Your free account shows the top three; Plus shows every pick, and goes ad-free. A screen, not a prediction or financial advice.",
   },
 ];
 
@@ -189,11 +189,12 @@ export function PremiumSlideIn() {
   const { mounted, entered } = usePresence(shown, 250);
   const lastCountedPath = useRef<string | null>(null);
   const contextPitch = contextPitchFor(pathname);
-  // Live "N deals worth $X right now" proof line. Fetched from the shared,
+  // Live "N cards below TCGplayer market right now" proof line (a count — no
+  // dollar total, 2026-09-25). Fetched from the shared,
   // already-cached homepage feed (see api/premium/proof) — ONLY once `shown`
   // flips true, never on mount, so a visitor who never triggers the slide-in
   // never causes this request at all.
-  const [proof, setProof] = useState<{ deals: number; savingsCents: number } | null>(null);
+  const [proof, setProof] = useState<{ deals: number } | null>(null);
   const proofFetched = useRef(false);
   // Distinguishes "still fetching" from "fetched, nothing worth showing" —
   // proof itself stays null in both cases, but only the first should render
@@ -287,8 +288,8 @@ export function PremiumSlideIn() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled || !d) return;
-        if (typeof d.deals === "number" && typeof d.savingsCents === "number") {
-          setProof({ deals: d.deals, savingsCents: d.savingsCents });
+        if (typeof d.deals === "number") {
+          setProof({ deals: d.deals });
         }
       })
       .catch(() => {
@@ -419,10 +420,10 @@ export function PremiumSlideIn() {
             proof &&
             proof.deals >= 5 && (
               <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-                <span className="font-bold text-white">
-                  {proof.deals} deals worth {formatMoneyCompact(proof.savingsCents, currencyOf(country))}
-                </span>{" "}
-                live on Deal Finder right now.
+                {/* A count, never a dollar total: summed gaps are a savings
+                    figure, which the pitch rules ban (QA, 2026-09-25). */}
+                <span className="font-bold text-white">{proof.deals} cards below TCGplayer market</span> on Deal Finder
+                right now.
               </p>
             )
           )}

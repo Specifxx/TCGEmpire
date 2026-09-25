@@ -3209,7 +3209,7 @@ Prices move daily, the same way a hot Pokémon set's prices do in its first week
 - **Ready-to-play products are the predictable, budget-friendly entry point** — a fixed cost, no pack-opening variance.
 - **Booster boxes are the highest-variance route**, the same trade-off as a Pokémon booster box: you might pull the chase card, you might not.
 - **Chase prints (Signature, Showcase, alt-art) carry a real premium**, the same way an Illustration Rare does over its base print — **[understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** explains exactly what separates each tier.
-- **Watch price movement, don't just check once.** The **[daily movers page](/movers)** shows what's trending up or down right now, the same instinct that keeps a Pokémon collector refreshing a marketplace watchlist.
+- **Watch price movement, don't just check once.** The **[weekly movers page](/movers)** shows what moved up or down over the last week, the same instinct that keeps a Pokémon collector refreshing a marketplace watchlist.
 
 ## Where to start
 
@@ -3311,7 +3311,7 @@ Both games share the same early-life pricing pattern: prices move fast while the
 - **Ready-to-play products are the predictable entry point** — fixed cost, no pack-opening variance.
 - **Booster boxes are the highest-variance route** — the trade-off you already know from chasing a Leader parallel.
 - **Chase prints carry a real premium.** **[Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** explains exactly what separates Showcase, alternate art and Signature.
-- **Watch price movement, don't just check once** — the **[daily movers page](/movers)** shows what's trending right now, the same habit that keeps a young TCG's secondary market legible.
+- **Watch price movement, don't just check once** — the **[weekly movers page](/movers)** shows what moved over the last week, the same habit that keeps a young TCG's secondary market legible.
 
 ## Where to start
 
@@ -3411,7 +3411,7 @@ No fabricated numbers here — prices move daily and any figure printed today wo
 
 - **Ready-to-play products are the fixed-cost entry point** — no pack-opening variance.
 - **Chase prints carry a real premium.** **[Understanding Riftbound card rarity](/guides/understanding-riftbound-card-rarity)** covers exactly what separates a base print from Showcase, alternate art and Signature — the closest Riftbound equivalent to a Magic foil-vs-nonfoil or Secret Lair premium.
-- **Watch price movement, not just a single snapshot** — the **[daily movers page](/movers)** shows what's trending up or down right now, the same signal a Magic player reads off a price-tracking tool.
+- **Watch price movement, not just a single snapshot** — the **[weekly movers page](/movers)** shows what moved up or down over the last week, the same signal a Magic player reads off a price-tracking tool.
 - **A deck's real cost is total delivered cost, not the sum of sticker prices** — the same lesson every Magic player learns the first time postage eats a "cheap" multi-store order.
 
 ## Where to start
@@ -3684,7 +3684,7 @@ Consolidate the same list into, say, 3 or 4 stores instead, and you often come o
 
 ## How Best Basket actually works
 
-1. **Give it a list.** Paste any decklist in standard list format, or send your watchlist or binder in from your account — and tick **Skip copies I already own** to leave out what's already in your portfolio. If you got here from a deck page, your list is often already pre-filled.
+1. **Give it a list.** Paste any decklist in standard list format, or send your watchlist in from your account — and tick **Skip copies I already own** to leave out what's already in your portfolio. You can also send your binder, which prices what re-buying it would cost. If you got here from a deck page, your list is often already pre-filled.
 2. **It searches combinations of stores** — not just the single cheapest store for each card, but sets of stores that carry enough of the list to be worth consolidating into, each with its real shipping cost and free-shipping threshold applied — and shows the best one-store and two-store orders beside the cheapest split. Any line it can't match or find in stock is listed, not dropped.
 3. **It shows you the comparison, not just the answer.** The result gives the total delivered cost and — right alongside it — what the "naive" per-card-cheapest approach would have cost and how many stores it would have needed. You can see the saving, not just be told one exists.
 4. **You check out at each store yourself.** Best Basket tells you where to buy; it doesn't process the order. Every store in the Premium plan gets a direct link.
@@ -7674,11 +7674,11 @@ That is genuinely useful information even without detail, because it tells you r
 
 **Nothing here is a reason to buy today.** There is no 2027 product to buy yet, and the announcement itself does not change the value of anything already in your collection. The one thing worth doing now is deciding which champions you care about, so you can [watchlist their cards](/alerts) before the next preview season rather than during it.
 
-**Watch the run-up, not the launch.** Prices on existing cards move when a new set is previewed, because a champion returning in a new set drives demand for their older printings. [The daily movers](/movers) is where that shows up first.
+**Watch the run-up, not the launch.** Prices on existing cards move when a new set is previewed, because a champion returning in a new set drives demand for their older printings. [The weekly movers](/movers) is where that shows up first.
 
 ## How we'll track it
 
-Every set gets a page on RiftCompare the moment its cards are catalogued, with live prices across every store we track. You can [browse the sets we already cover](/sets), watch [the daily movers](/movers) for the run-up, and use [the deal finder](/tools/deal-finder) when launch-window pricing is at its most scattered — the gap between the cheapest and dearest store is widest in the first week of a set, which is exactly when most people buy without checking.
+Every set gets a page on RiftCompare the moment its cards are catalogued, with live prices across every store we track. You can [browse the sets we already cover](/sets), watch [the weekly movers](/movers) for the run-up, and use [the deal finder](/tools/deal-finder) when launch-window pricing is at its most scattered — the gap between the cheapest and dearest store is widest in the first week of a set, which is exactly when most people buy without checking.
 
 ---
 
@@ -9452,7 +9452,7 @@ We built the price tracking, the price history, and the alerts specifically beca
     summary: [
       "**RiftCompare has two paid tiers: Plus at $4.99/mo and Premium at $9.99/mo** (each with an annual option at roughly a 33% saving) — both with a 3-day free trial, the first 3 months at half price on a monthly plan, and cancel-anytime billing through Stripe.",
       `**Plus is no ads, every deal, and target alerts**: no ads on any page, the full Deal Finder (which you can narrow to only the cards you watch or own) and Rising Cards lists, and target-price alerts on up to ${PLUS_TARGET_ALERT_LIMIT} cards that email you the store when a card hits your price.`,
-      "**Premium buys your whole list for less**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck, your watchlist or your binder (skipping copies you already own), and unlimited target alerts.",
+      "**Premium buys your whole list for less**: everything in Plus, plus Best Basket's store-by-store plan for the cheapest delivered order, Buy this list for a deck or your watchlist (skipping copies you already own), your binder's replacement cost, and unlimited target alerts.",
       "**Price comparison itself stays free for everyone**, and a free account keeps a watchlist with weekly new-low emails, your portfolio, the top 3 of each deal list and your own Best Basket total.",
       "**You can also get a week of Premium for free** just by sending us feedback at [/feedback](/feedback), no card required.",
     ],
@@ -9505,7 +9505,7 @@ We built the price tracking, the price history, and the alerts specifically beca
         { name: "Ad-free site", description: "No ads on any page, on the website and in the app — Plus and Premium.", url: "/premium" },
         { name: "Deal Finder", description: "Every card cheaper than TCGplayer's market price at a real store, filterable to only the cards you watch or own.", url: "/tools/deal-finder" },
         { name: "Target-price alerts", description: "Set the price you'd pay on a watched card; after every price update we email you the store when it's there.", url: "/watching" },
-        { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the full signal breakdown behind each score.", url: "/tools/rising" },
+        { name: "Rising Cards", description: "Cards ranked by demand and price-timing signals, with the reason each one ranks.", url: "/tools/rising" },
         { name: "Best Basket", description: "The cheapest delivered order for a whole list across your country's stores, postage included (Premium).", url: "/tools/best-basket" },
       ],
     },
@@ -9552,21 +9552,19 @@ Every account can watch a card and get a weekly email when it hits a new low. Pl
 
 ### 4. Rising Cards — the full list
 
-![The Rising Cards tool, showing its market toggle and demand/price-timing methodology](/blog/premium/04-rising-cards.png)
-
-Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent, and it is a signal, not a prediction or financial advice. A free account sees the top three picks, each with its full signal breakdown; Plus unlocks the full ranked list for every market RiftCompare tracks.
+Rising Cards ranks cards by a composite of **demand and price-timing signals** — search interest that's high or actively rising, combined with a card sitting near its own recent low rather than one that's already spiked. The scoring is transparent, and it is a signal, not a prediction or financial advice. A free account sees the top three picks, each with the reason it ranks; Plus unlocks the full ranked list for every market RiftCompare tracks.
 
 ## What Premium adds on top
 
 ### 5. Best Basket — the cheapest delivered order for a list
 
-Best Basket answers the question that matters when you're buying more than one card: **what's the cheapest way to actually buy the whole list**, postage included? Send it a decklist, your watchlist or the cards your binder is missing, and it searches combinations of your country's stores for the lowest delivered total — each store's postage and free-shipping threshold counted — and shows the best one-store and two-store orders beside it, because sometimes one parcel is worth a little more. Cards it can't match or can't find in stock are listed, never silently dropped.
+Best Basket answers the question that matters when you're buying more than one card: **what's the cheapest way to actually buy the whole list**, postage included? Send it a decklist or your watchlist (or your binder, to see what re-buying it would cost, delivered), and it searches combinations of your country's stores for the lowest delivered total — each store's postage and free-shipping threshold counted — and shows the best one-store and two-store orders beside it, because sometimes one parcel is worth a little more. Cards it can't match or can't find in stock are listed, never silently dropped.
 
 Any signed-in account sees its own list's delivered total, how many stores it takes and the saving against buying each card's cheapest copy separately. Premium shows which store to buy each card from, with the links. It helps most outside the US, where the stores RiftCompare tracks each charge their own postage; in the US, TCGplayer's own cart optimiser already covers much of the same ground.
 
 ### 6. Buy this list
 
-Send a list from the deck builder, your whole watchlist or your binder straight into Best Basket and tick **Skip copies I already own**: it subtracts what's in your portfolio before it optimises, so you never re-buy a card you already have.
+Send a list from the deck builder or your whole watchlist straight into Best Basket and tick **Skip copies I already own**: it subtracts what's in your portfolio before it optimises, so you never re-buy a card you already have. Your binder can be sent too — it prices what replacing it would cost, the same number as your portfolio's replacement cost, so skipping owned copies doesn't apply there.
 
 ### 7. The plan behind your replacement cost
 
@@ -9590,7 +9588,7 @@ Neither of these requires ever entering a payment method. If Premium turns out t
 Being straightforward here, since the point of this post is accuracy over hype: if you only ever check a handful of card prices before buying, the free account already does that job completely — you'd be paying for features you won't use. The two paid tiers are for two kinds of buyer:
 
 1. **Plus is for buying singles regularly** — it takes the ads away, shows every card below TCGplayer market, and tells you the store when a card you watch reaches your price.
-2. **Premium is for buying a whole deck or filling a binder** — Best Basket and Buy this list turn a list into the cheapest delivered order across your country's stores, skipping what you already own.
+2. **Premium is for buying a whole deck or list** — Best Basket and Buy this list turn a list into the cheapest delivered order across your country's stores, skipping what you already own.
 
 If neither of those describes how you use the site, the free tier — which still includes full price comparison, alerts and a portfolio tracker — is genuinely not a downgrade. That's a deliberate design choice, not a limitation we're hoping you won't notice.
 `,

@@ -57,7 +57,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "savingsVsMarket", label: "Biggest savings", sub: "Cards selling below the TCGplayer market price", premium: true, allHref: "/tools/deal-finder", allLabel: "All deals", totalKey: "savingsVsMarketTotal", surface: "gate:home-deals" },
   { key: "priceDrops", label: "Price drops", premium: false, allHref: "/movers", allLabel: "All movers" },
   { key: "cheapestSealed", label: "Cheapest sealed", premium: false, allHref: "/sealed", allLabel: "All sealed" },
-  { key: "risingCards", label: "Rising cards", sub: "Cards our signals rank most likely to rise in price", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal", surface: "gate:home-rising" },
+  { key: "risingCards", label: "Rising cards", sub: "Cards ranked by demand and price-timing signals", premium: true, allHref: "/tools/rising", allLabel: "All rising cards", totalKey: "risingCardsTotal", surface: "gate:home-rising" },
 ];
 
 // Budget tiers — "rounded to natural values per market" (not FX-converted at

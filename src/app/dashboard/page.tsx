@@ -74,7 +74,10 @@ export default async function DashboardPage() {
             Your {tierName} hub — tools, portfolio and the market at a glance.
           </p>
         </div>
-        {premiumCheckoutEnabled() && <ManageSubscriptionButton />}
+        {/* Only for an account with billing behind it: the portal answers "No
+            subscription found" for everyone else (QA, 2026-09-25 — the free
+            hub showed this button). */}
+        {premiumCheckoutEnabled() && tier != null && user.stripeCustomerId && <ManageSubscriptionButton />}
       </div>
 
       {/* Portfolio + watchlist snapshots */}

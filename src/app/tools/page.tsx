@@ -62,7 +62,7 @@ const FAQS = [
   },
   {
     q: "Which Riftbound tool should I use to buy a whole decklist?",
-    a: "Best Basket. It searches store combinations for the lowest total including postage, and shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total; Premium shows which store to buy each card from, and can skip the copies you already own.",
+    a: "Best Basket. It searches store combinations for the lowest total including postage, and with Premium shows the best one-store and two-store orders beside it. Any signed-in account sees its own delivered total, and can skip the copies it already owns; Premium shows which store to buy each card from.",
   },
   {
     q: "Is a Riftbound booster box worth opening?",
@@ -97,13 +97,13 @@ const GROUPS: ToolGroup[] = [
       },
       {
         href: "/tools/rising",
-        title: "Rising cards",
-        desc: "Cards ranked by demand and price-timing signals — whether to buy one now or wait.",
+        title: "Rising Cards",
+        desc: "Cards with high or rising demand whose price hasn't moved up yet, each with the reason it ranks.",
         badge: LIST_BADGE,
       },
       {
         href: "/tools/best-basket",
-        title: "Best basket",
+        title: "Best Basket",
         desc: "Buying a whole list? The cheapest delivered order across your country's stores, postage included — see your total free with an account.",
         badge: "Premium",
       },
@@ -125,7 +125,7 @@ const GROUPS: ToolGroup[] = [
     ],
   },
   {
-    label: "Decks & trading",
+    label: "Decks, trading & selling",
     tools: [
       {
         href: "/deck",
@@ -136,6 +136,13 @@ const GROUPS: ToolGroup[] = [
         href: "/trade",
         title: "Trade calculator",
         desc: "Value both sides of a card trade fairly before you commit.",
+      },
+      // Free and signed-out in the lineup spec, in the nav and in core.xml —
+      // and missing from this index until the QA pass (2026-09-25).
+      {
+        href: "/tools/selling-fees",
+        title: "Selling fee calculator",
+        desc: "What you actually keep selling a card on TCGplayer or eBay, after commission, processing and postage.",
       },
     ],
   },

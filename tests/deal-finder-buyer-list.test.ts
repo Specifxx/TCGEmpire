@@ -548,7 +548,7 @@ test("members' nudges link to their own cards; free accounts keep the Plus upsel
 
   const n = { watched: { deals: 4, dealsFree: 1, rising: 0, risingFree: 0 }, owned: { deals: 0, dealsFree: 0, rising: 0, risingFree: 0 }, example: null };
   const free = nudge.nudgeCopy(n, "watched")!;
-  assert.match(free.line, /Plus shows every one, and can email you when one hits your price\.$/);
+  assert.match(free.line, /Plus shows every one with no ads, and can email you when one hits your price\.$/);
   assert.equal(free.kind, "deal");
   const member = nudge.nudgeCopy(n, "watched", "member")!;
   assert.doesNotMatch(member.line, /Plus|Premium|free top 3/, "a member is never pitched");

@@ -536,7 +536,7 @@ export function CardRain() {
           <GameResultExtras game="card-rain" score={score} />
           <RunRecap cards={caught} currency={currency} title="🛒 The cards you caught" />
           <p className="mt-4 text-center text-xs text-slate-600">
-            Real cards, real prices. <Link href="/movers" className="text-brand-400 hover:underline">See today&apos;s movers →</Link>
+            Real cards, real prices. <Link href="/movers" className="text-brand-400 hover:underline">See this week&apos;s movers →</Link>
           </p>
         </div>
       )}

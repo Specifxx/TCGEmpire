@@ -48,8 +48,8 @@ export function WatchlistDrawer() {
         ) : (
           <>
             <p className="mb-4 text-xs leading-relaxed text-slate-500">
-              We email <strong className="text-slate-300">{user.email}</strong> when one of these drops below the
-              price you started tracking at — tap the heart on any card to stop watching it.
+              We email <strong className="text-slate-300">{user.email}</strong> when one of these hits a new low,
+              naming the cheapest store — at most one email a week. Tap the heart on any card to stop watching it.
             </p>
             {/* `list`, not the page's grid: this panel is 448px wide, and the
                 grid's viewport breakpoints gave it four 90px columns on every

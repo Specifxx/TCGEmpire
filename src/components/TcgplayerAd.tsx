@@ -122,7 +122,7 @@ export function TcgplayerAd({
   const deskShow = wide ? "hidden max-w-full md:inline-block" : "hidden max-w-full sm:inline-block";
   const mobShow = wide ? "max-w-full md:hidden" : "max-w-full sm:hidden";
   return (
-    <div className={`flex max-w-full flex-col items-center ${className ?? ""}`}>
+    <div data-ad-placement="" className={`flex max-w-full flex-col items-center ${className ?? ""}`}>
       {size === "billboard" ? (
         <>
           <span className="hidden max-w-full lg:inline-block">

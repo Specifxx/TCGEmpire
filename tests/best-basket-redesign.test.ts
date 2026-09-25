@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { basketPreview, optimizeBasket, planBasket, singleStartCount, type BasketCard, type BasketStores } from "../src/lib/basket";
+import { clampQty, parseBasketRequest } from "../src/lib/basket-request";
 import { rateLimit, refundRateLimit } from "../src/lib/rate-limit";
 
 const ROOT = process.cwd();
@@ -43,8 +44,10 @@ test("consolidates two cards off a store: 4 cards / 2 stores costs $9.40 from on
   assert.equal(plan.naiveStoreCount, 2);
   assert.equal(plan.savedCents, 460);
   assert.equal(alternatives.singleStore?.totalCents, 940);
-  assert.equal(alternatives.twoStores?.storeCount, 2, "the two-store alternative really uses two stores");
-  assert.equal(alternatives.twoStores?.totalCents, 1400);
+  // The best split (1400) is dearer than the one-store order, so the page's
+  // two-store card says so instead of showing a worse order.
+  assert.equal(alternatives.twoStores, null);
+  assert.equal(alternatives.twoStoresNone, "one-store-cheaper");
 });
 
 // Twelve cards over six small stores ($1.50 flat postage), plus one hub store
@@ -124,6 +127,93 @@ test("free-shipping thresholds are crossed when it pays, and reported per store"
   assert.equal(plan.stores[0].shippingFlatCents, 395);
 });
 
+// Review, 2026-09-25: the only way to the cheapest order is to move TWO cards
+// onto s3 at once to clear its $33 free-postage threshold — either card alone
+// costs more than the $6 it saves. The one-card polish returned $78.75 for
+// both the plan and the "Best two stores" card; the same two stores sell the
+// list for $77.54.
+test("threshold fill: two cards moved together to clear a store's free postage", () => {
+  const stores: BasketStores = {
+    s0: { name: "S0", ship: flat(400, 2200) },
+    s1: { name: "S1", ship: flat(600, 3200) },
+    s2: { name: "S2", ship: flat(600, 3600) },
+    s3: { name: "S3", ship: flat(600, 3300) },
+  };
+  const cards = [
+    card("c0", 2, [L("s2", 708), L("s3", 675)]),
+    card("c1", 1, [L("s0", 1104), L("s1", 1381), L("s3", 1568)]),
+    card("c2", 1, [L("s0", 886), L("s1", 1211), L("s3", 1101)]),
+    card("c3", 1, [L("s0", 692), L("s1", 619), L("s2", 764), L("s3", 707)]),
+    card("c4", 2, [L("s0", 492)]),
+    card("c5", 1, [L("s0", 1179), L("s2", 1242)]),
+    card("c6", 1, [L("s0", 1080), L("s1", 1152)]),
+  ];
+  const { plan, alternatives } = planBasket(cards, stores);
+  assert.equal(plan.totalCents, 7754);
+  assert.equal(plan.shippingCents, 0, "both orders clear their thresholds");
+  assert.deepEqual(plan.stores.find((g) => g.key === "s3")?.lines.map((l) => l.cardId).sort(), ["c0", "c1", "c3"]);
+  assert.equal(alternatives.twoStores?.totalCents, 7754, "the two-store card finds the same order");
+  assert.equal(optimizeBasket(cards, stores).totalCents, 7754);
+});
+
+// Review, 2026-09-25: a pair whose polish landed on one store used to be
+// dropped outright, real splits and all, so the card showed a $76.73 split
+// while the same list split $70.89 between two other stores. Every pair is now
+// searched for its best split that uses both stores, and a split is shown only
+// when it beats the best one-store order ($69.56 here) — so this list says one
+// store beats any split, rather than showing either.
+test("the two-store card searches every pair's real splits, and shows one only when it beats one store", () => {
+  const stores: BasketStores = {
+    s0: { name: "S0", ship: flat(100) },
+    s1: { name: "S1", ship: flat(1200) },
+    s2: { name: "S2", ship: flat(300, 2000) },
+    s3: { name: "S3", ship: flat(800) },
+  };
+  const cards = [
+    card("c0", 4, [L("s1", 2156), L("s2", 1256), L("s3", 1857)]),
+    card("c1", 3, [L("s1", 348), L("s2", 493)]),
+    card("c3", 3, [L("s0", 162), L("s1", 135), L("s2", 151)]),
+  ];
+  const { plan, alternatives } = planBasket(cards, stores);
+  assert.equal(plan.totalCents, 6956);
+  assert.equal(alternatives.singleStore?.totalCents, 6956);
+  assert.equal(alternatives.twoStores, null);
+  assert.equal(alternatives.twoStoresNone, "one-store-cheaper");
+});
+
+// Every two-store order that uses both stores, by brute force: the cheapest.
+function bruteTwoStores(cards: BasketCard[], stores: BasketStores): number {
+  const keys = Object.keys(stores);
+  let best = Infinity;
+  for (let a = 0; a < keys.length; a++) {
+    for (let b = a + 1; b < keys.length; b++) {
+      const opts = cards.map((c) => c.listings.filter((l) => l.retailer === keys[a] || l.retailer === keys[b]));
+      if (opts.some((o) => !o.length)) continue;
+      const rec = (i: number, pick: { retailer: string; priceCents: number }[]) => {
+        if (i === cards.length) {
+          const sub: Record<string, number> = {};
+          let items = 0;
+          pick.forEach((l, j) => {
+            items += l.priceCents * cards[j].qty;
+            sub[l.retailer] = (sub[l.retailer] ?? 0) + l.priceCents * cards[j].qty;
+          });
+          if (Object.keys(sub).length !== 2) return;
+          let ship = 0;
+          for (const [k, v] of Object.entries(sub)) {
+            const st = stores[k].ship;
+            if (!(st.freeOverCents > 0 && v >= st.freeOverCents)) ship += st.shippingFlatCents;
+          }
+          best = Math.min(best, items + ship);
+          return;
+        }
+        for (const l of opts[i]) rec(i + 1, [...pick, l]);
+      };
+      rec(0, []);
+    }
+  }
+  return best;
+}
+
 test("the plan is never dearer than the naive split or either alternative — and optimal on small lists", () => {
   // Brute force over every assignment on small random lists (seeded, so the
   // run is repeatable). The search found the optimum every time on 3,000 of
@@ -172,6 +262,56 @@ test("the plan is never dearer than the naive split or either alternative — an
       assert.ok(plan.totalCents <= alternatives.twoStores.totalCents);
       assert.equal(alternatives.twoStores.storeCount, 2);
     }
+    // The two-store card: the cheapest real split, shown exactly when it beats
+    // the best one-store order.
+    const two = bruteTwoStores(
+      cards.filter((c) => c.listings.length),
+      stores
+    );
+    const single = alternatives.singleStore?.totalCents ?? Infinity;
+    if (n > 1 && two < single) assert.equal(alternatives.twoStores?.totalCents, two, `trial ${trial}: the best split`);
+    else assert.equal(alternatives.twoStores, null, `trial ${trial}: no split beats one store`);
+  }
+});
+
+test("wider lists with free-postage thresholds: every answer is consistent and never dearer than what's shown beside it", () => {
+  // No brute force here (up to 12 stores): the search is a heuristic above
+  // ten, and the page says so. What must always hold is checked instead.
+  let seed = 17;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let trial = 0; trial < 150; trial++) {
+    const m = 6 + Math.floor(rnd() * 7);
+    const n = 2 + Math.floor(rnd() * 6);
+    const stores: BasketStores = {};
+    for (let s = 0; s < m; s++) {
+      stores["s" + s] = { name: "S" + s, ship: flat([200, 400, 600, 900][Math.floor(rnd() * 4)], rnd() < 0.8 ? (10 + Math.floor(rnd() * 31)) * 100 : 0) };
+    }
+    const cards: BasketCard[] = [];
+    for (let i = 0; i < n; i++) {
+      const base = 200 + Math.floor(rnd() * 1300);
+      let ls = Object.keys(stores)
+        .filter(() => rnd() < 0.5)
+        .map((k) => L(k, Math.round(base * (0.8 + rnd() * 0.4))));
+      if (!ls.length) ls = [L("s0", base)];
+      cards.push(card("c" + i, 1 + Math.floor(rnd() * 3), ls));
+    }
+    const { plan, alternatives } = planBasket(cards, stores);
+    const recomputed = plan.stores.reduce((t, g) => {
+      const sub = g.lines.reduce((x, l) => x + l.unitCents * l.qty, 0);
+      const sh = stores[g.key].ship;
+      return t + sub + (sh.freeOverCents > 0 && sub >= sh.freeOverCents ? 0 : sh.shippingFlatCents);
+    }, 0);
+    assert.equal(recomputed, plan.totalCents, `trial ${trial}: the parts add up`);
+    assert.ok(plan.totalCents <= plan.naiveTotalCents);
+    const single = alternatives.singleStore;
+    if (single) assert.ok(plan.totalCents <= single.totalCents);
+    if (alternatives.twoStores) {
+      assert.equal(alternatives.twoStores.storeCount, 2);
+      assert.ok(plan.totalCents <= alternatives.twoStores.totalCents);
+      if (single) assert.ok(alternatives.twoStores.totalCents < single.totalCents, "a split is shown only when it beats one store");
+    }
+    if (alternatives.twoStoresNone === "one-store-cheaper") assert.ok(single, "one-store-cheaper always has a one-store order to point at");
+    assert.equal(optimizeBasket(cards, stores).totalCents, plan.totalCents, "the replacement panel's total is the same answer");
   }
 });
 
@@ -385,9 +525,39 @@ test("nothing in Best Basket is cached: every answer is per user", () => {
 });
 
 test("skipOwned subtracts owned copies (and doesn't apply to the binder itself)", () => {
+  // Behavioural: the parser takes no account, so what it returns is what ANY
+  // signed-in caller may send — the tier only decides the answer.
+  assert.deepEqual(parseBasketRequest({ source: "watchlist", skipOwned: true }), { source: "watchlist", skipOwned: true, text: "", picked: [] });
+  assert.equal(parseBasketRequest({ source: "deck", skipOwned: true, text: "1 Jinx" }).skipOwned, true);
+  assert.equal(parseBasketRequest({ source: "binder", skipOwned: true }).skipOwned, false, "the binder prices replacement; skip is ignored");
+  assert.equal(parseBasketRequest({ source: "nonsense" }).source, "deck");
+  assert.equal(parseBasketRequest(null).skipOwned, false);
   const code = readCode(ROUTE);
-  assert.match(code, /const skipOwned = body\.skipOwned === true && source !== "binder"/);
+  assert.match(code, /parseBasketRequest\(await req\.json\(\)/);
   assert.match(code, /loadOwnedQty\(userId, \[\.\.\.wanted\.keys\(\)\]\)/);
+  // Owned copies come off before the tier branch, so a free total skips them too.
+  assert.ok(code.indexOf("loadOwnedQty(") < code.indexOf("if (!full) {\n      const preview"));
+});
+
+test("picked cards: clamped 1-99 on the server and resolved by exact id, never by name", () => {
+  assert.equal(clampQty(0), 1);
+  assert.equal(clampQty(-4), 1);
+  assert.equal(clampQty(2.6), 3);
+  assert.equal(clampQty(500), 99);
+  const parsed = parseBasketRequest({ lines: [{ cardId: "a", qty: 3 }, { cardId: 7, qty: 1 }, { cardId: "b", qty: "x" }, null] });
+  assert.deepEqual(parsed.picked, [{ cardId: "a", qty: 3 }], "only well-formed { cardId, qty } lines survive");
+  assert.equal(parseBasketRequest({ lines: Array.from({ length: 500 }, (_, i) => ({ cardId: "c" + i, qty: 1 })) }).picked.length, 200);
+  const code = readCode(ROUTE);
+  assert.match(code, /const add = \(cardId: string, qty: number\) => wanted\.set\(cardId, clampQty\(/, "a summed quantity is clamped too");
+  assert.match(code, /for \(const l of picked\) add\(l\.cardId, clampQty\(l\.qty\)\)/, "each pick goes in by its own id, clamped");
+  // Bare ids (picker, watchlist) get their names by id lookup only.
+  const at = code.indexOf("const missing = [...wanted.keys()].filter((id) => !info.has(id))");
+  assert.ok(at > 0);
+  const byId = code.slice(at, code.indexOf("marketStores(country)", at));
+  assert.match(byId, /where: \{ id: \{ in: missing \} \}/);
+  assert.doesNotMatch(byId, /nameNormalized|resolveDeckLines/, "a chosen printing is never re-resolved by name");
+  // The page sends picks as ids, not as text.
+  assert.match(read("src/components/BestBasket.tsx"), /lines: picked\.map\(\(p\) => \(\{ cardId: p\.card\.id, qty: p\.qty \}\)\)/);
 });
 
 test("the page: auto-run only for Premium, a sign-in prompt signed out, honest copy", () => {

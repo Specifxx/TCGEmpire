@@ -17,7 +17,18 @@ export type MostSearchedRow = { card: DemandCard; searches: number };
 // CardTile re-prices on the client.
 export function MostSearchedStrip({ rows, coveredDays }: { rows: MostSearchedRow[]; coveredDays: number | null }) {
   const { price, fmt } = useCountry();
-  if (!rows.length) return null;
+  // /tools/demand 301s to #most-searched, so the anchor is always on the page —
+  // with a plain note when there is no ranking to show (a window too short
+  // after a database move, or a failed read, which the ISR render keeps until
+  // the next /movers regeneration — see lib/demand.ts getTopDemand).
+  if (!rows.length) {
+    return (
+      <section id="most-searched" className="scroll-mt-header">
+        <h2 className="text-xl font-extrabold text-white">Most searched this week</h2>
+        <p className="mt-0.5 text-xs text-slate-500">Search counts aren&apos;t available right now. Check back after the next update.</p>
+      </section>
+    );
+  }
   const days = coveredDays && coveredDays > 0 ? coveredDays : 7;
   return (
     <section id="most-searched" className="scroll-mt-header">

@@ -14,7 +14,7 @@ const DESC: Record<string, string> = {
   "/market": "The RiftCompare Index — a daily search-weighted market index for Riftbound singles, with key stats.",
   "/stores/tracked": "The stores whose public prices RiftCompare tracks and compares.",
   "/tools/deal-finder": "Deal Finder: every card cheaper than TCGplayer's US market price at a real store, with a store filter and an eBay-only view. The top 3 with a free account; the full list, filterable to your watchlist or binder, with Plus.",
-  "/tools/rising": "Ranks cards by demand and price-timing signals — whether a card you want is better bought now or later. Not financial advice.",
+  "/tools/rising": "Ranks cards by search demand, stores in stock and where the price sits in its own recent range, with the reason for each pick. A screen, not a prediction; not financial advice.",
   "/tools/best-basket": "Best Basket: the cheapest delivered order for a list of cards across your country's stores, postage and free-shipping thresholds included, beside the best one-store and two-store orders. Your own total with a free account; the store-by-store plan with Premium.",
   "/tools/box-ev": "Booster-box expected value: the pull value of a sealed box vs its price.",
   "/tools/selling-fees": "Net proceeds calculator for selling on TCGplayer or eBay: stacks commission, processing and shipping.",

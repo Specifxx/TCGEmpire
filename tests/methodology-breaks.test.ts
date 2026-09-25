@@ -215,8 +215,10 @@ const INDIRECT: Record<string, string> = {
   "src/app/card/[id]/page.tsx":
     "hands the series to the narrative (card-narrative.ts trajectory() drops, pinned below) and draws nothing comparative itself",
   "src/app/api/card/[id]/insight/route.ts": "hands the series to getInsight (lib/ai-insight.ts), which drops before computeSignals — pinned below",
-  "src/components/PriceHistoryChart.tsx": "draws every recorded point as a chart; the step is visible in the line itself",
-  "src/app/api/card/[id]/history/route.ts": "serves a card's recorded points to the client charts (QuickView, LocalizedPriceHistory)",
+  "src/components/PriceHistoryChart.tsx":
+    "draws every recorded point as a chart; the step is visible in the line itself, and PriceChart's ▲/▼ arrow drops the break window (rawCardHistory, pinned below)",
+  "src/app/api/card/[id]/history/route.ts":
+    "serves a card's recorded points to the client charts (QuickView, LocalizedPriceHistory), whose PriceChart arrow drops the break window (pinned below)",
   "src/app/api/v1/card/[id]/history.json/route.ts": "publishes recorded points to API consumers; dropping any would delete facts",
 };
 
@@ -285,4 +287,21 @@ test("the records page names the basis date above the boards that compare with i
   assert.match(page, /const since = prettyDay\(records\.currentSince\);/);
   assert.match(page, /heading=\{since \? `Furthest below their high since \$\{since\}` : "Furthest below their all-time high"\}/);
   assert.match(page, /heading=\{since \? `At their lowest since \$\{since\}` : "At their all-time low"\}/);
+});
+
+test("the card chart's ▲/▼ arrow never measures across a break; the Index and portfolio arrows are untouched", () => {
+  // Review, 2026-09-25: the arrow compared the first and last raw points, so a
+  // range spanning 23 Sep showed the US sourcing change as a ~25% drop while
+  // /movers, the verdict and the Index all held it flat.
+  const chart = code(read("src/components/PriceChart.tsx"));
+  assert.match(chart, /import \{ dropBreakWindow \} from "@\/lib\/methodology-breaks";/, "the dependency-free module, safe in a client bundle");
+  assert.match(chart, /const trend = rawCardHistory \? dropBreakWindow\(data\) : data;/);
+  assert.match(chart, /const delta = tLast - tFirst;/);
+  for (const f of ["src/components/LocalizedPriceHistory.tsx", "src/components/QuickView.tsx"]) {
+    assert.match(read(f), /<PriceChart[^>]*\brawCardHistory\b/, `${f} draws a raw card series`);
+  }
+  // Chain-linked series already hold a break flat; cutting them would hide real moves.
+  for (const f of ["src/components/IndexChart.tsx", "src/app/portfolio/page.tsx"]) {
+    assert.doesNotMatch(read(f), /rawCardHistory/, `${f} is chain-linked, not raw`);
+  }
 });
