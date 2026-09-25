@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PROBE_ADDRESSES, classifyRate, type ProbeScenarioResult } from "../src/lib/shipping-probe";
 import { condenseStore, type ProbeStoreInput, type ShippingSnapshot } from "../src/lib/shipping-snapshot";
@@ -9,6 +11,7 @@ import {
   SHIPPING_SNAPSHOT,
   basketStoresFor,
   freeThreshold,
+  marketEstimateFloorCents,
   marketHasZonePricing,
   postageOptionsFrom,
   shippingFor,
@@ -16,6 +19,7 @@ import {
   shippingSummary,
 } from "../src/lib/shipping";
 import { optimizeBasket, type BasketCard } from "../src/lib/basket";
+import { planPostageNotes, postageLineBits, postagePrefix } from "../src/lib/postage-display";
 import { RETAILERS, RETAILER_LIST } from "../src/lib/retailers";
 import { currencyOf, type Country } from "../src/lib/country";
 
@@ -184,7 +188,10 @@ test("a store that does not post to a region is unavailable there, and says wher
   assert.match(es.unavailable ?? "", /Spain/);
   const unknown = shippingFor("trinketmage", cart(10, 1), {}, snap);
   assert.equal(unknown.cents, 599);
-  assert.equal(unknown.upTo, true);
+  // Not "up to €5.99": for Spain, France and the Netherlands there is no rate
+  // at all, so the figure caps nothing there. It is reported apart, and the
+  // plan headline tells the buyer to pick their region.
+  assert.equal(unknown.upTo, false);
   assert.deepEqual(unknown.notServed, ["Spain", "France", "Netherlands"]);
   // The basket leaves it out for a Madrid buyer and says why.
   const stores = basketStoresFor("EU", { region: "ES" }, snap);
@@ -194,6 +201,14 @@ test("a store that does not post to a region is unavailable there, and says wher
   );
   assert.deepEqual(plan.unbuyable, [{ name: "X", qty: 1 }]);
   assert.equal(plan.excludedStores[0]?.key, "trinketmage");
+  assert.match(plan.excludedStores[0]?.reason ?? "", /^Quoted no postage to Spain \(measured\)$/);
+  // Region unknown: it stays in, and the headline says where it does not post.
+  const open = optimizeBasket(
+    [{ cardId: "x", name: "X", slug: null, qty: 1, listings: [{ retailer: "trinketmage", retailerName: "Trinket Mage", priceCents: 100, url: "u" }] }],
+    basketStoresFor("EU", {}, snap),
+  );
+  assert.deepEqual(planPostageNotes(open, false), ["1 store in this plan doesn't post to Spain, France and Netherlands — pick your region"]);
+  assert.deepEqual(planPostageNotes(open, true), [], "a picked region already excluded what does not post there");
 });
 
 test("free postage needs a measured threshold, and applies from the first free cart — never a guessed round number", () => {
@@ -270,14 +285,35 @@ test("a minimum order is reported, and the basket counts the top-up", () => {
   assert.equal(condenseStore(dice, {}).minOrderCents, 2000);
 });
 
-test("an unmeasured store falls back to its guess, labelled an estimate, and its guessed threshold is never applied", () => {
-  const snap = snapshotOf(OBSESSION); // no punkouter in it
+test("an unmeasured store is an estimate: never under its market's dearest measured one-card rate, never zeroed by its guessed threshold", () => {
   const r = RETAILERS.punkouter;
   assert.ok(r && r.freeOverCents > 0, "fixture premise: punkouter carries a guessed free-over threshold");
-  const q = shippingFor("punkouter", cart(r.freeOverCents / 100 + 50, 3), {}, snap);
+  // The real snapshot: punkouter (US) quotes postage only inside checkout.
+  const q = shippingFor("punkouter", cart(r.freeOverCents / 100 + 50, 3), {});
   assert.equal(q.basis, "estimate");
-  assert.equal(q.cents, r.shippingFlatCents, "the guessed threshold must not zero it");
-  assert.equal(q.free, false);
+  assert.equal(q.label, "Estimate — not measured");
+  assert.equal(q.free, false, "the guessed threshold must not zero it");
+  assert.ok(q.cents >= r.shippingFlatCents, "never below the guess");
+  const floor = marketEstimateFloorCents("US");
+  assert.ok(q.cents >= floor, "never below the dearest one-card tracked rate a measured US store charges");
+  // …which is well above what a typical measured US store charges (the guess
+  // was US$1.50; the measured median is about US$6.30).
+  const oneCard = Object.entries(SHIPPING_SNAPSHOT.stores)
+    .filter(([, s]) => s.market === "US" && s.status === "measured")
+    .map(([k, s]) => {
+      const one = s.carts.filter(([, n]) => n === 1).sort((a, b) => a[0] - b[0])[0] ?? s.carts[0];
+      return shippingFor(k, cart(one[0] / 100, 1), { trackedOnly: true }).cents;
+    })
+    .filter((c) => c > 0)
+    .sort((a, b) => a - b);
+  assert.ok(q.cents >= oneCard[Math.floor(oneCard.length / 2)], "at least the US measured median");
+  // A store posting from Canada is not the yardstick for a domestic one:
+  // Danireon's US$14.13 international UPS rate is left out of the floor.
+  assert.ok(floor < 1413, `floor ${floor}`);
+  // A test snapshot with no measured store in the market: the guess stands.
+  assert.equal(shippingFor("punkouter", cart(10, 1), {}, snapshotOf(OBSESSION)).cents, r.shippingFlatCents);
+  // The store page and store card show the same floored figure.
+  assert.equal(shippingSummary("punkouter").estimateCents, shippingFor("punkouter", cart(10, 1)).cents);
 });
 
 test("no copy calls a guess 'measured'", () => {
@@ -299,7 +335,8 @@ test("no copy calls a guess 'measured'", () => {
   assert.match(estBranch, /est\. \{fmt\(p\.cents\)\}/);
   assert.match(estBranch, /hasn&apos;t been measured yet/);
   assert.ok(!claimsMeasured(estBranch.replace(/hasn&apos;t been measured/g, "")), "estimate branch must not claim a measurement");
-  assert.match(ui, /s\.postage\.basis === "estimate" \? "est\. "/, "the store header marks an estimate");
+  assert.match(ui, /\+ \{postagePrefix\(s\.postage\)\}/, "the store header marks an estimate through postagePrefix");
+  assert.equal(postagePrefix(est), "est. ");
   const page = read("src/app/stores/[slug]/page.tsx");
   const pageEst = page.slice(page.indexOf('if (s.basis === "estimate")'), page.indexOf('if (s.basis === "no-post")'));
   assert.match(pageEst, /haven&apos;t measured/);
@@ -330,9 +367,12 @@ test("the region and tracked-only choices are remembered, guarded, and sent to b
   assert.match(ui, /writePostagePrefs\(market,/);
   assert.match(ui, /Tracked postage only/);
   assert.match(ui, /Not sure — price the highest rate/);
-  assert.match(ui, /untracked letter \$\{fmt\(p\.otherOption\.cents\)\} also offered/);
+  assert.match(read("src/lib/postage-display.ts"), /untracked letter \$\{fmt\(p\.otherOption\.cents\)\} also offered/);
+  assert.match(ui, /postageLineBits\(group, fmt\)/);
   assert.match(ui, /the store&apos;s own checkout is final/);
-  assert.match(read("src/components/PortfolioReplacementCost.tsx"), /readPostagePrefs\(country\)/);
+  const panel = read("src/components/PortfolioReplacementCost.tsx");
+  assert.match(panel, /readPostagePrefs\(country\)/);
+  assert.match(panel, /postagePrefix\(s\.postage\)/, "the replacement table says est. / from / up to exactly as Best Basket does");
 });
 
 // ── The checked-in snapshot ─────────────────────────────────────────────────
@@ -428,4 +468,238 @@ test("the optimiser drains a whole store when no single-card move can save its p
   assert.equal(plan.savedCents, 900);
   // Deterministic: the same input gives the same split.
   assert.deepEqual(optimizeBasket(cards, stores).stores.map((s) => s.key), plan.stores.map((s) => s.key));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The postage review (2026-09-25): thirteen places the first measured model
+// still showed less than the checkout would charge, or said more than it knew.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test("a letter with a floor: not offered below the smallest cart it was seen on when a smaller cart got only the parcel", () => {
+  // Mecha Games (CA) as measured: no letter on a C$0.50 card, only "Standard"
+  // C$19.99; the C$3.49 bubble mailer on every cart from C$5.00.
+  const both = (): Rates => [["Standard", 19.99], ["CARD SINGLES ( Bubble Mailer No tracking)", 3.49]];
+  const mecha = probe("mechagames", "CA", [
+    { id: "S1", v: 0.5, n: 1, rates: [["Standard", 19.99]] },
+    { id: "S10", v: 5, n: 10, rates: both },
+    { id: "V20", v: 20.04, n: 2, rates: both },
+    { id: "V50", v: 51.4, n: 2, rates: both },
+    { id: "V100", v: 100.63, n: 1, rates: both },
+    { id: "V150", v: 150.28, n: 3, rates: both },
+  ]);
+  const snap = { ...snapshotOf(mecha), markets: {} } as ShippingSnapshot;
+  const q = (v: number, n: number) => shippingFor("mechagames", cart(v, n), { region: "ON" }, snap);
+  assert.equal(q(0.5, 1).cents, 1999, "the measured cart itself: the checkout offered no letter");
+  assert.equal(q(3, 2).cents, 1999, "below the letter's floor");
+  assert.equal(q(5, 1).cents, 349);
+  assert.equal(q(5, 1).tracked, false);
+  const sum = shippingSummary("mechagames", snap);
+  assert.equal(sum.letter?.fromValueCents, 500);
+  assert.equal(sum.letter?.minCents, 349, "the letter's price where it IS offered");
+  assert.match(shippingNoteFor("mechagames", snap), /untracked C\$3\.49 \(from C\$5\.00, up to 10 cards/);
+  // The real snapshot agrees.
+  assert.equal(shippingFor("mechagames", cart(0.5, 1)).cents, 1999);
+});
+
+test("tracked-only leaves out a store that only offers untracked postage, and says why", () => {
+  // GT Games (CA): "Economy (No Tracking)" and nothing else.
+  const gt = probe("gtgames", "CA", [
+    { id: "S1", v: 0.09, n: 1, rates: [["Economy (No Tracking)", 2.85]] },
+    { id: "S10", v: 1.48, n: 10, rates: [["Economy (No Tracking)", 5.7]] },
+  ]);
+  const snap = { ...snapshotOf(gt), markets: {} } as ShippingSnapshot;
+  const q = shippingFor("gtgames", cart(5, 2), { trackedOnly: true }, snap);
+  assert.equal(q.unavailable, "Offers only untracked postage (measured)");
+  assert.equal(shippingFor("gtgames", cart(5, 2), { region: "ON", trackedOnly: true }, snap).unavailable, "Offers only untracked postage (measured)");
+  assert.equal(shippingFor("gtgames", cart(5, 2), {}, snap).cents, 570, "without the toggle it is priced as before");
+  const plan = optimizeBasket(
+    [{ cardId: "x", name: "X", slug: null, qty: 1, listings: [{ retailer: "gtgames", retailerName: "GT Games", priceCents: 100, url: "u" }] }],
+    basketStoresFor("CA", { trackedOnly: true }, snap),
+  );
+  assert.deepEqual(plan.excludedStores, [{ key: "gtgames", name: RETAILERS.gtgames.name, reason: "Offers only untracked postage (measured)" }]);
+  // The Left-out heading no longer claims every excluded store "doesn't post to you".
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /Left out of this plan:/);
+  assert.doesNotMatch(ui, /post\{" "\}\s*\{regionLabel \? `to \$\{regionLabel\}` : "to you"\}/);
+  assert.doesNotMatch(read("src/components/PortfolioReplacementCost.tsx"), /don&apos;t post to you/);
+});
+
+test("a zone whose every quote errored was not measured: never 'does not post'", () => {
+  const errAt = (s: ProbeStoreInput, ids: string[]) => {
+    for (const sc of s.scenarios) for (const id of ids) sc.byAddress[id] = { status: "error", rates: [], error: "HTTP 429" };
+    return s;
+  };
+  const obs = () => probe("obsessiongaming", "AU", [
+    { id: "S1", v: 0.1, n: 1, rates: [["Standard", 20]] },
+    { id: "V50", v: 50.97, n: 2, rates: [["Standard", 20]] },
+  ]);
+  const snap = snapshotOf(errAt(obs(), ["adl"]));
+  const adl = snap.stores.obsessiongaming.zones.find((z) => z.at.includes("adl"))!;
+  assert.equal(adl.none, undefined);
+  assert.deepEqual(adl.err, [0, 1]);
+  const q = shippingFor("obsessiongaming", cart(30, 2), { region: "SA" }, snap);
+  assert.equal(q.unavailable, undefined, "Adelaide was never measured, so it is not 'does not post'");
+  assert.equal(q.cents, 2000, "priced at the highest measured region instead");
+  assert.equal(basketStoresFor("AU", { region: "SA" }, snap).obsessiongaming.unavailable, undefined);
+  // Every address errored: unmeasured (an estimate), never no-post.
+  const all = condenseStore(errAt(obs(), PROBE_ADDRESSES.AU.map((a) => a.id)), {});
+  assert.equal(all.status, "unmeasured");
+  assert.equal(all.note, "Not measured: every quote errored");
+  const snapAll = { ...snapshotOf(OBSESSION), stores: { obsessiongaming: all } } as ShippingSnapshot;
+  assert.equal(shippingFor("obsessiongaming", cart(30, 2), { region: "SA" }, snapAll).basis, "estimate");
+});
+
+test("the builder replaces a market only on a full run; a partial run keeps the rest and dates the market by its oldest store", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ship-"));
+  const one = probe("geargaming", "US", [{ id: "S1", v: 0.25, n: 1, rates: [["Ground Advantage", 5.72]] }]);
+  one.measuredAt = "2026-10-02T03:30:00.000Z";
+  writeFileSync(join(dir, "us.json"), JSON.stringify({ market: "US", stores: [one] }));
+  execFileSync(
+    process.execPath,
+    ["--import", "tsx", "scripts/build-shipping-rates.ts", join(dir, "us.json"), `--base=src/lib/shipping-rates.json`, `--out=${join(dir, "out.json")}`, `--summary=${join(dir, "sum.md")}`],
+    { cwd: ROOT, stdio: "pipe" },
+  );
+  const out = JSON.parse(readFileSync(join(dir, "out.json"), "utf8")) as ShippingSnapshot;
+  const us = Object.entries(out.stores).filter(([, s]) => s.market === "US");
+  assert.equal(us.length, Object.values(SHIPPING_SNAPSHOT.stores).filter((s) => s.market === "US").length, "no other US store dropped");
+  assert.equal(out.stores.geargaming.measuredAt, "2026-10-02");
+  assert.equal(out.stores.capefear.measuredAt, SHIPPING_SNAPSHOT.stores.capefear.measuredAt);
+  assert.equal(out.markets.US?.measuredAt, "2026-09-25", "a partial run: as fresh as the OLDEST store");
+  assert.match(readFileSync(join(dir, "sum.md"), "utf8"), /US \(partial run\)/);
+});
+
+test("at a measured cart the quote IS the measured rate; between carts it is never under a cart the order contains", () => {
+  // Always Games (Toronto): C$16.17 Expedited on small carts, then its
+  // "Standard" C$10.00 from C$50.85 / 5 cards. Quoted C$16.17 there before.
+  const ag = probe("alwaysgames", "CA", [
+    { id: "S1", v: 0.35, n: 1, rates: [["Expedited Parcel", 16.17]] },
+    { id: "S10", v: 3.5, n: 10, rates: [["Expedited Parcel", 16.17]] },
+    { id: "V20", v: 20.45, n: 2, rates: [["Expedited Parcel", 16.17]] },
+    { id: "V50", v: 50.85, n: 5, rates: [["Expedited Parcel", 16.17], ["Standard", 10]] },
+    { id: "V100", v: 100.05, n: 34, rates: [["Expedited Parcel", 16.17], ["Standard", 10]] },
+  ]);
+  const snap = { ...snapshotOf(ag), markets: {} } as ShippingSnapshot;
+  const q = (v: number, n: number) => shippingFor("alwaysgames", cart(v, n), { region: "ON" }, snap).cents;
+  assert.equal(q(50.85, 5), 1000);
+  assert.equal(q(100.05, 34), 1000);
+  assert.equal(q(60, 11), 1617, "contains the 10-card cart that paid C$16.17: never less");
+  // The whole real snapshot: every (store, region, measured cart) quotes
+  // exactly what was measured there, except where a checkout discount the
+  // rates endpoint cannot see makes it free (goattcg, tefuda).
+  let checked = 0;
+  const off: string[] = [];
+  for (const [k, s] of Object.entries(SHIPPING_SNAPSHOT.stores)) {
+    if (s.status !== "measured") continue;
+    for (const rg of SHIPPING_REGIONS[s.market]) {
+      const zs = rg.at.map((id) => s.zones.find((z) => z.at.includes(id))).filter((z) => !!z);
+      if (zs.length !== 1 || zs[0]!.none) continue;
+      const z = zs[0]!;
+      s.carts.forEach(([v, n], j) => {
+        const m = [z.std[j]?.[0], z.ltr?.[j]?.[0]].filter((x): x is number => x != null);
+        if (!m.length) return;
+        checked++;
+        const got = shippingFor(k, { subtotalCents: v, items: n }, { region: rg.key }).cents;
+        if (got !== Math.min(...m) && !s.freeFromCents) off.push(`${k} ${rg.key} ${v}/${n}: ${got} vs ${Math.min(...m)}`);
+      });
+    }
+  }
+  assert.ok(checked > 3000, `${checked}`);
+  assert.deepEqual(off, []);
+});
+
+test("a free letter counts in the free-postage hint, and the store page reports it apart from the parcel's", () => {
+  // Card Brawlers (Toronto): parcel C$14.29 until free at C$150; letter C$3.49 until free from C$55.
+  const cb = probe("cardbrawlers", "CA", [
+    { id: "S1", v: 0.25, n: 1, rates: [["Expedited Parcel", 14.29], ["Bubble Mail (NO Tracking)", 3.49]] },
+    { id: "S10", v: 2.5, n: 10, rates: [["Expedited Parcel", 14.29], ["Bubble Mail (NO Tracking)", 3.49]] },
+    { id: "V20", v: 20, n: 1, rates: [["Expedited Parcel", 14.29], ["Bubble Mail (NO Tracking)", 3.49]] },
+    { id: "V50", v: 55, n: 1, rates: [["Expedited Parcel", 14.29], ["Free Bubble Mail (NO Tracking)", 0]] },
+    { id: "V100", v: 100, n: 2, rates: [["Expedited Parcel", 14.29], ["Free Bubble Mail (NO Tracking)", 0]] },
+    { id: "V150", v: 150, n: 3, rates: [["Free Expedited", 0], ["Free Bubble Mail (NO Tracking)", 0]] },
+  ]);
+  const snap = { ...snapshotOf(cb), markets: {} } as ShippingSnapshot;
+  const q = shippingFor("cardbrawlers", cart(30, 2), { region: "ON" }, snap);
+  assert.equal(q.cents, 349);
+  assert.equal(q.freeFromCents, 5500, "the letter goes free first — not 'free postage from C$150'");
+  assert.equal(shippingFor("cardbrawlers", cart(60, 2), { region: "ON" }, snap).cents, 0);
+  assert.equal(shippingFor("cardbrawlers", cart(30, 2), { region: "ON", trackedOnly: true }, snap).freeFromCents, 15000, "tracked-only: the parcel's");
+  assert.equal(shippingFor("cardbrawlers", cart(30, 12), { region: "ON" }, snap).freeFromCents, 15000, "more cards than the letter was seen with: the parcel's");
+  const sum = shippingSummary("cardbrawlers", snap);
+  assert.equal(sum.free?.fromCents, 15000);
+  assert.equal(sum.free?.letterFromCents, 5500);
+  assert.match(shippingNoteFor("cardbrawlers", snap), /free from C\$150\.00 · free untracked from C\$55\.00/);
+});
+
+test("only a rate whose name says tracked is called tracked", () => {
+  const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const base = { cents: 700, label: "Small Letter Sized", tracked: false, basis: "measured" as const, free: false, upTo: false };
+  // Mana Market: the letter, beside a "Small Bubble Mailer" whose name says nothing.
+  const mana = postageLineBits({ topUpCents: 0, postage: { ...base, otherOption: { cents: 1000, label: "Small Bubble Mailer", tracked: null } } }, fmt);
+  assert.ok(!mana.some((b) => /tracked:/.test(b)), mana.join(" · "));
+  assert.ok(mana.includes("or: Small Bubble Mailer $10.00 (tracking not stated)"), mana.join(" · "));
+  const real = postageLineBits({ topUpCents: 0, postage: { ...base, otherOption: { cents: 1000, label: "Tracked Parcel", tracked: true } } }, fmt);
+  assert.ok(real.includes("tracked: Tracked Parcel $10.00"), real.join(" · "));
+  assert.doesNotMatch(read("src/components/BestBasket.tsx"), /`tracked: \$\{p\.otherOption\.label\}/);
+});
+
+test("a $0 cart only counts for orders with at least its cards and no more of its value; quotes rise with card count", () => {
+  // Maine Phase (New York) as measured: "Standard" $0 for 1–3 card carts, a
+  // 10-card $5 cart paid Ground Advantage $6.35, and $0 above $100 by threshold.
+  const mp = probe("mainephasehobbies", "US", [
+    { id: "S1", v: 0.5, n: 1, rates: [["Standard", 0], ["Ground Advantage", 6.35]] },
+    { id: "S10", v: 5, n: 10, rates: [["Ground Advantage", 6.35]] },
+    { id: "V20", v: 20.95, n: 1, rates: [["Standard", 0]] },
+    { id: "V50", v: 50.9, n: 2, rates: [["Standard", 0]] },
+    { id: "V60", v: 64.85, n: 3, rates: [["Standard", 0]] },
+    { id: "V100", v: 100.9, n: 2, rates: [["Ground Advantage", 0]] },
+    { id: "V150", v: 150.75, n: 5, rates: [["Ground Advantage", 0]] },
+  ]);
+  const snap = { ...snapshotOf(mp), markets: {} } as ShippingSnapshot;
+  const q = (v: number, n: number) => shippingFor("mainephasehobbies", cart(v, n), { region: "NE" }, snap);
+  assert.equal(q(10, 5).free, false, "5 cards at $10 is not free: only a $150.75 cart with 5 cards was");
+  assert.equal(q(10, 5).cents, 635);
+  assert.equal(q(0.5, 1).cents, 0, "the measured one-card cart still is");
+  assert.equal(q(150.75, 5).cents, 0);
+  for (const v of [1, 10, 30, 60, 90]) {
+    let prev = -1;
+    for (let n = 1; n <= 15; n++) {
+      const c = q(v, n).cents;
+      assert.ok(c >= prev, `$${v}: ${n} cards quoted ${c}, fewer cards ${prev}`);
+      prev = c;
+    }
+  }
+});
+
+test("an order bigger than any measured is 'from', and the optimiser counts postage that was rising", () => {
+  const hub = probe("cardhub", "AU", [
+    { id: "S1", v: 1.5, n: 1, rates: [["Singles Tracked Letter", 6]] },
+    { id: "S10", v: 15, n: 10, rates: [["Singles Tracked Letter", 12]] },
+    { id: "V50", v: 52.35, n: 1, rates: [["Singles Tracked Letter", 6]] },
+  ]);
+  const snap = snapshotOf(hub, OBSESSION);
+  const big = shippingFor("cardhub", cart(40, 60), { region: "SA" }, snap);
+  assert.equal(big.beyondMeasured, true);
+  assert.equal(big.cents, 1200, "the quote is what was measured");
+  assert.equal(big.riskCents, 3000, "$6 more per further 10 cards, for the optimiser");
+  assert.equal(postagePrefix(big), "from ");
+  assert.equal(`+ ${postagePrefix(big)}${big.cents}`.startsWith("+ from"), true);
+  // 60 cards, each 10c cheaper at Card Hub: consolidating there looks $8 cheaper
+  // on measured figures alone, but its postage was doubling by 10 cards.
+  const cards: BasketCard[] = Array.from({ length: 60 }, (_, i) => ({
+    cardId: `c${i}`,
+    name: `Card ${i}`,
+    slug: null,
+    qty: 1,
+    listings: [
+      { retailer: "cardhub", retailerName: "Card Hub", priceCents: 50, url: "u" },
+      { retailer: "obsessiongaming", retailerName: "Obsession", priceCents: 60, url: "u" },
+    ],
+  }));
+  const plan = optimizeBasket(cards, basketStoresFor("AU", { region: "SA" }, snap));
+  assert.deepEqual(plan.stores.map((s) => s.key), ["obsessiongaming"]);
+  assert.equal(plan.shippingCents, 2000, "reported totals use the quote, not the risk");
+  assert.deepEqual(planPostageNotes(plan, true), ["postage for 1 store is for a bigger order than we measured — at least this"]);
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /priced from the nearest order sizes each store&apos;s checkout quoted/);
+  assert.doesNotMatch(ui, /own checkout rate for an order this size/);
 });

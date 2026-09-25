@@ -11,7 +11,15 @@ import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
 import { BestBasket } from "@/components/BestBasket";
-import { SHIPPING_REGIONS, formatMeasuredDate, marketHasZonePricing, marketMeasuredAt } from "@/lib/shipping";
+import { headers } from "next/headers";
+import {
+  formatMeasuredDate,
+  marketHasZonePricing,
+  marketMeasuredAt,
+  marketMeasuredPlaces,
+  regionFromGeo,
+  regionOptionsFor,
+} from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +45,7 @@ const FAQS = [
   },
   {
     q: "Does it account for shipping?",
-    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list and ranks results by what you'd actually pay delivered. The postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market: the store's rate name, whether it's tracked, where a cheap untracked letter stops being offered, and the order value where postage goes free, if it ever does. Tell it where you are for exact regional rates, or leave it unset and it uses each store's highest. A store we haven't measured yet is marked as an estimate, and the store's own checkout is always final.",
+    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list and ranks results by what you'd actually pay delivered. The postage is each store's own checkout rate, measured for orders of different sizes and values to addresses across your market (in the US: New York, Chicago, Dallas and San Francisco): the store's rate name, whether its name says it's tracked, where a cheap untracked letter stops being offered, and the order value where postage goes free, if it ever does. It starts from your region and prices it at the address we measured there; leave it unset and it uses each store's highest. An order bigger than any we measured is marked 'from', a store we haven't measured yet is marked as an estimate, and the store's own checkout is always final.",
   },
   {
     q: "What can I paste in?",
@@ -74,8 +82,12 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
   const initialList = searchParams.list ? decodeList(searchParams.list) : undefined;
   // Postage choices for the picker: this market's regions, whether any store
   // here prices by region at all, and when the rates were measured.
-  const regions = (SHIPPING_REGIONS[country] ?? []).map((r) => ({ key: r.key, label: r.label }));
+  const regions = regionOptionsFor(country);
   const measuredAt = formatMeasuredDate(marketMeasuredAt(country)) || null;
+  // The visitor's region from Vercel's geo headers (this page is already
+  // dynamic, so reading them costs no caching): the picker starts there.
+  const h = headers();
+  const geoRegion = regionFromGeo(country, h.get("x-vercel-ip-country"), h.get("x-vercel-ip-country-region"));
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -132,6 +144,8 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
           regions={regions}
           zonePriced={marketHasZonePricing(country)}
           measuredAt={measuredAt}
+          measuredTo={marketMeasuredPlaces(country)}
+          geoRegion={geoRegion}
         />
       ) : (
         <div className="card-surface p-6 text-center">

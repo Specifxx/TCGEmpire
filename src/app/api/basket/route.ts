@@ -8,7 +8,7 @@ import { priceField } from "@/lib/country";
 import { normalizeSearch } from "@/lib/format";
 import { parseDeckList } from "@/lib/deck";
 import { optimizeBasket, type BasketCard } from "@/lib/basket";
-import { basketStoresFor, formatMeasuredDate, marketMeasuredAt, postageOptionsFrom, regionFor } from "@/lib/shipping";
+import { basketStoresFor, postageContextFor, postageOptionsFrom } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -127,15 +127,9 @@ export async function POST(req: Request) {
   }));
 
   const plan = optimizeBasket(basketCards, storesMap);
-  const region = regionFor(country, postageOpts.region);
   return NextResponse.json({
     plan,
     totalRequested: wanted.length,
-    shipping: {
-      region: region?.key ?? null,
-      regionLabel: region?.label ?? null,
-      trackedOnly: !!postageOpts.trackedOnly,
-      measuredAt: formatMeasuredDate(marketMeasuredAt(country)) || null,
-    },
+    shipping: postageContextFor(country, postageOpts),
   });
 }

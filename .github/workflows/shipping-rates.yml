@@ -20,16 +20,30 @@ name: Shipping rates probe
 # locally, and commit it (read the summary first — a store that suddenly
 # "does not post" is worth a manual check before it drops out of Best Basket).
 #
-# DISPATCH ONLY, deliberately no schedule. Shopify's default robots.txt
-# disallows /cart for every store; the probe reads /cart as a one-off,
-# low-volume measurement of the quote any shopper sees, not a crawl, and a
-# standing cron would turn it into one. Run it when rates are suspected stale
-# (a store's own complaint, a reader report, or every month or two).
+# MONTHLY, plus dispatch. It ran on dispatch only at first: Shopify's default
+# robots.txt disallows /cart for every store, and the probe reads /cart as a
+# low-volume measurement of the quote any shopper sees, not a crawl. Made an
+# automatic monthly refresh on 2026-09-25 (asked for in the postage review
+# follow-up) rather than relying on someone to dispatch it every month or two:
+# rates drift, and a stale snapshot is how a buyer gets shown one figure and
+# charged another. Once a month is the same traffic the
+# manual cadence would have produced — about 70 requests per store, one at a
+# time, >=700ms apart, with the probe's per-store request and time caps and
+# Retry-After backoff unchanged. The 2nd of the month at 03:17 UTC: off the
+# hour, and nowhere near the 08:00 UTC release.
+#
+# A scheduled run is a full run of every market and, like a dispatched one,
+# NEVER commits: it uploads each market's rebuilt snapshot and writes the
+# before/after table to the run summary, with a "Needs a look" list — stores
+# that newly do not post, and one-card rates that moved by more than 50%.
+# Someone reads it and commits the refresh by hand.
 #
 # max-parallel 2: the first EU run hit HTTP 429s on every store at the same
 # moment the CA run was going — Shopify throttles carts per IP.
 
 on:
+  schedule:
+    - cron: "17 3 2 * *"
   workflow_dispatch:
     inputs:
       market:
@@ -50,7 +64,8 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        market: ${{ inputs.market == 'all' && fromJSON('["AU","US","UK","CA","EU","SG"]') || fromJSON(format('["{0}"]', inputs.market)) }}
+        # A scheduled run has no inputs: every market.
+        market: ${{ (github.event_name == 'schedule' || inputs.market == 'all') && fromJSON('["AU","US","UK","CA","EU","SG"]') || fromJSON(format('["{0}"]', inputs.market)) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

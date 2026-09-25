@@ -7,7 +7,7 @@ import { pickPrice } from "@/lib/country";
 import { cardTileSelect } from "@/lib/cards";
 import { CONDITION_MULTIPLIER } from "@/lib/constants";
 import { optimizeBasket, type BasketCard } from "@/lib/basket";
-import { basketStoresFor, formatMeasuredDate, marketMeasuredAt, postageOptionsFrom, regionFor } from "@/lib/shipping";
+import { basketStoresFor, postageContextFor, postageOptionsFrom } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -154,11 +154,6 @@ export async function GET(req: Request) {
     valuedCents: wanted.reduce((s, w) => s + w.valueCents, 0),
     pricedHoldings: wanted.length,
     skippedHoldings: skipped,
-    shipping: {
-      region: regionFor(country, postageOpts.region)?.key ?? null,
-      regionLabel: regionFor(country, postageOpts.region)?.label ?? null,
-      trackedOnly: !!postageOpts.trackedOnly,
-      measuredAt: formatMeasuredDate(marketMeasuredAt(country)) || null,
-    },
+    shipping: postageContextFor(country, postageOpts),
   });
 }

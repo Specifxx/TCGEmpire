@@ -12,7 +12,8 @@ import { cardImageAlt } from "@/lib/image-alt";
 import { CardSearch, type SearchCard } from "./CardSearch";
 import type { BasketPlan, BasketStoreGroup } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
-import { readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
+import { effectiveRegion, readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
+import { joinList, planPostageNotes, postageLineBits, postagePrefix, trackedTag } from "@/lib/postage-display";
 
 interface PickedLine {
   card: SearchCard;
@@ -21,7 +22,9 @@ interface PickedLine {
 
 export interface BasketRegionOption {
   key: string;
-  label: string;
+  label: string; // the picker's text: "Northeast (measured to New York)"
+  phrase: string; // in a sentence: "the Northeast"
+  unmeasured?: boolean; // "Elsewhere in the US — not measured"
 }
 
 // The Best-Basket tool UI. Primary flow: search for a card, pick the exact
@@ -31,12 +34,16 @@ export interface BasketRegionOption {
 // than picking cards one at a time.
 //
 // POSTAGE (2026-09-25): each store's own checkout rate for the order it would
-// get, measured — not a flat guess. The buyer picks where it is going (the
-// region is remembered in this browser; unset, every store is priced at its
-// HIGHEST regional rate and says "up to") and can rule out untracked letters.
-// Each store line names the store's own rate ("Singles Tracked (3-7 Days)"),
-// says when a cheaper untracked letter was skipped, and marks any store still
-// on an estimate "est.". See lib/shipping.ts.
+// get, measured — not a flat guess. The buyer picks where it is going; the
+// picker starts from their location (geoRegion, from Vercel's geo headers —
+// a US visitor in Ohio starts on "Midwest (measured to Chicago)"), and their
+// own pick is remembered in this browser. Unset, every store is priced at its
+// HIGHEST regional rate and says "up to"; "Elsewhere … — not measured" is
+// priced the same way and marked "est.". The buyer can rule out untracked
+// letters. Each store line names the store's own rate, says when a cheaper
+// untracked letter was skipped, marks an order bigger than any measured
+// "from", and marks any store still on an estimate "est.". See lib/shipping.ts
+// and lib/postage-display.ts.
 export function BestBasket({
   currency,
   initialList,
@@ -44,6 +51,8 @@ export function BestBasket({
   regions,
   zonePriced,
   measuredAt,
+  measuredTo,
+  geoRegion,
 }: {
   currency: string;
   initialList?: string;
@@ -51,6 +60,8 @@ export function BestBasket({
   regions: BasketRegionOption[];
   zonePriced: boolean;
   measuredAt: string | null; // "25 Sep 2026"
+  measuredTo: string[]; // the addresses the market was measured to: ["New York", "San Francisco", …]
+  geoRegion: string | null; // the region the visitor's location suggests (a regions[] key), or null
 }) {
   const { country } = useCountry();
   const [picked, setPicked] = useState<PickedLine[]>([]);
@@ -59,7 +70,11 @@ export function BestBasket({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<BasketPlan | null>(null);
-  const [region, setRegion] = useState<string | null>(null);
+  const validRegion = (k: string) => regions.some((r) => r.key === k);
+  // The server knows the visitor's location, so the first render already
+  // shows their region; a remembered choice replaces it after mount.
+  const [region, setRegion] = useState<string | null>(geoRegion && validRegion(geoRegion) ? geoRegion : null);
+  const [regionGuessed, setRegionGuessed] = useState(!!geoRegion && validRegion(geoRegion));
   const [trackedOnly, setTrackedOnly] = useState(false);
   const lastRun = useRef<{ kind: "lines"; lines: { cardId: string; qty: number }[] } | { kind: "text"; text: string } | null>(null);
   // Only the latest request's answer is shown: a delivery change re-prices
@@ -70,9 +85,11 @@ export function BestBasket({
   // server); an unknown region prices at each store's highest regional rate.
   useEffect(() => {
     const p = readPostagePrefs(market);
-    if (p.region && regions.some((r) => r.key === p.region)) setRegion(p.region);
+    setRegion(effectiveRegion(p, geoRegion, validRegion));
+    setRegionGuessed(!p.regionChosen && !!geoRegion && validRegion(geoRegion));
     setTrackedOnly(p.trackedOnly);
-  }, [market, regions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [market, regions, geoRegion]);
 
   const postageQuery = (r: string | null, t: boolean) => {
     const q = new URLSearchParams();
@@ -151,13 +168,14 @@ export function BestBasket({
     // The remembered region is read here too: this runs in the same commit as
     // the prefs effect above, before its state update lands.
     const p = readPostagePrefs(market);
-    void runPasted(initialList, p.region && regions.some((r) => r.key === p.region) ? p.region : null, p.trackedOnly);
+    void runPasted(initialList, effectiveRegion(p, geoRegion, validRegion), p.trackedOnly);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // A changed delivery choice re-prices the basket already on screen.
   function changePostage(nextRegion: string | null, nextTracked: boolean) {
     setRegion(nextRegion);
+    setRegionGuessed(false);
     setTrackedOnly(nextTracked);
     writePostagePrefs(market, { region: nextRegion, trackedOnly: nextTracked });
     const last = lastRun.current;
@@ -165,7 +183,11 @@ export function BestBasket({
     if (last.kind === "lines") void runLines(last.lines, nextRegion, nextTracked);
     else void runPasted(last.text, nextRegion, nextTracked);
   }
-  const regionLabel = regions.find((r) => r.key === region)?.label ?? null;
+  const regionOpt = regions.find((r) => r.key === region) ?? null;
+  // A MEASURED region the buyer is pricing for ("the Northeast"); "Elsewhere"
+  // is priced like an unknown region and says so.
+  const regionLabel = regionOpt && !regionOpt.unmeasured ? regionOpt.phrase : null;
+  const places = joinList(measuredTo);
 
   const fmt = (c: number) => formatMoney(c, currency);
 
@@ -266,10 +288,12 @@ export function BestBasket({
             Tracked postage only
           </label>
           <p className="basis-full text-[11px] leading-snug text-slate-500">
+            {regionGuessed && regionOpt ? `Picked from your location: ${regionOpt.phrase}. Change it if that's wrong. ` : ""}
             {zonePriced
-              ? "Some stores charge more to some regions — pick yours for exact rates."
-              : `Every store we measured charges the same to every ${market === "AU" ? "state and territory (all eight capitals)" : "address we tried"}, so this changes nothing yet.`}{" "}
-            An untracked letter is only counted for orders no bigger than the ones the store offered it on.
+              ? `Some stores charge more to some regions — pick yours. Each region is priced to the one address we measured there${places ? ` (${places})` : ""}.`
+              : `Every store we measured charges the same to every ${market === "AU" ? "state and territory (all eight capitals)" : `address we tried${places ? ` (${places})` : ""}`}, so this changes nothing yet.`}{" "}
+            An untracked letter is only counted for orders no bigger than the ones the store offered it on. &ldquo;Tracked
+            postage only&rdquo; leaves those letters out; a rate whose name doesn&apos;t say is marked &ldquo;tracking not stated&rdquo;.
           </p>
         </div>
 
@@ -325,6 +349,10 @@ export function BestBasket({
                   {plan.storeCount === 1 ? "store" : "stores"} · {plan.matchedCards} cards matched
                   {regionLabel ? ` · delivered to ${regionLabel}` : ""}
                 </div>
+                {(() => {
+                  const notes = planPostageNotes(plan, !!regionLabel);
+                  return notes.length ? <div className="mt-0.5 text-xs text-amber-300/80">{notes.join(" · ")}</div> : null;
+                })()}
               </div>
               {plan.savedCents > 0 && (
                 <div className="rounded-lg bg-brand-500/10 px-3 py-2 text-right">
@@ -348,7 +376,7 @@ export function BestBasket({
                       <span className="ml-1 text-brand-400">+ free post</span>
                     ) : (
                       <span className="ml-1 text-slate-500">
-                        + {s.postage.basis === "estimate" ? "est. " : s.postage.upTo ? "up to " : ""}
+                        + {postagePrefix(s.postage)}
                         {fmt(s.shippingCents)} post
                       </span>
                     )}
@@ -402,10 +430,12 @@ export function BestBasket({
 
           {plan.excludedStores.length > 0 && (
             <div className="card-surface p-4 text-xs text-slate-400">
-              <p className="font-semibold text-slate-300">
-                Left out — {plan.excludedStores.length === 1 ? "this store doesn't" : "these stores don't"} post{" "}
-                {regionLabel ? `to ${regionLabel}` : "to you"}:
-              </p>
+              {/* Neutral: a store is left out for its own reason — it quoted no
+                  postage to the buyer's region, it offers only untracked
+                  postage under "Tracked postage only", or it posts nowhere we
+                  measured — and "doesn't post to you" was wrong for two of
+                  those. */}
+              <p className="font-semibold text-slate-300">Left out of this plan:</p>
               <ul className="mt-1 space-y-0.5">
                 {plan.excludedStores.map((x) => (
                   <li key={x.key}>
@@ -417,11 +447,16 @@ export function BestBasket({
           )}
 
           <p className="text-center text-[11px] leading-relaxed text-slate-600">
-            Postage is each store&apos;s own checkout rate for an order this size
+            Postage is priced from the nearest order sizes each store&apos;s checkout quoted
             {measuredAt ? `, measured ${measuredAt}` : ""}
-            {regionLabel ? ` for delivery to ${regionLabel}` : " — the highest rate any region pays, until you pick yours"}.
-            Stores marked <span className="text-slate-400">est.</span> haven&apos;t been measured yet. Stores change their rates:
-            the store&apos;s own checkout is final.
+            {regionLabel
+              ? ` for delivery to ${regionLabel}`
+              : ` — the highest rate we measured${places ? ` (to ${places})` : ""}${
+                  regionOpt?.unmeasured ? `, since we haven't measured delivery ${regionOpt.phrase}` : ", until you pick your region"
+                }`}
+            . Stores marked <span className="text-slate-400">est.</span> haven&apos;t been measured yet;{" "}
+            <span className="text-slate-400">from</span> means an order bigger than any we measured, so postage is at least that.
+            Stores change their rates: the store&apos;s own checkout is final.
           </p>
         </>
       )}
@@ -431,32 +466,24 @@ export function BestBasket({
 
 // The line under each store's name: its own rate name, and what else a buyer
 // should know about it — a skipped untracked letter, a free-postage threshold
-// within reach, a minimum order, an order bigger than any we measured.
+// within reach, a minimum order, an order bigger than any we measured, a store
+// posting from abroad (lib/postage-display.ts).
 function PostageLine({ group, fmt }: { group: BasketStoreGroup; fmt: (c: number) => string }) {
   const p = group.postage;
   if (p.basis === "estimate") {
     return (
       <p className="mt-0.5 text-[11px] text-amber-300/80">
-        est. {fmt(p.cents)} — this store&apos;s postage hasn&apos;t been measured yet; check at checkout.
+        est. {fmt(p.cents)} — this store&apos;s postage hasn&apos;t been measured yet, so it&apos;s priced at the dearer of our guess
+        and the dearest one-card rate of the stores we checked here; check at checkout.
       </p>
     );
   }
-  const kind = p.tracked === true ? "tracked" : p.tracked === false ? "untracked letter" : null;
-  const bits: string[] = [];
-  if (p.otherOption && p.otherOption.tracked === false && p.tracked !== false) {
-    bits.push(`untracked letter ${fmt(p.otherOption.cents)} also offered`);
-  } else if (p.otherOption && p.tracked === false) {
-    bits.push(`tracked: ${p.otherOption.label} ${fmt(p.otherOption.cents)}`);
-  }
-  if (p.freeFromCents != null && !p.free) bits.push(`free postage from ${fmt(p.freeFromCents)}`);
-  if (group.topUpCents > 0 && p.minOrderCents) bits.push(`no postage under ${fmt(p.minOrderCents)} — ${fmt(group.topUpCents)} to add`);
-  if (p.notServed?.length) bits.push(`doesn't post to ${p.notServed.join(", ")}`);
-  if (p.beyondMeasured) bits.push("a bigger order than any we measured here — confirm at checkout");
+  const kind = trackedTag(p);
+  const bits = postageLineBits(group, fmt);
   return (
     <p className="mt-0.5 text-[11px] text-slate-500">
       <span className="text-slate-400">
-        {p.label}
-        {kind ? ` (${kind})` : ""} {p.free ? "free" : `${p.upTo ? "up to " : ""}${fmt(p.cents)}`}
+        {p.label} ({kind}) {p.free ? "free" : `${postagePrefix(p)}${fmt(p.cents)}`}
       </span>
       {p.note ? ` · ${p.note}` : ""}
       {bits.length > 0 && <> · {bits.join(" · ")}</>}

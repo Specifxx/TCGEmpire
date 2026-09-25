@@ -126,8 +126,17 @@ export function optimizeBasket(cards: BasketCard[], stores: Stores): BasketPlan 
     return q;
   };
   const topUp = (q: PostageQuote, sub: number) => (q.minOrderCents && sub < q.minOrderCents ? q.minOrderCents - sub : 0);
-  // What an order at one store adds on top of its items.
+  // What an order at one store adds on top of its items, as the SEARCH weighs
+  // it: past the biggest order a store was measured on, postage that was rising
+  // with card count is assumed to keep rising (riskCents), so consolidating a
+  // deck onto that store is not free. The totals the plan REPORTS use the quote
+  // alone (reportCost) — the shown "from $12" is what was measured.
   const storeCost = (key: string, sub: number, items: number): number => {
+    if (items <= 0) return 0;
+    const q = quote(key, sub, items);
+    return q.cents + topUp(q, sub) + (q.riskCents ?? 0);
+  };
+  const reportCost = (key: string, sub: number, items: number): number => {
     if (items <= 0) return 0;
     const q = quote(key, sub, items);
     return q.cents + topUp(q, sub);
@@ -146,19 +155,19 @@ export function optimizeBasket(cards: BasketCard[], stores: Stores): BasketPlan 
     });
     return { sub, cnt, items };
   };
-  const totalOf = (st: State): number => {
+  const totalOf = (st: State, cost = storeCost): number => {
     let t = st.items;
-    for (const [k, s] of st.sub) t += storeCost(k, s, st.cnt.get(k)!);
+    for (const [k, s] of st.sub) t += cost(k, s, st.cnt.get(k)!);
     return t;
   };
 
   const naive = buyable.map((_, i) => cheapestStore(i));
-  const naiveTotal = totalOf(stateOf(naive));
+  const naiveTotal = totalOf(stateOf(naive), reportCost);
   const naiveStoreCount = new Set(naive).size;
 
   const assign = [...naive];
   let state = stateOf(assign);
-  let current = naiveTotal;
+  let current = totalOf(state);
 
   const moveDelta = (i: number, to: string): number => {
     const from = assign[i];

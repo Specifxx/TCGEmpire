@@ -59,6 +59,7 @@ export interface SnapshotStore {
   minOrderCents?: number; // no postage quoted below this subtotal
   freeFromCents?: number; // free postage the rates endpoint cannot see (a checkout discount)
   freeNote?: string;
+  shipsFrom?: string; // the country it posts from, when that is not the market's (import charges may apply)
 }
 
 export interface ShippingSnapshot {
@@ -85,6 +86,7 @@ export interface ShippingOverride {
   minOrderCents?: number;
   freeFromCents?: number;
   freeNote?: string;
+  shipsFrom?: string;
 }
 
 // Facts the probe cannot read from /cart/shipping_rates.json, each checked by
@@ -103,6 +105,14 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   // ── Stores whose rates exist only inside checkout ──
   punkouter: { status: "unmeasured", note: "Shows postage only inside checkout (its policy); the storefront quotes nothing" },
   atomilicollectables: { status: "unmeasured", note: "Shows postage only inside checkout (its policy); the storefront quotes nothing" },
+  // ── Stores listed in the US market that post from Canada (their Shopify
+  //    /meta.json, checked 2026-09-25). A US buyer can owe import duties or a
+  //    carrier's brokerage fee on delivery, on top of the postage quoted — unless
+  //    the rate itself says duties are included (Danireon's UPS rate does). ──
+  mythicstore: { shipsFrom: "Canada" }, // Quebec
+  danireon: { shipsFrom: "Canada" }, // Ottawa
+  npcollectibles: { shipsFrom: "Canada" }, // Markham, Ontario
+  hobbiesville: { shipsFrom: "Canada" }, // Ottawa
   // ── Caveats on measured stores ──
   trextcg: { note: "An Italian store: quoted no postage to Spain, Germany, France or the Netherlands (Italy only, checked by hand)" },
   // ── Minimum orders, measured to the cent by hand (the probe's carts bracket them) ──
@@ -116,6 +126,11 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   //    reach (its £50 rung stopped at £49.95, the next cart was £755.95) ──
   rollnplay: { freeFromCents: 5450, freeNote: "over about £50 (a £54.50 cart went free on the first UK run; £49.95 still paid)" },
 };
+
+/** Whether a zone holds any quoted rate at all (not just errors / empties). */
+export function zoneHasPoints(z: Pick<SnapshotZone, "std" | "ltr">): boolean {
+  return z.std.some(Boolean) || !!z.ltr?.some(Boolean);
+}
 
 /**
  * One store's probe output → its snapshot entry. Rates are RE-classified from
@@ -131,7 +146,10 @@ export function condenseStore(s: ProbeStoreInput, override: ShippingOverride = S
   const usable = s.scenarios
     .filter((x) => !x.error && !x.sameCartAs && x.items > 0 && x.cartCurrency === s.currency)
     .sort((a, b) => a.subtotalCents - b.subtotalCents || a.items - b.items);
-  const extra = override.freeFromCents ? { freeFromCents: override.freeFromCents, freeNote: override.freeNote } : {};
+  const extra = {
+    ...(override.freeFromCents ? { freeFromCents: override.freeFromCents, freeNote: override.freeNote } : {}),
+    ...(override.shipsFrom ? { shipsFrom: override.shipsFrom } : {}),
+  };
   if (!usable.length) {
     return {
       ...base,
@@ -218,9 +236,17 @@ export function condenseStore(s: ProbeStoreInput, override: ShippingOverride = S
     if (hit) hit.at.push(id);
     else zones.push({ at: [id], ...z });
   }
-  const served = zones.some((z) => !z.none);
-  const status: SnapshotStatus = override.status ?? (served ? "measured" : "no-post");
-  const note = override.note ?? (served ? undefined : "Quoted no postage to any address we measured");
+  // A zone where every quote ERRORED (a 429-exhausted or capped run leaves the
+  // addresses it never reached that way) was not measured: it is neither
+  // served nor "does not post". A store with nothing but such zones is
+  // unmeasured, never "no-post" — that would drop it from Best Basket on the
+  // strength of a failed request.
+  const served = zones.some((z) => !z.none && zoneHasPoints(z));
+  const erroredOnly = zones.some((z) => !z.none && !zoneHasPoints(z));
+  const status: SnapshotStatus = override.status ?? (served ? "measured" : erroredOnly ? "unmeasured" : "no-post");
+  const note =
+    override.note ??
+    (served ? undefined : erroredOnly ? "Not measured: every quote errored" : "Quoted no postage to any address we measured");
   // A minimum order the carts reveal: the smallest carts quoted nothing where
   // bigger ones were quoted (Dice Saloon, 4elements). The probe's rungs only
   // bracket it, so the first cart that WAS quoted is the safe figure; a

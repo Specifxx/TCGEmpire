@@ -134,7 +134,8 @@ test("the heavy listing read runs on demand, never on every portfolio render", (
   assert.match(panel, /onClick=\{run\}/, "it is a button");
   // The page renders the panel; it must NOT compute the plan server-side.
   const page = readCode("src/app/portfolio/page.tsx");
-  assert.match(page, /<PortfolioReplacementCost currency=\{info\.currency\} \/>/);
+  // geoRegion is a string from the request's geo headers, not a computed plan.
+  assert.match(page, /<PortfolioReplacementCost currency=\{info\.currency\} geoRegion=\{geoRegion\} \/>/);
   assert.doesNotMatch(page, /optimizeBasket/, "the page render must not run the optimiser");
 });
 

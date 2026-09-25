@@ -329,7 +329,12 @@ function StoreShipping({ summary: s, storeName, policyUrl }: { summary: StoreShi
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
         We haven&apos;t measured {storeName}&apos;s postage yet{s.note ? ` — ${s.note.replace(/^Not measured: /, "")}` : ""}.
         {s.estimateCents != null && (
-          <> Best Basket uses an estimated {m(s.estimateCents)} per order for it, marked &ldquo;est.&rdquo; — our guess, not a rate the store quoted.</>
+          <>
+            {" "}
+            Best Basket uses an estimated {m(s.estimateCents)} per order for it, marked &ldquo;est.&rdquo; — the dearer of our guess
+            and the dearest one-card rate of the stores we checked in this market, because our guesses ran low almost everywhere.
+            It&apos;s our guess, not a rate the store quoted.
+          </>
         )}{" "}
         Confirm the real rate at checkout.{policy}
       </p>
@@ -353,15 +358,17 @@ function StoreShipping({ summary: s, storeName, policyUrl }: { summary: StoreShi
         {s.std && (
           <li>
             <strong className="text-slate-200">{s.std.label}</strong>
-            {s.std.tracked ? " (tracked)" : ""}: {s.std.maxCents === 0 ? "free" : m(s.std.maxCents)} for one card
+            {s.std.tracked ? " (tracked)" : " (tracking not stated)"}: {s.std.maxCents === 0 ? "free" : m(s.std.maxCents)} for one card
             {s.regions ? ` where it costs most — ${range(s.std.minCents, s.std.maxCents)} depending on where it's going` : ""}.
           </li>
         )}
         {s.letter && (
           <li>
             Untracked: <strong className="text-slate-200">{s.letter.label}</strong> {range(s.letter.minCents, s.letter.maxCents)} —
-            offered on orders we tried up to {s.letter.maxItems} card{s.letter.maxItems === 1 ? "" : "s"} and {m(s.letter.maxValueCents)}.
-            Best Basket only counts it for orders within that.
+            offered on orders we tried {s.letter.fromValueCents != null ? `from ${m(s.letter.fromValueCents)} ` : ""}up to{" "}
+            {s.letter.maxItems} card{s.letter.maxItems === 1 ? "" : "s"} and {m(s.letter.maxValueCents)}
+            {s.letter.fromValueCents != null ? " (a smaller order got only the parcel rate)" : ""}. Best Basket only counts it for
+            orders within that.
           </li>
         )}
         {s.free && (
@@ -371,8 +378,14 @@ function StoreShipping({ summary: s, storeName, policyUrl }: { summary: StoreShi
                 Free postage from {m(s.free.fromCents)}
                 {s.free.note ? ` (${s.free.note})` : s.free.paidAtCents != null ? ` (an order of ${m(s.free.paidAtCents)} still paid)` : ""}.
               </>
-            ) : (
+            ) : s.free.letterFromCents != null ? null : (
               <>No free-postage threshold on any order we tried, up to {m(s.free.upToCents)}.</>
+            )}
+            {s.free.letterFromCents != null && (
+              <>
+                {s.free.fromCents != null ? " " : ""}The untracked letter goes free from {m(s.free.letterFromCents)}
+                {s.free.fromCents == null ? `; the parcel rate never did on any order we tried, up to ${m(s.free.upToCents)}` : ""}.
+              </>
             )}
           </li>
         )}
@@ -381,12 +394,18 @@ function StoreShipping({ summary: s, storeName, policyUrl }: { summary: StoreShi
           <li>
             By region, one card:{" "}
             {s.regions
-              .map((r) => `${r.label.replace(/ \(priced to .*\)$/, "")} ${r.cents == null ? "—" : m(r.cents)}${r.label2 && r.label2 !== s.std?.label ? ` (${r.label2})` : ""}`)
+              .map((r) => `${r.label} ${r.cents == null ? "—" : m(r.cents)}${r.label2 && r.label2 !== s.std?.label ? ` (${r.label2})` : ""}`)
               .join(" · ")}
             .
           </li>
         )}
         {s.notServed && s.notServed.length > 0 && <li>Doesn&apos;t post to: {s.notServed.join(", ")}.</li>}
+        {s.shipsFrom && (
+          <li>
+            Ships from {s.shipsFrom}: import duties or a carrier&apos;s brokerage fee may be charged on delivery, on top of the
+            postage — unless the rate says duties are included.
+          </li>
+        )}
       </ul>
       <p className="text-xs text-slate-500">
         Best Basket prices {storeName} with these rates for your order&apos;s size and region. Stores change their rates, so the

@@ -13,6 +13,9 @@
 //   --summary=<path>  also write the change report as Markdown (for $GITHUB_STEP_SUMMARY)
 //   --check           write nothing to --out; just report what would change
 //
+// A run that covers every configured store of a market replaces that market;
+// a partial run (probe --store=…) replaces only the stores it measured.
+//
 // The raw files are several MB each and are NOT committed — the probe workflow
 // (.github/workflows/shipping-rates.yml) uploads them as an artifact. Only the
 // condensed snapshot is checked in. See lib/shipping-snapshot.ts for its shape
@@ -56,24 +59,34 @@ const next: ShippingSnapshot = {
 };
 
 const replaced = new Set<Country>();
+const partial = new Set<Country>();
 for (const f of inputs) {
   const raw = JSON.parse(readFileSync(resolve(f), "utf8")) as { market: Country; stores: ProbeStoreInput[] };
   const market = raw.market;
   if (!PROBE_ADDRESSES[market as keyof typeof PROBE_ADDRESSES]) throw new Error(`${f}: unknown market ${market}`);
-  if (!replaced.has(market)) {
-    // A market's stores are replaced as a whole, so a store dropped from
-    // retailers.ts since the last run does not linger.
+  // A FULL-market run (every configured store of the market in it) replaces
+  // the market as a whole, so a store dropped from retailers.ts since the last
+  // run does not linger. A partial run (--store=cardgoblin) only replaces the
+  // stores it measured: wiping the rest would send every other store in the
+  // market back to an estimate.
+  const inRun = new Set(raw.stores.map((s) => s.key));
+  const full = RETAILER_LIST.filter((r) => (r.country ?? "AU") === market).every((r) => inRun.has(r.key));
+  if (full && !replaced.has(market)) {
     for (const [k, s] of Object.entries(next.stores)) if (s.market === market) delete next.stores[k];
-    replaced.add(market);
   }
-  const dates: string[] = [];
-  for (const s of raw.stores) {
-    next.stores[s.key] = condenseStore({ ...s, market });
-    dates.push(next.stores[s.key].measuredAt);
-  }
-  dates.sort();
+  if (!full) partial.add(market);
+  replaced.add(market);
+  for (const s of raw.stores) next.stores[s.key] = condenseStore({ ...s, market });
+}
+for (const market of replaced) {
+  // A full run is as fresh as its newest store; a partial one only as fresh as
+  // the OLDEST store in the market, since the rest were measured before it.
+  const dates = Object.values(next.stores)
+    .filter((s) => s.market === market && s.measuredAt)
+    .map((s) => s.measuredAt)
+    .sort();
   next.markets[market] = {
-    measuredAt: dates[dates.length - 1] ?? "",
+    measuredAt: (partial.has(market) ? dates[0] : dates[dates.length - 1]) ?? "",
     addresses: PROBE_ADDRESSES[market as keyof typeof PROBE_ADDRESSES].map((a) => ({ id: a.id, label: a.label })),
   };
 }
@@ -86,35 +99,65 @@ next.stores = Object.fromEntries(Object.entries(next.stores).sort(([a], [b]) => 
 const missing = RETAILER_LIST.filter((r) => !next.stores[r.key]).map((r) => r.key);
 
 // ── Change report ───────────────────────────────────────────────────────────
+// A table of every store whose one-card postage changed, then the changes
+// worth a human look before the refresh is committed: a store that newly
+// "does not post" (it drops out of Best Basket) and a one-card rate that moved
+// by more than half (a probe that measured the wrong cart, or a real change).
 const lines: string[] = [];
 const fmt = (c: number | null | undefined, cur: string) => (c == null ? "—" : formatMoney(c, cur));
-const oneLine = (snap: ShippingSnapshot | null, key: string): string => {
-  if (!snap?.stores[key]) return "not in snapshot";
+interface Line {
+  text: string;
+  noPost: boolean;
+  cents: number | null; // 1-card postage at the highest region; null = not measured / no postage
+  currency: string;
+}
+const lineOf = (snap: ShippingSnapshot | null, key: string): Line | null => {
+  if (!snap?.stores[key]) return null;
   const s = shippingSummary(key, snap);
-  if (s.basis === "no-post") return `no postage (${s.note ?? "does not post"})`;
-  if (s.basis === "estimate") return `not measured${s.note ? ` (${s.note})` : ""}`;
+  if (s.basis === "no-post") return { text: `no postage (${s.note ?? "does not post"})`, noPost: true, cents: null, currency: s.currency };
+  if (s.basis === "estimate") return { text: `not measured${s.note ? ` (${s.note})` : ""}`, noPost: false, cents: null, currency: s.currency };
   const q = shippingFor(key, { subtotalCents: s.oneCardSubtotalCents ?? 100, items: 1 }, {}, snap);
   const free = s.free?.fromCents != null ? `free from ${fmt(s.free.fromCents, s.currency)}` : "no free threshold";
-  return `1 card ${q.upTo ? "up to " : ""}${fmt(q.cents, s.currency)} (${q.label}) · ${free}`;
+  const regions = s.notServed?.length ? ` · does not post to ${s.notServed.join(", ")}` : "";
+  return {
+    text: `1 card ${q.upTo ? "up to " : ""}${fmt(q.cents, s.currency)} (${q.label}) · ${free}${regions}`,
+    noPost: !!q.unavailable,
+    cents: q.unavailable ? null : q.cents,
+    currency: s.currency,
+  };
 };
-lines.push(`## Postage snapshot — ${[...replaced].join(", ")}`);
+lines.push(`## Postage snapshot — ${[...replaced].map((m) => (partial.has(m) ? `${m} (partial run)` : m)).join(", ")}`);
 lines.push("");
 lines.push("| Store | Market | Before | After |");
 lines.push("|---|---|---|---|");
 let changed = 0;
+const flags: string[] = [];
 for (const key of Object.keys(next.stores)) {
   if (!replaced.has(next.stores[key].market)) continue;
-  const before = oneLine(base, key);
-  const after = oneLine(next, key);
-  if (before === after) continue;
+  const before = lineOf(base, key);
+  const after = lineOf(next, key);
+  const bt = before?.text ?? "not in snapshot";
+  const at = after?.text ?? "not in snapshot";
+  if (bt === at) continue;
   changed++;
-  lines.push(`| ${key} | ${next.stores[key].market} | ${before} | ${after} |`);
+  lines.push(`| ${key} | ${next.stores[key].market} | ${bt} | ${at} |`);
+  if (after?.noPost && !before?.noPost) flags.push(`- **${key}** newly does not post: ${at} — check by hand; it drops out of Best Basket`);
+  if (before?.cents != null && after?.cents != null && before.currency === after.currency) {
+    const lo = Math.min(before.cents, after.cents);
+    const hi = Math.max(before.cents, after.cents);
+    if (hi > 0 && (lo === 0 ? hi >= 100 : hi / lo > 1.5)) {
+      flags.push(`- **${key}** one-card postage moved ${fmt(before.cents, before.currency)} → ${fmt(after.cents, after.currency)} (more than 50%)`);
+    }
+  }
 }
 if (!changed) lines.push("| — | — | no change | — |");
 lines.push("");
+lines.push(flags.length ? "### Needs a look before committing" : "### Nothing flagged (no store newly without postage, no one-card move over 50%)");
+if (flags.length) lines.push("", ...flags);
+lines.push("");
 for (const m of replaced) {
   const info = next.markets[m];
-  if (info) lines.push(`- ${m}: measured ${formatMeasuredDate(info.measuredAt)}`);
+  if (info) lines.push(`- ${m}: measured ${formatMeasuredDate(info.measuredAt)}${partial.has(m) ? " (oldest store in the market — a partial run)" : ""}`);
 }
 if (gone.length) lines.push(`- Dropped (no longer in retailers.ts): ${gone.join(", ")}`);
 if (missing.length) lines.push(`- Not in the snapshot (shown as estimates): ${missing.join(", ")}`);

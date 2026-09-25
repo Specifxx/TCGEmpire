@@ -288,7 +288,12 @@ const UNTRACKED_EXPLICIT = /\bun-?tracked\b|\bnon[- ]?tracked\b|\bno[- ]tracking
 // buyer's-risk letter: the first UK run read "1st Class Signed For - Letter"
 // and "48 Signed Letter" as untracked on their "Letter".
 const TRACKED_EXPLICIT = /\btracked\b|\btracking\b|\bsignature\b|\bregistered\b|\bsigned\b/i;
-const UNTRACKED_HINT = /\bletter\b|lettermail|\bpwe\b|plain white envelope|\benvelope\b|\bstamp(ed)?\b|\b(normal|regular|ordinary|basic|economy) mail\b|\b(1st|2nd|first|second) class\b(?!.*\b(package|parcel)\b)/i;
+// USPS spells it "First-Class Mail" (hyphenated): a First-Class letter or
+// flat has no tracking, while "First-Class Package" (renamed Ground Advantage
+// in 2023) did. Unhyphenated, as most US stores type it, it matched before;
+// hyphenated it read as "unknown" and a US$1 letter would have been priced as
+// if it covered any order.
+const UNTRACKED_HINT = /\bletter\b|lettermail|\bpwe\b|plain white envelope|\benvelope\b|\bstamp(ed)?\b|\b(normal|regular|ordinary|basic|economy) mail\b|\b(1st|2nd|first|second)[- ]class\b(?!.*\b(package|parcel)\b)/i;
 // The first EU run's parcel services, in their own languages: PostNL's
 // "Brievenbuspakje" (letterbox parcel, track & trace) and "Thuisbezorgd
 // (verzekerd)" (home delivery, insured), Correos' "PAQ Premium" / "Paq Light
