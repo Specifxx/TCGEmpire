@@ -146,6 +146,11 @@ longer lands on its entry.
 - **Measure changes:** after the freeze, bump `PREMIUM_COPY_VERSION` /
   `PROMO_VARIANT` whenever funnel wording, price or frequency changes.
   [2026-09-09](../DECISIONS.md#L3628), [2026-09-14](../DECISIONS.md#L6134)
+- **Sign-up attribution:** /login keeps the clicked source
+  (`readSignupSource`) rather than overwriting it with "login", and every
+  /login link carries `src=` or marks its source on click
+  (`tests/login-links-attributed.test.ts`). By-source numbers compare only
+  from 2026-09-25 on. [2026-09-25](../DECISIONS.md#L12446)
 
 ## Navigation & chrome
 
@@ -246,6 +251,19 @@ longer lands on its entry.
 - **Portfolio value never includes shipping.** Price-drop emails: at most one
   digest per address per week. [2026-09-15](../DECISIONS.md#L6531),
   [2026-09-21](../DECISIONS.md#L9752)
+- **Rules text:** `Card.description` comes from Riot's gallery for every set.
+  Origins, Proving Grounds, Spiritforged and Unleashed are filled by
+  `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,
+  report-only unless `apply`): fill-only, matched on externalId + name +
+  collector number, refused unless it reproduces the stored Vendetta format.
+  Never run set-pipeline for those sets (it would duplicate ~950 cards);
+  sync-cards never writes the column. Core bracket-marker keywords are
+  unscoped; Empower/Flow/Burn and the plain-word predicates stay on Vendetta.
+  [2026-09-25](../DECISIONS.md#L12375)
+- **First-listing alerts:** a watch with a null baseline (no price in that
+  market when it was created) gets one "now in stock" email when the card
+  lists, inside the weekly per-address cap and at most 40 new digests a run.
+  [2026-09-25](../DECISIONS.md#L12574)
 
 ## Removed, declined, kept
 

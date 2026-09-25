@@ -12371,3 +12371,265 @@ before". The 48h window with one daily run delivers 24–48h ahead, so
 list price. It under-sells, never over-charges, and only runs by hand. The
 Upgrade/Downgrade buttons of a subscriber mid-intro still quote list prices
 while the coupon is swapped to the new tier (it bills less than shown).
+
+## Rules text backfilled for Origins, Proving Grounds, Spiritforged and Unleashed; core keyword pages list every set — 2026-09-25
+
+**Why.** `Card.description` held rules text only for Vendetta. RiftScribe's snapshot has no rules text, and sync-cards' `mapCard()` never writes the column. So about two-thirds of the 1,431 card pages printed no rules text. That includes /card, the site's worst-CTR template (27,626 impressions at 0.42%). It also meant every /keywords page could only list Vendetta cards: lib/keywords.ts scoped all 30 entries to VEN and said to "revisit this once description text is backfilled".
+
+**What.**
+- `scripts/backfill-card-text.ts` reads Riot's gallery `__NEXT_DATA__` with one plain fetch, no Playwright. On 2026-09-25 that returned 1,189 cards: OGN 352, SFD 288, UNL 288, OGS 24, VEN 237.
+- A row is filled only when its `externalId` equals the gallery id AND its name AND its collector number agree. It writes only where `description` is NULL (the UPDATE re-checks the NULL) and never creates a row.
+- There is deliberately no fuzzy fallback. TCGplayer promo rows (`tcg-<id>`) share the base card's name and number. They stay unmatched and are reported.
+- The text is the gallery image's accessibility text minus the "Riftbound Type: Name. " prefix. That is the same source and bracket format the Vendetta rows came from ("[Tank]", "[1][C]", "[S]"). Measured offline, all 236 parseable Vendetta gallery cards re-derive byte-identical to the old importer's parseAlt.
+- Before writing, the script compares stored Vendetta text with text re-derived from the gallery (the "canary"). It refuses to write unless at least 90% of at least 20 rows reproduce exactly, because every keyword predicate reads that format.
+- The script is a dry run unless `apply` is ticked. The maintenance.yml task `backfill-card-text` reuses the ping-new-cards purge only after a successful apply run, so a report-only run does not re-render every card page.
+- Never use `set-pipeline` for these sets: it keys rows as `${code}-official-${id}` and would create about 950 duplicates.
+- Because `mapCard()` never writes `description`, a later cards-sync cannot wipe the backfill.
+
+**Keyword scope.**
+- `KeywordEntry.set` is now optional. The 20 core keywords with bracket markers are unscoped.
+- Measured against the live gallery text: [Tank] goes from 6 VEN cards to 32 across four sets, [Action] to 102, [Equip] to 55.
+- The seven plain-word predicates (Add/Unique/Buff/Stun/Mighty/Predict/Disempower) stay on VEN. Plain words over-match, and those predicates were only verified on Vendetta. "Buff" already matches 23 non-VEN cards, "Mighty" 14.
+- Empower/Flow/Burn also stay on VEN, although the plan said to unscope every bracket marker. They are the mechanics Vendetta introduced, their prose and FAQs say "Vendetta only", and their guides are titled "Every X card in Vendetta" with the same scope. The gallery shows no non-VEN card printing them today, so keeping the scope costs nothing and keeps each keyword page and its guide in agreement.
+- The six evergreen guide embeds in articles.ts drop their VEN scope to match their keyword pages. `mechanicGuideForCard` accepts unscoped entries.
+- /keywords/[slug] shows 48 tiles plus one `count` ("48 of N"); it previously showed 24. ISR stays at 86400.
+
+**Meta description.** The card page's description leads with rules text clamped to 70 characters. On every gallery card with text, the price sentence still starts inside 155 characters, the same as Vendetta today. So the builder was not reordered.
+
+**Egress.** One read of about 1,190 short rows, then a one-time UPDATE of about 950 rows. The purge re-renders each card page once, comparable to a single deploy. There are no new read paths, since card pages already select `description`. The keyword page adds one COUNT per slug per day.
+
+**Left out.**
+- IndexNow: ping-new-cards submits only NEW cards, so the updated pages reach Bing via the 06:10 sitemap submission.
+- Promo rows keep no text.
+- Found, not fixed: the Burn keyword's `rulesContain: "[Burn]"` matches zero gallery cards. Riot prints "[Burn 1]", so the predicate should probably be "[Burn". Not changed here, because keywords.ts's accuracy rule requires checking against the live catalogue first.
+
+## Revealed pre-release cards link their set hub, spoiler tracker and pre-orders — 2026-09-25
+
+**Why.** `card/[id]/page.tsx` sent every `comingSoon` set to `/browse` (5d34b2e8, 09-12). That was two days before `SetInfo.hubReady` existed (0ff66e95, 09-14), and the rule was never revisited. So every revealed Radiance card had:
+- a breadcrumb to /browse;
+- no set crumb in its BreadcrumbList (`hasSetPage` false, so 3 levels instead of 4);
+- "View all Radiance", the gallery link and the empty-state link all pointing at /browse;
+- no sealed chip.
+
+Meanwhile /sets/radiance was an indexable hub owning `riftbound radiance card list` (817 impressions / 28 days). The spoiler tracker owns `riftbound radiance spoilers` (1,152 impressions, 163 clicks) and no card page linked it. Preview Season starts 25 Sep, and the twice-daily reveal imports will produce up to about 180 of these pages. The unpriced description also still said "AU, US, UK & SG", four of the six markets.
+
+**What.**
+- `hasSetHub(s) = !comingSoon || hubReady` in `src/lib/constants.ts` is the one predicate for "does /sets/<slug> deserve a link". `setUrl` and the gallery link use it, and the JSON-LD set crumb follows `setUrl` without further changes. /sets/radiance/gallery was checked live first: 200, index/follow.
+- The sealed chip deliberately stays on `!comingSoon`. `/sealed?set=RAD` is empty because `getSealedGroups` leaves pre-order sets out. A comingSoon set shows `preordersHrefForSet()` instead, only while that returns non-null.
+- A small row under the price-alert CTA links the tracker, the set hub and pre-orders when `isPreorderSetCode`. Each link comes from a helper that retires on its own date rule, and the card template names no set.
+- Unpriced pre-release cards now say "Revealed for Riftbound {set}; live prices from {release date}." instead of promising a price comparison that cannot happen yet. Other unpriced cards, and the FAQ fallback, now list all six markets.
+- Pinned by `tests/card-page-hub-links.test.ts`.
+
+**Numbers.** Measured on the live site on 25 Sep, before this change: /card/neeko-blending-in-rad-167-167 had 11 links to /browse and none to the tracker. The preview-card description tail is the same length as before (66 characters either way). The non-preview unpriced tail is 8 characters longer, because it names six markets. `tests/description-length.test.ts` only covers article excerpts, not card descriptions. Card descriptions with rules text were already past 155 characters before this change, and the price tail sits past Google's truncation point.
+
+**Left out.** No new query and no revalidate change: `setByCode` and the release-calendar helpers are static. A future comingSoon set without `hubReady` still falls back to /browse and drops its set crumb, exactly as before.
+
+## Radiance snippets: reveals, not 'All N Cards' — 2026-09-25
+
+**Why.** Preview Season opens today. /sets/radiance owns "riftbound radiance card list" (817 impressions/28d, the site's #5 query), but it served "Riftbound Radiance Card List: All 3 Cards + Prices", and its description promised "every card with live prices". The set has 167 printed / 180 announced cards and no singles prices. The counted rung added on 2026-09-24 fired for any `cardCount > 0`. The only honest pre-release branch keyed on `cardCount === 0`, and that stopped applying the moment the first reveal imported. /radiance-preorders had a similar pair of faults. Its title (72 chars) and description (204) both ran past truncation, and neither contained "booster box", although the keyword map gives it `radiance booster box price` (position 13.8). Its pricing paragraph also said "a price alert will email you if one of them drops" and linked /alerts. No sealed product can be watched, because `PriceAlert.cardId` is required, so the page described a mechanism the code does not run.
+
+**What.**
+- While `isPreorderSetCode(set.code) && cardCount > 0`, /sets/[set] titles are "Riftbound {Set} Card List: N of {announced} So Far". The ladder falls back to "…Card List So Far" when the count is unknown. N comes from the new `getSetRevealCount()` (lib/set-reveal-count.ts): a non-promo count, the same WHERE as lib/radiance-reveals.ts, `unstable_cache` for 900 s tagged CONTENT_TAG. It wraps a raw count, not a self-caching loader.
+- The denominator is a new `SetInfo.announcedCards` (180 on RAD). `totalCards` stays the printed 167 that price-import matching needs. `RADIANCE_TOTAL_CARDS` now reads `announcedCards`, so the title and the hub's "N of 180 revealed" counter cannot disagree.
+- The preview description says what is on the page now (reveals, with rarity, domain and card text) and gives the date prices start. It measures 151 characters at "180 of 180".
+- "Card List" still leads. "Revealed" and "Spoilers" stay out because the keyword map gives them to the spoiler tracker. Released sets keep their ladder, and on 23 Oct the Radiance page returns to it automatically through the same `isPreorderSetCode()` gate.
+- /radiance-preorders now has the title "Riftbound Radiance Booster Box Pre-Order Prices" (47 chars) and a 142-char description that leads with booster box, Vault Bundle and packs. The title carries no price, because the page renders in the visitor's currency and an AU or UK searcher would see a mismatched US$. It carries no store count either.
+- The alert sentence is replaced. Before release it reads "we'll email you the day Radiance prices go live", pointing at the release-day capture (now `id="notify"`, `scroll-mt-header`), plus a link to the card list, where individual revealed cards can be watched. After release the clause is dropped.
+
+**Measured.** No live numbers yet: the sandbox has no database. Worth watching in Search Console once the change is live: CTR on "riftbound radiance card list" for /sets/radiance, and position on "radiance booster box price" for /radiance-preorders.
+
+**Left out.**
+- The planned description said "added as official reveals land. Live prices from {date}". That measured 158–160 characters for Radiance with the en-US date the page already formats, so the dated rung drops "official". The undated rungs keep it.
+- The page body's own copy was not touched.
+- No sealed-product alerts were built. Removing the false promise was the fix; building the mechanism is a separate decision.
+
+## Sign-up attribution: /login stopped overwriting the clicked source; every /login link carries one — 2026-09-25
+
+**Why.** The 09-24 growth pass meant to judge each sign-up surface from `funnel-report`'s by-source table. That table was wrong for most surfaces. The header's "Sign up free", the navbar link, the homepage AccountStrip, the /alerts CTA and both article CTAs call `markSignupSource(...)` on click and then navigate to /login. /login mounts `AuthForm` with no `source` prop, and its provider click ran `markSignupSource(source ?? urlSrc ?? "login")`, which overwrote the 30-minute `rc_signup_src` cookie with "login". So none of those six sources could reach `User.signupSource`, and every one of their sign-ups was credited to "login". About 15 more /login links carried no source at all: the games, the Premium tool gates, the watchlist drawer, QuickView, the feedback form and a shared collection's "Start your collection".
+
+**What.**
+- `readSignupSource()` in `lib/signup-source.ts` reads the cookie back, whitelisted through `parseSignupSource`. The standalone /login click now resolves `source ?? urlSrc ?? readSignupSource() ?? "login"`. An explicit embedding source (popup, alert modal) still wins. A ?src= landing still wins over the cookie. "login" now means only a typed or bounced /login with no CTA click in the last 30 minutes.
+- Six new sources: `games`, `tool_gate`, `watchlist_drawer`, `quickview`, `shared_collection` and `feedback`. Each rides its link as `&src=`, which AuthForm already stashes on landing.
+- QuickView's sign-in now returns to the card instead of /profile, and AccountStrip returns home (`/login?next=/`).
+- The shared-collection link goes straight to `/login?next=/portfolio&src=shared_collection`. We did not add a user lookup on that force-dynamic page; a signed-in visitor is redirected on to ?next= by /login itself.
+- /login gained context lines:
+  - games and /riftle: "save your scores to the leaderboard", via a prefix match, since each game passes its own path;
+  - the five Premium-only tools: each line says it is a Premium tool, and to create a free account and then start Premium from the tool's page. A free account unlocks nothing in them by itself, so the line claims nothing more.
+- `funnel-report` now prints activation by source: the share of accounts at least 7 days old with a price watch or a collected card within 7 days of creation. It uses two `groupBy({ by: ["userId"], where: { userId: { in: ids } } })` reads over the window's sign-ups only.
+- `tests/login-links-attributed.test.ts` walks every .tsx under src. A /login link must carry a whitelisted `src=`, live in a click-marked file, or be on a short allowlist: AuthForm, /login itself, the profile page, the email-confirmation fallback in AccountForms, and the frozen Premium links.
+
+**Read the numbers with this in mind.** Until this deploy, sign-ups from header, navbar, home, alerts_page, article_intro and article_end were recorded as "login", so those rows are empty before it. The 09-24 growth-pass comparison therefore starts from this deploy, not from 09-24. The funnel-report header now lists this as a discontinuity.
+
+**Left out.** The Premium links (premium/page.tsx, PremiumPricingCards.tsx) stay untagged during the freeze and are allowlisted. Server `redirect("/login?next=…")` bounces off gated pages are not tagged: nobody clicks them, and a CTA that led there has already marked its source.
+
+## Champion hubs for Vendetta's eight, Seraphine, and an audit that notices the next ones — 2026-09-25
+
+**Why.** The /champions template gets 10,096 impressions at 1.35% CTR, and the keyword map sends `<champion> riftbound` queries to these hubs. But `src/lib/champions.ts` RAW had no Vendetta-era champions. /champions/nasus returned 404 while /api/cards?q=nasus returned 8 printings. Nothing reminds anyone to add names: reveals and imports write straight to the database, so there is no JSON file for a unit test to diff.
+
+**What.**
+- Added Ambessa, Gangplank, Illaoi, Kayle, Morgana, Nasus, Riven, Swain and Seraphine to RAW. None has an alias, since no data shows a Yi / Master Yi-style split.
+- Added a read-only, warn-only maintenance task, `audit-champion-coverage` (scripts/audit-champion-coverage.ts). It runs the `split_part(name, ',', 1)` query from the champions.ts header and removes every allowlisted prefix plus a short NOT_CHAMPIONS list. It writes what's left, with counts, types and sets, to the step summary and a ::warning::. It never fails the run: a missing hub is lost traffic, not a broken site.
+
+**Measured (2026-09-25, public /api/cards, crawled every page, 1,434 printings).** Printings per champion:
+
+| Champion | Printings |
+| --- | ---: |
+| Ambessa | 9 |
+| Nasus | 8 |
+| Riven | 4 |
+| Seraphine | 3 |
+| Gangplank | 2 |
+| Illaoi | 2 |
+| Kayle | 2 |
+| Morgana | 2 |
+| Swain | 2 |
+| Neeko | 1 |
+
+- Ambessa, Nasus and Riven reach CHAMPION_THIN_THRESHOLD (4), so they index and join the sitemap now.
+- The other five new hubs, plus Seraphine, render and are linked but stay noindex. Each flips on its own at a fourth printing.
+- The only other comma prefixes missing from RAW are Allay (UNL creature), Masa (VEN unit) and Heisho (VEN Battlefield). These three are the script's NOT_CHAMPIONS list, so on today's data the audit should report nothing missing.
+
+**Cost.** champions/[slug]/page.tsx already has `generateStaticParams` over CHAMPIONS, so each deploy now prerenders 9 more small hubs (87 to 96). That existing list grew; no new prewarming was added. revalidate stays at 86400.
+
+**Left out.**
+- Neeko: 1 printing, and the keyword map waits for more than one.
+- A scheduled run: the task is dispatch-only. Run it after each reveal season or set import.
+
+## Card galleries where they earn clicks: tracker newest-first, self-filling leak galleries, Empower/Flow moved up — 2026-09-25
+
+**Why.** Three galleries were in the wrong order or place, or missing.
+
+- **Spoiler tracker.** It is MARKETING-PLAN's #1 target page. Its `setAll RAD` gallery opened in collector-number order, so returning visitors saw the oldest reveals first. It also rendered every tile: at about 85 phone rows by mid-October, the tiles would push the reveal log, the second pre-order CTA and the end sign-up CTA off the page.
+- **Leak roundup.** This is the #1 page by clicks (975 over 28 days), but it showed no card and linked no card page.
+- **Empower and Flow guides.** Their "Every card" galleries used the legacy `embed`, which renders after the whole body and was capped at 12. /keywords uses 24, and the titles had just been changed to promise "Every Card".
+
+**What.**
+
+- `ArticleEmbed` gains `defaultSort` and `initialCount`, both optional.
+  - The tracker opens on "recent" (createdAt, newest import first) and collapses to 24 tiles behind a "Show all N cards" button.
+  - The gallery **hides and never slices**. Tiles past the count get `hidden` while the unfiltered view is collapsed, so the server HTML still links every Radiance card for crawlers.
+  - Any search or facet shows every match: hiding part of a narrowed result would read as a bug.
+  - The sort is deterministic on an ISO string, so there is no hydration mismatch.
+- The leak roundup and the Deploy, Showoff and Disarm guides carry positioned `rulesContain` galleries scoped to RAD.
+  - Each sits under its mechanic's section: take 8, note "Fills in as reveals are imported".
+  - EmbedGallery renders nothing for a rulesContain gallery with no match. The pages read exactly as before until the twice-daily importer lands a matching official card, and then the gallery appears on its own.
+  - The marker is the **bracketed prefix** (`[Deploy`, like `[Shield`/`[Level` in keywords.ts). The circulating Kai'Sa text uses plain "Disarm" for an unrelated effect and must not land in the Disarm gallery.
+  - Titles and snippets are unchanged, so the leak-post retitle rule still holds.
+- The Empower and Flow guides' galleries are now positioned right after "How the … mechanic works", 24 deep.
+  - Live check on 25 Sep: /keywords/empower lists 24 (its cap), and /browse?rules=[Empower]&rulesSet=VEN lists 52. Empower's browseCta now reads "See all 52 Empower cards →".
+  - /keywords/flow lists 18, which is all of them, so Flow's CTA is unchanged.
+- `scripts/check-leaked-keywords.ts` (read-only, six COUNT queries) writes a table to the run summary: bracketed vs plain-word-only counts for the three keywords in RAD. If a mechanic prints without brackets, the galleries stay empty while the plain count climbs; that is the signal to change the marker.
+
+**Egress.** The tracker query is unchanged. Each of the four Radiance pages gains up to three `contains` queries, capped at 8 rows, on 24h ISR and purged by the importer. Empower and Flow each gain at most 12 rows per render (Flow really only has 18 cards). The count script transfers no rows.
+
+**Left out.**
+
+- The count step does not live in `radiance-reveals.yml`, as planned. That workflow only dispatches `maintenance.yml set-pipeline` and has no checkout or database. The step runs after the import in maintenance.yml instead (`continue-on-error: true`), and radiance-reveals.yml carries a pointer comment.
+- No keywords.ts entries for Deploy, Showoff or Disarm: the verified-source bar still stands.
+- The guides' prose saying "no confirmed X card exists" is untouched. It becomes stale only when a gallery appears, and should be reworded then.
+
+## QuickView gets the one-click price-drop alert — 2026-09-25
+
+**Why.** A CardTile tap runs `e.preventDefault(); open(card)`, so set grids, article galleries and rails open QuickView, not the card page. QuickView is where most visitors compare prices without ever loading a card page. The main sign-up conversion, `PriceDropAlertCta` (2026-09-24), had one call site: under the card page's cheapest price. So most card views never saw it. On phones QuickView offered only an unlabelled 48px heart, which opens a second modal (PriceAlertModal). Accounts fell from 56 to 31 a week.
+
+**What.**
+- `PriceDropAlertCta` gains `placement` (`card_alert` | `quickview_alert`, default `card_alert`, so the card page is unchanged). It now feeds `markSignupSource`, `trackSignupCta` and `trackAuthStart`; before, all three were hardcoded to `card_alert`.
+- It also gains a `compact` mode: one row with "Price-drop alert:", Continue with Google as `btn-ghost`, a small Discord brand button and "or email me". Signed in, it is one click to "✓ Price-drop alert on".
+- Compact mode never uses `btn-primary`, so the retailer buy buttons stay QuickView's only filled CTA.
+- QuickView renders it after the eBay tabs' affiliate disclosure and above "Add to collection". That keeps it below the eBay buy path, so the commission path is not pushed down on phones.
+- The root layout passes `enabledProviders()` to `QuickViewProvider`. It reads env only, so the layout still reads no cookies.
+- `quickview_alert` joins `SIGNUP_SOURCES`, so it stays separate from `card_alert` in `User.signupSource` and the auth_start funnel.
+- OAuth `?next=` returns to `/card/<slug>`, where the global SignupWelcome completes the `PENDING_WATCH_KEY` watch, as it already does for the card page.
+- The heart stays.
+- Pinned by `tests/quickview-alert-cta.test.ts`.
+
+**Guardrail.** After 7 days, compare `quickview_alert` sign-ups (User.signupSource, plus `auth_start` with placement=quickview_alert) with QuickView `buy_click` (surface=modal) for the 7 days before. If modal buy clicks drop, revert the QuickView call site. The component change and the source value can stay.
+
+**Measured.** Nothing yet: it has not shipped, and there is no database in the build sandbox.
+
+**Left out.**
+- The alert was not moved above the eBay tabs. The retailer "Price comparison" list sits below the collection row, so it moves down by one compact row (~48px); the eBay carousel does not move.
+- No change to PriceWatchButton or PriceAlertModal.
+- No [deploy]: this rides the daily release.
+
+## Card share image leads with the default market's price, and the trade roast accepts every market's currency — 2026-09-25
+
+**Why.** Most /card link unfurls were showing the wrong currency. `card/[id]/opengraph-image.tsx` selected only `lowestPriceCents` (the AU column) and formatted it with formatMoney's default AUD. So every /card link pasted into Discord, Reddit or X read "from A$…" to everyone. Meanwhile the page it unfurls, its title and its JSON-LD all use DEFAULT_COUNTRY = US, and the US is 32% of impressions. The footer was typed by hand as "AU · US · UK · SG · CA" and had missed EU since that market launched on 2026-08-23.
+
+Separately, `/api/trade-roast` accepted only `["AUD","NZD","USD","GBP"]`. A CA, SG or EU visitor, or a UK visitor shown EUR, got a 400, and the calculator's "Roast this trade" silently did nothing.
+
+**What.**
+- `lib/og-price.ts` is pure. `ogPriceLines(card)` makes the headline DEFAULT_COUNTRY's price. When that is null it falls back in a fixed order: US, EU, UK, CA, AU, SG. The other priced markets are listed after it, each formatted only through `currencyOf(market)`, so no column is ever printed in another market's currency. `ogMarketsFooter()` is built from COUNTRY_LIST, so adding or retiring a market updates the footer.
+- The drawing moved to `lib/card-og.tsx`, following the hot40-og pattern: an image route can only export the names Next recognises, and a plain module can be rendered from a fixture. `scripts/render-card-og.tsx` draws three fixtures (all markets with four-figure prices, no US price, no price at all).
+- The route's query is the same one-row indexed findFirst plus five integer columns. There is no new query and no change to caching.
+- The other markets show as one chip row of up to 5, with no flag emoji. The symbols already name the market, and a flag would make satori fetch an emoji font over the network on every render.
+- The trade roast's currencies moved to `TRADE_CURRENCIES` in `lib/trade-gremlin.ts`, because a route file can only export its handlers. It adds CAD, EUR and SGD and keeps NZD. `tests/card-og-price.test.ts` checks that every `COUNTRIES[*].currency` is listed, and POSTs to the real handler with EUR, CAD and SGD, expecting 200 with text.
+
+**Measured.** The first render used 22px chips. With five four-figure prices they wrapped to a second row and pushed into the footer. At 19px with no wrap, all five fit in the roughly 676px beside the 330px art. This was checked on the rendered PNG, not estimated.
+
+**Also.** `tests/og-images.test.ts` now applies the satori "a div with several children must set display" rule to `src/lib/*-og.tsx` too. The drawings for hot40 and /card now live there, and before this change nothing checked them statically.
+
+**Left out.** No per-visitor currency on the image: one PNG per card is cached with no visitor behind it. No flag emoji, for the network reason above. The OG routes already send X-Robots-Tag noindex, so nothing changed there.
+
+## Price alerts: an unpriced card's watchers get a "now in stock" email when it first lists — 2026-09-25
+
+**Why.** Both watch-creation paths (`api/alerts/subscribe`, `api/alerts/watchlist`) store `lastPriceCents = pickPrice(...)`. That is null for a card no store in the watcher's market lists yet, which today covers every freshly revealed Radiance card. `runPriceAlerts` skipped a null price and emailed only when `prev != null && current < prev`, so the first real price quietly became the baseline. Someone who pressed "Get a price-drop alert" on a Radiance card page would hear nothing when it listed at Pre-Rift (16–22 Oct) or on release day (23 Oct). Meanwhile the CTA, the modal and the /alerts FAQ all promised an email "when it gets cheaper".
+
+**What.**
+- `isFirstPrice(prev, current)` (prev null, current non-null) sends a separate "listed" notice. It is not a drop: `shouldEmailDrop` is untouched, a first listing still waits out the address's 7-day cooldown (the 2026-09-21 weekly cap), and it has its own counter, `summary.listed`.
+- `FIRST_PRICE_SEND_CAP = 40` limits how many new digests these notices open per run. Release day lists a whole set at once, and Resend's 100/day quota is shared with welcome, trial-ending and release-day mail. A notice that joins a digest already going to the same address costs no extra email and is not counted.
+- Every hold (cooldown, send cap or failed send) keeps the baseline at null, so the notice comes back on the next run and is never lost.
+- "Priced, then out of stock, then priced again" does not fire. The loop skips a null current price without writing, so the baseline stays non-null.
+- The emailed first price seeds `lowestEmailedCents`, so a later drop counts as a "new low" only below what the watcher was already told.
+- Email: `dropRow` renders "Now in stock · from X", with no strikethrough and no percentage. `priceDropCopy()` gives the in-stock and mixed subject lines. The drop-only copy is byte-for-byte unchanged.
+- Copy: on a card page, `unpriced = priceState.isEmpty && !priceState.noRetailChannel`. Never-at-retail printings are excluded because they will never list. The copy says "when it's in stock" (never "for the first time": the card may have been stocked before), never "the day it lists", because the weekly cap can hold the notice back.
+
+**One adjacent fix.** `quiet()` now exempts an address that already has a digest queued in the same run. Before, `lastEmailedByAddress.set(a.email, now)` put the address into cooldown partway through the run, so the second card to drop (or list) for that address the same day was deferred a week. That contradicts the comment above it ("two cards dropping on the same day share one digest"). A release day listing several watched cards together would have delivered one card and held back the rest. The cap itself is unchanged: an address still gets at most one digest a week.
+
+**Testability.** `runPriceAlerts(deps = {})` accepts an optional stub `db`, `sendPriceDropEmail` and `now`. tests/price-alerts-first-price.test.ts runs the real loop against a stub and covers these cases:
+- a null-to-priced card produces exactly one "listed" item and the baseline, watermark and lastNotifiedAt are written
+- a quiet address keeps its null baseline
+- the send cap defers 5 of CAP+5
+- several listings for the same address share one digest
+- a joined digest is not counted against the cap
+- out of stock and back does not fire
+- a failed send holds the baseline
+- drops behave as before
+
+`notify()` is deliberately not injectable, because tests/design-system.test.ts pins its import and call shape. The test rows have no userId, so it never runs.
+
+**Left out.**
+- No schema change and no new query.
+- QuickView still has no alert CTA. quickview-alert-cta adds one and can pass `unpriced={lowest == null}`.
+- The confirmation email and the alert footer still say "price drops". Those are generic and still true of the alert after it lists.
+- Must ship before 16 Oct (Pre-Rift).
+
+## Outreach-ready assets: the badge waits in the store report, and the Discord bot gets an install link — 2026-09-25
+
+**Why.** Outreach had not started (MARKETING-PLAN "has not started", referring-domain baseline "—", target +6–8 domains by 20 Dec), and what the first emails point at had gaps:
+
+- The store badge (2026-09-24) was on /embed and /stores/[slug] but not on /stores/report, the one page a store owner actually opens from Template 1. Template 1 still asked the store to edit its own copy ("link the words 'compare prices'").
+- The Discord bot (/price, /movers, UTM-tagged) was fully built, but nothing on the site offered an install link.
+- Two statements were wrong. /embed said the card widget "Defaults to Australia", but `normalizeCountry` falls back to US. The bot's /movers footer said "AU market" over movers computed for `DEFAULT_COUNTRY` (US).
+
+**What.**
+
+- **Store report.** It renders the same "Add this badge" section as /stores/[slug]: a preview and a `<pre>` of `storeBadgeHtml({ slug, name: partner.name })`. It appears only when the retailer maps to a store page and has at least `STORE_THIN_THRESHOLD` (5) in-stock listings. Below that, the public store page is noindexed, and a badge pointing at a thin page does the store no favours. The count is `mine.length`, rows the page already loads, so there are zero new reads (the test pins the page at exactly three `await prisma.` calls). The report stays noindex.
+- **/embed.**
+  - The copy now says "Defaults to the United States."
+  - A "For Discord servers: the price bot" section appears only when `NEXT_PUBLIC_DISCORD_APP_ID` is set, because an install button without a registered app is a dead link. The value is inlined at build, so the page stays static at revalidate 86400.
+  - The install scope is `applications.commands` alone, since the bot answers over HTTP interactions and needs no permissions.
+  - The example output is static text, for the same egress reason the page has no preview iframes.
+  - There is no separate /discord-bot page and no keyword-map row.
+- **Bot.**
+  - The footer is `${COUNTRIES[DEFAULT_COUNTRY].label} market`, so it follows the constant the movers use.
+  - /price thumbnails use `cardImageSrc(card, { absolute: true })`, which goes through the card-art mirror like every other image, instead of the raw CDN `imageThumbUrl`.
+- **Docs.**
+  - OUTREACH-KIT Template 1 now asks for one paste ("there's a small badge under your report, ready to paste"), with a note to drop the line when the badge isn't shown.
+  - Template 2 mentions the attribution line under each widget and the bot (only once the bot is live). For deck databases it gives the existing `?list=` recipe, `btoa(unescape(encodeURIComponent(decklist)))`, which matches DeckBuilder's encoder and deck/page.tsx's decodeList and costs zero code. The test round-trips it with a non-ASCII name.
+  - OWNER-CHECKLIST gains Part 1 step 5 to set up the bot, and PROMO-KIT gains a two-line bot post.
+
+**Left out.**
+
+- A signed-interaction unit test of the route itself. The repo has no route-level harness, route.ts can't export helpers, and /movers needs `getPriceMovers` (database). The test pins the footer template at source level and asserts that `COUNTRIES[DEFAULT_COUNTRY].label + " market"` is "United States market".
+- The `bot` OAuth scope. The registration script's header mentions it as optional, but it is not needed for HTTP interactions and would ask server admins for more than the bot uses.
