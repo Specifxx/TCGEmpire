@@ -186,6 +186,15 @@ test("candidateTier: in-stock singles in, playsets as fallback, slabs/sealed/out
   assert.equal(candidateTier({ ...base, available: false, productTitle: "Albus Ferros" }), null);
   assert.equal(candidateTier({ ...base, priceCents: 0, productTitle: "Albus Ferros" }), null);
   assert.equal(candidateTier({ ...base, requiresShipping: false, productTitle: "Albus Ferros" }), null);
+  // Sealed titles without "box"/"pack" — Mint Collectables' sealed collection
+  // put a Vault into the first AU run's $100 rung, and it posted as a $20 parcel.
+  assert.equal(candidateTier({ ...base, productTitle: "Riftbound: League of Legends TCG - Vendetta Vault" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Riftbound: League of Legends TCG - Proving Grounds" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Riftbound: League of Legends TCG - Spiritforged – Champion Deck" }), null);
+  assert.equal(candidateTier({ ...base, productTitle: "Riftbound - Unleashed – Starter Deck" }), null);
+  // …but a single from one of those products is still a single.
+  assert.equal(candidateTier({ ...base, productTitle: "Tibbers (Proving Grounds) - NM" }), 0);
+  assert.equal(candidateTier({ ...base, productTitle: "Vault Guardian 012/221 (Spiritforged) - NM" }), 0);
 });
 
 test("count scenarios take the cheapest distinct singles, playsets only when singles run out", () => {

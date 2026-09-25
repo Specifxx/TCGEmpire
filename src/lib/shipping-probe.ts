@@ -135,6 +135,15 @@ const MULTI = /\b(playset|lot|lots|bundle|joblot|job lot|x\s*\d+|\d+\s*x|set of|
 // Never in a probe cart: a slab or sealed product ships as a parcel whatever
 // the store charges for a card, so it would measure the wrong thing.
 const NOT_A_CARD = /\b(psa|bgs|cgc|beckett|graded|slab|booster|display|box|pack|sleeves?|playmat|deck\s*box|binder|pre-?order)\b/i;
+// Sealed products whose titles carry none of the words above (kept in step with
+// SEALED_TITLE in sealed-import.ts by hand). The first full AU run put Mint
+// Collectables' "Vendetta Vault" ($65) and "Proving Grounds" ($140) into its
+// $100/$150 rungs — the sitemap fallback found its sealed collection — and the
+// Vault cart quoted $20 postage: a parcel, not a card. A title with a collector
+// number, a condition or a parenthesised set name is a single even so
+// ("Tibbers (Proving Grounds) - NM").
+const SEALED_NAME = /champion\s*deck|showdown\s*decks?|starter\s*(deck|set)|proving\s*grounds|\bvault\b|precon|pre-?rift|event\s*kit|\btin\b/i;
+const SINGLE_TELL = /\/\s*\d{2,3}\b|\b(nm|lp|mp|hp)\b|near\s*mint|lightly\s*played|\([^)]*\b(origins|spirit\s*forged|unleashed|vendetta|radiance|proving\s*grounds)\b[^)]*\)/i;
 
 /**
  * Where a variant stands as a probe-cart candidate: 0 a plain single, 1 a
@@ -151,6 +160,7 @@ export function candidateTier(v: {
   if (!v.available || !(v.priceCents > 0) || v.requiresShipping === false) return null;
   const text = `${v.productTitle} ${v.variantTitle ?? ""}`;
   if (NOT_A_CARD.test(text)) return null;
+  if (SEALED_NAME.test(text) && !SINGLE_TELL.test(text)) return null;
   return MULTI.test(text) ? 1 : 0;
 }
 
