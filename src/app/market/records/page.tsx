@@ -25,7 +25,11 @@ import { cardDisplayName } from "@/lib/card-name";
 // market per Sydney day regardless of traffic.
 export const dynamic = "force-dynamic";
 
-/** How many gap rows the free board shows. Deal Finder has the full screener. */
+/**
+ * How many gap rows the board shows. This free board IS the cross-market view
+ * since 2026-09-25: the Deal Finder's Cross-region tab, which ranked the same
+ * rows worse (by percentage, no links), was cut and points here instead.
+ */
 const GAPS_SHOWN = 10;
 /**
  * Candidates to consider before re-ranking — effectively "all of them".
@@ -46,9 +50,8 @@ const GAPS_CANDIDATES = 500;
  * Minimum absolute saving, in the home market's cents, for a row to appear.
  *
  * WHY THIS EXISTS — it was added after watching the live board. getCrossRegionGaps
- * ranks by PERCENTAGE, which is right for the Premium screener (sortable, paged,
- * used by someone who knows what they are looking at) and wrong for a public
- * top-10. Percentage systematically promotes the cheapest cards: the first
+ * ranks by PERCENTAGE, which was the Deal Finder tab's order (since cut) and is
+ * wrong for a public top-10. Percentage systematically promotes the cheapest cards: the first
  * board we shipped led with a common at S$0.50 vs US$3.99 and called it "−90.7%",
  * while a Showcase Signature with a genuine US$44 gap sat at #8. Every one of
  * those headline rows was a saving of two or three dollars — less than the
@@ -221,13 +224,15 @@ function GapsBoard({
       </ol>
       {/* The honest caveat. A gap is not a saving until the card is in your hands,
           and none of international postage, customs or whether that market's
-          stores ship abroad is modelled here — the same disclaimer the Premium
-          screener carries, because the number means exactly the same thing. */}
+          stores ship abroad is modelled here. The link below is to the list that
+          IS actionable where you live: cards below TCGplayer market at stores in
+          your own market. It used to promise a sortable cross-market screener
+          in Deal Finder — a tab with no sort and no store links, cut 2026-09-25. */}
       <p className="mt-2 text-[11px] text-slate-600">
         Informational: shipping internationally, customs and whether an overseas store ships to you are not included, and can
-        easily exceed the gap.{" "}
-        <Link href="/tools/deal-finder?view=xregion" className="text-brand-400 hover:underline">
-          The full sortable screener is in Deal Finder
+        easily exceed the gap. For cards selling below TCGplayer market at stores in {home.place}, see{" "}
+        <Link href="/tools/deal-finder" className="text-brand-400 hover:underline">
+          Deal Finder
         </Link>
         .
       </p>
@@ -246,9 +251,8 @@ export default async function MarketRecordsPage({ searchParams }: { searchParams
   ]);
 
   // Re-rank by MONEY, not percentage — see GAP_MIN_SAVING_CENTS. Done here
-  // rather than in getCrossRegionGaps because that function is shared with the
-  // Premium screener, where percentage ranking is the right default and a
-  // dollar floor would silently hide rows a paying user asked to see.
+  // rather than in getCrossRegionGaps, which keeps the plain percentage order
+  // (tests/market-records.test.ts pins the ranking to this page).
   const gaps = gapPage.items
     .map((g) => ({ gap: g, savingCents: g.homeCents - g.awayCentsConverted }))
     .filter((r) => r.savingCents >= GAP_MIN_SAVING_CENTS)

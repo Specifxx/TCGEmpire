@@ -1,8 +1,9 @@
 // "Today's Top Deals" — one normalized feed blending the live deal signals so
 // the homepage can surface the best opportunities in the viewer's market:
-//   • savings-vs-market  (PREMIUM) — cards underpriced vs TCGplayer's US market
-//                                     price (buy side: stores, our marketplace
-//                                     and eBay; never TCGplayer itself)
+//   • savings-vs-market  (PLUS)    — cards cheaper than TCGplayer's US market
+//                                     price (buy side: the Deal Finder's
+//                                     default — stores and eBay, never
+//                                     TCGplayer itself)
 //   • price-drops        (free)    — biggest 7-day price falls
 //   • cheapest-sealed    (free)    — lowest in-stock sealed products right now
 //   • rising-cards       (PREMIUM) — the Rising Cards screener's top picks
@@ -13,11 +14,11 @@
 // available in EVERY market as of 2026-09-21: it benchmarks against
 // TCGplayer's single US market price converted through the shared fx table,
 // which needs no local eBay presence (the old eBay-cheapest signal did). Each source is independently guarded, so one failing never
-// sinks the rest. Both PREMIUM columns are gated in the UI (only the single top
-// item is rendered to non-subscribers); the data layer itself is ungated.
+// sinks the rest. Both gated columns are gated in the UI (only the single top
+// item is rendered to non-members); the data layer itself is ungated.
 //
 // NO unstable_cache IN THIS FILE, deliberately. Every source below caches
-// ITSELF (getEbayCheapest's aggregates and row pulls, getPriceMovers,
+// ITSELF (getArbitrageVsTcgplayer's aggregates and row pulls, getPriceMovers,
 // getSealedGroups, getCachedRisingCards), and Next.js 14.2 disables an inner
 // cache whenever it is invoked from inside another unstable_cache callback
 // (see the note on cachedOrDirect in lib/price-history.ts). The hour-long
@@ -32,10 +33,8 @@
 // "undervalued" (cards furthest below their 30-day average) USED to be a fourth
 // column here — removed from the homepage feed entirely (not just hidden in the
 // UI) per a homepage-declutter pass: four competing signals on one page read as
-// "study this table," not "here's a deal." The Value Finder tool
-// (/tools/value-finder, src/app/tools/value-finder/page.tsx) still calls
-// getUndervalued() directly for visitors who want that specific signal — this
-// file no longer needs to fetch it just to leave it unrendered.
+// "study this table," not "here's a deal." This file does not fetch it just to
+// leave it unrendered.
 //
 // Rising Cards was added as a FOURTH column on 2026-08-20, a deliberate
 // reversal of part of that declutter call (explicit request) — the grid can
@@ -46,7 +45,7 @@
 import type { Country } from "./country";
 import { cardHref } from "./card-url";
 import { affiliateUrl } from "./affiliate";
-import { getArbitrageVsTcgplayer, getArbSources, TCGPLAYER_KEY } from "./arbitrage";
+import { belowTcgPct, defaultTcgBuyKeys, getArbitrageVsTcgplayer, type ArbItem } from "./arbitrage";
 import { getPriceMovers } from "./price-history";
 import { getSealedGroups } from "./sealed-import";
 import { getCachedRisingCards } from "./rise-predictor";
@@ -91,7 +90,7 @@ export type Deal = {
 };
 
 export type TopDeals = {
-  savingsVsMarket: Deal[]; // PREMIUM
+  savingsVsMarket: Deal[]; // PLUS (a full list on the cheaper tier)
   // The REAL count behind the Premium gate — getArbitrageVsTcgplayer's own `total`,
   // never derived from savingsVsMarket.length. That array is capped at perType
   // (4) for this feed regardless of how many deals actually exist, so
@@ -117,61 +116,56 @@ export type TopDeals = {
 
 const sub = (c: { setCode: string; collectorNumber: string }) => `${c.setCode} · ${c.collectorNumber}`;
 
+/**
+ * One Deal Finder row as a homepage "Biggest savings" deal. pctLabel is
+ * belowTcgPct — the SAME function the Deal Finder's "% below" column is computed
+ * with (lib/arbitrage.ts) — so the "Save X%" badge and the tool always agree.
+ * It is the percent below the TCGplayer reference, never the gap over the buy
+ * price: a card at half of market is "Save 50%", not 100%.
+ */
+export function savingsVsMarketDeal(it: ArbItem): Deal {
+  return {
+    dealType: "savings-vs-market" as const,
+    title: it.card.name,
+    subtitle: sub(it.card),
+    href: cardHref(it.card),
+    outboundUrl: null,
+    outboundRetailer: null,
+    imageUrl: it.card.imageThumbUrl,
+    priceCents: it.buyCents,
+    pctLabel: belowTcgPct(it.buyCents, it.marketCents),
+    deltaCents: it.belowCents,
+    refCents: it.marketCents,
+    note: "vs TCGplayer market",
+    card: it.card,
+  };
+}
+
 export async function getTopDeals(country: Country, perType = 4): Promise<TopDeals> {
   const [savings, priceDrops, cheapestSealed, rising] = await Promise.all([
     (async (): Promise<{ deals: Deal[]; total: number; savingsTotalCents: number }> => {
       try {
-        // UNDERPRICED VS TCGPLAYER, not "cheapest on eBay vs the best store"
-        // (2026-09-21, owner's instruction — see DECISIONS.md). This column
-        // now answers "where is this card cheaper than the wider US market
-        // right now", the same signal /tools/deal-finder's default tab shows,
-        // so the homepage teaser and the tool its "All opportunities" link
-        // opens are the same board rather than two different ones.
+        // CHEAPER THAN TCGPLAYER MARKET, not "cheapest on eBay vs the best
+        // store" (2026-09-21, owner's instruction — see DECISIONS.md). This
+        // column answers "where is this card cheaper than the wider US market
+        // right now", the same list /tools/deal-finder shows, so the homepage
+        // teaser and the tool its link opens are the same board.
         //
-        // The buy side is every tracked store, our own marketplace AND eBay,
-        // but never TCGplayer itself — it is the reference/sell side here, so
-        // buying from it to compare against itself would be circular. Same
-        // buy-key construction as the tool's own tcgBuyKeys; see
-        // app/tools/deal-finder/page.tsx.
+        // The buy side is the tool's own default (defaultTcgBuyKeys): every
+        // store and eBay, never TCGplayer itself — it is the reference side —
+        // and never a cross-border eBay feed with unquoted postage (CA).
         //
-        // "margin", not "profit" (raw dollar gap), for exactly the reason the
-        // eBay version sorted by "pct": a four-figure chase card's modest
-        // percentage gap would otherwise outrank an everyday card's much
-        // bigger percentage one purely on dollars, and TodaysTopDeals'
-        // mixByTier() can only interleave what this perType=4 slice hands it.
-        const sources = getArbSources(country);
-        const tcgKey = TCGPLAYER_KEY[country];
-        const buyKeys = sources
-          .filter((s) => s.key !== tcgKey)
-          .map((s) => s.key);
+        // "pct", not "saving" (raw money below market): a four-figure chase
+        // card's modest percentage would otherwise outrank an everyday card's
+        // much bigger one purely on dollars, and TodaysTopDeals' mixByTier()
+        // can only interleave what this perType=4 slice hands it.
         const { items, total, savingsTotalCents } = await getArbitrageVsTcgplayer(country, {
-          buy: buyKeys,
-          sort: "margin",
+          buy: defaultTcgBuyKeys(country),
+          sort: "pct",
           page: 1,
           pageSize: perType,
         });
-        // pctLabel is the percent BELOW the TCGplayer reference, NOT ArbItem's
-        // own marginPct — that one is the gap over the BUY price, so a card
-        // selling at half TCGplayer's figure would badge as 100% rather than
-        // 50%. The badge reads "Save X%", so X has to be measured against the
-        // thing being saved against.
-        const belowTcgPct = (it: (typeof items)[number]) =>
-          it.sellCents > 0 ? Math.round((it.netCents / it.sellCents) * 1000) / 10 : null;
-        const deals = items.map((it) => ({
-          dealType: "savings-vs-market" as const,
-          title: it.card.name,
-          subtitle: sub(it.card),
-          href: cardHref(it.card),
-          outboundUrl: null,
-          outboundRetailer: null,
-          imageUrl: it.card.imageThumbUrl,
-          priceCents: it.buyCents,
-          pctLabel: belowTcgPct(it),
-          deltaCents: it.netCents,
-          refCents: it.sellCents,
-          note: "vs TCGplayer market",
-          card: it.card,
-        }));
+        const deals = items.map(savingsVsMarketDeal);
         return { deals, total, savingsTotalCents: savingsTotalCents ?? 0 };
       } catch {
         return { deals: [], total: 0, savingsTotalCents: 0 };
@@ -296,8 +290,8 @@ export async function getTopDeals(country: Country, perType = 4): Promise<TopDea
 // Kept under its old name for the callers ("/", the region homes, /premium,
 // api/premium/proof), but NO LONGER A CACHE of its own — see the header. What
 // a call costs now: four data-cache reads (each source's own entry) and, from
-// getEbayCheapest, a handful of bounded lookups for the ≤perType cards on the
-// slice. The outer ["top-deals", country] entry this used to be is exactly the
+// getArbitrageVsTcgplayer, a handful of bounded lookups for the ≤perType cards
+// on the slice. The outer ["top-deals", country] entry this used to be is exactly the
 // nesting that disabled every inner cache; removing it is the fix, not a
 // regression.
 export function getCachedTopDeals(country: Country): Promise<TopDeals> {

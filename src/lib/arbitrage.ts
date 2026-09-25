@@ -1,18 +1,27 @@
-// Arbitrage finder, Pricempire-style: pick which sources count as the BUY side and
-// which count as the SELL side, then see the cards with the biggest gap. By default
-// you buy from the cheapest tracked store and sell on eBay, but either side can be
-// any combination of stores and/or eBay. eBay's ~final-value fee is only netted off
-// when the winning SELL source is eBay (selling to a store has no marketplace fee).
+// Deal Finder: ONE buyer list (2026-09-25). Every card a store or eBay seller in
+// the viewer's market is selling for less than TCGplayer's US market price,
+// converted into local currency, ranked by how far below it sits. The buy side
+// is selectable (every store, eBay, or any mix — "eBay only" is a preset of the
+// same list); the reference side is always TCGplayer's market price.
 //
-// Egress-bounded: a few groupBy aggregates rank everything; per-listing detail
-// (urls/names) is fetched only for the page being shown. The three full-set pulls
-// that can't be done as a groupBy (all of one market's eBay rows and all of
-// TCGplayer's US rows — needed to rank by delivered cost — plus the cross-region
-// catalogue read) go through the SHARED Next data cache via cachedOrDirect below:
-// day-keyed and CONTENT_TAG-busted on import, so it's one pull per market per day
-// across every lambda instance. These used to be per-instance globalThis memos,
-// but those only dedupe within one warm lambda — under Vercel's fan-out every cold
-// instance re-pulled the whole set, which is exactly what has burned through this
+// It used to be four tabs. "Worth more on eBay" (buy at a store, sell on eBay
+// after a ~13% fee) and "Cross-region" were cut: the first was seller framing
+// the site's positioning rules out, and its pager/sort/filter had silently sent
+// paying members to a different tab since 2026-09-21; the second ranked worse
+// than the free /market/records board it was advertised from. "Cheapest on
+// eBay" became the eBay-only preset of this list, ranked by delivered cost from
+// the eBay row cache below instead of a second, item-price-only query.
+// getCrossRegionGaps (bottom of this file) stays because /market/records uses it.
+//
+// Egress-bounded: a groupBy aggregate and two row pulls rank everything;
+// per-listing detail (urls/names) is fetched only for the page being shown. The
+// full-set pulls that can't be done as a groupBy (one market's cheapest eBay
+// listing per card, TCGplayer's US rows, the cross-region catalogue read) go
+// through the SHARED Next data cache via cachedOrDirect: day-keyed and
+// CONTENT_TAG-busted on import, so it's one pull per market per day across every
+// lambda instance. These used to be per-instance globalThis memos, but those only
+// dedupe within one warm lambda — under Vercel's fan-out every cold instance
+// re-pulled the whole set, which is exactly what has burned through this
 // project's Neon free-tier transfer allowance before.
 import { prisma } from "./db";
 import { COUNTRY_LIST, currencyOf, pickPrice, type Country } from "./country";
@@ -24,44 +33,72 @@ import { preferMarketRows, TCG_US_MARKET_READ_KEYS } from "./tcg-market-rows";
 import { usdCentsToCountry, convertCents } from "./fx";
 import { cachedOrDirect, sydneyDayKey } from "./price-history";
 import { CONTENT_TAG } from "./revalidate-content";
-import { TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
+import { isFallbackRetailer, TCGPLAYER_SG_RETAILER, TCGPLAYER_UK_RETAILER } from "./constants";
 import type { CardTileData } from "@/components/CardTile";
 
-export const EBAY_FEE = 0.13; // approx eBay final-value fee
 const MIN_BUY_CENTS = 300;
-const MIN_NET_CENTS = 100;
-// Outlier guards. A flip margin this large means the buy and sell aren't the same
-// product (e.g. a $9 Spindown die vs a $1,986 mispriced eBay listing) — bad data,
-// not an 18,000% opportunity. Likewise a ≥80% "cheaper on eBay" saving is almost
-// always a wrong/mismatched listing, not a real deal.
-const MAX_MARGIN_PCT = 300;
-const MAX_DEAL_PCT = 80;
+// A row must sit at least this far below TCGplayer market to count at all.
+const MIN_BELOW_CENTS = 100;
+// Outlier guard. A card "75% below market" almost always means the two sides
+// are not the same product (a $9 die against a mislabelled listing, a foil
+// matched to a base printing) — bad data, not a deal. 75% below market is the
+// same line as the old "300% margin over the buy price" guard, restated from the
+// buyer's side: market ≥ 4 × buy either way.
+const MAX_BELOW_PCT = 75;
+
+// ── The one "% below" definition ─────────────────────────────────────────────
+/**
+ * How far below TCGplayer market a price sits, as a percentage OF THE MARKET
+ * PRICE, to one decimal: (market − price) / market. The homepage's "Save X%"
+ * badge (lib/top-deals.ts) and Deal Finder's "% below" column both call this,
+ * so the same card can never read one figure on the homepage and another in the
+ * tool (it used to: the tool showed the gap over the BUY price, so a card at
+ * half of market read "Save 50%" on the homepage and "100%" in the tool).
+ * Null when there is no positive market price to measure against.
+ */
+export function belowTcgPct(priceCents: number, marketCents: number): number | null {
+  if (!(marketCents > 0)) return null;
+  return Math.round(((marketCents - priceCents) / marketCents) * 1000) / 10;
+}
+
+// ── eBay ─────────────────────────────────────────────────────────────────────
+// eBay retailer key per market.
+const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca", EU: "ebay_eu" };
+
+// Markets whose "eBay" rows are ANOTHER market's listings. ebay_ca is US listings
+// converted to CAD, written with shippingCents = null on purpose (price-import.ts:
+// "carrying the US number over would understate the delivered cost") — a
+// Canadian pays international postage nobody has quoted. So in these markets an
+// eBay row is item-price-only, is never called "delivered", and is left out of
+// the default buy side (it stays selectable, clearly labelled).
+const EBAY_CROSS_BORDER: Partial<Record<Country, true>> = { CA: true };
+
+/**
+ * What an eBay row is called in the Best price column. "delivered" ONLY when the
+ * seller stated postage and it is included in the figure; an unknown postage is
+ * never counted as free.
+ */
+export function ebayBuyLabel(country: Country, postageKnown: boolean): string {
+  if (EBAY_CROSS_BORDER[country]) return "eBay US + intl postage";
+  return postageKnown ? "eBay (delivered)" : "eBay + postage";
+}
 
 // One pull per (country, eBay retailer) per DAY, shared across every lambda
-// instance — NOT a per-instance globalThis memo. This used to memoize into
-// process memory with a 15-min TTL; that only dedupes WITHIN one warm lambda, so
-// under Vercel's fan-out every cold instance re-pulled the whole in-stock eBay
-// set (~1,000+ rows/market) on the force-dynamic deal-finder / market-records
-// pages — one of the largest repeat main-DB reads in the app. cachedOrDirect
-// puts it in the shared Next data cache instead, day-keyed and CONTENT_TAG-busted
-// on import (the data only changes then), and falls back to a direct query in any
-// context without the incremental cache (scripts) so nothing else has to care.
+// instance — NOT a per-instance globalThis memo. cachedOrDirect puts it in the
+// shared Next data cache, day-keyed and CONTENT_TAG-busted on import (the data
+// only changes then), and falls back to a direct query in any context without
+// the incremental cache (scripts) so nothing else has to care.
 //
 // REDUCED IN POSTGRES, NOT NODE (2026-09-14, DECISIONS.md "Find the fifth burn
-// before RM10 dies"). This used to be a plain findMany returning EVERY in-stock
-// eBay row for the market — RetailerPrice grew 89,877 → 131,008 rows in three
-// days (+43%), and the caller only ever wanted the cheapest DELIVERED
-// (price + shipping) listing per card, reduced in a Node Map afterwards. That
-// put this cache entry in the dead zone between unstable_cache's ~1.2 MB silent-
-// drop ceiling and the egress guard's 1 MB threshold: past ~6,600 rows it could
-// be dropped with no warning, and every request to the three FORCE-DYNAMIC pages
-// that read it (/tools/deal-finder, /premium, /api/premium/proof) would then
-// re-pull the whole table. DISTINCT ON pushes the same reduction into Postgres —
-// same pattern as app/stores/report/page.tsx's rivals query — so the result is
-// bounded by the CARD catalogue (~1,400 rows), not by how many eBay listings
-// exist. DISTINCT ON's leading ORDER BY term must match the DISTINCT list, so
-// cardId sorts first and the delivered-cost expression sorts last; that is what
-// makes the surviving row per card the cheapest one.
+// before RM10 dies"). DISTINCT ON keeps the cheapest listing per card, so the
+// result is bounded by the CARD catalogue (~1,400 rows), not by how many eBay
+// listings exist. DISTINCT ON's leading ORDER BY term must match the DISTINCT
+// list, so cardId sorts first and the comparable-cost expression sorts last.
+//
+// The COALESCE is the COMPARABLE cost, not a claim that unknown postage is
+// free: a listing whose seller stated no postage is compared on its item price,
+// exactly like a store row, and cheapestEbayByCard() below marks it
+// postageKnown: false so the page labels it "eBay + postage", never "delivered".
 type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
 
 function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
@@ -79,103 +116,196 @@ function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow
   );
 }
 
-// TCGplayer's US reference rows are market-neutral (one price per card regardless
-// of the viewer's country), so this is a single global slot, not keyed by country.
-// Documented invariant: ONE row per card (US, in USD) — enforced here with a
-// `take` rather than only asserted in prose, so a data bug that broke the
-// invariant would truncate rather than silently balloon this cache entry.
+export type EbayBest = { cents: number; url: string; postageKnown: boolean };
+
+/**
+ * Pure: the cheapest eBay listing per card, as the Best price column shows it —
+ * item + stated postage when postage is known, item price alone (flagged) when
+ * it is not. Cross-border markets (CA) always compare on the item price.
+ */
+export function cheapestEbayByCard(country: Country, rows: readonly EbayRow[]): Map<string, EbayBest> {
+  const cross = !!EBAY_CROSS_BORDER[country];
+  const best = new Map<string, EbayBest>();
+  for (const r of rows) {
+    const postageKnown = !cross && r.shippingCents != null;
+    const cents = r.priceCents + (postageKnown ? r.shippingCents! : 0);
+    const prev = best.get(r.cardId);
+    if (!prev || cents < prev.cents) best.set(r.cardId, { cents, url: r.url, postageKnown });
+  }
+  return best;
+}
+
+// ── TCGplayer (the reference side) ───────────────────────────────────────────
+// TCGplayer's US rows are market-neutral (one price per card regardless of the
+// viewer's country), so this is a single global slot, not keyed by country.
 //
-// MARKET PRICE, since 2026-09-23 read from its own reference row: the "tcgplayer"
-// US row became the cheapest English NM listing, and this benchmark is documented
-// (getArbitrageVsTcgplayer below) as a comparison against TCGplayer's MARKET price.
-// Falls back per card to the legacy row — see lib/tcg-market-rows.ts. The `take`
-// covers both keys (two rows per card during the transition, one after).
-type TcgRow = { cardId: string; priceCents: number; url: string; retailer: string };
-function getTcgUsRowsMemoized(): Promise<TcgRow[]> {
+// TWO PRICES PER CARD (2026-09-25). Since 2026-09-23 the US "tcgplayer" row is
+// the cheapest English Near-Mint LISTING and the market price lives in its own
+// reference row (lib/tcg-market-rows.ts). The ranking benchmarks against the
+// MARKET price, but in the US it also needs the listing: without it a store at
+// $8 was called "underpriced" against a $10 market while TCGplayer itself sold
+// the card at $6.50. mergeTcgUsRows keeps both on one row per card.
+//
+// Documented invariant: ONE row per card per key — enforced with a `take`
+// rather than only asserted in prose, so a data bug that broke it would truncate
+// rather than silently balloon this cache entry. The merged row adds one int per
+// card; ~1,500 cards is ~250-350 KB of JSON, well under the ~1.2 MB unstable_cache
+// ceiling (tests/deal-finder-buyer-list.test.ts sizes a 3,000-card worst case).
+// The key carries a -v2 because the cached VALUE's shape changed: the outer
+// cachedOrDirect wrapper's source is identical across builds, so without it a
+// pre-deploy entry could be served in the old shape.
+export type TcgUsRow = {
+  cardId: string;
+  priceCents: number; // TCGplayer US MARKET price, USD cents
+  url: string;
+  lowCents: number | null; // TCGplayer's own cheapest listing, USD cents, when there is one
+};
+
+/** Pure: one row per card — market price (via preferMarketRows) plus the cheapest-listing price. */
+export function mergeTcgUsRows(rows: readonly { cardId: string; priceCents: number; url: string; retailer: string }[]): TcgUsRow[] {
+  const low = new Map<string, number>();
+  for (const r of rows) {
+    if (r.retailer !== TCG_US.retailer) continue;
+    const prev = low.get(r.cardId);
+    if (prev == null || r.priceCents < prev) low.set(r.cardId, r.priceCents);
+  }
+  const out = new Map<string, TcgUsRow>();
+  for (const r of preferMarketRows(rows)) {
+    out.set(r.cardId, { cardId: r.cardId, priceCents: r.priceCents, url: r.url, lowCents: low.get(r.cardId) ?? null });
+  }
+  return [...out.values()];
+}
+
+function getTcgUsRowsMemoized(): Promise<TcgUsRow[]> {
   return cachedOrDirect(
     async () =>
-      preferMarketRows(
+      mergeTcgUsRows(
         await prisma.retailerPrice.findMany({
           where: { retailer: { in: [...TCG_US_MARKET_READ_KEYS] }, country: "US", inStock: true },
           select: { cardId: true, priceCents: true, url: true, retailer: true },
           take: 10000, // ~3.5x the catalogue across both keys — see invariant above
         }),
       ),
-    ["arb-tcg-us-rows", sydneyDayKey()],
+    ["arb-tcg-us-rows-v2", sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
   );
 }
 
-export type ArbSort = "profit" | "margin";
+/**
+ * Pure: does buying at `buyCents` count as "cheaper than TCGplayer market"? The
+ * figures the row shows, or null when it does not qualify. One predicate for the
+ * cached ranking AND the live detail row, so a row whose store repriced since
+ * the cache was built is re-checked against the same rules.
+ *
+ * In the US a row is dropped when TCGplayer's own cheapest listing is at or
+ * below the buy price: sending a US buyer to a store TCGplayer already beats is
+ * not a deal. Outside the US that listing is a US seller's price with
+ * international postage behind it, so it is not a local option and is ignored.
+ */
+export function scoreVsTcg(
+  country: Country,
+  buyCents: number,
+  marketCents: number,
+  tcgLowUsdCents: number | null,
+): { belowCents: number; belowPct: number } | null {
+  if (buyCents < MIN_BUY_CENTS) return null;
+  const belowCents = marketCents - buyCents;
+  if (belowCents < MIN_BELOW_CENTS) return null;
+  if (country === "US" && tcgLowUsdCents != null && tcgLowUsdCents <= buyCents) return null;
+  const belowPct = belowTcgPct(buyCents, marketCents);
+  if (belowPct == null || belowPct > MAX_BELOW_PCT) return null;
+  return { belowCents, belowPct };
+}
+
+// ── Sources ──────────────────────────────────────────────────────────────────
+// "saving" = most below market (money); "pct" = biggest % below market. The
+// pre-2026-09-25 URL values ("profit", "margin") are still accepted by the page.
+export type ArbSort = "saving" | "pct";
 
 export interface ArbSource {
   key: string;
   name: string;
   isEbay: boolean;
-  // Cut taken when SELLING through this source (0 for a plain store — you sell
-  // at face; eBay's final-value fee; RiftCompare Marketplace's platform fee).
-  // Buying is always fee-free, so this only affects sell-side net calculations.
-  feePct: number;
 }
 
-// eBay retailer key per market.
-const EBAY_KEY: Record<Country, string | null> = { AU: "ebay", US: "ebay_us", UK: "ebay_uk", SG: "ebay_sg", CA: "ebay_ca", EU: "ebay_eu" };
-// TCGplayer retailer key per market — the same converted-reference rows used as a
-// fallback in the main price comparison (see UK_FALLBACK_RETAILERS / SG_FALLBACK_RETAILERS)
-// double as a real, always-available BUY source here. Excluded for AU on purpose:
-// unlike UK/SG (where it fills a genuine coverage gap), AU already has plenty of
-// real tracked stores, so a converted reference price would just add noise rather
-// than a real opportunity.
+// TCGplayer retailer key per market. In the US it is the cheapest-listing row;
+// in the UK and SG it is a CONVERTED MARKET REFERENCE (UK_/SG_FALLBACK_RETAILERS,
+// "not a buyable store"). getArbSources only offers a key that is not a
+// fallback/reference row, and the Deal Finder strips this key from its buy side
+// either way (resolveTcgBuyKeys): TCGplayer is the thing every row is measured
+// against, so it is never also the thing you are sent to buy from.
 export const TCGPLAYER_KEY: Record<Country, string | null> = {
   AU: null,
   US: TCG_US.retailer,
   UK: TCGPLAYER_UK_RETAILER,
   SG: TCGPLAYER_SG_RETAILER,
-  // CA's arbitrage uses real CA store rows + eBay CA only. NOT because the row is
-  // missing — tcgplayer_ca exists and refreshTcgplayerPrices() writes it (that
-  // claim was stale here and had already caused a real bug: price-import.ts
-  // believed it too and let the converted row set lowestPriceCentsCa) — but
-  // because switching it on changes what the Deal Finder recommends to Canadian
-  // users, which is a product call rather than a correctness one. Flip this to
-  // TCGPLAYER_CA_RETAILER when that call is made; nothing else stands in the way.
+  // tcgplayer_ca exists (refreshTcgplayerPrices writes it) but is a converted
+  // reference like the UK/SG rows, so it would be filtered out anyway.
   CA: null,
-  // The EU market has NO reference source at all, unlike every other market
-  // here — and that is a licensing fact, not an oversight. TCGplayer publishes
-  // no EUR market price (tcgplayer.ts has no EU arm to convert from), and the
-  // obvious European equivalent, Cardmarket, is deliberately feature-flagged
-  // OFF pending written permission to redisplay its price data — read the
-  // header of lib/cardmarket.ts before assuming this is a gap to fill. Until
-  // that permission exists, EU arbitrage runs on real EU store rows + eBay ES.
+  // The EU market has NO reference source at all — a licensing fact, not an
+  // oversight. TCGplayer publishes no EUR market price, and Cardmarket is
+  // feature-flagged OFF pending written permission to redisplay its data (read
+  // the header of lib/cardmarket.ts before assuming this is a gap to fill).
   EU: null,
 };
-// All selectable sources for a market: its tracked stores + eBay + TCGplayer.
-// Stores and TCGplayer are BUY-side sources (bucketed in together via storeKeys
-// in the page); eBay is the only one ever used as a resale/sell destination
-// (TCGplayer's own flip view treats it as a fixed reference instead — see
-// getArbitrageVsTcgplayer).
+
+/**
+ * Every selectable source for a market: its tracked stores, eBay, and TCGplayer
+ * only where TCGplayer's row is a real listing (not a converted reference).
+ */
 export function getArbSources(country: Country): ArbSource[] {
   const stores = Object.values(RETAILERS)
-    .filter((r) => (r.country ?? "AU") === country)
-    .map((r) => ({ key: r.key, name: r.name, isEbay: false, feePct: 0 }));
+    .filter((r) => (r.country ?? "AU") === country && !isFallbackRetailer(r.key))
+    .map((r) => ({ key: r.key, name: r.name, isEbay: false }));
   const ek = EBAY_KEY[country];
-  const sources = ek ? [{ key: ek, name: "eBay", isEbay: true, feePct: EBAY_FEE }, ...stores] : stores;
+  const sources: ArbSource[] = ek ? [{ key: ek, name: EBAY_CROSS_BORDER[country] ? "eBay US" : "eBay", isEbay: true }, ...stores] : stores;
   const tcgKey = TCGPLAYER_KEY[country];
-  if (tcgKey) sources.push({ key: tcgKey, name: "TCGplayer", isEbay: false, feePct: 0 });
+  if (tcgKey && !isFallbackRetailer(tcgKey)) sources.push({ key: tcgKey, name: "TCGplayer", isEbay: false });
   return sources;
 }
 
+/** The sources the Deal Finder's "Buy from" picker offers: everything but TCGplayer itself. */
+export function dealFinderSources(country: Country): ArbSource[] {
+  const tcgKey = TCGPLAYER_KEY[country];
+  return getArbSources(country).filter((s) => s.key !== tcgKey);
+}
+
+/**
+ * Pure: a requested buy side, reduced to keys that are really buyable here —
+ * known for this market, not TCGplayer (the reference side), never a converted
+ * reference row. A URL can carry anything; this is what makes that safe.
+ */
+export function resolveTcgBuyKeys(country: Country, buy: readonly string[]): string[] {
+  const valid = new Set(dealFinderSources(country).map((s) => s.key));
+  return [...new Set(buy)].filter((k) => valid.has(k) && !isFallbackRetailer(k));
+}
+
+/**
+ * The default BUY side of the Deal Finder: every store and eBay — never
+ * TCGplayer itself, and never a cross-border eBay feed whose postage nobody has
+ * quoted (CA). One definition for /tools/deal-finder, the homepage's Biggest
+ * savings column and lib/premium-nudge.ts.
+ */
+export function defaultTcgBuyKeys(country: Country): string[] {
+  const sources = dealFinderSources(country);
+  const stores = sources.filter((s) => !s.isEbay).map((s) => s.key);
+  const ebay = sources.find((s) => s.isEbay);
+  return ebay && !EBAY_CROSS_BORDER[country] ? [...stores, ebay.key] : stores;
+}
+
+// ── Ranking ──────────────────────────────────────────────────────────────────
 export interface ArbItem {
   card: CardTileData; // full tile data so the row can open the QuickView popup
-  buyCents: number;
-  buyStore: string;
+  buyCents: number; // Best price: a store's item price, or an eBay listing (+ stated postage when known)
+  buyStore: string; // retailer key of that listing (click-tracking + labelling)
   buyStoreName: string;
   buyUrl: string;
-  sellCents: number; // gross sell price (cheapest NET on the sell side)
-  sellName: string;
-  sellUrl: string;
-  sellRetailer: string; // the winning sell source's retailer key (for click-tracking + labeling)
-  netCents: number; // sell (less that source's fee) − buy
-  marginPct: number;
+  postageIncluded: boolean; // true only for an eBay row whose postage is known and included
+  marketCents: number; // TCGplayer US market price, converted into the market's currency
+  marketUrl: string;
+  tcgLowCents: number | null; // US only: TCGplayer's own cheapest listing, for context
+  belowCents: number; // marketCents − buyCents
+  belowPct: number; // belowTcgPct(buyCents, marketCents)
 }
 
 export interface ArbPage {
@@ -184,24 +314,19 @@ export interface ArbPage {
   page: number;
   pageSize: number;
   pageCount: number;
-  // Sum of netCents across EVERY qualifying row, not just this page's slice —
-  // same semantics as EbayDealPage.savingsTotalCents, and populated for the
-  // same reason: the homepage feed and the Premium proof line quote "$X on the
-  // board" for the WHOLE board, and deriving it from a paged slice would
-  // understate it by an order of magnitude. Optional because only
-  // getArbitrageVsTcgplayer computes it today; read it with `?? 0`.
+  // Sum of belowCents across EVERY qualifying row, not just this page's slice:
+  // the homepage feed and the Premium proof line quote "$X on the board" for
+  // the WHOLE board, and deriving it from a paged slice would understate it by
+  // an order of magnitude. Optional; read it with `?? 0`.
   savingsTotalCents?: number;
 }
 
-// The two ranking aggregates below are full-market groupBys (~1,400 rows each)
-// and they used to run on EVERY call — every request to the force-dynamic
-// /tools/deal-finder and /premium pages, and every assembly of the homepage
-// deals feed. Shared-cached the same way as the row pulls above: day-keyed,
-// CONTENT_TAG-busted on import (the only time RetailerPrice changes). The
-// cached value is the plain groupBy row array — a Map would JSON-serialise to
-// {} on the way into the data cache — and the Map is rebuilt on the way out.
-// The retailer-key list is part of the key because the caller's source
-// selection (which stores, which eBay) changes the aggregate.
+// The ranking aggregate below is a full-market groupBy (~1,400 rows), shared-
+// cached like the row pulls above: day-keyed, CONTENT_TAG-busted on import (the
+// only time RetailerPrice changes). The cached value is the plain groupBy row
+// array — a Map would JSON-serialise to {} on the way into the data cache — and
+// the Map is rebuilt on the way out. The retailer-key list is part of the key
+// because the caller's source selection changes the aggregate.
 async function minByCard(country: Country, keys: string[]) {
   if (!keys.length) return new Map<string, number>();
   const rows = await cachedOrDirect(
@@ -217,257 +342,20 @@ async function minByCard(country: Country, keys: string[]) {
   return new Map(rows.filter((r) => r._min.priceCents != null).map((r) => [r.cardId, r._min.priceCents!]));
 }
 
-// Cheapest price PER (card, retailer) — used on the sell side, where different
-// sources can carry different fees (store 0%, eBay ~13%, marketplace fee), so
-// picking the best NET means comparing every source individually rather than
-// just the single cheapest gross price across all of them combined.
-async function minByCardAndRetailer(country: Country, keys: string[]) {
-  const map = new Map<string, Map<string, number>>();
-  if (!keys.length) return map;
-  const rows = await cachedOrDirect(
-    () =>
-      prisma.retailerPrice.groupBy({
-        by: ["cardId", "retailer"],
-        where: { country, inStock: true, retailer: { in: keys } },
-        _min: { priceCents: true },
-      }),
-    ["arb-min-by-card-retailer", country, [...keys].sort().join("|"), sydneyDayKey()],
-    { revalidate: 172800, tags: [CONTENT_TAG] },
-  );
-  for (const r of rows) {
-    if (r._min.priceCents == null) continue;
-    const inner = map.get(r.cardId) ?? new Map<string, number>();
-    inner.set(r.retailer, r._min.priceCents);
-    map.set(r.cardId, inner);
-  }
-  return map;
-}
-
-// ── Cheapest-on-eBay deals ───────────────────────────────────────────────────────
-// Cards where eBay is the cheapest place to BUY — its price beats every tracked
-// store. A buyer's view (the inverse of the flipper arbitrage): grab it on eBay.
-export type DealSort = "saving" | "pct";
-
-export interface EbayDeal {
-  card: CardTileData; // full tile data so the row can open the QuickView popup
-  ebayCents: number;
-  ebayUrl: string;
-  storeCents: number; // cheapest store price (what you'd otherwise pay)
-  storeName: string;
-  savingCents: number; // storeCents − ebayCents
-  savingPct: number;
-}
-
-export interface EbayDealPage {
-  items: EbayDeal[];
-  total: number;
-  // Sum of EVERY qualifying deal's savingCents — not just the page slice. Powers
-  // the Premium "$X in savings on the board" proof line (see top-deals.ts /
-  // api/premium/proof); computed once over the already-built `rows` before
-  // pagination slices it, so this costs nothing extra.
-  savingsTotalCents: number;
-  page: number;
-  pageSize: number;
-  pageCount: number;
-}
-
-const DEAL_MIN_SAVING_CENTS = 50;
-const DEAL_MIN_PRICE_CENTS = 100;
-
-export async function getEbayCheapest(country: Country, sort: DealSort, page = 1, pageSize = 25): Promise<EbayDealPage> {
-  try {
-    const sources = getArbSources(country);
-    const ebayKeys = sources.filter((s) => s.isEbay).map((s) => s.key);
-    const storeKeys = sources.filter((s) => !s.isEbay).map((s) => s.key);
-    if (!ebayKeys.length) return { items: [], total: 0, savingsTotalCents: 0, page, pageSize, pageCount: 1 };
-
-    const [ebayMin, storeMin] = await Promise.all([minByCard(country, ebayKeys), minByCard(country, storeKeys)]);
-
-    type Row = { cardId: string; ebay: number; store: number; saving: number; pct: number };
-    const rows: Row[] = [];
-    for (const [cardId, ebay] of ebayMin) {
-      const store = storeMin.get(cardId);
-      if (store == null || ebay >= store) continue; // eBay must actually be cheapest
-      if (ebay < DEAL_MIN_PRICE_CENTS) continue;
-      const saving = store - ebay;
-      if (saving < DEAL_MIN_SAVING_CENTS) continue;
-      const pct = Math.round((saving / store) * 1000) / 10;
-      if (pct >= MAX_DEAL_PCT) continue; // ≥80% cheaper = mismatched/junk listing, not a deal
-      rows.push({ cardId, ebay, store, saving, pct });
-    }
-    rows.sort((a, b) => (sort === "pct" ? b.pct - a.pct || b.saving - a.saving : b.saving - a.saving || b.pct - a.pct));
-
-    const total = rows.length;
-    const savingsTotalCents = rows.reduce((sum, r) => sum + r.saving, 0);
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
-    const p = Math.min(Math.max(1, page), pageCount);
-    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
-    if (!slice.length) return { items: [], total, savingsTotalCents, page: p, pageSize, pageCount };
-
-    const ids = slice.map((r) => r.cardId);
-    const [cards, ebayListings, storeListings] = await Promise.all([
-      prisma.card.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, name: true, slug: true, setCode: true, collectorNumber: true, imageThumbUrl: true },
-      }),
-      prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: ebayKeys } },
-        select: { cardId: true, priceCents: true, url: true },
-        orderBy: { priceCents: "asc" },
-      }),
-      prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: storeKeys } },
-        select: { cardId: true, retailerName: true, priceCents: true },
-        orderBy: { priceCents: "asc" },
-      }),
-    ]);
-    const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
-    const bestEbay = new Map<string, (typeof ebayListings)[number]>();
-    for (const l of ebayListings) if (!bestEbay.has(l.cardId)) bestEbay.set(l.cardId, l);
-    const bestStore = new Map<string, (typeof storeListings)[number]>();
-    for (const l of storeListings) if (!bestStore.has(l.cardId)) bestStore.set(l.cardId, l);
-
-    const items = slice
-      .map((r): EbayDeal | null => {
-        const c = cardMap.get(r.cardId);
-        const e = bestEbay.get(r.cardId);
-        const s = bestStore.get(r.cardId);
-        if (!c || !e || !s) return null;
-        return {
-          card: c,
-          ebayCents: r.ebay, ebayUrl: e.url, storeCents: r.store, storeName: s.retailerName,
-          savingCents: r.saving, savingPct: r.pct,
-        };
-      })
-      .filter((x): x is EbayDeal => x !== null);
-
-    return { items, total, savingsTotalCents, page: p, pageSize, pageCount };
-  } catch {
-    return { items: [], total: 0, savingsTotalCents: 0, page, pageSize, pageCount: 1 };
-  }
-}
-
-export async function getArbitrage(
-  country: Country,
-  opts: { buy: string[]; sell: string[]; sort: ArbSort; page?: number; pageSize?: number }
-): Promise<ArbPage> {
-  const page = opts.page ?? 1;
-  const pageSize = opts.pageSize ?? 25;
-  try {
-    const sources = getArbSources(country);
-    const valid = new Set(sources.map((s) => s.key));
-    const feeByKey = new Map(sources.map((s) => [s.key, s.feePct]));
-
-    const buyKeys = opts.buy.filter((k) => valid.has(k));
-    const sellKeys = opts.sell.filter((k) => valid.has(k));
-    if (!buyKeys.length || !sellKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1 };
-
-    const [buyMin, sellMinByRetailer] = await Promise.all([
-      minByCard(country, buyKeys),
-      minByCardAndRetailer(country, sellKeys),
-    ]);
-
-    type Row = { cardId: string; buy: number; sellGross: number; sellRetailer: string; net: number; margin: number };
-    const rows: Row[] = [];
-    for (const [cardId, buy] of buyMin) {
-      if (buy < MIN_BUY_CENTS) continue;
-      const perRetailer = sellMinByRetailer.get(cardId);
-      if (!perRetailer) continue;
-      // Best sell by NET across every selected sell source individually —
-      // each can carry a different cut (store 0%, eBay ~13%, marketplace fee).
-      let sellGross = -1;
-      let sellNet = -Infinity;
-      let sellRetailer = "";
-      for (const [retailer, gross] of perRetailer) {
-        const net = Math.round(gross * (1 - (feeByKey.get(retailer) ?? 0)));
-        if (net > sellNet) {
-          sellGross = gross;
-          sellNet = net;
-          sellRetailer = retailer;
-        }
-      }
-      if (!sellRetailer) continue;
-      const net = sellNet - buy;
-      if (net < MIN_NET_CENTS) continue;
-      const margin = Math.round((net / buy) * 1000) / 10;
-      if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
-      rows.push({ cardId, buy, sellGross, sellRetailer, net, margin });
-    }
-    rows.sort((a, b) => (opts.sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
-
-    const total = rows.length;
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
-    const p = Math.min(Math.max(1, page), pageCount);
-    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
-    if (!slice.length) return { items: [], total, page: p, pageSize, pageCount };
-
-    const ids = slice.map((r) => r.cardId);
-    const [cards, buyListings, sellListings] = await Promise.all([
-      prisma.card.findMany({ where: { id: { in: ids } }, select: cardTileSelect(country) }),
-      prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: buyKeys } },
-        select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
-        orderBy: { priceCents: "asc" },
-      }),
-      prisma.retailerPrice.findMany({
-        where: { cardId: { in: ids }, country, inStock: true, retailer: { in: sellKeys } },
-        select: { cardId: true, retailer: true, retailerName: true, priceCents: true, url: true },
-        orderBy: { priceCents: "asc" },
-      }),
-    ]);
-    const cardMap = new Map(cards.map((c) => [c.id, c as unknown as CardTileData]));
-    const bestBuy = new Map<string, (typeof buyListings)[number]>();
-    for (const l of buyListings) if (!bestBuy.has(l.cardId)) bestBuy.set(l.cardId, l);
-    // The listing on the WINNING sell source (per card) — matched by retailer
-    // key, not by a bucket, so any number of fee-bearing sources works.
-    const bestSell = new Map<string, (typeof sellListings)[number]>();
-    const winnerRetailer = new Map(slice.map((r) => [r.cardId, r.sellRetailer]));
-    for (const l of sellListings) {
-      if (winnerRetailer.get(l.cardId) !== l.retailer) continue;
-      if (!bestSell.has(l.cardId)) bestSell.set(l.cardId, l);
-    }
-
-    const items = slice
-      .map((r): ArbItem | null => {
-        const c = cardMap.get(r.cardId);
-        const b = bestBuy.get(r.cardId);
-        const s = bestSell.get(r.cardId);
-        if (!c || !b || !s) return null;
-        return {
-          card: c,
-          // Affiliate-tag both outbound links (eBay EPN / store network / n/a
-          // for an internal marketplace URL, which affiliateUrl passes through
-          // untouched) — rows can hold untagged URLs from before import-time
-          // tagging existed.
-          buyCents: r.buy, buyStore: b.retailer, buyStoreName: b.retailerName, buyUrl: affiliateUrl(b.url, b.retailer),
-          sellCents: r.sellGross, sellName: s.retailerName, sellUrl: affiliateUrl(s.url, r.sellRetailer), sellRetailer: r.sellRetailer,
-          netCents: r.net, marginPct: r.margin,
-        };
-      })
-      .filter((x): x is ArbItem => x !== null);
-
-    return { items, total, page: p, pageSize, pageCount };
-  } catch {
-    return { items: [], total: 0, page, pageSize, pageCount: 1 };
-  }
-}
-
-// THE "UNDERPRICED VS TCGPLAYER" RANKING, on its own (2026-09-23). Split out of
-// getArbitrageVsTcgplayer so the page and lib/premium-nudge.ts rank from ONE
-// definition — a nudge that says "3 of your cards are in Deal Finder" must
-// count exactly the rows Deal Finder would show. Reads only the day-cached
-// aggregates below (minByCard, the eBay and TCGplayer row caches); no detail
-// query, so ranking the whole set costs no extra database read.
-type TcgRankRow = { cardId: string; buy: number; buyIsEbay: boolean; sellGross: number; net: number; margin: number };
+// THE "CHEAPER THAN TCGPLAYER MARKET" RANKING, on its own (2026-09-23). Split out
+// of getArbitrageVsTcgplayer so the page, lib/premium-nudge.ts and the alert
+// cron rank from ONE definition — a nudge that says "3 of your cards are in Deal
+// Finder" must count exactly the rows Deal Finder would show. Reads only the
+// day-cached aggregates above; no detail query, so ranking the whole set costs
+// no extra database read.
+//
+// eBay is ranked by DELIVERED cost where the seller stated postage (a cheap item
+// hiding expensive postage would otherwise look like a bigger gap than it is),
+// and by item price where they did not — flagged, and labelled "eBay + postage".
+// Stores stay item-price-only: their postage is usually unknown until checkout,
+// and we never fabricate a number for it.
+type TcgRankRow = { cardId: string; buy: number; buyIsEbay: boolean; market: number; low: number | null; below: number; pct: number };
 async function rankVsTcgplayer(country: Country, buyKeys: string[], sort: ArbSort) {
-  // eBay gives a REAL per-listing shipping figure (see effectiveShippingCents in
-  // lib/retailers.ts), so when eBay is among the buy sources it's ranked by
-  // DELIVERED cost (item + actual shipping, 0 if the seller states free post) —
-  // otherwise a cheap item price hiding expensive postage would look like a
-  // bigger "underpriced" gap than it really is. Stores stay item-price-only:
-  // their shipping is usually unknown until checkout, and we never fabricate a
-  // number for them (same reasoning as effectiveShippingCents itself). This means
-  // buyMin can't be one simple groupBy — eBay needs its own per-listing pass.
   const ebayKey = EBAY_KEY[country];
   const buyEbayKey = ebayKey && buyKeys.includes(ebayKey) ? ebayKey : null;
   const storeKeys = buyKeys.filter((k) => k !== buyEbayKey);
@@ -478,22 +366,13 @@ async function rankVsTcgplayer(country: Country, buyKeys: string[], sort: ArbSor
     getTcgUsRowsMemoized(),
   ]);
   const tcgByCard = new Map(tcgRows.map((r) => [r.cardId, r]));
-
-  // Cheapest DELIVERED eBay listing per card, and which listing achieved it — we
-  // can't ask the DB to rank by a computed item+shipping sum, so this is a small
-  // in-memory reduction over one market's eBay rows.
-  const ebayDeliveredMin = new Map<string, { cents: number; url: string }>();
-  for (const r of ebayRows) {
-    const delivered = r.priceCents + (r.shippingCents ?? 0);
-    const prev = ebayDeliveredMin.get(r.cardId);
-    if (!prev || delivered < prev.cents) ebayDeliveredMin.set(r.cardId, { cents: delivered, url: r.url });
-  }
+  const ebayBest = cheapestEbayByCard(country, ebayRows);
 
   const rows: TcgRankRow[] = [];
-  const cardIds = new Set([...storeMin.keys(), ...ebayDeliveredMin.keys()]);
+  const cardIds = new Set([...storeMin.keys(), ...ebayBest.keys()]);
   for (const cardId of cardIds) {
     const storeBuy = storeMin.get(cardId);
-    const ebayBuy = ebayDeliveredMin.get(cardId)?.cents;
+    const ebayBuy = ebayBest.get(cardId)?.cents;
     let buy: number;
     let buyIsEbay: boolean;
     if (storeBuy != null && (ebayBuy == null || storeBuy <= ebayBuy)) {
@@ -505,77 +384,80 @@ async function rankVsTcgplayer(country: Country, buyKeys: string[], sort: ArbSor
     } else {
       continue;
     }
-    if (buy < MIN_BUY_CENTS) continue;
     const tcg = tcgByCard.get(cardId);
     if (!tcg) continue;
-    const sellGross = usdCentsToCountry(tcg.priceCents, country);
-    const net = sellGross - buy; // reference price — no marketplace fee modelled
-    if (net < MIN_NET_CENTS) continue;
-    const margin = Math.round((net / buy) * 1000) / 10;
-    if (margin > MAX_MARGIN_PCT) continue; // absurd flip margin = buy/sell mismatch, drop it
-    rows.push({ cardId, buy, buyIsEbay, sellGross, net, margin });
+    const market = usdCentsToCountry(tcg.priceCents, country);
+    const score = scoreVsTcg(country, buy, market, tcg.lowCents);
+    if (!score) continue;
+    rows.push({ cardId, buy, buyIsEbay, market, low: tcg.lowCents, below: score.belowCents, pct: score.belowPct });
   }
-  rows.sort((a, b) => (sort === "margin" ? b.margin - a.margin || b.net - a.net : b.net - a.net || b.margin - a.margin));
+  rows.sort((a, b) => (sort === "pct" ? b.pct - a.pct || b.below - a.below : b.below - a.below || b.pct - a.pct));
 
-  return { rows, storeKeys, buyEbayKey, ebayDeliveredMin, tcgByCard };
+  return { rows, storeKeys, buyEbayKey, ebayBest, tcgByCard };
 }
 
 /**
- * The default BUY side of the "Underpriced vs TCGplayer" view: every store, our
- * own marketplace and eBay — never TCGplayer itself, which is the reference
- * side there. One definition for /tools/deal-finder and lib/premium-nudge.ts.
+ * Pure: the page a caller asked for, AFTER the optional "only my cards" filter —
+ * so total, pageCount and the board's savings total describe the list the
+ * reader is actually looking at, and page 2 of "My watchlist" is the 26th-50th
+ * watched deal rather than whichever watched cards happen to fall on page 2 of
+ * the global list.
  */
-export function defaultTcgBuyKeys(country: Country): string[] {
-  const sources = getArbSources(country);
-  const tcgKey = TCGPLAYER_KEY[country];
-  const stores = sources.filter((s) => !s.isEbay).map((s) => s.key).filter((k) => k !== tcgKey);
-  const ebay = sources.find((s) => s.isEbay);
-  return ebay ? [...stores, ebay.key] : stores;
+export function pageRanked<T extends { cardId: string; below: number }>(
+  rows: readonly T[],
+  opts: { page: number; pageSize: number; onlyCardIds?: ReadonlySet<string> },
+): { slice: T[]; total: number; page: number; pageCount: number; savingsTotalCents: number } {
+  const only = opts.onlyCardIds;
+  const filtered = only ? rows.filter((r) => only.has(r.cardId)) : rows;
+  const total = filtered.length;
+  const savingsTotalCents = filtered.reduce((sum, r) => sum + r.below, 0);
+  const pageCount = Math.max(1, Math.ceil(total / opts.pageSize));
+  const page = Math.min(Math.max(1, opts.page), pageCount);
+  return { slice: filtered.slice((page - 1) * opts.pageSize, page * opts.pageSize), total, page, pageCount, savingsTotalCents };
 }
 
 /**
- * Card id → 1-based rank in Deal Finder's default "Underpriced vs TCGplayer"
- * view (biggest gap first), for the given buy sources. Empty map on any error.
+ * Card id → 1-based rank in the Deal Finder's default list (most below market
+ * first), for the given buy sources. Empty map on any error. Called directly —
+ * never inside another unstable_cache (src/lib/db.ts rule 6).
  */
 export async function getTcgDealRanks(country: Country, buyKeys: string[]): Promise<Map<string, number>> {
   try {
-    const valid = new Set(getArbSources(country).map((s) => s.key));
-    const keys = buyKeys.filter((k) => valid.has(k));
+    const keys = resolveTcgBuyKeys(country, buyKeys);
     if (!keys.length) return new Map();
-    const { rows } = await rankVsTcgplayer(country, keys, "profit");
+    const { rows } = await rankVsTcgplayer(country, keys, "saving");
     return new Map(rows.map((r, i) => [r.cardId, i + 1]));
   } catch {
     return new Map();
   }
 }
 
-// ── Worth more on TCGplayer (US market price, converted) ────────────────────────
-// A second flip benchmark alongside eBay: instead of the cheapest current eBay
-// listing, compare a buy price against TCGplayer's own US MARKET price
-// (the algorithmic fair-value figure it headlines — see lib/tcgplayer.ts), converted
-// from USD into the viewer's local currency via the shared fx table. This is a
-// REFERENCE comparison, not a specific listing — TCGplayer only has one retailer row
-// per card (US, in USD), so there's no "cheapest" to pick and no marketplace fee to
-// net off (unlike eBay's ~13% final-value fee). Available in every market.
+// ── The Deal Finder list ─────────────────────────────────────────────────────
+// Cards cheaper than TCGplayer's US MARKET price (the sales-based figure it
+// headlines — see lib/tcgplayer.ts), converted from USD into the viewer's
+// currency via the shared fx table. A REFERENCE comparison: TCGplayer market is
+// not a price anyone can check out at, so there is no fee to net off and no
+// "sell" side — the row answers "is this cheap", not "can I flip it".
+//
+// `onlyCardIds` ("Only my cards", Plus): the caller's own watched or binder card
+// ids, from lib/premium-nudge.ts getUserCardIds. Applied in memory to the
+// already-ranked rows BEFORE paging (pageRanked); the cache keys and the
+// ≤pageSize detail lookup are unchanged, so it costs no extra shared read.
 export async function getArbitrageVsTcgplayer(
   country: Country,
-  opts: { buy: string[]; sort: ArbSort; page?: number; pageSize?: number }
+  opts: { buy: string[]; sort: ArbSort; page?: number; pageSize?: number; onlyCardIds?: ReadonlySet<string> },
 ): Promise<ArbPage> {
   const page = opts.page ?? 1;
   const pageSize = opts.pageSize ?? 25;
   try {
-    const sources = getArbSources(country);
-    const valid = new Set(sources.map((s) => s.key));
-    const buyKeys = opts.buy.filter((k) => valid.has(k));
+    // resolveTcgBuyKeys strips TCGplayer's own key and any converted reference
+    // row, so a URL like ?buy=tcgplayer_uk can never put a price nobody can
+    // check out at on the buy side.
+    const buyKeys = resolveTcgBuyKeys(country, opts.buy);
     if (!buyKeys.length) return { items: [], total: 0, page, pageSize, pageCount: 1, savingsTotalCents: 0 };
 
-    const { rows, storeKeys, buyEbayKey, ebayDeliveredMin, tcgByCard } = await rankVsTcgplayer(country, buyKeys, opts.sort);
-
-    const total = rows.length;
-    const savingsTotalCents = rows.reduce((sum, r) => sum + r.net, 0);
-    const pageCount = Math.max(1, Math.ceil(total / pageSize));
-    const p = Math.min(Math.max(1, page), pageCount);
-    const slice = rows.slice((p - 1) * pageSize, p * pageSize);
+    const { rows, storeKeys, buyEbayKey, ebayBest, tcgByCard } = await rankVsTcgplayer(country, buyKeys, opts.sort);
+    const { slice, total, page: p, pageCount, savingsTotalCents } = pageRanked(rows, { page, pageSize, onlyCardIds: opts.onlyCardIds });
     if (!slice.length) return { items: [], total, page: p, pageSize, pageCount, savingsTotalCents };
 
     const ids = slice.map((r) => r.cardId);
@@ -599,25 +481,35 @@ export async function getArbitrageVsTcgplayer(
         const c = cardMap.get(r.cardId);
         const tcg = tcgByCard.get(r.cardId);
         if (!c || !tcg) return null;
-        let buyStore: string, buyStoreName: string, buyUrl: string;
+        const marketUrl = affiliateUrl(tcg.url, TCG_US.retailer);
+        const tcgLowCents = country === "US" ? r.low : null;
         if (r.buyIsEbay) {
-          const e = ebayDeliveredMin.get(r.cardId);
+          // The cached eBay row carries its own price AND its own URL, so the
+          // figure and the link always describe the same listing.
+          const e = ebayBest.get(r.cardId);
           if (!e || !buyEbayKey) return null;
-          buyStore = buyEbayKey;
-          buyStoreName = "eBay (delivered)";
-          buyUrl = affiliateUrl(e.url, buyEbayKey);
-        } else {
-          const b = bestStore.get(r.cardId);
-          if (!b) return null;
-          buyStore = b.retailer;
-          buyStoreName = b.retailerName;
-          buyUrl = affiliateUrl(b.url, b.retailer);
+          return {
+            card: c,
+            buyCents: e.cents, buyStore: buyEbayKey, buyStoreName: ebayBuyLabel(country, e.postageKnown),
+            buyUrl: affiliateUrl(e.url, buyEbayKey), postageIncluded: e.postageKnown,
+            marketCents: r.market, marketUrl, tcgLowCents, belowCents: r.below, belowPct: r.pct,
+          };
         }
+        // A store row's price is the LIVE listing's own price, next to that
+        // listing's own name and link. The ranking came from the day-cached
+        // aggregate; if the store has repriced or sold out since, this is a
+        // different number (or a different store), so it is re-scored with the
+        // same rules and dropped if it no longer qualifies — never a cached
+        // price shown beside another store's link.
+        const b = bestStore.get(r.cardId);
+        if (!b) return null;
+        const live = scoreVsTcg(country, b.priceCents, r.market, r.low);
+        if (!live) return null;
         return {
           card: c,
-          buyCents: r.buy, buyStore, buyStoreName, buyUrl,
-          sellCents: r.sellGross, sellName: "TCGplayer (US market, converted)", sellUrl: affiliateUrl(tcg.url, TCG_US.retailer), sellRetailer: TCG_US.retailer,
-          netCents: r.net, marginPct: r.margin,
+          buyCents: b.priceCents, buyStore: b.retailer, buyStoreName: b.retailerName,
+          buyUrl: affiliateUrl(b.url, b.retailer), postageIncluded: false,
+          marketCents: r.market, marketUrl, tcgLowCents, belowCents: live.belowCents, belowPct: live.belowPct,
         };
       })
       .filter((x): x is ArbItem => x !== null);
@@ -628,16 +520,39 @@ export async function getArbitrageVsTcgplayer(
   }
 }
 
+/**
+ * When this market's prices were last seen — the newest in-stock lastSeen —
+ * for the page's "Prices as of …" line. One aggregate row per market per day,
+ * shared-cached and busted on import like everything above, so it reads the
+ * import time without a per-request query. ISO string (JSON-safe), or null.
+ */
+export async function getPricesAsOf(country: Country): Promise<string | null> {
+  try {
+    return await cachedOrDirect(
+      async () => {
+        const r = await prisma.retailerPrice.aggregate({ where: { country, inStock: true }, _max: { lastSeen: true } });
+        return r._max.lastSeen ? new Date(r._max.lastSeen).toISOString() : null;
+      },
+      ["arb-prices-as-of", country, sydneyDayKey()],
+      { revalidate: 172800, tags: [CONTENT_TAG] },
+    );
+  } catch {
+    return null;
+  }
+}
+
 // ── Cross-region price gaps ──────────────────────────────────────────────────
 // Where the SAME card is priced meaningfully cheaper in another tracked market
-// than the viewer's own. Deliberately INFORMATIONAL, not a buy/sell execution
-// flow like the arbitrage functions above — acting on it means actually
+// than the viewer's own. Read by the free /market/records board only since
+// 2026-09-25 (the Deal Finder's Cross-region tab was cut; the board ranks the
+// same rows by money and links to stores, which the tab never did).
+// Deliberately INFORMATIONAL — acting on it means actually
 // shipping cross-border, and this models none of that (international postage
 // cost/time, customs, and whether the away market's stores will even ship
 // overseas are all real, unmodelled costs; see the disclaimer in the page
 // copy). Reuses the per-country lowestPriceCents* columns already sitting on
-// every Card row, so unlike getArbitrage above this needs no RetailerPrice
-// scan and no memoization — one Card query, one in-memory pass.
+// every Card row, so unlike the Deal Finder ranking above this needs no
+// RetailerPrice scan — one narrow Card query, one in-memory pass.
 export interface CrossRegionGap {
   card: CardTileData;
   homeCents: number;
@@ -660,15 +575,15 @@ export interface CrossRegionPage {
 
 const XREGION_MIN_HOME_CENTS = 300; // same floor as MIN_BUY_CENTS — ignore near-zero prices
 const XREGION_MIN_GAP_PCT = 20; // has to be a meaningful gap to be worth surfacing at all
-const XREGION_MAX_GAP_PCT = 300; // same outlier-guard reasoning as MAX_MARGIN_PCT — a huge gap is
+const XREGION_MAX_GAP_PCT = 300; // same outlier-guard reasoning as MAX_BELOW_PCT — a huge gap is
 // almost always a converted reference price or a thin/stale market, not a real 300%+ difference.
 
 type XRegionRow = { card: CardTileData; homeCents: number; away: Country; awayNative: number; awayConverted: number; pct: number };
 // Day-cached in the SHARED Next data cache, not a per-instance globalThis memo.
 // This read had no bound at all originally — a plain card.findMany with no take,
 // pulling the WHOLE catalogue (cardTileSelect, two image URLs/row, ~1,000-1,500
-// cards) on every request to the force-dynamic deal-finder cross-region tab and
-// /market/records. cachedOrDirect collapses it to one pull per home market per
+// cards) on every request to the force-dynamic Deal Finder cross-region tab (cut
+// 2026-09-25) and /market/records. cachedOrDirect collapses it to one pull per home market per
 // day (CONTENT_TAG busts it on import), shared across all lambda instances.
 //
 // TWO PASSES, NOT ONE (2026-09-14, DECISIONS.md "Find the fifth burn before

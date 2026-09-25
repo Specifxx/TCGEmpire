@@ -95,7 +95,7 @@ test("Deal Finder and the nudge rank from one definition", () => {
   const arb = code("src/lib/arbitrage.ts");
   assert.match(arb, /async function rankVsTcgplayer\(country: Country, buyKeys: string\[\], sort: ArbSort\)/);
   assert.match(arb, /await rankVsTcgplayer\(country, buyKeys, opts\.sort\)/, "the page's loader uses it");
-  assert.match(arb, /await rankVsTcgplayer\(country, keys, "profit"\)/, "and so do the nudge's ranks, in the default order");
+  assert.match(arb, /await rankVsTcgplayer\(country, keys, "saving"\)/, "and so do the nudge's ranks, in the default order");
   assert.match(read("src/app/tools/deal-finder/page.tsx"), /const tcgBuyKeys = defaultTcgBuyKeys\(country\);/);
 });
 

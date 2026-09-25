@@ -9,11 +9,17 @@
 // data to say it already exists and is already cached.
 //
 // COST, per call: two user-scoped, capped queries (their watches, their
-// collection); the Deal Finder ranking from its day-cached aggregates
-// (lib/arbitrage.ts getTcgDealRanks — no detail fetch); Rising Cards from its
-// day cache; and at most one single-row name lookup. Both loaders cache
-// themselves and are called directly — never from inside another cache
-// (src/lib/db.ts rule 6).
+// collection — getUserCardIds below); the Deal Finder ranking from its
+// day-cached aggregates (lib/arbitrage.ts getTcgDealRanks — no detail fetch);
+// Rising Cards from its day cache; and at most one single-row name lookup. Both
+// loaders cache themselves and are called directly — never from inside another
+// cache (src/lib/db.ts rule 6).
+//
+// getUserCardIds is also what the Deal Finder's "Only my cards" chips
+// (?mine=watch|own, Plus) read: the same two capped selects, per request,
+// NEVER cached — a shared cache entry keyed by user would be one entry per
+// account per day, and wrapping the self-caching ranking beside it would
+// disable that cache (tests/deal-finder-buyer-list.test.ts pins both).
 //
 // WHAT IT REVEALS: counts, whether a card is inside the free top three, and one
 // example card name. Never a price, a gap or a rank beyond "in the free top 3
@@ -65,13 +71,21 @@ export function hasNudge(n: PremiumNudge | null): n is PremiumNudge {
   return !!n && n.watched.deals + n.watched.rising + n.owned.rising > 0;
 }
 
+/**
+ * The card ids an account watches ("watch": its PriceAlert rows, capped at 500)
+ * or owns ("own": its CollectionCard rows, capped at 1000). One user-scoped,
+ * capped select; uncached on purpose — see the header.
+ */
+export async function getUserCardIds(userId: string, which: "watch" | "own"): Promise<Set<string>> {
+  const rows =
+    which === "watch"
+      ? await prisma.priceAlert.findMany({ where: { userId }, select: { cardId: true }, take: 500 })
+      : await prisma.collectionCard.findMany({ where: { userId }, select: { cardId: true }, take: 1000 });
+  return new Set(rows.map((r) => r.cardId));
+}
+
 export async function getPremiumNudge(userId: string, country: Country): Promise<PremiumNudge | null> {
-  const [watchRows, ownRows] = await Promise.all([
-    prisma.priceAlert.findMany({ where: { userId }, select: { cardId: true }, take: 500 }),
-    prisma.collectionCard.findMany({ where: { userId }, select: { cardId: true }, take: 1000 }),
-  ]);
-  const watched = new Set(watchRows.map((r) => r.cardId));
-  const owned = new Set(ownRows.map((r) => r.cardId));
+  const [watched, owned] = await Promise.all([getUserCardIds(userId, "watch"), getUserCardIds(userId, "own")]);
   if (!watched.size && !owned.size) return null; // nothing of theirs to talk about
 
   const [dealRank, rising] = await Promise.all([
@@ -116,31 +130,44 @@ export async function getPremiumNudge(userId: string, country: Country): Promise
 // Pure, so every sentence is testable without a database. Returns null when
 // there is nothing true and specific to say — the caller then renders nothing,
 // rather than falling back to a generic pitch.
+//
+// `audience` (2026-09-25): "free" (the default) ends on the Plus-level gate
+// line; "member" drops the free-top-3 counts and the pitch, because a member
+// already sees every row — PremiumNudgeCard then links to the list itself
+// (Deal Finder ?mine=watch|own, or Rising Cards) instead of a wall.
+// `kind` says which list the nudge is about, so that link can be the right one.
 const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
-export function nudgeCopy(nudge: PremiumNudge, where: "watched" | "owned"): { heading: string; line: string } | null {
+export const PLUS_GATE_LINE = "Plus shows every one, and can email you when one hits your price.";
+
+export function nudgeCopy(
+  nudge: PremiumNudge,
+  where: "watched" | "owned",
+  audience: "free" | "member" = "free",
+): { heading: string; line: string; kind: "deal" | "rising" } | null {
   const c = nudge[where];
   const who = where === "watched" ? ["card you watch", "cards you watch"] : ["card you own", "cards you own"];
   const ex = nudge.example && nudge.example.set === where ? nudge.example : null;
+  const free = audience === "free";
 
   if (where === "watched" && c.deals > 0) {
     const heading = `${n(c.deals, `${who[0]} is`, `${who[1]} are`)} underpriced right now`;
     const parts = [
       `Deal Finder shows ${c.deals === 1 ? "it" : "them"} selling below TCGplayer's market price${ex?.kind === "deal" ? ` — including ${ex.name}` : ""}.`,
     ];
-    if (c.dealsFree > 0) parts.push(`${c.dealsFree === c.deals ? (c.deals === 1 ? "It's" : "All are") : n(c.dealsFree, "is", "are")} in your free top 3.`);
+    if (free && c.dealsFree > 0) parts.push(`${c.dealsFree === c.deals ? (c.deals === 1 ? "It's" : "All are") : n(c.dealsFree, "is", "are")} in your free top 3.`);
     if (c.rising > 0) parts.push(`${n(c.rising, "is also a Rising Cards pick", "are also Rising Cards picks")}.`);
-    parts.push(c.dealsFree === c.deals ? "Premium shows every deal, with where each is cheapest." : "Premium shows every one, with where each is cheapest.");
-    return { heading, line: parts.join(" ") };
+    if (free) parts.push(PLUS_GATE_LINE);
+    return { heading, line: parts.join(" "), kind: "deal" };
   }
   if (c.rising > 0) {
     const heading = `${n(c.rising, `${who[0]} is a Rising Cards pick`, `${who[1]} are Rising Cards picks`)} right now`;
     const parts = [
       `Ranked by demand and price-timing signals${ex?.kind === "rising" ? ` — including ${ex.name}` : ""}.`,
     ];
-    if (c.risingFree > 0) parts.push(`${c.risingFree === c.rising ? (c.rising === 1 ? "It's" : "All are") : n(c.risingFree, "is", "are")} in your free top 3.`);
-    parts.push("Premium shows every pick and the signals behind each score.");
-    return { heading, line: parts.join(" ") };
+    if (free && c.risingFree > 0) parts.push(`${c.risingFree === c.rising ? (c.rising === 1 ? "It's" : "All are") : n(c.risingFree, "is", "are")} in your free top 3.`);
+    if (free) parts.push("Plus shows every pick and the signals behind each score.");
+    return { heading, line: parts.join(" "), kind: "rising" };
   }
   return null;
 }
