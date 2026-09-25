@@ -12,9 +12,20 @@
 //                     others are kept as they were.
 //   --summary=<path>  also write the change report as Markdown (for $GITHUB_STEP_SUMMARY)
 //   --check           write nothing to --out; just report what would change
+//   --add-carts       a store measured in more than one input keeps the carts of
+//                     all of them, a later input winning on the same cart
+//                     (subtotal and card count). For threshold rungs re-probed
+//                     after a full run. Without it the later input replaces the
+//                     store — right for a re-run that corrects a bad one.
 //
 // A run that covers every configured store of a market replaces that market;
 // a partial run (probe --store=…) replaces only the stores it measured.
+//
+// The snapshot as committed (2026-09-25) is, from the probe runs' files:
+//   npx tsx scripts/build-shipping-rates.ts AU.json US.json US-gaps.json UK.json CA.json EU.json SG.json \
+//     --base=<a path that does not exist> --add-carts
+// US-gaps.json re-probed the four US stores that quoted nothing and added
+// threshold rungs for knightandday, nerdmerchant and fabricatorsforge.
 //
 // The raw files are several MB each and are NOT committed — the probe workflow
 // (.github/workflows/shipping-rates.yml) uploads them as an artifact. Only the
@@ -45,6 +56,7 @@ if (!inputs.length) {
 const outPath = resolve(arg("out") || "src/lib/shipping-rates.json");
 const basePath = arg("base") ? resolve(arg("base")!) : outPath;
 const check = arg("check") !== undefined;
+const addCarts = arg("add-carts") !== undefined;
 
 const base: ShippingSnapshot | null = existsSync(basePath) ? JSON.parse(readFileSync(basePath, "utf8")) : null;
 const next: ShippingSnapshot = {
@@ -59,7 +71,11 @@ const next: ShippingSnapshot = {
 };
 
 const replaced = new Set<Country>();
-const partial = new Set<Country>();
+const fullRun = new Set<Country>();
+const measured = new Map<string, ProbeStoreInput>();
+// The same cart, measured twice: [subtotal, cards] (a scenario that reused an
+// earlier cart, or failed to build one, has none of its own).
+const cartKey = (x: ProbeStoreInput["scenarios"][number]) => (x.sameCartAs || x.items <= 0 ? null : `${x.subtotalCents}/${x.items}`);
 for (const f of inputs) {
   const raw = JSON.parse(readFileSync(resolve(f), "utf8")) as { market: Country; stores: ProbeStoreInput[] };
   const market = raw.market;
@@ -71,13 +87,29 @@ for (const f of inputs) {
   // market back to an estimate.
   const inRun = new Set(raw.stores.map((s) => s.key));
   const full = RETAILER_LIST.filter((r) => (r.country ?? "AU") === market).every((r) => inRun.has(r.key));
-  if (full && !replaced.has(market)) {
+  if (full && !fullRun.has(market)) {
     for (const [k, s] of Object.entries(next.stores)) if (s.market === market) delete next.stores[k];
+    fullRun.add(market);
   }
-  if (!full) partial.add(market);
   replaced.add(market);
-  for (const s of raw.stores) next.stores[s.key] = condenseStore({ ...s, market });
+  for (const s of raw.stores) {
+    const prev = measured.get(s.key);
+    if (addCarts && prev && prev.market === market) {
+      const again = new Set(s.scenarios.map(cartKey).filter(Boolean));
+      measured.set(s.key, {
+        ...s,
+        market,
+        measuredAt: [prev.measuredAt, s.measuredAt].sort().at(-1)!,
+        scenarios: [...prev.scenarios.filter((x) => { const k = cartKey(x); return k && !again.has(k); }), ...s.scenarios],
+      });
+    } else {
+      measured.set(s.key, { ...s, market });
+    }
+  }
 }
+for (const [key, s] of measured) next.stores[key] = condenseStore(s);
+// A market with no full run among the inputs is a partial refresh.
+const partial = new Set([...replaced].filter((m) => !fullRun.has(m)));
 for (const market of replaced) {
   // A full run is as fresh as its newest store; a partial one only as fresh as
   // the OLDEST store in the market, since the rest were measured before it.

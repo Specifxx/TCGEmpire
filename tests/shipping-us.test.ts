@@ -1,10 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PROBE_ADDRESSES, classifyRate, type ProbeScenarioResult } from "../src/lib/shipping-probe";
-import { condenseStore, type ProbeStoreInput, type ShippingSnapshot } from "../src/lib/shipping-snapshot";
+import { SHIPPING_OVERRIDES, condenseStore, roundAtCheckout, type ProbeStoreInput, type ShippingSnapshot } from "../src/lib/shipping-snapshot";
 import {
+  SHIPPING_REGIONS,
   SHIPPING_SNAPSHOT,
   basketStoresFor,
   postageOptionsFrom,
@@ -15,13 +18,14 @@ import {
   shippingSummary,
 } from "../src/lib/shipping";
 import { optimizeBasket } from "../src/lib/basket";
-import { planPostageNotes, postageLineBits, postagePrefix } from "../src/lib/postage-display";
+import { freePrefix, planPostageNotes, postageLineBits, postagePrefix } from "../src/lib/postage-display";
 import { effectiveRegion } from "../src/lib/postage-prefs";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // US buyers first-class (2026-09-25). The US is the biggest market, so its
 // postage has to read the way an American would say it — Census regions, each
-// named with the city it was measured to, preselected from the visitor's state
+// priced to the city (or the dearer of the cities) measured for it,
+// preselected from the visitor's state
 // — and the model has to handle what is specific to US stores: USPS
 // First-Class letters that vanish as an order grows, carrier-calculated
 // Ground Advantage that varies by zone, "Standard"/"Economy" names that do not
@@ -65,22 +69,42 @@ const GEAR = probeUS("geargaming", [
   { id: "V100", v: 100.04, n: 5, rates: (a) => [["Ground Advantage", GA[a]]] },
 ]);
 
-test("the US picker reads like America: Census regions named with the city they were measured to, then 'Elsewhere'", () => {
+test("the US picker reads like America: Census regions, each saying what it was priced to, then 'Elsewhere'", () => {
   const opts = regionOptionsFor("US");
   assert.deepEqual(
     opts.map((o) => o.label),
-    [
-      "Northeast (measured to New York)",
-      "Midwest (measured to Chicago)",
-      "South (measured to Dallas)",
-      "West (measured to San Francisco)",
-      "Elsewhere in the US — not measured",
-    ],
+    ["Northeast", "South Atlantic", "Midwest", "Plains", "South", "California", "Mountain & Northwest", "Elsewhere (not measured)"],
   );
-  assert.deepEqual(opts.map((o) => o.phrase), ["the Northeast", "the Midwest", "the South", "the West", "elsewhere in the US"]);
+  assert.deepEqual(opts.map((o) => o.phrase), [
+    "the Northeast",
+    "the South Atlantic states",
+    "the Midwest",
+    "the Plains states",
+    "the South",
+    "California",
+    "the Mountain and Northwest states",
+    "elsewhere in the US",
+  ]);
+  const to = Object.fromEntries(opts.map((o) => [o.key, o.pricedTo]));
+  assert.equal(to.NE, "priced to New York, the one address we measured there");
+  assert.equal(to.SA, "priced at the dearer of New York and Dallas, the addresses we measured either side of it");
+  assert.equal(to.MTW, "priced at the dearer of San Francisco and Dallas, the addresses we measured either side of it");
+  assert.match(to.OTHER, /^not measured — .*usually costs more/);
+  // Short enough for a phone: at 360–390px the select is 264–294px wide and
+  // clipped "Northeast (measured to New York)" (224px of Inter 16px text, 308px
+  // with the select's padding and arrow) to "Northeast (measured to New Y".
+  // The longest label now, "Elsewhere (not measured)", is 167px of text: it
+  // fits the ~180px a 360px phone leaves (headless Chromium, 2026-09-25).
+  for (const m of ["AU", "US", "UK", "CA", "EU", "SG"] as const) {
+    for (const o of regionOptionsFor(m)) assert.ok(o.label.length <= 24, `${m}: "${o.label}" is too long for a phone's select`);
+  }
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /<option value="">Not sure \(highest rate\)<\/option>/);
+  assert.match(ui, /regionOpt\.pricedTo/, "what the chosen region is priced to is said under the picker");
   assert.deepEqual(postageOptionsFrom("US", "OTHER", null), { region: "OTHER", trackedOnly: false });
   assert.equal(regionOptionsFor("AU").some((o) => o.unmeasured), false, "all eight AU states and territories are measured");
-  assert.equal(regionOptionsFor("EU").at(-1)?.label, "Elsewhere in the EU — not measured");
+  assert.equal(regionOptionsFor("EU").at(-1)?.label, "Elsewhere (not measured)");
+  assert.doesNotMatch(regionOptionsFor("EU").at(-1)?.pricedTo ?? "", /costs more/, "Elsewhere in the EU can be cheaper — not remote");
 });
 
 test("the visitor's state preselects their region (Vercel geo headers), for every market", () => {
@@ -89,12 +113,14 @@ test("the visitor's state preselects their region (Vercel geo headers), for ever
   assert.equal(us("PA"), "NE");
   assert.equal(us("OH"), "MW");
   assert.equal(us("IL"), "MW");
+  assert.equal(us("ND"), "PL");
   assert.equal(us("TX"), "S");
-  assert.equal(us("FL"), "S");
-  assert.equal(us("DC"), "S");
-  assert.equal(us("CA"), "W");
-  assert.equal(us("WA"), "W");
-  assert.equal(us("US-CA"), "W", "an ISO 3166-2 code with its country prefix");
+  assert.equal(us("FL"), "SA");
+  assert.equal(us("DC"), "SA", "between New York and Dallas — never priced as Dallas alone");
+  assert.equal(us("MD"), "SA");
+  assert.equal(us("CA"), "CAL");
+  assert.equal(us("WA"), "MTW", "Seattle is further than San Francisco from a West-coast store");
+  assert.equal(us("US-CA"), "CAL", "an ISO 3166-2 code with its country prefix");
   assert.equal(us("AK"), "OTHER", "Alaska is not priced as San Francisco");
   assert.equal(us("HI"), "OTHER");
   assert.equal(regionFromGeo("US", "PR", null), "OTHER", "Puerto Rico geolocates as its own country");
@@ -142,7 +168,8 @@ test("a US store's First-Class letter only covers the orders it was seen on; Gro
   assert.equal(q(25, 2).cents, 550);
   // By zone: the buyer's region, or the dearest ("up to") when unknown.
   assert.equal(q(25, 2, "S").cents, 538);
-  assert.equal(q(25, 2, "W").cents, 582);
+  assert.equal(q(25, 2, "CAL").cents, 582);
+  assert.equal(q(25, 2, "SA").cents, 572, "the South Atlantic: the dearer of New York ($5.72) and Dallas ($5.38)");
   const unknown = q(25, 2, null);
   assert.equal(unknown.cents, 582);
   assert.equal(unknown.upTo, true);
@@ -151,12 +178,126 @@ test("a US store's First-Class letter only covers the orders it was seen on; Gro
   const tracked = q(1, 1, "NE", true);
   assert.equal(tracked.cents, 572);
   assert.equal(tracked.otherOption?.label, "USPS First Class Mail");
-  // "Elsewhere in the US" (Alaska, Hawaii…): the dearest measured, marked as an estimate for there.
+  // "Elsewhere in the US" (Alaska, Hawaii…): the dearest measured, and a floor there.
   const el = q(25, 2, "OTHER");
   assert.equal(el.cents, 582);
   assert.equal(el.upTo, false);
   assert.equal(el.unmeasuredRegion, true);
-  assert.equal(postagePrefix(el), "est. ");
+  assert.equal(el.atLeast, true);
+  assert.equal(postagePrefix(el), "from ");
+});
+
+test("a preselected US region is never priced under a measured city it sits beside", () => {
+  // The review case: Maryland was preselected to the South and priced as
+  // Dallas — $3.30 under what One Stop TCG charges New York for a $55 card.
+  const md = regionFromGeo("US", "US", "MD");
+  assert.equal(shippingFor("onestoptcg", cart(55, 1), { region: md }).cents, 1455);
+  assert.equal(shippingFor("pokeboxusa", cart(25, 1), { region: md }).cents, 1107, "FedEx Home Delivery to New York");
+  assert.equal(shippingFor("mistymountain", cart(25, 1), { region: md }).cents, 1045, "UPS Ground to New York");
+  // Seattle: not PokeBox USA's San Francisco $7.51, its cheapest city.
+  assert.equal(shippingFor("pokeboxusa", cart(25, 1), { region: regionFromGeo("US", "US", "WA") }).cents, 918);
+  assert.equal(shippingFor("pokeboxusa", cart(25, 1), { region: regionFromGeo("US", "US", "CA") }).cents, 751);
+  // Every state, every measured US store, every measured cart: the region its
+  // state preselects quotes at least what each city it is priced from paid.
+  const states = "AL AR AZ CA CO CT DC DE FL GA IA ID IL IN KS KY LA MA MD ME MI MN MO MS MT NC ND NE NH NJ NM NV NY OH OK OR PA RI SC SD TN TX UT VA VT WA WI WV WY".split(" ");
+  const regions = regionOptionsFor("US");
+  let checked = 0;
+  for (const st of states) {
+    const key = regionFromGeo("US", "US", st);
+    assert.ok(key && regions.some((r) => r.key === key && !r.unmeasured), `${st} preselects a measured region`);
+    const at = SHIPPING_REGIONS.US.find((r) => r.key === key)!.at;
+    for (const [k, s] of Object.entries(SHIPPING_SNAPSHOT.stores)) {
+      if (s.market !== "US" || s.status !== "measured") continue;
+      for (const [v, n] of s.carts) {
+        const q = shippingFor(k, { subtotalCents: v, items: n }, { region: key });
+        if (q.unavailable) continue;
+        for (const id of at) {
+          const z = s.zones.find((zz) => zz.at.includes(id));
+          if (!z || z.none) continue;
+          const one = shippingFor(k, { subtotalCents: v, items: n }, { region: key }, { ...SHIPPING_SNAPSHOT, stores: { [k]: { ...s, zones: [{ ...z, at: at.slice() }] } } });
+          if (one.unavailable) continue;
+          checked++;
+          assert.ok(q.cents >= one.cents, `${st} (${key}) ${k} ${v}/${n}: ${q.cents} under ${id}'s ${one.cents}`);
+        }
+      }
+    }
+  }
+  assert.ok(checked > 5000, `${checked}`);
+});
+
+test("Alaska and Hawaii: the dearest lower-48 rate is a floor there, and free is not promised", () => {
+  const ak = regionFromGeo("US", "US", "AK");
+  const q = shippingFor("pokeboxusa", cart(25, 1), { region: ak });
+  assert.equal(q.cents, 1107);
+  assert.equal(postagePrefix(q), "from ");
+  const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const bits = postageLineBits({ topUpCents: 0, postage: q }, fmt);
+  assert.ok(bits.some((b) => /usually costs more than the highest rate we measured; confirm at checkout/.test(b)), bits.join(" · "));
+  // Bards and Cards goes free from $30 to all four cities — measured nowhere near Honolulu.
+  const hi = shippingFor("bardsandcards", cart(35, 3), { region: regionFromGeo("US", "US", "HI") });
+  assert.equal(hi.free, true);
+  assert.equal(hi.unmeasuredRegion, true);
+  assert.equal(freePrefix(hi), "est. ");
+  const hb = postageLineBits({ topUpCents: 0, postage: hi }, fmt);
+  assert.ok(hb.some((b) => /^free to every address we measured, but not measured to your region/.test(b)), hb.join(" · "));
+  assert.ok(!hb.some((b) => /this is the highest rate we measured/.test(b)), "a free quote is not 'the highest rate'");
+  assert.equal(freePrefix(shippingFor("bardsandcards", cart(35, 3), { region: "NE" })), "");
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /\+ \{freePrefix\(s\.postage\)\}free post/);
+  assert.match(ui, /\$\{freePrefix\(p\)\}free/);
+  assert.match(read("src/components/PortfolioReplacementCost.tsx"), /freePrefix\(s\.postage\)\}free/);
+  // The headline says so too.
+  const plan = optimizeBasket(
+    [{ cardId: "a", name: "A", slug: null, qty: 1, listings: [{ retailer: "pokeboxusa", retailerName: "PokeBox", priceCents: 2500, url: "u" }] }],
+    basketStoresFor("US", { region: ak }),
+  );
+  assert.ok(planPostageNotes(plan, false, true).includes("postage for 1 store is not measured to your region — delivery there usually costs more"));
+});
+
+test("'from' is only said where it is a floor, and never about free postage", () => {
+  const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
+  // 45 cards, region unknown: the dearest region's figure is not a floor for a
+  // buyer in the West ($7.51 there) — so not "from $11.07".
+  const unknown = shippingFor("pokeboxusa", cart(40, 45), {});
+  assert.equal(unknown.beyondMeasured, true);
+  assert.equal(unknown.upTo, true);
+  assert.equal(postagePrefix(unknown), "est. ");
+  assert.ok(postageLineBits({ topUpCents: 0, postage: unknown }, fmt).includes("a bigger order than any we measured, priced at the dearest region — pick yours"));
+  const west = shippingFor("pokeboxusa", cart(40, 45), { region: "CAL" });
+  assert.equal(west.cents, 751);
+  assert.equal(postagePrefix(west), "from ");
+  // Free on a 60-card order when the biggest cart measured was about 10 cards: not "at least free".
+  const big = shippingFor("bardsandcards", cart(30, 60), { region: "NE" });
+  assert.equal(big.free, true);
+  assert.equal(big.beyondMeasured, true);
+  const bits = postageLineBits({ topUpCents: 0, postage: big }, fmt);
+  assert.ok(bits.includes("free on the orders we measured, but this one is bigger than any of them — confirm at checkout"), bits.join(" · "));
+  assert.ok(!bits.some((b) => /so at least this/.test(b)));
+  const plan = optimizeBasket(
+    [{ cardId: "a", name: "A", slug: null, qty: 60, listings: [{ retailer: "bardsandcards", retailerName: "Bards", priceCents: 50, url: "u" }] }],
+    basketStoresFor("US", { region: "NE" }),
+  );
+  assert.ok(
+    planPostageNotes(plan, true).includes("free postage for 1 store was measured on smaller orders than yours — confirm at checkout"),
+    planPostageNotes(plan, true).join(" | "),
+  );
+});
+
+test("a buyer who picked 'Elsewhere' is not told to pick a region; a guessed region says it was guessed", () => {
+  const plan = optimizeBasket(
+    [{ cardId: "a", name: "A", slug: null, qty: 1, listings: [{ retailer: "grognardgames", retailerName: "Grognard", priceCents: 1000, url: "u" }] }],
+    basketStoresFor("US", { region: "OTHER" }),
+  );
+  const notes = planPostageNotes(plan, false, true);
+  assert.ok(notes.includes("1 store in this plan doesn't post to Northeast (New York) — it may not post to you either; check at checkout"), notes.join(" | "));
+  assert.ok(!notes.some((n) => /pick your region/.test(n)));
+  assert.ok(planPostageNotes(plan, false).some((n) => /pick your region$/.test(n)), "region unknown: still asked to pick");
+  const ui = read("src/components/BestBasket.tsx");
+  assert.match(ui, /planPostageNotes\(plan, !!regionLabel, !!regionOpt\?\.unmeasured\)/);
+  const panel = read("src/components/PortfolioReplacementCost.tsx");
+  assert.match(panel, /planPostageNotes\(plan, regionPicked, !!result\.shipping\?\.regionUnmeasured\)/);
+  assert.match(panel, /const wasGuessed = !prefs\.regionChosen && !!region;/);
+  assert.match(panel, /guessed from your location — pick yours in Best Basket/);
 });
 
 test("USPS's own spelling, 'First-Class Mail', is an untracked letter; 'First-Class Package' is not", () => {
@@ -184,6 +325,92 @@ test("a US free-shipping threshold starts at the measured free cart, never a gue
   assert.equal(at(80.5).cents, 0);
   assert.equal(at(55).tracked, null, "'Economy' does not say whether it is tracked");
   assert.match(shippingNoteFor("knightandday", snap), /free from US\$80\.50/);
+  // The real snapshot: its banner ("FREE Shipping On Orders $75+ (48 States)")
+  // narrows it, since no Riftbound cart exists between $73.00 (paid) and $80.50.
+  const real = (v: number) => shippingFor("knightandday", cart(v, 1), { region: "NE" });
+  assert.equal(real(73).cents, 900);
+  assert.equal(real(73).freeFromCents, 7500);
+  assert.equal(real(75).cents, 0);
+  assert.match(real(75).note ?? "", /lower 48/);
+});
+
+test("the US gap re-probe: four stores that quoted nothing post nowhere, and each says why", () => {
+  for (const [key, why] of [
+    ["cgrealm", /cover Canada only/],
+    ["larrysgamestore", /site banner says 'We are currently doing in-store pickup only/],
+    ["punkouter", /not in its own checkout \('Shipping not available'\)/],
+    ["atomilicollectables", /no ship-to countries\): local pickup in Houston only/],
+  ] as const) {
+    assert.equal(SHIPPING_SNAPSHOT.stores[key].status, "no-post", key);
+    const q = shippingFor(key, cart(20, 2), { region: "MW" });
+    assert.match(q.unavailable ?? "", why, key);
+    assert.match(basketStoresFor("US", {})[key].unavailable ?? "", why, `${key} is left out of Best Basket`);
+  }
+  // Every other US store is measured: none is priced on a guess any more.
+  const us = Object.entries(SHIPPING_SNAPSHOT.stores).filter(([, s]) => s.market === "US");
+  assert.deepEqual(us.filter(([, s]) => s.status === "unmeasured").map(([k]) => k), []);
+});
+
+test("the Canadian stores in the US market: checkout rounding, a letter that says 'No tracking', and duties", () => {
+  assert.equal(roundAtCheckout(1291, "whole"), 1300);
+  assert.equal(roundAtCheckout(1300, "whole"), 1300);
+  assert.equal(roundAtCheckout(252, "x.50"), 350);
+  assert.equal(roundAtCheckout(504, "x.50"), 550);
+  assert.equal(roundAtCheckout(1081, "x.50"), 1150);
+  assert.equal(roundAtCheckout(0, "x.50"), 0, "free stays free");
+  // Checkout (Storefront API cart) — not the endpoint's unrounded conversion.
+  assert.equal(shippingFor("danireon", cart(50, 2), { region: "NE" }).cents, 1600);
+  assert.equal(shippingFor("danireon", cart(151, 2), { region: "NE" }).cents, 1300);
+  assert.equal(shippingFor("npcollectibles", cart(10, 1), { region: "NE" }).cents, 1300);
+  assert.equal(shippingFor("hobbiesville", cart(10, 1), { region: "NE" }).cents, 1100);
+  // Mythic's "Canada Post Standard" is its untracked plain white envelope
+  // (the rate's own description: "No tracking"); ChitChats Select is tracked.
+  const small = shippingFor("mythicstore", cart(5, 3), { region: "NE" });
+  assert.equal(small.cents, 350);
+  assert.equal(small.tracked, false);
+  assert.deepEqual(small.otherOption, { cents: 550, label: "ChitChats Select", tracked: true });
+  const tracked = shippingFor("mythicstore", cart(5, 3), { region: "NE", trackedOnly: true });
+  assert.equal(tracked.cents, 550);
+  assert.equal(tracked.label, "ChitChats Select");
+  // More cards than the envelope was ever seen with (13): never US$2.52.
+  assert.equal(shippingFor("mythicstore", cart(30, 25), { region: "NE" }).cents, 550);
+  assert.equal(shippingFor("mythicstore", cart(111, 13), { region: "NE" }).cents, 0, "free tracked from US$110.50");
+  assert.equal(SHIPPING_OVERRIDES.mythicstore.rateService?.["Canada Post Standard"], "untracked");
+  // One Stop TCG's "Standard": its policy says every shipment is tracked.
+  assert.equal(shippingFor("onestoptcg", cart(5, 1), { region: "NE" }).tracked, true);
+  // The caveats reach the store page.
+  for (const k of ["mythicstore", "danireon", "npcollectibles", "hobbiesville", "grognardgames", "mainephasehobbies"]) {
+    assert.ok(shippingSummary(k).note, `${k} has its caveat`);
+  }
+  assert.match(shippingSummary("npcollectibles").note ?? "", /C\$350 is Canada only/);
+  assert.match(read("src/app/stores/[slug]/page.tsx"), /\{s\.note && <li>\{s\.note\}\.<\/li>\}/);
+});
+
+test("the builder can add a re-probe's carts to a full run instead of replacing the store", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ship-us-"));
+  const first = probeUS("knightandday", [
+    { id: "S1", v: 0.5, n: 1, rates: () => [["Economy", 9]] },
+    { id: "V100", v: 101.5, n: 1, rates: () => [["Economy", 0]] },
+  ]);
+  const rungs = probeUS("knightandday", [
+    { id: "S1", v: 0.5, n: 1, rates: () => [["Economy", 9.5]] },
+    { id: "V70", v: 73, n: 1, rates: () => [["Economy", 9]] },
+  ]);
+  rungs.measuredAt = "2026-09-25T06:42:42.586Z";
+  writeFileSync(join(dir, "a.json"), JSON.stringify({ market: "US", stores: [first] }));
+  writeFileSync(join(dir, "b.json"), JSON.stringify({ market: "US", stores: [rungs] }));
+  const build = (...extra: string[]) => {
+    execFileSync(
+      process.execPath,
+      ["--import", "tsx", "scripts/build-shipping-rates.ts", join(dir, "a.json"), join(dir, "b.json"), "--base=src/lib/shipping-rates.json", `--out=${join(dir, "out.json")}`, ...extra],
+      { cwd: ROOT, stdio: "pipe" },
+    );
+    return (JSON.parse(readFileSync(join(dir, "out.json"), "utf8")) as ShippingSnapshot).stores.knightandday;
+  };
+  assert.deepEqual(build().carts, [[50, 1], [7300, 1]], "by default the later input replaces the store");
+  const merged = build("--add-carts");
+  assert.deepEqual(merged.carts, [[50, 1], [7300, 1], [10150, 1]]);
+  assert.equal(merged.zones[0].std[0]?.[0], 950, "the same cart measured twice: the later run wins");
 });
 
 test("a store in the US market that posts from Canada says import charges may be due", () => {
@@ -209,8 +436,8 @@ test("the real US snapshot: zone pricing is real, Grognard's New York gap is nam
   // Shippin' Texas: a $1.49 plain white envelope to $20.76, then Ground
   // Advantage by zone — Dallas $5.93 up to San Francisco $8.27.
   assert.equal(shippingFor("shippintexas", cart(60, 2), { region: "S" }).cents, 593);
-  assert.equal(shippingFor("shippintexas", cart(60, 2), { region: "W" }).cents, 827);
-  assert.equal(shippingFor("shippintexas", cart(5, 1), { region: "W" }).cents, 149);
+  assert.equal(shippingFor("shippintexas", cart(60, 2), { region: "CAL" }).cents, 827);
+  assert.equal(shippingFor("shippintexas", cart(5, 1), { region: "CAL" }).cents, 149);
   const nyGap = shippingFor("grognardgames", cart(10, 1), { region: "NE" });
   assert.equal(nyGap.unavailable, "Quoted no postage to New York (measured, for the Northeast)");
   assert.deepEqual(shippingFor("grognardgames", cart(10, 1), {}).notServed, ["Northeast (New York)"]);

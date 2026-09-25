@@ -40,12 +40,17 @@
 //     The order must reach the first free cart — a threshold between $90.98
 //     (paid) and $100.98 (free) is applied from $100.98, never from a guessed
 //     round number (nor a US-typical $35/$50/$75/$100: each store's own).
-//   * Region: AU by state, the US by Census region, the others by the probe's
-//     cities/countries — each named with the address it was measured to. When
-//     the buyer's region is not known the HIGHEST regional figure is used and
-//     the quote says "up to"; "Elsewhere" (Alaska, an unmeasured province or
-//     EU country) is priced the same way and says it was not measured there.
-//     The picker starts from the visitor's geo headers (regionFromGeo).
+//   * Region: AU by state, the US by Census region or division, the others by
+//     the probe's cities/countries. A region is priced from the address(es) we
+//     measured for it; one that sits BETWEEN measured addresses (the South
+//     Atlantic, between New York and Dallas) is priced at the dearer of them,
+//     since a carrier-calculated rate rises with distance from wherever the
+//     store posts from. When the buyer's region is not known the HIGHEST
+//     regional figure is used and the quote says "up to"; "Elsewhere" (Alaska,
+//     an unmeasured province or EU country) is priced the same way and says it
+//     was not measured there — for Alaska, Hawaii, the territories and
+//     Canada's remote provinces as a floor ("from"). The picker starts from
+//     the visitor's geo headers (regionFromGeo).
 //   * "Tracked only" rules out untracked letters; a store that only ever
 //     quoted untracked postage is then left out, with that reason.
 //   * A store the probe could not measure is charged the dearer of its
@@ -75,16 +80,18 @@ const zoneHasPoints = (z: SnapshotZone): boolean => z.std.some(Boolean) || !!z.l
 
 // ── Regions ─────────────────────────────────────────────────────────────────
 // `at` lists the probe address ids (lib/shipping-probe.ts PROBE_ADDRESSES) a
-// region is priced from. England is priced from London AND Manchester — the
-// dearer of the two. The picker shows each region with the address it was
-// measured to ("Northeast (measured to New York)"): a region is only ever as
-// exact as the one address behind it, and the copy must not claim more.
+// region is priced from; with more than one, the DEARER of them. England is
+// priced from London AND Manchester. The picker shows each region by name and
+// says under it which address(es) it was priced to ("priced to New York, the
+// one address we measured there"): a region is only ever as exact as the
+// addresses behind it, and the copy must not claim more.
 export interface ShippingRegion {
   key: string;
   label: string; // the region's own name: "Northeast", "South Australia", "Spain"
   phrase?: string; // how a sentence names it, when not the label: "the Northeast"
   at: string[];
   unmeasured?: true; // the "Elsewhere" choice: no address measured there
+  remote?: true; // (Elsewhere) further than every measured address: the highest measured rate is a floor there
 }
 
 export const SHIPPING_REGIONS: Record<Country, ShippingRegion[]> = {
@@ -98,13 +105,26 @@ export const SHIPPING_REGIONS: Record<Country, ShippingRegion[]> = {
     { key: "NT", label: "Northern Territory", at: ["drw"] },
     { key: "ACT", label: "ACT", at: ["cbr"] },
   ],
-  // The US Census Bureau's four regions, each priced to one big city. The
-  // biggest market: a US buyer's state preselects its region (regionFromGeo).
+  // The biggest market: a US buyer's state preselects its region
+  // (regionFromGeo). The Census regions, split where a region reaches past the
+  // one city measured in it: US carriers price by distance from the store, so a
+  // state between two measured cities is priced at the DEARER of them — never
+  // at one it may be further from. DC and Maryland were priced as Dallas: $3.30
+  // under what One Stop TCG's checkout charges New York for a $55 card, the
+  // Malik direction. Seattle is further than San Francisco from a West-coast
+  // store (PokeBox USA: $7.51 to San Francisco, its cheapest city), and North
+  // Dakota two zones further than Chicago from an East-coast one. A state
+  // within about a zone of its city stays on it (Ohio or Alabama from a
+  // West-coast store): the city either side would overprice the far bigger
+  // population next to the measured address.
   US: [
     { key: "NE", label: "Northeast", phrase: "the Northeast", at: ["ny"] },
+    { key: "SA", label: "South Atlantic", phrase: "the South Atlantic states", at: ["ny", "dal"] },
     { key: "MW", label: "Midwest", phrase: "the Midwest", at: ["chi"] },
+    { key: "PL", label: "Plains", phrase: "the Plains states", at: ["chi", "dal"] },
     { key: "S", label: "South", phrase: "the South", at: ["dal"] },
-    { key: "W", label: "West", phrase: "the West", at: ["sf"] },
+    { key: "CAL", label: "California", phrase: "California", at: ["sf"] },
+    { key: "MTW", label: "Mountain & Northwest", phrase: "the Mountain and Northwest states", at: ["sf", "dal"] },
   ],
   UK: [
     { key: "ENG", label: "England & Wales", at: ["lon", "man"] },
@@ -130,11 +150,15 @@ export const SHIPPING_REGIONS: Record<Country, ShippingRegion[]> = {
 // Canada's other six provinces and the territories; the 23 EU countries the
 // probe never priced. Priced like an unknown region (the highest measured
 // figure) and said to be unmeasured — never passed off as a rate for there.
-// AU (all eight states and territories), the UK (all four nations) and SG are
-// covered by their measured regions.
+// US and CA "Elsewhere" is REMOTE: further from every store than any address we
+// measured (USPS prices Alaska and Hawaii above every lower-48 zone; several
+// US stores' free or flat offers leave them out), so the figure is a floor and
+// reads "from". Not the EU's: Elsewhere there can be cheaper (Belgium from a
+// Dutch store). AU (all eight states and territories), the UK (all four
+// nations) and SG are covered by their measured regions.
 export const SHIPPING_ELSEWHERE: Partial<Record<Country, ShippingRegion>> = {
-  US: { key: "OTHER", label: "Elsewhere in the US", phrase: "elsewhere in the US", at: [], unmeasured: true },
-  CA: { key: "OTHER", label: "Elsewhere in Canada", phrase: "elsewhere in Canada", at: [], unmeasured: true },
+  US: { key: "OTHER", label: "Elsewhere in the US", phrase: "elsewhere in the US", at: [], unmeasured: true, remote: true },
+  CA: { key: "OTHER", label: "Elsewhere in Canada", phrase: "elsewhere in Canada", at: [], unmeasured: true, remote: true },
   EU: { key: "OTHER", label: "Elsewhere in the EU", phrase: "elsewhere in the EU", at: [], unmeasured: true },
 };
 
@@ -178,14 +202,19 @@ function notPostedTo(market: Country, region: ShippingRegion, snapshot: Shipping
 
 export interface RegionOption {
   key: string;
-  label: string; // the picker's text
+  label: string; // the picker's text: the region's name only, short enough for a phone ("Northeast")
   phrase: string; // "the Northeast", "South Australia", "elsewhere in the US"
+  pricedTo: string; // what the price is measured to, for the line under the picker
   unmeasured?: boolean;
 }
 
 /**
- * The delivery picker for one market, in order, ending with "Elsewhere in
- * {market} — not measured" where the measured regions do not cover it.
+ * The delivery picker for one market, in order, ending with "Elsewhere
+ * (not measured)" where the measured regions do not cover it. The labels are
+ * names only: on a 360–390px phone the select is 264–294px wide, and "Northeast
+ * (measured to New York)" was cut to "Northeast (measured to New Y" — the
+ * qualifier is what went missing. What each region is priced to is `pricedTo`,
+ * shown under the picker for the region chosen.
  */
 export function regionOptionsFor(market: Country, snapshot: ShippingSnapshot = SHIPPING_SNAPSHOT): RegionOption[] {
   const out: RegionOption[] = (SHIPPING_REGIONS[market] ?? []).map((r) => {
@@ -193,12 +222,29 @@ export function regionOptionsFor(market: Country, snapshot: ShippingSnapshot = S
     const same = places.length === 1 && places[0] === r.label;
     return {
       key: r.key,
-      label: places.length && !same ? `${r.label} (measured to ${joinPlaces(places)})` : r.label,
+      label: r.label,
       phrase: r.phrase ?? r.label,
+      pricedTo: !places.length
+        ? "not measured"
+        : same
+          ? `priced to ${places[0]}, the address we measured`
+          : places.length === 1
+            ? `priced to ${places[0]}, the one address we measured there`
+            : `priced at the dearer of ${joinPlaces(places)}, the addresses we measured either side of it`,
     };
   });
   const el = SHIPPING_ELSEWHERE[market];
-  if (el) out.push({ key: el.key, label: `${el.label} — not measured`, phrase: el.phrase ?? el.label, unmeasured: true });
+  if (el) {
+    out.push({
+      key: el.key,
+      label: "Elsewhere (not measured)",
+      phrase: el.phrase ?? el.label,
+      pricedTo: el.remote
+        ? "not measured — priced at the highest rate we measured, and delivery there usually costs more"
+        : "not measured — priced at the highest rate we measured",
+      unmeasured: true,
+    });
+  }
   return out;
 }
 
@@ -210,9 +256,12 @@ export function regionOptionsFor(market: Country, snapshot: ShippingSnapshot = S
 const US_REGION_OF_STATE: Record<string, string> = {};
 for (const [region, states] of Object.entries({
   NE: "CT ME MA NH RI VT NJ NY PA",
-  MW: "IL IN MI OH WI IA KS MN MO NE ND SD",
-  S: "DE DC FL GA MD NC SC VA WV AL KY MS TN AR LA OK TX",
-  W: "AZ CO ID MT NV NM UT WY CA OR WA",
+  SA: "DE DC MD VA WV NC SC GA FL",
+  MW: "IL IN MI OH WI",
+  PL: "IA KS MN MO NE ND SD",
+  S: "AL KY MS TN AR LA OK TX",
+  CAL: "CA",
+  MTW: "WA OR ID MT WY NV UT CO AZ NM",
 })) {
   for (const st of states.split(" ")) US_REGION_OF_STATE[st] = region;
 }
@@ -292,6 +341,7 @@ export interface PostageQuote {
   unavailable?: string; // the store does not post here — why
   notServed?: string[]; // (region unknown / elsewhere) regions the store does not post to
   unmeasuredRegion?: boolean; // the buyer picked "Elsewhere": this is the highest measured figure, not a rate for there
+  atLeast?: boolean; // (with unmeasuredRegion) a REMOTE region — Alaska, Hawaii, Canada's north: the figure is a floor, "from"
   crossBorder?: string; // it posts from another country: what that can add
   measuredAt?: string; // YYYY-MM-DD
   note?: string;
@@ -647,6 +697,7 @@ function measuredQuote(store: SnapshotStore, cart: PostageCart, opts: PostageOpt
     ...top.q,
     upTo: chosen?.unmeasured ? false : differs,
     ...(chosen?.unmeasured ? { unmeasuredRegion: true } : {}),
+    ...(chosen?.remote ? { atLeast: true } : {}),
     ...(notServed.length ? { notServed } : {}),
   });
 }

@@ -6,7 +6,7 @@ import { formatMoney } from "@/lib/format";
 import { trackEvent } from "@/lib/analytics";
 import type { BasketPlan } from "@/lib/basket";
 import { effectiveRegion, readPostagePrefs } from "@/lib/postage-prefs";
-import { joinList, planPostageNotes, postagePrefix } from "@/lib/postage-display";
+import { freePrefix, joinList, planPostageNotes, postagePrefix } from "@/lib/postage-display";
 import { useCountry } from "./CountryProvider";
 
 // "What would it cost to buy this collection again?" — the delivered answer.
@@ -40,6 +40,10 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The region came from the visitor's location, not their own pick: say so
+  // where it is used. US state-level IP location is unreliable on mobile
+  // carriers and VPNs, and a wrong guess shows a lower regional figure.
+  const [guessed, setGuessed] = useState(false);
   const { country } = useCountry();
 
   async function run() {
@@ -53,6 +57,7 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
       const prefs = readPostagePrefs(country);
       const region = effectiveRegion(prefs, geoRegion, () => true);
       const q = new URLSearchParams();
+      const wasGuessed = !prefs.regionChosen && !!region;
       if (region) q.set("region", region);
       if (prefs.trackedOnly) q.set("tracked", "1");
       const res = await fetch(`/api/portfolio/replacement${q.toString() ? `?${q}` : ""}`);
@@ -62,6 +67,7 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
         return;
       }
       setResult(data as Result);
+      setGuessed(wasGuessed);
       trackEvent("portfolio_replacement_priced", { holdings: (data as Result).pricedHoldings });
     } catch {
       setError("Couldn't reach the pricing service. Try again in a moment.");
@@ -124,7 +130,7 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
             <strong className="text-slate-200">{formatMoney(plan.shippingCents, currency)}</strong> of postage
             {(() => {
               const regionPicked = !!result.shipping?.regionLabel && !result.shipping?.regionUnmeasured;
-              const notes = planPostageNotes(plan, regionPicked);
+              const notes = planPostageNotes(plan, regionPicked, !!result.shipping?.regionUnmeasured);
               return notes.length ? ` (${notes.join("; ")})` : "";
             })()}
             .
@@ -156,7 +162,7 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
                       <td className="py-1.5 text-right">{formatMoney(s.subtotalCents, currency)}</td>
                       <td className="py-1.5 text-right" title={s.postage?.label}>
                         {s.freeShipping ? (
-                          <span className="text-brand-400">Free</span>
+                          <span className="text-brand-400">{s.postage?.unmeasuredRegion ? `${freePrefix(s.postage)}free` : "Free"}</span>
                         ) : (
                           <>
                             {postagePrefix(s.postage)}
@@ -185,12 +191,15 @@ export function PortfolioReplacementCost({ currency, geoRegion = null }: { curre
               Delivery is priced from the nearest order sizes each store&apos;s checkout quoted
               {result.shipping?.measuredAt ? `, measured ${result.shipping.measuredAt}` : ""}
               {result.shipping?.regionLabel && !result.shipping.regionUnmeasured
-                ? ` for delivery to ${result.shipping.regionLabel}`
+                ? ` for delivery to ${result.shipping.regionLabel}${guessed ? " (guessed from your location — pick yours in Best Basket)" : ""}`
                 : ` — the highest rate we measured${result.shipping?.measuredTo?.length ? ` (to ${joinList(result.shipping.measuredTo)})` : ""}${
-                    result.shipping?.regionUnmeasured ? `, since we haven't measured delivery ${result.shipping.regionLabel}` : " (pick your region in Best Basket)"
+                    result.shipping?.regionUnmeasured
+                      ? `, since we haven't measured delivery ${result.shipping.regionLabel}${guessed ? " (guessed from your location — pick yours in Best Basket)" : ""}`
+                      : " (pick your region in Best Basket)"
                   }`}
-              ; stores marked est. haven&apos;t been measured, &ldquo;from&rdquo; means an order bigger than any we measured, and a
-              store&apos;s checkout is final.
+              ; &ldquo;est.&rdquo; means not measured (the store, or to your region), &ldquo;from&rdquo; means at least that
+              — an order bigger than any we measured, or a region further than any address we measured — and a store&apos;s
+              checkout is final.
               {plan.excludedStores.length > 0 && (
                 <>
                   {" "}

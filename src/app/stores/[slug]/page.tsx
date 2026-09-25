@@ -400,6 +400,10 @@ function StoreShipping({ summary: s, storeName, policyUrl }: { summary: StoreShi
           </li>
         )}
         {s.notServed && s.notServed.length > 0 && <li>Doesn&apos;t post to: {s.notServed.join(", ")}.</li>}
+        {/* A hand-checked caveat the rates endpoint can't show (SHIPPING_OVERRIDES):
+            Grognard's New York gap, Maine Phase's 7-card free rate, a
+            Canadian store's checkout rounding and duties. */}
+        {s.note && <li>{s.note}.</li>}
         {s.shipsFrom && (
           <li>
             Ships from {s.shipsFrom}: import duties or a carrier&apos;s brokerage fee may be charged on delivery, on top of the

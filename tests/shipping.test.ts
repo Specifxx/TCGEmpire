@@ -288,13 +288,19 @@ test("a minimum order is reported, and the basket counts the top-up", () => {
 test("an unmeasured store is an estimate: never under its market's dearest measured one-card rate, never zeroed by its guessed threshold", () => {
   const r = RETAILERS.punkouter;
   assert.ok(r && r.freeOverCents > 0, "fixture premise: punkouter carries a guessed free-over threshold");
-  // The real snapshot: punkouter (US) quotes postage only inside checkout.
-  const q = shippingFor("punkouter", cart(r.freeOverCents / 100 + 50, 3), {});
+  // The real snapshot, with punkouter back on the estimate it was on until the
+  // US gap re-probe (2026-09-25) found it posts nowhere at all: no US store is
+  // unmeasured any more, and this is about the US floor.
+  const snap: ShippingSnapshot = {
+    ...SHIPPING_SNAPSHOT,
+    stores: { ...SHIPPING_SNAPSHOT.stores, punkouter: { ...SHIPPING_SNAPSHOT.stores.punkouter, status: "unmeasured" } },
+  };
+  const q = shippingFor("punkouter", cart(r.freeOverCents / 100 + 50, 3), {}, snap);
   assert.equal(q.basis, "estimate");
   assert.equal(q.label, "Estimate — not measured");
   assert.equal(q.free, false, "the guessed threshold must not zero it");
   assert.ok(q.cents >= r.shippingFlatCents, "never below the guess");
-  const floor = marketEstimateFloorCents("US");
+  const floor = marketEstimateFloorCents("US", snap);
   assert.ok(q.cents >= floor, "never below the dearest one-card tracked rate a measured US store charges");
   // …which is well above what a typical measured US store charges (the guess
   // was US$1.50; the measured median is about US$6.30).
@@ -308,12 +314,14 @@ test("an unmeasured store is an estimate: never under its market's dearest measu
     .sort((a, b) => a - b);
   assert.ok(q.cents >= oneCard[Math.floor(oneCard.length / 2)], "at least the US measured median");
   // A store posting from Canada is not the yardstick for a domestic one:
-  // Danireon's US$14.13 international UPS rate is left out of the floor.
-  assert.ok(floor < 1413, `floor ${floor}`);
+  // Danireon's US$15.00 international UPS rate is left out of the floor.
+  assert.ok(floor < 1500, `floor ${floor}`);
   // A test snapshot with no measured store in the market: the guess stands.
   assert.equal(shippingFor("punkouter", cart(10, 1), {}, snapshotOf(OBSESSION)).cents, r.shippingFlatCents);
   // The store page and store card show the same floored figure.
-  assert.equal(shippingSummary("punkouter").estimateCents, shippingFor("punkouter", cart(10, 1)).cents);
+  assert.equal(shippingSummary("punkouter", snap).estimateCents, shippingFor("punkouter", cart(10, 1), {}, snap).cents);
+  // As it really is: no postage anywhere, so Best Basket leaves it out.
+  assert.match(shippingFor("punkouter", cart(10, 1)).unavailable ?? "", /Shipping not available/);
 });
 
 test("no copy calls a guess 'measured'", () => {
@@ -366,7 +374,7 @@ test("the region and tracked-only choices are remembered, guarded, and sent to b
   assert.match(ui, /readPostagePrefs\(market\)/);
   assert.match(ui, /writePostagePrefs\(market,/);
   assert.match(ui, /Tracked postage only/);
-  assert.match(ui, /Not sure — price the highest rate/);
+  assert.match(ui, /Not sure \(highest rate\)/);
   assert.match(read("src/lib/postage-display.ts"), /untracked letter \$\{fmt\(p\.otherOption\.cents\)\} also offered/);
   assert.match(ui, /postageLineBits\(group, fmt\)/);
   assert.match(ui, /the store&apos;s own checkout is final/);

@@ -87,34 +87,102 @@ export interface ShippingOverride {
   freeFromCents?: number;
   freeNote?: string;
   shipsFrom?: string;
+  // What the store's own rate DESCRIPTION (or policy) says about tracking, for
+  // a rate whose name does not: keyed by the exact rate name. The rates
+  // endpoint returns a description the probe does not keep.
+  rateService?: Record<string, "tracked" | "untracked">;
+  // Checkout rounds this store's converted rates UP (Shopify Markets rounding,
+  // read from the Storefront API cart): "whole" — to the next whole unit;
+  // "x.50" — to the next price ending in .50. /cart/shipping_rates.json
+  // reports the unrounded conversion, so without this the snapshot sits up to
+  // 99¢ under what the buyer is charged.
+  checkoutRounding?: "whole" | "x.50";
+}
+
+/** A rate as the store's checkout charges it, after its currency rounding (0 stays free). */
+export function roundAtCheckout(cents: number, rounding: ShippingOverride["checkoutRounding"]): number {
+  if (!rounding || cents <= 0) return cents;
+  if (rounding === "whole") return Math.ceil(cents / 100) * 100;
+  return Math.ceil((cents - 50) / 100) * 100 + 50;
 }
 
 // Facts the probe cannot read from /cart/shipping_rates.json, each checked by
 // hand on 2026-09-25 and recorded in the probe runs' notes. A rebuild keeps them.
 export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   // ── Stores that do not post (at all, or to this market) ──
-  larrysgamestore: { status: "no-post", note: "In-store pickup only: its shipping policy says it is not shipping any orders" },
+  // Each re-probed 2026-09-25 (every cart empty at New York, San Francisco,
+  // Dallas and Chicago) and checked through the Storefront API (no delivery
+  // group at any US address) and the store's /meta.json ships_to_countries.
+  larrysgamestore: {
+    status: "no-post",
+    // Its site banner; the 2020 shipping policy still describes USPS/UPS/FedEx. ships_to_countries: [].
+    note: "In-store pickup only: its site banner says 'We are currently doing in-store pickup only. We are not shipping any orders.'",
+  },
   evolutiontcg: { status: "no-post", note: "Collection from the store only (its site banner); no postage quoted to any UK address" },
   tcgclubhouse: { status: "no-post", note: "Offered no delivery at all when measured (the store is away 15 Sep – 1 Oct 2026)" },
-  cgrealm: { status: "no-post", note: "A Windsor, Ontario store (CAD): quoted no postage to any US address" },
+  // /meta.json: Windsor, Ontario, CAD, ships_to_countries ['CA']; Toronto gets 8 rates from C$4.00.
+  cgrealm: { status: "no-post", note: "A Windsor, Ontario store (CAD) whose shipping zones cover Canada only: quoted no postage to any US address" },
   chonkycollectibles: { status: "no-post", note: "A Toronto store whose shipping policy ships to Canada only" },
   espercards: {
     status: "no-post",
     note: "Quoted no postage to any Canadian address we tried and publishes no shipping policy (pickup only, or rates only inside checkout)",
   },
-  // ── Stores whose rates exist only inside checkout ──
-  punkouter: { status: "unmeasured", note: "Shows postage only inside checkout (its policy); the storefront quotes nothing" },
-  atomilicollectables: { status: "unmeasured", note: "Shows postage only inside checkout (its policy); the storefront quotes nothing" },
+  // Was "rates only inside checkout", on the estimate. It is not: its own
+  // checkout said "Shipping not available — Your order cannot be shipped to the
+  // selected address" for one card to New York, and /cart/shipping_rates.json
+  // was [] to New York, its own zip 32601, Toronto, London and Sydney.
+  punkouter: {
+    status: "no-post",
+    note: "Offered no postage to any address on 2026-09-25: not on the storefront, not through Shopify's cart API, and not in its own checkout ('Shipping not available'), although its policy promises USPS shipping",
+  },
+  // Was "rates only inside checkout", on the estimate. /meta.json: Katy TX,
+  // ships_to_countries []; its shipping page offers local pickup in Houston.
+  atomilicollectables: {
+    status: "no-post",
+    note: "Has no shipping zone at all (Shopify lists no ship-to countries): local pickup in Houston only",
+  },
   // ── Stores listed in the US market that post from Canada (their Shopify
   //    /meta.json, checked 2026-09-25). A US buyer can owe import duties or a
   //    carrier's brokerage fee on delivery, on top of the postage quoted — unless
-  //    the rate itself says duties are included (Danireon's UPS rate does). ──
-  mythicstore: { shipsFrom: "Canada" }, // Quebec
-  danireon: { shipsFrom: "Canada" }, // Ottawa
-  npcollectibles: { shipsFrom: "Canada" }, // Markham, Ontario
-  hobbiesville: { shipsFrom: "Canada" }, // Ottawa
+  //    the rate itself says duties are included (Danireon's UPS rate does).
+  //    Checkout converts their CAD rates with Shopify Markets rounding, which
+  //    the rates endpoint leaves out (Storefront API cart, 2026-09-25). ──
+  mythicstore: {
+    shipsFrom: "Canada", // Quebec
+    // Rate descriptions: "Canada Post Standard" → "No tracking. Not liable for loss…"; "ChitChats Select" → "Tracking included".
+    rateService: { "Canada Post Standard": "untracked", "ChitChats Select": "tracked" },
+    // Storefront API: Canada Post Standard US$3.50 (endpoint 2.52), ChitChats Select US$5.50 (5.04), Signature 11.50 (10.81).
+    checkoutRounding: "x.50",
+    note: "Ships from Quebec (CAD). 'Canada Post Standard' is an untracked plain white envelope (up to about 19 cards); tracked ChitChats Select US$5.50 at checkout (US$5.04 before its rounding); free tracked from about US$110 (C$150). US import duty is not prepaid",
+  },
+  danireon: {
+    shipsFrom: "Canada", // Ottawa
+    // Storefront API: US$16.00 at US$50 (endpoint 15.59), US$13.00 at US$151 (12.52).
+    checkoutRounding: "whole",
+    note: "Ships from Ottawa by UPS with US duties prepaid (its policy: US orders are pre-cleared, no extra fees); checkout rounds the US rate up to the whole dollar",
+  },
+  npcollectibles: {
+    shipsFrom: "Canada", // Markham, Ontario
+    // Storefront API: Standard International US$13.00 (endpoint 12.91), Express US$26.00 (25.16).
+    checkoutRounding: "whole",
+    note: "Ships from Markham, Ontario: flat US$12.91 (checkout rounds to US$13); no free US threshold (C$350 is Canada only); US duties and taxes are the buyer's",
+  },
+  hobbiesville: {
+    shipsFrom: "Canada", // Ottawa
+    // Storefront API: Express US$11.00 (endpoint 10.57), FedEx US$18.00 (17.67).
+    checkoutRounding: "whole",
+    note: "Ships from Ottawa: cheapest US option (US$10.57, checkout US$11) leaves duties to the buyer; FedEx with duties covered US$17.67; free from about US$126 (C$175)",
+  },
   // ── Caveats on measured stores ──
   trextcg: { note: "An Italian store: quoted no postage to Spain, Germany, France or the Netherlands (Italy only, checked by hand)" },
+  // Storefront API: 0 delivery groups for NYC 10001 and Albany 12207; Chicago Economy $10.00. Policy: $10, $20 oversized.
+  grognardgames: { note: "Does not ship to New York State (NYC and Albany quoted nothing; NJ and MA $10); flat $10, $20 for oversized" },
+  // Homepage banner; Storefront API at Chicago: free Standard for 1–7 cards, gone at 8 (Ground Advantage $6.68).
+  mainephasehobbies: {
+    note: "Free 'Standard' postage on singles orders of up to 7 cards (its banner: 'Free Shipping on All Singles & Orders $100+'); 8 or more cards pay Ground Advantage until about $100",
+  },
+  // Policy: "Tracking information is provided for every shipment" — its "Standard" rate included.
+  onestoptcg: { rateService: { Standard: "tracked" } },
   // ── Minimum orders, measured to the cent by hand (the probe's carts bracket them) ──
   dicesaloon: { minOrderCents: 500 }, // £4.50 got no rates, £5.00 got £3.50
   fourelements: { minOrderCents: 1015 }, // S$9.90 got no rates, S$10.15 got Registered S$2.90
@@ -122,9 +190,13 @@ export const SHIPPING_OVERRIDES: Record<string, ShippingOverride> = {
   //    endpoint; read from the Storefront API's cart discountAllocations ──
   goattcg: { freeFromCents: 8000, freeNote: "a 'FREE SHIPPING' checkout discount (S$79.00 still pays)" },
   tefuda: { freeFromCents: 3000, freeNote: "a 'FREE SG SHIPPING' checkout discount (S$29.50 still pays)" },
-  // ── A threshold a discarded run measured and the clean run's thin stock could not
-  //    reach (its £50 rung stopped at £49.95, the next cart was £755.95) ──
+  // ── Thresholds the probe's rungs only bracket, narrowed from the store's own words ──
+  // A discarded run measured it and the clean run's thin stock could not reach
+  // it (its £50 rung stopped at £49.95, the next cart was £755.95).
   rollnplay: { freeFromCents: 5450, freeNote: "over about £50 (a £54.50 cart went free on the first UK run; £49.95 still paid)" },
+  // Banner "FREE Shipping On Orders $75+ (48 States)"; no Riftbound cart exists
+  // between $73.00 (paid $9.00) and $80.50 (free). Its policy page's $150 is stale.
+  knightandday: { freeFromCents: 7500, freeNote: "on orders of $75+ to the lower 48 (its site banner; a $73.00 cart still paid $9.00, $80.50 went free)" },
 };
 
 /** Whether a zone holds any quoted rate at all (not just errors / empties). */
@@ -195,18 +267,20 @@ export function condenseStore(s: ProbeStoreInput, override: ShippingOverride = S
         if (r.currency !== s.currency) continue; // never mix currencies
         const c = classifyRate(r.name);
         if (c.pickup) continue; // collected, not posted
-        if (c.service === "untracked") {
-          if (!bestLtr || r.cents < bestLtr.cents || (r.cents === bestLtr.cents && bestLtr.express && !c.express)) {
-            bestLtr = { cents: r.cents, name: r.name, express: c.express };
+        const service = override.rateService?.[r.name] ?? c.service;
+        const cents = roundAtCheckout(r.cents, override.checkoutRounding);
+        if (service === "untracked") {
+          if (!bestLtr || cents < bestLtr.cents || (cents === bestLtr.cents && bestLtr.express && !c.express)) {
+            bestLtr = { cents, name: r.name, express: c.express };
           }
         } else {
-          const tracked = c.service === "tracked";
+          const tracked = service === "tracked";
           const better =
             !bestStd ||
-            r.cents < bestStd.cents ||
-            (r.cents === bestStd.cents && tracked && !bestStd.tracked) ||
-            (r.cents === bestStd.cents && tracked === bestStd.tracked && bestStd.express && !c.express);
-          if (better) bestStd = { cents: r.cents, name: r.name, tracked, express: c.express };
+            cents < bestStd.cents ||
+            (cents === bestStd.cents && tracked && !bestStd.tracked) ||
+            (cents === bestStd.cents && tracked === bestStd.tracked && bestStd.express && !c.express);
+          if (better) bestStd = { cents, name: r.name, tracked, express: c.express };
         }
       }
       if (!bestStd && !bestLtr) {

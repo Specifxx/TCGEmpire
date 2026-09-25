@@ -13,7 +13,7 @@ import { CardSearch, type SearchCard } from "./CardSearch";
 import type { BasketPlan, BasketStoreGroup } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
 import { effectiveRegion, readPostagePrefs, writePostagePrefs } from "@/lib/postage-prefs";
-import { joinList, planPostageNotes, postageLineBits, postagePrefix, trackedTag } from "@/lib/postage-display";
+import { freePrefix, joinList, planPostageNotes, postageLineBits, postagePrefix, trackedTag } from "@/lib/postage-display";
 
 interface PickedLine {
   card: SearchCard;
@@ -22,9 +22,10 @@ interface PickedLine {
 
 export interface BasketRegionOption {
   key: string;
-  label: string; // the picker's text: "Northeast (measured to New York)"
+  label: string; // the picker's text, a name short enough for a phone: "Northeast", "Elsewhere (not measured)"
   phrase: string; // in a sentence: "the Northeast"
-  unmeasured?: boolean; // "Elsewhere in the US — not measured"
+  pricedTo: string; // under the picker: "priced to New York, the one address we measured there"
+  unmeasured?: boolean; // "Elsewhere (not measured)"
 }
 
 // The Best-Basket tool UI. Primary flow: search for a card, pick the exact
@@ -36,10 +37,12 @@ export interface BasketRegionOption {
 // POSTAGE (2026-09-25): each store's own checkout rate for the order it would
 // get, measured — not a flat guess. The buyer picks where it is going; the
 // picker starts from their location (geoRegion, from Vercel's geo headers —
-// a US visitor in Ohio starts on "Midwest (measured to Chicago)"), and their
+// a US visitor in Ohio starts on "Midwest", priced to Chicago; one in Maryland
+// on "South Atlantic", priced at the dearer of New York and Dallas), and their
 // own pick is remembered in this browser. Unset, every store is priced at its
-// HIGHEST regional rate and says "up to"; "Elsewhere … — not measured" is
-// priced the same way and marked "est.". The buyer can rule out untracked
+// HIGHEST regional rate and says "up to"; "Elsewhere (not measured)" is priced
+// the same way and marked "est." — "from" in the US and Canada, where it means
+// Alaska, Hawaii or the north and costs more. The buyer can rule out untracked
 // letters. Each store line names the store's own rate, says when a cheaper
 // untracked letter was skipped, marks an order bigger than any measured
 // "from", and marks any store still on an estimate "est.". See lib/shipping.ts
@@ -270,7 +273,7 @@ export function BestBasket({
               className="input py-1 sm:text-sm"
               aria-label="Delivery region"
             >
-              <option value="">Not sure — price the highest rate</option>
+              <option value="">Not sure (highest rate)</option>
               {regions.map((r) => (
                 <option key={r.key} value={r.key}>
                   {r.label}
@@ -289,8 +292,9 @@ export function BestBasket({
           </label>
           <p className="basis-full text-[11px] leading-snug text-slate-500">
             {regionGuessed && regionOpt ? `Picked from your location: ${regionOpt.phrase}. Change it if that's wrong. ` : ""}
+            {regionOpt && (zonePriced || regionOpt.unmeasured) ? `${regionOpt.unmeasured ? "Elsewhere" : regionOpt.label}: ${regionOpt.pricedTo}. ` : ""}
             {zonePriced
-              ? `Some stores charge more to some regions — pick yours. Each region is priced to the one address we measured there${places ? ` (${places})` : ""}.`
+              ? `Some stores charge more to some regions — pick yours. We measured delivery to ${places || "a few addresses"}; a region between two of them is priced at the dearer.`
               : `Every store we measured charges the same to every ${market === "AU" ? "state and territory (all eight capitals)" : `address we tried${places ? ` (${places})` : ""}`}, so this changes nothing yet.`}{" "}
             An untracked letter is only counted for orders no bigger than the ones the store offered it on. &ldquo;Tracked
             postage only&rdquo; leaves those letters out; a rate whose name doesn&apos;t say is marked &ldquo;tracking not stated&rdquo;.
@@ -350,7 +354,7 @@ export function BestBasket({
                   {regionLabel ? ` · delivered to ${regionLabel}` : ""}
                 </div>
                 {(() => {
-                  const notes = planPostageNotes(plan, !!regionLabel);
+                  const notes = planPostageNotes(plan, !!regionLabel, !!regionOpt?.unmeasured);
                   return notes.length ? <div className="mt-0.5 text-xs text-amber-300/80">{notes.join(" · ")}</div> : null;
                 })()}
               </div>
@@ -373,7 +377,7 @@ export function BestBasket({
                   <span className="shrink-0 text-xs text-slate-400">
                     {fmt(s.subtotalCents)}
                     {s.freeShipping ? (
-                      <span className="ml-1 text-brand-400">+ free post</span>
+                      <span className="ml-1 text-brand-400">+ {freePrefix(s.postage)}free post</span>
                     ) : (
                       <span className="ml-1 text-slate-500">
                         + {postagePrefix(s.postage)}
@@ -454,8 +458,9 @@ export function BestBasket({
               : ` — the highest rate we measured${places ? ` (to ${places})` : ""}${
                   regionOpt?.unmeasured ? `, since we haven't measured delivery ${regionOpt.phrase}` : ", until you pick your region"
                 }`}
-            . Stores marked <span className="text-slate-400">est.</span> haven&apos;t been measured yet;{" "}
-            <span className="text-slate-400">from</span> means an order bigger than any we measured, so postage is at least that.
+            . Stores marked <span className="text-slate-400">est.</span> haven&apos;t been measured yet (or not to your region);{" "}
+            <span className="text-slate-400">from</span> means postage is at least that — an order bigger than any we measured, or
+            a region further than any address we measured.
             Stores change their rates: the store&apos;s own checkout is final.
           </p>
         </>
@@ -483,7 +488,7 @@ function PostageLine({ group, fmt }: { group: BasketStoreGroup; fmt: (c: number)
   return (
     <p className="mt-0.5 text-[11px] text-slate-500">
       <span className="text-slate-400">
-        {p.label} ({kind}) {p.free ? "free" : `${postagePrefix(p)}${fmt(p.cents)}`}
+        {p.label} ({kind}) {p.free ? `${freePrefix(p)}free` : `${postagePrefix(p)}${fmt(p.cents)}`}
       </span>
       {p.note ? ` · ${p.note}` : ""}
       {bits.length > 0 && <> · {bits.join(" · ")}</>}
