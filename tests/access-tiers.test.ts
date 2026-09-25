@@ -16,60 +16,62 @@ const exists = (p: string) => existsSync(join(ROOT, p));
 // structurally impossible rather than merely prevented. What needs guarding now is
 // the tier model that replaced it.
 
-const BULK = "src/app/bulk-pricer/page.tsx";
 const BASKET = "src/app/tools/best-basket/page.tsx";
 const BASKET_API = "src/app/api/basket/route.ts";
 const POPUP = "src/components/SignupPromoPopup.tsx";
 const PREMIUM_LIB = "src/lib/premium.ts";
 const OAUTH_CALLBACK = "src/app/api/auth/oauth/[provider]/callback/route.ts";
 
-test("the bulk pricer gates on Premium, not merely on an account", () => {
-  // The Bulk Pricer stays on the paid tier (see the tier note in lib/premium.ts).
-  // hasAccount() here would put it back on the free tier.
-  const src = read(BULK);
-  assert.match(src, /isPremium\(/, `${BULK} must gate via isPremium()`);
-  assert.ok(!/hasAccount\s*\(/.test(src), `${BULK} must not gate on hasAccount()`);
+test("the Bulk Pricer is gone: its list pricing is free on /deck, and /bulk-pricer redirects there", () => {
+  // 2026-09-25: the Premium Bulk Pricer was a wall over the same /api/deck/price
+  // the free, no-account /deck uses. Its capabilities (plain names, unmatched
+  // lines listed, quantity editing, search-to-add) moved into /deck.
+  assert.ok(!exists("src/app/bulk-pricer/page.tsx"), "the /bulk-pricer page must be deleted");
+  assert.ok(!exists("src/components/BulkPricer.tsx"), "BulkPricer.tsx must be deleted");
+  assert.match(read("next.config.js"), /source: "\/bulk-pricer", destination: "\/deck", permanent: true/);
+  const deck = read("src/components/DeckBuilder.tsx");
+  assert.match(deck, /CardSearch/, "/deck keeps search-to-add");
+  assert.match(deck, /QtyInput/, "/deck keeps quantity editing");
+  assert.match(read("src/app/api/deck/price/route.ts"), /plainNames: true/, "/deck prices plain names without quantities");
 });
 
-test("Best Basket gates on Premium, not merely on an account", () => {
-  // Best Basket moved BACK to the Premium tier (see the tier note in
-  // lib/premium.ts), reversing the free-account experiment described in an
-  // earlier version of this test. hasAccount() here would put it back on the
-  // free tier this change moves it off of.
+test("Best Basket's store-by-store plan is Premium; an account gets its own total", () => {
+  // Best Basket is Premium (see the tier note in lib/premium.ts). Since
+  // 2026-09-25 a free account gets a click-only preview of its own delivered
+  // total, so the page renders the tool for any account and tells it which
+  // view to show; hasAccount() alone would hand everyone the full plan.
   const src = read(BASKET);
-  assert.match(src, /isPremium\(/, `${BASKET} must gate via isPremium()`);
+  assert.match(src, /isPremium\(user, "premium"\)/, `${BASKET} must decide the view via isPremium(user, "premium")`);
+  assert.match(src, /full=\{premium\}/);
   assert.ok(!/hasAccount\s*\(/.test(src), `${BASKET} must not gate on hasAccount()`);
 });
 
-test("the basket API requires Premium, not merely a session", () => {
-  // The page only conditionally RENDERS <BestBasket> — that's no obstacle to a
-  // non-Premium caller hitting this route directly, so the Premium check has to
-  // live here too, on top of the sign-in check.
+test("the basket API tiers its answer server-side, not in the page", () => {
+  // The page only picks the UI — that's no obstacle to a caller hitting this
+  // route directly, so the route decides what the response carries.
   const src = read(BASKET_API);
   assert.match(src, /if \(!user\) return NextResponse\.json\(/, "must still reject signed-out callers");
-  assert.match(src, /isPremium\(/, "basket API must require Premium — it's Premium-tier again");
+  assert.match(src, /const full = isPremium\(user, "premium"\)/);
+  assert.match(src, /if \(!full\) \{\s*return NextResponse\.json\(basketPreview\(/, "non-Premium gets the preview aggregate only");
 });
 
-test("the bulk pricer gates the TOOL without gating the page's indexable content", () => {
-  const src = read(BULK);
+test("Best Basket renders its heading and intro for everyone, above the sign-in split", () => {
+  const src = read(BASKET);
   // The heading and intro must render for everyone, or the page drops out of the
-  // index for the terms it ranks on and the shared ?list= OG card stops unfurling.
-  const gateIdx = src.indexOf("premium ?");
-  assert.ok(gateIdx > 0, "expected a premium ternary around the tool");
+  // index for the terms it ranks on.
+  const gateIdx = src.indexOf("{user ? (");
+  assert.ok(gateIdx > 0, "expected a signed-in ternary around the tool");
   const beforeGate = src.slice(0, gateIdx);
   assert.match(beforeGate, /<h1/, "the H1 must render above the gate, for signed-out visitors too");
   assert.match(beforeGate, /HubIntro/, "the hub intro must render above the gate");
 });
 
-test("neither list tool still advertises itself as needing no account", () => {
-  // Both pages used to say exactly this, and a stale claim here is a promise the
-  // gate immediately breaks — both tools are Premium-gated now, which requires
-  // an account a fortiori.
-  for (const page of [BULK, BASKET]) {
-    const src = read(page);
-    assert.ok(!/No account needed/i.test(src), `${page} still claims "no account needed"`);
-    assert.ok(!/no sign-in required/i.test(src), `${page} still claims "no sign-in required"`);
-  }
+test("Best Basket doesn't advertise itself as needing no account", () => {
+  // It needs an account (and Premium for the plan); a stale claim here is a
+  // promise the sign-in card immediately breaks.
+  const src = read(BASKET);
+  assert.ok(!/No account needed/i.test(src), `${BASKET} still claims "no account needed"`);
+  assert.ok(!/no sign-in required/i.test(src), `${BASKET} still claims "no sign-in required"`);
 });
 
 test("the signup popup still appears on its own, with no promo gate", () => {

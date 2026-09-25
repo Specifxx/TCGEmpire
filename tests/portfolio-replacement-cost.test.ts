@@ -27,6 +27,8 @@ const readCode = (p: string) => read(p).replace(/(^|[^:])\/\/.*$/gm, "$1").repla
 
 const ROUTE = "src/app/api/portfolio/replacement/route.ts";
 const PANEL = "src/components/PortfolioReplacementCost.tsx";
+// The binder and listing reads, shared with /api/basket since 2026-09-25.
+const READS = "src/lib/basket-server.ts";
 
 test("postage is charged once per store, not once per card — the whole reason this reuses the optimiser", () => {
   // Two cards, each cheapest at a DIFFERENT store, both stores charging $12
@@ -131,23 +133,41 @@ test("the heavy listing read runs on demand, never on every portfolio render", (
 });
 
 test("the RetailerPrice query obeys the egress rules at the top of lib/db.ts", () => {
-  const route = readCode(ROUTE);
-  const q = route.slice(route.indexOf("prisma.retailerPrice"), route.indexOf("Cheapest listing per"));
-  assert.match(q, /cardId:\s*\{\s*in:/, "scoped to this user's cards, never the whole table");
+  const reads = readCode(READS);
+  const q = reads.slice(reads.indexOf("prisma.retailerPrice"), reads.indexOf("const best = new Map"));
+  assert.match(q, /cardId:\s*\{\s*in:\s*cardIds\s*\}/, "scoped to this user's cards, never the whole table");
   assert.match(q, /country/, "one market only");
   assert.match(q, /inStock:\s*true/);
   assert.match(q, /retailer:\s*\{\s*in:\s*allowed\s*\}/, "only stores serving this market");
   assert.match(q, /select:\s*\{/, "explicit select — rule 3");
+  assert.doesNotMatch(q, /retailerName/, "store names come from RETAILERS, not the column");
   // The card-id list itself is capped, which is what bounds this query.
-  assert.match(route, /const MAX_HOLDINGS = \d+/);
-  assert.match(route, /ranked\.slice\(0, MAX_HOLDINGS\)/);
-  assert.doesNotMatch(route, /unstable_cache/, "a per-user answer must not go in a shared cache");
+  assert.match(reads, /export const MAX_HOLDINGS = \d+/);
+  assert.match(reads, /ranked\.slice\(0, MAX_HOLDINGS\)/);
+  for (const f of [ROUTE, READS]) assert.doesNotMatch(readCode(f), /unstable_cache/, `${f}: a per-user answer must not go in a shared cache`);
+  // A failed read is an error, never an empty "nothing in stock" plan.
+  assert.doesNotMatch(reads, /\.catch\(\(\) => \[\]\)/);
+  assert.match(readCode(ROUTE), /status: 503/);
+});
+
+test("the route is rate-limited per user", () => {
+  assert.match(readCode(ROUTE), /rateLimit\(`replacement:\$\{user\.id\}`/);
+});
+
+test("the total is free; the store-by-store plan is Premium", () => {
+  const route = readCode(ROUTE);
+  assert.match(route, /const full = isPremium\(user, "premium"\)/);
+  assert.match(route, /\.\.\.basketPreview\(plan\)/, "everyone gets the aggregate");
+  assert.match(route, /\.\.\.\(full \? \{ plan \} : \{\}\)/, "only Premium gets the plan itself");
+  const panel = readCode(PANEL);
+  assert.match(panel, /href="\/tools\/best-basket\?source=binder"/, "the panel links to the plan in Best Basket");
+  assert.match(panel, /See the store-by-store plan/);
 });
 
 test("a capped run prices the dearest holdings and says so, instead of silently pricing some of them", () => {
-  const route = readCode(ROUTE);
-  assert.match(route, /sort\(\(a, b\) => b\.valueCents - a\.valueCents\)/, "rank by value before capping");
-  assert.match(route, /skippedHoldings/, "the response must report what it left out");
+  const reads = readCode(READS);
+  assert.match(reads, /sort\(\(a, b\) => b\.valueCents - a\.valueCents\)/, "rank by value before capping");
+  assert.match(readCode(ROUTE), /skippedHoldings/, "the response must report what it left out");
   assert.match(readCode(PANEL), /result\.skippedHoldings > 0/, "and the panel must surface it");
 });
 
@@ -156,7 +176,7 @@ test("the comparison is like-for-like: the same cards, valued both ways", () => 
   // valuedCents covers exactly the holdings that were priced, not the whole
   // portfolio — otherwise the cap and the unbuyable rows get charged to postage.
   assert.match(route, /valuedCents: wanted\.reduce/);
-  assert.match(readCode(PANEL), /plan!\.totalCents - result\.valuedCents/);
+  assert.match(readCode(PANEL), /result\.totalCents - result\.valuedCents/);
 });
 
 test("the gate matches the rest of the page, so this panel can't lock while its neighbours are open", () => {

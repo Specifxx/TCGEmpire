@@ -188,7 +188,6 @@ test("TIER_COMPARISON's plus column agrees with the real server gates", () => {
   // page must NOT require the "premium" minimum.
   const proToolPages: Record<string, string> = {
     "Value Finder screener": "src/app/tools/value-finder/page.tsx",
-    "Bulk Pricer — price a whole list at once": "src/app/bulk-pricer/page.tsx",
     "Best Basket — cheapest store split, postage included": "src/app/tools/best-basket/page.tsx",
     "Demand Finder — most searched & viewed cards": "src/app/tools/demand/page.tsx",
   };
@@ -213,9 +212,9 @@ test("TIER_COMPARISON's plus column agrees with the real server gates", () => {
     assert.doesNotMatch(src, /isPremium\(user,\s*"premium"\)/, `${file} must not require the premium minimum — Plus gets the full list here`);
   }
 
-  // The basket API 403 is the one non-page pro-tool gate.
+  // The basket API tiers its answer (full plan vs preview) on the same minimum.
   const basketApi = read("src/app/api/basket/route.ts");
-  assert.match(basketApi, /isPremium\(user,\s*"premium"\)/, "the Best Basket API must also require the premium minimum, matching the page");
+  assert.match(basketApi, /isPremium\(user,\s*"premium"\)/, "the Best Basket API must tier on the premium minimum, matching the page");
 });
 
 test("Plus's display prices and helpers are real and match the decided figures", () => {

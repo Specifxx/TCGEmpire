@@ -147,6 +147,12 @@ const nextConfig = {
       // at a redirect would have been the worst of both.
       { source: "/decks", destination: "/deck", permanent: true },
       { source: "/decks/:path*", destination: "/deck", permanent: true },
+      // BULK PRICER MERGED INTO /deck (2026-09-25). It was a Premium wall over
+      // the same free /api/deck/price the deck builder uses; /deck now takes
+      // plain names, lists unmatched lines and edits quantities, and keeps the
+      // "bulk price checker" wording. (Workstream D; workstream A owns this
+      // list — keep one copy of this entry when merging.)
+      { source: "/bulk-pricer", destination: "/deck", permanent: true },
       // Retired the /card-value lander — the card database is the real value
       // checker. 301 so any indexed/inbound links flow to /browse instead of 404ing.
       {

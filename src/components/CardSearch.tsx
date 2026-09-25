@@ -26,8 +26,21 @@ export interface SearchCard {
   lowestPriceCentsEu?: number | null;
 }
 
-export function CardSearch({ onPick, placeholder = "Search for a card…" }: { onPick: (c: SearchCard) => void; placeholder?: string }) {
-  const [q, setQ] = useState("");
+// `initialQuery` pre-fills the box and searches straight away — /deck's "search
+// for this" on a line it couldn't match remounts the widget (a new `key`) with
+// that line's text. `autoFocus` goes with it, so the pick is one tap away.
+export function CardSearch({
+  onPick,
+  placeholder = "Search for a card…",
+  initialQuery = "",
+  autoFocus = false,
+}: {
+  onPick: (c: SearchCard) => void;
+  placeholder?: string;
+  initialQuery?: string;
+  autoFocus?: boolean;
+}) {
+  const [q, setQ] = useState(initialQuery);
   const [results, setResults] = useState<SearchCard[]>([]);
   const [active, setActive] = useState(-1);
   const abort = useRef<AbortController | null>(null);
@@ -84,6 +97,7 @@ export function CardSearch({ onPick, placeholder = "Search for a card…" }: { o
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         className="input"
+        autoFocus={autoFocus}
         autoComplete="off"
         role="combobox"
         aria-expanded={results.length > 0}

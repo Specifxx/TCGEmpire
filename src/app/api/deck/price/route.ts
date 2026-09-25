@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { normalizeSearch } from "@/lib/format";
-import { parseDeckList } from "@/lib/deck";
+import { parseDeckList, resolveDeckLines, DECK_LINE_CAP } from "@/lib/deck";
 import { getCountry } from "@/lib/get-country";
 import { pickPrice, priceField } from "@/lib/country";
+import { rateLimit, clientIp, tooManyRequests } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+// The free, no-account list pricer behind /deck (which absorbed the Bulk
+// Pricer on 2026-09-25): paste a decklist or a plain list of names, get each
+// line matched to a card and priced at its cheapest in-stock listing.
+//
+// Unauthenticated, so it is rate-limited per IP — generously: a real user
+// prices a list, edits it and re-prices, and /deck re-prices once when the
+// market changes. Resolution is lib/deck.ts's resolveDeckLines (set + number
+// scoped to the set, then exact name, then a capped name-contains fallback).
+
+// Only what the /deck client renders: no imageUrl (the thumbnail is what it
+// shows) and no nameNormalized (resolution needs it; the response doesn't).
 const cardSelect = {
   id: true,
   slug: true,
@@ -16,8 +27,9 @@ const cardSelect = {
   setCode: true,
   collectorNumber: true,
   variant: true,
+  isPromo: true,
+  rarity: true,
   imageThumbUrl: true,
-  imageUrl: true,
   lowestPriceCents: true,
   lowestPriceCentsUs: true,
   lowestPriceCentsUk: true,
@@ -26,114 +38,44 @@ const cardSelect = {
   lowestPriceCentsEu: true,
 } as const;
 
-type DeckCard = {
-  id: string;
-  slug: string | null;
-  name: string;
-  nameNormalized: string;
-  setCode: string;
-  collectorNumber: string;
-  variant: string | null;
-  imageThumbUrl: string | null;
-  imageUrl: string | null;
-  lowestPriceCents: number | null;
-  lowestPriceCentsUs: number | null;
-  lowestPriceCentsUk: number | null;
-  lowestPriceCentsSg: number | null;
-  lowestPriceCentsCa: number | null;
-  lowestPriceCentsEu: number | null;
-};
-
 export async function POST(req: Request) {
+  const rl = rateLimit(`deck-price:${clientIp(req)}`, 30, 60_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
+
   const country = getCountry();
-  const orderByPrice = [{ [priceField(country)]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput];
+  const orderBy = [{ [priceField(country)]: { sort: "asc", nulls: "last" } } as Prisma.CardOrderByWithRelationInput];
   const body = await req.json().catch(() => null);
-  const text: string = typeof body?.text === "string" ? body.text : "";
-  const lines = parseDeckList(text).slice(0, 200);
+  const text: string = typeof body?.text === "string" ? body.text.slice(0, 20_000) : "";
+  const lines = parseDeckList(text, { plainNames: true });
 
-  // Batch all lookups into a few queries instead of one-or-two per line (which was
-  // slow enough to feel like a hang on a full deck).
-  const nqs = Array.from(new Set(lines.filter((l) => l.name).map((l) => normalizeSearch(l.name))));
-  const numbers = Array.from(new Set(lines.filter((l) => l.number).map((l) => l.number!)));
-
-  const [nameCards, numCards] = await Promise.all([
-    nqs.length
-      ? prisma.card.findMany({
-          where: { nameNormalized: { in: nqs } },
-          select: cardSelect,
-          orderBy: orderByPrice,
-        })
-      : Promise.resolve([] as DeckCard[]),
-    numbers.length
-      ? prisma.card.findMany({
-          where: { OR: numbers.map((n) => ({ collectorNumber: { startsWith: `${n}/` } })) },
-          select: cardSelect,
-          orderBy: orderByPrice,
-        })
-      : Promise.resolve([] as DeckCard[]),
-  ]);
-
-  // Cheapest printing per name / per number (orderBy already sorts cheapest first).
-  const byName = new Map<string, DeckCard>();
-  for (const c of nameCards) if (!byName.has(c.nameNormalized)) byName.set(c.nameNormalized, c);
-  const byNum = new Map<string, DeckCard>();
-  for (const c of numCards) {
-    const k = c.collectorNumber.split("/")[0];
-    if (!byNum.has(k)) byNum.set(k, c);
+  let resolved;
+  try {
+    resolved = await resolveDeckLines(lines, (args) => prisma.card.findMany({ ...args, select: cardSelect, orderBy }));
+  } catch {
+    return NextResponse.json({ error: "Card prices are unavailable right now — try again in a minute." }, { status: 503 });
   }
 
-  // Resolve lines; collect any still unmatched for a single contains-fallback query.
-  const items = lines.map((l) => ({ line: l, card: null as DeckCard | null }));
-  const unresolved: { idx: number; nq: string }[] = [];
-  items.forEach((it, idx) => {
-    const l = it.line;
-    if (l.number) {
-      const c = byNum.get(l.number);
-      if (c && (!l.setCode || c.setCode === l.setCode)) it.card = c;
-    }
-    if (!it.card && l.name) {
-      const nq = normalizeSearch(l.name);
-      const c = byName.get(nq);
-      if (c) it.card = c;
-      else if (nq.length >= 3) unresolved.push({ idx, nq });
-    }
-  });
-
-  if (unresolved.length) {
-    const fallback = await prisma.card.findMany({
-      where: { OR: unresolved.map((u) => ({ nameNormalized: { contains: u.nq } })) },
-      select: cardSelect,
-      orderBy: orderByPrice,
-    });
-    for (const u of unresolved) {
-      const hit = fallback.find((c) => c.nameNormalized.includes(u.nq));
-      if (hit) items[u.idx].card = hit;
-    }
-  }
-
-  const out = items.map(({ line, card }) => {
+  const items = resolved.items.map(({ line, card, fuzzy }) => {
     const unitPriceCents = card ? pickPrice(card, country) : null;
     return {
       raw: line.raw,
       qty: line.qty,
       name: line.name,
-      card,
+      card: card ? withoutKey(card) : null,
+      fuzzy,
+      // Whether the line named its printing (set + number); the client keeps
+      // that printing when it re-shares or hands the list on.
+      pinned: !!(card && line.number && !fuzzy),
       unitPriceCents,
       lineCents: unitPriceCents != null ? unitPriceCents * line.qty : 0,
     };
   });
 
-  const totalQty = out.reduce((n, i) => n + i.qty, 0);
-  const totalCents = out.reduce((n, i) => n + i.lineCents, 0);
-  const matchedCount = out.filter((i) => i.card).length;
-  const pricedQty = out.filter((i) => i.unitPriceCents != null).reduce((n, i) => n + i.qty, 0);
+  return NextResponse.json({ items, truncated: lines.length > DECK_LINE_CAP });
+}
 
-  return NextResponse.json({
-    items: out,
-    totalQty,
-    totalCents,
-    matchedCount,
-    unmatchedCount: out.length - matchedCount,
-    pricedQty,
-  });
+function withoutKey<T extends { nameNormalized: string }>(card: T): Omit<T, "nameNormalized"> {
+  const out: Partial<T> = { ...card };
+  delete out.nameNormalized;
+  return out as Omit<T, "nameNormalized">;
 }

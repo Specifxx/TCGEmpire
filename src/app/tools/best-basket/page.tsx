@@ -4,19 +4,18 @@ import { HubFaq } from "@/components/HubFaq";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
-import { PremiumButton } from "@/components/PremiumButton";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES } from "@/lib/country";
 import { SITE_URL } from "@/lib/site";
 import { pageAlternates, pageOpenGraph } from "@/lib/seo";
 import { faqPage } from "@/lib/jsonld";
-import { BestBasket } from "@/components/BestBasket";
+import { BestBasket, type BasketSource } from "@/components/BestBasket";
 
 export const dynamic = "force-dynamic";
 
 const TITLE = "Best Basket — Cheapest Way to Buy a Riftbound Deck | RiftCompare";
 const DESCRIPTION =
-  "Paste a Riftbound decklist or use your wishlist and get the cheapest way to buy every card across stores — postage and free-shipping thresholds included. A RiftCompare Premium tool.";
+  "Paste a Riftbound decklist, or send your watchlist or binder, and get the cheapest delivered way to buy it across stores — postage and free-shipping thresholds included, beside the best one-store and two-store orders.";
 
 export const metadata: Metadata = {
   title: { absolute: TITLE },
@@ -25,32 +24,34 @@ export const metadata: Metadata = {
   openGraph: pageOpenGraph({ title: TITLE, description: DESCRIPTION, url: "/tools/best-basket" }),
 };
 
-// Answers the questions a non-Premium visitor actually has before they'll
-// upgrade to unlock the tool — this is also the substance a crawler sees while
-// logged out, since the tool UI itself only renders past the gate (see
-// BestBasketPage below).
+// What a visitor wants to know before signing in or upgrading — also the
+// substance a crawler sees while logged out, since the tool itself renders only
+// for a signed-in account. Every claim here is something the tool does today.
 const FAQS = [
   {
     q: "Is Best Basket free?",
-    a: "No — Best Basket is a RiftCompare Premium tool. Upgrade and it's included alongside the Bulk Pricer, Value Finder, Rising Cards and the full Deal Finder list.",
+    a: "Partly. Any free account can see its own delivered total — what the list costs delivered, from how many stores, and how much less that is than buying each card's cheapest copy separately — up to 5 times a day. The store-by-store plan, with the best one-store and two-store orders beside it and a link for every card, is a RiftCompare Premium tool.",
   },
   {
     q: "Does it account for shipping?",
-    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket prices every viable split across the stores that stock your list, including each store's shipping cost and free-shipping thresholds, and ranks results by what you'd actually pay delivered.",
+    a: "Yes — that's the whole point. Buying each card from its individual cheapest store usually spreads an order over a dozen stores and buries the saving in postage. Best Basket searches store combinations for the lowest total including each store's postage and free-shipping threshold, and shows the best one-store and two-store orders beside it.",
   },
   {
     q: "What can I paste in?",
-    a: "Any decklist in standard list format, or your own wishlist/watchlist from your RiftCompare account. It matches by card name and set/collector number where given.",
+    a: "Any decklist or card list, one card per line — with quantities (\"3 Jinx, Loose Cannon\") or plain names. A set code like (OGN-251) picks that exact printing. Section headers are skipped, and any line we can't match is listed back to you rather than dropped. Signed in, you can also price your watchlist or your binder, and tick \"Skip copies I already own\".",
+  },
+  {
+    q: "Is the cheapest split guaranteed to be the cheapest possible?",
+    a: "It's the cheapest the search finds, not a proof — with free-shipping thresholds there's no fast exact answer. It is never dearer than buying each card's cheapest copy separately, or than the best single-store or two-store order, which are shown beside it so you can compare.",
   },
   {
     q: "Do I need Premium just to price a list, not buy it?",
-    a: "No — the free deck pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-split optimisation.",
+    a: "No — the free deck and list pricer at /deck needs no account at all if you only want per-card prices. Premium is only needed for Best Basket's store-by-store plan.",
   },
 ];
 
-// Decode the base64 ?list= param the way DeckBuilder/deck pages encode it
-// (btoa(unescape(encodeURIComponent(text))) client-side, the equivalent
-// Buffer.from(text, "utf8").toString("base64") server-side — see /deck/page.tsx's
+// Decode the base64 ?list= param the way DeckBuilder encodes it
+// (btoa(unescape(encodeURIComponent(text))) — see /deck/page.tsx's
 // identically-named helper). Returns "" on anything malformed, never throws.
 function decodeList(b64: string): string {
   try {
@@ -60,20 +61,40 @@ function decodeList(b64: string): string {
   }
 }
 
-export default async function BestBasketPage({ searchParams }: { searchParams: { list?: string } }) {
+interface Params {
+  list?: string;
+  source?: string;
+  skipOwned?: string;
+}
+
+// This page's own URL with its entry parameters, for the sign-in round trip.
+function selfHref(sp: Params): string {
+  const q = new URLSearchParams();
+  if (sp.list) q.set("list", sp.list);
+  if (sp.source === "watchlist" || sp.source === "binder") q.set("source", sp.source);
+  if (sp.skipOwned === "1") q.set("skipOwned", "1");
+  const qs = q.toString();
+  return qs ? `/tools/best-basket?${qs}` : "/tools/best-basket";
+}
+
+export default async function BestBasketPage({ searchParams }: { searchParams: Params }) {
   const user = await getCurrentUser();
-  // PREMIUM tier (see lib/premium.ts) — moved back from ACCOUNT.
+  // The store-by-store plan is PREMIUM (see lib/premium.ts); any account gets
+  // the preview. The route enforces the same split — this only picks the UI.
   const premium = isPremium(user, "premium");
   const country = getCountry();
   const info = COUNTRIES[country];
-  // The deck builder (/deck) hands off its list via ?list= — decoded here
-  // rather than left to the client so a signed-in visitor's basket runs
-  // immediately with no extra round trip. (The meta-deck pages used the same
-  // handoff until they were removed on 2026-09-12.)
+  // Entry points: /deck's "Buy this deck for less" (?list=), /watching
+  // (?source=watchlist), the portfolio's replacement panel (?source=binder),
+  // each optionally with ?skipOwned=1. Decoded here so a Premium visitor's
+  // basket runs straight away; a free preview waits for a click.
   const initialList = searchParams.list ? decodeList(searchParams.list) : undefined;
+  const initialSource: BasketSource =
+    searchParams.source === "watchlist" || searchParams.source === "binder" ? searchParams.source : "deck";
+  const handedIn = initialSource !== "deck" || !!initialList?.trim();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -87,6 +108,8 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
                 { "@type": "ListItem", position: 3, name: "Best Basket", item: `${SITE_URL}/tools/best-basket` },
               ],
             },
+            // No `offers`: the full tool is paid, and the zero-price Offer this
+            // used to carry told search engines otherwise.
             {
               "@context": "https://schema.org",
               "@type": "WebApplication",
@@ -94,12 +117,11 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
               url: `${SITE_URL}/tools/best-basket`,
               applicationCategory: "UtilitiesApplication",
               operatingSystem: "Web",
-              offers: { "@type": "Offer", price: "0", priceCurrency: info.currency },
               description:
-                "Find the cheapest way to buy a whole Riftbound deck or wishlist across stores — postage and free-shipping thresholds included.",
+                "Find the cheapest delivered way to buy a whole Riftbound deck or card list across stores — postage and free-shipping thresholds included.",
             },
             faqPage(FAQS),
-          ].filter(Boolean)),
+          ]),
         }}
       />
       <div className="mb-5">
@@ -109,47 +131,47 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
           <span className="text-slate-300">Best Basket</span>
         </nav>
         <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">Best Basket Optimiser</h1>
-      <HubIntro path="/tools/best-basket" />
+        <HubIntro path="/tools/best-basket" />
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
-          The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or wishlist — not just the
-          lowest price per card, but the lowest <strong className="text-slate-200">landed total</strong> across {info.adjective}{" "}
-          stores once postage and free-shipping thresholds are factored in. Buying each card from its cheapest store usually
-          spreads your order over a dozen stores and buries you in postage; this finds the smarter split.
+          The cheapest way to actually <strong className="text-slate-200">buy</strong> a whole deck or card list — not just the
+          lowest price per card, but the lowest <strong className="text-slate-200">delivered total</strong> across {info.adjective}{" "}
+          stores once postage and free-shipping thresholds are counted. Buying each card from its cheapest store usually spreads your
+          order over a dozen stores and buries you in postage; this searches for a better split, and shows the best one-store and
+          two-store orders beside it.
         </p>
       </div>
 
-      {premium ? (
-        <BestBasket currency={info.currency} initialList={initialList} />
+      {user ? (
+        <BestBasket
+          full={premium}
+          initialList={initialList}
+          initialSource={initialSource}
+          initialSkipOwned={searchParams.skipOwned === "1"}
+          autoRun={premium && handedIn}
+        />
       ) : (
         <div className="card-surface p-6 text-center">
-          <h2 className="text-lg font-extrabold text-white">Go Premium to use Best Basket</h2>
+          <h2 className="text-lg font-extrabold text-white">Sign in to price your list, delivered</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
-            Best Basket is a RiftCompare Premium tool. Upgrade and paste any decklist or use your wishlist to get the
-            cheapest combination of stores to buy it all, postage included, with direct buy links.
+            A free account shows what your list costs delivered, from how many stores, and how much less that is than buying each
+            card&apos;s cheapest copy. Premium adds the store-by-store plan.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            {user ? (
-              <PremiumButton surface="gate:best-basket" />
-            ) : (
-              <Link
-                href={`/login?next=${encodeURIComponent(searchParams.list ? `/tools/best-basket?list=${searchParams.list}` : "/tools/best-basket")}&src=tool_gate`}
-                // nofollow, same reason as every other dynamic ?next= target (see
-                // components/UserMenu.tsx) — with a list= present this mints one more
-                // unique, crawler-inert /login?next=... URL per pasted decklist. No
-                // internal link currently hands a ?list= into this page (the meta-deck
-                // pages did, until they were removed on 2026-09-12 — DECISIONS.md,
-                // "Meta decks: removed"); the route still accepts one, so a shared or
-                // bookmarked URL keeps working, and this guard stays regardless.
-                rel="nofollow"
-                className="btn-primary text-sm"
-              >
-                Sign in free
-              </Link>
-            )}
+            <Link
+              href={`/login?next=${encodeURIComponent(selfHref(searchParams))}&src=tool_gate`}
+              // nofollow, same reason as every other dynamic ?next= target (see
+              // components/UserMenu.tsx) — with a list= present this mints one more
+              // unique, crawler-inert /login?next=... URL per handed-in list. The
+              // list survives the round trip, so a /deck handoff isn't lost.
+              rel="nofollow"
+              className="btn-primary text-sm"
+            >
+              Sign in free
+            </Link>
             <Link href="/tools" className="btn-ghost text-sm">Browse free tools</Link>
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Just want per-card prices? The <Link href="/deck" className="text-brand-400 hover:underline">deck pricer</Link>{" "}
+            Just want per-card prices? The <Link href="/deck" className="text-brand-400 hover:underline">deck and list pricer</Link>{" "}
             needs no account.
           </p>
         </div>
@@ -157,7 +179,7 @@ export default async function BestBasketPage({ searchParams }: { searchParams: {
 
       {/* Rendered regardless of sign-in state, so a signed-out visitor — and the
           crawler that indexes this page while logged out — gets real substance
-          beyond the gate card above, not just a login prompt. */}
+          beyond the sign-in card above. */}
       <HubFaq faqs={FAQS} />
     </div>
   );

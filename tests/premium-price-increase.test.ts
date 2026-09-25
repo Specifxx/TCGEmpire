@@ -296,7 +296,7 @@ test("PremiumButton (the gated-tool-wall CTA) still opens the dialog — this in
   const src = read("src/components/PremiumButton.tsx");
   assert.match(src, /usePremiumDialog/, "PremiumButton must still open the shared dialog");
   const usages = [
-    "src/app/bulk-pricer/page.tsx",
+    "src/components/BestBasket.tsx",
     "src/app/tools/value-finder/page.tsx",
     "src/app/tools/deal-finder/page.tsx",
   ];

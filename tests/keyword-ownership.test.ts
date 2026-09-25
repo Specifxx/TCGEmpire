@@ -190,12 +190,13 @@ test("the price-check MINI-GAME no longer reads as the site's answer to the quer
   );
 });
 
-test("/bulk-pricer keeps the BULK price-check query, and doesn't claim the single-card one", () => {
-  // "Bulk Riftbound Card Price Checker" is a genuinely different job (many cards
-  // at once, Premium-gated) and stays as it is — this asserts the split holds
-  // rather than that the page changed.
-  const src = read("src/app/bulk-pricer/page.tsx");
-  assert.match(src, /const TITLE = "Bulk Riftbound Card Price Checker"/, "bulk pricer keeps its own title");
+test("/deck carries the BULK price-check wording now the Bulk Pricer lives there", () => {
+  // The Bulk Pricer merged into the free /deck on 2026-09-25 and /bulk-pricer
+  // 301s there, so /deck keeps the "bulk price checker" phrasing for that query
+  // (and still doesn't claim the single-card "price check" one, owned by /).
+  const src = read("src/app/deck/page.tsx");
+  assert.match(src, /bulk price checker/i, "/deck keeps the bulk price checker wording");
+  assert.doesNotMatch(src, /riftbound price check\b/i);
 });
 
 // ── The map itself ──────────────────────────────────────────────────────────
