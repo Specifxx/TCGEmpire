@@ -55,6 +55,12 @@ Swap in real numbers where you see `[…]`.
 
 *(Post in #self-promo / #tools / #resources channels where allowed, or DM a server's mods to ask first.)*
 
+### Discord — add the price bot to your server
+
+> 🤖 Free Riftbound price bot: `/price card: …` gives the cheapest price in every market, `/movers` posts the week's biggest risers and drops. No permissions, reads nothing, one click to add → https://riftcompare.com/embed
+
+*(Only once the "For Discord servers" section is live on /embed — it appears when `NEXT_PUBLIC_DISCORD_APP_ID` is set. Best aimed at server admins, who are the only people who can add it.)*
+
 ---
 
 ## Product Hunt / directory listing

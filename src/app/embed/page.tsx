@@ -66,7 +66,7 @@ const WIDGETS: Widget[] = [
     options: [
       {
         param: "?market=US",
-        detail: "AU, US, UK, SG, CA or EU. Sets the currency and which stores are compared. Defaults to Australia.",
+        detail: "AU, US, UK, SG, CA or EU. Sets the currency and which stores are compared. Defaults to the United States.",
       },
       {
         param: "CARD-SLUG",
@@ -106,6 +106,33 @@ const WIDGETS: Widget[] = [
       embedAttributionHtml("https://riftcompare.com/release-dates", "Riftbound release dates on RiftCompare"),
     height: 140,
     options: [],
+  },
+];
+
+// The Discord price bot (api/discord/interactions) — the same "give a community
+// something useful that links back" play as the widgets, for servers instead of
+// sites. The section renders ONLY once NEXT_PUBLIC_DISCORD_APP_ID is set: an
+// install button without a registered app is a dead link. NEXT_PUBLIC_ is inlined
+// at build, so the page stays static at its revalidate window. Scope is
+// applications.commands alone — the bot answers over HTTP interactions, so it
+// needs no gateway presence and asks a server admin for no permissions.
+const DISCORD_APP_ID = (process.env.NEXT_PUBLIC_DISCORD_APP_ID ?? "").trim();
+const DISCORD_INSTALL_URL = DISCORD_APP_ID
+  ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(DISCORD_APP_ID)}&scope=applications.commands`
+  : null;
+
+// Static example output — illustrative, not live, for the same egress reason
+// there are no preview iframes above.
+const DISCORD_EXAMPLES = [
+  {
+    command: "/price card: irelia",
+    reply: "Irelia, Fervent — SFD 225\n🇦🇺 AU A$… · 🇺🇸 US $… · 🇬🇧 UK £… · 🇸🇬 SG S$… · 🇨🇦 CA C$… · 🇪🇺 EU €…\nCompare every store →",
+    detail: "The cheapest in-stock price for a card in every market we track, linked to the full comparison.",
+  },
+  {
+    command: "/movers",
+    reply: "📈 Riftbound price movers — this week\nSpiking  ▲ Card A +42%  ▲ Card B +31%  ▲ Card C +18%\nDropping ▼ Card D −22%  ▼ Card E −15%  ▼ Card F −9%",
+    detail: "This week's three biggest risers and drops, each linked to its card page.",
   },
 ];
 
@@ -179,6 +206,36 @@ export default function EmbedDirectoryPage() {
           <code>{storeBadgeHtml({ slug: "STORE-SLUG", name: "Your store" })}</code>
         </pre>
       </section>
+
+      {DISCORD_INSTALL_URL && (
+        <section className="card-surface flex flex-col gap-3 p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-bold text-white">For Discord servers: the price bot</h2>
+            <a
+              href={DISCORD_INSTALL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary inline-flex text-sm"
+            >
+              Add it to your server &rarr;
+            </a>
+          </div>
+          <p className="text-sm leading-relaxed text-slate-400">
+            Two slash commands for any Riftbound server. It asks for no permissions, reads no messages and only
+            speaks when someone runs a command.
+          </p>
+          {DISCORD_EXAMPLES.map((e) => (
+            <div key={e.command} className="flex flex-col gap-1.5">
+              <p className="text-sm text-slate-400">
+                <code className="font-mono font-semibold text-slate-300">{e.command}</code> &mdash; {e.detail}
+              </p>
+              <pre className="overflow-x-auto rounded-lg border border-ink-800 bg-ink-950 p-4 text-xs leading-relaxed text-slate-300">
+                <code>{e.reply}</code>
+              </pre>
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="card-surface flex flex-col gap-3 p-6">
         <h2 className="text-lg font-bold text-white">The fine print, such as it is</h2>
