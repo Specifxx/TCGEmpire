@@ -152,6 +152,8 @@ const EXEMPT: Record<string, string> = {
     "publishes RECORDED prices (latest, ~1/7/30 days back, high, low) for API consumers, not a change; dropping points there would delete facts",
   "src/lib/premium.ts":
     "the portfolio series — owned by the free-tools/portfolio workstream (F) in the 2026-09-25 lineup change; remove this entry when it applies dropBreakWindow",
+  "src/lib/rise-predictor.ts":
+    "Rising Cards keeps the pre-break signals by the owner's call (2026-09-25, 'for now we can still use the old signals'): dropping them left no card with five weekly points",
   "src/lib/screener.ts": "the Value Finder's loader, deleted with the Value Finder in the same change (only while the file still exists)",
 };
 
@@ -187,7 +189,6 @@ test("each comparing reader actually applies the drop where it compares", () => 
     ["src/lib/price-history.ts", "computeRecentlyUpdated"],
     ["src/lib/market-index.ts", "computeRegionIndex"],
     ["src/lib/market-records.ts", "computeAllTimeRecords"],
-    ["src/lib/rise-predictor.ts", "assembleRisingCards"],
     ["src/lib/price-table.ts", "computePriceTable"],
   ];
   for (const [file, fn] of sites) assert.match(fnBody(file, fn), /dropBreakWindow\(/, `${file} ${fn} must drop pre-break points`);

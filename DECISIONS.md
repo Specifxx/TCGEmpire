@@ -13039,3 +13039,27 @@ figure until a commission is entered; /auctions says "Bid at last check ·
 Finder leave the Premium list; each capability is free elsewhere now, and
 they gain unlimited target alerts and the rebuilt basket. Nobody's price or
 Stripe Price changes.
+
+## Rising Cards keeps its pre-break price signals; Deal Finder keeps thumbnails on phones — 2026-09-25
+
+Same-day follow-ups to the lineup, both the owner's call on seeing it live.
+
+**Rising Cards reads across the 09-23 basis switch.** The lineup pass applied
+`dropBreakWindow` to Rising Cards like every other PriceHistory reader, so no
+card had the five weekly points price signals need and the whole list was
+ranked on demand and stock alone, under a "Price signals are rebuilding"
+banner, until about 10-26. Owner: "for now we can still use the old signals."
+`assembleRisingCards` now keeps the whole 120-day window (`riseHistoryStart`
+is the plain window again; cache key `rc-rise-history-v2`), and
+`tests/methodology-breaks.test.ts` exempts rise-predictor.ts with that reason.
+The cost is known and accepted: a US-sourced card's series has one step at the
+switch (TCGplayer market price → cheapest English listing), which can read as
+a fall into "near the low of its range". Revisit once cards have five weekly
+points on the new basis (late October) — dropping the break window then costs
+nothing. Every other reader (movers, Index, records, price table, portfolio)
+still handles the break.
+
+**Deal Finder thumbnails are back below 640px.** The review pass hid them on
+phones to fit the table into 390px. They now show at every width, slightly
+smaller (26×36) with the name capped at 6rem instead; measured at 390 the page
+still has no sideways scroll.

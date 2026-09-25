@@ -540,11 +540,13 @@ function CardCell({ card }: { card: CardTileData }) {
       <CardQuickLink card={card} className="flex items-center gap-2.5">
         {card.imageThumbUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="hidden h-10 w-7 shrink-0 rounded-sm object-cover sm:block" />
+          <img src={card.imageThumbUrl} alt={cardImageAlt(card)} width={28} height={39} loading="lazy" decoding="async" className="h-9 w-[26px] shrink-0 rounded-sm object-cover sm:h-10 sm:w-7" />
         )}
         {/* Capped below sm so a long name truncates instead of widening the
-            table past a phone (the thumbnail is dropped there too). */}
-        <span className="min-w-0 max-w-[7.5rem] sm:max-w-none">
+            table past a phone. The thumbnail stays at every width (owner,
+            2026-09-25: "the deal finder should still have some thumbnails") —
+            a slightly smaller one, and a narrower name, pay for it on phones. */}
+        <span className="min-w-0 max-w-[6rem] sm:max-w-none">
           <span className="block truncate font-semibold text-white">{card.name}</span>
           <span className="block text-[11px] text-slate-500">{card.setCode} · {card.collectorNumber}</span>
         </span>

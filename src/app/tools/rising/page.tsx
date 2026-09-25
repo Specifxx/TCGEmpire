@@ -4,7 +4,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { isPremium } from "@/lib/premium";
 import { ADSENSE_REVIEW_MODE } from "@/lib/adsense";
 import { getCachedRisingCards, parseRiseScope, growthSpanLabel, type RisePick, type RiseScope } from "@/lib/rise-predictor";
-import { recentMethodologyBreak } from "@/lib/price-history";
 import { formatMoney } from "@/lib/format";
 import { currencyOf, COUNTRIES, COUNTRY_LIST } from "@/lib/country";
 import { getCountry } from "@/lib/get-country";
@@ -86,7 +85,7 @@ function Pct({ v }: { v: number | null }) {
 // Where today's price sits in the card's own recent range, as a labelled bar:
 // the plain replacement for the unlabelled z-score bars (2026-09-25).
 function RangePosition({ p }: { p: RisePick }) {
-  if (!p.priceSignals) return <span className="text-[11px] text-slate-600" title="Not enough weekly prices on the current basis yet">—</span>;
+  if (!p.priceSignals) return <span className="text-[11px] text-slate-600" title="Not enough weekly prices yet">—</span>;
   const pct = Math.round(p.posPct * 100);
   return (
     <span className="flex flex-col items-end gap-1" title={`${pct}% of the way from its ${p.rangeWeeks}-week low to its high`}>
@@ -209,9 +208,6 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
   const analysis = await getCachedRisingCards(scope);
   const visible = access === "full" ? analysis.picks : access === "top3" ? analysis.picks.slice(0, FREE_PREVIEW_ROWS) : [];
   const hiddenCount = Math.min(40, analysis.picks.length) - visible.length;
-  // Named in the rebuilding note for as long as it can still be the reason:
-  // price signals need five clean weekly points, so about six weeks after it.
-  const pricingBreak = recentMethodologyBreak(Date.now(), 42);
   const rebuilding = analysis.picks.length > 0 && analysis.qualifying === 0;
 
   return (
@@ -324,11 +320,8 @@ export default async function RisingPage({ searchParams }: { searchParams: { sco
         <>
           {rebuilding && (
             <div className="mb-3 rounded-lg border border-ink-700 bg-ink-900 px-4 py-3 text-xs leading-relaxed text-slate-400">
-              <strong className="text-slate-200">Price signals are rebuilding.</strong>{" "}
-              {pricingBreak
-                ? `On ${new Date(pricingBreak.from).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })} the US TCGplayer price we track changed from TCGplayer's market price to the cheapest English listing, so older prices aren't compared with newer ones. `
-                : ""}
-              Until a card has {analysis.minPointsRequired} weekly prices on the current basis (the deepest has{" "}
+              <strong className="text-slate-200">Price signals are still building.</strong>{" "}
+              Until a card has {analysis.minPointsRequired} weekly prices (the deepest has{" "}
               {analysis.deepestSeries} so far), it is ranked on demand and stores in stock alone, and its reason says so.
             </div>
           )}

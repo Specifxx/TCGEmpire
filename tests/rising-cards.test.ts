@@ -100,29 +100,25 @@ test("a single market prices every row, the series and today's point in that mar
 
 // ── The series: weekly + live, never across a break ─────────────────────────
 
-test("today's live global low is the newest point, and the 09-23 basis step is never compared", () => {
+test("today's live global low is the newest point, and pre-break prices still count (owner: keep the old signals)", () => {
   const now = Date.UTC(2026, 9, 20, 12);
   const c = card("x", { lowestPriceCentsUs: 990 });
   const series = {
-    // 1300 on the old TCGplayer basis, then the switch (09-23 is the ambiguous
-    // switch-day snapshot), then the new basis from 09-30.
     x: [[eday(9, 9), 1300], [eday(9, 16), 1300], [eday(9, 23), 1000], [eday(9, 30), 1000], [eday(10, 7), 1000], [eday(10, 14), 900]] as [number, number][],
   };
   const p = assembleRisingCards("GLOBAL", inputs([c]), history(series), now).picks[0];
-  assert.deepEqual(p.spark, [1000, 1000, 900, 990], "starts at the first settled point (09-30), ends with today's price");
-  assert.ok(!p.spark.includes(1300), "no pre-break point survives");
-  assert.equal(p.vsLastWeekPct, 10, "today (990) vs the clean point nearest a week ago (900)");
-  assert.equal(p.trend7, 10);
-  assert.equal(p.historyPoints, 4);
-  assert.equal(p.priceSignals, false, "four clean points is below MIN_POINTS");
+  assert.deepEqual(p.spark, [1300, 1300, 1000, 1000, 1000, 900, 990], "the whole window, ending with today's price");
+  assert.equal(p.vsLastWeekPct, 10, "today (990) vs the point nearest a week ago (900)");
+  assert.equal(p.historyPoints, 7);
+  assert.equal(p.priceSignals, true, "seven weekly points clears MIN_POINTS");
 });
 
-test("while the break window is open, nothing is compared at all", () => {
-  const now = Date.UTC(2026, 8, 25, 12); // 25 Sep 2026: last snapshot is the switch-day one
+test("right after the switch, 'vs last week' still reads the weekly price nearest 7 days back", () => {
+  const now = Date.UTC(2026, 8, 25, 12);
   const c = card("x", { lowestPriceCentsUs: 800 });
   const p = assembleRisingCards("GLOBAL", inputs([c]), history({ x: [[eday(9, 9), 1300], [eday(9, 16), 1300], [eday(9, 23), 1000]] }), now).picks[0];
-  assert.deepEqual(p.spark, [800], "only today's price is left");
-  assert.equal(p.vsLastWeekPct, null, "no 'vs last week' against a snapshot that may be on the old basis");
+  assert.deepEqual(p.spark, [1300, 1300, 1000, 800]);
+  assert.equal(p.vsLastWeekPct, -38.5, "today (800) vs 09-16's 1300, the point nearest a week ago");
 });
 
 test("with enough clean weekly points the price signals switch on", () => {
@@ -237,18 +233,12 @@ test("a card with no loaded history is never described as 'rebuilding' — and t
   assert.doesNotMatch(code(LIB), /Price history rebuilding/);
 });
 
-test("the weekly history load starts at the current pricing basis, floored at 120 days", () => {
+test("the weekly history load is the plain 120-day window, across the 09-23 break (owner: keep the old signals)", () => {
   const D = (y: number, m: number, d: number) => Date.UTC(y, m - 1, d);
-  // Inside 120 days of the 09-23 break: every older point would be dropped by
-  // dropBreakWindow in the assembly, so it is never read.
-  assert.equal(riseHistoryStart(D(2026, 10, 20)).getTime(), D(2026, 9, 24), "starts at the break's settled day");
-  assert.equal(riseHistoryStart(D(2026, 9, 25)).getTime(), D(2026, 9, 24));
-  // Long after it, the ordinary 120-day window.
-  const later = D(2027, 6, 1);
-  assert.equal(riseHistoryStart(later).getTime(), later - 120 * DAY);
-  // Before any break opened, the ordinary window too.
-  const before = D(2026, 9, 10);
-  assert.equal(riseHistoryStart(before).getTime(), before - 120 * DAY);
+  for (const now of [D(2026, 10, 20), D(2026, 9, 25), D(2027, 6, 1), D(2026, 9, 10)]) {
+    assert.equal(riseHistoryStart(now).getTime(), now - 120 * DAY);
+  }
+  assert.doesNotMatch(code(LIB), /dropBreakWindow\(/, "Rising Cards must not drop pre-break points while the owner keeps the old signals");
 });
 
 test("an empty universe is an empty analysis, not a failure", () => {
@@ -309,7 +299,7 @@ test("a failed load reads 'temporarily unavailable', never 'no price history yet
 test("history is read by one week-keyed, scope-independent loader; the daily loader never touches it", () => {
   const src = read(LIB);
   const historyLoader = /export function getRiseHistory\(\)[\s\S]*?\n\}/.exec(src)?.[0] ?? "";
-  assert.match(historyLoader, /\["rc-rise-history", sydneyWeekKey\(\)\]/, "keyed on the week only — no scope in the key");
+  assert.match(historyLoader, /\["rc-rise-history-v2", sydneyWeekKey\(\)\]/, "keyed on the week only — no scope in the key");
   assert.match(historyLoader, /tags: \[HISTORY_TAG\]/, "not purged by an ordinary import");
   const inputsLoader = /export function getRiseInputs\([\s\S]*?\n\}/.exec(src)?.[0] ?? "";
   assert.match(inputsLoader, /\["rc-rise-inputs", scope, sydneyDayKey\(\)\]/);

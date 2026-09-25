@@ -277,7 +277,9 @@ longer lands on its entry.
 - **Methodology breaks:** `METHODOLOGY_BREAKS` and `dropBreakWindow` live in
   `lib/price-history.ts`; every per-card PriceHistory reader uses them
   (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
-  chain-linked across a break. [2026-09-25](../DECISIONS.md#L12842)
+  chain-linked across a break. Rising Cards is the exception: it keeps its
+  pre-09-23 signals by the owner's call until cards have five weekly points
+  on the new basis. [2026-09-25](../DECISIONS.md#L12842), [2026-09-25](../DECISIONS.md#L13043)
 - **Rules text:** `Card.description` comes from Riot's gallery for every set.
   Origins, Proving Grounds, Spiritforged and Unleashed are filled by
   `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,

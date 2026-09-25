@@ -10,8 +10,6 @@ import {
   sydneyDayKey,
   sydneyWeekKey,
   collapseToWeekly,
-  dropBreakWindow,
-  currentBasisStart,
   globalLowUsd,
   type PricePoint,
 } from "./price-history";
@@ -32,9 +30,13 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // (2) Price history is written WEEKLY, so the price-timing half moves once a
 // week; today's live price is appended as the newest point so the displayed
 // price and "vs last week" describe the same number. (3) Price-timing signals
-// need MIN_POINTS clean weekly points, counted from the last methodology break
-// (dropBreakWindow in price-history.ts): until a card has them it is ranked on
-// demand and supply alone, and says so. (4) No track record is published yet,
+// need MIN_POINTS weekly points: until a card has them it is ranked on demand
+// and supply alone, and says so. Rising Cards reads the WHOLE window, across
+// the 2026-09-23 US basis switch (market price → cheapest English listing),
+// by the owner's call ("for now we can still use the old signals", 09-25):
+// dropping pre-break points left no card with five, so every price signal
+// went dark until ~10-26. The cost is one step at the switch in a US-sourced
+// card's series; tests/methodology-breaks.test.ts exempts it with that reason. (4) No track record is published yet,
 // so nothing on the page may call the ranking "backtested" or "validated" — the
 // admin page's lookahead-free backtest covers only the room-to-run component.
 // Not financial advice.
@@ -42,19 +44,14 @@ import { zScores, percentileRanks, spearman, mean, median, clamp } from "./stats
 // ── THE EGRESS SHAPE (2026-09-25) ────────────────────────────────────────────
 // Two self-caching loaders and an UNCACHED assembly:
 //   • getRiseHistory() — week-keyed, HISTORY_TAG, scope-independent. EVERY
-//     card's GLOBAL series since riseHistoryStart() (the current pricing basis,
-//     floored at HISTORY_DAYS), collapsed to one point per week before it is
-//     cached. No card list, so it is a superset of every scope's universe by
-//     construction: a card missing from it has no history in the window, never
-//     "history we did not load" (the first cut read only the 600 most-searched
-//     cards, and a thinner market's top 400 reaches further down the search
-//     order than that). Starting at the basis costs nothing the assembly would
-//     keep — dropBreakWindow discards every older point once today's live
-//     price is appended — and keeps the read small: ~1,400 cards × at most
-//     ~18 weekly points, about a week apart. PriceHistory only changes weekly
-//     and every market reads the same GLOBAL series, so this is read about
-//     once a week instead of once per scope per import purge (7 scopes × ~3
-//     purges a day re-read the same ~37k rows before).
+//     card's GLOBAL series over the last HISTORY_DAYS (riseHistoryStart()),
+//     collapsed to one point per week before it is cached. No card list, so it
+//     is a superset of every scope's universe by construction: a card missing
+//     from it has no history in the window, never "history we did not load".
+//     ~1,400 cards × at most ~18 weekly points. PriceHistory only changes
+//     weekly and every market reads the same GLOBAL series, so this is read
+//     about once a week instead of once per scope per import purge (7 scopes ×
+//     ~3 purges a day re-read the same ~37k rows before).
 //   • getRiseInputs(scope) — day-keyed, CONTENT_TAG: the cheap operational
 //     inputs that do change daily (the scope's universe and live prices, supply,
 //     demand velocity).
@@ -142,7 +139,7 @@ export interface RisePick {
   viewCount: number;
   /** True when the card has MIN_POINTS clean weekly points, so posPct / momentum / volatility mean something. */
   priceSignals: boolean;
-  /** Today's price vs the clean weekly point nearest a week ago; null when there is none on the current basis. */
+  /** Today's price vs the clean weekly point nearest a week ago; null when there is none. */
   vsLastWeekPct: number | null;
   trend7: number; // = vsLastWeekPct ?? 0 (kept for the frozen Hot 40 snapshots)
   trend30: number; // 0 without price signals
@@ -301,21 +298,19 @@ export function getCachedRisingCards(scope: RiseScope): Promise<RiseAnalysis> {
 
 // ── Loader 1: scope-independent weekly history ───────────────────────────────
 export function getRiseHistory(): Promise<RiseHistory> {
-  return cachedOrDirect(() => computeRiseHistory(), ["rc-rise-history", sydneyWeekKey()], {
+  return cachedOrDirect(() => computeRiseHistory(), ["rc-rise-history-v2", sydneyWeekKey()], {
     revalidate: 8 * 86400, // one week + a day of slack; the week key is what refreshes it
     tags: [HISTORY_TAG],
   });
 }
 
-// The first day the weekly history load reads: the start of the current pricing
-// basis (lib/methodology-breaks.ts currentBasisStart), floored at HISTORY_DAYS
-// back. Every older point would be discarded by dropBreakWindow in the assembly
-// anyway — today's live price, always on the current basis, is appended before
-// the drop — so reading it would be pure egress. Exported for tests.
+// The first day the weekly history load reads. It briefly started at the
+// current pricing basis (the 09-23 break), while the assembly dropped
+// pre-break points; since the owner kept the old signals (see the header,
+// point 3) it is simply the HISTORY_DAYS window: ~1,400 cards × ≤18 weekly points, read about once a
+// week (week-keyed cache). Exported for tests.
 export function riseHistoryStart(now: number): Date {
-  const floor = now - HISTORY_DAYS * DAY_MS;
-  const basis = currentBasisStart(now);
-  return new Date(basis != null && basis > floor ? basis : floor);
+  return new Date(now - HISTORY_DAYS * DAY_MS);
 }
 
 async function computeRiseHistory(): Promise<RiseHistory> {
@@ -451,7 +446,7 @@ export function assembleRisingCards(scope: RiseScope, inputs: RiseInputs, histor
     const pts: PricePoint[] = recorded.map(([day, usd]) => ({ t: day * DAY_MS, v: convert(usd) }));
     const live = globalLowUsd(card);
     if (live != null && now > pts[pts.length - 1].t) pts.push({ t: now, v: convert(live) });
-    seriesById.set(card.id, dropBreakWindow(pts));
+    seriesById.set(card.id, pts);
   }
   const withAnyHistory = seriesById.size;
   let deepestSeries = 0;
