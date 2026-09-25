@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { watchBaseline } from "../src/lib/watch-baseline";
+import { buildAlertConfirmationEmail } from "../src/lib/email";
 import { CONFIRMATION_DAILY_CAP, claimConfirmationSlot, confirmationKey, type ConfirmationDb } from "../src/lib/alert-confirmations";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -62,11 +63,13 @@ test("confirmations: new addresses only, and the route claims a slot only when i
   // returning watchers and missed signed-in confirmations.
   assert.doesNotMatch(sub, /createdAt: \{ gte: since \}/);
   assert.doesNotMatch(sub, /CONFIRMATION_DAILY_CAP/, "route files export only handlers; the cap lives in the lib");
-  // The confirmation no longer promises an email on every drop.
-  const email = read("src/lib/email.ts");
-  const conf = email.slice(email.indexOf("export async function sendAlertConfirmationEmail"), email.indexOf("// ─── Weekly newsletter digest"));
-  assert.doesNotMatch(conf, /whenever the price drops/);
-  assert.match(conf, /At most one email a week/);
+  // The confirmation no longer promises an email on every drop, and states
+  // the real cadence (rendered, both parts).
+  const conf = buildAlertConfirmationEmail([], 3, "tok", true);
+  for (const part of [conf.html, conf.text]) {
+    assert.doesNotMatch(part, /whenever the price drops/);
+    assert.match(part, /At most one email a week/);
+  }
 });
 
 // A Counter table in memory, with the same upsert-increment semantics.

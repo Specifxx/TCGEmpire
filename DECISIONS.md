@@ -13254,3 +13254,139 @@ against a stub that serves prices as RetailerPrice rows. New tests:
 alert-price, alert-outlier-hold, price-alerts-restock, alert-budget,
 price-verify and tcgplayer-listing-fallback. The regex-over-source tests in
 alert-baseline-hold and alert-weekly-cadence became behavioural tests.
+
+## Alert emails rebuilt; one-tap actions; "unsubscribe" becomes pause — 2026-09-25
+
+The second half of the alerts rework (the first is "Price alerts fire on the
+price you would pay", above). The owner's decisions stand: core now, sealed
+watches later, no eBay in alerts, tier split unchanged.
+
+**The email** (`lib/email.ts`, one builder per email: `buildPriceDropEmail`,
+`buildAlertConfirmationEmail`). Each card row shows:
+- what changed, in money and %, measured from the item's reference and saying
+  which one ("down from the price we last emailed you" or "the last price we
+  saw");
+- the "you started watching at" price, finally read from `startPriceCents`;
+- the condition (Near Mint, or "not stated by the store");
+- up to three stores, each with postage and a delivered total, plus a Buy
+  button (affiliate-wrapped, loc `/email-alert-<kind>` from the previous
+  stage). A total is quoted only when postage is known: stated on the
+  listing, measured, or estimated and marked "est.". Otherwise the row says
+  "item price, postage extra";
+- when the lead listing was checked, in the market's own time zone ("17:10
+  AEST 25 Sep"), then "Prices move, so confirm at the store";
+- for below-market, the TCGplayer market figure with its USD original and the
+  gap;
+- for a restock, since when it was sold out;
+- for a pre-order, "ships ~23 Oct".
+
+Rows are ordered by kind (target > restock > below-market > drop >
+listed/pre-order), then by the biggest saving. Ten rows render in full, the
+next 30 at one line each, and anything beyond that becomes "and N more". An
+item the run marked as emailed is never silently hidden.
+
+The subject names the lead card, the price, the store and the saving ("Jinx,
+Loose Cannon: A$18.40 at Cherry, 12% off"). A hidden preheader carries the
+saving and the checked time.
+
+Every site link carries `utm_campaign=price-alert-<kind>`. The card link goes
+through the new no-DB `/api/market?m=&to=` route, which sets the `country`
+cookie and 307s to a same-origin path (`sanitizeNextPath`). Card pages stay
+ISR, with no searchParams.
+
+The main button is "Manage your watchlist": `/watching` for accounts, the
+token page `/alerts/manage` for anonymous watchers. Paid digests keep a
+secondary Deal Finder link.
+
+**Every email is fluid now.** `emailShell` (and the auth `layout`) was a fixed
+520px (480px) table, which scrolled sideways on a 390px phone. It is now
+`width="100%"` with `max-width:520px`, an 8px gutter and a viewport meta. The
+rendered digest measures `scrollWidth` 390 at a 390px viewport.
+
+**Parts and headers.** `sendEmail` takes optional `{ text, headers }`, which
+Resend's `/emails` accepts as top-level fields; every other caller is
+unchanged. Alert emails send an explicit plain-text part, and
+`List-Unsubscribe: <…/api/alerts/unsubscribe?token=…&mode=pause>` with
+`List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058).
+
+**One-tap actions** (`lib/alert-actions.ts`). Each row carries four signed
+links:
+- Stop watching (deletes that row);
+- Snooze 30 days (`snoozedUntil`, which every trigger already honours, and
+  whose baselines advance);
+- Set target at this price;
+- Lower target 10%. With no target yet, the link sets one 10% under the price.
+  The value is precomputed and signed, so the confirmation shows the exact
+  number.
+
+The two target links appear only on rows owned by an entitled account. Free
+and anonymous rows get "Set a target price with Plus" (`/premium?src=alert-email`).
+
+The token is HMAC-SHA256 over `v1.<alertId>.<action>.<value>.<exp>`. It is
+keyed by a key derived from `AUTH_SECRET` with the label `alert-action:v1`,
+so there is no new env var and a session JWT can never double as an action.
+It expires after 90 days and is verified with `timingSafeEqual`.
+`AUTH_SECRET`'s resolution and production refusal moved to
+`lib/auth-secret.ts`, and `lib/auth.ts` uses it unchanged. A signing failure
+drops a row's links, never the alert.
+
+**Why confirm-then-POST, not an idempotent GET.** Mail scanners (Outlook Safe
+Links, corporate gateways) and prefetchers GET every link in a message, so an
+acting GET would stop watches and snooze cards nobody tapped. An "idempotent"
+GET doesn't help: stop and snooze are idempotent and still wrong to fire
+unasked. So GET `/alerts/action?t=` only verifies the token and shows one card
+saying exactly what the button does. Its plain HTML form POSTs to
+`/api/alerts/action`, which has no GET handler, re-verifies the token, acts,
+and 303s back with `?r=<outcome>`. Scanners don't submit forms. It costs a
+human one extra tap.
+
+The target actions go through `applyTargetPrice`, the same function the
+watchlist's PATCH uses, so they get the same checks:
+- 403 for a free account (and for an anonymous watch);
+- 409 at `targetAlertLimit`;
+- re-arm on change.
+
+A bad, tampered or expired token is a 403. The tokens are bearer tokens. A
+forwarded email forwards them, but each is scoped to one row and one action,
+and the address's `unsubToken` could already delete every watch.
+
+**"Unsubscribe" becomes "Pause alert emails (your watchlist is kept)".** The
+footer link used to delete every PriceAlert row for the address, including a
+Plus member's targets. The new `AlertMute(email @id, mutedAt, source)` table
+is a pause per address: keyed like `AnnouncementOptOut`, it covers anonymous
+and account rows and any watch added later. `lib/alert-mute.ts` implements
+the modes:
+- the `/unsubscribe?token=` page pauses by default;
+- resume deletes the row;
+- "Delete all my watches" is a separate, explicit button (the footer's second
+  link opens it with `?mode=delete`);
+- the manage page also removes single cards, scoped by token and id.
+
+The one-click POST (form-encoded, token in the query) can only pause. It needs
+no confirm step because a pause is reversible.
+
+The run reads `AlertMute` once, for the candidate addresses only (`in` +
+`take`). A paused address is treated like a snoozed card: no email, baselines
+advance, counted as `paused`. Resuming therefore never releases a backlog. A
+failed mute read throws, and the run sends nothing. Emailing someone who asked
+for silence is worse than retrying at the next import.
+
+`/watching` shows a paused banner with Resume, or a quiet "Pause alert emails
+(keep this list)" control, through the session route `/api/alerts/pause`. It
+also shows "emails snoozed until …" chips. A new watch does not auto-resume.
+
+**The confirmation** lists up to 10 watched cards, each with its market and
+today's alert price and store. It uses `confirmationCards`, one bounded
+`computeAlertPrices` read, done only after the daily confirmation slot is
+claimed. The email then states the real cadence and links "Manage these
+alerts".
+
+**Copy.** The /alerts FAQ adds "What's in an alert email?" and "How do I stop,
+snooze or pause alert emails?", and says emails now show postage and delivered
+totals. The /watching intro names the new triggers, snooze and pause.
+
+**Schema** (additive): new table `AlertMute`.
+
+**Not built:** per-watch filters; `RetailerPrice.preorder` title detection;
+an un-snooze control (a snooze lapses after 30 days, and the stop link
+remains); `SealedWatch` (owner: later).

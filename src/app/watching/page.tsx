@@ -69,21 +69,29 @@ export default async function WatchingPage() {
           <NavIcon name="heart" className="h-6 w-6 shrink-0 text-brand-400" />
           My watchlist
         </h1>
-        {/* Matches the code: "watching from" is PriceAlert.startPriceCents
-            (older watches show their last-checked price, labelled as such);
-            the free email is the weekly new-low digest (lib/price-alerts.ts);
-            the paid triggers — a target (Plus: PLUS_TARGET_ALERT_LIMIT cards,
-            Premium: any) and a new low below TCGplayer market — send after
-            each price update, without the weekly wait. Plus is described as
-            ad-free wherever it is described (lineup marketing rule). */}
+        {/* Matches the code (lib/price-alerts.ts, lib/alert-price.ts): the
+            price is the cheapest in-stock Near Mint copy at a store we track,
+            never eBay; "watching from" is PriceAlert.startPriceCents (older
+            watches show their last-checked price, labelled as such); the free
+            email is the weekly digest — a new low at least 5% and 50 cents
+            under the price we last emailed (for 30 days, then the last price
+            seen), a first listing (labelled pre-order before release) or a
+            restock; the paid triggers — a target (Plus: PLUS_TARGET_ALERT_LIMIT
+            cards, Premium: any), a card at least 15% below TCGplayer market,
+            and restocks — send after each price update, without the weekly
+            wait. Snooze and pause are lib/alert-actions.ts and
+            lib/alert-mute.ts. Plus is described as ad-free wherever it is
+            described (lineup marketing rule). */}
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Every card you&apos;re tracking, with the price it was at when you started. We email{" "}
-          <strong className="text-slate-200">{user.email}</strong> when one hits a new low, naming the
-          cheapest store — at most one email a week.{" "}
+          <strong className="text-slate-200">{user.email}</strong> when the cheapest Near Mint copy at a store hits a new
+          low (at least 5% under the price we last told you), when a card is first listed or opens for pre-order, and when
+          one is back in stock, naming the stores and their postage — at most one email a week.{" "}
           {member ? (
             <>
               Set your own price on {onPlus ? `up to ${PLUS_TARGET_ALERT_LIMIT} cards` : "any card"} below and we
-              email you as soon as it&apos;s met — and when a card drops below TCGplayer market at a new low.
+              email you as soon as it&apos;s met — and when a card drops at least 15% below TCGplayer market, or is back
+              in stock, after every price update.
             </>
           ) : (
             <>
@@ -91,7 +99,8 @@ export default async function WatchingPage() {
               it&apos;s met, and when one drops below TCGplayer market.
             </>
           )}{" "}
-          Tap the heart on any card to stop watching it.
+          Every alert email has one-tap links to stop watching a card or snooze it for 30 days, and you can pause all alert
+          emails without losing this list. Tap the heart on any card to stop watching it.
         </p>
       </div>
 

@@ -164,17 +164,19 @@ test("email copy: 'now in stock' for listings, no strikethrough on a listing", (
 
   const l = priceDropCopy([listed]);
   assert.match(l.subject, /^Radiant Hero is now in stock from /);
-  assert.equal(l.intro, "A card you're watching is now in stock:");
+  assert.equal(l.heading, "Now in stock");
   for (const c of [l, priceDropCopy([listed, { ...listed, name: "B" }]), priceDropCopy([drop, listed])]) {
     assert.doesNotMatch(`${c.heading} ${c.intro} ${c.subject}`, /first time/);
   }
-  assert.match(priceDropCopy([drop]).subject, /^Price drop: Radiant Hero is now /);
-  assert.match(priceDropCopy([drop, listed]).subject, /Price drops and new listings on 2/);
+  // The subject names the card, the price and the saving (2026-09-25 rebuild).
+  assert.equal(priceDropCopy([drop]).subject, "Radiant Hero: US$12.99, 13% off");
+  // The drop leads a mixed digest (a saving outranks a listing).
+  assert.equal(priceDropCopy([listed, drop]).subject, "Radiant Hero: US$12.99, 13% off (+1 more)");
   const r = dropRow(listed);
   assert.match(r, /Now in stock · from/);
   assert.doesNotMatch(r, /line-through|NaN|Infinity/);
   assert.match(dropRow(drop), /line-through/);
-  assert.match(dropRow(drop), /-13%/);
+  assert.match(dropRow(drop), /save US\$2\.01 \(−13%\)/);
 });
 
 test("the card page and CTA say 'in stock' for an unpriced card, never 'first'", () => {

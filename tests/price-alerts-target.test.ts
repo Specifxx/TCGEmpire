@@ -364,12 +364,12 @@ test("target email copy names the price and the store; postage is never invented
   };
   const store = { retailer: "shopx", name: "Shop X", url: "https://shopx.example/a", priceCents: 900, condition: null, postageCents: null, postageBasis: null, postageUpTo: false, deliveredCents: null };
   const hit: PriceDropItem = { ...base, kind: "target", currentCents: 900, targetCents: 1000, stores: [store] };
-  assert.equal(priceDropCopy([hit]).subject, "Radiant Hero hit your target: US$9.00 at Shop X");
+  assert.equal(priceDropCopy([hit]).subject, "Radiant Hero hit your US$10.00 target: US$9.00 at Shop X");
   assert.match(priceDropCopy([hit, { ...hit, kind: "drop", targetCents: null }]).subject, /\(\+1 more\)$/);
-  assert.equal(priceDropCopy([{ ...hit, stores: [] }]).subject, "Radiant Hero hit your target: US$9.00");
+  assert.equal(priceDropCopy([{ ...hit, stores: [] }]).subject, "Radiant Hero hit your US$10.00 target: US$9.00");
   const html = dropRow(hit);
-  assert.match(html, /Hit your target of US\$10\.00/);
-  assert.match(html, /Cheapest at <strong[^>]*>Shop X<\/strong>: US\$9\.00/);
+  assert.match(html, /Your target US\$10\.00 · now <strong[^>]*>US\$9\.00<\/strong> · US\$1\.00 under it/);
+  assert.match(html, /<strong[^>]*>Shop X<\/strong> · US\$9\.00 item price, postage extra/);
   assert.match(html, /item price, postage extra/);
   assert.doesNotMatch(html, /delivered/i);
   assert.match(dropRow({ ...hit, stores: [{ ...store, name: "<b>A&B</b>" }] }), /&lt;b&gt;A&amp;B&lt;\/b&gt;/);
@@ -380,7 +380,7 @@ test("target email copy names the price and the store; postage is never invented
   assert.equal(postageNote({ postageCents: 800, postageBasis: "estimate", postageUpTo: false }, "USD"), "+ US$8.00 postage (est.)");
 
   const below: PriceDropItem = { ...hit, kind: "below_market", targetCents: null, tcgMarket: { marketCents: 1420, marketUsdCents: 940, belowCents: 520, belowPct: 36.6 } };
-  assert.equal(priceDropCopy([below]).subject, "Radiant Hero US$9.00 at Shop X, 37% under TCGplayer market");
+  assert.equal(priceDropCopy([below]).subject, "Radiant Hero: US$9.00 at Shop X, 37% under TCGplayer market");
   assert.match(dropRow(below), /≈ US\$14\.20 · 37% under/);
 });
 

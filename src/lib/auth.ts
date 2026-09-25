@@ -5,35 +5,13 @@ import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "./db";
 import { touchActivity } from "./activity";
 import { isAdminEmail } from "./admin-emails";
+import { authSecret } from "./auth-secret";
 
 const SESSION_COOKIE = "tcge_session";
 
-// Resolve the session-signing secret lazily so a missing value fails at request
-// time (not build time). In production we refuse to fall back to a known default —
-// signing sessions with a public, hardcoded secret would let anyone forge a cookie
-// for any user (full account takeover). Outside production we allow a dev-only
-// secret with a loud warning.
-let cachedSecret: Uint8Array | null = null;
-function getSecret(): Uint8Array {
-  if (cachedSecret) return cachedSecret;
-  const s = process.env.AUTH_SECRET;
-  if (!s || s === "change-me-in-production" || s === "tcgempire-dev-secret-change-me") {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "AUTH_SECRET is not set (or still the insecure default). Refusing to sign/verify " +
-          "sessions in production. Generate one with: " +
-          "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
-      );
-    }
-    console.warn(
-      "[auth] AUTH_SECRET not set — using an insecure development-only secret. NEVER use this in production."
-    );
-    cachedSecret = new TextEncoder().encode("tcgempire-dev-secret-change-me");
-    return cachedSecret;
-  }
-  cachedSecret = new TextEncoder().encode(s);
-  return cachedSecret;
-}
+// The session-signing secret: AUTH_SECRET, with its production refusal policy,
+// lives in lib/auth-secret.ts (shared with the alert action links).
+const getSecret = authSecret;
 
 // Moderator emails: the list lives in lib/admin-emails.ts so the alert cron
 // reads the same one (re-exported here for the existing import sites).

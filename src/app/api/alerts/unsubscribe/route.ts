@@ -1,46 +1,59 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
+import { alertEmailSummary, applyAlertEmailMode } from "@/lib/alert-mute";
 
 export const dynamic = "force-dynamic";
 
-// Mask an email for display on the (public, token-addressed) unsubscribe page so
-// the full address is never echoed back. e.g. "bill.jyang101@gmail.com" → "bi***@gmail.com".
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  if (!domain) return "your email";
-  const head = local.slice(0, 2);
-  return `${head}${local.length > 2 ? "***" : "*"}@${domain}`;
-}
+// The footer and List-Unsubscribe target of every price-alert email, addressed
+// by the address's unsubToken (no session: the click comes from a mail client).
+//
+// PAUSE, NOT DELETE, BY DEFAULT (2026-09-25). This used to delete every watch
+// for the address on any POST. Now (lib/alert-mute.ts):
+//   • POST form-encoded "List-Unsubscribe=One-Click" with ?token= — RFC 8058
+//     one-click from the inbox's own Unsubscribe button. PAUSES alert email
+//     (AlertMute), keeps every watch. No confirm step: it is reversible.
+//   • POST JSON { token, mode } — the /unsubscribe page. mode "pause" (the
+//     default), "resume", "delete" (every watch — the page's separate,
+//     explicit button) or "remove" (one watch, with alertId).
+//   • GET ?token= — what the token covers, for the page.
 
-// GET ?token=... — summarise what a token covers, for the unsubscribe page UI.
+// GET ?token=... — summarise what a token covers, for the page UI.
 export async function GET(req: Request) {
   const token = new URL(req.url).searchParams.get("token") ?? "";
   if (!token) return NextResponse.json({ error: "Missing token" }, { status: 400 });
-
-  const rows = await prisma.priceAlert.findMany({
-    where: { unsubToken: token },
-    select: { email: true, card: { select: { name: true, setCode: true } } },
-  });
-  if (rows.length === 0) {
-    // Already unsubscribed (or bad link) — not an error from the user's POV.
-    return NextResponse.json({ active: false, count: 0 });
-  }
-  return NextResponse.json({
-    active: true,
-    email: maskEmail(rows[0]!.email),
-    count: rows.length,
-    cards: rows.map((r) => ({ name: r.card.name, setCode: r.card.setCode })).slice(0, 100),
-  });
+  const summary = await alertEmailSummary(prisma, token);
+  // No rows: already removed (or a bad link) — not an error from the user's POV.
+  return NextResponse.json(summary, { headers: { "Cache-Control": "no-store" } });
 }
 
-const schema = z.object({ token: z.string().min(1) });
+const schema = z.object({
+  token: z.string().min(1).max(200),
+  mode: z.enum(["pause", "resume", "delete", "remove"]).default("pause"),
+  alertId: z.string().min(1).max(64).optional(),
+});
 
-// POST { token } — remove every price-drop alert for that token's email.
 export async function POST(req: Request) {
-  const parsed = schema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const rl = rateLimit(`alerts:unsub:${clientIp(req)}`, 30, 60_000);
+  if (!rl.ok) return tooManyRequests(rl.retryAfter);
 
-  const result = await prisma.priceAlert.deleteMany({ where: { unsubToken: parsed.data.token } });
-  return NextResponse.json({ ok: true, removed: result.count });
+  const url = new URL(req.url);
+  const type = req.headers.get("content-type") ?? "";
+  const headers = { "Cache-Control": "no-store" };
+
+  // RFC 8058 one-click: the token rides the List-Unsubscribe URL's query and
+  // the body is "List-Unsubscribe=One-Click". Whatever ?mode= says, this path
+  // can only pause — an inbox button must never delete a watchlist.
+  if (type.includes("application/x-www-form-urlencoded") || type.includes("multipart/form-data")) {
+    const token = url.searchParams.get("token") ?? "";
+    const res = await applyAlertEmailMode(prisma, token, "pause", { source: "one-click" });
+    return NextResponse.json(res.body, { status: res.status, headers });
+  }
+
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400, headers });
+  const { token, mode, alertId } = parsed.data;
+  const res = await applyAlertEmailMode(prisma, token, mode, { alertId, source: "page" });
+  return NextResponse.json(res.body, { status: res.status, headers });
 }

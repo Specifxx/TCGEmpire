@@ -3,6 +3,7 @@ import { formatMoney } from "./format";
 import { currencyOf, type Country } from "./country";
 import { issueNoun } from "./price-report";
 import { RADIANCE_RELEASE_DATE } from "./sets/radiance";
+import type { AlertActionLinks } from "./alert-actions";
 
 export function isEmailEnabled(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -37,7 +38,15 @@ async function noteProviderFailure(provider: string, res: Response): Promise<voi
 // Send a transactional email via Resend's REST API. Requires RESEND_API_KEY (and
 // ideally a verified sender in EMAIL_FROM) to actually deliver; otherwise it
 // no-ops and logs, so the rest of the app keeps working without email configured.
-export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+// `extras`: an explicit plain-text part and extra headers (List-Unsubscribe on
+// the alert emails). Resend's POST /emails takes both as top-level `text` and
+// `headers` fields; callers that pass neither send exactly what they always did.
+export interface SendEmailExtras {
+  text?: string;
+  headers?: Record<string, string>;
+}
+
+export async function sendEmail(to: string, subject: string, html: string, extras: SendEmailExtras = {}): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn(`[email] RESEND_API_KEY not set — "${subject}" to ${to} was NOT sent.`);
@@ -53,7 +62,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, subject, html }),
+      body: JSON.stringify(resendPayload({ from, to, subject, html }, extras)),
     });
     if (!res.ok) {
       console.warn(`[email] Resend returned ${res.status} for "${subject}".`);
@@ -65,6 +74,19 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     lastEmailError = `Resend: ${e instanceof Error ? e.message : String(e)}`;
     return false;
   }
+}
+
+// The Resend request body: the four fields every send has, plus `text` and
+// `headers` only when given (exported for tests/alert-email-render.test.ts).
+export function resendPayload(
+  base: { from: string; to: string; subject: string; html: string },
+  extras: SendEmailExtras = {},
+): Record<string, unknown> {
+  return {
+    ...base,
+    ...(extras.text ? { text: extras.text } : {}),
+    ...(extras.headers && Object.keys(extras.headers).length ? { headers: extras.headers } : {}),
+  };
 }
 
 export function isBrevoEnabled(): boolean {
@@ -112,11 +134,15 @@ export async function sendEmailBrevo(to: string, subject: string, html: string):
   }
 }
 
+// Every email's <head>: a viewport so a phone lays the fluid table out at its
+// own width instead of zooming a desktop-wide page out.
+const EMAIL_HEAD = `<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`;
+
 // On-brand HTML wrapper for transactional emails.
 function layout(heading: string, body: string, cta: { label: string; url: string }): string {
-  return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
-    <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#131a26;border:1px solid #233047;border-radius:16px">
+  return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#131a26;border:1px solid #233047;border-radius:16px">
       <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#34d17e">Compare</span></div></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${body}</td></tr>
@@ -221,15 +247,476 @@ export interface PriceDropItem extends AlertCard {
   soldOutAt: Date | null; // on a restock item: when it sold out
   preorder: boolean; // the card's set has not released yet
   releasedOn: string | null; // ISO date the set ships, when preorder
+  // The per-card one-tap links (lib/alert-actions.ts alertActionLinks), built
+  // by the run, which knows the row's entitlement and target. Absent → the row
+  // renders no action line (a hand-built item in a test, say).
+  actions?: AlertActionLinks | null;
 }
 
-// Footer with an unsubscribe link, appended to every alert email so recipients
-// always have a one-click way out (and so we stay CAN-SPAM/GDPR-friendly).
-function alertFooter(unsubUrl: string): string {
-  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
-    You're getting this because you asked RiftCompare to watch your wishlist for price drops.<br/>
-    <a href="${unsubUrl}" style="color:#9aa4b2;text-decoration:underline">Unsubscribe from price-drop emails</a> · RiftCompare · Riftbound card price comparison.
+// ── Alert email mechanics (2026-09-25 rebuild) ───────────────────────────────
+// One builder (buildPriceDropEmail) makes the subject, a hidden preheader, the
+// HTML, an explicit plain-text part and the List-Unsubscribe headers; the send
+// is a thin shell over it. Pure given the items, so every variant is rendered
+// in tests (tests/alert-email-render.test.ts).
+
+// Digests order and subjects lead by kind: target > restock > below-market >
+// drop > listed/pre-order (lib/price-alerts.ts opens digests in this order too).
+export const ALERT_KIND_PRIORITY: Record<AlertKind, number> = {
+  target: 0,
+  restock: 1,
+  below_market: 2,
+  drop: 3,
+  listed: 4,
+  preorder: 4,
+};
+
+/** Rows rendered in full; the rest of a big digest is listed one line each. */
+export const ALERT_EMAIL_FULL_ROWS = 10;
+/** One-line rows after the full ones; anything past this is "and N more". */
+export const ALERT_EMAIL_COMPACT_ROWS = 30;
+
+// The money a row saves against what it is measured from, for ordering.
+function savingCents(i: PriceDropItem): number {
+  if (i.kind === "below_market" && i.tcgMarket) return i.tcgMarket.belowCents;
+  if (i.kind === "target" && i.targetCents != null) return Math.max(0, i.targetCents - i.currentCents);
+  return i.change && i.change.cents > 0 ? i.change.cents : 0;
+}
+
+/** Importance order: kind priority, then the biggest saving, then as given. */
+export function sortAlertItems(items: PriceDropItem[]): PriceDropItem[] {
+  return items
+    .map((item, idx) => ({ item, idx }))
+    .sort((a, b) => ALERT_KIND_PRIORITY[a.item.kind] - ALERT_KIND_PRIORITY[b.item.kind] || savingCents(b.item) - savingCents(a.item) || a.idx - b.idx)
+    .map((x) => x.item);
+}
+
+// Every site link in an alert email is attributable: utm_campaign names the
+// email's lead kind (price-alert-drop, price-alert-target, …).
+export function alertCampaign(kind: AlertKind | "confirm"): string {
+  return `price-alert-${kind.replace("_", "-")}`;
+}
+function utm(campaign: string): string {
+  return `utm_source=email&utm_medium=email&utm_campaign=${encodeURIComponent(campaign)}`;
+}
+function withQuery(url: string, q: string): string {
+  return `${url}${url.includes("?") ? "&" : "?"}${q}`;
+}
+
+// A card link that lands on the WATCH'S market. Card pages are ISR and take no
+// searchParams (adding one would make them dynamic), so the link goes through
+// /api/market, which sets the country cookie and redirects to the same-origin
+// path — the page then shows the stores and prices the email quoted.
+export function marketCardLink(item: Pick<PriceDropItem, "url" | "market">, campaign: string): string {
+  const path = item.url.startsWith(SITE_URL) ? item.url.slice(SITE_URL.length) || "/" : item.url;
+  if (!path.startsWith("/")) return withQuery(item.url, utm(campaign));
+  return `${SITE_URL}/api/market?m=${item.market}&to=${encodeURIComponent(withQuery(path, utm(campaign)))}`;
+}
+
+// The address-level links, all addressed by PriceAlert.unsubToken.
+export interface AlertAddressLinks {
+  manage: string; // /watching for an account, the token page for anonymous watchers
+  pause: string; // the page, which pauses by default
+  deleteAll: string; // the page's explicit delete
+  oneClick: string; // RFC 8058 List-Unsubscribe target: POST pauses, never deletes
+}
+export function alertAddressLinks(unsubToken: string, anonymous: boolean, campaign: string): AlertAddressLinks {
+  const t = encodeURIComponent(unsubToken);
+  return {
+    manage: anonymous ? `${SITE_URL}/alerts/manage?token=${t}&${utm(campaign)}` : `${SITE_URL}/watching?${utm(campaign)}`,
+    pause: `${SITE_URL}/unsubscribe?token=${t}`,
+    deleteAll: `${SITE_URL}/unsubscribe?token=${t}&mode=delete`,
+    oneClick: `${SITE_URL}/api/alerts/unsubscribe?token=${t}&mode=pause`,
+  };
+}
+
+// List-Unsubscribe (RFC 2369) + one-click (RFC 8058): Gmail and Apple Mail
+// show an "Unsubscribe" button that POSTs "List-Unsubscribe=One-Click" to the
+// URL. It PAUSES alert email (reversible); it never deletes a watch.
+export function alertListHeaders(links: Pick<AlertAddressLinks, "oneClick">): Record<string, string> {
+  return {
+    "List-Unsubscribe": `<${links.oneClick}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
+// "17:10 AEST 25 Sep" in the watch's market — when the lead listing was seen.
+const MARKET_CLOCK: Record<Country, { tz: string; locale: string }> = {
+  AU: { tz: "Australia/Sydney", locale: "en-AU" },
+  US: { tz: "America/New_York", locale: "en-US" },
+  UK: { tz: "Europe/London", locale: "en-GB" },
+  SG: { tz: "Asia/Singapore", locale: "en-SG" },
+  CA: { tz: "America/Toronto", locale: "en-CA" },
+  EU: { tz: "Europe/Paris", locale: "en-GB" },
+};
+export function checkedLabel(d: Date, market: Country): string {
+  const { tz, locale } = MARKET_CLOCK[market] ?? MARKET_CLOCK.US;
+  try {
+    const time = new Intl.DateTimeFormat(locale, { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZoneName: "short" }).format(d);
+    return `${time} ${shortDate(d, tz)}`;
+  } catch {
+    return `${d.toISOString().slice(11, 16)} UTC ${shortDate(d, "UTC")}`;
+  }
+}
+// "25 Sep" (en-US month names: en-GB now prints "Sept").
+function shortDate(d: Date, tz: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, day: "numeric", month: "short" }).formatToParts(d);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("day")} ${get("month")}`;
+}
+// An ISO release date ("2026-10-23") → "23 Oct".
+function isoDayLabel(iso: string): string {
+  const d = new Date(`${iso}T12:00:00Z`);
+  return Number.isNaN(d.getTime()) ? iso : shortDate(d, "UTC");
+}
+
+// What the store line says about postage for one card. Only a figure the
+// listing states or shippingFor() measured is quoted plainly; an unmeasured
+// store's floor is marked "est."; nothing known says so, never "delivered".
+export function postageNote(store: Pick<AlertStore, "postageCents" | "postageBasis" | "postageUpTo">, currency: string): string {
+  if (store.postageCents == null || store.postageBasis == null) return "item price, postage extra";
+  if (store.postageCents === 0) return "free postage";
+  const money = formatMoney(store.postageCents, currency);
+  if (store.postageBasis === "estimate") return `+ ${money} postage (est.)`;
+  return `+ ${store.postageUpTo ? "up to " : ""}${money} postage`;
+}
+
+// "A$27.50 + A$8.95 postage ≈ A$36.45 delivered" — the delivered total only
+// when postage is known, "up to" when the postage is.
+export function storePriceText(store: AlertStore, currency: string): string {
+  const price = formatMoney(store.priceCents, currency);
+  const note = postageNote(store, currency);
+  if (store.deliveredCents == null || store.postageCents == null || store.postageBasis == null) return `${price} ${note}`;
+  const delivered = formatMoney(store.deliveredCents, currency);
+  if (store.postageCents === 0) return `${price}, free postage = ${delivered} delivered`;
+  return `${price} ${note} ≈ ${store.postageUpTo ? "up to " : ""}${delivered} delivered`;
+}
+
+// The headline under a card's name: what changed, in money and %, by kind.
+// `html` and `text` say the same thing.
+export function alertHeadline(item: PriceDropItem): { html: string; text: string } {
+  const cur = item.currency;
+  const m = (c: number) => formatMoney(c, cur);
+  const now = m(item.currentCents);
+  const nowHtml = `<strong style="color:#34d17e">${now}</strong>`;
+  const pct = item.change && item.change.pct > 0 ? item.change.pct : null;
+  const save = item.change && item.change.cents > 0 ? item.change.cents : null;
+  switch (item.kind) {
+    case "target": {
+      const t = item.targetCents;
+      const under = t != null && t > item.currentCents ? ` · ${m(t - item.currentCents)} under it` : "";
+      return {
+        html: t != null ? `Your target ${m(t)} · now ${nowHtml}${under}` : `At your target · now ${nowHtml}`,
+        text: t != null ? `Your target ${m(t)} · now ${now}${under}` : `At your target · now ${now}`,
+      };
+    }
+    case "restock": {
+      const since = item.soldOutAt ? ` · sold out since ${shortDate(item.soldOutAt, MARKET_CLOCK[item.market]?.tz ?? "UTC")}` : "";
+      const was = item.referenceCents != null ? ` · ${m(item.referenceCents)} before it sold out` : "";
+      return { html: `Back in stock at ${nowHtml}${since}${was}`, text: `Back in stock at ${now}${since}${was}` };
+    }
+    case "below_market": {
+      const tm = item.tcgMarket;
+      if (!tm) return { html: `${nowHtml} · below TCGplayer market`, text: `${now} · below TCGplayer market` };
+      const converted = cur === "USD" ? "" : ` (${formatMoney(tm.marketUsdCents, "USD")} converted)`;
+      const tail = ` vs TCGplayer market ≈ ${m(tm.marketCents)}${converted} · ${Math.round(tm.belowPct)}% under, save ${m(tm.belowCents)}`;
+      return { html: `${nowHtml}${tail}`, text: `${now}${tail}` };
+    }
+    case "preorder": {
+      const ships = item.releasedOn ? ` · ships ~${isoDayLabel(item.releasedOn)}` : "";
+      return { html: `Open for pre-order at ${nowHtml}${ships}`, text: `Open for pre-order at ${now}${ships}` };
+    }
+    case "listed":
+      return { html: `Now in stock · from ${nowHtml}`, text: `Now in stock · from ${now}` };
+    case "drop": {
+      if (item.referenceCents == null) return { html: `Now ${nowHtml}`, text: `Now ${now}` };
+      const from = m(item.referenceCents);
+      const gain = save != null ? ` · save ${m(save)}${pct != null ? ` (−${pct}%)` : ""}` : "";
+      const basis = item.referenceBasis === "emailed" ? "the price we last emailed you" : "the last price we saw";
+      return {
+        html: `<span style="color:#6b7585;text-decoration:line-through">${from}</span> → ${nowHtml}${gain}<div style="font-size:12px;color:#6b7585;margin-top:2px">Down from ${basis}</div>`,
+        text: `${from} → ${now}${gain} (down from ${basis})`,
+      };
+    }
+  }
+}
+
+// "You started watching at A$35.00 · Near Mint". The alert price is Near Mint
+// (or a store that doesn't state condition) by construction, so it is always
+// said which.
+export function watchingSinceText(item: PriceDropItem): string {
+  const start = item.startPriceCents != null ? `You started watching at ${formatMoney(item.startPriceCents, item.currency)}` : "No price when you started watching";
+  const condition = item.condition ?? "Condition not stated by the store";
+  return `${start} · ${condition}`;
+}
+
+function actionItems(item: PriceDropItem): { label: string; url: string }[] {
+  const a = item.actions;
+  if (!a) return [];
+  const cur = item.currency;
+  const out = [
+    { label: "Stop watching", url: a.stop },
+    { label: "Snooze 30 days", url: a.snooze },
+  ];
+  if (a.targetSet) out.push({ label: `Set target at ${formatMoney(a.targetSet.cents, cur)}`, url: a.targetSet.url });
+  if (a.targetDown) out.push({ label: `${a.hasTarget ? "Lower target 10%" : "Target 10% lower"} (${formatMoney(a.targetDown.cents, cur)})`, url: a.targetDown.url });
+  if (a.upsell) out.push({ label: "Set a target price with Plus", url: a.upsell });
+  return out;
+}
+
+// One store, with its Buy button. Inline-blocks, so the button drops under the
+// line on a narrow screen instead of pushing the email wider.
+function storeBlock(store: AlertStore, currency: string): string {
+  return `
+      <div style="margin-top:6px;padding:8px 10px;background:#0f1622;border:1px solid #233047;border-radius:10px">
+        <div style="display:inline-block;vertical-align:middle;max-width:100%;margin:2px 8px 2px 0;font-size:13px;line-height:1.5;color:#b8c0cc"><strong style="color:#fff">${escapeHtml(store.name)}</strong> · ${escapeHtml(storePriceText(store, currency))}</div>
+        <a href="${escapeHtml(store.url)}" style="display:inline-block;vertical-align:middle;margin:2px 0;background:#34d17e;color:#06210f;font-size:13px;font-weight:700;text-decoration:none;padding:6px 14px;border-radius:8px">Buy</a>
+      </div>`;
+}
+
+/** One card row of the alert table (HTML). */
+export function dropRow(item: PriceDropItem, campaign: string = alertCampaign(item.kind)): string {
+  const cur = item.currency;
+  const head = alertHeadline(item);
+  const stores = item.stores.slice(0, 3).map((s) => storeBlock(s, cur)).join("");
+  const actions = actionItems(item)
+    .map((x) => `<a href="${escapeHtml(x.url)}" style="color:#9aa4b2;text-decoration:underline">${escapeHtml(x.label)}</a>`)
+    .join(" &nbsp;·&nbsp; ");
+  return `<tr><td style="padding:14px 0;border-bottom:1px solid #233047">
+    <a href="${escapeHtml(marketCardLink(item, campaign))}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${escapeHtml(item.name)}</a>
+    <div style="font-size:12px;color:#6b7585;margin-top:2px">${escapeHtml(item.setCode)} · ${escapeHtml(item.collectorNumber)} · <span style="border:1px solid #233047;border-radius:6px;padding:0 5px">${item.market}</span></div>
+    <div style="margin-top:6px;font-size:14px;line-height:1.5;color:#b8c0cc">${head.html}</div>
+    <div style="margin-top:4px;font-size:12px;color:#6b7585">${escapeHtml(watchingSinceText(item))}</div>${stores}
+    <div style="margin-top:6px;font-size:12px;color:#6b7585">Checked ${checkedLabel(item.checkedAt, item.market)}. Prices move, so confirm at the store.</div>
+    ${actions ? `<div style="margin-top:6px;font-size:12px;line-height:1.8;color:#6b7585">${actions}</div>` : ""}
   </td></tr>`;
+}
+
+// A one-line row for the tail of a big digest.
+function compactRow(item: PriceDropItem, campaign: string): string {
+  return `<tr><td style="padding:6px 0;border-bottom:1px solid #1b2433;font-size:13px;line-height:1.5;color:#b8c0cc">
+    <a href="${escapeHtml(marketCardLink(item, campaign))}" style="color:#fff;font-weight:700;text-decoration:none">${escapeHtml(item.name)}</a> · ${escapeHtml(alertHeadline(item).text)}
+  </td></tr>`;
+}
+
+/** One card, as plain text. */
+export function alertRowText(item: PriceDropItem, campaign: string = alertCampaign(item.kind)): string {
+  const lines = [
+    `${item.name} (${item.setCode} · ${item.collectorNumber} · ${item.market})`,
+    `  ${alertHeadline(item).text}`,
+    `  ${watchingSinceText(item)}`,
+  ];
+  for (const s of item.stores.slice(0, 3)) lines.push(`  - ${s.name}: ${storePriceText(s, item.currency)}`, `    Buy: ${s.url}`);
+  lines.push(`  Checked ${checkedLabel(item.checkedAt, item.market)}. Prices move, so confirm at the store.`);
+  lines.push(`  Compare every store: ${marketCardLink(item, campaign)}`);
+  for (const a of actionItems(item)) lines.push(`  ${a.label}: ${a.url}`);
+  return lines.join("\n");
+}
+
+// The price an alert quotes: the lead listing's own price (the alert price is
+// that listing's price by construction).
+function alertPrice(item: PriceDropItem): string {
+  return formatMoney(item.stores[0]?.priceCents ?? item.currentCents, item.currency);
+}
+
+// Subject, heading, intro and hidden preheader for a digest, led by the most
+// important item (sortAlertItems). The subject names the card and the saving:
+// "Jinx, Loose Cannon: A$18.40 at Cherry, 12% off". Pure; unit-tested.
+export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro: string; subject: string; preheader: string } {
+  const sorted = sortAlertItems(items);
+  const count = sorted.length;
+  const lead = sorted[0]!;
+  const more = count > 1 ? ` (+${count - 1} more)` : "";
+  const at = lead.stores[0] ? ` at ${lead.stores[0].name}` : "";
+  const price = alertPrice(lead);
+  const m = (c: number) => formatMoney(c, lead.currency);
+  let subject: string;
+  let single: string;
+  switch (lead.kind) {
+    case "target":
+      subject = `${lead.name} hit your ${lead.targetCents != null ? `${m(lead.targetCents)} ` : ""}target: ${price}${at}`;
+      single = "Your target price is met";
+      break;
+    case "restock":
+      subject = `${lead.name} is back in stock: ${price}${at}`;
+      single = "Back in stock";
+      break;
+    case "below_market":
+      subject = `${lead.name}: ${price}${at}, ${lead.tcgMarket ? `${Math.round(lead.tcgMarket.belowPct)}% under` : "below"} TCGplayer market`;
+      single = "Below TCGplayer market";
+      break;
+    case "drop":
+      subject = `${lead.name}: ${price}${at}${lead.change && lead.change.pct > 0 ? `, ${lead.change.pct}% off` : ""}`;
+      single = "A card you're watching got cheaper";
+      break;
+    case "preorder":
+      subject = `${lead.name} is open for pre-order from ${price}${at}`;
+      single = "Open for pre-order";
+      break;
+    case "listed":
+      subject = `${lead.name} is now in stock from ${price}${at}`;
+      single = "Now in stock";
+      break;
+  }
+  const saving = savingCents(lead);
+  const preheader = `${saving > 0 ? `Save ${m(saving)} · ` : ""}checked ${checkedLabel(lead.checkedAt, lead.market)}`;
+  return {
+    heading: count === 1 ? single : `Price news on ${count} cards you're watching`,
+    intro: count === 1 ? "" : "Biggest news first.",
+    subject: `${subject}${more}`,
+    preheader,
+  };
+}
+
+// Footer for every alert email: why it came, how often, and the two separate
+// choices — pause (keeps the watchlist) and delete.
+function alertFooter(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
+  return `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;line-height:1.6;color:#6b7585">
+    You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week;
+    Plus and Premium target, below-market and restock alerts can arrive after each price update.<br/>
+    <a href="${escapeHtml(links.pause)}" style="color:#9aa4b2;text-decoration:underline">Pause alert emails (your watchlist is kept)</a>
+    &nbsp;·&nbsp; <a href="${escapeHtml(links.deleteAll)}" style="color:#9aa4b2;text-decoration:underline">Delete all my watches</a><br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+}
+function alertFooterText(links: Pick<AlertAddressLinks, "pause" | "deleteAll">): string {
+  return [
+    "You're getting this because you asked RiftCompare to watch these cards for price changes. Free alerts come at most once a week; Plus and Premium target, below-market and restock alerts can arrive after each price update.",
+    `Pause alert emails (your watchlist is kept): ${links.pause}`,
+    `Delete all my watches: ${links.deleteAll}`,
+  ].join("\n");
+}
+
+const button = (href: string, label: string) =>
+  `<a href="${escapeHtml(href)}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${label}</a>`;
+
+export interface BuiltEmail {
+  subject: string;
+  heading: string;
+  preheader: string;
+  html: string;
+  text: string;
+  headers: Record<string, string>;
+}
+
+// The digest itself. `anonymous` = this address has no linked account
+// (PriceAlert.userId null on every row): the manage link is the token page,
+// and only these recipients get the account CTA.
+export function buildPriceDropEmail(items: PriceDropItem[], unsubToken: string, anonymous = false): BuiltEmail {
+  const sorted = sortAlertItems(items);
+  const { heading, intro, subject, preheader } = priceDropCopy(sorted);
+  const campaign = alertCampaign(sorted[0]!.kind);
+  const links = alertAddressLinks(unsubToken, anonymous, campaign);
+  const full = sorted.slice(0, ALERT_EMAIL_FULL_ROWS);
+  const compact = sorted.slice(ALERT_EMAIL_FULL_ROWS, ALERT_EMAIL_FULL_ROWS + ALERT_EMAIL_COMPACT_ROWS);
+  const hidden = sorted.length - full.length - compact.length;
+  // A paid digest also links Deal Finder filtered to the member's own watchlist.
+  const paid = sorted.some((i) => i.kind === "target" || i.kind === "below_market");
+  const dealFinder = `${SITE_URL}/tools/deal-finder?mine=watch&${utm(campaign)}`;
+  const moreLine = hidden > 0 ? `and ${hidden} more on your watchlist` : "";
+  const inner = `
+    ${intro ? `<tr><td style="padding:8px 32px 0;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>` : ""}
+    <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%">${full.map((i) => dropRow(i, campaign)).join("")}${compact.map((i) => compactRow(i, campaign)).join("")}</table>
+    ${moreLine ? `<div style="margin-top:8px;font-size:13px"><a href="${escapeHtml(links.manage)}" style="color:#34d17e;font-weight:700;text-decoration:none">${moreLine} →</a></div>` : ""}</td></tr>
+    <tr><td style="padding:4px 32px 20px">${button(links.manage, "Manage your watchlist")}
+    ${paid ? `<div style="margin-top:10px;font-size:13px"><a href="${escapeHtml(dealFinder)}" style="color:#34d17e;font-weight:700;text-decoration:none">Your watched cards in Deal Finder →</a></div>` : ""}</td></tr>
+    ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
+  const text = [
+    heading,
+    intro,
+    "",
+    ...full.map((i) => alertRowText(i, campaign)).flatMap((t) => [t, ""]),
+    ...compact.map((i) => `${i.name}: ${alertHeadline(i).text}`),
+    ...(moreLine ? [`${moreLine}: ${links.manage}`] : []),
+    `Manage your watchlist: ${links.manage}`,
+    ...(paid ? [`Your watched cards in Deal Finder: ${dealFinder}`] : []),
+    "",
+    alertFooterText(links),
+  ]
+    .filter((l, idx, arr) => !(l === "" && arr[idx - 1] === ""))
+    .join("\n");
+  return {
+    subject,
+    heading,
+    preheader,
+    html: emailShell(heading, inner, alertFooter(links), preheader),
+    text,
+    headers: alertListHeaders(links),
+  };
+}
+
+// One digest per address (lib/price-alerts.ts). The row's unsubToken addresses
+// every address-level link; the per-card links ride on each item.
+export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubToken: string, anonymous = false): Promise<boolean> {
+  const email = buildPriceDropEmail(items, unsubToken, anonymous);
+  return sendEmail(to, email.subject, email.html, { text: email.text, headers: email.headers });
+}
+
+// ── The watch confirmation ───────────────────────────────────────────────────
+// Sent once, to a NEW address, when it subscribes via the wishlist pop-up
+// (/api/alerts/subscribe). Says what is being watched — each card, its market
+// and today's alert price (the same cheapest-Near-Mint-at-a-store figure the
+// alerts use) — how often we will email, and where to manage or pause it.
+export interface AlertConfirmationCard {
+  name: string;
+  setCode: string;
+  collectorNumber: string;
+  url: string; // absolute card-page link
+  market: Country;
+  priceCents: number | null; // today's alert price; null = not in stock at a store
+  storeName: string | null;
+}
+
+/** Cards listed by name in the confirmation; the rest are counted. */
+export const CONFIRMATION_CARD_ROWS = 10;
+
+export function buildAlertConfirmationEmail(cards: AlertConfirmationCard[], total: number, unsubToken: string, anonymous = false): BuiltEmail {
+  const campaign = alertCampaign("confirm");
+  const links = alertAddressLinks(unsubToken, anonymous, campaign);
+  const shown = cards.slice(0, CONFIRMATION_CARD_ROWS);
+  const rest = Math.max(0, total - shown.length);
+  const priceText = (c: AlertConfirmationCard) =>
+    c.priceCents != null
+      ? `cheapest Near Mint now ${formatMoney(c.priceCents, currencyOf(c.market))}${c.storeName ? ` at ${c.storeName}` : ""}`
+      : "not in stock at a store yet: we'll email you when it is";
+  const rows = shown
+    .map(
+      (c) => `<tr><td style="padding:8px 0;border-bottom:1px solid #233047;font-size:13px;line-height:1.5;color:#b8c0cc">
+      <a href="${escapeHtml(marketCardLink(c, campaign))}" style="color:#fff;font-weight:700;text-decoration:none">${escapeHtml(c.name)}</a>
+      <span style="color:#6b7585">· ${escapeHtml(c.setCode)} · ${escapeHtml(c.collectorNumber)} · ${c.market}</span><br/>${escapeHtml(priceText(c))}
+    </td></tr>`,
+    )
+    .join("");
+  const cadence =
+    "At most one email a week for free alerts: when a card falls at least 5% (and at least 50 cents) to a new low, when it's first listed or opens for pre-order, and when it's back in stock. Each email names the stores and their postage. Plus and Premium target, below-market and restock alerts can arrive after each price update.";
+  const count = total === 1 ? "this card" : `these ${total} cards`;
+  const inner = `
+    <tr><td style="padding:8px 32px 8px;font-size:14px;line-height:1.6;color:#b8c0cc">You're all set. We're watching ${count}:</td></tr>
+    <tr><td style="padding:0 32px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%">${rows}</table>
+    ${rest > 0 ? `<div style="margin-top:6px;font-size:13px;color:#b8c0cc">and ${rest} more.</div>` : ""}</td></tr>
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">${cadence}</td></tr>
+    <tr><td style="padding:4px 32px 24px">${button(links.manage, "Manage these alerts")}</td></tr>
+    ${anonymous ? accountCtaBlock("alert-confirm", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
+  const heading = "Price alerts are on";
+  const text = [
+    heading,
+    "",
+    `You're all set. We're watching ${count}:`,
+    ...shown.map((c) => `- ${c.name} (${c.setCode} · ${c.collectorNumber} · ${c.market}): ${priceText(c)}`),
+    ...(rest > 0 ? [`and ${rest} more.`] : []),
+    "",
+    cadence,
+    "",
+    `Manage these alerts: ${links.manage}`,
+    "",
+    alertFooterText(links),
+  ].join("\n");
+  const subject = total === 1 ? `You're watching ${cards[0]?.name ?? "a card"} on RiftCompare` : `You're watching ${total} cards on RiftCompare`;
+  return { subject, heading, preheader: "At most one email a week, and only when there's news.", html: emailShell(heading, inner, alertFooter(links), "At most one email a week, and only when there's news."), text, headers: alertListHeaders(links) };
+}
+
+export async function sendAlertConfirmationEmail(to: string, cards: AlertConfirmationCard[], total: number, unsubToken: string, anonymous = false): Promise<boolean> {
+  const email = buildAlertConfirmationEmail(cards, total, unsubToken, anonymous);
+  return sendEmail(to, email.subject, email.html, { text: email.text, headers: email.headers });
 }
 
 // One-row "create a free account" block for MARKETING-ADJACENT emails going to
@@ -255,10 +742,18 @@ export function accountCtaBlock(campaign: string, line?: string): string {
   </td></tr>`;
 }
 
-export function emailShell(heading: string, inner: string, footer: string): string {
-  return `<!doctype html><html><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 0"><tr><td align="center">
-    <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="background:#131a26;border:1px solid #233047;border-radius:16px">
+// FLUID, NOT 520px (2026-09-25). The card table was a fixed width="520", so at
+// a 390px phone every email scrolled sideways or was zoomed out to unreadable
+// text. It is now width 100% capped at max-width 520px, with a viewport meta;
+// the outer cell keeps an 8px gutter. `preheader` is the hidden inbox-preview
+// line (alert emails: "Save A$3.75 · checked 17:10 AEST 25 Sep").
+export function emailShell(heading: string, inner: string, footer: string, preheader?: string): string {
+  const pre = preheader
+    ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">${escapeHtml(preheader)}</div>`
+    : "";
+  return `<!doctype html><html><head>${EMAIL_HEAD}</head><body style="margin:0;background:#0b0e14;font-family:Arial,Helvetica,sans-serif">${pre}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0e14;padding:32px 8px"><tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px;background:#131a26;border:1px solid #233047;border-radius:16px">
       <tr><td style="padding:28px 32px 6px"><div style="font-size:22px;font-weight:800;color:#fff">Rift<span style="color:#34d17e">Compare</span></div></td></tr>
       <tr><td style="padding:6px 32px 4px"><h1 style="margin:0;font-size:20px;color:#fff">${heading}</h1></td></tr>
       ${inner}
@@ -266,180 +761,6 @@ export function emailShell(heading: string, inner: string, footer: string): stri
     </table></td></tr></table></body></html>`;
 }
 
-// What the store line says about postage for one card. Only a figure the
-// listing states or shippingFor() measured is quoted plainly; an unmeasured
-// store's floor is marked "est."; nothing known says so, never "delivered".
-export function postageNote(store: Pick<AlertStore, "postageCents" | "postageBasis" | "postageUpTo">, currency: string): string {
-  if (store.postageCents == null || store.postageBasis == null) return "item price, postage extra";
-  if (store.postageCents === 0) return "free postage";
-  const money = formatMoney(store.postageCents, currency);
-  if (store.postageBasis === "estimate") return `+ ${money} postage (est.)`;
-  return `+ ${store.postageUpTo ? "up to " : ""}${money} postage`;
-}
-
-// The line under an alert naming the store behind the price and linking the
-// exact listing. Shows that listing's own price. (The email stage lists up to
-// three; this names the cheapest.)
-export function storeLine(item: PriceDropItem): string {
-  const store = item.stores[0];
-  if (!store) return "";
-  const cur = item.currency;
-  // Scraped strings, so escaped (escapeHtml is hoisted from further down).
-  const condition = store.condition ? ` (${escapeHtml(store.condition)})` : "";
-  return `
-    <div style="margin-top:6px;font-size:13px;color:#b8c0cc">
-      Cheapest at <strong style="color:#fff">${escapeHtml(store.name)}</strong>: ${formatMoney(store.priceCents, cur)}${condition} · ${postageNote(store, cur)}
-      &nbsp;<a href="${escapeHtml(store.url)}" style="color:#34d17e;font-weight:700;text-decoration:none">View listing →</a>
-    </div>`;
-}
-
-// One row in the alert table.
-export function dropRow(item: PriceDropItem): string {
-  const cur = item.currency;
-  const head = `<tr><td style="padding:12px 0;border-bottom:1px solid #233047">
-    <a href="${item.url}" style="color:#fff;font-weight:700;text-decoration:none;font-size:15px">${item.name}</a>
-    <div style="font-size:12px;color:#6b7585;margin-top:2px">${item.setCode} · ${item.collectorNumber}</div>`;
-  const tail = `${storeLine(item)}
-  </td></tr>`;
-  const now = `<span style="color:#34d17e;font-weight:700">${formatMoney(item.currentCents, cur)}</span>`;
-  const line = (text: string) => `${head}
-    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      ${text}
-    </div>${tail}`;
-  if (item.kind === "target") {
-    const target = item.targetCents != null ? ` of ${formatMoney(item.targetCents, cur)}` : "";
-    return line(`Hit your target${target} · now ${now}`);
-  }
-  if (item.kind === "below_market") {
-    const m = item.tcgMarket;
-    const gap = m ? ` ≈ ${formatMoney(m.marketCents, cur)} · ${Math.round(m.belowPct)}% under` : "";
-    return line(`Cheaper than TCGplayer market${gap} · now ${now}`);
-  }
-  if (item.kind === "restock") return line(`Back in stock · now ${now}`);
-  if (item.kind === "preorder") {
-    const ships = item.releasedOn ? ` · ships ~${escapeHtml(item.releasedOn)}` : "";
-    return line(`Open for pre-order · from ${now}${ships}`);
-  }
-  if (item.kind === "listed" || item.referenceCents == null) return line(`Now in stock · from ${now}`);
-  const pct = item.change?.pct ?? 0;
-  return `${head}
-    <div style="margin-top:6px;font-size:14px;color:#b8c0cc">
-      <span style="color:#6b7585;text-decoration:line-through">${formatMoney(item.referenceCents, cur)}</span>
-      &nbsp;→&nbsp;${now}
-      ${pct > 0 ? `&nbsp;<span style="background:#13351f;color:#34d17e;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px">-${pct}%</span>` : ""}
-    </div>${tail}`;
-}
-
-// The price an alert quotes: the lead listing's own price (the alert price is
-// that listing's price by construction).
-function alertPrice(item: PriceDropItem): string {
-  return formatMoney(item.stores[0]?.priceCents ?? item.currentCents, item.currency);
-}
-
-const isListing = (i: PriceDropItem) => i.kind === "listed" || i.kind === "preorder";
-
-// Heading, intro and subject for a price-alert digest, led by the highest-
-// priority item (target > restock > below-market > drop > listed/pre-order).
-// Pure and exported so the copy is unit-tested. The email stage rebuilds this.
-export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro: string; subject: string } {
-  const count = items.length;
-  const more = count > 1 ? ` (+${count - 1} more)` : "";
-  const at = (i: PriceDropItem) => (i.stores[0] ? ` at ${i.stores[0].name}` : "");
-  const target = items.find((i) => i.kind === "target");
-  if (target) {
-    return {
-      heading: count === 1 ? "A card you're watching hit your target" : `Price news on ${count} cards you're watching`,
-      intro:
-        count === 1
-          ? "A card you're watching is at or below the price you set:"
-          : "A card you're watching is at or below the price you set, and there's news on others:",
-      subject: `${target.name} hit your target: ${alertPrice(target)}${at(target)}${more}`,
-    };
-  }
-  const restock = items.find((i) => i.kind === "restock");
-  if (restock) {
-    return {
-      heading: count === 1 ? "A card you're watching is back in stock" : `Price news on ${count} cards you're watching`,
-      intro: count === 1 ? "A card you're watching is back in stock:" : "A card you're watching is back in stock, and there's news on others:",
-      subject: `${restock.name} is back in stock: ${alertPrice(restock)}${at(restock)}${more}`,
-    };
-  }
-  const under = items.find((i) => i.kind === "below_market");
-  if (under) {
-    const pct = under.tcgMarket ? `, ${Math.round(under.tcgMarket.belowPct)}% under TCGplayer market` : " below TCGplayer market";
-    return {
-      heading: count === 1 ? "A card you're watching is below TCGplayer market" : `Price news on ${count} cards you're watching`,
-      intro:
-        count === 1
-          ? "A card you're watching is selling below TCGplayer's market price:"
-          : "A card you're watching is selling below TCGplayer's market price, and there's news on others:",
-      subject: `${under.name} ${alertPrice(under)}${at(under)}${pct}${more}`,
-    };
-  }
-  const listed = items.filter(isListing).length;
-  const first = items[0]!;
-  const firstPrice = formatMoney(first.currentCents, first.currency);
-  if (listed === 0) {
-    return {
-      heading: count === 1 ? "A wishlist card just got cheaper" : `${count} wishlist cards just got cheaper`,
-      intro: `Good news — ${count === 1 ? "a card you're watching" : "some cards you're watching"} dropped in price:`,
-      subject: count === 1 ? `Price drop: ${first.name} is now ${firstPrice}` : `Price drops on ${count} of your wishlist cards`,
-    };
-  }
-  if (listed === count) {
-    if (items.every((i) => i.kind === "preorder")) {
-      return {
-        heading: count === 1 ? "A card you're watching is open for pre-order" : `${count} cards you're watching are open for pre-order`,
-        intro: `${count === 1 ? "A card you're watching is" : "Cards you're watching are"} open for pre-order — they ship when the set releases:`,
-        subject: count === 1 ? `${first.name} is open for pre-order from ${firstPrice}` : `${count} of your wishlist cards are open for pre-order`,
-      };
-    }
-    return {
-      heading: count === 1 ? "A card you're watching is now in stock" : `${count} cards you're watching are now in stock`,
-      intro: `${count === 1 ? "A card you're watching is" : "Cards you're watching are"} now in stock:`,
-      subject: count === 1 ? `${first.name} is now in stock from ${firstPrice}` : `${count} of your wishlist cards are now in stock`,
-    };
-  }
-  return {
-    heading: `Price news on ${count} wishlist cards`,
-    intro: "Some cards you're watching got cheaper, and some are now listed:",
-    subject: `Price drops and new listings on ${count} of your wishlist cards`,
-  };
-}
-
-// The "a card on your wishlist has price news" email. One digest per address.
-// `anonymous` = this address has no linked account (PriceAlert.userId is null).
-// Only THOSE recipients get the account CTA — its "your existing alerts come
-// with you" promise is claimAlertsForUser's adopt-by-email behavior, which is
-// meaningless (and the CTA is pure noise) for someone already signed up.
-export async function sendPriceDropEmail(to: string, items: PriceDropItem[], unsubUrl: string, anonymous = false): Promise<boolean> {
-  const { heading, intro, subject } = priceDropCopy(items);
-  // A paid alert (target / below-market) links to Deal Finder filtered to the
-  // member's own watchlist; everyone else keeps the card database button.
-  const paid = items.some((i) => i.kind === "target" || i.kind === "below_market");
-  const button = paid
-    ? { href: `${SITE_URL}/tools/deal-finder?mine=watch`, label: "Your watched cards in Deal Finder" }
-    : { href: `${SITE_URL}/browse`, label: "Card database" };
-  const inner = `
-    <tr><td style="padding:8px 32px 4px;font-size:14px;line-height:1.6;color:#b8c0cc">${intro}</td></tr>
-    <tr><td style="padding:4px 32px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(dropRow).join("")}</table></td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${button.href}" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">${button.label}</a></td></tr>
-    ${anonymous ? accountCtaBlock("price-drop", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
-  return sendEmail(to, subject, emailShell(heading, inner, alertFooter(unsubUrl)));
-}
-
-// Sent once when someone subscribes via the wishlist pop-up, confirming the watch
-// and surfacing the unsubscribe link up front.
-export async function sendAlertConfirmationEmail(to: string, cardCount: number, unsubUrl: string, anonymous = false): Promise<boolean> {
-  const inner = `
-    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
-      You're all set — we'll email you when ${cardCount === 1 ? "the card" : `any of the ${cardCount} cards`} on
-      your wishlist hits a new low, naming the cheapest store and linking the listing. At most one email a week.
-    </td></tr>
-    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/browse" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Card database</a></td></tr>
-    ${anonymous ? accountCtaBlock("alert-confirm", "Manage your price watches with a free account — your existing alerts come with you automatically.") : ""}`;
-  return sendEmail(to, "You're watching your RiftCompare wishlist for price drops", emailShell("Price-drop alerts are on", inner, alertFooter(unsubUrl)));
-}
 
 // ─── Weekly newsletter digest ────────────────────────────────────────────────
 

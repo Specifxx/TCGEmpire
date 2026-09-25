@@ -1,7 +1,9 @@
 import { prisma } from "./db";
 import { COUNTRIES, currencyOf, pickPrice, type Country } from "./country";
 import { cardHref } from "./card-url";
-import { sendPriceDropEmail as sendPriceDropEmailImpl, type AlertKind, type AlertStore, type PriceDropItem } from "./email";
+import { ALERT_KIND_PRIORITY, sendPriceDropEmail as sendPriceDropEmailImpl, sortAlertItems, type AlertKind, type AlertStore, type PriceDropItem } from "./email";
+import { alertActionLinks } from "./alert-actions";
+import { pausedAddresses } from "./alert-mute";
 import { SITE_URL } from "./site";
 import { notify } from "./notifications";
 import { isPremium, premiumTierOf, type EntitlementUser } from "./premium";
@@ -63,6 +65,7 @@ export interface AlertRunSummary {
   outlierHeld: number; // new lows > OUTLIER_DROP_PCT under the last price, held for one run
   cooldown: number; // paid triggers skipped inside their 24h per-card cooldown (baseline held)
   snoozed: number; // triggers not emailed because the watch is snoozed (baselines still advance)
+  paused: number; // triggers not emailed because the ADDRESS paused alert emails (AlertMute; baselines still advance)
   deferred: number; // worth sending, held for the weekly cap, a per-run cap or the daily budget
   budgetDeferred: number; // …of which by ALERT_DAILY_BUDGET
   soldOut: number; // watches that went sold out this run (soldOutAt set)
@@ -144,15 +147,9 @@ export const PAID_SEND_CAP = 30;
 // (tests/watchlist.test.ts: rows are never filtered by account).
 export const FIRST_CONTACT_SEND_CAP = 20;
 
-// Digests open in this order when a cap or the budget binds.
-export const ALERT_KIND_PRIORITY: Record<AlertKind, number> = {
-  target: 0,
-  restock: 1,
-  below_market: 2,
-  drop: 3,
-  listed: 4,
-  preorder: 4,
-};
+// Digests open in this order when a cap or the budget binds (defined beside
+// the email, which orders its rows and picks its subject by the same rule).
+export { ALERT_KIND_PRIORITY };
 
 // ── The pure rules ───────────────────────────────────────────────────────────
 
@@ -316,7 +313,7 @@ const isSupportedMarket = (m: string): m is Country => Object.prototype.hasOwnPr
 // import and call shape); `notifyUsers: false` switches the in-app mirror off
 // instead, so a test can never write a Notification row.
 export interface AlertRunDeps {
-  db?: Pick<typeof prisma, "priceAlert" | "retailerPrice" | "$transaction">;
+  db?: Pick<typeof prisma, "priceAlert" | "retailerPrice" | "alertMute" | "$transaction">;
   sendPriceDropEmail?: typeof sendPriceDropEmailImpl;
   now?: Date;
   notifyUsers?: boolean;
@@ -420,6 +417,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     outlierHeld: 0,
     cooldown: 0,
     snoozed: 0,
+    paused: 0,
     deferred: 0,
     budgetDeferred: 0,
     soldOut: 0,
@@ -539,6 +537,18 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     const current = ap.priceCents!;
     const preorder = isPreorderSetCode(a.card.setCode, now);
     const loc = `/email-alert-${kind.replace("_", "-")}`;
+    // The row's one-tap links (lib/alert-actions.ts): stop, snooze 30 days,
+    // and for an entitled account "set target at this price" / "lower target
+    // 10%" — a free or anonymous row gets the Plus link instead. The POST
+    // re-checks entitlement and the Plus limit. A signing failure (no
+    // AUTH_SECRET in production) drops the links, never the alert.
+    let actions: PriceDropItem["actions"] = null;
+    try {
+      const canTarget = entitled.get(a.id) === true;
+      actions = alertActionLinks({ alertId: a.id, currentCents: current, targetCents: canTarget ? a.targetCents : null, canTarget, now });
+    } catch {
+      actions = null;
+    }
     return {
       kind,
       alertId: a.id,
@@ -572,6 +582,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
       soldOutAt: null,
       preorder,
       releasedOn: preorder ? setByCode(a.card.setCode)?.releasedOn ?? null : null,
+      actions,
       ...extra,
     };
   };
@@ -705,6 +716,22 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
     candidates.push(cand);
   });
 
+  // ── Paused addresses ───────────────────────────────────────────────────────
+  // "Pause alert emails, keep my watchlist" (AlertMute, lib/alert-mute.ts):
+  // one scoped read for the addresses about to be emailed. A paused address's
+  // triggers are dropped like a snoozed card's — not emailed, baselines
+  // advance — so resuming never releases a backlog of stale news. A failed
+  // read throws: emailing someone who asked for no email is worse than a run
+  // that retries at the next import.
+  const pausedSet = await pausedAddresses(db, [...new Set(candidates.map((c) => c.a.email))]);
+  if (pausedSet.size) {
+    for (let i = candidates.length - 1; i >= 0; i--) {
+      if (!pausedSet.has(candidates[i]!.a.email)) continue;
+      candidates.splice(i, 1);
+      summary.paused++;
+    }
+  }
+
   // ── Open digests in priority order ─────────────────────────────────────────
   // target > restock > below-market > new low > listed/pre-order, then oldest
   // watch first. An item for an address that already has a digest this run
@@ -770,8 +797,9 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
   // Sequential to stay gentle on the provider's rate limits.
   const failedEmails = new Set<string>();
   for (const [email, { token, items, anonymous, userId }] of byEmail) {
-    const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
-    const sent = await sendPriceDropEmail(email, items, unsubUrl, anonymous);
+    // The address's unsubToken addresses the email's pause / delete / manage
+    // links and its List-Unsubscribe header (lib/email.ts alertAddressLinks).
+    const sent = await sendPriceDropEmail(email, items, token, anonymous);
     if (sent) {
       summary.emails++;
       // In-app mirror for the account's own bell — only when the watch is
@@ -819,7 +847,7 @@ export async function runPriceAlerts(deps: AlertRunDeps = {}, opts: AlertRunOpti
 // The in-app notification's title for one digest: the lead item (by the same
 // priority the email uses), its price and the store behind it.
 function notificationTitle(items: PriceDropItem[]): string {
-  const lead = [...items].sort((x, y) => ALERT_KIND_PRIORITY[x.kind] - ALERT_KIND_PRIORITY[y.kind])[0]!;
+  const lead = sortAlertItems(items)[0]!;
   const price = formatMoney(lead.currentCents, lead.currency);
   const at = lead.stores[0] ? ` at ${lead.stores[0].name}` : "";
   const more = items.length > 1 ? ` (+${items.length - 1} more)` : "";

@@ -852,9 +852,10 @@ model PriceAlert {
   // instead of being emailed; the next run fires only if the price is still at
   // or near it (lib/price-alerts.ts OUTLIER_*), then clears it either way.
   pendingLowCents    Int?
-  // Per-card snooze from the email's one-tap links (next stage): a row with
-  // snoozedUntil in the future is not emailed, but its baselines still advance
-  // so nothing backs up behind the snooze.
+  // Per-card snooze from the email's one-tap "Snooze 30 days" link
+  // (lib/alert-actions.ts): a row with snoozedUntil in the future is not
+  // emailed by ANY trigger, but its baselines still advance so nothing backs
+  // up behind the snooze.
   snoozedUntil       DateTime?
 
   card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
@@ -870,6 +871,27 @@ model PriceAlert {
   @@index([email])
   @@index([unsubToken])
   @@index([userId])
+}
+
+// "PAUSE ALERT EMAILS, KEEP MY WATCHLIST" (2026-09-25). One row = this address
+// gets no price-alert email from any run (lib/price-alerts.ts reads it once per
+// run, for the addresses it is about to email), while every PriceAlert row —
+// baselines, targets, the /watching list — stays exactly as it was. It
+// replaced the footer's old "Unsubscribe", which DELETED every watch for the
+// address (targets included) when most people only wanted fewer emails.
+//
+// Keyed by the PriceAlert address, not a PriceAlert column, so a watch added
+// later for the same address is paused too, and keyed by email (like
+// AnnouncementOptOut) so it covers anonymous and account-owned rows alike.
+// Written by the footer page, the List-Unsubscribe one-click POST and the
+// /watching "Pause" control; deleting the row resumes. Deleting every watch is
+// a separate, explicit choice on the page. New table: `prisma db push` creates
+// it with no backfill.
+model AlertMute {
+  email   String   @id
+  mutedAt DateTime @default(now())
+  // Where the pause came from: "page" | "one-click" | "watchlist".
+  source  String?
 }
 
 // A live price for a card at an external retailer, used for price comparison.

@@ -33,8 +33,8 @@ test("the account CTA reaches exactly the emails whose recipients lack accounts"
   const email = read("src/lib/email.ts");
   // Price-drop + confirmation carry it ONLY for anonymous recipients — the
   // callers know PriceAlert.userId and gate on it.
-  assert.match(email, /sendPriceDropEmail\(to: string, items: PriceDropItem\[\], unsubUrl: string, anonymous = false\)/);
-  assert.match(email, /sendAlertConfirmationEmail\(to: string, cardCount: number, unsubUrl: string, anonymous = false\)/);
+  assert.match(email, /sendPriceDropEmail\(to: string, items: PriceDropItem\[\], unsubToken: string, anonymous = false\)/);
+  assert.match(email, /sendAlertConfirmationEmail\(to: string, cards: AlertConfirmationCard\[\], total: number, unsubToken: string, anonymous = false\)/);
   const ctaUses = email.match(/\$\{anonymous \? accountCtaBlock\(/g) ?? [];
   assert.equal(ctaUses.length, 2, "both alert emails must gate the CTA on anonymity");
   // The newsletter digest (account-less list by construction) carries it always.
@@ -49,9 +49,9 @@ test("the alert callers thread real anonymity into the senders", () => {
   const alerts = read("src/lib/price-alerts.ts");
   assert.match(alerts, /userId: true/);
   assert.match(alerts, /if \(a\.userId != null\) bucket\.anonymous = false/);
-  assert.match(alerts, /sendPriceDropEmail\(email, items, unsubUrl, anonymous\)/);
+  assert.match(alerts, /sendPriceDropEmail\(email, items, token, anonymous\)/);
   const subscribe = read("src/app/api/alerts/subscribe/route.ts");
-  assert.match(subscribe, /sendAlertConfirmationEmail\(email, total, unsubUrl, userId == null\)/);
+  assert.match(subscribe, /sendAlertConfirmationEmail\(email, list, total, unsubToken, userId == null\)/);
 });
 
 test("/login converts ?src= into stashed attribution without inflating the click metric", () => {

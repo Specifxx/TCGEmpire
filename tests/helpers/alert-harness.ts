@@ -141,6 +141,8 @@ export interface HarnessOpts {
   now?: Date;
   dailyBudget?: number;
   priceQueryFails?: boolean;
+  mutes?: string[]; // addresses that paused alert emails (AlertMute)
+  muteQueryFails?: boolean;
 }
 
 type Where = {
@@ -151,12 +153,13 @@ type Where = {
 
 export function harness(rows: (Row & { _price?: number | null })[], opts: HarnessOpts = {}) {
   const now = opts.now ?? NOW;
-  const sent: { to: string; items: PriceDropItem[] }[] = [];
+  const sent: { to: string; items: PriceDropItem[]; token: string; anonymous: boolean }[] = [];
   const writes: { id: string; data: Record<string, unknown> }[] = [];
   const alertQueries: Record<string, unknown>[] = [];
   const priceQueries: Record<string, unknown>[] = [];
   const budgetQueries: Record<string, unknown>[] = [];
   const tcgCalls: { country: string; ids: string[] }[] = [];
+  const muteQueries: Record<string, unknown>[] = [];
   const listings: AlertPriceRow[] = [
     ...rows.filter((r) => r._price != null).map((r) => listing(r.card.id, r._price!, { country: r.market })),
     ...(opts.stores ?? []),
@@ -197,12 +200,19 @@ export function harness(rows: (Row & { _price?: number | null })[], opts: Harnes
           .slice(0, args.take ?? Infinity);
       },
     },
+    alertMute: {
+      findMany: async (args: { where: { email: { in: string[] } }; take?: number }) => {
+        muteQueries.push(args as unknown as Record<string, unknown>);
+        if (opts.muteQueryFails) throw new Error("db down");
+        return (opts.mutes ?? []).filter((e) => args.where.email.in.includes(e)).map((email) => ({ email }));
+      },
+    },
     $transaction: async (ops: unknown[]) => ops,
   };
   const deps: AlertRunDeps = {
     db: db as unknown as AlertRunDeps["db"],
-    sendPriceDropEmail: async (to, items) => {
-      sent.push({ to, items });
+    sendPriceDropEmail: async (to, items, token, anonymous = false) => {
+      sent.push({ to, items, token, anonymous });
       const ok = opts.sendOk ?? true;
       return typeof ok === "function" ? ok(to) : ok;
     },
@@ -225,6 +235,7 @@ export function harness(rows: (Row & { _price?: number | null })[], opts: Harnes
     priceQueries,
     budgetQueries,
     tcgCalls,
+    muteQueries,
     run: (scope?: AlertScope) => runPriceAlerts(deps, scope ? { scope } : {}),
   };
 }

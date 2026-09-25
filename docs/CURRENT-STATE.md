@@ -276,11 +276,20 @@ longer lands on its entry.
   restock alerts, which run after both daily imports (refresh-prices.yml's
   `/price-alerts/paid` step). The free `all` run is a refresh-prices.yml step
   straight after the 07:00 import (no vercel.json cron), and both run only
-  after a successful, non-push import. Every alert email names the store
-  behind the price and says "item price, postage extra" unless postage is
-  known. [2026-09-15](../DECISIONS.md#L6531),
+  after a successful, non-push import. Every alert email names up to three
+  stores with postage and a delivered total only where postage is known
+  ("item price, postage extra" otherwise), is fluid (max-width 520px), and
+  sends a plain-text part plus List-Unsubscribe one-click headers.
+  [2026-09-15](../DECISIONS.md#L6531),
   [2026-09-21](../DECISIONS.md#L9752), [2026-09-25](../DECISIONS.md#L12842),
-  [2026-09-25](../DECISIONS.md#L13128)
+  [2026-09-25](../DECISIONS.md#L13128), [2026-09-25](../DECISIONS.md#L13258)
+- **Alert emails pause, never delete, by default:** the footer, the inbox
+  one-click and /watching write `AlertMute` (per address; the run skips it,
+  baselines advance); deleting every watch is a separate explicit button.
+  Per-card one-tap links (stop, snooze 30 days, Plus/Premium set or lower a
+  target) are HMAC-signed (`lib/alert-actions.ts`, key derived from
+  `AUTH_SECRET`) and act only on a POST from the `/alerts/action`
+  confirmation page, never on GET. [2026-09-25](../DECISIONS.md#L13258)
 - **Alerts read the alert price, never Card.lowestPriceCents\*:** the
   cheapest in-stock Near Mint (or unstated) copy seen within 36h at a store,
   CardTrader or TCGplayer US's listing (`lib/alert-price.ts`). No eBay (no

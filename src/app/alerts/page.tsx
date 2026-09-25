@@ -17,10 +17,13 @@ import { PLUS_TARGET_ALERT_LIMIT } from "@/lib/alert-limits";
 // alert" style queries, which nothing on the site was answering.
 //
 // EVERY SENTENCE HERE DESCRIBES CODE THAT RUNS (lib/price-alerts.ts). The
-// trigger is Card.lowestPriceCents* — an ITEM price, no postage — so nothing
-// here may say "shipping included" (it did, three times, until 2026-09-25).
-// Free alerts are the weekly new-low digest; the Plus target price is its own
-// trigger, checked after each price update. The Plus limit is quoted from
+// trigger is the ALERT PRICE (lib/alert-price.ts) — the cheapest in-stock Near
+// Mint ITEM price at a store, no postage — so nothing here may say "shipping
+// included" (it did, three times, until 2026-09-25); the email adds each
+// store's postage and delivered total beside it (lib/email.ts). Free alerts
+// are the weekly digest; the Plus target price is its own trigger, checked
+// after each price update. The one-tap links, snooze and pause are
+// lib/alert-actions.ts and lib/alert-mute.ts. The Plus limit is quoted from
 // lib/alert-limits.ts, the constant the route enforces.
 
 export const revalidate = 86400;
@@ -60,7 +63,7 @@ const FAQS = [
   },
   {
     q: "Which price triggers the alert?",
-    a: "The cheapest Near Mint copy in stock at a store we track for your market (or CardTrader, or a real TCGplayer listing in the US), seen by our last price update. eBay listings never trigger an alert, and neither do played copies or a store whose feed has gone quiet. A drop has to be at least 5% and at least 50 cents below the price we last emailed you (or, after 30 days, below the day before), so a few cents of drift never sends an email. A new low more than 40% under the day before is checked again at the next price update before we send it, because a price that far off is usually a listing error. That is the item price — postage is on top — so every alert names the stores and links the listings. There are no reminders: a price that just sits still doesn't email you again.",
+    a: "The cheapest Near Mint copy in stock at a store we track for your market (or CardTrader, or a real TCGplayer listing in the US), seen by our last price update. eBay listings never trigger an alert, and neither do played copies or a store whose feed has gone quiet. A drop has to be at least 5% and at least 50 cents below the price we last emailed you (or, after 30 days, below the day before), so a few cents of drift never sends an email. A new low more than 40% under the day before is checked again at the next price update before we send it, because a price that far off is usually a listing error. That is the item price — postage is on top — so every alert lists up to three stores with their postage and the delivered total, and links each listing. There are no reminders: a price that just sits still doesn't email you again.",
   },
   {
     q: "How often will I actually get emailed?",
@@ -69,6 +72,14 @@ const FAQS = [
   {
     q: "How often are prices checked?",
     a: "Prices are imported twice a day. New-low alerts are checked once a day, straight after the morning import; Plus target-price, below-market and back-in-stock alerts are checked after both. A drop is picked up on the next check rather than instantly — Riftbound reprices over days, not seconds, so that is the right resolution for buying decisions.",
+  },
+  {
+    q: "What's in an alert email?",
+    a: "For each card: what changed, in money and as a percentage, measured from the price we last emailed you (or the last price we saw); the price when you started watching; the condition (Near Mint, or not stated by the store); up to three stores, each with its price, its postage to your market (measured at the store's checkout, or marked 'est.' where we haven't measured it) and the delivered total, and a Buy button; and when we checked. A card that's back in stock says since when it was sold out; a pre-order says when the set ships; a below-market alert shows the TCGplayer market price (converted from US dollars outside the US) and the gap. The card link opens the card in the market you're watching it in. The biggest news comes first.",
+  },
+  {
+    q: "How do I stop, snooze or pause alert emails?",
+    a: "Every card in an alert email has one-tap links: 'Stop watching' removes that card, and 'Snooze 30 days' stops emails about it for a month while we keep checking its price. Plus and Premium members also get 'Set target at this price' and 'Lower target 10%'. Each link opens a short confirmation page first, so a mail app scanning links can't change anything. The footer's 'Pause alert emails' stops every price-alert email to your address and keeps your watchlist and targets; your inbox's own Unsubscribe button does the same. While paused or snoozed we still check prices, but nothing piles up: when you resume, you hear about news from then on, not a backlog. You can resume from the same page or from your watchlist. Deleting all your watches is a separate, explicit button on that page.",
   },
   {
     q: "Can I track cards I already own instead?",
@@ -113,8 +124,9 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
     body: (
       <>
         You&apos;ll be emailed when it hits a new low — at least 5% below the price we last told you — the item
-        price of the cheapest Near Mint copy, with the store named and linked so you can check postage. Sold out
-        and back again? You hear about that too. At most one email a week, only when a card hits a new low: a
+        price of the cheapest Near Mint copy, with up to three stores, their postage and the delivered total, each
+        linked. Sold out and back again? You hear about that too. One tap in the email stops watching a card or
+        snoozes it for 30 days. At most one email a week, only when a card hits a new low: a
         further drop in the same week waits for the next email instead of sending its own. No refreshing, no five
         tabs.
       </>
@@ -145,8 +157,8 @@ export default function AlertsPage() {
           A watchlist is a list of Riftbound cards you want; a price alert is an email when one drops to a new low — at
           most one email a week. Both are free, with no price to set. The
           trigger is the cheapest Near Mint copy in stock at the stores we track for your market — never an eBay
-          listing or a played copy. That is the item price, before postage, so every alert names the store and
-          links the listing: you see the delivered total there before you buy.
+          listing or a played copy. That is the item price, before postage, so every alert names up to three stores
+          with their postage and delivered total, and links each listing.
         </p>
       </AnswerBox>
 

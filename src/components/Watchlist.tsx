@@ -37,6 +37,8 @@ interface WatchItem {
   startPriceCents: number | null;
   // The member's "notify me at" price, in the watch's market currency.
   targetCents: number | null;
+  // Set by an alert email's "Snooze 30 days": no email about this card until then.
+  snoozedUntil?: string | null;
   createdAt: string;
   card: CardTileData;
 }
@@ -72,13 +74,18 @@ export function Watchlist({
   // The same shared /api/me the target fields read — no extra request.
   const { premium, tier } = useMe();
   const [items, setItems] = useState<WatchItem[] | null>(null);
+  // Alert emails paused for this address (AlertMute) — null = unknown.
+  const [paused, setPaused] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/alerts/watchlist", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { items: [] }))
-      .then((d: { items?: WatchItem[] }) => {
-        if (!cancelled) setItems(d.items ?? []);
+      .then((d: { items?: WatchItem[]; paused?: boolean | null }) => {
+        if (!cancelled) {
+          setItems(d.items ?? []);
+          setPaused(d.paused ?? null);
+        }
       })
       .catch(() => {
         if (!cancelled) setItems([]);
@@ -143,6 +150,7 @@ export function Watchlist({
 
   return (
     <>
+      <PauseBanner paused={paused} onChange={setPaused} />
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <p className="text-sm text-slate-400">
           <span className="num font-semibold text-white">{visible.length}</span>{" "}
@@ -202,6 +210,7 @@ export function Watchlist({
                   </span>
                 )}
                 {it.market !== country && <span className="chip px-1.5 py-0 text-[10px]">{it.market}</span>}
+                <SnoozeNote until={it.snoozedUntil} />
               </div>
               <TargetPriceField
                 cardId={it.cardId}
@@ -311,6 +320,7 @@ function WatchRow({
                   </span>
                 )}
                 {item.market !== country && <span className="chip px-1.5 py-0 text-[10px]">{item.market}</span>}
+                <SnoozeNote until={item.snoozedUntil} />
               </p>
             </div>
           </div>
@@ -333,5 +343,59 @@ function WatchRow({
         className="mt-3 border-t border-ink-800 pt-3"
       />
     </li>
+  );
+}
+
+// "Emails snoozed until 25 Oct" — an alert email's per-card Snooze 30 days.
+// The card is still checked; only its emails wait.
+function SnoozeNote({ until }: { until?: string | null }) {
+  if (!until) return null;
+  const d = new Date(until);
+  if (Number.isNaN(d.getTime()) || d.getTime() <= Date.now()) return null;
+  return (
+    <span className="chip px-1.5 py-0 text-[10px]" title="Snoozed from an alert email: still checked, not emailed until then">
+      emails snoozed until {d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+    </span>
+  );
+}
+
+// "Pause alert emails" for the whole address (AlertMute), with the watchlist
+// kept — the account-side twin of the email footer's link. Shown as a banner
+// while paused; otherwise one quiet control. Hidden when the state is unknown.
+function PauseBanner({ paused, onChange }: { paused: boolean | null; onChange: (p: boolean) => void }) {
+  const [working, setWorking] = useState(false);
+  if (paused == null) return null;
+  const toggle = async () => {
+    setWorking(true);
+    try {
+      const res = await fetch("/api/alerts/pause", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paused: !paused }),
+      });
+      if (res.ok) onChange(!paused);
+    } finally {
+      setWorking(false);
+    }
+  };
+  if (paused) {
+    return (
+      <div className="card-surface mb-4 flex flex-wrap items-center justify-between gap-2 border-amber-500/40 p-3 text-sm text-slate-300">
+        <span>
+          <strong className="text-white">Alert emails paused.</strong> We still check every card here, but send no price-alert
+          emails until you resume.
+        </span>
+        <button onClick={toggle} disabled={working} className="btn-primary min-h-11">
+          {working ? "Resuming…" : "Resume"}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-2 flex justify-end">
+      <button onClick={toggle} disabled={working} className="min-h-11 text-xs text-slate-500 underline hover:text-slate-300">
+        {working ? "Pausing…" : "Pause alert emails (keep this list)"}
+      </button>
+    </div>
   );
 }

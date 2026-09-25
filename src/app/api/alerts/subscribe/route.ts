@@ -6,8 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { clientIp, rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { pickPrice, type Country } from "@/lib/country";
 import { sendAlertConfirmationEmail } from "@/lib/email";
-import { claimConfirmationSlot } from "@/lib/alert-confirmations";
-import { SITE_URL } from "@/lib/site";
+import { claimConfirmationSlot, confirmationCards } from "@/lib/alert-confirmations";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +50,11 @@ export async function POST(req: Request) {
     where: { id: { in: Array.from(new Set(cardIds)) } },
     select: {
       id: true,
+      // For the confirmation email's card list (new addresses only).
+      name: true,
+      slug: true,
+      setCode: true,
+      collectorNumber: true,
       lowestPriceCents: true,
       lowestPriceCentsUs: true,
       lowestPriceCentsUk: true,
@@ -104,11 +108,16 @@ export async function POST(req: Request) {
   // is counted. A capped confirmation costs nothing but the courtesy email —
   // the watch itself is saved either way.
   if (result.count > 0 && !existing && (await claimConfirmationSlot(prisma))) {
-    const unsubUrl = `${SITE_URL}/unsubscribe?token=${encodeURIComponent(unsubToken)}`;
-    // Don't block the response on the network round-trip. `userId == null`
-    // means this watch has no account behind it — those recipients (and only
-    // those) get the create-a-free-account block in the confirmation.
-    void sendAlertConfirmationEmail(email, total, unsubUrl, userId == null);
+    // Don't block the response on the price lookup or the network round-trip.
+    // The confirmation lists the watched cards with today's alert price
+    // (confirmationCards: one bounded query, at most 10 cards); a failed
+    // lookup lists them without prices. The unsubToken addresses its manage,
+    // pause and List-Unsubscribe links. `userId == null` means this watch has
+    // no account behind it — those recipients (and only those) get the
+    // create-a-free-account block in the confirmation.
+    void confirmationCards(prisma, cards, market as Country)
+      .then((list) => sendAlertConfirmationEmail(email, list, total, unsubToken, userId == null))
+      .catch(() => false);
   }
 
   return NextResponse.json({ ok: true, added: result.count, watching: total });

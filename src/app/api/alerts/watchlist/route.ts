@@ -80,13 +80,23 @@ export async function GET(req: Request) {
         // The member's "notify me at" price, for the row's target field and
         // the "N of 25 used" count.
         targetCents: true,
+        // "Snoozed until …" from an email's one-tap Snooze 30 days.
+        snoozedUntil: true,
         createdAt: true,
         card: { select: cardTileSelect(country) },
       },
     })
     .catch(() => []);
 
-  return NextResponse.json({ items }, { headers: { "Cache-Control": "no-store" } });
+  // Whether this address paused alert emails (AlertMute, keyed by the address
+  // the rows are written with): one primary-key read. null on a failed read —
+  // the page then shows no pause state rather than a wrong one.
+  const paused = await prisma.alertMute
+    .findUnique({ where: { email: user.email }, select: { email: true } })
+    .then((r) => r != null)
+    .catch(() => null);
+
+  return NextResponse.json({ items, paused }, { headers: { "Cache-Control": "no-store" } });
 }
 
 const schema = z.object({
