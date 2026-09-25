@@ -75,29 +75,33 @@ const stub = {
       return args.where.id.in.map((id) => ({ id, name: `Card ${id}`, slug: id, setCode: "OGN", collectorNumber: id, imageThumbUrl: null }));
     },
   },
+  // db.watch / db.own are listed newest first, as the orderBy asks.
   priceAlert: {
-    async findMany(args: unknown) {
+    async findMany(args: { take?: number }) {
       db.calls.push({ op: "priceAlert.findMany", args });
-      return db.watch.map((cardId) => ({ cardId }));
+      return db.watch.slice(0, args.take).map((cardId) => ({ cardId }));
     },
   },
   collectionCard: {
-    async findMany(args: unknown) {
+    async findMany(args: { take?: number }) {
       db.calls.push({ op: "collectionCard.findMany", args });
-      return db.own.map((cardId) => ({ cardId }));
+      return db.own.slice(0, args.take).map((cardId) => ({ cardId }));
     },
   },
   // The eBay row pull is a tagged-template DISTINCT ON query: the cheapest
-  // (price + COALESCE(shipping, 0)) in-stock listing per card.
-  async $queryRaw(_strings: TemplateStringsArray, ...values: unknown[]) {
+  // (price + COALESCE(shipping, 0)) in-stock listing per card, a listing with
+  // stated postage first on a tie.
+  async $queryRaw(strings: TemplateStringsArray, ...values: unknown[]) {
     const [country, retailer] = values as [string, string];
-    db.calls.push({ op: "$queryRaw", args: { country, retailer } });
+    db.calls.push({ op: "$queryRaw", args: { country, retailer, sql: strings.join("?") } });
     const best = new Map<string, Row>();
     for (const r of db.rows) {
       if (r.country !== country || r.retailer !== retailer || !r.inStock) continue;
       const cost = (x: Row) => x.priceCents + (x.shippingCents ?? 0);
       const prev = best.get(r.cardId);
-      if (!prev || cost(r) < cost(prev)) best.set(r.cardId, r);
+      if (!prev || cost(r) < cost(prev) || (cost(r) === cost(prev) && r.shippingCents != null && prev.shippingCents == null)) {
+        best.set(r.cardId, r);
+      }
     }
     return [...best.values()].map(({ cardId, priceCents, shippingCents, url }) => ({ cardId, priceCents, shippingCents, url }));
   },
@@ -188,6 +192,44 @@ test("unknown eBay postage is never counted as free, and never called delivered"
   assert.equal(arb.ebayBuyLabel("US", false), "eBay + postage");
   assert.equal(arb.ebayBuyLabel("CA", true), "eBay US + intl postage");
   assert.equal(arb.ebayBuyLabel("CA", false), "eBay US + intl postage");
+});
+
+test("a listing with stated postage wins whenever its delivered price is no higher", async () => {
+  // Unknown postage is a floor (item + something), so an equal delivered price
+  // with the postage stated is strictly the better row to send a buyer to.
+  const tie = arb.cheapestEbayByCard("US", [
+    { cardId: "t", priceCents: 500, shippingCents: null, url: "unknown" },
+    { cardId: "t", priceCents: 450, shippingCents: 50, url: "known" },
+  ]);
+  assert.deepEqual(tie.get("t"), { cents: 500, url: "known", postageKnown: true });
+  const flipped = arb.cheapestEbayByCard("US", [
+    { cardId: "t", priceCents: 450, shippingCents: 50, url: "known" },
+    { cardId: "t", priceCents: 500, shippingCents: null, url: "unknown" },
+  ]);
+  assert.equal(flipped.get("t")?.url, "known", "order-independent");
+  // A cheaper item price with unstated postage is kept, flagged — no postage
+  // figure is invented to compare it with.
+  assert.deepEqual(
+    arb.cheapestEbayByCard("US", [
+      { cardId: "t", priceCents: 500, shippingCents: 20, url: "known" },
+      { cardId: "t", priceCents: 500, shippingCents: null, url: "unknown" },
+    ]).get("t"),
+    { cents: 500, url: "unknown", postageKnown: false },
+  );
+
+  // The day-cached SQL applies the same tie-break (the stub mirrors it).
+  db.calls = [];
+  db.rows = [
+    row({ cardId: "q", retailer: "ebay_us", priceCents: 600, shippingCents: null, url: "https://ebay.test/unknown" }),
+    row({ cardId: "q", retailer: "ebay_us", priceCents: 550, shippingCents: 50, url: "https://ebay.test/known" }),
+    tcgMarket("q", 1500),
+  ];
+  const page = await arb.getArbitrageVsTcgplayer("US", { buy: ["ebay_us"], sort: "saving" });
+  assert.equal(page.items[0].buyStoreName, "eBay (delivered)");
+  assert.match(page.items[0].buyUrl, /\/known\?/);
+  const sql = (db.calls.find((c) => c.op === "$queryRaw")?.args as { sql?: string } | undefined)?.sql;
+  assert.ok(sql, "the eBay pull ran");
+  assert.match(sql!, /ORDER BY "cardId", \("priceCents" \+ COALESCE\("shippingCents", 0\)\) ASC, \("shippingCents" IS NULL\) ASC/);
 });
 
 test("an eBay row with no stated postage is labelled '+ postage' on the page, with its own price and link", async () => {
@@ -350,16 +392,31 @@ test("getArbitrageVsTcgplayer honours onlyCardIds end to end", async () => {
   assert.deepEqual(p2.items.map((i) => i.card.id), ["m39"]);
 });
 
-test("getUserCardIds is the capped, user-scoped select, and is never cached", async () => {
+test("getUserCardIds is the capped, user-scoped select, newest first, and is never cached", async () => {
   db.calls = [];
   db.watch = ["w1", "w2", "w1"];
   db.own = ["o1"];
   assert.deepEqual([...(await nudge.getUserCardIds("u1", "watch"))], ["w1", "w2"]);
   assert.deepEqual([...(await nudge.getUserCardIds("u1", "own"))], ["o1"]);
+  // A deterministic orderBy: without one, a list longer than the cap came back
+  // as whichever rows Postgres met first, and could change between page loads.
   assert.deepEqual(db.calls.map((c) => [c.op, c.args]), [
-    ["priceAlert.findMany", { where: { userId: "u1" }, select: { cardId: true }, take: 500 }],
-    ["collectionCard.findMany", { where: { userId: "u1" }, select: { cardId: true }, take: 1000 }],
+    ["priceAlert.findMany", { where: { userId: "u1" }, select: { cardId: true }, orderBy: { createdAt: "desc" }, take: 500 }],
+    ["collectionCard.findMany", { where: { userId: "u1" }, select: { cardId: true }, orderBy: { createdAt: "desc" }, take: 1000 }],
   ]);
+  assert.deepEqual(nudge.USER_CARD_ID_CAPS, { watch: 500, own: 1000 });
+
+  // `capped` says the cap cut the list — counted in ROWS, so the same card
+  // watched in two markets still counts twice toward it.
+  assert.equal((await nudge.readUserCardIds("u1", "watch")).capped, false);
+  db.watch = Array.from({ length: 600 }, (_, i) => `c${i % 550}`);
+  const long = await nudge.readUserCardIds("u1", "watch");
+  assert.equal(long.capped, true);
+  assert.equal(long.ids.size, 500);
+  db.watch = Array.from({ length: 500 }, (_, i) => `c${i % 450}`);
+  const dupes = await nudge.readUserCardIds("u1", "watch");
+  assert.equal(dupes.capped, true, "500 rows is the cap even when they are 450 cards");
+  assert.equal(dupes.ids.size, 450);
 
   // Never inside a cache: a per-user entry would be one per account per day,
   // and wrapping it beside the self-caching ranking would disable that cache
@@ -374,12 +431,16 @@ test("getUserCardIds is the capped, user-scoped select, and is never cached", as
     }
   };
   walk(join(ROOT, "src"));
-  const callers = files.filter((f) => /getUserCardIds\(/.test(readFileSync(f, "utf8")));
+  const callers = files.filter((f) => /(?:getUserCardIds|readUserCardIds)\(/.test(readFileSync(f, "utf8")));
   assert.ok(callers.some((f) => f.endsWith(join("tools", "deal-finder", "page.tsx"))), "the Deal Finder page reads it");
   for (const f of callers) {
     const src = readFileSync(f, "utf8").replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
     assert.doesNotMatch(src, /unstable_cache/, `${relative(ROOT, f)}: getUserCardIds must not sit beside unstable_cache`);
-    assert.doesNotMatch(src, /cachedOrDirect\([\s\S]{0,600}?getUserCardIds/, `${relative(ROOT, f)}: never inside cachedOrDirect`);
+    assert.doesNotMatch(
+      src,
+      /cachedOrDirect\([\s\S]{0,600}?(?:getUserCardIds|readUserCardIds)/,
+      `${relative(ROOT, f)}: never inside cachedOrDirect`,
+    );
   }
 });
 
@@ -453,13 +514,37 @@ test("every link on the page goes through hrefFor", () => {
   assert.doesNotMatch(records, /view=xregion|full sortable screener/, "the free board no longer points at the cut tab");
 });
 
+test("the cross-market link opens the reader's own market, and the way back names none", () => {
+  // /market/records reads ?market= (default US); Deal Finder reads the country
+  // cookie. A bare link sent every non-US reader to the US board.
+  const page = readFileSync(join(process.cwd(), "src/app/tools/deal-finder/page.tsx"), "utf8");
+  assert.match(page, /href=\{`\/market\/records\?market=\$\{country\}#gaps`\}/);
+  assert.doesNotMatch(page, /href="\/market\/records#gaps"/);
+  const records = readFileSync(join(process.cwd(), "src/app/market/records/page.tsx"), "utf8");
+  const board = records.slice(records.indexOf("function GapsBoard"), records.indexOf("export default async function"));
+  assert.match(board, /stores in your own market, see\{" "\}\s*<Link href="\/tools\/deal-finder"/, "no market named for a page that picks its own");
+  // With nothing over the floor the #gaps anchor still lands on the board's heading.
+  const empty = board.slice(board.indexOf("if (gaps.length === 0)"), board.indexOf("if (gaps.length === 0)") + 600);
+  assert.match(empty, /<section id="gaps"/);
+  assert.doesNotMatch(empty, /return null/);
+});
+
 test("members' nudges link to their own cards; free accounts keep the Plus upsell", () => {
-  const card = readFileSync(join(process.cwd(), "src/components/PremiumNudgeCard.tsx"), "utf8");
-  assert.match(card, /hrefFor\(\{ buy: null, sort: "saving", page: 1, mine: which \}\)/);
-  assert.match(card, /surface === "nudge:portfolio" \? "own" : "watch"/);
-  assert.match(card, /<PremiumButton surface=\{surface\} tier="plus" \/>/);
-  assert.equal(hrefFor({ buy: null, sort: "saving", page: 1, mine: "watch" }), "/tools/deal-finder?mine=watch");
+  // A deal nudge is only ever about watched cards; a rising one opens Rising Cards.
+  assert.equal(nudge.memberNudgeHref("deal"), "/tools/deal-finder?mine=watch");
+  assert.equal(nudge.memberNudgeHref("rising"), "/tools/rising");
   assert.equal(hrefFor({ buy: null, sort: "saving", page: 1, mine: "own" }), "/tools/deal-finder?mine=own");
+  const card = readFileSync(join(process.cwd(), "src/components/PremiumNudgeCard.tsx"), "utf8");
+  assert.match(card, /<Link href=\{memberNudgeHref\(kind\)\}/);
+  assert.match(card, /<PremiumButton surface=\{surface\} tier="plus" \/>/);
+  // …and the member path is reachable: both pages compute the nudge for a
+  // member, ask for member copy, and pass `member`.
+  const watching = readFileSync(join(process.cwd(), "src/app/watching/page.tsx"), "utf8");
+  assert.match(watching, /watchedNudgeCopy\(nudge, "watched", isPremium\(user\) \? "member" : "free"\)/);
+  assert.match(watching, /<PremiumNudgeCard \{\.\.\.nudgeCopy\} member=\{isPremium\(user\)\}/);
+  const portfolio = readFileSync(join(process.cwd(), "src/app/portfolio/page.tsx"), "utf8");
+  assert.match(portfolio, /nudgeCopy\(nudge, "owned", premium \? "member" : "free"\)/);
+  assert.match(portfolio, /<PremiumNudgeCard \{\.\.\.ownedNudge\} member=\{premium\}/);
 
   const n = { watched: { deals: 4, dealsFree: 1, rising: 0, risingFree: 0 }, owned: { deals: 0, dealsFree: 0, rising: 0, risingFree: 0 }, example: null };
   const free = nudge.nudgeCopy(n, "watched")!;

@@ -3,7 +3,7 @@ import { HubIntro } from "@/components/HubIntro";
 import Link from "next/link";
 import { getArbitrageVsTcgplayer, getPricesAsOf, dealFinderSources, defaultTcgBuyKeys, type ArbItem, type ArbSort } from "@/lib/arbitrage";
 import { hrefFor, parseDealFinderParams, type DealFinderParams, type DealFinderSearchParams, type MineFilter } from "@/lib/deal-finder-href";
-import { getUserCardIds, PLUS_GATE_LINE } from "@/lib/premium-nudge";
+import { readUserCardIds, PLUS_GATE_LINE, USER_CARD_ID_CAPS } from "@/lib/premium-nudge";
 import { getCountry } from "@/lib/get-country";
 import { COUNTRIES, type Country } from "@/lib/country";
 import { formatMoney } from "@/lib/format";
@@ -100,7 +100,7 @@ const DEAL_FAQS = [
   },
   {
     q: "Does the price include postage?",
-    a: "Store prices are the item price only, because most shops quote postage at checkout and we never guess it. eBay rows include the postage the seller states and are marked delivered; when a seller states none, the row reads eBay + postage rather than counting it as free. In Canada the eBay rows are US listings with international postage on top, so they are left out of the default list.",
+    a: "Store prices are the item price only, because most shops quote postage at checkout and we never guess it. eBay rows include the postage the seller states and are marked delivered. When a seller states none, the row reads eBay + postage and, like a store's price, is compared and ranked on the item price alone, so the real cost is higher than the figure shown; a listing with stated postage is shown instead whenever its delivered price is no higher. In Canada the eBay rows are US listings with international postage on top, so they are left out of the default list.",
   },
   {
     q: "Is a big gap always a good deal?",
@@ -137,10 +137,14 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
   const { sort, page, mine } = params;
 
   // "Only my cards": the member's own watched or binder card ids — one
-  // user-scoped, capped select per request, never cached and never wrapped in
-  // another cache (src/lib/db.ts rule 6). The list is filtered in memory
-  // before paging (getArbitrageVsTcgplayer's onlyCardIds).
-  const onlyCardIds = mine && user ? await getUserCardIds(user.id, mine).catch(() => new Set<string>()) : undefined;
+  // user-scoped, capped select per request (newest first), never cached and
+  // never wrapped in another cache (src/lib/db.ts rule 6). The list is filtered
+  // in memory before paging (getArbitrageVsTcgplayer's onlyCardIds). `capped`
+  // means the cap cut a longer list, and the copy says so.
+  const mineRead =
+    mine && user ? await readUserCardIds(user.id, mine).catch(() => ({ ids: new Set<string>(), capped: false })) : null;
+  const onlyCardIds = mineRead?.ids;
+  const mineCapped = !!mineRead?.capped;
 
   // Signed out runs nothing, this included.
   const asOfPromise = access === "none" ? Promise.resolve(null) : getPricesAsOf(country);
@@ -245,6 +249,12 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
               </Link>
             );
           })}
+          {mine && mineCapped ? (
+            <span className="text-xs text-slate-500">
+              Checking your {USER_CARD_ID_CAPS[mine].toLocaleString("en-US")} most recent{" "}
+              {mine === "watch" ? "watches" : "binder entries"}.
+            </span>
+          ) : null}
         </nav>
       )}
 
@@ -279,7 +289,7 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
         <LockedPreview />
       ) : data.items.length === 0 ? (
         <Empty>
-          <EmptyMessage params={params} buy={buy} place={info.place} mineCount={onlyCardIds?.size ?? null} />
+          <EmptyMessage params={params} buy={buy} place={info.place} mineCount={onlyCardIds?.size ?? null} mineCapped={mineCapped} />
         </Empty>
       ) : (
         <>
@@ -302,7 +312,10 @@ export default async function DealFinderPage({ searchParams }: { searchParams: D
 
       <p className="mt-4 text-xs text-slate-500">
         Looking for cards that cost less in another market?{" "}
-        <Link href="/market/records#gaps" className="text-brand-400 hover:underline">
+        {/* ?market= is this page's market: /market/records reads its market
+            from the URL (default US), not from the country cookie this page
+            uses, so a bare link sent every non-US reader to the US board. */}
+        <Link href={`/market/records?market=${country}#gaps`} className="text-brand-400 hover:underline">
           The cross-market board
         </Link>{" "}
         ranks the biggest price gaps between the markets we track, free.
@@ -387,11 +400,13 @@ function EmptyMessage({
   buy,
   place,
   mineCount,
+  mineCapped = false,
 }: {
   params: DealFinderParams;
   buy: string[];
   place: string;
   mineCount: number | null;
+  mineCapped?: boolean;
 }) {
   if (buy.length === 0) return <>Pick at least one store on the buy side to see results.</>;
   // A narrowed store selection is the likeliest reason for an empty list, so
@@ -417,8 +432,15 @@ function EmptyMessage({
         </>
       );
     }
-    const line =
-      params.mine === "watch"
+    // Capped: the read stopped at the newest N rows (lib/premium-nudge.ts
+    // USER_CARD_ID_CAPS), so "none of your N cards" would be false for a longer
+    // list — say which ones were checked instead.
+    const cap = USER_CARD_ID_CAPS[params.mine].toLocaleString("en-US");
+    const line = mineCapped
+      ? params.mine === "watch"
+        ? `None of your ${cap} most recent watches is below TCGplayer market right now.`
+        : `None of your ${cap} most recently added binder entries is below TCGplayer market right now.`
+      : params.mine === "watch"
         ? mineCount === 1
           ? "Your watched card isn't below TCGplayer market right now."
           : `None of your ${mineCount} watched cards is below TCGplayer market right now.`

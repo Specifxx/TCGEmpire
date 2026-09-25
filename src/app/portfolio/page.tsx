@@ -137,13 +137,14 @@ export default async function PortfolioPage() {
   // read as a paywall wherever they appear. The two blurred Premium previews
   // below render as real content while the flag is on.
   const pro = premium || PORTFOLIO_FREE || ADSENSE_REVIEW_MODE;
-  // Which of the cards they OWN are Rising Cards picks right now — free
-  // accounts with a collection only (lib/premium-nudge.ts). Never fails the page.
+  // Which of the cards they OWN are Rising Cards picks right now — a Plus
+  // upsell for a free account, a link to the picks for a member; accounts with
+  // a collection only (lib/premium-nudge.ts). Never fails the page.
   const nudge =
-    !premium && premiumCheckoutEnabled() && portfolio.holdings.length > 0
+    (premium || premiumCheckoutEnabled()) && portfolio.holdings.length > 0
       ? await getPremiumNudge(user.id, country).catch(() => null)
       : null;
-  const ownedNudge = nudge ? nudgeCopy(nudge, "owned") : null;
+  const ownedNudge = nudge ? nudgeCopy(nudge, "owned", premium ? "member" : "free") : null;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -246,7 +247,7 @@ export default async function PortfolioPage() {
         )}
       </section>
 
-      {ownedNudge && <PremiumNudgeCard {...ownedNudge} surface="nudge:portfolio" />}
+      {ownedNudge && <PremiumNudgeCard {...ownedNudge} member={premium} surface="nudge:portfolio" />}
 
       {portfolio.holdings.length > 0 && (
         <>

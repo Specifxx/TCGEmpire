@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PremiumButton } from "./PremiumButton";
-import { hrefFor } from "@/lib/deal-finder-href";
+import { memberNudgeHref } from "@/lib/premium-nudge";
 
 // The personal nudge — "4 cards you watch are underpriced right now" — as a
 // card. Copy comes from lib/premium-nudge.ts nudgeCopy(), which returns null
@@ -10,10 +10,11 @@ import { hrefFor } from "@/lib/deal-finder-href";
 //
 // FREE ACCOUNT: the upsell, on the Plus-level gate (tier="plus" — the full lists
 // are a Plus feature, so the dialog opens on Plus and quotes Plus's price).
-// MEMBER (`member`, 2026-09-25): never a wall. The card links straight to the
-// list it is talking about — Deal Finder filtered to their own cards
-// (?mine=watch for the watchlist, ?mine=own for the binder), or Rising Cards —
-// and nudgeCopy(…, "member") drops the pitch from the line.
+// MEMBER (`member`, 2026-09-25; /watching and /portfolio pass it): never a
+// wall. The card links straight to the list it is talking about —
+// memberNudgeHref: Deal Finder filtered to their watchlist (?mine=watch) for a
+// deal nudge, Rising Cards for a rising one — and nudgeCopy(…, "member") drops
+// the pitch from the line.
 export function PremiumNudgeCard({
   heading,
   line,
@@ -21,7 +22,6 @@ export function PremiumNudgeCard({
   className = "",
   member = false,
   kind = "deal",
-  mine,
 }: {
   heading: string;
   line: string;
@@ -29,13 +29,7 @@ export function PremiumNudgeCard({
   className?: string;
   member?: boolean;
   kind?: "deal" | "rising";
-  // Which "Only my cards" filter a member's link opens. Defaults from the
-  // surface: the portfolio's nudge is about the binder, every other about the
-  // watchlist.
-  mine?: "watch" | "own";
 }) {
-  const which = mine ?? (surface === "nudge:portfolio" ? "own" : "watch");
-  const memberHref = kind === "rising" ? "/tools/rising" : hrefFor({ buy: null, sort: "saving", page: 1, mine: which });
   return (
     <section
       className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gold/30 bg-gold/5 px-4 py-3 ${className}`}
@@ -49,7 +43,7 @@ export function PremiumNudgeCard({
         <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{line}</p>
       </div>
       {member ? (
-        <Link href={memberHref} className="btn-ghost text-sm">
+        <Link href={memberNudgeHref(kind)} className="btn-ghost text-sm">
           {kind === "rising" ? "See the picks →" : "See them →"}
         </Link>
       ) : (

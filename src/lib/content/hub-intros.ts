@@ -91,7 +91,7 @@ export const HUB_INTROS: Record<string, HubIntro> = {
   "/tools/deal-finder": {
     paragraphs: [
       "Deal Finder lists the Riftbound cards a store or an eBay seller in your market is selling for less than TCGplayer's market price. For each card it takes the cheapest in-stock copy we track, compares it against TCGplayer's US market price, converted into your currency, and ranks the list by how far below that price it sits — in money, or as a percentage.",
-      "Store prices are the item price only: store postage isn't included, because most shops quote it at checkout. eBay rows include stated postage and are marked delivered; where a seller states none, the row says postage is extra rather than counting it as free. In the United States a card only makes the list when it is also cheaper than TCGplayer's own cheapest listing, so it never sends you to a store TCGplayer already beats.",
+      "Store prices are the item price only: store postage isn't included, because most shops quote it at checkout. eBay rows include stated postage and are marked delivered; where a seller states none, the row says postage is extra and, like a store price, is ranked on the item price alone. In the United States a card only makes the list when it is also cheaper than TCGplayer's own cheapest listing, so it never sends you to a store TCGplayer already beats.",
       "TCGplayer's market price is a reference built from recent US sales, not a price you can check out at, and outside the US it moves with the exchange rate shown above the list. A big gap is a reason to look, not a guarantee: the cheap copy is often one seller's only one. Open the card to see every store before you buy. Nothing here is investment advice.",
     ],
   },

@@ -99,6 +99,13 @@ export function ebayBuyLabel(country: Country, postageKnown: boolean): string {
 // free: a listing whose seller stated no postage is compared on its item price,
 // exactly like a store row, and cheapestEbayByCard() below marks it
 // postageKnown: false so the page labels it "eBay + postage", never "delivered".
+// That figure is a floor (the buyer pays item + something), so a listing with
+// STATED postage wins whenever its delivered total is no higher — the trailing
+// ("shippingCents" IS NULL) sends exact ties to the known one. Where the known
+// total is higher we keep the cheaper item price, flagged, rather than invent a
+// postage figure to compare with; the page copy says the row is ranked on its
+// item price. (Same value shape, so no key bump: an entry built before this
+// line only differs on exact ties, and rolls over with the day key.)
 type EbayRow = { cardId: string; priceCents: number; shippingCents: number | null; url: string };
 
 function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow[]> {
@@ -109,7 +116,7 @@ function getEbayRowsMemoized(country: Country, ebayKey: string): Promise<EbayRow
                "cardId", "priceCents", "shippingCents", "url"
         FROM "RetailerPrice"
         WHERE country = ${country} AND retailer = ${ebayKey} AND "inStock" = true
-        ORDER BY "cardId", ("priceCents" + COALESCE("shippingCents", 0)) ASC
+        ORDER BY "cardId", ("priceCents" + COALESCE("shippingCents", 0)) ASC, ("shippingCents" IS NULL) ASC
       `,
     ["arb-ebay-rows", country, ebayKey, sydneyDayKey()],
     { revalidate: 172800, tags: [CONTENT_TAG] },
@@ -121,7 +128,8 @@ export type EbayBest = { cents: number; url: string; postageKnown: boolean };
 /**
  * Pure: the cheapest eBay listing per card, as the Best price column shows it —
  * item + stated postage when postage is known, item price alone (flagged) when
- * it is not. Cross-border markets (CA) always compare on the item price.
+ * it is not. Cross-border markets (CA) always compare on the item price. On a
+ * tie the listing whose postage is known wins, as in the SQL above.
  */
 export function cheapestEbayByCard(country: Country, rows: readonly EbayRow[]): Map<string, EbayBest> {
   const cross = !!EBAY_CROSS_BORDER[country];
@@ -130,7 +138,9 @@ export function cheapestEbayByCard(country: Country, rows: readonly EbayRow[]): 
     const postageKnown = !cross && r.shippingCents != null;
     const cents = r.priceCents + (postageKnown ? r.shippingCents! : 0);
     const prev = best.get(r.cardId);
-    if (!prev || cents < prev.cents) best.set(r.cardId, { cents, url: r.url, postageKnown });
+    if (!prev || cents < prev.cents || (cents === prev.cents && postageKnown && !prev.postageKnown)) {
+      best.set(r.cardId, { cents, url: r.url, postageKnown });
+    }
   }
   return best;
 }

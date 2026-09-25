@@ -189,8 +189,21 @@ function GapsBoard({
   gaps: { gap: CrossRegionGap; savingCents: number }[];
   homeCountry: Country;
 }) {
-  if (gaps.length === 0) return null;
   const home = COUNTRIES[homeCountry];
+  // Deal Finder links here as /market/records?market=XX#gaps. With nothing over
+  // the floor the anchor still lands on a heading that says so, rather than on
+  // nothing (the board used to render null, and #gaps went nowhere).
+  if (gaps.length === 0) {
+    return (
+      <section id="gaps" className="scroll-mt-40 xl:scroll-mt-36">
+        <h2 className="text-xl font-extrabold text-white">Biggest cross-market price gaps</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          No card is at least {formatMoney(GAP_MIN_SAVING_CENTS, home.currency)} cheaper in another tracked market than in{" "}
+          {home.place} right now.
+        </p>
+      </section>
+    );
+  }
   return (
     <section id="gaps" className="scroll-mt-40 xl:scroll-mt-36">
       <h2 className="text-xl font-extrabold text-white">Biggest cross-market price gaps</h2>
@@ -227,10 +240,13 @@ function GapsBoard({
           stores ship abroad is modelled here. The link below is to the list that
           IS actionable where you live: cards below TCGplayer market at stores in
           your own market. It used to promise a sortable cross-market screener
-          in Deal Finder — a tab with no sort and no store links, cut 2026-09-25. */}
+          in Deal Finder — a tab with no sort and no store links, cut 2026-09-25.
+          It names no market on purpose: this board's market comes from
+          ?market=, Deal Finder's from the visitor's own market setting, and the
+          two differ whenever someone browses another market's board. */}
       <p className="mt-2 text-[11px] text-slate-600">
         Informational: shipping internationally, customs and whether an overseas store ships to you are not included, and can
-        easily exceed the gap. For cards selling below TCGplayer market at stores in {home.place}, see{" "}
+        easily exceed the gap. For cards selling below TCGplayer market at stores in your own market, see{" "}
         <Link href="/tools/deal-finder" className="text-brand-400 hover:underline">
           Deal Finder
         </Link>

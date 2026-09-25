@@ -15,8 +15,8 @@
 // loaders cache themselves and are called directly — never from inside another
 // cache (src/lib/db.ts rule 6).
 //
-// getUserCardIds is also what the Deal Finder's "Only my cards" chips
-// (?mine=watch|own, Plus) read: the same two capped selects, per request,
+// readUserCardIds / getUserCardIds is also what the Deal Finder's "Only my cards"
+// chips (?mine=watch|own, Plus) read: the same two capped selects, per request,
 // NEVER cached — a shared cache entry keyed by user would be one entry per
 // account per day, and wrapping the self-caching ranking beside it would
 // disable that cache (tests/deal-finder-buyer-list.test.ts pins both).
@@ -26,6 +26,7 @@
 // or not" — those are what Premium sells.
 import { prisma } from "./db";
 import { defaultTcgBuyKeys, getTcgDealRanks } from "./arbitrage";
+import { hrefFor } from "./deal-finder-href";
 import { getCachedRisingCards } from "./rise-predictor";
 import type { Country } from "./country";
 
@@ -72,16 +73,38 @@ export function hasNudge(n: PremiumNudge | null): n is PremiumNudge {
 }
 
 /**
- * The card ids an account watches ("watch": its PriceAlert rows, capped at 500)
- * or owns ("own": its CollectionCard rows, capped at 1000). One user-scoped,
- * capped select; uncached on purpose — see the header.
+ * Row caps on the two selects below: an account's newest 500 watches and newest
+ * 1,000 binder entries. Watches are unlimited for every account
+ * (lib/alert-limits.ts), so a long list IS cut here, and the Deal Finder says
+ * so ("your 500 most recent watches") rather than calling the cut list "all of
+ * your cards".
  */
-export async function getUserCardIds(userId: string, which: "watch" | "own"): Promise<Set<string>> {
+export const USER_CARD_ID_CAPS = { watch: 500, own: 1000 } as const;
+
+/**
+ * The card ids an account watches ("watch": its PriceAlert rows) or owns
+ * ("own": its CollectionCard rows), newest first up to USER_CARD_ID_CAPS, and
+ * whether the cap cut the list. One user-scoped, capped select; uncached on
+ * purpose — see the header.
+ *
+ * NEWEST FIRST, deliberately (2026-09-25). The select had a `take` and no
+ * orderBy, so for a list longer than the cap Postgres returned whichever rows it
+ * met first — an arbitrary subset that could change between two page loads.
+ * `capped` compares ROWS with the cap, not distinct cards: one card watched in
+ * two markets, or owned in two conditions, is two rows.
+ */
+export async function readUserCardIds(userId: string, which: "watch" | "own"): Promise<{ ids: Set<string>; capped: boolean }> {
+  const take = USER_CARD_ID_CAPS[which];
   const rows =
     which === "watch"
-      ? await prisma.priceAlert.findMany({ where: { userId }, select: { cardId: true }, take: 500 })
-      : await prisma.collectionCard.findMany({ where: { userId }, select: { cardId: true }, take: 1000 });
-  return new Set(rows.map((r) => r.cardId));
+      ? await prisma.priceAlert.findMany({ where: { userId }, select: { cardId: true }, orderBy: { createdAt: "desc" }, take })
+      : await prisma.collectionCard.findMany({ where: { userId }, select: { cardId: true }, orderBy: { createdAt: "desc" }, take });
+  return { ids: new Set(rows.map((r) => r.cardId)), capped: rows.length >= take };
+}
+
+/** readUserCardIds without the cap flag — the nudge only counts. */
+export async function getUserCardIds(userId: string, which: "watch" | "own"): Promise<Set<string>> {
+  return (await readUserCardIds(userId, which)).ids;
 }
 
 export async function getPremiumNudge(userId: string, country: Country): Promise<PremiumNudge | null> {
@@ -134,9 +157,24 @@ export async function getPremiumNudge(userId: string, country: Country): Promise
 // `audience` (2026-09-25): "free" (the default) ends on the Plus-level gate
 // line; "member" drops the free-top-3 counts and the pitch, because a member
 // already sees every row — PremiumNudgeCard then links to the list itself
-// (Deal Finder ?mine=watch|own, or Rising Cards) instead of a wall.
+// (memberNudgeHref below) instead of a wall. /watching and /portfolio show a
+// member this card too; the slide-in (/api/premium/nudge) stays free-only,
+// because it exists to sell.
 // `kind` says which list the nudge is about, so that link can be the right one.
 const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+
+/**
+ * Where a member's nudge card links: the list it is talking about, never a
+ * wall. A "deal" nudge is always about WATCHED cards (nudgeCopy only builds one
+ * for `where === "watched"` — owned cards are tallied against Rising only, see
+ * getPremiumNudge), so it opens Deal Finder's "My watchlist" filter; a "rising"
+ * nudge opens Rising Cards. Deal Finder's "My binder" filter (?mine=own) is
+ * reached from its own chips, not from here: no nudge is ever about owned cards
+ * being cheap.
+ */
+export function memberNudgeHref(kind: "deal" | "rising"): string {
+  return kind === "deal" ? hrefFor({ buy: null, sort: "saving", page: 1, mine: "watch" }) : "/tools/rising";
+}
 
 export const PLUS_GATE_LINE = "Plus shows every one, and can email you when one hits your price.";
 

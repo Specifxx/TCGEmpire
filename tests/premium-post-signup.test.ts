@@ -83,8 +83,9 @@ test("the nudge never reveals a price or a gap — only counts and one name", ()
 
 test("the nudge's reads are user-scoped and capped, and call the self-caching loaders directly", () => {
   const src = code("src/lib/premium-nudge.ts");
-  assert.match(src, /priceAlert\.findMany\(\{ where: \{ userId \}, select: \{ cardId: true \}, take: 500 \}\)/);
-  assert.match(src, /collectionCard\.findMany\(\{ where: \{ userId \}, select: \{ cardId: true \}, take: 1000 \}\)/);
+  assert.match(src, /priceAlert\.findMany\(\{ where: \{ userId \}, select: \{ cardId: true \}, orderBy: \{ createdAt: "desc" \}, take \}\)/);
+  assert.match(src, /collectionCard\.findMany\(\{ where: \{ userId \}, select: \{ cardId: true \}, orderBy: \{ createdAt: "desc" \}, take \}\)/);
+  assert.match(src, /export const USER_CARD_ID_CAPS = \{ watch: 500, own: 1000 \} as const;/);
   assert.match(src, /getTcgDealRanks\(country, defaultTcgBuyKeys\(country\)\)/);
   assert.match(src, /getCachedRisingCards\("GLOBAL"\)/);
   assert.doesNotMatch(src, /unstable_cache|cachedOrDirect/, "never wrap the self-caching loaders (src/lib/db.ts rule 6)");
@@ -100,12 +101,15 @@ test("Deal Finder and the nudge rank from one definition", () => {
 });
 
 test("where the nudge appears: watchlist, portfolio, and the slide-in", () => {
+  // The two pages show it to a free account (as the Plus upsell, only while
+  // checkout is on) AND to a member (as a link into the list, never a wall —
+  // 2026-09-25). The slide-in below stays free-only: it exists to sell.
   const watching = read("src/app/watching/page.tsx");
-  assert.match(watching, /!isPremium\(user\) && premiumCheckoutEnabled\(\) \? await getPremiumNudge\(user\.id, getCountry\(\)\)\.catch\(\(\) => null\)/);
-  assert.match(watching, /<PremiumNudgeCard \{\.\.\.nudgeCopy\} surface="nudge:watchlist"/);
+  assert.match(watching, /isPremium\(user\) \|\| premiumCheckoutEnabled\(\) \? await getPremiumNudge\(user\.id, getCountry\(\)\)\.catch\(\(\) => null\)/);
+  assert.match(watching, /<PremiumNudgeCard \{\.\.\.nudgeCopy\} member=\{isPremium\(user\)\} surface="nudge:watchlist"/);
   const portfolio = read("src/app/portfolio/page.tsx");
-  assert.match(portfolio, /!premium && premiumCheckoutEnabled\(\) && portfolio\.holdings\.length > 0/);
-  assert.match(portfolio, /<PremiumNudgeCard \{\.\.\.ownedNudge\} surface="nudge:portfolio"/);
+  assert.match(portfolio, /\(premium \|\| premiumCheckoutEnabled\(\)\) && portfolio\.holdings\.length > 0/);
+  assert.match(portfolio, /<PremiumNudgeCard \{\.\.\.ownedNudge\} member=\{premium\} surface="nudge:portfolio"/);
 
   const route = read("src/app/api/premium/nudge/route.ts");
   assert.match(route, /if \(!user \|\| isPremium\(user\) \|\| !premiumCheckoutEnabled\(\)\) return none;/);
