@@ -99,29 +99,47 @@ longer lands on its entry.
   subscriptions and missed every mid-trial cancel. A trial set to end is told
   it won't be charged, gets the no-charge reminder 24–48h out and a one-click
   Keep (`/api/premium/resume`); plan switches stay hidden mid-trial until
-  verified on a Stripe test clock.
-  [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924)
-- **Tiers:** Plus, $4.99/mo or $39.99/yr, is **ad-free** and has the full
-  lists (Deal Finder, Rising Cards, Rising Sealed). Premium, $9.99/mo or
-  $79.99/yr, adds Value Finder, Bulk Pricer, Best Basket and Demand Finder.
+  verified on a Stripe test clock. The owner lifted the freeze for the
+  09-25 lineup change (prices, trial and intro untouched); compare cohorts
+  by `PREMIUM_COPY_VERSION` (`lineup-2026-09-25`).
+  [2026-09-24](../DECISIONS.md#L12120), [2026-09-24](../DECISIONS.md#L12215), [2026-09-23](../DECISIONS.md#L10924),
+  [2026-09-25](../DECISIONS.md#L12842)
+- **Tiers (lineup of 2026-09-25):** Plus, $4.99/mo or $39.99/yr, is
+  **ad-free**, has the full Deal Finder (with "Only my cards") and Rising
+  Cards lists, and target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT`
+  (25) cards. Premium, $9.99/mo or $79.99/yr, adds unlimited targets and
+  Best Basket's store-by-store plan (for a pasted list, deck, watchlist or
+  binder, and behind the portfolio's replacement cost). Any signed-in
+  account gets its own Best Basket total and the replacement-cost total;
+  "binder" means replacement cost, never gaps. Value Finder, Demand Finder,
+  Rising Sealed, the Condition Calculator and the Bulk Pricer are gone, each
+  301'd to the free page carrying its useful part
+  (`tests/lineup-removals.test.ts`).
   The intro price is an amount-off coupon created by `ensureIntroCoupon`;
   its display and charge share `introAmountOffCents`, and it is quoted only
   where `introEligibleFor` says checkout will give it. A tier switch keeps
   exactly the discounted renewals left (`introRenewalsRemaining`).
   [2026-09-11](../DECISIONS.md#L4428), [2026-09-24](../DECISIONS.md#L12120),
-  [2026-09-25](../DECISIONS.md#L12322)
+  [2026-09-25](../DECISIONS.md#L12322), [2026-09-25](../DECISIONS.md#L12842)
 - **Gates:** `isPremium(user)` defaults to the Plus minimum; ads read
   `adFree` (any paid tier). Tier comes from the Stripe price (`tierFromPriceId`);
   a `premiumTierFloor` only raises a paid tier, never grants one. Never reuse
-  a Price across tiers. [2026-09-11](../DECISIONS.md#L4774),
-  [2026-09-14](../DECISIONS.md#L6038)
-- **Copy:** members see their real tier; marketing says "Premium"; never link
-  a member to a wall. The pitch is "Never overpay for a Riftbound card", with
+  a Price across tiers. Ad-free is enforced client-side too: the eBay
+  carousel and the app's AdMob banner check `adFree`, and the `rc_adfree`
+  boot script pauses ad requests before the (ungated) loader. **Set
+  `AD_STRATEGY=manual`, or verify anchor/vignette ads stay off on a Plus
+  account, before AdSense Auto ads go on.** [2026-09-11](../DECISIONS.md#L4774),
+  [2026-09-14](../DECISIONS.md#L6038), [2026-09-25](../DECISIONS.md#L12842)
+- **Copy:** members see their real tier; marketing says "Premium", except
+  that a Plus-level wall sells Plus (`<PremiumButton tier="plus">`) and every
+  surface describing Plus says it is ad-free; never link a member to a wall. The pitch is "Never overpay for a Riftbound card", with
   no flipper or "ahead of the market" language. No fake scarcity,
-  countdowns, invented numbers or testimonials. The lock-in banner is a
-  promise: never move existing subscribers onto a new Price.
+  countdowns, invented numbers, savings totals or testimonials. Rising
+  Cards is a screen, not a prediction. The lock-in banner is a promise:
+  never move existing subscribers onto a new Price.
   [2026-09-11](../DECISIONS.md#L4642), [2026-09-14](../DECISIONS.md#L5971),
-  [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328)
+  [2026-09-10](../DECISIONS.md#L3990), [2026-09-22](../DECISIONS.md#L10328),
+  [2026-09-25](../DECISIONS.md#L12842)
 - **Checkout:** every buy button goes to `/premium/start` (sign-in first when
   signed out; OAuth only). `/premium` defaults to MONTHLY and headlines the
   real price, with no `$0`. [2026-09-13](../DECISIONS.md#L5890),
@@ -133,9 +151,9 @@ longer lands on its entry.
   dismissals per device, snoozes 3 pages then 7 days, and keeps its 5-second
   delay. [2026-09-16](../DECISIONS.md#L7031),
   [2026-09-14](../DECISIONS.md#L6134), [2026-09-24](../DECISIONS.md#L12089)
-- **Free visitors get nothing from Deal Finder or Rising Cards** (the queries
-  run only for paying members); Rising Sealed and Value Finder keep a free
-  top pick. [2026-09-22](../DECISIONS.md#L10538)
+- **Signed-out visitors get nothing from Deal Finder or Rising Cards**; a
+  free account gets the top 3 of each, a paid tier the full list.
+  [2026-09-22](../DECISIONS.md#L10538), [2026-09-25](../DECISIONS.md#L12842)
 - **AdSense review mode** (`NEXT_PUBLIC_ADSENSE_REVIEW_MODE`, which lifts
   the paywall for a submission) **is off by default in code**; a value set in
   Vercel's dashboard overrides it. "The paywall now takes priority." The
@@ -249,8 +267,17 @@ longer lands on its entry.
   images need PNG (`cardImageForOg`). [2026-09-13](../DECISIONS.md#L5750),
   [2026-09-22](../DECISIONS.md#L10857)
 - **Portfolio value never includes shipping.** Price-drop emails: at most one
-  digest per address per week. [2026-09-15](../DECISIONS.md#L6531),
-  [2026-09-21](../DECISIONS.md#L9752)
+  digest per address per week, except Plus/Premium target and below-market
+  alerts, which run after both daily imports (`?scope=paid` from
+  refresh-prices.yml; vercel.json's daily run is the free `all` run) under
+  `PAID_SEND_CAP`. Every alert email names the store behind the price and
+  says "item price, postage extra" unless postage is known.
+  [2026-09-15](../DECISIONS.md#L6531),
+  [2026-09-21](../DECISIONS.md#L9752), [2026-09-25](../DECISIONS.md#L12842)
+- **Methodology breaks:** `METHODOLOGY_BREAKS` and `dropBreakWindow` live in
+  `lib/price-history.ts`; every per-card PriceHistory reader uses them
+  (`tests/methodology-breaks.test.ts`), and the Index and portfolio are
+  chain-linked across a break. [2026-09-25](../DECISIONS.md#L12842)
 - **Rules text:** `Card.description` comes from Riot's gallery for every set.
   Origins, Proving Grounds, Spiritforged and Unleashed are filled by
   `scripts/backfill-card-text.ts` (maintenance task `backfill-card-text`,
@@ -289,8 +316,7 @@ longer lands on its entry.
   "Embed this live price" (`/embed` still offers the widgets); the per-card
   eBay auction pass. [2026-09-17](../DECISIONS.md#L7959),
   [2026-09-21](../DECISIONS.md#L9560), [2026-09-16](../DECISIONS.md#L6683)
-- **Declined:** a locked popup ✕; guest checkout (deferred); target-price
-  alerts (backlog); a Radiance post blitz or paid ads; a static rule-2
+- **Declined:** a locked popup ✕; guest checkout (deferred); a Radiance post blitz or paid ads; a static rule-2
   egress test; redefining a "real" price drop; a static landscape header or
   a 44px desktop switcher. [2026-09-14](../DECISIONS.md#L6134),
   [2026-09-13](../DECISIONS.md#L5890), [2026-09-16](../DECISIONS.md#L6598),

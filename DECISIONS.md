@@ -12838,3 +12838,204 @@ The builder's `--add-carts` merges a threshold re-probe's carts into the full ru
 - the cron guard fails closed;
 - the Keep button and the email quote one price, using one `renewalTerms()`;
 - the email's dates state UTC or the market's time zone.
+
+## Premium lineup: fewer tools, each one worth paying for — 2026-09-25
+
+Owner: "do a review of all of the premium features … some just didn't make
+sense, like the condition calculator … I need it to be desirable, I need
+people to want to buy it … take inspiration from websites like price empire …
+some people might actually profit from … we also want to narrow our focus …
+we want to maximize quality … if there's something that we don't have that
+MTG stocks might have … I want you to implement it … do it all in one pass."
+
+**The freeze is lifted for this change, by that request.** CURRENT-STATE had
+the pitch frozen until ~10-15 to measure the trial model. Prices ($4.99 /
+$9.99, $39.99 / $79.99), the 3-day card-gated trial and the half-price intro
+are NOT changed, so the trial-cancel read still means what it did. The funnel
+wording did change: compare cohorts by `PREMIUM_COPY_VERSION`
+(`lineup-2026-09-25`). No subscriber is moved to a new Stripe Price; the
+lock-in promise stands.
+
+**How it was decided.** Every paid and free tool was audited end to end
+(quality and desirability out of 10, with file:line bugs), and four research
+passes read the paid tiers of PriceEmpire and the CS2 sites, MTGStocks,
+MTGGoldfish, MTGBAN, EchoMTG, TCGplayer, Collectr, PriceCharting, Card Ladder
+and every Riftbound price tool we could find. What the category shows:
+
+- Looking up a price is a commodity. Pricempire made its $19.99 Trader tier
+  free in Nov 2025; at least ten Riftbound sites show prices for nothing.
+- What people pay $4–8 a month for: no ads, alerts on their own cards, and
+  being handed a list of deals. Tiers are metered (alerts 3/20/unlimited,
+  watch 50/unlimited), not just locked.
+- Basket optimisers are free elsewhere (tcgmarketplace.ca in Canada, TCG
+  Snoop in Australia), each in one country. Multi-region, collection-aware
+  buying is the gap.
+- Riftbound's community punishes "investor" framing, and has already called
+  RiftCompare "too greedy". "Never overpay" is the frame that survives.
+
+No per-tool usage numbers exist (gate attribution only began 09-23), so the
+cuts rest on the audits, not on traffic.
+
+**The lineup.**
+
+- **Free account:** unchanged comparison and database; watchlist and the
+  weekly new-low email, now naming the cheapest store with a link; portfolio
+  with P&L, CSV and the delivered replacement-cost TOTAL; the top 3 of Deal
+  Finder and Rising Cards; a Best Basket total for your own list (5 a day);
+  list pricing on /deck.
+- **Plus ($4.99):** "No ads, every deal, and an email naming the store when a
+  card you watch hits your price." No ads on any page (enforced, below);
+  target-price alerts on up to `PLUS_TARGET_ALERT_LIMIT` (25) cards; the full
+  Deal Finder with "Only my cards"; the full Rising Cards list.
+- **Premium ($9.99):** "Buy your whole list for less." Everything in Plus;
+  unlimited target alerts; Best Basket's store-by-store plan beside the best
+  one-store and two-store orders; the same plan for your deck, watchlist or
+  binder; the store-by-store plan behind the portfolio's replacement cost.
+
+**Cut, each with a 301 to the free page that carries its useful part**
+(`tests/lineup-removals.test.ts` pins the redirects and that no internal link
+still points at them):
+
+| Tool | Redirect | Why |
+|---|---|---|
+| Condition Impact Calculator | /guides/riftbound-card-condition-guide | Its answer never depended on the card (NM→LP was always −15%), it read an any-condition low as NM, and it had no buy link. Its useful part is now a note on played listings on card pages: "LP · 22% under the cheapest NM here". |
+| Value Finder | /movers | Compared a local price to a GLOBAL baseline, so it was wrong in most markets; the weekly series has too few clean points after the 09-23 break for a paid list. |
+| Demand Finder | /movers#most-searched | A leaderboard any visitor could pump with curl. It is now a free top-10 strip on /movers, behind a hardened counter. |
+| Rising Sealed | /sealed | Re-running its own scoring put a flat eBay-only product first on ~9 snapshots. /sealed gets a free "Sold out at every store we track" badge instead. |
+| Bulk Pricer | /deck | A Premium wall over the same `/api/deck/price` the free /deck already used. /deck now takes plain names, lists unmatched lines, and edits quantities. |
+
+**Deal Finder is one honest buyer list.** The audit found its "Worth more on
+eBay" tab unusable for paying members since 09-21: the pager, sort and store
+filter all dropped `view=flip` and sent them to another tab. It was also
+ask-based (an eBay listing price is not a sale), so it is cut, with
+"Cross-region" (worse than the free /market/records board). "Cheapest on
+eBay" became the eBay-only preset. The list is "Cheaper than TCGplayer
+market": Best price · TCGplayer market · Below market · % below, with no
+Sell/Net profit/Margin columns, and one `belowTcgPct` shared with the
+homepage badge. The owner's "profit" ask is served by this list: TCGplayer
+market is sales-based, so a store price well under it is the honest version
+of a deal. Correctness fixes: converted UK/SG TCGplayer reference rows are
+never a buy source; unknown eBay postage is "eBay + postage", never
+"delivered" (Canada's eBay rows are US listings and left out of its
+defaults); in the US a row is dropped when TCGplayer's own cheapest listing
+is at or below the buy price; every link is built by one `hrefFor`.
+**Only my cards** (`?mine=watch|own`) filters before paging and is honoured
+only for Plus and up.
+
+**Target-price alerts** (the Plus headline; `PriceAlert.targetCents`,
+`startPriceCents`, `targetEmailedCents`, all nullable):
+
+- Fires when the price is at or below the target and it is news: nothing
+  emailed yet, a new low under the shared watermark, or the ~2-month reminder.
+  Changing a target re-arms it. Also a below-market trigger at a new low from
+  `getTcgDealRanks` (switches off cleanly if the TCGplayer feed does).
+- Runs after BOTH daily imports: refresh-prices.yml curls
+  `/api/cron/price-alerts?scope=paid`; vercel.json's daily run stays the free
+  `all` run. No weekly cap for paid triggers; `PAID_SEND_CAP` = 30 digests a
+  run. The Plus ceiling is enforced in the PATCH route (409) and again in the
+  cron (oldest watches first).
+- Every alert email, free ones too, names the store behind the price and
+  links the listing ("item price, postage extra" unless postage is known),
+  found by one capped query over fired cards only.
+- Resend's 100/day is shared with sign-up mail, so the anonymous
+  confirmation is sent only to new addresses, capped at 30 a day, and first
+  contact digests at `FIRST_CONTACT_SEND_CAP` = 20 a run. Double opt-in for
+  anonymous watches is the durable fix and is the owner's call.
+
+**Best Basket is rebuilt, and priced with measured postage.** The old
+single-card hill-climb recommended six orders for $109.20 where one store
+delivered for $104.80. It is now an open-store search (add, drop and swap
+stores, a multi-card threshold fill), and the headline is the cheapest of
+that search, the best single-store order and the best two-store order. It
+is still a heuristic: on threshold-heavy random lists it misses the optimum
+about 3% of the time, so the copy says it is the best the search finds. The
+same day's measured-postage work (entries above) landed on main in
+parallel and the two were merged: every cost the search weighs goes through
+each store's `postage(cart)` (subtotal AND card count, plus minimum-order
+top-up and the rising-postage `riskCents`), `unavailable` stores are left
+out before pricing, and main's drain-a-store move is kept as a third polish
+move (on 240 real-postage lists it found a cheaper plan 50 times, a dearer
+one 3). A straight port asked `shippingFor` for 57k–162k quotes on a
+200-card list (6.4 s), so `basketStoresFor` memoises quotes for one request
+— orders with the same card count between the same two measured cart values
+get the same quote, and `tests/shipping.test.ts` checks the memo against a
+fresh `shippingFor` for every store. Because `riskCents` steers the search
+but is not reported, a chosen plan can show a higher total than a split that
+leans on a store's "from" figure; `savedCents` never goes below 0 and the
+page says why rather than claiming the split is cheapest.
+
+- **Buy this list is open to every signed-in account** (deck, watchlist,
+  binder, "Skip copies I already own"); the answer is what is tiered.
+  Non-Premium gets `basketPreview()` — total, postage, top-up, store count,
+  saving, coverage and region-level postage notes — and store names, lines
+  and URLs are never in that payload.
+- **"Binder" means replacement cost**, not gaps: CollectionCard has no
+  want-list or set target, so "the cards your binder is missing" cannot be
+  computed honestly, and skip-owned does not apply to it. A want-list model
+  comes first if binder gaps are ever wanted.
+- No savings figure is published until `best_basket_build` savedCents
+  medians are measured. It is weak in the US, where TCGplayer's cart
+  optimiser is free; its value rests on the flat-postage AU/CA/UK/SG/EU
+  stores.
+
+**Ad-free is enforced, not just promised.** A Plus member's first card page
+showed "Ad · live listings on eBay" and the app's AdMob banner. Now the eBay
+carousel renders a plain eBay link for ad-free viewers, NativeShell never
+shows the banner to them (and hides it after sign-in or purchase), and an
+inline boot script reads an `rc_adfree` hint cookie (set only after a real
+`/api/me` answer) to set `pauseAdRequests` and hide `[data-ad-placement]`
+before the loader runs. The loader stays ungated. **Before AdSense Auto ads
+are switched on, set `AD_STRATEGY=manual` or check on a Plus account that
+anchor and vignette ads are held back.**
+
+**Gates sell the tier that unlocks them.** `<PremiumButton tier="plus">` and
+`open(surface, { tier })` open the dialog on Plus for Deal Finder, Rising
+Cards, the homepage teasers, the nudges and the target field; Premium walls
+keep Premium. This refines "marketing says Premium": a Plus-level wall
+quotes Plus, and every surface describing Plus says it is ad-free. The
+dialog's price lock-in banner shows only while Premium is selected (there is
+no Plus lock-in to promise). /api/me gains `trialing` and `interval` (one
+Stripe read per Plus customer, 10-minute memo, time-boxed); a Plus trialist
+is never offered an upgrade the route would refuse, and annual subscribers
+are quoted annual prices for a switch. `PremiumClick.tier` (nullable) lets
+checkout recovery speak to Plus abandoners in Plus terms.
+
+**Honesty fixes that came with it:** no dollar totals on proof lines (a
+count of cards below market instead); Rising Cards is "a screen, not a
+prediction" (no "backtested", "investing" or buy-now-or-wait copy), prices in
+the row's own currency, every market as a scope; /movers is weekly, not
+daily; `/alerts` no longer claims shipping is included; the terms name both
+tiers, the card-gated trial, the intro and the lock-in.
+
+**History integrity.** `METHODOLOGY_BREAKS` moved to `lib/price-history.ts`
+with `dropBreakWindow`; every per-card PriceHistory reader uses it
+(`tests/methodology-breaks.test.ts`). Rising Cards ranks cards without five
+clean weekly points on demand and supply alone ("Price history
+rebuilding…") rather than going dark until ~10-26. Its history read is one
+week-keyed loader instead of ~21 reads a day of ~37k rows. The portfolio's
+moves are chain-linked like the Index (no "1 day" chip, which was the weekly
+step), so a card's first price never reads as a gain — relevant when
+Radiance prices on 23 Oct.
+
+**Free tools fixed:** Box EV counted about six phantom rares a box (Rare
+1.75 + Epic 0.25 per pack now) and priced OGS, which has no booster box;
+the fee calculator applies eBay's fee to item + shipping and shows no net
+figure until a commission is entered; /auctions says "Bid at last check ·
+2h ago".
+
+**Deferred, deliberately:**
+
+- A card-page "vs its 5-week average" verdict (Value Finder's signal, free):
+  after 2026-10-01, once four clean weekly points exist past the break.
+- A published Rising Cards track record, with a 6–8 week kill rule if picks
+  don't beat the universe median. The Plus pitch is anchored on ad-free,
+  alerts and deals so it survives a cut.
+- A Sell Sheet ("where do I get the most for this card"): there are no sold
+  prices outside TCGplayer US, and asks are not sales.
+- Shopify cart permalinks for Best Basket (the tcgmarketplace.ca idea): we
+  do not store variant ids.
+
+**Existing Premium members** see Value Finder, Bulk Pricer and Demand
+Finder leave the Premium list; each capability is free elsewhere now, and
+they gain unlimited target alerts and the rebuilt basket. Nobody's price or
+Stripe Price changes.
