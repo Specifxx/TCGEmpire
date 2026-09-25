@@ -293,7 +293,7 @@ export const SPECIAL_POOLS = ["Showcase"] as const;
 /**
  * Expected cards per pack for every pool.
  *
- * Base pools take their community rate. AltArt/Overnumbered/Signature take
+ * Base pools take their slot-count rate. AltArt/Overnumbered/Signature take
  * Riot's own published rate, unaffected by how many cards of that pool this
  * set happens to have. Showcase alone is still estimated: `specialsPerBox` per
  * box, divided by `packs`. A pool with no cards in this set gets 0 rather than

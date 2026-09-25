@@ -40,6 +40,17 @@ test("Box EV: the verdict's tone agrees with the colour of the ratio it sits und
   assert.equal(verdictFor(null), null);
 });
 
+test("Box EV: the pull-rate panel says where its base rates come from — Riot's slot counts", () => {
+  // Rare 1.75 is Riot's two rare-or-better slots minus the Epic share, not the
+  // community guide's figure (which had Rare at 2). The panel used to credit the
+  // guide for every base rate; it now quotes the slot counts the defaults are
+  // built from, and cites the guide only as agreeing (review, 2026-09-25).
+  const src = codeOnly("src/components/BoxEvCalculator.tsx");
+  assert.doesNotMatch(src, /base rarity rates come from a community/);
+  assert.match(src, /base rarity rates are Riot&apos;s published pack contents/);
+  assert.match(src, /\{DEFAULT_BASE_RATES\.Rare\} Rare and \{DEFAULT_BASE_RATES\.Epic\}/, "quoted from the defaults, never typed");
+});
+
 test("Box EV: Proving Grounds is not offered — it has no booster packs", () => {
   assert.ok(NO_BOOSTER_SETS.has("OGS"));
   assert.match(codeOnly("src/app/tools/box-ev/page.tsx"), /!NO_BOOSTER_SETS\.has\(s\.code\)/);
@@ -147,7 +158,6 @@ test("Played listing: 'LP · 22% under the cheapest NM here', from the page's ow
   assert.equal(d.get("lp")?.grade, "LP");
   assert.equal(d.get("lp")?.pctUnder, 22);
   assert.equal(d.get("lp")?.cheapestNmCents, 1_000);
-  assert.equal(d.get("lp")?.typicalPct, 15, "the site's standard LP multiplier, as context");
   assert.equal(playedDiscountText(d.get("lp")!), "22% under the cheapest NM here");
   // A played copy that isn't cheaper says so rather than hiding it.
   assert.equal(playedDiscountText(d.get("mp")!), "costs more than the cheapest NM here");
@@ -169,6 +179,17 @@ test("Played listing: the card page renders it from the rows it already has (no 
   const src = codeOnly("src/components/CardMarketSection.tsx");
   assert.match(src, /playedDiscounts\(prices\)/);
   assert.match(src, /playedDiscountText\(d\)/);
+});
+
+test("Played listing: no 'typical discount' from the site's fixed condition table beside a real listing", () => {
+  // CONDITION_MULTIPLIER is the site's own valuation assumption, unsourced — the
+  // same fixed table the retired calculator applied to every card. Quoting it as
+  // "a typical LP discount is about 15%" next to a live listing presents an
+  // invented number as a market norm (review, 2026-09-25).
+  const d = playedDiscounts([row("nm", "NM", 1_000), row("lp", "LP", 780)]).get("lp")!;
+  assert.deepEqual(Object.keys(d).sort(), ["cheapestNmCents", "grade", "pctUnder"]);
+  assert.doesNotMatch(read("src/lib/played-discount.ts").replace(/^\/\/.*$/gm, ""), /CONDITION_MULTIPLIER/);
+  assert.doesNotMatch(codeOnly("src/components/CardMarketSection.tsx"), /typical \$\{d\.grade\}|typicalPct/);
 });
 
 // ── /sealed: "Sold out at every store we track" ──────────────────────────────

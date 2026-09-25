@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { cardHref } from "@/lib/card-url";
 import { cardDisplayName } from "@/lib/card-name";
 import { CONDITIONS, CONDITION_KEYS, CONDITION_MULTIPLIER } from "@/lib/constants";
+import { QUANTITY_CAP } from "@/lib/collection-cost";
 import { useCountry } from "./CountryProvider";
 import { cardImageAlt } from "@/lib/image-alt";
 import { trackEvent } from "@/lib/analytics";
@@ -259,7 +260,7 @@ export function MyCollection({ refreshPage = false }: { refreshPage?: boolean } 
                     <div className="flex items-center overflow-hidden rounded-md border border-ink-700">
                       <button onClick={() => patch(it.id, { quantity: Math.max(0, it.quantity - 1) })} disabled={busy === it.id} className="px-2 py-1 text-sm text-slate-300 hover:bg-ink-800" aria-label="Decrease quantity">−</button>
                       <span className="min-w-8 px-2 text-center text-sm font-semibold text-white">{it.quantity}</span>
-                      <button onClick={() => patch(it.id, { quantity: Math.min(999, it.quantity + 1) })} disabled={busy === it.id} className="px-2 py-1 text-sm text-slate-300 hover:bg-ink-800" aria-label="Increase quantity">+</button>
+                      <button onClick={() => patch(it.id, { quantity: Math.min(QUANTITY_CAP, it.quantity + 1) })} disabled={busy === it.id} className="px-2 py-1 text-sm text-slate-300 hover:bg-ink-800" aria-label="Increase quantity">+</button>
                     </div>
                     {/* Price paid — powers the Premium profit/loss view on /portfolio. */}
                     <CostInput
@@ -304,6 +305,8 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
   const [open, setOpen] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
+  // A row already at QUANTITY_CAP: the add changed nothing, so it must not say "✓ Added".
+  const [atCap, setAtCap] = useState<string | null>(null);
 
   useEffect(() => {
     const t = q.trim();
@@ -340,6 +343,9 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
         setTimeout(() => setJustAdded((v) => (v === card.id ? null : v)), 1500);
         trackEvent("collection_add", { card_id: card.id });
         await onAdded();
+      } else if (res.status === 409 && (await res.json().catch(() => null))?.full) {
+        setAtCap(card.id);
+        setTimeout(() => setAtCap((v) => (v === card.id ? null : v)), 2500);
       }
     } finally {
       setAdding(null);
@@ -375,8 +381,8 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
                   <span className="block truncate text-sm font-medium text-white">{c.name}</span>
                   <span className="block text-[11px] text-slate-500">{c.setCode} · {c.collectorNumber}</span>
                 </span>
-                <span className={`shrink-0 text-xs font-semibold ${justAdded === c.id ? "text-brand-400" : "text-slate-400"}`}>
-                  {adding === c.id ? "…" : justAdded === c.id ? "✓ Added" : "+ Add"}
+                <span className={`shrink-0 text-xs font-semibold ${justAdded === c.id ? "text-brand-400" : atCap === c.id ? "text-amber-300" : "text-slate-400"}`}>
+                  {adding === c.id ? "…" : justAdded === c.id ? "✓ Added" : atCap === c.id ? `Already ${QUANTITY_CAP}` : "+ Add"}
                 </span>
               </button>
             </li>
@@ -392,7 +398,7 @@ export function CollectionSearch({ onAdded }: { onAdded: () => void | Promise<vo
 function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ added: number; matchedCards: number; unmatched: string[] } | null>(null);
+  const [result, setResult] = useState<{ added: number; matchedCards: number; full?: string[]; unmatched: string[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
@@ -442,7 +448,15 @@ function BulkImport({ onDone }: { onDone: (res: unknown) => Promise<unknown> }) 
       {error && <p role="alert" className="mt-2 text-sm text-rose-400">{error}</p>}
       {result && (
         <div role="status" className="mt-2 text-sm">
-          <p className="font-semibold text-brand-300">✓ Added {result.matchedCards} card{result.matchedCards === 1 ? "" : "s"} to your collection.</p>
+          {/* `added`, not `matchedCards`: a card already at the cap matched but gained nothing. */}
+          {result.added > 0 && (
+            <p className="font-semibold text-brand-300">✓ Added {result.added} card{result.added === 1 ? "" : "s"} to your collection.</p>
+          )}
+          {result.full && result.full.length > 0 && (
+            <p className="mt-1 text-xs text-amber-300/90">
+              Already at {QUANTITY_CAP} copies, nothing added: <span className="text-slate-400">{result.full.join(" · ")}</span>
+            </p>
+          )}
           {result.unmatched.length > 0 && (
             <p className="mt-1 text-xs text-amber-300/90">
               Couldn&apos;t match: <span className="text-slate-400">{result.unmatched.join(" · ")}</span>

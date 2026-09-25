@@ -490,7 +490,7 @@ export function CardPriceComparison({
                       return d ? (
                         <span
                           className={d.pctUnder > 0 ? "text-slate-300" : "text-gold"}
-                          title={`Compared with the cheapest in-stock Near Mint${p.isFoil ? " foil" : ""} copy in this list (${fmt(d.cheapestNmCents)}). A typical ${d.grade} discount is about ${d.typicalPct}%.`}
+                          title={`Compared with the cheapest in-stock Near Mint${p.isFoil ? " foil" : ""} copy in this list (${fmt(d.cheapestNmCents)}).`}
                         >
                           {playedDiscountText(d)}
                         </span>

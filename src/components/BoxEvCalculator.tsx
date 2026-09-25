@@ -14,18 +14,26 @@ import {
   oneInPacks,
   poolStatsFromPools,
   verdictFor,
+  DEFAULT_BASE_RATES,
   DEFAULT_PACKS,
   DEFAULT_SPECIALS_PER_BOX,
   SPECIAL_POOLS,
   POOL_LABEL,
   type PoolKey,
 } from "@/lib/box-ev";
+import { PACK_SLOTS } from "@/lib/pack-composition";
 
 const isEstimatedPool = (p: PoolKey) => (SPECIAL_POOLS as readonly string[]).includes(p);
 
+// The provenance note quotes the numbers the defaults are built from, never a
+// typed copy of them (lib/box-ev.ts DEFAULT_BASE_RATES).
+const slots = (key: string) => PACK_SLOTS.find((s) => s.key === key)?.count ?? 0;
+const EPIC_ONE_IN_PACKS = Math.round(1 / DEFAULT_BASE_RATES.Epic);
+
 // Box EV explorer. RiftCompare supplies the half nobody else has — a real market
 // price for every card in the set, including the chase prints — and the player
-// supplies the pack structure, because Riot has never published pull rates.
+// can tune the pack structure, which comes from Riot's published pack contents
+// and pull-rate table (lib/pack-composition.ts) except for Showcase.
 //
 // EVERYTHING ARRIVES IN USD and is converted once, here, for display. The server
 // render is country-agnostic (that is what lets the page be ISR-cached), and
@@ -341,7 +349,10 @@ export function BoxEvCalculator({ sets, offers = {} }: { sets: BoxEvSet[]; offer
         {showRates && (
           <div className="mt-4 border-t border-ink-800 pt-4">
             <p className="text-[11px] leading-relaxed text-slate-500">
-              The base rarity rates come from a community pull-rate guide built on observed box and case data.{" "}
+              The base rarity rates are Riot&apos;s published pack contents: {slots("common")} common,{" "}
+              {slots("uncommon")} uncommon and {slots("rare")} rare-or-better cards per pack, where an Epic replaces a
+              rare about one pack in {EPIC_ONE_IN_PACKS} — so {DEFAULT_BASE_RATES.Rare} Rare and {DEFAULT_BASE_RATES.Epic}{" "}
+              Epic per pack. A community pull-rate guide built on observed box and case data agrees.{" "}
               <strong className="text-gold">Alt Art, Over-numbered and Signature are Riot&apos;s own published
               rates</strong>, and a set&apos;s <strong className="text-gold">Ultimate</strong> (Unleashed: Baron
               Nashor) pulls at the Signature rate — all from the same pull-rate table the{" "}

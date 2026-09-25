@@ -13,7 +13,12 @@
 // non-foil one with the cheapest NM non-foil, because the foil premium would
 // otherwise swamp the condition discount. No NM copy of the same finish in the
 // market, no note: there is nothing honest to compare with.
-import { CONDITION_MULTIPLIER, normaliseCondition } from "./constants";
+//
+// And no "a typical LP discount is about 15%" beside it: that 15% is the site's
+// own CONDITION_MULTIPLIER valuation assumption (unsourced, the same fixed table
+// the retired calculator was faulted for), not a market norm, and quoting it
+// next to a real listing would present an invented number as one.
+import { normaliseCondition } from "./constants";
 
 export interface ConditionListing {
   id: string;
@@ -27,8 +32,6 @@ export interface PlayedDiscount {
   grade: string;
   /** Whole percent below the cheapest NM copy of the same finish; ≤ 0 = no cheaper. */
   pctUnder: number;
-  /** The site's standard multiplier for the grade, as a percent discount (LP 15). */
-  typicalPct: number;
   cheapestNmCents: number;
 }
 
@@ -51,7 +54,6 @@ export function playedDiscounts(listings: readonly ConditionListing[]): Map<stri
     out.set(l.id, {
       grade,
       pctUnder: Math.round(((nm - l.priceCents) / nm) * 100),
-      typicalPct: Math.round((1 - (CONDITION_MULTIPLIER[grade] ?? 1)) * 100),
       cheapestNmCents: nm,
     });
   }
