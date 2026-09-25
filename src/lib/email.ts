@@ -592,6 +592,67 @@ export async function sendTrialEndingNoChargeEmail(
   );
 }
 
+// ─── Auto-renew off: a PAID subscription ends soon (once per period) ────────
+// runRenewalReminders in lib/premium.ts, 2026-09-25. For someone who switched
+// auto-renew off ("I disable it for everything and then renew when needed"):
+// the date, that nothing more is charged, and exactly what renewing charges —
+// every figure from their own subscription via renewalTerms(), never a typed
+// price. No countdown, no "last chance"; letting it end is a real choice and
+// the email says so. The link lands on /premium?keep=1#keep, where renewing is
+// one deliberate click (the link itself changes nothing — mail scanners
+// prefetch links).
+export interface RenewalReminderEmailOpts {
+  planName: string;
+  endsAt: Date;
+  /** What renewing charges from the end date (subscriptionChargeLine); null when unknown. */
+  renewLine: string | null;
+  /** Half-price renewals still owed, which renewing before the end keeps. */
+  introMonthsLeft: number;
+  /** What a new subscription after the end costs someone who has paid; null when not stated. */
+  newSubLine: string | null;
+}
+
+export function buildRenewalReminderEmail(opts: RenewalReminderEmailOpts): { subject: string; heading: string; html: string } {
+  const { planName, endsAt, renewLine, introMonthsLeft, newSubLine } = opts;
+  const dateLabel = endsAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const strong = (s: string) => `<strong style="color:#e6ebf2">${s}</strong>`;
+  const charge = renewLine
+    ? `Renewing turns auto-renew back on: nothing is charged before ${dateLabel}, then ${strong(renewLine)}.`
+    : `Renewing turns auto-renew back on, and nothing is charged before ${dateLabel}.`;
+  const intro =
+    introMonthsLeft > 0
+      ? `Renew before it ends and you keep your ${introMonthsLeft} remaining half-price month${introMonthsLeft === 1 ? "" : "s"}${
+          newSubLine ? `; a new subscription after it ends is the full price, ${newSubLine}` : ""
+        }.`
+      : newSubLine
+      ? `If it ends, you can subscribe again any time at ${newSubLine}.`
+      : "";
+  const heading = "Your subscription ends soon";
+  const inner = `
+    <tr><td style="padding:8px 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      Your RiftCompare ${planName} subscription ends on ${strong(dateLabel)}. Auto-renew is off, so
+      ${strong("nothing more will be charged")} and ${planName} simply stops then.
+    </td></tr>
+    <tr><td style="padding:0 32px 16px;font-size:14px;line-height:1.6;color:#b8c0cc">
+      To keep it, renew with one click on your account page. ${charge}${intro ? ` ${intro}` : ""} Otherwise there's nothing to do.
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px"><a href="${SITE_URL}/premium?keep=1#keep" style="display:inline-block;background:#34d17e;color:#06210f;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px">Renew ${planName}</a></td></tr>`;
+  const footer = `<tr><td style="padding:16px 32px 26px;border-top:1px solid #233047;font-size:12px;color:#6b7585">
+    You're getting this once because you turned off auto-renew on your RiftCompare ${planName} subscription.<br/>
+    RiftCompare · Riftbound card price comparison.
+  </td></tr>`;
+  return {
+    subject: `Your RiftCompare ${planName} ends on ${dateLabel} — renew with one click`,
+    heading,
+    html: emailShell(heading, inner, footer),
+  };
+}
+
+export async function sendRenewalReminderEmail(to: string, opts: RenewalReminderEmailOpts): Promise<boolean> {
+  const e = buildRenewalReminderEmail(opts);
+  return sendEmail(to, e.subject, e.html);
+}
+
 // ─── Premium checkout-recovery (one-time) ────────────────────────────────────
 
 // Sent ONCE, roughly a day after someone opens Stripe checkout for Premium but

@@ -16,6 +16,7 @@ import {
   introEligibleFor,
   PREMIUM_TRIAL_DAYS,
 } from "@/lib/premium";
+import { renewalReminderAhead } from "@/lib/renewal-reminders";
 import { PremiumPricingCards } from "@/components/PremiumPricingCards";
 import { ManageSubscriptionButton } from "@/components/ManageSubscriptionButton";
 import { SubscriptionActions } from "@/components/SubscriptionActions";
@@ -154,7 +155,20 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How do I cancel?",
-    a: "From this page, use \"Manage subscription\" to open Stripe's billing portal and cancel in a couple of clicks — no email or phone call needed. You keep access until the end of the period you already paid for (or, during a trial, until it ends).",
+    a: "From this page: \"Turn off auto-renew\" on your subscription card is one click, or use \"Manage subscription\" to open Stripe's billing portal — no email or phone call needed. You keep access until the end of the period you already paid for (or, during a trial, until it ends).",
+  },
+  // Customer feedback, 2026-09-25: "Personally I hate auto renewal so I
+  // disable it for everything and then renew when needed." Answered here and
+  // on the account card only — deliberately not in the hero, the pricing
+  // cards or checkout. Every clause is what the code does: api/premium/
+  // auto-renew, the reminder runs (24–48h ahead), resume's intro rule.
+  {
+    q: "Can I turn off auto-renew?",
+    a: `Yes. Once you're subscribed, "Turn off auto-renew" on this page is one click. You keep everything until the end of your trial or the period you've paid for, and nothing more is charged. Switch it off more than two days before the end and we email you a day or two before it ends, with a link to renew in one click — renewing turns auto-renew back on and charges nothing until that date.${
+      introOfferEnabled()
+        ? " Renewing before it ends keeps any half-price months you have left; once it has ended, a new subscription is the full price for anyone who has already paid."
+        : ""
+    }`,
   },
   {
     q: "Does my price ever go up?",
@@ -224,6 +238,17 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
     });
     if (line) keepOffer = { line, from: fmtDate(subDetails.currentPeriodEnd) };
   }
+  // A renewing subscription gets "Turn off auto-renew" (api/premium/auto-renew)
+  // — trial or paid, never past_due (that period is unpaid, so "you keep
+  // everything until" would not be true). The reminder is promised only when
+  // it will really still go out (renewalReminderAhead).
+  const autoRenew =
+    subDetails && !subDetails.cancelAtPeriodEnd && (subDetails.status === "active" || subDetails.status === "trialing")
+      ? {
+          until: fmtDate(subDetails.currentPeriodEnd),
+          reminder: renewalReminderAhead(subDetails.currentPeriodEnd, user?.premiumUntil),
+        }
+      : null;
   const currentTier = premiumTierOf(user);
   // The half-price intro, quoted only to viewers checkout would give it to.
   const introEligible = !already && (await introEligibleFor(dbUser));
@@ -416,6 +441,7 @@ export default async function PremiumPage({ searchParams }: { searchParams?: { k
                 trialing={subDetails.status === "trialing"}
                 keep={keepOffer}
                 highlightKeep={searchParams?.keep === "1"}
+                autoRenew={autoRenew}
               />
             </div>
           ) : user.premiumUntil ? (

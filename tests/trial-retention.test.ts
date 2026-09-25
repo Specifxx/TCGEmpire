@@ -49,7 +49,8 @@ test("Keep: POST only, the signed-in owner's own customer, clears the cancel, in
   assert.match(route, /price\.recurring\?\.interval === "month" &&\s*!sub\.discount &&\s*!\(await hasEverPaid\(dbUser\.stripeCustomerId\)\)/);
   const actions = code("src/components/SubscriptionActions.tsx");
   assert.match(actions, /act\("resume", "\/api\/premium\/resume"\)/);
-  assert.match(actions, /`Keep \$\{TIER_NAMES\[tier\]\} — \$\{keep\.line\} from \$\{keep\.from\}`/, "the button names the amount and the date");
+  // Worded as the other side of "Turn off auto-renew" since 2026-09-25 (tests/auto-renew.test.ts).
+  assert.match(actions, /`Turn auto-renew back on — \$\{keep\.line\} from \$\{keep\.from\}`/, "the button names the amount and the date");
   assert.match(actions, /Or do nothing and it simply ends then\./);
 });
 

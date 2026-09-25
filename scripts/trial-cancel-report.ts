@@ -13,7 +13,9 @@
  * Also counts SAVES (a cancelled subscription kept via api/premium/resume, or
  * resumed in the portal — the latter from customer.subscription.updated events,
  * which Stripe keeps for 30 days), splits 14-day from 3-day trials and the
- * intro coupon, and takes --since=YYYY-MM-DD to read one cohort alone.
+ * intro coupon, and takes --since=YYYY-MM-DD to read one cohort alone. Every
+ * cancel is also split by door: /premium's "Turn off auto-renew" (metadata
+ * turnedOffVia, 2026-09-25) versus Stripe's portal or dashboard.
  *
  * Per trial it reads, from Stripe: when the trial started, whether and when it
  * was cancelled (cancel_at_period_end OR canceled_at), Stripe's
@@ -34,7 +36,7 @@ import type Stripe from "stripe";
 import { prisma } from "../src/lib/db";
 import { stripe, stripeEnabled } from "../src/lib/stripe";
 import { tierFromPriceId, NOT_SEED_WHERE } from "../src/lib/premium";
-import { classifyTrial, cancelBucket, type TrialRow } from "../src/lib/trial-cancel";
+import { classifyTrial, cancelBucket, cancelDoor, TURNED_OFF_VIA_BUTTON, type TrialRow } from "../src/lib/trial-cancel";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -139,6 +141,8 @@ async function main() {
       keptAtMs: typeof s.metadata?.keptAt === "string" ? Date.parse(s.metadata.keptAt) : null,
       keptVia: typeof s.metadata?.keptVia === "string" ? s.metadata.keptVia : null,
       resumedByEvent: resumed.has(s.id),
+      turnedOffAtMs: typeof s.metadata?.turnedOffAt === "string" ? Date.parse(s.metadata.turnedOffAt) : null,
+      turnedOffVia: typeof s.metadata?.turnedOffVia === "string" ? s.metadata.turnedOffVia : null,
     };
   });
 
@@ -167,6 +171,28 @@ async function main() {
   }
   const afterReminder = cancelled.filter((x) => x.c.afterReminder === true).length;
   console.log(`  cancelled AFTER the "trial ends soon" email: ${afterReminder} of ${cancelled.length}`);
+
+  // WHICH DOOR (2026-09-25). /premium gained a one-click "Turn off auto-renew"
+  // (api/premium/auto-renew stamps turnedOffVia), and Stripe records it
+  // exactly like the portal's Cancel. Inside the trial-model measurement
+  // window, a new way to switch renewal off must not read as the new model
+  // failing, so every cancel is split by where it happened.
+  const doorLabel = (d: string | null) =>
+    d === TURNED_OFF_VIA_BUTTON ? '"Turn off auto-renew" on /premium' : d === "portal" ? "Stripe portal / dashboard" : d ?? "(not off)";
+  const doors = new Map<string, { inTrial: number; afterPaying: number }>();
+  for (const x of classified) {
+    if (x.c.outcome !== "cancelled_in_trial" && x.c.outcome !== "churned_after_paying") continue;
+    const k = doorLabel(cancelDoor(x.r));
+    const g = doors.get(k) ?? { inTrial: 0, afterPaying: 0 };
+    if (x.c.outcome === "cancelled_in_trial") g.inTrial++;
+    else g.afterPaying++;
+    doors.set(k, g);
+  }
+  console.log("\nWHERE RENEWAL WAS SWITCHED OFF  (cancelled in trial · paid, then cancelled)");
+  if (!doors.size) console.log("  (no cancels)");
+  for (const [k, g] of [...doors.entries()].sort((a, b) => b[1].inTrial + b[1].afterPaying - (a[1].inTrial + a[1].afterPaying))) {
+    console.log(`  ${k.padEnd(36)} ${String(g.inTrial).padStart(3)} · ${String(g.afterPaying).padStart(3)}`);
+  }
 
   const split = (label: string, key: (r: TrialRow) => string) => {
     const groups = new Map<string, { n: number; cancelled: number; converted: number }>();

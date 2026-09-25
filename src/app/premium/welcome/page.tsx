@@ -116,6 +116,19 @@ export default async function PremiumWelcomePage({
           time from your account page.
         </p>
       ) : null}
+      {/* Auto-renew, said once and plainly, under the terms (customer
+          feedback 2026-09-25: "I hate auto renewal so I disable it for
+          everything"). Not in the pitch, the pricing cards or checkout. True
+          as written: a new trial or period is days away from its end, so the
+          reminder (runPremiumTrialReminders / runRenewalReminders) is still
+          ahead when this is read. */}
+      <p className="mt-3 text-xs leading-relaxed text-slate-400" data-auto-renew-note>
+        Prefer not to auto-renew? You can switch it off on your{" "}
+        <Link href="/premium" className="text-brand-400 hover:underline">
+          account page
+        </Link>{" "}
+        — you keep the full {trial ? "trial" : "period"} and we&apos;ll remind you before it ends.
+      </p>
       {unlocked.length > 0 && (
         <>
           <p className="mt-4 text-sm font-semibold text-white">Just unlocked</p>

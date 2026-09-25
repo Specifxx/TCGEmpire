@@ -27,6 +27,15 @@ import {
 //   • annual    → billed the year now, credited for the rest of this month
 // The wording here is the display half of the three routes' own proration
 // choices; changing one without the other would make this card lie.
+//
+// AUTO-RENEW (2026-09-25, customer feedback: "I hate auto renewal so I disable
+// it for everything and then renew when needed"). "Turn off auto-renew" and
+// "Turn auto-renew back on" are one switch's two sides, named alike:
+//   • off → api/premium/auto-renew: nothing more is charged, access runs to
+//     the date shown, and the reminder goes out a day or two before it ends
+//     (promised only when renewalReminderAhead says it still will);
+//   • on  → api/premium/resume: the Keep logic unchanged, quoting the real
+//     charge (intro-aware) and the date it starts.
 export function SubscriptionActions({
   tier,
   interval,
@@ -36,6 +45,7 @@ export function SubscriptionActions({
   trialing = false,
   keep = null,
   highlightKeep = false,
+  autoRenew = null,
 }: {
   tier: PremiumTierKey;
   interval: "month" | "year" | null;
@@ -46,14 +56,20 @@ export function SubscriptionActions({
   trialing?: boolean;
   /** Set when the subscription is due to END: what keeping it charges, and from when. */
   keep?: { line: string; from: string } | null;
-  /** Arrived from the trial-ending email's ?keep=1 link. */
+  /** Arrived from a reminder email's ?keep=1 link. */
   highlightKeep?: boolean;
+  /**
+   * Set when the subscription is renewing (active or trialing, not set to end):
+   * the date access runs to if auto-renew is turned off, and whether the
+   * before-it-ends reminder can still be promised.
+   */
+  autoRenew?: { until: string; reminder: boolean } | null;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<null | "upgrade" | "downgrade" | "annual" | "resume">(null);
+  const [busy, setBusy] = useState<null | "upgrade" | "downgrade" | "annual" | "resume" | "autorenew-off">(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function act(kind: "upgrade" | "downgrade" | "annual" | "resume", path: string) {
+  async function act(kind: "upgrade" | "downgrade" | "annual" | "resume" | "autorenew-off", path: string) {
     setBusy(kind);
     setError(null);
     trackEvent("subscription_change_started", { kind, from_tier: tier, source: "premium-page" });
@@ -109,7 +125,7 @@ export function SubscriptionActions({
               disabled={busy !== null}
               className="btn-primary w-full py-2 text-xs"
             >
-              {busy === "resume" ? "Keeping…" : `Keep ${TIER_NAMES[tier]} — ${keep.line} from ${keep.from}`}
+              {busy === "resume" ? "Turning it back on…" : `Turn auto-renew back on — ${keep.line} from ${keep.from}`}
             </button>
             <p className="mt-1 text-[11px] text-slate-500">
               Nothing is charged before {keep.from}. Or do nothing and it simply ends then.
@@ -160,6 +176,25 @@ export function SubscriptionActions({
             <p className="mt-1 text-[11px] text-slate-500">
               Takes effect now. The unused part of this period is credited against your next invoice, and the four pro
               tools lock.
+            </p>
+          </div>
+        )}
+
+        {/* One click, no confirm step: fully reversible from this card ("Turn
+            auto-renew back on") until the date shown. Same weight as the plan
+            buttons — not hidden, not styled as the "wrong" choice. */}
+        {autoRenew && (
+          <div data-auto-renew-off>
+            <button
+              onClick={() => act("autorenew-off", "/api/premium/auto-renew")}
+              disabled={busy !== null}
+              className="btn-ghost w-full py-2 text-xs"
+            >
+              {busy === "autorenew-off" ? "Turning off…" : "Turn off auto-renew"}
+            </button>
+            <p className="mt-1 text-[11px] text-slate-500">
+              You keep everything until {autoRenew.until}. Nothing more is charged.
+              {autoRenew.reminder ? " We'll email you a day or two before it ends so you can renew in one click." : ""}
             </p>
           </div>
         )}

@@ -38,6 +38,37 @@ export interface TrialRow {
   keptVia?: string | null;
   /** A cancel_at_period_end true → false event seen in the last 30 days (a portal resume). */
   resumedByEvent?: boolean;
+  /** Set by api/premium/auto-renew when renewal was switched off there (metadata turnedOffAt/turnedOffVia). */
+  turnedOffAtMs?: number | null;
+  turnedOffVia?: string | null;
+}
+
+/**
+ * The metadata value api/premium/auto-renew stamps as turnedOffVia — the
+ * "Turn off auto-renew" button on /premium (2026-09-25). Anything that switched
+ * renewal off without stamping it (Stripe's portal, the dashboard) reads as
+ * "portal" in cancelDoor below.
+ */
+export const TURNED_OFF_VIA_BUTTON = "auto-renew";
+
+/**
+ * Which door switched renewal off, for a subscription that is cancelled —
+ * because Stripe records the button and the portal's Cancel identically
+ * (cancel_at_period_end). Pure. null when renewal is not off.
+ *
+ * The button's stamp counts only when it is the LATEST of our stamps: after
+ * button → Keep → portal cancel, metadata still carries turnedOffAt (Stripe
+ * merges metadata), but keptAt is newer, so that cancel is the portal's. One
+ * sequence still misreads, and is accepted: button → portal resume → portal
+ * cancel (a portal resume leaves no stamp) reads as the button.
+ */
+export function cancelDoor(r: TrialRow): string | null {
+  const off = r.cancelAtPeriodEnd || r.canceledAtMs != null || r.status === "canceled";
+  if (!off) return null;
+  if (r.turnedOffVia && r.turnedOffAtMs != null && (r.keptAtMs == null || r.turnedOffAtMs > r.keptAtMs)) {
+    return r.turnedOffVia;
+  }
+  return "portal";
 }
 
 export type TrialOutcome =

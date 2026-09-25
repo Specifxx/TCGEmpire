@@ -8,6 +8,9 @@ name: Premium trial reminders
 # reason the other GH Actions cron workflows here exist) — see src/lib/premium.ts's
 # runPremiumTrialReminders for why this can't just be Stripe's own
 # customer.subscription.trial_will_end webhook (it doesn't fire for trials this short).
+# The same call also sends the renewal reminder to PAID subscribers whose
+# auto-renew is off and whose period ends within 48h (runRenewalReminders,
+# 2026-09-25) — once per period, stamped on the Stripe subscription.
 #
 # SETUP (one-time): add a repository secret named CRON_SECRET matching the value
 # already used to guard /api/revalidate and the other /api/cron/* routes.
