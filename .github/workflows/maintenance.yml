@@ -31,6 +31,7 @@ on:
           - fix-promo-variants # REPAIR for cards tcg-printings already created wrongly: a TCGplayer PROMO product that was filed as an in-set alt-art "Showcase" because this script's own promo-set regex was narrower than lib/tcgplayer.ts's (reported via the wrong-card form — /card/warwick-hunter-ogn-159a-298 showed a US$63.81 promo price on a page claiming to be a pack-pulled Showcase). Flags isPromo and restores the base printing's rarity. Report-only unless `apply` is ticked. NEVER moves a slug — those URLs are live and indexed, and a move needs a next.config.js redirect in the same commit.
           - fix-cloned-art   # scrape real official art for cloned promo/rune printings; clear wrong borrowed art to a placeholder where none exists
           - set-pipeline     # scrape playriftbound.com's official gallery for ONE set and import its reveals (set_slug input; defaults to the next announced-but-unreleased set — Radiance today). Replaced 'vendetta-pipeline', which could only ever do VEN.
+          - backfill-card-text # FILL-ONLY: printed rules text (Card.description) for OGN/OGS/SFD/UNL from the official gallery, matched on externalId + name + collector number, written only where description is NULL. Report-only unless `apply` is ticked — read the format canary, match and mismatch counts in the job summary first. NEVER use set-pipeline for these sets instead: it keys rows differently and would create ~950 duplicate cards.
           - probe-sg         # read-only Singapore store scan (no DB writes)
           - probe-url        # read-only page fetch + font/style diagnostics (url input)
           - probe-imgur      # read-only: render an Imgur album (JS SPA — curl gets an empty shell) and dump every full-res image URL (url input)
@@ -117,7 +118,7 @@ on:
         type: boolean
         default: false
       set_slug:
-        description: "set-pipeline only: which set to scrape + import, by slug or code (e.g. radiance / RAD). Leave empty for the next announced-but-unreleased set."
+        description: "set-pipeline / backfill-card-text: which set, by slug or code (e.g. radiance / RAD). Empty: set-pipeline takes the next announced-but-unreleased set, backfill-card-text all four of OGN/OGS/SFD/UNL."
         type: string
         required: false
       source:
@@ -127,7 +128,7 @@ on:
         default: RM4
         options: [RM4, RM3, DATABASE_URL_2, DATABASE_URL, HISTORY_DATABASE_URL_2, HISTORY_DATABASE_URL, RH7, RH6, RH5, HISTORY_DATABASE_URL_4, HISTORY_DATABASE_URL_3]
       apply:
-        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / apply-intro-to-trialists: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
+        description: "audit-premium-vs-stripe / fix-promo-variants / close-inbox-items / apply-intro-to-trialists / backfill-card-text: actually WRITE (default: report only). Doubles as 'show every row' for audit-inbox."
         type: boolean
         default: false
       premium_until:
@@ -5208,6 +5209,18 @@ jobs:
           DUMP=1 npx tsx scripts/fetch-set-official.ts
           npx tsx scripts/import-set-cards.ts
 
+      # Printed rules text for the four sets RiftScribe catalogued without it.
+      # Fill-only, keyed on the gallery id that IS those rows' externalId — see
+      # the header of scripts/backfill-card-text.ts, including why set-pipeline
+      # must never be run for these sets instead. `apply` gates the write (the
+      # polarity rule: ticking is what produces a value) and the job's DRY_RUN
+      # still vetoes it. The ping step below purges the card pages after a write.
+      - name: Backfill card rules text (official gallery, fill-only)
+        if: inputs.task == 'backfill-card-text'
+        env:
+          SET: ${{ inputs.set_slug }}
+        run: npx tsx scripts/backfill-card-text.ts ${{ inputs.apply && '--apply' || '' }}
+
       # The scraped card list + raw JSON dump, for inspection / parser hardening.
       # Globbed because the filenames are per-set now (prisma/radiance-cards.json).
       - uses: actions/upload-artifact@v4
@@ -5236,11 +5249,19 @@ jobs:
       # the importer actually did — see app/api/cron/ping-new-cards/route.ts.
       #
       # DRY_RUN is excluded: a dry run wrote nothing, so there is nothing to submit.
+      # backfill-card-text is report-only unless `apply` is ticked, so it is
+      # excluded the same way: purging every /card/* page after a run that wrote
+      # nothing is a deploy's worth of re-renders for no change — and so is an
+      # apply run the format canary refused (it exits non-zero, hence success()
+      # alongside always()). After a successful apply run the purge is the point (the filled text shows now, not in 24h); its
+      # IndexNow half submits only NEW cards, so updated pages reach Bing on the
+      # 06:10 sitemap submission instead.
       - name: Revalidate sitemap + ping IndexNow for new cards
         if: >-
           always() &&
           !inputs.dry_run &&
-          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","set-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed"]'), inputs.task)
+          (inputs.task != 'backfill-card-text' || (inputs.apply && success())) &&
+          contains(fromJSON('["cards-sync","cards-manual","fetch-promos","tcg-printings","set-pipeline","fix-cloned-art","fix-op-promo-flag","set-rune-art","import-prices","import-sealed","backfill-card-text"]'), inputs.task)
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: "https://riftcompare.com"

@@ -45,22 +45,32 @@ export interface KeywordSection {
 export interface KeywordEntry {
   slug: string; // "empower"
   name: string; // "Empower"
-  // Set to scope the live card query against. NOT necessarily "the set that
-  // introduced this keyword" — every entry here is "VEN", including keywords
-  // that are core, evergreen Riftbound rules and predate Vendetta entirely
-  // (Tank, Action, Reaction, etc.). That's a live-data fact, not a rules one:
-  // as of 2026-08-12, `Card.description` (the rules-text field this predicate
-  // reads) is populated ONLY for Vendetta — confirmed by probing production
-  // with a maximally generic single-character query, which matched 36 VEN
-  // cards and ZERO cards in every other set. Origins/Unleashed/Spiritforged
-  // were imported by the general RiftScribe sync, which doesn't carry rules
-  // text through; Vendetta alone went through a dedicated gallery scraper
-  // (import-set-cards.ts) that does. So "VEN" here means "the only set where
-  // this predicate can currently match anything", not "Vendetta-exclusive
-  // mechanic" — see each entry's own prose for what's actually true about
-  // where the keyword is printed. Revisit this once description text is
-  // backfilled for the older sets.
-  set: string;
+  // Set to scope the live card query against — OPTIONAL, and absent on every
+  // core keyword whose `rulesContain` is a printed bracket marker ("[Tank]",
+  // "[Shield").
+  //
+  // Until 2026-09-25 every entry here carried "VEN", including evergreen core
+  // keywords that predate Vendetta (Tank, Action, Reaction…). That was a
+  // live-data fact, not a rules one: `Card.description` was populated ONLY for
+  // Vendetta, because Origins/Proving Grounds/Spiritforged/Unleashed came in
+  // through the RiftScribe sync, which carries no rules text.
+  // scripts/backfill-card-text.ts then filled those four sets from Riot's own
+  // gallery, in the same bracket format, so a bracket marker now matches
+  // wherever it is printed and /keywords/tank lists Tank units from every set.
+  //
+  // Empower, Flow and Burn keep "VEN" although their markers are bracketed:
+  // they are the mechanics Vendetta introduced, their prose says so, and their
+  // guides (lib/articles.ts) are "every X card in Vendetta" lists scoped the
+  // same way, so the keyword page and the guide still show identical cards.
+  // Drop all three together, guides included, the day another set prints one.
+  //
+  // The seven entries that match an UNBRACKETED substring ("Add ", "Unique",
+  // "Buff", "Stun", "Mighty", "Predict", "Disempower") keep "VEN". A plain word
+  // matches anywhere it is printed, inside other cards' reminder text or a
+  // longer word included, and those predicates were only ever verified against
+  // Vendetta. Widen one only after checking its matches across the whole
+  // catalogue with `/api/cards?rules=<marker>`.
+  set?: string;
   rulesContain: string; // printed bracket marker, e.g. "[Empower]" — same predicate
   // the existing guide's browseCta/embed already use, so this page and the guide
   // always show the identical set of cards.
@@ -163,7 +173,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "action",
     name: "Action",
-    set: "VEN",
     rulesContain: "[Action]",
     directAnswer:
       "Action is a Riftbound keyword that gives a card or ability permission to be played or activated during a Showdown — a state that normally only lets the active player respond — even when it isn't your turn. It's pure permission: an Action card still follows every other rule for playing it (a unit still needs a base or a battlefield you control), it just isn't locked out of Showdowns the way an ordinary card is.",
@@ -188,7 +197,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "reaction",
     name: "Reaction",
-    set: "VEN",
     rulesContain: "[Reaction]",
     directAnswer:
       "Reaction is Riftbound's true instant-speed keyword. It grants everything Action does — permission to play or activate during a Showdown — plus permission to play during a Closed state, the game's most restrictive timing window, which otherwise only Reaction cards can act in. A Reaction card can be played on any player's turn, essentially any time you have priority.",
@@ -213,7 +221,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "hidden",
     name: "Hidden",
-    set: "VEN",
     rulesContain: "[Hidden]",
     directAnswer:
       "Hidden is a Riftbound keyword on Spells, Units and Gear that lets you pay a cost to hide the card facedown at a battlefield you control, on your own turn. From the next turn onward, that facedown card gains Reaction and can be played for free, ignoring its normal cost — turning it into a surprise play your opponent can't see coming or plan around.",
@@ -239,7 +246,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "ambush",
     name: "Ambush",
-    set: "VEN",
     rulesContain: "[Ambush]",
     directAnswer:
       "Ambush is a Riftbound keyword on units that lets them be played to a battlefield where you already control other units — a location that would otherwise be off-limits, since units can normally only be played to your base or a battlefield you already control by other means. While being played that way, an Ambush unit also gains Reaction, so it can drop into a fight already in progress.",
@@ -268,7 +274,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "tank",
     name: "Tank",
-    set: "VEN",
     rulesContain: "[Tank]",
     directAnswer:
       "Tank is a Riftbound keyword on units that changes how combat damage gets assigned to your side. A unit with Tank must be assigned lethal damage before any of your other units without Tank — it steps in front of the rest of your board, soaking up damage that would otherwise land somewhere else, as long as another Tank unit hasn't already claimed the assignment.",
@@ -293,7 +298,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "shield",
     name: "Shield",
-    set: "VEN",
     rulesContain: "[Shield",
     directAnswer:
       "Shield is a Riftbound keyword on units that adds bonus Might — but only while that unit is defending in combat. \"Shield [X]\" gives +X Might for the duration of combat as a defender; the value disappears the moment the unit stops defending, and multiple sources of Shield on the same unit simply add together.",
@@ -318,7 +322,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "deflect",
     name: "Deflect",
-    set: "VEN",
     rulesContain: "[Deflect",
     directAnswer:
       "Deflect is a Riftbound keyword that makes a card or ability more expensive for an opponent to target you or the permanent with it. \"Deflect [X]\" adds X Power, of any domain, as a mandatory extra cost every time an opponent's spell or ability chooses that target — a tax on being singled out, not a hard block.",
@@ -343,7 +346,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "assault",
     name: "Assault",
-    set: "VEN",
     rulesContain: "[Assault",
     directAnswer:
       "Assault is a Riftbound keyword on units that adds bonus Might — the mirror image of Shield — but only while that unit is attacking. \"Assault [X]\" gives +X Might for the duration of combat as an attacker, disappearing once the unit stops being the Attacker; multiple sources of Assault on the same unit add together.",
@@ -368,7 +370,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "backline",
     name: "Backline",
-    set: "VEN",
     rulesContain: "[Backline]",
     directAnswer:
       "Backline is a Riftbound keyword on units that pushes combat damage away from them — the reverse of Tank. A unit with Backline must be assigned lethal damage after every other unit the same controller has that doesn't have Backline, so it's protected as long as there's anything else on the board to take the hit first.",
@@ -393,7 +394,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "ganking",
     name: "Ganking",
-    set: "VEN",
     rulesContain: "[Ganking]",
     directAnswer:
       "Ganking is a Riftbound keyword on units that lets them make a standard move directly from one battlefield to another. Normally a standard move only reaches your base or a battlefield adjacent to it; Ganking is a passive ability that widens those options without removing any move a unit already had.",
@@ -424,7 +424,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "legion",
     name: "Legion",
-    set: "VEN",
     rulesContain: "[Legion]",
     directAnswer:
       "Legion is a Riftbound dependent keyword that rewards playing more than one card in a turn. \"[Legion][>] [Text]\" is short for \"if you've played another card this turn, this card gains [Text]\" — the bonus text is dormant until you've finalized a second card on the same turn, then it switches on for the rest of that turn.",
@@ -449,7 +448,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "level",
     name: "Level",
-    set: "VEN",
     rulesContain: "[Level",
     directAnswer:
       "Level is a Riftbound dependent keyword tied to XP. \"[Level N][>] [Text]\" is short for \"while you have N or more XP, this card gains [Text]\" — the bonus text switches on the moment your XP total reaches the printed threshold, and switches back off if your XP (or the card's controller) changes and the threshold is no longer met.",
@@ -474,7 +472,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "hunt",
     name: "Hunt",
-    set: "VEN",
     rulesContain: "[Hunt",
     directAnswer:
       "Hunt is a Riftbound triggered-ability keyword on units that grants XP for winning a battlefield. \"Hunt X\" triggers both when the unit Conquers and when it Holds a battlefield, granting its controller X XP each time (X defaults to 1 if omitted) — it's the main engine that fuels [Level](/keywords/level) payoffs.",
@@ -499,7 +496,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "weaponmaster",
     name: "Weaponmaster",
-    set: "VEN",
     rulesContain: "[Weaponmaster]",
     directAnswer:
       "Weaponmaster is a Riftbound triggered-ability keyword on units that lets them equip a piece of Gear you control at a discount the instant they're played — even outside the normal timing an Equip ability would allow. It's a play effect: choose an Equipment card you control, pay its Equip cost reduced by any-domain Power, and attach it straight to the unit with Weaponmaster.",
@@ -524,7 +520,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "equip",
     name: "Equip",
-    set: "VEN",
     rulesContain: "[Equip",
     directAnswer:
       "Equip is a Riftbound activated-ability keyword on Gear cards tagged Equipment. Paying the printed \"Equip [Cost]\" attaches that Gear to a unit you choose and control — turning a card sitting in play into a permanent boost on the unit it's attached to, activatable any time you could normally activate an ability.",
@@ -549,7 +544,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "accelerate",
     name: "Accelerate",
-    set: "VEN",
     rulesContain: "[Accelerate]",
     directAnswer:
       "Accelerate is a Riftbound unit ability that lets you pay an optional extra cost as you play the unit to have it enter the board already readied, instead of exhausted. It's a one-time tempo boost paid for at the moment of playing the card — Accelerate has no function once the unit is already on the board.",
@@ -574,7 +568,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "vision",
     name: "Vision",
-    set: "VEN",
     rulesContain: "[Vision]",
     directAnswer:
       "Vision is a Riftbound triggered-ability keyword on permanents that fires when the permanent is played, letting its controller Predict — look at the top card of their Main Deck and choose whether to keep it there or Recycle it away. It's Riftbound's card-selection tool, smoothing out what you're about to draw.",
@@ -599,7 +592,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "deathknell",
     name: "Deathknell",
-    set: "VEN",
     rulesContain: "[Deathknell]",
     directAnswer:
       "Deathknell is a Riftbound triggered-ability keyword on permanents, short for \"when I die, [Effect].\" It fires when the permanent is Killed and actually sent to the trash — if something replaces that death (a recall, for instance) before it happens, the Deathknell effect never triggers, since the permanent was never truly sent to the trash.",
@@ -809,7 +801,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "temporary",
     name: "Temporary",
-    set: "VEN",
     rulesContain: "[Temporary]",
     directAnswer:
       "Temporary is a Riftbound triggered-ability keyword on permanents, short for \"at the start of this permanent's controller's Beginning Phase, before scoring, kill this.\" A Temporary permanent is built to last exactly one round — it's automatically killed at the very start of its controller's next Beginning Phase, before points are even scored that turn.",
@@ -834,7 +825,6 @@ export const KEYWORDS: KeywordEntry[] = [
   {
     slug: "repeat",
     name: "Repeat",
-    set: "VEN",
     rulesContain: "[Repeat",
     directAnswer:
       "Repeat is a Riftbound optional-additional-cost keyword on spells and abilities. Paying \"Repeat [Cost]\" as you play the card lets its effect execute a second time on resolution — the same instructions run twice, back to back, as though the card's text were printed out in full a second time.",

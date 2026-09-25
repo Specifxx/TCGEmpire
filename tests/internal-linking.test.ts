@@ -108,7 +108,7 @@ const VEN_BASE: CardForGuides = {
 
 test("a card printing a keyword resolves to that keyword's own guide", () => {
   for (const k of KEYWORDS) {
-    const card = { ...VEN_BASE, setCode: k.set, description: `Some text. ${k.rulesContain} more text.` };
+    const card = { ...VEN_BASE, setCode: k.set ?? VEN_BASE.setCode, description: `Some text. ${k.rulesContain} more text.` };
     const g = mechanicGuideForCard(card);
     assert.ok(g, `a card printing ${k.rulesContain} must resolve a guide`);
     assert.equal(g!.slug, k.guideSlug, `${k.name} must resolve to its own guide`);
@@ -128,15 +128,29 @@ test("the mechanic rule never fires without the printed marker", () => {
 test("keyword matching is scoped to the set that introduced it", () => {
   // Empower/Flow/Burn are Vendetta keywords. An older card whose text happens to
   // contain the word must not be sold a guide about a mechanic it doesn't have.
-  for (const k of KEYWORDS) {
+  const scoped = KEYWORDS.filter((k) => k.set);
+  assert.ok(scoped.some((k) => k.slug === "empower"), "Empower is still a Vendetta-scoped keyword");
+  for (const k of scoped) {
     const wrongSet = { ...VEN_BASE, setCode: "OGN", setName: "Origins", description: `${k.rulesContain} me.` };
     assert.equal(mechanicGuideForCard(wrongSet), null, `${k.name} must not match outside ${k.set}`);
   }
 });
 
+test("a core keyword's bracket marker matches in every set", () => {
+  // Rules text is backfilled for Origins/Proving Grounds/Spiritforged/Unleashed
+  // (scripts/backfill-card-text.ts), so an Origins [Tank] unit gets the guide.
+  const core = KEYWORDS.filter((k) => !k.set);
+  assert.ok(core.some((k) => k.slug === "tank"));
+  for (const k of core) {
+    assert.ok(k.rulesContain.startsWith("["), `${k.name} is unscoped but its marker is not bracketed`);
+    const origins = { ...VEN_BASE, setCode: "OGN", setName: "Origins", description: `${k.rulesContain} me.` };
+    assert.equal(mechanicGuideForCard(origins)?.slug, k.guideSlug, `${k.name} must match on an Origins card`);
+  }
+});
+
 test("guidesForCard surfaces the mechanic guide first, without crowding out the rest", () => {
   for (const k of KEYWORDS) {
-    const card = { ...VEN_BASE, setCode: k.set, description: `${k.rulesContain} me.` };
+    const card = { ...VEN_BASE, setCode: k.set ?? VEN_BASE.setCode, description: `${k.rulesContain} me.` };
     const guides = guidesForCard(card);
     assert.equal(guides[0]?.slug, k.guideSlug, `${k.name}: the mechanic guide should lead`);
     assert.equal(guides.length, 3, "the card page still gets its full complement of three links");
