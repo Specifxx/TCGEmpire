@@ -10,11 +10,11 @@
 // clock: a sitemap lastmod that moves on every deploy regardless of real changes
 // teaches Google to stop trusting <lastmod> entirely.
 const STATIC_PAGE_DATES: Record<string, string> = {
-  "/deck": "2026-07-29",
+  "/deck": "2026-09-25",
   "/trade": "2026-07-29",
   "/riftle": "2026-08-10",
   "/tools": "2026-09-25",
-  "/tools/best-basket": "2026-08-17",
+  "/tools/best-basket": "2026-09-25",
   "/tools/selling-fees": "2026-08-21",
   "/premium": "2026-09-25",
   "/release-dates": "2026-08-27",

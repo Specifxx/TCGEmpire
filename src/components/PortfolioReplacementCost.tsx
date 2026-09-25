@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { trackEvent } from "@/lib/analytics";
-import type { BasketPlan } from "@/lib/basket";
+import type { BasketPlan, BasketPreview } from "@/lib/basket";
 
 // "What would it cost to buy this collection again?" — the delivered answer.
 //
@@ -15,12 +15,16 @@ import type { BasketPlan } from "@/lib/basket";
 // actually charged — once per store, free where the order clears a store's
 // threshold — and shows the gap against the headline.
 //
+// The TOTAL is free; the store-by-store plan behind it is Premium (2026-09-25).
+// The route returns `plan` only to Premium, and everyone else gets a link to
+// Best Basket's binder source, which shows it.
+//
 // BEHIND A BUTTON, not computed on load: the route it calls reads every in-stock
 // listing for every card held, which is a much heavier query than the page's own
 // (see the route's header, and the egress rules at the top of lib/db.ts).
 
-interface Result {
-  plan: BasketPlan;
+interface Result extends BasketPreview {
+  plan?: BasketPlan; // Premium only
   valuedCents: number;
   pricedHoldings: number;
   skippedHoldings: number;
@@ -54,7 +58,8 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
   // The delivered total against what the same cards contribute to the headline.
   // Signed both ways on purpose: a collection of cheap cards costs far more to
   // replace than it is "worth", and saying so is the honest answer.
-  const gapCents = result ? plan!.totalCents - result.valuedCents : 0;
+  const gapCents = result ? result.totalCents - result.valuedCents : 0;
+  const outOfStock = result ? result.requested - result.covered : 0;
 
   return (
     <section className="card-surface p-5">
@@ -85,12 +90,12 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
 
       {error && <p className="mt-3 text-sm text-rose-400">{error}</p>}
 
-      {plan && result && (
+      {result && (
         <div className="mt-3 space-y-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="Cards" value={formatMoney(plan.itemsCents, currency)} />
-            <Stat label="Delivery" value={formatMoney(plan.shippingCents, currency)} />
-            <Stat label="Total delivered" value={formatMoney(plan.totalCents, currency)} cls="text-gold" />
+            <Stat label="Cards" value={formatMoney(result.totalCents - result.shippingCents, currency)} />
+            <Stat label="Delivery" value={formatMoney(result.shippingCents, currency)} />
+            <Stat label="Total delivered" value={formatMoney(result.totalCents, currency)} cls="text-gold" />
             <Stat
               label="vs. listed value"
               value={`${gapCents >= 0 ? "+" : "−"}${formatMoney(Math.abs(gapCents), currency)}`}
@@ -99,19 +104,19 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
           </div>
 
           <p className="text-sm text-slate-400">
-            Re-buying {plan.matchedCards} of your card{plan.matchedCards === 1 ? "" : "s"} today would take{" "}
-            <strong className="text-slate-200">{plan.storeCount} store{plan.storeCount === 1 ? "" : "s"}</strong> and{" "}
-            <strong className="text-slate-200">{formatMoney(plan.shippingCents, currency)}</strong> of postage.
-            {plan.savedCents > 0 && (
+            Re-buying the {result.covered} cop{result.covered === 1 ? "y" : "ies"} in stock today would take{" "}
+            <strong className="text-slate-200">{result.storeCount} store{result.storeCount === 1 ? "" : "s"}</strong> and{" "}
+            <strong className="text-slate-200">{formatMoney(result.shippingCents, currency)}</strong> of postage.
+            {result.savedCents > 0 && (
               <>
                 {" "}
-                Consolidating onto those stores saves {formatMoney(plan.savedCents, currency)} against buying each card from its own
-                cheapest shop ({plan.naiveStoreCount} orders).
+                Consolidating onto those stores saves {formatMoney(result.savedCents, currency)} against buying each card from its own
+                cheapest shop.
               </>
             )}
           </p>
 
-          {plan.stores.length > 0 && (
+          {plan && plan.stores.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
@@ -138,6 +143,14 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
             </div>
           )}
 
+          {result.covered > 0 && (
+            <p className="text-sm">
+              <Link href="/tools/best-basket?source=binder" className="font-semibold text-brand-400 hover:underline">
+                {plan ? "Open it in Best Basket, with every card and its store link →" : "See the store-by-store plan →"}
+              </Link>
+            </p>
+          )}
+
           <div className="space-y-1.5 text-[11px] text-slate-600">
             <p>
               Replacement cost is what re-buying costs, not what your cards are worth — two different numbers, and normally this is the
@@ -149,11 +162,11 @@ export function PortfolioReplacementCost({ currency }: { currency: string }) {
               The split across stores is the best one the optimiser finds, not a proof of the cheapest possible — consolidating orders
               against free-shipping thresholds has no fast exact answer, so it lands close rather than provably first. Store listings
               only: eBay is left out because its postage is quoted per listing and isn&apos;t comparable with a store&apos;s flat rate.
-              {plan.unbuyable.length > 0 && (
+              {outOfStock > 0 && (
                 <>
                   {" "}
-                  {plan.unbuyable.length} card{plan.unbuyable.length === 1 ? " is" : "s are"} not in stock at any tracked store right now
-                  and {plan.unbuyable.length === 1 ? "is" : "are"} left out of the total.
+                  {outOfStock} cop{outOfStock === 1 ? "y is" : "ies are"} not in stock at any tracked store right now and{" "}
+                  {outOfStock === 1 ? "is" : "are"} left out of the total.
                 </>
               )}
               {result.skippedHoldings > 0 && (

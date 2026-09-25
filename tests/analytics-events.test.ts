@@ -87,22 +87,23 @@ test("deck_create fires only on a real user click, not the auto-price-from-share
   }
 });
 
-test("best_basket_build fires once a plan is actually built, from BOTH ways a basket can be built", () => {
-  // BestBasket has two paths to a result: runLines() (primary — search and
-  // pick a card at a time) and runPasted() (secondary "advanced" decklist
-  // paste). "a best-basket result generated" applies to either, so both must
-  // fire the event, not just whichever one happened to exist when this was
-  // first wired up.
+test("best_basket_build fires once a basket is actually built, with the fields the savings read needs", () => {
+  // Since 2026-09-25 every way into Best Basket (paste, watchlist, binder; full
+  // plan or free preview) goes through one run(). The event carries source and
+  // market because the saving is expected to differ by both, and savedCents
+  // because no savings figure may be published until its median is measured.
   const src = read("src/components/BestBasket.tsx");
-  const CALL = 'trackEvent("best_basket_build", { card_count: built.matchedCards, total_price: built.totalCents / 100, region: country })';
-  for (const fn of ["runLines", "runPasted"]) {
-    const start = src.indexOf(`async function ${fn}`);
-    assert.ok(start > -1, `expected a ${fn}() function`);
-    const end = src.indexOf("\n  }", src.indexOf("try {", start));
-    const body = src.slice(start, end);
-    assert.ok(body.includes(CALL), `${fn}() must fire best_basket_build once its plan resolves`);
-    // Must come after setPlan, i.e. only once the plan is known-good (res.ok
-    // was already checked and returned early above).
-    assert.ok(body.indexOf("setPlan(built)") < body.indexOf(CALL), `${fn}() must fire best_basket_build AFTER setting the plan, not before it's known to exist`);
+  const start = src.indexOf("async function run()");
+  assert.ok(start > -1, "expected a run() function");
+  const end = src.indexOf("\n  }", src.indexOf("try {", start));
+  const body = src.slice(start, end);
+  const at = body.indexOf('trackEvent("best_basket_build", {');
+  assert.ok(at > -1, "run() must fire best_basket_build");
+  // lines/matched are LINE counts (listSize), not the copy counts requested/covered carry.
+  for (const field of ["source: tab", "market: country", "lines: size.lines", "matched: size.matched", "stores: built.storeCount", "savedCents: built.savedCents"]) {
+    assert.ok(body.slice(at).includes(field), `best_basket_build must carry ${field}`);
   }
+  // Only once the result is known-good (res.ok was checked and returned early).
+  assert.ok(body.indexOf("setResult(built)") > -1 && body.indexOf("setResult(built)") < at, "must fire AFTER the result is set");
+  assert.ok(body.indexOf("if (!res.ok || !d)") < at, "must not fire for a failed request");
 });

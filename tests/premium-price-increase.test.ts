@@ -299,6 +299,7 @@ test("PremiumButton (the gated-tool-wall CTA) still opens the dialog — this in
   // left the product on 2026-09-25 (both URLs 301 to free pages now).
   const usages = [
     "src/app/tools/best-basket/page.tsx",
+    "src/components/BestBasket.tsx",
     "src/app/tools/deal-finder/page.tsx",
     "src/app/tools/rising/page.tsx",
   ];

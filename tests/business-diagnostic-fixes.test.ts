@@ -293,12 +293,11 @@ test("the /stores pitch page counts real tracked stores (RETAILER_LIST), not eve
 // alternatives, played-alongside, all server-rendered (crawlable).
 // ─────────────────────────────────────────────────────────────────────────────
 
-test("the card page links to the deck builder and Best Basket", () => {
+test("the card page links to the deck and list pricer and Best Basket", () => {
   const src = read("src/app/card/[id]/page.tsx");
   assert.match(src, /href="\/deck"/);
   assert.match(src, /href="\/tools\/best-basket"/);
-  // The "Bulk price a list" chip went with the Bulk Pricer (2026-09-25): its
-  // list pricing is the deck builder's now, which the first link already offers.
+  // The Bulk Pricer merged into /deck (2026-09-25); /bulk-pricer only redirects.
   assert.doesNotMatch(src, /href="\/bulk-pricer"/);
 });
 
@@ -313,9 +312,8 @@ test("the card page's cheaper-alternatives query is gated on a real priced basel
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deck builder → Best Basket handoff. (The meta-deck pages used the same ?list=
-// handoff until they were removed on 2026-09-12; the two tests that pinned the
-// card page's "played in these decks" / "played alongside" rails and the deck
-// page's bestBasketHref went with them.)
+// handoff until they were removed on 2026-09-12. Nothing linked into it after
+// that until /deck's "Buy this deck for less →", 2026-09-25.)
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("BestBasket accepts an initialList and best-basket/page.tsx decodes ?list=", () => {
@@ -323,13 +321,19 @@ test("BestBasket accepts an initialList and best-basket/page.tsx decodes ?list="
   assert.match(read("src/app/tools/best-basket/page.tsx"), /searchParams\.list/);
 });
 
-test("the signed-out gate preserves ?list= through the login redirect", () => {
+test("/deck hands its list to Best Basket in the encoding the page decodes", () => {
+  const deck = read("src/components/DeckBuilder.tsx");
+  assert.match(deck, /href=\{`\/tools\/best-basket\?list=\$\{encodeURIComponent\(encodeList\(listText\)\)\}`\}/);
+  assert.match(deck, /Buy this deck for less →/);
+  assert.match(deck, /btoa\(unescape\(encodeURIComponent\(text\)\)\)/);
+  assert.match(read("src/app/tools/best-basket/page.tsx"), /decodeURIComponent\(escape\(atob\(b64\)\)\)/);
+});
+
+test("the signed-out gate preserves ?list= (and the source) through the login redirect", () => {
   const src = read("src/app/tools/best-basket/page.tsx");
-  assert.match(
-    src,
-    /searchParams\.list \? `\/tools\/best-basket\?list=\$\{searchParams\.list\}`/,
-    "a signed-out visitor who followed a deck's Best-Basket link must not lose that list after signing in"
-  );
+  assert.match(src, /if \(sp\.list\) q\.set\("list", sp\.list\)/, "a signed-out visitor who followed a deck's link must not lose that list");
+  assert.match(src, /q\.set\("source", sp\.source\)/);
+  assert.match(src, /href=\{`\/login\?next=\$\{encodeURIComponent\(selfHref\(searchParams\)\)\}&src=tool_gate`\}/);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -203,6 +203,15 @@ test("the BULK price-check query moved to /deck with the Bulk Pricer, and doesn'
   assert.doesNotMatch(read(HOME).replace(/\/\/[^\n]*/g, ""), /bulk price check/i, "the homepage keeps the single-card query only");
 });
 
+test("/deck carries the BULK price-check wording now the Bulk Pricer lives there", () => {
+  // The Bulk Pricer merged into the free /deck on 2026-09-25 and /bulk-pricer
+  // 301s there, so /deck keeps the "bulk price checker" phrasing for that query
+  // (and still doesn't claim the single-card "price check" one, owned by /).
+  const src = read("src/app/deck/page.tsx");
+  assert.match(src, /bulk price checker/i, "/deck keeps the bulk price checker wording");
+  assert.doesNotMatch(src, /riftbound price check\b/i);
+});
+
 // ── The map itself ──────────────────────────────────────────────────────────
 
 test("docs/seo-keyword-map.md records both owners, per its own rule 3", () => {

@@ -1374,7 +1374,7 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             <h2 className="font-bold text-white">Do more with this price</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               <Link href="/deck" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
-                Price a whole deck →
+                Price a deck or list →
               </Link>
               <Link href="/tools/best-basket" className="chip border border-ink-700 hover:border-brand-500 hover:bg-ink-800">
                 Cheapest multi-card cart →
