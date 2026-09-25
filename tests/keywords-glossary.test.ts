@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { ALL_KEYWORD_NAMES, KEYWORDS, keywordBySlug, keywordSlug } from "../src/lib/keywords";
+import { ALL_KEYWORD_NAMES, KEYWORDS, REACTION_REMINDERS, keywordBySlug, keywordSlug } from "../src/lib/keywords";
+import { getArticle } from "../src/lib/articles";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The /keywords glossary is now fully populated — every name in
@@ -104,8 +105,10 @@ test("sections and FAQs read as our own prose, not a copy-pasted rules citation"
 
 test("only bracket markers go unscoped; plain-word predicates stay on Vendetta", () => {
   // A plain word ("Buff", "Add ") matches wherever it is printed, and those
-  // predicates were only ever verified against Vendetta. A bracket marker is the
-  // printed keyword itself, so it may match the whole backfilled catalogue.
+  // predicates were only ever verified against Vendetta. A bracket marker names
+  // the printed keyword, so it may match the whole backfilled catalogue — except
+  // where it also appears in another keyword's reminder text, which the entry's
+  // `rulesExclude` filters out (asserted in the next test).
   for (const k of KEYWORDS) {
     if (!k.rulesContain.startsWith("[")) assert.equal(k.set, "VEN", `${k.name} matches a plain word and must stay VEN-scoped`);
   }
@@ -113,4 +116,18 @@ test("only bracket markers go unscoped; plain-word predicates stay on Vendetta",
     assert.equal(KEYWORDS.find((k) => k.slug === slug)?.set, "VEN", `${slug} is a Vendetta mechanic whose guide lists Vendetta cards only`);
   }
   assert.ok(KEYWORDS.filter((k) => !k.set).length >= 20, "the core bracket keywords are unscoped");
+});
+
+test("reminder-text markers are excluded, and the guide embed excludes the same ones", () => {
+  // Weaponmaster's reminder prints "you may [Equip]"; Ambush's "play me as a
+  // [Reaction]". Neither card has the keyword the bracket names.
+  const equip = KEYWORDS.find((k) => k.slug === "equip");
+  const reaction = KEYWORDS.find((k) => k.slug === "reaction");
+  assert.deepEqual(equip?.rulesExclude, ["you may [Equip]"]);
+  assert.deepEqual(reaction?.rulesExclude, REACTION_REMINDERS);
+  for (const k of KEYWORDS) {
+    for (const x of k.rulesExclude ?? []) assert.ok(x.includes(k.rulesContain), `${k.name}: "${x}" must contain the marker it excludes`);
+  }
+  const embed = getArticle("riftbound-timing-keywords-explained")?.embeds?.find((e) => e.rulesContain === "[Reaction]");
+  assert.deepEqual(embed?.rulesExclude, REACTION_REMINDERS, "the guide's Reaction embed filters the same reminders as /keywords/reaction");
 });

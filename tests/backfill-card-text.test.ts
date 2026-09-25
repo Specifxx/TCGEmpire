@@ -60,6 +60,10 @@ const NEXT_DATA = {
                   alt: "Riftbound Unit: Dr. Mundo, Expert. My Might is increased by the number of cards in your trash.",
                 }),
                 gal({
+                  id: "ogn-248-298", name: "Icathian Rain", subtitle: "Kai'Sa", set: "OGN", code: "OGN-248/298", type: "Spell", tags: ["Kai'Sa"],
+                  alt: "Riftbound Spell: Icathian Rain, Kai'Sa. Deal 2 to a unit.",
+                }),
+                gal({
                   id: "ogn-066a-298", name: "Ahri", subtitle: "Alluring", set: "OGN", code: "OGN-066a/298", type: "Unit", tags: ["Ahri", "Ionia"],
                   alt: "Riftbound Unit: Ahri, Alluring. When I hold, you score 1 point.",
                 }),
@@ -83,7 +87,7 @@ const row = (o: Partial<DbCardText> & { externalId: string; name: string; collec
 });
 
 test("the gallery parser reads name + subtitle, set and bracket-format text", () => {
-  assert.equal(GALLERY.length, 6);
+  assert.equal(GALLERY.length, 7);
   const akali = GALLERY.find((g) => g.id === "ven-021-166")!;
   assert.equal(akali.name, "Akali, Deadly Weapon");
   assert.equal(akali.setCode, "VEN");
@@ -124,6 +128,20 @@ test("an exact externalId match with agreeing name and number is filled", () => 
 test("a Legend matches under the catalogue's 'Champion, Epithet' name", () => {
   const plan = planBackfill([row({ externalId: "ogn-251-298", name: "Jinx, Loose Cannon", collectorNumber: "251/298" })], OLD_SETS);
   assert.equal(plan.updates.length, 1);
+});
+
+test("a champion's signature card matches under its bare stored name", () => {
+  // The gallery names it "Icathian Rain" with subtitle "Kai'Sa" (the champion
+  // tag); RiftScribe stores "Icathian Rain".
+  const plan = planBackfill([row({ externalId: "ogn-248-298", name: "Icathian Rain", collectorNumber: "248/298" })], OLD_SETS);
+  assert.equal(plan.updates.length, 1);
+  assert.equal(plan.nameMismatch.length, 0);
+});
+
+test("a bare champion name does not match a unit whose subtitle is an epithet", () => {
+  const plan = planBackfill([row({ externalId: "ogn-109-298", name: "Dr. Mundo", collectorNumber: "109/298" })], OLD_SETS);
+  assert.equal(plan.updates.length, 0);
+  assert.equal(plan.nameMismatch.length, 1);
 });
 
 test("an alt-art matches on its lettered number", () => {

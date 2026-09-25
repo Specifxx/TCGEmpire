@@ -136,6 +136,15 @@ test("keyword matching is scoped to the set that introduced it", () => {
   }
 });
 
+test("a marker only in another keyword's reminder text does not link that keyword's guide", () => {
+  const ambushUnit = { ...VEN_BASE, setCode: "UNL", description: "[Ambush] (You may play me as a [Reaction] to a battlefield where you control units.)" };
+  assert.equal(mechanicGuideForCard(ambushUnit)?.name, "Ambush");
+  const weaponmaster = { ...VEN_BASE, setCode: "SFD", description: "[Weaponmaster] (When you play me, you may [Equip] one of your Equipment to me.)" };
+  assert.equal(mechanicGuideForCard(weaponmaster)?.name, "Weaponmaster");
+  const quickDraw = { ...VEN_BASE, setCode: "SFD", description: "[Quick-Draw] (This has [Reaction]. When you play it, attach it to a unit you control.)" };
+  assert.equal(mechanicGuideForCard(quickDraw), null, "Quick-Draw has no keyword entry, and its [Reaction] is reminder text");
+});
+
 test("a core keyword's bracket marker matches in every set", () => {
   // Rules text is backfilled for Origins/Proving Grounds/Spiritforged/Unleashed
   // (scripts/backfill-card-text.ts), so an Origins [Tank] unit gets the guide.

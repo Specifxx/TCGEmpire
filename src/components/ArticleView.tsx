@@ -71,6 +71,7 @@ async function resolveEmbed(e: ArticleEmbed | undefined): Promise<CardTileData[]
         where: {
           ...(e.rulesSet ? { setCode: e.rulesSet } : {}),
           description: { contains: e.rulesContain },
+          ...(e.rulesExclude?.length ? { NOT: e.rulesExclude.map((x) => ({ description: { contains: x } })) } : {}),
         },
         orderBy: [{ rarity: "asc" }, { collectorNumber: "asc" }],
         take: e.take ?? 12,

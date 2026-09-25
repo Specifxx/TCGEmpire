@@ -6,6 +6,7 @@ import { SITE_URL } from "./site";
 import type { Country } from "./country";
 import { SEO_PACK_ARTICLES } from "./content/seo-pack-articles";
 import { monthYear } from "./content/month-year";
+import { REACTION_REMINDERS } from "./keywords";
 
 
 export type ArticleCategory = "blog" | "guide";
@@ -60,6 +61,9 @@ export interface ArticleEmbed {
   // scoped to a set) — e.g. "[Empower]" collects every Empower card as reveals land.
   rulesContain?: string;
   rulesSet?: string;
+  // Leave out cards whose text contains any of these — the keyword's marker
+  // printed only inside another keyword's reminder text (KeywordEntry.rulesExclude).
+  rulesExclude?: string[];
   // MOST-WANTED — the cards players search for most on RiftCompare, priced
   // (lib/cheapest-cards.ts getPopularCards: search count, ties toward the dearer
   // card, priced-only; the same query the homepage's popular carousel runs).
@@ -4275,7 +4279,7 @@ The whole set is out and trading, so this is genuinely the moment to start assem
         slugs: ["jayce-brilliant-inventor-ven-068", "mel-newly-awakened-ven-069"],
       },
       {
-        title: "Every Empower card in Vendetta",
+        title: "Empower cards in Vendetta",
         note: "Every Vendetta card with the Empower keyword — build the Empower Midrange shell around these.",
         rulesContain: "[Empower]",
         rulesSet: "VEN",
@@ -5435,10 +5439,11 @@ Bookmark this page — it updates as new Jayce or Mel printings land in the data
     // real images, tap → card page. POSITIONED right after "How the Empower
     // mechanic works" and 24 deep, like /keywords/empower (2026-09-25): as the
     // legacy `embed` it rendered after the whole body, capped at 12, under a
-    // title that now promises "Every Card".
+    // title that now promises "Every Card". The gallery's own title does not say
+    // "Every": 24 tiles of 52 printings, the rest behind the closing CTA.
     embeds: [
       {
-        title: "Every Empower card in Vendetta",
+        title: "Empower cards in Vendetta",
         note: "Vendetta cards with the Empower keyword — tap a card for its page and live prices across every store we track. The full list is linked at the end of this guide.",
         rulesContain: "[Empower]",
         rulesSet: "VEN",
@@ -5787,6 +5792,7 @@ The other keyword families are covered the same way: **[timing keywords](/guides
         title: "Cards printed with Reaction",
         note: "Real, officially catalogued cards whose rules text carries the Reaction keyword.",
         rulesContain: "[Reaction]",
+        rulesExclude: REACTION_REMINDERS,
         take: 6,
       },
       {

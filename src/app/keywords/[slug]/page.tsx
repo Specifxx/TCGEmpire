@@ -65,7 +65,14 @@ export default async function KeywordPage({ params }: { params: { slug: string }
   // five sets a core keyword like Action prints on 100+ cards, and the full list
   // is one click away on /browse. The count keeps the heading honest about what
   // the grid leaves out. Both run once per slug per day (revalidate below).
-  const where = { ...(kw.set ? { setCode: kw.set } : {}), description: { contains: kw.rulesContain } };
+  //
+  // `rulesExclude` drops cards whose only marker is another keyword's reminder
+  // text (Weaponmaster's "you may [Equip]…"), in the list and the count alike.
+  const where = {
+    ...(kw.set ? { setCode: kw.set } : {}),
+    description: { contains: kw.rulesContain },
+    ...(kw.rulesExclude?.length ? { NOT: kw.rulesExclude.map((x) => ({ description: { contains: x } })) } : {}),
+  };
   const [cards, total] = await Promise.all([
     prisma.card.findMany({
       where,

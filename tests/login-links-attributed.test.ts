@@ -106,7 +106,10 @@ test("the click-marked files really do mark their source", () => {
 
 test("/login reads the clicked source back instead of overwriting it with 'login'", () => {
   const form = read("src/components/AuthForm.tsx");
-  assert.match(form, /source \?\? urlSrc \?\? readSignupSource\(\) \?\? "login"/);
+  assert.match(form, /source \?\? urlSrc \?\? stashed \?\? "login"/);
+  // …and does not fire sign_in_click again for it: the surface that stashed it
+  // already counted the click.
+  assert.match(form, /if \(stashed\) stashSignupSource\(stashed\);\s*else markSignupSource\(placement\);/);
   const lib = read("src/lib/signup-source.ts");
   const body = lib.slice(lib.indexOf("export function readSignupSource"));
   // Whitelisted like every other read; never a raw cookie string.

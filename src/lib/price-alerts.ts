@@ -55,9 +55,12 @@ export function addressInCooldown(opts: { lastEmailedAt: Date | null; now: Date 
 //
 // A separate notification, not a drop: shouldEmailDrop() and the weekly cap are
 // unchanged (a first listing still waits out an address's cooldown), and it needs
-// no new query or column. prev == null only ever means "never priced" — the loop
-// skips a null CURRENT price without touching the baseline, so a card that goes
-// out of stock and relists keeps its old non-null baseline and does NOT fire.
+// no new query or column. prev == null means "unpriced in this market when the
+// watch was created" — never listed, OR sold out at that moment (price-import
+// nulls lowestPriceCents* when no in-stock listing is left), so the notice can be
+// a restock rather than a first listing and its copy never says "first". The
+// loop skips a null CURRENT price without touching the baseline, so a card that
+// goes out of stock AFTER the watch keeps its non-null baseline and does NOT fire.
 export function isFirstPrice(prev: number | null, current: number | null): boolean {
   return prev == null && current != null;
 }

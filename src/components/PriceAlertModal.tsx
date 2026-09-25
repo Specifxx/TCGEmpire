@@ -247,7 +247,7 @@ export function PriceAlertModal({ providers = [] }: { providers?: ("google" | "d
                 )}
                 {(!meLoaded || user || providers.length === 0) && (
                   <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                    We&apos;ll email you when this card is first in stock or gets cheaper. Unsubscribe anytime.
+                    We&apos;ll email you when this card is in stock or gets cheaper. Unsubscribe anytime.
                   </p>
                 )}
                 <input

@@ -77,6 +77,8 @@ export interface GalleryCard {
   id: string; // "ogn-251-298" — lowercased
   setCode: string; // "OGN"
   name: string; // "Ahri, Inquisitive" — name + subtitle, as printed
+  baseName: string; // "Ahri" — the gallery name without its subtitle
+  subtitle: string | null; // "Inquisitive"; the champion ("Kai'Sa") on a signature card
   champion: string | null; // first gallery tag — the champion, on a Legend
   type: string; // "Legend", "Unit", … ("" for tokens)
   publicCode: string; // "OGN-251/298"
@@ -130,6 +132,8 @@ export function galleryCardsFrom(nextData: unknown): GalleryCard[] {
           id,
           setCode: setId.toUpperCase(),
           name,
+          baseName: o.name.trim(),
+          subtitle: subtitle || null,
           champion: typeof o?.tags?.tags?.[0] === "string" ? o.tags.tags[0] : null,
           type: String(o?.cardType?.type?.[0]?.label ?? ""),
           publicCode: typeof o.publicCode === "string" ? o.publicCode : "",
@@ -158,6 +162,12 @@ export function normCollector(code: string): string {
  * Names the database may hold for this gallery card. sync-cards (and the
  * gallery importer) name a Legend "Champion, Epithet" — "Jinx, Loose Cannon" —
  * where the gallery names it "Loose Cannon" and tags it "Jinx".
+ *
+ * A champion's signature card is the other way round: the gallery puts the
+ * champion in the subtitle ("Icathian Rain" + "Kai'Sa", tagged "Kai'Sa") while
+ * RiftScribe stores the bare "Icathian Rain", so the bare name is accepted when
+ * the subtitle IS the champion tag. Not otherwise: "Akali" alone must not match
+ * "Akali, Deadly Weapon", whose subtitle is an epithet.
  */
 export function nameCandidates(g: GalleryCard): string[] {
   const names = [g.name];
@@ -165,6 +175,9 @@ export function nameCandidates(g: GalleryCard): string[] {
   // ("Ionia", "Mech"), not a name.
   if (g.type === "Legend" && g.champion && !g.name.toLowerCase().startsWith(g.champion.toLowerCase())) {
     names.push(`${g.champion}, ${g.name}`);
+  }
+  if (g.subtitle && g.champion && g.subtitle.toLowerCase() === g.champion.toLowerCase()) {
+    names.push(g.baseName);
   }
   return names.map(normalizeSearch);
 }
@@ -367,7 +380,7 @@ async function main() {
       }
     } else {
       log();
-      log("Dry run — nothing written. Re-run with `apply` ticked once the canary passes, matches look right and name mismatches are 0.");
+      log("Dry run — nothing written. Re-run with `apply` ticked once the canary passes, matches look right and name mismatches reviewed.");
     }
 
     if (process.env.GITHUB_STEP_SUMMARY) {

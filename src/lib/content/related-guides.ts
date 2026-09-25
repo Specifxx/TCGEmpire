@@ -56,7 +56,10 @@ export function mechanicGuideForCard(c: CardForGuides): { slug: string; name: st
   for (const k of KEYWORDS) {
     // An unscoped entry is a core keyword printed in every set (lib/keywords.ts).
     if (k.set && k.set !== c.setCode) continue;
-    if (text.includes(k.rulesContain)) return { slug: k.guideSlug, name: k.name };
+    if (!text.includes(k.rulesContain)) continue;
+    // Only in another keyword's reminder text ("play me as a [Reaction]…").
+    if (k.rulesExclude?.some((x) => text.includes(x))) continue;
+    return { slug: k.guideSlug, name: k.name };
   }
   return null;
 }

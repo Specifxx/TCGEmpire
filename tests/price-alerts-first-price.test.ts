@@ -214,6 +214,13 @@ test("email copy: 'now in stock' for listings, unchanged for drops, no strikethr
   assert.match(l.subject, /^Radiant Hero is now in stock from /);
   assert.match(l.heading, /now in stock/);
   assert.match(priceDropCopy([listed, { ...listed, name: "B" }]).subject, /2 of your wishlist cards are now in stock/);
+  // A null baseline can be a sold-out card at watch time, so a listing notice
+  // may be a restock: the copy never claims it is the card's first listing.
+  assert.equal(l.intro, "A card you're watching is now in stock:");
+  assert.equal(priceDropCopy([drop, listed]).intro, "Some cards you're watching got cheaper, and some are now in stock:");
+  for (const c of [l, priceDropCopy([listed, { ...listed, name: "B" }]), priceDropCopy([drop, listed])]) {
+    assert.doesNotMatch(`${c.heading} ${c.intro} ${c.subject}`, /first time/);
+  }
 
   assert.match(priceDropCopy([drop]).subject, /^Price drop: Radiant Hero is now /);
   assert.equal(priceDropCopy([drop]).heading, "A wishlist card just got cheaper");
@@ -226,16 +233,19 @@ test("email copy: 'now in stock' for listings, unchanged for drops, no strikethr
   assert.match(dropRow(drop), /line-through/);
 });
 
-test("the card page and CTA say 'first in stock' for an unpriced card", () => {
+test("the card page and CTA say 'in stock' for an unpriced card, never 'first'", () => {
   const read = (rel: string) => readFileSync(join(process.cwd(), rel), "utf8");
   const cta = read("src/components/PriceDropAlertCta.tsx");
   assert.match(cta, /unpriced\?: boolean/);
-  assert.match(cta, /Get an email when it's first in stock\. No store has it yet\./);
-  assert.match(cta, /We'll email you when it's first in stock\./);
+  assert.match(cta, /Get an email when it's in stock\. No store has it in stock yet\./);
+  assert.match(cta, /We'll email you when it's in stock\./);
+  // `unpriced` also covers a card listed days ago and sold out since, so neither
+  // "first" nor "no store has it" holds for every card it is shown on.
+  assert.doesNotMatch(cta, /first in stock|No store has it yet/);
   // "when", never "the day" — the weekly cap can hold the notice back.
   assert.doesNotMatch(cta, /the day it/);
   const page = read("src/app/card/[id]/page.tsx");
   assert.match(page, /unpriced=\{priceState\.isEmpty && !priceState\.noRetailChannel\}/);
-  assert.match(read("src/components/PriceAlertModal.tsx"), /first in stock or gets cheaper/);
+  assert.match(read("src/components/PriceAlertModal.tsx"), /when this card is in stock or gets cheaper/);
   assert.match(read("src/app/alerts/page.tsx"), /Can I watch a card with no price yet\?/);
 });

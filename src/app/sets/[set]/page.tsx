@@ -416,7 +416,14 @@ export default async function SetPage({
   // Vendetta's official-gallery pipeline had all 166 main-set cards in the DB
   // before release day. Distinguishing this from "still mid-spoiler-season" (see
   // set.totalCards in lib/constants.ts) keeps the copy below honest either way.
-  const fullyRevealed = !!set.totalCards && totalInSet >= set.totalCards;
+  //
+  // Measured against the ANNOUNCED total, the same denominator the preview title
+  // ("N of 180 So Far") and RadianceReveals use, and — where the page already has
+  // it — the same non-promo count, so the page never shows "Complete" beside a
+  // title that still says "167 of 180". totalInSet includes promos.
+  const completeAt = set.announcedCards ?? set.totalCards;
+  const revealedCount = radianceReveals?.revealed ?? totalInSet;
+  const fullyRevealed = !!completeAt && revealedCount >= completeAt;
   // Pre-order comparison page for THIS set, while it is still upcoming. Read from
   // the release calendar rather than hardcoded, so this template never names a
   // set and the link retires itself on release day (see preordersHrefForSet).
@@ -496,7 +503,7 @@ export default async function SetPage({
               <>
                 Riftbound <strong className="text-slate-200">{set.name}</strong> is new.
                 {fullyRevealed
-                  ? <> All {set.totalCards} {set.name} cards are officially confirmed and listed below — live store prices land the moment singles release.</>
+                  ? <> All {completeAt} {set.name} cards are officially confirmed and listed below — live store prices land the moment singles release.</>
                   : totalInSet > 0
                   ? <> Every officially revealed {set.name} card is listed below — live store prices land the moment singles release.</>
                   : <> This page will list every {set.name} card with live prices the moment they release — check back soon.</>}
@@ -632,7 +639,7 @@ export default async function SetPage({
             {set.comingSoon && (
               <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-4 py-3 text-sm text-slate-300">
                 {fullyRevealed ? (
-                  <><strong className="text-emerald-300">All revealed.</strong> Every one of the {set.totalCards} official {set.name} cards is confirmed below — live store prices appear here the moment singles go on sale.</>
+                  <><strong className="text-emerald-300">All revealed.</strong> Every one of the {completeAt} official {set.name} cards is confirmed below — live store prices appear here the moment singles go on sale.</>
                 ) : (
                   <><strong className="text-emerald-300">Revealed so far.</strong> These are the {set.name} cards officially
                   revealed to date — more land through spoiler season, and live store prices appear here the moment singles

@@ -58,6 +58,12 @@ export interface KeywordEntry {
   // gallery, in the same bracket format, so a bracket marker now matches
   // wherever it is printed and /keywords/tank lists Tank units from every set.
   //
+  // "Wherever it is printed" includes REMINDER text: Weaponmaster's reads "you
+  // may [Equip] one of your Equipment…", Ambush's "play me as a [Reaction]…",
+  // Quick-Draw's "This has [Reaction]. When you play it…". A card whose only
+  // marker sits in another keyword's reminder is not a card with that keyword,
+  // so those two entries carry `rulesExclude` below.
+  //
   // Empower, Flow and Burn keep "VEN" although their markers are bracketed:
   // they are the mechanics Vendetta introduced, their prose says so, and their
   // guides (lib/articles.ts) are "every X card in Vendetta" lists scoped the
@@ -74,12 +80,26 @@ export interface KeywordEntry {
   rulesContain: string; // printed bracket marker, e.g. "[Empower]" — same predicate
   // the existing guide's browseCta/embed already use, so this page and the guide
   // always show the identical set of cards.
+  // Reminder-text phrasings that carry the marker without the card having the
+  // keyword; a card whose text contains any of them is left out. Each one was
+  // checked against the live gallery (2026-09-25): none of the cards it drops
+  // prints the marker anywhere else in its text. Mirrored by the /keywords page,
+  // the guide embed of the same keyword and mechanicGuideForCard.
+  rulesExclude?: string[];
   directAnswer: string; // ~50-80 words, answers "what is <keyword>" up front
   sections: KeywordSection[];
   faqs: KeywordFaq[];
   guideSlug: string; // cross-link to the matching /guides/* tutorial
   relatedKeywords: string[]; // sibling keyword slugs
 }
+
+// [Reaction] inside other keywords' reminder text, not printed as a keyword:
+// Ambush ("You may play me as a [Reaction] to a battlefield…"), Quick-Draw
+// ("This has [Reaction]. When you play it, attach it…" / "It gains [Reaction].
+// When you play it…") and a Gold token's quoted ability ("It has "[Reaction][>]
+// Kill this…""). 24 cards in the 2026-09-25 gallery. Shared with the timing
+// guide's Reaction embed (lib/articles.ts) so the two lists stay identical.
+export const REACTION_REMINDERS = ["play me as a [Reaction]", "[Reaction]. When you play it", "\"[Reaction]"];
 
 export const KEYWORDS: KeywordEntry[] = [
   {
@@ -198,6 +218,7 @@ export const KEYWORDS: KeywordEntry[] = [
     slug: "reaction",
     name: "Reaction",
     rulesContain: "[Reaction]",
+    rulesExclude: REACTION_REMINDERS,
     directAnswer:
       "Reaction is Riftbound's true instant-speed keyword. It grants everything Action does — permission to play or activate during a Showdown — plus permission to play during a Closed state, the game's most restrictive timing window, which otherwise only Reaction cards can act in. A Reaction card can be played on any player's turn, essentially any time you have priority.",
     sections: [
@@ -521,6 +542,8 @@ export const KEYWORDS: KeywordEntry[] = [
     slug: "equip",
     name: "Equip",
     rulesContain: "[Equip",
+    // Weaponmaster's reminder text — 16 SFD/VEN units, none of them Gear.
+    rulesExclude: ["you may [Equip]"],
     directAnswer:
       "Equip is a Riftbound activated-ability keyword on Gear cards tagged Equipment. Paying the printed \"Equip [Cost]\" attaches that Gear to a unit you choose and control — turning a card sitting in play into a permanent boost on the unit it's attached to, activatable any time you could normally activate an ability.",
     sections: [

@@ -96,8 +96,15 @@ export function AuthForm({
     // A source stashed by the click that led here (header, home, article,
     // alerts page) outranks the "login" default, which is now only what a
     // typed or bounced /login with no recent click records.
-    const placement = source ?? urlSrc ?? readSignupSource() ?? "login";
-    markSignupSource(placement);
+    //
+    // That stashed click already fired sign_in_click{source} on its own surface
+    // (UserMenu, AccountStrip…), so re-stash it silently instead of counting the
+    // same visitor twice — the ?src= landing below follows the same rule.
+    // trackAuthStart still records this provider click under that placement.
+    const stashed = (source ?? urlSrc) ? null : readSignupSource();
+    const placement = source ?? urlSrc ?? stashed ?? "login";
+    if (stashed) stashSignupSource(stashed);
+    else markSignupSource(placement);
     trackAuthStart(provider, placement);
     onProviderClickProp?.();
   };

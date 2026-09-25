@@ -153,7 +153,7 @@ export function FilterableCardGallery({
 
       <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
         <span>
-          Showing <span className="num text-slate-300">{shown.length}</span> of{" "}
+          Showing <span className="num text-slate-300">{collapsed ? initialCount : shown.length}</span> of{" "}
           <span className="num text-slate-300">{cards.length}</span> cards
         </span>
         {(activeCount > 0 || q) && (

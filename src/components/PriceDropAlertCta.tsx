@@ -28,10 +28,12 @@ import { trackAuthStart, trackSignupCta } from "@/lib/growth-events";
 // CTA (see the "Add to collection" comment there). `placement` keeps the two
 // surfaces separable in User.signupSource and the auth_start funnel.
 //
-// `unpriced`: no store lists the card yet (a freshly revealed Radiance card).
-// "Gets cheaper" would be a promise the alert could never keep, so the copy
-// becomes "first in stock" — which lib/price-alerts.ts now actually sends (its
-// isFirstPrice notice). "When", never "the day": the weekly email cap can hold a
+// `unpriced`: no store has the card in stock (a freshly revealed Radiance card,
+// or one listed in the last few days and sold out since — priceState.isEmpty
+// covers both). "Gets cheaper" would be a promise the alert could never keep, so
+// the copy becomes "in stock" — which lib/price-alerts.ts now actually sends (its
+// isFirstPrice notice). Never "first" or "no store has it yet": for the sold-out
+// card both are false, with its out-of-stock store rows right below. "When", never "the day": the weekly email cap can hold a
 // notice back for anyone emailed in the last seven days.
 export function PriceDropAlertCta({
   cardId,
@@ -137,7 +139,7 @@ export function PriceDropAlertCta({
         </button>
         <span className="text-xs text-slate-400">
           {unpriced
-            ? "We'll email you when it's first in stock."
+            ? "We'll email you when it's in stock."
             : watching
               ? "We'll email you when it gets cheaper."
               : "One click — we email you when it gets cheaper."}
@@ -151,7 +153,7 @@ export function PriceDropAlertCta({
       <p className="text-sm font-bold text-white">{unpriced ? "Get an in-stock alert" : "Get a price-drop alert"}</p>
       <p className="mt-0.5 text-xs text-slate-400">
         {unpriced
-          ? "Get an email when it's first in stock. No store has it yet."
+          ? "Get an email when it's in stock. No store has it in stock yet."
           : "One click creates your free account and the alert — we email you when this card gets cheaper."}
       </p>
       <div className="mt-2.5 flex flex-wrap items-center gap-2">

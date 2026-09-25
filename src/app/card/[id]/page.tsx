@@ -1038,8 +1038,8 @@ export default async function CardPage({ params }: { params: { id: string } }) {
             {/* The page's primary conversion, next to the cheapest price
                 (2026-09-24 growth pass): one-click OAuth that creates the
                 account and the alert together; email-only stays secondary.
-                `unpriced` swaps "gets cheaper" for "first in stock" on a card
-                no store lists yet — not for a never-at-retail printing, which
+                `unpriced` swaps "gets cheaper" for "in stock" on a card
+                no store has in stock — not for a never-at-retail printing, which
                 never will be. */}
             <PriceDropAlertCta
               cardId={card.id}

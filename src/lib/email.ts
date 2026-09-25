@@ -250,13 +250,13 @@ export function priceDropCopy(items: PriceDropItem[]): { heading: string; intro:
   if (listed === count) {
     return {
       heading: count === 1 ? "A card you're watching is now in stock" : `${count} cards you're watching are now in stock`,
-      intro: `${count === 1 ? "A card you're watching has" : "Cards you're watching have"} just been listed by a store for the first time:`,
+      intro: `${count === 1 ? "A card you're watching is" : "Cards you're watching are"} now in stock:`,
       subject: count === 1 ? `${first.name} is now in stock from ${firstPrice}` : `${count} of your wishlist cards are now in stock`,
     };
   }
   return {
     heading: `Price news on ${count} wishlist cards`,
-    intro: "Some cards you're watching got cheaper, and some are in stock for the first time:",
+    intro: "Some cards you're watching got cheaper, and some are now in stock:",
     subject: `Price drops and new listings on ${count} of your wishlist cards`,
   };
 }
